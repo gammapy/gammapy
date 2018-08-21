@@ -3,7 +3,6 @@
 Implementation of adaptive smoothing algorithms.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
@@ -42,8 +41,12 @@ class ASmooth(object):
 
     def __init__(self, kernel=Gaussian2DKernel, method='simple', threshold=5,
                  scales=None):
-        self.parameters = OrderedDict(kernel=kernel, method=method,
-                                      threshold=threshold, scales=scales)
+        self.parameters = {
+            'kernel': kernel,
+            'method': method,
+            'threshold': threshold,
+            'scales': scales,
+        }
 
     def kernels(self, pixel_scale):
         """

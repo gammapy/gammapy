@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Ring background estimation."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
@@ -74,19 +73,19 @@ class AdaptiveRingBackgroundEstimator(object):
         if method not in ['fixed_width', 'fixed_r_in']:
             raise ValueError("Not a valid adaptive ring method.")
 
-        self._parameters = OrderedDict(
-            r_in=Angle(r_in),
-            r_out_max=Angle(r_out_max),
-            width=Angle(width),
-            stepsize=Angle(stepsize),
-            threshold_alpha=threshold_alpha,
-            theta=Angle(theta),
-            method=method,
-        )
+        self._parameters = {
+            'r_in': Angle(r_in),
+            'r_out_max': Angle(r_out_max),
+            'width': Angle(width),
+            'stepsize': Angle(stepsize),
+            'threshold_alpha': threshold_alpha,
+            'theta': Angle(theta),
+            'method': method,
+        }
 
     @property
     def parameters(self):
-        """OrderedDict of parameters"""
+        """Parameter dict."""
         return self._parameters
 
     def kernels(self, image):
@@ -213,7 +212,7 @@ class AdaptiveRingBackgroundEstimator(object):
         required = ['counts', 'exposure_on', 'exclusion']
         counts_map, exposure_on_map, exclusion_map = [images[_] for _ in required]
 
-        result = dict()
+        result = {}
         result['exposure_off'] = exposure_on_map.copy(unit='')
         result['off'] = exposure_on_map.copy(unit='')
         result['alpha'] = exposure_on_map.copy(unit='')
@@ -224,7 +223,7 @@ class AdaptiveRingBackgroundEstimator(object):
             exposure_on = exposure_on_map.get_image_by_idx(idx)
             exclusion = exclusion_map.get_image_by_idx(idx)
 
-            cubes = OrderedDict()
+            cubes = {}
 
             kernels = self.kernels(counts)
 
@@ -295,11 +294,11 @@ class RingBackgroundEstimator(object):
     """
 
     def __init__(self, r_in, width, use_fft_convolution=False):
-        self._parameters = dict(
-            r_in=Angle(r_in),
-            width=Angle(width),
-            use_fft_convolution=use_fft_convolution,
-        )
+        self._parameters = {
+            'r_in': Angle(r_in),
+            'width': Angle(width),
+            'use_fft_convolution': use_fft_convolution,
+        }
 
     @property
     def parameters(self):
@@ -349,7 +348,7 @@ class RingBackgroundEstimator(object):
 
         counts, exposure_on, exclusion = [images[_] for _ in required]
 
-        result = dict()
+        result = {}
         ring = self.kernel(counts)
 
         counts_excluded = counts.copy(data=counts.data * exclusion.data.astype('float'))

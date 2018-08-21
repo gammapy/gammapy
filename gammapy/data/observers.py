@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Location of gamma-ray observatories."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 from astropy.coordinates import EarthLocation
 
 __all__ = [
@@ -9,11 +8,11 @@ __all__ = [
 ]
 
 
-observatory_locations = OrderedDict()
-observatory_locations.__doc__ = """Gamma-ray observatory locations (`~collections.OrderedDict`).
+observatory_locations = {}
+"""Gamma-ray observatory locations (dict).
 
-This is an `~collections.OrderedDict` with string keys
-nd values of type `~astropy.coordinates.EarthLocation`.
+This is a dict with observatory names as keys
+and values of type `~astropy.coordinates.EarthLocation`.
 
 Not that with ``EarthLocation`` the orientation of angles is as follows:
 

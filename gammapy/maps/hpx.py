@@ -51,8 +51,8 @@ class HpxConv(object):
         return copy.deepcopy(HPX_FITS_CONVENTIONS[convname])
 
 
-# Various conventions for storing HEALPIX maps in FITS files
-HPX_FITS_CONVENTIONS = OrderedDict()
+HPX_FITS_CONVENTIONS = {}
+"""Various conventions for storing HEALPIX maps in FITS files"""
 HPX_FITS_CONVENTIONS[None] = HpxConv('gadf', bands_hdu='BANDS')
 HPX_FITS_CONVENTIONS['gadf'] = HpxConv('gadf', bands_hdu='BANDS')
 HPX_FITS_CONVENTIONS['fgst-ccube'] = HpxConv('fgst-ccube')

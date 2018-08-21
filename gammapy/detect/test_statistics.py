@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import contextlib
 import warnings
-from collections import OrderedDict
 from functools import partial
 from multiprocessing import Pool
 import numpy as np
@@ -137,16 +136,16 @@ class TSMapEstimator(object):
         if error_method not in ['covar', 'conf']:
             raise ValueError("Not a valid error method '{}'".format(error_method))
 
-        p = OrderedDict()
-        p['method'] = method
-        p['error_method'] = error_method
-        p['error_sigma'] = error_sigma
-        p['ul_method'] = ul_method
-        p['ul_sigma'] = ul_sigma
-        p['n_jobs'] = n_jobs
-        p['threshold'] = threshold
-        p['rtol'] = rtol
-        self.parameters = p
+        self.parameters = {
+            'method': method,
+            'error_method': error_method,
+            'error_sigma': error_sigma,
+            'ul_method': ul_method,
+            'ul_sigma': ul_sigma,
+            'n_jobs': n_jobs,
+            'threshold': threshold,
+            'rtol': rtol,
+        }
 
     @staticmethod
     def flux_default(maps, kernel):
@@ -154,8 +153,8 @@ class TSMapEstimator(object):
 
         Parameters
         ----------
-        maps : `OrderedDict` or `Dict`
-            Dict of input sky maps. Requires `counts`, `background` and `exposure` maps.
+        maps : dict
+            Input sky maps. Requires `counts`, `background` and `exposure` maps.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
@@ -174,8 +173,8 @@ class TSMapEstimator(object):
 
         Parameters
         ----------
-        maps : `OrderedDict` or `Dict`
-            Dict of input sky maps. . Requires `background` and `exposure`.
+        maps : dict
+            Input sky maps. Requires `background` and `exposure`.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
@@ -240,8 +239,8 @@ class TSMapEstimator(object):
         ----------
         kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
             Source model kernel.
-        maps : `OrderedDict`
-            List of input sky maps.
+        maps : dict
+            Input sky maps.
         which : list of str or 'all'
             Which maps to compute.
         downsampling_factor : int
@@ -251,7 +250,7 @@ class TSMapEstimator(object):
 
         Returns
         -------
-        maps : `OrderedDict`
+        maps : dict
             Result maps.
         """
         p = self.parameters
@@ -276,7 +275,7 @@ class TSMapEstimator(object):
         if which == 'all':
             which = ['ts', 'sqrt_ts', 'flux', 'flux_err', 'flux_ul', 'niter']
 
-        result = OrderedDict()
+        result = {}
         for name in which:
             data = np.nan * np.ones_like(maps['counts'].data)
             result[name] = maps['counts'].copy(data=data)

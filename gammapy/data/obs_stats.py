@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from ..stats import Stats, significance_on_off
@@ -65,7 +64,7 @@ class ObservationStats(Stats):
         self.gamma_rate = gamma_rate
 
         if bg_rate is None:
-            bg_rate =  self.alpha_obs * n_off / livetime
+            bg_rate = self.alpha_obs * n_off / livetime
         self.bg_rate = bg_rate
 
     @classmethod
@@ -185,24 +184,24 @@ class ObservationStats(Stats):
         )
 
     def to_dict(self):
-        """Data as an `~collections.OrderedDict`.
+        """Data as a dict.
 
         This is useful for serialisation or putting the info in a table.
         """
-        data = OrderedDict()
-        data['obs_id'] = self.obs_id
-        data['livetime'] = self.livetime
-        data['n_on'] = self.n_on
-        data['n_off'] = self.n_off
-        data['a_on'] = self.a_on
-        data['a_off'] = self.a_off
-        data['alpha'] = self.alpha
-        data['background'] = self.background
-        data['excess'] = self.excess
-        data['sigma'] = self.sigma
-        data['gamma_rate'] = self.gamma_rate
-        data['bg_rate'] = self.bg_rate
-        return data
+        return {
+            'obs_id': self.obs_id,
+            'livetime': self.livetime,
+            'n_on': self.n_on,
+            'n_off': self.n_off,
+            'a_on': self.a_on,
+            'a_off': self.a_off,
+            'alpha': self.alpha,
+            'background': self.background,
+            'excess': self.excess,
+            'sigma': self.sigma,
+            'gamma_rate': self.gamma_rate,
+            'bg_rate': self.bg_rate,
+        }
 
     def __str__(self):
         ss = '*** Observation summary report ***\n'

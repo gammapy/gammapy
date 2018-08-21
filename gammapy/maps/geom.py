@@ -604,22 +604,15 @@ class MapAxis(object):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        line_format = '\t{key:<10s} : {value:<10s}\n'
-
-        repr_dict = OrderedDict()
-        repr_dict['name'] = self.name
-        repr_dict['unit'] = '{!r}'.format(str(self.unit))
-        repr_dict['nbins'] = str(self.nbin)
-        repr_dict['node type'] = self.node_type
-
+        fmt = '\t{:<10s} : {:<10s}\n'
+        str_ += fmt.format('name', self.name)
+        str_ += fmt.format('unit', '{!r}'.format(str(self.unit)))
+        str_ += fmt.format('nbins', str(self.nbin))
+        str_ += fmt.format('node type', self.node_type)
         vals = self.edges if self.node_type == 'edge' else self.center
-        repr_dict['{} min'.format(self.node_type)] = '{:.1e} {}'.format(vals.min(), str(self.unit))
-        repr_dict['{} max'.format(self.node_type)] = '{:.1e} {}'.format(vals.max(), str(self.unit))
-
-        repr_dict['interp'] = self._interp
-
-        for key, value in repr_dict.items():
-            str_ += line_format.format(key=key, value=value)
+        str_ += fmt.format('{} min'.format(self.node_type), '{:.1e} {}'.format(vals.min(), str(self.unit)))
+        str_ += fmt.format('{} max'.format(self.node_type), '{:.1e} {}'.format(vals.max(), str(self.unit)))
+        str_ += fmt.format('interp', self._interp)
         return str_
 
 
@@ -734,8 +727,7 @@ class MapCoord(object):
         else:
             raise ValueError('Unrecognized input type.')
 
-        return cls(coords_dict, coordsys=coordsys,
-                   match_by_name=False)
+        return cls(coords_dict, coordsys=coordsys, match_by_name=False)
 
     @classmethod
     def _from_skycoord(cls, coords, coordsys=None):
@@ -784,8 +776,7 @@ class MapCoord(object):
             return cls(coords, coordsys=coordsys)
         elif 'skycoord' in coords:
             coords_dict = OrderedDict()
-            lon, lat, frame = skycoord_to_lonlat(
-                coords['skycoord'], coordsys=coordsys)
+            lon, lat, frame = skycoord_to_lonlat(coords['skycoord'], coordsys=coordsys)
             coords_dict['lon'] = lon
             coords_dict['lat'] = lat
             for k, v in coords.items():
