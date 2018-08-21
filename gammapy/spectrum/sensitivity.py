@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from astropy.table import Table, Column
 import astropy.units as u
-from gammapy.stats import significance_on_off, excess_matching_significance_on_off
+from gammapy.stats import excess_matching_significance_on_off
 from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
 
@@ -44,6 +43,7 @@ class SensitivityEstimator(object):
         irf = CTAPerf.read(filename)
         sens = SensitivityEstimator(irf=irf, livetime='5h')
         sens.run()
+        print(sens.results_table)
         sens.plot()
 
     Further examples in :gp-extra-notebook:`cta_sensitivity` .
@@ -58,7 +58,6 @@ class SensitivityEstimator(object):
 
     def __init__(self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05):
         self.irf = irf
-
         self.livetime = u.Quantity(livetime).to('s')
         self.slope = slope
         self.alpha = alpha
@@ -75,14 +74,10 @@ class SensitivityEstimator(object):
 
     def run(self):
         """Run the computation."""
-        model = PowerLaw(
-            index=self.slope,
-            amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
-            reference=1 * u.TeV,
-        )
 
-        ebounds = self.irf.bkg.energy
-        energy = ebounds.log_center()
+        # TODO: let the user decide on energy binning
+        # then integrate bkg model and gamma over those energy bins.
+        energy = self.irf.bkg.energy.log_center()
 
         bkg_counts = (self.irf.bkg.data.data * self.livetime).value
 
@@ -94,19 +89,39 @@ class SensitivityEstimator(object):
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
 
-        phi_0 = self.get_1TeV_differential_flux(excess_counts, model, self.irf.aeff, self.irf.rmf)
+        model = PowerLaw(
+            index=self.slope,
+            amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
+            reference=1 * u.TeV,
+        )
+
+        # TODO: simplify the following computation
+        predictor = CountsPredictor(model, aeff=self.irf.aeff, edisp=self.irf.rmf, livetime=self.livetime)
+        predictor.run()
+        counts = predictor.npred.data.data.value
+        phi_0 = excess_counts / counts * u.Unit('cm-2 s-1 TeV-1')
         # TODO: should use model.__call__ here
         dnde_model = model.evaluate(energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV)
         diff_flux = (phi_0 * dnde_model * energy ** 2).to('erg / (cm2 s)')
 
+        # TODO: take self.bkg_sys into account
+        # and add a criterion 'bkg sys'
+        criterion = []
+        for idx in range(len(energy)):
+            if is_gamma_limited[idx]:
+                c = 'gamma'
+            else:
+                c = 'significance'
+            criterion.append(c)
+
         table = Table([
             Column(
-                data=energy, name='ENERGY', format='5g',
+                data=energy, name='energy', format='5g',
                 description='Reconstructed Energy',
             ),
             Column(
-                data=diff_flux, name='FLUX', format='5g',
-                description='Differential flux',
+                data=diff_flux, name='e2dnde', format='5g',
+                description='Energy squared times differential flux',
             ),
             Column(
                 data=excess_counts, name='excess', format='5g',
@@ -117,47 +132,18 @@ class SensitivityEstimator(object):
                 description='Number of background counts in the bin',
             ),
             Column(
-                data=is_gamma_limited, name='is_gamma_limited',
-                description='Is the limiting criterion the min number of gammas?',
+                data=criterion, name='criterion',
+                description='Sensitivity-limiting criterion',
             ),
         ])
         self._results_table = table
-
-    def get_1TeV_differential_flux(self, excess_counts, model, aeff, rmf):
-        """Compute the differential fluxes at 1 TeV.
-
-        Parameters
-        ----------
-        excess_counts : `~numpy.ndarray`
-            Array of gamma-ray excess (bins in reconstructed energy)
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        aeff : `~gammapy.irf.EffectiveAreaTable`
-            Effective area
-        rmf : `~gammapy.irf.EnergyDispersion`
-            RMF
-
-        Returns
-        -------
-        flux : `~astropy.units.Quantity`
-            Array of 1TeV fluxes (bins in reconstructed energy)
-        """
-        # Compute expected excess
-        predictor = CountsPredictor(model, aeff=aeff, edisp=rmf, livetime=self.livetime)
-        predictor.run()
-        counts = predictor.npred.data.data.value
-
-        # Conversion in flux
-        flux = excess_counts / counts * u.Unit('cm-2 s-1 TeV-1')
-
-        return flux
 
     def plot(self, ax=None):
         """Plot the sensitivity curve."""
         import matplotlib.pyplot as plt
 
-        energy = self.results_table['ENERGY'].quantity
-        dnde = self.results_table['FLUX'].quantity
+        energy = self.results_table['energy'].quantity
+        dnde = self.results_table['e2dnde'].quantity
 
         fig = plt.figure()
         fig.canvas.set_window_title("Sensitivity")

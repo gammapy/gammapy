@@ -24,32 +24,32 @@ def test_cta_sensitivity_table(sens):
 
     assert len(table) == 21
     assert table.colnames == [
-        'ENERGY', 'FLUX', 'excess',
-        'background', 'is_gamma_limited',
+        'energy', 'e2dnde', 'excess',
+        'background', 'criterion',
     ]
-    assert table['ENERGY'].unit == 'TeV'
-    assert table['FLUX'].unit == 'erg / (cm2 s)'
+    assert table['energy'].unit == 'TeV'
+    assert table['e2dnde'].unit == 'erg / (cm2 s)'
 
     row = table[0]
-    assert_allclose(row['ENERGY'], 0.015848, rtol=1e-3)
-    assert_allclose(row['FLUX'], 1.2656e-10, rtol=1e-3)
+    assert_allclose(row['energy'], 0.015848, rtol=1e-3)
+    assert_allclose(row['e2dnde'], 1.2656e-10, rtol=1e-3)
     assert_allclose(row['excess'], 339.143, rtol=1e-3)
     assert_allclose(row['background'], 3703.48, rtol=1e-3)
-    assert row['is_gamma_limited'] == False
+    assert row['criterion'] == 'significance'
 
     row = table[9]
-    assert_allclose(row['ENERGY'], 1, rtol=1e-3)
-    assert_allclose(row['FLUX'], 4.28759e-13, rtol=1e-3)
+    assert_allclose(row['energy'], 1, rtol=1e-3)
+    assert_allclose(row['e2dnde'], 4.28759e-13, rtol=1e-3)
     assert_allclose(row['excess'], 18.1072, rtol=1e-3)
     assert_allclose(row['background'], 5.11857, rtol=1e-3)
-    assert row['is_gamma_limited'] == False
+    assert row['criterion'] == 'significance'
 
     row = table[20]
-    assert_allclose(row['ENERGY'], 158.489, rtol=1e-3)
-    assert_allclose(row['FLUX'], 9.0483e-12, rtol=1e-3)
+    assert_allclose(row['energy'], 158.489, rtol=1e-3)
+    assert_allclose(row['e2dnde'], 9.0483e-12, rtol=1e-3)
     assert_allclose(row['excess'], 10, rtol=1e-3)
     assert_allclose(row['background'], 0.00566093, rtol=1e-3)
-    assert row['is_gamma_limited'] == True
+    assert row['criterion'] == 'gamma'
 
 
 @requires_dependency('scipy')
