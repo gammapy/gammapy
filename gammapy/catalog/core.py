@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import sys
 from copy import deepcopy
-from pprint import pprint
 import numpy as np
 from ..extern import six
 from astropy.utils import lazyproperty

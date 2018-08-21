@@ -85,7 +85,6 @@ class TestSourceCatalogObject:
 
     def test_data(self):
         d = self.source.data
-        print(d)
         assert isinstance(d, OrderedDict)
         assert isinstance(d['RA'], float)
         assert_allclose(d['RA'], 43.3)
