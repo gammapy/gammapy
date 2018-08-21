@@ -4,7 +4,7 @@ import numpy as np
 from ...extern.six.moves import range
 from ...utils.random import get_random_state
 
-__all__ = ['GeneralRandom']
+__all__ = ["GeneralRandom"]
 
 
 class GeneralRandom(object):
@@ -35,8 +35,10 @@ class GeneralRandom(object):
         Lookup is computed and stored in:
         cdf: cumulative pdf
         inversecdf: the inverse lookup table
-        delta_inversecdf: difference of inversecdf"""
-        self.ran_res = ran_res  # Resolution of the PDF
+        delta_inversecdf: difference of inversecdf
+        ran_res: Resolution of the PDF
+        """
+        self.ran_res = ran_res
         x = np.linspace(min_range, max_range, ran_res)
         # This is a good default for the number of reverse
         # lookups to not loose much information in the pdf
@@ -47,37 +49,34 @@ class GeneralRandom(object):
         self.x = x
         self.pdf = pdf(x)
 
-        # old solution has problems with first bin:
-        # self.pdf = pdf/float(pdf.sum()) #normalize it
-        # self.cdf = self.pdf.cumsum()
-
         self.cdf = np.empty(self.nx, dtype=float)
         self.cdf[0] = 0
         for i in range(1, self.nx):
-            self.cdf[i] = self.cdf[i - 1] + (self.pdf[i] + self.pdf[i - 1]) * (self.x[i] - self.x[i - 1]) / 2
+            temp = (self.pdf[i] + self.pdf[i - 1]) * (self.x[i] - self.x[i - 1]) / 2
+            self.cdf[i] = self.cdf[i - 1] + temp
 
         self.pdf = self.pdf / self.cdf.max()  # normalize pdf
         self.cdf = self.cdf / self.cdf.max()  # normalize cdf
 
         self.ninversecdf = ninversecdf
         y = np.arange(ninversecdf) / float(ninversecdf)
-        # delta = 1.0/ninversecdf
         self.inversecdf = np.empty(ninversecdf)
         self.inversecdf[0] = self.x[0]
         cdf_idx = 0
         for n in range(1, self.ninversecdf):
             while self.cdf[cdf_idx] < y[n] and cdf_idx < ninversecdf:
                 cdf_idx += 1
-            self.inversecdf[n] = self.x[cdf_idx - 1] + \
-                                 (self.x[cdf_idx] - self.x[cdf_idx - 1]) * \
-                                 (y[n] - self.cdf[cdf_idx - 1]) / \
-                                 (self.cdf[cdf_idx] - self.cdf[cdf_idx - 1])
+
+            self.inversecdf[n] = self.x[cdf_idx - 1] + (
+                self.x[cdf_idx] - self.x[cdf_idx - 1]
+            ) * (y[n] - self.cdf[cdf_idx - 1]) / (
+                self.cdf[cdf_idx] - self.cdf[cdf_idx - 1]
+            )
             if cdf_idx >= ninversecdf:
                 break
-        self.delta_inversecdf = \
-            np.concatenate((np.diff(self.inversecdf), [0]))
+        self.delta_inversecdf = np.concatenate((np.diff(self.inversecdf), [0]))
 
-    def draw(self, N=1000, random_state='random-seed'):
+    def draw(self, N=1000, random_state="random-seed"):
         """Returns an array of random numbers with the requested distribution.
 
         The random numbers x are generated using the lookups
@@ -101,7 +100,7 @@ class GeneralRandom(object):
         # Generate uniform random float index in range [0, ninversecdf-1]
         idx_f = random_state.uniform(size=N, high=self.ninversecdf - 1)
         # Round down to next integer
-        idx = np.array(idx_f, 'i')
+        idx = np.array(idx_f, "i")
         # Use the inversecdf lookup to get the corresponding x
         # and the delta_inversecdf lookup for linear interpolation
         x = self.inversecdf[idx] + (idx_f - idx) * self.delta_inversecdf[idx]
@@ -113,16 +112,17 @@ class GeneralRandom(object):
 
         Useful for illustrating the interpolation and debugging."""
         import matplotlib.pyplot as plt
+
         # Plot the cdf
         plt.figure()
         plt.plot(self.x, self.cdf)
-        plt.title('cdf(x)')
+        plt.title("cdf(x)")
 
         # Plot the inverse cdf
         plt.figure()
         y = np.arange(self.ninversecdf) / float(self.ninversecdf)
         plt.plot(y, self.inversecdf)
-        plt.title('inversecdf(y)')
+        plt.title("inversecdf(y)")
 
         # Plot the pdf and a random sample distribution
         plt.figure()
@@ -133,4 +133,4 @@ class GeneralRandom(object):
         plt.hist(x, bins=binedges, normed=True)
         #    x1 = 0.5*(edges[0:-1] + edges[1:])
         #    plot(x1, p1/p1.sum(),label='hist of random draws')
-        plt.plot(self.x, self.pdf, label='pdf')
+        plt.plot(self.x, self.pdf, label="pdf")
