@@ -14,7 +14,9 @@ __all__ = ['SensitivityEstimator']
 
 
 class SensitivityEstimator(object):
-    """Estimate differential sensitivity for the ON/OFF method, ie 1D analysis
+    """Estimate differential sensitivity.
+
+    Uses a 1D spectral analysis and on / off measurement.
 
     Parameters
     ----------
@@ -40,12 +42,13 @@ class SensitivityEstimator(object):
 
     Compute and plot a sensitivity curve for CTA::
 
-        from gammapy.scripts import CTAPerf, SensitivityEstimator
+        from gammapy.irf import CTAPerf
+        from gammapy.spectrum import SensitivityEstimator
+
         filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
         irf = CTAPerf.read(filename)
         sens = SensitivityEstimator(irf=irf, livetime='5h')
         sens.run()
-        sens.print_results()
         sens.plot()
 
     Further examples in :gp-extra-notebook:`cta_sensitivity` .
@@ -55,17 +58,12 @@ class SensitivityEstimator(object):
     For the moment, only the differential point-like sensitivity is computed at a fixed offset.
     This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
     events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent larger than the
-    number of background events in the ON region
-
-    TODO:
-
-    - make the computation for any source size
-    - compute the integral sensitivity
-    - Add options to use different spectral shape?
+    number of background events in the ON region.
     """
 
     def __init__(self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05, random=0):
         self.irf = irf
+
         self.livetime = u.Quantity(livetime).to('s')
         self.slope = slope
         self.alpha = alpha
@@ -74,24 +72,58 @@ class SensitivityEstimator(object):
         self.bkg_sys = bkg_sys
         self.random = random
 
-        self.energy = None
-        self.diff_sens = None
+        self._results_table = None
 
-    def get_bkg(self, bkg_rate):
-        """Return the Background rate for each energy bin
+    @property
+    def results_table(self):
+        """Results table (`~astropy.table.Table`)."""
+        return self._results_table
 
-        Parameters
-        ----------
-        bkg_rate : `~gammapy.scripts.BgRateTable`
-            Table of background rate
+    def run(self):
+        """Run the computation."""
+        model = PowerLaw(
+            index=self.slope,
+            amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
+            reference=1 * u.TeV,
+        )
 
-        Returns
-        -------
-        rate : `~numpy.ndarray`
-            Return an array of background counts (bins in reconstructed energy)
-        """
-        bkg = bkg_rate.data.data * self.livetime
-        return bkg.value
+        reco_energy = self.irf.bkg.energy
+
+        bkg_counts = (self.irf.bkg.data.data * self.livetime).value
+
+        if self.random < 1:
+            excess_counts = self.get_excess(bkg_counts)
+        else:
+            ex = self.get_excess(np.random.poisson(bkg_counts))
+            for ii in range(self.random - 1):
+                ex += self.get_excess(np.random.poisson(bkg_counts))
+            excess_counts = ex / float(self.random)
+
+        phi_0 = self.get_1TeV_differential_flux(excess_counts, model, self.irf.aeff, self.irf.rmf)
+        energy = reco_energy.log_center()
+        # TODO: should use model.__call__ here
+        dnde_model = model.evaluate(energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV)
+        diff_flux = (phi_0 * dnde_model * energy ** 2).to('erg / (cm2 s)')
+
+        table = Table([
+            Column(
+                data=reco_energy.log_center(), name='ENERGY', format='5g',
+                description='Reconstructed Energy',
+            ),
+            Column(
+                data=diff_flux, name='FLUX', format='5g',
+                description='Differential flux',
+            ),
+            Column(
+                data=excess_counts, name='excess', format='5g',
+                description='Number of excess counts in the bin',
+            ),
+            Column(
+                data=bkg_counts, name='background', format='5g',
+                description='Number of background counts in the bin',
+            ),
+        ])
+        self._results_table = table
 
     def get_excess(self, bkg_counts):
         """Compute the gamma-ray excess for each energy bin.
@@ -164,72 +196,12 @@ class SensitivityEstimator(object):
 
         return flux
 
-    def run(self):
-        """Run the computation."""
-        # Creation of the spectral shape
-        norm = 1 * u.Unit('cm-2 s-1 TeV-1')
-        index = self.slope
-        ref = 1 * u.TeV
-        model = PowerLaw(index=index, amplitude=norm, reference=ref)
-
-        # Get the bins in reconstructed  energy
-        reco_energy = self.irf.bkg.energy
-
-        # Start the computation
-        bkg_counts = self.get_bkg(self.irf.bkg)
-        if self.random < 1:
-            excess_counts = self.get_excess(bkg_counts)
-        else:
-            ex = self.get_excess(np.random.poisson(bkg_counts))
-            for ii in range(self.random - 1):
-                ex += self.get_excess(np.random.poisson(bkg_counts))
-            excess_counts = ex / float(self.random)
-
-        phi_0 = self.get_1TeV_differential_flux(excess_counts, model, self.irf.aeff, self.irf.rmf)
-        energy = reco_energy.log_center()
-        dnde_model = model.evaluate(energy=energy, index=index, amplitude=1, reference=ref)
-        diff_flux = (phi_0 * dnde_model * energy ** 2).to('erg / (cm2 s)')
-
-        self.energy = reco_energy.log_center()
-        self.diff_sens = diff_flux
-
-    @property
-    def diff_sensi_table(self):
-        """Differential sensitivity table (`~astropy.table.Table`)."""
-        table = Table()
-        table['ENERGY'] = Column(self.energy, unit=self.energy.unit,
-                                 description='Reconstructed Energy')
-        table['FLUX'] = Column(self.diff_sens, unit=self.diff_sens.unit,
-                               description='Differential flux')
-        return table
-
-    @property
-    def _ref_diff_sensi(self):
-        """Reference differential sensitivity table (`~astropy.table.Table`)"""
-        table = Table()
-        energy = self.irf.sens.energy.log_center()
-        table['ENERGY'] = Column(energy, unit=energy.unit,
-                                 description='Reconstructed Energy')
-        flux = self.irf.sens.data.data
-        table['FLUX'] = Column(flux, unit=flux.unit,
-                               description='Differential flux')
-        return table
-
-    def print_results(self):
-        """Print results to the console."""
-        log.info("** Sensitivity **")
-        self.diff_sensi_table.pprint()
-
-        if log.getEffectiveLevel() == 10:
-            log.debug("** ROOT Sensitivity **")
-            self._ref_diff_sensi.pprint()
-            rel_diff = (self.diff_sensi_table['FLUX'] - self._ref_diff_sensi['FLUX']) / self._ref_diff_sensi['FLUX']
-            log.debug("** Relative Difference (ref=ROOT)**")
-            log.debug(rel_diff)
-
     def plot(self, ax=None):
         """Plot the sensitivity curve."""
         import matplotlib.pyplot as plt
+
+        energy = self.results_table['ENERGY'].quantity
+        dnde = self.results_table['FLUX'].quantity
 
         fig = plt.figure()
         fig.canvas.set_window_title("Sensitivity")
@@ -238,15 +210,13 @@ class SensitivityEstimator(object):
         label = r"        $\sigma$=" + str(self.sigma) + " T=" + \
                 str(self.livetime.to('h').value) + "h \n" + r"$\alpha$=" + str(self.alpha) + \
                 r" Syst$_{BKG}$=" + str(self.bkg_sys * 100) + "%" + r" $\gamma_{min}$=" + str(self.gamma_min)
-        ax.plot(self.energy.value, self.diff_sens.value, color='red', label=label)
+        ax.plot(energy.value, dnde.value, color='red', label=label)
 
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.grid(True)
-        ax.set_xlabel('Reco Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Sensitivity [{}]'.format(self.diff_sens.unit))
-        if log.getEffectiveLevel() == 10:
-            self.irf.sens.plot(color='black', label="ROOT")
+        ax.set_xlabel('Reco Energy [{}]'.format(energy.unit))
+        ax.set_ylabel('Sensitivity [{}]'.format(dnde.unit))
 
         plt.legend()
         return ax
