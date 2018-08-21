@@ -61,8 +61,8 @@ class SpectrumExtraction(object):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
-        self.e_reco = e_reco or self.DEFAULT_RECO_ENERGY
-        self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
+        self.e_reco = e_reco if e_reco is not None else self.DEFAULT_RECO_ENERGY
+        self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
         self.use_recommended_erange = use_recommended_erange
