@@ -148,7 +148,7 @@ def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
     containment : `~astropy.units.Quantity`
         Corresponding contained flux.
     """
-    radius_max = radius_max or Quantity(0.2, 'deg')
+    radius_max = radius_max if radius_max is not None else Quantity(0.2, 'deg')
     containment = []
     radii = Quantity(np.linspace(0, radius_max.value, radius_n), radius_max.unit)
     for radius in radii:

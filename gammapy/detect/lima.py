@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from copy import deepcopy
 import logging
+import numpy as np
 from ..stats import significance, significance_on_off
 
 __all__ = [
@@ -87,7 +88,8 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
 
     significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
 
-    background_conv = alpha_conv * n_off.data
+    with np.errstate(invalid='ignore'):
+        background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
 
     return {

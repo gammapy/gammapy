@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import sys
 from copy import deepcopy
-from pprint import pprint
 import numpy as np
 from ..extern import six
 from astropy.utils import lazyproperty
@@ -51,13 +50,6 @@ class SourceCatalogObject(object):
     def index(self):
         """Row index of source in catalog (int)"""
         return self.data[self._source_index_key]
-
-    def pprint(self, file=None):
-        """Pretty-print source data"""
-        if not file:
-            file = sys.stdout
-
-        pprint(self.data, stream=file)
 
     @property
     def _data_python_dict(self):

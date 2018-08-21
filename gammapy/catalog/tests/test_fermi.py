@@ -75,10 +75,6 @@ class TestFermi3FGLObject:
     def test_data(self):
         assert_allclose(self.source.data['Signif_Avg'], 30.669872283935547)
 
-    def test_pprint(self):
-        # TODO: add assert on output
-        self.source.pprint()
-
     def test_str(self):
         ss = str(self.source)
         assert 'Source name          : 3FGL J0534.5+2201' in ss
@@ -234,9 +230,6 @@ class TestFermi3FHLObject:
 
     def test_data(self):
         assert_allclose(self.source.data['Signif_Avg'], 168.64082)
-
-    def test_pprint(self):
-        self.source.pprint()
 
     def test_str(self):
         source = self.cat['3FHL J2301.9+5855e']  # Picking an extended source

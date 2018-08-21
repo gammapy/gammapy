@@ -77,11 +77,11 @@ class TestNDDataArray:
 
     def test_evaluate_2d(self, nddata_2d):
         # Case 1: axis1 = scalar, axis2 = array
-        out = nddata_2d.evaluate(energy=0 * u.TeV, offset=[0, 0] * u.deg)
+        out = nddata_2d.evaluate(energy=1 * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (2,)
 
         # Case 2: axis1 = array, axis2 = array
-        out = nddata_2d.evaluate(energy=[0, 0, 0] * u.TeV, offset=[0, 0] * u.deg)
+        out = nddata_2d.evaluate(energy=[1, 1, 1] * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (3, 2)
 
         # Case 3: axis1 array, axis2 = 2Darray

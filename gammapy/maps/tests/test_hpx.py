@@ -538,7 +538,6 @@ def test_hpxgeom_solid_angle():
                           axes=[MapAxis.from_edges([0, 2, 3])])
 
     solid_angle = geom.solid_angle()
-    print(float(solid_angle.value))
 
     assert solid_angle.shape == (1,)
     assert_allclose(solid_angle.value, 0.016362461737446838)
