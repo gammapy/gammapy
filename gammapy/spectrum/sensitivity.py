@@ -54,7 +54,7 @@ class SensitivityEstimator(object):
     -----
     For the moment, only the differential point-like sensitivity is computed at a fixed offset.
     This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
-    events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys``% larger than the
+    events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent larger than the
     number of background events in the ON region
 
     TODO:

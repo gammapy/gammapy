@@ -40,15 +40,13 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', s
     flux : `numpy.ndarray`
         Flux array of the light curve
     flux_err : `numpy.ndarray`
-        Flux error array of the light curve.
-        Is set to 1 if not given.
+        Flux error array of the light curve. Default is 1.
     periods : `numpy.ndarray`
         Period grid on which the periodogram is performed.
         If not given, a linear grid will be computed limited by the length of the light curve and the Nyquist frequency.
-    loss : str (optional, default='linear')
+    loss : {'linear', 'soft_l1', 'huber', 'cauchy', 'arctan'}
         Loss function for the robust regression.
-        Available: `{'linear', 'soft_l1', 'huber', 'cauchy', 'arctan'}`.
-        If not given, `'linear'` will be used, resulting in the Lomb-Scargle periodogram.
+        Default is 'linear', resulting in the Lomb-Scargle periodogram.
     scale : float (optional, default=1)
         Loss scale parameter to define margin between inlier and outlier residuals.
         If not given, will be set to 1.

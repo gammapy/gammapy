@@ -12,6 +12,7 @@ __all__ = [
 
 # TODO: replace this with the default from the Galactocentric frame in astropy.coordinates
 D_SUN_TO_GALACTIC_CENTER = Quantity(8.5, 'kpc')
+"""Default assumed distance from the Sun to the Galactic center (`~astropy.units.Quantity`)"""
 
 
 def cartesian(r, theta):

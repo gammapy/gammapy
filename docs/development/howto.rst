@@ -566,7 +566,7 @@ Methods that use interpolation should provide an option to the caller to pass in
 ``RegularGridInterpolator`` in case the default behaviour doesn't suit the application.
 
 TODO: we have some classes (aeff2d and edisp2d) that pre-compute an interpolator, currently in the constructor.
-In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the `read` and other constructors.
+In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the ``read`` and other constructors.
 Do we want / need that?
 
 
@@ -652,7 +652,7 @@ Here's an example how to write ``__repr__``::
             self.__class__.__name__, self.name, self.age
         )
 
-Note how we use `{!r}` in the format string to fill in the ``repr`` of the
+Note how we use ``{!r}`` in the format string to fill in the ``repr`` of the
 object being formatted, and how we used ``self.__class__.__name__`` to avoid
 duplicating the class name (easier to refactor code, and shows sub-class name if
 repr is inherited).
@@ -865,11 +865,6 @@ In these cases, the following shorter format omitting the *Returns* section is r
 Usually the parameter description doesn't fit on the one line, so it's
 recommended to always keep this in the *Parameters* section.
 
-This is just a recommendation, e.g. for `gammapy.cube.SkyCube.spectral_index`
-we decided to use this shorter format, but for `gammapy.cube.SkyCube.flux` we
-decided to stick with the more verbose format, because the return type and units
-didn't fit on the first line.
-
 A common case where the short format is appropriate are class properties,
 because they always return a single object.
 As an example see `gammapy.data.EventList.radec`, which is reproduced here:
@@ -887,8 +882,7 @@ As an example see `gammapy.data.EventList.radec`, which is reproduced here:
 Class attributes
 ++++++++++++++++
 
-Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.cube.SkyCube` as an example.
+Class attributes (data members) and properties are currently a bit of a mess.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended `here`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
@@ -897,10 +891,7 @@ sections, which is confusing to users ("what's the difference between attributes
 .. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
 
 One solution is to always use properties, but that can get very verbose if we have to write
-so many getters and setters. I don't have a solution for this yet ... for now I'll go read
-`this`__ and meditate.
-
-.. __: https://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
+so many getters and setters. We could start using descriptors.
 
 TODO: make a decision on this and describe the issue / solution here.
 

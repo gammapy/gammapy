@@ -301,7 +301,7 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 - [#1246] Improve map read method (Matthew Wood)
 - [#1240] Finish change to Click in gammapy.scripts (Christoph Deil)
 - [#1238] Clean up catalog image code (Axel Donath)
-- [#1235] Introduce main `gammapy` command line tool (Axel Donath and Christoph Deil)
+- [#1235] Introduce main ``gammapy`` command line tool (Axel Donath and Christoph Deil)
 - [#1227] Remove gammapy-data-show and gammapy-cube-bin (Christoph Deil)
 - [#1226] Make DataStoreObservation properties less lazy (Christoph Deil)
 - [#1220] Fix flux point computation for non-power-law models (Axel Donath)

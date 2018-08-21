@@ -501,7 +501,7 @@ using a format other than the GADF format:
 Visualization
 -------------
 
-All map objects provide a `~Map.plot` method for generating a visualization of a
+All map objects provide a ``plot`` method for generating a visualization of a
 map.  This method returns figure, axes, and image objects that can be used to
 further tweak/customize the image.
 

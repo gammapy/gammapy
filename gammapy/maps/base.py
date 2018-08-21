@@ -13,7 +13,6 @@ from .geom import pix_tuple_to_idx, MapCoord
 from ..extern import six
 from ..utils.scripts import make_path
 
-
 __all__ = [
     'Map',
 ]
@@ -197,7 +196,7 @@ class Map(object):
 
     @staticmethod
     def from_geom(geom, meta=None, data=None, map_type='auto', unit=''):
-        """Generate an empty map from a `Geom` instance.
+        """Generate an empty map from a `MapGeom` instance.
 
         Parameters
         ----------
@@ -209,10 +208,9 @@ class Map(object):
             Dictionary to store meta data.
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
-            instantiate the map.  The map type should be consistent
-            with the geometry.  If map_type is 'auto' then an
-            appropriate map type will be inferred from type of
-            ``geom``.
+            instantiate the map. The map type should be consistent
+            with the geometry. If map_type is 'auto' then an
+            appropriate map type will be inferred from type of ``geom``.
         unit : str or `~astropy.units.Unit`
             Data unit.
 
@@ -238,8 +236,7 @@ class Map(object):
 
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type='auto'):
-        """Create from `astropy.io.fits.HDUList`.
-        """
+        """Create from `astropy.io.fits.HDUList`."""
         if map_type == 'auto':
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
@@ -479,13 +476,12 @@ class Map(object):
         ----------
         crop_width : {sequence, array_like, int}
             Number of pixels cropped from the edges of each axis.
-            Defined analogously to `pad_with` from `~numpy.pad`.
+            Defined analogously to ``pad_with`` from `numpy.pad`.
 
         Returns
         -------
         map : `Map`
             Cropped map.
-
         """
         pass
 
@@ -821,8 +817,7 @@ class Map(object):
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
         weights : `~numpy.ndarray`
-            Weights vector. If None then a unit weight will be assumed
-            for each element in `coords`.
+            Weights vector. Default is weight of one.
         """
         idx = self.geom.coord_to_idx(coords)
         self.fill_by_idx(idx, weights)
@@ -839,8 +834,7 @@ class Map(object):
             Pixel indices can be either float or integer type.  Float
             indices will be rounded to the nearest integer.
         weights : `~numpy.ndarray`
-            Weights vector. If None then a unit weight will be assumed
-            for each element in `pix`.
+            Weights vector. Default is weight of one.
         """
         idx = pix_tuple_to_idx(pix)
         return self.fill_by_idx(idx, weights=weights)
@@ -856,14 +850,12 @@ class Map(object):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
         weights : `~numpy.ndarray`
-            Weights vector. If None then a unit weight will be assumed
-            for each element in `idx`.
+            Weights vector. Default is weight of one.
         """
         pass
 
     def set_by_coord(self, coords, vals):
-        """Set pixels at the given map coordinates to the values in `vals`
-        vector.
+        """Set pixels at ``coords`` with given ``vals``.
 
         Parameters
         ----------
@@ -871,16 +863,14 @@ class Map(object):
             Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
         vals : `~numpy.ndarray`
-            Values vector.  Pixels at `coords` will be set to these values.
+            Values vector.
         """
         idx = self.geom.coord_to_pix(coords)
         self.set_by_pix(idx, vals)
 
     def set_by_pix(self, pix, vals):
-        """Set pixels at the given pixel coordinates to the values in `vals`
-        vector.
+        """Set pixels at ``pix`` with given ``vals``.
 
         Parameters
         ----------
@@ -891,15 +881,14 @@ class Map(object):
             Pixel indices can be either float or integer type.  Float
             indices will be rounded to the nearest integer.
         vals : `~numpy.ndarray`
-            Values vector. Pixels at `pix` will be set to these values.
+            Values vector.
         """
         idx = pix_tuple_to_idx(pix)
         return self.set_by_idx(idx, vals)
 
     @abc.abstractmethod
     def set_by_idx(self, idx, vals):
-        """Set pixels at the given pixel indices to the values in `vals`
-        vector.
+        """Set pixels at ``idx`` with given ``vals``.
 
         Parameters
         ----------
@@ -908,7 +897,7 @@ class Map(object):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
         vals : `~numpy.ndarray`
-            Values vector. Pixels at `idx` will be set to these values.
+            Values vector.
         """
         pass
 
@@ -922,14 +911,12 @@ class Map(object):
             Axis name to slide through, with the interactive slider. By default
             the first non-spatial axis is used.
         rc_params : dict
-            Matplotlib rc parameters passed to `matplotlib.rc_context(rc=rc_params)`,
-            to style the plot.
+            Passed to ``matplotlib.rc_context(rc=rc_params)`` to style the plot.
         **kwargs : dict
-            Keyword arguments passed to `WcsND.plot()`.
+            Keyword arguments passed to `WcsNDMap.plot`.
 
         Examples
         --------
-
         You can try this out e.g. using a Fermi-LAT diffuse model cube with an energy axis::
 
             from gammapy.maps import Map
@@ -937,12 +924,10 @@ class Map(object):
             m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
             m.plot_interactive(cmap='gnuplot2')
 
-        If you would like to adjust the figure size you can use the `rc_params`
-        argument.
+        If you would like to adjust the figure size you can use the ``rc_params`` argument::
 
             rc_params = {'figure.figsize': (12, 6), 'font.size': 12}
             m.plot_interactive(rc_params=rc_params)
-
         """
         import matplotlib as mpl
         import matplotlib.pyplot as plt
@@ -965,18 +950,17 @@ class Map(object):
         if map_axis.node_type == 'edge':
             edges = map_axis.edges
             options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, map_axis.unit) for
-                         val_min, val_max in zip(edges[:-1], edges[1:])]
+                       val_min, val_max in zip(edges[:-1], edges[1:])]
         else:
             center = map_axis.center
             options = ['{:.0f} {}'.format(val, map_axis.unit) for val in center]
-
 
         @interact(
             val=SelectionSlider(options=options, description='Select {}:'.format(axis),
                                 continuous_update=False, style={'description_width': 'initial'},
                                 layout={'width': '36%'}),
             stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value=stretch,
-                                 description='Select stretch:', style={'description_width': 'initial'} ),
+                                 description='Select stretch:', style={'description_width': 'initial'}),
         )
         def _plot_interactive(val, stretch):
             idx = options.index(val)
