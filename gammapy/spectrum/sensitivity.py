@@ -34,8 +34,6 @@ class SensitivityEstimator(object):
         Minimum number of gamma-rays
     bkg_sys : float, optional
         Fraction of Background systematics relative to the number of ON counts
-    random: : int, optional
-        Number of random trial to derive the number of gamma-rays
 
     Examples
     --------
@@ -61,7 +59,7 @@ class SensitivityEstimator(object):
     number of background events in the ON region.
     """
 
-    def __init__(self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05, random=0):
+    def __init__(self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05):
         self.irf = irf
 
         self.livetime = u.Quantity(livetime).to('s')
@@ -70,7 +68,6 @@ class SensitivityEstimator(object):
         self.sigma = sigma
         self.gamma_min = gamma_min
         self.bkg_sys = bkg_sys
-        self.random = random
 
         self._results_table = None
 
@@ -91,13 +88,7 @@ class SensitivityEstimator(object):
 
         bkg_counts = (self.irf.bkg.data.data * self.livetime).value
 
-        if self.random < 1:
-            excess_counts = self.get_excess(bkg_counts)
-        else:
-            ex = self.get_excess(np.random.poisson(bkg_counts))
-            for ii in range(self.random - 1):
-                ex += self.get_excess(np.random.poisson(bkg_counts))
-            excess_counts = ex / float(self.random)
+        excess_counts = self.get_excess(bkg_counts)
 
         phi_0 = self.get_1TeV_differential_flux(excess_counts, model, self.irf.aeff, self.irf.rmf)
         energy = reco_energy.log_center()
