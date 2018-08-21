@@ -848,10 +848,6 @@ class FluxPointProfiles(object):
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
-    def plot(self, ax):
-        # TODO: copy code from fermipy, don't start from scratch!
-        raise NotImplementedError
-
 
 def chi2_flux_points(flux_points, gp_model):
     """

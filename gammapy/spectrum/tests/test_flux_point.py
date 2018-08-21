@@ -234,10 +234,8 @@ class TestFluxPointProfiles:
         filename = '$GAMMAPY_EXTRA/datasets/spectrum/llsed_hights.fits'
         self.sed = FluxPointProfiles.read(filename)
 
-    @pytest.mark.xfail(run=False)
-    @requires_dependency('matplotlib')
-    def test_plot(self):
-        self.sed.plot()
+    def test_basics(self):
+        assert isinstance(self.sed.table, Table)
 
 
 @pytest.fixture(params=FLUX_POINTS_FILES, scope='session')
