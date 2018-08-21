@@ -21,6 +21,7 @@ _build
 # Pytest
 .cache
 v
+.pytest_cache
 
 # Packages/installer info
 *.egg
