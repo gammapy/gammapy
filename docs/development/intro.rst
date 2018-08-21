@@ -189,8 +189,8 @@ Make a working example
 * Explain "documentation driven development" and "test driven development"
 
 * make a branch
-* test in `examples`
-* `import IPython; IPython.embed` trick
+* test in ``examples``
+* ``import IPython; IPython.embed`` trick
 
 
 Integrate the code in Gammapy

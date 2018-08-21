@@ -25,28 +25,28 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
 
     Parameters
     ----------
-    period : `float`
+    period : float
         period of model
-    amplitude : `float`
+    amplitude : float
         amplitude of model
-    t_length : `float`
+    t_length : float
         length of data set in units of time
-    n_data : `int`
+    n_data : int
         number of points for the test data
-    n_obs : `int`
+    n_obs : int
         number of unevenly data points for the observation data
-    n_outliers : `int`
+    n_outliers : int
         number of outliers in the test data
 
     Returns
     ----------
-    t : `~numpy.ndarray`
+    t : `numpy.ndarray`
         time for observation
-    dt : `float`
+    dt : float
         time resolution of test data
-    y : `~numpy.ndarray`
+    y : `numpy.ndarray`
         flux of observation
-    dy : `~numpy.ndarray`
+    dy : `numpy.ndarray`
         flux error of observation
     """
     rand = np.random.RandomState(42)
@@ -77,18 +77,18 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
 
     Parameters
     ----------
-    power : `~numpy.ndarray`
+    power : `numpy.ndarray`
         power of periodogram
-    freq : `~numpy.ndarray`
+    freq : `numpy.ndarray`
         frequencies at withc the periodogram is computed
-    t, y, dy : `~numpy.ndarray`
+    t, y, dy : `numpy.ndarray`
         time, flux and flux error or light curve
-    method : `dict`
+    method : dict
         dictionary of methods with their respective false alarm probability
 
     Returns
     -------
-    fap : `dict`
+    fap : dict
         false alarm probability dictionary (see description above).
     """
     ls = LombScargle(t, y, dy, normalization='standard')

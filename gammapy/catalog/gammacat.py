@@ -286,7 +286,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SpatialModel`).
+        """Source spatial model (`~gammapy.image.models.SkySpatialModel`).
 
         TODO: add parameter errors!
         """
@@ -446,7 +446,7 @@ class SourceCatalogGammaCat(SourceCatalog):
         )
 
     def to_sky_models(self):
-        """Convert to a `~gammapy.utils.modeling.SkyModels`.
+        """Convert to a `~gammapy.cube.models.SkyModels`.
 
         TODO: add an option whether to skip or raise on missing models or data.
         """
@@ -597,17 +597,17 @@ class GammaCatResourceIndex(object):
 
     @property
     def unique_source_ids(self):
-        """Sorted list of unique source IDs (`list(int)`)."""
+        """Sorted list of unique source IDs (list of int)."""
         return sorted(set([resource.source_id for resource in self.resources]))
 
     @property
     def unique_reference_ids(self):
-        """Sorted list of unique source IDs (`list(str)`)."""
+        """Sorted list of unique source IDs (list of str)."""
         return sorted(set([resource.reference_id for resource in self.resources]))
 
     @property
     def global_ids(self):
-        """List of global resource IDs (`list(str)`).
+        """List of global resource IDs (list of str).
 
         In original order, not sorted.
         """

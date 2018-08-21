@@ -177,7 +177,7 @@ class ObservationSummary(object):
             self.sigma[index] = stack.sigma
 
     def obs_wise_summary(self):
-        """Observation wise summary report (`str`)."""
+        """Observation wise summary report (str)."""
         ss = '*** Observation Wise summary ***\n'
         for obs in self.obs_stats:
             ss += '{}\n'.format(obs)

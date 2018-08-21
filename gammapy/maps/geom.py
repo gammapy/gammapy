@@ -806,7 +806,7 @@ class MapCoord(object):
 
         Parameters
         ----------
-        data : `tuple`, `dict`, `~MapCoord` or `~astropy.coordinates.SkyCoord`
+        data : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
         coordsys : {'CEL', 'GAL', None}, optional
             Set the coordinate system for longitude and latitude. If

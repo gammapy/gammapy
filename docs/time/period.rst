@@ -37,7 +37,7 @@ chance if the underlying light curve would consist of Gaussian white-noise only.
 Both, periodogram and light curve can be plotted with
 `~gammapy.time.plot_periodogram`.
 
-See the `astropy`-docs for more details about the Lomb-Scargle periodogram and
+See the Astropy docs for more details about the Lomb-Scargle periodogram and
 its false alarm probability [1]_. The loss functions for the robust periodogram
 are provided by `scipy.optimize.least_squares` [2]_.
 
@@ -186,11 +186,11 @@ return following FAP:
 ===========   ===================
 method        FAP
 ===========   ===================
-`single`      :math:`1.04e^{-21}`
-`naive`       :math:`5.40e^{-16}`
-`davies`      :math:`4.05e^{-15}`
-`baluev`      :math:`4.05e^{-15}`
-`bootstrap`   :math:`0.0`
+'single'      :math:`1.04e^{-21}`
+'naive'       :math:`5.40e^{-16}`
+'davies'      :math:`4.05e^{-15}`
+'baluev'      :math:`4.05e^{-15}`
+'bootstrap'   :math:`0.0`
 ===========   ===================
 
 The plot of the light curve shows no evidence for outliers. Thus,

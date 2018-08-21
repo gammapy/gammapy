@@ -334,7 +334,7 @@ class SpectrumResult(object):
         fit_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.models.SpectralModel.plot`
         butterfly_kwargs : dict, optional
-            forwarded to :func:`gammapy.spectrum.SpectralModel.plot_error`
+            forwarded to :func:`gammapy.spectrum.models.SpectralModel.plot_error`
         point_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.FluxPoints.plot`
         fig_kwargs : dict, optional

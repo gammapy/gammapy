@@ -53,7 +53,7 @@ class ObservationCTA(object):
 
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
-    observation_dead_time_fraction : `float`
+    observation_dead_time_fraction : float
         Dead-time fraction
 
         Defined as dead-time over observation time.

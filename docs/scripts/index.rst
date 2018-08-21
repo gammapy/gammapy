@@ -301,7 +301,7 @@ example::
 
 If you're new to Python command line tools or Click, probably setuptools entry
 points and click groups seem very complex. And they are, compared to the rest of
-Gammapy which is just `def` and `class` statements to make functions and
+Gammapy which is just ``def`` and ``class`` statements to make functions and
 classes, i.e. "normal" Python code. Just know that to use and even work on the
 Gammapy CLI you don't have to understand how it works under the hood, but if you
 want to, it's actually not that complex.
@@ -318,7 +318,7 @@ Note how sub-commands are ``click.Command`` objects::
     click.core.Command
 
 that are independent and how the main ``cli`` is created via ``cli.add_command``
-calls in `gammapy/scripts/main.py`.
+calls in `gammapy/scripts/main.py`_.
 
 Now you have a basic understanding how things work and should be able to work on
 Gammapy CLI (e.g. add more functionality to the CLI interface). If you're

@@ -262,7 +262,7 @@ class SkyDiffuseMap(SkySpatialModel):
 
     Parameters
     ----------
-    map : `~gammapy.map.Map`
+    map : `~gammapy.maps.Map`
         Map template
     norm : float
         Norm parameter (multiplied with map values)

@@ -8,9 +8,8 @@ import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
-from .base import Map
 from .utils import unpack_seq
-from .geom import pix_tuple_to_idx, axes_pix_to_coord
+from .geom import pix_tuple_to_idx
 from .wcs import _check_width
 from .utils import interp_to_order
 from .wcsmap import WcsGeom, WcsMap
@@ -504,7 +503,7 @@ class WcsNDMap(WcsMap):
         radius : `~astropy.units.Quantity` or float
             Smoothing width given as quantity or float. If a float is given it
             interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it converted to pixels using `geom.wcs.wcs.cdelt`.
+            is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
         kwargs : dict
@@ -552,7 +551,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        kernel : `PSFKernel` or `numpy.ndarray`
+        kernel : `~gammapy.cube.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         use_fft : bool
             Use `scipy.signal.fftconvolve` or `scipy.ndimage.convolve`.

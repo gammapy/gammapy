@@ -180,8 +180,8 @@ class HpxMap(Map):
             then the WCS map will have the same dimensionality as the
             HEALPix one.
         normalize : bool
-            True -> preserve integral by splitting HEALPIX values between bins
-        proj  : str
+            Preserve integral by splitting HEALPIX values between bins?
+        proj : str
             WCS-projection
         oversample : float
             Oversampling factor for WCS map. This will be the
@@ -249,7 +249,7 @@ class HpxMap(Map):
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
+        conv : {'fgst-ccube', 'fgst-template', 'gadf', None}, optional
             FITS format convention.  If None this will be set to the
             default convention of the map.
 

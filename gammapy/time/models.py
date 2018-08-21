@@ -136,13 +136,6 @@ class LightCurveTableModel(object):
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
 
-    TODO: Improve this class!
-    This class is very preliminary / work in progress.
-    An obvious issue is that `gammapy.time.LightCurve` has the same name,
-    which has a good potential to confuse users.
-    Another poitn is the API for time, i.e. when to take floats or time objects.
-    We plan to discuss this `LightCurve` and the `PhaseCurveTableModel` model classes soon.
-
     Parameters
     ----------
     table : `~astropy.table.Table`

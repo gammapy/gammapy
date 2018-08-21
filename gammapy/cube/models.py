@@ -113,7 +113,7 @@ class SkyModel(object):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.image.models.SpatialModel`
+    spatial_model : `~gammapy.image.models.SkySpatialModel`
         Spatial model (must be normalised to integrate to 1)
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
         Spectral model
@@ -273,7 +273,7 @@ class SkyDiffuseCube(object):
 
     Parameters
     ----------
-    map : `~gammapy.map.Map`
+    map : `~gammapy.maps.Map`
         Map template
     norm : float
         Norm parameter (multiplied with map values)

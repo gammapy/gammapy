@@ -15,20 +15,20 @@ def plot_periodogram(time, flux, periods, power, flux_err=None, best_period=None
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
+    time : `numpy.ndarray`
         Time array of the light curve
-    flux : `~numpy.ndarray`
+    flux : `numpy.ndarray`
         Flux array of the light curve
-    periods : `~numpy.ndarray`
+    periods : `numpy.ndarray`
         Periods for the periodogram
-    power : `~numpy.ndarray`
+    power : `numpy.ndarray`
         Periodogram peaks of the data
-    flux_err : `~numpy.ndarray` (optional, default=None)
+    flux_err : `numpy.ndarray` (optional, default=None)
         Flux error array of the light curve.
         Is set to 0 if not given.
-    best_period : `float` (optional, default=None)
+    best_period : float (optional, default=None)
         Period of the highest periodogram peak
-    fap : `float` (optional, default=None)
+    fap : float (optional, default=None)
         False alarm probability of ``best_period`` under a certain significance criterion.
 
     Returns

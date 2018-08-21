@@ -391,12 +391,12 @@ class EventListBase(object):
 
         Parameters
         ----------
-        region : list of `~region.SkyRegion`
+        region : list of `~regions.SkyRegion`
             List of sky regions
 
         Returns
         -------
-        index_array : `np.array`
+        index_array : `numpy.ndarray`
             Index array of selected events
         """
         position = self.radec

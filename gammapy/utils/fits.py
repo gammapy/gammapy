@@ -261,7 +261,7 @@ class SmartHDUList(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             Filename
         """
         filename = str(make_path(filename))
@@ -279,7 +279,7 @@ class SmartHDUList(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             Filename
         """
         filename = str(make_path(filename))

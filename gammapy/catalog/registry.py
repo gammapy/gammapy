@@ -59,7 +59,7 @@ class SourceCatalogRegistry(object):
 
     @property
     def catalog_names(self):
-        """Catalog names (`list`)."""
+        """Catalog names (list of str)."""
         return list(self._available_catalogs.keys())
 
     def register(self, name, cls, args=()):

@@ -22,7 +22,7 @@ def significance_to_probability_normal(significance):
 
     Returns
     -------
-    probability : ndarray
+    probability : `numpy.ndarray`
         One-sided tail probability
 
     See Also

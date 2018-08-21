@@ -47,7 +47,7 @@ class Background3D(object):
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
-    """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
+    """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(self, energy_lo, energy_hi,
                  fov_lon_lo, fov_lon_hi, fov_lat_lo, fov_lat_hi,
@@ -132,7 +132,7 @@ class Background3D(object):
         return table
 
     def to_fits(self, name='BACKGROUND'):
-        """Convert to `~astropy.io.fits.BinTable`."""
+        """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
     def evaluate(self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs):
@@ -219,7 +219,7 @@ class Background2D(object):
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
-    """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
+    """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(self, energy_lo, energy_hi,
                  offset_lo, offset_hi,
@@ -297,7 +297,7 @@ class Background2D(object):
         return table
 
     def to_fits(self, name='BACKGROUND'):
-        """Convert to `~astropy.io.fits.BinTable`."""
+        """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
     def evaluate(self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs):
