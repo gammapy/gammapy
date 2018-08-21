@@ -251,7 +251,8 @@ def coord_to_idx(edges, x, clip=False):
         ibin[x < edges[0]] = 0
         ibin[x > edges[-1]] = len(edges) - 1
     else:
-        ibin[x > edges[-1]] = -1
+        with np.errstate(invalid='ignore'):
+            ibin[x > edges[-1]] = -1
 
     ibin[~np.isfinite(x)] = -1
     return ibin
