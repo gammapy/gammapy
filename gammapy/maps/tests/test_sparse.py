@@ -13,7 +13,7 @@ test_params = [
 ]
 
 
-@pytest.mark.parametrize(('shape'), test_params)
+@pytest.mark.parametrize('shape', test_params)
 def test_sparse_init(shape):
     v = SparseArray(shape)
     assert (v.shape == shape)
@@ -44,7 +44,7 @@ def test_sparse_getitem():
                     data[:, np.arange(4), np.arange(4)])
 
 
-@pytest.mark.parametrize(('shape'), test_params)
+@pytest.mark.parametrize('shape', test_params)
 def test_sparse_setitem(shape):
     data = np.random.poisson(np.ones(shape)).astype(float)
     v = SparseArray(shape)

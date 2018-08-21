@@ -98,13 +98,10 @@ def find_bands_hdu(hdu_list, hdu):
 
     has_cube_data = False
 
-    if (isinstance(hdu, (fits.ImageHDU, fits.PrimaryHDU)) and
-            hdu.header.get('NAXIS', None) == 3):
+    if isinstance(hdu, (fits.ImageHDU, fits.PrimaryHDU)) and hdu.header.get('NAXIS', None) == 3:
         has_cube_data = True
     elif isinstance(hdu, fits.BinTableHDU):
-
-        if (hdu.header.get('INDXSCHM', '') in ['EXPLICIT', 'IMPLICIT', '']
-                and len(hdu.columns) > 1):
+        if hdu.header.get('INDXSCHM', '') in ['EXPLICIT', 'IMPLICIT', ''] and len(hdu.columns) > 1:
             has_cube_data = True
 
     if has_cube_data:

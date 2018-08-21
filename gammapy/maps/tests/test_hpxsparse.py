@@ -26,5 +26,5 @@ hpx_test_geoms = [
                          hpx_test_geoms)
 def test_hpxsparse_init(nside, nested, coordsys, region, axes):
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    m = HpxSparseMap(geom)
+    HpxSparseMap(geom)
     # TODO: Test initialization w/ data array

@@ -46,4 +46,3 @@ def test_iminuit():
     assert states[1]['has_limits']
     assert states[1]['lower_limit'] == 4
     assert states[1]['upper_limit'] == 0
-

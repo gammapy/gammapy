@@ -257,7 +257,7 @@ def test_map_reproject_wcs_to_wcs():
     m = WcsNDMap(geom_wcs_1, data=data)
     m_r = m.reproject(geom_wcs_2)
 
-    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
+    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1., 3.16227766, 10.]})
     assert_allclose(actual, [59.98055, 180.98055, 301.98056], rtol=1e-3)
     assert m.data.shape == m_r.data.shape
 
@@ -273,7 +273,7 @@ def test_map_reproject_wcs_to_hpx():
     m = WcsNDMap(geom_wcs, data=data)
 
     m_r = m.reproject(geom_hpx)
-    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
+    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1., 3.16227766, 10.]})
     assert_allclose(actual, [65., 186., 307.], rtol=1e-3)
 
 
@@ -288,5 +288,5 @@ def test_map_reproject_hpx_to_wcs():
     m = HpxNDMap(geom_hpx, data=data)
 
     m_r = m.reproject(geom_wcs)
-    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1.,  3.16227766, 10.]})
+    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1., 3.16227766, 10.]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)

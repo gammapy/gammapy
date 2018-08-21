@@ -5,7 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
-from astropy.units import Quantity
 import astropy.units as u
 from ..wcs import WcsGeom, _check_width
 from ..geom import MapAxis
@@ -38,8 +37,8 @@ wcs_test_geoms = wcs_allsky_test_geoms + wcs_partialsky_test_geoms
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_init(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
-                          proj=proj, coordsys=coordsys, axes=axes)
+    WcsGeom.create(npix=npix, binsz=binsz, skydir=skydir,
+                   proj=proj, coordsys=coordsys, axes=axes)
 
 
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),

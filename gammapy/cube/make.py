@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
-from .background import make_map_background_irf, _fov_background_norm
+from .background import make_map_background_irf
 
 __all__ = [
     'MapMaker',
@@ -213,15 +213,8 @@ class MapMakerObs(object):
             background.data[..., self.fov_mask] = 0
 
         # TODO: decide what background modeling options to support
-        # This is not well tested or documented at the moment,
-        # so for now take this out
-        # background_scale = _fov_background_norm(
-        #     acceptance_map=background,
-        #     counts_map=counts,
-        #     exclusion_mask=self.exclusion_mask,
-        # )
-        # if self.fov_mask is not None:
-        #     background.data *= background_scale[:, None, None]
+        # Extra things like FOV norm scale or ring would go here.
+
         self.maps['background'] = background
 
 
