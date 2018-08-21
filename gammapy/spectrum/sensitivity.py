@@ -1,14 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import logging
 import numpy as np
 from astropy.table import Table, Column
 import astropy.units as u
-from gammapy.stats import significance_on_off
+from gammapy.stats import significance_on_off, excess_matching_significance_on_off
 from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
-
-log = logging.getLogger(__name__)
 
 __all__ = ['SensitivityEstimator']
 
@@ -84,21 +81,27 @@ class SensitivityEstimator(object):
             reference=1 * u.TeV,
         )
 
-        reco_energy = self.irf.bkg.energy
+        ebounds = self.irf.bkg.energy
+        energy = ebounds.log_center()
 
         bkg_counts = (self.irf.bkg.data.data * self.livetime).value
 
-        excess_counts = self.get_excess(bkg_counts)
+        excess_counts = excess_matching_significance_on_off(
+            n_off=bkg_counts / self.alpha,
+            alpha=self.alpha,
+            significance=self.sigma,
+        )
+        is_gamma_limited = excess_counts < self.gamma_min
+        excess_counts[is_gamma_limited] = self.gamma_min
 
         phi_0 = self.get_1TeV_differential_flux(excess_counts, model, self.irf.aeff, self.irf.rmf)
-        energy = reco_energy.log_center()
         # TODO: should use model.__call__ here
         dnde_model = model.evaluate(energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV)
         diff_flux = (phi_0 * dnde_model * energy ** 2).to('erg / (cm2 s)')
 
         table = Table([
             Column(
-                data=reco_energy.log_center(), name='ENERGY', format='5g',
+                data=energy, name='ENERGY', format='5g',
                 description='Reconstructed Energy',
             ),
             Column(
@@ -113,50 +116,12 @@ class SensitivityEstimator(object):
                 data=bkg_counts, name='background', format='5g',
                 description='Number of background counts in the bin',
             ),
+            Column(
+                data=is_gamma_limited, name='is_gamma_limited',
+                description='Is the limiting criterion the min number of gammas?',
+            ),
         ])
         self._results_table = table
-
-    def get_excess(self, bkg_counts):
-        """Compute the gamma-ray excess for each energy bin.
-
-        Parameters
-        ----------
-        bkg_counts : `~numpy.ndarray`
-            Array of background counts (bins in reconstructed energy)
-
-        Returns
-        -------
-        count : `~numpy.ndarray`
-            Array of gamma-ray excess (bins in reconstructed energy)
-
-        Notes
-        -----
-        Find the number of needed gamma excess events using newtons method.
-        Defines a function ``significance_on_off(x, off, alpha) - self.sigma``
-        and uses scipy.optimize.newton to find the `x` for which this function
-        is zero.
-        """
-        from scipy.optimize import newton
-
-        def target_function(on, off, alpha):
-            return significance_on_off(on, off, alpha, method='lima') - self.sigma
-
-        excess = np.zeros_like(bkg_counts)
-        for energy_bin, bg_count in enumerate(bkg_counts):
-            # if the number of bg events is to small just return the predefined minimum
-            if bg_count < 1:
-                excess[energy_bin] = self.gamma_min
-                continue
-
-            off = bg_count / self.alpha
-            # provide a proper start guess for the minimizer
-            on = bg_count + self.gamma_min
-            e = newton(target_function, x0=on, args=(off, self.alpha))
-
-            # excess is defined as the number of on events minues the number of background events
-            excess[energy_bin] = e - bg_count
-
-        return excess
 
     def get_1TeV_differential_flux(self, excess_counts, model, aeff, rmf):
         """Compute the differential fluxes at 1 TeV.
