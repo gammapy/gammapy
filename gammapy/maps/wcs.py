@@ -115,7 +115,7 @@ def _make_image_header(
     elif coordsys == "GAL":
         ctype1, ctype2 = "GLON-", "GLAT-"
     else:
-        raise ValueError("Unsupported coordsys: {}".format(proj))
+        raise ValueError("Unsupported coordsys: {!r}".format(coordsys))
 
     pars = {
         "NAXIS": 2,
@@ -181,7 +181,7 @@ class WcsGeom(MapGeom):
         # Shape to use for WCS transformations
         wcs_shape = max([get_shape(t) for t in [npix, cdelt]])
         if np.sum(wcs_shape) > 1 and wcs_shape != self.shape:
-            raise ValueError
+            raise ValueError()
 
         self._npix = cast_to_shape(npix, wcs_shape, int)
         self._cdelt = cast_to_shape(cdelt, wcs_shape, float)
@@ -391,7 +391,7 @@ class WcsGeom(MapGeom):
         elif isinstance(skydir, SkyCoord):
             xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
         else:
-            raise ValueError("Invalid type for skydir: {}".format(type(skydir)))
+            raise ValueError("Invalid type for skydir: {!r}".format(type(skydir)))
 
         if width is not None:
             width = _check_width(width)
@@ -720,22 +720,22 @@ class WcsGeom(MapGeom):
     def pad(self, pad_width):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
+
         npix = (self.npix[0] + 2 * pad_width[0], self.npix[1] + 2 * pad_width[1])
         wcs = self._wcs.deepcopy()
         wcs.wcs.crpix += np.array(pad_width)
-        return self.__class__(
-            wcs, npix, cdelt=copy.deepcopy(self._cdelt), axes=copy.deepcopy(self.axes)
-        )
+        cdelt = copy.deepcopy(self._cdelt)
+        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
     def crop(self, crop_width):
         if np.isscalar(crop_width):
             crop_width = (crop_width, crop_width)
+
         npix = (self.npix[0] - 2 * crop_width[0], self.npix[1] - 2 * crop_width[1])
         wcs = self._wcs.deepcopy()
         wcs.wcs.crpix -= np.array(crop_width)
-        return self.__class__(
-            wcs, npix, cdelt=copy.deepcopy(self._cdelt), axes=copy.deepcopy(self.axes)
-        )
+        cdelt = copy.deepcopy(self._cdelt)
+        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
     def downsample(self, factor):
 
@@ -743,9 +743,8 @@ class WcsGeom(MapGeom):
             np.mod(self.npix[1], factor) == 0
         ):
             raise ValueError(
-                "Data shape is not divisible by {} in all axes."
-                " Pad image prior to downsampling to correct"
-                " shape.".format(factor)
+                "Data shape not divisible by factor {!r} in all axes."
+                " You need to pad prior to calling downsample.".format(factor)
             )
 
         npix = (self.npix[0] / factor, self.npix[1] / factor)
@@ -763,7 +762,10 @@ class WcsGeom(MapGeom):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 
         The array has the same dimension as the WcsGeom object.
-        To return solid angles for the spatial dimensions only use: WcsGeom.to_image().solid_angle()
+
+        To return solid angles for the spatial dimensions only use::
+
+            WcsGeom.to_image().solid_angle()
         """
         coord = self.get_coord(mode="edges")
         lon = coord.lon * np.pi / 180.
@@ -843,9 +845,7 @@ class WcsGeom(MapGeom):
         from regions import PixCoord
 
         if not self.is_regular:
-            raise NotImplementedError(
-                "Region mask is not working yet with multi-resolution maps"
-            )
+            raise ValueError("Multi-resolution maps not supported yet")
 
         idx = self.get_idx()
         pixcoord = PixCoord(idx[0], idx[1])
@@ -871,11 +871,9 @@ class WcsGeom(MapGeom):
         str_ += "\tndim       : {}\n".format(self.ndim)
         str_ += "\tcoordsys   : {}\n".format(self.coordsys)
         str_ += "\tprojection : {}\n".format(self.projection)
-        lon, lat = (
-            float(self.center_skydir.data.lon.deg),
-            float(self.center_skydir.data.lat.deg),
-        )
-        str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
+        lon = self.center_skydir.data.lon.deg
+        lat = self.center_skydir.data.lat.deg
+        str_ += "\tcenter     : {:.1f} deg, {:.1f} deg\n".format(lon, lat)
         str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f} " "deg\n".format(
             width=self.width
         )
@@ -919,7 +917,7 @@ def create_wcs(
         w.wcs.crval[0] = skydir.galactic.l.deg
         w.wcs.crval[1] = skydir.galactic.b.deg
     else:
-        raise ValueError("Unrecognized coordinate system.")
+        raise ValueError("Invalid coordsys: {!r}".format(coordsys))
 
     if isinstance(crpix, tuple):
         w.wcs.crpix[0] = crpix[0]
@@ -1118,21 +1116,21 @@ def wcs_to_axes(w, npix):
     axes of a WCS object."""
     npix = npix[::-1]
 
-    x = np.linspace(-(npix[0]) / 2., (npix[0]) / 2., npix[0] + 1) * np.abs(
-        w.wcs.cdelt[0]
-    )
-    y = np.linspace(-(npix[1]) / 2., (npix[1]) / 2., npix[1] + 1) * np.abs(
-        w.wcs.cdelt[1]
-    )
+    cdelt0 = np.abs(w.wcs.cdelt[0])
+    x = np.linspace(-(npix[0]) / 2., (npix[0]) / 2., npix[0] + 1) * cdelt0
+
+    cdelt1 = np.abs(w.wcs.cdelt[1])
+    y = np.linspace(-(npix[1]) / 2., (npix[1]) / 2., npix[1] + 1) * cdelt1
 
     cdelt2 = np.log10((w.wcs.cdelt[2] + w.wcs.crval[2]) / w.wcs.crval[2])
-
-    z = (np.linspace(0, npix[2], npix[2] + 1)) * cdelt2
+    z = np.linspace(0, npix[2], npix[2] + 1) * cdelt2
     z += np.log10(w.wcs.crval[2])
 
     return x, y, z
 
 
+# FIXME: unused and broken. Remove?
+# See https://github.com/gammapy/gammapy/issues/1737
 def wcs_to_coords(w, shape):
     """Generate an N x D list of pixel center coordinates where N is
     the number of pixels and D is the dimensionality of the map."""
