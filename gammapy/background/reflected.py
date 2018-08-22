@@ -59,7 +59,11 @@ def _compute_distance_image(mask_map):
     invert_mask = np.invert(np.array(mask_map.data, dtype=np.bool))
     distance_inside = distance_transform_edt(invert_mask)
 
-    distance = np.where(mask_map.data, distance_outside, -distance_inside)
+    distance = np.where(
+        mask_map.data,
+        distance_outside,
+        -distance_inside,  # pylint:disable=invalid-unary-operand-type
+    )
 
     return mask_map.copy(data=distance)
 

@@ -44,7 +44,9 @@ class Energy(Quantity):
             val, unit = energy.split()
             energy = float(val)
 
-        self = super(Energy, cls).__new__(cls, energy, unit,
+        # This is a pylint error false positive
+        # See https://github.com/PyCQA/pylint/issues/2335#issuecomment-415055075
+        self = super(Energy, cls).__new__(cls, energy, unit,  # pylint:disable=redundant-keyword-arg
                                           dtype=dtype, copy=copy)
 
         if not self.unit.is_equivalent('eV'):

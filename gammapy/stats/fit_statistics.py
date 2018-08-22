@@ -158,14 +158,18 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide='ignore', invalid='ignore'):
-        term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
+        # This is a false positive error from pylint
+        # See https://github.com/PyCQA/pylint/issues/2436
+        term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_on == 0
     condition = (n_on == 0)
     term2 = np.where(condition, 0, term2_)
 
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide='ignore', invalid='ignore'):
-        term3_ = - n_off * np.log(mu_bkg)
+        # This is a false positive error from pylint
+        # See https://github.com/PyCQA/pylint/issues/2436
+        term3_ = - n_off * np.log(mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_off == 0
     condition = (n_off == 0)
     term3 = np.where(condition, 0, term3_)
