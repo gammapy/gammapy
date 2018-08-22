@@ -901,15 +901,12 @@ class Map(object):
         """
         pass
 
-    def plot_interactive(self, axis=None, rc_params=None, **kwargs):
+    def plot_interactive(self, rc_params=None, **kwargs):
         """
         Plot map with interactive widgets to explore the non spatial axes.
 
         Parameters
         ----------
-        axis : str
-            Axis name to slide through, with the interactive slider. By default
-            the first non-spatial axis is used.
         rc_params : dict
             Passed to ``matplotlib.rc_context(rc=rc_params)`` to style the plot.
         **kwargs : dict
@@ -931,8 +928,11 @@ class Map(object):
         """
         import matplotlib as mpl
         import matplotlib.pyplot as plt
-        from ipywidgets.widgets.interaction import interact
+        from ipywidgets.widgets.interaction import interact, fixed
         from ipywidgets import SelectionSlider, RadioButtons
+
+        if self.geom.is_image:
+            raise TypeError('Use .plot() for 2D Maps')
 
         kwargs.setdefault('interpolation', 'nearest')
         kwargs.setdefault('origin', 'lower')
@@ -941,30 +941,36 @@ class Map(object):
         rc_params = rc_params or {}
         stretch = kwargs.pop('stretch', 'sqrt')
 
-        if self.geom.is_image:
-            raise TypeError('Use .plot() for 2D Maps')
+        interact_kwargs = {}
 
-        axis = axis or self.geom.axes[0].name
-        map_axis = self.geom.get_axis_by_name(axis)
+        for axis in self.geom.axes:
+            if axis.node_type == 'edge':
+                options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, axis.unit) for
+                        val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])]
+            else:
+                options = ['{:.0f} {}'.format(val, axis.unit) for val in axis. center]
 
-        if map_axis.node_type == 'edge':
-            edges = map_axis.edges
-            options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, map_axis.unit) for
-                       val_min, val_max in zip(edges[:-1], edges[1:])]
-        else:
-            center = map_axis.center
-            options = ['{:.0f} {}'.format(val, map_axis.unit) for val in center]
+            interact_kwargs[axis.name] = SelectionSlider(
+                options=options,
+                description='Select {}:'.format(axis.name),
+                continuous_update=False,
+                style={'description_width': 'initial'},
+                layout={'width': '36%'}
+                )
+            interact_kwargs[axis.name + '_options'] = fixed(options)
 
-        @interact(
-            val=SelectionSlider(options=options, description='Select {}:'.format(axis),
-                                continuous_update=False, style={'description_width': 'initial'},
-                                layout={'width': '36%'}),
-            stretch=RadioButtons(options=['linear', 'sqrt', 'log'], value=stretch,
-                                 description='Select stretch:', style={'description_width': 'initial'}),
-        )
-        def _plot_interactive(val, stretch):
-            idx = options.index(val)
-            img = self.get_image_by_idx([idx])
+        interact_kwargs['stretch'] = RadioButtons(
+            options=['linear', 'sqrt', 'log'],
+            value=stretch,
+            description='Select stretch:',
+            style={'description_width': 'initial'}
+            )
+
+        @interact(**interact_kwargs)
+        def _plot_interactive(**ikwargs):
+            idx = [ikwargs[ax.name + '_options'].index(ikwargs[ax.name]) for ax in self.geom.axes]
+            img = self.get_image_by_idx(idx)
+            stretch = ikwargs['stretch']
             with mpl.rc_context(rc=rc_params):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
                 plt.show()
