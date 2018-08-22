@@ -247,20 +247,28 @@ def test_map_properties():
 
 @requires_dependency('reproject')
 def test_map_reproject_wcs_to_wcs():
-    axis1 = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
-    axis2 = MapAxis.from_bounds(1.0, 10.0, 4, interp='lin', name='time', node_type='center')
+    energy_nodes = np.arange(3)
+    time_nodes = np.arange(4)
+
+    axis1 = MapAxis(energy_nodes, interp='lin', name='energy', node_type='center')
+    axis2 = MapAxis(time_nodes, interp='lin', name='time', node_type='center')
     geom_wcs_1 = WcsGeom.create(skydir=(266.405, -28.936), npix=(11, 11),
                                 binsz=0.1, axes=[axis1, axis2], coordsys='CEL')
     geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1,
                                 axes=[axis1, axis2], coordsys='GAL')
 
-    data = np.arange(11 * 11 * 3 * 4).reshape(geom_wcs_1.data_shape)
+    spatial_data = np.zeros((11, 11))
+    energy_data = energy_nodes.reshape(3, 1, 1)
+    time_data = time_nodes.reshape(4, 1, 1, 1)
+    data =  spatial_data + energy_data + 0.5 * time_data
+
     m = WcsNDMap(geom_wcs_1, data=data)
     m_r = m.reproject(geom_wcs_2)
-
-    actual = m_r.get_by_coord({'lon': 0, 'lat': 0, 'energy': [1., 3.16227766, 10.]})
-    assert_allclose(actual, [59.98055, 180.98055, 301.98056], rtol=1e-3)
     assert m.data.shape == m_r.data.shape
+
+    for img, idx in m_r.iter_by_image():
+        ref = idx[1] + 0.5 * idx[0]
+        assert_allclose(np.nanmean(img.data), ref)
 
 
 @requires_dependency('reproject')
