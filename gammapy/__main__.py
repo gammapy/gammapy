@@ -11,4 +11,4 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from .scripts.main import cli
 
-sys.exit(cli())
+sys.exit(cli())  # pylint:disable=no-value-for-parameter
