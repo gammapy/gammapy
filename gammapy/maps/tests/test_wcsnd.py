@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.convolution import Gaussian2DKernel
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data
 from ...cube import PSFKernel
@@ -427,9 +428,11 @@ def test_coadd_unit():
 @requires_dependency('scipy')
 @pytest.mark.parametrize('kernel', ['gauss', 'box', 'disk'])
 def test_smooth(kernel):
+    axes = [MapAxis(np.logspace(0., 3., 3), interp='log'),
+            MapAxis(np.logspace(1., 3., 4), interp='lin')]
     geom = WcsGeom.create(npix=(10, 10), binsz=1,
-                          proj='CAR', coordsys='GAL')
-    m = WcsNDMap(geom, data=np.ones((10, 10)), unit='m2')
+                          proj='CAR', coordsys='GAL', axes=axes)
+    m = WcsNDMap(geom, data=np.ones(geom.data_shape), unit='m2')
 
     desired = m.data.sum()
     smoothed = m.smooth(0.2 * u.deg, kernel)
@@ -451,27 +454,18 @@ def test_make_cutout(mode):
 
 
 @requires_dependency('scipy')
-def test_convolve_2d():
-    sigma = 0.5 * u.deg
+def test_convolve_vs_smooth():
+    axes = [MapAxis(np.logspace(0., 3., 3), interp='log'),
+            MapAxis(np.logspace(1., 3., 4), interp='lin')]
+
     binsz = 0.05 * u.deg
+    m = WcsNDMap.create(binsz=binsz, width=1.05 * u.deg, axes=axes)
+    m.data[:, :, 10, 10] = 1.
 
-    testmap = WcsNDMap.create(binsz=binsz, width=5 * u.deg)
-    testmap.fill_by_coord(([1], [1]), weights=np.array([2]))
-
-    kernel = PSFKernel.from_gauss(testmap.geom, sigma, max_radius=1.5 * u.deg)
-
-    # is kernel size OK?
-    assert kernel.psf_kernel_map.geom.npix[0] == 61
-    # is kernel maximum at the center?
-    assert kernel.psf_kernel_map.data[30, 30] == np.max(kernel.psf_kernel_map.data)
-
-    conv_map = testmap.convolve(kernel)
-
-    # Is convolved map normalization OK
-    assert_allclose(conv_map.data.sum(), 2.0, atol=1e-3)
-
-    # Is the maximum in the convolved map at the right position?
-    assert conv_map.get_by_coord([1, 1]) == np.max(conv_map.data)
+    desired = m.smooth(kernel='gauss', radius=0.25 * u.deg)
+    gauss = Gaussian2DKernel(5)
+    actual = m.convolve(kernel=gauss)
+    assert_allclose(actual, desired)
 
 
 @requires_dependency('scipy')
