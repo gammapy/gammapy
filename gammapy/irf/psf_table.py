@@ -250,9 +250,9 @@ class TablePSF(object):
 
         self._dp_dr /= integral
 
-        # Don't divide by 0
-        EPS = 1e-6
-        rad = np.clip(self._rad.radian, EPS, None)
+        # Clip to small positive number to avoid divide by 0
+        rad = np.clip(self._rad.radian, 1e-6, None)
+
         rad = Quantity(rad, 'radian')
         self._dp_domega = self._dp_dr / (2 * np.pi * rad)
         self._compute_splines(self._spline_kwargs)
@@ -701,9 +701,8 @@ class EnergyDependentTablePSF(object):
             PSF value array
         """
         psf_values = self.psf_value[energy_index, :].flatten().copy()
-        where_are_NaNs = np.isnan(psf_values)
         # When the PSF Table is not filled (with nan), the psf estimation at a given energy crashes
-        psf_values[where_are_NaNs] = 0
+        psf_values[np.isnan(psf_values)] = 0
         return psf_values
 
     def _get_1d_table_psf(self, energy_index, **kwargs):
