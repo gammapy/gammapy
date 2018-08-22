@@ -325,7 +325,6 @@ class Map(object):
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
-    @abc.abstractmethod
     def iter_by_image(self):
         """Iterate over image planes of the map returning a tuple with the image
         array and image plane index.
@@ -337,9 +336,9 @@ class Map(object):
         idx : tuple
             Index of image plane.
         """
-        pass
+        for idx in np.ndindex(self.geom.shape):
+            yield self.data[idx[::-1]], idx
 
-    @abc.abstractmethod
     def iter_by_pix(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         pixel coordinates.
@@ -357,9 +356,12 @@ class Map(object):
         pix : tuple
             Tuple of pixel coordinates.
         """
-        pass
+        pix = list(self.geom.get_idx(flat=True))
+        vals = self.data[np.isfinite(self.data)]
+        return unpack_seq(np.nditer([vals] + pix,
+                                    flags=['external_loop', 'buffered'],
+                                    buffersize=buffersize))
 
-    @abc.abstractmethod
     def iter_by_coord(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         map coordinates.
@@ -377,7 +379,11 @@ class Map(object):
         coords : tuple
             Tuple of map coordinates.
         """
-        pass
+        coords = list(self.geom.get_coord(flat=True))
+        vals = self.data[np.isfinite(self.data)]
+        return unpack_seq(np.nditer([vals] + coords,
+                                    flags=['external_loop', 'buffered'],
+                                    buffersize=buffersize))
 
     @abc.abstractmethod
     def sum_over_axes(self):

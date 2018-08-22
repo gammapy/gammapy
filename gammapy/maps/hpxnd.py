@@ -171,24 +171,6 @@ class HpxNDMap(HpxMap):
         hpx2wcs.fill_wcs_map_from_hpx_data(hpx_data, wcs_data, normalize)
         return WcsNDMap(wcs, wcs_data, unit=self.unit)
 
-    def iter_by_image(self):
-        for idx in np.ndindex(self.geom.shape):
-            yield self.data[idx[::-1]], idx
-
-    def iter_by_pix(self, buffersize=1):
-        idx = list(self.geom.get_idx(flat=True))
-        vals = self.data[np.isfinite(self.data)]
-        return unpack_seq(np.nditer([vals] + idx,
-                                    flags=['external_loop', 'buffered'],
-                                    buffersize=buffersize))
-
-    def iter_by_coord(self, buffersize=1):
-        coords = list(self.geom.get_coord(flat=True))
-        vals = self.data[np.isfinite(self.data)]
-        return unpack_seq(np.nditer([vals] + coords,
-                                    flags=['external_loop', 'buffered'],
-                                    buffersize=buffersize))
-
     def sum_over_axes(self):
         """Sum over all non-spatial dimensions.
 
