@@ -8,9 +8,7 @@ from .base import Map
 from .hpx import HpxGeom, HpxConv
 from .utils import find_bintable_hdu, find_bands_hdu
 
-__all__ = [
-    'HpxMap',
-]
+__all__ = ["HpxMap"]
 
 
 class HpxMap(Map):
@@ -28,15 +26,29 @@ class HpxMap(Map):
         The map unit
     """
 
-    def __init__(self, geom, data, meta=None, unit=''):
+    def __init__(self, geom, data, meta=None, unit=""):
         super(HpxMap, self).__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None
 
     @classmethod
-    def create(cls, nside=None, binsz=None, nest=True, map_type='hpx', coordsys='CEL',
-               data=None, skydir=None, width=None, dtype='float32',
-               region=None, axes=None, conv='gadf', meta=None, unit=''):
+    def create(
+        cls,
+        nside=None,
+        binsz=None,
+        nest=True,
+        map_type="hpx",
+        coordsys="CEL",
+        data=None,
+        skydir=None,
+        width=None,
+        dtype="float32",
+        region=None,
+        axes=None,
+        conv="gadf",
+        meta=None,
+        unit="",
+    ):
         """Factory method to create an empty HEALPix map.
 
         Parameters
@@ -80,19 +92,27 @@ class HpxMap(Map):
         from .hpxnd import HpxNDMap
         from .hpxsparse import HpxSparseMap
 
-        hpx = HpxGeom.create(nside=nside, binsz=binsz,
-                             nest=nest, coordsys=coordsys, region=region,
-                             conv=conv, axes=axes, skydir=skydir, width=width)
-        if cls.__name__ == 'HpxNDMap':
+        hpx = HpxGeom.create(
+            nside=nside,
+            binsz=binsz,
+            nest=nest,
+            coordsys=coordsys,
+            region=region,
+            conv=conv,
+            axes=axes,
+            skydir=skydir,
+            width=width,
+        )
+        if cls.__name__ == "HpxNDMap":
             return HpxNDMap(hpx, dtype=dtype, meta=meta, unit=unit)
-        elif cls.__name__ == 'HpxSparseMap':
+        elif cls.__name__ == "HpxSparseMap":
             return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
-        elif map_type == 'hpx':
+        elif map_type == "hpx":
             return HpxNDMap(hpx, dtype=dtype, meta=meta, unit=unit)
-        elif map_type == 'hpx-sparse':
+        elif map_type == "hpx-sparse":
             return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
         else:
-            raise ValueError('Unrecognized map type: {}'.format(map_type))
+            raise ValueError("Unrecognized map type: {!r}".format(map_type))
 
     @classmethod
     def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
@@ -128,7 +148,7 @@ class HpxMap(Map):
 
         return cls.from_hdu(hdu_out, hdu_bands_out)
 
-    def to_hdulist(self, hdu='SKYMAP', hdu_bands=None, sparse=False, conv=None):
+    def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -149,17 +169,17 @@ class HpxMap(Map):
         hdu_list : `~astropy.io.fits.HDUList`
         """
         if self.geom.axes:
-            hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands, hdu_skymap=hdu,
-                                                     conv=conv)
+            hdu_bands_out = self.geom.make_bands_hdu(
+                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+            )
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands_out = None
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse,
-                                conv=conv)
-        hdu_out.header['META'] = json.dumps(self.meta)
-        hdu_out.header['UNIT'] = self.unit.to_string('fits')
+        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
+        hdu_out.header["META"] = json.dumps(self.meta)
+        hdu_out.header["UNIT"] = self.unit.to_string("fits")
 
         hdu_list = fits.HDUList([fits.PrimaryHDU(), hdu_out])
 
@@ -169,8 +189,15 @@ class HpxMap(Map):
         return hdu_list
 
     @abc.abstractmethod
-    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2,
-               width_pix=None, hpx2wcs=None):
+    def to_wcs(
+        self,
+        sum_bands=False,
+        normalize=True,
+        proj="AIT",
+        oversample=2,
+        width_pix=None,
+        hpx2wcs=None,
+    ):
         """Make a WCS object and convert HEALPIX data into WCS projection.
 
         Parameters
@@ -202,7 +229,6 @@ class HpxMap(Map):
         -------
         map_out : `~gammapy.maps.WcsMap`
             WCS map object.
-
         """
         pass
 
@@ -225,7 +251,6 @@ class HpxMap(Map):
         ----------
         nside : int
             NSIDE parameter of the new map.
-
         preserve_counts : bool
             Choose whether to preserve counts (total amplitude) or
             intensity (amplitude per unit solid angle).
@@ -266,19 +291,18 @@ class HpxMap(Map):
         header = self.geom.make_header(conv=conv)
 
         if self.geom.axes:
-            header['BANDSHDU'] = hduname_bands
+            header["BANDSHDU"] = hduname_bands
 
         if sparse:
-            header['INDXSCHM'] = 'SPARSE'
+            header["INDXSCHM"] = "SPARSE"
 
         cols = []
-        if header['INDXSCHM'] == 'EXPLICIT':
+        if header["INDXSCHM"] == "EXPLICIT":
             array = self.geom._ipix
-            cols.append(fits.Column('PIX', 'J', array=array))
-        elif header['INDXSCHM'] == 'LOCAL':
+            cols.append(fits.Column("PIX", "J", array=array))
+        elif header["INDXSCHM"] == "LOCAL":
             array = np.arange(self.data.shape[-1])
-            cols.append(fits.Column('PIX', 'J', array=array))
+            cols.append(fits.Column("PIX", "J", array=array))
 
         cols += self._make_cols(header, conv)
-        return fits.BinTableHDU.from_columns(cols, header=header,
-                                             name=hduname)
+        return fits.BinTableHDU.from_columns(cols, header=header, name=hduname)
