@@ -10,6 +10,7 @@ from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from .geom import pix_tuple_to_idx, MapCoord
+from .utils import unpack_seq
 from ..extern import six
 from ..utils.scripts import make_path
 
@@ -327,7 +328,7 @@ class Map(object):
 
     def iter_by_image(self):
         """Iterate over image planes of the map returning a tuple with the image
-        array and image plane index.
+        array and image plane index in the data array.
 
         Returns
         -------
@@ -337,7 +338,7 @@ class Map(object):
             Index of image plane.
         """
         for idx in np.ndindex(self.geom.shape):
-            yield self.data[idx[::-1]], idx
+            yield self.data[idx[::-1]], idx[::-1]
 
     def iter_by_pix(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and

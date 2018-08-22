@@ -8,7 +8,6 @@ import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
-from .utils import unpack_seq
 from .geom import pix_tuple_to_idx
 from .wcs import _check_width
 from .utils import interp_to_order

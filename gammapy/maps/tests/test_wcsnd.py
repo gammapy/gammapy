@@ -462,10 +462,10 @@ def test_convolve_vs_smooth():
     m = WcsNDMap.create(binsz=binsz, width=1.05 * u.deg, axes=axes)
     m.data[:, :, 10, 10] = 1.
 
-    desired = m.smooth(kernel='gauss', radius=0.25 * u.deg)
-    gauss = Gaussian2DKernel(5)
+    desired = m.smooth(kernel='gauss', radius=0.5 * u.deg, mode='constant')
+    gauss = Gaussian2DKernel(5).array
     actual = m.convolve(kernel=gauss)
-    assert_allclose(actual, desired)
+    assert_allclose(actual.data, desired.data, rtol=1e-3)
 
 
 @requires_dependency('scipy')
