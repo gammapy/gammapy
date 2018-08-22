@@ -41,10 +41,9 @@ class SensitivityEstimator(object):
 
         filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
         irf = CTAPerf.read(filename)
-        sens = SensitivityEstimator(irf=irf, livetime='5h')
-        sens.run()
-        print(sens.results_table)
-        sens.plot()
+        sensitivity_estimator = SensitivityEstimator(irf=irf, livetime='5h')
+        sensitivity_estimator.run()
+        print(sensitivity_estimator.results_table)
 
     Further examples in :gp-extra-notebook:`cta_sensitivity` .
 
@@ -137,28 +136,3 @@ class SensitivityEstimator(object):
             ),
         ])
         self._results_table = table
-
-    def plot(self, ax=None):
-        """Plot the sensitivity curve."""
-        import matplotlib.pyplot as plt
-
-        energy = self.results_table['energy'].quantity
-        dnde = self.results_table['e2dnde'].quantity
-
-        fig = plt.figure()
-        fig.canvas.set_window_title("Sensitivity")
-        ax = ax or plt.gca()
-
-        label = r"        $\sigma$=" + str(self.sigma) + " T=" + \
-                str(self.livetime.to('h').value) + "h \n" + r"$\alpha$=" + str(self.alpha) + \
-                r" Syst$_{BKG}$=" + str(self.bkg_sys * 100) + "%" + r" $\gamma_{min}$=" + str(self.gamma_min)
-        ax.plot(energy.value, dnde.value, color='red', label=label)
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.grid(True)
-        ax.set_xlabel('Reco Energy [{}]'.format(energy.unit))
-        ax.set_ylabel('Sensitivity [{}]'.format(dnde.unit))
-
-        plt.legend()
-        return ax

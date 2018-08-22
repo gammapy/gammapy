@@ -19,7 +19,7 @@ def sens():
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_cta_sensitivity_table(sens):
+def test_cta_sensitivity_estimator(sens):
     table = sens.results_table
 
     assert len(table) == 21
@@ -50,10 +50,3 @@ def test_cta_sensitivity_table(sens):
     assert_allclose(row['excess'], 10, rtol=1e-3)
     assert_allclose(row['background'], 0.00566093, rtol=1e-3)
     assert row['criterion'] == 'gamma'
-
-
-@requires_dependency('scipy')
-@requires_dependency('matplotlib')
-@requires_data('gammapy-extra')
-def test_cta_sensitivity_plot(sens):
-    sens.plot()
