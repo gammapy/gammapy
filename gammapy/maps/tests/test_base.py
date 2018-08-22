@@ -261,14 +261,15 @@ def test_map_reproject_wcs_to_wcs():
     energy_data = energy_nodes.reshape(3, 1, 1)
     time_data = time_nodes.reshape(4, 1, 1, 1)
     data = spatial_data + energy_data + 0.5 * time_data
-
     m = WcsNDMap(geom_wcs_1, data=data)
+
     m_r = m.reproject(geom_wcs_2)
+
     assert m.data.shape == m_r.data.shape
 
-    for img, idx in m_r.iter_by_image():
+    for data, idx in m_r.iter_by_image():
         ref = idx[1] + 0.5 * idx[0]
-        assert_allclose(np.nanmean(img.data), ref)
+        assert_allclose(np.nanmean(data), ref)
 
 
 @requires_dependency('reproject')
