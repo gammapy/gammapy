@@ -247,13 +247,14 @@ def test_map_properties():
 
 @requires_dependency('reproject')
 def test_map_reproject_wcs_to_wcs():
-    axis = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
+    axis1 = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
+    axis2 = MapAxis.from_bounds(1.0, 10.0, 4, interp='lin', name='time', node_type='center')
     geom_wcs_1 = WcsGeom.create(skydir=(266.405, -28.936), npix=(11, 11),
-                                binsz=0.1, axes=[axis], coordsys='CEL')
+                                binsz=0.1, axes=[axis1, axis2], coordsys='CEL')
     geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1,
-                                axes=[axis], coordsys='GAL')
+                                axes=[axis1, axis2], coordsys='GAL')
 
-    data = np.arange(11 * 11 * 3).reshape(geom_wcs_1.data_shape)
+    data = np.arange(11 * 11 * 3 * 4).reshape(geom_wcs_1.data_shape)
     m = WcsNDMap(geom_wcs_1, data=data)
     m_r = m.reproject(geom_wcs_2)
 
