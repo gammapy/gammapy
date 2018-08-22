@@ -19,17 +19,15 @@ from .geom import find_and_read_bands, make_axes
 # HPX_FITS_CONVENTIONS, HpxConv
 __all__ = ["HpxGeom"]
 
-# This is an approximation of the size of HEALPIX pixels (in degrees)
-# for a particular order.   It is used to convert from HEALPIX to WCS-based
-# projections
+# Approximation of the size of HEALPIX pixels (in degrees) for a particular order.
+# Used to convert from HEALPIX to WCS-based projections.
 HPX_ORDER_TO_PIXSIZE = np.array(
     [32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 0.50, 0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.002]
 )
 
 
 class HpxConv(object):
-    """Data structure to define how a HEALPIX map is stored to FITS.
-    """
+    """Data structure to define how a HEALPIX map is stored to FITS."""
 
     def __init__(self, convname, **kwargs):
         self.convname = convname
