@@ -14,9 +14,7 @@ from .utils import interp_to_order
 from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 
-__all__ = [
-    'WcsNDMap',
-]
+__all__ = ["WcsNDMap"]
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +41,7 @@ class WcsNDMap(WcsMap):
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
+    def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
         # TODO: Figure out how to mask pixels for integer data types
 
         data_shape = geom.data_shape
@@ -59,14 +57,18 @@ class WcsNDMap(WcsMap):
         coords = []
         if not geom.is_regular:
             for idx in np.ndindex(geom.shape):
-                pix = (np.array([0.0, float(geom.npix[0][idx] - 1)]),
-                       np.array([0.0, float(geom.npix[1][idx] - 1)]))
+                pix = (
+                    np.array([0.0, float(geom.npix[0][idx] - 1)]),
+                    np.array([0.0, float(geom.npix[1][idx] - 1)]),
+                )
                 pix += tuple([np.array(2 * [t]) for t in idx])
                 coords += geom.pix_to_coord(pix)
 
         else:
-            pix = (np.array([0.0, float(geom.npix[0] - 1)]),
-                   np.array([0.0, float(geom.npix[1] - 1)]))
+            pix = (
+                np.array([0.0, float(geom.npix[0] - 1)]),
+                np.array([0.0, float(geom.npix[1] - 1)]),
+            )
             pix += tuple([np.array(2 * [0.0]) for i in range(geom.ndim - 2)])
             coords += geom.pix_to_coord(pix)
 
@@ -76,9 +78,7 @@ class WcsNDMap(WcsMap):
             else:
                 data = np.full(shape_np, np.nan, dtype=dtype)
                 for idx in np.ndindex(geom.shape):
-                    data[idx,
-                         slice(geom.npix[0][idx]),
-                         slice(geom.npix[1][idx])] = 0.0
+                    data[idx, slice(geom.npix[0][idx]), slice(geom.npix[1][idx])] = 0.0
         else:
             data = np.full(shape_np, np.nan, dtype=dtype)
             idx = geom.get_idx()
@@ -100,21 +100,20 @@ class WcsNDMap(WcsMap):
         """
         geom = WcsGeom.from_header(hdu.header, hdu_bands)
         shape = tuple([ax.nbin for ax in geom.axes])
-        shape_wcs = tuple([np.max(geom.npix[0]),
-                           np.max(geom.npix[1])])
+        shape_wcs = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])])
         meta = cls._get_meta_from_header(hdu.header)
 
-        unit = hdu.header.get('UNIT', '')
+        unit = hdu.header.get("UNIT", "")
 
         map_out = cls(geom, meta=meta, unit=unit)
 
         # TODO: Should we support extracting slices?
         if isinstance(hdu, fits.BinTableHDU):
-            pix = hdu.data.field('PIX')
+            pix = hdu.data.field("PIX")
             pix = np.unravel_index(pix, shape_wcs[::-1])
-            vals = hdu.data.field('VALUE')
-            if 'CHANNEL' in hdu.data.columns.names and shape:
-                chan = hdu.data.field('CHANNEL')
+            vals = hdu.data.field("VALUE")
+            if "CHANNEL" in hdu.data.columns.names and shape:
+                chan = hdu.data.field("CHANNEL")
                 chan = np.unravel_index(chan, shape[::-1])
                 idx = chan + pix
             else:
@@ -142,26 +141,28 @@ class WcsNDMap(WcsMap):
         """Interpolate map values at the given pixel coordinates.
         """
         if not self.geom.is_regular:
-            raise ValueError('Pixel-based interpolation not supported for '
-                             'non-regular geometries.')
+            raise ValueError("interp_by_pix only supported for regular geom.")
 
         order = interp_to_order(interp)
         if order == 0 or order == 1:
-            return self._interp_by_pix_linear_grid(pix, order=order, fill_value=fill_value)
+            return self._interp_by_pix_linear_grid(
+                pix, order=order, fill_value=fill_value
+            )
         elif order == 2 or order == 3:
             return self._interp_by_pix_map_coordinates(pix, order=order)
         else:
-            raise ValueError('Invalid interpolation order: {}'.format(order))
+            raise ValueError("Invalid interpolation order: {!r}".format(order))
 
     def _interp_by_pix_linear_grid(self, pix, order=1, fill_value=None):
         # TODO: Cache interpolator
-        method_lookup = {0: 'nearest', 1: 'linear'}
+        method_lookup = {0: "nearest", 1: "linear"}
         try:
             method = method_lookup[order]
         except KeyError:
-            raise ValueError('Invalid interpolation order: {}'.format(order))
+            raise ValueError("Invalid interpolation order: {!r}".format(order))
 
         from scipy.interpolate import RegularGridInterpolator
+
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -170,32 +171,42 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data.T
 
-        fn = RegularGridInterpolator(grid_pix, data, fill_value=fill_value,
-                                     bounds_error=False, method=method)
+        fn = RegularGridInterpolator(
+            grid_pix, data, fill_value=fill_value, bounds_error=False, method=method
+        )
         return fn(tuple(pix))
 
     def _interp_by_pix_map_coordinates(self, pix, order=1):
         from scipy.ndimage import map_coordinates
-        pix = tuple([np.array(x, ndmin=1)
-                     if not isinstance(x, np.ndarray) or x.ndim == 0 else x for x in pix])
-        return map_coordinates(self.data.T, pix, order=order, mode='nearest')
+
+        pix = tuple(
+            [
+                np.array(x, ndmin=1)
+                if not isinstance(x, np.ndarray) or x.ndim == 0
+                else x
+                for x in pix
+            ]
+        )
+        return map_coordinates(self.data.T, pix, order=order, mode="nearest")
 
     def _interp_by_coord_griddata(self, coords, interp=None):
         order = interp_to_order(interp)
-        method_lookup = {0: 'nearest', 1: 'linear', 3: 'cubic'}
+        method_lookup = {0: "nearest", 1: "linear", 3: "cubic"}
         method = method_lookup.get(order, None)
         if method is None:
-            raise ValueError('Invalid interpolation method: {}'.format(interp))
+            raise ValueError("Invalid interp: {!r}".format(interp))
 
         from scipy.interpolate import griddata
+
         grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
         vals = griddata(grid_coords, data, tuple(coords), method=method)
 
         m = ~np.isfinite(vals)
         if np.any(m):
-            vals_fill = griddata(grid_coords, data, tuple([c[m] for c in coords]),
-                                 method='nearest')
+            vals_fill = griddata(
+                grid_coords, data, tuple([c[m] for c in coords]), method="nearest"
+            )
             vals[m] = vals_fill
 
         return vals
@@ -226,7 +237,7 @@ class WcsNDMap(WcsMap):
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_to_wcs(self, geom, mode='interp', order=1):
+    def _reproject_to_wcs(self, geom, mode="interp", order=1):
         from reproject import reproject_interp, reproject_exact
 
         data = np.empty(geom.data_shape)
@@ -236,59 +247,63 @@ class WcsNDMap(WcsMap):
             # multi-resolution geom
             shape_out = geom.get_image_shape(idx)[::-1]
 
-            if self.geom.projection == 'CAR' and self.geom.is_allsky:
-                vals, footprint = reproject_car_to_wcs((img, self.geom.wcs),
-                                                       geom.wcs,
-                                                       shape_out=shape_out)
-            elif mode == 'interp':
-                vals, footprint = reproject_interp((img, self.geom.wcs),
-                                                   geom.wcs,
-                                                   shape_out=shape_out)
-            elif mode == 'exact':
-                vals, footprint = reproject_exact((img, self.geom.wcs),
-                                                  geom.wcs,
-                                                  shape_out=shape_out)
+            if self.geom.projection == "CAR" and self.geom.is_allsky:
+                vals, footprint = reproject_car_to_wcs(
+                    (img, self.geom.wcs), geom.wcs, shape_out=shape_out
+                )
+            elif mode == "interp":
+                vals, footprint = reproject_interp(
+                    (img, self.geom.wcs), geom.wcs, shape_out=shape_out
+                )
+            elif mode == "exact":
+                vals, footprint = reproject_exact(
+                    (img, self.geom.wcs), geom.wcs, shape_out=shape_out
+                )
             else:
                 raise TypeError(
-                    "Invalid reprojection mode, either choose 'interp' or 'exact'")
+                    "mode must be 'interp' or 'exact'. Got: {!r}".format(mode)
+                )
 
             data[idx] = vals
 
         return self._init_copy(geom=geom, data=data)
 
-    def _reproject_to_hpx(self, geom, mode='interp', order=1):
+    def _reproject_to_hpx(self, geom, mode="interp", order=1):
         from reproject import reproject_to_healpix
 
         data = np.empty(geom.data_shape)
-        coordsys = 'galactic' if geom.coordsys == 'GAL' else 'icrs'
+        coordsys = "galactic" if geom.coordsys == "GAL" else "icrs"
 
         for img, idx in self.iter_by_image():
             # TODO: For partial-sky HPX we need to map from full- to
             # partial-sky indices
-            if self.geom.projection == 'CAR' and self.geom.is_allsky:
-                vals, footprint = reproject_car_to_hpx((img, self.geom.wcs),
-                                                       coordsys,
-                                                       nside=geom.nside,
-                                                       nested=geom.nest,
-                                                       order=order)
+            if self.geom.projection == "CAR" and self.geom.is_allsky:
+                vals, footprint = reproject_car_to_hpx(
+                    (img, self.geom.wcs),
+                    coordsys,
+                    nside=geom.nside,
+                    nested=geom.nest,
+                    order=order,
+                )
             else:
-                vals, footprint = reproject_to_healpix((img, self.geom.wcs),
-                                                       coordsys,
-                                                       nside=geom.nside,
-                                                       nested=geom.nest,
-                                                       order=order)
+                vals, footprint = reproject_to_healpix(
+                    (img, self.geom.wcs),
+                    coordsys,
+                    nside=geom.nside,
+                    nested=geom.nest,
+                    order=order,
+                )
             data[idx] = vals
 
         return self._init_copy(geom=geom, data=data)
 
-    def pad(self, pad_width, mode='constant', cval=0, order=1):
-
+    def pad(self, pad_width, mode="constant", cval=0, order=1):
         if np.isscalar(pad_width):
             pad_width = (pad_width, pad_width)
             pad_width += (0,) * (self.geom.ndim - 2)
 
         geom = self.geom.pad(pad_width[:2])
-        if self.geom.is_regular and mode != 'interp':
+        if self.geom.is_regular and mode != "interp":
             return self._pad_np(geom, pad_width, mode, cval)
         else:
             return self._pad_coadd(geom, pad_width, mode, cval, order)
@@ -299,8 +314,8 @@ class WcsNDMap(WcsMap):
         large maps.
         """
         kwargs = {}
-        if mode == 'constant':
-            kwargs['constant_values'] = cval
+        if mode == "constant":
+            kwargs["constant_values"] = cval
 
         pad_width = [(t, t) for t in pad_width]
         data = np.pad(self.data, pad_width[::-1], mode)
@@ -314,29 +329,33 @@ class WcsNDMap(WcsMap):
         idx_out = geom.get_idx(flat=True)[::-1]
         map_out = self._init_copy(geom=geom, data=None)
         map_out.coadd(self)
-        if mode == 'constant':
+
+        if mode == "constant":
             pad_msk = np.zeros_like(map_out.data, dtype=bool)
             pad_msk[idx_out] = True
             pad_msk[idx_in] = False
             map_out.data[pad_msk] = cval
-        elif mode in ['edge', 'interp']:
+        elif mode in ["edge", "interp"]:
             coords = geom.pix_to_coord(idx_out[::-1])
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
-            vals = self.interp_by_coord(coords, interp=0 if mode == 'edge' else order)
+            vals = self.interp_by_coord(coords, interp=0 if mode == "edge" else order)
             map_out.set_by_coord(coords, vals)
         else:
-            raise ValueError('Unrecognized pad mode: {}'.format(mode))
+            raise ValueError("Invalid mode: {!r}".format(mode))
 
         return map_out
 
     def crop(self, crop_width):
         if np.isscalar(crop_width):
             crop_width = (crop_width, crop_width)
+
         geom = self.geom.crop(crop_width)
         if self.geom.is_regular:
-            slices = [slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
-                      slice(crop_width[1], int(self.geom.npix[1] - crop_width[1]))]
+            slices = [
+                slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
+                slice(crop_width[1], int(self.geom.npix[1] - crop_width[1])),
+            ]
             for ax in self.geom.axes:
                 slices += [slice(None)]
             data = self.data[slices[::-1]]
@@ -351,13 +370,17 @@ class WcsNDMap(WcsMap):
 
     def upsample(self, factor, order=0, preserve_counts=True):
         from scipy.ndimage import map_coordinates
+
         geom = self.geom.upsample(factor)
         idx = geom.get_idx()
-        pix = ((idx[0] - 0.5 * (factor - 1)) / factor,
-               (idx[1] - 0.5 * (factor - 1)) / factor,) + idx[2:]
-        data = map_coordinates(self.data.T, pix, order=order, mode='nearest')
+        pix = (
+            (idx[0] - 0.5 * (factor - 1)) / factor,
+            (idx[1] - 0.5 * (factor - 1)) / factor,
+        ) + idx[2:]
+        data = map_coordinates(self.data.T, pix, order=order, mode="nearest")
         if preserve_counts:
             data /= factor ** 2
+
         return self._init_copy(geom=geom, data=data)
 
     def downsample(self, factor, preserve_counts=True):
@@ -366,9 +389,10 @@ class WcsNDMap(WcsMap):
         data = block_reduce(self.data, block_size[::-1], np.nansum)
         if not preserve_counts:
             data /= factor ** 2
+
         return self._init_copy(geom=geom, data=data)
 
-    def plot(self, ax=None, fig=None, add_cbar=False, stretch='linear', **kwargs):
+    def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):
         """
         Plot image on matplotlib WCS axes.
 
@@ -399,24 +423,26 @@ class WcsNDMap(WcsMap):
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
         if not self.geom.is_image:
-            raise TypeError('Use .plot_interactive() for Map dimension > 2')
+            raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
         if fig is None:
             fig = plt.gcf()
 
         if ax is None:
             if self.geom.is_allsky:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame)
+                ax = fig.add_subplot(
+                    1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
+                )
             else:
                 ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
 
         data = self.data.astype(float)
 
-        kwargs.setdefault('interpolation', 'nearest')
-        kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault("interpolation", "nearest")
+        kwargs.setdefault("origin", "lower")
+        kwargs.setdefault("cmap", "afmhot")
         norm = simple_norm(data[np.isfinite(data)], stretch)
-        kwargs.setdefault('norm', norm)
+        kwargs.setdefault("norm", norm)
 
         caxes = ax.imshow(data, **kwargs)
         cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
@@ -436,11 +462,11 @@ class WcsNDMap(WcsMap):
 
     def _plot_format(self, ax):
         try:
-            ax.coords['glon'].set_axislabel('Galactic Longitude')
-            ax.coords['glat'].set_axislabel('Galactic Latitude')
+            ax.coords["glon"].set_axislabel("Galactic Longitude")
+            ax.coords["glat"].set_axislabel("Galactic Latitude")
         except KeyError:
-            ax.coords['ra'].set_axislabel('Right Ascension')
-            ax.coords['dec'].set_axislabel('Declination')
+            ax.coords["ra"].set_axislabel("Right Ascension")
+            ax.coords["dec"].set_axislabel("Declination")
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
         return ax
@@ -451,27 +477,27 @@ class WcsNDMap(WcsMap):
 
         # Set plot axis limits
         ymax, xmax = self.data.shape
-        xmargin, _ = self.geom.coord_to_pix({'lon': 180, 'lat': 0})
-        _, ymargin = self.geom.coord_to_pix({'lon': 0, 'lat': -90})
+        xmargin, _ = self.geom.coord_to_pix({"lon": 180, "lat": 0})
+        _, ymargin = self.geom.coord_to_pix({"lon": 0, "lat": -90})
 
         ax.set_xlim(xmargin, xmax - xmargin)
         ax.set_ylim(ymargin, ymax - ymargin)
 
-        ax.text(0, ymax, self.geom.coordsys + ' coords')
+        ax.text(0, ymax, self.geom.coordsys + " coords")
 
         # Grid and ticks
         glon_spacing, glat_spacing = 45, 15
         lon, lat = ax.coords
-        lon.set_ticks(spacing=glon_spacing * u.deg, color='w', alpha=0.8)
+        lon.set_ticks(spacing=glon_spacing * u.deg, color="w", alpha=0.8)
         lat.set_ticks(spacing=glat_spacing * u.deg)
         lon.set_ticks_visible(False)
 
-        lon.set_ticklabel(color='w', alpha=0.8)
-        lon.grid(alpha=0.2, linestyle='solid', color='w')
-        lat.grid(alpha=0.2, linestyle='solid', color='w')
+        lon.set_ticklabel(color="w", alpha=0.8)
+        lon.grid(alpha=0.2, linestyle="solid", color="w")
+        lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def smooth(self, radius, kernel='gauss', **kwargs):
+    def smooth(self, radius, kernel="gauss", **kwargs):
         """
         Smooth the image (works on a 2D image and returns a copy).
 
@@ -499,24 +525,24 @@ class WcsNDMap(WcsMap):
         from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
         if isinstance(radius, Quantity):
-            radius = (radius.to('deg') / self.geom.pixel_scales.mean()).value
+            radius = (radius.to("deg") / self.geom.pixel_scales.mean()).value
 
         smoothed_data = np.empty_like(self.data)
 
         for img, idx in self.iter_by_image():
-            if kernel == 'gauss':
+            if kernel == "gauss":
                 width = radius / 2.
                 data = gaussian_filter(img, width, **kwargs)
-            elif kernel == 'disk':
+            elif kernel == "disk":
                 width = 2 * radius + 1
                 disk = Tophat2DKernel(width)
-                disk.normalize('integral')
+                disk.normalize("integral")
                 data = convolve(img, disk.array, **kwargs)
-            elif kernel == 'box':
+            elif kernel == "box":
                 width = 2 * radius + 1
                 data = uniform_filter(img, width, **kwargs)
             else:
-                raise ValueError('Invalid option kernel = {}'.format(kernel))
+                raise ValueError("Invalid kernel: {!r}".format(kernel))
             smoothed_data[idx] = data
 
         return self._init_copy(data=smoothed_data)
@@ -551,13 +577,14 @@ class WcsNDMap(WcsMap):
         conv_function = fftconvolve if use_fft else convolve
         convolved_data = np.empty(self.data.shape, dtype=np.float32)
         if use_fft:
-            kwargs.setdefault('mode', 'same')
+            kwargs.setdefault("mode", "same")
 
         if isinstance(kernel, PSFKernel):
             kmap = kernel.psf_kernel_map
-            if not np.allclose(self.geom.pixel_scales.deg,
-                               kmap.geom.pixel_scales.deg, rtol=1e-5):
-                raise ValueError('Pixel size of kernel and map not compatible.')
+            if not np.allclose(
+                self.geom.pixel_scales.deg, kmap.geom.pixel_scales.deg, rtol=1e-5
+            ):
+                raise ValueError("Pixel size of kernel and map not compatible.")
             kernel = kmap.data
 
         for img, idx in self.iter_by_image():
@@ -566,7 +593,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=convolved_data)
 
-    def cutout(self, position, width, mode='trim'):
+    def cutout(self, position, width, mode="trim"):
         """
         Create a cutout around a given position.
 

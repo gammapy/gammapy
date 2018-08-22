@@ -260,7 +260,7 @@ def test_map_reproject_wcs_to_wcs():
     spatial_data = np.zeros((11, 11))
     energy_data = energy_nodes.reshape(3, 1, 1)
     time_data = time_nodes.reshape(4, 1, 1, 1)
-    data =  spatial_data + energy_data + 0.5 * time_data
+    data = spatial_data + energy_data + 0.5 * time_data
 
     m = WcsNDMap(geom_wcs_1, data=data)
     m_r = m.reproject(geom_wcs_2)

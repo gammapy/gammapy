@@ -7,9 +7,7 @@ from .geom import pix_tuple_to_idx
 from .hpxmap import HpxMap
 from .hpx import HpxGeom
 
-__all__ = [
-    'HpxSparseMap',
-]
+__all__ = ["HpxSparseMap"]
 
 
 class HpxSparseMap(HpxMap):
@@ -30,7 +28,7 @@ class HpxSparseMap(HpxMap):
         The map unit
     """
 
-    def __init__(self, geom, data=None, dtype='float32', meta=None, unit=''):
+    def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
         if data is None:
             shape = tuple([np.max(geom.npix)] + [ax.nbin for ax in geom.axes])
             data = SparseArray(shape[::-1], dtype=dtype)
@@ -59,11 +57,11 @@ class HpxSparseMap(HpxMap):
 
         colnames = hdu.columns.names
         cnames = []
-        if hdu.header['INDXSCHM'] == 'SPARSE':
-            pix = hdu.data.field('PIX')
-            vals = hdu.data.field('VALUE')
-            if 'CHANNEL' in hdu.data.columns.names:
-                chan = hdu.data.field('CHANNEL')
+        if hdu.header["INDXSCHM"] == "SPARSE":
+            pix = hdu.data.field("PIX")
+            vals = hdu.data.field("VALUE")
+            if "CHANNEL" in hdu.data.columns.names:
+                chan = hdu.data.field("CHANNEL")
                 chan = np.unravel_index(chan, shape)
                 idx = chan + (pix,)
             else:
@@ -122,32 +120,31 @@ class HpxSparseMap(HpxMap):
     def _make_cols(self, header, conv):
         shape = self.data.shape
         cols = []
-        if header['INDXSCHM'] == 'SPARSE':
+        if header["INDXSCHM"] == "SPARSE":
+            array = self.data.data.astype(float)
             idx = np.unravel_index(self.data.idx, shape)
             pix = self.geom.local_to_global(idx[::-1])[0]
             if len(shape) == 1:
-                cols.append(fits.Column('PIX', 'J', array=pix))
-                array = self.data.data.astype(float)
-                cols.append(fits.Column('VALUE', 'E', array=array))
+                cols.append(fits.Column("PIX", "J", array=pix))
+                cols.append(fits.Column("VALUE", "E", array=array))
             else:
                 channel = np.ravel_multi_index(idx[:-1], shape[:-1])
-                cols.append(fits.Column('PIX', 'J', array=pix))
-                cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                array = self.data.data.astype(float)
-                cols.append(fits.Column('VALUE', 'E', array=array))
+                cols.append(fits.Column("PIX", "J", array=pix))
+                cols.append(fits.Column("CHANNEL", "I", array=channel))
+                cols.append(fits.Column("VALUE", "E", array=array))
 
         elif len(shape) == 1:
             name = conv.colname(indx=conv.firstcol)
             # Use [...] to instantiate a dense array
             array = self.data[...].astype(float)
-            cols.append(fits.Column(name, 'E', array=array))
+            cols.append(fits.Column(name, "E", array=array))
         else:
             # FIXME: We should be filling undefined pixels here with NaN
             for i, idx in enumerate(np.ndindex(shape[:-1])):
                 name = conv.colname(indx=i + conv.firstcol)
                 # Use [...] to instantiate a dense array
                 array = self.data[...][idx].astype(float)
-                cols.append(fits.Column(name, 'E', array=array))
+                cols.append(fits.Column(name, "E", array=array))
 
         return cols
 
@@ -175,7 +172,7 @@ class HpxSparseMap(HpxMap):
     def downsample(self, factor):
         raise NotImplementedError
 
-    def to_wcs(self, sum_bands=False, normalize=True, proj='AIT', oversample=2):
+    def to_wcs(self, sum_bands=False, normalize=True, proj="AIT", oversample=2):
         raise NotImplementedError
 
     def to_swapped(self):

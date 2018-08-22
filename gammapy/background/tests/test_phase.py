@@ -13,27 +13,23 @@ def on_region():
     """Example on_region for testing."""
     pos = SkyCoord('08h35m20.65525s', '-45d10m35.1545s', frame='icrs')
     radius = Angle(0.2, 'deg')
-    region = CircleSkyRegion(pos, radius)
-    return region
+    return CircleSkyRegion(pos, radius)
 
 
 @pytest.fixture
 def obs_list():
     """Example observation list for testing."""
-    DATA_DIR = '$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps'
-    datastore = DataStore.from_dir(DATA_DIR)
-    obs_ids = [111630]
-    return datastore.obs_list(obs_ids)
+    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps')
+    return datastore.obs_list([111630])
 
 
 @pytest.fixture(scope='session')
 def phase_bkg_estimator():
     """Example background estimator for testing."""
-    estimator = PhaseBackgroundEstimator(obs_list=obs_list(),
-                                         on_region=on_region(),
-                                         on_phase=(0.5, 0.6),
-                                         off_phase=(0.7, 1))
-    return estimator
+    return PhaseBackgroundEstimator(obs_list=obs_list(),
+                                    on_region=on_region(),
+                                    on_phase=(0.5, 0.6),
+                                    off_phase=(0.7, 1))
 
 
 @requires_data('gammapy-extra')
