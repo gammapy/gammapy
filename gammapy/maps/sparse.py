@@ -3,9 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from ._sparse import find_in_array, merge_sparse_arrays
 
-__all__ = [
-    'SparseArray',
-]
+__all__ = ["SparseArray"]
 
 
 def slices_to_idxs(slices, shape, ndim):
@@ -165,10 +163,10 @@ class SparseArray(object):
     def _to_flat_index(self, idx_in):
         """Convert index tuple to a flattened index."""
         idx_in = tuple([np.array(z, ndmin=1, copy=False) for z in idx_in])
-        msk = np.all(
-            np.stack([t < n for t, n in zip(idx_in, self.shape)]), axis=0)
-        idx = np.ravel_multi_index(tuple([t[msk] for t in idx_in]),
-                                   self.shape, mode='wrap')
+        msk = np.all(np.stack([t < n for t, n in zip(idx_in, self.shape)]), axis=0)
+        idx = np.ravel_multi_index(
+            tuple([t[msk] for t in idx_in]), self.shape, mode="wrap"
+        )
 
         return idx, msk
 
@@ -184,9 +182,9 @@ class SparseArray(object):
         vals = np.array(vals, ndmin=1)
         idx_flat_in, msk_in = self._to_flat_index(idx_in)
         vals = np.asanyarray(vals, dtype=self.data.dtype)
-        idx, data = merge_sparse_arrays(idx_flat_in, vals,
-                                        self.idx, self.data,
-                                        fill=fill)
+        idx, data = merge_sparse_arrays(
+            idx_flat_in, vals, self.idx, self.data, fill=fill
+        )
 
         # Remove elements equal to fill value
         msk = data != self._fill_value
