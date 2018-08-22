@@ -10,7 +10,6 @@ from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
 
-
 __all__ = [
     'SpectrumFit',
 ]
@@ -257,23 +256,26 @@ class SpectrumFit(object):
         statsval : tuple of `~numpy.ndarray`
             Statval
         """
-        stats_func = getattr(stats, self.stat)
-
-        if self.stat == 'cash' or self.stat == 'cstat':
-            on_stat = stats_func(n_on=obs.on_vector.data.data.value,
-                                 mu_on=prediction)
-
+        if self.stat == 'cash':
+            return stats.cash(
+                n_on=obs.on_vector.data.data.value,
+                mu_on=prediction,
+            )
+        elif self.stat == 'cstat':
+            return stats.cstat(
+                n_on=obs.on_vector.data.data.value,
+                mu_on=prediction,
+            )
         elif self.stat == 'wstat':
-            kwargs = dict(n_on=obs.on_vector.data.data.value,
-                          n_off=obs.off_vector.data.data.value,
-                          alpha=obs.alpha,
-                          mu_sig=prediction)
-            on_stat_ = stats_func(**kwargs)
-            on_stat = np.nan_to_num(on_stat_)
+            on_stat_ = stats.wstat(
+                n_on=obs.on_vector.data.data.value,
+                n_off=obs.off_vector.data.data.value,
+                alpha=obs.alpha,
+                mu_sig=prediction,
+            )
+            return np.nan_to_num(on_stat_)
         else:
             raise NotImplementedError('{}'.format(self.stat))
-
-        return on_stat
 
     def total_stat(self, parameters):
         """Statistic summed over all bins and all observations.
