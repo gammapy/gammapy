@@ -1353,17 +1353,17 @@ class MapGeom(object):
         pass
 
     def _fill_header_from_axes(self, header):
-        for i, ax in enumerate(self.axes):
-
+        for idx, ax in enumerate(self.axes, start=1):
+            key = "AXCOLS%i" % idx
+            name = ax.name.upper()
             if ax.name == "energy" and ax.node_type == "edge":
-                header["AXCOLS%i" % (i + 1)] = "E_MIN,E_MAX"
+                header[key] = "E_MIN,E_MAX"
             elif ax.name == "energy" and ax.node_type == "center":
-                header["AXCOLS%i" % (i + 1)] = "ENERGY"
+                header[key] = "ENERGY"
             elif ax.node_type == "edge":
-                val = "{}_MIN,{}_MAX".format(ax.name.upper(), ax.name.upper())
-                header["AXCOLS%i" % (i + 1)] = val
+                header[key] = "{}_MIN,{}_MAX".format(name, name)
             elif ax.node_type == "center":
-                header["AXCOLS%i" % (i + 1)] = ax.name.upper()
+                header[key] = name
             else:
                 raise ValueError("Invalid node type {!r}".format(ax.node_type))
 
