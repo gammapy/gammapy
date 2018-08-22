@@ -17,16 +17,14 @@ from .geom import find_and_read_bands, make_axes
 
 # Not sure if we should expose this in the docs or not:
 # HPX_FITS_CONVENTIONS, HpxConv
-__all__ = [
-    'HpxGeom',
-]
+__all__ = ["HpxGeom"]
 
 # This is an approximation of the size of HEALPIX pixels (in degrees)
 # for a particular order.   It is used to convert from HEALPIX to WCS-based
 # projections
-HPX_ORDER_TO_PIXSIZE = np.array([32.0, 16.0, 8.0, 4.0, 2.0, 1.0,
-                                 0.50, 0.25, 0.1, 0.05, 0.025, 0.01,
-                                 0.005, 0.002])
+HPX_ORDER_TO_PIXSIZE = np.array(
+    [32.0, 16.0, 8.0, 4.0, 2.0, 1.0, 0.50, 0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.002]
+)
 
 
 class HpxConv(object):
@@ -35,42 +33,56 @@ class HpxConv(object):
 
     def __init__(self, convname, **kwargs):
         self.convname = convname
-        self.colstring = kwargs.get('colstring', 'CHANNEL')
-        self.firstcol = kwargs.get('firstcol', 1)
-        self.hduname = kwargs.get('hduname', 'SKYMAP')
-        self.bands_hdu = kwargs.get('bands_hdu', 'EBOUNDS')
-        self.quantity_type = kwargs.get('quantity_type', 'integral')
-        self.coordsys = kwargs.get('coordsys', 'COORDSYS')
+        self.colstring = kwargs.get("colstring", "CHANNEL")
+        self.firstcol = kwargs.get("firstcol", 1)
+        self.hduname = kwargs.get("hduname", "SKYMAP")
+        self.bands_hdu = kwargs.get("bands_hdu", "EBOUNDS")
+        self.quantity_type = kwargs.get("quantity_type", "integral")
+        self.coordsys = kwargs.get("coordsys", "COORDSYS")
 
     def colname(self, indx):
-        return '{}{}'.format(self.colstring, indx)
+        return "{}{}".format(self.colstring, indx)
 
     @classmethod
-    def create(cls, convname='gadf'):
+    def create(cls, convname="gadf"):
         return copy.deepcopy(HPX_FITS_CONVENTIONS[convname])
 
 
 HPX_FITS_CONVENTIONS = {}
 """Various conventions for storing HEALPIX maps in FITS files"""
-HPX_FITS_CONVENTIONS[None] = HpxConv('gadf', bands_hdu='BANDS')
-HPX_FITS_CONVENTIONS['gadf'] = HpxConv('gadf', bands_hdu='BANDS')
-HPX_FITS_CONVENTIONS['fgst-ccube'] = HpxConv('fgst-ccube')
-HPX_FITS_CONVENTIONS['fgst-ltcube'] = HpxConv(
-    'fgst-ltcube', colstring='COSBINS', hduname='EXPOSURE', bands_hdu='CTHETABOUNDS')
-HPX_FITS_CONVENTIONS['fgst-bexpcube'] = HpxConv(
-    'fgst-bexpcube', colstring='ENERGY', hduname='HPXEXPOSURES', bands_hdu='ENERGIES')
-HPX_FITS_CONVENTIONS['fgst-srcmap'] = HpxConv(
-    'fgst-srcmap', hduname=None, quantity_type='differential')
-HPX_FITS_CONVENTIONS['fgst-template'] = HpxConv(
-    'fgst-template', colstring='ENERGY', bands_hdu='ENERGIES')
-HPX_FITS_CONVENTIONS['fgst-srcmap-sparse'] = HpxConv(
-    'fgst-srcmap-sparse', colstring=None, hduname=None, quantity_type='differential')
-HPX_FITS_CONVENTIONS['galprop'] = HpxConv(
-    'galprop', colstring='Bin', hduname='SKYMAP2',
-    bands_hdu='ENERGIES', quantity_type='differential', coordsys='COORDTYPE')
-HPX_FITS_CONVENTIONS['galprop2'] = HpxConv(
-    'galprop', colstring='Bin', hduname='SKYMAP2',
-    bands_hdu='ENERGIES', quantity_type='differential')
+HPX_FITS_CONVENTIONS[None] = HpxConv("gadf", bands_hdu="BANDS")
+HPX_FITS_CONVENTIONS["gadf"] = HpxConv("gadf", bands_hdu="BANDS")
+HPX_FITS_CONVENTIONS["fgst-ccube"] = HpxConv("fgst-ccube")
+HPX_FITS_CONVENTIONS["fgst-ltcube"] = HpxConv(
+    "fgst-ltcube", colstring="COSBINS", hduname="EXPOSURE", bands_hdu="CTHETABOUNDS"
+)
+HPX_FITS_CONVENTIONS["fgst-bexpcube"] = HpxConv(
+    "fgst-bexpcube", colstring="ENERGY", hduname="HPXEXPOSURES", bands_hdu="ENERGIES"
+)
+HPX_FITS_CONVENTIONS["fgst-srcmap"] = HpxConv(
+    "fgst-srcmap", hduname=None, quantity_type="differential"
+)
+HPX_FITS_CONVENTIONS["fgst-template"] = HpxConv(
+    "fgst-template", colstring="ENERGY", bands_hdu="ENERGIES"
+)
+HPX_FITS_CONVENTIONS["fgst-srcmap-sparse"] = HpxConv(
+    "fgst-srcmap-sparse", colstring=None, hduname=None, quantity_type="differential"
+)
+HPX_FITS_CONVENTIONS["galprop"] = HpxConv(
+    "galprop",
+    colstring="Bin",
+    hduname="SKYMAP2",
+    bands_hdu="ENERGIES",
+    quantity_type="differential",
+    coordsys="COORDTYPE",
+)
+HPX_FITS_CONVENTIONS["galprop2"] = HpxConv(
+    "galprop",
+    colstring="Bin",
+    hduname="SKYMAP2",
+    bands_hdu="ENERGIES",
+    quantity_type="differential",
+)
 
 
 def unravel_hpx_index(idx, npix):
@@ -91,7 +103,7 @@ def unravel_hpx_index(idx, npix):
     if npix.size == 1:
         return tuple([idx])
 
-    dpix = np.zeros(npix.size, dtype='i')
+    dpix = np.zeros(npix.size, dtype="i")
     dpix[1:] = np.cumsum(npix.flat[:-1])
     bidx = np.searchsorted(np.cumsum(npix.flat), idx + 1)
     pix = idx - dpix[bidx]
@@ -115,7 +127,7 @@ def ravel_hpx_index(idx, npix):
     # TODO: raise exception for indices that are out of bounds
 
     idx0 = idx[0]
-    idx1 = np.ravel_multi_index(idx[1:], npix.shape, mode='clip')
+    idx1 = np.ravel_multi_index(idx[1:], npix.shape, mode="clip")
     npix = np.concatenate((np.array([0]), npix.flat[:-1]))
 
     return idx0 + np.cumsum(npix)[idx1]
@@ -162,6 +174,7 @@ def get_nside_from_pix_size(pixsz):
         NSIDE parameter.
     """
     import healpy as hp
+
     pixsz = np.array(pixsz, ndmin=1)
     nside = 2 ** np.linspace(1, 14, 14, dtype=int)
     nside_pixsz = np.degrees(hp.nside2resol(nside))
@@ -176,8 +189,7 @@ def get_pix_size_from_nside(nside):
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
-        raise ValueError(
-            'HEALPIX order must be between 0 to 13. Value is: {}'.format(order))
+        raise ValueError("HEALPIX order must be 0 to 13. Got: {!r}".format(order))
 
     return HPX_ORDER_TO_PIXSIZE[order]
 
@@ -265,6 +277,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
         tuple(nx,ny) with the shape of the WCS grid
     """
     import healpy as hp
+
     npix = wcs.npix
 
     # FIXME: Calculation of WCS pixel centers should be moved into a
@@ -308,6 +321,7 @@ def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
     """TODO
     """
     import healpy as hp
+
     ipix_in = np.arange(12 * nside * nside)
     vecs = hp.pix2vec(nside, ipix_in, nest)
     pix_match = hp.vec2pix(nside_pix, vecs[0], vecs[1], vecs[2]) == ipix_ring
@@ -317,16 +331,15 @@ def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
 def parse_hpxregion(region):
     """Parse the ``HPX_REG`` header keyword into a list of tokens.
     """
-    m = re.match(r'([A-Za-z\_]*?)\((.*?)\)', region)
+    m = re.match(r"([A-Za-z\_]*?)\((.*?)\)", region)
 
     if m is None:
-        raise ValueError(
-            'Failed to parse hpx region string: {!r}'.format(region))
+        raise ValueError("Failed to parse hpx region string: {!r}".format(region))
 
     if not m.group(1):
-        return re.split(',', m.group(2))
+        return re.split(",", m.group(2))
     else:
-        return [m.group(1)] + re.split(',', m.group(2))
+        return [m.group(1)] + re.split(",", m.group(2))
 
 
 def get_hpxregion_dir(region, coordsys):
@@ -340,31 +353,30 @@ def get_hpxregion_dir(region, coordsys):
         Coordinate system
     """
     import healpy as hp
+
     frame = coordsys_to_frame(coordsys)
     if region is None:
-        return SkyCoord(0., 0., frame=frame, unit='deg')
+        return SkyCoord(0., 0., frame=frame, unit="deg")
 
     tokens = parse_hpxregion(region)
-    if tokens[0] in ['DISK', 'DISK_INC']:
+    if tokens[0] in ["DISK", "DISK_INC"]:
         lon, lat = float(tokens[1]), float(tokens[2])
-        return SkyCoord(lon, lat, frame=frame, unit='deg')
-    elif tokens[0] == 'HPX_PIXEL':
+        return SkyCoord(lon, lat, frame=frame, unit="deg")
+    elif tokens[0] == "HPX_PIXEL":
         nside_pix = int(tokens[2])
         ipix_pix = int(tokens[3])
-        if tokens[1] == 'NESTED':
+        if tokens[1] == "NESTED":
             nest_pix = True
-        elif tokens[1] == 'RING':
+        elif tokens[1] == "RING":
             nest_pix = False
         else:
-            raise ValueError(
-                'Did not recognize ordering scheme: {}'.format(tokens[1]))
+            raise ValueError("Invalid ordering scheme: {!r}".format(tokens[1]))
         theta, phi = hp.pix2ang(nside_pix, ipix_pix, nest_pix)
         lat = np.degrees((np.pi / 2) - theta)
         lon = np.degrees(phi)
-        return SkyCoord(lon, lat, frame=frame, unit='deg')
+        return SkyCoord(lon, lat, frame=frame, unit="deg")
     else:
-        raise ValueError(
-            'HPX.get_ref_dir did not recognize region type: {}'.format(tokens[0]))
+        raise ValueError("Invalid region type: {!r}".format(tokens[0]))
 
     return None
 
@@ -373,13 +385,13 @@ def get_hpxregion_size(region):
     """Get the approximate size of region (in degrees) from a HEALPIX region string.
     """
     tokens = parse_hpxregion(region)
-    if tokens[0] in {'DISK', 'DISK_INC'}:
+    if tokens[0] in {"DISK", "DISK_INC"}:
         return float(tokens[3])
-    elif tokens[0] == 'HPX_PIXEL':
+    elif tokens[0] == "HPX_PIXEL":
         pix_size = get_pix_size_from_nside(int(tokens[2]))
         return 2. * pix_size
     else:
-        raise ValueError('Did not recognize region type: {}'.format(tokens[0]))
+        raise ValueError("Invalid region type: {!r}".format(tokens[0]))
 
 
 def is_power2(n):
@@ -447,7 +459,7 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
         idx = hp.ring2nest(nside_subpix, idx)
 
     if np.any(~is_power2(nside_superpix)) or np.any(~is_power2(nside_subpix)):
-        raise ValueError('NSIDE must be a power of 2.')
+        raise ValueError("NSIDE must be a power of 2.")
 
     ratio = np.array((nside_subpix // nside_superpix) ** 2, ndmin=1)
     idx //= ratio
@@ -501,7 +513,7 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
     nside_subpix = np.asarray(nside_subpix)
 
     if np.any(~is_power2(nside_superpix)) or np.any(~is_power2(nside_subpix)):
-        raise ValueError('NSIDE must be a power of 2.')
+        raise ValueError("NSIDE must be a power of 2.")
 
     # number of subpixels in each superpixel
     npix = np.array((nside_subpix // nside_superpix) ** 2, ndmin=1)
@@ -565,10 +577,19 @@ class HpxGeom(MapGeom):
         arrays.  This option is only compatible with partial-sky maps
         with an analytic geometry (e.g. DISK).
     """
+
     is_hpx = True
 
-    def __init__(self, nside, nest=True, coordsys='CEL', region=None,
-                 axes=None, conv='gadf', sparse=False):
+    def __init__(
+        self,
+        nside,
+        nest=True,
+        coordsys="CEL",
+        region=None,
+        axes=None,
+        conv="gadf",
+        sparse=False,
+    ):
 
         # FIXME: Figure out what to do when sparse=True
         # FIXME: Require NSIDE to be power of two when nest=True
@@ -577,9 +598,11 @@ class HpxGeom(MapGeom):
         self._axes = make_axes(axes, conv)
         self._shape = tuple([ax.nbin for ax in self._axes])
         if self.nside.size > 1 and self.nside.shape != self._shape:
-            raise ValueError('Wrong dimensionality for nside.  nside must '
-                             'be a scalar or have a dimensionality consistent '
-                             'with the axes argument.')
+            raise ValueError(
+                "Wrong dimensionality for nside. nside must "
+                "be a scalar or have a dimensionality consistent "
+                "with the axes argument."
+            )
 
         self._order = nside_to_order(self._nside)
         self._nest = nest
@@ -602,8 +625,10 @@ class HpxGeom(MapGeom):
         self._conv = conv
         self._center_skydir = self._get_ref_dir()
         lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
-        self._center_coord = tuple([lon, lat] +
-                                   [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes])
+        self._center_coord = tuple(
+            [lon, lat]
+            + [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes]
+        )
         self._center_pix = self.coord_to_pix(self._center_coord)
 
     @property
@@ -617,15 +642,19 @@ class HpxGeom(MapGeom):
         """Create local-to-global pixel lookup table."""
 
         if isinstance(region, six.string_types):
-            ipix = [self.get_index_list(nside, self._nest, region)
-                    for nside in self._nside.flat]
-            self._ibnd = np.concatenate([i * np.ones_like(p, dtype='int16') for
-                                         i, p in enumerate(ipix)])
-            self._ipix = [ravel_hpx_index((p, i * np.ones_like(p)),
-                                          np.ravel(self._maxpix)) for i, p in
-                          enumerate(ipix)]
+            ipix = [
+                self.get_index_list(nside, self._nest, region)
+                for nside in self._nside.flat
+            ]
+            self._ibnd = np.concatenate(
+                [i * np.ones_like(p, dtype="int16") for i, p in enumerate(ipix)]
+            )
+            self._ipix = [
+                ravel_hpx_index((p, i * np.ones_like(p)), np.ravel(self._maxpix))
+                for i, p in enumerate(ipix)
+            ]
             self._region = region
-            self._indxschm = 'EXPLICIT'
+            self._indxschm = "EXPLICIT"
             self._npix = np.array([len(t) for t in self._ipix])
             if self.nside.ndim > 1:
                 self._npix = self._npix.reshape(self.nside.shape)
@@ -640,8 +669,8 @@ class HpxGeom(MapGeom):
             self._ipix = ravel_hpx_index(region, self._maxpix)
             self._ipix = np.unique(self._ipix)
             region = unravel_hpx_index(self._ipix, self._maxpix)
-            self._region = 'explicit'
-            self._indxschm = 'EXPLICIT'
+            self._region = "explicit"
+            self._indxschm = "EXPLICIT"
             if len(region) == 1:
                 self._npix = np.array([len(region[0])])
             else:
@@ -652,12 +681,11 @@ class HpxGeom(MapGeom):
 
         elif region is None:
             self._region = None
-            self._indxschm = 'IMPLICIT'
+            self._indxschm = "IMPLICIT"
             self._npix = self._maxpix
 
         else:
-            raise ValueError(
-                'Invalid input for region string: {}'.format(region))
+            raise ValueError("Invalid region string: {!r}".format(region))
 
     def local_to_global(self, idx_local):
         """Compute a local index (partial-sky) from a global (all-sky)
@@ -675,9 +703,9 @@ class HpxGeom(MapGeom):
         if self.nside.size > 1:
             idx = ravel_hpx_index(idx_local, self._npix)
         else:
-            idx_tmp = tuple([idx_local[0]] +
-                            [np.zeros(t.shape, dtype=int)
-                             for t in idx_local[1:]])
+            idx_tmp = tuple(
+                [idx_local[0]] + [np.zeros(t.shape, dtype=int) for t in idx_local[1:]]
+            )
             idx = ravel_hpx_index(idx_tmp, self._npix)
 
         idx_global = unravel_hpx_index(self._ipix[idx], self._maxpix)
@@ -705,7 +733,7 @@ class HpxGeom(MapGeom):
             idx = ravel_hpx_index(idx_global, self._maxpix)
 
         if self._rmap is not None:
-            retval = np.full(idx.size, -1, 'i')
+            retval = np.full(idx.size, -1, "i")
             m = np.in1d(idx.flat, self._ipix)
             retval[m] = np.searchsorted(self._ipix, idx.flat[m])
             retval = retval.reshape(idx.shape)
@@ -751,16 +779,18 @@ class HpxGeom(MapGeom):
             An array of local HEALPIX pixel indices.
         """
         # Convert to tuple representation
-        if (isinstance(idx_global, int) or
-                (isinstance(idx_global, tuple) and isinstance(idx_global[0], int)) or
-                isinstance(idx_global, np.ndarray)):
-            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1),
-                                           self._maxpix)
+        if (
+            isinstance(idx_global, int)
+            or (isinstance(idx_global, tuple) and isinstance(idx_global[0], int))
+            or isinstance(idx_global, np.ndarray)
+        ):
+            idx_global = unravel_hpx_index(np.array(idx_global, ndmin=1), self._maxpix)
 
         return self.global_to_local(idx_global, ravel=True)
 
     def coord_to_pix(self, coords):
         import healpy as hp
+
         coords = MapCoord.create(coords, coordsys=self.coordsys)
         phi = np.radians(coords.lon)
         theta = np.pi / 2. - np.radians(coords.lat)
@@ -791,12 +821,13 @@ class HpxGeom(MapGeom):
                     p[m] = -1
 
         else:
-            pix = hp.ang2pix(self.nside, theta, phi, nest=self.nest),
+            pix = (hp.ang2pix(self.nside, theta, phi, nest=self.nest),)
 
         return pix
 
     def pix_to_coord(self, pix):
         import healpy as hp
+
         if self.axes:
 
             bins = []
@@ -844,8 +875,9 @@ class HpxGeom(MapGeom):
                     np.clip(idx[i], 0, None, out=idx[i])
             else:
                 if i > 0:
-                    np.putmask(idx[i],
-                               (idx[i] < 0) | (idx[i] >= self.axes[i - 1].nbin), -1)
+                    np.putmask(
+                        idx[i], (idx[i] < 0) | (idx[i] >= self.axes[i - 1].nbin), -1
+                    )
                 else:
                     np.putmask(idx[i], (idx_local[i] < 0) | (idx[i] < 0), -1)
 
@@ -856,7 +888,7 @@ class HpxGeom(MapGeom):
             return copy.deepcopy(self)
 
         if len(slices) != self.ndim - 2:
-            raise ValueError
+            raise ValueError()
 
         nside = np.ones(self.shape, dtype=int) * self.nside
         nside = np.squeeze(nside[slices])
@@ -864,12 +896,11 @@ class HpxGeom(MapGeom):
         axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
         if drop_axes:
             axes = [ax for ax in axes if ax.nbin > 1]
-            slice_dims = [0] + [i + 1 for
-                                i, ax in enumerate(axes) if ax.nbin > 1]
+            slice_dims = [0] + [i + 1 for i, ax in enumerate(axes) if ax.nbin > 1]
         else:
             slice_dims = np.arange(self.ndim)
 
-        if self.region == 'explicit':
+        if self.region == "explicit":
             idx = self.get_idx()
             slices = (slice(None),) + slices
             idx = [p[slices[::-1]] for p in idx]
@@ -880,8 +911,9 @@ class HpxGeom(MapGeom):
         else:
             region = self.region
 
-        return HpxGeom(nside, self.nest, self.coordsys, region=region, axes=axes,
-                       conv=self.conv)
+        return HpxGeom(
+            nside, self.nest, self.coordsys, region=region, axes=axes, conv=self.conv
+        )
 
     @property
     def axes(self):
@@ -902,8 +934,8 @@ class HpxGeom(MapGeom):
     def ordering(self):
         """HEALPix ordering ('NESTED' or 'RING')."""
         if self._nest:
-            return 'NESTED'
-        return 'RING'
+            return "NESTED"
+        return "RING"
 
     @property
     def nside(self):
@@ -947,7 +979,7 @@ class HpxGeom(MapGeom):
     @property
     def projection(self):
         """Map projection."""
-        return 'HPX'
+        return "HPX"
 
     @property
     def region(self):
@@ -969,7 +1001,7 @@ class HpxGeom(MapGeom):
         geometries.  If true all image planes have the same pixel
         geometry.
         """
-        if self.nside.size > 1 or self.region == 'explicit':
+        if self.nside.size > 1 or self.region == "explicit":
             return False
         else:
             return True
@@ -1019,12 +1051,17 @@ class HpxGeom(MapGeom):
             A HEALPix geometry object.
         """
         if np.any(self.order < 0):
-            raise ValueError(
-                'Upgrade and degrade only implemented for standard maps')
+            raise ValueError("Upgrade and degrade only implemented for standard maps")
 
         axes = copy.deepcopy(self.axes)
-        return self.__class__(2 ** order, self.nest, coordsys=self.coordsys,
-                              region=self.region, axes=axes, conv=self.conv)
+        return self.__class__(
+            2 ** order,
+            self.nest,
+            coordsys=self.coordsys,
+            region=self.region,
+            axes=axes,
+            conv=self.conv,
+        )
 
     def to_swapped(self):
         """Make a copy of this geometry with a swapped ORDERING.  (NEST->RING
@@ -1036,31 +1073,47 @@ class HpxGeom(MapGeom):
             A HEALPix geometry object.
         """
         axes = copy.deepcopy(self.axes)
-        return self.__class__(self.nside, not self.nest, coordsys=self.coordsys,
-                              region=self.region, axes=axes, conv=self.conv)
+        return self.__class__(
+            self.nside,
+            not self.nest,
+            coordsys=self.coordsys,
+            region=self.region,
+            axes=axes,
+            conv=self.conv,
+        )
 
     def to_image(self):
-        return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
-                              region=self.region, conv=self.conv)
+        return self.__class__(
+            np.max(self.nside),
+            self.nest,
+            coordsys=self.coordsys,
+            region=self.region,
+            conv=self.conv,
+        )
 
     def to_cube(self, axes):
         axes = copy.deepcopy(self.axes) + axes
-        return self.__class__(np.max(self.nside), self.nest, coordsys=self.coordsys,
-                              region=self.region, conv=self.conv, axes=axes)
+        return self.__class__(
+            np.max(self.nside),
+            self.nest,
+            coordsys=self.coordsys,
+            region=self.region,
+            conv=self.conv,
+            axes=axes,
+        )
 
     def _get_neighbors(self, idx):
         import healpy as hp
 
         nside = self._get_nside(idx)
         idx_nb = (hp.get_all_neighbours(nside, idx[0], nest=self.nest),)
-        idx_nb += tuple([t[None, ...] * np.ones_like(idx_nb[0])
-                         for t in idx[1:]])
+        idx_nb += tuple([t[None, ...] * np.ones_like(idx_nb[0]) for t in idx[1:]])
 
         return idx_nb
 
     def pad(self, pad_width):
         if self.is_allsky:
-            raise ValueError('Cannot pad an all-sky map.')
+            raise ValueError("Cannot pad an all-sky map.")
 
         idx = self.get_idx(flat=True)
         idx_r = ravel_hpx_index(idx, self._maxpix)
@@ -1083,13 +1136,18 @@ class HpxGeom(MapGeom):
             idx_nb = ravel_hpx_index(idx_nb, self._maxpix)
 
         idx = unravel_hpx_index(idx_r, self._maxpix)
-        return self.__class__(self.nside.copy(), self.nest, coordsys=self.coordsys,
-                              region=idx, conv=self.conv,
-                              axes=copy.deepcopy(self.axes))
+        return self.__class__(
+            self.nside.copy(),
+            self.nest,
+            coordsys=self.coordsys,
+            region=idx,
+            conv=self.conv,
+            axes=copy.deepcopy(self.axes),
+        )
 
     def crop(self, crop_width):
         if self.is_allsky:
-            raise ValueError('Cannot crop an all-sky map.')
+            raise ValueError("Cannot crop an all-sky map.")
 
         idx = self.get_idx(flat=True)
         idx_r = ravel_hpx_index(idx, self._maxpix)
@@ -1107,18 +1165,28 @@ class HpxGeom(MapGeom):
             idx_nb = idx_nb[:, ~mask_edge]
 
         idx = unravel_hpx_index(idx_r, self._maxpix)
-        return self.__class__(self.nside.copy(), self.nest, coordsys=self.coordsys,
-                              region=idx, conv=self.conv,
-                              axes=copy.deepcopy(self.axes))
+        return self.__class__(
+            self.nside.copy(),
+            self.nest,
+            coordsys=self.coordsys,
+            region=idx,
+            conv=self.conv,
+            axes=copy.deepcopy(self.axes),
+        )
 
     def upsample(self, factor):
         if not is_power2(factor):
-            raise ValueError('Upsample factor must be a power of 2.')
+            raise ValueError("Upsample factor must be a power of 2.")
 
         if self.is_allsky:
-            return self.__class__(self.nside * factor, self.nest, coordsys=self.coordsys,
-                                  region=self.region, conv=self.conv,
-                                  axes=copy.deepcopy(self.axes))
+            return self.__class__(
+                self.nside * factor,
+                self.nest,
+                coordsys=self.coordsys,
+                region=self.region,
+                conv=self.conv,
+                axes=copy.deepcopy(self.axes),
+            )
 
         idx = list(self.get_idx(flat=True))
         nside = self._get_nside(idx)
@@ -1128,31 +1196,55 @@ class HpxGeom(MapGeom):
             idx[i] = idx[i][..., None] * np.ones(idx_new.shape, dtype=int)
 
         idx[0] = idx_new
-        return self.__class__(self.nside * factor, self.nest, coordsys=self.coordsys,
-                              region=tuple(idx), conv=self.conv,
-                              axes=copy.deepcopy(self.axes))
+        return self.__class__(
+            self.nside * factor,
+            self.nest,
+            coordsys=self.coordsys,
+            region=tuple(idx),
+            conv=self.conv,
+            axes=copy.deepcopy(self.axes),
+        )
 
     def downsample(self, factor):
         if not is_power2(factor):
-            raise ValueError('Downsample factor must be a power of 2.')
+            raise ValueError("Downsample factor must be a power of 2.")
 
         if self.is_allsky:
-            return self.__class__(self.nside // factor, self.nest, coordsys=self.coordsys,
-                                  region=self.region, conv=self.conv,
-                                  axes=copy.deepcopy(self.axes))
+            return self.__class__(
+                self.nside // factor,
+                self.nest,
+                coordsys=self.coordsys,
+                region=self.region,
+                conv=self.conv,
+                axes=copy.deepcopy(self.axes),
+            )
 
         idx = list(self.get_idx(flat=True))
         nside = self._get_nside(idx)
-        idx_new = get_superpixels(
-            idx[0], nside, nside // factor, nest=self.nest)
+        idx_new = get_superpixels(idx[0], nside, nside // factor, nest=self.nest)
         idx[0] = idx_new
-        return self.__class__(self.nside // factor, self.nest, coordsys=self.coordsys,
-                              region=tuple(idx), conv=self.conv,
-                              axes=copy.deepcopy(self.axes))
+        return self.__class__(
+            self.nside // factor,
+            self.nest,
+            coordsys=self.coordsys,
+            region=tuple(idx),
+            conv=self.conv,
+            axes=copy.deepcopy(self.axes),
+        )
 
     @classmethod
-    def create(cls, nside=None, binsz=None, nest=True, coordsys='CEL', region=None,
-               axes=None, conv='gadf', skydir=None, width=None):
+    def create(
+        cls,
+        nside=None,
+        binsz=None,
+        nest=True,
+        coordsys="CEL",
+        region=None,
+        axes=None,
+        conv="gadf",
+        skydir=None,
+        width=None,
+    ):
         """Create an HpxGeom object.
 
         Parameters
@@ -1198,7 +1290,7 @@ class HpxGeom(MapGeom):
         >>> geom = HpxGeom.create(nside=[32,64], width=10.0, axes=[axis])
         """
         if nside is None and binsz is None:
-            raise ValueError('Either nside or binsz must be defined.')
+            raise ValueError("Either nside or binsz must be defined.")
 
         if nside is None and binsz is not None:
             nside = get_nside_from_pix_size(binsz)
@@ -1210,15 +1302,14 @@ class HpxGeom(MapGeom):
         elif isinstance(skydir, SkyCoord):
             lon, lat, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
         else:
-            raise ValueError(
-                'Invalid type for skydir: {}'.format(type(skydir)))
+            raise ValueError("Invalid type for skydir: {!r}".format(type(skydir)))
 
         if region is None and width is not None:
-            region = 'DISK({:f},{:f},{:f})'.format(lon, lat,
-                                                   width / 2.)
+            region = "DISK({:f},{:f},{:f})".format(lon, lat, width / 2.)
 
-        return cls(nside, nest=nest, coordsys=coordsys, region=region,
-                   axes=axes, conv=conv)
+        return cls(
+            nside, nest=nest, coordsys=coordsys, region=region, axes=axes, conv=conv
+        )
 
     @staticmethod
     def identify_hpx_convention(header):
@@ -1226,40 +1317,40 @@ class HpxGeom(MapGeom):
         # Hopefully the file contains the HPX_CONV keyword specifying
         # the convention used
         try:
-            return header['HPX_CONV'].lower()
+            return header["HPX_CONV"].lower()
         except KeyError:
             pass
 
         # Try based on the EXTNAME keyword
-        hduname = header.get('EXTNAME', None)
-        if hduname == 'HPXEXPOSURES':
-            return 'fgst-bexpcube'
-        elif hduname == 'SKYMAP2':
-            if 'COORDTYPE' in header.keys():
-                return 'galprop'
+        hduname = header.get("EXTNAME", None)
+        if hduname == "HPXEXPOSURES":
+            return "fgst-bexpcube"
+        elif hduname == "SKYMAP2":
+            if "COORDTYPE" in header.keys():
+                return "galprop"
             else:
-                return 'galprop2'
+                return "galprop2"
 
         # Check the name of the first column
-        colname = header['TTYPE1']
-        if colname == 'PIX':
-            colname = header['TTYPE2']
+        colname = header["TTYPE1"]
+        if colname == "PIX":
+            colname = header["TTYPE2"]
 
-        if colname == 'KEY':
-            return 'fgst-srcmap-sparse'
-        elif colname == 'ENERGY1':
-            return 'fgst-template'
-        elif colname == 'COSBINS':
-            return 'fgst-ltcube'
-        elif colname == 'Bin0':
-            return 'galprop'
-        elif colname == 'CHANNEL1' or colname == 'CHANNEL0':
-            if hduname == 'SKYMAP':
-                return 'fgst-ccube'
+        if colname == "KEY":
+            return "fgst-srcmap-sparse"
+        elif colname == "ENERGY1":
+            return "fgst-template"
+        elif colname == "COSBINS":
+            return "fgst-ltcube"
+        elif colname == "Bin0":
+            return "galprop"
+        elif colname == "CHANNEL1" or colname == "CHANNEL0":
+            if hduname == "SKYMAP":
+                return "fgst-ccube"
             else:
-                return 'fgst-srcmap'
+                return "fgst-srcmap"
         else:
-            raise ValueError('Could not identify HEALPIX convention')
+            raise ValueError("Could not identify HEALPIX convention")
 
     @classmethod
     def from_header(cls, header, hdu_bands=None, pix=None):
@@ -1287,42 +1378,47 @@ class HpxGeom(MapGeom):
         axes = find_and_read_bands(hdu_bands)
         shape = [ax.nbin for ax in axes]
 
-        if header['PIXTYPE'] != 'HEALPIX':
+        if header["PIXTYPE"] != "HEALPIX":
             raise ValueError(
-                'Invalid header PIXTYPE: {}; Must be HEALPIX'.format(header['PIXTYPE']))
+                "Header PIXTYPE must be 'HEALPIX'. Got: {}".format(header["PIXTYPE"])
+            )
 
-        if header['ORDERING'] == 'RING':
+        if header["ORDERING"] == "RING":
             nest = False
-        elif header['ORDERING'] == 'NESTED':
+        elif header["ORDERING"] == "NESTED":
             nest = True
         else:
-            raise ValueError('Invalid header ORDERING: {}; Must be RING or NESTED'.format(
-                header['ORDERING']))
+            raise ValueError(
+                "Header ORDERING must be RING or NESTED. Got: {}".format(
+                    header["ORDERING"]
+                )
+            )
 
-        if hdu_bands is not None and 'NSIDE' in hdu_bands.columns.names:
-            nside = hdu_bands.data.field('NSIDE').reshape(shape).astype(int)
-        elif 'NSIDE' in header:
-            nside = header['NSIDE']
-        elif 'ORDER' in header:
-            nside = 2 ** header['ORDER']
+        if hdu_bands is not None and "NSIDE" in hdu_bands.columns.names:
+            nside = hdu_bands.data.field("NSIDE").reshape(shape).astype(int)
+        elif "NSIDE" in header:
+            nside = header["NSIDE"]
+        elif "ORDER" in header:
+            nside = 2 ** header["ORDER"]
         else:
-            raise ValueError('Failed to extract NSIDE or ORDER.')
+            raise ValueError("Failed to extract NSIDE or ORDER.")
 
         try:
             coordsys = header[conv.coordsys]
         except KeyError:
-            coordsys = header.get('COORDSYS', 'CEL')
+            coordsys = header.get("COORDSYS", "CEL")
 
         try:
-            region = header['HPX_REG']
+            region = header["HPX_REG"]
         except KeyError:
             try:
-                region = header['HPXREGION']
+                region = header["HPXREGION"]
             except KeyError:
                 region = None
 
-        return cls(nside, nest, coordsys=coordsys, region=region,
-                   axes=axes, conv=convname)
+        return cls(
+            nside, nest, coordsys=coordsys, region=region, axes=axes, conv=convname
+        )
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None):
@@ -1344,8 +1440,8 @@ class HpxGeom(MapGeom):
 
         # if HPX region is not defined then geometry is defined by
         # the set of all pixels in the table
-        if 'HPX_REG' not in hdu.header:
-            pix = (hdu.data.field('PIX'), hdu.data.field('CHANNEL'))
+        if "HPX_REG" not in hdu.header:
+            pix = (hdu.data.field("PIX"), hdu.data.field("CHANNEL"))
         else:
             pix = None
 
@@ -1354,21 +1450,21 @@ class HpxGeom(MapGeom):
     def make_header(self, **kwargs):
         """"Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
-        conv = kwargs.get('conv', HPX_FITS_CONVENTIONS[self.conv])
+        conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[self.conv])
 
         # FIXME: For some sparse maps we may want to allow EXPLICIT
         # with an empty region string
-        indxschm = kwargs.get('indxschm', None)
+        indxschm = kwargs.get("indxschm", None)
 
         if indxschm is None:
             if self._region is None:
-                indxschm = 'IMPLICIT'
+                indxschm = "IMPLICIT"
             elif self.is_regular == 1:
-                indxschm = 'EXPLICIT'
+                indxschm = "EXPLICIT"
             else:
-                indxschm = 'LOCAL'
+                indxschm = "LOCAL"
 
-        if 'FGST' in conv.convname.upper():
+        if "FGST" in conv.convname.upper():
             header["TELESCOP"] = "GLAST"
             header["INSTRUME"] = "LAT"
         header[conv.coordsys] = self.coordsys
@@ -1381,22 +1477,21 @@ class HpxGeom(MapGeom):
         header["LASTPIX"] = np.max(self._maxpix) - 1
         header["HPX_CONV"] = conv.convname.upper()
 
-        if self.coordsys == 'CEL':
-            header['EQUINOX'] = (2000.0,
-                                 'Equinox of RA & DEC specifications')
+        if self.coordsys == "CEL":
+            header["EQUINOX"] = (2000.0, "Equinox of RA & DEC specifications")
 
         if self.region:
-            header['HPX_REG'] = self._region
+            header["HPX_REG"] = self._region
 
         return header
 
     def _make_bands_cols(self):
         cols = []
         if self.nside.size > 1:
-            cols += [fits.Column('NSIDE', 'I', array=np.ravel(self.nside)), ]
+            cols += [fits.Column("NSIDE", "I", array=np.ravel(self.nside))]
         return cols
 
-    def make_ebounds_hdu(self, hdu='EBOUNDS'):
+    def make_ebounds_hdu(self, hdu="EBOUNDS"):
         """Make a FITS HDU with the energy bin boundaries.
 
         Parameters
@@ -1409,14 +1504,15 @@ class HpxGeom(MapGeom):
         emin = self._axes[0].edges[:-1]
         emax = self._axes[0].edges[1:]
 
-        cols = [fits.Column('CHANNEL', 'I', array=np.arange(1, self._axes[0].nbin)),
-                fits.Column('E_MIN', '1E', unit='keV', array=1000 * emin),
-                fits.Column('E_MAX', '1E', unit='keV', array=1000 * emax)]
-        hdu_out = fits.BinTableHDU.from_columns(cols, self.make_header(),
-                                                name=hdu)
+        cols = [
+            fits.Column("CHANNEL", "I", array=np.arange(1, self._axes[0].nbin)),
+            fits.Column("E_MIN", "1E", unit="keV", array=1000 * emin),
+            fits.Column("E_MAX", "1E", unit="keV", array=1000 * emax),
+        ]
+        hdu_out = fits.BinTableHDU.from_columns(cols, self.make_header(), name=hdu)
         return hdu_out
 
-    def make_energies_hdu(self, hdu='ENERGIES'):
+    def make_energies_hdu(self, hdu="ENERGIES"):
         """Make a FITS HDU with the energy bin centers.
 
         Parameters
@@ -1425,12 +1521,11 @@ class HpxGeom(MapGeom):
             The HDU extension name
         """
         ectr = np.sqrt(self._axes[0][1:] * self._axes[0][:-1])
-        cols = [fits.Column('ENERGY', '1E', unit='MeV', array=ectr)]
-        hdu_out = fits.BinTableHDU.from_columns(
-            cols, self.make_header(), name=hdu)
+        cols = [fits.Column("ENERGY", "1E", unit="MeV", array=ectr)]
+        hdu_out = fits.BinTableHDU.from_columns(cols, self.make_header(), name=hdu)
         return hdu_out
 
-    def write(self, data, outfile, hdu='SKYMAP', overwrite=False):
+    def write(self, data, outfile, hdu="SKYMAP", overwrite=False):
         """Write input data to a FITS file.
 
         Parameters
@@ -1447,9 +1542,9 @@ class HpxGeom(MapGeom):
         hdu_hpx = self.make_hdu(data, hdu=hdu)
         hdu_list = fits.HDUList([fits.PrimaryHDU(), hdu_hpx])
 
-        if self.conv.bands_hdu == 'EBOUNDS':
+        if self.conv.bands_hdu == "EBOUNDS":
             hdu_energy = self.make_ebounds_hdu()
-        elif self.conv.bands_hdu == 'ENERGIES':
+        elif self.conv.bands_hdu == "ENERGIES":
             hdu_energy = self.make_energies_hdu()
 
         if hdu_energy is not None:
@@ -1476,45 +1571,51 @@ class HpxGeom(MapGeom):
             List of pixel indices.
         """
         import healpy as hp
+
         tokens = parse_hpxregion(region)
 
-        if tokens[0] == 'DISK':
+        if tokens[0] == "DISK":
             vec = coords_to_vec(float(tokens[1]), float(tokens[2]))
-            ilist = hp.query_disc(nside, vec[0], np.radians(float(tokens[3])),
-                                  inclusive=False, nest=nest)
-        elif tokens[0] == 'DISK_INC':
+            ilist = hp.query_disc(
+                nside, vec[0], np.radians(float(tokens[3])), inclusive=False, nest=nest
+            )
+        elif tokens[0] == "DISK_INC":
             vec = coords_to_vec(float(tokens[1]), float(tokens[2]))
-            ilist = hp.query_disc(nside, vec[0], np.radians(float(tokens[3])),
-                                  inclusive=True, fact=int(tokens[4]),
-                                  nest=nest)
-        elif tokens[0] == 'HPX_PIXEL':
+            ilist = hp.query_disc(
+                nside,
+                vec[0],
+                np.radians(float(tokens[3])),
+                inclusive=True,
+                fact=int(tokens[4]),
+                nest=nest,
+            )
+        elif tokens[0] == "HPX_PIXEL":
             nside_pix = int(tokens[2])
-            if tokens[1] == 'NESTED':
+            if tokens[1] == "NESTED":
                 ipix_ring = hp.nest2ring(nside_pix, int(tokens[3]))
-            elif tokens[1] == 'RING':
+            elif tokens[1] == "RING":
                 ipix_ring = int(tokens[3])
             else:
-                raise ValueError(
-                    'Did not recognize ordering scheme: {}'.format(tokens[1]))
+                raise ValueError("Invalid ordering scheme: {!r}".format(tokens[1]))
             ilist = match_hpx_pix(nside, nest, nside_pix, ipix_ring)
         else:
-            raise ValueError(
-                'Did not recognize region type: {}'.format(tokens[0]))
+            raise ValueError("Invalid region type: {!r}".format(tokens[0]))
 
         return ilist
 
     def _get_ref_dir(self):
         """Compute the reference direction for this geometry."""
         import healpy as hp
+
         frame = coordsys_to_frame(self.coordsys)
 
-        if self.region == 'explicit':
+        if self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             vec = hp.pix2vec(nside, idx[0], nest=self.nest)
             vec = np.array([np.mean(t) for t in vec])
             lonlat = hp.vec2ang(vec, lonlat=True)
-            return SkyCoord(lonlat[0], lonlat[1], frame=frame, unit='deg')
+            return SkyCoord(lonlat[0], lonlat[1], frame=frame, unit="deg")
 
         return get_hpxregion_dir(self.region, self.coordsys)
 
@@ -1523,12 +1624,12 @@ class HpxGeom(MapGeom):
 
         if self.region is None:
             return 180.
-        if self.region == 'explicit':
+        if self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
             ang = hp.pix2ang(nside, idx[0], nest=self.nest, lonlat=True)
-            dirs = SkyCoord(ang[0], ang[1], unit='deg',
-                            frame=coordsys_to_frame(self.coordsys))
+            frame = coordsys_to_frame(self.coordsys)
+            dirs = SkyCoord(ang[0], ang[1], unit="deg", frame=frame)
             return np.max(dirs.separation(self.center_skydir).deg)
 
         return get_hpxregion_size(self.region)
@@ -1539,7 +1640,7 @@ class HpxGeom(MapGeom):
         else:
             return self.nside
 
-    def make_wcs(self, proj='AIT', oversample=2, drop_axes=True, width_pix=None):
+    def make_wcs(self, proj="AIT", oversample=2, drop_axes=True, width_pix=None):
         """Make a WCS projection appropriate for this HPX pixelization.
 
         Parameters
@@ -1567,8 +1668,9 @@ class HpxGeom(MapGeom):
             WCS geometry
         """
         binsz = np.min(get_pix_size_from_nside(self.nside)) / oversample
-        width = (2.0 * self._get_region_size() +
-                 np.max(get_pix_size_from_nside(self.nside)))
+        width = 2.0 * self._get_region_size() + np.max(
+            get_pix_size_from_nside(self.nside)
+        )
 
         if width_pix is not None and int(width / binsz) > width_pix:
             binsz = width / width_pix
@@ -1581,12 +1683,18 @@ class HpxGeom(MapGeom):
         else:
             axes = copy.deepcopy(self.axes)
 
-        return WcsGeom.create(width=width, binsz=binsz, coordsys=self.coordsys,
-                              axes=axes, skydir=self.center_skydir, proj=proj)
+        return WcsGeom.create(
+            width=width,
+            binsz=binsz,
+            coordsys=self.coordsys,
+            axes=axes,
+            skydir=self.center_skydir,
+            proj=proj,
+        )
 
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):
-            raise ValueError('Image index out of range: {}'.format(idx))
+            raise ValueError("Image index out of range: {!r}".format(idx))
 
         # Regular all- and partial-sky maps
         if self.is_regular:
@@ -1596,7 +1704,7 @@ class HpxGeom(MapGeom):
                 pix += [np.arange(ax.nbin, dtype=int) for ax in self.axes]
             else:
                 pix += [t for t in idx]
-            pix = np.meshgrid(*pix[::-1], indexing='ij', sparse=False)[::-1]
+            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=False)[::-1]
             pix = self.local_to_global(pix)
 
         # Non-regular all-sky
@@ -1607,8 +1715,7 @@ class HpxGeom(MapGeom):
                 shape = shape + self.shape
             else:
                 shape = shape + (1,) * len(self.axes)
-            pix = [np.full(shape, -1, dtype=int)
-                   for i in range(1 + len(self.axes))]
+            pix = [np.full(shape, -1, dtype=int) for i in range(1 + len(self.axes))]
             for idx_img in np.ndindex(self.shape):
 
                 if idx is not None and idx_img != idx:
@@ -1641,8 +1748,7 @@ class HpxGeom(MapGeom):
                 shape = shape + self.shape
             else:
                 shape = shape + (1,) * len(self.axes)
-            pix = [np.full(shape, -1, dtype=int)
-                   for _ in range(1 + len(self.axes))]
+            pix = [np.full(shape, -1, dtype=int) for _ in range(1 + len(self.axes))]
 
             for idx_img in np.ndindex(self.shape):
 
@@ -1656,8 +1762,10 @@ class HpxGeom(MapGeom):
                     s_img = (slice(0, npix),) + (0,) * len(self.axes)
 
                 if self.axes:
-                    m = np.all(np.stack([pix_flat[i + 1] == t
-                                         for i, t in enumerate(idx_img)]), axis=0)
+                    m = np.all(
+                        np.stack([pix_flat[i + 1] == t for i, t in enumerate(idx_img)]),
+                        axis=0,
+                    )
                     pix[0][s_img] = pix_flat[0][m]
                 else:
                     pix[0][s_img] = pix_flat[0]
@@ -1678,10 +1786,7 @@ class HpxGeom(MapGeom):
     def get_coord(self, idx=None, flat=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)
-        cdict = OrderedDict([
-            ('lon', coords[0]),
-            ('lat', coords[1]),
-        ])
+        cdict = OrderedDict([("lon", coords[0]), ("lat", coords[1])])
 
         for i, axis in enumerate(self.axes):
             cdict[axis.name] = coords[i + 2]
@@ -1695,20 +1800,20 @@ class HpxGeom(MapGeom):
     def get_skydirs(self):
         """Get the sky coordinates of all the pixels in this geometry. """
         coords = self.get_coord()
-        frame = 'galactic' if self.coordsys == 'GAL' else 'icrs'
-        return SkyCoord(coords[0], coords[1], unit='deg', frame=frame)
+        frame = "galactic" if self.coordsys == "GAL" else "icrs"
+        return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
 
     def skydir_to_pix(self, skydir):
         """Return the pixel index of a SkyCoord object."""
         # FIXME: What should this method do for maps with non-spatial
         # dimensions
 
-        if self.coordsys in ['CEL', 'EQU']:
-            skydir = skydir.transform_to('icrs')
+        if self.coordsys in ["CEL", "EQU"]:
+            skydir = skydir.transform_to("icrs")
             lon = skydir.ra.deg
             lat = skydir.dec.deg
         else:
-            skydir = skydir.transform_to('galactic')
+            skydir = skydir.transform_to("galactic")
             lon = skydir.l.deg
             lat = skydir.b.deg
 
@@ -1721,12 +1826,13 @@ class HpxGeom(MapGeom):
         since all pixels have the same solid angle.
         """
         import healpy as hp
-        return Quantity(hp.nside2pixarea(self.nside), 'sr')
+
+        return Quantity(hp.nside2pixarea(self.nside), "sr")
 
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        axes = ['skycoord'] + [_.name for _ in self.axes]
+        axes = ["skycoord"] + [_.name for _ in self.axes]
         str_ += "\taxes       : {}\n".format(", ".join(axes))
         str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
         str_ += "\tndim       : {}\n".format(self.ndim)
@@ -1809,6 +1915,7 @@ class HpxToWcsMapping(object):
             Overwrite existing file?
         """
         from .wcsnd import WcsNDMap
+
         index_map = WcsNDMap(self.ipix, self.wcs)
 
         # TODO: Figure out where to write HPX header information
@@ -1849,6 +1956,7 @@ class HpxToWcsMapping(object):
     def read(cls, filename):
         """Read a FITS file and use it to make a mapping."""
         from .wcsnd import WcsNDMap
+
         filename = str(make_path(filename))
         index_map = WcsNDMap.read(filename)
         mult_map = WcsNDMap.read(filename, hdu=1)
@@ -1860,8 +1968,9 @@ class HpxToWcsMapping(object):
 
         return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
-    def fill_wcs_map_from_hpx_data(self, hpx_data, wcs_data, normalize=True,
-                                   fill_nan=True):
+    def fill_wcs_map_from_hpx_data(
+        self, hpx_data, wcs_data, normalize=True, fill_nan=True
+    ):
         """Fill the WCS map from the hpx data using the pre-calculated mappings.
 
         Parameters
