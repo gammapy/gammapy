@@ -213,8 +213,8 @@ class AdaptiveRingBackgroundEstimator(object):
         counts, exposure_on, exclusion = [images[_] for _ in required]
 
         if not counts.geom.is_image:
-            raise NotImplementedError('Adaptive ring background estimation only'
-                                      ' supported for 2D images.')
+            raise ValueError('Adaptive ring background estimation only supported'
+                             ' for 2D images.')
 
         kernels = self.kernels(counts)
         cubes = {}
