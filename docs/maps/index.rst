@@ -403,6 +403,8 @@ of the original map will be copied over to the projected map.
     m_proj = m.project(geom)
     m_proj.write('gll_iem_v06_hpx_nside8.fits')
 
+.. _mapiter:
+
 Iterating on a Map
 ------------------
 
@@ -427,17 +429,26 @@ one can use this method to fill a map with a 2D Gaussian:
         m.set_by_coord(coord, new_val)
 
 For maps with non-spatial dimensions the `~Map.iter_by_image` method can be used
-to loop over image slices:
+to loop over image slices. The image plane index `idx` is returned in data order,
+so that the data array can be indexed directly. Here is an example for an in-place
+convolution of an image using `astropy.convolution.convolve` to interpolate NaN
+values:
 
 .. code:: python
 
-    from astropy.coordinates import SkyCoord
-    from astropy.convolution import Gaussian2DKernel, convolve
-    from gammapy.maps import Map
+    import numpy as np
+    from astropy.convolution import convolve
 
-    m = Map.create(binsz=0.05, map_type='wcs', width=10.0)
+    axis1 = MapAxis([1, 10, 100], interp='log', name='energy')
+    axis2 = MapAxis([1, 2, 3], interp='lin', name='time')
+    m = Map.create(width=(5, 3), axes=[axis1, axis2], binsz=0.1)
+    m.data[:, :, 15:18, 20:25] = np.nan
+
     for img, idx in m.iter_by_image():
-        img = convolve(img, Gaussian2DKernel(x_stddev=2.0) )
+        kernel = np.ones((5, 5))
+        m.data[idx] = convolve(img, kernel)
+
+    assert not np.isnan(m.data).any()
 
 FITS I/O
 --------

@@ -210,45 +210,35 @@ class AdaptiveRingBackgroundEstimator(object):
             Result sky maps.
         """
         required = ['counts', 'exposure_on', 'exclusion']
-        counts_map, exposure_on_map, exclusion_map = [images[_] for _ in required]
+        counts, exposure_on, exclusion = [images[_] for _ in required]
 
-        result = {}
-        result['exposure_off'] = exposure_on_map.copy(unit='')
-        result['off'] = exposure_on_map.copy(unit='')
-        result['alpha'] = exposure_on_map.copy(unit='')
-        result['background'] = exposure_on_map.copy(unit='')
+        if not counts.geom.is_image:
+            raise ValueError('Adaptive ring background estimation only supported'
+                             ' for 2D images.')
 
-        for idx in np.ndindex(counts_map.geom.shape):
-            counts = counts_map.get_image_by_idx(idx)
-            exposure_on = exposure_on_map.get_image_by_idx(idx)
-            exclusion = exclusion_map.get_image_by_idx(idx)
+        kernels = self.kernels(counts)
+        cubes = {}
+        cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
+        cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
+        cubes['off'] = self._off_cube(counts, exclusion, kernels)
+        cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
 
-            cubes = {}
+        exposure_off, off = self._reduce_cubes(cubes)
+        alpha = exposure_on.data / exposure_off
 
-            kernels = self.kernels(counts)
+        # set data outside fov to zero
+        not_has_exposure = ~(exposure_on.data > 0)
+        for data in [alpha, off, exposure_off]:
+            data[not_has_exposure] = 0
 
-            cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
-            cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
+        background = alpha * off
 
-            cubes['off'] = self._off_cube(counts, exclusion, kernels)
-            cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
-
-            exposure_off, off = self._reduce_cubes(cubes)
-            alpha = exposure_on.data / exposure_off
-            not_has_exposure = ~(exposure_on.data > 0)
-
-            # set data outside fov to zero
-            for data in [alpha, off, exposure_off]:
-                data[not_has_exposure] = 0
-
-            background = alpha * off
-
-            result['exposure_off'].data[idx] = exposure_off
-            result['off'].data[idx] = off
-            result['alpha'].data[idx] = alpha
-            result['background'].data[idx] = background
-
-        return result
+        return {
+            'exposure_off': counts.copy(data=exposure_off),
+            'off': counts.copy(data=off),
+            'alpha': counts.copy(data=alpha),
+            'background': counts.copy(data=background),
+        }
 
 
 class RingBackgroundEstimator(object):
