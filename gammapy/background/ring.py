@@ -212,41 +212,44 @@ class AdaptiveRingBackgroundEstimator(object):
         required = ['counts', 'exposure_on', 'exclusion']
         counts_map, exposure_on_map, exclusion_map = [images[_] for _ in required]
 
+        if counts_map.geom.is_image():
+            raise NotImplementedError('Adaptive ring background estimation only'
+                                      ' supported for 2D images.')
+
         result = {}
         result['exposure_off'] = exposure_on_map.copy(unit='')
         result['off'] = exposure_on_map.copy(unit='')
         result['alpha'] = exposure_on_map.copy(unit='')
         result['background'] = exposure_on_map.copy(unit='')
 
-        for idx in np.ndindex(counts_map.geom.shape):
-            counts = counts_map.get_image_by_idx(idx)
-            exposure_on = exposure_on_map.get_image_by_idx(idx)
-            exclusion = exclusion_map.get_image_by_idx(idx)
+        counts = counts_map.get_image_by_idx(idx)
+        exposure_on = exposure_on_map.get_image_by_idx(idx)
+        exclusion = exclusion_map.get_image_by_idx(idx)
 
-            cubes = {}
+        cubes = {}
 
-            kernels = self.kernels(counts)
+        kernels = self.kernels(counts)
 
-            cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
-            cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
+        cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
+        cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
 
-            cubes['off'] = self._off_cube(counts, exclusion, kernels)
-            cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
+        cubes['off'] = self._off_cube(counts, exclusion, kernels)
+        cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
 
-            exposure_off, off = self._reduce_cubes(cubes)
-            alpha = exposure_on.data / exposure_off
-            not_has_exposure = ~(exposure_on.data > 0)
+        exposure_off, off = self._reduce_cubes(cubes)
+        alpha = exposure_on.data / exposure_off
+        not_has_exposure = ~(exposure_on.data > 0)
 
-            # set data outside fov to zero
-            for data in [alpha, off, exposure_off]:
-                data[not_has_exposure] = 0
+        # set data outside fov to zero
+        for data in [alpha, off, exposure_off]:
+            data[not_has_exposure] = 0
 
-            background = alpha * off
+        background = alpha * off
 
-            result['exposure_off'].data[idx] = exposure_off
-            result['off'].data[idx] = off
-            result['alpha'].data[idx] = alpha
-            result['background'].data[idx] = background
+        result['exposure_off'].data[idx] = exposure_off
+        result['off'].data[idx] = off
+        result['alpha'].data[idx] = alpha
+        result['background'].data[idx] = background
 
         return result
 
