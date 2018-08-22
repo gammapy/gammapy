@@ -50,7 +50,7 @@ class KernelBackgroundEstimator(object):
 
     Examples
     --------
-    .. plot:: 
+    .. plot::
         :include-source:
 
         import numpy as np
