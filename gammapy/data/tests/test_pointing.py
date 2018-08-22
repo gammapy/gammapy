@@ -1,22 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-import pytest
 from ...utils.testing import requires_data, requires_dependency
 from ..pointing import PointingInfo
-
-
-@pytest.fixture(scope='session')
-def pointing_info():
-    filename = '$GAMMAPY_EXTRA/test_datasets/hess_event_list.fits'
-    return PointingInfo.read(filename)
 
 
 @requires_data('gammapy-extra')
 class TestPointingInfo:
 
+    @classmethod
     def setup_class(cls):
-        cls.pointing_info = pointing_info()
+        filename = '$GAMMAPY_EXTRA/test_datasets/hess_event_list.fits'
+        cls.pointing_info = PointingInfo.read(filename)
 
     def test_str(self):
         ss = str(self.pointing_info)

@@ -55,7 +55,8 @@ class ExtraImage(Image):
             # with an extra "/" at the start seems to do the trick
             self.arguments[0] = '/' + path.absolute().as_posix()
         else:
-            self.warning('GAMMAPY_EXTRA not available. Missing image: {}'.format(self.name, filename))
+            self.warning('GAMMAPY_EXTRA not available. '
+                         'Missing image: name: {!r} filename: {!r}'.format(self.name, filename))
             self.options['alt'] = self.arguments[1]
 
         return super(ExtraImage, self).run()

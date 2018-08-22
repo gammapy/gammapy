@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from copy import deepcopy
 from astropy.units import Quantity
-from ..extern.six.moves import UserList
+from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds

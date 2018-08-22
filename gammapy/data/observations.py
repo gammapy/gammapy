@@ -6,7 +6,7 @@ from collections import OrderedDict
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from ..extern.six.moves import UserList
+from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..irf import EnergyDependentTablePSF, PSF3D, IRFStacker
 from ..utils.energy import Energy
 from ..utils.fits import earth_location_from_dict

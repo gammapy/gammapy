@@ -298,7 +298,7 @@ def grayify_colormap(cmap, mode='hsp'):
     colors = cmap(np.arange(cmap.N))
 
     if mode == 'skimage':
-        from skimage.color import rgb2gray
+        from skimage.color import rgb2gray  # pylint:disable=import-error
         luminance = rgb2gray(np.array([colors]))
         colors[:, :3] = luminance[0][:, np.newaxis]
     elif mode == 'hsp':

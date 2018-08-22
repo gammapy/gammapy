@@ -1022,7 +1022,7 @@ class EventListDatasetChecker(object):
         # TSTART, TSTOP, MJDREFI, MJDREFF
 
         # Check that START and STOP times are consecutive
-        times = np.ravel(self['START'], self['STOP'])
+        times = np.ravel(self.table['START'], self.table['STOP'])
         # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
         if not np.all(np.diff(times) >= 0):
             raise InvalidDataError('GTIs are not consecutive or sorted.')

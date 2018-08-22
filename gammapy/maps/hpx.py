@@ -6,7 +6,6 @@ import re
 import copy
 import numpy as np
 from ..extern import six
-from ..extern.six.moves import range
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
@@ -1643,7 +1642,7 @@ class HpxGeom(MapGeom):
             else:
                 shape = shape + (1,) * len(self.axes)
             pix = [np.full(shape, -1, dtype=int)
-                   for i in range(1 + len(self.axes))]
+                   for _ in range(1 + len(self.axes))]
 
             for idx_img in np.ndindex(self.shape):
 
@@ -1886,10 +1885,10 @@ class HpxToWcsMapping(object):
         lmap = self._lmap[self._valid]
         mult_val = self._mult_val[self._valid]
 
-        wcs_slice = [slice(None) for i in range(wcs_data.ndim - 2)]
+        wcs_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
         wcs_slice = tuple(wcs_slice + list(valid)[::-1][:2])
 
-        hpx_slice = [slice(None) for i in range(wcs_data.ndim - 2)]
+        hpx_slice = [slice(None) for _ in range(wcs_data.ndim - 2)]
         hpx_slice = tuple(hpx_slice + [lmap])
 
         if normalize:

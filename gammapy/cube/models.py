@@ -181,8 +181,8 @@ class SkyModel(object):
         value : `~astropy.units.Quantity`
             Model value at the given point.
         """
-        val_spatial = self.spatial_model(lon, lat)
-        val_spectral = self.spectral_model(energy)
+        val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
+        val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
         val_spectral = np.atleast_1d(val_spectral)[:, np.newaxis, np.newaxis]
 
         val = val_spatial * val_spectral

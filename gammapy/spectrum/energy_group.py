@@ -18,7 +18,7 @@ from collections import OrderedDict
 from copy import deepcopy
 import numpy as np
 import logging
-from ..extern.six.moves import UserList
+from ..extern.six.moves import UserList  # pylint:disable=import-error
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack

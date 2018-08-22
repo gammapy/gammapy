@@ -15,9 +15,7 @@ __all__ = [
     'EnergyDependentTablePSF',
 ]
 
-
 log = logging.getLogger(__name__)
-
 
 # Default PSF spline keyword arguments
 # TODO: test and document
@@ -539,7 +537,9 @@ class EnergyDependentTablePSF(object):
             Table PSF
         """
         if spectrum is None:
-            def spectrum(energy):
+            # This is a false positive error from pylint
+            # See https://github.com/PyCQA/pylint/issues/2410#issuecomment-415026690
+            def spectrum(energy):  # pylint:disable=function-redefined
                 return (energy / energy_band[0]) ** (-spectral_index)
 
         # TODO: warn if `energy_band` is outside available data.

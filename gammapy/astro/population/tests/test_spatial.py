@@ -74,13 +74,14 @@ radial_models_1D.update(velocity_models_1D)
 
 @pytest.mark.parametrize(('model_class', 'test_parameters'), list(radial_models_1D.items()))
 class TestMorphologyModels(Fittable1DModelTester):
-    def setup_class(self):
-        self.N = 100
-        self.M = 100
-        self.eval_error = 0.0001
-        self.fit_error = 10
-        self.x = 5.3
-        self.y = 6.7
-        self.x1 = np.arange(1, 10, .1)
-        self.y1 = np.arange(1, 10, .1)
-        self.y2, self.x2 = np.mgrid[:10, :8]
+    @classmethod
+    def setup_class(cls):
+        cls.N = 100
+        cls.M = 100
+        cls.eval_error = 0.0001
+        cls.fit_error = 10
+        cls.x = 5.3
+        cls.y = 6.7
+        cls.x1 = np.arange(1, 10, .1)
+        cls.y1 = np.arange(1, 10, .1)
+        cls.y2, cls.x2 = np.mgrid[:10, :8]
