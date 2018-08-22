@@ -179,7 +179,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
                 'flux', d['spec_pl2_flux'].value, d['spec_pl2_flux_err'].value,
                 d['spec_pl2_flux_err_sys'].value, 'cm-2 s-1')
-            ss += '{:<15s} : {:.3} +- {:.3} (stat)\n'.format(
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
                 'index', d['spec_pl2_index'], d['spec_pl2_index_err'],
                 d['spec_pl2_index_err_sys'])
             ss += '{:<15s} : {:.3}\n'.format('e_min', d['spec_pl2_e_min'])
@@ -333,7 +333,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
-        name = self.name
         return SkyModel(spatial_model, spectral_model, name=self.name)
 
     def _add_source_meta(self, table):

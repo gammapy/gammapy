@@ -547,7 +547,7 @@ Livetime        : 9.700 h
 
 Spectrum type   : pl2
 flux            : 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
-index           : 2.09 +- 0.08 (stat)
+index           : 2.09 +- 0.08 (stat) +- 0.2 (sys)
 e_min           : 0.2 TeV
 e_max           : nan TeV
 
