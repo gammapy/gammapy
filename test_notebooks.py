@@ -6,6 +6,7 @@ import os
 import sys
 import subprocess
 import logging
+from pkg_resources import working_set
 from pprint import pprint
 import yaml
 
@@ -42,10 +43,9 @@ def requirement_missing(notebook):
 
     for package in notebook['requires'].split():
         try:
-            __import__(package)
-        except ImportError:
-            logging.warning('Skipping notebook {} because dependency {} is missing.'
-                            ''.format(notebook['name'], package))
+            working_set.require(package)
+        except Exception as ex:
+            logging.warning('Skipping notebook {} because dependency {} is missing.'.format(notebook['name'], package))
             return True
 
     return False
