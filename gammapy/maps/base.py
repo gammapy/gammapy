@@ -14,9 +14,7 @@ from .utils import unpack_seq
 from ..extern import six
 from ..utils.scripts import make_path
 
-__all__ = [
-    'Map',
-]
+__all__ = ["Map"]
 
 
 class MapMeta(InheritDocstrings, abc.ABCMeta):
@@ -42,7 +40,7 @@ class Map(object):
         Data unit
     """
 
-    def __init__(self, geom, data, meta=None, unit=''):
+    def __init__(self, geom, data, meta=None, unit=""):
         self.geom = geom
         self.data = data
         self.unit = unit
@@ -56,11 +54,11 @@ class Map(object):
         """Init map instance by copying missing init arguments from self.
         """
         argnames = inspect.getargspec(self.__init__).args
-        argnames.remove('self')
-        argnames.remove('dtype')
+        argnames.remove("self")
+        argnames.remove("dtype")
 
         for arg in argnames:
-            value = getattr(self, '_' + arg)
+            value = getattr(self, "_" + arg)
             kwargs.setdefault(arg, copy.deepcopy(value))
 
         return self.from_geom(**kwargs)
@@ -82,11 +80,13 @@ class Map(object):
     @data.setter
     def data(self, val):
         if val.shape != self.geom.data_shape:
-            raise ValueError('Shape {!r} does not match map data shape {!r}'
-                             ''.format(val.shape, self.geom.data_shape))
+            raise ValueError(
+                "Shape {!r} does not match map data shape {!r}"
+                "".format(val.shape, self.geom.data_shape)
+            )
 
         if isinstance(val, u.Quantity):
-            raise TypeError('No Quantity allowed in map data. Set data and unit separately.')
+            raise TypeError("Map data must be a Numpy array. Set unit separately")
 
         self._data = val
 
@@ -157,16 +157,16 @@ class Map(object):
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
 
-        map_type = kwargs.setdefault('map_type', 'wcs')
-        if 'wcs' in map_type.lower():
+        map_type = kwargs.setdefault("map_type", "wcs")
+        if "wcs" in map_type.lower():
             return WcsMap.create(**kwargs)
-        elif 'hpx' in map_type.lower():
+        elif "hpx" in map_type.lower():
             return HpxMap.create(**kwargs)
         else:
-            raise ValueError('Unrecognized map type: {}'.format(map_type))
+            raise ValueError("Unrecognized map type: {!r}".format(map_type))
 
     @staticmethod
-    def read(filename, hdu=None, hdu_bands=None, map_type='auto'):
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
         """Read a map from a FITS file.
 
         Parameters
@@ -196,7 +196,7 @@ class Map(object):
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod
-    def from_geom(geom, meta=None, data=None, map_type='auto', unit=''):
+    def from_geom(geom, meta=None, data=None, map_type="auto", unit=""):
         """Generate an empty map from a `MapGeom` instance.
 
         Parameters
@@ -221,24 +221,25 @@ class Map(object):
             Map object
 
         """
-        if map_type == 'auto':
+        if map_type == "auto":
 
             from .hpx import HpxGeom
             from .wcs import WcsGeom
+
             if isinstance(geom, HpxGeom):
-                map_type = 'hpx'
+                map_type = "hpx"
             elif isinstance(geom, WcsGeom):
-                map_type = 'wcs'
+                map_type = "wcs"
             else:
-                raise ValueError('Unrecognized geom type.')
+                raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
         return cls_out(geom, data=data, meta=meta, unit=unit)
 
     @staticmethod
-    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type='auto'):
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
         """Create from `astropy.io.fits.HDUList`."""
-        if map_type == 'auto':
+        if map_type == "auto":
             map_type = Map._get_map_type(hdulist, hdu)
         cls_out = Map._get_map_cls(map_type)
         return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
@@ -246,8 +247,8 @@ class Map(object):
     @staticmethod
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
-        if 'META' in header:
-            meta = json.loads(header['META'], object_pairs_hook=OrderedDict)
+        if "META" in header:
+            meta = json.loads(header["META"], object_pairs_hook=OrderedDict)
         else:
             meta = OrderedDict()
         return meta
@@ -261,15 +262,15 @@ class Map(object):
         if hdu_name is None:
             # Find the header of the first non-empty HDU
             header = hdu_list[0].header
-            if header['NAXIS'] == 0:
+            if header["NAXIS"] == 0:
                 header = hdu_list[1].header
         else:
             header = hdu_list[hdu_name].header
 
-        if ('PIXTYPE' in header) and (header['PIXTYPE'] == 'HEALPIX'):
-            return 'hpx'
+        if ("PIXTYPE" in header) and (header["PIXTYPE"] == "HEALPIX"):
+            return "hpx"
         else:
-            return 'wcs'
+            return "wcs"
 
     @staticmethod
     def _get_map_cls(map_type):
@@ -280,19 +281,22 @@ class Map(object):
         (see e.g. the Astropy table format I/O registry),
         but that's non-trivial to implement without avoiding circular imports.
         """
-        if map_type == 'wcs':
+        if map_type == "wcs":
             from .wcsnd import WcsNDMap
+
             return WcsNDMap
-        elif map_type == 'wcs-sparse':
+        elif map_type == "wcs-sparse":
             raise NotImplementedError()
-        elif map_type == 'hpx':
+        elif map_type == "hpx":
             from .hpxnd import HpxNDMap
+
             return HpxNDMap
-        elif map_type == 'hpx-sparse':
+        elif map_type == "hpx-sparse":
             from .hpxsparse import HpxSparseMap
+
             return HpxSparseMap
         else:
-            raise ValueError('Unrecognized map type: {!r}'.format(map_type))
+            raise ValueError("Unrecognized map type: {!r}".format(map_type))
 
     def write(self, filename, overwrite=False, **kwargs):
         """Write to a FITS file.
@@ -362,9 +366,10 @@ class Map(object):
         """
         pix = list(self.geom.get_idx(flat=True))
         vals = self.data[np.isfinite(self.data)]
-        return unpack_seq(np.nditer([vals] + pix,
-                                    flags=['external_loop', 'buffered'],
-                                    buffersize=buffersize))
+        x = [vals] + pix
+        return unpack_seq(
+            np.nditer(x, flags=["external_loop", "buffered"], buffersize=buffersize)
+        )
 
     def iter_by_coord(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
@@ -385,9 +390,10 @@ class Map(object):
         """
         coords = list(self.geom.get_coord(flat=True))
         vals = self.data[np.isfinite(self.data)]
-        return unpack_seq(np.nditer([vals] + coords,
-                                    flags=['external_loop', 'buffered'],
-                                    buffersize=buffersize))
+        x = [vals] + coords
+        return unpack_seq(
+            np.nditer(x, flags=["external_loop", "buffered"], buffersize=buffersize)
+        )
 
     @abc.abstractmethod
     def sum_over_axes(self):
@@ -414,7 +420,7 @@ class Map(object):
         vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
-    def reproject(self, geom, order=1, mode='interp'):
+    def reproject(self, geom, order=1, mode="interp"):
         """Reproject this map to a different geometry.
 
         Only spatial axes are reprojected, if you would like to reproject
@@ -436,22 +442,22 @@ class Map(object):
         map : `Map`
             Reprojected map.
         """
-        axes_eq = (geom.ndim == self.geom.ndim)
-        axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in
-                           zip(geom.axes, self.geom.axes)])
+        axes_eq = geom.ndim == self.geom.ndim
+        axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)])
 
         if not axes_eq and not geom.is_image:
-            raise ValueError('Projection geometry must be 2D or have the '
-                             'same number of dimensions as the map. If you want'
-                             ' to reproject in non-spatial axes, try Map.interp_by_coord()')
+            raise ValueError(
+                "Map and target geometry non-spatial axes must match."
+                "Use interp_by_coord to interpolate in non-spatial axes."
+            )
 
-        if geom.projection == 'HPX':
+        if geom.projection == "HPX":
             return self._reproject_to_hpx(geom, mode=mode, order=order)
         else:
             return self._reproject_to_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
-    def pad(self, pad_width, mode='constant', cval=0, order=1):
+    def pad(self, pad_width, mode="constant", cval=0, order=1):
         """Pad the spatial dimension of the map by extending the edge of the
         map by the given number of pixels.
 
@@ -548,7 +554,7 @@ class Map(object):
         slices : dict
             Dict of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
-            correspoding axes is dropped from the map. Axes not specified in the
+            corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
 
         Returns
@@ -671,8 +677,7 @@ class Map(object):
             Map with spatial dimensions only.
         """
         if len(idx) != len(self.geom.axes):
-            raise ValueError("tuple length must be equal to the number of"
-                             " non spatial dimensions.")
+            raise ValueError("Tuple length must equal number of non-spatial dimensions")
 
         # Only support scalar indices per axis
         idx = tuple([int(_) for _ in idx])
@@ -942,45 +947,50 @@ class Map(object):
         from ipywidgets import SelectionSlider, RadioButtons
 
         if self.geom.is_image:
-            raise TypeError('Use .plot() for 2D Maps')
+            raise TypeError("Use .plot() for 2D Maps")
 
-        kwargs.setdefault('interpolation', 'nearest')
-        kwargs.setdefault('origin', 'lower')
-        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault("interpolation", "nearest")
+        kwargs.setdefault("origin", "lower")
+        kwargs.setdefault("cmap", "afmhot")
 
         rc_params = rc_params or {}
-        stretch = kwargs.pop('stretch', 'sqrt')
+        stretch = kwargs.pop("stretch", "sqrt")
 
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            if axis.node_type == 'edge':
-                options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, axis.unit) for
-                           val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])]
+            if axis.node_type == "edge":
+                options = [
+                    "{:.0f} - {:.0f} {}".format(val_min, val_max, axis.unit)
+                    for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])
+                ]
             else:
-                options = ['{:.0f} {}'.format(val, axis.unit) for val in axis.center]
+                options = ["{:.0f} {}".format(val, axis.unit) for val in axis.center]
 
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
-                description='Select {}:'.format(axis.name),
+                description="Select {}:".format(axis.name),
                 continuous_update=False,
-                style={'description_width': 'initial'},
-                layout={'width': '36%'}
+                style={"description_width": "initial"},
+                layout={"width": "36%"},
             )
-            interact_kwargs[axis.name + '_options'] = fixed(options)
+            interact_kwargs[axis.name + "_options"] = fixed(options)
 
-        interact_kwargs['stretch'] = RadioButtons(
-            options=['linear', 'sqrt', 'log'],
+        interact_kwargs["stretch"] = RadioButtons(
+            options=["linear", "sqrt", "log"],
             value=stretch,
-            description='Select stretch:',
-            style={'description_width': 'initial'}
+            description="Select stretch:",
+            style={"description_width": "initial"},
         )
 
         @interact(**interact_kwargs)
         def _plot_interactive(**ikwargs):
-            idx = [ikwargs[ax.name + '_options'].index(ikwargs[ax.name]) for ax in self.geom.axes]
+            idx = [
+                ikwargs[ax.name + "_options"].index(ikwargs[ax.name])
+                for ax in self.geom.axes
+            ]
             img = self.get_image_by_idx(idx)
-            stretch = ikwargs['stretch']
+            stretch = ikwargs["stretch"]
             with mpl.rc_context(rc=rc_params):
                 fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
                 plt.show()
@@ -998,7 +1008,7 @@ class Map(object):
         copy : `Map`
             Copied Map.
         """
-        if 'geom' in kwargs:
+        if "geom" in kwargs:
             raise ValueError("Can't copy and change geometry of the map.")
         return self._init_copy(**kwargs)
 
@@ -1007,7 +1017,7 @@ class Map(object):
         str_ += "\n\n"
         geom = self.geom.__class__.__name__
         str_ += "\tgeom  : {} \n ".format(geom)
-        axes = ['skycoord'] if self.geom.is_hpx else ['lon', 'lat']
+        axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
         axes = axes + [_.name for _ in self.geom.axes]
         str_ += "\taxes  : {}\n".format(", ".join(axes))
         str_ += "\tshape : {}\n".format(self.geom.data_shape[::-1])
