@@ -66,8 +66,6 @@ cython:
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
-code-analysis: flake8 pylint
-
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \

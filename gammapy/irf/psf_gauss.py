@@ -221,7 +221,9 @@ class EnergyDependentMultiGaussPSF(object):
 
     def containment_radius(self, energy, theta, fraction=0.68):
         """Compute containment for all energy and theta values"""
-        energy = Energy(energy).flatten()
+        # This is a false positive from pylint
+        # See https://github.com/PyCQA/pylint/issues/2435
+        energy = Energy(energy).flatten()  # pylint:disable=assignment-from-no-return
         theta = Angle(theta).flatten()
         radius = np.empty((theta.size, energy.size))
 
