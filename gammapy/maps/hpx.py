@@ -139,12 +139,12 @@ def coords_to_vec(lon, lat):
     sin_t = np.sin(theta)
     cos_t = np.cos(theta)
 
-    xVals = sin_t * np.cos(phi)
-    yVals = sin_t * np.sin(phi)
-    zVals = cos_t
+    x = sin_t * np.cos(phi)
+    y = sin_t * np.sin(phi)
+    z = cos_t
 
     # Stack them into the output array
-    out = np.vstack((xVals, yVals, zVals)).swapaxes(0, 1)
+    out = np.vstack((x, y, z)).swapaxes(0, 1)
     return out
 
 
@@ -1221,7 +1221,7 @@ class HpxGeom(MapGeom):
                    axes=axes, conv=conv)
 
     @staticmethod
-    def identify_HPX_convention(header):
+    def identify_hpx_convention(header):
         """Identify the convention used to write this file."""
         # Hopefully the file contains the HPX_CONV keyword specifying
         # the convention used
@@ -1281,7 +1281,7 @@ class HpxGeom(MapGeom):
         hpx : `~HpxGeom`
             HEALPix geometry.
         """
-        convname = HpxGeom.identify_HPX_convention(header)
+        convname = HpxGeom.identify_hpx_convention(header)
         conv = HPX_FITS_CONVENTIONS[convname]
 
         axes = find_and_read_bands(hdu_bands)

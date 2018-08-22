@@ -956,9 +956,9 @@ class Map(object):
         for axis in self.geom.axes:
             if axis.node_type == 'edge':
                 options = ['{:.0f} - {:.0f} {}'.format(val_min, val_max, axis.unit) for
-                        val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])]
+                           val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])]
             else:
-                options = ['{:.0f} {}'.format(val, axis.unit) for val in axis. center]
+                options = ['{:.0f} {}'.format(val, axis.unit) for val in axis.center]
 
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
@@ -966,7 +966,7 @@ class Map(object):
                 continuous_update=False,
                 style={'description_width': 'initial'},
                 layout={'width': '36%'}
-                )
+            )
             interact_kwargs[axis.name + '_options'] = fixed(options)
 
         interact_kwargs['stretch'] = RadioButtons(
@@ -974,7 +974,7 @@ class Map(object):
             value=stretch,
             description='Select stretch:',
             style={'description_width': 'initial'}
-            )
+        )
 
         @interact(**interact_kwargs)
         def _plot_interactive(**ikwargs):
