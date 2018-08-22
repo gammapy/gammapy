@@ -174,7 +174,7 @@ class TestHESS:
             assert_almost_equal(val_hess, val_m, decimal=4)
 
     @staticmethod
-    def test_GC():
+    def test_gc():
         """Compare the containment radii computed with the HESS software
         with those found by using MultiGauss2D.
 
