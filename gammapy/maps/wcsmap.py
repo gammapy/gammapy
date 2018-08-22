@@ -7,9 +7,7 @@ from .base import Map
 from .wcs import WcsGeom
 from .utils import find_hdu, find_bands_hdu
 
-__all__ = [
-    'WcsMap',
-]
+__all__ = ["WcsMap"]
 
 
 class WcsMap(Map):
@@ -24,9 +22,22 @@ class WcsMap(Map):
     """
 
     @classmethod
-    def create(cls, map_type='wcs', npix=None, binsz=0.1, width=None,
-               proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv='gadf', meta=None, unit=''):
+    def create(
+        cls,
+        map_type="wcs",
+        npix=None,
+        binsz=0.1,
+        width=None,
+        proj="CAR",
+        coordsys="CEL",
+        refpix=None,
+        axes=None,
+        skydir=None,
+        dtype="float32",
+        conv="gadf",
+        meta=None,
+        unit="",
+    ):
         """Factory method to create an empty WCS map.
 
         Parameters
@@ -78,19 +89,27 @@ class WcsMap(Map):
             A WCS map object.
         """
         from .wcsnd import WcsNDMap
+
         # from .wcssparse import WcsMapSparse
 
-        geom = WcsGeom.create(npix=npix, binsz=binsz, width=width,
-                              proj=proj, skydir=skydir,
-                              coordsys=coordsys, refpix=refpix, axes=axes,
-                              conv=conv)
+        geom = WcsGeom.create(
+            npix=npix,
+            binsz=binsz,
+            width=width,
+            proj=proj,
+            skydir=skydir,
+            coordsys=coordsys,
+            refpix=refpix,
+            axes=axes,
+            conv=conv,
+        )
 
-        if map_type == 'wcs':
+        if map_type == "wcs":
             return WcsNDMap(geom, dtype=dtype, meta=meta, unit=unit)
-        elif map_type == 'wcs-sparse':
+        elif map_type == "wcs-sparse":
             raise NotImplementedError
         else:
-            raise ValueError('Unrecognized map type: {}'.format(map_type))
+            raise ValueError("Invalid map type: {!r}".format(map_type))
 
     @classmethod
     def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
@@ -123,8 +142,7 @@ class WcsMap(Map):
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False,
-                   conv=None):
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv=None):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -146,29 +164,28 @@ class WcsMap(Map):
 
         """
         if sparse:
-            hdu = 'SKYMAP' if hdu is None else hdu.upper()
+            hdu = "SKYMAP" if hdu is None else hdu.upper()
         else:
-            hdu = 'PRIMARY' if hdu is None else hdu.upper()
+            hdu = "PRIMARY" if hdu is None else hdu.upper()
 
-        if sparse and hdu == 'PRIMARY':
-            raise ValueError('Sparse maps cannot be written to the PRIMARY HDU.')
+        if sparse and hdu == "PRIMARY":
+            raise ValueError("Sparse maps cannot be written to the PRIMARY HDU.")
 
         if self.geom.axes:
-            hdu_bands_out = self.geom.make_bands_hdu(hdu=hdu_bands,
-                                                     hdu_skymap=hdu,
-                                                     conv=conv)
+            hdu_bands_out = self.geom.make_bands_hdu(
+                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+            )
             hdu_bands = hdu_bands_out.name
         else:
             hdu_bands = None
 
-        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands,
-                                sparse=sparse, conv=conv)
+        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
 
-        hdu_out.header['META'] = json.dumps(self.meta)
+        hdu_out.header["META"] = json.dumps(self.meta)
 
-        hdu_out.header['UNIT'] = self.unit.to_string('fits')
+        hdu_out.header["UNIT"] = self.unit.to_string("fits")
 
-        if hdu == 'PRIMARY':
+        if hdu == "PRIMARY":
             hdulist = [hdu_out]
         else:
             hdulist = [fits.PrimaryHDU(), hdu_out]
@@ -178,8 +195,7 @@ class WcsMap(Map):
 
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, hdu='SKYMAP', hdu_bands=None, sparse=False,
-                 conv=None):
+    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
         """Make a FITS HDU from this map.
 
         Parameters
@@ -200,11 +216,11 @@ class WcsMap(Map):
         header = self.geom.make_header()
 
         if hdu_bands is not None:
-            header['BANDSHDU'] = hdu_bands
+            header["BANDSHDU"] = hdu_bands
 
         if sparse:
             hdu_out = self._make_hdu_sparse(self.data, self.geom.npix, hdu, header)
-        elif hdu == 'PRIMARY':
+        elif hdu == "PRIMARY":
             hdu_out = fits.PrimaryHDU(self.data, header=header)
         else:
             hdu_out = fits.ImageHDU(self.data, header=header, name=hdu)
@@ -226,10 +242,9 @@ class WcsMap(Map):
             data_flat[~np.isfinite(data_flat)] = 0
             nonzero = np.where(data_flat > 0)
             value = data_flat[nonzero].astype(float)
-
             cols = [
-                fits.Column('PIX', 'J', array=nonzero[0]),
-                fits.Column('VALUE', 'E', array=value),
+                fits.Column("PIX", "J", array=nonzero[0]),
+                fits.Column("VALUE", "E", array=value),
             ]
         elif npix[0].size == 1:
             shape_flat = shape[:-2] + (shape[-1] * shape[-2],)
@@ -238,11 +253,10 @@ class WcsMap(Map):
             nonzero = np.where(data_flat > 0)
             channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
             value = data_flat[nonzero].astype(float)
-
             cols = [
-                fits.Column('PIX', 'J', array=nonzero[-1]),
-                fits.Column('CHANNEL', 'I', array=channel),
-                fits.Column('VALUE', 'E', array=value),
+                fits.Column("PIX", "J", array=nonzero[-1]),
+                fits.Column("CHANNEL", "I", array=channel),
+                fits.Column("VALUE", "E", array=value),
             ]
         else:
             data_flat = []
@@ -255,17 +269,19 @@ class WcsMap(Map):
                 data_i = data_i[pix_i]
                 data_flat += [data_i]
                 pix += pix_i
-                channel += [np.ones(data_i.size, dtype=int) *
-                            np.ravel_multi_index(i[::-1], shape[:-2])]
+                channel += [
+                    np.ones(data_i.size, dtype=int)
+                    * np.ravel_multi_index(i[::-1], shape[:-2])
+                ]
 
             pix = np.concatenate(pix)
             channel = np.concatenate(channel)
             value = np.concatenate(data_flat).astype(float)
 
             cols = [
-                fits.Column('PIX', 'J', array=pix),
-                fits.Column('CHANNEL', 'I', array=channel),
-                fits.Column('VALUE', 'E', array=value),
+                fits.Column("PIX", "J", array=pix),
+                fits.Column("CHANNEL", "I", array=channel),
+                fits.Column("VALUE", "E", array=value),
             ]
 
         return fits.BinTableHDU.from_columns(cols, header=header, name=hdu)
