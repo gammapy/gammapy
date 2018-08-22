@@ -5,17 +5,15 @@ from numpy.testing import assert_allclose
 import numpy as np
 from astropy import units as u
 from ...utils.testing import requires_dependency
-from ...maps import WcsNDMap, MapAxis
+from ...maps import WcsNDMap
 from ...background import RingBackgroundEstimator, AdaptiveRingBackgroundEstimator
 
 
 @pytest.fixture
 def images():
     fov = 2.5 * u.deg
-    axes = [MapAxis(np.logspace(0., 3., 3), interp='log'),
-            MapAxis(np.logspace(1., 3., 4), interp='lin')]
 
-    reference_image = WcsNDMap.create(binsz=0.05, npix=201, dtype=float, axes=axes)
+    reference_image = WcsNDMap.create(binsz=0.05, npix=201, dtype=float)
     reference_image.data += 1.
     coords = reference_image.geom.get_coord().skycoord
     center = reference_image.geom.center_skydir
@@ -43,9 +41,9 @@ def test_ring_background_estimator(images):
     in_fov = images['exposure_on'].data > 0
 
     assert_allclose(result['background'].data[in_fov], 2.)
-    assert_allclose(result['alpha'].data[in_fov].mean(), 0.00327, rtol=1e-3)
-    assert_allclose(result['exposure_off'].data[in_fov].mean(), 324.104, rtol=1e-3)
-    assert_allclose(result['off'].data[in_fov].mean(), 648.208, rtol=1e-3)
+    assert_allclose(result['alpha'].data[in_fov].mean(), 0.003488538457592745)
+    assert_allclose(result['exposure_off'].data[in_fov].mean(), 305.1268970794541)
+    assert_allclose(result['off'].data[in_fov].mean(), 610.2537941589082)
 
     assert_allclose(result['off'].data[~in_fov], 0.)
     assert_allclose(result['exposure_off'].data[~in_fov], 0.)
