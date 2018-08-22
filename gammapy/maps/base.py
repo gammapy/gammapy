@@ -331,23 +331,7 @@ class Map(object):
         array and image plane index.
 
         The image plane index is in data order, so that the data array can be
-        indexed directly. Here is an example for an inplace convolution of an
-        image using `astropy.convolution.convolve()` to interpolate NaN values:
-
-
-        .. code::
-
-            import numpy as np
-            from astropy.convolution import convolve
-
-            axis = MapAxis([1, 10, 100], interp='log', name='energy')
-            axis = MapAxis([1, 2, 3], interp='lin', name='time')
-            m = Map.create(width=(5, 3), axes=[axis1, axis2], binsz=0.1)
-            m.data[:, :, 15:18, 20:25] = np.nan
-
-            for img, idx in m.iter_by_image():
-                kernel = np.ones((5, 5))
-                m.data[idx] = convolve(img, kernel)
+        indexed directly. See :ref:`mapiter` for further information.
 
         Returns
         -------
