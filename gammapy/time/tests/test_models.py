@@ -5,14 +5,14 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from ...utils.scripts import make_path
 from ...utils.testing import requires_data, requires_dependency
-from ..models import PhaseCurve, LightCurve
+from ..models import PhaseCurveTableModel, LightCurveTableModel
 
 
 @pytest.fixture(scope='session')
 def phase_curve():
     filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
     table = Table.read(str(filename))
-    return PhaseCurve(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
+    return PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
 
 @requires_data('gammapy-extra')
@@ -38,13 +38,13 @@ def test_phasecurve_evaluate(phase_curve):
 @pytest.fixture(scope='session')
 def light_curve():
     path = '$GAMMAPY_EXTRA/test_datasets/models/light_curve/lightcrv_PKSB1222+216.fits'
-    return LightCurve.read(path)
+    return LightCurveTableModel.read(path)
 
 
 @requires_data('gammapy-extra')
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
-    assert 'LightCurve' in ss
+    assert 'LightCurveTableModel' in ss
 
 
 @requires_dependency('scipy')

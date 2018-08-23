@@ -4,15 +4,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
-
 from astropy.coordinates import Angle
 
 __all__ = [
     'colormap_hess',
     'colormap_milagro',
-    'fits_to_png',
-    'GalacticPlaneSurveyPanelPlot',
-    'fitsfigure_add_psf_inset',
+    'MapPanelPlotter',
     'illustrate_colormap',
     'grayify_colormap',
 ]
@@ -20,12 +17,12 @@ __all__ = [
 __doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
 
 
-class SkyImagePanelPlotter(object):
+class MapPanelPlotter(object):
     """
-    Sky image panel plotter class
+    Mape panel plotter class.
 
     Given a `~matplotlib.pyplot.Figure` object this class creates axes objects
-    using `~matplotlib.gridspec.GridSpec` and plots a given sky image onto these.
+    using `~matplotlib.gridspec.GridSpec` and plots a given sky map onto these.
 
     Parameters
     ----------
@@ -82,41 +79,41 @@ class SkyImagePanelPlotter(object):
         ax.set_ylim(*ylim_pix)
         return ax
 
-    def plot_panel(self, skyimage, panel=1, panel_fov=None, **kwargs):
+    def plot_panel(self, image, panel=1, panel_fov=None, **kwargs):
         """
         Plot sky image on one panel.
 
         Parameters
         ----------
-        skyimage : `~gammapy.image.SkyImage`
-            Sky image to plot.
+        map : `~gammapy.maps.WcsNDMap`
+            Map to plot.
         panel : int
             Which panel to plot on (counted from top).
         """
         if panel_fov is None:
             panel_fov = panel
         spec = self.grid_spec[panel]
-        ax = self.figure.add_subplot(spec, projection=skyimage.wcs)
+        ax = self.figure.add_subplot(spec, projection=image.geom.wcs)
         try:
-            ax = skyimage.plot(ax=ax, **kwargs)[1]
+            ax = image.plot(ax=ax, **kwargs)[1]
         except AttributeError:
-            ax = skyimage.plot_rgb(ax=ax, **kwargs)
+            ax = image.plot_rgb(ax=ax, **kwargs)
         ax = self._set_ax_fov(ax, panel_fov)
         return ax
 
-    def plot(self, skyimage, **kwargs):
+    def plot(self, image, **kwargs):
         """
         Plot sky image on all panels.
 
         Parameters
         ----------
-        skyimage : `~gammapy.image.SkyImage`
-            Sky image to plot.
+       map : `~gammapy.maps.WcsNDMap`
+            Map to plot.
         """
         p = self.parameters
         axes = []
         for panel in range(p['npanels']):
-            ax = self.plot_panel(skyimage, panel=panel, **kwargs)
+            ax = self.plot_panel(image, panel=panel, **kwargs)
             axes.append(ax)
         return axes
 
@@ -270,439 +267,6 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     return cmap
 
 
-def fits_to_png(infile, outfile, draw, dpi=100):
-    """Plot FITS image in PNG format.
-
-    For the default ``dpi=100`` a 1:1 copy of the pixels in the FITS image
-    and the PNG image is achieved, i.e. they have exactly the same size.
-
-    Parameters
-    ----------
-    infile : str
-        Input FITS file name
-    outfile : str
-        Output PNG file name
-    draw : callable
-        Callback function ``draw(figure)``
-        where ``figure`` is an `~aplpy.FITSFigure`.
-    dpi : int
-        Resolution
-
-    Examples
-    --------
-    >>> def draw(figure):
-    ...     x, y, width, height = 42, 0, 3, 2
-    ...     figure.recenter(x, y, width, height)
-    ...     figure.show_grayscale()
-    >>> from gammapy.image import fits_to_png
-    >>> fits_to_png('image.fits', 'image.png', draw)
-    """
-    import matplotlib
-    matplotlib.use('Agg')  # Prevents image popup
-    import matplotlib.pyplot as plt
-    from astropy.io import fits
-    from aplpy import FITSFigure
-
-    # Peak ahead just to get the figure size
-    NAXIS1 = float(fits.getval(infile, 'NAXIS1'))
-    NAXIS2 = float(fits.getval(infile, 'NAXIS2'))
-
-    # Note: For dpi=100 I get exactly the same FITS and PNG image size in pix.
-    figsize = np.array((NAXIS1, NAXIS2))
-    figure = plt.figure(figsize=figsize / dpi)
-    # Also try this:
-    # matplotlib.rcParams['figure.figsize'] = NAXIS1, NAXIS2
-    # figsize(x,y)
-
-    subplot = [0, 0, 1, 1]
-    figure = FITSFigure(infile, figure=figure, subplot=subplot)
-
-    draw(figure)
-
-    figure.axis_labels.hide()
-    figure.tick_labels.hide()
-    figure.ticks.set_linewidth(0)
-    figure.frame.set_linewidth(0)
-
-    figure.save(outfile, max_dpi=dpi, adjust_bbox=False)
-
-
-class GalacticPlaneSurveyPanelPlot(object):
-    """Plot Galactic plane survey images in multiple panels.
-
-    This is useful for very wide, but not so high survey images
-    (~100 deg in Galactic longitude and ~10 deg in Galactic latitude).
-
-    TODO: describe how the callbacks work
-
-    References:
-    http://aplpy.readthedocs.io/en/latest/howto_subplot.html
-
-    Attributes:
-
-    * ``panel_parameters`` -- dict of panel parameters
-    * ``figure`` --- Main matplotlib figure (cantains all panels)
-    * ``fits_figure`` --- Current `aplpy.FITSFigure`
-
-    Parameters
-    ----------
-    fits_figure : `aplpy.FITSFigure`
-        FITSFigure to plot on all panels
-    npanels : int
-        Number of panels
-
-    Examples
-    --------
-    TODO
-
-    TODO: Link to tutorial example
-    """
-
-    def __init__(self, npanels=4, center=(0, 0), fov=(10, 1),
-                 xsize=10, ysize=None, xborder=0.5, yborder=0.5,
-                 yspacing=0.5, xoverlap=0):
-        """Compute panel parameters and make a matplotlib Figure.
-        """
-        import matplotlib.pyplot as plt
-
-        self.panel_parameters = _panel_parameters(npanels=npanels,
-                                                  center=center,
-                                                  fov=fov,
-                                                  xsize=xsize,
-                                                  ysize=ysize,
-                                                  xborder=xborder,
-                                                  yborder=yborder,
-                                                  yspacing=yspacing,
-                                                  xoverlap=xoverlap)
-
-        self.figure = plt.figure(figsize=self.panel_parameters['figsize'])
-
-    def bottom(self, colorbar_pars={}, colorbar_label=''):
-        """TODO: needed?
-        """
-        if colorbar_pars:
-            self.fits_figure.add_colorbar(**colorbar_pars)
-        if colorbar_label != '':
-            self.fits_figure.colorbar.set_font(size='small')
-            self.fits_figure.colorbar._colorbar.set_label(colorbar_label)
-
-    def top(self):
-        """TODO: needed?
-        """
-        pass
-
-    def draw_panels(self, panels='all', format=True):
-        """Draw panels.
-
-        Parameters
-        ----------
-        panels : list of ints or 'all'
-            List of panels to draw.
-        """
-        if panels == 'all':
-            panels = range(self.panel_parameters['npanels'])
-
-        for panel in panels:
-            self.draw_panel(panel, format=format)
-
-            # self.figure.canvas.draw()
-
-    def draw_panel(self, panel=0, format=True):
-        """Draw panel.
-
-        Parameters
-        ----------
-        panel : int
-            Panel index
-        """
-        pp = self.panel_parameters
-        center = pp['centers'][panel]
-        self.subplot = pp['subplots'][panel]
-
-        # Execute user-defined plotting ...
-        # This must set self.fits_figure
-        self.main(self.figure, self.subplot)
-
-        # self.fits_figure.set_auto_refresh(False)
-        self.fits_figure.recenter(center[0], center[1],
-                                  width=pp['width'], height=pp['height'])
-
-        if panel == 0:
-            self.bottom()
-        if panel == (pp['npanels'] - 1):
-            self.top()
-
-        # fits_figure.refresh()
-        # self.figure.canvas.draw()
-
-        # To ensure compatibility with old code
-        if hasattr(self, 'post'):
-            self.post()
-        if format:
-            GalacticPlaneSurveyPanelPlot.format_fits_figure(self.fits_figure)
-
-    @staticmethod
-    def format_fits_figure(fits_figure, theme=None):
-        """TODO: describe
-
-        Parameters
-        ----------
-        TODO
-        """
-        if theme is not None:
-            fits_figure.set_theme('publication')
-        fits_figure.axis_labels.hide()
-        fits_figure.ticks.set_xspacing(5)
-        fits_figure.ticks.set_yspacing(1)
-        fits_figure.tick_labels.set_xformat('dd')
-        fits_figure.tick_labels.set_yformat('dd')
-        fits_figure.tick_labels.set_style('colons')
-        # fits_figure.tick_labels.set_font(size='small')
-
-
-def _panel_parameters(npanels, center, fov, xborder, yborder,
-                      yspacing, xoverlap=0, xsize=None, ysize=None):
-    """Compute panel parameters.
-
-    This function computes all relevant quantities to plot
-    a very wide survey map in n slices.
-
-    This is surprisingly complicated because coordinates are
-    relative to figsize, which is already not 1:1.
-
-    TODO: document panel parameters.
-
-    Parameters
-    ----------
-    npanels : int
-        Number of slices
-    center : pair
-        Image center position (lon, lat)
-    fov : pair
-        Image full-width and full-height
-    xsize : float
-        Width of the figure in inches
-    ysize : float (None)
-        Height of the figure in inches
-    xborder : float
-        Free space to x border in inches
-    yborder : float
-        Free space to y border in inches
-    yspacing : float
-        Free space between slices in inches
-    xoverlap : float
-        Overlap between single panels in deg.
-
-    Returns
-    -------
-    panel_parameters : dict
-        Dictionary of panel parameters
-    """
-    # Need floats for precise divisions
-    center = [float(center[0]), float(center[1])]
-    fov = [float(fov[0]), float(fov[1])]
-    xborder, yborder = float(xborder), float(yborder)
-    yspacing = float(yspacing)
-
-    # Width and height in deg of a slice
-    width = fov[0] / npanels
-    height = fov[1]
-    # Aspect ratio y:x of a slice
-    aspectratio = fov[1] / (fov[0] / npanels)
-    # Absolute figure dimensions
-    if ysize is None and xsize is not None:
-        ysize = (2 * yborder + (npanels - 1) * yspacing +
-                 npanels * aspectratio * (float(xsize) - 2 * xborder))
-    elif xsize is None and ysize is not None:
-        xsize = ((float(ysize) - (2 * yborder + (npanels - 1) * yspacing)) /
-                 (npanels * aspectratio) + 2 * xborder)
-    else:
-        raise ValueError('Either xsize or ysize must be specified.')
-
-    figsize = [xsize, ysize]
-
-    # Relative slice subplot dimensions
-    dx = 1 - 2 * xborder / xsize
-    dy = aspectratio * dx * xsize / ysize
-    dyspacing = yspacing / ysize
-
-    # List of y slice offsets
-    subplots = []
-    subplot_centers = []
-    for ii in range(npanels):
-        subplot_center = [center[0] - fov[0] / 2 + (ii + 0.5) * width, center[1]]
-        subplot = [xborder / xsize, yborder / ysize + ii * (dy + dyspacing), dx, dy]
-        subplot_centers.append(subplot_center)
-        subplots.append(subplot)
-
-    pp = dict()
-    pp['figsize'] = figsize
-    pp['npanels'] = npanels
-    pp['centers'] = subplot_centers
-    pp['subplots'] = subplots
-    pp['width'] = width + xoverlap
-    pp['height'] = height
-
-    return pp
-
-
-def fitsfigure_add_psf_inset(ff, psf, box, linewidth=1, color='w',
-                             psf_position=(0, 0), **kwargs):
-    """
-    Add PSF inset to `~aplpy.FITSFigure` instance.
-
-    Parameters
-    ----------
-    ff : `~aplpy.FITSFigure`
-        `~aplpy.FITSFigure` instance.
-    psf : `astropy.io.fits.ImageHDU`
-        PSF image.
-    box : tuple
-        (x, y, width, height) of the PSF inset in world coordinates.
-    linewidth : float
-        Linewidth of the PSF inset frame.
-    color : str
-        Color of the PSF inset frame.
-    psf_position : tuple
-        (x, y) position of the psf in in the psf image in pixel coordinates.
-    kwargs : dict
-        Further arguments passed to `~matplotlib.pyplot.imshow`.
-
-    Returns
-    -------
-    psf : `~matplotlib.axes.Axes`
-        PSF `~matplotlib.axes.Axes` instance, can be used for further plotting.
-    """
-    rect = _rect_world2fig(ff, box)
-
-    # WCSAxes should be used here
-    psf_axes = ff._figure.add_axes(rect)
-    for spline in psf_axes.spines.values():
-        spline.set_edgecolor(color)
-        spline.set_linewidth(linewidth)
-
-    psf_axes.xaxis.set_ticks([])
-    psf_axes.yaxis.set_ticks([])
-
-    psf_axes.imshow(psf.data, **kwargs)
-    xc, yc = psf_position
-    wc = box[2] / abs(psf.header['CDELT1']) / 2.
-    hc = box[3] / abs(psf.header['CDELT2']) / 2.
-    psf_axes.set_xlim(xc - wc, xc + wc)
-    psf_axes.set_ylim(yc - hc, yc + hc)
-    return psf_axes
-
-
-def fitsfigure_add_colorbar_inset(ff, box, linewidth=1, color='w', normalize=None,
-                                  label='', label_position='right', label_pad=0,
-                                  n_ticks=5, ticklabel_format='.1f', tick_size=5):
-    """
-    Add colorbar inset to existing `~aplpy.FITSFigure` instance.
-
-    Parameters
-    ----------
-    ff : `~aplpy.FITSFigure`
-        `~aplpy.FITSFigure` instance.
-    box : tuple
-        (x, y, width, height) of the colorbar inset in world coordinates.
-    linewidth : float
-        Linewidth of the colorbar inset frame.
-    color : str
-        Color of the colorbar inset frame.
-    normalize : `~astropy.visualization.mpl_normalize.ImageNormalize` (None)
-        `~astropy.visualization.mpl_normalize.ImageNormalize` instance.
-    label : str
-        Colorbar label.
-    label_position : {'right', 'bottom'}
-        Colorbar label position.
-    label_pad : float
-        Colorbar label padding.
-    n_ticks : int (default = 5)
-        Number of ticks and tick labels.
-    ticklabel_format : str (default = '.1f')
-        Tick label fomating string.
-    ticksize : float
-        Size of the colorbar ticks.
-
-    Returns
-    -------
-    psf : `~matplotlib.axes.Axes`
-        Colorbar `~matplotlib.axes.Axes` instance, can be used for further plotting.
-    """
-    rect = _rect_world2fig(ff, box)
-    cbar_axes = ff._figure.add_axes(rect)
-    cbar = ff._figure.colorbar(ff.image, cax=cbar_axes)
-    cbar.solids.set_edgecolor('face')
-    cbar.outline.set_edgecolor(color)
-    cbar.outline.set_linewidth(linewidth)
-    cbar.ax.yaxis.set_tick_params(color=color, size=tick_size)
-    ticks_pos = np.linspace(0, 1, n_ticks)
-    if normalize is not None:
-        ticks_pos = normalize.inverse(ticks_pos)
-    tick_labels = [('{0:' + ticklabel_format + '}').format(_) for _ in ticks_pos]
-    cbar.set_ticks(np.linspace(0, 1, n_ticks))
-    cbar_axes.set_yticklabels(tick_labels, color=color)
-    if label_position == 'bottom':
-        cbar_axes.set_xlabel(label, color=color, labelpad=label_pad)
-    elif label_position == 'right':
-        cbar_axes.set_ylabel(label, color=color, labelpad=label_pad)
-    else:
-        raise ValueError("Position of the label must be either 'right' or 'bottom'")
-    return cbar_axes
-
-
-def _rect_world2fig(ff, rect):
-    """
-    Transform rectangle from world to figure coordinates.
-
-    Paramaters
-    ----------
-    ff : `~aplpy.FITSFigure`
-        `~aplpy.FITSFigure` instance.
-    rect : tuple
-        Tuple that defines the rectangle like [x, y, width, height] in world
-        coordinates.
-
-    Returns
-    -------
-    rect : tuple
-        Tuple that defines the rectangle like [x, y, width, height] in figure
-        coordinates.
-    """
-    x, y, width, height = rect
-    xf, yf = _world2fig(ff, [x, x + width], [y, y + height])
-    return [xf[0], yf[0], abs(xf[1] - xf[0]), abs(yf[1] - yf[0])]
-
-
-def _world2fig(ff, x, y):
-    """
-    Helper function to convert world to figure coordinates.
-
-    Parameters
-    ----------
-    ff : `~aplpy.FITSFigure`
-        `~aplpy.FITSFigure` instance.
-    x : ndarray
-        Array of x coordinates.
-    y : ndarray
-        Array of y coordinates.
-
-    Returns
-    -------
-    coordsf : tuple
-        Figure coordinates as tuple (xfig, yfig) of arrays.
-    """
-    # Convert world to pixel coordinates
-    xp, yp = ff.world2pixel(x, y)
-
-    # Pixel to Axes coordinates
-    coordsa = ff._ax1.transData.transform(zip(xp, yp))
-
-    # Axes to figure coordinates
-    coordsf = ff._figure.transFigure.inverted().transform(coordsa)
-    return coordsf[:, 0], coordsf[:, 1]
-
-
 def grayify_colormap(cmap, mode='hsp'):
     """
     Return a grayscale version a the colormap.
@@ -734,12 +298,12 @@ def grayify_colormap(cmap, mode='hsp'):
     colors = cmap(np.arange(cmap.N))
 
     if mode == 'skimage':
-        from skimage.color import rgb2gray
+        from skimage.color import rgb2gray  # pylint:disable=import-error
         luminance = rgb2gray(np.array([colors]))
         colors[:, :3] = luminance[0][:, np.newaxis]
     elif mode == 'hsp':
-        RGB_weight = [0.299, 0.587, 0.114]
-        luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
+        rgb_weight = [0.299, 0.587, 0.114]
+        luminance = np.sqrt(np.dot(colors[:, :3] ** 2, rgb_weight))
         colors[:, :3] = luminance[:, np.newaxis]
     else:
         raise ValueError('Not a valid grayscale conversion mode.')

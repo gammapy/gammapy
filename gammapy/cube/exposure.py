@@ -1,20 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from .core import SkyCube
+import numpy as np
+from ..spectrum.models import PowerLaw
+from ..maps import WcsNDMap
 
 __all__ = [
-    'make_exposure_cube',
-    'make_background_cube',
+    'make_map_exposure_true_energy',
 ]
 
 
-def make_exposure_cube(pointing,
-                       livetime,
-                       aeff,
-                       ref_cube,
-                       offset_max,
-                       ):
-    """Calculate exposure cube.
+def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
+    """Compute exposure map.
+
+    This map has a true energy axis, the exposure is not combined
+    with energy dispersion.
 
     Parameters
     ----------
@@ -23,109 +22,66 @@ def make_exposure_cube(pointing,
     livetime : `~astropy.units.Quantity`
         Livetime
     aeff : `~gammapy.irf.EffectiveAreaTable2D`
-        Effective area table
-    ref_cube : `~gammapy.cube.SkyCube`
-        Reference cube used to define geometry
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset.
+        Effective area
+    geom : `~gammapy.maps.WcsGeom`
+        Map geometry (must have an energy axis)
 
     Returns
     -------
-    expcube : `~gammapy.cube.SkyCube`
-        Exposure cube (3D)
+    map : `~gammapy.maps.WcsNDMap`
+        Exposure map
     """
-    coordinates = ref_cube.sky_image_ref.coordinates()
-    offset = coordinates.separation(pointing)
-    energy = ref_cube.energies()
+    offset = geom.separation(pointing)
+    energy = geom.axes[0].center * geom.axes[0].unit
 
     exposure = aeff.data.evaluate(offset=offset, energy=energy)
-    exposure *= livetime
-    exposure[:, offset >= offset_max] = 0
+    # TODO: Improve IRF evaluate to preserve energy axis if length 1
+    # For now, we handle that case via this hack:
+    if len(exposure.shape) < 3:
+        exposure = np.expand_dims(exposure.value, 0) * exposure.unit
 
-    return SkyCube(
-        data=exposure,
-        wcs=ref_cube.wcs,
-        energy_axis=ref_cube.energy_axis,
-    )
+    exposure = (exposure * livetime).to('m2 s')
+
+    return WcsNDMap(geom, exposure.value, unit=exposure.unit)
 
 
-def make_background_cube(pointing,
-                         obstime,
-                         bkg,
-                         ref_cube,
-                         offset_max,
-                         ):
-    """Calculate background predicted counts cube.
+def _map_spectrum_weight(map, spectrum=None):
+    """Weight a map with a spectrum.
 
-    This function evaluates the background rate model on
-    a sky cube, and then multiplies with the cube bin size,
-    computed via `gammapy.cube.SkyCube.bin_size`, resulting
-    in a cube with values that contain predicted background
-    counts per bin.
+    This requires map to have an "energy" axis.
+    The weights are normalised so that they sum to 1.
+    The mean and unit of the output image is the same as of the input cube.
 
-    Note that this method isn't very precise if the energy
-    bins are large. In that case you might consider implementing
-    a more precise method that integrates over energy (e.g. by
-    choosing a finer energy binning here and then to group
-    energy bins).
+    At the moment this is used to get a weighted exposure image.
 
     Parameters
     ----------
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing direction
-    obstime : `~astropy.units.Quantity`
-        Observation time
-    bkg : `~gammapy.irf.Background3D`
-        Background rate model
-    ref_cube : `~gammapy.cube.SkyCube`
-        Reference cube used to define geometry
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum field of view offset.
+    map : `~gammapy.maps.Map`
+        Input map with an "energy" axis.
+    spectrum : `~gammapy.spectrum.models.SpectralModel`
+        Spectral model to compute the weights.
+        Default is power-law with spectral index of 2.
 
     Returns
     -------
-    background : `~gammapy.cube.SkyCube`
-        Background predicted counts sky cube
+    map_weighted : `~gammapy.maps.Map`
+        Weighted image
     """
-    coordinates = ref_cube.sky_image_ref.coordinates()
-    offset = coordinates.separation(pointing)
-    energy = ref_cube.energies()
+    if spectrum is None:
+        spectrum = PowerLaw(index=2.0)
 
-    # TODO: properly transform FOV to sky coordinates
-    # For now we assume the background is radially symmetric
+    # Compute weights vector
+    # Should we change to call spectrum.integrate ?
+    energy_axis = map.geom.get_axis_by_name("energy")
+    energy_center = energy_axis.center * energy_axis.unit
+    energy_edges = energy_axis.edges * energy_axis.unit
+    energy_width = np.diff(energy_edges)
+    weights = spectrum(energy_center) * energy_width
+    weights /= weights.sum()
 
-    data = bkg.data.evaluate(detx=offset, dety='0 deg', energy=energy)
-    data *= obstime * ref_cube.bin_size
-    data[:, offset >= offset_max] = 0
+    # Make new map with weights applied
+    map_weighted = map.copy()
+    for img, idx in map_weighted.iter_by_image():
+        img *= weights[idx].value
 
-    data = data.to('')
-
-    return SkyCube(
-        name='bkg',
-        data=data,
-        wcs=ref_cube.wcs,
-        energy_axis=ref_cube.energy_axis,
-    )
-
-
-def make_exposure_cube_obs(obs, ref_cube=None):
-    """Make exposure cube for a given observation.
-
-    Parameters
-    ----------
-    obs : `gammapy.data.Observation`
-        Observation
-    ref_cube : `~gammapy.data.SkyCube`
-        Reference cube used to define geometry
-
-    Returns
-    -------
-    expcube : `~gammapy.data.SkyCube`
-        3D exposure
-    """
-    # TODO: the observation class still needs to be implemented first!
-    raise NotImplemented
-    if not ref_cube:
-        ref_cube = obs.ref_cube
-
-    return make_exposure_cube(obs.pointing, obs.livetime, obs.irfs.aeff2d, ref_cube)
+    return map_weighted

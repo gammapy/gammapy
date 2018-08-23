@@ -17,7 +17,7 @@ from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel, SourceLibrary
+from ..cube.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -179,7 +179,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
                 'flux', d['spec_pl2_flux'].value, d['spec_pl2_flux_err'].value,
                 d['spec_pl2_flux_err_sys'].value, 'cm-2 s-1')
-            ss += '{:<15s} : {:.3} +- {:.3} (stat)\n'.format(
+            ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
                 'index', d['spec_pl2_index'], d['spec_pl2_index_err'],
                 d['spec_pl2_index_err_sys'])
             ss += '{:<15s} : {:.3}\n'.format('e_min', d['spec_pl2_e_min'])
@@ -286,7 +286,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SpatialModel`).
+        """Source spatial model (`~gammapy.image.models.SkySpatialModel`).
 
         TODO: add parameter errors!
         """
@@ -333,7 +333,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
-        name = self.name
         return SkyModel(spatial_model, spectral_model, name=self.name)
 
     def _add_source_meta(self, table):
@@ -445,8 +444,8 @@ class SourceCatalogGammaCat(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-    def to_source_library(self):
-        """Convert to a `~gammapy.utils.modeling.SourceLibrary`.
+    def to_sky_models(self):
+        """Convert to a `~gammapy.cube.models.SkyModels`.
 
         TODO: add an option whether to skip or raise on missing models or data.
         """
@@ -460,7 +459,7 @@ class SourceCatalogGammaCat(SourceCatalog):
                 log.warning('Skipping source {} (missing data in gamma-cat)'.format(source.name))
                 continue
 
-        return SourceLibrary(source_list)
+        return SkyModels(source_list)
 
 
 class GammaCatDataCollection(object):
@@ -484,8 +483,7 @@ class GammaCatDataCollection(object):
         data_index = json.load(path.read_text())
         return cls(data_index=data_index)
 
-    def info(self):
-        """Print some info."""
+    def __str__(self):
         ss = 'version = {}'.format(self.data_index['info']['version'])
         return ss
 
@@ -598,17 +596,17 @@ class GammaCatResourceIndex(object):
 
     @property
     def unique_source_ids(self):
-        """Sorted list of unique source IDs (`list(int)`)."""
+        """Sorted list of unique source IDs (list of int)."""
         return sorted(set([resource.source_id for resource in self.resources]))
 
     @property
     def unique_reference_ids(self):
-        """Sorted list of unique source IDs (`list(str)`)."""
+        """Sorted list of unique source IDs (list of str)."""
         return sorted(set([resource.reference_id for resource in self.resources]))
 
     @property
     def global_ids(self):
-        """List of global resource IDs (`list(str)`).
+        """List of global resource IDs (list of str).
 
         In original order, not sorted.
         """

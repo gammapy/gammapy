@@ -5,11 +5,11 @@ from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
-from .core import SkyImage
+from astropy.coordinates import Angle
 
 __all__ = [
     'ImageProfile',
-    'ImageProfileEstimator'
+    'ImageProfileEstimator',
 ]
 
 
@@ -54,148 +54,6 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
     return bin_edges
 
 
-class FluxProfile(object):
-    """Flux profile.
-
-    Note: over- and underflow is ignored and not stored in the profile
-
-    Note: this is implemented by creating bin labels and storing the
-    input 2D data in 1D `pandas.DataFrame` tables.
-    The 1D profile is also stored as a `pandas.DataFrame` and computed
-    using the fast and flexible pandas groupby and apply functions.
-
-    * TODO: take mask into account everywhere
-    * TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?
-    * TODO: add ``solid_angle`` to input arrays.
-
-    Parameters
-    ----------
-    x_image : array_like
-        Label image (2-dimensional)
-    x_edges : array_like
-        Defines binning in ``x`` (could be GLON, GLAT, DIST, ...)
-    counts, background, exposure : array_like
-        Input images (2-dimensional)
-    mask : array_like
-        possibility to mask pixels (i.e. ignore in computations)
-    """
-
-    def __init__(self, x_image, x_edges, counts, background, exposure, mask=None):
-        import pandas as pd
-        # Make sure inputs are numpy arrays
-        x_edges = np.asanyarray(x_edges)
-        x_image = np.asanyarray(x_image)
-        counts = np.asanyarray(counts)
-        background = np.asanyarray(background)
-        exposure = np.asanyarray(exposure)
-        if mask:
-            mask = np.asanyarray(mask)
-
-        assert (x_image.shape == counts.shape == background.shape ==
-                exposure.shape == mask.shape)
-
-        # Remember the shape of the 2D input arrays
-        self.shape = x_image.shape
-
-        # Store all input data as 1D vectors in a pandas.DataFrame
-        d = pd.DataFrame(index=np.arange(x_image.size))
-        d['x'] = x_image.flat
-        # By default np.digitize uses 0 as the underflow bin.
-        # Here we ignore under- and overflow, thus the -1
-        d['label'] = np.digitize(d['x'], x_edges) - 1
-        d['counts'] = counts.flat
-        d['background'] = background.flat
-        d['exposure'] = exposure.flat
-        if mask:
-            d['mask'] = mask.flat
-        else:
-            d['mask'] = np.ones_like(d['x'])
-        self.data = d
-
-        self.bins = np.arange(len(x_edges) + 1)
-
-        # Store all per-profile bin info in a pandas.DataFrame
-        p = pd.DataFrame(index=np.arange(x_edges.size - 1))
-        p['x_lo'] = x_edges[:-1]
-        p['x_hi'] = x_edges[1:]
-        p['x_center'] = 0.5 * (p['x_hi'] + p['x_lo'])
-        p['x_width'] = p['x_hi'] - p['x_lo']
-        self.profile = p
-
-        # The x_edges array is longer by one than the profile arrays,
-        # so we store it separately
-        self.x_edges = x_edges
-
-    def compute(self):
-        """Compute the flux profile.
-
-        TODO: call `~gammapy.stats.compute_total_stats` instead.
-
-        Note: the current implementation is very inefficienct in speed and memory.
-        There are various fast implementations, but none is flexible enough to
-        allow combining many input quantities (counts, background, exposure) in a
-        flexlible way:
-        - `numpy.histogram`
-        - `scipy.ndimage.measurements.labeled_comprehension` and special cases
-
-        pandas DataFrame groupby followed by apply is flexible enough, I think:
-
-        http://pandas.pydata.org/pandas-docs/dev/groupby.html
-
-        Returns
-        -------
-        results : dict
-            Dictionary of profile measurements, also stored in ``self.profile``.
-
-        See also
-        --------
-        gammapy.stats.compute_total_stats
-        """
-        # Shortcuts to access class info needed in this method
-        d = self.data
-        # Here the pandas magic happens: we group pixels by label
-        g = d.groupby('label')
-        p = self.profile
-
-        # Compute number of entries in each profile bin
-        p['n_entries'] = g['x'].aggregate(len)
-        for name in ['counts', 'background', 'exposure']:
-            p['{}_sum'.format(name)] = g[name].sum()
-            p['{}_mean'.format(name)] = p['{}_sum'.format(name)] / p['n_entries']
-        p['excess'] = p['counts'] - p['background']
-        p['flux'] = p['excess'] / p['exposure']
-
-        return p
-
-    def plot(self, which='n_entries', xlabel='Distance (deg)', ylabel=None):
-        """Plot flux profile.
-
-        Parameters
-        ----------
-        TODO
-        """
-        import matplotlib.pyplot as plt
-        if ylabel is None:
-            ylabel = which
-        p = self.profile
-        x = p['x_center']
-        xerr = 0.5 * p['x_width']
-        y = p[which]
-        plt.errorbar(x, y, xerr=xerr, fmt='o')
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.grid()
-        # plt.ylim(-10, 20)
-
-    def save(self, filename):
-        """Save all profiles to a FITS file.
-
-        Parameters
-        ----------
-        """
-        raise NotImplementedError
-
-
 # TODO: implement measuring profile along arbitrary directions
 # TODO: think better about error handling. e.g. MC based methods
 class ImageProfileEstimator(object):
@@ -208,8 +66,10 @@ class ImageProfileEstimator(object):
         Coordinate edges to define a custom measument grid (optional).
     method : ['sum', 'mean']
         Compute sum or mean within profile bins.
-    axis : ['lon', 'lat']
+    axis : ['lon', 'lat', 'radial']
         Along which axis to estimate the profile.
+    center : `~astropy.coordinates.SkyCoord`
+        Center coordinate for the radial profile option.
 
     Examples
     --------
@@ -219,14 +79,13 @@ class ImageProfileEstimator(object):
     .. code:: python
 
         import matplotlib.pyplot as plt
-        from gammapy.datasets import FermiGalacticCenter
-        from gammapy.image import ImageProfile, ImageProfileEstimator
-        from gammapy.image import SkyImage
+        from gammapy.image import ImageProfileEstimator
+        from gammapy.maps import Map
         from astropy import units as u
 
         # load example data
-        fermi_cts = SkyImage.from_image_hdu(FermiGalacticCenter.counts())
-        fermi_cts.unit = u.count
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/fermi_counts.fits.gz'
+        fermi_cts = Map.read(filename)
 
         # set up profile estimator and run
         p = ImageProfileEstimator(axis='lon', method='sum')
@@ -235,22 +94,24 @@ class ImageProfileEstimator(object):
         # smooth profile and plot
         smoothed = profile.smooth(kernel='gauss')
         smoothed.peek()
-
         plt.show()
 
     """
 
-    def __init__(self, x_edges=None, method='sum', axis='lon'):
+    def __init__(self, x_edges=None, method='sum', axis='lon', center=None):
 
         self._x_edges = x_edges
 
         if method not in ['sum', 'mean']:
             raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
 
-        if axis not in ['lon', 'lat']:
+        if axis not in ['lon', 'lat', 'radial']:
             raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
 
-        self.parameters = OrderedDict(method=method, axis=axis)
+        if method == 'radial' and center is None:
+            raise ValueError("Please provide center coordinate for radial profiles")
+
+        self.parameters = OrderedDict(method=method, axis=axis, center=center)
 
     def _get_x_edges(self, image):
         """
@@ -260,13 +121,18 @@ class ImageProfileEstimator(object):
             return self._x_edges
 
         p = self.parameters
-        coordinates = image.coordinates(mode='edges')
+        coordinates = image.geom.get_coord(mode='edges').skycoord
 
         if p['axis'] == 'lat':
             x_edges = coordinates[:, 0].data.lat
         elif p['axis'] == 'lon':
             lon = coordinates[0, :].data.lon
             x_edges = lon.wrap_at('180d')
+        elif p['axis'] == 'radial':
+            rad_step = image.geom.pixel_scales.mean()
+            corners = [0, 0, -1, -1], [0, -1, 0, -1]
+            rad_max = coordinates[corners].separation(p['center']).max()
+            x_edges = Angle(np.arange(0, rad_max.deg, rad_step.deg), unit='deg')
         return x_edges
 
     def _estimate_profile(self, image, image_err, mask):
@@ -308,8 +174,7 @@ class ImageProfileEstimator(object):
         """
         p = self.parameters
 
-        label_image = SkyImage.empty_like(image)
-        coordinates = image.coordinates()
+        coordinates = image.geom.get_coord().skycoord
         x_edges = self._get_x_edges(image)
 
         if p['axis'] == 'lon':
@@ -320,12 +185,15 @@ class ImageProfileEstimator(object):
             lat = coordinates.data.lat
             data = np.digitize(lat.degree, x_edges.deg)
 
+        elif p['axis'] == 'radial':
+            separation = coordinates.separation(p['center'])
+            data = np.digitize(separation.degree, x_edges.deg)
+
         if mask is not None:
             # assign masked values to background
             data[mask.data] = 0
 
-        label_image.data = data
-        return label_image
+        return image.copy(data=data)
 
     def run(self, image, image_err=None, mask=None):
         """
@@ -333,11 +201,11 @@ class ImageProfileEstimator(object):
 
         Parameters
         ----------
-        image : `~gammapy.image.SkyImage`
+        image : `~gammapy.maps.Map`
             Input image to run profile estimator on.
-        image_err : `~gammapy.image.SkyImage`
+        image_err : `~gammapy.maps.Map`
             Input error image to run profile estimator on.
-        mask : `~gammapy.image.SkyImage`
+        mask : `~gammapy.maps.Map`
             Optional mask to exclude regions from the measurement.
 
         Returns
@@ -346,14 +214,9 @@ class ImageProfileEstimator(object):
             Result image profile object.
         """
         p = self.parameters
-        image = image.copy()
 
         if image.unit.is_equivalent('count'):
-            image_err = SkyImage.empty_like(image)
-            image_err.data = np.sqrt(image.data)
-
-        if image_err:
-            image_err = image_err.copy()
+            image_err = image.copy(data=np.sqrt(image.data))
 
         profile, profile_err = self._estimate_profile(image, image_err, mask)
 

@@ -6,9 +6,13 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
-from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
-from ...spectrum.models import (PowerLaw, LogParabola, ExponentialCutoffPowerLaw3FGL,
-                                PLSuperExpCutoff3FGL)
+from ...spectrum.models import (
+    PowerLaw,
+    LogParabola,
+    ExponentialCutoffPowerLaw3FGL,
+    PLSuperExpCutoff3FGL,
+)
+from .. import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
 
 SOURCES_3FGL = [
     dict(
@@ -71,10 +75,6 @@ class TestFermi3FGLObject:
     def test_data(self):
         assert_allclose(self.source.data['Signif_Avg'], 30.669872283935547)
 
-    def test_pprint(self):
-        # TODO: add assert on output
-        self.source.pprint()
-
     def test_str(self):
         ss = str(self.source)
         assert 'Source name          : 3FGL J0534.5+2201' in ss
@@ -109,13 +109,11 @@ class TestFermi3FGLObject:
 
     @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
     def test_spatial_model(self, ref):
-        model = self.cat[ref['idx']].spatial_model
-        # TODO: add asserts
+        self.cat[ref['idx']].spatial_model
 
     @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
     def test_sky_model(self, ref):
-        model = self.cat[ref['idx']].sky_model
-        # TODO: add asserts
+        self.cat[ref['idx']].sky_model
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -233,9 +231,6 @@ class TestFermi3FHLObject:
     def test_data(self):
         assert_allclose(self.source.data['Signif_Avg'], 168.64082)
 
-    def test_pprint(self):
-        self.source.pprint()
-
     def test_str(self):
         source = self.cat['3FHL J2301.9+5855e']  # Picking an extended source
         ss = str(source)
@@ -266,13 +261,11 @@ class TestFermi3FHLObject:
 
     @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
     def test_spatial_model(self, ref):
-        model = self.cat[ref['idx']].spatial_model
-        # TODO: add asserts
+        self.cat[ref['idx']].spatial_model
 
     @pytest.mark.parametrize('ref', SOURCES_3FHL, ids=lambda _: _['name'])
     def test_sky_model(self, ref):
-        model = self.cat[ref['idx']].sky_model
-        # TODO: add asserts
+        self.cat[ref['idx']].sky_model
 
     def test_flux_points(self):
         flux_points = self.source.flux_points
@@ -316,7 +309,6 @@ class TestSourceCatalog3FGL:
 
         selection = self.cat.select_source_class('PSR')
         assert len(selection.table) == 143
-
 
 
 @requires_data('gammapy-extra')

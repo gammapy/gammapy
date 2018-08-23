@@ -4,7 +4,7 @@ import pytest
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency, assert_quantity_allclose
-from ...image import SkyImage
+from ...maps import WcsNDMap, WcsGeom
 from ...data import DataStore
 from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
 
@@ -12,8 +12,11 @@ from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstima
 @pytest.fixture
 def mask():
     """Example mask for testing."""
-    filename = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    return SkyImage.read(filename, hdu='EXCLUSION')
+    pos = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
+    exclusion_region = CircleSkyRegion(pos, Angle(0.3, 'deg'))
+    geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.)
+    mask = geom.region_mask([exclusion_region], inside=False)
+    return WcsNDMap(geom, data=mask)
 
 
 @pytest.fixture
@@ -28,8 +31,7 @@ def on_region():
 @pytest.fixture
 def obs_list():
     """Example observation list for testing."""
-    DATA_DIR = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
-    datastore = DataStore.from_dir(DATA_DIR)
+    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
     obs_ids = [23523, 23526]
     return datastore.obs_list(obs_ids)
 
@@ -60,6 +62,12 @@ def test_find_reflected_regions(mask, on_region):
     regions = fregions.reflected_regions
     assert len(regions) == 16
     assert_quantity_allclose(regions[3].center.icrs.ra, Angle('83.674 deg'), rtol=1e-2)
+
+    # Test with maximum number of regions
+    fregions.max_region_number = 5
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 5
 
 
 @pytest.fixture

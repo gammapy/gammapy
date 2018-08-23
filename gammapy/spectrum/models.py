@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Spectral models for Gammapy.
-"""
+"""Spectral models for Gammapy."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import copy
@@ -11,7 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
-from ..utils.modeling import Parameter, ParameterList
+from ..utils.modeling import Parameter, Parameters
 
 __all__ = [
     'SpectralModel',
@@ -33,7 +32,7 @@ class SpectralModel(object):
     """Spectral model base class.
 
     Derived classes should store their parameters as
-    `~gammapy.utils.modeling.ParameterList`
+    `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
@@ -103,11 +102,12 @@ class SpectralModel(object):
         return values, errors
 
     def _convert_energy(self, energy):
-        try:
-            energy = energy.to(self.parameters['reference'].unit)
-        except IndexError:
-            energy = energy.to(self.parameters['emin'].unit)
-        return energy
+        if 'reference' in self.parameters.names:
+            return energy.to(self.parameters['reference'].unit)
+        elif 'emin' in self.parameters.names:
+            return energy.to(self.parameters['emin'].unit)
+        else:
+            return energy
 
     def evaluate_error(self, energy):
         """Evaluate spectral model with error propagation.
@@ -206,7 +206,7 @@ class SpectralModel(object):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to `func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
 
         Returns
         -------
@@ -235,7 +235,7 @@ class SpectralModel(object):
     def from_dict(cls, val):
         """Create from dict."""
         classname = val.pop('name')
-        parameters = ParameterList.from_dict(val)
+        parameters = Parameters.from_dict(val)
         model = globals()[classname]()
         model.parameters = parameters
         model.parameters.covariance = parameters.covariance
@@ -247,6 +247,19 @@ class SpectralModel(object):
         """Plot spectral model curve.
 
         kwargs are forwarded to `matplotlib.pyplot.plot`
+
+        By default a log-log scaling of the axes is used, if you want to change
+        the y axis scaling to linear you can use:
+
+        .. code:
+
+            from gammapy.spectrum.models import PowerLaw
+            from astropy import units as u
+
+            pwl = ExponentialCutoffPowerLaw()
+            ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
+            ax.set_yscale('linear')
+
 
         Parameters
         ----------
@@ -360,16 +373,12 @@ class SpectralModel(object):
         ax.set_yscale("log", nonposy='clip')
 
     def _plot_scale_flux(self, energy, flux, energy_power):
-        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+        try:
+            eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+        except IndexError:
+            eunit = energy.unit
         y = flux * np.power(energy, energy_power)
         return y.to(flux.unit * eunit ** energy_power)
-
-    def to_sherpa(self, name='default'):
-        """Convert to Sherpa model.
-
-        To be implemented by subclasses
-        """
-        raise NotImplementedError('{}'.format(self.__class__.__name__))
 
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.
@@ -440,15 +449,16 @@ class ConstantModel(SpectralModel):
     const : `~astropy.units.Quantity`
         :math:`k`
     """
+
     def __init__(self, const):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('const', const)
         ])
 
     @staticmethod
     def evaluate(energy, const):
         """Evaluate the model (static function)."""
-        return const
+        return np.ones(len(np.atleast_1d(energy))) * const
 
 
 class CompoundSpectralModel(SpectralModel):
@@ -456,6 +466,7 @@ class CompoundSpectralModel(SpectralModel):
     `~gammapy.spectrum.models.SpectralModel`
 
     """
+
     def __init__(self, model1, model2, operator):
         self.model1 = model1
         self.model2 = model2
@@ -465,7 +476,7 @@ class CompoundSpectralModel(SpectralModel):
     @property
     def parameters(self):
         val = self.model1.parameters.parameters + self.model2.parameters.parameters
-        return ParameterList(val)
+        return Parameters(val)
 
     @parameters.setter
     def parameters(self, parameters):
@@ -527,10 +538,10 @@ class PowerLaw(SpectralModel):
 
     def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
-            Parameter('reference', reference, parmin=0, frozen=True)
+            Parameter('reference', reference, min=0, frozen=True)
         ])
 
     @staticmethod
@@ -665,21 +676,6 @@ class PowerLaw(SpectralModel):
 
         return self._parse_uarray(uarray) * unit
 
-    def to_sherpa(self, name='default'):
-        """Convert to `sherpa.models.PowLaw1D`.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the sherpa model instance
-        """
-        import sherpa.models as m
-        model = m.PowLaw1D('powlaw1d.' + name)
-        model.gamma = self.parameters['index'].value
-        model.ref = self.parameters['reference'].quantity.to('keV').value
-        model.ampl = self.parameters['amplitude'].quantity.to('cm-2 s-1 keV-1').value
-        return model
-
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
 
@@ -700,8 +696,8 @@ class PowerLaw2(SpectralModel):
 
     .. math::
 
-        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{\Gamma + 1}
-         - E_{0, min}^{\Gamma + 1}} \cdot E^{-\Gamma}
+        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
+         - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
 
     Parameters
     ----------
@@ -730,7 +726,7 @@ class PowerLaw2(SpectralModel):
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
                  emin=0.1 * u.TeV, emax=100 * u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('amplitude', amplitude),
             Parameter('index', index),
             Parameter('emin', emin, frozen=True),
@@ -741,8 +737,10 @@ class PowerLaw2(SpectralModel):
     def evaluate(energy, amplitude, index, emin, emax):
         """Evaluate the model (static function)."""
         top = -index + 1
-        bottom = emax ** (-index + 1) - emin ** (-index + 1)
-        return amplitude * (top / bottom) * np.power(energy, -index)
+
+        # to get the energies dimensionless we use a modified formula
+        bottom = emax - emin * (emin / emax) ** (-index)
+        return amplitude * (top / bottom) * np.power(energy / emax, -index)
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate power law analytically.
@@ -832,7 +830,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
-    lambda : `~astropy.units.Quantity`
+    lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
 
     Examples
@@ -851,7 +849,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV, lambda_=0.1 / u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
@@ -868,26 +866,6 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
-
-    def to_sherpa(self, name='default'):
-        """Convert to a `~sherpa.models.ArithmeticModel`.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the sherpa model instance
-        """
-        from .sherpa_utils import SherpaExponentialCutoffPowerLaw
-        model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
-        pars = self.parameters
-
-        model.gamma = pars['index'].value
-        model.ref = pars['reference'].quantity.to('keV').value
-        model.ampl = pars['amplitude'].quantity.to('cm-2 s-1 keV-1').value
-        # Sherpa ExponentialCutoffPowerLaw expects cutoff in 1/TeV
-        model.cutoff = pars['lambda_'].quantity.to('TeV-1').value
-
-        return model
 
     @property
     def e_peak(self):
@@ -947,7 +925,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV, ecut=10 * u.TeV):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('index', index),
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
@@ -1006,7 +984,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
                  reference=1 * u.TeV, ecut=10 * u.TeV):
         # TODO: order or parameters is different from argument list / docstring. Make uniform!
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
             Parameter('ecut', ecut),
@@ -1019,12 +997,16 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
-            cutoff = np.exp((reference / ecut) ** (index_2)
-                            - (energy / ecut) ** (index_2))
+            cutoff = np.exp(
+                (reference / ecut) ** index_2 -
+                (energy / ecut) ** index_2
+            )
         except AttributeError:
             from uncertainties.unumpy import exp
-            cutoff = exp((reference / ecut) ** (index_2)
-                         - (energy / ecut) ** (index_2))
+            cutoff = exp(
+                (reference / ecut) ** index_2 -
+                (energy / ecut) ** index_2
+            )
         return pwl * cutoff
 
 
@@ -1074,7 +1056,7 @@ class LogParabola(SpectralModel):
 
     def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=10 * u.TeV,
                  alpha=2, beta=1):
-        self.parameters = ParameterList([
+        self.parameters = Parameters([
             Parameter('amplitude', amplitude),
             Parameter('reference', reference, frozen=True),
             Parameter('alpha', alpha),
@@ -1121,7 +1103,6 @@ class LogParabola(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
-
 class TableModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
 
@@ -1139,50 +1120,54 @@ class TableModel(SpectralModel):
         Array of energies at which the model values are given
     values : array
         Array with the values of the model at energies ``energy``.
-    scale : float
+    norm : float
         Model scale that is multiplied to the supplied arrays. Defaults to 1.
-    scale_logy : boolean
-        interpolation can be done linearly or in logarithm
+    values_scale : {'log', 'lin', 'sqrt'}
+        Interpolation scaling applied to values. If the values vary over many magnitudes
+        a 'log' scaling is recommended.
+    interp_kwargs : dict
+        Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
+        By default all values outside the interpolation range are set to zero.
+        If you want to apply linear extrapolation you can pass `interp_kwargs={'fill_value':
+        'extrapolate', 'kind': 'linear'}`
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
 
-    def __init__(self, energy, values, scale=1, scale_logy=True, meta=None):
+    def __init__(self, energy, values, norm=1, values_scale='log', interp_kwargs=None, meta=None):
         from scipy.interpolate import interp1d
-        self.parameters = ParameterList([
-            Parameter('scale', scale, parmin=0, unit='')
+        self.parameters = Parameters([
+            Parameter('norm', norm, min=0, unit='')
         ])
         self.energy = energy
         self.values = values
-        self.scale_logy = scale_logy
+        self.values_scale = values_scale
         self.meta = dict() if meta is None else meta
 
-        self.lo_threshold = energy[0]
-        self.hi_threshold = energy[-1]
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault('bounds_error', False)
+        interp_kwargs.setdefault('kind', 'cubic')
 
-        loge = np.log10(self.energy.to('eV').value)
-        try:
-            self.unit = self.values.unit
-            if scale_logy is True:
-                y = np.log10(self.values.value)
-            else:
-                y = self.values.value
-        except AttributeError:
-            self.unit = u.Unit('')
-            if scale_logy is True:
-                y = np.log10(self.values)
-            else:
-                y = self.values
-        # The type conversion is a fix for:
-        # https://travis-ci.org/gammapy/gammapy/jobs/210576260
-        self.interpy = interp1d(loge.astype(float),
-                                y.astype(float),
-                                fill_value=-np.Inf,
-                                bounds_error=False,
-                                kind='cubic')
+        if values_scale == 'log':
+            fn_0, fn_1 = np.log, np.exp
+            interp_kwargs.setdefault('fill_value', -np.inf)
+        elif values_scale == 'lin':
+            fn_0, fn_1 = lambda x: x, lambda x: x
+            interp_kwargs.setdefault('fill_value', 0)
+        elif values_scale == 'sqrt':
+            interp_kwargs.setdefault('fill_value', 0)
+            fn_0, fn_1 = np.sqrt, lambda x: x ** 2
+        else:
+            raise ValueError('Not a valid interpolation mode.')
+
+        non_zero = (values.value > 0)
+        y = fn_0(values.value[non_zero])
+        x = np.log(energy.value[non_zero])
+        interpy = interp1d(x, y, **interp_kwargs)
+        self._evaluate = lambda x: fn_1(interpy(x))
 
     @classmethod
-    def read_xspec_model(cls, filename, param):
+    def read_xspec_model(cls, filename, param, **kwargs):
         """Read XSPEC table model
 
         The input is a table containing absorbed values from a XSPEC model as a
@@ -1193,7 +1178,7 @@ class TableModel(SpectralModel):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             File containing the XSPEC model
         param : float
             Model parameter value
@@ -1233,7 +1218,8 @@ class TableModel(SpectralModel):
         idx = np.abs(table_spectra['PARAMVAL'] - param).argmin()
         values = table_spectra[idx][1] * u.Unit('')  # no dimension
 
-        return cls(energy=energy, values=values, scale_logy=False)
+        kwargs.setdefault('values_scale', 'lin')
+        return cls(energy=energy, values=values, **kwargs)
 
     @classmethod
     def read_fermi_isotropic_model(cls, filename, **kwargs):
@@ -1243,96 +1229,21 @@ class TableModel(SpectralModel):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             filename
-        param : float
-            Model parameter value
         """
         filename = str(make_path(filename))
         vals = np.loadtxt(filename)
-        energy = vals[:,0] * u.MeV
-        values = vals[:,1] * u.Unit('MeV-1 s-1 cm-2')
+        energy = u.Quantity(vals[:, 0], 'MeV', copy=False)
+        values = u.Quantity(vals[:, 1], 'MeV-1 s-1 cm-2 sr-1', copy=False)
+        return cls(energy=energy, values=values, **kwargs)
 
-        return cls(energy=energy, values=values, scale_logy=False, **kwargs)
-
-    def evaluate(self, energy, scale):
+    def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
-        # What's with all this checking?
-        # TODO: Try `np.asanyarray` and always return an array (even for scalar input)?
-        is_array = True
-        try:
-            len(energy)
-        except:
-            is_array = False
-
-        # Not working for astropy.units.quantity.Quantity
-        # if isinstance(energy, (np.ndarray, np.generic)):
-        if is_array:  # Test if array
-            # initialise array value to zero (dim energy)
-            values = np.zeros(len(energy), dtype=float)
-            # mask for energy range
-            mask = (energy >= self.lo_threshold) & (
-                energy <= self.hi_threshold)
-            # apply interpolation for masked values
-            values[mask] = self.interpy(np.log10(energy[mask].to('eV').value))
-            # Get rid of negative values (due to interpolation)
-            # Needed because of the rand.poisson used in SpectrumSimulation class
-            # Should be fixed in the class itself ?
-            if self.scale_logy is False:
-                values[values < 0] = 0.
-        else:  # if not array
-            # test if energy is in range
-            if (energy >= self.lo_threshold or energy <= self.hi_threshold):
-                values = self.interpy(np.log10(energy.to('eV').value))
-            else:
-                values = 0
-
-        if self.scale_logy:
-            values = np.power(10, values)
-        return scale * values * self.unit
-
-    def plot(self, energy_range, ax=None, energy_unit='TeV',
-             n_points=100, **kwargs):
-        """Plot spectral model curve.
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.plot`
-
-        Parameters
-        ----------
-        energy_range : `~astropy.units.Quantity`
-            Plot range
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        n_points : int, optional
-            Number of evaluation nodes
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        """
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
-
-        y = self.interpy(np.log10(energy.to('eV').value)) * self.parameters['scale'].quantity
-        if self.scale_logy:
-            y = np.power(10, y)
-
-        ax.plot(energy.value, y, **kwargs)
-
-        ax.set_xlabel('Energy [{}]'.format(energy.unit))
-        ax.set_ylabel('Table model')
-
-        ax.set_xscale("log", nonposx='clip')
-        if self.scale_logy:
-            ax.set_yscale("log", nonposy='clip')
-
-        return ax
+        x = np.log(energy.to(self.energy.unit).value)
+        vals = self._evaluate(x)
+        vals = np.clip(vals, 0, np.inf)
+        return u.Quantity(norm.value * vals, self.values.unit, copy=False)
 
 
 class Absorption(object):
@@ -1367,7 +1278,7 @@ class Absorption(object):
         # start customised plot
         energy_range = [0.08, 3] * u.TeV
         ax = plt.gca()
-        opts = dict(energy_range=energy_range, energy_unit='TeV', ax=ax)
+        opts = dict(energy_range=energy_range, energy_unit='TeV', ax=ax, flux_unit='')
         franceschini.plot(label='Franceschini 2008', **opts)
         finke.plot(label='Finke 2010', **opts)
         dominguez.plot(label='Dominguez 2011', **opts)
@@ -1402,10 +1313,9 @@ class Absorption(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             File containing the model.
         """
-
         # Create EBL data array
         filename = str(make_path(filename))
         table_param = Table.read(filename, hdu='PARAMETERS')
@@ -1472,9 +1382,9 @@ class Absorption(object):
 
         Parameters
         ----------
-        parameter : `float`
+        parameter : float
             Parameter value.
-        unit : `str`, (optional)
+        unit : str, (optional)
             desired value for energy axis
         """
         energy_axis = self.data.axes[1]
@@ -1482,7 +1392,7 @@ class Absorption(object):
 
         values = self.evaluate(energy=energy, parameter=parameter)
 
-        return TableModel(energy=energy, values=values, scale_logy=False)
+        return TableModel(energy=energy, values=values, values_scale='lin')
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
@@ -1498,9 +1408,9 @@ class AbsorbedSpectralModel(SpectralModel):
         Spectral model.
     absorption : `~gammapy.spectrum.models.Absorption`
         Absorption model.
-    parameter : `float`
+    parameter : float
         parameter value for absorption model
-    parameter_name : `str`, optional
+    parameter_name : str, optional
         parameter name
     """
 
@@ -1517,14 +1427,14 @@ class AbsorbedSpectralModel(SpectralModel):
             param_list.append(param)
 
         # Add parameter to the list
-        param_min = self.absorption.data.axes[0].lo[0]
-        param_max = self.absorption.data.axes[0].lo[-1]
+        min_ = self.absorption.data.axes[0].lo[0]
+        max_ = self.absorption.data.axes[0].lo[-1]
         par = Parameter(parameter_name, parameter,
-                        parmin=param_min, parmax=param_max,
+                        min=min_, max=max_,
                         frozen=True)
         param_list.append(par)
 
-        self.parameters = ParameterList(param_list)
+        self.parameters = Parameters(param_list)
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""

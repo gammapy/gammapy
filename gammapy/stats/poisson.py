@@ -6,6 +6,7 @@ Poisson significance computations for these two cases.
 * background estimated from ``n_off`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from .significance import significance_to_probability_normal
 import numpy as np
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     'significance_on_off',
     'excess_matching_significance',
     'excess_matching_significance_on_off',
+    'excess_ul_helene',
 ]
 
 __doctest_skip__ = ['*']
@@ -38,7 +40,7 @@ def background(n_off, alpha):
 
     Returns
     -------
-    background : ndarray
+    background : `numpy.ndarray`
         Background estimate for the on region
 
     Examples
@@ -71,7 +73,7 @@ def background_error(n_off, alpha):
 
     Returns
     -------
-    background : ndarray
+    background : `numpy.ndarray`
         Background estimate for the on region
 
     Examples
@@ -105,7 +107,7 @@ def excess(n_on, n_off, alpha):
 
     Returns
     -------
-    excess : ndarray
+    excess : `numpy.ndarray`
         Excess estimate for the on region
 
     Examples
@@ -142,7 +144,7 @@ def excess_error(n_on, n_off, alpha):
 
     Returns
     -------
-    excess_error : ndarray
+    excess_error : `numpy.ndarray`
         Excess error estimate
 
     Examples
@@ -196,7 +198,7 @@ def significance(n_on, mu_bkg, method='lima', n_on_min=1):
 
     Returns
     -------
-    significance : ndarray
+    significance : `numpy.ndarray`
         Significance according to the method chosen.
 
     References
@@ -326,26 +328,27 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
 
-    if method == 'simple':
-        if neglect_background_uncertainty:
-            mu_bkg = background(n_off, alpha)
-            return _significance_simple(n_on, mu_bkg)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        if method == 'simple':
+            if neglect_background_uncertainty:
+                mu_bkg = background(n_off, alpha)
+                return _significance_simple(n_on, mu_bkg)
+            else:
+                return _significance_simple_on_off(n_on, n_off, alpha)
+        elif method == 'lima':
+            if neglect_background_uncertainty:
+                mu_bkg = background(n_off, alpha)
+                return _significance_lima(n_on, mu_bkg)
+            else:
+                return _significance_lima_on_off(n_on, n_off, alpha)
+        elif method == 'direct':
+            if neglect_background_uncertainty:
+                mu_bkg = background(n_off, alpha)
+                return _significance_direct(n_on, mu_bkg)
+            else:
+                return _significance_direct_on_off(n_on, n_off, alpha)
         else:
-            return _significance_simple_on_off(n_on, n_off, alpha)
-    elif method == 'lima':
-        if neglect_background_uncertainty:
-            mu_bkg = background(n_off, alpha)
-            return _significance_lima(n_on, mu_bkg)
-        else:
-            return _significance_lima_on_off(n_on, n_off, alpha)
-    elif method == 'direct':
-        if neglect_background_uncertainty:
-            mu_bkg = background(n_off, alpha)
-            return _significance_direct(n_on, mu_bkg)
-        else:
-            return _significance_direct_on_off(n_on, n_off, alpha)
-    else:
-        raise ValueError('Invalid method: {}'.format(method))
+            raise ValueError('Invalid method: {}'.format(method))
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):
@@ -414,6 +417,75 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     return significance
 
 
+def excess_ul_helene(excess, excess_error, significance):
+    """Compute excess upper limit using the Helene method.
+
+    Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
+
+    Parameters
+    ----------
+    excess : float
+        Signal excess
+    excess_error : float
+        Gaussian excess error
+        For on / off measurement, use this function to compute it:
+        `~gammapy.stats.excess_error`.
+    significance : float
+        Confidence level significance for the excess upper limit.
+
+    Returns
+    -------
+    excess_ul : float
+        Upper limit for the excess
+    """
+    conf_level1 = significance_to_probability_normal(significance)
+
+    if excess_error <= 0:
+        raise ValueError('Non-positive excess_error: {}'.format(excess_error))
+
+    from math import sqrt
+    from scipy.special import erf
+
+    if excess >= 0.:
+        zeta = excess / excess_error
+        value = zeta / sqrt(2.)
+        integral = (1. + erf(value)) / 2.
+        integral2 = 1. - conf_level1 * integral
+        value_old = value
+        value_new = value_old + 0.01
+        if integral > integral2:
+            value_new = 0.
+        integral = (1. + erf(value_new)) / 2.
+    else:
+        zeta = -excess / excess_error
+        value = zeta / sqrt(2.)
+        integral = 1 - (1. + erf(value)) / 2.
+        integral2 = 1. - conf_level1 * integral
+        value_old = value
+        value_new = value_old + 0.01
+        integral = (1. + erf(value_new)) / 2.
+
+    # The 1st Loop is for Speed & 2nd For Precision
+    while integral < integral2:
+        value_old = value_new
+        value_new = value_new + 0.01
+        integral = (1. + erf(value_new)) / 2.
+    value_new = value_old + 0.0000001
+    integral = (1. + erf(value_new)) / 2.
+
+    while integral < integral2:
+        value_new = value_new + 0.0000001
+        integral = (1. + erf(value_new)) / 2.
+    value_new = value_new * sqrt(2.)
+
+    if excess >= 0.:
+        conf_limit = (value_new + zeta) * excess_error
+    else:
+        conf_limit = (value_new - zeta) * excess_error
+
+    return conf_limit
+
+
 def excess_matching_significance(mu_bkg, significance, method='lima'):
     r"""Compute excess matching a given significance.
 
@@ -430,7 +502,7 @@ def excess_matching_significance(mu_bkg, significance, method='lima'):
 
     Returns
     -------
-    excess : ndarray
+    excess : `numpy.ndarray`
         Excess
 
     See Also
@@ -453,14 +525,6 @@ def excess_matching_significance(mu_bkg, significance, method='lima'):
         return _excess_matching_significance_lima(mu_bkg, significance)
     else:
         raise ValueError('Invalid method: {}'.format(method))
-
-
-def _excess_matching_significance_simple(mu_bkg, significance):
-    raise NotImplementedError
-
-
-def _excess_matching_significance_lima(mu_bkg, significance):
-    raise NotImplementedError
 
 
 def excess_matching_significance_on_off(n_off, alpha, significance, method='lima'):
@@ -515,6 +579,10 @@ def excess_matching_significance_on_off(n_off, alpha, significance, method='lima
         raise ValueError('Invalid method: {}'.format(method))
 
 
+def _excess_matching_significance_simple(mu_bkg, significance):
+    return significance * np.sqrt(mu_bkg)
+
+
 def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
     # TODO: can these equations be simplified?
     significance2 = significance ** 2
@@ -522,6 +590,36 @@ def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
     temp = significance2 + 2 * n_off * alpha
     n_on = 0.5 * (temp + significance * np.sqrt(np.abs(determinant)))
     return n_on - background(n_off, alpha)
+
+
+# This is mostly a copy & paste from _excess_matching_significance_on_off_lima
+# TODO: simplify this, or avoid code duplication?
+# Looking at the formula for significance_lima_on_off, I don't think
+# it can be analytically inverted because the n_on appears inside and outside the log
+# So probably root finding is still needed here.
+def _excess_matching_significance_lima(mu_bkg, significance):
+    from scipy.optimize import fsolve
+
+    # Significance not well-defined for n_on < 0
+    # Return Nan if given significance can't be reached
+    s0 = _significance_lima(n_on=1e-5, mu_bkg=mu_bkg)
+    if s0 >= significance:
+        return np.nan
+
+    def target_significance(n_on):
+        if n_on >= 0:
+            return _significance_lima(n_on, mu_bkg) - significance
+        else:
+            # This high value is to tell the optimiser to stay n_on >= 0
+            return 1e10
+
+    excess_guess = _excess_matching_significance_simple(mu_bkg, significance)
+    n_on_guess = excess_guess + mu_bkg
+
+    # solver options to control robustness / accuracy / speed
+    opts = dict(factor=0.1)
+    n_on = fsolve(target_significance, n_on_guess, **opts)
+    return n_on - mu_bkg
 
 
 def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
@@ -549,4 +647,5 @@ def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
     return n_on - background(n_off, alpha)
 
 
+_excess_matching_significance_lima = np.vectorize(_excess_matching_significance_lima)
 _excess_matching_significance_on_off_lima = np.vectorize(_excess_matching_significance_on_off_lima)

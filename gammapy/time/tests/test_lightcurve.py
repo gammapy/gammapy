@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from datetime import datetime, timedelta
 from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
 import astropy.units as u
@@ -11,11 +12,10 @@ from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
 from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import EnergyBounds
-from ...data import Target, DataStore
+from ...data import DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyImage
 from ..lightcurve import LightCurve, LightCurveEstimator
 
 
@@ -42,6 +42,7 @@ def lc():
         Column([1e-11, 3e-11], 'flux', unit='cm-2 s-1'),
         Column([0.1e-11, 0.3e-11], 'flux_err', unit='cm-2 s-1'),
         Column([np.nan, 3.6e-11], 'flux_ul', unit='cm-2 s-1'),
+        Column([False, True], 'is_ul'),
     ])
 
     return LightCurve(table=table)
@@ -116,6 +117,36 @@ def test_lightcurve_plot(lc):
     mpl_savefig_check()
 
 
+@pytest.mark.parametrize('flux_unit', ['cm-2 s-1'])
+def test_lightcurve_plot_flux(lc, flux_unit):
+    f, ferr = lc._get_fluxes_and_errors(flux_unit)
+    assert_allclose(f, [1e-11, 3e-11])
+    assert_allclose(ferr, ([0.1e-11, 0.3e-11], [0.1e-11, 0.3e-11]))
+
+
+@pytest.mark.parametrize('flux_unit', ['cm-2 s-1'])
+def test_lightcurve_plot_flux_ul(lc, flux_unit):
+    is_ul, ful = lc._get_flux_uls(flux_unit)
+    assert_allclose(is_ul, [False, True])
+    assert_allclose(ful, [np.nan, 3.6e-11])
+
+
+@requires_dependency('matplotlib')
+@pytest.mark.parametrize('time_format, output', [
+    ('mjd', (np.array([55198., 55201]), (np.array([1., 2.]), np.array([1., 5.])))),
+    ('iso', (np.array([datetime(2010, 1, 2), datetime(2010, 1, 5)]),
+             (np.array([timedelta(1), timedelta(2)]),
+              np.array([timedelta(1), timedelta(5)])))),
+    ('unsupported', ValueError)])
+def test_lightcurve_plot_time(lc, time_format, output):
+    try:
+        t, terr = lc._get_times_and_errors(time_format)
+    except output:
+        return
+    assert np.array_equal(t, output[0])
+    assert np.array_equal(terr, output[1])
+
+
 # TODO: Reuse fixtures from spectrum tests
 @pytest.fixture(scope='session')
 def spec_extraction():
@@ -126,17 +157,9 @@ def spec_extraction():
     target_position = SkyCoord(ra=83.63308, dec=22.01450, unit='deg')
     on_region_radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
-    target = Target(on_region=on_region, name='Crab', tag='ana_crab')
 
-    exclusion_file = '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    allsky_mask = SkyImage.read(exclusion_file)
-    exclusion_mask = allsky_mask.cutout(
-        position=target.on_region.center,
-        size=Angle('6 deg'),
-    )
     bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                                        obs_list=obs_list,
-                                                        exclusion_mask=exclusion_mask)
+                                                        obs_list=obs_list)
     bkg_estimator.run()
 
     e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit='TeV')  # fine binning
@@ -179,17 +202,16 @@ def test_lightcurve_estimator():
 
     assert_quantity_allclose(len(table), 2)
 
-    # TODO:
-    # The uncommented values are with containment correction, this does not
-    # work at the moment, try to reproduce them later
-    # assert_allclose(table['flux'][0], 5.70852574714e-11, rtol=1e-2)
     assert_allclose(table['flux'][0], 3.759367126537715e-11, rtol=1e-2)
-    # assert_allclose(table['flux'][-1], 6.16718031281e-11, rtol=1e-2)
     assert_allclose(table['flux'][-1], 3.8700838947652217e-11, rtol=1e-2)
 
     assert_allclose(table['flux_err'][0], 3.175731544692804e-12, rtol=1e-2)
-    # assert_allclose(table['flux_err'][-1], 5.91581572415e-12, rtol=1e-2)
     assert_allclose(table['flux_err'][-1], 3.181191593075743e-12, rtol=1e-2)
+
+    # TODO: change dataset and also add LC point with weak signal
+    # or even negative excess that is an UL
+    assert_allclose(table['flux_ul'][0], 4.712087e-11, rtol=1e-2)
+    assert not table['is_ul'][0]
 
     # same but with threshold equal to 2 TeV
     lc = lc_estimator.light_curve(
@@ -233,7 +255,7 @@ def test_lightcurve_adaptative_interval_maker():
         separators=separator)
     assert_allclose(table['significance'] >= 3, True)
     assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-10)
-    assert_allclose(table['alpha'][5], 0.09090909, rtol=1e-5)
+    assert_allclose(table['alpha'][5], 0.0833333, rtol=1e-5)
     assert_allclose(len(table), 71)
     assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-10)
     assert_allclose(table['t_stop'][70].value, 53343.97229090575, rtol=1e-10)

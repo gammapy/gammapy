@@ -1,19 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
+import copy
+import inspect
 import json
 import numpy as np
 from collections import OrderedDict
-from ..extern import six
-from ..utils.scripts import make_path
+from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
-from astropy.units import Quantity, Unit
 from .geom import pix_tuple_to_idx, MapCoord
+from .utils import unpack_seq
+from ..extern import six
+from ..utils.scripts import make_path
 
-__all__ = [
-    'Map',
-]
+__all__ = ["Map"]
 
 
 class MapMeta(InheritDocstrings, abc.ABCMeta):
@@ -39,63 +40,92 @@ class Map(object):
         Data unit
     """
 
-    def __init__(self, geom, data, meta=None, unit=''):
-        self._geom = geom
-        if isinstance(data, Quantity):
-            self._data = data.value
-            self._unit = data.unit.to_string()
-        else:
-            self._data = data
-            self._unit = Unit(unit).to_string()
+    def __init__(self, geom, data, meta=None, unit=""):
+        self.geom = geom
+        self.data = data
+        self.unit = unit
 
         if meta is None:
-            self.meta = OrderedDict()
+            self.meta = {}
         else:
-            self.meta = OrderedDict(meta)
+            self.meta = meta
 
-    @property
-    def data(self):
-        """Data array (`~numpy.ndarray`)"""
-        return self._data
+    def _init_copy(self, **kwargs):
+        """Init map instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getargspec(self.__init__).args
+        argnames.remove("self")
+        argnames.remove("dtype")
 
-    @property
-    def quantity(self):
-        """Map data times unit (`~astropy.units.Quantity`)"""
-        return self._data * Unit(self._unit)
+        for arg in argnames:
+            value = getattr(self, "_" + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
 
-    @property
-    def unit(self):
-        """Map unit (`~astropy.units.Unit`)"""
-        return Unit(self._unit)
-
-    @data.setter
-    def data(self, val):
-        if val.shape != self.data.shape:
-            raise ValueError('Wrong shape.')
-        self._data = val
-
-    @quantity.setter
-    def quantity(self, val):
-        if val.shape != self.data.shape:
-            raise ValueError('Wrong shape.')
-
-        val = Quantity(val)
-        self._data = val.value
-        self._unit = val.unit.to_string()
+        return self.from_geom(**kwargs)
 
     @property
     def geom(self):
         """Map geometry (`~gammapy.maps.MapGeom`)"""
         return self._geom
 
-    @classmethod
-    def create(cls, **kwargs):
+    @geom.setter
+    def geom(self, val):
+        self._geom = val
+
+    @property
+    def data(self):
+        """Data array (`~numpy.ndarray`)"""
+        return self._data
+
+    @data.setter
+    def data(self, val):
+        if val.shape != self.geom.data_shape:
+            raise ValueError(
+                "Shape {!r} does not match map data shape {!r}"
+                "".format(val.shape, self.geom.data_shape)
+            )
+
+        if isinstance(val, u.Quantity):
+            raise TypeError("Map data must be a Numpy array. Set unit separately")
+
+        self._data = val
+
+    @property
+    def unit(self):
+        """Map unit (`~astropy.units.Unit`)"""
+        return self._unit
+
+    @unit.setter
+    def unit(self, val):
+        self._unit = u.Unit(val)
+
+    @property
+    def meta(self):
+        """Map meta (`~collections.OrderedDict`)"""
+        return self._meta
+
+    @meta.setter
+    def meta(self, val):
+        self._meta = OrderedDict(val)
+
+    @property
+    def quantity(self):
+        """Map data times unit (`~astropy.units.Quantity`)"""
+        return self.data * self.unit
+
+    @quantity.setter
+    def quantity(self, val):
+        val = u.Quantity(val)
+        self.data = val.value
+        self.unit = val.unit
+
+    @staticmethod
+    def create(**kwargs):
         """Create an empty map object.
 
-        This method accepts generic options
-        listed below as well as options for `~HpxMap` and `~WcsMap`
-        objects (see `~HpxMap.create` and `~WcsMap.create` for WCS-
-        and HPX-specific options).
+        This method accepts generic options listed below, as well as options
+        for `HpxMap` and `WcsMap` objects. For WCS-specific options, see
+        `WcsMap.create` and for HPX-specific options, see `HpxMap.create`.
 
         Parameters
         ----------
@@ -113,7 +143,7 @@ class Map(object):
             List of `~MapAxis` objects for each non-spatial dimension.
             If None then the map will be a 2D image.
         dtype : str
-            Data type, default is ``float32``
+            Data type, default is 'float32'
         unit : str or `~astropy.units.Unit`
             Data unit.
         meta : `~collections.OrderedDict`
@@ -121,22 +151,22 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Empty map object.
         """
         from .hpxmap import HpxMap
         from .wcsmap import WcsMap
 
-        map_type = kwargs.setdefault('map_type', 'wcs')
-        if 'wcs' in map_type.lower():
+        map_type = kwargs.setdefault("map_type", "wcs")
+        if "wcs" in map_type.lower():
             return WcsMap.create(**kwargs)
-        elif 'hpx' in map_type.lower():
+        elif "hpx" in map_type.lower():
             return HpxMap.create(**kwargs)
         else:
-            raise ValueError('Unrecognized map type: {}'.format(map_type))
+            raise ValueError("Unrecognized map type: {!r}".format(map_type))
 
-    @classmethod
-    def read(cls, filename, hdu=None, hdu_bands=None, map_type='auto'):
+    @staticmethod
+    def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
         """Read a map from a FITS file.
 
         Parameters
@@ -158,70 +188,67 @@ class Map(object):
 
         Returns
         -------
-        map_out : `~Map`
+        map_out : `Map`
             Map object
         """
         filename = str(make_path(filename))
         with fits.open(filename, memmap=False) as hdulist:
-            map_out = cls.from_hdu_list(hdulist, hdu, hdu_bands, map_type)
+            return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
-        return map_out
-
-    @classmethod
-    def from_geom(cls, geom, meta=None, map_type='auto', unit=''):
-        """Generate an empty map from a `~Geom` instance.
+    @staticmethod
+    def from_geom(geom, meta=None, data=None, map_type="auto", unit=""):
+        """Generate an empty map from a `MapGeom` instance.
 
         Parameters
         ----------
-        geom : `~MapGeom`
+        geom : `MapGeom`
             Map geometry.
-
+        data : `numpy.ndarray`
+            data array
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
-
-        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}        
+        map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
-            instantiate the map.  The map type should be consistent
-            with the geometry.  If map_type is 'auto' then an
-            appropriate map type will be inferred from type of
-            ``geom``.
+            instantiate the map. The map type should be consistent
+            with the geometry. If map_type is 'auto' then an
+            appropriate map type will be inferred from type of ``geom``.
         unit : str or `~astropy.units.Unit`
             Data unit.
 
         Returns
         -------
-        map_out : `~Map`
+        map_out : `Map`
             Map object
 
         """
-        if map_type == 'auto':
+        if map_type == "auto":
 
             from .hpx import HpxGeom
             from .wcs import WcsGeom
+
             if isinstance(geom, HpxGeom):
-                map_type = 'hpx'
+                map_type = "hpx"
             elif isinstance(geom, WcsGeom):
-                map_type = 'wcs'
+                map_type = "wcs"
             else:
-                raise ValueError('Unrecognized geom type.')
+                raise ValueError("Unrecognized geom type.")
 
-        cls_out = cls._get_map_cls(map_type)
-        map_out = cls_out(geom, meta=meta, unit=unit)
-        return map_out
+        cls_out = Map._get_map_cls(map_type)
+        return cls_out(geom, data=data, meta=meta, unit=unit)
 
-    @classmethod
-    def from_hdu_list(cls, hdulist, hdu=None, hdu_bands=None, map_type='auto'):
-        if map_type == 'auto':
-            map_type = cls._get_map_type(hdulist, hdu)
-        cls_out = cls._get_map_cls(map_type)
-        map_out = cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
-        return map_out
+    @staticmethod
+    def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
+        """Create from `astropy.io.fits.HDUList`."""
+        if map_type == "auto":
+            map_type = Map._get_map_type(hdulist, hdu)
+        cls_out = Map._get_map_cls(map_type)
+        return cls_out.from_hdulist(hdulist, hdu=hdu, hdu_bands=hdu_bands)
 
     @staticmethod
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
-        if 'META' in header:
-            meta = json.loads(header['META'], object_pairs_hook=OrderedDict)
+        if "META" in header:
+            meta = json.loads(header["META"], object_pairs_hook=OrderedDict)
         else:
             meta = OrderedDict()
         return meta
@@ -235,15 +262,15 @@ class Map(object):
         if hdu_name is None:
             # Find the header of the first non-empty HDU
             header = hdu_list[0].header
-            if header['NAXIS'] == 0:
+            if header["NAXIS"] == 0:
                 header = hdu_list[1].header
         else:
             header = hdu_list[hdu_name].header
 
-        if ('PIXTYPE' in header) and (header['PIXTYPE'] == 'HEALPIX'):
-            return 'hpx'
+        if ("PIXTYPE" in header) and (header["PIXTYPE"] == "HEALPIX"):
+            return "hpx"
         else:
-            return 'wcs'
+            return "wcs"
 
     @staticmethod
     def _get_map_cls(map_type):
@@ -254,19 +281,22 @@ class Map(object):
         (see e.g. the Astropy table format I/O registry),
         but that's non-trivial to implement without avoiding circular imports.
         """
-        if map_type == 'wcs':
+        if map_type == "wcs":
             from .wcsnd import WcsNDMap
+
             return WcsNDMap
-        elif map_type == 'wcs-sparse':
+        elif map_type == "wcs-sparse":
             raise NotImplementedError()
-        elif map_type == 'hpx':
+        elif map_type == "hpx":
             from .hpxnd import HpxNDMap
+
             return HpxNDMap
-        elif map_type == 'hpx-sparse':
+        elif map_type == "hpx-sparse":
             from .hpxsparse import HpxSparseMap
+
             return HpxSparseMap
         else:
-            raise ValueError('Unrecognized map type: {!r}'.format(map_type))
+            raise ValueError("Unrecognized map type: {!r}".format(map_type))
 
     def write(self, filename, overwrite=False, **kwargs):
         """Write to a FITS file.
@@ -284,7 +314,7 @@ class Map(object):
         hdu_bands : str
             Set the name of the bands table extension.  By default this will
             be set to BANDS.
-        conv : str        
+        conv : str
             FITS format convention.  By default files will be written
             to the gamma-astro-data-formats (GADF) format.  This
             option can be used to write files that are compliant with
@@ -292,18 +322,20 @@ class Map(object):
             Fermi Science Tools).  Supported conventions are 'gadf',
             'fgst-ccube', 'fgst-ltcube', 'fgst-bexpcube',
             'fgst-template', 'fgst-srcmap', 'fgst-srcmap-sparse',
-            'galprop', and 'galprop2'.            
-        sparse : bool        
+            'galprop', and 'galprop2'.
+        sparse : bool
             Sparsify the map by dropping pixels with zero amplitude.
             This option is only compatible with the 'gadf' format.
         """
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
-    @abc.abstractmethod
     def iter_by_image(self):
         """Iterate over image planes of the map returning a tuple with the image
         array and image plane index.
+
+        The image plane index is in data order, so that the data array can be
+        indexed directly. See :ref:`mapiter` for further information.
 
         Returns
         -------
@@ -312,9 +344,9 @@ class Map(object):
         idx : tuple
             Index of image plane.
         """
-        pass
+        for idx in np.ndindex(self.geom.shape):
+            yield self.data[idx[::-1]], idx[::-1]
 
-    @abc.abstractmethod
     def iter_by_pix(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         pixel coordinates.
@@ -332,9 +364,13 @@ class Map(object):
         pix : tuple
             Tuple of pixel coordinates.
         """
-        pass
+        pix = list(self.geom.get_idx(flat=True))
+        vals = self.data[np.isfinite(self.data)]
+        x = [vals] + pix
+        return unpack_seq(
+            np.nditer(x, flags=["external_loop", "buffered"], buffersize=buffersize)
+        )
 
-    @abc.abstractmethod
     def iter_by_coord(self, buffersize=1):
         """Iterate over elements of the map returning a tuple with values and
         map coordinates.
@@ -352,7 +388,12 @@ class Map(object):
         coords : tuple
             Tuple of map coordinates.
         """
-        pass
+        coords = list(self.geom.get_coord(flat=True))
+        vals = self.data[np.isfinite(self.data)]
+        x = [vals] + coords
+        return unpack_seq(
+            np.nditer(x, flags=["external_loop", "buffered"], buffersize=buffersize)
+        )
 
     @abc.abstractmethod
     def sum_over_axes(self):
@@ -366,7 +407,7 @@ class Map(object):
 
         Parameters
         ----------
-        map_in : `~Map`
+        map_in : `Map`
             Input map.
         """
         if not self.unit.is_equivalent(map_in.unit):
@@ -376,15 +417,18 @@ class Map(object):
         # data vectors directly
         idx = map_in.geom.get_idx()
         coords = map_in.geom.get_coord()
-        vals = Quantity(map_in.get_by_idx(idx), map_in.unit)
+        vals = u.Quantity(map_in.get_by_idx(idx), map_in.unit)
         self.fill_by_coord(coords, vals)
 
-    def reproject(self, geom, order=1, mode='interp'):
+    def reproject(self, geom, order=1, mode="interp"):
         """Reproject this map to a different geometry.
+
+        Only spatial axes are reprojected, if you would like to reproject
+        non-spatial axes consider using `Map.interp_by_coord()` instead.
 
         Parameters
         ----------
-        geom : `~MapGeom`
+        geom : `MapGeom`
             Geometry of projection.
         mode : {'interp', 'exact'}
             Method for reprojection.  'interp' method interpolates at pixel
@@ -395,22 +439,25 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Reprojected map.
         """
-        if geom.ndim == 2 and self.geom.ndim > 2:
-            geom = geom.to_cube(self.geom.axes)
-        elif geom.ndim != self.geom.ndim:
-            raise ValueError('Projection geometry must be 2D or have the '
-                             'same number of dimensions as the map.')
+        axes_eq = geom.ndim == self.geom.ndim
+        axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)])
 
-        if geom.projection == 'HPX':
-            return self._reproject_hpx(geom, mode=mode, order=order)
+        if not axes_eq and not geom.is_image:
+            raise ValueError(
+                "Map and target geometry non-spatial axes must match."
+                "Use interp_by_coord to interpolate in non-spatial axes."
+            )
+
+        if geom.projection == "HPX":
+            return self._reproject_to_hpx(geom, mode=mode, order=order)
         else:
-            return self._reproject_wcs(geom, mode=mode, order=order)
+            return self._reproject_to_wcs(geom, mode=mode, order=order)
 
     @abc.abstractmethod
-    def pad(self, pad_width, mode='constant', cval=0, order=1):
+    def pad(self, pad_width, mode="constant", cval=0, order=1):
         """Pad the spatial dimension of the map by extending the edge of the
         map by the given number of pixels.
 
@@ -430,7 +477,7 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Padded map.
 
         """
@@ -445,19 +492,18 @@ class Map(object):
         ----------
         crop_width : {sequence, array_like, int}
             Number of pixels cropped from the edges of each axis.
-            Defined analogously to `pad_with` from `~numpy.pad`.
+            Defined analogously to ``pad_with`` from `numpy.pad`.
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Cropped map.
-
         """
         pass
 
     @abc.abstractmethod
     def downsample(self, factor, preserve_counts=True):
-        """Downsample the spatial dimension of the map by a given factor. 
+        """Downsample the spatial dimension by a given factor.
 
         Parameters
         ----------
@@ -470,14 +516,14 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Downsampled map.
         """
         pass
 
     @abc.abstractmethod
     def upsample(self, factor, order=0, preserve_counts=True):
-        """Upsample the spatial dimension of the map by a given factor. 
+        """Upsample the spatial dimension by a given factor.
 
         Parameters
         ----------
@@ -492,11 +538,153 @@ class Map(object):
 
         Returns
         -------
-        map : `~Map`
+        map : `Map`
             Upsampled map.
 
         """
         pass
+
+    def slice_by_idx(self, slices):
+        """Slice sub map from map object.
+
+        For usage examples, see :ref:`mapslicing`.
+
+        Parameters
+        ----------
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            corresponding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
+
+        Returns
+        -------
+        map_out : `Map`
+            Sliced map object.
+        """
+        geom = self.geom.slice_by_idx(slices)
+        slices = tuple([slices.get(ax.name, slice(None)) for ax in self.geom.axes])
+        data = self.data[slices[::-1]]
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
+
+    def get_image_by_coord(self, coords):
+        """Return spatial map at the given axis coordinates.
+
+        Parameters
+        ----------
+        coords : tuple or dict
+            Tuple should be ordered as (x_0, ..., x_n) where x_i are coordinates
+            for non-spatial dimensions of the map. Dict should specify the axis
+            names of the non-spatial axes such as {'axes0': x_0, ..., 'axesn': x_n}.
+
+        Examples
+        --------
+
+        ::
+
+            import numpy as np
+            from gammapy.maps import Map, MapAxis
+            from astropy.coordinates import SkyCoord
+            from astropy import units as u
+
+            # Define map axes
+            energy_axis = MapAxis.from_edges(
+                np.logspace(-1., 1., 4), unit='TeV', name='energy',
+            )
+
+            time_axis = MapAxis.from_edges(
+                np.linspace(0., 10, 20), unit='h', name='time',
+            )
+
+            # Define map center
+            skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+
+            # Create map
+            m_wcs = Map.create(
+                map_type='wcs',
+                binsz=0.02,
+                skydir=skydir,
+                width=10.0,
+                axes=[energy_axis, time_axis],
+            )
+
+            # Get image by coord tuple
+            image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
+
+            # Get image by coord dict with strings
+            image = m_wcs.get_image_by_coord({'energy': '500 GeV', 'time': '1 h'})
+
+            # Get image by coord dict with quantities
+            image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
+
+        See Also
+        --------
+        get_image_by_idx, get_image_by_pix
+
+        Returns
+        -------
+        map_out : `Map`
+            Map with spatial dimensions only.
+        """
+        if isinstance(coords, tuple):
+            axes_names = [_.name for _ in self.geom.axes]
+            coords = OrderedDict(zip(axes_names, coords))
+
+        idx = []
+        for axis, value in zip(self.geom.axes, coords.values()):
+            idx.append(axis.coord_to_idx(value))
+
+        return self.get_image_by_idx(idx)
+
+    def get_image_by_pix(self, pix):
+        """Return spatial map at the given axis pixel coordinates
+
+        Parameters
+        ----------
+        pix : tuple
+            Tuple of scalar pixel coordinates for each non-spatial dimension of
+            the map. Tuple should be ordered as (I_0, ..., I_n). Pixel coordinates
+            can be either float or integer type.
+
+        See Also
+        --------
+        get_image_by_coord, get_image_by_idx
+
+        Returns
+        -------
+        map_out : `Map`
+            Map with spatial dimensions only.
+        """
+        idx = self.geom.pix_to_idx(pix)
+        return self.get_image_by_idx(idx)
+
+    def get_image_by_idx(self, idx):
+        """Return spatial map at the given axis pixel indices.
+
+        Parameters
+        ----------
+        idx : tuple
+            Tuple of scalar indices for each non spatial dimension of the map.
+            Tuple should be ordered as (I_0, ..., I_n).
+
+        See Also
+        --------
+        get_image_by_coord, get_image_by_pix
+
+        Returns
+        -------
+        map_out : `Map`
+            Map with spatial dimensions only.
+        """
+        if len(idx) != len(self.geom.axes):
+            raise ValueError("Tuple length must equal number of non-spatial dimensions")
+
+        # Only support scalar indices per axis
+        idx = tuple([int(_) for _ in idx])
+
+        geom = self.geom.to_image()
+        data = self.data[idx[::-1]]
+        return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
     def get_by_coord(self, coords):
         """Return map values at the given map coordinates.
@@ -504,8 +692,7 @@ class Map(object):
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
@@ -533,7 +720,7 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-            Pixel indices can be either float or integer type. 
+            Pixel indices can be either float or integer type.
 
         Returns
         ----------
@@ -573,14 +760,13 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def interp_by_coord(self, coords, interp=None):
+    def interp_by_coord(self, coords, interp=None, fill_value=None):
         """Interpolate map values at the given map coordinates.
 
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
 
@@ -593,6 +779,9 @@ class Map(object):
             (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
             that only 'nearest' and 'linear' methods are supported for
             all map types.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
 
         Returns
         -------
@@ -602,7 +791,7 @@ class Map(object):
         pass
 
     @abc.abstractmethod
-    def interp_by_pix(self, pix, interp=None):
+    def interp_by_pix(self, pix, interp=None, fill_value=None):
         """Interpolate map values at the given pixel coordinates.
 
         Parameters
@@ -622,6 +811,9 @@ class Map(object):
             (0='nearest', 1='linear', 2='quadratic', 3='cubic').  Note
             that only 'nearest' and 'linear' methods are supported for
             all map types.
+        fill_value : None or float value
+            The value to use for points outside of the interpolation domain.
+            If None, values outside the domain are extrapolated.
 
         Returns
         -------
@@ -631,27 +823,22 @@ class Map(object):
         pass
 
     def fill_by_coord(self, coords, weights=None):
-        """Fill pixels at the given map coordinates with values in `weights`
-        vector.
+        """Fill pixels at ``coords`` with given ``weights``.
 
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
         weights : `~numpy.ndarray`
-            Weights vector. If None then a unit weight will be assumed
-            for each element in `coords`.
+            Weights vector. Default is weight of one.
         """
         idx = self.geom.coord_to_idx(coords)
         self.fill_by_idx(idx, weights)
 
     def fill_by_pix(self, pix, weights=None):
-        """Fill pixels at the given pixel coordinates with values in `weights`
-        vector.
+        """Fill pixels at ``pix`` with given ``weights``.
 
         Parameters
         ----------
@@ -661,18 +848,15 @@ class Map(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.  Float
             indices will be rounded to the nearest integer.
-
         weights : `~numpy.ndarray`
-            Weights vector. If None then a unit weight will be assumed
-            for each element in `pix`.
+            Weights vector. Default is weight of one.
         """
         idx = pix_tuple_to_idx(pix)
         return self.fill_by_idx(idx, weights=weights)
 
     @abc.abstractmethod
     def fill_by_idx(self, idx, weights=None):
-        """Fill pixels at the given pixel indices with values in `weights`
-        vector.
+        """Fill pixels at ``idx`` with given ``weights``.
 
         Parameters
         ----------
@@ -680,34 +864,28 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-
         weights : `~numpy.ndarray`
-            Weights vector. If None then a unit weight will be assumed
-            for each element in `idx`.
+            Weights vector. Default is weight of one.
         """
         pass
 
     def set_by_coord(self, coords, vals):
-        """Set pixels at the given map coordinates to the values in `vals`
-        vector.
+        """Set pixels at ``coords`` with given ``vals``.
 
         Parameters
         ----------
         coords : tuple or `~gammapy.maps.MapCoord`
-            `~gammapy.maps.MapCoord` object or tuple of
-            coordinate arrays for each dimension of the map.  Tuple
+            Coordinate arrays for each dimension of the map.  Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-
         vals : `~numpy.ndarray`
-            Values vector.  Pixels at `coords` will be set to these values.
+            Values vector.
         """
         idx = self.geom.coord_to_pix(coords)
         self.set_by_pix(idx, vals)
 
     def set_by_pix(self, pix, vals):
-        """Set pixels at the given pixel coordinates to the values in `vals`
-        vector.
+        """Set pixels at ``pix`` with given ``vals``.
 
         Parameters
         ----------
@@ -717,17 +895,15 @@ class Map(object):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.  Float
             indices will be rounded to the nearest integer.
-
         vals : `~numpy.ndarray`
-            Values vector. Pixels at `pix` will be set to these values.
+            Values vector.
         """
         idx = pix_tuple_to_idx(pix)
         return self.set_by_idx(idx, vals)
 
     @abc.abstractmethod
     def set_by_idx(self, idx, vals):
-        """Set pixels at the given pixel indices to the values in `vals`
-        vector.
+        """Set pixels at ``idx`` with given ``vals``.
 
         Parameters
         ----------
@@ -735,8 +911,117 @@ class Map(object):
             Tuple of pixel index arrays for each dimension of the map.
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
-
         vals : `~numpy.ndarray`
-            Values vector. Pixels at `idx` will be set to these values.
+            Values vector.
         """
         pass
+
+    def plot_interactive(self, rc_params=None, **kwargs):
+        """
+        Plot map with interactive widgets to explore the non spatial axes.
+
+        Parameters
+        ----------
+        rc_params : dict
+            Passed to ``matplotlib.rc_context(rc=rc_params)`` to style the plot.
+        **kwargs : dict
+            Keyword arguments passed to `WcsNDMap.plot`.
+
+        Examples
+        --------
+        You can try this out e.g. using a Fermi-LAT diffuse model cube with an energy axis::
+
+            from gammapy.maps import Map
+
+            m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
+            m.plot_interactive(cmap='gnuplot2')
+
+        If you would like to adjust the figure size you can use the ``rc_params`` argument::
+
+            rc_params = {'figure.figsize': (12, 6), 'font.size': 12}
+            m.plot_interactive(rc_params=rc_params)
+        """
+        import matplotlib as mpl
+        import matplotlib.pyplot as plt
+        from ipywidgets.widgets.interaction import interact, fixed
+        from ipywidgets import SelectionSlider, RadioButtons
+
+        if self.geom.is_image:
+            raise TypeError("Use .plot() for 2D Maps")
+
+        kwargs.setdefault("interpolation", "nearest")
+        kwargs.setdefault("origin", "lower")
+        kwargs.setdefault("cmap", "afmhot")
+
+        rc_params = rc_params or {}
+        stretch = kwargs.pop("stretch", "sqrt")
+
+        interact_kwargs = {}
+
+        for axis in self.geom.axes:
+            if axis.node_type == "edge":
+                options = [
+                    "{:.0f} - {:.0f} {}".format(val_min, val_max, axis.unit)
+                    for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])
+                ]
+            else:
+                options = ["{:.0f} {}".format(val, axis.unit) for val in axis.center]
+
+            interact_kwargs[axis.name] = SelectionSlider(
+                options=options,
+                description="Select {}:".format(axis.name),
+                continuous_update=False,
+                style={"description_width": "initial"},
+                layout={"width": "36%"},
+            )
+            interact_kwargs[axis.name + "_options"] = fixed(options)
+
+        interact_kwargs["stretch"] = RadioButtons(
+            options=["linear", "sqrt", "log"],
+            value=stretch,
+            description="Select stretch:",
+            style={"description_width": "initial"},
+        )
+
+        @interact(**interact_kwargs)
+        def _plot_interactive(**ikwargs):
+            idx = [
+                ikwargs[ax.name + "_options"].index(ikwargs[ax.name])
+                for ax in self.geom.axes
+            ]
+            img = self.get_image_by_idx(idx)
+            stretch = ikwargs["stretch"]
+            with mpl.rc_context(rc=rc_params):
+                fig, ax, cbar = img.plot(stretch=stretch, **kwargs)
+                plt.show()
+
+    def copy(self, **kwargs):
+        """Copy map instance and overwrite given attributes, except for geometry.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map constructor.
+
+        Returns
+        --------
+        copy : `Map`
+            Copied Map.
+        """
+        if "geom" in kwargs:
+            raise ValueError("Can't copy and change geometry of the map.")
+        return self._init_copy(**kwargs)
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        geom = self.geom.__class__.__name__
+        str_ += "\tgeom  : {} \n ".format(geom)
+        axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
+        axes = axes + [_.name for _ in self.geom.axes]
+        str_ += "\taxes  : {}\n".format(", ".join(axes))
+        str_ += "\tshape : {}\n".format(self.geom.data_shape[::-1])
+        str_ += "\tndim  : {}\n".format(self.geom.ndim)
+        str_ += "\tunit  : {!r} \n".format(str(self.unit))
+        str_ += "\tdtype : {} \n".format(self.data.dtype)
+        return str_

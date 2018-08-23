@@ -51,7 +51,7 @@ help:
 	@echo '     python -m gammapy info'
 
 clean:
-	rm -rf build dist docs/_build docs/api docs/notebooks docs/_static/notebooks htmlcov MANIFEST v gammapy.egg-info .coverage .cache
+	rm -rf build dist docs/_build docs/api docs/notebooks docs/_static/notebooks htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
@@ -66,34 +66,32 @@ cython:
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
-code-analysis: flake8 pylint
-
-# TODO: fix or silence everything reported here
-# TODO: remove the weird pipe / grep line and configure properly
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
-	       --exclude=gammapy/extern \
-	       --ignore=E501 \
-	       | grep -v __init__ | grep -v external
+    --exclude=gammapy/extern,gammapy/conftest.py,gammapy/_astropy_init.py,__init__.py \
+    --ignore=E501
+
+black:
+	# TODO: clean up one sub-package at a time and remove from the exclude
+	black $(PROJECT)/ \
+	--exclude="_astropy_init.py|extern/|astro/|background/|catalog/|cube/|data/|detect/|image/|irf/|maps/|scripts/|spectrum/|stats/|time/|/utils" \
+	--line-length 88 \
+	--skip-string-normalization
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
 	pylint -E $(PROJECT)/ \
-	       --ignore=_astropy_init.py -f colorized \
-	       -d E1103,E0611,E1101 \
-	       --msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
-
-# TODO: fix or silence all the issue (and check which codes we really want to ignore if any)
-# TODO: figure out how exclude works (see https://github.com/PyCQA/pydocstyle/issues/175):
-# Should exclude: gammapy/version.py, gammapy/extern
-#	       --match-dir='[^gammapy/extern]' \
+	--ignore=_astropy_init.py,gammapy/extern \
+	-d E0611,E1101,E1103 \
+	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})' -f colorized
 
 pydocstyle:
-	pydocstyle $(PROJECT)/ \
-	       --convention=numpy \
-	       --add-ignore=D410,D104,D102,D100,D200
+	pydocstyle $(PROJECT) \
+	--convention=numpy \
+	--add-ignore=D100,D102,D104,D105,D200,D410 \
+	--add-ignore=D301 # TODO: re-activate and fix this one
 
 # TODO: add test and code quality checks for `examples`
 

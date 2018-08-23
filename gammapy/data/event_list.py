@@ -11,10 +11,10 @@ from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
+from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..utils.time import time_ref_from_dict
-from .utils import _earth_location_from_dict
 from .gti import GTI
 from . import InvalidDataError
 
@@ -391,12 +391,12 @@ class EventListBase(object):
 
         Parameters
         ----------
-        region : list of `~region.SkyRegion`
+        region : list of `~regions.SkyRegion`
             List of sky regions
 
         Returns
         -------
-        index_array : `np.array`
+        index_array : `numpy.ndarray`
             Index array of selected events
         """
         position = self.radec
@@ -446,9 +446,8 @@ class EventListBase(object):
 
             ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
             events = ds.obs(obs_id=23523).events
-            events.plot_time_map()
+            events.plot_time()
             plt.show()
-
         """
         import matplotlib.pyplot as plt
 
@@ -468,60 +467,6 @@ class EventListBase(object):
         t_center = (t[1:] + t[:-1]) / 2
 
         ax.plot(t_center, rate)
-
-        return ax
-
-    def plot_time_map(self, ax=None):
-        """A time map showing for each event the time between the previous and following event.
-
-        The use and implementation are described here:
-        https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes` or None
-            Axes
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`
-            Axes
-
-        Examples
-        --------
-        Plot a time map of the events:
-
-        .. plot::
-            :include-source:
-
-            import matplotlib.pyplot as plt
-            from gammapy.data import DataStore
-
-            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
-            events = ds.obs(obs_id=23523).events
-            events.plot_time_map()
-            plt.show()
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        time = self.table['TIME']
-        first_event_time = np.min(time)
-
-        # Note the events are not necessarily in time order
-        relative_event_times = time - first_event_time
-
-        diffs = relative_event_times[1:] - relative_event_times[:-1]
-
-        xcoords = diffs[:-1]  # all differences except the last
-        ycoords = diffs[1:]  # all differences except the first
-
-        ax.set_title('Time Map')
-
-        ax.set_xlabel('time before event / s')
-        ax.set_ylabel('time after event / s')
-        ax.scatter(xcoords, ycoords)
 
         return ax
 
@@ -624,7 +569,7 @@ class EventList(EventListBase):
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return _earth_location_from_dict(self.table.meta)
+        return earth_location_from_dict(self.table.meta)
 
     @property
     def observation_time_duration(self):
@@ -698,40 +643,19 @@ class EventList(EventListBase):
         import matplotlib.pyplot as plt
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
         self.plot_image_radec(ax=axes[0])
-        #        self.plot_time_map(ax=axes[1])
         self.plot_time(ax=axes[1])
-
-        # log-log scale for time map
-        #        xlims = axes[1].set_xlim()
-        #        ylims = axes[1].set_ylim()
-        #        axes[1].set_xlim(1e-3, xlims[1])
-        #        axes[1].set_ylim(1e-3, ylims[1])
-        #        axes[1].loglog()
         # TODO: self.plot_energy_dependence(ax=axes[x])
         # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
 
     def plot_image_radec(self, ax=None, number_bins=50):
-        """Plot a sky  counts image in RADEC coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
+        """Plot a sky counts image in RA/DEC coordinates.
         """
         import matplotlib.pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         from matplotlib.colors import PowerNorm
 
         ax = plt.gca() if ax is None else ax
-
-        # max_x = max(self.table['RA'])
-        # min_x = min(self.table['RA'])
-        # max_y = max(self.table['DEC'])
-        # min_y = min(self.table['DEC'])
-        #
-        # x_edges = np.linspace(min_x, max_x, number_bins)
-        # y_edges = np.linspace(min_y, max_y, number_bins)
 
         count_image, x_edges, y_edges = np.histogram2d(
             self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins)
@@ -741,7 +665,8 @@ class EventList(EventListBase):
         ax.set_xlabel('RA')
         ax.set_ylabel('DEC')
 
-        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value, '+', ms=20, mew=3, color='white')
+        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value,
+                '+', ms=20, mew=3, color='white')
 
         im = ax.imshow(count_image, interpolation='nearest', origin='low',
                        extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
@@ -755,12 +680,7 @@ class EventList(EventListBase):
         plt.colorbar(im, cax=cax)
 
     def plot_image(self, ax=None, number_bins=50):
-        """Plot the counts as a function of x and y camera coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
+        """Plot a counts image in field of view coordinates.
         """
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
@@ -810,36 +730,15 @@ class EventListLAT(EventListBase):
     >>> events = EventListLAT.read(filename)
     """
 
-    def plot_image(self, center, size):
-        """A quick look function to generate a count skymap with all the photons
-        within a certain square (rectangle).
-
-        Fermi-LAT eventlist could encompass large fraction of the sky,
-        this way we can restirct the skymap to a squared (rectangular)
-        region of interest (ROI)
-
-        We evaluate the number of pixel of the skymap such that we have a
-        bin size 0.1 deg, this is what is suggested by default in fermipy
-        http://fermipy.readthedocs.io/en/latest/config.html
-
-        Parameters
-        -----------
-        center : `~astropy.coordinates.SkyCoord`
-            Sky circle center
-        size : `~astropy.coordinates.Quantity`
-            size of the square defining our ROI
-        """
-        from ..image import SkyImage
-        binsz = Quantity(0.1, 'deg')
-        nxpix = int(size[0] / binsz)
-        nypix = int(size[1] / binsz)
-        counts_image = SkyImage.empty(
-            nxpix=nxpix, nypix=nypix, binsz=binsz.value,
-            xref=center.icrs.ra.deg, yref=center.icrs.dec.deg,
-            coordsys='CEL', proj='TAN',
+    def plot_image(self):
+        """Quick look counts map sky plot."""
+        from ..maps import WcsNDMap
+        m = WcsNDMap.create(
+            npix=(360, 180), binsz=1.0, proj='AIT', coordsys='GAL',
         )
-        counts_image.fill_events(self)
-        counts_image.show()
+        coord = self.radec
+        m.fill_by_coord(coord)
+        m.plot(stretch='sqrt')
 
 
 class EventListDataset(object):
@@ -861,7 +760,7 @@ class EventListDataset(object):
         self.gti = gti
 
     @classmethod
-    def from_hdu_list(cls, hdu_list):
+    def from_hdulist(cls, hdu_list):
         """Create `EventList` from a `~astropy.io.fits.HDUList`."""
         # TODO: This doesn't work because FITS / Table is not integrated.
         # Maybe the easiest solution for now it to write the hdu_list
@@ -1123,7 +1022,7 @@ class EventListDatasetChecker(object):
         # TSTART, TSTOP, MJDREFI, MJDREFF
 
         # Check that START and STOP times are consecutive
-        times = np.ravel(self['START'], self['STOP'])
+        times = np.ravel(self.table['START'], self.table['STOP'])
         # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
         if not np.all(np.diff(times) >= 0):
             raise InvalidDataError('GTIs are not consecutive or sorted.')

@@ -5,65 +5,44 @@ import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
-from ...data import DataStore, ObservationList, ObservationStats, Target
+from ...data import DataStore, ObservationList, ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyImage
 
 
-def get_obs_list():
+@pytest.fixture(scope='session')
+def obs_list():
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     run_list = [23523, 23526]
-    obs_list = ObservationList([data_store.obs(_) for _ in run_list])
-    return obs_list
-
-
-def get_obs(id):
-    obs_list = get_obs_list()
-    for obs in obs_list:
-        if obs.obs_id == id:
-            return obs
+    return ObservationList([data_store.obs(_) for _ in run_list])
 
 
 @pytest.fixture(scope='session')
-def target():
+def on_region():
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg)
     on_size = 0.3 * u.deg
-    on_region = CircleSkyRegion(pos, on_size)
-
-    return Target(position=pos, on_region=on_region, name='Crab Nebula', tag='crab')
+    return CircleSkyRegion(pos, on_size)
 
 
 @pytest.fixture(scope='session')
-def mask():
-    return SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-
-
-@pytest.fixture(scope='session')
-def stats(target, mask):
-    obs = get_obs(23523)
-    bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
-                                              exclusion_mask=mask,
+def stats(on_region, obs_list):
+    obs = obs_list[0]
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                               obs_list=obs)
     bg = bge.process(obs)
     return ObservationStats.from_obs(obs, bg)
 
 
 @pytest.fixture(scope='session')
-def stats_stacked(target, mask):
-    obs_list = get_obs_list()
-    bge = ReflectedRegionsBackgroundEstimator(on_region=target.on_region,
-                                              exclusion_mask=mask,
+def stats_stacked(on_region, obs_list):
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
                                               obs_list=obs_list)
     bge.run()
 
     return ObservationStats.stack([
         ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)
-
     ])
 
-
-# TODO: parametrize tests using single and stacked stats!
 
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')

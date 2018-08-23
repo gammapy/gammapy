@@ -165,6 +165,55 @@ class EnergyDispersion(object):
         return edisp.to_energy_dispersion(offset=offset[0], e_reco=e_reco)
 
     @classmethod
+    def from_diagonal_response(cls, e_true, e_reco=None):
+        """Create energy dispersion from a diagonal response, i.e. perfect energy resolution
+
+        This creates the matrix corresponding to a perfect energy response.
+        It contains ones where the e_true center is inside the e_reco bin.
+        It is a square diagonal matrix if e_true = e_reco.
+
+        This is useful in cases where code always applies an edisp,
+        but you don't want it to do anything.
+
+        Parameters
+        ----------
+        e_true, e_reco : `~astropy.units.Quantity`
+            Energy bounds for true and reconstructed energy axis
+
+        Examples
+        --------
+        If ``e_true`` equals ``e_reco``, you get a diagonal matrix::
+
+            e_true = [0.5, 1, 2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(e_true)
+            edisp.plot_matrix()
+
+        Example with different energy binnings::
+
+            e_true = [0.5, 1, 2, 4, 6] * u.TeV
+            e_reco = [2, 4, 6] * u.TeV
+            edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+            edisp.plot_matrix()
+        """
+        if e_reco is None:
+            e_reco = e_true
+
+        e_true_center = 0.5 * (e_true[1:] + e_true[:-1])
+        etrue_2d, ereco_lo_2d = np.meshgrid(e_true_center, e_reco[:-1])
+        etrue_2d, ereco_hi_2d = np.meshgrid(e_true_center, e_reco[1:])
+
+        data = np.logical_and(etrue_2d >= ereco_lo_2d, etrue_2d < ereco_hi_2d)
+        data = np.transpose(data).astype('float')
+
+        return cls(
+            e_true_lo=e_true[:-1],
+            e_true_hi=e_true[1:],
+            e_reco_lo=e_reco[:-1],
+            e_reco_hi=e_reco[1:],
+            data=data,
+        )
+
+    @classmethod
     def from_hdulist(cls, hdulist, hdu1='MATRIX', hdu2='EBOUNDS'):
         """Create `EnergyDispersion` object from `~astropy.io.fits.HDUList`.
 
@@ -375,7 +424,7 @@ class EnergyDispersion(object):
         idx = self.e_true.find_node(e_true)
         pdf = self.data.data[idx]
 
-        # compute sum along reconstructed energy 
+        # compute sum along reconstructed energy
         # axis to determine the mean
         norm = np.sum(pdf, axis=-1)
         temp = np.sum(pdf * self.e_reco.nodes, axis=-1)
@@ -418,7 +467,7 @@ class EnergyDispersion(object):
             Instance name
         """
         from sherpa.astro.data import DataRMF
-        from sherpa.utils import SherpaInt, SherpaUInt, SherpaFloat
+        from sherpa.utils import SherpaUInt, SherpaFloat
 
         # Need to modify RMF data
         # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727
@@ -588,7 +637,7 @@ class EnergyDispersion2D(object):
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(self, e_true_lo, e_true_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, data, interp_kwargs=None, meta=None,):
+                 offset_hi, data, interp_kwargs=None, meta=None, ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
@@ -675,7 +724,7 @@ class EnergyDispersion2D(object):
         m_lo = table['MIGRA_LO'].quantity[0]
         m_hi = table['MIGRA_HI'].quantity[0]
 
-        matrix = table['MATRIX'].quantity[0].transpose() ## TODO Why does this need to be transposed?
+        matrix = table['MATRIX'].quantity[0].transpose()  ## TODO Why does this need to be transposed?
         return cls(e_true_lo=e_lo, e_true_hi=e_hi,
                    offset_lo=o_lo, offset_hi=o_hi,
                    migra_lo=m_lo, migra_hi=m_hi, data=matrix)
@@ -787,7 +836,8 @@ class EnergyDispersion2D(object):
         vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
 
         # Compute normalized cumulative sum to prepare integration
-        tmp = np.nan_to_num(np.cumsum(vals) / np.sum(vals))
+        with np.errstate(invalid='ignore'):
+            tmp = np.nan_to_num(np.cumsum(vals) / np.sum(vals))
 
         # Determine positions (bin indices) of e_reco bounds in migration array
         pos_mig = np.digitize(migra_e_reco, mig_array) - 1

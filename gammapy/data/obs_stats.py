@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from ..stats import Stats, significance_on_off
@@ -52,13 +51,21 @@ class ObservationStats(Stats):
         self.obs_id = obs_id
         self.livetime = livetime
         if alpha is not None:
+            self.a_on = alpha
+            self.a_off = 1
             self.alpha_obs = alpha
         elif a_off > 0:
             self.alpha_obs = a_on / a_off
         else:
             self.alpha_obs = 0
-        self.gamma_rate = gamma_rate or n_on / livetime
-        self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
+
+        if gamma_rate is None:
+            gamma_rate = self.excess / livetime
+        self.gamma_rate = gamma_rate
+
+        if bg_rate is None:
+            bg_rate = self.alpha_obs * n_off / livetime
+        self.bg_rate = bg_rate
 
     @classmethod
     def from_obs(cls, obs, bg_estimate):
@@ -106,11 +113,8 @@ class ObservationStats(Stats):
 
     @property
     def sigma(self):
-        """Li-Ma significance for observation statistics (`float`).
-        """
-        sigma = significance_on_off(
-            self.n_on, self.n_off, self.alpha, method='lima')
-        return sigma
+        """Li-Ma significance for observation statistics (float)."""
+        return significance_on_off(self.n_on, self.n_off, self.alpha, method='lima')
 
     @classmethod
     def stack(cls, stats_list):
@@ -180,27 +184,26 @@ class ObservationStats(Stats):
         )
 
     def to_dict(self):
-        """Data as an `~collections.OrderedDict`.
+        """Data as a dict.
 
         This is useful for serialisation or putting the info in a table.
         """
-        data = OrderedDict()
-        data['obs_id'] = self.obs_id
-        data['livetime'] = self.livetime
-        data['n_on'] = self.n_on
-        data['n_off'] = self.n_off
-        data['a_on'] = self.a_on
-        data['a_off'] = self.a_off
-        data['alpha'] = self.alpha
-        data['background'] = self.background
-        data['excess'] = self.excess
-        data['sigma'] = self.sigma
-        data['gamma_rate'] = self.gamma_rate
-        data['bg_rate'] = self.bg_rate
-        return data
+        return {
+            'obs_id': self.obs_id,
+            'livetime': self.livetime,
+            'n_on': self.n_on,
+            'n_off': self.n_off,
+            'a_on': self.a_on,
+            'a_off': self.a_off,
+            'alpha': self.alpha,
+            'background': self.background,
+            'excess': self.excess,
+            'sigma': self.sigma,
+            'gamma_rate': self.gamma_rate,
+            'bg_rate': self.bg_rate,
+        }
 
     def __str__(self):
-        """Observation statistics report (`str`)."""
         ss = '*** Observation summary report ***\n'
         if type(self.obs_id) is list:
             obs_str = '[{}-{}]'.format(self.obs_id[0], self.obs_id[-1])
@@ -213,8 +216,8 @@ class ObservationStats(Stats):
         ss += 'Alpha: {:.3f}\n'.format(self.alpha)
         ss += 'Bkg events in On region: {:.2f}\n'.format(self.background)
         ss += 'Excess: {:.2f}\n'.format(self.excess)
-        ss += 'Excess / Background: {:.2f}\n'.format(np.divide(self.excess,
-                                                               self.background))
+        with np.errstate(invalid='ignore', divide='ignore'):
+            ss += 'Excess / Background: {:.2f}\n'.format(self.excess / self.background)
         ss += 'Gamma rate: {:.2f}\n'.format(self.gamma_rate)
         ss += 'Bkg rate: {:.2f}\n'.format(self.bg_rate)
         ss += 'Sigma: {:.2f}\n'.format(self.sigma)

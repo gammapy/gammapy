@@ -9,11 +9,8 @@ Morphology models (`gammapy.image.models`)
 Introduction
 ============
 
-`gammapy.image.models` contains implementations of common morphology models.
-
-TODO: explain about `astropy.modeling` and ``sherpa`` models.
-
-TODO: write me
+`gammapy.image.models` contains implementations of common 2-dimensional spatial
+models.
 
 Getting Started
 ===============

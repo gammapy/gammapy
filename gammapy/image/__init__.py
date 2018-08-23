@@ -3,12 +3,8 @@
 Sky images (2-dimensional: lon, lat).
 """
 from .utils import *
-from .basic import *
 from .measure import *
 from .profile import *
 from .plotting import *
-from .core import *
-from .lists import *
-from .radial_profile import *
 from .asmooth import *
 

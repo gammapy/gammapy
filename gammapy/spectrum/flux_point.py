@@ -8,8 +8,10 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
+from ..utils.fitting import fit_iminuit
 from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
+from . import SpectrumObservationList, SpectrumObservation
 
 __all__ = [
     'FluxPoints',
@@ -229,7 +231,7 @@ class FluxPoints(object):
         >>> print(flux_points.drop_ul())
         FluxPoints(sed_type="flux", n_points=19)
         """
-        table_drop_ul = self.table[~self._is_ul]
+        table_drop_ul = self.table[~self.is_ul]
         return self.__class__(table_drop_ul)
 
     def to_sed_type(self, sed_type, method='log_center', model=None, pwl_approx=False):
@@ -242,7 +244,7 @@ class FluxPoints(object):
         ----------
         sed_type : {'dnde'}
              SED type to convert to.
-        model : `~gammapy.spectrum.SpectralModel`
+        model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model assumption.  Note that the value of the amplitude parameter
             does not matter. Still it is recommended to use something with the right
             scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
@@ -430,7 +432,7 @@ class FluxPoints(object):
         return y_err
 
     @property
-    def _is_ul(self):
+    def is_ul(self):
         try:
             return self.table['is_ul'].data.astype('bool')
         except KeyError:
@@ -515,7 +517,7 @@ class FluxPoints(object):
         x = self.e_ref.to(energy_unit)
 
         # get errors and ul
-        is_ul = self._is_ul
+        is_ul = self.is_ul
         x_err_all = self.get_energy_err(sed_type)
         y_err_all = self.get_flux_err(sed_type)
 
@@ -575,6 +577,16 @@ class FluxPointEstimator(object):
     Computes flux points for a given spectrum observation dataset
     (a 1-dim on/off observation), energy binning and spectral model.
 
+    A spectral model shape is assumed, all parameters except the norm are fixed
+    A 1D amplitude fit is done, to find the amplitude so that npred equals excess.
+
+    This is done for each group independently.
+
+    The method is used for example in this FERMI-LAT catalog paper
+    https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
+    or the HESS GPS paper
+    https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
+
     Parameters
     ----------
     obs : `~gammapy.spectrum.SpectrumObservation` or `~gammapy.spectrum.SpectrumObservationList`
@@ -590,6 +602,7 @@ class FluxPointEstimator(object):
         self.groups = groups
         self.model = model
         self.flux_points = None
+        self._fit = None
 
     def __str__(self):
         s = '{}:\n'.format(self.__class__.__name__)
@@ -597,6 +610,23 @@ class FluxPointEstimator(object):
         s += str(self.groups) + '\n'
         s += str(self.model) + '\n'
         return s
+
+    @property
+    def fit(self):
+        """Instance of `~gammapy.spectrum.SpectrumFit`"""
+        return self._fit
+
+    @property
+    def obs(self):
+        """Observations participating in the fit"""
+        return self._obs
+
+    @obs.setter
+    def obs(self, obs):
+        if isinstance(obs, SpectrumObservation):
+            obs = SpectrumObservationList([obs])
+
+        self._obs = SpectrumObservationList(obs)
 
     def compute_points(self):
         rows = []
@@ -618,10 +648,7 @@ class FluxPointEstimator(object):
     def compute_flux_point(self, energy_group):
         log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
 
-        model = self.compute_approx_model(
-            global_model=self.model,
-            energy_group=energy_group,
-        )
+        model = self._get_spectral_model(self.model)
 
         # Put at log center of the bin
         energy_ref = np.sqrt(energy_group.energy_min * energy_group.energy_max)
@@ -633,52 +660,12 @@ class FluxPointEstimator(object):
         )
 
     @staticmethod
-    def compute_approx_model(global_model, energy_group):
-        """
-        Compute approximate model, to be used in the energy bin.
-        TODO: At the moment just the global model with fixed parameters is
-        returned
-        """
-        # binning = EnergyBounds(binning)
-        # low_bins = binning.lower_bounds
-        # high_bins = binning.upper_bounds
-        #
-        # from sherpa.models import PowLaw1D
-        #
-        # if isinstance(model, models.PowerLaw):
-        #     temp = model.to_sherpa()
-        #     temp.gamma.freeze()
-        #     sherpa_models = [temp] * binning.nbins
-        # else:
-        #     sherpa_models = [None] * binning.nbins
-        #
-        # for low, high, sherpa_model in zip(low_bins, high_bins, sherpa_models):
-        #     log.info('Computing flux points in bin [{}, {}]'.format(low, high))
-        #
-        #     # Make PowerLaw approximation for higher order models
-        #     if sherpa_model is None:
-        #         flux_low = model(low)
-        #         flux_high = model(high)
-        #         index = powerlaw.power_law_g_from_points(e1=low, e2=high,
-        #                                                  f1=flux_low,
-        #                                                  f2=flux_high)
-        #
-        #         log.debug('Approximated power law index: {}'.format(index))
-        #         sherpa_model = PowLaw1D('powlaw1d.default')
-        #         sherpa_model.gamma = index
-        #         sherpa_model.gamma.freeze()
-        #         sherpa_model.ref = model.parameters.reference.to('keV')
-        #         sherpa_model.ampl = 1e-20
-        # return PowerLaw(
-        #    index=u.Quantity(2, ''),
-        #    amplitude=u.Quantity(1, 'm-2 s-1 TeV-1'),
-        #    reference=u.Quantity(1, 'TeV'),
-        # )
-        approx_model = global_model.copy()
-        for par in approx_model.parameters.parameters:
+    def _get_spectral_model(global_model):
+        model = global_model.copy()
+        for par in model.parameters.parameters:
             if par.name != 'amplitude':
                 par.frozen = True
-        return approx_model
+        return model
 
     def compute_flux_point_ul(self, fit, stat_best_fit, delta_ts=4, negative=False):
         """
@@ -700,7 +687,7 @@ class FluxPointEstimator(object):
 
         Examples
         --------
-        To compute ~95% confidence upper limits (or 2 sigma) you can use:
+        To compute ~95% confidence upper limits (or 2 sigma) you can use::
 
             from scipy.stats import chi2, norm
 
@@ -708,20 +695,17 @@ class FluxPointEstimator(object):
             cl = 1 - 2 * norm.sf(sigma) # using two sided p-value
             delta_ts = chi2.isf(1 - cl, df=1)
 
-
         Returns
         -------
         dnde_ul : `~astropy.units.Quantity`
             Flux point upper limit.
-
         """
-
         from scipy.optimize import brentq
-
+        model = fit.result[0].model.copy()
         # this is a prototype for fast flux point upper limit
         # calculation using brentq
-        amplitude = fit.result[0].model.parameters['amplitude'].value / 1E-12
-        amplitude_err = fit.result[0].model.parameters.error('amplitude') / 1E-12
+        amplitude = model.parameters['amplitude'].value / 1E-12
+        amplitude_err = model.parameters.error('amplitude') / 1E-12
 
         if negative:
             amplitude_max = amplitude
@@ -731,16 +715,15 @@ class FluxPointEstimator(object):
             amplitude_min = amplitude
 
         def ts_diff(x):
-            pars = fit.model.parameters
-            pars['amplitude'].value = x * 1E-12
-            stat = fit.total_stat(pars)
+            model.parameters['amplitude'].value = x * 1E-12
+            stat = fit.total_stat(model.parameters)
             return (stat_best_fit + delta_ts) - stat
 
         try:
             result = brentq(ts_diff, amplitude_min, amplitude_max,
                             maxiter=100, rtol=1e-2)
-            fit.model.parameters['amplitude'].value = result * 1E-12
-            return fit.model(fit.model.parameters['reference'].quantity)
+            model.parameters['amplitude'].value = result * 1E-12
+            return model(model.parameters['reference'].quantity)
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             log.debug('Flux point upper limit computation failed.')
@@ -765,16 +748,16 @@ class FluxPointEstimator(object):
             Sqrt(TS) for flux point.
 
         """
+        model = fit.result[0].model.copy()
         # store best fit amplitude, set amplitude of fit model to zero
-        amplitude = fit.result[0].model.parameters['amplitude'].value
+        amplitude = model.parameters['amplitude'].value
 
         # determine TS value for amplitude zero
-        pars = fit.model.parameters
-        pars['amplitude'].value = 0
-        stat_null = fit.total_stat(pars)
+        model.parameters['amplitude'].value = 0
+        stat_null = fit.total_stat(model.parameters)
 
         # set amplitude of fit model to best fit amplitude
-        fit.model.parameters['amplitude'].value = amplitude
+        model.parameters['amplitude'].value = amplitude
 
         # compute sqrt TS
         ts = np.abs(stat_null - stat_best_fit)
@@ -786,31 +769,45 @@ class FluxPointEstimator(object):
         energy_min = energy_group.energy_min
         energy_max = energy_group.energy_max
 
+        quality_orig = []
+
+        for index in range(len(self.obs)):
+            # Set quality bins to only bins in energy_group
+            quality_orig_unit = self.obs[index].on_vector.quality
+            quality_len = len(quality_orig_unit)
+            quality_orig.append(quality_orig_unit)
+            quality = np.zeros(quality_len, dtype=int)
+            for bin in range(quality_len):
+                if (bin < energy_group.bin_idx_min) or (bin > energy_group.bin_idx_max) or (
+                        energy_group.bin_type != 'normal'):
+                    quality[bin] = 1
+            self.obs[index].on_vector.quality = quality
+
         # Set reference and remove min amplitude
         model.parameters['reference'].value = energy_ref.to('TeV').value
 
-        fit = SpectrumFit(self.obs, model)
+        self._fit = SpectrumFit(self.obs, model)
 
-        # TODO: Notice channels contained in energy_group
-        fit.fit_range = energy_min, energy_max
+        for index in range(len(quality_orig)):
+            self.obs[index].on_vector.quality = quality_orig[index]
 
         log.debug(
             'Calling Sherpa fit for flux point '
-            ' in energy range:\n{}'.format(fit)
+            ' in energy range:\n{}'.format(self.fit)
         )
 
-        fit.fit()
-        fit.est_errors()
+        self.fit.fit()
+        self.fit.est_errors()
 
         # compute TS value for all observations
-        stat_best_fit = np.sum([res.statval for res in fit.result])
+        stat_best_fit = np.sum([res.statval for res in self.fit.result])
 
-        dnde, dnde_err = fit.result[0].model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(fit, stat_best_fit=stat_best_fit)
+        dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
+        sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
 
-        dnde_ul = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit)
-        dnde_errp = self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
-        dnde_errn = dnde - self.compute_flux_point_ul(fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
+        dnde_ul = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit)
+        dnde_errp = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit, delta_ts=1.) - dnde
+        dnde_errn = dnde - self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True)
 
         return OrderedDict([
             ('e_ref', energy_ref),
@@ -851,10 +848,6 @@ class FluxPointProfiles(object):
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
-    def plot(self, ax):
-        # TODO: copy code from fermipy, don't start from scratch!
-        raise NotImplementedError
-
 
 def chi2_flux_points(flux_points, gp_model):
     """
@@ -888,10 +881,8 @@ class FluxPointFitter(object):
 
     Parameters
     ----------
-    optimizer : {'simplex', 'moncar', 'gridsearch'}
+    optimizer : {'minuit'}
         Select optimizer
-    error_estimator : {'covar'}
-        Select error estimator
     ul_handling : {'ignore'}
         How to handle flux point upper limits in the fit
 
@@ -918,8 +909,8 @@ class FluxPointFitter(object):
         print(result['best_fit_model'])
     """
 
-    def __init__(self, stat='chi2', optimizer='simplex', error_estimator='covar',
-                 ul_handling='ignore'):
+    def __init__(self, stat='chi2', optimizer='minuit', ul_handling='ignore',
+                 opts_minuit=None):
         if stat == 'chi2':
             self.stat = chi2_flux_points
         elif stat == 'chi2assym':
@@ -932,31 +923,11 @@ class FluxPointFitter(object):
             raise NotImplementedError('No handling of upper limits implemented.')
 
         self.parameters = OrderedDict([
+            ('stat', stat),
             ('optimizer', optimizer),
-            ('error_estimator', error_estimator),
             ('ul_handling', ul_handling),
+            ('opts_minuit', opts_minuit)
         ])
-
-    def _setup_sherpa_fit(self, data, model):
-        """Fit flux point using sherpa"""
-        from sherpa.fit import Fit
-        from sherpa.data import DataSimulFit
-        from ..utils.sherpa import (SherpaDataWrapper, SherpaStatWrapper,
-                                    SherpaModelWrapper, SHERPA_OPTMETHODS)
-
-        optimizer = self.parameters['optimizer']
-
-        if data.sed_type == 'dnde':
-            data = SherpaDataWrapper(data)
-        else:
-            raise NotImplementedError('Only fitting of differential flux points data '
-                                      'is supported.')
-
-        stat = SherpaStatWrapper(self.stat)
-        data = DataSimulFit(name='GPFluxPoints', datasets=[data])
-        method = SHERPA_OPTMETHODS[optimizer]
-        models = SherpaModelWrapper(model)
-        return Fit(data=data, model=models, stat=stat, method=method)
 
     def fit(self, data, model):
         """
@@ -975,53 +946,24 @@ class FluxPointFitter(object):
         p = self.parameters
         model = model.copy()
 
-        if p['optimizer'] in ['simplex', 'moncar', 'gridsearch', 'levmar']:
-            sherpa_fitter = self._setup_sherpa_fit(data, model)
-            sherpa_fitter.fit()
+        if p['optimizer'] == 'minuit':
+
+            def total_stat(parameters):
+                model.parameters = parameters
+                return self.stat(data, model)[0]
+
+            minuit = fit_iminuit(
+                parameters=model.parameters,
+                function=total_stat,
+                opts_minuit=p['opts_minuit']
+            )
+            self._minuit = minuit
         else:
-            raise ValueError('Not a valid optimizer')
-
-        return model
-
-    def statval(self, data, model):
-        """
-        Compute statval for given model and data.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        """
-        return self.stat(data, model)
-
-    def dof(self, data, model):
-        """
-        Degrees of freedom.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-        """
-        m = len(model.parameters.free)
-        n = len(data.table)
-        return n - m
-
-    def estimate_errors(self, data, model):
-        """
-        Estimate errors on best fit parameters.
-        """
-        model = model.copy()
-        sherpa_fitter = self._setup_sherpa_fit(data, model)
-        result = sherpa_fitter.est_errors()
-        covariance = result.extra_output
-        covar_axis = model.parameters.free
-        model.parameters.set_parameter_covariance(covariance, covar_axis)
+            raise ValueError('Only the minuit fitting backend is supported.')
         return model
 
     def run(self, data, model):
-        """
-        Run all fitting adn extra information steps.
+        """Run all fitting and extra information steps.
 
         Parameters
         ----------
@@ -1036,9 +978,12 @@ class FluxPointFitter(object):
             Dictionary with fit results and debug output.
         """
         best_fit_model = self.fit(data, model)
-        best_fit_model = self.estimate_errors(data, best_fit_model)
-        dof = self.dof(data, best_fit_model)
-        statval = self.statval(data, best_fit_model)[0]
+        statval = self.stat(data, best_fit_model)[0]
+
+        # Compute degrees of freedom
+        n = len(data.table)
+        m = sum(1 for par in best_fit_model.parameters if not par.frozen)
+        dof = n - m
 
         return OrderedDict([
             ('best-fit-model', best_fit_model),

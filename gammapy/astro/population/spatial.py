@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
@@ -48,6 +47,7 @@ class Paczynski1990(Fittable1DModel):
     CaseBattacharya1998, YusifovKucuk2004, Lorimer2006, YusifovKucuk2004B,
     FaucherKaspi2006, Exponential
     """
+
     amplitude = Parameter()
     r_exp = Parameter()
     evolved = False
@@ -58,7 +58,7 @@ class Paczynski1990(Fittable1DModel):
 
     @staticmethod
     def evaluate(r, amplitude, r_exp):
-        """One dimensional Paczynski 1990 model function"""
+        """Evaluate model."""
         return amplitude * r_exp ** -2 * np.exp(-r / r_exp)
 
 
@@ -85,6 +85,7 @@ class CaseBattacharya1998(Fittable1DModel):
     Paczynski1990, YusifovKucuk2004, Lorimer2006, YusifovKucuk2004B,
     FaucherKaspi2006, Exponential
     """
+
     amplitude = Parameter()
     alpha = Parameter()
     beta = Parameter()
@@ -96,7 +97,7 @@ class CaseBattacharya1998(Fittable1DModel):
 
     @staticmethod
     def evaluate(r, amplitude, alpha, beta):
-        """One dimensional Case & Battacharya 2006 model function"""
+        """Evaluate model."""
         term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** alpha
         term2 = np.exp(-beta * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
         return amplitude * term1 * term2
@@ -129,6 +130,7 @@ class YusifovKucuk2004(Fittable1DModel):
     CaseBattacharya1998, Paczynski1990, Lorimer2006, YusifovKucuk2004B,
     FaucherKaspi2006, Exponential
     """
+
     amplitude = Parameter()
     a = Parameter()
     b = Parameter()
@@ -141,7 +143,7 @@ class YusifovKucuk2004(Fittable1DModel):
 
     @staticmethod
     def evaluate(r, amplitude, a, b, r_1):
-        """One dimensional Yusifov & Kucuk 2004 model function"""
+        """Evaluate model."""
         term1 = ((r + r_1) / (D_SUN_TO_GALACTIC_CENTER.value + r_1)) ** a
         term2 = np.exp(-b * (r - D_SUN_TO_GALACTIC_CENTER.value) / (D_SUN_TO_GALACTIC_CENTER.value + r_1))
         return amplitude * term1 * term2
@@ -172,6 +174,7 @@ class YusifovKucuk2004B(Fittable1DModel):
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     FaucherKaspi2006, Exponential
     """
+
     amplitude = Parameter()
     a = Parameter()
     b = Parameter()
@@ -183,7 +186,7 @@ class YusifovKucuk2004B(Fittable1DModel):
 
     @staticmethod
     def evaluate(r, amplitude, a, b):
-        """One dimensional Yusifov & Kucuk 2004 model function"""
+        """Evaluate model."""
         return amplitude * (r / D_SUN_TO_GALACTIC_CENTER.value) ** a * np.exp(-b * (r / D_SUN_TO_GALACTIC_CENTER.value))
 
 
@@ -210,6 +213,7 @@ class FaucherKaspi2006(Fittable1DModel):
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     YusifovKucuk2004B, Exponential
     """
+
     amplitude = Parameter()
     r_0 = Parameter()
     sigma = Parameter()
@@ -221,7 +225,7 @@ class FaucherKaspi2006(Fittable1DModel):
 
     @staticmethod
     def evaluate(r, amplitude, r_0, sigma):
-        """One dimensional Faucher-Giguere & Kaspi 2006 model function"""
+        """Evaluate model."""
         term1 = 1. / np.sqrt(2 * pi * sigma)
         term2 = np.exp(-(r - r_0) ** 2 / (2 * sigma ** 2))
         return amplitude * term1 * term2
@@ -249,8 +253,8 @@ class Lorimer2006(Fittable1DModel):
     --------
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     YusifovKucuk2004B, FaucherKaspi2006
-
     """
+
     amplitude = Parameter()
     B = Parameter()
     C = Parameter()
@@ -261,7 +265,7 @@ class Lorimer2006(Fittable1DModel):
 
     @staticmethod
     def evaluate(r, amplitude, B, C):
-        """One dimensional Lorimer 2006 model function"""
+        """Evaluate model."""
         term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** B
         term2 = np.exp(-C * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
         return amplitude * term1 * term2
@@ -288,6 +292,7 @@ class Exponential(Fittable1DModel):
     CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
     YusifovKucuk2004B, FaucherKaspi2006, Exponential
     """
+
     amplitude = Parameter()
     z_0 = Parameter()
     evolved = False
@@ -297,7 +302,7 @@ class Exponential(Fittable1DModel):
 
     @staticmethod
     def evaluate(z, amplitude, z_0):
-        """One dimensional exponential model function"""
+        """Evaluate model."""
         return amplitude * np.exp(-np.abs(z) / z_0)
 
 
@@ -386,6 +391,7 @@ class FaucherSpiral(LogSpiral):
 
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
+
     # Parameters
     k = Quantity([4.25, 4.25, 4.89, 4.89], 'rad')
     r_0 = Quantity([3.48, 3.48, 4.9, 4.9], 'kpc')
@@ -481,6 +487,7 @@ class ValleeSpiral(LogSpiral):
 
     Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
     """
+
     # Model parameters
     p = Quantity(12.8, 'deg')  # pitch angle in deg
     m = 4  # number of spiral arms
@@ -502,11 +509,12 @@ class ValleeSpiral(LogSpiral):
         self.bar = dict(x=Quantity([x_0, x_1]), y=Quantity([y_0, y_1]))
 
 
-radial_distributions = OrderedDict()
-radial_distributions.__doc__ = """Radial distribution (dict mapping names to classes)."""
-radial_distributions['CB98'] = CaseBattacharya1998
-radial_distributions['F06'] = FaucherKaspi2006
-radial_distributions['L06'] = Lorimer2006
-radial_distributions['P90'] = Paczynski1990
-radial_distributions['YK04'] = YusifovKucuk2004
-radial_distributions['YK04B'] = YusifovKucuk2004B
+"""Radial distribution (dict mapping names to classes)."""
+radial_distributions = {
+    'CB98': CaseBattacharya1998,
+    'F06': FaucherKaspi2006,
+    'L06': Lorimer2006,
+    'P90': Paczynski1990,
+    'YK04': YusifovKucuk2004,
+    'YK04B': YusifovKucuk2004B,
+}

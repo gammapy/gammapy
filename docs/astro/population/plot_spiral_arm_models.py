@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from astropy.units import Quantity
 from gammapy.astro.population.spatial import ValleeSpiral, FaucherSpiral
 
-
 fig = plt.figure(figsize=(7, 8))
 rect = [0.12, 0.12, 0.85, 0.85]
 ax_cartesian = fig.add_axes(rect)

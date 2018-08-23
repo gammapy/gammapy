@@ -16,22 +16,18 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import io
 import os
 import re
 from shutil import copytree, rmtree
-
 from distutils.util import strtobool
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst import roles
 from docutils import nodes
 from sphinx.util import logging
-
 import nbformat
 from nbformat.v4 import new_markdown_cell
 from nbconvert.exporters import PythonExporter
-
 from ..extern.pathlib import Path
 
 try:
@@ -59,7 +55,8 @@ class ExtraImage(Image):
             # with an extra "/" at the start seems to do the trick
             self.arguments[0] = '/' + path.absolute().as_posix()
         else:
-            self.warning('GAMMAPY_EXTRA not available. Missing image: {}'.format(self.name, filename))
+            self.warning('GAMMAPY_EXTRA not available. '
+                         'Missing image: name: {!r} filename: {!r}'.format(self.name, filename))
             self.options['alt'] = self.arguments[1]
 
         return super(ExtraImage, self).run()
@@ -91,9 +88,9 @@ def make_link_node(rawtext, app, refuri, notebook, options):
     # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
     # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
 
-    relpath = refuri.split('gammapy/docs/')[1]
-    foldersplit = relpath.split('/')
-    base = '../' * (len(foldersplit) - 1) + 'notebooks/'
+    relpath = refuri.split(str(Path('/gammapy/docs')))[1]
+    foldersplit = relpath.split(os.sep)
+    base = (('..' + os.sep) * (len(foldersplit) - 2)) + 'notebooks' + os.sep
     full_name = notebook + '.html'
     ref = base + full_name
     roles.set_classes(options)
@@ -128,9 +125,8 @@ def modif_nb_links(folder, url_docs, git_commit):
 <div class='alert alert-info'>
 **This is a fixed-text formatted version of a Jupyter notebook.**
 
-- Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?urlpath=lab)
- and then double-click on **{nb_filename}** file.
-- You can also contribute with your own notebooks in this 
+- Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-extra/{git_commit}?urlpath=lab/tree/{nb_filename})
+- You can contribute with your own notebooks in this
 [GitHub repository](https://github.com/gammapy/gammapy-extra/tree/master/notebooks).
 - **Source files:**
 [{nb_filename}](../_static/notebooks/{nb_filename}) |

@@ -23,14 +23,6 @@ def test_info_table(source_catalogs):
     assert table.colnames == ['name', 'description', 'sources']
 
 
-# 2HWC catalog is in ECSV format, which requires yaml to read the header
-@requires_dependency('yaml')
-@requires_data('gammapy-extra')
-def test_info(source_catalogs):
-    # TODO: assert output somehow
-    source_catalogs.info()
-
-
 @requires_data('gammapy-extra')
 def test_getitem(source_catalogs):
     cat = source_catalogs['2fhl']

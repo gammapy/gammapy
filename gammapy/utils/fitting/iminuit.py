@@ -2,49 +2,72 @@
 """iminuit fitting functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
-from ..modeling import ParameterList, Parameter
-
 
 __all__ = [
-    'fit_minuit',
+    'fit_iminuit',
 ]
 
+log = logging.getLogger(__name__)
 
-def fit_minuit(parameters, function):
+
+def fit_iminuit(parameters, function, opts_minuit=None):
     """iminuit optimization
-
-    The input `~gammapy.utils.modeling.ParameterList` is copied internally
-    before the fit and will thus not be modified. The best-fit parameter values
-    are contained in the output `~gammapy.utils.modeling.ParameterList` or the
-    `~iminuit.Minuit` object.
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with starting values
     function : callable
         Likelihood function
+    opts_minuit : dict (optional)
+        Options passed to `iminuit.Minuit` constructor
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with best-fit values
     minuit : `~iminuit.Minuit`
         Minuit object
     """
     from iminuit import Minuit
 
-    parameters = parameters.copy()
+    if parameters.apply_autoscale:
+        parameters.autoscale()
+
     minuit_func = MinuitFunction(function, parameters)
-    minuit_kwargs = make_minuit_kwargs(parameters)
 
+    if opts_minuit is None:
+        opts_minuit = {}
+    opts_minuit.update(make_minuit_par_kwargs(parameters))
+
+    # In Gammapy, we have the factor 2 in the likelihood function
+    # This means `errordef=1` in the Minuit interface is correct
+    opts_minuit.setdefault('errordef', 1)
+
+    parnames = _make_parnames(parameters)
     minuit = Minuit(minuit_func.fcn,
-                    forced_parameters=parameters.names,
-                    **minuit_kwargs)
-
+                    forced_parameters=parnames,
+                    **opts_minuit)
     minuit.migrad()
-    return parameters, minuit
+
+    parameters.set_parameter_factors(minuit.args)
+    if minuit.covariance is not None:
+        parameters.set_covariance_factors(_get_covar(minuit))
+    else:
+        log.warning("No covariance matrix found")
+        parameters.covariance = None
+
+    return minuit
+
+
+def _make_parnames(parameters):
+    """Create list with unambigious parameter names"""
+    return [
+        'par_{:03d}_{}'.format(idx, par.name)
+        for idx, par in enumerate(parameters.parameters)
+    ]
 
 
 class MinuitFunction(object):
@@ -52,7 +75,7 @@ class MinuitFunction(object):
 
     Parameters
     ----------
-    parameters : `~gammapy.utils.modeling.ParameterList`
+    parameters : `~gammapy.utils.modeling.Parameters`
         Parameters with starting values
     function : callable
         Likelihood function
@@ -62,28 +85,44 @@ class MinuitFunction(object):
         self.function = function
         self.parameters = parameters
 
-    def fcn(self, *p):
-        for parval, par in zip(p, self.parameters.parameters):
-            par.value = parval
-        val = self.function(self.parameters)
-        return val
+    def fcn(self, *factors):
+        self.parameters.set_parameter_factors(factors)
+        return self.function(self.parameters)
 
 
-def make_minuit_kwargs(parameters):
-    """Create kwargs for iminuit"""
-    kwargs = dict()
-    for par in parameters.parameters:
-        kwargs[par.name] = par.value
+def make_minuit_par_kwargs(parameters):
+    """Create *Parameter Keyword Arguments* for the `Minuit` constructor.
+
+    See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+    """
+    kwargs = {}
+    parnames = _make_parnames(parameters)
+    for idx, parname_, in enumerate(parnames):
+        par = parameters[idx]
+        kwargs[parname_] = par.factor
+
+        min_ = None if np.isnan(par.min) else par.min
+        max_ = None if np.isnan(par.max) else par.max
+        kwargs['limit_{}'.format(parname_)] = (min_, max_)
+
+        kwargs['error_{}'.format(parname_)] = 1
+
         if par.frozen:
-            kwargs['fix_{}'.format(par.name)] = True
-        limits = par.parmin, par.parmax
-        limits = np.where(np.isnan(limits), None, limits)
-        kwargs['limit_{}'.format(par.name)] = limits
-
-        if parameters.covariance is not None:
-            err = parameters.error(par.name)
-            if err != '0':
-                kwargs['error_{}'.format(par.name)] = err
-
+            kwargs['fix_{}'.format(parname_)] = True
 
     return kwargs
+
+
+def _get_covar(minuit):
+    """Get full covar matrix as Numpy array.
+
+    This was added as `minuit.np_covariance` in `iminuit` in v1.3,
+    but we still want to support v1.2
+    """
+    n = len(minuit.parameters)
+    m = np.zeros((n, n))
+    for i1, k1 in enumerate(minuit.parameters):
+        for i2, k2 in enumerate(minuit.parameters):
+            if set([k1, k2]).issubset(minuit.list_of_vary_param()):
+                m[i1, i2] = minuit.covariance[(k1, k2)]
+    return m

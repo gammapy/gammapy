@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
-from ..stats.poisson import excess_error
+from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
 from ..stats.poisson import significance_on_off
 
@@ -83,20 +83,12 @@ class LightCurve(object):
 
     @property
     def time_mid(self):
-        """Time bin center (`~astropy.time.Time`).
-
-        ::
-            time_mid = time_min + 0.5 * time_delta
-        """
+        """Time bin center (`~astropy.time.Time`)."""
         return self.time_min + 0.5 * self.time_delta
 
     @property
     def time_delta(self):
-        """Time bin width (`~astropy.time.TimeDelta`).
-
-        ::
-            time_delta = time_max - time_min
-        """
+        """Time bin width (`~astropy.time.TimeDelta`)."""
         return self.time_max - self.time_min
 
     @classmethod
@@ -188,62 +180,166 @@ class LightCurve(object):
         chi2, pval = stats.chisquare(yobs, yexp)
         return chi2, pval
 
-    def plot(self, ax=None):
-        """Plot flux versus time.
+    def plot(self, ax=None, time_format='mjd', flux_unit='cm-2 s-1', **kwargs):
+        """Plot flux points.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None, optional.
+        ax : `~matplotlib.axes.Axes`, optional.
             The `~matplotlib.axes.Axes` object to be drawn on.
             If None, uses the current `~matplotlib.axes.Axes`.
+        time_format : {'mjd', 'iso'}, optional
+            If 'iso', the x axis will contain Matplotlib dates.
+            For formatting these dates see: https://matplotlib.org/gallery/ticks_and_spines/date_demo_rrule.html
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        kwargs : dict
+            Keyword arguments passed to :func:`matplotlib.pyplot.errorbar`
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes` or None, optional.
-            The `~matplotlib.axes.Axes` object to be drawn on.
-            If None, uses the current `~matplotlib.axes.Axes`.
+        ax : `~matplotlib.axes.Axes`
+            Axis object
         """
         import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
+        from matplotlib.dates import DateFormatter
 
-        # TODO: Should we plot with normal time axis labels (ISO, not MJD)?
+        if ax is None:
+            ax = plt.gca()
 
-        x, xerr = self._get_plot_x()
-        y, yerr = self._get_plot_y()
+        y, yerr = self._get_fluxes_and_errors(flux_unit)
+        is_ul, yul = self._get_flux_uls(flux_unit)
+        x, xerr = self._get_times_and_errors(time_format)
 
-        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, linestyle="None")
-        ax.scatter(x=x, y=y)
-        ax.set_xlabel("Time (MJD)")
-        ax.set_ylabel("Flux (cm-2 s-1)")
+        # length of the ul arrow
+        ul_arr = (np.nanmax(np.concatenate((y[~is_ul], yul[is_ul]))) -
+                  np.nanmin(np.concatenate((y[~is_ul], yul[is_ul])))) * 0.1
+
+        # join fluxes and upper limits for the plot
+        y[is_ul] = yul[is_ul]
+        yerr[0][is_ul] = ul_arr
+
+        # set plotting defaults and plot
+        kwargs.setdefault('marker', '+')
+        kwargs.setdefault('ls', 'None')
+
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
+        ax.set_xlabel('Time ({})'.format(time_format.upper()))
+        ax.set_ylabel('Flux ({0:FITS})'.format(u.Unit(flux_unit)))
+        if time_format == 'iso':
+            ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
+            plt.setp(ax.xaxis.get_majorticklabels(), rotation=30, ha="right",
+                     rotation_mode="anchor")
 
         return ax
 
-    def _get_plot_x(self):
-        try:
-            x = self.time.mjd
-        except KeyError:
-            x = self.time_mid.mjd
+    def _get_fluxes_and_errors(self, unit='cm-2 s-1'):
+        """Extract fluxes and corresponding errors
 
-        try:
-            xerr = x - self.time_min.mjd, self.time_max.mjd - x
-        except KeyError:
-            xerr = None
+        Helper function for the plot method.
 
-        return x, xerr
+        Parameters
+        ----------
+        unit : str, `~astropy.units.Unit`, optional
+            Unit of the returned flux and errors values
 
-    def _get_plot_y(self):
-        y = self.table['flux'].quantity.to('cm-2 s-1').value
+        Returns
+        -------
+        y : `numpy.ndarray`
+            Flux values
+        (yn, yp) : tuple of `numpy.ndarray`
+            Flux error values
+        """
+        y = self.table['flux'].quantity.to(unit)
 
-        if 'flux_errp' in self.table.colnames:
-            yp = self.table['flux_errp'].quantity.to('cm-2 s-1').value
-            yn = self.table['flux_errn'].quantity.to('cm-2 s-1').value
-            yerr = yn, yp
+        if all(k in self.table.colnames for k in ['flux_errp', 'flux_errn']):
+            yp = self.table['flux_errp'].quantity.to(unit)
+            yn = self.table['flux_errn'].quantity.to(unit)
         elif 'flux_err' in self.table.colnames:
-            yerr = self.table['flux_err'].quantity.to('cm-2 s-1').value
+            yp = self.table['flux_err'].quantity.to(unit)
+            yn = self.table['flux_err'].quantity.to(unit)
         else:
-            yerr = None
+            yp, yn = np.zeros_like(y), np.zeros_like(y)
 
-        return y, yerr
+        return y.value, (yn.value, yp.value)
+
+    def _get_flux_uls(self, unit='cm-2 s-1'):
+        """Extract flux upper limits
+
+        Helper function for the plot method.
+
+        Parameters
+        ----------
+        unit : str, `~astropy.units.Unit`, optional
+            Unit of the returned flux upper limit values
+
+        Returns
+        -------
+        is_ul : `numpy.ndarray`
+            Is flux point is an upper limit? (boolean array)
+        yul : `numpy.ndarray`
+            Flux upper limit values
+        """
+        try:
+            is_ul = self.table['is_ul'].data.astype('bool')
+        except KeyError:
+            is_ul = np.zeros_like(self.table['flux']).data.astype('bool')
+
+        if is_ul.any():
+            yul = self.table['flux_ul'].quantity.to(unit)
+        else:
+            yul = np.zeros_like(self.table['flux']).quantity
+            yul[:] = np.nan
+
+        return is_ul, yul.value
+
+    def _get_times_and_errors(self, time_format='mjd'):
+        """Extract times and corresponding errors
+
+        Helper function for the plot method.
+
+        Parameters
+        ----------
+        time_format : {'mjd', 'iso'}, optional
+            Time format of the times. If 'iso', times and errors will be
+            returned as `~datetime.datetime` and `~datetime.timedelta` objects
+
+        Returns
+        -------
+        x : `~numpy.ndarray` or of `~datetime.datetime`
+            Time values or `~datetime.datetime` instances if 'iso' is chosen
+            as time format
+        (xn, xp) : tuple of `numpy.ndarray` of `~datetime.timedelta`
+            Tuple of time error values or `~datetime.timedelta` instances if
+            'iso' is chosen as time format
+        """
+        from matplotlib.dates import num2timedelta
+
+        try:
+            x = self.time
+        except KeyError:
+            x = self.time_mid
+
+        try:
+            xn, xp = x - self.time_min, self.time_max - x
+        except KeyError:
+            xn, xp = x - x, x - x
+
+        # convert to given time format
+        if time_format == 'iso':
+            x = x.datetime
+            # TODO: In astropy version >3.1 the TimeDelta.to_datetime() method
+            # should start working, for now i will use num2timedelta.
+            xn = np.asarray(num2timedelta(xn.to('d').value))
+            xp = np.asarray(num2timedelta(xp.to('d').value))
+        elif time_format == 'mjd':
+            x = x.mjd
+            xn, xp = xn.to('d').value, xp.to('d').value
+        else:
+            raise ValueError(
+                "The time format '{}' is not supported.".format(time_format))
+
+        return x, (xn, xp)
 
 
 class LightCurveEstimator(object):
@@ -302,9 +398,9 @@ class LightCurveEstimator(object):
 
         Examples
         --------
-        extract intervals for light curve :
-            intervals = list(zip(table['t_start'], table['t_stop']))
+        To extract intervals for light curve::
 
+            intervals = list(zip(table['t_start'], table['t_stop']))
         """
         rows = []
         time_start = Time(100000, format="mjd")
@@ -348,7 +444,6 @@ class LightCurveEstimator(object):
             List of on events
         off : `~gammapy.data.EventList`
             List of on events
-
         """
         spec = self.obs_spec[t_index]
         # get ON and OFF evt list
@@ -380,7 +475,7 @@ class LightCurveEstimator(object):
 
         Parameters
         ----------
-        time_holder : `list` of float and flag
+        time_holder : list of float and flag
             Contains a list of a time and a flag in 2-element arrays
         obs_properties : `~astropy.table.Table`
             Contains the dead time fraction and ratio of the on/off region
@@ -416,21 +511,20 @@ class LightCurveEstimator(object):
                         float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
                          obs_properties['A_off'][n + tmp]
                 time += (1 - obs_properties['deadtime'][n + tmp]) * (
-                            float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                        float(time_holder[x][0]) - float(time_holder[xm1][0]))
                 xm1 = x + 1
                 tmp += 1
         alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
-                    (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0])) * \
+                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0])) * \
                  obs_properties['A_off'][n + tmp]
         time += (1 - obs_properties['deadtime'][n + tmp]) * (
-                    (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0]))
+                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0]))
         alpha = time / alpha
         return alpha
 
     def make_time_intervals_min_significance(self, significance, significance_method, energy_range,
                                              spectrum_extraction, separators=None):
         """
-
         Create time intervals such that each bin of a light curve reach a given significance
 
         The function work event by event to create an interval containing enough statistic and then starting a new one
@@ -445,7 +539,7 @@ class LightCurveEstimator(object):
             True energy range to evaluate integrated flux (true energy)
         spectrum_extraction : `~gammapy.spectrum.SpectrumExtraction`
             Contains statistics, IRF and event lists
-        separators : `list` of `~astropy.time.Time`
+        separators : list of `~astropy.time.Time`
             Contains a list of time to stop the current point creation (not saved) and start a new one
             Mostly useful between observations separated by a large time gap
 
@@ -458,9 +552,7 @@ class LightCurveEstimator(object):
         --------
         extract intervals for light curve :
             intervals = list(zip(table['t_start'], table['t_stop']))
-
         """
-
         # The function create a list of time associated with identifiers called time_holder.
         # The identifiers can be 'on' for the on events, 'off' for the off events, 'start' for the start of an
         # observation, 'end for the end of an observation and 'break' for a separator.
@@ -537,7 +629,7 @@ class LightCurveEstimator(object):
         table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
         return table
 
-    def light_curve(self, time_intervals, spectral_model, energy_range):
+    def light_curve(self, time_intervals, spectral_model, energy_range, ul_significance=3):
         """Compute light curve.
 
         Implementation follows what is done in:
@@ -548,12 +640,14 @@ class LightCurveEstimator(object):
 
         Parameters
         ----------
-        time_intervals : `list` of `~astropy.time.Time`
+        time_intervals : list of `~astropy.time.Time`
             List of time intervals
         spectral_model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
+        ul_significance : float
+            Upper limit confidence level significance
 
         Returns
         -------
@@ -562,7 +656,7 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range)
+            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range, ul_significance)
             if useinterval:
                 rows.append(row)
 
@@ -576,17 +670,19 @@ class LightCurveEstimator(object):
 
         table['flux'] = [_['flux'].value for _ in rows] * u.Unit('1 / (s cm2)')
         table['flux_err'] = [_['flux_err'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['flux_ul'] = [_['flux_ul'].value for _ in rows] * u.Unit('1 / (s cm2)')
+        table['is_ul'] = [_['is_ul'] for _ in rows]
 
         table['livetime'] = [_['livetime'].value for _ in rows] * u.s
         table['n_on'] = [_['n_on'] for _ in rows]
         table['n_off'] = [_['n_off'] for _ in rows]
         table['alpha'] = [_['alpha'] for _ in rows]
         table['measured_excess'] = [_['measured_excess'] for _ in rows]
-        table['expected_excess'] = [_['expected_excess'].value for _ in rows]
+        table['expected_excess'] = [_['expected_excess'] for _ in rows]
 
         return LightCurve(table)
 
-    def compute_flux_point(self, time_interval, spectral_model, energy_range):
+    def compute_flux_point(self, time_interval, spectral_model, energy_range, ul_significance=3):
         """Compute one flux point for one time interval.
 
         Parameters
@@ -597,6 +693,8 @@ class LightCurveEstimator(object):
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
+        ul_significance : float
+            Upper limit confidence level significance
 
         Returns
         -------
@@ -695,12 +793,20 @@ class LightCurveEstimator(object):
 
             flux = measured_excess / predicted_excess.value
             flux *= int_flux
-            flux_err = int_flux / predicted_excess.value
+
             # Gaussian errors, TODO: should be improved
-            flux_err *= excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err = int_flux / predicted_excess.value
+            delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
+            flux_err *= delta_excess
+
+            sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
+            is_ul = sigma <= 3
+            flux_ul = excess_ul_helene(n_on - alpha_mean * n_off, delta_excess, ul_significance)
+            flux_ul *= int_flux / predicted_excess.value
         else:
             flux = 0
             flux_err = 0
+            flux_ul = -1
 
         # Store measurements in a dict and return that
         return useinterval, OrderedDict([
@@ -708,7 +814,8 @@ class LightCurveEstimator(object):
             ('time_max', Time(tmax, format='mjd')),
             ('flux', flux * u.Unit('1 / (s cm2)')),
             ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
-
+            ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
+            ('is_ul', is_ul),
             ('livetime', livetime * u.s),
             ('alpha', alpha_mean),
             ('n_on', n_on),

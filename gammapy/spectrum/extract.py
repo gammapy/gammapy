@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
 import numpy as np
-from regions import CircleSkyRegion
 import astropy.units as u
+from regions import CircleSkyRegion
 from . import PHACountsSpectrum
 from . import SpectrumObservation, SpectrumObservationList
 from ..utils.scripts import make_path
@@ -62,8 +61,8 @@ class SpectrumExtraction(object):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
-        self.e_reco = e_reco or self.DEFAULT_RECO_ENERGY
-        self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
+        self.e_reco = e_reco if e_reco is not None else self.DEFAULT_RECO_ENERGY
+        self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
         self.use_recommended_erange = use_recommended_erange
@@ -96,14 +95,14 @@ class SpectrumExtraction(object):
 
     def process(self, obs, bkg):
         """Process one observation.
-        
+
         Parameters
         ----------
         obs : `~gammapy.data.DataStoreObservation`
             Observation
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
-        
+
         Returns
         -------
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
@@ -157,8 +156,8 @@ class SpectrumExtraction(object):
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
             offset=offset,
-            livetime = obs.observation_live_time_duration,
-            obs_id=obs.obs_info['OBS_ID'])
+            livetime=obs.observation_live_time_duration,
+            obs_id=obs.obs_id)
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True

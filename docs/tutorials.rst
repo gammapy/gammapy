@@ -21,7 +21,8 @@ Set up
 
 The Gammapy installation instructions are here: :ref:`install`
 
-One quick way to get set up, that works the same on Linux, Mac and Windows is this:
+One quick way to get set up, that works the same on Linux, Mac and Windows is
+this:
 
 * Install Anaconda or Miniconda (see https://www.anaconda.com/download/ )
 * Get the following repository that contains the Gammapy tutorial notebooks::
@@ -51,23 +52,20 @@ If you have any questions, ask for help. See http://gammapy.org/contact.html
 Execute tutorials online
 ------------------------
 
-If you want, you can execute latest version of the collection of notebooks on-line
-accessing the `Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space.
-
-Click the "launch binder" link here, or at the top of each notebook below:
-
 .. image:: http://mybinder.org/badge.svg
-    :target: http://mybinder.org/repo/gammapy/gammapy-extra
 
-Note that this is a free, temporary notebook server. You cannot upload your data or save
-your work there. For that, install Gammapy on your machine and work there.
+You can execute the notebooks on-line.
+Just click on the *launch binder* badge placed at the top of each of the notebooks below.
+
+Note that this is a free, temporary notebook server. You cannot save your work there and retrieve it afterwards.
+For that, install Gammapy on your machine and work there.
 
 The basics
 ----------
 
-Gammapy is a Python package built on Numpy and Astropy, and the
-tutorials are Jupyter notebooks. If you're already familar with those,
-you can skip to the next section and start learning about Gammapy.
+Gammapy is a Python package built on Numpy and Astropy, and the tutorials are
+Jupyter notebooks. If you're already familar with those, you can skip to the
+next section and start learning about Gammapy.
 
 To learn the basics, here are a few good resources.
 
@@ -99,25 +97,24 @@ Notebooks
    :hidden:
 
    notebooks/first_steps.ipynb
+   notebooks/intro_maps.ipynb
    notebooks/cta_1dc_introduction.ipynb
    notebooks/cta_data_analysis.ipynb
    notebooks/analysis_3d.ipynb
    notebooks/simulate_3d.ipynb
-   notebooks/image_analysis.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
    notebooks/spectrum_models.ipynb
    notebooks/spectrum_pipe.ipynb
    notebooks/spectrum_analysis.ipynb
-   notebooks/cta_simulation.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
-   notebooks/light_curve.ipynb
-   notebooks/data_fermi_lat.ipynb
+   notebooks/fermi_lat.ipynb
 
 For a quick introduction to Gammapy, go here:
 
 - `First steps with Gammapy <notebooks/first_steps.html>`__  | *first_steps.ipynb*
+- `Introduction to gammapy.maps <notebooks/intro_maps.html>`__  | *intro_maps.ipynb*
 
 Interested to do a first analysis of simulated CTA data?
 
@@ -128,6 +125,7 @@ Interested to do a first analysis of simulated CTA data?
 
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
+- `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
 2-dimensional sky image analysis:
 
@@ -140,32 +138,22 @@ Interested to do a first analysis of simulated CTA data?
 - `Spectral models in Gammapy <notebooks/spectrum_models.html>`__ | *spectrum_models.ipynb*
 - `Spectral analysis with Gammapy (run pipeline) <notebooks/spectrum_pipe.html>`__ (H.E.S.S. data example) | *spectrum_pipe.ipynb*
 - `Spectral analysis with Gammapy (individual steps) <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
-- `Spectrum simulation and fitting <notebooks/cta_simulation.html>`__ (CTA data example with AGN / EBL) | *cta_simulation.ipynb*
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
-
-Time-related analysis:
-
-- `Light curve estimation with Gammapy <notebooks/light_curve.html>`__ | *light_curve.ipynb*
-
-To learn how to work with gamma-ray data with Gammapy:
-
-- For IACT data, see the ``cta_1dc_introduction`` notebook mentioned above.
-- `Fermi-LAT data with Gammapy <notebooks/data_fermi_lat.html>`__ (Fermi-LAT data example) | *data_fermi_lat.ipynb*
 
 Extra topics
 ------------
 .. toctree::
-   :hidden:
+    :hidden:
 
-   notebooks/hgps.ipynb
-   notebooks/source_population_model.ipynb
-   notebooks/background_model.ipynb
-   notebooks/cwt.ipynb
+    notebooks/hgps.ipynb
+    notebooks/source_population_model.ipynb
+    notebooks/cwt.ipynb
+    notebooks/astro_dark_matter.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
 - `H.E.S.S. Galactic plane survey (HGPS) data <notebooks/hgps.html>`__ | *hgps.ipynb*
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
-- `Template background model production with Gammapy <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
+- `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*

@@ -5,12 +5,10 @@ import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
-from ...scripts import CTAPerf
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola,
-                      TableModel, AbsorbedSpectralModel, Absorption)
-from ...scripts.cta_utils import CTAObservationSimulation, Target, ObservationParameters
-from ...spectrum import SpectrumObservationList, SpectrumFit
+                      TableModel, AbsorbedSpectralModel, Absorption,
+                      ConstantModel)
 
 
 def table_model():
@@ -38,7 +36,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='powerlaw',
         model=PowerLaw(
@@ -50,7 +47,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(3.6, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(9.210340371976184, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='powerlaw2',
         model=PowerLaw2(
@@ -63,7 +59,6 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='ecpl',
         model=ExponentialCutoffPowerLaw(
@@ -72,13 +67,11 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV
         ),
-
         val_at_2TeV=u.Quantity(1.080321705479446, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(3.765838739678921, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(9.901735870666526, 'TeV cm-2 s-1'),
         e_peak=4 * u.TeV
     ),
-
     dict(
         name='ecpl_3fgl',
         model=ExponentialCutoffPowerLaw3FGL(
@@ -87,12 +80,10 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             ecut=10 * u.TeV
         ),
-
         val_at_2TeV=u.Quantity(0.7349563611124971, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.6034046173089, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(5.340285560055799, 'TeV cm-2 s-1'),
     ),
-
     dict(
         name='logpar',
         model=LogParabola(
@@ -101,7 +92,6 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             beta=0.5 * u.Unit('')
         ),
-
         val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
@@ -115,11 +105,19 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             beta=1.151292546497023 * u.Unit('')
         ),
-
         val_at_2TeV=u.Quantity(0.6387956571420305, 'cm-2 s-1 TeV-1'),
         integral_1_10TeV=u.Quantity(2.255689748270628, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(3.9586515834989267, 'TeV cm-2 s-1'),
         e_peak=0.74082 * u.TeV
+    ),
+    dict(
+        name='constant',
+        model=ConstantModel(
+            const=4 / u.cm ** 2 / u.s / u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(4, 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(35.9999999999999, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(198.00000000000006, 'TeV cm-2 s-1'),
     ),
 ]
 
@@ -142,7 +140,7 @@ TEST_MODELS.append(dict(
 
 TEST_MODELS.append(dict(
     name='compound3',
-    model= TEST_MODELS[0]['model'] + TEST_MODELS[0]['model'],
+    model=TEST_MODELS[0]['model'] + TEST_MODELS[0]['model'],
     val_at_2TeV=TEST_MODELS[0]['val_at_2TeV'] * 2,
     integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 2,
     eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 2,
@@ -150,16 +148,16 @@ TEST_MODELS.append(dict(
 
 TEST_MODELS.append(dict(
     name='compound4',
-    model= TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
-    val_at_2TeV= 0.9 * TEST_MODELS[0]['val_at_2TeV'],
-    integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'), 
+    model=TEST_MODELS[0]['model'] - 0.1 * TEST_MODELS[0]['val_at_2TeV'],
+    val_at_2TeV=0.9 * TEST_MODELS[0]['val_at_2TeV'],
+    integral_1_10TeV=2.1919819216346936 * u.Unit('cm-2 s-1'),
     eflux_1_10TeV=2.6322140512045697 * u.Unit('TeV cm-2 s-1'),
 ))
 
 TEST_MODELS.append(dict(
     name='compound5',
-    model= TEST_MODELS[0]['model'] - TEST_MODELS[0]['model'] / 2.,
-    val_at_2TeV= 0.5 * TEST_MODELS[0]['val_at_2TeV'],
+    model=TEST_MODELS[0]['model'] - TEST_MODELS[0]['model'] / 2.,
+    val_at_2TeV=0.5 * TEST_MODELS[0]['val_at_2TeV'],
     integral_1_10TeV=TEST_MODELS[0]['integral_1_10TeV'] * 0.5,
     eflux_1_10TeV=TEST_MODELS[0]['eflux_1_10TeV'] * 0.5,
 ))
@@ -198,7 +196,7 @@ def test_models(spectrum):
         assert_quantity_allclose(model.e_peak, spectrum['e_peak'], rtol=1E-2)
 
     # inverse for TableModel is not implemented
-    if not isinstance(model, TableModel):
+    if not (isinstance(model, TableModel) or isinstance(model, ConstantModel)):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
 
     model.to_dict()
@@ -212,34 +210,12 @@ def test_models(spectrum):
 
 
 @requires_dependency('matplotlib')
-@requires_dependency('sherpa')
-@pytest.mark.parametrize(
-    "spectrum", TEST_MODELS, ids=[_['name'] for _ in TEST_MODELS]
-)
-def test_to_sherpa(spectrum):
-    model = spectrum['model']
-    try:
-        sherpa_model = model.to_sherpa()
-    except NotImplementedError:
-        pass
-    else:
-        test_e = 1.56 * u.TeV
-        desired = model(test_e)
-        actual = sherpa_model(test_e.to('keV').value) * u.Unit('cm-2 s-1 keV-1')
-        assert_quantity_allclose(actual, desired)
-
-    # test plot
-    energy_range = [1, 10] * u.TeV
-    model.plot(energy_range=energy_range)
-
-
-@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_table_model_from_file():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
     absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
     absorption_z03.plot(energy_range=(0.03, 10),
-                        energy_unit=u.TeV)
+                        energy_unit=u.TeV, flux_unit='')
 
 
 @requires_data('gammapy-extra')
@@ -300,55 +276,9 @@ def test_pwl_index_2_error():
     assert_quantity_allclose(eflux_err, 0.2302585E-12 * u.Unit('TeV cm-2 s-1'))
 
 
-@requires_dependency('sherpa')
 @requires_data('gammapy-extra')
-def test_spectral_model_absorbed_by_ebl():
-    # Observation parameters
-    obs_param = ObservationParameters(alpha=0.2 * u.Unit(''),
-                                      livetime=5. * u.h,
-                                      emin=0.08 * u.TeV,
-                                      emax=12 * u.TeV)
-
-    # Target, PKS 2155-304 from 3FHL
-    name = 'test'
-    absorption = Absorption.read('$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz')
-    pwl = PowerLaw(index=3. * u.Unit(''),
-                   amplitude=1.e-12 * u.Unit('1/(cm2 s TeV)'),
-                   reference=1. * u.TeV)
-
-    input_model = AbsorbedSpectralModel(spectral_model=pwl,
-                                        absorption=absorption,
-                                        parameter=0.2)
-
-    target = Target(name=name, model=input_model)
-
-    # Performance
-    filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
-    cta_perf = CTAPerf.read(filename)
-
-    # Simulation
-    simu = CTAObservationSimulation.simulate_obs(perf=cta_perf,
-                                                 target=target,
-                                                 obs_param=obs_param)
-
-    # Model we want to fit
-    pwl_model = PowerLaw(index=2.5 * u.Unit(''),
-                         amplitude=1.e-12 * u.Unit('1/(cm2 s TeV)'),
-                         reference=1. * u.TeV)
-    model = AbsorbedSpectralModel(spectral_model=pwl_model,
-                                  absorption=absorption,
-                                  parameter=0.2)
-
-    # fit
-    fit = SpectrumFit(obs_list=SpectrumObservationList([simu]),
-                      model=model,
-                      stat='wstat')
-    fit.fit()
-    fit.est_errors()
-    result = fit.result[0]
-
-    # TODO: assert on things from result
-
-    # TODO: handle error propagation for AbsorbedSpectralModel
-    # here it explodes since NDDataArray can't handle error propagation
-    # butterfly = result.butterfly()
+@requires_dependency('scipy')
+def test_fermi_isotropic():
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt'
+    model = TableModel.read_fermi_isotropic_model(filename)
+    assert_quantity_allclose(model(50 * u.GeV), 1.463 * u.Unit('1e-13 MeV-1 cm-2 s-1 sr-1'), rtol=1e-3)

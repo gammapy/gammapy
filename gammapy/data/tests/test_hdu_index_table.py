@@ -1,8 +1,37 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-from ..hdu_index_table import HDUIndexTable
+from ...utils.scripts import make_path
 from ...utils.testing import requires_data
+from ..hdu_index_table import HDUIndexTable
+
+
+@pytest.fixture(scope='session')
+def hdu_index_table():
+    table = HDUIndexTable(rows=[
+        {'OBS_ID': 42, 'HDU_TYPE': 'events', 'HDU_CLASS': 'spam42', 'FILE_DIR': 'a', 'FILE_NAME': 'b', 'HDU_NAME': 'c'},
+    ])
+    table.meta['BASE_DIR'] = 'spam'
+    return table
+
+
+def test_hdu_index_table(hdu_index_table):
+    """
+    This test ensures that the HDUIndexTable works in a case-insensitive
+    way concerning the values in the ``HDU_CLASS`` and ``HDU_TYPE`` columns.
+
+    We ended up with this, because initially the HDU index table spec used
+    lower-case, but then the ``HDUCLAS`` header keys to all the HDUs
+    (e.g. EVENTS, IRFs, ...) were defined in upper-case.
+
+    So for consistency we changed to all upper-case in the spec also for the HDU
+    index table, just with a mention that values should be treated in a case-insensitive
+    manner for backward compatibility with existing index tables.
+
+    See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/118
+    """
+    location = hdu_index_table.hdu_location(obs_id=42, hdu_type='events')
+    assert location.path().as_posix() == 'spam/a/b'
 
 
 @requires_data('gammapy-extra')
@@ -10,6 +39,9 @@ def test_hdu_index_table_hd_hap():
     """Test HESS HAP-HD data access."""
     hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/hdu-index.fits.gz')
     hdu_index.summary()
+
+    assert list(hdu_index.meta) == ['BASE_DIR']
+    assert hdu_index.base_dir == make_path('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
 
     # A few valid queries
 

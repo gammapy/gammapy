@@ -70,7 +70,7 @@ def test_hpxmap_init(nside, nested, coordsys, region, axes):
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_create(nside, nested, coordsys, region, axes, sparse):
-    m = create_map(nside, nested, coordsys, region, axes, sparse)
+    create_map(nside, nested, coordsys, region, axes, sparse)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
@@ -180,6 +180,16 @@ def test_hpxmap_interp_by_coord(nside, nested, coordsys, region, axes):
                     m.interp_by_coord(coords, interp='linear'))
 
 
+def test_hpxmap_interp_by_coord_dict():
+    # Regression test, call interp_by_coord_with a dict
+    m = HpxNDMap(HpxGeom(nside=1))
+    coords = m.geom.get_coord(flat=True)
+    m.set_by_coord(coords, coords[1])
+
+    val = m.interp_by_coord({'lon': 99, 'lat': 42})
+    assert_allclose(val, 42, atol=1)
+
+
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
                          hpx_test_geoms_sparse)
 def test_hpxmap_fill_by_coord(nside, nested, coordsys, region, axes, sparse):
@@ -208,8 +218,8 @@ def test_hpxmap_iter(nside, nested, coordsys, region, axes):
 def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
                          coordsys=coordsys, region=region, axes=axes))
-    m_wcs = m.to_wcs(sum_bands=False, oversample=2, normalize=False)
-    m_wcs = m.to_wcs(sum_bands=True, oversample=2, normalize=False)
+    m.to_wcs(sum_bands=False, oversample=2, normalize=False)
+    m.to_wcs(sum_bands=True, oversample=2, normalize=False)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
@@ -261,22 +271,24 @@ def test_hpxmap_crop(nside, nested, coordsys, region, axes):
                          hpx_test_geoms)
 def test_hpxmap_upsample(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
-                         coordsys=coordsys, region=region, axes=axes))
+                         coordsys=coordsys, region=region, axes=axes), unit='m2')
     m.set_by_pix(m.geom.get_idx(flat=True), 1.0)
     m_up = m.upsample(2, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m_up.data))
     m_up = m.upsample(2, preserve_counts=False)
     assert_allclose(4.0 * np.nansum(m.data), np.nansum(m_up.data))
+    assert m.unit == m_up.unit
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),
                          hpx_test_geoms)
 def test_hpxmap_downsample(nside, nested, coordsys, region, axes):
     m = HpxNDMap(HpxGeom(nside=nside, nest=nested,
-                         coordsys=coordsys, region=region, axes=axes))
+                         coordsys=coordsys, region=region, axes=axes), unit='m2')
     m.set_by_pix(m.geom.get_idx(flat=True), 1.0)
     m_down = m.downsample(2, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m_down.data))
+    assert m.unit == m_down.unit
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes'),

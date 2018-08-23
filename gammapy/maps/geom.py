@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import copy
+import inspect
 import re
 from collections import OrderedDict
 import numpy as np
@@ -13,11 +14,7 @@ from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from .utils import find_hdu, find_bands_hdu
 
-__all__ = [
-    'MapCoord',
-    'MapGeom',
-    'MapAxis',
-]
+__all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
 
 def make_axes(axes_in, conv):
@@ -30,10 +27,10 @@ def make_axes(axes_in, conv):
         if isinstance(ax, np.ndarray):
             ax = MapAxis(ax)
 
-        if conv in ['fgst-ccube', 'fgst-template']:
-            ax.name = 'energy'
-        elif ax.name == '':
-            ax.name = 'axis%i' % i
+        if conv in ["fgst-ccube", "fgst-template"]:
+            ax.name = "energy"
+        elif ax.name == "":
+            ax.name = "axis%i" % i
 
         axes_out += [ax]
 
@@ -45,34 +42,40 @@ def make_axes_cols(axes, axis_names=None):
 
     Parameters
     ----------
-    axes : list of `~MapAxis`
+    axes : list
+        Python list of `MapAxis` objects
 
-    axis_names : list of str
-
+    Returns
+    -------
+    cols : list
+        Python list of `~astropy.io.fits.Column`
     """
-    colname = {
-        'energy': ['ENERGY', 'E_MIN', 'E_MAX'],
-        'time': ['TIME', 'T_MIN', 'T_MAX'],
-    }
+    size = np.prod([ax.nbin for ax in axes])
+    chan = np.arange(0, size)
+    cols = [fits.Column("CHANNEL", "I", array=chan)]
 
     if axis_names is None:
         axis_names = [ax.name for ax in axes]
+    axis_names = [_.upper() for _ in axis_names]
 
-    size = np.prod([ax.nbin for ax in axes])
-    chan = np.arange(0, size)
-    cols = [fits.Column('CHANNEL', 'I', array=chan), ]
     axes_ctr = np.meshgrid(*[ax.center for ax in axes])
     axes_min = np.meshgrid(*[ax.edges[:-1] for ax in axes])
     axes_max = np.meshgrid(*[ax.edges[1:] for ax in axes])
+
     for i, (ax, name) in enumerate(zip(axes, axis_names)):
 
-        names = colname.get(name.lower(),
-                            ['AXIS%i' % i,
-                             'AXIS%i_MIN' % i, 'AXIS%i_MAX' % i])
-        for t, v in zip(names, [axes_ctr, axes_min, axes_max]):
+        if name == "ENERGY":
+            colnames = ["ENERGY", "E_MIN", "E_MAX"]
+        elif name == "TIME":
+            colnames = ["TIME", "T_MIN", "T_MAX"]
+        else:
+            s = "AXIS%i" % i if name == "" else name
+            colnames = [s, s + "_MIN", s + "_MAX"]
+
+        for colname, v in zip(colnames, [axes_ctr, axes_min, axes_max]):
             array = np.ravel(v[i])
-            unit = ax.unit.to_string()
-            cols.append(fits.Column(t, 'E', array=array, unit=unit))
+            unit = ax.unit.to_string("fits")
+            cols.append(fits.Column(colname, "E", array=array, unit=unit))
 
     return cols
 
@@ -97,28 +100,29 @@ def find_and_read_bands(hdu, header=None):
 
     axes = []
     axis_cols = []
-    if hdu.name == 'ENERGIES':
-        axis_cols = [['ENERGY']]
-    elif hdu.name == 'EBOUNDS':
-        axis_cols = [['E_MIN', 'E_MAX']]
+    if hdu.name == "ENERGIES":
+        axis_cols = [["ENERGY"]]
+    elif hdu.name == "EBOUNDS":
+        axis_cols = [["E_MIN", "E_MAX"]]
     else:
         for i in range(5):
-            if 'AXCOLS%i' % i in hdu.header:
-                axis_cols += [hdu.header['AXCOLS%i' % i].split(',')]
+            if "AXCOLS%i" % i in hdu.header:
+                axis_cols += [hdu.header["AXCOLS%i" % i].split(",")]
 
     for i, cols in enumerate(axis_cols):
 
-        if 'ENERGY' in cols or 'E_MIN' in cols:
-            name = 'energy'
-        elif re.search('(.+)_MIN', cols[0]):
-            name = re.search('(.+)_MIN', cols[0]).group(1)
+        if "ENERGY" in cols or "E_MIN" in cols:
+            name = "energy"
+        elif re.search("(.+)_MIN", cols[0]):
+            name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
             name = cols[0]
 
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
-            unit = header.get('CUNIT%i' % (3 + i), '')
-
+            unit = header.get("CUNIT%i" % (3 + i), "")
+        if unit is None:
+            unit = ""
         if len(cols) == 2:
             xmin = np.unique(hdu.data.field(cols[0]))
             xmax = np.unique(hdu.data.field(cols[1]))
@@ -142,12 +146,12 @@ def get_shape(param):
 
 
 def coordsys_to_frame(coordsys):
-    if coordsys in ['CEL', 'C']:
-        return 'icrs'
-    elif coordsys in ['GAL', 'G']:
-        return 'galactic'
+    if coordsys in ["CEL", "C"]:
+        return "icrs"
+    elif coordsys in ["GAL", "G"]:
+        return "galactic"
     else:
-        raise ValueError('Unrecognized coordinate system: {}'.format(coordsys))
+        raise ValueError("Unrecognized coordinate system: {!r}".format(coordsys))
 
 
 def skycoord_to_lonlat(skycoord, coordsys=None):
@@ -165,25 +169,25 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
         Name of coordinate frame.
     """
 
-    if coordsys in ['CEL', 'C']:
-        skycoord = skycoord.transform_to('icrs')
-    elif coordsys in ['GAL', 'G']:
-        skycoord = skycoord.transform_to('galactic')
+    if coordsys in ["CEL", "C"]:
+        skycoord = skycoord.transform_to("icrs")
+    elif coordsys in ["GAL", "G"]:
+        skycoord = skycoord.transform_to("galactic")
 
     frame = skycoord.frame.name
-    if frame in ['icrs', 'fk5']:
+    if frame in ["icrs", "fk5"]:
         return skycoord.ra.deg, skycoord.dec.deg, frame
-    elif frame in ['galactic']:
+    elif frame in ["galactic"]:
         return skycoord.l.deg, skycoord.b.deg, frame
     else:
-        raise ValueError('Unrecognized SkyCoord frame: {}'.format(frame))
+        raise ValueError("Unrecognized SkyCoord frame: {!r}".format(frame))
 
 
 def lonlat_to_skycoord(lon, lat, coordsys):
-    return SkyCoord(lon, lat, frame=coordsys_to_frame(coordsys), unit='deg')
+    return SkyCoord(lon, lat, frame=coordsys_to_frame(coordsys), unit="deg")
 
 
-def pix_tuple_to_idx(pix, copy=False):
+def pix_tuple_to_idx(pix):
     """Convert a tuple of pixel coordinate arrays to a tuple of pixel
     indices.
 
@@ -194,9 +198,6 @@ def pix_tuple_to_idx(pix, copy=False):
     pix : tuple
         Tuple of pixel coordinates with one element for each dimension.
 
-    copy : bool
-        Flag to set whether a copy or view is returned.
-
     Returns
     -------
     idx : `~numpy.ndarray`
@@ -204,7 +205,7 @@ def pix_tuple_to_idx(pix, copy=False):
     """
     idx = []
     for p in pix:
-        p = np.array(p, copy=copy, ndmin=1)
+        p = np.array(p, ndmin=1)
         if np.issubdtype(p.dtype, np.integer):
             idx += [p]
         else:
@@ -246,7 +247,8 @@ def coord_to_idx(edges, x, clip=False):
         ibin[x < edges[0]] = 0
         ibin[x > edges[-1]] = len(edges) - 1
     else:
-        ibin[x > edges[-1]] = -1
+        with np.errstate(invalid="ignore"):
+            ibin[x > edges[-1]] = -1
 
     ibin[~np.isfinite(x)] = -1
     return ibin
@@ -257,56 +259,57 @@ def bin_to_val(edges, bins):
     return ctr[bins]
 
 
-def coord_to_pix(edges, coord, interp='lin'):
+def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis coordinates to pixel coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
 
-    if interp == 'log':
+    if interp == "log":
         fn = np.log
-    elif interp == 'lin':
+    elif interp == "lin":
+
         def fn(t):
             return t
-    elif interp == 'sqrt':
+
+    elif interp == "sqrt":
         fn = np.sqrt
     else:
-        raise ValueError('Invalid interp: {}'.format(interp))
+        raise ValueError("Invalid interp: {!r}".format(interp))
 
     interp_fn = interp1d(
-        fn(edges),
-        np.arange(len(edges)).astype(float),
-        fill_value='extrapolate',
+        fn(edges), np.arange(len(edges), dtype=float), fill_value="extrapolate"
     )
 
     return interp_fn(fn(coord))
 
 
-def pix_to_coord(edges, pix, interp='lin'):
+def pix_to_coord(edges, pix, interp="lin"):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
 
-    if interp == 'log':
+    if interp == "log":
         fn0 = np.log
         fn1 = np.exp
-    elif interp == 'lin':
+    elif interp == "lin":
+
         def fn0(t):
             return t
 
         def fn1(t):
             return t
-    elif interp == 'sqrt':
+
+    elif interp == "sqrt":
         fn0 = np.sqrt
 
         def fn1(t):
             return np.power(t, 2)
+
     else:
-        raise ValueError('Invalid interp: {}'.format(interp))
+        raise ValueError("Invalid interp: {!r}".format(interp))
 
     interp_fn = interp1d(
-        np.arange(len(edges)).astype(float),
-        fn0(edges),
-        fill_value='extrapolate',
+        np.arange(len(edges), dtype=float), fn0(edges), fill_value="extrapolate"
     )
 
     return fn1(interp_fn(pix))
@@ -345,46 +348,46 @@ class MapAxis(object):
         String specifying the data units.
     """
 
+    __slots__ = [
+        "_name",
+        "_nodes",
+        "_node_type",
+        "_interp",
+        "_pix_offset",
+        "_nbin",
+        "_unit",
+    ]
+
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
-    def __init__(self, nodes, interp='lin', name='',
-                 node_type='edge', unit=''):
-        self._name = name
-        self._interp = interp
+    def __init__(self, nodes, interp="lin", name="", node_type="edge", unit=""):
+        self.name = name
+        self.unit = unit
         self._nodes = nodes
         self._node_type = node_type
-        self._unit = u.Unit('' if unit is None else unit)
-
-        # Set axis type from its unit
-        if self._unit.is_equivalent("eV"):
-            self._type = 'energy'
-        elif self._unit.is_equivalent("s"):
-            self._type = 'time'
-        else:
-            self._type = 'any'
+        self._interp = interp
 
         # Set pixel coordinate of first node
-        if node_type == 'edge':
+        if node_type == "edge":
             self._pix_offset = -0.5
             nbin = len(nodes) - 1
-        elif node_type == 'center':
+        elif node_type == "center":
             self._pix_offset = 0.0
             nbin = len(nodes)
         else:
-            raise ValueError('Invalid node type: {}'.format(node_type))
+            raise ValueError("Invalid node type: {!r}".format(node_type))
 
-        pix = np.arange(nbin, dtype=float)
-        self._center = self.pix_to_coord(pix)
-        pix = np.arange(nbin + 1, dtype=float) - 0.5
-        self._bin_edges = self.pix_to_coord(pix)
+        self._nbin = nbin
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return (np.allclose(self._nodes, other._nodes) and
-                    self._node_type == other._node_type and
-                    self._interp == other._interp and
-                    self._unit == other._unit)
+            return (
+                np.allclose(self._nodes, other._nodes)
+                and self._node_type == other._node_type
+                and self._interp == other._interp
+                and self._unit == other._unit
+            )
         return NotImplemented
 
     def __ne__(self, other):
@@ -404,17 +407,19 @@ class MapAxis(object):
     @property
     def edges(self):
         """Return array of bin edges."""
-        return self._bin_edges
+        pix = np.arange(self.nbin + 1, dtype=float) - 0.5
+        return self.pix_to_coord(pix)
 
     @property
     def center(self):
         """Return array of bin centers."""
-        return self._center
+        pix = np.arange(self.nbin, dtype=float)
+        return self.pix_to_coord(pix)
 
     @property
     def nbin(self):
         """Return number of bins."""
-        return len(self._bin_edges) - 1
+        return self._nbin
 
     @property
     def node_type(self):
@@ -426,10 +431,9 @@ class MapAxis(object):
         """Return coordinate axis unit."""
         return self._unit
 
-    @property
-    def type(self):
-        """Return coordinate axis type."""
-        return self._type
+    @unit.setter
+    def unit(self, val):
+        self._unit = u.Unit(val)
 
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
@@ -452,26 +456,24 @@ class MapAxis(object):
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        interp = kwargs.setdefault('interp', 'lin')
-        node_type = kwargs.setdefault('node_type', 'edge')
+        interp = kwargs.setdefault("interp", "lin")
+        node_type = kwargs.setdefault("node_type", "edge")
 
-        if node_type == 'edge':
+        if node_type == "edge":
             nnode = nbin + 1
-        elif node_type == 'center':
+        elif node_type == "center":
             nnode = nbin
         else:
-            raise ValueError('Invalid node type: {}'.format(node_type))
+            raise ValueError("Invalid node type: {!r}".format(node_type))
 
-        if interp == 'lin':
+        if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
-        elif interp == 'log':
-            nodes = np.exp(np.linspace(np.log(lo_bnd),
-                                       np.log(hi_bnd), nnode))
-        elif interp == 'sqrt':
-            nodes = np.linspace(lo_bnd ** 0.5,
-                                hi_bnd ** 0.5, nnode) ** 2.0
+        elif interp == "log":
+            nodes = np.exp(np.linspace(np.log(lo_bnd), np.log(hi_bnd), nnode))
+        elif interp == "sqrt":
+            nodes = np.linspace(lo_bnd ** 0.5, hi_bnd ** 0.5, nnode) ** 2.0
         else:
-            raise ValueError('Invalid interp: {}'.format(interp))
+            raise ValueError("Invalid interp: {}".format(interp))
 
         return cls(nodes, **kwargs)
 
@@ -494,9 +496,9 @@ class MapAxis(object):
         """
         nodes = np.array(nodes, ndmin=1)
         if len(nodes) < 1:
-            raise ValueError('Nodes array must have at least one element.')
+            raise ValueError("Nodes array must have at least one element.")
 
-        return cls(nodes, node_type='center', **kwargs)
+        return cls(nodes, node_type="center", **kwargs)
 
     @classmethod
     def from_edges(cls, edges, **kwargs):
@@ -515,9 +517,9 @@ class MapAxis(object):
             coordinates.  Default: 'lin'.
         """
         if len(edges) < 2:
-            raise ValueError('Edges array must have at least two elements.')
+            raise ValueError("Edges array must have at least two elements.")
 
-        return cls(edges, node_type='edge', **kwargs)
+        return cls(edges, node_type="edge", **kwargs)
 
     def pix_to_coord(self, pix):
         """Transform from pixel to axis coordinates.
@@ -548,6 +550,7 @@ class MapAxis(object):
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
         """
+        coord = u.Quantity(coord, self.unit).value
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
         return np.array(pix + self._pix_offset, ndmin=1)
 
@@ -568,6 +571,7 @@ class MapAxis(object):
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
+        coord = u.Quantity(coord, self.unit).value
         return coord_to_idx(self.edges, coord, clip)
 
     def coord_to_idx_interp(self, coord):
@@ -578,8 +582,9 @@ class MapAxis(object):
         coord : `~numpy.ndarray`
             Array of axis coordinate values.
         """
-        return (coord_to_idx(self.center[:-1], coord, clip=True),
-                coord_to_idx(self.center[:-1], coord, clip=True) + 1,)
+        coord = u.Quantity(coord, self.unit).value
+        idx = coord_to_idx(self.center[:-1], coord, clip=True)
+        return idx, idx + 1
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -597,11 +602,37 @@ class MapAxis(object):
         center = self.center[idx]
         idx = self.coord_to_idx(center)
         # For edge nodes we need to keep N+1 nodes
-        if self._node_type == 'edge':
+        if self._node_type == "edge":
             idx = tuple(list(idx) + [1 + idx[-1]])
+
         nodes = self._nodes[(idx,)]
-        return MapAxis(nodes, interp=self._interp, name=self._name,
-                       node_type=self._node_type, unit=self._unit)
+        return MapAxis(
+            nodes,
+            interp=self._interp,
+            name=self._name,
+            node_type=self._node_type,
+            unit=self._unit,
+        )
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        fmt = "\t{:<10s} : {:<10s}\n"
+        str_ += fmt.format("name", self.name)
+        str_ += fmt.format("unit", "{!r}".format(str(self.unit)))
+        str_ += fmt.format("nbins", str(self.nbin))
+        str_ += fmt.format("node type", self.node_type)
+        vals = self.edges if self.node_type == "edge" else self.center
+        str_ += fmt.format(
+            "{} min".format(self.node_type),
+            "{:.1e} {}".format(vals.min(), str(self.unit)),
+        )
+        str_ += fmt.format(
+            "{} max".format(self.node_type),
+            "{:.1e} {}".format(vals.max(), str(self.unit)),
+        )
+        str_ += fmt.format("interp", self._interp)
+        return str_
 
 
 class MapCoord(object):
@@ -616,28 +647,29 @@ class MapCoord(object):
     ----------
     data : `~collections.OrderedDict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
-    coordsys : {'CEL', 'GAL', None}    
+    coordsys : {'CEL', 'GAL', None}
         Spatial coordinate system.  If None then the coordinate system
         will be set to the native coordinate system of the geometry.
-    copy : bool
-        Make copies of the input arrays?
-        If False then this object will store views.
     match_by_name : bool
         Match coordinates to axes by name?
         If false coordinates will be matched by index.
     """
 
-    def __init__(self, data, coordsys=None, copy=False, match_by_name=True):
+    def __init__(self, data, coordsys=None, match_by_name=True):
 
-        if 'lon' not in data or 'lat' not in data:
+        if "lon" not in data or "lat" not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        self._data = OrderedDict([
-            (k, np.array(v, ndmin=1, copy=copy))
-            for k, v in data.items()
-        ])
-        vals = np.broadcast_arrays(*self._data.values())
-        self._data = OrderedDict(zip(self._data.keys(), vals))
+        if issubclass(data["lon"].__class__, u.Quantity):
+            raise ValueError("Quantity not supported for 'lon'")
+        if issubclass(data["lat"].__class__, u.Quantity):
+            raise ValueError("Quantity not supported for 'lat'")
+
+        data = OrderedDict(
+            [(k, np.atleast_1d(np.asanyarray(v))) for k, v in data.items()]
+        )
+        vals = np.broadcast_arrays(*data.values(), subok=True)
+        self._data = OrderedDict(zip(data.keys(), vals))
         self._coordsys = coordsys
         self._match_by_name = match_by_name
 
@@ -667,12 +699,12 @@ class MapCoord(object):
     @property
     def lon(self):
         """Longitude coordinate in degrees."""
-        return self._data['lon']
+        return self._data["lon"]
 
     @property
     def lat(self):
         """Latitude coordinate in degrees."""
-        return self._data['lat']
+        return self._data["lat"]
 
     @property
     def coordsys(self):
@@ -688,11 +720,12 @@ class MapCoord(object):
 
     @property
     def skycoord(self):
-        return SkyCoord(self.lon, self.lat, unit='deg',
-                        frame=coordsys_to_frame(self.coordsys))
+        return SkyCoord(
+            self.lon, self.lat, unit="deg", frame=coordsys_to_frame(self.coordsys)
+        )
 
     @classmethod
-    def _from_lonlat(cls, coords, coordsys=None, copy=False):
+    def _from_lonlat(cls, coords, coordsys=None):
         """Create a `~MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
@@ -708,40 +741,38 @@ class MapCoord(object):
             A coordinates object.
         """
         if isinstance(coords, (list, tuple)):
-            coords_dict = OrderedDict([('lon', coords[0]),
-                                       ('lat', coords[1])])
+            coords_dict = OrderedDict([("lon", coords[0]), ("lat", coords[1])])
             for i, c in enumerate(coords[2:]):
-                coords_dict['axis{}'.format(i)] = c
+                coords_dict["axis{}".format(i)] = c
         else:
-            raise ValueError('Unrecognized input type.')
+            raise ValueError("Unrecognized input type.")
 
-        return cls(coords_dict, coordsys=coordsys, copy=copy,
-                   match_by_name=False)
+        return cls(coords_dict, coordsys=coordsys, match_by_name=False)
 
     @classmethod
-    def _from_skycoord(cls, coords, coordsys=None, copy=False):
+    def _from_skycoord(cls, coords, coordsys=None):
         """Create from vector of `~astropy.coordinates.SkyCoord`.
 
         Parameters
         ----------
         coords : tuple
             Coordinate tuple with first element of type
-            `~astropy.coordinates.SkyCoord`.        
+            `~astropy.coordinates.SkyCoord`.
         coordsys : {'CEL', 'GAL', None}
             Spatial coordinate system of output `~MapCoord` object.
             If None the coordinate system will be set to the frame of
-            the `~astropy.coordinates.SkyCoord` object.        
+            the `~astropy.coordinates.SkyCoord` object.
         """
         skycoord = coords[0]
-        if skycoord.frame.name in ['icrs', 'fk5']:
+        name = skycoord.frame.name
+        if name in ["icrs", "fk5"]:
             coords = (skycoord.ra.deg, skycoord.dec.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys='CEL', copy=copy)
-        elif skycoord.frame.name in ['galactic']:
+            coords = cls._from_lonlat(coords, coordsys="CEL")
+        elif name in ["galactic"]:
             coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
-            coords = cls._from_lonlat(coords, coordsys='GAL', copy=copy)
+            coords = cls._from_lonlat(coords, coordsys="GAL")
         else:
-            raise ValueError(
-                'Unrecognized coordinate frame: {}'.format(skycoord.frame.name))
+            raise ValueError("Unrecognized coordinate frame: {!r}".format(name))
 
         if coordsys is None:
             return coords
@@ -749,37 +780,35 @@ class MapCoord(object):
             return coords.to_coordsys(coordsys)
 
     @classmethod
-    def _from_tuple(cls, coords, coordsys=None, copy=False):
+    def _from_tuple(cls, coords, coordsys=None):
         """Create from tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
-            return cls._from_lonlat(coords, coordsys=coordsys, copy=copy)
+            return cls._from_lonlat(coords, coordsys=coordsys)
         elif isinstance(coords[0], SkyCoord):
-            return cls._from_skycoord(coords, coordsys=coordsys, copy=copy)
+            return cls._from_skycoord(coords, coordsys=coordsys)
         else:
-            raise TypeError('Type not supported: {}'.format(type(coords)))
+            raise TypeError("Type not supported: {!r}".format(type(coords)))
 
     @classmethod
-    def _from_dict(cls, coords, coordsys=None, copy=False):
+    def _from_dict(cls, coords, coordsys=None):
         """Create from a dictionary of coordinate vectors."""
-        if 'lon' in coords and 'lat' in coords:
-            return cls(coords, coordsys=coordsys, copy=copy)
-        elif 'skycoord' in coords:
+        if "lon" in coords and "lat" in coords:
+            return cls(coords, coordsys=coordsys)
+        elif "skycoord" in coords:
             coords_dict = OrderedDict()
-            lon, lat, frame = skycoord_to_lonlat(
-                coords['skycoord'], coordsys=coordsys)
-            coords_dict['lon'] = lon
-            coords_dict['lat'] = lat
+            lon, lat, frame = skycoord_to_lonlat(coords["skycoord"], coordsys=coordsys)
+            coords_dict["lon"] = lon
+            coords_dict["lat"] = lat
             for k, v in coords.items():
-                if k == 'skycoord':
+                if k == "skycoord":
                     continue
                 coords_dict[k] = v
-            return cls(coords_dict, coordsys=coordsys, copy=copy)
+            return cls(coords_dict, coordsys=coordsys)
         else:
-            raise ValueError("Dictionary must contain axes named 'lon'/'lat'"
-                             "or 'skycoord'.")
+            raise ValueError("coords dict must contain 'lon'/'lat' or 'skycoord'.")
 
     @classmethod
-    def create(cls, data, coordsys=None, copy=False):
+    def create(cls, data, coordsys=None):
         """Create a new `~MapCoord` object.
 
         This method can be used to create either unnamed (with tuple input)
@@ -787,15 +816,12 @@ class MapCoord(object):
 
         Parameters
         ----------
-        data : `tuple`, `dict`, `~MapCoord` or `~astropy.coordinates.SkyCoord`
-            Object containing coordinate arrays.  
+        data : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
+            Object containing coordinate arrays.
         coordsys : {'CEL', 'GAL', None}, optional
-            Set the coordinate system for longitude and latitude.  If
+            Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
             the coordinate system native to a given map geometry.
-        copy : bool
-            Make copies of the input coordinate arrays.  If False this
-            object will store views.
 
         Examples
         --------
@@ -818,13 +844,13 @@ class MapCoord(object):
             else:
                 return data.to_coordsys(coordsys)
         elif isinstance(data, dict):
-            return cls._from_dict(data, coordsys=coordsys, copy=copy)
+            return cls._from_dict(data, coordsys=coordsys)
         elif isinstance(data, (list, tuple)):
-            return cls._from_tuple(data, coordsys=coordsys, copy=copy)
+            return cls._from_tuple(data, coordsys=coordsys)
         elif isinstance(data, SkyCoord):
-            return cls._from_skycoord((data,), coordsys=coordsys, copy=copy)
+            return cls._from_skycoord((data,), coordsys=coordsys)
         else:
-            raise TypeError('Unsupported input type: {}'.format(type(data)))
+            raise TypeError("Unsupported input type: {!r}".format(type(data)))
 
     def to_coordsys(self, coordsys):
         """Convert to a different coordinate frame.
@@ -845,10 +871,9 @@ class MapCoord(object):
             skycoord = lonlat_to_skycoord(self.lon, self.lat, self.coordsys)
             lon, lat, frame = skycoord_to_lonlat(skycoord, coordsys=coordsys)
             data = copy.deepcopy(self._data)
-            data['lon'] = lon
-            data['lat'] = lat
-            return self.__class__(data, coordsys=coordsys,
-                                  match_by_name=self._match_by_name)
+            data["lon"] = lon
+            data["lat"] = lat
+            return self.__class__(data, coordsys, self._match_by_name)
 
     def apply_mask(self, mask):
         """Return a masked copy of this coordinate object.
@@ -864,8 +889,20 @@ class MapCoord(object):
             A coordinates object.
         """
         data = OrderedDict([(k, v[mask]) for k, v in self._data.items()])
-        return self.__class__(data, self.coordsys,
-                              match_by_name=self._match_by_name)
+        return self.__class__(data, self.coordsys, self._match_by_name)
+
+    def copy(self):
+        """Copy geom object."""
+        return copy.deepcopy(self)
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        str_ += "\taxes     : {}\n".format(", ".join(self._data.keys()))
+        str_ += "\tshape    : {}\n".format(self.shape[::-1])
+        str_ += "\tndim     : {}\n".format(self.ndim)
+        str_ += "\tcoordsys : {}\n".format(self.coordsys)
+        return str_
 
 
 class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
@@ -875,6 +912,12 @@ class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
 @six.add_metaclass(MapGeomMeta)
 class MapGeom(object):
     """Base class for WCS and HEALPix geometries."""
+
+    @property
+    @abc.abstractmethod
+    def data_shape(self):
+        """Shape of the Numpy data array matching this geometry."""
+        pass
 
     @property
     @abc.abstractmethod
@@ -963,17 +1006,17 @@ class MapGeom(object):
         # FIXME: Check whether convention is compatible with
         # dimensionality of geometry
 
-        if conv == 'fgst-ccube':
-            hdu = 'EBOUNDS'
-            axis_names = ['energy']
-        elif conv == 'fgst-template':
-            hdu = 'ENERGIES'
-            axis_names = ['energy']
-        elif conv == 'gadf' and hdu is None:
+        if conv == "fgst-ccube":
+            hdu = "EBOUNDS"
+            axis_names = ["energy"]
+        elif conv == "fgst-template":
+            hdu = "ENERGIES"
+            axis_names = ["energy"]
+        elif conv == "gadf" and hdu is None:
             if hdu_skymap:
-                hdu = '{}_{}'.format(hdu_skymap, 'BANDS')
+                hdu = "{}_{}".format(hdu_skymap, "BANDS")
             else:
-                hdu = 'BANDS'
+                hdu = "BANDS"
         # else:
         #     raise ValueError('Unknown conv: {}'.format(conv))
 
@@ -1000,12 +1043,10 @@ class MapGeom(object):
             dimension.  If defined only pixels for the image plane with
             this index will be returned.  If none then all pixels
             will be returned.
-
         local : bool
             Flag to return local or global pixel indices.  Local
             indices run from 0 to the number of pixels in a given
             image plane.
-
         flat : bool, optional
             Return a flattened array containing only indices for
             pixels contained in the geometry.
@@ -1034,7 +1075,6 @@ class MapGeom(object):
             dimension.  If defined only coordinates for the image
             plane with this index will be returned.  If none then
             coordinates for all pixels will be returned.
-
         flat : bool, optional
             Return a flattened array containing only coordinates for
             pixels contained in the geometry.
@@ -1162,27 +1202,32 @@ class MapGeom(object):
         idx = self.pix_to_idx(pix)
         return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
-    @abc.abstractmethod
-    def to_slice(self, slices, drop_axes=True):
+    def slice_by_idx(self, slices):
         """Create a new geometry by cutting in the non-spatial dimensions of
         this geometry.
 
         Parameters
         ----------
-        slices : tuple
-            Tuple of integers or `slice` objects.  Contains one
-            element for each non-spatial dimension.
-
-        drop_axes : bool
-            Drop axes for which the slice reduces the size of that
-            dimension to one.
+        slices : dict
+            Dict of axes names and integers or `slice` object pairs. Contains one
+            element for each non-spatial dimension. For integer indexing the
+            correspoding axes is dropped from the map. Axes not specified in the
+            dict are kept unchanged.
 
         Returns
         -------
         geom : `~MapGeom`
             Sliced geometry.
         """
-        pass
+        axes = []
+        for ax in self.axes:
+            ax_slice = slices.get(ax.name, slice(None))
+            if isinstance(ax_slice, slice):
+                ax_sliced = ax.slice(ax_slice)
+                axes.append(ax_sliced)
+                # in the case where isinstance(ax_slice, int) the axes is dropped
+
+        return self._init_copy(axes=axes)
 
     @abc.abstractmethod
     def to_image(self):
@@ -1223,7 +1268,7 @@ class MapGeom(object):
         coord : `~MapCoord`
         """
         if self.ndim != coord.ndim:
-            raise ValueError
+            raise ValueError("ndim mismatch")
 
         if not coord.match_by_name:
             return tuple(coord._data.values())
@@ -1287,7 +1332,7 @@ class MapGeom(object):
 
     @abc.abstractmethod
     def upsample(self, factor):
-        """Upsample the spatial dimension of the geometry by a given factor. 
+        """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
@@ -1308,18 +1353,55 @@ class MapGeom(object):
         pass
 
     def _fill_header_from_axes(self, header):
-
-        for i, ax in enumerate(self.axes):
-
-            if ax.name == 'energy' and ax.node_type == 'edge':
-                header['AXCOLS%i' % (i + 1)] = 'E_MIN,E_MAX'
-            elif ax.name == 'energy' and ax.node_type == 'center':
-                header['AXCOLS%i' % (i + 1)] = 'ENERGY'
-            elif ax.node_type == 'edge':
-                header['AXCOLS%i' % (i + 1)] = '{}_MIN,{}_MAX'.format(ax.name.upper(),
-                                                                      ax.name.upper())
-            elif ax.node_type == 'center':
-                header['AXCOLS%i' % (i + 1)] = ax.name.upper()
+        for idx, ax in enumerate(self.axes, start=1):
+            key = "AXCOLS%i" % idx
+            name = ax.name.upper()
+            if ax.name == "energy" and ax.node_type == "edge":
+                header[key] = "E_MIN,E_MAX"
+            elif ax.name == "energy" and ax.node_type == "center":
+                header[key] = "ENERGY"
+            elif ax.node_type == "edge":
+                header[key] = "{}_MIN,{}_MAX".format(name, name)
+            elif ax.node_type == "center":
+                header[key] = name
             else:
-                raise ValueError('Invalid node type '
-                                 '{}'.format(ax.node_type))
+                raise ValueError("Invalid node type {!r}".format(ax.node_type))
+
+    @property
+    def is_image(self):
+        """Whether the geom is equivalent to an image without extra dimensions."""
+        if self.axes is None:
+            return True
+        return len(self.axes) == 0
+
+    def get_axis_by_name(self, name):
+        """Get an axis by name (case in-sensitive).
+
+        Parameters
+        ----------
+        name : str
+           Name of the requested axis
+
+        Returns
+        -------
+        axis : `~gammapy.maps.MapAxis`
+            Axis
+        """
+        axes = {axis.name.upper(): axis for axis in self.axes}
+        return axes[name.upper()]
+
+    def _init_copy(self, **kwargs):
+        """Init map instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getargspec(self.__init__).args
+        argnames.remove("self")
+
+        for arg in argnames:
+            value = getattr(self, "_" + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
+
+    def copy(self):
+        """Deep copy."""
+        return copy.deepcopy(self)

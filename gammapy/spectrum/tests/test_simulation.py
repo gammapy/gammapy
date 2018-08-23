@@ -34,10 +34,12 @@ class TestSpectrumSimulation:
         self.alpha = 1. / 3
 
         # Minimal setup
-        self.sim = SpectrumSimulation(aeff=aeff,
-                                      edisp=edisp,
-                                      source_model=self.source_model,
-                                      livetime=4 * u.h)
+        self.sim = SpectrumSimulation(
+            aeff=aeff,
+            edisp=edisp,
+            source_model=self.source_model,
+            livetime=4 * u.h,
+        )
 
     def test_without_background(self):
         self.sim.simulate_obs(seed=23, obs_id=23)
@@ -62,10 +64,11 @@ class TestSpectrumSimulation:
         assert self.sim.result[4].on_vector.total_counts == 186
 
     def test_without_edisp(self):
-        sim = SpectrumSimulation(aeff=self.sim.aeff,
-                                 source_model=self.sim.source_model,
-                                 livetime=4*u.h,
-                                )
+        sim = SpectrumSimulation(
+            aeff=self.sim.aeff,
+            source_model=self.sim.source_model,
+            livetime=4 * u.h,
+        )
         sim.simulate_obs(seed=23, obs_id=23)
         assert sim.obs.on_vector.total_counts == 161
         # The test value is taken from the test with edisp
@@ -75,11 +78,13 @@ class TestSpectrumSimulation:
     def test_without_aeff(self):
         e_true = EnergyBounds.equal_log_spacing(1, 10, 5, u.TeV)
         rate_model = self.source_model.copy()
-        rate_model.parameters['amplitude'].unit = u.Unit('TeV-1 s-1')
-        rate_model.parameters['amplitude'].value = 1
-        sim = SpectrumSimulation(source_model=rate_model,
-                                 livetime=4*u.h,
-                                 e_true=e_true 
-                                )
+        par = rate_model.parameters['amplitude']
+        par.unit = 'TeV-1 s-1'
+        par.value = 1
+        sim = SpectrumSimulation(
+            source_model=rate_model,
+            livetime=4 * u.h,
+            e_true=e_true,
+        )
         sim.simulate_obs(seed=23, obs_id=23)
         assert sim.obs.on_vector.total_counts == 10509

@@ -20,4 +20,6 @@ Alphabetical order:
   Origin: https://github.com/martinblech/xmltodict/blob/master/xmltodict.py
 * ``zeros.py`` - Modified copy of the file from ``scipy.optimize``,
   used by the TS map computation code.
+* ``skimage.py`` - utility functions copied from scikit-image
+  They have the same BSD license as we do.
 """

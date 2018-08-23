@@ -43,8 +43,6 @@ class ObservationTableSummary(object):
         return offset
 
     def __str__(self):
-        """Summary report (`str`).
-        """
         ss = '*** Observation summary ***\n'
         ss += 'Target position: {}\n'.format(self.target_pos)
 
@@ -179,7 +177,7 @@ class ObservationSummary(object):
             self.sigma[index] = stack.sigma
 
     def obs_wise_summary(self):
-        """Observation wise summary report (`str`)."""
+        """Observation wise summary report (str)."""
         ss = '*** Observation Wise summary ***\n'
         for obs in self.obs_stats:
             ss += '{}\n'.format(obs)
@@ -187,7 +185,6 @@ class ObservationSummary(object):
         return ss
 
     def __str__(self):
-        """Observation summary report (`str`)."""
         stack = ObservationStats.stack(self.obs_stats)
         ss = '*** Observation summary ***\n'
         ss += '{}\n'.format(stack)

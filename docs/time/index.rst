@@ -1,21 +1,17 @@
 .. _time:
 
-************************
-Time analysis (``time``)
-************************
+********************
+time - Time analysis
+********************
 
 .. currentmodule:: gammapy.time
 
 Introduction
 ============
 
-`gammapy.time` contains methods for timing analysis.
-
-There is also `gammapy.utils.time`, which contains low-level helper functions
-for time conversions e.g. following the
-
-At the moment there isn't a lot of functionality yet ... contributions welcome!
-
+`gammapy.time` contains methods for time-based analysis, e.g. from AGN, binaries
+or pulsars. There is also `gammapy.utils.time`, which contains low-level helper
+functions for time conversions e.g. following the
 
 Getting Started
 ===============
@@ -27,38 +23,37 @@ Lightcurve
 
 This section introduces the `~gammapy.time.LightCurve` class.
 
-Read a table that contains a lightcurve:
+Read a table that contains a lightcurve::
 
->>> from astropy.table import Table
->>> url = 'https://github.com/gammapy/gamma-cat/raw/master/input/data/2006/2006A%2526A...460..743A/tev-000119-lc.ecsv'
->>> table = Table.read(url, format='ascii.ecsv')
+    >>> from astropy.table import Table
+    >>> url = 'https://github.com/gammapy/gamma-cat/raw/master/input/data/2006/2006A%2526A...460..743A/tev-000119-lc.ecsv'
+    >>> table = Table.read(url, format='ascii.ecsv')
 
 Create a ``LightCurve`` object:
 
->>> from gammapy.time import LightCurve
->>> lc = LightCurve(table)
+    >>> from gammapy.time import LightCurve
+    >>> lc = LightCurve(table)
 
-``LightCurve`` is a simple container that stores the LC table,
-and provices a few conveniences, like creating time objects
-and a quick-look plot:
+``LightCurve`` is a simple container that stores the LC table, and provices a
+few conveniences, like creating time objects and a quick-look plot:
 
->>> lc.time[:2].iso
-['2004-05-23 01:47:08.160' '2004-05-23 02:17:31.200']
->>> lc.plot()
+    >>> lc.time[:2].iso
+    ['2004-05-23 01:47:08.160' '2004-05-23 02:17:31.200']
+    >>> lc.plot()
 
 .. _time-variability:
 
 Variability test
 ----------------
 
-The `~gammapy.time.exptest` function can be used to compute the significance
-of variability (compared to the null hypothesis of constant rate)
-for a list of event time differences.
+The `~gammapy.time.exptest` function can be used to compute the significance of
+variability (compared to the null hypothesis of constant rate) for a list of
+event time differences.
 
-Here's an example how to use the `~gammapy.time.random_times` helper
-function to simulate a `~astropy.time.TimeDelta` array for a given constant rate
-and use `~gammapy.time.exptest` to assess the level of variability (0.11 sigma in this case,
-not variable):
+Here's an example how to use the `~gammapy.time.random_times` helper function to
+simulate a `~astropy.time.TimeDelta` array for a given constant rate and use
+`~gammapy.time.exptest` to assess the level of variability (0.11 sigma in this
+case, not variable):
 
 .. code-block:: python
 
@@ -69,7 +64,6 @@ not variable):
     >>> mr = exptest(time_delta)
     >>> print(mr)
     0.11395763079
-
 
 See ``examples/example_exptest.py`` for a longer example.
 
@@ -82,14 +76,13 @@ TODO: apply this to the 2FHL events and check which sources are variable as a ni
     events = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz ', hdu='EVENTS')
     # TODO: cone select events for 2FHL catalog sources, compute mr for each and print 10 most variable sources
 
-
 Other codes
 ===========
 
-Where possible we shouldn't duplicate timing analysis functionality
-that's already available elsewhere. In some cases it's enough to refer
-gamma-ray astronomers to other packages, sometimes a convenience wrapper for
-our data formats or units might make sense.
+Where possible we shouldn't duplicate timing analysis functionality that's
+already available elsewhere. In some cases it's enough to refer gamma-ray
+astronomers to other packages, sometimes a convenience wrapper for our data
+formats or units might make sense.
 
 Some references (please add what you find useful
 
@@ -104,8 +97,9 @@ Some references (please add what you find useful
 * https://github.com/YSOVAR/YSOVAR
 * https://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
 
-Content
-=======
+Using `gammapy.time`
+====================
+
 .. toctree::
    :maxdepth: 1
 

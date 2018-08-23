@@ -9,7 +9,6 @@ import numpy as np
 
 __all__ = [
     'cash', 'cstat', 'wstat', 'get_wstat_mu_bkg', 'get_wstat_gof_terms',
-    'lstat', 'pgstat',
     'chi2', 'chi2constvar', 'chi2datavar',
     'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
 ]
@@ -23,7 +22,7 @@ def cash(n_on, mu_on):
     The Cash statistic is defined as:
 
     .. math::
-        C = 2 \left( n_{on} - n_{on} \log \mu_{on} \right)
+        C = 2 \left( \mu_{on} - n_{on} \log \mu_{on} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
     For more information see :ref:`fit-statistics`
@@ -49,14 +48,10 @@ def cash(n_on, mu_on):
     * `Cash 1979, ApJ 228, 939
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
-    n_on = np.asanyarray(n_on, dtype=np.float64)
-    mu_on = np.asanyarray(mu_on, dtype=np.float64)
-
     # suppress zero division warnings, they are corrected below
-    with np.warnings.catch_warnings():
-        np.warnings.filterwarnings('ignore')
+    with np.errstate(divide='ignore', invalid='ignore'):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
-    stat = np.where(mu_on > 0, stat, 0)
+        stat = np.where(mu_on > 0, stat, 0)
     return stat
 
 
@@ -162,17 +157,19 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     term1 = mu_sig + (1 + alpha) * mu_bkg
 
     # suppress zero division warnings, they are corrected below
-    with np.warnings.catch_warnings():
-        np.warnings.filterwarnings('ignore')
-        term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        # This is a false positive error from pylint
+        # See https://github.com/PyCQA/pylint/issues/2436
+        term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_on == 0
     condition = (n_on == 0)
     term2 = np.where(condition, 0, term2_)
 
     # suppress zero division warnings, they are corrected below
-    with np.warnings.catch_warnings():
-        np.warnings.filterwarnings('ignore')
-        term3_ = - n_off * np.log(mu_bkg)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        # This is a false positive error from pylint
+        # See https://github.com/PyCQA/pylint/issues/2436
+        term3_ = - n_off * np.log(mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_off == 0
     condition = (n_off == 0)
     term3 = np.where(condition, 0, term3_)
@@ -211,8 +208,7 @@ def get_wstat_gof_terms(n_on, n_off):
     term = np.zeros(len(n_on))
 
     # suppress zero division warnings, they are corrected below
-    with np.warnings.catch_warnings():
-        np.warnings.filterwarnings('ignore')
+    with np.errstate(divide='ignore', invalid='ignore'):
         term1 = - n_on * (1 - np.log(n_on))
         term2 = - n_off * (1 - np.log(n_off))
 
@@ -220,22 +216,6 @@ def get_wstat_gof_terms(n_on, n_off):
     term += np.where(n_off == 0, 0, term2)
 
     return 2 * term
-
-
-def lstat():
-    r"""L statistic, for Poisson data with Poisson background (Bayesian).
-
-    Reference: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-    """
-    raise NotImplementedError
-
-
-def pgstat():
-    r"""PG statistic, for Poisson data with Gaussian background.
-
-    Reference: https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-    """
-    raise NotImplementedError
 
 
 def chi2(N_S, B, S, sigma2):

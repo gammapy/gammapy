@@ -3,8 +3,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from ..extern.six.moves import range
-from ..extern.six import iteritems
 
 __all__ = [
     'fc_find_acceptance_interval_gauss',
@@ -436,7 +434,7 @@ def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
     new_bins = np.concatenate((bins, np.array([bins[-1] + bin_width])), axis=0)
 
     # Histogram and normalise each distribution so it is a real PDF
-    for mu, distribution in iter(sorted(iteritems(distribution_dict))):
+    for _, distribution in sorted(distribution_dict.items()):
         entries = np.histogram(distribution, bins=new_bins)[0]
         integral = float(sum(entries))
         distributions_scaled.append(entries / integral)

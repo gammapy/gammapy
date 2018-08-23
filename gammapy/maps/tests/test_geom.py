@@ -4,6 +4,7 @@ import pytest
 from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy import units as u
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis, MapCoord
 
@@ -175,8 +176,9 @@ def test_mapcoords_create():
     assert coords.ndim == 3
 
     # 3D OrderedDict w/ vectors
-    coords = MapCoord.create(OrderedDict([('energy', energy),
-                                          ('lat', lat), ('lon', lon)]))
+    coords = MapCoord.create(OrderedDict([
+        ('energy', energy), ('lat', lat), ('lon', lon)
+    ]))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords['energy'], energy)
@@ -184,6 +186,10 @@ def test_mapcoords_create():
     assert_allclose(coords[1], lat)
     assert_allclose(coords[2], lon)
     assert coords.ndim == 3
+
+    # Quantities
+    coords = MapCoord.create(dict(energy=energy * u.TeV, lat=lat, lon=lon))
+    assert coords['energy'].unit == 'TeV'
 
 
 def test_mapcoords_to_coordsys():
@@ -219,3 +225,13 @@ def test_mapcoords_to_coordsys():
         'icrs').ra.deg, skycoord_gal.icrs.ra.deg)
     assert_allclose(coords.skycoord.transform_to(
         'icrs').dec.deg, skycoord_gal.icrs.dec.deg)
+
+
+def test_mapaxis_repr():
+    axis = MapAxis([1, 2, 3], name='test')
+    assert 'MapAxis' in repr(axis)
+
+
+def test_mapcoord_repr():
+    coord = MapCoord({'lon': 0, 'lat': 0, 'energy': 5})
+    assert 'MapCoord' in repr(coord)

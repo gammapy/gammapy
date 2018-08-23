@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from copy import deepcopy
 from astropy.units import Quantity
-from ..extern.six.moves import UserList
+from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
@@ -30,8 +30,8 @@ class SpectrumStats(ObservationStats):
     """
 
     def __init__(self, **kwargs):
-        self.energy_min = kwargs.pop('energy_min', None)
-        self.energy_max = kwargs.pop('energy_max', None)
+        self.energy_min = kwargs.pop('energy_min', Quantity(0, 'TeV'))
+        self.energy_max = kwargs.pop('energy_max', Quantity(0, 'TeV'))
         super(SpectrumStats, self).__init__(**kwargs)
 
     def __str__(self):
@@ -50,8 +50,7 @@ class SpectrumStats(ObservationStats):
 class SpectrumObservation(object):
     """1D spectral analysis storage class.
 
-    This container holds the ingredients for 1D region based spectral analysis
-    TODO: describe PHA, ARF, etc.
+    This container holds the ingredients for 1D region based spectral analysis.
 
     Meta data is stored in the ``on_vector`` attribute.
     This reflects the OGIP convention.
@@ -70,6 +69,7 @@ class SpectrumObservation(object):
     Examples
     --------
     ::
+
         from gammapy.spectrum import SpectrumObservation
         filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
         obs = SpectrumObservation.read(filename)
@@ -96,6 +96,11 @@ class SpectrumObservation(object):
         self.on_vector.obs_id = obs_id
         if self.off_vector is not None:
             self.off_vector.obs_id = obs_id
+
+    @property
+    def meta(self):
+        """Meta information"""
+        return self.on_vector.meta
 
     @property
     def livetime(self):
@@ -308,6 +313,7 @@ class SpectrumObservation(object):
         stats_list = [self.stats(ii) for ii in idx]
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
+        stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
         stacked_stats.obs_id = self.obs_id
         stacked_stats.energy_min = self.e_reco[bin_min]
         stacked_stats.energy_max = self.e_reco[bin_max + 1]
@@ -840,8 +846,9 @@ class SpectrumObservationStacker(object):
             bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range.value
             alpha_sum += (obs.alpha * obs.off_vector.counts_in_safe_range).sum()
 
-        stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
-        alpha_average = alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
+        with np.errstate(divide='ignore', invalid='ignore'):
+            stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
+            alpha_average = alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data

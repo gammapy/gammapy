@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import logging
-import astropy.units as u
 from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds
 from .utils import CountsPredictor
@@ -152,7 +151,7 @@ class SpectrumSimulation(object):
 
         Parameters
         ----------
-        rand: `~numpy.random.RandomState`
+        rand : `~numpy.random.RandomState`
             random state
         """
         on_counts = rand.poisson(self.npred_source.data.data.value)
@@ -176,14 +175,14 @@ class SpectrumSimulation(object):
 
         Parameters
         ----------
-        rand: `~numpy.random.RandomState`
+        rand : `~numpy.random.RandomState`
             random state
         """
         bkg_counts = rand.poisson(self.npred_background.data.data.value)
         off_counts = rand.poisson(self.npred_background.data.data.value / self.alpha)
 
         # Add background to on_vector
-        self.on_vector.data.data += bkg_counts 
+        self.on_vector.data.data += bkg_counts
 
         # Create off vector
         off_vector = PHACountsSpectrum(energy_lo=self.e_reco.lower_bounds,
@@ -196,7 +195,6 @@ class SpectrumSimulation(object):
         self.off_vector = off_vector
 
     def _get_meta(self):
-        """Meta info added to simulated counts spectra."""
-        meta = OrderedDict()
-        meta['CREATOR'] = self.__class__.__name__
-        return meta
+        return OrderedDict([
+            ('CREATOR', self.__class__.__name__),
+        ])

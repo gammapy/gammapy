@@ -12,7 +12,6 @@
   directly on the spectral model classes some day.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 
 __all__ = [
@@ -256,9 +255,9 @@ def power_law_compatibility(par_low, par_high):
     sigma_high = (g_match - g_high) / g_err_high
     sigma_combined = np.sqrt(sigma_low ** 2 + sigma_high ** 2)
 
-    return OrderedDict([
-        ('g_match', g_match),
-        ('sigma_low', sigma_low),
-        ('sigma_high', sigma_high),
-        ('sigma_combined', sigma_combined),
-    ])
+    return {
+        'g_match': g_match,
+        'sigma_low': sigma_low,
+        'sigma_high': sigma_high,
+        'sigma_combined': sigma_combined,
+    }

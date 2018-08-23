@@ -2,13 +2,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import Counter
 import pytest
+import numpy as np
 from numpy.testing.utils import assert_allclose
 from astropy import units as u
+from astropy.coordinates import SkyCoord, Angle
+from astropy.table import Table
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_data, requires_dependency
-from ...image import SkyImage
 from ...spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
-from ..hess import SourceCatalogHGPS
+from ..hess import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
 
 
 @pytest.fixture(scope='session')
@@ -42,33 +44,6 @@ class TestSourceCatalogHGPS:
         # Thus we expect `HGPSC 084` at row 83
         c = cat.gaussian_component(83)
         assert c.name == 'HGPSC 084'
-
-    @staticmethod
-    @requires_dependency('scipy')
-    @pytest.mark.parametrize('source_name', ['HESS J1837-069', 'HESS J1809-193', 'HESS J1841-055'])
-    def test_large_scale_component(cat, source_name):
-        # This test compares the flux values from the LS model within source
-        # regions with ones listed in the catalog, agreement is <1%
-        ls_model = cat.large_scale_component
-
-        source = cat[source_name]
-        rspec = source.data['RSpec']
-        npix = int(2.5 * rspec.value / 0.02)
-
-        image = SkyImage.empty(
-            xref=source.position.galactic.l.deg,
-            yref=source.position.galactic.b.deg,
-            nxpix=npix,
-            nypix=npix,
-        )
-        coordinates = image.coordinates()
-        image.data = ls_model.evaluate(coordinates)
-        image.data *= image.solid_angle()
-
-        mask = coordinates.separation(source.position) < rspec
-        flux_ls = image.data[mask].sum()
-
-        assert_quantity_allclose(flux_ls, source.data['Flux_Map_RSpec_LS'], rtol=1E-2)
 
 
 @requires_data('gammapy-extra')
@@ -213,15 +188,14 @@ class TestSourceCatalogObjectHGPS:
     @staticmethod
     def test_sky_model_gaussian2(cat):
         model = cat['HESS J1843-033'].sky_model
-        p = model.parameters
 
-        p = model[0].parameters
+        p = model.skymodels[0].parameters
         assert_allclose(p['amplitude'].value, 1.343344814726255e-12)
         assert_allclose(p['lon_0'].value, 29.047216415405273)
         assert_allclose(p['lat_0'].value, 0.24389676749706268)
         assert_allclose(p['sigma'].value, 0.12499100714921951)
 
-        p = model[1].parameters
+        p = model.skymodels[1].parameters
         assert_allclose(p['amplitude'].value, 1.5390372353277226e-12)
         assert_allclose(p['lon_0'].value, 28.77037811279297)
         assert_allclose(p['lat_0'].value, -0.0727819949388504)
@@ -234,9 +208,9 @@ class TestSourceCatalogObjectHGPS:
     @staticmethod
     def test_sky_model_gaussian3(cat):
         model = cat['HESS J1825-137'].sky_model
-        assert_allclose(model[0].parameters['amplitude'].value, 5.022436459778401e-12)
-        assert_allclose(model[1].parameters['amplitude'].value, 1.1829840926291801e-11)
-        assert_allclose(model[2].parameters['amplitude'].value, 1.5557788347539403e-12)
+        assert_allclose(model.skymodels[0].parameters['amplitude'].value, 5.022436459778401e-12)
+        assert_allclose(model.skymodels[1].parameters['amplitude'].value, 1.1829840926291801e-11)
+        assert_allclose(model.skymodels[2].parameters['amplitude'].value, 1.5557788347539403e-12)
 
     @staticmethod
     def test_sky_model_gaussian_extern(cat):
@@ -304,3 +278,30 @@ class TestSourceCatalogObjectHGPSComponent:
     def test_sky_model(component):
         model = component.sky_model
         assert 'SkyModel' in str(model)
+
+
+@requires_dependency('scipy')
+class TestSourceCatalogLargeScaleHGPS:
+    def setup(self):
+        table = Table()
+        table['GLON'] = [-30, -10, 10, 20] * u.deg
+        table['Surface_Brightness'] = [0, 1, 10, 0] * u.Unit('cm-2 s-1 sr-1')
+        table['GLAT'] = [-1, 0, 1, 0] * u.deg
+        table['Width'] = [0.4, 0.5, 0.3, 1.0] * u.deg
+        self.table = table
+        self.model = SourceCatalogLargeScaleHGPS(table)
+
+    def test_evaluate(self):
+        x = np.linspace(-100, 20, 5)
+        y = np.linspace(-2, 2, 7)
+        x, y = np.meshgrid(x, y)
+        coords = SkyCoord(x, y, unit='deg', frame='galactic')
+        image = self.model.evaluate(coords)
+        desired = 1.223962643740966 * u.Unit('cm-2 s-1 sr-1')
+        assert_quantity_allclose(image.sum(), desired)
+
+    def test_parvals(self):
+        glon = Angle(10, unit='deg')
+        assert_quantity_allclose(self.model.peak_brightness(glon), 10 * u.Unit('cm-2 s-1 sr-1'))
+        assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
+        assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)

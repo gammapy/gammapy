@@ -113,10 +113,8 @@ setup(
       analysis=[
           'pyyaml',
           'scipy>=0.15',
-          'scikit-image>=0.10',
           'photutils',
           'reproject',
-          'astroplan',
           'uncertainties>=2.4',
           'naima',
           'iminuit',
@@ -124,7 +122,6 @@ setup(
       ],
       plotting=[
           'matplotlib>=1.5',
-          'aplpy>=0.9',
       ],
     ),
     author=AUTHOR,

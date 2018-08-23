@@ -8,20 +8,21 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
+from astropy.modeling.models import Gaussian1D
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel
-from ..background.models import GaussianBand2D
+from ..cube.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
     'SourceCatalogHGPS',
     'SourceCatalogObjectHGPS',
     'SourceCatalogObjectHGPSComponent',
+    'SourceCatalogLargeScaleHGPS',
 ]
 
 # Flux factor, used for printing
@@ -475,7 +476,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Spatial model (`~gammapy.image.models.SpatialModel`).
+        """Spatial model (`~gammapy.image.models.SkySpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
@@ -528,7 +529,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         if self.spatial_model_type in {'2-gaussian', '3-gaussian'}:
             models = [c.sky_model for c in self.components]
-            return SkySumModel(models)
+            return SkyModels(models)
         else:
             spatial_model = self.spatial_model
             # TODO: there are two spectral models
@@ -647,10 +648,10 @@ class SourceCatalogHGPS(SourceCatalog):
 
     @property
     def large_scale_component(self):
-        """Large scale component model (`~gammapy.background.models.GaussianBand2D`).
+        """Large scale component model (`~gammapy.catalog.SourceCatalogLargeScaleHGPS`).
         """
         table = self.table_large_scale_component
-        return GaussianBand2D(table, spline_kwargs=dict(k=3, s=0, ext=0))
+        return SourceCatalogLargeScaleHGPS(table, spline_kwargs=dict(k=3, s=0, ext=0))
 
     def _make_source_object(self, index):
         """Make `SourceCatalogObject` for given row index"""
@@ -690,49 +691,119 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogObjectHGPSComponent(data=data)
 
 
-class SkySumModel(object):
-    """Additive sum of `SkyModel`.
+class SourceCatalogLargeScaleHGPS(object):
+    """Gaussian band model.
 
-    TODO: fully implement this class or remove?
+    This 2-dimensional model is Gaussian in ``y`` for a given ``x``,
+    and the Gaussian parameters can vary in ``x``.
 
-    Not sure if we want this class, or only a + operator on SkyModel.
-    If we keep it, then probably SkyModel should become an ABC
-    and the current SkyModel renamed to SkyModelFactorised or something like that?
-
-    I'm only adding this for now as a hack to migrate the multi-Gauss HGPS
-    models to the new model classes.
-    See https://github.com/gammapy/gammapy/pull/1387
+    One application of this model is the diffuse emission along the
+    Galactic plane, i.e. ``x = GLON`` and ``y = GLAT``.
 
     Parameters
     ----------
-    models : list
-        List of SkyModel objects
+    table : `~astropy.table.Table`
+        Table of Gaussian parameters.
+        ``x``, ``amplitude``, ``mean``, ``stddev``.
+    spline_kwargs : dict
+        Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
     """
 
-    def __init__(self, models):
-        self._models = models
+    def __init__(self, table, spline_kwargs=None):
+        from scipy.interpolate import UnivariateSpline
 
-    def __len__(self):
-        return len(self._models)
+        if spline_kwargs is None:
+            spline_kwargs = dict(k=1, s=0)
 
-    def __getitem__(self, item):
-        return self._models[item]
+        self.table = table
+        glon = Angle(self.table['GLON']).wrap_at('180d')
 
-    @property
-    def parameters(self):
-        """Concatenated parameters.
+        splines, units = {}, {}
 
-        Currently no way to distinguish spectral and spatial.
+        for column in table.colnames:
+            y = self.table[column].quantity
+            spline = UnivariateSpline(glon.degree, y.value, **spline_kwargs)
+            splines[column] = spline
+            units[column] = y.unit
+
+        self._splines = splines
+        self._units = units
+
+    def _interpolate_parameter(self, parname, glon):
+        glon = glon.wrap_at('180d')
+        y = self._splines[parname](glon.degree)
+        return y * self._units[parname]
+
+    def peak_brightness(self, glon):
+        """Peak brightness at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude`
+            Galactic Longitude.
         """
-        from ..utils.modeling import ParameterList
-        pars = []
-        for model in self._models:
-            for p in model.parameters:
-                pars.append(p)
-        return ParameterList(pars)
+        return self._interpolate_parameter('Surface_Brightness', glon)
 
-    def evaluate(self, lon, lat, energy):
-        # TODO: untested; add test or remove
-        return np.stack([m.evaluate(lon, lat, energy) for m in self._models])
+    def peak_brightness_error(self, glon):
+        """Peak brightness error at a given longitude.
 
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Surface_Brightness_Err', glon)
 
+    def width(self, glon):
+        """Width at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Width', glon)
+
+    def width_error(self, glon):
+        """Width error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('Width_Err', glon)
+
+    def peak_latitude(self, glon):
+        """Peak position at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('GLAT', glon)
+
+    def peak_latitude_error(self, glon):
+        """Peak position error at a given longitude.
+
+        Parameters
+        ----------
+        glon : `~astropy.coordinates.Longitude` or `~astropy.coordinates.Angle`
+            Galactic Longitude.
+        """
+        return self._interpolate_parameter('GLAT_Err', glon)
+
+    def evaluate(self, position):
+        """Evaluate model at a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        """
+        glon, glat = position.galactic.l, position.galactic.b
+        width = self.width(glon)
+        amplitude = self.peak_brightness(glon)
+        mean = self.peak_latitude(glon)
+        return Gaussian1D.evaluate(glat, amplitude=amplitude, mean=mean, stddev=width)

@@ -1,81 +1,75 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
-from astropy import units as u
-from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
-from ...irf import EffectiveAreaTable2D, Background3D
-from .. import make_exposure_cube, make_background_cube
-from .. import SkyCube
+from astropy.coordinates import SkyCoord
+from ...utils.testing import requires_data
+from ...maps import WcsGeom, HpxGeom, MapAxis, WcsNDMap
+from ...irf import EffectiveAreaTable2D
+from ..exposure import make_map_exposure_true_energy, _map_spectrum_weight
+from ...spectrum.models import ConstantModel
 
-
-@pytest.fixture(scope='session')
-def bkg_3d():
-    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
-    return Background3D.read(filename, hdu='BACKGROUND')
+pytest.importorskip('scipy')
+pytest.importorskip('healpy')
 
 
 @pytest.fixture(scope='session')
 def aeff():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
-    return EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
+    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc//caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
+    return EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
 
 
-@pytest.fixture(scope='session')
-def counts_cube():
-    import os
-    filename = os.path.join(
-        os.environ['GAMMAPY_EXTRA'],
-        'datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits'
-    )
-    return SkyCube.read(filename, format='fermi-counts')
+def geom(map_type, ebounds):
+    axis = MapAxis.from_edges(ebounds, name="energy", unit='TeV', interp='log')
+    if map_type == 'wcs':
+        return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
+    elif map_type == 'hpx':
+        return HpxGeom(256, axes=[axis])
+    else:
+        raise ValueError()
 
 
-@requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_exposure_cube(aeff, counts_cube):
-    pointing = SkyCoord(83.633, 21.514, unit='deg')
-    livetime = Quantity(1581.17, 's')
-    offset_max = Angle(2.2, 'deg')
-
-    exp_cube = make_exposure_cube(
-        pointing, livetime, aeff, counts_cube, offset_max=offset_max,
-    )
-    exp_ref = Quantity(4.7e8, 'm2 s')
-    coordinates = exp_cube.sky_image_ref.coordinates()
-    offset = coordinates.separation(pointing)
-
-    assert np.shape(exp_cube.data)[1:] == np.shape(counts_cube.data)[1:]
-    assert np.shape(exp_cube.data)[0] == np.shape(counts_cube.data)[0]
-    assert exp_cube.wcs == counts_cube.wcs
-    assert_quantity_allclose(np.nanmax(exp_cube.data), exp_ref, rtol=100)
-    assert exp_cube.data.unit == exp_ref.unit
-    assert exp_cube.data[:, offset > offset_max].sum() == 0
-
-
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_background_cube(bkg_3d, counts_cube):
-    pointing = SkyCoord(83.633, 21.514, unit='deg')
-    livetime = Quantity(1581.17, 's')
-    offset_max = Angle(2.2, 'deg')
-
-    bkg_cube = make_background_cube(
-        pointing, livetime, bkg_3d, counts_cube, offset_max=offset_max,
+@pytest.mark.parametrize("pars", [
+    {
+        'geom': geom(map_type='wcs', ebounds=[0.1, 1, 10]),
+        'shape': (2, 3, 4),
+        'sum': 8.103974e+08,
+    },
+    {
+        'geom': geom(map_type='wcs', ebounds=[0.1, 10]),
+        'shape': (1, 3, 4),
+        'sum': 2.387916e+08,
+    },
+    # TODO: make this work for HPX
+    # 'HpxGeom' object has no attribute 'separation'
+    # {
+    #     'geom': geom(map_type='hpx', ebounds=[0.1, 1, 10]),
+    #     'shape': '???',
+    #     'sum': '???',
+    # },
+])
+def test_make_map_exposure_true_energy(aeff, pars):
+    m = make_map_exposure_true_energy(
+        pointing=SkyCoord(2, 1, unit='deg'),
+        livetime='42 s',
+        aeff=aeff,
+        geom=pars['geom'],
     )
 
-    assert bkg_cube.data.shape == (15, 120, 200)
-    assert bkg_cube.data.unit == ''
+    assert m.data.shape == pars['shape']
+    assert m.unit == 'm2 s'
+    assert_allclose(m.data.sum(), pars['sum'], rtol=1e-5)
 
-    print(bkg_cube.data.sum())
-    assert_allclose(bkg_cube.data[0, 0, 0], 0.013959329891790048)
-    assert_allclose(bkg_cube.data.sum(), 1315.7910319477235)
 
-    # Check that `offset_max` is working properly
-    pos = SkyCoord(85.6, 23, unit='deg')
-    val = bkg_cube.lookup(pos, energy=1 * u.TeV)
-    assert_allclose(val, 0)
+def test_map_spectrum_weight():
+    axis = MapAxis.from_edges([0.1, 10, 1000], unit='TeV', name='energy')
+    expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit='m2 s')
+    expo_map.data += 1
+    spectrum = ConstantModel(42)
+
+    weighted_expo = _map_spectrum_weight(expo_map, spectrum)
+
+    assert weighted_expo.data.shape == (2, 10, 10)
+    assert weighted_expo.unit == 'm2 s'
+    assert_allclose(weighted_expo.data.sum(), 100)

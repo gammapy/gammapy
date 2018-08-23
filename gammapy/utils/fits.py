@@ -196,12 +196,15 @@ from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy.coordinates import Angle, EarthLocation
+from astropy.units import Quantity
 from .scripts import make_path
 from .energy import EnergyBounds
 
 __all__ = [
     'SmartHDUList',
     'energy_axis_to_ebounds',
+    'earth_location_from_dict',
 ]
 
 
@@ -241,9 +244,6 @@ class SmartHDUList(object):
     >>> hdus.get_hdu(2)  # by index
     >>> hdus.get_hdu(hdu_type='image')  # first image (skip primary if empty)
     >>> hdus.get_hdu(hdu_type='table')  # first table
-
-    TODO: add more conveniences, e.g. to create HDU lists from lists of Gammapy
-    objects that can be serialised to FITS (e.g. SkyImage, SkyCube, EventList, ...)
     """
 
     def __init__(self, hdu_list):
@@ -261,7 +261,7 @@ class SmartHDUList(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             Filename
         """
         filename = str(make_path(filename))
@@ -279,7 +279,7 @@ class SmartHDUList(object):
 
         Parameters
         ----------
-        filename : `str`
+        filename : str
             Filename
         """
         filename = str(make_path(filename))
@@ -463,3 +463,20 @@ def ebounds_to_energy_axis(ebounds):
     emax = table['E_MAX'].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit
     return EnergyBounds(energy)
+
+
+# TODO: add unit test
+def earth_location_from_dict(meta):
+    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    lon = Angle(meta['GEOLON'], 'deg')
+    lat = Angle(meta['GEOLAT'], 'deg')
+    # TODO: should we support both here?
+    # Check latest spec if ALTITUDE is used somewhere.
+    if 'GEOALT' in meta:
+        height = Quantity(meta['GEOALT'], 'meter')
+    elif 'ALTITUDE' in meta:
+        height = Quantity(meta['ALTITUDE'], 'meter')
+    else:
+        raise KeyError('The GEOALT or ALTITUDE header keyword must be set')
+
+    return EarthLocation(lon=lon, lat=lat, height=height)

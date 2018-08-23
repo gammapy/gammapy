@@ -2,9 +2,9 @@
 
 .. _data:
 
-**************************************
-Data / observation handling (``data``)
-**************************************
+****************************
+data - Data and observations
+****************************
 
 .. currentmodule:: gammapy.data
 
@@ -38,14 +38,10 @@ Should we introduce a sub-class ``EventListIACT``?
 Using `gammapy.data`
 ====================
 
-If you'd like to learn more about using `gammapy.data`, read the following sub-pages:
+Gammapy tutorial notebooks that show examples using ``gammapy.data``:
 
-.. toctree::
-   :maxdepth: 1
-
-   dm
-   obs_group
-
+* :gp-extra-notebook:`cta_1dc_introduction`
+* :gp-extra-notebook:`fermi_lat`
 
 Reference/API
 =============

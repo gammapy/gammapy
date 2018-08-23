@@ -13,7 +13,7 @@ __all__ = [
 class GTI(object):
     """Good time intervals (GTI) `~astropy.table.Table`.
 
-    Data format specification: ref:`gadf:iact-gti`
+    Data format specification: :ref:`gadf:iact-gti`
 
     Note: at the moment dead-time and live-time is in the
     EVENTS header ... the GTI header just deals with

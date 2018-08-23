@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Simulate source catalogs.
-"""
+"""Simulate source catalogs."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy import degrees, pi, arctan, exp
@@ -252,8 +251,7 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
 
 
 def add_snr_parameters(table):
-    """Adds SNR parameters to the table.
-    """
+    """Add SNR parameters to the table."""
     # Read relevant columns
     age = table['age'].quantity
     n_ISM = table['n_ISM'].quantity
@@ -325,8 +323,7 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
 
 
 def add_pwn_parameters(table):
-    """Add PWN parameters to the table.
-    """
+    """Add PWN parameters to the table."""
     # Some of the computations (specifically `pwn.radius`) aren't vectorised
     # across all parameters; so here we loop over source parameters explicitly
 
@@ -360,8 +357,7 @@ def add_pwn_parameters(table):
 
 
 def add_observed_source_parameters(table):
-    """Add observed source parameters to the table.
-    """
+    """Add observed source parameters to the table."""
     # Read relevant columns
     distance = table['distance']
     r_in = table['r_in']

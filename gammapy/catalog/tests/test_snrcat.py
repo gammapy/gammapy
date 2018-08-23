@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-from ...utils.testing import requires_data
 from ..snrcat import SourceCatalogSNRcat
 
 
-@pytest.mark.xfail(reason="Fails locally")
-@requires_data('gammapy-extra')
+@pytest.mark.remote_data
 def test_load_catalog_snrcat(tmpdir):
     snrcat = SourceCatalogSNRcat()
 

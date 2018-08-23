@@ -9,7 +9,6 @@ from ...data import DataStore, ObservationTableSummary, ObservationSummary
 from ...data import ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyImage
 
 
 @requires_data('gammapy-extra')
@@ -58,15 +57,12 @@ class TestObservationSummary:
         on_size = 0.3 * u.deg
         on_region = CircleSkyRegion(pos, on_size)
 
-        exclusion_mask = SkyImage.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-
         obs_stats_list = []
         for obs_id in obs_ids:
             obs = datastore.obs(obs_id)
             bkg = ReflectedRegionsBackgroundEstimator(
                 on_region=on_region,
                 obs_list=[obs],
-                exclusion_mask=exclusion_mask,
             )
             bkg.run()
             bg_estimate = bkg.result[0]

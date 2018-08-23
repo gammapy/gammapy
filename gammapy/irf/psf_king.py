@@ -167,9 +167,10 @@ class PSFKing(object):
         r2 = r * r
         sigma2 = sigma * sigma
 
-        term1 = 1 / (2 * np.pi * sigma2)
-        term2 = 1 - 1 / gamma
-        term3 = (1 + r2 / (2 * gamma * sigma2)) ** (-gamma)
+        with np.errstate(divide='ignore'):
+            term1 = 1 / (2 * np.pi * sigma2)
+            term2 = 1 - 1 / gamma
+            term3 = (1 + r2 / (2 * gamma * sigma2)) ** (-gamma)
 
         return term1 * term2 * term3
 
@@ -232,8 +233,8 @@ class PSFKing(object):
         energies = self.energy
 
         # Defaults
-        theta = theta or Angle(0, 'deg')
-        rad = rad or Angle(np.arange(0, 1.5, 0.005), 'deg')
+        theta = theta if theta is not None else Angle(0, 'deg')
+        rad = rad if rad is not None else Angle(np.arange(0, 1.5, 0.005), 'deg')
         psf_value = Quantity(np.empty((len(energies), len(rad))), 'deg^-2')
 
         for i, energy in enumerate(energies):

@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import sys
-from collections import OrderedDict
 from astropy.table import Table
 
 __all__ = [
@@ -22,8 +20,8 @@ class SourceCatalogRegistry(object):
     """
 
     def __init__(self):
-        self._available_catalogs = OrderedDict()
-        self._loaded_catalogs = OrderedDict()
+        self._available_catalogs = {}
+        self._loaded_catalogs = {}
 
     @classmethod
     def builtins(cls):
@@ -60,7 +58,7 @@ class SourceCatalogRegistry(object):
 
     @property
     def catalog_names(self):
-        """Catalog names (`list`)."""
+        """Catalog names (list of str)."""
         return list(self._available_catalogs.keys())
 
     def register(self, name, cls, args=()):
@@ -68,7 +66,7 @@ class SourceCatalogRegistry(object):
 
         It must be possible to load it via ``cls(*args)``.
         """
-        self._available_catalogs[name] = dict(cls=cls, args=args)
+        self._available_catalogs[name] = {'cls': cls, 'args': args}
 
     def __getitem__(self, name):
         if name not in self._available_catalogs:
@@ -96,11 +94,11 @@ class SourceCatalogRegistry(object):
         rows = []
         for name in self._available_catalogs.keys():
             cat = self[name]
-            rows.append(dict(
-                name=name,
-                description=cat.description,
-                sources=len(cat.table),
-            ))
+            rows.append({
+                'name': name,
+                'description': cat.description,
+                'sources': len(cat.table),
+            })
 
         return Table(rows=rows, names=['name', 'description', 'sources'])
 

@@ -38,9 +38,7 @@ class NDDataArray(object):
     of an individual axis ('log', 'linear') can be passed to the axis on
     initialization."""
 
-    def __init__(self, axes, data=None, meta=None,
-                 interp_kwargs=None):
-
+    def __init__(self, axes, data=None, meta=None, interp_kwargs=None):
         self._axes = axes
         if data is not None:
             self.data = data
@@ -51,7 +49,6 @@ class NDDataArray(object):
         self._regular_grid_interp = None
 
     def __str__(self):
-        """String representation"""
         ss = 'NDDataArray summary info\n'
         for axis in self.axes:
             ss += array_stats_str(axis.nodes, axis.name)
@@ -159,14 +156,23 @@ class NDDataArray(object):
         if kwargs != {}:
             raise ValueError("Input given for unknown axis: {}".format(kwargs))
 
-        if method is None:
-            out = self._eval_regular_grid_interp(values)
-        elif method == 'linear':
-            out = self._eval_regular_grid_interp(values, method='linear')
-        elif method == 'nearest':
-            out = self._eval_regular_grid_interp(values, method='nearest')
+        # This is necessary since np.append does not support the 1D case
+        if self.dim > 1:
+            shapes = np.concatenate([np.shape(_) for _ in values])
         else:
-            raise ValueError('Interpolator {} not available'.format(method))
+            shapes = values[0].shape
+
+        # Flatten in order to support 2D array input
+        values = [_.flatten() for _ in values]
+        points = list(itertools.product(*values))
+
+        if self._regular_grid_interp is None:
+            self._add_regular_grid_interp()
+
+        method = method or self.default_interp_kwargs.get('method', None)
+        res = self._regular_grid_interp(points, method=method, **kwargs)
+
+        out = np.reshape(res, shapes).squeeze()
 
         # Clip interpolated values to be non-negative
         np.clip(out, 0, None, out=out)
@@ -175,25 +181,40 @@ class NDDataArray(object):
 
         return out
 
-    def _eval_regular_grid_interp(self, values, **kwargs):
-        """Evaluate linear interpolator
+    def evaluate_at_coord(self, points, method="linear", **kwargs):
+        """Evaluate NDData Array on set of points.
 
-        Input: list of values to evaluate, in correct units and correct order.
+        TODO: merge with `evaluate`?
+        This method was added to support evaluating on arbitrary arrays
+        of coordinates, not just on the outer product like `evaluate`.
+
+        Parameters
+        ----------
+        points: dict
+            contains the coordinates on which you want to interpolate (axis_name: value)
+        method : str {'linear', 'nearest'}, optional
+            Interpolation method
+        kwargs : dict
+            Keys are the axis names, Values the evaluation points
+
+        Returns
+        -------
+        array : `~astropy.units.Quantity`
+            Interpolated values, axis order is the same as for the NDData array
         """
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        # This is necessary since np.append does not support the 1D case
-        if self.dim > 1:
-            shapes = np.concatenate([np.shape(_) for _ in values])
+        points = tuple([
+            axis._interp_values(points[axis.name].to(axis.unit).value)
+            for axis in self.axes
+        ])
+        res = self._regular_grid_interp(points, method=method, **kwargs)
 
-        else:
-            shapes = values[0].shape
-        # Flatten in order to support 2D array input
-        values = [_.flatten() for _ in values]
-        points = list(itertools.product(*values))
-        res = self._regular_grid_interp(points, **kwargs)
-        res = np.reshape(res, shapes).squeeze()
+        # Clip interpolated values to be non-negative
+        np.clip(res, 0, None, out=res)
+        # Attach units to the output
+        res = res * self.data.unit
 
         return res
 
@@ -212,6 +233,7 @@ class NDDataArray(object):
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
         points = [a._interp_nodes() for a in self.axes]
+
         values = self.data.value
 
         # If values contains nan, only setup interpolator in valid range

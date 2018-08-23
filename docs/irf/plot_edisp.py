@@ -1,7 +1,7 @@
 """Plot energy dispersion example."""
+import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
-import numpy as np
 from gammapy.irf import EnergyDispersion
 
 ebounds = np.logspace(-1, 2, 101) * u.TeV

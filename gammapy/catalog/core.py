@@ -3,9 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-import sys
 from copy import deepcopy
-from pprint import pprint
 import numpy as np
 from ..extern import six
 from astropy.utils import lazyproperty
@@ -52,13 +50,6 @@ class SourceCatalogObject(object):
         """Row index of source in catalog (int)"""
         return self.data[self._source_index_key]
 
-    def pprint(self, file=None):
-        """Pretty-print source data"""
-        if not file:
-            file = sys.stdout
-
-        pprint(self.data, stream=file)
-
     @property
     def _data_python_dict(self):
         """Convert ``data`` into a Python dict that only contains
@@ -81,12 +72,6 @@ class SourceCatalogObject(object):
             out[key] = out_val
 
         return out
-
-    def info(self):
-        """
-        Print summary info about the object.
-        """
-        print(self)
 
     @property
     def position(self):
@@ -125,14 +110,9 @@ class SourceCatalog(object):
         self._source_name_alias = source_name_alias
 
     def __str__(self):
-        """Info string."""
-        ss = self.description
-        ss += ' with {} objects.'.format(len(self.table))
-        return ss
-
-    def info(self):
-        """Print info string."""
-        print(self)
+        s = self.description
+        s += ' with {} objects.'.format(len(self.table))
+        return s
 
     @lazyproperty
     def _name_to_index_cache(self):
@@ -261,25 +241,6 @@ class SourceCatalog(object):
     def positions(self):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return skycoord_from_table(self.table)
-
-    def select_image_region(self, image):
-        """
-        Select all source within an image
-
-        Parameters
-        ----------
-        image : `~gammapy.image.SkyImage`
-            Sky image
-
-        Returns
-        -------
-        catalog : `SourceCatalog`
-            Source catalog selection.
-        """
-        catalog = self.copy()
-        selection = image.contains(self.positions)
-        catalog.table = catalog.table[selection]
-        return catalog
 
     def copy(self):
         """Copy catalog"""

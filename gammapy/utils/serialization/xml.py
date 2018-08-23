@@ -8,70 +8,145 @@ For XML model format definitions, see here:
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ...extern import xmltodict
-from ...cube.models import SourceLibrary, SkyModel
-from ..modeling import Parameter, ParameterList
-from ...maps import Map
-import numpy as np
 import logging
+import numpy as np
 import astropy.units as u
-import gammapy.image.models as spatial
-import gammapy.spectrum.models as spectral
+from ...extern import xmltodict
+from ..modeling import Parameter, Parameters
+from ...maps import Map
+from ...image import models as spatial
+from ...spectrum import models as spectral
+from ...cube.models import SkyModels, SkyModel
 
-
-log = logging.getLogger(__name__) 
-
+log = logging.getLogger(__name__)
 
 __all__ = [
     'UnknownModelError',
     'UnknownParameterError',
-    'xml_to_source_library',
+    'xml_to_sky_models',
     'xml_to_skymodel',
     'xml_to_model',
-    'xml_to_parameter_list',
-    'source_library_to_xml',
+    'xml_to_parameters',
+    'sky_models_to_xml',
 ]
 
+# TODO: Move to a separate file ?
+model_registry = {
+    'spectral': {
+        'PowerLaw': {
+            'model': spectral.PowerLaw,
+            'parameters': {
+                'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
+                'Index': ['index', ''],
+                'Scale': ['reference', 'MeV'],
+                'PivotEnergy': ['reference', 'MeV']
+            }
+        },
+        'ExponentialCutoffPowerLaw': {
+            'model': spectral.ExponentialCutoffPowerLaw,
+            'parameters': {
+                'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
+                'Index': ['index', ''],
+                'Scale': ['reference', 'MeV'],
+                'PivotEnergy': ['reference', 'MeV'],
+                'CutoffEnergy': ['lambda_', 'MeV'],  # parameter lambda_=1/Ecut will be inverted on model creation
+            }
+        },
+        'ConstantValue': {
+            'model': spectral.ConstantModel,
+            'parameters': {
+                'Value': ['const', 'cm-2 s-1 MeV-1'],
+                'Normalization': ['const', 'cm-2 s-1 MeV-1']
+            }
+        },
+        # TODO: FileFunction is not working
+        'FileFunction': {
+            'model': spectral.TableModel,
+            'parameters': {
+                'Value': ['const', 'cm-2 s-1 MeV-1'],
+                'Normalization': ['const', 'cm-2 s-1 MeV-1']
+            }
+        }
+    },
+    'spatial': {
+        'PointSource': {
+            'model': spatial.SkyPointSource,
+            'parameters': {
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg']
+            }
+        },
+        'RadialGaussian': {
+            'model': spatial.SkyGaussian,
+            'parameters': {
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg'],
+                'Sigma': ['sigma', 'deg']
+            }
+        },
+        'RadialDisk': {
+            'model': spatial.SkyDisk,
+            'parameters': {
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg'],
+                'Radius': ['r_0', 'deg']
 
-# TODO: MapCubeFunction does not have a good equivalent yet
-model_registry = dict(spatial=dict(), spectral=dict())
-model_registry['spatial']['SkyDirFunction'] = spatial.SkyPointSource
-model_registry['spatial']['MapCubeFunction'] = spatial.SkyDiffuseMap
-model_registry['spatial']['ConstantValue'] = spatial.SkyDiffuseConstant
-model_registry['spatial']['RadialShell'] = spatial.SkyShell
-model_registry['spatial']['Gaussian'] = spatial.SkyGaussian
-model_registry['spectral']['PowerLaw'] = spectral.PowerLaw
-model_registry['spectral']['FileFunction'] = spectral.TableModel
+            }
+        },
+        'RadialShell': {
+            'model': spatial.SkyShell,
+            'parameters': {
+                'RA': ['lon_0', 'deg'],
+                'DEC': ['lat_0', 'deg'],
+                'GLON': ['lon_0', 'deg'],
+                'GLAT': ['lat_0', 'deg'],
+                'Radius': ['radius', 'deg'],
+                'Width': ['width', 'deg']
 
-
-parname_registry = dict(spatial=dict(), spectral=dict())
-parname_registry['spatial']['RA'] = 'lon_0', 'deg'
-parname_registry['spatial']['DEC'] = 'lat_0', 'deg'
-parname_registry['spatial']['Normalization'] = 'norm', ''
-parname_registry['spatial']['Value'] = 'value', 'MeV cm-2 s-1'
-parname_registry['spatial']['Radius'] = 'radius', 'deg'
-parname_registry['spatial']['Width'] = 'width', 'deg'
-parname_registry['spatial']['Sigma'] = 'sigma', 'deg'
-parname_registry['spectral']['Prefactor'] = 'amplitude', 'MeV cm-2 s-1'
-parname_registry['spectral']['Index'] = 'index', ''
-parname_registry['spectral']['Scale'] = 'reference', 'MeV'
-parname_registry['spectral']['PivotEnergy'] = 'reference', 'MeV'
-parname_registry['spectral']['Normalization'] = 'scale', ''
+            }
+        },
+        'DiffuseMap': {
+            'model': spatial.SkyDiffuseMap,
+            'parameters': {
+                'Prefactor': ['norm', ''],
+                'Normalization': ['norm', ''],
+                'Value': ['norm', '']
+            }
+        },
+        'DiffuseIsotropic': {
+            'model': spatial.SkyDiffuseConstant,
+            'parameters': {
+                'Prefactor': ['value', ''],
+                'Normalization': ['value', ''],
+                'Value': ['value', '']
+            }
+        }
+    }
+}
+# For compatibility with the Fermi/LAT ScienceTools the model type PointSource can be replaced by SkyDirFunction.
+model_registry['spatial']['SkyDirFunction'] = model_registry['spatial']['PointSource']
+model_registry['spatial']['SpatialMap'] = model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['DiffuseMapCube'] = model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['MapCubeFunction'] = model_registry['spatial']['DiffuseMap']
+model_registry['spatial']['ConstantValue'] = model_registry['spatial']['DiffuseIsotropic']
+model_registry['spectral']['Constant'] = model_registry['spectral']['ConstantValue']
 
 
 class UnknownModelError(ValueError):
-    """
-    Error when encountering unknown model types.
-    """
+    """Error when encountering unknown models."""
 
 
 class UnknownParameterError(ValueError):
-    """
-    Error when encountering unknown model types.
-    """
+    """Error when encountering unknown parameters."""
 
 
-def xml_to_source_library(xml):
+def xml_to_sky_models(xml):
     """
     Convert XML to `~gammapy.cube.models.SkyModelList`
     """
@@ -82,7 +157,7 @@ def xml_to_source_library(xml):
         skymodel = xml_to_skymodel(xml_skymodel)
         if skymodel is not None:
             skymodels.append(skymodel)
-    return SourceLibrary(skymodels)
+    return SkyModels(skymodels)
 
 
 def xml_to_skymodel(xml):
@@ -107,15 +182,16 @@ def xml_to_model(xml, which):
     `~gammapy.spectrum.models.SpectralModel`
     """
     type_ = xml['@type']
-    parameters = xml_to_parameter_list(xml['parameter'], which)
 
     try:
-        model = model_registry[which][type_]
+        model = model_registry[which][type_]['model']
     except KeyError:
         msg = "{} model '{}' not registered"
         raise UnknownModelError(msg.format(which, type_))
 
-    if type_ == 'MapCubeFunction':
+    parameters = xml_to_parameters(xml['parameter'], which, type_)
+
+    if type_ in ['MapCubeFunction', 'DiffuseMapCube', 'DiffuseMap', 'SpatialMap']:
         filename = xml['@file']
         map_ = Map.read(filename)
         model = model(map=map_, norm=-1, meta=dict(filename=filename))
@@ -133,37 +209,57 @@ def xml_to_model(xml, which):
             kwargs[par.name] = -1 * u.Unit(par.unit)
         model = model(**kwargs)
         model.parameters = parameters
+
+        # Special case models for which the XML definition does not map one to
+        # one to the gammapy model definition
+        if type_ == 'PowerLaw':
+            model.parameters['index'].value *= -1
+            model.parameters['index'].min = np.nan
+            model.parameters['index'].max = np.nan
+        if type_ == 'ExponentialCutoffPowerLaw':
+            model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
+            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit.to_string('fits') + '-1'
+            model.parameters['lambda_'].min = np.nan
+            model.parameters['lambda_'].max = np.nan
+            model.parameters['index'].value *= -1
+            model.parameters['index'].min = np.nan
+            model.parameters['index'].max = np.nan
+
     return model
 
 
-def xml_to_parameter_list(xml, which):
-    """
-    Convert XML to `~gammapy.utils.modeling.ParameterList`
-
-    TODO: Introduce scale argument to `~gammapy.utils.modeling.Parameter`.
-    """
-    parameters = list()
+def xml_to_parameters(xml, which, type_):
+    """Convert XML to `~gammapy.utils.modeling.Parameters`."""
+    parameters = []
     for par in np.atleast_1d(xml):
         try:
-            name, unit = parname_registry[which][par['@name']]
+            name, unit = model_registry[which][type_]['parameters'][par['@name']]
         except KeyError:
-            msg = "{} parameter '{}' not registered"
-            raise UnknownParameterError(msg.format(which, par['@name']))
-        
+            msg = "Parameter '{}' not registered for {} model {}"
+            raise UnknownParameterError(msg.format(par['@name'], which, type_))
+
+        factor = float(par['@value'])
+        scale = float(par['@scale'])
+        min_ = float(par.get('@min', 'nan'))
+        max_ = float(par.get('@max', 'nan'))
+        frozen = bool(1 - int(par['@free']))
+
         parameters.append(Parameter(
             name=name,
-            value=float(par['@value']) * float(par['@scale']),
+            factor=factor,
+            scale=scale,
             unit=unit,
-            parmin=float(par['@min']),
-            parmax=float(par['@max']),
-            frozen=bool(1 - int(par['@free']))
+            min=min_,
+            max=max_,
+            frozen=frozen,
         ))
-    return ParameterList(parameters)
+
+    return Parameters(parameters)
 
 
-def source_library_to_xml(sourcelib):
+def sky_models_to_xml(sourcelib):
     """
-    Convert `~gammapy.cube.models.SourceLibrary` to XML
+    Convert `~gammapy.cube.models.SkyModels` to XML
     """
     xml = '<?xml version="1.0" encoding="utf-8"?>\n'
     xml += '<source_library title="source library">\n'
@@ -208,21 +304,19 @@ def model_to_xml(model, which):
     if not model_found:
         msg = "{} model {} not in registry".format(which, model)
         raise UnknownModelError(msg)
-    
+
     indent = 8 * ' '
     xml = indent + '<{} '.format(tag)
     if xml_type in ['MapCubeFunction', 'FileFunction']:
         xml += 'file="{}" '.format(model.meta['filename'])
     xml += 'type="{}">\n'.format(xml_type)
-    xml += parameter_list_to_xml(model.parameters, which)
+    xml += parameters_to_xml(model.parameters, which)
     xml += indent + '</{}>\n'.format(tag)
     return xml
 
 
-def parameter_list_to_xml(parameters, which):
-    """
-    Convert `~gammapy.utils.modeling.ParameterList` to XML
-    """
+def parameters_to_xml(parameters, which):
+    """Convert `~gammapy.utils.modeling.Parameters` to XML."""
     indent = 12 * ' '
     xml = ''
     val = '<parameter free="{}" max="{}" min="{}" name="{}" scale="1.0" value="{}">'
@@ -239,11 +333,9 @@ def parameter_list_to_xml(parameters, which):
             raise UnknownParameterError(msg)
 
         xml += indent
-        xml += val.format(int(not par.frozen),
-                          par.parmax,
-                          par.parmin,
-                          xml_par,
-                          par.quantity.to(unit).value)
+        free = int(not par.frozen)
+        value = par.quantity.to(unit).value
+        xml += val.format(free, par.max, par.min, xml_par, value)
         xml += '\n'
 
     return xml

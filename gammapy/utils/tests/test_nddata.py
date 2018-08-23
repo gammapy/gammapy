@@ -16,7 +16,7 @@ def axis_x():
 
 @pytest.fixture(scope='session')
 def axis_energy():
-    return BinnedDataAxis.logspace(1, 10, 3, unit=u.TeV, name='energy', interpolation_mode='log')
+    return BinnedDataAxis.logspace(0.1, 1000, 2, unit=u.TeV, name='energy', interpolation_mode='log')
 
 
 @pytest.fixture(scope='session')
@@ -37,13 +37,12 @@ def nddata_1d(axis_x):
 def nddata_2d(axis_energy, axis_offset):
     return NDDataArray(
         axes=[axis_energy, axis_offset],
-        data=np.arange(12).reshape(3, 4) * u.cm * u.cm,
+        data=np.arange(8).reshape(2, 4) * u.cm * u.cm,
         interp_kwargs=dict(bounds_error=False, fill_value=None),
     )
 
 
 class TestNDDataArray:
-
     def test_init_error(self):
         with pytest.raises(ValueError):
             NDDataArray(
@@ -59,7 +58,7 @@ class TestNDDataArray:
         assert_equal(node, [1])
 
     def test_find_node_2d(self, nddata_2d):
-        node = nddata_2d.find_node(energy=4 * u.TeV, offset=0.4 * u.deg)
+        node = nddata_2d.find_node(energy=100 * u.TeV, offset=0.4 * u.deg)
         assert_equal(node[0], [1])
         assert_equal(node[1], [2])
 
@@ -78,16 +77,27 @@ class TestNDDataArray:
 
     def test_evaluate_2d(self, nddata_2d):
         # Case 1: axis1 = scalar, axis2 = array
-        out = nddata_2d.evaluate(energy=0 * u.TeV, offset=[0, 0] * u.deg)
+        out = nddata_2d.evaluate(energy=1 * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (2,)
 
         # Case 2: axis1 = array, axis2 = array
-        out = nddata_2d.evaluate(energy=[0, 0, 0] * u.TeV, offset=[0, 0] * u.deg)
+        out = nddata_2d.evaluate(energy=[1, 1, 1] * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (3, 2)
 
         # Case 3: axis1 array, axis2 = 2Darray
         out = nddata_2d.evaluate(energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg)
         assert out.shape == (12, 3, 2)
+
+    @pytest.mark.parametrize("shape", [(2,), (3, 2), (4, 2, 3)])
+    def test_evaluate_at_coord_2d(self, nddata_2d, shape):
+        points = dict(energy=np.ones(shape) * 1 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        out = nddata_2d.evaluate_at_coord(points=points)
+        assert out.shape == shape
+        assert_allclose(out.value, 1)
+
+        points = dict(energy=np.ones(shape) * 100 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        out = nddata_2d.evaluate_at_coord(points=points)
+        assert_allclose(out.value, 5)
 
     def test_evaluate_1d_linear(self, nddata_1d):
         # This should test all cases of interest:

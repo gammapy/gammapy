@@ -26,15 +26,11 @@ GAMMAPY_DEPENDENCIES = [
     'pytest',
     'sphinx',
 
-    'pandas',
-    'aplpy',
-    'h5py',
     'healpy',
     'regions',
     'iminuit',
     'naima',
     'photutils',
-    'skimage',
     'uncertainties',
 ]
 
@@ -43,7 +39,6 @@ GAMMAPY_ENV_VARIABLES = [
     'GAMMA_CAT',
     'GAMMAPY_FERMI_LAT_DATA',
     'CTADATA',
-    'HGPS_DATA',
 ]
 
 

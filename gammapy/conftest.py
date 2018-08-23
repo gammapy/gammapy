@@ -17,8 +17,6 @@ TESTED_VERSIONS[packagename] = version.version
 # Declare for which packages version numbers should be displayed
 # when running the tests
 PYTEST_HEADER_MODULES['cython'] = 'cython'
-PYTEST_HEADER_MODULES['skimage'] = 'skimage'
-PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
 PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
 PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
 PYTEST_HEADER_MODULES['astropy'] = 'astropy'
@@ -29,12 +27,12 @@ PYTEST_HEADER_MODULES['gammapy'] = 'gammapy'
 PYTEST_HEADER_MODULES['naima'] = 'naima'
 PYTEST_HEADER_MODULES['reproject'] = 'reproject'
 PYTEST_HEADER_MODULES['photutils'] = 'photutils'
-PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
 
 
 def pytest_configure(config):
     """Print some info ..."""
     from .utils.testing import has_data
+
     print('')
     print('Gammapy test data availability:')
 
@@ -50,6 +48,7 @@ def pytest_configure(config):
         # Switch to non-interactive plotting backend to avoid GUI windows
         # popping up while running the tests.
         import matplotlib
+
         matplotlib.use('agg')
         print('Setting matplotlib backend to "agg" for the tests.')
     except ImportError:

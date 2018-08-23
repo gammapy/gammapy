@@ -41,5 +41,5 @@ def test_spectrum_analysis_iact(tmpdir):
 
     dnde = flux_points.table['dnde'].quantity
     dnde.unit == 'cm-2 s-1 TeV-1'
-    assert_allclose(dnde[0].value, 7.986780772924239e-12)
-    assert_allclose(dnde[-1].value, 8.527066331239763e-15)
+    assert_allclose(dnde[0].value, 7.168938e-12, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 6.093336e-15, rtol=1e-2)

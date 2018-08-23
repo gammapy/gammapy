@@ -80,8 +80,8 @@ class TestSourceCatalogGammaCat:
             cat.table.sort(sort_key)
             assert cat[name].name == name
 
-    def test_to_source_library(self, gammacat):
-        sources = gammacat.to_source_library()
+    def test_to_sky_models(self, gammacat):
+        sources = gammacat.to_sky_models()
         source = sources.skymodels[0]
 
         assert len(sources.skymodels) == 74
@@ -102,7 +102,6 @@ class TestSourceCatalogObjectGammaCat:
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_str(self, gammacat, ref):
         ss = str(gammacat[ref['name']])
-        print(ss)
         assert ss == SOURCES_STR[ref['name']]
 
     def test_data_python_dict(self, gammacat):
@@ -123,13 +122,13 @@ class TestSourceCatalogObjectGammaCat:
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
-        dnde_1TeV = spectral_model(e_min)
-        flux_1TeV = spectral_model.integral(emin=e_min, emax=e_inf)
-        eflux_1_10TeV = spectral_model.energy_flux(emin=e_min, emax=e_max).to('erg cm-2 s-1')
+        dne = spectral_model(e_min)
+        flux = spectral_model.integral(emin=e_min, emax=e_inf)
+        eflux = spectral_model.energy_flux(emin=e_min, emax=e_max).to('erg cm-2 s-1')
 
-        assert_quantity_allclose(dnde_1TeV, ref['dnde_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV, ref['flux_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV, ref['eflux_1_10TeV'], rtol=1e-3)
+        assert_quantity_allclose(dne, ref['dnde_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(flux, ref['flux_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(eflux, ref['eflux_1_10TeV'], rtol=1e-3)
 
     @requires_dependency('uncertainties')
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
@@ -139,17 +138,17 @@ class TestSourceCatalogObjectGammaCat:
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
-        dnde_1TeV, dnde_1TeV_err = spectral_model.evaluate_error(e_min)
-        flux_1TeV, flux_1TeV_err = spectral_model.integral_error(emin=e_min, emax=e_inf)
-        eflux_1_10TeV, eflux_1_10TeV_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
+        dnde, dnde_err = spectral_model.evaluate_error(e_min)
+        flux, flux_err = spectral_model.integral_error(emin=e_min, emax=e_inf)
+        eflux, eflux_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
 
-        assert_quantity_allclose(dnde_1TeV, ref['dnde_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV, ref['flux_1TeV'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV, ref['eflux_1_10TeV'], rtol=1e-3)
+        assert_quantity_allclose(dnde, ref['dnde_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(flux, ref['flux_1TeV'], rtol=1e-3)
+        assert_quantity_allclose(eflux, ref['eflux_1_10TeV'], rtol=1e-3)
 
-        assert_quantity_allclose(dnde_1TeV_err, ref['dnde_1TeV_err'], rtol=1e-3)
-        assert_quantity_allclose(flux_1TeV_err, ref['flux_1TeV_err'], rtol=1e-3)
-        assert_quantity_allclose(eflux_1_10TeV_err, ref['eflux_1_10TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(dnde_err, ref['dnde_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(flux_err, ref['flux_1TeV_err'], rtol=1e-3)
+        assert_quantity_allclose(eflux_err, ref['eflux_1_10TeV_err'], rtol=1e-3)
 
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_flux_points(self, gammacat, ref):
@@ -165,7 +164,6 @@ class TestSourceCatalogObjectGammaCat:
 
         spatial_model = source.spatial_model
 
-        # print(spatial_model); 1 /0
         # TODO: put better asserts on model properties
         # TODO: add a point and shell source -> separate list of sources for morphology test parametrization?
         assert spatial_model.__class__.__name__ == ref['spatial_model']
@@ -174,10 +172,7 @@ class TestSourceCatalogObjectGammaCat:
 
     @pytest.mark.parametrize('ref', SOURCES, ids=lambda _: _['name'])
     def test_sky_model(self, gammacat, ref):
-        source = gammacat[ref['name']]
-
-        model = source.sky_model
-        # TODO: put asserts
+        gammacat[ref['name']].sky_model
 
 
 class TestGammaCatResource:
@@ -552,7 +547,7 @@ Livetime        : 9.700 h
 
 Spectrum type   : pl2
 flux            : 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
-index           : 2.09 +- 0.08 (stat)
+index           : 2.09 +- 0.08 (stat) +- 0.2 (sys)
 e_min           : 0.2 TeV
 e_max           : nan TeV
 

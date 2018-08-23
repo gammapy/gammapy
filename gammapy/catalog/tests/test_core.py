@@ -8,7 +8,6 @@ from astropy.table import Table, Column
 from astropy.units import Quantity
 from ...utils.testing import assert_quantity_allclose
 from ..core import SourceCatalog
-from ...image import SkyImage
 
 
 def make_test_catalog():
@@ -72,13 +71,6 @@ class TestSourceCatalog:
         positions = self.cat.positions
         assert len(positions) == 3
 
-    def test_select_image_region(self):
-        reference = SkyImage.empty(xref=42.2, yref=1, nxpix=5, nypix=5,
-                                   coordsys='CEL')
-        selection = self.cat.select_image_region(reference)
-
-        assert len(selection.table) == 1
-
 
 class TestSourceCatalogObject:
     def setup(self):
@@ -93,14 +85,9 @@ class TestSourceCatalogObject:
 
     def test_data(self):
         d = self.source.data
-        print(d)
         assert isinstance(d, OrderedDict)
         assert isinstance(d['RA'], float)
         assert_allclose(d['RA'], 43.3)
 
         assert isinstance(d['DEC'], Quantity)
         assert_quantity_allclose(d['DEC'], Quantity(2, 'deg'))
-
-    def test_pprint(self):
-        # TODO: capture output and assert that it contains some substring
-        self.source.pprint()
