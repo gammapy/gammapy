@@ -228,10 +228,10 @@ class SpectrumFitResult(object):
 
     def plot_counts(self, ax):
         """Plot predicted and detected counts."""
-        self.expected_source_counts.plot(ax=ax, label="mu_source")
+        self.expected_source_counts.plot(ax=ax, label="mu_src")
 
         self.obs.excess_vector.plot(
-            ax=ax, label="n_on", show_poisson_errors=True, fmt=".", energy_unit="TeV"
+            ax=ax, label="excess", fmt=".", energy_unit="TeV"
         )
 
         ax.axvline(
