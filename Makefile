@@ -72,6 +72,13 @@ flake8:
     --exclude=gammapy/extern,gammapy/conftest.py,gammapy/_astropy_init.py,__init__.py \
     --ignore=E501
 
+black:
+	# TODO: clean up one sub-package at a time and remove from the exclude
+	black $(PROJECT)/ \
+	--exclude="_astropy_init.py|extern/|astro/|background/|catalog/|cube/|data/|detect/|image/|irf/|maps/|scripts/|spectrum/|stats/|time/|/utils" \
+	--line-length 88 \
+	--skip-string-normalization
+
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
