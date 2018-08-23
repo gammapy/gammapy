@@ -959,7 +959,7 @@ class Map(object):
         interact_kwargs = {}
 
         for axis in self.geom.axes:
-            if axis.node_type == "edge":
+            if axis.node_type == "edges":
                 options = [
                     "{:.0f} - {:.0f} {}".format(val_min, val_max, axis.unit)
                     for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])

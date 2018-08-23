@@ -376,7 +376,7 @@ def test_wcsndmap_pad(npix, binsz, coordsys, proj, skydir, axes):
         msk = m2.geom.contains(coords)
         coords = tuple([c[~msk] for c in coords])
         assert_allclose(m2.get_by_coord(coords), 2.2)
-    m.pad(1, mode='edge')
+    m.pad(1, mode='interp', order=0)
     m.pad(1, mode='interp')
 
 
