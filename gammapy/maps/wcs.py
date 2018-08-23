@@ -1129,34 +1129,6 @@ def wcs_to_axes(w, npix):
     return x, y, z
 
 
-# FIXME: unused and broken. Remove?
-# See https://github.com/gammapy/gammapy/issues/1737
-def wcs_to_coords(w, shape):
-    """Generate an N x D list of pixel center coordinates where N is
-    the number of pixels and D is the dimensionality of the map."""
-    if w.naxis == 2:
-        y, x = wcs_to_axes(w, shape)
-    elif w.naxis == 3:
-        z, y, x = wcs_to_axes(w, shape)
-    else:
-        raise ValueError("WCS naxis must be 2 or 3. Got: {}".format(w.naxis))
-
-    x = 0.5 * (x[1:] + x[:-1])
-    y = 0.5 * (y[1:] + y[:-1])
-
-    if w.naxis == 2:
-        x = np.ravel(np.ones(shape) * x[:, np.newaxis])
-        y = np.ravel(np.ones(shape) * y[np.newaxis, :])
-        return np.vstack((x, y))
-
-    z = 0.5 * (z[1:] + z[:-1])
-    x = np.ravel(np.ones(shape) * x[:, np.newaxis, np.newaxis])
-    y = np.ravel(np.ones(shape) * y[np.newaxis, :, np.newaxis])
-    z = np.ravel(np.ones(shape) * z[np.newaxis, np.newaxis, :])
-
-    return np.vstack((x, y, z))
-
-
 def get_map_skydir(filename, maphdu=0):
     filename = str(make_path(filename))
     with fits.open(filename, memmap=False) as hdu_list:
