@@ -43,3 +43,4 @@ dependencies:
     - nbsphinx==0.2.17
     - sphinx-click
     - pydocstyle
+    - black
