@@ -32,17 +32,6 @@ def cli_download_datasets():
     downloadproc.go()
 
 
-def create_folder(folder):
-
-    try:
-        if not folder.exists():
-            folder.mkdir(parents=True, exist_ok=True)
-            log.info(str(folder) + ' folder created.')
-    except Exception as ex:
-        log.error('Failed: error creating directory. ' + str(folder))
-        sys.exit()
-
-
 def get_file(filename):
 
     url = rawgitUrl + filename
@@ -101,6 +90,6 @@ class DownloadProcess:
             ifolder = localfolder / Path(self.repofold) / Path(item['path'])
 
             if item['type'] == 'tree':
-                create_folder(ifolder)
+                ifolder.mkdir(parents=True, exist_ok=True)
             else:
                 self.listfiles.append(ipath)
