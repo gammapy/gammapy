@@ -361,7 +361,7 @@ class MapAxis(object):
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
 
-    def __init__(self, nodes, interp="lin", name="", node_type="edge", unit=""):
+    def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
         self.name = name
         self.unit = unit
         self._nodes = nodes
@@ -369,7 +369,7 @@ class MapAxis(object):
         self._interp = interp
 
         # Set pixel coordinate of first node
-        if node_type == "edge":
+        if node_type == "edges":
             self._pix_offset = -0.5
             nbin = len(nodes) - 1
         elif node_type == "center":
@@ -457,9 +457,9 @@ class MapAxis(object):
             coordinates.  Default: 'lin'.
         """
         interp = kwargs.setdefault("interp", "lin")
-        node_type = kwargs.setdefault("node_type", "edge")
+        node_type = kwargs.setdefault("node_type", "edges")
 
-        if node_type == "edge":
+        if node_type == "edges":
             nnode = nbin + 1
         elif node_type == "center":
             nnode = nbin
@@ -519,7 +519,7 @@ class MapAxis(object):
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
 
-        return cls(edges, node_type="edge", **kwargs)
+        return cls(edges, node_type="edges", **kwargs)
 
     def pix_to_coord(self, pix):
         """Transform from pixel to axis coordinates.
@@ -602,7 +602,7 @@ class MapAxis(object):
         center = self.center[idx]
         idx = self.coord_to_idx(center)
         # For edge nodes we need to keep N+1 nodes
-        if self._node_type == "edge":
+        if self._node_type == "edges":
             idx = tuple(list(idx) + [1 + idx[-1]])
 
         nodes = self._nodes[(idx,)]
@@ -622,7 +622,7 @@ class MapAxis(object):
         str_ += fmt.format("unit", "{!r}".format(str(self.unit)))
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
-        vals = self.edges if self.node_type == "edge" else self.center
+        vals = self.edges if self.node_type == "edges" else self.center
         str_ += fmt.format(
             "{} min".format(self.node_type),
             "{:.1e} {}".format(vals.min(), str(self.unit)),
@@ -1356,11 +1356,11 @@ class MapGeom(object):
         for idx, ax in enumerate(self.axes, start=1):
             key = "AXCOLS%i" % idx
             name = ax.name.upper()
-            if ax.name == "energy" and ax.node_type == "edge":
+            if ax.name == "energy" and ax.node_type == "edges":
                 header[key] = "E_MIN,E_MAX"
             elif ax.name == "energy" and ax.node_type == "center":
                 header[key] = "ENERGY"
-            elif ax.node_type == "edge":
+            elif ax.node_type == "edges":
                 header[key] = "{}_MIN,{}_MAX".format(name, name)
             elif ax.node_type == "center":
                 header[key] = name

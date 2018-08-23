@@ -335,11 +335,11 @@ class WcsNDMap(WcsMap):
             pad_msk[idx_out] = True
             pad_msk[idx_in] = False
             map_out.data[pad_msk] = cval
-        elif mode in ["edge", "interp"]:
+        elif mode == "interp":
             coords = geom.pix_to_coord(idx_out[::-1])
             m = self.geom.contains(coords)
             coords = tuple([c[~m] for c in coords])
-            vals = self.interp_by_coord(coords, interp=0 if mode == "edge" else order)
+            vals = self.interp_by_coord(coords, interp=order)
             map_out.set_by_coord(coords, vals)
         else:
             raise ValueError("Invalid mode: {!r}".format(mode))
