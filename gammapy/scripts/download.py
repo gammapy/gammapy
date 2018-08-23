@@ -5,10 +5,9 @@ import logging
 import click
 
 import sys
-import requests
 import json
 from ..extern.pathlib import Path
-from ..extern.six.moves.urllib.request import urlretrieve
+from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 
 log = logging.getLogger(__name__)
 
@@ -87,8 +86,8 @@ class DownloadProcess:
         url = apigitUrl + self.repofold + '?recursive=1'
 
         try:
-            r = requests.get(url)
-            json_items = json.loads(r.text)
+            r = urlopen(url)
+            json_items = json.loads(r.read())
             return json_items
         except Exception as ex:
             log.error('Failed: bad response from GitHub API')
