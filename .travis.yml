@@ -40,6 +40,7 @@ env:
         - FETCH_GAMMAPY_EXTRA=true
         - FETCH_GAMMA_CAT=true
         - PACKAGING_TEST=false
+        - TEST_FERMIPY=false
 
         - MAIN_CMD='python setup.py'
 
@@ -102,7 +103,6 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
 
-
         # Test with Astropy dev and LTS versions
         - os: linux
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
@@ -112,15 +112,16 @@ matrix:
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
-        # Temporarily disabled because of this issue:
-        # https://travis-ci.org/gammapy/gammapy/jobs/115820975
-        # https://github.com/gammapy/gammapy/pull/483
-        # Test the dev version of Sherpa, this may take a longer time
-        #- os: linux
-        #  env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
-        #       CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
-        #       PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa'
+        # Test with Sherpa dev, this may take a longer time
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
+               PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa'
 
+        # Test Fermipy master against gammapy master
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='install'
+               TEST_FERMIPY=true
 
         # Test with other numpy versions
         - os: linux
@@ -183,6 +184,12 @@ install:
 
 script:
     - $MAIN_CMD $SETUP_CMD
+
+    - if $TEST_FERMIPY; then
+          git clone https://github.com/fermiPy/fermipy.git;
+          cd fermipy;
+          pytest -v;
+      fi
 
 after_success:
     - if [[ $SETUP_CMD == 'test -V --coverage' ]]; then
