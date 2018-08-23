@@ -57,11 +57,17 @@ def cli_image():
 
 
 @cli.group('download')
-def cli_download():
+@click.option('--folder', prompt='target folder', default='gammapy-tutorials',
+              help='Folder where the files will be copied.')
+@click.pass_context
+def cli_download(ctx, folder):
     """
     Download datasets and notebooks from the gammapy-extra Github repository
     into a folder gammapy-extra created in the current working directory.
     """
+    ctx.obj = {
+        'localfolder': folder,
+    }
 
 
 def add_subcommands():
