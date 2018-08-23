@@ -940,33 +940,20 @@ class MapGeom(object):
         pass
 
     @classmethod
-    def read(cls, filename, **kwargs):
-        """Create a geometry object from a FITS file.
-
-        Parameters
-        ----------
-        filename : str or `~pathlib.Path`
-            Name of the FITS file.
-        hdu : str
-            Name or index of the HDU with the map data.
-        hdu_bands : str
-            Name or index of the HDU with the BANDS table.  If not
-            defined this will be inferred from the FITS header of the
-            map HDU.
-
-        Returns
-        -------
-        geom : `~MapGeom`
-            Geometry object.
-        """
-        filename = str(make_path(filename))
-        with fits.open(filename, memmap=False) as hdulist:
-            geom = cls.from_hdulist(hdulist, **kwargs)
-        return geom
-
-    @classmethod
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
         """Load a geometry object from a FITS HDUList.
+
+        The following example demonstrates to create a `MapGeom` object from a
+        fits file and don't read the data from the file:
+
+        .. code::
+
+            from astropy.io import fits
+            from gammaoy.maps import MapGeom
+
+            with fits.open(filename, memmap=False) as hdulist:
+                geom = MapGeom.from_hdulist(hdulist, **kwargs)
+
 
         Parameters
         ----------
