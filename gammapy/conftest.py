@@ -32,6 +32,7 @@ PYTEST_HEADER_MODULES['photutils'] = 'photutils'
 def pytest_configure(config):
     """Print some info ..."""
     from .utils.testing import has_data
+
     print('')
     print('Gammapy test data availability:')
 
@@ -47,6 +48,7 @@ def pytest_configure(config):
         # Switch to non-interactive plotting backend to avoid GUI windows
         # popping up while running the tests.
         import matplotlib
+
         matplotlib.use('agg')
         print('Setting matplotlib backend to "agg" for the tests.')
     except ImportError:

@@ -9,10 +9,7 @@ from astropy.table import Table
 import astropy.utils.data
 from ..extern.pathlib import Path
 
-__all__ = [
-    'Datasets',
-    'gammapy_extra',
-]
+__all__ = ['Datasets', 'gammapy_extra']
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +19,9 @@ log = logging.getLogger(__name__)
 DATASET_DIR = Path.home() / '.gammapy/datasets'
 
 
-def download_file(url, filename, overwrite=False, mkdir=True, show_progress=True, timeout=None):
+def download_file(
+    url, filename, overwrite=False, mkdir=True, show_progress=True, timeout=None
+):
     """Download a URL to a given filename.
 
     This is a wrapper for the `astropy.utils.data.download_file` function,
@@ -44,7 +43,8 @@ def download_file(url, filename, overwrite=False, mkdir=True, show_progress=True
 
     # This saves the file to a temp folder, with `cache=False` the Astropy cache isn't touched!
     temp_filename = astropy.utils.data.download_file(
-        remote_url=url, cache=False, show_progress=show_progress, timeout=timeout)
+        remote_url=url, cache=False, show_progress=show_progress, timeout=timeout
+    )
 
     shutil.move(temp_filename, str(filename))
 
@@ -61,11 +61,7 @@ def make_dataset(config):
     description = config.get('description')
     tags = config.get('tags')
     ds = OneFileDataset(
-        name=name,
-        filename=filename,
-        url=url,
-        description=description,
-        tags=tags
+        name=name, filename=filename, url=url, description=description, tags=tags
     )
     return ds
 
@@ -119,6 +115,7 @@ class Datasets(object):
     datasets : list of `Dataset` objects
         List of datasets
     """
+
     # DEFAULT_CONFIG_FILE = Path.home() / '.gammapy/data-register.yaml'
     DEFAULT_CONFIG_FILE = astropy.utils.data.get_pkg_data_filename('datasets.yaml')
 
@@ -149,6 +146,7 @@ class Datasets(object):
     @staticmethod
     def _load_config(filename):
         import yaml
+
         with Path(filename).open() as fh:
             config = yaml.safe_load(fh)
         return config
@@ -203,6 +201,7 @@ class GammapyExtraNotFoundError(OSError):
 
     You have to set the GAMMAPY_EXTRA environment variable so that it's found.
     """
+
     pass
 
 

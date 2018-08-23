@@ -39,6 +39,7 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 # should keep this content at the top.
 # ----------------------------------------------------------------------------
 from ._astropy_init import *
+
 # ----------------------------------------------------------------------------
 
 # For egg_info test builds to pass, put package imports here.
@@ -64,17 +65,18 @@ def song(karaoke=False):
     webbrowser.open('http://gammapy.org/gammapy_song.mp3')
 
     if karaoke:
-        lyrics = ("\nGammapy Song Lyrics\n"
-                  "-------------------\n\n"
-                  "Gammapy, gamma-ray data analysis package\n"
-                  "Gammapy, prototype software CTA science tools\n\n"
-                  "Supernova remnants, pulsar winds, AGN, Gamma, Gamma, Gammapy\n"
-                  "Galactic plane survey, pevatrons, Gammapy, Gamma, Gammapy\n"
-                  "Gammapy, github, continuous integration, readthedocs, travis, "
-                  "open source project\n\n"
-                  "Gammapy, Gammapy\n\n"
-                  "Supernova remnants, pulsar winds, AGN, Gamma, Gamma, Gammapy\n"
-                  )
+        lyrics = (
+            "\nGammapy Song Lyrics\n"
+            "-------------------\n\n"
+            "Gammapy, gamma-ray data analysis package\n"
+            "Gammapy, prototype software CTA science tools\n\n"
+            "Supernova remnants, pulsar winds, AGN, Gamma, Gamma, Gammapy\n"
+            "Galactic plane survey, pevatrons, Gammapy, Gamma, Gammapy\n"
+            "Gammapy, github, continuous integration, readthedocs, travis, "
+            "open source project\n\n"
+            "Gammapy, Gammapy\n\n"
+            "Supernova remnants, pulsar winds, AGN, Gamma, Gamma, Gammapy\n"
+        )
 
         centered = '\n'.join('{:^80}'.format(s) for s in lyrics.split('\n'))
         sys.stdout.write(centered)

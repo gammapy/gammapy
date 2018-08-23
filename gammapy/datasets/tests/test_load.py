@@ -3,9 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_data
 from ..core import gammapy_extra
-from ...datasets import (
-    load_poisson_stats_image,
-)
+from ...datasets import load_poisson_stats_image
 
 
 @requires_data('gammapy-extra')

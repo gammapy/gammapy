@@ -78,12 +78,14 @@ def load_tev_spectrum(source_name):
         Energy spectrum as a table (one flux point per row).
     """
     if source_name == 'crab':
-        filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_hess_spec.txt')
+        filename = gammapy_extra.filename(
+            'test_datasets/unbundled/tev_spectra/crab_hess_spec.txt'
+        )
     else:
-        raise ValueError('Data not available for source: {}'.format(source_name))
+        raise ValueError('Data not available for source: {!r}'.format(source_name))
 
-    table = Table.read(filename, format='ascii',
-                       names=['energy', 'flux', 'flux_lo', 'flux_hi'])
+    names = ['energy', 'flux', 'flux_lo', 'flux_hi']
+    table = Table.read(filename, format='ascii', names=names)
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
     return table
 
@@ -128,7 +130,9 @@ def load_crab_flux_points(component='both'):
     Aleksic et al. Astron. Astrophys. 540 2012
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
     """
-    filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz')
+    filename = gammapy_extra.filename(
+        'test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz'
+    )
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', UnitsWarning)
@@ -176,8 +180,9 @@ def load_diffuse_gamma_spectrum(reference):
 
 
 def _read_diffuse_gamma_spectrum_fermi(filename):
-    table = Table.read(filename, format='ascii',
-                       names=['energy', 'flux', 'flux_hi', 'flux_lo'])
+    table = Table.read(
+        filename, format='ascii', names=['energy', 'flux', 'flux_hi', 'flux_lo']
+    )
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
 
     table['energy'] = Quantity(table['energy'], 'MeV').to('TeV')
@@ -222,8 +227,9 @@ def load_electron_spectrum(reference):
 
 
 def _read_electron_spectrum_hess(filename):
-    table = Table.read(filename, format='ascii',
-                       names=['energy', 'flux', 'flux_lo', 'flux_hi'])
+    table = Table.read(
+        filename, format='ascii', names=['energy', 'flux', 'flux_lo', 'flux_hi']
+    )
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
 
     table['energy'] = Quantity(table['energy'], 'GeV').to('TeV')
@@ -244,8 +250,8 @@ def _read_electron_spectrum_fermi(filename):
 
     table = Table()
     table['energy'] = Quantity(t['E'], 'GeV').to('TeV')
-    table['flux'] = Quantity(t['y'], 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
-    flux_err = 0.5 * (t['yerrtot_lo'] + t['yerrtot_up'])
-    table['flux_err'] = Quantity(flux_err, 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+    table['flux'] = Quantity(t['y'], 'm-2 s-1 GeV-1 sr-1').to('m-2 s-1 TeV-1 sr-1')
+    val = 0.5 * (t['yerrtot_lo'] + t['yerrtot_up'])
+    table['flux_err'] = Quantity(val, 'm-2 s-1 GeV-1 sr-1').to('m-2 s-1 TeV-1 sr-1')
 
     return table
