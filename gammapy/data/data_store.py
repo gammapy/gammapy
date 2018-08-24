@@ -69,7 +69,7 @@ class DataStore(object):
             log.debug('Reading {}'.format(hdu_table_filename))
             hdu_table = HDUIndexTable.read(str(hdu_table_filename), format='fits')
 
-            hdu_table.meta['BASE_DIR'] = base_dir
+            hdu_table.meta['BASE_DIR'] = str(base_dir)
         else:
             hdu_table = None
 
