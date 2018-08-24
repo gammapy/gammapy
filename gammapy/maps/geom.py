@@ -943,18 +943,6 @@ class MapGeom(object):
     def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
         """Load a geometry object from a FITS HDUList.
 
-        The following example demonstrates to create a `MapGeom` object from a
-        fits file and don't read the data from the file:
-
-        .. code::
-
-            from astropy.io import fits
-            from gammaoy.maps import MapGeom
-
-            with fits.open(filename, memmap=False) as hdulist:
-                geom = MapGeom.from_hdulist(hdulist, **kwargs)
-
-
         Parameters
         ----------
         hdulist :  `~astropy.io.fits.HDUList`
