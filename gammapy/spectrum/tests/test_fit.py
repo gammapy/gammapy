@@ -306,6 +306,11 @@ class TestSpectralFit:
         import sherpa.astro.ui as sau
         from sherpa.models import PowLaw1D
 
+        # TODO: this works a little bit, but some info and warnings
+        # from Sherpa remain. Not sure what to do, OK as-is for now.
+        import logging
+        logging.getLogger("sherpa").setLevel('ERROR')
+
         self.obs_list.write(tmpdir, use_sherpa=True)
         filename = tmpdir / 'pha_obs23523.fits'
         sau.load_pha(str(filename))
