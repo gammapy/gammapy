@@ -46,10 +46,15 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     # This means `errordef=1` in the Minuit interface is correct
     opts_minuit.setdefault('errordef', 1)
 
+    opts_minuit.setdefault('print_level', 0)
+
     parnames = _make_parnames(parameters)
-    minuit = Minuit(minuit_func.fcn,
-                    forced_parameters=parnames,
-                    **opts_minuit)
+    minuit = Minuit(
+        minuit_func.fcn,
+        forced_parameters=parnames,
+        **opts_minuit
+    )
+
     minuit.migrad()
 
     parameters.set_parameter_factors(minuit.args)
@@ -123,6 +128,6 @@ def _get_covar(minuit):
     m = np.zeros((n, n))
     for i1, k1 in enumerate(minuit.parameters):
         for i2, k2 in enumerate(minuit.parameters):
-            if set([k1, k2]).issubset(minuit.list_of_vary_param()):
+            if {k1, k2} <= set(minuit.list_of_vary_param()):
                 m[i1, i2] = minuit.covariance[(k1, k2)]
     return m
