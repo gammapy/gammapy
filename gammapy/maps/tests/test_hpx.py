@@ -247,7 +247,7 @@ def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
     lon = np.array([112.5, 135., 105.])
     lat = np.array([75.3, 75.3, 74.6])
     coords = make_test_coords(geom, lon, lat)
-    zidx = [ax.coord_to_idx(t) for t, ax in zip(coords[2:], geom.axes)]
+    zidx = tuple([ax.coord_to_idx(t) for t, ax in zip(coords[2:], geom.axes)])
 
     if geom.nside.size > 1:
         nside = geom.nside[zidx]

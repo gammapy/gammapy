@@ -302,7 +302,7 @@ class HpxNDMap(HpxMap):
         phi[m] = 0
 
         if self.geom.nside.size > 1:
-            nside = self.geom.nside[idxs]
+            nside = self.geom.nside[tuple(idxs)]
         else:
             nside = self.geom.nside
 
@@ -328,7 +328,7 @@ class HpxNDMap(HpxMap):
         pix, wts = self._get_interp_weights(coords, idx_ax)
 
         if self.geom.ndim == 2:
-            return np.sum(self.data.T[pix] * wts, axis=0)
+            return np.sum(self.data.T[tuple(pix)] * wts, axis=0)
 
         val = np.zeros(pix[0].shape[1:])
         # Loop over function values at corners

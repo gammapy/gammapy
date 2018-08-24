@@ -490,7 +490,7 @@ class EnergyDependentTablePSF(object):
         energy_bin = self.energy.to('TeV')
         rad_bin = self.rad.to('deg')
         points = (energy_bin, rad_bin)
-        interpolator = RegularGridInterpolator(points, self.psf_value, **interp_kwargs)
+        interpolator = RegularGridInterpolator(points, self.psf_value.value, **interp_kwargs)
         energy_grid, rad_grid = np.meshgrid(energy.value, rad.value, indexing='ij')
         shape = energy_grid.shape
         pix_coords = np.column_stack([energy_grid.flat, rad_grid.flat])

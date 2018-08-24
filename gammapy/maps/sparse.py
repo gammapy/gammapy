@@ -28,12 +28,12 @@ def slices_to_idxs(slices, shape, ndim):
             start = 0 if s.start is None else s.start
             stop = shape[i] if s.stop is None else s.stop
 
-            idx += [np.arange(start, stop, 1)[si]]
+            idx += [np.arange(start, stop, 1)[tuple(si)]]
         else:
             if idim is None:
                 idim = i
             si[idim] = slice(None)
-            idx += [np.array(s, ndmin=1)[si]]
+            idx += [np.array(s, ndmin=1)[tuple(si)]]
 
     return idx
 

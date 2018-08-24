@@ -798,7 +798,7 @@ class HpxGeom(MapGeom):
             # FIXME: Figure out how to handle coordinates out of
             # bounds of non-spatial dimensions
             if self.nside.size > 1:
-                nside = self.nside[idxs]
+                nside = self.nside[tuple(idxs)]
             else:
                 nside = self.nside
 
@@ -1549,7 +1549,7 @@ class HpxGeom(MapGeom):
 
     def _get_nside(self, idx):
         if self.nside.size > 1:
-            return self.nside[idx[1:]]
+            return self.nside[tuple(idx[1:])]
         else:
             return self.nside
 

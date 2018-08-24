@@ -644,10 +644,10 @@ class WcsGeom(MapGeom):
         # Variable Bin Size
         if not self.is_regular:
             bins = [ax.coord_to_pix(c[i + 2]) for i, ax in enumerate(self.axes)]
-            idxs = [
+            idxs = tuple([
                 np.clip(ax.coord_to_idx(c[i + 2]), 0, ax.nbin - 1)
                 for i, ax in enumerate(self.axes)
-            ]
+            ])
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))

@@ -358,7 +358,7 @@ class WcsNDMap(WcsMap):
             ]
             for ax in self.geom.axes:
                 slices += [slice(None)]
-            data = self.data[slices[::-1]]
+            data = self.data[tuple(slices[::-1])]
             map_out = self._init_copy(geom=geom, data=data)
         else:
             # FIXME: This could be done more efficiently by
