@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from astropy.utils.console import ProgressBar
 from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
@@ -70,11 +69,11 @@ class MapMaker(object):
             unit = 'm2 s' if name == 'exposure' else ''
             self.maps[name] = Map.from_geom(self.geom, unit=unit)
 
-        for obs in ProgressBar(obs_list):
+        for obs in obs_list:
             try:
                 self._process_obs(obs, selection)
             except NoOverlapError:
-                log.info('Skipping observation {}, not contained in map.'.format(obs.obs_id))
+                log.info('Skipping observation {}, no overlap with map.'.format(obs.obs_id))
                 continue
 
         return self.maps
@@ -87,7 +86,7 @@ class MapMaker(object):
             mode='trim',
         )
 
-        log.info('Processing observation {}'.format(obs.obs_id))
+        log.info('Processing observation: OBS_ID = {}'.format(obs.obs_id))
 
         # Compute field of view mask on the cutout
         coords = cutout_map.geom.get_coord()
