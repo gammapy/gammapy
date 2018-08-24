@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
-from astropy.utils.console import ProgressBar
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
@@ -838,8 +837,8 @@ class EventListDataset(object):
 
         event_lists = []
         gtis = []
-        for filename in ProgressBar(filenames):
-            # logger.info('Reading {}'.format(filename))
+        for filename in filenames:
+            logger.info('Reading {}'.format(filename))
             event_list = Table.read(filename, hdu='EVENTS')
 
             # TODO: Remove and modify header keywords for stacked event list
