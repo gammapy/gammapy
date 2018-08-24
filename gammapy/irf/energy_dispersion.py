@@ -939,11 +939,11 @@ class EnergyDispersion2D(object):
             label = 'Probability density (A.U.)'
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.semilogx()
         ax.set_xlabel('$E_\mathrm{{True}}$ [{unit}]'.format(unit=e_true.unit))
         ax.set_ylabel('$E_\mathrm{{Reco}} / E_\mathrm{{True}}$')
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
+        ax.set_xscale('log')
         return ax
 
     def peek(self, figsize=(15, 5)):

@@ -16,7 +16,7 @@ def fit_result():
     filename = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits"
     obs = SpectrumObservation.read(filename)
     best_fit_model = PowerLaw(
-        index=2 * u.Unit(""),
+        index=2.1 * u.Unit(""),
         amplitude=1e-11 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1 * u.TeV,
     )
@@ -91,4 +91,4 @@ class TestSpectrumResult:
     @requires_dependency("matplotlib")
     @requires_dependency("uncertainties")
     def test_plot(self, spectrum_result):
-        spectrum_result.plot(energy_range=[1, 10] * u.TeV)
+        spectrum_result.plot(energy_range=[1, 10] * u.TeV, energy_power=2)
