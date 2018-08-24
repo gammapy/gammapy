@@ -33,12 +33,13 @@ def test_hdu_index_table(hdu_index_table):
     location = hdu_index_table.hdu_location(obs_id=42, hdu_type='events')
     assert location.path().as_posix() == 'spam/a/b'
 
+    assert hdu_index_table.summary().startswith('HDU index table')
+
 
 @requires_data('gammapy-extra')
 def test_hdu_index_table_hd_hap():
     """Test HESS HAP-HD data access."""
     hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/hdu-index.fits.gz')
-    hdu_index.summary()
 
     assert list(hdu_index.meta) == ['BASE_DIR']
     assert hdu_index.base_dir == make_path('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
@@ -46,7 +47,6 @@ def test_hdu_index_table_hd_hap():
     # A few valid queries
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_type='events')
-    location.info()
     hdu = location.get_hdu()
     assert hdu.name == 'EVENTS'
 
@@ -93,12 +93,10 @@ def test_hdu_index_table_hd_hap():
 def test_hdu_index_table_pa():
     """Test HESS ParisAnalysis data access."""
     hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-crab4-pa/hdu-index.fits.gz')
-    hdu_index.summary()
 
     # A few valid queries
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_type='psf')
-    location.info()
     assert str(location.path(abs_path=False)) == 'run23400-23599/run23523/psf_king_23523.fits.gz'
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_class='psf_king')

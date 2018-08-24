@@ -256,6 +256,12 @@ def common_sky_region_select_test_routines(obs_table, selection):
     assert len(selected_obs_table) + len(inv_selected_obs_table) == len(obs_table)
 
 
+def test_basics():
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
+    assert obs_table.summary().startswith('Observation table')
+
+
 def test_select_parameter_box():
     # create random observation table
     random_state = np.random.RandomState(seed=0)

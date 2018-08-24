@@ -80,32 +80,26 @@ class ObservationTable(Table):
         """
         return self[self.get_obs_idx(obs_id)]
 
-    def summary(self, file=None):
+    def summary(self):
         """Info string (str)"""
-        if not file:
-            file = sys.stdout
+        obs_name = self.meta.get('OBSERVATORY_NAME', 'N/A')
 
-        print('Observation table:', file=file)
-
-        if 'OBSERVATORY_NAME' in self.meta:
-            obs_name = self.meta['OBSERVATORY_NAME']
-            print('Observatory name: {}'.format(obs_name), file=file)
-
-        print('Number of observations: {}'.format(len(self)), file=file)
-
-        # TODO: clean this up. Make those properties?
-        # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
-        #
-        # ss += 'Total observation time: {}\n'.format(ontime)
-        # livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
-        # ss += 'Total live time: {}\n'.format(livetime)
-        # dtf = 100. * (1 - livetime / ontime)
-        # ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
-        # time_ref = time_ref_from_dict(self.meta)
-        # time_ref_unit = time_ref_from_dict(self.meta).format
-        # ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
-        #
-        # return ss
+        return '\n'.join([
+            'Observation table:',
+            'Observatory name: {!r}'.format(obs_name),
+            'Number of observations: {}'.format(len(self)),
+            # TODO: clean this up. Make those properties?
+            # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
+            #
+            # ss += 'Total observation time: {}\n'.format(ontime)
+            # livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
+            # ss += 'Total live time: {}\n'.format(livetime)
+            # dtf = 100. * (1 - livetime / ontime)
+            # ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
+            # time_ref = time_ref_from_dict(self.meta)
+            # time_ref_unit = time_ref_from_dict(self.meta).format
+            # ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
+        ])
 
     def select_linspace_subset(self, num):
         """Select subset of observations.

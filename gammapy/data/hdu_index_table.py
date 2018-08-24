@@ -266,14 +266,13 @@ class HDUIndexTable(Table):
         """HDU classes (unique)."""
         return list(np.unique(np.sort([_.strip() for _ in self['HDU_CLASS']])))
 
-    def summary(self, file=None):
-        """Print some summary info to stdout."""
-        if not file:
-            file = sys.stdout
-
-        print('HDU index table:', file=file)
-        print('BASE_DIR: {}'.format(self.base_dir), file=file)
-        print('Rows: {}'.format(len(self)), file=file)
-        print('OBS_ID: {} -- {}'.format(self.obs_id_unique[0], self.obs_id_unique[-1]), file=file)
-        print('HDU_TYPE: {}'.format(self.hdu_type_unique), file=file)
-        print('HDU_CLASS: {}'.format(self.hdu_class_unique), file=file)
+    def summary(self):
+        """Summary report (str)"""
+        return '\n'.join([
+            'HDU index table:',
+            'BASE_DIR: {}'.format(self.base_dir),
+            'Rows: {}'.format(len(self)),
+            'OBS_ID: {} -- {}'.format(self.obs_id_unique[0], self.obs_id_unique[-1]),
+            'HDU_TYPE: {}'.format(self.hdu_type_unique),
+            'HDU_CLASS: {}'.format(self.hdu_class_unique),
+        ])

@@ -138,18 +138,18 @@ class DataStore(object):
 
         return filename
 
-    def info(self, file=None):
+    def info(self, show=True):
         """Print some info."""
-        if not file:
-            stream = sys.stdout
+        s = 'Data store summary info:\n'
+        s += 'name: {!r}\n\n'.format(self.name)
+        s += self.hdu_table.summary()
+        s += '\n\n'
+        s += self.obs_table.summary()
 
-        print(file=stream)
-        print('Data store summary info:', file=file)
-        print('name: {}'.format(self.name), file=file)
-        print('', file=file)
-        self.hdu_table.summary(file=file)
-        print('', file=file)
-        self.obs_table.summary(file=file)
+        if show:
+            print(s)
+        else:
+            return s
 
     def obs(self, obs_id):
         """Access a given `~gammapy.data.DataStoreObservation`.
