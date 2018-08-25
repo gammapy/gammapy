@@ -21,7 +21,6 @@ class TestEffectiveAreaTable2D:
     # Add I/O test
     @staticmethod
     @requires_dependency('scipy')
-    @requires_dependency('matplotlib')
     @requires_data('gammapy-extra')
     def test(aeff):
         assert aeff.data.axis('energy').nbins == 73
@@ -60,6 +59,8 @@ class TestEffectiveAreaTable2D:
         assert_equal(actual.value, desired.value)
 
     @staticmethod
+    @requires_dependency('matplotlib')
+    @requires_data('gammapy-extra')
     def test_plot(aeff):
         with mpl_plot_check():
             aeff.plot()
