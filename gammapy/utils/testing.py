@@ -148,21 +148,6 @@ def assert_time_allclose(actual, desired):
     assert actual.format == desired.format
 
 
-def mpl_savefig_check():
-    """Call matplotlib savefig for the current figure.
-
-    This will trigger a render of the Figure, which can sometimes
-    raise errors if there is a problem; i.e. we call this at the
-    end of every plotting test for now.
-
-    This is writing to an in-memory byte buffer, i.e. is faster
-    than writing to disk.
-    """
-    import matplotlib.pyplot as plt
-    from io import BytesIO
-    plt.savefig(BytesIO(), format='png')
-
-
 def assert_quantity_allclose(actual, desired, rtol=1.e-7, atol=None, **kwargs):
     # TODO: change this later to explicitly check units are the same!
     # assert actual.unit == desired.unit
@@ -200,3 +185,24 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         raise u.UnitsError("`rtol` should be dimensionless")
 
     return actual.value, desired.value, rtol.value, atol.value
+
+
+class MPLPlotCheck(object):
+    """Matplotlib plotting test context manager.
+
+    It create a new figure on __enter__ and calls savefig for the
+    current figure in __exit__. This will trigger a render of the
+    Figure, which can sometimes raise errors if there is a problem.
+
+    This is writing to an in-memory byte buffer, i.e. is faster
+    than writing to disk.
+    """
+    def __enter__(self):
+        import matplotlib.pyplot as plt
+        plt.figure()
+
+    def __exit__(self):
+        from io import BytesIO
+        plt.savefig(BytesIO(), format='png')
+
+mpl_plot_check = MPLPlotCheck
