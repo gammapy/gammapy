@@ -59,6 +59,7 @@ class TestEffectiveAreaTable2D:
         desired = aeff.data.evaluate(offset=offset)
         assert_equal(actual.value, desired.value)
 
+    @staticmethod
     def test_plot(aeff):
         with mpl_plot_check():
             aeff.plot()

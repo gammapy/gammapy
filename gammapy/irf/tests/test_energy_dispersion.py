@@ -8,7 +8,7 @@ import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
-f
+
 
 @requires_dependency('scipy')
 class TestEnergyDispersion:

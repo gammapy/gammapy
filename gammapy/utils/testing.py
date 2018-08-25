@@ -187,7 +187,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
     return actual.value, desired.value, rtol.value, atol.value
 
 
-class MPLPlotCheck(object):
+class _MPLPlotCheck(object):
     """Matplotlib plotting test context manager.
 
     It create a new figure on __enter__ and calls savefig for the
@@ -201,8 +201,9 @@ class MPLPlotCheck(object):
         import matplotlib.pyplot as plt
         plt.figure()
 
-    def __exit__(self):
+    def __exit__(self, type, value, traceback):
+        import matplotlib.pyplot as plt
         from io import BytesIO
         plt.savefig(BytesIO(), format='png')
 
-mpl_plot_check = MPLPlotCheck
+mpl_plot_check = _MPLPlotCheck
