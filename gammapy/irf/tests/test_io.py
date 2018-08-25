@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
-from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
+from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
 from ..io import CTAIrf, CTAPerf
 
@@ -42,5 +42,5 @@ def test_cta_irf():
 def test_point_like_perf():
     filename = '$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
     cta_perf = CTAPerf.read(filename)
-    cta_perf.peek()
-    mpl_savefig_check()
+    with mpl_plot_check():
+        cta_perf.peek()

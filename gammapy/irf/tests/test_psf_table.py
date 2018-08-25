@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
 from ...irf import TablePSF, EnergyDependentTablePSF
 
@@ -116,11 +116,13 @@ class TestEnergyDependentTablePSF:
 
     @requires_dependency('matplotlib')
     def test_plot(self):
-        self.psf.plot_containment_vs_energy()
+        with mpl_plot_check():
+            self.psf.plot_containment_vs_energy()
 
         energy = Quantity(1, 'GeV')
         psf_1GeV = self.psf.table_psf_at_energy(energy)
-        psf_1GeV.plot_psf_vs_rad()
+        with mpl_plot_check():
+            psf_1GeV.plot_psf_vs_rad()
 
     # TODO: fix this test (move the code from examples/plot_irfs.py here)
     @pytest.mark.xfail
@@ -128,4 +130,5 @@ class TestEnergyDependentTablePSF:
     def test_plot2(self):
         # psf.plot_containment('fermi_psf_containment.pdf')
         # psf.plot_exposure('fermi_psf_exposure.pdf')
-        self.psf.plot_psf_vs_rad()
+        with mpl_plot_check():
+            self.psf.plot_psf_vs_rad()

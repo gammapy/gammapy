@@ -5,11 +5,10 @@ import pytest
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import Angle
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
-from ...utils.testing import mpl_savefig_check
-
+f
 
 @requires_dependency('scipy')
 class TestEnergyDispersion:
@@ -86,18 +85,18 @@ class TestEnergyDispersion:
 
     @requires_dependency('matplotlib')
     def test_plot_matrix(self):
-        self.edisp.plot_matrix()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.edisp.plot_matrix()
 
     @requires_dependency('matplotlib')
     def test_plot_bias(self):
-        self.edisp.plot_bias()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.edisp.plot_bias()
 
     @requires_dependency('matplotlib')
     def test_peek(self):
-        self.edisp.peek()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.edisp.peek()
 
 
 @requires_dependency('scipy')
@@ -186,15 +185,15 @@ class TestEnergyDispersion2D:
 
     @requires_dependency('matplotlib')
     def test_plot_migration(self):
-        self.edisp.plot_migration()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.edisp.plot_migration()
 
     @requires_dependency('matplotlib')
     def test_plot_bias(self):
-        self.edisp.plot_bias()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.edisp.plot_bias()
 
     @requires_dependency('matplotlib')
     def test_peek(self):
-        self.edisp.peek()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.edisp.peek()

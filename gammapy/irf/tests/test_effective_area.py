@@ -5,7 +5,7 @@ import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose, assert_equal
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
 
@@ -38,10 +38,6 @@ class TestEffectiveAreaTable2D:
         test_val = aeff.data.evaluate(energy='14 TeV', offset='0.2 deg')
         assert_allclose(test_val.value, 740929.645, atol=1e-2)
 
-        aeff.plot()
-        aeff.plot_energy_dependence()
-        aeff.plot_offset_dependence()
-
         # Test ARF export
         offset = 0.236 * u.deg
         e_axis = np.logspace(0, 1, 20) * u.TeV
@@ -63,6 +59,16 @@ class TestEffectiveAreaTable2D:
         desired = aeff.data.evaluate(offset=offset)
         assert_equal(actual.value, desired.value)
 
+    def test_plot(aeff):
+        with mpl_plot_check():
+            aeff.plot()
+        
+        with mpl_plot_check():
+            aeff.plot_energy_dependence()
+        
+        with mpl_plot_check():
+            aeff.plot_offset_dependence()
+
 
 class TestEffectiveAreaTable:
 
@@ -75,7 +81,8 @@ class TestEffectiveAreaTable:
 
         assert_quantity_allclose(arf.data.evaluate(), arf.data.data)
 
-        arf.plot()
+        with mpl_plot_check():
+            arf.plot()
 
         filename = str(tmpdir / 'effarea_test.fits')
         arf.write(filename)
