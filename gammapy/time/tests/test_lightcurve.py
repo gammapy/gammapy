@@ -9,7 +9,7 @@ from astropy.time import Time
 import astropy.units as u
 from astropy.table import Table, Column
 from regions import CircleSkyRegion
-from ...utils.testing import requires_data, requires_dependency, mpl_savefig_check
+from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import EnergyBounds
 from ...data import DataStore
@@ -113,8 +113,8 @@ def test_lightcurve_chisq(lc):
 
 @requires_dependency('matplotlib')
 def test_lightcurve_plot(lc):
-    lc.plot()
-    mpl_savefig_check()
+    with mpl_plot_check():
+        lc.plot()
 
 
 @pytest.mark.parametrize('flux_unit', ['cm-2 s-1'])
