@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, mpl_savefig_check
+from ...utils.testing import requires_dependency, mpl_plot_check
 from ...maps import WcsNDMap, WcsGeom
 from ..profile import compute_binning, ImageProfile, ImageProfileEstimator
 
@@ -130,5 +130,5 @@ class TestImageProfile(object):
 
     @requires_dependency('matplotlib')
     def test_peek(self, cosine_profile):
-        cosine_profile.peek()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            cosine_profile.peek()
