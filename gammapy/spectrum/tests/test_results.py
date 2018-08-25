@@ -5,7 +5,7 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.energy import EnergyBounds
 from ..models import PowerLaw, ConstantModel
 from .. import SpectrumObservation, SpectrumFitResult, FluxPoints, SpectrumResult
@@ -74,7 +74,8 @@ class TestSpectrumFitResult:
 
     @requires_dependency("matplotlib")
     def test_plot(self, fit_result):
-        fit_result.plot()
+        with mpl_plot_check():
+            fit_result.plot()
 
 
 @requires_dependency("scipy")
@@ -91,4 +92,5 @@ class TestSpectrumResult:
     @requires_dependency("matplotlib")
     @requires_dependency("uncertainties")
     def test_plot(self, spectrum_result):
-        spectrum_result.plot(energy_range=[1, 10] * u.TeV, energy_power=2)
+        with mpl_plot_check():
+            spectrum_result.plot(energy_range=[1, 10] * u.TeV, energy_power=2)

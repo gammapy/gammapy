@@ -6,7 +6,8 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 import astropy.units as u
 from ...catalog.fermi import SourceCatalog3FGL
-from ...utils.testing import requires_dependency, requires_data, assert_quantity_allclose
+from ...utils.testing import (requires_dependency, requires_data,
+                              assert_quantity_allclose, mpl_plot_check)
 from ...utils.modeling import Parameters
 from ..results import SpectrumResult
 from ..fit import SpectrumFit
@@ -225,7 +226,8 @@ class TestFluxPointEstimator:
         actual = result.flux_point_residuals[1][0]
         assert_allclose(actual, 0.08519, rtol=1e-2)
 
-        result.plot(energy_range=[1, 10] * u.TeV)
+        with mpl_plot_check():
+            result.plot(energy_range=[1, 10] * u.TeV)
 
 
 @requires_data('gammapy-extra')
@@ -298,7 +300,8 @@ class TestFluxPoints:
 
     @requires_dependency('matplotlib')
     def test_plot(self, flux_points):
-        flux_points.plot()
+        with mpl_plot_check():
+            flux_points.plot()
 
 
 @requires_data('gammapy-extra')

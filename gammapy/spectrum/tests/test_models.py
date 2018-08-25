@@ -4,7 +4,7 @@ import pytest
 import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ..models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                       ExponentialCutoffPowerLaw3FGL, LogParabola,
                       TableModel, AbsorbedSpectralModel, Absorption,
@@ -214,8 +214,9 @@ def test_models(spectrum):
 def test_table_model_from_file():
     filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
     absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
-    absorption_z03.plot(energy_range=(0.03, 10),
-                        energy_unit=u.TeV, flux_unit='')
+    with mpl_plot_check():
+        absorption_z03.plot(energy_range=(0.03, 10),
+                            energy_unit=u.TeV, flux_unit='')
 
 
 @requires_data('gammapy-extra')
