@@ -447,10 +447,6 @@ class WcsNDMap(WcsMap):
         caxes = ax.imshow(data, **kwargs)
         cbar = fig.colorbar(caxes, ax=ax, label=str(self.unit)) if add_cbar else None
 
-        if cbar:
-            cbar.formatter.set_powerlimits((0, 0))
-            cbar.update_ticks()
-
         if self.geom.is_allsky:
             ax = self._plot_format_allsky(ax)
         else:
