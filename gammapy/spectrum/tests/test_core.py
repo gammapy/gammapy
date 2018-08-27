@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, mpl_plot_check
 from ...utils.energy import EnergyBounds
 from .. import CountsSpectrum, PHACountsSpectrum
 
@@ -44,8 +44,11 @@ class TestCountsSpectrum:
 
     @requires_dependency('matplotlib')
     def test_plot(self):
-        self.spec.plot()
-        self.spec.plot_hist()
+        with mpl_plot_check():
+            self.spec.plot()
+        
+        with mpl_plot_check():
+            self.spec.plot_hist()
 
     def test_io(self, tmpdir):
         filename = tmpdir / 'test.fits'

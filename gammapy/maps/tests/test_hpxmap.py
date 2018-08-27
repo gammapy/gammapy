@@ -13,6 +13,7 @@ from ..hpx import HpxGeom
 from ..hpxmap import HpxMap
 from ..hpxnd import HpxNDMap
 from ..hpxsparse import HpxSparseMap
+from ...utils.testing import mpl_plot_check, requires_dependency
 
 pytest.importorskip('scipy')
 pytest.importorskip('healpy')
@@ -320,3 +321,17 @@ def test_coadd_unit():
     m1.coadd(m2)
 
     assert_allclose(m1.data, 1.0001)
+
+
+@requires_dependency('matplotlib')
+def test_plot():
+    m = HpxNDMap.create(binsz=10)
+    with mpl_plot_check():
+        m.plot()
+
+
+@requires_dependency('matplotlib')
+def test_plot_poly():
+    m = HpxNDMap.create(binsz=10)
+    with mpl_plot_check():
+        m.plot(method='poly')

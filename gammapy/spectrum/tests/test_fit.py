@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable
 from ...spectrum import (
@@ -152,8 +152,9 @@ class TestFit:
                           forward_folded=False)
 
         scan_idx = np.linspace(1, 3, 20)
-        fit.plot_likelihood_1d(model=self.source_model, parname='index',
-                               parvals=scan_idx)
+        with mpl_plot_check():
+            fit.plot_likelihood_1d(model=self.source_model, parname='index',
+                                   parvals=scan_idx)
         # TODO: add assert, see issue 294
 
 

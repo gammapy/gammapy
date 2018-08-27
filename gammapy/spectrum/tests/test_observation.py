@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data, mpl_savefig_check
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.scripts import make_path
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from .. import (
@@ -177,8 +177,8 @@ class SpectrumObservationTester:
 
     @requires_dependency('matplotlib')
     def test_peek(self):
-        self.obs.peek()
-        mpl_savefig_check()
+        with mpl_plot_check():
+            self.obs.peek()
 
 
 @requires_dependency('scipy')

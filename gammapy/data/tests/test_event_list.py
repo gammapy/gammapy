@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...data import EventList, EventListLAT, EventListDataset, EventListDatasetChecker
 
 
@@ -35,11 +35,13 @@ class TestEventListHESS:
 
     @requires_dependency('matplotlib')
     def test_peek(self):
-        self.events.peek()
+        with mpl_plot_check():
+            self.events.peek()
 
     @requires_dependency('matplotlib')
     def test_plot_offset2_distribution(self):
-        self.events.plot_offset2_distribution()
+        with mpl_plot_check():
+            self.events.plot_offset2_distribution()
 
 
 @requires_data('gammapy-extra')
@@ -53,7 +55,8 @@ class TestEventListFermi:
 
     @requires_dependency('matplotlib')
     def test_plot_image(self):
-        self.events.plot_image()
+        with mpl_plot_check():
+            self.events.plot_image()
 
 
 @requires_data('gammapy-extra')

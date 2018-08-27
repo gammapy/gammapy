@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
-from ...utils.testing import requires_dependency, requires_data, mpl_savefig_check
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...irf import PSF3D
 
 pytest.importorskip('scipy')
@@ -75,19 +75,19 @@ def test_psf_3d_write(psf_3d, tmpdir):
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
 def test_psf_3d_plot_vs_rad(psf_3d):
-    psf_3d.plot_psf_vs_rad()
-    mpl_savefig_check()
+    with mpl_plot_check():
+        psf_3d.plot_psf_vs_rad()
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
 def test_psf_3d_plot_containment(psf_3d):
-    psf_3d.plot_containment(show_safe_energy=True)
-    mpl_savefig_check()
+    with mpl_plot_check():     
+        psf_3d.plot_containment(show_safe_energy=True)
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
 def test_psf_3d_peek(psf_3d):
-    psf_3d.peek()
-    mpl_savefig_check()
+    with mpl_plot_check():    
+        psf_3d.peek()

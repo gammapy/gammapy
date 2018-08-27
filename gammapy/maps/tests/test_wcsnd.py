@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.convolution import Gaussian2DKernel
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...cube import PSFKernel
 from ...irf import EnergyDependentMultiGaussPSF
 from ..utils import fill_poisson
@@ -500,3 +500,16 @@ def test_convolve_pixel_scale_error():
     with pytest.raises(ValueError) as err:
         m.convolve(kernel)
         assert 'Kernel shape larger' in str(err.value)
+
+
+@requires_dependency('matplotlib')
+def test_plot():
+    m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg)
+    with mpl_plot_check():
+        m.plot(add_cbar=True)
+
+@requires_dependency('matplotlib')
+def test_plot_allsky():
+    m = WcsNDMap.create(binsz=10 * u.deg)
+    with mpl_plot_check():
+        m.plot()

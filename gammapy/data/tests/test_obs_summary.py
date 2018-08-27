@@ -7,7 +7,7 @@ import astropy.units as u
 from regions import CircleSkyRegion
 from ...data import DataStore, ObservationTableSummary, ObservationSummary
 from ...data import ObservationStats
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...background import ReflectedRegionsBackgroundEstimator
 
 
@@ -34,11 +34,13 @@ class TestObservationSummaryTable:
 
     @requires_dependency('matplotlib')
     def test_plot_zenith(self):
-        self.table_summary.plot_zenith_distribution()
+        with mpl_plot_check():
+            self.table_summary.plot_zenith_distribution()
 
     @requires_dependency('matplotlib')
     def test_plot_offset(self):
-        self.table_summary.plot_offset_distribution()
+        with mpl_plot_check():
+            self.table_summary.plot_offset_distribution()
 
 
 @requires_data('gammapy-extra')
@@ -89,20 +91,25 @@ class TestObservationSummary:
 
     @requires_dependency('matplotlib')
     def test_plot_significance(self):
-        self.obs_summary.plot_significance_vs_livetime()
+        with mpl_plot_check():
+            self.obs_summary.plot_significance_vs_livetime()
 
     @requires_dependency('matplotlib')
     def test_plot_excess(self):
-        self.obs_summary.plot_excess_vs_livetime()
+        with mpl_plot_check():
+            self.obs_summary.plot_excess_vs_livetime()
 
     @requires_dependency('matplotlib')
     def test_plot_background(self):
-        self.obs_summary.plot_background_vs_livetime()
+        with mpl_plot_check():
+            self.obs_summary.plot_background_vs_livetime()
 
     @requires_dependency('matplotlib')
     def test_plot_gamma_rate(self):
-        self.obs_summary.plot_gamma_rate()
+        with mpl_plot_check():
+            self.obs_summary.plot_gamma_rate()
 
     @requires_dependency('matplotlib')
     def test_plot_background_rate(self):
-        self.obs_summary.plot_background_rate()
+        with mpl_plot_check():
+            self.obs_summary.plot_background_rate()

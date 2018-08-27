@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from ...utils.testing import requires_data, requires_dependency, assert_quantity_allclose
+from ...utils.testing import (requires_data, requires_dependency,
+                              assert_quantity_allclose, mpl_plot_check)
 from ...maps import WcsNDMap, WcsGeom
 from ...data import DataStore
 from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
@@ -98,6 +99,7 @@ class TestReflectedRegionBackgroundEstimator:
     @requires_dependency('matplotlib')
     def test_plot(self):
         self.bg_maker.run()
-        self.bg_maker.plot()
-        self.bg_maker.plot(idx=1)
-        self.bg_maker.plot(idx=[0, 1])
+        with mpl_plot_check():
+            self.bg_maker.plot()
+            self.bg_maker.plot(idx=1)
+            self.bg_maker.plot(idx=[0, 1])
