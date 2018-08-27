@@ -936,7 +936,7 @@ class EventListDatasetChecker(object):
     logger : `logging.Logger` or None
         Logger to use (use module-level Gammapy logger by default)
     """
-    _AVAILABLE_CHECKS = OrderedDict(
+    CHECKS = OrderedDict(
         misc='check_misc',
         times='check_times',
         coordinates='check_coordinates',
@@ -971,15 +971,15 @@ class EventListDatasetChecker(object):
             Everything ok?
         """
         if checks == 'all':
-            checks = self._AVAILABLE_CHECKS.keys()
+            checks = self.CHECKS.keys()
 
-        unknown_checks = set(checks).difference(self._AVAILABLE_CHECKS.keys())
+        unknown_checks = set(checks).difference(self.CHECKS.keys())
         if unknown_checks:
             raise ValueError('Unknown checks: {}'.format(unknown_checks))
 
         ok = True
         for check in checks:
-            check_method = getattr(self, self._AVAILABLE_CHECKS[check])
+            check_method = getattr(self, self.CHECKS[check])
             ok &= check_method()
 
         return ok
