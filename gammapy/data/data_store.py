@@ -418,3 +418,92 @@ class DataStore(object):
             colnames = np.append(['OBS_ID'], colnames)
 
         return Table(rows=rows, names=colnames)
+
+    def check(self, checks='all'):
+        checker = DataStoreChecker(self)
+        return checker.run(checks=checks)
+
+
+class DataStoreChecker(object):
+    CHECKS = OrderedDict(
+        obs_table='check_obs_table',
+        hdu_table='check_hdu_table',
+        # observations='check_observations',
+        # consistency='check_consistency',
+    )
+
+    def __init__(self, data_store):
+        self.data_store = data_store
+
+    def run(self, checks='all'):
+        if checks == 'all':
+            checks = self.CHECKS.keys()
+
+        unknown_checks = set(checks).difference(self.CHECKS.keys())
+        if unknown_checks:
+            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+
+        for check in checks:
+            for record in getattr(self, self.CHECKS[check])():
+                yield record
+
+    def check_obs_table(self):
+        t = self.data_store.obs_table
+        m = t.meta
+        if m.get('HDUCLAS1', '') != 'INDEX':
+            yield {'type': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
+        if m.get('HDUCLAS2', '') != 'OBS':
+            yield {'type': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS2=OBS'}
+
+    def check_hdu_table(self):
+        t = self.data_store.obs_table
+        m = t.meta
+        if m.get('HDUCLAS1', '') != 'INDEX':
+            yield {'type': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
+        if m.get('HDUCLAS2', '') != 'HDU':
+            yield {'type': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS2=HDU'}
+
+    def check_observations(self):
+        """Perform some sanity checks for all observations.
+
+        Returns
+        -------
+        results : OrderedDict
+            dictionary containing failure messages for all runs that fail a check.
+        """
+        results = OrderedDict()
+
+        # Loop over all obs_ids in obs_table
+        for obs_id in self.obs_table['OBS_ID']:
+            messages = self.obs(obs_id).check_observation()
+            if len(messages) > 0:
+                results[obs_id] = messages
+
+        return results
+
+    def check_observation(self):
+        """Perform some basic sanity checks on this observation.
+
+        Returns
+        -------
+        results : list
+            List with failure messages for the checks that failed
+        """
+        messages = []
+        # Check that events table is not empty
+        if len(self.events.table) == 0:
+            messages.append('events table empty')
+        # Check that thresholds are meaningful for aeff
+        if self.aeff.meta['LO_THRES'] >= self.aeff.meta['HI_THRES']:
+            messages.append('LO_THRES >= HI_THRES in effective area meta data')
+        # Check that maximum value of aeff is greater than zero
+        if np.max(self.aeff.data.data) <= 0:
+            messages.append('maximum entry of effective area table <= 0')
+        # Check that maximum value of edisp matrix is greater than zero
+        if np.max(self.edisp.data.data) <= 0:
+            messages.append('maximum entry of energy dispersion table <= 0')
+        # Check that thresholds are meaningful for psf
+        if self.psf.energy_thresh_lo >= self.psf.energy_thresh_hi:
+            messages.append('LO_THRES >= HI_THRES in psf meta data')
+
+        return messages
