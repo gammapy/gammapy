@@ -187,7 +187,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
     return actual.value, desired.value, rtol.value, atol.value
 
 
-class _MPLPlotCheck(object):
+def mpl_plot_check():
     """Matplotlib plotting test context manager.
 
     It create a new figure on __enter__ and calls savefig for the
@@ -197,13 +197,16 @@ class _MPLPlotCheck(object):
     This is writing to an in-memory byte buffer, i.e. is faster
     than writing to disk.
     """
-    def __enter__(self):
-        import matplotlib.pyplot as plt
-        plt.figure()
+    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
+    from io import BytesIO
 
-    def __exit__(self, type, value, traceback):
-        import matplotlib.pyplot as plt
-        from io import BytesIO
-        plt.savefig(BytesIO(), format='png')
+    class MPLPlotCheck(object):
+        def __enter__(self):
+            plt.figure()
 
-mpl_plot_check = _MPLPlotCheck
+        def __exit__(self, type, value, traceback):
+            plt.savefig(BytesIO(), format='png')
+            plt.close()
+
+    return MPLPlotCheck()
