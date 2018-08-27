@@ -284,25 +284,29 @@ class SkyDiffuseCube(SkyModelBase):
         Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `Map.interp_by_coord()`.
+        Default arguments are {'interp': 'linear', 'fill_value': 0}.
+
     """
 
-    def __init__(self, map, norm=1, meta=None):
-        if len(map.geom.axes) != 1:
-            raise ValueError('Need a map with an energy axis')
-
-        axis = map.geom.axes[0]
-        if axis.name != 'energy':
-            raise ValueError('Need a map with axis of name "energy"')
+    def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
+        axis = map.geom.get_axis_by_name('energy')
 
         if axis.node_type != 'center':
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
         self.parameters = Parameters([
             Parameter('norm', norm),
         ])
         self.meta = {} if meta is None else meta
+
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault('interp', 'linear')
+        interp_kwargs.setdefault('fill_value', 0)
+        self._interp_kwargs = interp_kwargs
+
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -325,6 +329,6 @@ class SkyDiffuseCube(SkyModelBase):
             'lat': lat.to('deg').value,
             'energy': energy,
         }
-        val = self.map.interp_by_coord(coord, **self._interp_opts)
+        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         norm = self.parameters['norm'].value
-        return norm * val * u.Unit('cm-2 s-1 MeV-1 sr-1')
+        return norm * val * self.map.unit
