@@ -936,17 +936,16 @@ class EventListDatasetChecker(object):
     logger : `logging.Logger` or None
         Logger to use (use module-level Gammapy logger by default)
     """
-    CHECKS = OrderedDict(
-        misc='check_misc',
-        times='check_times',
-        coordinates='check_coordinates',
-    )
+    CHECKS = OrderedDict([
+        ('misc', 'check_misc'),
+        ('times', 'check_times'),
+        ('coordinates', 'check_coordinates'),
+    ])
 
-    accuracy = OrderedDict(
-        angle=Angle('1 arcsec'),
-        time=Quantity(1, 'microsecond'),
-
-    )
+    accuracy = {
+        'angle': Angle('1 arcsec'),
+        'time': Quantity(1, 'microsecond'),
+    }
 
     def __init__(self, event_list_dataset, logger=None):
         self.dset = event_list_dataset
