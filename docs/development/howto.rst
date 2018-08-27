@@ -1024,8 +1024,11 @@ rendering of the plot, which can rasie errore as well. Here is a short example:
 
     from gammapy.utils.testing import mpl_plot_check
 
-    with mpl_plot_check():
-        events.plot_histogram()
+    def test_plot():
+        import matplotlib.pyplot as plt
+        with mpl_plot_check():
+            plt.plot([1., 2., 3., 4., 5.])
+
 
 With this approach we make sure that the plotting code is at least executed once
 and runs completely (up to saving the plot to file) without errors. In future we
