@@ -429,7 +429,7 @@ class DataStoreChecker(object):
         obs_table='check_obs_table',
         hdu_table='check_hdu_table',
         # observations='check_observations',
-        # consistency='check_consistency',
+        consistency='check_consistency',
     )
 
     def __init__(self, data_store):
@@ -448,6 +448,7 @@ class DataStoreChecker(object):
                 yield record
 
     def check_obs_table(self):
+        """Checks for the observation index table."""
         t = self.data_store.obs_table
         m = t.meta
         if m.get('HDUCLAS1', '') != 'INDEX':
@@ -456,12 +457,33 @@ class DataStoreChecker(object):
             yield {'type': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS2=OBS'}
 
     def check_hdu_table(self):
-        t = self.data_store.obs_table
+        """Checks for the HDU index table."""
+        t = self.data_store.hdu_table
         m = t.meta
         if m.get('HDUCLAS1', '') != 'INDEX':
             yield {'type': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
         if m.get('HDUCLAS2', '') != 'HDU':
             yield {'type': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS2=HDU'}
+
+        # Check that all HDU in the data files exist
+        for idx in range(len(t)):
+            location_info = t.location_info(idx)
+            try:
+                location_info.get_hdu()
+            except KeyError:
+                yield {'type': 'error', 'msg': 'HDU not found: {!r}'.format(location_info.__dict__)}
+
+        # TODO: all HDU in the index table should be present
+
+    def check_consistency(self):
+        """Consistency checks between multiple HDUs"""
+        # obs and HDU index should have the same OBS_ID
+        obs_table_obs_id = set(self.data_store.obs_table['OBS_ID'])
+        hdu_table_obs_id = set(self.data_store.hdu_table['OBS_ID'])
+        if not obs_table_obs_id == hdu_table_obs_id:
+            yield {'type': 'error', 'msg': 'Inconsistent OBS_ID in obs and HDU index tables'}
+
+        # TODO: obs table and events header should have the same times
 
     def check_observations(self):
         """Perform some sanity checks for all observations.
