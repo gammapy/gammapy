@@ -31,6 +31,14 @@ def sky_model():
 
 
 @pytest.fixture(scope='session')
+def diffuse_model():
+    axis = MapAxis.from_nodes([0.1, 100], name='energy', unit='TeV', interp='log')
+    m = Map.create(npix=(4, 3), binsz=2, axes=[axis], unit='cm-2 s-1 MeV-1 sr-1')
+    m.data += 42
+    return SkyDiffuseCube(m)
+
+
+@pytest.fixture(scope='session')
 def geom():
     axis = MapAxis.from_edges(np.logspace(-1, 1, 3), unit=u.TeV, name="energy")
     return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys='GAL', axes=[axis])
@@ -66,6 +74,11 @@ def psf(geom):
 @pytest.fixture(scope='session')
 def evaluator(sky_model, exposure, background, psf, edisp):
     return MapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
+
+
+@pytest.fixture(scope='session')
+def diffuse_evaluator(diffuse_model, exposure, background, psf, edisp):
+    return MapEvaluator(diffuse_model, exposure, background, psf=psf, edisp=edisp)
 
 
 class TestSkyModels:
@@ -181,38 +194,29 @@ class TestCompoundSkyModel:
 
 @requires_dependency('scipy')
 class TestSkyDiffuseCube:
-
     @staticmethod
-    @pytest.fixture()
-    def model():
-        axis = MapAxis.from_nodes([0.1, 100], name='energy', unit='TeV', interp='log')
-        m = Map.create(npix=(4, 3), binsz=2, axes=[axis], unit='cm-2 s-1 MeV-1 sr-1')
-        m.data += 42
-        return SkyDiffuseCube(m)
-
-    @staticmethod
-    def test_evaluate_scalar(model):
+    def test_evaluate_scalar(diffuse_model):
         # Check pixel inside map
-        val = model.evaluate(0 * u.deg, 0 * u.deg, 10 * u.TeV)
+        val = diffuse_model.evaluate(0 * u.deg, 0 * u.deg, 10 * u.TeV)
         assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
         assert val.shape == (1,)
         assert_allclose(val.value, 42)
 
         # Check pixel outside map (spatially)
-        val = model.evaluate(100 * u.deg, 0 * u.deg, 10 * u.TeV)
+        val = diffuse_model.evaluate(100 * u.deg, 0 * u.deg, 10 * u.TeV)
         assert_allclose(val.value, 0)
 
         # Check pixel outside energy range
-        val = model.evaluate(0 * u.deg, 0 * u.deg, 200 * u.TeV)
+        val = diffuse_model.evaluate(0 * u.deg, 0 * u.deg, 200 * u.TeV)
         assert_allclose(val.value, 0)
 
     @staticmethod
-    def test_evaluate_array(model):
+    def test_evaluate_array(diffuse_model):
         lon = 1 * u.deg * np.ones(shape=(3, 4))
         lat = 2 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
-        q = model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
+        q = diffuse_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value.mean(), 42)
@@ -228,6 +232,50 @@ class TestSkyDiffuseCube:
         assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
         assert val.shape == (1,)
         assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
+
+
+@requires_dependency('scipy')
+class TestSkyDiffuseCubeMapEvaluator:
+    @staticmethod
+    def test_compute_dnde(diffuse_evaluator):
+        out = diffuse_evaluator.compute_dnde()
+        assert out.shape == (2, 4, 5)
+        out = out.to('cm-2 s-1 MeV-1 sr-1')
+        assert_allclose(out.value.sum(), 1680, rtol=1e-5)
+        assert_allclose(out.value[0, 0, 0], 42, rtol=1e-5)
+
+    @staticmethod
+    def test_compute_flux(diffuse_evaluator):
+        out = diffuse_evaluator.compute_flux()
+        assert out.shape == (2, 4, 5)
+        out = out.to('cm-2 s-1')
+        assert_allclose(out.value.sum(), 633263.444803, rtol=1e-5)
+        assert_allclose(out.value[0, 0, 0], 2878.196184, rtol=1e-5)
+
+    @staticmethod
+    def test_apply_psf(diffuse_evaluator):
+        flux = diffuse_evaluator.compute_flux()
+        npred = diffuse_evaluator.apply_exposure(flux)
+        out = diffuse_evaluator.apply_psf(npred)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 4.004864e+12, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.380614e+09, rtol=1e-5)
+
+    @staticmethod
+    def test_apply_edisp(diffuse_evaluator):
+        flux = diffuse_evaluator.compute_flux()
+        out = diffuse_evaluator.apply_edisp(flux.value)
+        assert out.shape == (2, 4, 5)
+        assert_allclose(out.sum(), 633263.444803, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 2878.196184, rtol=1e-5)
+
+    @staticmethod
+    def test_compute_npred(diffuse_evaluator):
+        out = diffuse_evaluator.compute_npred()
+        assert out.shape == (2, 4, 5)
+        assert_allclose(out.sum(), 4.004864e+12, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 1.380614e+09, rtol=1e-5)
+
 
 
 @requires_dependency('scipy')

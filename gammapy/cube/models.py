@@ -29,8 +29,8 @@ class SkyModelBase(object):
     def __radd__(self, model):
         return self.__add__(model)
 
-    def __call__(self, *args, **kwargs):
-        return self.evaluate(*args, **kwargs)
+    def __call__(self, lon, lat, energy):
+        return self.evaluate(lon, lat, energy)
 
 
 class SkyModels(object):
@@ -203,6 +203,8 @@ class SkyModel(SkyModelBase):
         val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
         val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
         val = val_spatial * val_spectral
+        # TODO: shall remove hard coded return units? If really needed users can
+        # always do this themselves. For fitting this also adds a performance penalty...
         return val.to('cm-2 s-1 TeV-1 deg-2')
 
 
@@ -289,7 +291,6 @@ class SkyDiffuseCube(SkyModelBase):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
 
     """
-
     def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
         axis = map.geom.get_axis_by_name('energy')
 
@@ -302,7 +303,7 @@ class SkyDiffuseCube(SkyModelBase):
         ])
         self.meta = {} if meta is None else meta
 
-        interp_kwargs = interp_kwargs or {}
+        interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault('interp', 'linear')
         interp_kwargs.setdefault('fill_value', 0)
         self._interp_kwargs = interp_kwargs
