@@ -1014,7 +1014,7 @@ Notes:
 Testing of plotting functions
 -----------------------------
 
-Many of the data classes in Gammapy implement `.plot()` or `.peek()` methods to
+Many of the data classes in Gammapy implement ``.plot()`` or ``.peek()`` methods to
 allow users a quick look in the data. Those methods should be tested using the
 `mpl_check_plot()` context manager. The context manager will take care of creating
 a new figure to plot on and writing the plot to a byte-stream to trigger the
