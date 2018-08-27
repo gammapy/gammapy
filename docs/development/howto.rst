@@ -1009,3 +1009,25 @@ Notes:
 * Finally, we realise that eventually probably CTA will define this, and Gammapy
   is only a prototype. So if CTA chooses something else, probably we will follow
   suite and do one more backward-incompatible change at some point to align with CTA.
+
+
+Testing of plotting functions
+-----------------------------
+
+Many of the data classes in Gammapy implement `.plot()` or `.peek()` methods to
+allow users a quick look in the data. Those methods should be tested using the
+`mpl_check_plot()` context manager. The context manager will take care of creating
+a new figure to plot on and writing the plot to a byte-stream to trigger the
+rendering of the plot, which can rasie errore as well. Here is a short example:
+
+.. code-block:: python
+
+    from gammapy.utils.testing import mpl_plot_check
+
+    with mpl_plot_check():
+        events.plot_histogram()
+
+With this approach we make sure that the plotting code is at least executed once
+and runs completely (up to saving the plot to file) without errors. In future we
+will maybe change to something like https://github.com/matplotlib/pytest-mpl
+to ensure that correct plots are produced.
