@@ -70,12 +70,11 @@ for notebook in notebooks:
     # For testing how `subprocess.Popen` works:
     # cmd = 'pwd && echo "hi" && asdf'
 
-    cmd = 'which python; '
+    cmd = 'pwd; '
     cmd += 'echo $GAMMAPY_EXTRA; '
-    cmd += 'pwd; '
     # cmd += 'export GAMMAPY_EXTRA={}; '.format(os.environ['GAMMAPY_EXTRA'])
     # cmd += 'cd $GAMMAPY_EXTRA/notebooks; '
-    cmd += 'runipy {}.ipynb'.format(notebook['name'])
+    cmd += sys.executable + ' -m runipy.main {}.ipynb'.format(notebook['name'])
     logging.info('Executing: {}'.format(cmd))
     proc = subprocess.Popen(
         cmd,
