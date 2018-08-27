@@ -62,8 +62,8 @@ class HDULocation(object):
     def get_hdu(self):
         """Get HDU."""
         filename = str(self.path(abs_path=True))
-        hdu_list = fits.open(filename, memmap=False)
-        return hdu_list[self.hdu_name]
+        with fits.open(filename, memmap=False) as hdu_list:
+            return hdu_list[self.hdu_name]
 
     def load(self):
         """Load HDU as appropriate class.
@@ -232,7 +232,7 @@ class HDUIndexTable(Table):
     def location_info(self, idx):
         """Create `HDULocation` for a given row index."""
         row = self[idx]
-        location = HDULocation(
+        return HDULocation(
             obs_id=row['OBS_ID'],
             hdu_type=row['HDU_TYPE'].strip(),
             hdu_class=row['HDU_CLASS'].strip(),
@@ -241,7 +241,6 @@ class HDUIndexTable(Table):
             file_name=row['FILE_NAME'].strip(),
             hdu_name=row['HDU_NAME'].strip(),
         )
-        return location
 
     @lazyproperty
     def _hdu_class_stripped(self):

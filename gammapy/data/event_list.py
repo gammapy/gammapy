@@ -22,7 +22,6 @@ __all__ = [
     'EventList',
     'EventListLAT',
     'EventListDataset',
-    'EventListDatasetChecker',
 ]
 
 log = logging.getLogger(__name__)
@@ -930,12 +929,6 @@ class EventListDatasetChecker(object):
 
     Data format specification: ref:`gadf:iact-events`
 
-    Having such a checker is useful at the moment because
-    the CTA data formats are quickly evolving and there's
-    various sources of event list data, e.g. exporters are
-    being written for the existing IACTs and simulators
-    are being written for CTA.
-
     Parameters
     ----------
     event_list_dataset : `~gammapy.data.EventListDataset`
@@ -943,17 +936,16 @@ class EventListDatasetChecker(object):
     logger : `logging.Logger` or None
         Logger to use (use module-level Gammapy logger by default)
     """
-    _AVAILABLE_CHECKS = OrderedDict(
-        misc='check_misc',
-        times='check_times',
-        coordinates='check_coordinates',
-    )
+    CHECKS = OrderedDict([
+        ('misc', 'check_misc'),
+        ('times', 'check_times'),
+        ('coordinates', 'check_coordinates'),
+    ])
 
-    accuracy = OrderedDict(
-        angle=Angle('1 arcsec'),
-        time=Quantity(1, 'microsecond'),
-
-    )
+    accuracy = {
+        'angle': Angle('1 arcsec'),
+        'time': Quantity(1, 'microsecond'),
+    }
 
     def __init__(self, event_list_dataset, logger=None):
         self.dset = event_list_dataset
@@ -978,15 +970,15 @@ class EventListDatasetChecker(object):
             Everything ok?
         """
         if checks == 'all':
-            checks = self._AVAILABLE_CHECKS.keys()
+            checks = self.CHECKS.keys()
 
-        unknown_checks = set(checks).difference(self._AVAILABLE_CHECKS.keys())
+        unknown_checks = set(checks).difference(self.CHECKS.keys())
         if unknown_checks:
             raise ValueError('Unknown checks: {}'.format(unknown_checks))
 
         ok = True
         for check in checks:
-            check_method = getattr(self, self._AVAILABLE_CHECKS[check])
+            check_method = getattr(self, self.CHECKS[check])
             ok &= check_method()
 
         return ok

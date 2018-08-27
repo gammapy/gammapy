@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import sys
 import logging
 import numpy as np
 from collections import OrderedDict
@@ -165,7 +164,7 @@ class DataStore(object):
             Observation container
         """
         return DataStoreObservation(
-            obs_id=obs_id,
+            obs_id=int(obs_id),
             data_store=self,
         )
 
@@ -418,3 +417,175 @@ class DataStore(object):
             colnames = np.append(['OBS_ID'], colnames)
 
         return Table(rows=rows, names=colnames)
+
+    def check(self, checks='all'):
+        """Check index tables and data files.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = DataStoreChecker(self)
+        return checker.run(checks=checks)
+
+
+class DataStoreChecker(object):
+    """Check data store.
+
+    Checks data format and a bit about the content.
+    """
+
+    CHECKS = OrderedDict([
+        ('obs_table', 'check_obs_table'),
+        ('hdu_table', 'check_hdu_table'),
+        ('observations', 'check_observations'),
+        ('consistency', 'check_consistency'),
+    ])
+
+    def __init__(self, data_store):
+        self.data_store = data_store
+
+    def run(self, checks='all'):
+        if checks == 'all':
+            checks = self.CHECKS.keys()
+
+        unknown_checks = set(checks).difference(self.CHECKS.keys())
+        if unknown_checks:
+            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+
+        for check in checks:
+            for record in getattr(self, self.CHECKS[check])():
+                yield record
+
+    def check_obs_table(self):
+        """Checks for the observation index table."""
+        t = self.data_store.obs_table
+        m = t.meta
+        if m.get('HDUCLAS1', '') != 'INDEX':
+            yield {'level': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
+        if m.get('HDUCLAS2', '') != 'OBS':
+            yield {'level': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS2=OBS'}
+
+    def check_hdu_table(self):
+        """Checks for the HDU index table."""
+        t = self.data_store.hdu_table
+        m = t.meta
+        if m.get('HDUCLAS1', '') != 'INDEX':
+            yield {'level': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
+        if m.get('HDUCLAS2', '') != 'HDU':
+            yield {'level': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS2=HDU'}
+
+        # Check that all HDU in the data files exist
+        for idx in range(len(t)):
+            location_info = t.location_info(idx)
+            try:
+                location_info.get_hdu()
+            except KeyError:
+                yield {'level': 'error', 'msg': 'HDU not found: {!r}'.format(location_info.__dict__)}
+
+        # TODO: all HDU in the index table should be present
+
+    def check_consistency(self):
+        """Consistency checks between multiple HDUs"""
+        # obs and HDU index should have the same OBS_ID
+        obs_table_obs_id = set(self.data_store.obs_table['OBS_ID'])
+        hdu_table_obs_id = set(self.data_store.hdu_table['OBS_ID'])
+        if not obs_table_obs_id == hdu_table_obs_id:
+            yield {'level': 'error', 'msg': 'Inconsistent OBS_ID in obs and HDU index tables'}
+
+        # TODO: obs table and events header should have the same times
+
+    def check_observations(self):
+        """Perform some sanity checks for all observations."""
+        for obs_id in self.data_store.obs_table['OBS_ID']:
+            obs = self.data_store.obs(obs_id)
+            for records in ObservationChecker(obs).run():
+                yield records
+
+
+class ObservationChecker:
+    """Check an observation.
+
+    Checks data format and a bit about the content.
+    """
+
+    CHECKS = OrderedDict([
+        ('events', 'check_events'),
+        ('aeff', 'check_aeff'),
+        ('edisp', 'check_edisp'),
+        ('psf', 'check_psf'),
+    ])
+
+    def __init__(self, obs):
+        self.obs = obs
+
+    def _record(self, level='info', msg=None):
+        return {
+            'level': level,
+            'obs_id': self.obs.obs_id,
+            'msg': msg,
+        }
+
+    def run(self):
+        yield self._record(level='debug', msg='Starting observation check')
+
+        for record in self.check_events():
+            yield record
+
+        for record in self.check_aeff():
+            yield record
+
+        for record in self.check_edisp():
+            yield record
+
+        for record in self.check_psf():
+            yield record
+
+    def check_events(self):
+        yield self._record(level='debug', msg='Starting events check')
+
+        try:
+            events = self.obs.load('events')
+        except:
+            yield self._record(level='warning', msg='Loading events failed')
+            return
+
+        if len(events.table) == 0:
+            yield self._record(level='error', msg='Events table has zero rows')
+
+    def check_aeff(self):
+        yield self._record(level='debug', msg='Starting aeff check')
+
+        try:
+            aeff = self.obs.load('aeff')
+        except:
+            yield self._record(level='warning', msg='Loading aeff failed')
+            return
+
+        # Check that thresholds are meaningful for aeff
+        if 'LO_THRES' in aeff.meta and 'HI_THRES' in aeff.meta and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']:
+            yield self._record(level='error', msg='LO_THRES >= HI_THRES in effective area meta data')
+
+        # Check that maximum value of aeff is greater than zero
+        if np.max(aeff.data.data) <= 0:
+            yield self._record(level='error', msg='maximum entry of effective area table <= 0')
+
+    def check_edisp(self):
+        yield self._record(level='debug', msg='Starting edisp check')
+
+        try:
+            edisp = self.obs.load('edisp')
+        except:
+            yield self._record(level='warning', msg='Loading edisp failed')
+            return
+
+        # Check that maximum value of edisp matrix is greater than zero
+        if np.max(edisp.data.data) <= 0:
+            yield self._record(level='error', msg='maximum entry of edisp is <= 0')
+
+    def check_psf(self):
+        yield self._record(level='debug', msg='Starting psf check')
+
+        try:
+            psf = self.obs.load('psf')
+        except:
+            yield self._record(level='warning', msg='Loading psf failed')
+            return

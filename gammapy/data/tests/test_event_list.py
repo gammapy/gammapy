@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...data import EventList, EventListLAT, EventListDataset, EventListDatasetChecker
+from ...data.event_list import EventList, EventListLAT, EventListDataset, EventListDatasetChecker
 
 
 @requires_data('gammapy-extra')
@@ -73,7 +73,7 @@ class TestEventListDataset:
 
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
-class TestEventListDatasetChecker():
+class TestEventListDatasetChecker:
     def test(self):
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
         dset = EventListDataset.read(filename)

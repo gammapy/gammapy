@@ -4,9 +4,7 @@ from collections import OrderedDict
 import math
 import numpy as np
 
-__all__ = [
-    'PSF3DChecker',
-]
+__all__ = []
 
 
 class PSF3DChecker(object):

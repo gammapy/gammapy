@@ -3,7 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 import pytest
 from ...data import DataStore
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
+
+pytest.importorskip('scipy')
 
 
 @pytest.fixture(scope='session')
@@ -11,7 +13,6 @@ def data_store():
     return DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
 
 
-@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_datastore_hd_hap(data_store):
     """Test HESS HAP-HD data access."""
@@ -24,7 +25,6 @@ def test_datastore_hd_hap(data_store):
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_gauss.EnergyDependentMultiGaussPSF'>"
 
 
-@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_datastore_pa():
     """Test HESS ParisAnalysis data access."""
@@ -100,6 +100,11 @@ def test_data_summary(data_store):
 
 
 @requires_data('gammapy-extra')
-def test_check_observations(data_store):
-    result = data_store.check_observations()
-    assert len(result) == 0
+class TestDataStoreChecker:
+    def setup(self):
+        self.data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps')
+
+    def test_check_all(self):
+        records = list(self.data_store.check())
+        from pprint import pprint; pprint(records)
+        assert len(records) == 24
