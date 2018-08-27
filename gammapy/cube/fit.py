@@ -164,19 +164,19 @@ class MapEvaluator(object):
         """Energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.axes[0]
         energy = energy_axis.center * energy_axis.unit
-        return energy
+        return energy[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_edges(self):
         """Energy axis bin edges (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.axes[0]
         energy = energy_axis.edges * energy_axis.unit
-        return energy
+        return energy[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_bin_width(self):
         """Energy axis bin widths (`astropy.units.Quantity`)"""
-        return np.diff(self.energy_edges)
+        return np.diff(self.energy_edges, axis=0)
 
     @lazyproperty
     def lon_lat(self):
@@ -205,7 +205,6 @@ class MapEvaluator(object):
         """Map pixel bin volume (solid angle times energy bin width)."""
         omega = self.solid_angle
         de = self.energy_bin_width
-        de = de[:, np.newaxis, np.newaxis]
         return omega * de
 
     def compute_dnde(self):

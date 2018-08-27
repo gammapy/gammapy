@@ -166,6 +166,8 @@ class SkyModel(object):
     def evaluate(self, lon, lat, energy):
         """Evaluate the model at given points.
 
+        The model evaluation follows numpy broadcasting rules.
+
         Return differential surface brightness cube.
         At the moment in units: ``cm-2 s-1 TeV-1 deg-2``
 
@@ -183,10 +185,7 @@ class SkyModel(object):
         """
         val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
         val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
-        val_spectral = np.atleast_1d(val_spectral)[:, np.newaxis, np.newaxis]
-
         val = val_spatial * val_spectral
-
         return val.to('cm-2 s-1 TeV-1 deg-2')
 
     def copy(self):
@@ -315,9 +314,6 @@ class SkyDiffuseCube(object):
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
-        energy = np.atleast_1d(energy)[:, np.newaxis, np.newaxis]
-        energy = energy.to(self.map.geom.axes[0].unit).value
-
         coord = {
             'lon': lon.to('deg').value,
             'lat': lat.to('deg').value,

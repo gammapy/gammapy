@@ -100,7 +100,7 @@ class TestSkyModels:
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
-        q = sky_models.evaluate(lon, lat, energy)
+        q = sky_models.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
         assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
         assert q.shape == (5, 3, 4)
@@ -131,7 +131,7 @@ class TestSkyModel:
         q = sky_model.evaluate(lon, lat, energy)
 
         assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
-        assert q.shape == (1, 1, 1)
+        assert np.isscalar(q.value)
         assert_allclose(q.value, 1.76838826e-13)
 
     @staticmethod
@@ -140,7 +140,7 @@ class TestSkyModel:
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
-        q = sky_model.evaluate(lon, lat, energy)
+        q = sky_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value, 1.76838826e-13)
@@ -172,7 +172,7 @@ class TestCompoundSkyModel:
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
-        q = compound_model.evaluate(lon, lat, energy)
+        q = compound_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
         assert q.unit == 'cm-2 s-1 TeV-1 deg-2'
         assert q.shape == (5, 3, 4)
@@ -195,7 +195,7 @@ class TestSkyDiffuseCube:
         # Check pixel inside map
         val = model.evaluate(0 * u.deg, 0 * u.deg, 10 * u.TeV)
         assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
-        assert val.shape == (1, 1, 1)
+        assert val.shape == (1,)
         assert_allclose(val.value, 42)
 
         # Check pixel outside map (spatially)
@@ -212,7 +212,7 @@ class TestSkyDiffuseCube:
         lat = 2 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
 
-        q = model.evaluate(lon, lat, energy)
+        q = model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value.mean(), 42)
@@ -226,7 +226,7 @@ class TestSkyDiffuseCube:
         # Check pixel inside map
         val = model.evaluate(0 * u.deg, 0 * u.deg, 100 * u.GeV)
         assert val.unit == 'cm-2 s-1 MeV-1 sr-1'
-        assert val.shape == (1, 1, 1)
+        assert val.shape == (1,)
         assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
 
 
@@ -236,19 +236,19 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_energy_center(evaluator):
         val = evaluator.energy_center
-        assert val.shape == (2,)
+        assert val.shape == (2, 1, 1)
         assert val.unit == 'TeV'
 
     @staticmethod
     def test_energy_edges(evaluator):
         val = evaluator.energy_edges
-        assert val.shape == (3,)
+        assert val.shape == (3, 1, 1)
         assert val.unit == 'TeV'
 
     @staticmethod
     def test_energy_bin_width(evaluator):
         val = evaluator.energy_bin_width
-        assert val.shape == (2,)
+        assert val.shape == (2, 1, 1)
         assert val.unit == 'TeV'
 
     @staticmethod
