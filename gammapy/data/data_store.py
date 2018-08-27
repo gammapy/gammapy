@@ -165,7 +165,7 @@ class DataStore(object):
             Observation container
         """
         return DataStoreObservation(
-            obs_id=obs_id,
+            obs_id=int(obs_id),
             data_store=self,
         )
 
@@ -420,6 +420,10 @@ class DataStore(object):
         return Table(rows=rows, names=colnames)
 
     def check(self, checks='all'):
+        """Check index tables and data files.
+
+        This is a generator that yields a list of dicts.
+        """
         checker = DataStoreChecker(self)
         return checker.run(checks=checks)
 
@@ -428,7 +432,7 @@ class DataStoreChecker(object):
     CHECKS = OrderedDict(
         obs_table='check_obs_table',
         hdu_table='check_hdu_table',
-        # observations='check_observations',
+        observations='check_observations',
         consistency='check_consistency',
     )
 
@@ -486,46 +490,31 @@ class DataStoreChecker(object):
         # TODO: obs table and events header should have the same times
 
     def check_observations(self):
-        """Perform some sanity checks for all observations.
+        """Perform some sanity checks for all observations."""
+        for obs_id in self.data_store.obs_table['OBS_ID']:
+            obs = self.data_store.obs(obs_id)
 
-        Returns
-        -------
-        results : OrderedDict
-            dictionary containing failure messages for all runs that fail a check.
-        """
-        results = OrderedDict()
+            for records in self.check_observation(obs):
+                yield records
 
-        # Loop over all obs_ids in obs_table
-        for obs_id in self.obs_table['OBS_ID']:
-            messages = self.obs(obs_id).check_observation()
-            if len(messages) > 0:
-                results[obs_id] = messages
+    @staticmethod
+    def check_observation(obs):
+        """Perform some basic sanity checks on this observation."""
 
-        return results
-
-    def check_observation(self):
-        """Perform some basic sanity checks on this observation.
-
-        Returns
-        -------
-        results : list
-            List with failure messages for the checks that failed
-        """
-        messages = []
         # Check that events table is not empty
-        if len(self.events.table) == 0:
-            messages.append('events table empty')
-        # Check that thresholds are meaningful for aeff
-        if self.aeff.meta['LO_THRES'] >= self.aeff.meta['HI_THRES']:
-            messages.append('LO_THRES >= HI_THRES in effective area meta data')
-        # Check that maximum value of aeff is greater than zero
-        if np.max(self.aeff.data.data) <= 0:
-            messages.append('maximum entry of effective area table <= 0')
-        # Check that maximum value of edisp matrix is greater than zero
-        if np.max(self.edisp.data.data) <= 0:
-            messages.append('maximum entry of energy dispersion table <= 0')
-        # Check that thresholds are meaningful for psf
-        if self.psf.energy_thresh_lo >= self.psf.energy_thresh_hi:
-            messages.append('LO_THRES >= HI_THRES in psf meta data')
+        events = obs.events
+        if len(events.table) == 0:
+            yield {'type': 'error', 'obs_id': obs.obs_id, 'msg': 'Events table has zero rows'}
 
-        return messages
+        # # Check that thresholds are meaningful for aeff
+        # if self.aeff.meta['LO_THRES'] >= self.aeff.meta['HI_THRES']:
+        #     messages.append('LO_THRES >= HI_THRES in effective area meta data')
+        # # Check that maximum value of aeff is greater than zero
+        # if np.max(self.aeff.data.data) <= 0:
+        #     messages.append('maximum entry of effective area table <= 0')
+        # # Check that maximum value of edisp matrix is greater than zero
+        # if np.max(self.edisp.data.data) <= 0:
+        #     messages.append('maximum entry of energy dispersion table <= 0')
+        # # Check that thresholds are meaningful for psf
+        # if self.psf.energy_thresh_lo >= self.psf.energy_thresh_hi:
+        #     messages.append('LO_THRES >= HI_THRES in psf meta data')
