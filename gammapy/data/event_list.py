@@ -22,7 +22,6 @@ __all__ = [
     'EventList',
     'EventListLAT',
     'EventListDataset',
-    'EventListDatasetChecker',
 ]
 
 log = logging.getLogger(__name__)
@@ -929,12 +928,6 @@ class EventListDatasetChecker(object):
     """Event list dataset checker.
 
     Data format specification: ref:`gadf:iact-events`
-
-    Having such a checker is useful at the moment because
-    the CTA data formats are quickly evolving and there's
-    various sources of event list data, e.g. exporters are
-    being written for the existing IACTs and simulators
-    are being written for CTA.
 
     Parameters
     ----------
