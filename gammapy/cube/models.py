@@ -16,6 +16,23 @@ __all__ = [
 ]
 
 
+class SkyModelBase(object):
+    """Sky model base class"""
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
+
+    def __add__(self, skymodel):
+        return CompoundSkyModel(self, skymodel, operator.add)
+
+    def __radd__(self, model):
+        return self.__add__(model)
+
+    def __call__(self, *args, **kwargs):
+        return self.evaluate(*args, **kwargs)
+
+
 class SkyModels(object):
     """Collection of `~gammapy.cube.models.SkyModel`
 
@@ -102,7 +119,7 @@ class SkyModels(object):
         return out
 
 
-class SkyModel(object):
+class SkyModel(SkyModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -188,18 +205,8 @@ class SkyModel(object):
         val = val_spatial * val_spectral
         return val.to('cm-2 s-1 TeV-1 deg-2')
 
-    def copy(self):
-        """A deep copy"""
-        return copy.deepcopy(self)
 
-    def __add__(self, skymodel):
-        return CompoundSkyModel(self, skymodel, operator.add)
-
-    def __radd__(self, model):
-        return self.__add__(model)
-
-
-class CompoundSkyModel(object):
+class CompoundSkyModel(SkyModelBase):
     """Represents the algebraic combination of two
     `~gammapy.cube.models.SkyModel`
 
@@ -259,11 +266,10 @@ class CompoundSkyModel(object):
         """
         val1 = self.model1.evaluate(lon, lat, energy)
         val2 = self.model2.evaluate(lon, lat, energy)
-
         return self.operator(val1, val2)
 
 
-class SkyDiffuseCube(object):
+class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
     This is for a 3D map with an energy axis.
