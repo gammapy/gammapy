@@ -65,4 +65,4 @@ class TestEventListChecker:
 
     def test_check_all(self):
         records = list(self.event_list.check())
-        assert len(records) == 28
+        assert len(records) == 1

@@ -5,6 +5,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord, Angle, AltAz
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
@@ -749,7 +750,8 @@ class EventListChecker(Checker):
         ('meta', 'check_meta'),
         ('columns', 'check_columns'),
         ('times', 'check_times'),
-        ('coordinates', 'check_coordinates'),
+        ('coordinates_galactic', 'check_coordinates_galactic'),
+        ('coordinates_altaz', 'check_coordinates_altaz'),
     ])
 
     accuracy = {
@@ -771,13 +773,11 @@ class EventListChecker(Checker):
     def __init__(self, event_list):
         self.event_list = event_list
 
-    def obs_id(self):
-        return self.event_list.table.meta['OBS_ID']
-
     def _record(self, level='info', msg=None):
+        obs_id = self.event_list.table.meta['OBS_ID']
         return {
             'level': level,
-            'obs_id': self.obs_id,
+            'obs_id': obs_id,
             'msg': msg,
         }
 
@@ -791,58 +791,39 @@ class EventListChecker(Checker):
         if columns_missing:
             yield self._record(level='error', msg='Missing table columns: {!r}'.format(columns_missing))
 
-    def check_coordinates(self):
-        """Check if various event list coordinates are consistent."""
-        self._check_coordinates_galactic()
-        self._check_coordinates_altaz()
+    def check_times(self):
+        dt = (self.event_list.time - self.event_list.observation_time_start).sec
+        if dt[0] <= 0:
+            yield self._record(level='error', msg='Time of first event is before obs start time')
 
-        # TODO: add FOV coordinates checks
-        # self._check_coordinates_field_of_view()
+        # TODO: add check for last event time < obs stop time
 
-    def _check_coordinates_galactic(self):
+        if np.min(np.diff(dt)) <= 0:
+            yield self._record(level='error', msg='Events are not time-ordered.')
+
+    def check_coordinates_galactic(self):
         """Check if RA / DEC matches GLON / GLAT."""
-        event_list = self.dset.event_list
+        t = self.event_list.table
 
-        for colname in ['RA', 'DEC', 'GLON', 'GLAT']:
-            if colname not in event_list.table.colnames:
-                # GLON / GLAT columns are optional ...
-                # so it's OK if they are not present ... just move on ...
-                self.logger.info('Skipping Galactic coordinate check. '
-                                 'Missing column: "{}".'.format(colname))
-                return True
+        if 'GLON' not in t.colnames:
+            return
 
-        radec = event_list.radec
-        galactic = event_list.galactic
-        separation = radec.separation(galactic).to('arcsec')
-        return self._check_separation(separation, 'GLON / GLAT', 'RA / DEC')
+        galactic = SkyCoord(t['GLON'], t['GLAT'], unit='deg', frame='galactic')
+        separation = self.event_list.radec.separation(galactic).to('arcsec')
+        if separation.max() > self.accuracy['angle']:
+            yield self._record(level='error', msg='GLON / GLAT not consistent with RA / DEC')
 
-    def _check_coordinates_altaz(self):
+    def check_coordinates_altaz(self):
         """Check if ALT / AZ matches RA / DEC."""
-        event_list = self.dset.event_list
+        t = self.event_list.table
 
-        for colname in ['RA', 'DEC', 'AZ', 'ALT']:
-            if colname not in event_list.table.colnames:
-                # AZ / ALT columns are optional ...
-                # so it's OK if they are not present ... just move on ...
-                self.logger.info('Skipping AltAz coordinate check. '
-                                 'Missing column: "{}".'.format(colname))
-                return True
+        if 'AZ' not in t.colnames:
+            return
 
-        radec = event_list.radec
-        altaz_expected = event_list.altaz
-        altaz_actual = radec.transform_to(altaz_expected)
-        separation = altaz_actual.separation(altaz_expected).to('arcsec')
-        return self._check_separation(separation, 'ALT / AZ', 'RA / DEC')
-
-    def _check_separation(self, separation, tag1, tag2):
-        max_separation = separation.max()
-
-        if max_separation > self.accuracy['angle']:
-            # TODO: probably we need to print run number and / or other
-            # things for this to be useful in a pipeline ...
-            fmt = '{} not consistent with {}. Max separation: {}'
-            args = [tag1, tag2, max_separation]
-            self.logger.warning(fmt.format(*args))
-            return False
-        else:
-            return True
+        altaz_astropy = self.event_list.altaz
+        separation = angular_separation(
+            altaz_astropy.data.lon, altaz_astropy.data.lat,
+            t['AZ'].quantity, t['ALT'].quantity,
+        )
+        if separation.max() > self.accuracy['angle']:
+            yield self._record(level='error', msg='ALT / AZ not consistent with RA / DEC')
