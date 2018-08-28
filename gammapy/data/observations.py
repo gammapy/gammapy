@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..irf import EnergyDependentTablePSF, PSF3D, IRFStacker
+from .event_list import EventListChecker
 from ..utils.testing import Checker
 from ..utils.energy import Energy
 from ..utils.fits import earth_location_from_dict
@@ -524,6 +525,9 @@ class ObservationChecker(Checker):
             yield self._record(level='warning', msg='Loading events failed')
             return
 
+        for record in EventListChecker(events).run():
+            yield record
+
         if len(events.table) == 0:
             yield self._record(level='error', msg='Events table has zero rows')
 
@@ -640,3 +644,5 @@ class ObservationChecker(Checker):
         except:
             yield self._record(level='warning', msg='Loading psf failed')
             return
+
+        # TODO: add some check that PSF is good, e.g. evaluate at 1 TeV?
