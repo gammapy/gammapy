@@ -121,7 +121,7 @@ setup(
           'sherpa',
       ],
       plotting=[
-          'matplotlib>=1.5',
+          'matplotlib>=2.1',
       ],
     ),
     author=AUTHOR,
