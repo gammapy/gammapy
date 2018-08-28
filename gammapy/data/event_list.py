@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
-from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
@@ -12,16 +11,13 @@ from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
 from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
-from ..extern.pathlib import Path
 from ..utils.time import time_ref_from_dict
-from .gti import GTI
 from . import InvalidDataError
 
 __all__ = [
     'EventListBase',
     'EventList',
     'EventListLAT',
-    'EventListDataset',
 ]
 
 log = logging.getLogger(__name__)
@@ -35,8 +31,6 @@ class EventListBase(object):
     - EventListLAT: targeted for Fermi-LAT event lists
 
     Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
-
-    TODO: merge this class with EventListDataset, which also holds a GTI extension.
 
     The most important reconstructed event parameters
     are available as the following columns:
@@ -561,9 +555,6 @@ class EventList(EventListBase):
     >>> events = EventList.read(filename)
     """
 
-    # TODO: the following properties are also present on the `DataStoreObservation` class.
-    # This duplication should be removed.
-    # Maybe the EventList or EventListDataset should have an `observation` object member?
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
@@ -739,192 +730,7 @@ class EventListLAT(EventListBase):
         m.plot(stretch='sqrt')
 
 
-class EventListDataset(object):
-    """Event list dataset (event list plus some extra info).
-
-    TODO: I'm not sure if IRFs should be included in this
-    class or if an extra container class should be added.
-
-    Parameters
-    ----------
-    event_list : `~gammapy.data.EventList`
-        Event list table
-    gti : `~gammapy.data.GTI`
-        Good time interval table
-    """
-
-    def __init__(self, event_list, gti=None):
-        self.event_list = event_list
-        self.gti = gti
-
-    @classmethod
-    def from_hdulist(cls, hdu_list):
-        """Create `EventList` from a `~astropy.io.fits.HDUList`."""
-        # TODO: This doesn't work because FITS / Table is not integrated.
-        # Maybe the easiest solution for now it to write the hdu_list
-        # to an in-memory buffer with StringIO and then read it
-        # back using Table.read()?
-        raise NotImplementedError
-        event_list = EventList.from_hdu(hdu_list['EVENTS'])
-        gti = GTI.from_hdu(hdu_list['GTI'])
-
-        return cls(event_list=event_list, gti=gti)
-
-    @classmethod
-    def read(cls, filename):
-        """Read event list from FITS file."""
-        event_list = EventList.read(filename)
-
-        try:
-            gti = GTI.read(filename, hdu='GTI')
-        except KeyError:
-            gti = None
-
-        return cls(event_list=event_list, gti=gti)
-
-    @classmethod
-    def vstack_from_files(cls, filenames, logger=None):
-        """Stack event lists vertically (combine events and GTIs).
-
-        This function stacks (a.k.a. concatenates) event lists.
-        E.g. if you have one event list with 100 events (i.e. 100 rows)
-        and another with 42 events, the output event list will have 142 events.
-
-        It also stacks the GTIs so that exposure computations are still
-        possible using the stacked event list.
-
-
-        At the moment this can require a lot of memory.
-        All event lists are loaded into memory at the same time.
-
-        TODO: implement and benchmark different a more efficient method:
-        Get number of rows from headers, pre-allocate a large table,
-        open files one by one and fill correct rows.
-
-        TODO: handle header keywords "correctly".
-        At the moment the output event list header keywords are copies of
-        the values from the first observation, i.e. meaningless.
-        Here's a (probably incomplete) list of values we should handle
-        (usually by computing the min, max or mean or removing it):
-        - OBS_ID
-        - DATE_OBS, DATE_END
-        - TIME_OBS, TIME_END
-        - TSTART, TSTOP
-        - LIVETIME, DEADC
-        - RA_PNT, DEC_PNT
-        - ALT_PNT, AZ_PNT
-
-
-        Parameters
-        ----------
-        filenames : list of str
-            List of event list filenames
-
-        Returns
-        -------
-        event_list_dataset : `~gammapy.data.EventListDataset`
-
-        """
-        total_filesize = 0
-        for filename in filenames:
-            total_filesize += Path(filename).stat().st_size
-
-        if logger:
-            logger.info('Number of files to stack: {}'.format(len(filenames)))
-            logger.info('Total filesize: {:.2f} MB'.format(total_filesize / 1024. ** 2))
-            logger.info('Reading event list files ...')
-
-        event_lists = []
-        gtis = []
-        for filename in filenames:
-            logger.info('Reading {}'.format(filename))
-            event_list = Table.read(filename, hdu='EVENTS')
-
-            # TODO: Remove and modify header keywords for stacked event list
-            meta_del = ['OBS_ID', 'OBJECT']
-            meta_mod = ['DATE_OBS', 'DATE_END', 'TIME_OBS', 'TIME_END']
-
-            gti = Table.read(filename, hdu='GTI')
-            event_lists.append(event_list)
-            gtis.append(gti)
-
-        total_event_list = vstack_tables(event_lists, metadata_conflicts='silent')
-        total_gti = vstack_tables(gtis, metadata_conflicts='silent')
-
-        total_event_list.meta['EVTSTACK'] = 'yes'
-        total_gti.meta['EVTSTACK'] = 'yes'
-
-        return cls(event_list=total_event_list, gti=total_gti)
-
-    def write(self, *args, **kwargs):
-        """Write to FITS file.
-
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
-        """
-        self.to_fits().writeto(*args, **kwargs)
-
-    def to_fits(self):
-        """Convert to FITS HDU list format.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            HDU list with EVENTS and GTI extension.
-        """
-        # TODO: simplify when Table / FITS integration improves:
-        # https://github.com/astropy/astropy/issues/2632#issuecomment-70281392
-        # TODO: I think this makes an in-memory copy, i.e. is inefficient.
-        # Can we avoid this?
-        hdu_list = fits.HDUList()
-
-        # TODO:
-        del self.event_list['TELMASK']
-
-        data = self.event_list.as_array()
-        header = fits.Header()
-        header.update(self.event_list.meta)
-        hdu_list.append(fits.BinTableHDU(data=data, header=header, name='EVENTS'))
-
-        data = self.gti.as_array()
-        header = fits.Header()
-        header.update(self.gti.meta)
-        hdu_list.append(fits.BinTableHDU(data, header=header, name='GTI'))
-
-        return hdu_list
-
-    def __str__(self):
-        ss = 'Event list dataset info:\n'
-        ss += str(self.event_list)
-        ss += str(self.gti)
-        return ss
-
-    def check(self, checks='all'):
-        """Check if format and content is ok.
-
-        This is a convenience method that instantiates
-        and runs a `~gammapy.data.EventListDatasetChecker` ...
-        if you want more options use this way to use it:
-
-        >>> from gammapy.data import EventListDatasetChecker
-        >>> checker = EventListDatasetChecker(event_list, ...)
-        >>> checker.run(which, ...)  #
-
-        Parameters
-        ----------
-        checks : list of str or 'all'
-            Which checks to run (see list in
-            `~gammapy.data.EventListDatasetChecker.run` docstring).
-
-        Returns
-        -------
-        ok : bool
-            Everything ok?
-        """
-        checker = EventListDatasetChecker(self)
-        return checker.run(checks)
-
-
-class EventListDatasetChecker(object):
+class EventListDataSetChecker(object):
     """Event list dataset checker.
 
     Data format specification: ref:`gadf:iact-events`
