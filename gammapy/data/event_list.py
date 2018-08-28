@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 import numpy as np
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
@@ -750,11 +750,13 @@ class EventListChecker(Checker):
         'OBS_ID', 'TELESCOP'
     ]
 
+    _col = namedtuple('col', ['name', 'unit'])
     columns_required = [
-        'EVENT_ID',
-        'RA',
-        'DEC',
-        'ENERGY',
+        _col(name='EVENT_ID', unit=''),
+        _col(name='TIME', unit='s'),
+        _col(name='RA', unit='deg'),
+        _col(name='DEC', unit='deg'),
+        _col(name='ENERGY', unit='TeV'),
     ]
 
     def __init__(self, event_list):
@@ -774,9 +776,13 @@ class EventListChecker(Checker):
             yield self._record(level='error', msg='Missing meta keys: {!r}'.format(meta_missing))
 
     def check_columns(self):
-        columns_missing = set(self.columns_required) - set(self.event_list.table.colnames)
-        if columns_missing:
-            yield self._record(level='error', msg='Missing table columns: {!r}'.format(columns_missing))
+        t = self.event_list.table
+        for name, unit in self.columns_required:
+            if name not in t.colnames:
+                yield self._record(level='error', msg='Missing table column: {!r}'.format(name))
+            else:
+                if Unit(unit) != (t[name].unit or ''):
+                    yield self._record(level='error', msg='Invalid unit for column: {!r}'.format(name))
 
     def check_times(self):
         dt = (self.event_list.time - self.event_list.observation_time_start).sec
