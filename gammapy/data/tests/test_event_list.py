@@ -56,3 +56,13 @@ class TestEventListFermi:
     def test_plot_image(self):
         with mpl_plot_check():
             self.events.plot_image()
+
+
+@requires_data('gammapy-extra')
+class TestEventListChecker:
+    def setup(self):
+        self.event_list = EventList.read('$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_111140.fits')
+
+    def test_check_all(self):
+        records = list(self.event_list.check())
+        assert len(records) == 28

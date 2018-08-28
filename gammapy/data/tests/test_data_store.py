@@ -106,5 +106,4 @@ class TestDataStoreChecker:
 
     def test_check_all(self):
         records = list(self.data_store.check())
-        from pprint import pprint; pprint(records)
         assert len(records) == 28
