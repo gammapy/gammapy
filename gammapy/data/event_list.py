@@ -747,7 +747,31 @@ class EventListChecker(Checker):
     }
 
     meta_required = [
-        'OBS_ID', 'TELESCOP'
+        'OBS_ID',
+        'OBJECT',
+
+        'TSTART',
+        'TSTOP',
+        'ONTIME',
+        'LIVETIME',
+        'DEADC',
+
+        'MJDREFI',
+        'MJDREFF',
+        'TIMEREF',
+        'TIMESYS',
+        'TIMEUNIT',
+
+        'GEOLAT',
+        'GEOLON',
+        'ALTITUDE',
+
+        # TODO: what to do about these?
+        # They are currently listed as required in the spec,
+        # but I think we should just require ICRS and those
+        # are irrelevant, should not be used.
+        # 'RADECSYS',
+        # 'EQUINOX',
     ]
 
     _col = namedtuple('col', ['name', 'unit'])
@@ -777,6 +801,10 @@ class EventListChecker(Checker):
 
     def check_columns(self):
         t = self.event_list.table
+
+        if len(t) == 0:
+            yield self._record(level='error', msg='Events table has zero rows')
+
         for name, unit in self.columns_required:
             if name not in t.colnames:
                 yield self._record(level='error', msg='Missing table column: {!r}'.format(name))
@@ -786,10 +814,12 @@ class EventListChecker(Checker):
 
     def check_times(self):
         dt = (self.event_list.time - self.event_list.observation_time_start).sec
-        if dt[0] <= 0:
-            yield self._record(level='error', msg='Time of first event is before obs start time')
+        if dt.min() < self.accuracy['time'].to('s').value:
+            yield self._record(level='error', msg='Event times before obs start time')
 
-        # TODO: add check for last event time < obs stop time
+        dt = (self.event_list.time - self.event_list.observation_time_end).sec
+        if dt.max() > self.accuracy['time'].to('s').value:
+            yield self._record(level='error', msg='Event times after the obs end time')
 
         if np.min(np.diff(dt)) <= 0:
             yield self._record(level='error', msg='Events are not time-ordered.')

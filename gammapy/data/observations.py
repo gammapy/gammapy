@@ -528,9 +528,6 @@ class ObservationChecker(Checker):
         for record in EventListChecker(events).run():
             yield record
 
-        if len(events.table) == 0:
-            yield self._record(level='error', msg='Events table has zero rows')
-
     def check_gti(self):
         yield self._record(level='debug', msg='Starting gti check')
 
