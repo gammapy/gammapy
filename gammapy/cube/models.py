@@ -9,11 +9,29 @@ from ..utils.scripts import make_path
 from ..maps import Map
 
 __all__ = [
+    'SkyModelBase',
     'SkyModels',
     'SkyModel',
     'CompoundSkyModel',
     'SkyDiffuseCube',
 ]
+
+
+class SkyModelBase(object):
+    """Sky model base class"""
+
+    def copy(self):
+        """A deep copy"""
+        return copy.deepcopy(self)
+
+    def __add__(self, skymodel):
+        return CompoundSkyModel(self, skymodel, operator.add)
+
+    def __radd__(self, model):
+        return self.__add__(model)
+
+    def __call__(self, lon, lat, energy):
+        return self.evaluate(lon, lat, energy)
 
 
 class SkyModels(object):
@@ -102,7 +120,7 @@ class SkyModels(object):
         return out
 
 
-class SkyModel(object):
+class SkyModel(SkyModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -166,6 +184,8 @@ class SkyModel(object):
     def evaluate(self, lon, lat, energy):
         """Evaluate the model at given points.
 
+        The model evaluation follows numpy broadcasting rules.
+
         Return differential surface brightness cube.
         At the moment in units: ``cm-2 s-1 TeV-1 deg-2``
 
@@ -183,24 +203,13 @@ class SkyModel(object):
         """
         val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
         val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
-        val_spectral = np.atleast_1d(val_spectral)[:, np.newaxis, np.newaxis]
-
         val = val_spatial * val_spectral
-
+        # TODO: shall remove hard coded return units? If really needed users can
+        # always do this themselves. For fitting this also adds a performance penalty...
         return val.to('cm-2 s-1 TeV-1 deg-2')
 
-    def copy(self):
-        """A deep copy"""
-        return copy.deepcopy(self)
 
-    def __add__(self, skymodel):
-        return CompoundSkyModel(self, skymodel, operator.add)
-
-    def __radd__(self, model):
-        return self.__add__(model)
-
-
-class CompoundSkyModel(object):
+class CompoundSkyModel(SkyModelBase):
     """Represents the algebraic combination of two
     `~gammapy.cube.models.SkyModel`
 
@@ -260,16 +269,14 @@ class CompoundSkyModel(object):
         """
         val1 = self.model1.evaluate(lon, lat, energy)
         val2 = self.model2.evaluate(lon, lat, energy)
-
         return self.operator(val1, val2)
 
 
-class SkyDiffuseCube(object):
+class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis.
-    The map unit is assumed to be ``cm-2 s-1 MeV-1 sr-1``.
-    Use `~gammapy.image.models.SkyDiffuseMap` for 2D maps.
+    This is for a 3D map with an energy axis. Use `~gammapy.image.models.SkyDiffuseMap`
+    for 2D maps.
 
     Parameters
     ----------
@@ -279,29 +286,34 @@ class SkyDiffuseCube(object):
         Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `Map.interp_by_coord()`.
+        Default arguments are {'interp': 'linear', 'fill_value': 0}.
+
     """
-
-    def __init__(self, map, norm=1, meta=None):
-        if len(map.geom.axes) != 1:
-            raise ValueError('Need a map with an energy axis')
-
-        axis = map.geom.axes[0]
-        if axis.name != 'energy':
-            raise ValueError('Need a map with axis of name "energy"')
+    def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
+        axis = map.geom.get_axis_by_name('energy')
 
         if axis.node_type != 'center':
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
         self.parameters = Parameters([
             Parameter('norm', norm),
         ])
         self.meta = {} if meta is None else meta
 
+        interp_kwargs = {} if interp_kwargs is None else interp_kwargs
+        interp_kwargs.setdefault('interp', 'linear')
+        interp_kwargs.setdefault('fill_value', 0)
+        self._interp_kwargs = interp_kwargs
+
+
     @classmethod
     def read(cls, filename, **kwargs):
         """Read map from FITS file.
+
+        The default unit used if none is found in the file is ``cm-2 s-1 MeV-1 sr-1``.
 
         Parameters
         ----------
@@ -315,14 +327,11 @@ class SkyDiffuseCube(object):
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
-        energy = np.atleast_1d(energy)[:, np.newaxis, np.newaxis]
-        energy = energy.to(self.map.geom.axes[0].unit).value
-
         coord = {
             'lon': lon.to('deg').value,
             'lat': lat.to('deg').value,
             'energy': energy,
         }
-        val = self.map.interp_by_coord(coord, **self._interp_opts)
+        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         norm = self.parameters['norm'].value
-        return norm * val * u.Unit('cm-2 s-1 MeV-1 sr-1')
+        return u.Quantity(norm * val, self.map.unit, copy=False)
