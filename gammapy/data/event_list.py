@@ -83,9 +83,7 @@ class EventListBase(object):
             Filename
         """
         filename = make_path(filename)
-        if 'hdu' not in kwargs:
-            kwargs.update(hdu='EVENTS')
-
+        kwargs.setdefault('hdu', 'EVENTS')
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 

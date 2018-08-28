@@ -67,8 +67,7 @@ class GTI(object):
             Filename
         """
         filename = make_path(filename)
-        if 'hdu' not in kwargs:
-            kwargs.update(hdu='GTI')
+        kwargs.setdefault('hdu', 'GTI')
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
