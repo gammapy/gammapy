@@ -530,6 +530,14 @@ class EventListBase(object):
 
         return ax
 
+    def check(self, checks='all'):
+        """Run checks.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = EventListChecker(self)
+        return checker.run(checks=checks)
+
 
 class EventList(EventListBase):
     """Event list for IACT dataset
