@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 import numpy as np
-from astropy.units import Quantity
-from astropy.time import Time
+from astropy.units import Quantity, Unit
 from astropy.coordinates import SkyCoord, Angle, AltAz
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
 from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from . import InvalidDataError
+from ..utils.testing import Checker
 
 __all__ = [
     'EventListBase',
@@ -83,9 +83,7 @@ class EventListBase(object):
             Filename
         """
         filename = make_path(filename)
-        if 'hdu' not in kwargs:
-            kwargs.update(hdu='EVENTS')
-
+        kwargs.setdefault('hdu', 'EVENTS')
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
@@ -151,8 +149,6 @@ class EventListBase(object):
     @property
     def radec(self):
         """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-
-        TODO: the `radec` and `galactic` properties should be cached as table columns
         """
         lon, lat = self.table['RA'], self.table['DEC']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
@@ -161,27 +157,9 @@ class EventListBase(object):
     def galactic(self):
         """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
 
-        Note: uses the ``GLON`` and ``GLAT`` columns.
-        If only ``RA`` and ``DEC`` are present use the explicit
-        ``event_list.radec.to('galactic')`` instead.
+        Always computed from RA / DEC using Astropy.
         """
-        self.add_galactic_columns()
-        lon, lat = self.table['GLON'], self.table['GLAT']
-        return SkyCoord(lon, lat, unit='deg', frame='galactic')
-
-    def add_galactic_columns(self):
-        """Add Galactic coordinate columns to the table.
-
-        Adds the following columns to the table if not already present:
-        - "GLON" - Galactic longitude (deg)
-        - "GLAT" - Galactic latitude (deg)
-        """
-        if set(['GLON', 'GLAT']).issubset(self.table.colnames):
-            return
-
-        galactic = self.radec.galactic
-        self.table['GLON'] = galactic.l.degree
-        self.table['GLAT'] = galactic.b.degree
+        return self.radec.galactic
 
     @property
     def observation_live_time_duration(self):
@@ -213,14 +191,21 @@ class EventListBase(object):
         return 1 - self.table.meta['DEADC']
 
     @property
-    def altaz(self):
-        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        time = self.time
-        location = self.observatory_earth_location
-        altaz_frame = AltAz(obstime=time, location=location)
+    def altaz_frame(self):
+        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        return AltAz(obstime=self.time, location=self.location)
 
-        lon, lat = self.table['AZ'], self.table['ALT']
-        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
+    @property
+    def altaz(self):
+        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
+        return self.radec.transform_to(self.altaz_frame)
+
+    @property
+    def altaz_from_table(self):
+        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
+        lon = self.table['AZ_PNT']
+        lat = self.table['ALT_PNT']
+        return SkyCoord(lon, lat, unit='deg', frame=self.altaz_frame)
 
     @property
     def pointing_radec(self):
@@ -533,6 +518,14 @@ class EventListBase(object):
 
         return ax
 
+    def check(self, checks='all'):
+        """Run checks.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = EventListChecker(self)
+        return checker.run(checks=checks)
+
 
 class EventList(EventListBase):
     """Event list for IACT dataset
@@ -730,22 +723,22 @@ class EventListLAT(EventListBase):
         m.plot(stretch='sqrt')
 
 
-class EventListDataSetChecker(object):
-    """Event list dataset checker.
+class EventListChecker(Checker):
+    """Event list checker.
 
     Data format specification: ref:`gadf:iact-events`
 
     Parameters
     ----------
-    event_list_dataset : `~gammapy.data.EventListDataset`
-        Event list dataset
-    logger : `logging.Logger` or None
-        Logger to use (use module-level Gammapy logger by default)
+    event_list : `~gammapy.data.EventList`
+        Event list
     """
     CHECKS = OrderedDict([
-        ('misc', 'check_misc'),
+        ('meta', 'check_meta'),
+        ('columns', 'check_columns'),
         ('times', 'check_times'),
-        ('coordinates', 'check_coordinates'),
+        ('coordinates_galactic', 'check_coordinates_galactic'),
+        ('coordinates_altaz', 'check_coordinates_altaz'),
     ])
 
     accuracy = {
@@ -753,200 +746,119 @@ class EventListDataSetChecker(object):
         'time': Quantity(1, 'microsecond'),
     }
 
-    def __init__(self, event_list_dataset, logger=None):
-        self.dset = event_list_dataset
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = log
+    # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
+    meta_required = [
+        'HDUCLASS',
+        'HDUDOC',
+        'HDUVERS',
+        'HDUCLAS1',
+        
+        'OBS_ID',
 
-    def run(self, checks='all'):
-        """Run checks.
+        'TSTART',
+        'TSTOP',
+        'ONTIME',
+        'LIVETIME',
+        'DEADC',
 
-        Available checks: {...}
+        # TODO: what to do about these?
+        # They are currently listed as required in the spec,
+        # but I think we should just require ICRS and those
+        # are irrelevant, should not be used.
+        # 'RADECSYS',
+        # 'EQUINOX',
 
-        Parameters
-        ----------
-        checks : list of str or "all"
-            Which checks to run
+        'ORIGIN',
+        'TELESCOP',
+        'INSTRUME',
+        'CREATOR',
 
-        Returns
-        -------
-        ok : bool
-            Everything ok?
-        """
-        if checks == 'all':
-            checks = self.CHECKS.keys()
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        'MJDREFI',
+        'MJDREFF',
+        'TIMEUNIT',
+        'TIMESYS',
+        'TIMEREF',
 
-        unknown_checks = set(checks).difference(self.CHECKS.keys())
-        if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location
+        'GEOLON',
+        'GEOLAT',
+        'ALTITUDE',
+    ]
 
-        ok = True
-        for check in checks:
-            check_method = getattr(self, self.CHECKS[check])
-            ok &= check_method()
+    _col = namedtuple('col', ['name', 'unit'])
+    columns_required = [
+        _col(name='EVENT_ID', unit=''),
+        _col(name='TIME', unit='s'),
+        _col(name='RA', unit='deg'),
+        _col(name='DEC', unit='deg'),
+        _col(name='ENERGY', unit='TeV'),
+    ]
 
-        return ok
+    def __init__(self, event_list):
+        self.event_list = event_list
 
-    def check_misc(self):
-        """Check misc basic stuff."""
-        ok = True
+    def _record(self, level='info', msg=None):
+        obs_id = self.event_list.table.meta['OBS_ID']
+        return {
+            'level': level,
+            'obs_id': obs_id,
+            'msg': msg,
+        }
 
-        required_meta = ['TELESCOP', 'OBS_ID']
-        missing_meta = set(required_meta) - set(self.dset.event_list.table.meta)
-        if missing_meta:
-            ok = False
-            self.logger.error('Missing meta info: {}'.format(missing_meta))
+    def check_meta(self):
+        meta_missing = set(self.meta_required) - set(self.event_list.table.meta)
+        if meta_missing:
+            yield self._record(level='error', msg='Missing meta keys: {!r}'.format(meta_missing))
 
-        # TODO: implement more basic checks that all required info is present.
+    def check_columns(self):
+        t = self.event_list.table
 
-        return ok
+        if len(t) == 0:
+            yield self._record(level='error', msg='Events table has zero rows')
 
-    def _check_times_gtis(self):
-        """Check GTI info."""
-        # TODO:
-        # Check that required info is there
-        for colname in ['START', 'STOP']:
-            if colname not in self.colnames:
-                raise InvalidDataError('GTI missing column: {}'.format(colname))
-
-        for key in ['TSTART', 'TSTOP', 'MJDREFI', 'MJDREFF']:
-            if key not in self.meta:
-                raise InvalidDataError('GTI missing header keyword: {}'.format(key))
-
-        # TODO: Check that header keywords agree with table entries
-        # TSTART, TSTOP, MJDREFI, MJDREFF
-
-        # Check that START and STOP times are consecutive
-        times = np.ravel(self.table['START'], self.table['STOP'])
-        # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
-        if not np.all(np.diff(times) >= 0):
-            raise InvalidDataError('GTIs are not consecutive or sorted.')
+        for name, unit in self.columns_required:
+            if name not in t.colnames:
+                yield self._record(level='error', msg='Missing table column: {!r}'.format(name))
+            else:
+                if Unit(unit) != (t[name].unit or ''):
+                    yield self._record(level='error', msg='Invalid unit for column: {!r}'.format(name))
 
     def check_times(self):
-        """Check if various times are consistent.
+        dt = (self.event_list.time - self.event_list.observation_time_start).sec
+        if dt.min() < self.accuracy['time'].to('s').value:
+            yield self._record(level='error', msg='Event times before obs start time')
 
-        The headers and tables of the FITS EVENTS and GTI extension
-        contain various observation and event time information.
-        """
-        ok = True
+        dt = (self.event_list.time - self.event_list.observation_time_end).sec
+        if dt.max() > self.accuracy['time'].to('s').value:
+            yield self._record(level='error', msg='Event times after the obs end time')
 
-        # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
-        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
-        telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01T00:00:00'),
-            HESS=Time('2001-01-01T00:00:00'),
-        )
+        if np.min(np.diff(dt)) <= 0:
+            yield self._record(level='error', msg='Events are not time-ordered.')
 
-        meta = self.dset.event_list.table.meta
-        telescope = meta['TELESCOP']
-
-        if telescope in telescope_met_refs.keys():
-            dt = (self.time_ref - telescope_met_refs[telescope])
-            if dt > self.accuracy['time']:
-                ok = False
-                self.logger.error('MET reference is incorrect.')
-        else:
-            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
-
-        # TODO: check latest CTA spec to see which info is required / optional
-        # EVENTS header keywords:
-        # 'DATE_OBS': '2004-10-14'
-        # 'TIME_OBS': '00:08:27'
-        # 'DATE_END': '2004-10-14'
-        # 'TIME_END': '00:34:44'
-        # 'TSTART': 150984507.0
-        # 'TSTOP': 150986084.0
-        # 'MJDREFI': 51544
-        # 'MJDREFF': 0.5
-        # 'TIMEUNIT': 's'
-        # 'TIMESYS': 'TT'
-        # 'TIMEREF': 'local'
-        # 'TASSIGN': 'Namibia'
-        # 'TELAPSE': 0
-        # 'ONTIME': 1577.0
-        # 'LIVETIME': 1510.95910644531
-        # 'DEADC': 0.964236799627542
-
-        return ok
-
-    def check_coordinates(self):
-        """Check if various event list coordinates are consistent.
-
-        Parameters
-        ----------
-        event_list_dataset : `~gammapy.data.EventListDataset`
-            Event list dataset
-        accuracy : `~astropy.coordinates.Angle`
-            Required accuracy.
-
-        Returns
-        -------
-        status : bool
-            All coordinates consistent?
-        """
-        ok = True
-        ok &= self._check_coordinates_header()
-        ok &= self._check_coordinates_galactic()
-        ok &= self._check_coordinates_altaz()
-        ok &= self._check_coordinates_field_of_view()
-        return ok
-
-    def _check_coordinates_header(self):
-        """Check TODO"""
-        # TODO: implement
-        return True
-
-    def _check_coordinates_galactic(self):
+    def check_coordinates_galactic(self):
         """Check if RA / DEC matches GLON / GLAT."""
-        event_list = self.dset.event_list
+        t = self.event_list.table
 
-        for colname in ['RA', 'DEC', 'GLON', 'GLAT']:
-            if colname not in event_list.table.colnames:
-                # GLON / GLAT columns are optional ...
-                # so it's OK if they are not present ... just move on ...
-                self.logger.info('Skipping Galactic coordinate check. '
-                                 'Missing column: "{}".'.format(colname))
-                return True
+        if 'GLON' not in t.colnames:
+            return
 
-        radec = event_list.radec
-        galactic = event_list.galactic
-        separation = radec.separation(galactic).to('arcsec')
-        return self._check_separation(separation, 'GLON / GLAT', 'RA / DEC')
+        galactic = SkyCoord(t['GLON'], t['GLAT'], unit='deg', frame='galactic')
+        separation = self.event_list.radec.separation(galactic).to('arcsec')
+        if separation.max() > self.accuracy['angle']:
+            yield self._record(level='error', msg='GLON / GLAT not consistent with RA / DEC')
 
-    def _check_coordinates_altaz(self):
+    def check_coordinates_altaz(self):
         """Check if ALT / AZ matches RA / DEC."""
-        event_list = self.dset.event_list
+        t = self.event_list.table
 
-        for colname in ['RA', 'DEC', 'AZ', 'ALT']:
-            if colname not in event_list.table.colnames:
-                # AZ / ALT columns are optional ...
-                # so it's OK if they are not present ... just move on ...
-                self.logger.info('Skipping AltAz coordinate check. '
-                                 'Missing column: "{}".'.format(colname))
-                return True
+        if 'AZ' not in t.colnames:
+            return
 
-        radec = event_list.radec
-        altaz_expected = event_list.altaz
-        altaz_actual = radec.transform_to(altaz_expected)
-        separation = altaz_actual.separation(altaz_expected).to('arcsec')
-        return self._check_separation(separation, 'ALT / AZ', 'RA / DEC')
-
-    def _check_coordinates_field_of_view(self):
-        """Check if DETX / DETY matches ALT / AZ."""
-        # TODO: implement
-        return True
-
-    def _check_separation(self, separation, tag1, tag2):
-        max_separation = separation.max()
-
-        if max_separation > self.accuracy['angle']:
-            # TODO: probably we need to print run number and / or other
-            # things for this to be useful in a pipeline ...
-            fmt = '{} not consistent with {}. Max separation: {}'
-            args = [tag1, tag2, max_separation]
-            self.logger.warning(fmt.format(*args))
-            return False
-        else:
-            return True
+        altaz_astropy = self.event_list.altaz
+        separation = angular_separation(
+            altaz_astropy.data.lon, altaz_astropy.data.lat,
+            t['AZ'].quantity, t['ALT'].quantity,
+        )
+        if separation.max() > self.accuracy['angle']:
+            yield self._record(level='error', msg='ALT / AZ not consistent with RA / DEC')

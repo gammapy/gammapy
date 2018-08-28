@@ -6,9 +6,10 @@ from collections import OrderedDict
 import subprocess
 from astropy.table import Table
 from ..utils.scripts import make_path
+from ..utils.testing import Checker
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
-from .observations import DataStoreObservation, ObservationList
+from .observations import DataStoreObservation, ObservationList, ObservationChecker
 
 __all__ = [
     'DataStore',
@@ -240,100 +241,6 @@ class DataStore(object):
 
         return things
 
-    def check_observations(self):
-        """Perform some sanity checks for all observations.
-
-        Returns
-        -------
-        results : OrderedDict
-            dictionary containing failure messages for all runs that fail a check.
-        """
-
-        results = OrderedDict()
-
-        # Loop over all obs_ids in obs_table
-        for obs_id in self.obs_table['OBS_ID']:
-            messages = self.obs(obs_id).check_observation()
-            if len(messages) > 0:
-                results[obs_id] = messages
-
-        return results
-
-    def check_integrity(self, logger=None):
-        """Check integrity, i.e. whether index and observation table match.
-        """
-        # Todo: This is broken - remove or fix?
-        sane = True
-        if logger is None:
-            logger = logging.getLogger('default')
-
-        logger.info('Checking event list files')
-        available = self.check_available_event_lists(logger)
-        if np.any(~available):
-            logger.warning('Number of missing event list files: {}'.format(np.invert(available).sum()))
-
-        # TODO: implement better, more complete integrity checks.
-        return sane
-
-    def make_table_of_files(self, observation_table=None, filetypes=['events']):
-        """Make list of files in the datastore directory.
-
-        Parameters
-        ----------
-        observation_table : `~gammapy.data.ObservationTable` or None
-            Observation table (``None`` means select all observations).
-        filetypes : list of str
-            File types (TODO: document in a central location and reference from here).
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Table summarising info about files.
-        """
-        # TODO : remove or fix
-        raise NotImplementedError
-
-        if observation_table is None:
-            observation_table = ObservationTable(self.obs_table)
-
-        data = []
-        for observation in observation_table:
-            for filetype in filetypes:
-                row = dict()
-                row['OBS_ID'] = observation['OBS_ID']
-                row['filetype'] = filetype
-                filename = self.filename(observation['OBS_ID'], filetype=filetype, abspath=True)
-                row['filename'] = filename
-                data.append(row)
-
-        return Table(data=data, names=['OBS_ID', 'filetype', 'filename'])
-
-    def check_available_event_lists(self, logger=None):
-        """Check if all event lists are available.
-
-        TODO: extend this function, or combine e.g. with ``make_table_of_files``.
-
-        Returns
-        -------
-        file_available : `~numpy.ndarray`
-            Boolean mask which files are available.
-        """
-        # TODO: This is broken. Remove (covered by HDUlocation class)?
-        raise NotImplementedError
-
-        observation_table = self.obs_table
-        file_available = np.ones(len(observation_table), dtype='bool')
-        for ii in range(len(observation_table)):
-            obs_id = observation_table['OBS_ID'][ii]
-            filename = self.filename(obs_id)
-            if not make_path(filename).is_file():
-                file_available[ii] = False
-                if logger:
-                    logger.warning('For OBS_ID = {:06d} the event list file is missing: {}'
-                                   ''.format(obs_id, filename))
-
-        return file_available
-
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
 
@@ -427,7 +334,7 @@ class DataStore(object):
         return checker.run(checks=checks)
 
 
-class DataStoreChecker(object):
+class DataStoreChecker(Checker):
     """Check data store.
 
     Checks data format and a bit about the content.
@@ -442,18 +349,6 @@ class DataStoreChecker(object):
 
     def __init__(self, data_store):
         self.data_store = data_store
-
-    def run(self, checks='all'):
-        if checks == 'all':
-            checks = self.CHECKS.keys()
-
-        unknown_checks = set(checks).difference(self.CHECKS.keys())
-        if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
-
-        for check in checks:
-            for record in getattr(self, self.CHECKS[check])():
-                yield record
 
     def check_obs_table(self):
         """Checks for the observation index table."""
@@ -500,92 +395,3 @@ class DataStoreChecker(object):
             for records in ObservationChecker(obs).run():
                 yield records
 
-
-class ObservationChecker:
-    """Check an observation.
-
-    Checks data format and a bit about the content.
-    """
-
-    CHECKS = OrderedDict([
-        ('events', 'check_events'),
-        ('aeff', 'check_aeff'),
-        ('edisp', 'check_edisp'),
-        ('psf', 'check_psf'),
-    ])
-
-    def __init__(self, obs):
-        self.obs = obs
-
-    def _record(self, level='info', msg=None):
-        return {
-            'level': level,
-            'obs_id': self.obs.obs_id,
-            'msg': msg,
-        }
-
-    def run(self):
-        yield self._record(level='debug', msg='Starting observation check')
-
-        for record in self.check_events():
-            yield record
-
-        for record in self.check_aeff():
-            yield record
-
-        for record in self.check_edisp():
-            yield record
-
-        for record in self.check_psf():
-            yield record
-
-    def check_events(self):
-        yield self._record(level='debug', msg='Starting events check')
-
-        try:
-            events = self.obs.load('events')
-        except:
-            yield self._record(level='warning', msg='Loading events failed')
-            return
-
-        if len(events.table) == 0:
-            yield self._record(level='error', msg='Events table has zero rows')
-
-    def check_aeff(self):
-        yield self._record(level='debug', msg='Starting aeff check')
-
-        try:
-            aeff = self.obs.load('aeff')
-        except:
-            yield self._record(level='warning', msg='Loading aeff failed')
-            return
-
-        # Check that thresholds are meaningful for aeff
-        if 'LO_THRES' in aeff.meta and 'HI_THRES' in aeff.meta and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']:
-            yield self._record(level='error', msg='LO_THRES >= HI_THRES in effective area meta data')
-
-        # Check that maximum value of aeff is greater than zero
-        if np.max(aeff.data.data) <= 0:
-            yield self._record(level='error', msg='maximum entry of effective area table <= 0')
-
-    def check_edisp(self):
-        yield self._record(level='debug', msg='Starting edisp check')
-
-        try:
-            edisp = self.obs.load('edisp')
-        except:
-            yield self._record(level='warning', msg='Loading edisp failed')
-            return
-
-        # Check that maximum value of edisp matrix is greater than zero
-        if np.max(edisp.data.data) <= 0:
-            yield self._record(level='error', msg='maximum entry of edisp is <= 0')
-
-    def check_psf(self):
-        yield self._record(level='debug', msg='Starting psf check')
-
-        try:
-            psf = self.obs.load('psf')
-        except:
-            yield self._record(level='warning', msg='Loading psf failed')
-            return

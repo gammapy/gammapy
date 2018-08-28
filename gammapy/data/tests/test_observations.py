@@ -155,3 +155,14 @@ def test_make_mean_edisp(data_store):
     i = np.where(rmf.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     i2 = np.where(rmf2.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     assert_equal(i, i2)
+
+
+@requires_data('gammapy-extra')
+class TestObservationChecker:
+    def setup(self):
+        data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps')
+        self.observation = data_store.obs(111140)
+
+    def test_check_all(self):
+        records = list(self.observation.check())
+        assert len(records) == 9

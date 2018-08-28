@@ -7,6 +7,8 @@ import numpy as np
 __all__ = []
 
 
+# TODO: change this checker to the structure of the other checkers
+# we have; see gammapy.utils.testing.Checker and examples in gammapy.data
 class PSF3DChecker(object):
     """Automated quality checks for `gammapy.irf.PSF3D`.
 

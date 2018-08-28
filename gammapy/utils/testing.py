@@ -17,6 +17,7 @@ __all__ = [
     'assert_wcs_allclose',
     'assert_skycoord_allclose',
     'assert_time_allclose',
+    'Checker',
 ]
 
 # Cache for `requires_dependency`
@@ -210,3 +211,19 @@ def mpl_plot_check():
             plt.close()
 
     return MPLPlotCheck()
+
+
+class Checker(object):
+    """Base class for checker classes in Gammapy."""
+
+    def run(self, checks='all'):
+        if checks == 'all':
+            checks = self.CHECKS.keys()
+
+        unknown_checks = set(checks).difference(self.CHECKS.keys())
+        if unknown_checks:
+            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+
+        for check in checks:
+            for record in getattr(self, self.CHECKS[check])():
+                yield record

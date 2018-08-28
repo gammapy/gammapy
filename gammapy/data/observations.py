@@ -8,6 +8,8 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..irf import EnergyDependentTablePSF, PSF3D, IRFStacker
+from .event_list import EventListChecker
+from ..utils.testing import Checker
 from ..utils.energy import Energy
 from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
@@ -341,33 +343,6 @@ class DataStoreObservation(object):
                                       exposure=exposure, psf_value=psf_value)
         return psf
 
-    def check_observation(self):
-        """Perform some basic sanity checks on this observation.
-
-        Returns
-        -------
-        results : list
-            List with failure messages for the checks that failed
-        """
-        messages = []
-        # Check that events table is not empty
-        if len(self.events.table) == 0:
-            messages.append('events table empty')
-        # Check that thresholds are meaningful for aeff
-        if self.aeff.meta['LO_THRES'] >= self.aeff.meta['HI_THRES']:
-            messages.append('LO_THRES >= HI_THRES in effective area meta data')
-        # Check that maximum value of aeff is greater than zero
-        if np.max(self.aeff.data.data) <= 0:
-            messages.append('maximum entry of effective area table <= 0')
-        # Check that maximum value of edisp matrix is greater than zero
-        if np.max(self.edisp.data.data) <= 0:
-            messages.append('maximum entry of energy dispersion table <= 0')
-        # Check that thresholds are meaningful for psf
-        if self.psf.energy_thresh_lo >= self.psf.energy_thresh_hi:
-            messages.append('LO_THRES >= HI_THRES in psf meta data')
-
-        return messages
-
     def to_observation_cta(self):
         """Convert to `~gammapy.data.ObservationCTA`.
 
@@ -401,6 +376,14 @@ class DataStoreObservation(object):
                 props[obs_cta_kwarg] = None
 
         return ObservationCTA(**props)
+
+    def check(self, checks='all'):
+        """Run checks.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = ObservationChecker(self)
+        return checker.run(checks=checks)
 
 
 class ObservationList(UserList):
@@ -507,3 +490,131 @@ class ObservationList(UserList):
         irf_stack.stack_edisp()
 
         return irf_stack.stacked_edisp
+
+
+class ObservationChecker(Checker):
+    """Check an observation.
+
+    Checks data format and a bit about the content.
+    """
+
+    CHECKS = OrderedDict([
+        ('events', 'check_events'),
+        ('gti', 'check_gti'),
+        ('aeff', 'check_aeff'),
+        ('edisp', 'check_edisp'),
+        ('psf', 'check_psf'),
+    ])
+
+    def __init__(self, obs):
+        self.obs = obs
+
+    def _record(self, level='info', msg=None):
+        return {
+            'level': level,
+            'obs_id': self.obs.obs_id,
+            'msg': msg,
+        }
+
+    def check_events(self):
+        yield self._record(level='debug', msg='Starting events check')
+
+        try:
+            events = self.obs.load('events')
+        except:
+            yield self._record(level='warning', msg='Loading events failed')
+            return
+
+        for record in EventListChecker(events).run():
+            yield record
+
+    # TODO: split this out into a GTIChecker
+    def check_gti(self):
+        yield self._record(level='debug', msg='Starting gti check')
+
+        try:
+            gti = self.obs.load('gti')
+        except:
+            yield self._record(level='warning', msg='Loading GTI failed')
+            return
+
+        if len(gti.table) == 0:
+            yield self._record(level='error', msg='GTI table has zero rows')
+
+        columns_required = ['START', 'STOP']
+        columns_missing = set(columns_required) - set(gti.table.colnames)
+        if columns_missing:
+            yield self._record(level='error', msg='Missing table columns: {!r}'.format(columns_missing))
+
+        # TODO: Check that header keywords agree with table entries
+        # TSTART, TSTOP, MJDREFI, MJDREFF
+
+        # Check that START and STOP times are consecutive
+        # times = np.ravel(self.table['START'], self.table['STOP'])
+        # # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
+        # if not np.all(np.diff(times) >= 0):
+        #     yield 'GTIs are not consecutive or sorted.'
+
+    # TODO: add reference times for all instruments and check for this
+    # Use TELESCOP header key to check which instrument it is.
+    def _check_times(self):
+        """Check if various times are consistent.
+
+        The headers and tables of the FITS EVENTS and GTI extension
+        contain various observation and event time information.
+        """
+        # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
+        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
+        telescope_met_refs = OrderedDict(
+            FERMI=Time('2001-01-01T00:00:00'),
+            HESS=Time('2001-01-01T00:00:00'),
+        )
+
+        meta = self.dset.event_list.table.meta
+        telescope = meta['TELESCOP']
+
+        if telescope in telescope_met_refs.keys():
+            dt = (self.time_ref - telescope_met_refs[telescope])
+            if dt > self.accuracy['time']:
+                yield self._record(level='error', msg='Reference time incorrect for telescope')
+
+    def check_aeff(self):
+        yield self._record(level='debug', msg='Starting aeff check')
+
+        try:
+            aeff = self.obs.load('aeff')
+        except:
+            yield self._record(level='warning', msg='Loading aeff failed')
+            return
+
+        # Check that thresholds are meaningful for aeff
+        if 'LO_THRES' in aeff.meta and 'HI_THRES' in aeff.meta and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']:
+            yield self._record(level='error', msg='LO_THRES >= HI_THRES in effective area meta data')
+
+        # Check that maximum value of aeff is greater than zero
+        if np.max(aeff.data.data) <= 0:
+            yield self._record(level='error', msg='maximum entry of effective area table <= 0')
+
+    def check_edisp(self):
+        yield self._record(level='debug', msg='Starting edisp check')
+
+        try:
+            edisp = self.obs.load('edisp')
+        except:
+            yield self._record(level='warning', msg='Loading edisp failed')
+            return
+
+        # Check that maximum value of edisp matrix is greater than zero
+        if np.max(edisp.data.data) <= 0:
+            yield self._record(level='error', msg='maximum entry of edisp is <= 0')
+
+    def check_psf(self):
+        yield self._record(level='debug', msg='Starting psf check')
+
+        try:
+            psf = self.obs.load('psf')
+        except:
+            yield self._record(level='warning', msg='Loading psf failed')
+            return
+
+        # TODO: add some check that PSF is good, e.g. evaluate at 1 TeV?
