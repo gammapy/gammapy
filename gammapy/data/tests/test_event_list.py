@@ -27,6 +27,12 @@ class TestEventListHESS:
         assert '{:1.5f}'.format(lat) == '-23.27178 deg'
         assert '{:1.5f}'.format(height) == '1835.00000 m'
 
+    def test_altaz(self):
+        altaz = self.events.altaz
+        assert_allclose(altaz[0].az.deg, 46.205875, atol=1e-3)
+        assert_allclose(altaz[0].alt.deg, 31.200132, atol=1e-3)
+        # TODO: add asserts for frame properties
+
     def test_stack(self):
         event_lists = [self.events] * 3
         stacked_list = EventList.stack(event_lists)
