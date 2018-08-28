@@ -165,4 +165,4 @@ class TestObservationChecker:
 
     def test_check_all(self):
         records = list(self.observation.check())
-        assert len(records) == 9
+        assert len(records) == 10

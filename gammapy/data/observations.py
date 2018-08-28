@@ -542,9 +542,9 @@ class ObservationChecker(Checker):
             yield self._record(level='error', msg='GTI table has zero rows')
 
         columns_required = ['START', 'STOP']
-        columns_missing = set(columns_required) - set(gti.table.colnames)
-        if columns_missing:
-            yield self._record(level='error', msg='Missing table columns: {!r}'.format(columns_missing))
+        for name in columns_required:
+            if name not in gti.table.colnames:
+                yield self._record(level='error', msg='Missing table column: {!r}'.format(name))
 
         # TODO: Check that header keywords agree with table entries
         # TSTART, TSTOP, MJDREFI, MJDREFF

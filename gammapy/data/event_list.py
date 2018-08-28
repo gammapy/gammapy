@@ -807,7 +807,7 @@ class EventListChecker(Checker):
         }
 
     def check_meta(self):
-        meta_missing = set(self.meta_required) - set(self.event_list.table.meta)
+        meta_missing = sorted(set(self.meta_required) - set(self.event_list.table.meta))
         if meta_missing:
             yield self._record(level='error', msg='Missing meta keys: {!r}'.format(meta_missing))
 
