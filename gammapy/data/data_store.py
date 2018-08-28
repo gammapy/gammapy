@@ -6,6 +6,7 @@ from collections import OrderedDict
 import subprocess
 from astropy.table import Table
 from ..utils.scripts import make_path
+from ..utils.testing import Checker
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .observations import DataStoreObservation, ObservationList
@@ -427,7 +428,7 @@ class DataStore(object):
         return checker.run(checks=checks)
 
 
-class DataStoreChecker(object):
+class DataStoreChecker(Checker):
     """Check data store.
 
     Checks data format and a bit about the content.
@@ -442,18 +443,6 @@ class DataStoreChecker(object):
 
     def __init__(self, data_store):
         self.data_store = data_store
-
-    def run(self, checks='all'):
-        if checks == 'all':
-            checks = self.CHECKS.keys()
-
-        unknown_checks = set(checks).difference(self.CHECKS.keys())
-        if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
-
-        for check in checks:
-            for record in getattr(self, self.CHECKS[check])():
-                yield record
 
     def check_obs_table(self):
         """Checks for the observation index table."""
@@ -501,7 +490,7 @@ class DataStoreChecker(object):
                 yield records
 
 
-class ObservationChecker:
+class ObservationChecker(Checker):
     """Check an observation.
 
     Checks data format and a bit about the content.
@@ -509,6 +498,7 @@ class ObservationChecker:
 
     CHECKS = OrderedDict([
         ('events', 'check_events'),
+        ('gti', 'check_gti'),
         ('aeff', 'check_aeff'),
         ('edisp', 'check_edisp'),
         ('psf', 'check_psf'),
@@ -524,21 +514,6 @@ class ObservationChecker:
             'msg': msg,
         }
 
-    def run(self):
-        yield self._record(level='debug', msg='Starting observation check')
-
-        for record in self.check_events():
-            yield record
-
-        for record in self.check_aeff():
-            yield record
-
-        for record in self.check_edisp():
-            yield record
-
-        for record in self.check_psf():
-            yield record
-
     def check_events(self):
         yield self._record(level='debug', msg='Starting events check')
 
@@ -550,6 +525,82 @@ class ObservationChecker:
 
         if len(events.table) == 0:
             yield self._record(level='error', msg='Events table has zero rows')
+
+    def check_gti(self):
+        yield self._record(level='debug', msg='Starting gti check')
+
+        try:
+            gti = self.obs.load('gti')
+        except:
+            yield self._record(level='warning', msg='Loading GTI failed')
+            return
+
+        if len(gti.table) == 0:
+            yield self._record(level='error', msg='GTI table has zero rows')
+
+        columns_required = ['START', 'STOP']
+        columns_missing = set(columns_required) - set(gti.table.colnames)
+        if columns_missing:
+            yield self._record(level='error', msg='Missing table columns: {!r}'.format(columns_missing))
+
+        # TODO: Check that header keywords agree with table entries
+        # TSTART, TSTOP, MJDREFI, MJDREFF
+
+        # Check that START and STOP times are consecutive
+        # times = np.ravel(self.table['START'], self.table['STOP'])
+        # # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
+        # if not np.all(np.diff(times) >= 0):
+        #     yield 'GTIs are not consecutive or sorted.'
+
+    def _check_times(self):
+        """Check if various times are consistent.
+
+        The headers and tables of the FITS EVENTS and GTI extension
+        contain various observation and event time information.
+        """
+        ok = True
+
+        # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
+        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
+        telescope_met_refs = OrderedDict(
+            FERMI=Time('2001-01-01T00:00:00'),
+            HESS=Time('2001-01-01T00:00:00'),
+        )
+
+        meta = self.dset.event_list.table.meta
+        telescope = meta['TELESCOP']
+
+        if telescope in telescope_met_refs.keys():
+            dt = (self.time_ref - telescope_met_refs[telescope])
+            if dt > self.accuracy['time']:
+                ok = False
+                self.logger.error('MET reference is incorrect.')
+        else:
+            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
+
+        # TODO: emit warning if event times aren't time-ordered.
+
+        # TODO: check latest CTA spec to see which info is required / optional
+        # EVENTS header keywords:
+        # 'DATE_OBS': '2004-10-14'
+        # 'TIME_OBS': '00:08:27'
+        # 'DATE_END': '2004-10-14'
+        # 'TIME_END': '00:34:44'
+        # 'TSTART': 150984507.0
+        # 'TSTOP': 150986084.0
+        # 'MJDREFI': 51544
+        # 'MJDREFF': 0.5
+        # 'TIMEUNIT': 's'
+        # 'TIMESYS': 'TT'
+        # 'TIMEREF': 'local'
+        # 'TASSIGN': 'Namibia'
+        # 'TELAPSE': 0
+        # 'ONTIME': 1577.0
+        # 'LIVETIME': 1510.95910644531
+        # 'DEADC': 0.964236799627542
+
+        return ok
+
 
     def check_aeff(self):
         yield self._record(level='debug', msg='Starting aeff check')

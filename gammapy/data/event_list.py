@@ -4,7 +4,6 @@ import logging
 from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
-from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
@@ -12,7 +11,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from . import InvalidDataError
+from ..utils.testing import Checker
 
 __all__ = [
     'EventListBase',
@@ -728,20 +727,19 @@ class EventListLAT(EventListBase):
         m.plot(stretch='sqrt')
 
 
-class EventListDataSetChecker(object):
-    """Event list dataset checker.
+class EventListChecker(Checker):
+    """Event list checker.
 
     Data format specification: ref:`gadf:iact-events`
 
     Parameters
     ----------
-    event_list_dataset : `~gammapy.data.EventListDataset`
-        Event list dataset
-    logger : `logging.Logger` or None
-        Logger to use (use module-level Gammapy logger by default)
+    event_list : `~gammapy.data.EventList`
+        Event list
     """
     CHECKS = OrderedDict([
-        ('misc', 'check_misc'),
+        ('meta', 'check_meta'),
+        ('columns', 'check_columns'),
         ('times', 'check_times'),
         ('coordinates', 'check_coordinates'),
     ])
@@ -751,150 +749,47 @@ class EventListDataSetChecker(object):
         'time': Quantity(1, 'microsecond'),
     }
 
-    def __init__(self, event_list_dataset, logger=None):
-        self.dset = event_list_dataset
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = log
+    meta_required = [
+        'OBS_ID', 'TELESCOP'
+    ]
 
-    def run(self, checks='all'):
-        """Run checks.
+    columns_required = [
+        'EVENT_ID',
+        'RA',
+        'DEC',
+        'ENERGY',
+    ]
 
-        Available checks: {...}
+    def __init__(self, event_list):
+        self.event_list = event_list
 
-        Parameters
-        ----------
-        checks : list of str or "all"
-            Which checks to run
+    def obs_id(self):
+        return self.event_list.table.meta['OBS_ID']
 
-        Returns
-        -------
-        ok : bool
-            Everything ok?
-        """
-        if checks == 'all':
-            checks = self.CHECKS.keys()
+    def _record(self, level='info', msg=None):
+        return {
+            'level': level,
+            'obs_id': self.obs_id,
+            'msg': msg,
+        }
 
-        unknown_checks = set(checks).difference(self.CHECKS.keys())
-        if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+    def check_meta(self):
+        meta_missing = set(self.meta_required) - set(self.event_list.table.meta)
+        if meta_missing:
+            yield self._record(level='error', msg='Missing meta keys: {!r}'.format(meta_missing))
 
-        ok = True
-        for check in checks:
-            check_method = getattr(self, self.CHECKS[check])
-            ok &= check_method()
-
-        return ok
-
-    def check_misc(self):
-        """Check misc basic stuff."""
-        ok = True
-
-        required_meta = ['TELESCOP', 'OBS_ID']
-        missing_meta = set(required_meta) - set(self.dset.event_list.table.meta)
-        if missing_meta:
-            ok = False
-            self.logger.error('Missing meta info: {}'.format(missing_meta))
-
-        # TODO: implement more basic checks that all required info is present.
-
-        return ok
-
-    def _check_times_gtis(self):
-        """Check GTI info."""
-        # TODO:
-        # Check that required info is there
-        for colname in ['START', 'STOP']:
-            if colname not in self.colnames:
-                raise InvalidDataError('GTI missing column: {}'.format(colname))
-
-        for key in ['TSTART', 'TSTOP', 'MJDREFI', 'MJDREFF']:
-            if key not in self.meta:
-                raise InvalidDataError('GTI missing header keyword: {}'.format(key))
-
-        # TODO: Check that header keywords agree with table entries
-        # TSTART, TSTOP, MJDREFI, MJDREFF
-
-        # Check that START and STOP times are consecutive
-        times = np.ravel(self.table['START'], self.table['STOP'])
-        # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
-        if not np.all(np.diff(times) >= 0):
-            raise InvalidDataError('GTIs are not consecutive or sorted.')
-
-    def check_times(self):
-        """Check if various times are consistent.
-
-        The headers and tables of the FITS EVENTS and GTI extension
-        contain various observation and event time information.
-        """
-        ok = True
-
-        # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
-        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
-        telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01T00:00:00'),
-            HESS=Time('2001-01-01T00:00:00'),
-        )
-
-        meta = self.dset.event_list.table.meta
-        telescope = meta['TELESCOP']
-
-        if telescope in telescope_met_refs.keys():
-            dt = (self.time_ref - telescope_met_refs[telescope])
-            if dt > self.accuracy['time']:
-                ok = False
-                self.logger.error('MET reference is incorrect.')
-        else:
-            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
-
-        # TODO: check latest CTA spec to see which info is required / optional
-        # EVENTS header keywords:
-        # 'DATE_OBS': '2004-10-14'
-        # 'TIME_OBS': '00:08:27'
-        # 'DATE_END': '2004-10-14'
-        # 'TIME_END': '00:34:44'
-        # 'TSTART': 150984507.0
-        # 'TSTOP': 150986084.0
-        # 'MJDREFI': 51544
-        # 'MJDREFF': 0.5
-        # 'TIMEUNIT': 's'
-        # 'TIMESYS': 'TT'
-        # 'TIMEREF': 'local'
-        # 'TASSIGN': 'Namibia'
-        # 'TELAPSE': 0
-        # 'ONTIME': 1577.0
-        # 'LIVETIME': 1510.95910644531
-        # 'DEADC': 0.964236799627542
-
-        return ok
+    def check_columns(self):
+        columns_missing = set(self.columns_required) - set(self.event_list.table.colnames)
+        if columns_missing:
+            yield self._record(level='error', msg='Missing table columns: {!r}'.format(columns_missing))
 
     def check_coordinates(self):
-        """Check if various event list coordinates are consistent.
+        """Check if various event list coordinates are consistent."""
+        self._check_coordinates_galactic()
+        self._check_coordinates_altaz()
 
-        Parameters
-        ----------
-        event_list_dataset : `~gammapy.data.EventListDataset`
-            Event list dataset
-        accuracy : `~astropy.coordinates.Angle`
-            Required accuracy.
-
-        Returns
-        -------
-        status : bool
-            All coordinates consistent?
-        """
-        ok = True
-        ok &= self._check_coordinates_header()
-        ok &= self._check_coordinates_galactic()
-        ok &= self._check_coordinates_altaz()
-        ok &= self._check_coordinates_field_of_view()
-        return ok
-
-    def _check_coordinates_header(self):
-        """Check TODO"""
-        # TODO: implement
-        return True
+        # TODO: add FOV coordinates checks
+        # self._check_coordinates_field_of_view()
 
     def _check_coordinates_galactic(self):
         """Check if RA / DEC matches GLON / GLAT."""
@@ -930,11 +825,6 @@ class EventListDataSetChecker(object):
         altaz_actual = radec.transform_to(altaz_expected)
         separation = altaz_actual.separation(altaz_expected).to('arcsec')
         return self._check_separation(separation, 'ALT / AZ', 'RA / DEC')
-
-    def _check_coordinates_field_of_view(self):
-        """Check if DETX / DETY matches ALT / AZ."""
-        # TODO: implement
-        return True
 
     def _check_separation(self, separation, tag1, tag2):
         max_separation = separation.max()
