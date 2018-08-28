@@ -528,6 +528,7 @@ class ObservationChecker(Checker):
         for record in EventListChecker(events).run():
             yield record
 
+    # TODO: split this out into a GTIChecker
     def check_gti(self):
         yield self._record(level='debug', msg='Starting gti check')
 
@@ -554,14 +555,14 @@ class ObservationChecker(Checker):
         # if not np.all(np.diff(times) >= 0):
         #     yield 'GTIs are not consecutive or sorted.'
 
+    # TODO: add reference times for all instruments and check for this
+    # Use TELESCOP header key to check which instrument it is.
     def _check_times(self):
         """Check if various times are consistent.
 
         The headers and tables of the FITS EVENTS and GTI extension
         contain various observation and event time information.
         """
-        ok = True
-
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
         telescope_met_refs = OrderedDict(
@@ -575,33 +576,7 @@ class ObservationChecker(Checker):
         if telescope in telescope_met_refs.keys():
             dt = (self.time_ref - telescope_met_refs[telescope])
             if dt > self.accuracy['time']:
-                ok = False
-                self.logger.error('MET reference is incorrect.')
-        else:
-            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
-
-        # TODO: emit warning if event times aren't time-ordered.
-
-        # TODO: check latest CTA spec to see which info is required / optional
-        # EVENTS header keywords:
-        # 'DATE_OBS': '2004-10-14'
-        # 'TIME_OBS': '00:08:27'
-        # 'DATE_END': '2004-10-14'
-        # 'TIME_END': '00:34:44'
-        # 'TSTART': 150984507.0
-        # 'TSTOP': 150986084.0
-        # 'MJDREFI': 51544
-        # 'MJDREFF': 0.5
-        # 'TIMEUNIT': 's'
-        # 'TIMESYS': 'TT'
-        # 'TIMEREF': 'local'
-        # 'TASSIGN': 'Namibia'
-        # 'TELAPSE': 0
-        # 'ONTIME': 1577.0
-        # 'LIVETIME': 1510.95910644531
-        # 'DEADC': 0.964236799627542
-
-        return ok
+                yield self._record(level='error', msg='Reference time incorrect for telescope')
 
     def check_aeff(self):
         yield self._record(level='debug', msg='Starting aeff check')

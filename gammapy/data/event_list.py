@@ -746,9 +746,14 @@ class EventListChecker(Checker):
         'time': Quantity(1, 'microsecond'),
     }
 
+    # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
     meta_required = [
+        'HDUCLASS',
+        'HDUDOC',
+        'HDUVERS',
+        'HDUCLAS1',
+        
         'OBS_ID',
-        'OBJECT',
 
         'TSTART',
         'TSTOP',
@@ -756,22 +761,29 @@ class EventListChecker(Checker):
         'LIVETIME',
         'DEADC',
 
-        'MJDREFI',
-        'MJDREFF',
-        'TIMEREF',
-        'TIMESYS',
-        'TIMEUNIT',
-
-        'GEOLAT',
-        'GEOLON',
-        'ALTITUDE',
-
         # TODO: what to do about these?
         # They are currently listed as required in the spec,
         # but I think we should just require ICRS and those
         # are irrelevant, should not be used.
         # 'RADECSYS',
         # 'EQUINOX',
+
+        'ORIGIN',
+        'TELESCOP',
+        'INSTRUME',
+        'CREATOR',
+
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        'MJDREFI',
+        'MJDREFF',
+        'TIMEUNIT',
+        'TIMESYS',
+        'TIMEREF',
+
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location
+        'GEOLON',
+        'GEOLAT',
+        'ALTITUDE',
     ]
 
     _col = namedtuple('col', ['name', 'unit'])
