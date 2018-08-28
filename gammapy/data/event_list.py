@@ -149,8 +149,6 @@ class EventListBase(object):
     @property
     def radec(self):
         """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-
-        TODO: the `radec` and `galactic` properties should be cached as table columns
         """
         lon, lat = self.table['RA'], self.table['DEC']
         return SkyCoord(lon, lat, unit='deg', frame='icrs')
@@ -159,27 +157,9 @@ class EventListBase(object):
     def galactic(self):
         """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
 
-        Note: uses the ``GLON`` and ``GLAT`` columns.
-        If only ``RA`` and ``DEC`` are present use the explicit
-        ``event_list.radec.to('galactic')`` instead.
+        Always computed from RA / DEC using Astropy.
         """
-        self.add_galactic_columns()
-        lon, lat = self.table['GLON'], self.table['GLAT']
-        return SkyCoord(lon, lat, unit='deg', frame='galactic')
-
-    def add_galactic_columns(self):
-        """Add Galactic coordinate columns to the table.
-
-        Adds the following columns to the table if not already present:
-        - "GLON" - Galactic longitude (deg)
-        - "GLAT" - Galactic latitude (deg)
-        """
-        if set(['GLON', 'GLAT']).issubset(self.table.colnames):
-            return
-
-        galactic = self.radec.galactic
-        self.table['GLON'] = galactic.l.degree
-        self.table['GLAT'] = galactic.b.degree
+        return self.radec.galactic
 
     @property
     def observation_live_time_duration(self):
