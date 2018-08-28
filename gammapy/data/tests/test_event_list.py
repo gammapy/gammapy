@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import pytest
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...data.event_list import EventList, EventListLAT, EventListDataset, EventListDatasetChecker
+from ...data.event_list import EventList, EventListLAT
 
 
 @requires_data('gammapy-extra')
@@ -57,25 +56,3 @@ class TestEventListFermi:
     def test_plot_image(self):
         with mpl_plot_check():
             self.events.plot_image()
-
-
-@requires_data('gammapy-extra')
-class TestEventListDataset:
-    def test(self):
-        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-        dset = EventListDataset.read(filename)
-        assert 'Event list dataset info' in str(dset)
-
-        assert len(dset.event_list.table) == 49
-        # TODO: test all methods ... get ~ 100% test coverage
-        # even without running the following test.
-
-
-@pytest.mark.xfail
-@requires_data('gammapy-extra')
-class TestEventListDatasetChecker:
-    def test(self):
-        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-        dset = EventListDataset.read(filename)
-        checker = EventListDatasetChecker(dset)
-        checker.run('all')
