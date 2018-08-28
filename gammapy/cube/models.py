@@ -9,6 +9,7 @@ from ..utils.scripts import make_path
 from ..maps import Map
 
 __all__ = [
+    'SkyModelBase',
     'SkyModels',
     'SkyModel',
     'CompoundSkyModel',
@@ -274,9 +275,8 @@ class CompoundSkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis.
-    The map unit is assumed to be ``cm-2 s-1 MeV-1 sr-1``.
-    Use `~gammapy.image.models.SkyDiffuseMap` for 2D maps.
+    This is for a 3D map with an energy axis. Use `~gammapy.image.models.SkyDiffuseMap`
+    for 2D maps.
 
     Parameters
     ----------
@@ -313,6 +313,8 @@ class SkyDiffuseCube(SkyModelBase):
     def read(cls, filename, **kwargs):
         """Read map from FITS file.
 
+        The default unit used if none is found in the file is ``cm-2 s-1 MeV-1 sr-1``.
+
         Parameters
         ----------
         filename : str
@@ -332,4 +334,4 @@ class SkyDiffuseCube(SkyModelBase):
         }
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         norm = self.parameters['norm'].value
-        return norm * val * self.map.unit
+        return u.Quantity(norm * val, self.map.unit, copy=False)
