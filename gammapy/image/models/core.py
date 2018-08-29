@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import abc
+import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
@@ -20,6 +21,8 @@ __all__ = [
     'SkyDiffuseMap',
 ]
 
+
+log = logging.getLogger(__name__)
 
 @six.add_metaclass(abc.ABCMeta)
 class SkySpatialModel(object):
