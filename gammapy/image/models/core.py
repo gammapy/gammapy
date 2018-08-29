@@ -298,7 +298,7 @@ class SkyDiffuseMap(SkySpatialModel):
         self._interp_kwargs = interp_kwargs
 
     def normalize(self):
-        """Normalize the diffuse map model, so that in integrates to unity."""
+        """Normalize the diffuse map model so that it integrates to unity."""
         data = self.map.data / self.map.data.sum()
         data /= self.map.geom.solid_angle().to('sr').value
         self.map = self.map.copy(data=data, unit='sr-1')
