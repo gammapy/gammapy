@@ -32,8 +32,6 @@ class DataStore(object):
         HDU index table
     obs_table : `~gammapy.data.ObservationTable`
         Observation index table
-    name : str
-        Data store name
 
     Examples
     --------
@@ -49,20 +47,12 @@ class DataStore(object):
     DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
     """Default observation table filename."""
 
-    DEFAULT_NAME = 'noname'
-    """Default data store name."""
-
-    def __init__(self, hdu_table=None, obs_table=None, name=None):
+    def __init__(self, hdu_table=None, obs_table=None):
         self.hdu_table = hdu_table
         self.obs_table = obs_table
 
-        if name:
-            self.name = name
-        else:
-            self.name = self.DEFAULT_NAME
-
     @classmethod
-    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None, name=None):
+    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Construct from HDU and observation index table files."""
         if hdu_table_filename:
             log.debug('Reading {}'.format(hdu_table_filename))
@@ -81,11 +71,10 @@ class DataStore(object):
         return cls(
             hdu_table=hdu_table,
             obs_table=obs_table,
-            name=name,
         )
 
     @classmethod
-    def from_dir(cls, base_dir, name=None):
+    def from_dir(cls, base_dir):
         """Create from a directory.
 
         This assumes that the HDU and observations index tables
@@ -96,14 +85,12 @@ class DataStore(object):
             base_dir=base_dir,
             hdu_table_filename=base_dir / cls.DEFAULT_HDU_TABLE,
             obs_table_filename=base_dir / cls.DEFAULT_OBS_TABLE,
-            name=name,
         )
 
     @classmethod
     def from_config(cls, config):
         """Create from a config dict."""
         base_dir = config['base_dir']
-        name = config.get('name', cls.DEFAULT_NAME)
         hdu_table_filename = config.get('hduindx', cls.DEFAULT_HDU_TABLE)
         obs_table_filename = config.get('obsindx', cls.DEFAULT_OBS_TABLE)
 
@@ -114,7 +101,6 @@ class DataStore(object):
             base_dir=base_dir,
             hdu_table_filename=hdu_table_filename,
             obs_table_filename=obs_table_filename,
-            name=name,
         )
 
     @staticmethod
@@ -139,8 +125,7 @@ class DataStore(object):
 
     def info(self, show=True):
         """Print some info."""
-        s = 'Data store summary info:\n'
-        s += 'name: {!r}\n\n'.format(self.name)
+        s = 'Data store:\n'
         s += self.hdu_table.summary()
         s += '\n\n'
         s += self.obs_table.summary()
