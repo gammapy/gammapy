@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
+from ....maps import Map
 from ....utils.testing import requires_dependency, requires_data
 from ..core import (
     SkyPointSource,
@@ -83,10 +84,25 @@ def test_sky_diffuse_constant():
 @requires_data('gammapy-extra')
 def test_sky_diffuse_map():
     filename = '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits'
-    model = SkyDiffuseMap.read(filename)
+    model = SkyDiffuseMap.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
     val = model(lon, lat)
     assert val.unit == 'sr-1'
     desired = [3269.178107, 0]
     assert_allclose(val.value, desired)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_sky_diffuse_map_normalize():
+    model_map = Map.create(map_type='wcs', width=(10, 5), binsz=0.5)
+    model_map.data += 1.
+    data_map = Map.create(map_type='wcs', width=(10, 5), binsz=1)
+    model = SkyDiffuseMap(model_map)
+
+    coords = data_map.geom.get_coord()
+    solid_angle = data_map.geom.solid_angle()
+    flux = model(coords.lon * u.deg, coords.lat * u.deg) * solid_angle
+
+    assert_allclose(flux.sum().to('').value, 1, rtol=1e-4)
