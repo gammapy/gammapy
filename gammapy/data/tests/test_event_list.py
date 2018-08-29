@@ -18,7 +18,7 @@ class TestEventListHESS:
         assert self.events.time[0].iso == '2004-10-14 00:08:39.214'
         assert self.events.radec[0].to_string() == '82.7068 19.8186'
         assert self.events.galactic[0].to_string(precision=2) == '185.96 -7.69'
-        assert self.events.altaz[0].to_string() == '46.2059 31.2001'
+        assert self.events.altaz[0].to_string() == '46.5793 30.8799'
         assert_allclose(self.events.offset[0].value, 1.904497742652893, rtol=1e-5)
         assert '{:1.5f}'.format(self.events.energy[0]) == '11.64355 TeV'
 
@@ -29,6 +29,10 @@ class TestEventListHESS:
 
     def test_altaz(self):
         altaz = self.events.altaz
+        assert_allclose(altaz[0].az.deg, 46.579258, atol=1e-3)
+        assert_allclose(altaz[0].alt.deg, 30.879939, atol=1e-3)
+
+        altaz = self.events.altaz_from_table
         assert_allclose(altaz[0].az.deg, 46.205875, atol=1e-3)
         assert_allclose(altaz[0].alt.deg, 31.200132, atol=1e-3)
         # TODO: add asserts for frame properties

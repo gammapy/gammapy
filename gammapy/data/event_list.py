@@ -191,23 +191,6 @@ class EventListBase(object):
         return 1 - self.table.meta['DEADC']
 
     @property
-    def altaz_frame(self):
-        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
-        return AltAz(obstime=self.time, location=self.location)
-
-    @property
-    def altaz(self):
-        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
-        return self.radec.transform_to(self.altaz_frame)
-
-    @property
-    def altaz_from_table(self):
-        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
-        lon = self.table['AZ_PNT']
-        lat = self.table['ALT_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame=self.altaz_frame)
-
-    @property
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         info = self.table.meta
@@ -578,14 +561,21 @@ class EventList(EventListBase):
         return 1 - self.table.meta['DEADC']
 
     @property
-    def altaz(self):
-        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        time = self.time
-        location = self.observatory_earth_location
-        altaz_frame = AltAz(obstime=time, location=location)
+    def altaz_frame(self):
+        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        return AltAz(obstime=self.time, location=self.observatory_earth_location)
 
-        lon, lat = self.table['AZ'], self.table['ALT']
-        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
+    @property
+    def altaz(self):
+        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
+        return self.radec.transform_to(self.altaz_frame)
+
+    @property
+    def altaz_from_table(self):
+        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
+        lon = self.table['AZ']
+        lat = self.table['ALT']
+        return SkyCoord(lon, lat, unit='deg', frame=self.altaz_frame)
 
     @property
     def pointing_radec(self):
