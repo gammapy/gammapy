@@ -41,14 +41,6 @@ def test_datastore_pa():
 
 
 @requires_data('gammapy-extra')
-def test_datastore_load_all(data_store):
-    """Test loading data and IRF files via the DataStore"""
-    event_lists = data_store.load_all(hdu_class='events')
-    assert_allclose(event_lists[0].table['ENERGY'][0], 1.1156039)
-    assert_allclose(event_lists[-1].table['ENERGY'][0], 1.0204216)
-
-
-@requires_data('gammapy-extra')
 def test_datastore_obslist(data_store):
     """Test loading data and IRF files via the DataStore"""
     obslist = data_store.obs_list([23523, 23592])

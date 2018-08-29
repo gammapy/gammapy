@@ -185,49 +185,6 @@ class DataStore(object):
                 obslist.append(obs)
         return obslist
 
-    def load_all(self, hdu_type=None, hdu_class=None):
-        """Load a given file type for all observations.
-
-        Parameters
-        ----------
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        list : python list of object
-            Object depends on type, e.g. for 'events' it is a list of `~gammapy.data.EventList`.
-        """
-        obs_ids = self.obs_table['OBS_ID']
-        return self.load_many(obs_ids=obs_ids, hdu_type=hdu_type, hdu_class=hdu_class)
-
-    def load_many(self, obs_ids, hdu_type=None, hdu_class=None):
-        """Load a given file type for certain observations in an observation table.
-
-        Parameters
-        ----------
-        obs_ids : list
-            List of observation IDs
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        list : list of object
-            Object depends on type, e.g. for 'events' it is a list of `~gammapy.data.EventList`.
-        """
-        things = []
-        for obs_id in obs_ids:
-            obs = self.obs(obs_id=obs_id)
-            thing = obs.load(hdu_type=hdu_type, hdu_class=hdu_class)
-            things.append(thing)
-
-        return things
-
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
 
