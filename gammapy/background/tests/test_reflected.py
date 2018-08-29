@@ -32,7 +32,7 @@ def on_region():
 @pytest.fixture
 def obs_list():
     """Example observation list for testing."""
-    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
     obs_ids = [23523, 23526]
     return datastore.obs_list(obs_ids)
 
