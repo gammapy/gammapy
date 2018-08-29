@@ -256,9 +256,8 @@ class SkyDiffuseConstant(SkySpatialModel):
 class SkyDiffuseMap(SkySpatialModel):
     """Spatial sky map template model (2D).
 
-    This is for a 2D image.
-    The map unit is assumed to be ``sr-1``.
-    Use `~gammapy.cube.SkyDiffuseCube` for 3D cubes with an energy axis.
+    This is for a 2D image. Use `~gammapy.cube.SkyDiffuseCube` for 3D cubes with
+    an energy axis.
 
     Parameters
     ----------
@@ -268,27 +267,58 @@ class SkyDiffuseMap(SkySpatialModel):
         Norm parameter (multiplied with map values)
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
+    normalize : bool
+        Normalize the input map so that it integrates to unity.
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `Map.interp_by_coord()`.
+        Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    def __init__(self, map, norm=1, meta=None):
+    def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
+        if (map.data < 0).any():
+            log.warn("Map template contains negative values, please check the"
+                     " data and fix if needed.")
+
         self.map = map
-        self._interp_opts = {'fill_value': 0, 'interp': 'linear'}
+
+        if normalize:
+            self.normalize()
+
         self.parameters = Parameters([
             Parameter('norm', norm),
         ])
         self.meta = dict() if meta is None else meta
 
+        interp_kwargs = {} if interp_kwargs is None else interp_kwargs
+        interp_kwargs.setdefault('interp', 'linear')
+        interp_kwargs.setdefault('fill_value', 0)
+        self._interp_kwargs = interp_kwargs
+
+    def normalize(self):
+        """Normalize the diffuse map model, so that in integrates to unity."""
+        data = self.map.data / self.map.data.sum()
+        data /= self.map.geom.solid_angle().to('sr').value
+        self.map = self.map.copy(data=data, unit='sr-1')
+
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, normalize=True, **kwargs):
         """Read spatial template model from FITS image.
+
+        The default unit used if none is found in the file is ``sr-1``.
 
         Parameters
         ----------
         filename : str
             FITS image filename.
+        normalize : bool
+            Normalize the input map so that it integrates to unity.
+        kwargs : dict
+            Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
-        return cls(m)
+        if m.unit == '':
+            m.unit = 'sr-1'
+        return cls(m, normalize=normalize)
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
@@ -296,5 +326,5 @@ class SkyDiffuseMap(SkySpatialModel):
             'lon': lon.to('deg').value,
             'lat': lat.to('deg').value,
         }
-        val = self.map.interp_by_coord(coord, **self._interp_opts)
-        return norm * val * u.Unit('sr-1')
+        val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        return u.Quantity(norm.value * val, self.map.unit, copy=False)
