@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose
 import pytest
 from ...data import DataStore
 from ...utils.testing import requires_data
@@ -10,7 +9,7 @@ pytest.importorskip('scipy')
 
 @pytest.fixture(scope='session')
 def data_store():
-    return DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    return DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
 
 
 @requires_data('gammapy-extra')
@@ -22,7 +21,7 @@ def test_datastore_hd_hap(data_store):
     assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
     assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
     assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
-    assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_gauss.EnergyDependentMultiGaussPSF'>"
+    assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_3d.PSF3D'>"
 
 
 @requires_data('gammapy-extra')
@@ -78,17 +77,6 @@ def test_datastore_subset(tmpdir, data_store):
 
     substore = DataStore.from_dir(storedir)
     assert len(substore.hdu_table) == 2
-
-
-@requires_data('gammapy-extra')
-def test_data_summary(data_store):
-    """Test data summary function"""
-    t = data_store.data_summary([23523, 23592])
-    assert t[0]['events'] == 620975
-    assert t[1]['edisp_2d'] == 28931
-
-    t = data_store.data_summary([23523, 23592], summed=True)
-    assert t[0]['psf_3gauss'] == 6042
 
 
 @requires_data('gammapy-extra')
