@@ -35,17 +35,17 @@ def extraction():
 @requires_data('gammapy-extra')
 class TestSpectrumExtraction:
     @pytest.mark.parametrize("pars, results", [
-        (dict(containment_correction=False), dict(n_on=172,
-                                                  sigma=24.56,
-                                                  aeff=549861.8 * u.m ** 2,
-                                                  edisp=0.2595896944765074,
+        (dict(containment_correction=False), dict(n_on=192,
+                                                  sigma=20.971149,
+                                                  aeff=580254.9 * u.m ** 2,
+                                                  edisp=0.236176,
                                                   containment=1,
                                                   )),
-        (dict(containment_correction=True), dict(n_on=172,
-                                                 sigma=24.56,
-                                                 aeff=412731.8 * u.m ** 2,
-                                                 edisp=0.2595896944765074,
-                                                 containment=0.7645777148101338,
+        (dict(containment_correction=True), dict(n_on=192,
+                                                 sigma=20.971149,
+                                                 aeff=373237.8 * u.m ** 2,
+                                                 edisp=0.236176,
+                                                 containment=0.661611,
                                                  ))
     ])
     def test_extract(self, pars, results, obs_list, bkg_estimate):
@@ -109,6 +109,7 @@ class TestSpectrumExtraction:
         assert_allclose(actual, desired)
 
     def test_compute_energy_threshold(self, extraction):
+        extraction.run()
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
         actual = extraction.observations[0].lo_threshold
-        assert_quantity_allclose(actual, 0.6812920690579611 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(actual, 0.879923 * u.TeV, rtol=1e-3)
