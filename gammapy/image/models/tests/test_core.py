@@ -96,13 +96,17 @@ def test_sky_diffuse_map():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_sky_diffuse_map_normalize():
+    # define model map with a constant value of 1
     model_map = Map.create(map_type='wcs', width=(10, 5), binsz=0.5)
     model_map.data += 1.
-    data_map = Map.create(map_type='wcs', width=(10, 5), binsz=1)
     model = SkyDiffuseMap(model_map)
 
+    # define data map with a different spatial binning
+    data_map = Map.create(map_type='wcs', width=(10, 5), binsz=1)
     coords = data_map.geom.get_coord()
     solid_angle = data_map.geom.solid_angle()
-    flux = model(coords.lon * u.deg, coords.lat * u.deg) * solid_angle
+    vals = model(coords.lon * u.deg, coords.lat * u.deg) * solid_angle
 
-    assert_allclose(flux.sum().to('').value, 1, rtol=1e-4)
+    assert vals.unit == ''
+    integral = vals.sum()
+    assert_allclose(integral.value, 1, rtol=1e-4)
