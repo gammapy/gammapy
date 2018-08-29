@@ -404,7 +404,7 @@ class EventListBase(object):
             import matplotlib.pyplot as plt
             from gammapy.data import DataStore
 
-            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
             events = ds.obs(obs_id=23523).events
             events.plot_time()
             plt.show()
