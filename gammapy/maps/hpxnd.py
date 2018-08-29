@@ -327,12 +327,12 @@ class HpxNDMap(HpxMap):
         idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
         pix, wts = self._get_interp_weights(coords, idx_ax)
 
-        if self.geom.ndim == 2:
+        if self.geom.is_image:
             return np.sum(self.data.T[tuple(pix)] * wts, axis=0)
 
         val = np.zeros(pix[0].shape[1:])
         # Loop over function values at corners
-        for i, t in enumerate(range(2 ** len(self.geom.axes))):
+        for i in range(2 ** len(self.geom.axes)):
 
             pix_i = []
             wt = np.ones(pix[0].shape[1:])[None, ...]
