@@ -1715,20 +1715,6 @@ class HpxGeom(MapGeom):
         frame = "galactic" if self.coordsys == "GAL" else "icrs"
         return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
 
-    def skydir_to_pix(self, skydir):
-        """Return the pixel index of a SkyCoord object."""
-        # FIXME: What should this method do for maps with non-spatial dimensions?
-        if self.coordsys in ["CEL", "EQU"]:
-            skydir = skydir.transform_to("icrs")
-            lon = skydir.ra.deg
-            lat = skydir.dec.deg
-        else:
-            skydir = skydir.transform_to("galactic")
-            lon = skydir.l.deg
-            lat = skydir.b.deg
-
-        return self.pix_to_coord((lat, lon))
-
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
 

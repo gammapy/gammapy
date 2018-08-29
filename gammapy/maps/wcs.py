@@ -1053,51 +1053,6 @@ def world2pix(wcs, cdelt, crpix, coord):
     )
 
 
-def skydir_to_pix(skydir, wcs):
-    """Convert skydir object to pixel coordinates.
-
-    Gracefully handles 0-d coordinate arrays.
-
-    Parameters
-    ----------
-    skydir : `~astropy.coordinates.SkyCoord`
-        TODO
-    wcs : `~astropy.wcs.WCS`
-        TODO
-
-    Returns
-    -------
-    xp, yp : `numpy.ndarray`
-       The pixel coordinates
-    """
-    if len(skydir.shape) > 0 and len(skydir) == 0:
-        return [np.empty(0), np.empty(0)]
-
-    return skydir.to_pixel(wcs, origin=0)
-
-
-def pix_to_skydir(xpix, ypix, wcs):
-    """Convert pixel coordinates to a skydir object.
-
-    Gracefully handles 0-d coordinate arrays.
-    Always returns a celestial coordinate.
-
-    Parameters
-    ----------
-    xpix, ypix : `numpy.ndarray`
-        TODO
-    wcs : `~astropy.wcs.WCS`
-        TODO
-    """
-    xpix = np.array(xpix)
-    ypix = np.array(ypix)
-
-    if xpix.ndim > 0 and len(xpix) == 0:
-        return SkyCoord(np.empty(0), np.empty(0), unit="deg", frame="icrs")
-
-    return SkyCoord.from_pixel(xpix, ypix, wcs, origin=0).transform_to("icrs")
-
-
 def get_projection(wcs):
     return wcs.wcs.ctype[0][5:]
 
@@ -1127,30 +1082,3 @@ def wcs_to_axes(w, npix):
     z += np.log10(w.wcs.crval[2])
 
     return x, y, z
-
-
-def get_map_skydir(filename, maphdu=0):
-    filename = str(make_path(filename))
-    with fits.open(filename, memmap=False) as hdu_list:
-        wcs = WCS(hdu_list[maphdu].header)
-    return wcs_to_skydir(wcs)
-
-
-def wcs_to_skydir(wcs):
-    lon = wcs.wcs.crval[0]
-    lat = wcs.wcs.crval[1]
-    coordsys = get_coordys(wcs)
-    if coordsys == "GAL":
-        return SkyCoord(lon, lat, unit="deg", frame="galactic").transform_to("icrs")
-    else:
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
-
-
-def is_galactic(wcs):
-    coordsys = get_coordys(wcs)
-    if coordsys == "GAL":
-        return True
-    elif coordsys == "CEL":
-        return False
-    else:
-        raise ValueError("Unsupported coordinate system: {}".format(coordsys))
