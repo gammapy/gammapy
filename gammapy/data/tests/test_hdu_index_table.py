@@ -39,10 +39,10 @@ def test_hdu_index_table(hdu_index_table):
 @requires_data('gammapy-extra')
 def test_hdu_index_table_hd_hap():
     """Test HESS HAP-HD data access."""
-    hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/hdu-index.fits.gz')
+    hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz')
 
     assert list(hdu_index.meta) == ['BASE_DIR']
-    assert hdu_index.base_dir == make_path('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+    assert hdu_index.base_dir == make_path('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
 
     # A few valid queries
 
@@ -50,16 +50,16 @@ def test_hdu_index_table_hd_hap():
     hdu = location.get_hdu()
     assert hdu.name == 'EVENTS'
 
-    assert str(location.path(abs_path=False)) == 'run023400-023599/run023523/hess_events_023523.fits.gz'
+    assert str(location.path(abs_path=False)) == 'data/hess_dl3_dr1_obs_id_023523.fits.gz'
     path1 = str(location.path(abs_path=True))
     path2 = str(location.path(abs_path=False))
     assert path1.endswith(path2)
 
-    location = hdu_index.hdu_location(obs_id=23523, hdu_class='psf_3gauss')
-    assert str(location.path(abs_path=False)) == 'run023400-023599/run023523/hess_psf_3gauss_023523.fits.gz'
+    location = hdu_index.hdu_location(obs_id=23523, hdu_class='psf_table')
+    assert str(location.path(abs_path=False)) == 'data/hess_dl3_dr1_obs_id_023523.fits.gz'
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_type='psf')
-    assert str(location.path(abs_path=False)) == 'run023400-023599/run023523/hess_psf_3gauss_023523.fits.gz'
+    assert str(location.path(abs_path=False)) == 'data/hess_dl3_dr1_obs_id_023523.fits.gz'
 
     # A few invalid queries
 
