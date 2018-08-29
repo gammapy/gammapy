@@ -51,6 +51,9 @@ class DataStore(object):
         self.hdu_table = hdu_table
         self.obs_table = obs_table
 
+    def __str__(self):
+        return self.info(show=False)
+
     @classmethod
     def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Construct from HDU and observation index table files."""
@@ -174,7 +177,7 @@ class DataStore(object):
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warn('Obs {} not in store, skip.'.format(_))
+                    log.warning('Skipping observation that is not available: {}'.format(_))
                     continue
                 else:
                     raise err
