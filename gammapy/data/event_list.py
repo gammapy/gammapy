@@ -402,10 +402,9 @@ class EventListBase(object):
             :include-source:
 
             import matplotlib.pyplot as plt
-            from gammapy.data import DataStore
+            from gammapy.data import EventList
 
-            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
-            events = ds.obs(obs_id=23523).events
+            events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
             events.plot_time()
             plt.show()
         """
@@ -467,8 +466,7 @@ class EventListBase(object):
         Load an example event list:
 
         >>> from gammapy.data import EventList
-        >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-        >>> events = EventList.read(filename)
+        >>> events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
         Plot the offset^2 distribution wrt. the observation pointing position
         (this is a commonly used plot to check the background spatial distribution):
@@ -527,8 +525,7 @@ class EventList(EventListBase):
     To load an example H.E.S.S. event list:
 
     >>> from gammapy.data import EventList
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-    >>> events = EventList.read(filename)
+    >>> events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
     """
 
     @property

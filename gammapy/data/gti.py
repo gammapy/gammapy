@@ -29,28 +29,26 @@ class GTI(object):
     Load GTIs for a H.E.S.S. event list:
 
     >>> from gammapy.data import GTI
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-    >>> gti = GTI.read(filename)
+    >>> gti = GTI.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
     >>> print(gti)
     GTI info:
     - Number of GTIs: 1
-    - Duration: 1568.0 s
-    - Start: 53292.00592592593 MET
-    - Start: 2004-10-14T00:08:32.000(TT)
-    - Stop: 53292.02407407408 MET
-    - Stop: 2004-10-14T00:34:40.000(TT)
+    - Duration: 1687.0 s
+    - Start: 53343.92234009259 MET
+    - Start: 2004-12-04T22:08:10.184(TT)
+    - Stop: 53343.94186555556 MET
+    - Stop: 2004-12-04T22:36:17.184(TT)
 
     Load GTIs for a Fermi-LAT event list:
 
-    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
-    >>> gti = GTI.read(filename)
+    >>> gti = GTI.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
     >>> print(gti)
     GTI info:
     - Number of GTIs: 36589
     - Duration: 171273490.97510204 s
     - Start: 54682.659499814814 MET
     - Start: 2008-08-04T15:49:40.784(TT)
-    - Stop: 57053.993550740735 MET
+    - Stop: 57053.99355074074 MET
     - Stop: 2015-01-31T23:50:42.784(TT)
     """
 
