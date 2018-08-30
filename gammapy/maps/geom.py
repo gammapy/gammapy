@@ -695,6 +695,16 @@ class MapCoord(object):
         return self._data["lat"]
 
     @property
+    def theta(self):
+        """Theta co-latitude angle in radians"""
+        return np.pi / 2. - np.radians(self.lat)
+
+    @property
+    def phi(self):
+        """Phi longitude angle in radians"""
+        return np.radians(self.lon)
+
+    @property
     def coordsys(self):
         """Coordinate system (str)"""
         return self._coordsys
@@ -918,17 +928,6 @@ class MapCoord(object):
                 coords[name] = u.Quantity(coord, ax.unit, copy=False).value
 
         return self.__class__(coords, coordsys=self.coordsys)
-
-    @property
-    def theta(self):
-        """Theta latitude angle in radians"""
-        return np.array(np.pi / 2. - np.radians(self.lat), ndmin=1)
-
-    @property
-    def phi(self):
-        """Phi longitude angle in radians"""
-        return np.array(np.radians(self.lon), ndmin=1)
-
 
 
 class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
