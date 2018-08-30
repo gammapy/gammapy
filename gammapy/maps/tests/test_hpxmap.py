@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
-from astropy.units import Quantity
+from astropy import units as u
 from ..utils import fill_poisson
 from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map
@@ -181,14 +181,23 @@ def test_hpxmap_interp_by_coord(nside, nested, coordsys, region, axes):
                     m.interp_by_coord(coords, interp='linear'))
 
 
-def test_hpxmap_interp_by_coord_dict():
-    # Regression test, call interp_by_coord_with a dict
-    m = HpxNDMap(HpxGeom(nside=1))
-    coords = m.geom.get_coord(flat=True)
-    m.set_by_coord(coords, coords[1])
+def test_hpxmap_interp_by_coord_quantities():
+    ax = MapAxis(np.logspace(0., 3., 3), interp='log', name='energy', unit='TeV')
+    geom = HpxGeom(nside=1, axes=[ax])
+    m = HpxNDMap(geom=geom)
 
-    val = m.interp_by_coord({'lon': 99, 'lat': 42})
-    assert_allclose(val, 42, atol=1)
+    coords_dict = {
+        'lon': 99,
+        'lat': 42,
+        'energy': 1000 * u.GeV
+    }
+
+    coords = m.geom.get_coord(flat=True)
+    m.set_by_coord(coords, coords['lat'])
+
+    coords_dict['energy'] = 1 * u.TeV
+    val = m.interp_by_coord(coords_dict)
+    assert_allclose(val, 42, rtol=1e-2)
 
 
 @pytest.mark.parametrize(('nside', 'nested', 'coordsys', 'region', 'axes', 'sparse'),
@@ -312,11 +321,11 @@ def test_coadd_unit():
 
     idx = geom.get_idx()
 
-    weights = Quantity(np.ones_like(idx[0]), unit='cm2')
+    weights = u.Quantity(np.ones_like(idx[0]), unit='cm2')
     m1.fill_by_idx(idx, weights=weights)
     assert_allclose(m1.data, 0.0001)
 
-    weights = Quantity(np.ones_like(idx[0]), unit='m2')
+    weights = u.Quantity(np.ones_like(idx[0]), unit='m2')
     m1.fill_by_idx(idx, weights=weights)
     m1.coadd(m2)
 
