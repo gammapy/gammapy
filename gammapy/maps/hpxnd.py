@@ -296,11 +296,6 @@ class HpxNDMap(HpxMap):
         if idxs is None:
             idxs = self.geom.coord_to_idx(coords, clip=True)[1:]
 
-        coords_ctr = [coords.lon, coords.lat]
-        coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
-        idx_ctr = self.geom.coord_to_idx(coords_ctr)
-        idx_ctr = self.geom.global_to_local(idx_ctr)
-
         theta, phi = coords.theta, coords.phi
 
         m = ~np.isfinite(theta)
@@ -323,7 +318,13 @@ class HpxNDMap(HpxMap):
 
         # If a pixel lies outside of the geometry set its index to the center pixel
         m = pix_local[0] == -1
-        pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+        if m.any():
+            coords_ctr = [coords.lon, coords.lat]
+            coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
+            idx_ctr = self.geom.coord_to_idx(coords_ctr)
+            idx_ctr = self.geom.global_to_local(idx_ctr)
+            pix_local[0][m] = (idx_ctr[0] * np.ones(pix.shape, dtype=int))[m]
+
         pix_local += [np.broadcast_to(t, pix_local[0].shape) for t in idxs]
         return pix_local, wts
 
