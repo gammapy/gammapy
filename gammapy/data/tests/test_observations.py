@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose, assert_equal
 import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
-import astropy.units as u
 from astropy.time import Time
 from ...data import DataStore, ObservationList, EventList, GTI, ObservationCTA
 from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, PSF3D
