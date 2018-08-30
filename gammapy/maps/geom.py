@@ -907,7 +907,7 @@ class MapCoord(object):
     #TODO: this is a temporary solution until we have decided how to handle
     # quantities uniformly. This should be called after any `MapCoord.create()`
     # to support that users can pass quantities in any Map.xxx_by_coord() method.
-    def match_units(self, geom):
+    def match_axes_units(self, geom):
         """Match the units of the non-spatial axes to a given map geometry.
 
         Parameters
@@ -924,13 +924,12 @@ class MapCoord(object):
 
         for name, coord in self._data.items():
             if name in ['lon', 'lat']:
-                coord = u.Quantity(coord, 'deg', copy=False).value
+                coords[name] = coord
             else:
-                ax = self.get_axis_by_name(name)
-                coord = u.Quantity(coord, ax.unit, copy=False).value
-            coords[name] = coords
+                ax = geom.get_axis_by_name(name)
+                coords[name] = u.Quantity(coord, ax.unit, copy=False).value
 
-        return self.__class__(coords, coordssys=self.coordsys)
+        return self.__class__(coords, coordsys=self.coordsys)
 
 
 
