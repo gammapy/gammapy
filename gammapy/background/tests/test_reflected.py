@@ -32,9 +32,19 @@ def on_region():
 @pytest.fixture
 def obs_list():
     """Example observation list for testing."""
-    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
     obs_ids = [23523, 23526]
     return datastore.obs_list(obs_ids)
+
+
+@pytest.fixture
+def bkg_estimator():
+    """Example background estimator for testing."""
+    return ReflectedRegionsBackgroundEstimator(
+        obs_list=obs_list(),
+        on_region=on_region(),
+        exclusion_mask=mask(),
+    )
 
 
 @requires_dependency('scipy')
@@ -69,15 +79,6 @@ def test_find_reflected_regions(mask, on_region):
     fregions.run()
     regions = fregions.reflected_regions
     assert len(regions) == 5
-
-
-@pytest.fixture
-def bkg_estimator():
-    """Example background estimator for testing."""
-    estimator = ReflectedRegionsBackgroundEstimator(obs_list=obs_list(),
-                                                    on_region=on_region(),
-                                                    exclusion_mask=mask())
-    return estimator
 
 
 @requires_data('gammapy-extra')

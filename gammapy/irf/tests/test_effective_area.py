@@ -11,8 +11,8 @@ from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
 @pytest.fixture(scope='session')
 def aeff():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
-    return EffectiveAreaTable2D.read(filename, hdu='AEFF_2D')
+    filename = '$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    return EffectiveAreaTable2D.read(filename, hdu='AEFF')
 
 
 class TestEffectiveAreaTable2D:
@@ -23,19 +23,19 @@ class TestEffectiveAreaTable2D:
     @requires_dependency('scipy')
     @requires_data('gammapy-extra')
     def test(aeff):
-        assert aeff.data.axis('energy').nbins == 73
+        assert aeff.data.axis('energy').nbins == 96
         assert aeff.data.axis('offset').nbins == 6
-        assert aeff.data.data.shape == (73, 6)
+        assert aeff.data.data.shape == (96, 6)
 
         assert aeff.data.axis('energy').unit == 'TeV'
         assert aeff.data.axis('offset').unit == 'deg'
         assert aeff.data.data.unit == 'm2'
 
-        assert_quantity_allclose(aeff.high_threshold, 99.083 * u.TeV, rtol=1e-3)
-        assert_quantity_allclose(aeff.low_threshold, 0.603 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(aeff.high_threshold, 100 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(aeff.low_threshold, 0.870964 * u.TeV, rtol=1e-3)
 
         test_val = aeff.data.evaluate(energy='14 TeV', offset='0.2 deg')
-        assert_allclose(test_val.value, 740929.645, atol=1e-2)
+        assert_allclose(test_val.value, 683177.5, rtol=1e-3)
 
         # Test ARF export
         offset = 0.236 * u.deg
@@ -102,7 +102,8 @@ class TestEffectiveAreaTable:
         assert ener_below < test_ener and test_ener < ener_above
 
         elo_threshold = arf.find_energy(0.1 * arf.max_area)
-        assert_quantity_allclose(elo_threshold, 0.43669092057562997 * u.TeV)
+        assert elo_threshold.unit == 'TeV'
+        assert_allclose(elo_threshold.value, 0.552741, rtol=1e-3)
 
         # Test evaluation outside safe range
         data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]

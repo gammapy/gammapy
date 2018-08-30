@@ -32,16 +32,13 @@ class DataStore(object):
         HDU index table
     obs_table : `~gammapy.data.ObservationTable`
         Observation index table
-    name : str
-        Data store name
 
     Examples
     --------
     Here's an example how to create a `DataStore` to access H.E.S.S. data:
 
     >>> from gammapy.data import DataStore
-    >>> dir = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
-    >>> data_store = DataStore.from_dir(dir)
+    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
     >>> data_store.info()
     """
     DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
@@ -50,20 +47,15 @@ class DataStore(object):
     DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
     """Default observation table filename."""
 
-    DEFAULT_NAME = 'noname'
-    """Default data store name."""
-
-    def __init__(self, hdu_table=None, obs_table=None, name=None):
+    def __init__(self, hdu_table=None, obs_table=None):
         self.hdu_table = hdu_table
         self.obs_table = obs_table
 
-        if name:
-            self.name = name
-        else:
-            self.name = self.DEFAULT_NAME
+    def __str__(self):
+        return self.info(show=False)
 
     @classmethod
-    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None, name=None):
+    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Construct from HDU and observation index table files."""
         if hdu_table_filename:
             log.debug('Reading {}'.format(hdu_table_filename))
@@ -82,11 +74,10 @@ class DataStore(object):
         return cls(
             hdu_table=hdu_table,
             obs_table=obs_table,
-            name=name,
         )
 
     @classmethod
-    def from_dir(cls, base_dir, name=None):
+    def from_dir(cls, base_dir):
         """Create from a directory.
 
         This assumes that the HDU and observations index tables
@@ -97,14 +88,12 @@ class DataStore(object):
             base_dir=base_dir,
             hdu_table_filename=base_dir / cls.DEFAULT_HDU_TABLE,
             obs_table_filename=base_dir / cls.DEFAULT_OBS_TABLE,
-            name=name,
         )
 
     @classmethod
     def from_config(cls, config):
         """Create from a config dict."""
         base_dir = config['base_dir']
-        name = config.get('name', cls.DEFAULT_NAME)
         hdu_table_filename = config.get('hduindx', cls.DEFAULT_HDU_TABLE)
         obs_table_filename = config.get('obsindx', cls.DEFAULT_OBS_TABLE)
 
@@ -115,7 +104,6 @@ class DataStore(object):
             base_dir=base_dir,
             hdu_table_filename=hdu_table_filename,
             obs_table_filename=obs_table_filename,
-            name=name,
         )
 
     @staticmethod
@@ -140,8 +128,7 @@ class DataStore(object):
 
     def info(self, show=True):
         """Print some info."""
-        s = 'Data store summary info:\n'
-        s += 'name: {!r}\n\n'.format(self.name)
+        s = 'Data store:\n'
         s += self.hdu_table.summary()
         s += '\n\n'
         s += self.obs_table.summary()
@@ -190,56 +177,13 @@ class DataStore(object):
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warn('Obs {} not in store, skip.'.format(_))
+                    log.warning('Skipping observation that is not available: {}'.format(_))
                     continue
                 else:
                     raise err
             else:
                 obslist.append(obs)
         return obslist
-
-    def load_all(self, hdu_type=None, hdu_class=None):
-        """Load a given file type for all observations.
-
-        Parameters
-        ----------
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        list : python list of object
-            Object depends on type, e.g. for 'events' it is a list of `~gammapy.data.EventList`.
-        """
-        obs_ids = self.obs_table['OBS_ID']
-        return self.load_many(obs_ids=obs_ids, hdu_type=hdu_type, hdu_class=hdu_class)
-
-    def load_many(self, obs_ids, hdu_type=None, hdu_class=None):
-        """Load a given file type for certain observations in an observation table.
-
-        Parameters
-        ----------
-        obs_ids : list
-            List of observation IDs
-        hdu_type : str
-            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
-        hdu_class : str
-            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
-
-        Returns
-        -------
-        list : list of object
-            Object depends on type, e.g. for 'events' it is a list of `~gammapy.data.EventList`.
-        """
-        things = []
-        for obs_id in obs_ids:
-            obs = self.obs(obs_id=obs_id)
-            thing = obs.load(hdu_type=hdu_type, hdu_class=hdu_class)
-            things.append(thing)
-
-        return things
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
@@ -286,44 +230,6 @@ class DataStore(object):
 
         subhdutable.write(str(outdir / self.DEFAULT_HDU_TABLE), format='fits', overwrite=overwrite)
         subobstable.write(str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=overwrite)
-
-    def data_summary(self, obs_id=None, summed=False):
-        """Create a summary `~astropy.table.Table` with HDU size information.
-
-        Parameters
-        ----------
-        obs_id : array-like
-            Observation IDs to include in the summary
-        summed : bool
-            Sum up file size?
-        """
-        if obs_id is None:
-            obs_id = self.obs_table['OBS_ID'].data
-
-        hdut = self.hdu_table
-        hdut.add_index('OBS_ID')
-        subhdut = hdut.loc[obs_id]
-
-        subhdut_grpd = subhdut.group_by('OBS_ID')
-        colnames = subhdut_grpd.groups[0]['HDU_CLASS']
-        temp = np.zeros(len(colnames), dtype=int)
-
-        rows = []
-        for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
-            # This is needed to get the column order right
-            group.add_index('HDU_CLASS')
-            vals = group.loc[colnames]['SIZE']
-            if summed:
-                temp = temp + vals
-            else:
-                rows.append(np.append(key['OBS_ID'], vals))
-
-        if summed:
-            rows.append(temp)
-        else:
-            colnames = np.append(['OBS_ID'], colnames)
-
-        return Table(rows=rows, names=colnames)
 
     def check(self, checks='all'):
         """Check index tables and data files.

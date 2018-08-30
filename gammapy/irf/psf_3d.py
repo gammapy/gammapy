@@ -211,7 +211,7 @@ class PSF3D(object):
         data_interp = interpolator(pix_coords)
         return Quantity(data_interp.reshape(shape), self.psf_value.unit)
 
-    def to_energy_dependent_table_psf(self, theta='0 deg', exposure=None):
+    def to_energy_dependent_table_psf(self, theta='0 deg', rad=None, exposure=None):
         """
         Convert PSF3D in EnergyDependentTablePSF.
 
@@ -219,6 +219,9 @@ class PSF3D(object):
         ----------
         theta : `~astropy.coordinates.Angle`
             Offset in the field of view
+        rad : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid.
+            Default is the ``rad`` from this PSF.
         exposure : `~astropy.units.Quantity`
             Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
             Default exposure = 1.
@@ -230,8 +233,13 @@ class PSF3D(object):
         """
         theta = Angle(theta)
         energies = self._energy_logcenter()
-        rad = self._rad_center()
-        psf_value = self.evaluate(offset=theta)
+
+        if rad is None:
+            rad = self._rad_center()
+        else:
+            rad = Angle(rad)
+
+        psf_value = self.evaluate(offset=theta, rad=rad)
         psf_value = psf_value[:, 0, :].transpose()
 
         return EnergyDependentTablePSF(

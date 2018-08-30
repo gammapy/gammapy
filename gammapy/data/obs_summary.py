@@ -38,9 +38,7 @@ class ObservationTableSummary(object):
                            self.obs_table['DEC_PNT'],
                            unit='deg')
 
-        offset = pnt_pos.separation(self.target_pos)
-
-        return offset
+        return pnt_pos.separation(self.target_pos)
 
     def __str__(self):
         ss = '*** Observation summary ***\n'

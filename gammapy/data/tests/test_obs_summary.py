@@ -13,15 +13,14 @@ from ...background import ReflectedRegionsBackgroundEstimator
 
 @requires_data('gammapy-extra')
 class TestObservationSummaryTable:
-    @staticmethod
-    def make_observation_summary_table():
-        data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-        target_pos = SkyCoord(83.633083, 22.0145, unit='deg')
-        return ObservationTableSummary(data_store.obs_table, target_pos)
 
     @classmethod
     def setup_class(cls):
-        cls.table_summary = cls.make_observation_summary_table()
+        data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
+        obs_table = data_store.obs_table
+        obs_table = obs_table[obs_table['OBS_SUBSET_NAME'] == 'Crab']
+        target_pos = SkyCoord(83.633083, 22.0145, unit='deg')
+        cls.table_summary = ObservationTableSummary(obs_table, target_pos)
 
     def test_str(self):
         text = str(self.table_summary)
@@ -29,8 +28,9 @@ class TestObservationSummaryTable:
 
     def test_offset(self):
         offset = self.table_summary.offset
-        assert_allclose(offset.degree.mean(), 1., rtol=1.e-2)
-        assert_allclose(offset.degree.std(), 0.5, rtol=1.e-2)
+        assert len(offset) == 4
+        assert_allclose(offset.degree.mean(), 1., rtol=0.01)
+        assert_allclose(offset.degree.std(), 0.5, rtol=0.01)
 
     @requires_dependency('matplotlib')
     def test_plot_zenith(self):
@@ -50,14 +50,15 @@ class TestObservationSummary:
     Test observation summary.
     """
 
-    @staticmethod
-    def make_observation_summary():
-        datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    @classmethod
+    def setup_class(cls):
+        datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
         obs_ids = [23523, 23526]
 
-        pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
-        on_size = 0.3 * u.deg
-        on_region = CircleSkyRegion(pos, on_size)
+        on_region = CircleSkyRegion(
+            SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs'),
+            0.3 * u.deg,
+        )
 
         obs_stats_list = []
         for obs_id in obs_ids:
@@ -72,11 +73,7 @@ class TestObservationSummary:
             obs_stats = ObservationStats.from_obs(obs, bg_estimate)
             obs_stats_list.append(obs_stats)
 
-        return ObservationSummary(obs_stats_list)
-
-    @classmethod
-    def setup_class(cls):
-        cls.obs_summary = cls.make_observation_summary()
+        cls.obs_summary = ObservationSummary(obs_stats_list)
 
     @pytest.mark.xfail
     def test_results(self):

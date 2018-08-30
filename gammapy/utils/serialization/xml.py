@@ -167,7 +167,7 @@ def xml_to_skymodel(xml):
     type_ = xml['@type']
     # TODO: Support ctools radial acceptance
     if type_ == 'RadialAcceptance':
-        log.warn("Radial acceptance models are not supported")
+        log.warning("Radial acceptance models are not supported")
         return None
 
     name = xml['@name']

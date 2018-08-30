@@ -12,7 +12,7 @@ from ...background import ReflectedRegionsBackgroundEstimator
 
 @pytest.fixture(scope='session')
 def obs_list():
-    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
     run_list = [23523, 23526]
     return ObservationList([data_store.obs(_) for _ in run_list])
 
@@ -53,14 +53,14 @@ class TestObservationStats(object):
 
     def test_to_dict(self, stats):
         data = stats.to_dict()
-        assert data['n_on'] == 235
-        assert data['n_off'] == 107
+        assert data['n_on'] == 425
+        assert data['n_off'] == 395
         assert_allclose(data['alpha'], 0.333, rtol=1e-2)
-        assert_allclose(data['sigma'], 16.973577445630323, rtol=1e-3)
+        assert_allclose(data['sigma'], 16.430, rtol=1e-3)
 
     def test_stack(self, stats_stacked):
         data = stats_stacked.to_dict()
-        assert data['n_on'] == 454
-        assert data['n_off'] == 226
+        assert data['n_on'] == 900
+        assert data['n_off'] == 766
         assert_allclose(data['alpha'], 0.333, rtol=1e-2)
-        assert_allclose(data['sigma'], 22.89225735104067, rtol=1e-3)
+        assert_allclose(data['sigma'], 25.244, rtol=1e-3)

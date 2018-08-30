@@ -5,10 +5,9 @@ from numpy.testing import assert_allclose, assert_equal
 import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
-import astropy.units as u
 from astropy.time import Time
 from ...data import DataStore, ObservationList, EventList, GTI, ObservationCTA
-from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, EnergyDependentMultiGaussPSF
+from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, PSF3D
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.testing import assert_quantity_allclose, assert_time_allclose, assert_skycoord_allclose
 from ...utils.energy import Energy
@@ -17,7 +16,7 @@ from ...utils.energy import EnergyBounds
 
 @pytest.fixture(scope='session')
 def data_store():
-    return DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    return DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
 
 
 @requires_data('gammapy-extra')
@@ -25,13 +24,13 @@ def test_data_store_observation(data_store):
     """Test DataStoreObservation class"""
     obs = data_store.obs(23523)
 
-    assert_time_allclose(obs.tstart, Time(51545.11740650318, scale='tt', format='mjd'))
-    assert_time_allclose(obs.tstop, Time(51545.11740672924, scale='tt', format='mjd'))
+    assert_time_allclose(obs.tstart, Time(53343.92234, scale='tt', format='mjd'))
+    assert_time_allclose(obs.tstop, Time(53343.941866, scale='tt', format='mjd'))
 
     c = SkyCoord(83.63333129882812, 21.51444435119629, unit='deg')
     assert_skycoord_allclose(obs.pointing_radec, c)
 
-    c = SkyCoord(26.533863067626953, 40.60616683959961, unit='deg')
+    c = SkyCoord(22.481705, 41.38979, unit='deg')
     assert_skycoord_allclose(obs.pointing_altaz, c)
 
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit='deg')
@@ -49,7 +48,7 @@ def test_data_store_observation_to_observation_cta(data_store):
     assert type(obs.events) == EventList
     assert type(obs.aeff) == EffectiveAreaTable2D
     assert type(obs.edisp) == EnergyDispersion2D
-    assert type(obs.psf) == EnergyDependentMultiGaussPSF
+    assert type(obs.psf) == PSF3D
     assert type(obs.pointing_radec) == SkyCoord
     assert type(obs.observation_live_time_duration) == Quantity
     assert type(obs.observation_dead_time_fraction) == np.float64
@@ -57,45 +56,75 @@ def test_data_store_observation_to_observation_cta(data_store):
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-@pytest.mark.parametrize("pars,result", [
-    (dict(energy=None, rad=None),
-     dict(energy_shape=18, rad_shape=300, psf_energy=2.5178505859375 * u.TeV,
-          psf_rad=0.05 * u.deg,
-          psf_exposure=Quantity(6878545291473.34, "cm2 s"),
-          psf_value=Quantity(1837.4367332530592, "1/sr"))),
-    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), rad=None),
-     dict(energy_shape=101, rad_shape=300,
-          psf_energy=1.2589254117941673 * u.TeV, psf_rad=0.05 * u.deg,
-          psf_exposure=Quantity(4622187644084.735, "cm2 s"),
-          psf_value=Quantity(1682.8135627097995, "1/sr"))),
-    (dict(energy=None, rad=Angle(np.arange(0, 2, 0.002), 'deg')),
-     dict(energy_shape=18, rad_shape=1000,
-          psf_energy=2.5178505859375 * u.TeV, psf_rad=0.02 * u.deg,
-          psf_exposure=Quantity(6878545291473.34, "cm2 s"),
-          psf_value=Quantity(20455.914082287516, "1/sr"))),
-    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
-          rad=Angle(np.arange(0, 2, 0.002), 'deg')),
-     dict(energy_shape=101, rad_shape=1000,
-          psf_energy=1.2589254117941673 * u.TeV, psf_rad=0.02 * u.deg,
-          psf_exposure=Quantity(4622187644084.735, "cm2 s"),
-          psf_value=Quantity(25016.103907407552, "1/sr"))),
+@pytest.mark.parametrize("pars", [
+    {
+        'energy': None,
+        'rad': None,
+        'energy_shape': (32,),
+        'psf_energy': 865.9643,
+        'rad_shape': (144,),
+        'psf_rad': 0.0015362848,
+        'psf_exposure': 3.14711e12,
+        'psf_value_shape': (32, 144),
+        'psf_value': 4369.96391,
+    },
+    {
+        'energy': EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
+        'rad': None,
+        'energy_shape': (101,),
+        'psf_energy': 1412.537545,
+        'rad_shape': (144,),
+        'psf_rad': 0.0015362848,
+        'psf_exposure': 4.688142e+12,
+        'psf_value_shape': (101, 144),
+        'psf_value': 3726.58798,
+    },
+    {
+        'energy': None,
+        'rad': Angle(np.arange(0, 2, 0.002), 'deg'),
+        'energy_shape': (32,),
+        'psf_energy': 865.9643,
+        'rad_shape': (1000,),
+        'psf_rad': 0.000524,
+        'psf_exposure': 3.14711e+12,
+        # TODO: should this be psf_value_shape == (32, 1000) ?
+        'psf_value_shape': (32, 144),
+        'psf_value': 4369.96391,
+    },
+    {
+        'energy': EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
+        'rad': Angle(np.arange(0, 2, 0.002), 'deg'),
+        'energy_shape': (101,),
+        'psf_energy': 1412.537545,
+        'rad_shape': (1000,),
+        'psf_rad': 0.000524,
+        'psf_exposure': 4.688142e+12,
+        'psf_value_shape': (101, 144),
+        'psf_value': 3726.58798,
+    },
 ])
-def test_make_psf(pars, result, data_store):
-    position = SkyCoord(83.63, 22.01, unit='deg')
+def test_make_psf(pars, data_store):
+    psf = data_store.obs(23523).make_psf(
+        position=SkyCoord(83.63, 22.01, unit='deg'),
+        energy=pars["energy"],
+        rad=pars["rad"],
+    )
 
-    obs1 = data_store.obs(23523)
-    psf = obs1.make_psf(position=position, energy=pars["energy"], rad=pars["rad"])
+    assert psf.energy.unit == "GeV"
+    assert psf.energy.shape == pars["energy_shape"]
+    assert_allclose(psf.energy.value[15], pars["psf_energy"], rtol=1e-3)
 
-    assert_allclose(psf.rad.shape, result["rad_shape"])
-    assert_allclose(psf.energy.shape, result["energy_shape"])
-    assert_allclose(psf.exposure.shape, result["energy_shape"])
-    assert_allclose(psf.psf_value.shape, (result["energy_shape"],
-                                          result["rad_shape"]))
+    assert psf.rad.unit == "rad"
+    assert psf.rad.shape == pars["rad_shape"]
+    assert_allclose(psf.rad.value[15], pars["psf_rad"], rtol=1e-3)
 
-    assert_quantity_allclose(psf.rad[10], result["psf_rad"])
-    assert_quantity_allclose(psf.energy[10], result["psf_energy"])
-    assert_quantity_allclose(psf.exposure[10], result["psf_exposure"])
-    assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])
+    assert psf.exposure.unit == "cm2 s"
+    assert psf.exposure.shape == pars["energy_shape"]
+    assert_allclose(psf.exposure.value[15], pars["psf_exposure"], rtol=1e-3)
+
+    assert psf.psf_value.unit == "sr-1"
+    assert psf.psf_value.shape == pars["psf_value_shape"]
+    assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
 @requires_dependency('scipy')
