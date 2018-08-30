@@ -574,18 +574,6 @@ class MapAxis(object):
         coord = u.Quantity(coord, self.unit).value
         return coord_to_idx(self.edges, coord, clip)
 
-    def coord_to_idx_interp(self, coord):
-        """Compute indices of two nearest bins to the given coordinate.
-
-        Parameters
-        ----------
-        coord : `~numpy.ndarray`
-            Array of axis coordinate values.
-        """
-        coord = u.Quantity(coord, self.unit).value
-        idx = coord_to_idx(self.center[:-1], coord, clip=True)
-        return idx, idx + 1
-
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
 
