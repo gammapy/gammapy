@@ -931,6 +931,15 @@ class MapCoord(object):
 
         return self.__class__(coords, coordsys=self.coordsys)
 
+    @property
+    def theta(self):
+        """Theta latitude angle in radians"""
+        return np.array(np.pi / 2. - np.radians(self.lat), ndmin=1)
+
+    @property
+    def phi(self):
+        """Phi longitude angle in radians"""
+        return np.array(np.radians(self.lon), ndmin=1)
 
 
 

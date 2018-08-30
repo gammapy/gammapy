@@ -301,8 +301,7 @@ class HpxNDMap(HpxMap):
         idx_ctr = self.geom.coord_to_idx(coords_ctr)
         idx_ctr = self.geom.global_to_local(idx_ctr)
 
-        theta = np.array(np.pi / 2. - np.radians(coords.lat), ndmin=1)
-        phi = np.array(np.radians(coords.lon), ndmin=1)
+        theta, phi = coords.theta, coords.phi
 
         m = ~np.isfinite(theta)
         theta[m] = 0

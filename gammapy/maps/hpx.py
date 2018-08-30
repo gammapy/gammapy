@@ -781,10 +781,8 @@ class HpxGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         import healpy as hp
-
         coords = MapCoord.create(coords, coordsys=self.coordsys)
-        phi = np.radians(coords.lon)
-        theta = np.pi / 2. - np.radians(coords.lat)
+        theta, phi = coords.theta, coords.phi
 
         c = self.coord_to_tuple(coords)
 
