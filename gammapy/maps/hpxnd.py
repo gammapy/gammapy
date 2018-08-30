@@ -269,6 +269,10 @@ class HpxNDMap(HpxMap):
         return map_out
 
     def interp_by_coord(self, coords, interp=1):
+        # inherited docstring
+        coords = MapCoord.create(coords)
+        coords = coords.match_axes_units(self.geom)
+
         order = interp_to_order(interp)
         if order == 1:
             return self._interp_by_coord(coords, order)
@@ -281,17 +285,20 @@ class HpxNDMap(HpxMap):
         raise NotImplementedError
 
     def get_by_idx(self, idx):
+        # inherited docstring
         idx = pix_tuple_to_idx(idx)
         idx = self.geom.global_to_local(idx)
         return self.data.T[idx]
 
-    def _get_interp_weights(self, coords, idxs):
+    def _get_interp_weights(self, coords, idxs=None):
         import healpy as hp
 
-        coords = MapCoord.create(coords)
+        if idxs is None:
+            idxs = self.geom.coord_to_idx(coords, clip=True)[1:]
+
         coords_ctr = [coords.lon, coords.lat]
         coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
-        idx_ctr = pix_tuple_to_idx(self.geom.coord_to_pix(coords_ctr))
+        idx_ctr = self.geom.coord_to_idx(coords_ctr)
         idx_ctr = self.geom.global_to_local(idx_ctr)
 
         theta = np.array(np.pi / 2. - np.radians(coords.lat), ndmin=1)
@@ -301,7 +308,7 @@ class HpxNDMap(HpxMap):
         theta[m] = 0
         phi[m] = 0
 
-        if self.geom.nside.size > 1:
+        if not self.geom.is_regular:
             nside = self.geom.nside[tuple(idxs)]
         else:
             nside = self.geom.nside
@@ -323,29 +330,27 @@ class HpxNDMap(HpxMap):
 
     def _interp_by_coord(self, coords, order):
         """Linearly interpolate map values."""
-        c = MapCoord.create(coords)
-        idx_ax = self.geom.coord_to_idx(c, clip=True)[1:]
-        pix, wts = self._get_interp_weights(coords, idx_ax)
+        pix, wts = self._get_interp_weights(coords)
 
         if self.geom.is_image:
             return np.sum(self.data.T[tuple(pix)] * wts, axis=0)
 
         val = np.zeros(pix[0].shape[1:])
+
         # Loop over function values at corners
         for i in range(2 ** len(self.geom.axes)):
-
             pix_i = []
-            wt = np.ones(pix[0].shape[1:])[None, ...]
+            wt = np.ones(pix[0].shape[1:])[np.newaxis, ...]
             for j, ax in enumerate(self.geom.axes):
-
-                idx = coord_to_idx(ax.center[:-1], c[2 + j], clip=True)  # [None, ...]
+                idx = ax.coord_to_idx(coords[ax.name])
+                idx = np.clip(idx, 0, len(ax.center) - 2)
 
                 w = ax.center[idx + 1] - ax.center[idx]
                 if i & (1 << j):
-                    wt *= (c[2 + j] - ax.center[idx]) / w
-                    pix_i += [1 + idx]
+                    wt *= (coords[ax.name] - ax.center[idx]) / w
+                    pix_i += [idx + 1]
                 else:
-                    wt *= 1.0 - (c[2 + j] - ax.center[idx]) / w
+                    wt *= 1.0 - (coords[ax.name] - ax.center[idx]) / w
                     pix_i += [idx]
 
             if not self.geom.is_regular:
