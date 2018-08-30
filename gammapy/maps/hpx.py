@@ -131,12 +131,6 @@ def ravel_hpx_index(idx, npix):
     return idx0 + np.cumsum(npix)[idx1]
 
 
-def lonlat_to_colat(lon, lat):
-    phi = np.radians(lon)
-    theta = (np.pi / 2) - np.radians(lat)
-    return phi, theta
-
-
 def coords_to_vec(lon, lat):
     """Converts longitude and latitude coordinates to a unit 3-vector.
 

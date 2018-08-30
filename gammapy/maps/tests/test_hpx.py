@@ -4,8 +4,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from ..geom import MapAxis
-from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order, lonlat_to_colat
+from ..geom import MapAxis, MapCoord
+from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 from ..hpx import get_hpxregion_dir, get_hpxregion_size, get_subpixels, get_superpixels
 
@@ -46,7 +46,7 @@ def make_test_coords(geom, lon, lat):
     coords = [lon, lat] + [ax.center for ax in geom.axes]
     coords = np.meshgrid(*coords)
     coords = tuple([np.ravel(t) for t in coords])
-    return coords
+    return MapCoord.create(coords)
 
 
 def test_unravel_hpx_index():
@@ -254,7 +254,7 @@ def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
     else:
         nside = geom.nside
 
-    phi, theta = lonlat_to_colat(coords[0], coords[1])
+    phi, theta = coords.phi, coords.theta
     idx = geom.coord_to_idx(coords)
     assert_allclose(hp.ang2pix(nside, theta, phi), idx[0])
     for i, z in enumerate(zidx):
