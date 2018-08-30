@@ -916,7 +916,7 @@ class MapCoord(object):
         Returns
         -------
         coords : `MapCoord`
-            Map coords with
+            Map coord object with matched units
         """
         coords = {}
 
