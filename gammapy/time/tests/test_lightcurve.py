@@ -150,7 +150,7 @@ def test_lightcurve_plot_time(lc, time_format, output):
 # TODO: Reuse fixtures from spectrum tests
 @pytest.fixture(scope='session')
 def spec_extraction():
-    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
     obs_ids = [23523, 23526]
     obs_list = data_store.obs_list(obs_ids)
 
@@ -202,15 +202,15 @@ def test_lightcurve_estimator():
 
     assert_quantity_allclose(len(table), 2)
 
-    assert_allclose(table['flux'][0], 3.759367126537715e-11, rtol=1e-2)
-    assert_allclose(table['flux'][-1], 3.8700838947652217e-11, rtol=1e-2)
+    assert_allclose(table['flux'][0], 4.309371e-11, rtol=1e-3)
+    assert_allclose(table['flux'][-1], 3.543012e-11, rtol=1e-3)
 
-    assert_allclose(table['flux_err'][0], 3.175731544692804e-12, rtol=1e-2)
-    assert_allclose(table['flux_err'][-1], 3.181191593075743e-12, rtol=1e-2)
+    assert_allclose(table['flux_err'][0], 4.135581e-12, rtol=1e-3)
+    assert_allclose(table['flux_err'][-1], 3.654781e-12, rtol=1e-3)
 
     # TODO: change dataset and also add LC point with weak signal
     # or even negative excess that is an UL
-    assert_allclose(table['flux_ul'][0], 4.712087e-11, rtol=1e-2)
+    assert_allclose(table['flux_ul'][0], 5.550045e-11, rtol=1e-3)
     assert not table['is_ul'][0]
 
     # same but with threshold equal to 2 TeV
@@ -221,8 +221,7 @@ def test_lightcurve_estimator():
     )
     table = lc.table
 
-    # assert_allclose(table['flux'][0], 1.02122885108e-11, rtol=1e-2)
-    assert_allclose(table['flux'][0], 7.52856493381838e-12, rtol=1e-2)
+    assert_allclose(table['flux'][0], 5.051995e-12, rtol=1e-3)
 
     # TODO: add test exercising e_reco selection
     # TODO: add asserts on all measured quantities
@@ -254,10 +253,10 @@ def test_lightcurve_adaptative_interval_maker():
         spectrum_extraction=spec_extract,
         separators=separator)
     assert_allclose(table['significance'] >= 3, True)
-    assert_allclose(table['t_start'][5].value, 53343.92371392407, rtol=1e-10)
+    assert_allclose(table['t_start'][5].value, 53343.927374, rtol=1e-10)
     assert_allclose(table['alpha'][5], 0.0833333, rtol=1e-5)
-    assert_allclose(len(table), 71)
-    assert_allclose(table['t_start'][0].value, 53343.92096938292, rtol=1e-10)
-    assert_allclose(table['t_stop'][70].value, 53343.97229090575, rtol=1e-10)
-    assert_allclose(np.logical_and(table['t_start'] < separator[0],
-                                   table['t_stop'] > separator[0]), False)
+    assert len(table) == 57
+    assert_allclose(table['t_start'][0].value, 53343.922392, rtol=1e-10)
+    assert_allclose(table['t_stop'][-1].value, 53343.973528, rtol=1e-10)
+    val = (table['t_start'] < separator[0]) & (table['t_stop'] > separator[0])
+    assert_allclose(val, False)
