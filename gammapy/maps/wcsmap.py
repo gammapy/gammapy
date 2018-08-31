@@ -183,7 +183,7 @@ class WcsMap(Map):
 
         hdu_out.header["META"] = json.dumps(self.meta)
 
-        hdu_out.header["UNIT"] = self.unit.to_string("fits")
+        hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
         if hdu == "PRIMARY":
             hdulist = [hdu_out]

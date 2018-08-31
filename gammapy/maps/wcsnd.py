@@ -103,7 +103,7 @@ class WcsNDMap(WcsMap):
         shape_wcs = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])])
         meta = cls._get_meta_from_header(hdu.header)
 
-        unit = hdu.header.get("UNIT", "")
+        unit = hdu.header.get("BUNIT", "")
 
         map_out = cls(geom, meta=meta, unit=unit)
 
