@@ -918,7 +918,7 @@ class MapCoord(object):
         coords : `MapCoord`
             Map coord object with matched units
         """
-        coords = {}
+        coords = OrderedDict()
 
         for name, coord in self._data.items():
             if name in ['lon', 'lat']:
