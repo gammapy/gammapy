@@ -270,7 +270,7 @@ class HpxNDMap(HpxMap):
 
     def interp_by_coord(self, coords, interp=1):
         # inherited docstring
-        coords = MapCoord.create(coords)
+        coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
         coords = coords.match_axes_units(self.geom)
 
         order = interp_to_order(interp)
