@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from ..extern.skimage import block_reduce
+from ..utils.units import unit_from_fits_image_hdu
 from .geom import pix_tuple_to_idx
 from .wcs import _check_width
 from .utils import interp_to_order
@@ -101,10 +102,9 @@ class WcsNDMap(WcsMap):
         geom = WcsGeom.from_header(hdu.header, hdu_bands)
         shape = tuple([ax.nbin for ax in geom.axes])
         shape_wcs = tuple([np.max(geom.npix[0]), np.max(geom.npix[1])])
+
         meta = cls._get_meta_from_header(hdu.header)
-
-        unit = hdu.header.get("BUNIT", "")
-
+        unit = unit_from_fits_image_hdu(hdu.header)
         map_out = cls(geom, meta=meta, unit=unit)
 
         # TODO: Should we support extracting slices?
