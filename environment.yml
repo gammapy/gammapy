@@ -1,9 +1,9 @@
 # Conda environment for Gammapy stable versions
 # Install:    conda env create -f environment.yml
-# Activate:   source activate gammapy_v08
+# Activate:   source activate gammapy-0.8
 # Deactivate: source deactivate
 
-name: gammapy_v08
+name: gammapy-0.8
 
 channels:
   - conda-forge
