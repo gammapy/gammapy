@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
+from ..utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx, coord_to_idx
 from .utils import interp_to_order
 from .hpxmap import HpxMap
@@ -72,8 +73,7 @@ class HpxNDMap(HpxMap):
         # TODO: Should we support extracting slices?
 
         meta = cls._get_meta_from_header(hdu.header)
-
-        unit = hdu.header.get("UNIT", "")
+        unit = unit_from_fits_image_hdu(hdu.header)
         map_out = cls(hpx, None, meta=meta, unit=unit)
 
         colnames = hdu.columns.names

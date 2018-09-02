@@ -184,7 +184,7 @@ def test_map_unit_read_write(map_type, unit):
     hdu_list = m.to_hdulist(hdu='COUNTS')
     header = hdu_list['COUNTS'].header
 
-    assert Unit(header['UNIT']) == Unit(unit)
+    assert Unit(header['BUNIT']) == Unit(unit)
 
     m2 = Map.from_hdulist(hdu_list)
     assert m2.unit == unit
