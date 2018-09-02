@@ -11,6 +11,22 @@ import yaml
 
 logging.basicConfig(level=logging.INFO)
 
+
+def comment_magics(input):
+    """Coment magic commands."""
+    lines = input.splitlines(True)
+    output = ""
+    for line in lines:
+        new_line = ""
+        if line.startswith("%") or line.startswith("!"):
+            new_line = new_line + "###-MAGIC COMMAND-" + line
+        if new_line:
+            output = output + new_line
+        else:
+            output = output + line
+    return output
+
+
 # check gammapy-extra
 if 'GAMMAPY_EXTRA' not in os.environ:
     logging.info('GAMMAPY_EXTRA environment variable not set.')
@@ -44,10 +60,12 @@ for notebook in notebooks:
         fmt = nb.cells[cellnumber]['source']
         if nb.cells[cellnumber]['cell_type'] == 'code':
             try:
+                fmt = comment_magics(fmt)
                 fmt = format_str(src_contents=fmt,
                                  line_length=79).rstrip()
             except Exception as ex:
                 logging.info(ex)
+            fmt = fmt.replace("###-MAGIC COMMAND-", "")
         nb.cells[cellnumber]['source'] = fmt
 
     # write formatted notebook
