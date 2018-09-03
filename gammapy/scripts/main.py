@@ -56,6 +56,20 @@ def cli_image():
     """Analysis - 2D images"""
 
 
+@cli.group('download')
+@click.option('--folder', prompt='target folder', default='gammapy-tutorials',
+              help='Folder where the files will be copied.')
+@click.pass_context
+def cli_download(ctx, folder):
+    """
+    Download datasets and notebooks from the gammapy-extra Github repository
+    into a folder gammapy-extra created in the current working directory.
+    """
+    ctx.obj = {
+        'localfolder': folder,
+    }
+
+
 def add_subcommands():
     from .info import cli_info
     cli.add_command(cli_info)
@@ -65,6 +79,12 @@ def add_subcommands():
 
     from .image_bin import cli_image_bin
     cli_image.add_command(cli_image_bin)
+
+    from .download import cli_download_notebooks
+    cli_download.add_command(cli_download_notebooks)
+
+    from .download import cli_download_datasets
+    cli_download.add_command(cli_download_datasets)
 
 
 add_subcommands()
