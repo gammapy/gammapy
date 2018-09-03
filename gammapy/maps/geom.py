@@ -574,18 +574,6 @@ class MapAxis(object):
         coord = u.Quantity(coord, self.unit).value
         return coord_to_idx(self.edges, coord, clip)
 
-    def coord_to_idx_interp(self, coord):
-        """Compute indices of two nearest bins to the given coordinate.
-
-        Parameters
-        ----------
-        coord : `~numpy.ndarray`
-            Array of axis coordinate values.
-        """
-        coord = u.Quantity(coord, self.unit).value
-        idx = coord_to_idx(self.center[:-1], coord, clip=True)
-        return idx, idx + 1
-
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
 
@@ -705,6 +693,16 @@ class MapCoord(object):
     def lat(self):
         """Latitude coordinate in degrees."""
         return self._data["lat"]
+
+    @property
+    def theta(self):
+        """Theta co-latitude angle in radians"""
+        return np.pi / 2. - np.radians(self.lat)
+
+    @property
+    def phi(self):
+        """Phi longitude angle in radians"""
+        return np.radians(self.lon)
 
     @property
     def coordsys(self):
@@ -903,6 +901,33 @@ class MapCoord(object):
         str_ += "\tndim     : {}\n".format(self.ndim)
         str_ += "\tcoordsys : {}\n".format(self.coordsys)
         return str_
+
+    #TODO: this is a temporary solution until we have decided how to handle
+    # quantities uniformly. This should be called after any `MapCoord.create()`
+    # to support that users can pass quantities in any Map.xxx_by_coord() method.
+    def match_axes_units(self, geom):
+        """Match the units of the non-spatial axes to a given map geometry.
+
+        Parameters
+        ----------
+        geom : `MapGeom`
+            Map geometry with specified units per axis.
+
+        Returns
+        -------
+        coords : `MapCoord`
+            Map coord object with matched units
+        """
+        coords = OrderedDict()
+
+        for name, coord in self._data.items():
+            if name in ['lon', 'lat']:
+                coords[name] = coord
+            else:
+                ax = geom.get_axis_by_name(name)
+                coords[name] = u.Quantity(coord, ax.unit, copy=False).value
+
+        return self.__class__(coords, coordsys=self.coordsys)
 
 
 class MapGeomMeta(InheritDocstrings, abc.ABCMeta):

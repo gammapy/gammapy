@@ -131,12 +131,6 @@ def ravel_hpx_index(idx, npix):
     return idx0 + np.cumsum(npix)[idx1]
 
 
-def lonlat_to_colat(lon, lat):
-    phi = np.radians(lon)
-    theta = (np.pi / 2) - np.radians(lat)
-    return phi, theta
-
-
 def coords_to_vec(lon, lat):
     """Converts longitude and latitude coordinates to a unit 3-vector.
 
@@ -781,10 +775,8 @@ class HpxGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         import healpy as hp
-
         coords = MapCoord.create(coords, coordsys=self.coordsys)
-        phi = np.radians(coords.lon)
-        theta = np.pi / 2. - np.radians(coords.lat)
+        theta, phi = coords.theta, coords.phi
 
         c = self.coord_to_tuple(coords)
 
