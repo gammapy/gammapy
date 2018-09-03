@@ -103,6 +103,16 @@ def test_wcsgeom_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
     assert (geom0.coordsys == geom1.coordsys)
 
 
+def test_wcsgeom_to_hdulist():
+    npix, binsz, coordsys, proj, skydir, axes = wcs_test_geoms[3]
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, coordsys=coordsys,
+                      axes=axes)
+
+    hdu = geom.make_bands_hdu(hdu='TEST')
+    assert hdu.header['AXCOLS1'] == 'E_MIN,E_MAX'
+    assert hdu.header['AXCOLS2'] == 'AXIS1_MIN,AXIS1_MAX'
+
+
 @pytest.mark.parametrize(('npix', 'binsz', 'coordsys', 'proj', 'skydir', 'axes'),
                          wcs_test_geoms)
 def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
