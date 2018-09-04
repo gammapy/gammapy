@@ -33,7 +33,6 @@ Optional dependencies of Gammapy:
 * `reproject`_ for image reprojection
 * `iminuit`_ for fitting by optimization
 * `uncertainties`_ for linear error propagation
-* `photutils`_ for image photometry
 * `matplotlib`_ for plotting
 * `emcee`_ for fitting by MCMC sampling
 * `healpy`_ for `HEALPIX`_ data handling

@@ -113,7 +113,6 @@ setup(
       analysis=[
           'pyyaml',
           'scipy>=0.15',
-          'photutils',
           'reproject',
           'uncertainties>=2.4',
           'naima',

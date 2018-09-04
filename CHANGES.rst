@@ -40,7 +40,7 @@ using gamma-ray data.
 
 The number of optional dependencies used in Gammapy has been reduced. Sherpa is now
 an optional fitting backend, modeling is built-in in Gammapy. The following packages
-are no longer used in Gammapy: scikit-image, pandas, aplpy.
+are no longer used in Gammapy: scikit-image, photutils, pandas, aplpy.
 The code quality and test coverage in Gammapy has been improved a lot in the past months.
 
 This release also contains a large number of small improvements and bug fixes to the existing code,

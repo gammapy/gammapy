@@ -22,7 +22,6 @@ dependencies:
   - click==6.7
   - pyyaml==3.12
   - scipy==0.19.1
-  - photutils==0.4
   - reproject==0.4
   - uncertainties==3.0.2
   - naima==0.8.1
