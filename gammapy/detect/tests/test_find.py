@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency
 from ...maps import Map
@@ -15,6 +16,7 @@ class TestFindPeaks:
         image.data[3, 3] = 11
         image.data[3, 4] = 10
         image.data[3, 5] = 12
+        image.data[3, 6] = np.nan
         image.data[0, 9] = 99
 
         table = find_peaks(image, threshold=3)

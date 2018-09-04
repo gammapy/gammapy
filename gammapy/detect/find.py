@@ -70,6 +70,10 @@ def find_peaks(image, threshold, min_distance=1):
     if np.all(data == data.flat[0]):
         return Table()
 
+    # Remove non-finite values to avoid warnings or spurious detection
+    data = data.copy()
+    data[~np.isfinite(data)] = threshold - 1
+
     # Run peak finder
     data_max = maximum_filter(data, size=size, mode='constant')
     mask = (data == data_max) & (data > threshold)
