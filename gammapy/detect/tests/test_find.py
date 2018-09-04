@@ -17,7 +17,7 @@ class TestFindPeaks:
         image.data[3, 4] = 10
         image.data[3, 5] = 12
         image.data[3, 6] = np.nan
-        image.data[0, 9] = 99
+        image.data[0, 9] = 1e20
 
         table = find_peaks(image, threshold=3)
 
@@ -28,7 +28,7 @@ class TestFindPeaks:
 
         row = table[0]
         assert tuple((row['x'], row['y'])) == (9, 0)
-        assert_allclose(row['value'], 99)
+        assert_allclose(row['value'], 1e20)
         assert_allclose(row['ra'], 359.55)
         assert_allclose(row['dec'], -0.2)
 

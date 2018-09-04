@@ -64,15 +64,13 @@ def find_peaks(image, threshold, min_distance=1):
 
     size = 2 * min_distance + 1
 
-    data = image.data
+    # Remove non-finite values to avoid warnings or spurious detection
+    data = image.data.copy()
+    data[~np.isfinite(data)] = np.nanmin(data)
 
     # Handle edge case of constant data; treat as no peak
     if np.all(data == data.flat[0]):
         return Table()
-
-    # Remove non-finite values to avoid warnings or spurious detection
-    data = data.copy()
-    data[~np.isfinite(data)] = threshold - 1
 
     # Run peak finder
     data_max = maximum_filter(data, size=size, mode='constant')
