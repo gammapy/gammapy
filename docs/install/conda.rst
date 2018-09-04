@@ -5,21 +5,14 @@ Installation with conda
 
 To install the latest Gammapy **stable** version as well as the most common
 optional dependencies for Gammapy, first install `Anaconda
-<http://continuum.io/downloads>`__ and then run these commands:
+<http://continuum.io/downloads>`__ and then run this commands:
 
 .. code-block:: bash
 
     conda config --add channels conda-forge --add channels sherpa
     conda install gammapy naima sherpa \
         scipy matplotlib ipython-notebook \
-        cython click
-
-We strongly recommend that you install the optional dependencies of Gammapy to
-have the full functionality available:
-
-.. code-block:: bash
-
-    conda install photutils reproject iminuit
+        cython click reproject iminuit
 
 To update to the latest version:
 

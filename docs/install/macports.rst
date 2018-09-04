@@ -107,7 +107,7 @@ commands above), whereas with pip it's usually a more manual process.
 .. code-block:: bash
 
     python -m pip install --no-deps --user \
-        naima photutils reproject astroplan iminuit
+        naima reproject astroplan iminuit
 
 
 There's a few things worth pointing out about how we execute ``pip`` to install

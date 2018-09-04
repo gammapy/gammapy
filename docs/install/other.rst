@@ -42,7 +42,7 @@ The following packages have to be installed with pip:
 .. code-block:: bash
 
     python3 -m pip install --user \
-        gammapy naima photutils reproject \
+        gammapy naima reproject \
         iminuit emcee healpy sherpa
 
 Another option to install software on Debian (and any system) is to use conda.

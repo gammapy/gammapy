@@ -30,7 +30,6 @@ GAMMAPY_DEPENDENCIES = [
     'regions',
     'iminuit',
     'naima',
-    'photutils',
     'uncertainties',
 ]
 

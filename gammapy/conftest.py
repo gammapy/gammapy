@@ -26,7 +26,6 @@ PYTEST_HEADER_MODULES['sherpa'] = 'sherpa'
 PYTEST_HEADER_MODULES['gammapy'] = 'gammapy'
 PYTEST_HEADER_MODULES['naima'] = 'naima'
 PYTEST_HEADER_MODULES['reproject'] = 'reproject'
-PYTEST_HEADER_MODULES['photutils'] = 'photutils'
 
 
 def pytest_configure(config):
