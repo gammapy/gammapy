@@ -6,3 +6,4 @@ from .kernel import *
 from .cwt import *
 from .test_statistics import *
 from .lima import *
+from .find import *
