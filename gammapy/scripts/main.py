@@ -68,21 +68,33 @@ def cli_image():
     """Analysis - 2D images"""
 
 
-@cli.group("download", short_help="Download datasets and notebooks")
-@click.option(
-    "--folder",
-    prompt="target folder",
-    default="gammapy-tutorials",
-    help="Folder where the files will be copied.",
-)
+@cli.group('download', short_help='Download datasets and notebooks')
+@click.option('--folder', prompt='target folder', default='gammapy-tutorials',
+              help='Folder where the files will be copied.')
+@click.option('--hash', default='',
+              help='Version release, branch or commit hash in Github repo.')
 @click.pass_context
-def cli_download(ctx, folder):
-    """
+def cli_download(ctx, folder, hash):
+    """Download datasets and notebooks.
+
     Download from the 'gammapy-extra' Github repository the content of
     'datasets' or 'notebooks' folders. The files are copied into a folder
     created at the current working directory.
+
+    \b
+    Examples
+    --------
+
+    \b
+    $ gammapy download notebooks
+    $ gammapy download datasets
+    $ gammapy download --folder=myfolder datasets
+    $ gammapy download --hash=master notebooks
     """
-    ctx.obj = {"localfolder": folder}
+    ctx.obj = {
+        'localfolder': folder,
+        'hash': hash,
+    }
 
 
 @cli.group('jupyter', short_help='Perform actions on notebooks')
