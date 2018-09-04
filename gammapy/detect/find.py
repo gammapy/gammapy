@@ -92,6 +92,10 @@ def find_peaks(image, threshold, min_distance=1):
     table['ra'] = coord.ra
     table['dec'] = coord.dec
 
+    table['ra'].format = '.5f'
+    table['dec'].format = '.5f'
+    table['value'].format = '.5g'
+
     table.sort('value')
     table.reverse()
 
