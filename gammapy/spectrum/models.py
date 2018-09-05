@@ -1160,9 +1160,9 @@ class TableModel(SpectralModel):
         else:
             raise ValueError('Not a valid interpolation mode.')
 
-        non_zero = (values.value > 0)
-        y = fn_0(values.value[non_zero])
-        x = np.log(energy.value[non_zero])
+        with np.errstate(divide='ignore'):
+            y = fn_0(values.value)
+        x = np.log(energy.value)
         interpy = interp1d(x, y, **interp_kwargs)
         self._evaluate = lambda x: fn_1(interpy(x))
 
