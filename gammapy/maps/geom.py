@@ -109,10 +109,12 @@ def find_and_read_bands(hdu, header=None):
             if "AXCOLS%i" % i in hdu.header:
                 axis_cols += [hdu.header["AXCOLS%i" % i].split(",")]
 
+    interp = 'lin'
     for i, cols in enumerate(axis_cols):
 
         if "ENERGY" in cols or "E_MIN" in cols:
             name = "energy"
+            interp = 'log'
         elif re.search("(.+)_MIN", cols[0]):
             name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
@@ -127,10 +129,10 @@ def find_and_read_bands(hdu, header=None):
             xmin = np.unique(hdu.data.field(cols[0]))
             xmax = np.unique(hdu.data.field(cols[1]))
             nodes = np.append(xmin, xmax[-1])
-            axes.append(MapAxis(nodes, name=name, unit=unit))
+            axes.append(MapAxis(nodes, name=name, unit=unit, interp=interp))
         else:
             nodes = np.unique(hdu.data.field(cols[0]))
-            axes.append(MapAxis.from_nodes(nodes, name=name, unit=unit))
+            axes.append(MapAxis.from_nodes(nodes, name=name, unit=unit, interp=interp))
 
     return axes
 
