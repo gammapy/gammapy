@@ -18,25 +18,15 @@ def print_version(ctx, param, value):
 
 
 # http://click.pocoo.org/5/documentation/#help-parameter-customization
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
-@click.group("gammapy", context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "--log-level",
-    default="info",
-    help="Logging verbosity level",
-    type=click.Choice(["debug", "info", "warning", "error"]),
-)
-@click.option("--ignore-warnings", is_flag=True, help="Ignore warnings?")
-@click.option(
-    "--version",
-    is_flag=True,
-    callback=print_version,
-    expose_value=False,
-    is_eager=True,
-    help="Print version and exit",
-)
+@click.group('gammapy', context_settings=CONTEXT_SETTINGS)
+@click.option('--log-level', default='info', help='Logging verbosity level.',
+              type=click.Choice(['debug', 'info', 'warning', 'error']))
+@click.option('--ignore-warnings', is_flag=True, help='Ignore warnings?')
+@click.option('--version', is_flag=True, callback=print_version,
+              expose_value=False, is_eager=True, help='Print version and exit.')
 def cli(log_level, ignore_warnings):
     """Gammapy command line interface (CLI).
 
@@ -69,12 +59,16 @@ def cli_image():
 
 
 @cli.group('download', short_help='Download datasets and notebooks')
-@click.option('--folder', prompt='target folder', default='gammapy-tutorials',
+@click.option('--dest', prompt='destination folder', default='gammapy-tutorials',
               help='Folder where the files will be copied.')
+@click.option('--file', default='',
+              help='Specific file to download.')
+@click.option('--folder', default='',
+              help='Specific folder to download.')
 @click.option('--hash', default='',
               help='Version release, branch or commit hash in Github repo.')
 @click.pass_context
-def cli_download(ctx, folder, hash):
+def cli_download(ctx, dest, file, folder, hash):
     """Download datasets and notebooks.
 
     Download from the 'gammapy-extra' Github repository the content of
@@ -88,11 +82,14 @@ def cli_download(ctx, folder, hash):
     \b
     $ gammapy download notebooks
     $ gammapy download datasets
-    $ gammapy download --folder=myfolder datasets
+    $ gammapy download --file=first_steps.ipynb notebooks
+    $ gammapy download --dest=localfolder --folder=catalogs/fermi datasets
     $ gammapy download --hash=master notebooks
     """
     ctx.obj = {
-        'localfolder': folder,
+        'localfold': dest,
+        'specfile': file,
+        'specfold': folder,
         'hash': hash,
     }
 
