@@ -83,6 +83,19 @@ def cli_download(ctx, folder):
     ctx.obj = {"localfolder": folder}
 
 
+@cli.group('jupyter', short_help='Perform actions on notebooks')
+@click.option('--file', prompt='target file',
+              help='Jupyter notebook filename.')
+@click.pass_context
+def cli_jupyter(ctx, file):
+    """
+    Perform a series of actions on Jupyter notebooks.
+    """
+    ctx.obj = {
+        'file': file,
+    }
+
+
 def add_subcommands():
     from .info import cli_info
 
@@ -103,6 +116,9 @@ def add_subcommands():
     from .download import cli_download_datasets
 
     cli_download.add_command(cli_download_datasets)
+
+    from .jupyter import cli_jupyter_black
+    cli_jupyter.add_command(cli_jupyter_black)
 
 
 add_subcommands()
