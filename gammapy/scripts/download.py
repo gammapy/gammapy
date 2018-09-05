@@ -31,7 +31,8 @@ def cli_download_notebooks(ctx):
         ctx.obj['specfold'],
         ctx.obj['hash'],
         ['../environment.yml'],
-        Path(ctx.obj['localfold']) / 'notebooks'
+        Path(ctx.obj['localfold']) / 'notebooks',
+        ctx.obj['recursive']
     )
 
     # valid hash
@@ -71,7 +72,8 @@ def cli_download_datasets(ctx):
         ctx.obj['specfold'],
         ctx.obj['hash'],
         [],
-        Path(ctx.obj['localfold']) / 'datasets'
+        Path(ctx.obj['localfold']) / 'datasets',
+        ctx.obj['recursive']
     )
 
     # valid hash
@@ -85,7 +87,7 @@ class DownloadProcess:
     """Manages the process of downloading content from the Github repository"""
 
     def __init__(self, repo, repofold, specfile, specfold,
-                 hash, listfiles, localfold):
+                 hash, listfiles, localfold, recursive):
 
         self.repo = repo
         self.repofold = repofold
@@ -94,6 +96,7 @@ class DownloadProcess:
         self.hash = hash
         self.listfiles = listfiles
         self.localfold = localfold
+        self.recursive = recursive
 
         if specfile and specfold:
             log.error(
@@ -158,7 +161,8 @@ class DownloadProcess:
         url = apigitUrl + self.repo + '/git/trees/' + self.hash + ':' + self.repofold
         if self.specfold:
             url = url + '/' + self.specfold
-        url = url + '?recursive=1'
+        if self.recursive:
+            url = url + '?recursive=1'
 
         try:
             r = urlopen(url)
@@ -173,14 +177,17 @@ class DownloadProcess:
 
         if self.specfold:
             ifolder = self.localfold / Path(self.specfold)
-            ifolder.mkdir(parents=True, exist_ok=True)
+        else:
+            ifolder = self.localfold
+        ifolder.mkdir(parents=True, exist_ok=True)
 
         for item in json_files['tree']:
             if self.specfold:
                 item['path'] = self.specfold + '/' + item['path']
             ifolder = self.localfold / Path(item['path'])
             if item['type'] == 'tree':
-                ifolder.mkdir(parents=True, exist_ok=True)
+                if self.recursive:
+                    ifolder.mkdir(parents=True, exist_ok=True)
             else:
                 self.listfiles.append(item['path'])
 

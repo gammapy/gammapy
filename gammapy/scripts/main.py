@@ -63,12 +63,13 @@ def cli_image():
               help='Folder where the files will be copied.')
 @click.option('--file', default='',
               help='Specific file to download.')
-@click.option('--folder', default='',
+@click.option('--fold', default='',
               help='Specific folder to download.')
 @click.option('--hash', default='',
-              help='Version release, branch or commit hash in Github repo.')
+              help='Release, branch or commit hash in Github repo.')
+@click.option('--recursive/--no-recursive', default=True, help='Deactivate recursive scan of a folder.')
 @click.pass_context
-def cli_download(ctx, dest, file, folder, hash):
+def cli_download(ctx, dest, file, fold, hash, recursive):
     """Download datasets and notebooks.
 
     Download from the 'gammapy-extra' Github repository the content of
@@ -83,14 +84,15 @@ def cli_download(ctx, dest, file, folder, hash):
     $ gammapy download notebooks
     $ gammapy download datasets
     $ gammapy download --file=first_steps.ipynb notebooks
-    $ gammapy download --dest=localfolder --folder=catalogs/fermi datasets
+    $ gammapy download --dest=localfolder --fold=catalogs/fermi --no-recursive datasets
     $ gammapy download --hash=master notebooks
     """
     ctx.obj = {
         'localfold': dest,
         'specfile': file,
-        'specfold': folder,
+        'specfold': fold,
         'hash': hash,
+        'recursive': recursive
     }
 
 
