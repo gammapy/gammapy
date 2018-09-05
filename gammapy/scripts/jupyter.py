@@ -8,6 +8,9 @@ import logging
 import nbformat
 import subprocess
 import sys
+import testipynb
+import time
+from unittest import TestCase
 from ..extern.pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -16,7 +19,7 @@ log = logging.getLogger(__name__)
 @click.command(name='black')
 @click.pass_context
 def cli_jupyter_black(ctx):
-    """Format cells with black."""
+    """Format code cells with black."""
 
     jupyterfile = Path(ctx.obj['file'])
 
@@ -56,13 +59,10 @@ def cli_jupyter_stripout(ctx):
 
     try:
         subprocess.call(f'nbstripout {jupyterfile}', shell=True)
+        print('Jupyter notebook {} stripped out.'.format(str(jupyterfile)))
     except Exception as ex:
         log.error('Error stripping file {}'.format(str(jupyterfile)))
         log.error(ex)
-        sys.exit()
-
-    # inform
-    print('Jupyter notebook {} stripped out.'.format(str(jupyterfile)))
 
 
 @click.command(name='execute')
@@ -73,16 +73,34 @@ def cli_jupyter_execute(ctx):
     jupyterfile = Path(ctx.obj['file'])
 
     try:
+        t = time.time()
         subprocess.call(
             f'jupyter nbconvert --ExecutePreprocessor.timeout=None --to notebook --execute {jupyterfile} --output {jupyterfile}',
             shell=True)
+        t = (time.time() - t) / 60
+        print(f'Executing duration: {t:.2f} mn')
     except Exception as ex:
         log.error('Error executing file {}'.format(str(jupyterfile)))
         log.error(ex)
-        sys.exit()
 
-    # inform
-    print('Jupyter notebook {} executed.'.format(str(jupyterfile)))
+
+@click.command(name='test')
+@click.pass_context
+def cli_jupyter_test(ctx):
+    """Check if jupyter notebook is broken."""
+
+    jupyterfile = Path(ctx.obj['file'])
+
+    # ignore all files except jupyterfile
+    ignorelist = []
+    for f in jupyterfile.parent.iterdir():
+        if jupyterfile.name != f.name and f.name.endswith('.ipynb'):
+            nbname = f.name.replace('.ipynb', '')
+            ignorelist.append(nbname)
+
+    testnb = testipynb.TestNotebooks(
+        directory=str(jupyterfile.parent), ignore=ignorelist)
+    TestCase.assertTrue(testnb, testnb.run_tests())
 
 
 def comment_magics(input):

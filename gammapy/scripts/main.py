@@ -126,5 +126,8 @@ def add_subcommands():
     from .jupyter import cli_jupyter_execute
     cli_jupyter.add_command(cli_jupyter_execute)
 
+    from .jupyter import cli_jupyter_test
+    cli_jupyter.add_command(cli_jupyter_test)
+
 
 add_subcommands()
