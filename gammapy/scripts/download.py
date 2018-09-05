@@ -6,7 +6,6 @@ https://developer.github.com/v3/
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
-
 import sys
 import json
 # from .. import version
@@ -29,7 +28,7 @@ def cli_download_notebooks(ctx):
         'notebooks',
         ctx.obj['specfile'],
         ctx.obj['specfold'],
-        ctx.obj['hash'],
+        ctx.obj['release'],
         ['../environment.yml'],
         Path(ctx.obj['localfold']) / 'notebooks',
         ctx.obj['recursive']
@@ -39,8 +38,8 @@ def cli_download_notebooks(ctx):
     downloadproc.check_hash()
 
     # get version label
-    version = ctx.obj['hash']
-    if ctx.obj['hash'] == '':
+    version = ctx.obj['release']
+    if ctx.obj['release'] == '':
         # uncomment when notebooks moved to gammapy repo
         # version = version.version
         version = 'master'
@@ -51,7 +50,7 @@ def cli_download_notebooks(ctx):
     downloadproc.localfold = Path(verfolder)
 
     # download
-    downloadproc.go()
+    downloadproc.run()
 
     # rename environment.yml with version label
     envfile = Path(ctx.obj['localfold']) / 'environment.yml'
@@ -70,7 +69,7 @@ def cli_download_datasets(ctx):
         'datasets',
         ctx.obj['specfile'],
         ctx.obj['specfold'],
-        ctx.obj['hash'],
+        ctx.obj['release'],
         [],
         Path(ctx.obj['localfold']) / 'datasets',
         ctx.obj['recursive']
@@ -80,33 +79,33 @@ def cli_download_datasets(ctx):
     downloadproc.check_hash()
 
     # download
-    downloadproc.go()
+    downloadproc.run()
 
 
 class DownloadProcess:
     """Manages the process of downloading content from the Github repository"""
 
     def __init__(self, repo, repofold, specfile, specfold,
-                 hash, listfiles, localfold, recursive):
+                 release, listfiles, localfold, recursive):
 
         self.repo = repo
         self.repofold = repofold
         self.specfile = specfile
         self.specfold = specfold
-        self.hash = hash
+        self.release = release
         self.listfiles = listfiles
         self.localfold = localfold
         self.recursive = recursive
 
         if specfile and specfold:
             log.error(
-                '--file and --foder are exclusive options, only one is allowed.')
+                '--file and --foder are mutually exclusive options, only one is allowed.')
             sys.exit()
 
-    def go(self):
+    def run(self):
 
         # fill list of files
-        self.fill_listfiles()
+        self.build_files()
         print('Content will be downloaded in {}'.format(self.localfold))
 
         # download files
@@ -120,33 +119,34 @@ class DownloadProcess:
     def check_hash(self):
 
         # installed local gammapy hash
-        if self.hash == '':
+        if self.release == '' or self.release == 'master':
             # uncomment when notebooks moved to gammapy repo
-            # self.hash = version.githash
-            # refhash = 'refs/commits/' + self.hash
-            self.hash = 'master'
-            refhash = 'refs/heads/' + self.hash
+            # self.release = version.githash
+            # refhash = 'refs/commits/' + self.release
+            self.release = 'master'
+            refhash = 'refs/heads/' + self.release
         # release
-        elif self.hash.startswith('v') and len(self.hash) == 4:
-            refhash = 'refs/tags/' + self.hash
+        elif self.release.startswith('v') and len(self.release) == 4:
+            refhash = 'refs/tags/' + self.release
         # commit hash
-        elif len(self.hash) == 40:
-            refhash = 'commits/' + self.hash
-        # branch
+        elif len(self.release) == 40:
+            refhash = 'commits/' + self.release
+        # not allowed
         else:
-            refhash = 'refs/heads/' + self.hash
+            refhash = 'refs/tags/notallowed'
 
         # check hash
         url = apigitUrl + self.repo + '/git/' + refhash
+
         try:
             urlopen(url)
         except Exception as ex:
             log.error('Bad response from GitHub API.')
             log.error(
-                'Bad value for release, branch or hash: ' + self.hash)
+                'Bad value for release or commit hash: ' + self.release)
             sys.exit()
 
-    def fill_listfiles(self):
+    def build_files(self):
 
         if self.specfile:
             ifolder = self.localfold / Path(self.specfile).parent
@@ -158,7 +158,7 @@ class DownloadProcess:
 
     def get_json_tree(self):
 
-        url = apigitUrl + self.repo + '/git/trees/' + self.hash + ':' + self.repofold
+        url = apigitUrl + self.repo + '/git/trees/' + self.release + ':' + self.repofold
         if self.specfold:
             url = url + '/' + self.specfold
         if self.recursive:
@@ -194,7 +194,7 @@ class DownloadProcess:
     def get_file(self, filename):
 
         url = rawgitUrl + self.repo + \
-            '/' + self.hash + '/' + self.repofold + '/' + filename
+            '/' + self.release + '/' + self.repofold + '/' + filename
         filepath = self.localfold / filename
 
         try:
