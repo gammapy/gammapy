@@ -123,5 +123,8 @@ def add_subcommands():
     from .jupyter import cli_jupyter_stripout
     cli_jupyter.add_command(cli_jupyter_stripout)
 
+    from .jupyter import cli_jupyter_execute
+    cli_jupyter.add_command(cli_jupyter_execute)
+
 
 add_subcommands()

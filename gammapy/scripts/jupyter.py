@@ -65,8 +65,28 @@ def cli_jupyter_stripout(ctx):
     print('Jupyter notebook {} stripped out.'.format(str(jupyterfile)))
 
 
+@click.command(name='execute')
+@click.pass_context
+def cli_jupyter_execute(ctx):
+    """Execute jupyter notebook."""
+
+    jupyterfile = Path(ctx.obj['file'])
+
+    try:
+        subprocess.call(
+            f'jupyter nbconvert --ExecutePreprocessor.timeout=None --to notebook --execute {jupyterfile} --output {jupyterfile}',
+            shell=True)
+    except Exception as ex:
+        log.error('Error executing file {}'.format(str(jupyterfile)))
+        log.error(ex)
+        sys.exit()
+
+    # inform
+    print('Jupyter notebook {} executed.'.format(str(jupyterfile)))
+
+
 def comment_magics(input):
-    """Coment magic commands when formatting cells."""
+    """Comment magic commands when formatting cells."""
 
     lines = input.splitlines(True)
     output = ""
