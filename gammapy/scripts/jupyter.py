@@ -6,6 +6,7 @@ from black import format_str
 import click
 import logging
 import nbformat
+import subprocess
 import sys
 from ..extern.pathlib import Path
 
@@ -15,7 +16,7 @@ log = logging.getLogger(__name__)
 @click.command(name='black')
 @click.pass_context
 def cli_jupyter_black(ctx):
-    """Format notebook cells with black."""
+    """Format cells with black."""
 
     jupyterfile = Path(ctx.obj['file'])
 
@@ -44,6 +45,24 @@ def cli_jupyter_black(ctx):
 
     # inform
     print('Jupyter notebook {} painted in black.'.format(str(jupyterfile)))
+
+
+@click.command(name='stripout')
+@click.pass_context
+def cli_jupyter_stripout(ctx):
+    """Strip output cells."""
+
+    jupyterfile = Path(ctx.obj['file'])
+
+    try:
+        subprocess.call(f'nbstripout {jupyterfile}', shell=True)
+    except Exception as ex:
+        log.error('Error stripping file {}'.format(str(jupyterfile)))
+        log.error(ex)
+        sys.exit()
+
+    # inform
+    print('Jupyter notebook {} stripped out.'.format(str(jupyterfile)))
 
 
 def comment_magics(input):
