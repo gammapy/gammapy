@@ -91,17 +91,8 @@ class PhaseBackgroundEstimator(object):
         ]
 
         # Loop over all ON- and OFF- phase intervals to compute the normalization factors a_on and a_off
-        a_on = np.fromiter(
-            (each_on_phase[1] - each_on_phase[0] for each_on_phase in self.on_phase),
-            np.float,
-        ).sum()
-        a_off = np.fromiter(
-            (
-                each_off_phase[1] - each_off_phase[0]
-                for each_off_phase in self.off_phase
-            ),
-            np.float,
-        ).sum()
+        a_on = np.sum([_[1] - _[0] for _ in self.on_phase])
+        a_off = np.sum([_[1] - _[0] for _ in self.off_phase])
 
         on_events = EventList.stack(list_on_events)
         off_events = EventList.stack(list_off_events)
