@@ -94,10 +94,9 @@ class TestSkyModels:
         assert sky_models.parameters.names == parnames
 
         # Check that model parameters are references to the parts
-        assert (
-            sky_models.parameters['lon_0']
-            is sky_models.skymodels[0].parameters['lon_0']
-        )
+        p1 = sky_models.parameters['lon_0']
+        p2 = sky_models.skymodels[0].parameters['lon_0']
+        assert p1 is p2
 
         # Check that parameter assignment works
         assert sky_models.parameters.parameters[-1].value == 1
@@ -129,13 +128,13 @@ class TestSkyModel:
     @staticmethod
     def test_parameters(sky_model):
         # Check that model parameters are references to the spatial and spectral parts
-        assert (
-            sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
-        )
-        assert (
-            sky_model.parameters['amplitude']
-            is sky_model.spectral_model.parameters['amplitude']
-        )
+        p1 = sky_model.parameters['lon_0']
+        p2 = sky_model.spatial_model.parameters['lon_0']
+        assert p1 is p2
+
+        p1 = sky_model.parameters['amplitude']
+        p2 = sky_model.spectral_model.parameters['amplitude']
+        assert p1 is p2
 
     @staticmethod
     def test_evaluate_scalar(sky_model):

@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-import numpy as np
 from collections import OrderedDict
 import subprocess
-from astropy.table import Table
 from ..utils.scripts import make_path
 from ..utils.testing import Checker
 from .obs_table import ObservationTable
@@ -170,9 +168,7 @@ class DataStore(object):
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warning(
-                        'Skipping observation that is not available: {}'.format(_)
-                    )
+                    log.warning('Skipping missing obs_id: {!r}'.format(_))
                     continue
                 else:
                     raise err
@@ -223,12 +219,11 @@ class DataStore(object):
             cmd += [str(loc.path()), str(targetdir)]
             subprocess.call(cmd)
 
-        subhdutable.write(
-            str(outdir / self.DEFAULT_HDU_TABLE), format='fits', overwrite=overwrite
-        )
-        subobstable.write(
-            str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=overwrite
-        )
+        filename = str(outdir / self.DEFAULT_HDU_TABLE)
+        subhdutable.write(filename, format='fits', overwrite=overwrite)
+
+        filename = str(outdir / self.DEFAULT_OBS_TABLE)
+        subobstable.write(filename, format='fits', overwrite=overwrite)
 
     def check(self, checks='all'):
         """Check index tables and data files.

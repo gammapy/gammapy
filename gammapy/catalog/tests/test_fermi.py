@@ -154,15 +154,15 @@ class TestFermi3FGLObject:
 
         assert lc.time_min[0].fits == '2008-08-02T00:33:19.000(UTC)'
         assert lc.time_max[0].fits == '2008-09-01T10:31:04.625(UTC)'
-        assert_quantity_allclose(
-            table['flux'].quantity[0], 2.38471262e-06 * u.Unit('cm-2 s-1')
-        )
-        assert_quantity_allclose(
-            table['flux_errp'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1')
-        )
-        assert_quantity_allclose(
-            table['flux_errn'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1')
-        )
+
+        assert table['flux'].unit == 'cm-2 s-1'
+        assert_allclose(table['flux'][0], 2.384e-06, rtol=1e-3)
+
+        assert table['flux_errp'].unit == 'cm-2 s-1'
+        assert_allclose(table['flux_errp'][0], 8.071e-08, rtol=1e-3)
+
+        assert table['flux_errn'].unit == 'cm-2 s-1'
+        assert_allclose(table['flux_errn'][0], 8.071e-08, rtol=1e-3)
 
     @pytest.mark.parametrize(
         'name',
@@ -301,14 +301,8 @@ class TestFermi3FHLObject:
         assert len(flux_points.table) == 5
         assert 'flux_ul' in flux_points.table.colnames
 
-        desired = [
-            5.12440652532e-07,
-            7.37024993524e-08,
-            9.04493849264e-09,
-            7.68135443661e-10,
-            4.30737078315e-11,
-        ]
-        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
+        desired = [5.124e-07, 7.370e-08, 9.044e-09, 7.681e-10, 4.307e-11]
+        assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-3)
 
     @pytest.mark.parametrize(
         'name', ['Crab Nebula', '3FHL J0534.5+2201', '3FGL J0534.5+2201i']
