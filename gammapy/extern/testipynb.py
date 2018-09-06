@@ -1,16 +1,15 @@
-import unittest
-import sys
-import os
-import pprint
+"""
+Copied from https://github.com/opengeophysics/testipynb and modified.
+2018-09-06
+__author__ = 'Lindsey Heagy'
+__license__ = 'MIT'
+"""
 import nbformat
-from nbconvert.preprocessors import (
-    ClearOutputPreprocessor, ExecutePreprocessor
-)
-from nbconvert.preprocessors.execute import CellExecutionError
+import os
 import properties
-
-
-__all__ = ['TestNotebooks']
+import subprocess
+import sys
+import unittest
 
 
 def get_test(nbname, nbpath, timeout=600):
@@ -32,72 +31,49 @@ def get_test(nbname, nbpath, timeout=600):
 
     # use nbconvert to execute the notebook
     def test_func(self):
-        cwd = os.getcwd()
+
         passing = True
+
         print(
             "\n---------------------"
-            " Testing {0}.ipynb "
-            "---------------------".format(nbname)
+            " Testing {0}.ipynb ".format(nbname)
         )
-
-        if (
-            (nbname in self.ignore) or
-            (nbname in self.py2_ignore and sys.version_info[0] == 2)
-        ):
-            print(" Skipping {}".format(nbname))
-            return
 
         run_path = os.path.sep.join(nbpath.split(os.path.sep)[:-1])
         os.chdir(run_path)
-        ep = ClearOutputPreprocessor(
-            resources={'metadata': {'path': run_path}}
-        )
 
-        with open(nbpath) as f:
-            nb = nbformat.read(f, as_version=4)
+        subprocess.call(
+            "jupyter nbconvert --allow-errors --ExecutePreprocessor.timeout=None --ExecutePreprocessor.kernel_name=python3 --to notebook --execute '{}' --inplace".format(
+                nbpath),
+            shell=True)
 
-            ep.preprocess(nb, {})
+        nb = nbformat.read(nbpath, as_version=nbformat.NO_CONVERT)
 
-            ex = ExecutePreprocessor(
-                timeout=timeout,
-                kernel_name='python{}'.format(sys.version_info[0]),
-                allow_errors=True,
-                resources={'metadata': {'path': run_path}}
-            )
+        for cell in nb.cells:
+            if 'outputs' in cell.keys():
+                for output in cell['outputs']:
+                    if output['output_type'] == 'error':
+                        passing = False
 
-            out = ex.preprocess(nb, {})
-            os.chdir(cwd)
+                        err_msg = []
+                        for o in output['traceback']:
+                            err_msg += ["{}".format(o)]
+                        err_msg = "\n".join(err_msg)
 
-            for cell in out[0]['cells']:
-                if 'outputs' in cell.keys():
-                    for output in cell['outputs']:
-                        if output['output_type'] == 'error':
-                            passing = False
-
-                            err_msg = []
-                            for o in output['traceback']:
-                                err_msg += ["{}".format(o)]
-                            err_msg = "\n".join(err_msg)
-
-                            msg = """
+                        msg = """
 \n ... {} FAILED \n
 {} in cell [{}] \n-----------\n{}\n-----------\n
-                            """.format(
-                                nbname, output['ename'],
-                                cell['execution_count'], cell['source'],
-                            )
+                        """.format(
+                            nbname, output['ename'],
+                            cell['execution_count'], cell['source'],
+                        )
 
-                            traceback = """
------------------ >> begin Traceback << ----------------- \n
-{}\n
-\n----------------- >> end Traceback << -----------------\n
-                            """.format(err_msg)
+                        print(u"{}".format(msg))
+                        print(err_msg)
 
-                            print(u"{}".format(msg + traceback))
+                        assert passing, msg
 
-                            assert passing, msg
-
-            print("   ... {0} Passed \n".format(nbname))
+        print("   ... {0} Passed \n".format(nbname))
 
     return test_func
 
@@ -106,7 +82,7 @@ class TestNotebooks(properties.HasProperties, unittest.TestCase):
 
     _name = properties.String(
         "test name",
-        default = "NbTestCase"
+        default="NbTestCase"
     )
 
     directory = properties.String(
@@ -165,6 +141,8 @@ class TestNotebooks(properties.HasProperties, unittest.TestCase):
                     )
                     # strip off the file extension
                     nbnames.append("".join(filename[:-6]))
+            # non recursive
+            break
         self._nbpaths = nbpaths
         self._nbnames = nbnames
 
@@ -179,7 +157,12 @@ class TestNotebooks(properties.HasProperties, unittest.TestCase):
 
             # build test for each notebook
             for nb, nbpath in zip(self._nbnames, self._nbpaths):
-                tests["test_"+nb] = get_test(nb, nbpath, timeout=self.timeout)
+                if (
+                    (nb in self.ignore) or
+                    (nb in self.py2_ignore and sys.version_info[0] == 2)
+                ):
+                    continue
+                tests["test_" + nb] = get_test(nb, nbpath, timeout=self.timeout)
             self._test_dict = tests
         return self._test_dict
 
@@ -198,7 +181,6 @@ class TestNotebooks(properties.HasProperties, unittest.TestCase):
         obj.py2_ignore = self.py2_ignore
         return obj
 
-
     def run_tests(self):
         """
         Run the unit-tests. Returns :code:`True` if all tests were successful
@@ -210,13 +192,9 @@ class TestNotebooks(properties.HasProperties, unittest.TestCase):
             test = nbtest.TestNotebooks(directory='./notebooks')
             passed = test.run_tests()
             assert(passed)
-
         """
         NbTestCase = self.get_tests()
         tests = unittest.TestSuite(map(NbTestCase, self.test_dict.keys()))
-        result = unittest.TestResult()
         testRunner = unittest.TextTestRunner()
         result = testRunner.run(tests)
         return result.wasSuccessful()
-
-
