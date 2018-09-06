@@ -124,9 +124,7 @@ class ReflectedRegionsFinder(object):
 
         self.angle_increment = Angle(angle_increment)
         if self.angle_increment < Angle(1, 'deg'):
-            raise ValueError(
-                "ReflectedRegionsFinder: the angle_increment parameter is too small."
-            )
+            raise ValueError("angle_increment is too small")
 
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
@@ -161,7 +159,7 @@ class ReflectedRegionsFinder(object):
         binsz = 0.02
         npix = int((3 * min_size / binsz).value)
         maskmap = WcsNDMap.create(
-            skydir=center, binsz=binsz, npix=npix, coordsys='GAL', proj='TAN', unit=''
+            skydir=center, binsz=binsz, npix=npix, coordsys='GAL', proj='TAN'
         )
         maskmap.data += 1.
         return maskmap

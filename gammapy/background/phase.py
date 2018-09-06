@@ -64,21 +64,21 @@ class PhaseBackgroundEstimator(object):
         return events.select_row_subset(mask)
 
     @staticmethod
-    def _check_phase_intervals(list_phase_interval):
+    def _check_intervals(intervals):
         """Split phase intervals that go beyond phase 1"""
-        for phase_interval in list_phase_interval:
+        for phase_interval in intervals:
             if phase_interval[0] > phase_interval[1]:
-                list_phase_interval.remove(phase_interval)
-                list_phase_interval.append([phase_interval[0], 1])
-                list_phase_interval.append([0, phase_interval[1]])
-        return list_phase_interval
+                intervals.remove(phase_interval)
+                intervals.append([phase_interval[0], 1])
+                intervals.append([0, phase_interval[1]])
+        return intervals
 
     def process(self, obs):
         """Estimate background for one observation."""
         all_events = obs.events.select_circular_region(self.on_region)
 
-        self.on_phase = self._check_phase_intervals(self.on_phase)
-        self.off_phase = self._check_phase_intervals(self.off_phase)
+        self.on_phase = self._check_intervals(self.on_phase)
+        self.off_phase = self._check_intervals(self.off_phase)
 
         # Loop over all ON- and OFF- phase intervals to filter the ON- and OFF- events
         list_on_events = [

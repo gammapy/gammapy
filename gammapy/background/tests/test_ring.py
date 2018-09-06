@@ -13,24 +13,20 @@ from ...background import RingBackgroundEstimator, AdaptiveRingBackgroundEstimat
 def images():
     fov = 2.5 * u.deg
 
-    reference_image = WcsNDMap.create(binsz=0.05, npix=201, dtype=float)
-    reference_image.data += 1.
-    coords = reference_image.geom.get_coord().skycoord
-    center = reference_image.geom.center_skydir
+    m_ref = WcsNDMap.create(binsz=0.05, npix=201, dtype=float)
+    m_ref.data += 1.
+    coords = m_ref.geom.get_coord().skycoord
+    center = m_ref.geom.center_skydir
     mask = coords.separation(center) < fov
 
     images = dict()
-    images['counts'] = reference_image.copy(
-        data=np.zeros_like(reference_image.data) + 2.
-    )
+    images['counts'] = m_ref.copy(data=np.zeros_like(m_ref.data) + 2.)
     images['counts'].data *= mask
 
-    images['exposure_on'] = reference_image.copy(
-        data=np.zeros_like(reference_image.data) + 1.
-    )
+    images['exposure_on'] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.)
     images['exposure_on'].data *= mask
 
-    exclusion = reference_image.copy(data=np.zeros_like(reference_image.data) + 1.)
+    exclusion = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.)
     exclusion.data[90:110, 90:110] = 0
     images['exclusion'] = exclusion
     return images

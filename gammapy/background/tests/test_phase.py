@@ -55,14 +55,14 @@ def test_filter_events(obs_list, on_region):
 
 
 @pytest.mark.parametrize(
-    'example_phase_interval, output',
-    [([[0.2, 0.3]], [[0.2, 0.3]]), ([[0.9, 0.1]], [[0.9, 1], [0, 0.1]])],
+    'pars',
+    [
+        {'p_in': [[0.2, 0.3]], 'p_out': [[0.2, 0.3]]},
+        {'p_in': [[0.9, 0.1]], 'p_out': [[0.9, 1], [0, 0.1]]},
+    ],
 )
-def test_check_phase_intervals(example_phase_interval, output):
-    assert (
-        PhaseBackgroundEstimator._check_phase_intervals(example_phase_interval)
-        == output
-    )
+def test_check_phase_intervals(pars):
+    assert PhaseBackgroundEstimator._check_intervals(pars['p_in']) == pars['p_out']
 
 
 @requires_data('gammapy-extra')

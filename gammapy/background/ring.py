@@ -71,7 +71,6 @@ class AdaptiveRingBackgroundEstimator(object):
         theta='0.22 deg',
         method='fixed_width',
     ):
-
         stepsize = Angle(stepsize)
         theta = Angle(theta)
 
@@ -220,15 +219,14 @@ class AdaptiveRingBackgroundEstimator(object):
         counts, exposure_on, exclusion = [images[_] for _ in required]
 
         if not counts.geom.is_image:
-            raise ValueError(
-                'Adaptive ring background estimation only supported' ' for 2D images.'
-            )
+            raise ValueError('Only 2D maps are supported')
 
         kernels = self.kernels(counts)
-        cubes = {}
-        cubes['exposure_on'] = self._exposure_on_cube(exposure_on, kernels)
-        cubes['exposure_off'] = self._exposure_off_cube(exposure_on, exclusion, kernels)
-        cubes['off'] = self._off_cube(counts, exclusion, kernels)
+        cubes = {
+            'exposure_on': self._exposure_on_cube(exposure_on, kernels),
+            'exposure_off': self._exposure_off_cube(exposure_on, exclusion, kernels),
+            'off': self._off_cube(counts, exclusion, kernels),
+        }
         cubes['alpha_approx'] = self._alpha_approx_cube(cubes)
 
         exposure_off, off = self._reduce_cubes(cubes)
