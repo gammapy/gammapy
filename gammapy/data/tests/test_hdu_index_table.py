@@ -6,12 +6,21 @@ from ...utils.testing import requires_data
 from ..hdu_index_table import HDUIndexTable
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def hdu_index_table():
-    table = HDUIndexTable(rows=[
-        {'OBS_ID': 42, 'HDU_TYPE': 'events', 'HDU_CLASS': 'spam42', 'FILE_DIR': 'a', 'FILE_NAME': 'b', 'HDU_NAME': 'c'},
-    ])
-    table.meta['BASE_DIR'] = 'spam'
+    table = HDUIndexTable(
+        rows=[
+            {
+                "OBS_ID": 42,
+                "HDU_TYPE": "events",
+                "HDU_CLASS": "spam42",
+                "FILE_DIR": "a",
+                "FILE_NAME": "b",
+                "HDU_NAME": "c",
+            }
+        ]
+    )
+    table.meta["BASE_DIR"] = "spam"
     return table
 
 
@@ -30,74 +39,90 @@ def test_hdu_index_table(hdu_index_table):
 
     See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/118
     """
-    location = hdu_index_table.hdu_location(obs_id=42, hdu_type='events')
-    assert location.path().as_posix() == 'spam/a/b'
+    location = hdu_index_table.hdu_location(obs_id=42, hdu_type="events")
+    assert location.path().as_posix() == "spam/a/b"
 
-    assert hdu_index_table.summary().startswith('HDU index table')
+    assert hdu_index_table.summary().startswith("HDU index table")
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_hdu_index_table_hd_hap():
     """Test HESS HAP-HD data access."""
-    hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz')
+    hdu_index = HDUIndexTable.read(
+        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz"
+    )
 
-    assert list(hdu_index.meta) == ['BASE_DIR']
-    assert hdu_index.base_dir == make_path('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
+    assert list(hdu_index.meta) == ["BASE_DIR"]
+    assert hdu_index.base_dir == make_path("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
 
     # A few valid queries
 
-    location = hdu_index.hdu_location(obs_id=23523, hdu_type='events')
+    location = hdu_index.hdu_location(obs_id=23523, hdu_type="events")
     hdu = location.get_hdu()
-    assert hdu.name == 'EVENTS'
+    assert hdu.name == "EVENTS"
 
-    assert str(location.path(abs_path=False)) == 'data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    assert (
+        str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
     path1 = str(location.path(abs_path=True))
     path2 = str(location.path(abs_path=False))
     assert path1.endswith(path2)
 
-    location = hdu_index.hdu_location(obs_id=23523, hdu_class='psf_table')
-    assert str(location.path(abs_path=False)) == 'data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_table")
+    assert (
+        str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
 
-    location = hdu_index.hdu_location(obs_id=23523, hdu_type='psf')
-    assert str(location.path(abs_path=False)) == 'data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    location = hdu_index.hdu_location(obs_id=23523, hdu_type="psf")
+    assert (
+        str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
 
     # A few invalid queries
 
     with pytest.raises(IndexError) as exc:
-        hdu_index.hdu_location(obs_id=42, hdu_class='psf_3gauss')
-    msg = 'No entry available with OBS_ID = 42'
+        hdu_index.hdu_location(obs_id=42, hdu_class="psf_3gauss")
+    msg = "No entry available with OBS_ID = 42"
     assert exc.value.args[0] == msg
 
     with pytest.raises(IndexError) as exc:
-        hdu_index.hdu_location(obs_id=23523, hdu_type='bkg')
-    msg = 'No HDU found matching: OBS_ID = 23523, HDU_TYPE = bkg, HDU_CLASS = None'
+        hdu_index.hdu_location(obs_id=23523, hdu_type="bkg")
+    msg = "No HDU found matching: OBS_ID = 23523, HDU_TYPE = bkg, HDU_CLASS = None"
     assert exc.value.args[0] == msg
 
     with pytest.raises(ValueError) as exc:
         hdu_index.hdu_location(obs_id=23523)
-    msg = 'You have to specify `hdu_type` or `hdu_class`.'
+    msg = "You have to specify `hdu_type` or `hdu_class`."
     assert exc.value.args[0] == msg
 
     with pytest.raises(ValueError) as exc:
-        hdu_index.hdu_location(obs_id=23523, hdu_type='invalid')
+        hdu_index.hdu_location(obs_id=23523, hdu_type="invalid")
     msg = "Invalid hdu_type: invalid. Valid values are: ['events', 'gti', 'aeff', 'edisp', 'psf', 'bkg']"
     assert exc.value.args[0] == msg
 
     with pytest.raises(ValueError) as exc:
-        hdu_index.hdu_location(obs_id=23523, hdu_class='invalid')
+        hdu_index.hdu_location(obs_id=23523, hdu_class="invalid")
     msg = "Invalid hdu_class: invalid. Valid values are: ['events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table', 'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d']"
     assert exc.value.args[0] == msg
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_hdu_index_table_pa():
     """Test HESS ParisAnalysis data access."""
-    hdu_index = HDUIndexTable.read('$GAMMAPY_EXTRA/datasets/hess-crab4-pa/hdu-index.fits.gz')
+    hdu_index = HDUIndexTable.read(
+        "$GAMMAPY_EXTRA/datasets/hess-crab4-pa/hdu-index.fits.gz"
+    )
 
     # A few valid queries
 
-    location = hdu_index.hdu_location(obs_id=23523, hdu_type='psf')
-    assert str(location.path(abs_path=False)) == 'run23400-23599/run23523/psf_king_23523.fits.gz'
+    location = hdu_index.hdu_location(obs_id=23523, hdu_type="psf")
+    assert (
+        str(location.path(abs_path=False))
+        == "run23400-23599/run23523/psf_king_23523.fits.gz"
+    )
 
-    location = hdu_index.hdu_location(obs_id=23523, hdu_class='psf_king')
-    assert str(location.path(abs_path=False)) == 'run23400-23599/run23523/psf_king_23523.fits.gz'
+    location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_king")
+    assert (
+        str(location.path(abs_path=False))
+        == "run23400-23599/run23523/psf_king_23523.fits.gz"
+    )

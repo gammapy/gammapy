@@ -3,10 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from regions import CircleSkyRegion
 from .ring import ring_area_factor
 
-__all__ = [
-    'BackgroundEstimate',
-    'ring_background_estimate',
-]
+__all__ = ["BackgroundEstimate", "ring_background_estimate"]
 
 
 class BackgroundEstimate(object):
@@ -35,8 +32,16 @@ class BackgroundEstimate(object):
         Background estimation method
     """
 
-    def __init__(self, on_region, on_events, off_region,
-                 off_events, a_on, a_off, method='default'):
+    def __init__(
+        self,
+        on_region,
+        on_events,
+        off_region,
+        off_events,
+        a_on,
+        a_off,
+        method="default",
+    ):
         self.on_region = on_region
         self.on_events = on_events
         self.off_region = off_region
@@ -47,13 +52,13 @@ class BackgroundEstimate(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n Method: {}'.format(self.method)
-        ss += '\n on region'
-        ss += '\n {}'.format(self.on_region)
-        ss += '\n {}'.format(self.on_events)
-        ss += '\n off region'
-        ss += '\n {}'.format(self.off_region)
-        ss += '\n {}'.format(self.off_events)
+        ss += "\n Method: {}".format(self.method)
+        ss += "\n on region"
+        ss += "\n {}".format(self.on_region)
+        ss += "\n {}".format(self.on_events)
+        ss += "\n off region"
+        ss += "\n {}".format(self.off_region)
+        ss += "\n {}".format(self.off_events)
         return ss
 
 
@@ -97,5 +102,5 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
         off_events=off_events,
         a_on=a_on,
         a_off=a_off,
-        method='ring',
+        method="ring",
     )

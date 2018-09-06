@@ -10,9 +10,7 @@ from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 from ..utils.time import time_relative_to_ref
 
-__all__ = [
-    'ObservationTable',
-]
+__all__ = ["ObservationTable"]
 
 
 class ObservationTable(Table):
@@ -36,18 +34,20 @@ class ObservationTable(Table):
     @property
     def pointing_radec(self):
         """Pointing positions as ICRS (`~astropy.coordinates.SkyCoord`)"""
-        return SkyCoord(self['RA_PNT'], self['DEC_PNT'], unit='deg', frame='icrs')
+        return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
     def pointing_galactic(self):
         """Pointing positions as Galactic (`~astropy.coordinates.SkyCoord`)"""
-        return SkyCoord(self['GLON_PNT'], self['GLAT_PNT'], unit='deg', frame='galactic')
+        return SkyCoord(
+            self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
+        )
 
     @lazyproperty
     def _index_dict(self):
         """Dict containing row index for all obs ids"""
         # TODO: Switch to http://docs.astropy.org/en/latest/table/indexing.html once it is more stable
-        temp = (zip(self['OBS_ID'], np.arange(len(self))))
+        temp = zip(self["OBS_ID"], np.arange(len(self)))
         return dict(temp)
 
     def get_obs_idx(self, obs_id):
@@ -82,24 +82,26 @@ class ObservationTable(Table):
 
     def summary(self):
         """Info string (str)"""
-        obs_name = self.meta.get('OBSERVATORY_NAME', 'N/A')
+        obs_name = self.meta.get("OBSERVATORY_NAME", "N/A")
 
-        return '\n'.join([
-            'Observation table:',
-            'Observatory name: {!r}'.format(obs_name),
-            'Number of observations: {}'.format(len(self)),
-            # TODO: clean this up. Make those properties?
-            # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
-            #
-            # ss += 'Total observation time: {}\n'.format(ontime)
-            # livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
-            # ss += 'Total live time: {}\n'.format(livetime)
-            # dtf = 100. * (1 - livetime / ontime)
-            # ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
-            # time_ref = time_ref_from_dict(self.meta)
-            # time_ref_unit = time_ref_from_dict(self.meta).format
-            # ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
-        ])
+        return "\n".join(
+            [
+                "Observation table:",
+                "Observatory name: {!r}".format(obs_name),
+                "Number of observations: {}".format(len(self)),
+                # TODO: clean this up. Make those properties?
+                # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
+                #
+                # ss += 'Total observation time: {}\n'.format(ontime)
+                # livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
+                # ss += 'Total live time: {}\n'.format(livetime)
+                # dtf = 100. * (1 - livetime / ontime)
+                # ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
+                # time_ref = time_ref_from_dict(self.meta)
+                # time_ref_unit = time_ref_from_dict(self.meta).format
+                # ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
+            ]
+        )
 
     def select_linspace_subset(self, num):
         """Select subset of observations.
@@ -119,7 +121,7 @@ class ObservationTable(Table):
         """
         indices = np.linspace(start=0, stop=len(self), num=num, endpoint=False)
         # Round down to nearest integer
-        indices = indices.astype('int')
+        indices = indices.astype("int")
         return self[indices]
 
     def select_range(self, selection_variable, value_range, inverted=False):
@@ -160,7 +162,7 @@ class ObservationTable(Table):
         mask = (value_range[0] <= value) & (value < value_range[1])
 
         if np.allclose(value_range[0].value, value_range[1].value):
-            mask = (value_range[0] == value)
+            mask = value_range[0] == value
 
         if inverted:
             mask = np.invert(mask)
@@ -192,7 +194,7 @@ class ObservationTable(Table):
         obs_table : `~gammapy.data.ObservationTable`
             Observation table after selection.
         """
-        if self.meta['TIME_FORMAT'] == 'absolute':
+        if self.meta["TIME_FORMAT"] == "absolute":
             # read times into a Time object
             time = Time(self[selection_variable])
         else:
@@ -305,38 +307,45 @@ class ObservationTable(Table):
         """
         from ..catalog import select_sky_box, select_sky_circle
 
-        if 'inverted' not in selection.keys():
-            selection['inverted'] = False
+        if "inverted" not in selection.keys():
+            selection["inverted"] = False
 
-        if selection['type'] == 'sky_circle':
-            lon = selection['lon']
-            lat = selection['lat']
-            radius = selection['radius'] + selection['border']
+        if selection["type"] == "sky_circle":
+            lon = selection["lon"]
+            lat = selection["lat"]
+            radius = selection["radius"] + selection["border"]
             return select_sky_circle(
-                self, lon_cen=lon, lat_cen=lat, radius=radius,
-                frame=selection['frame'], inverted=selection['inverted']
+                self,
+                lon_cen=lon,
+                lat_cen=lat,
+                radius=radius,
+                frame=selection["frame"],
+                inverted=selection["inverted"],
             )
 
-        elif selection['type'] == 'sky_box':
-            lon = selection['lon']
-            lat = selection['lat']
-            border = selection['border']
+        elif selection["type"] == "sky_box":
+            lon = selection["lon"]
+            lat = selection["lat"]
+            border = selection["border"]
             lon = Angle([lon[0] - border, lon[1] + border])
             lat = Angle([lat[0] - border, lat[1] + border])
             return select_sky_box(
-                self, lon_lim=lon, lat_lim=lat,
-                frame=selection['frame'], inverted=selection['inverted']
+                self,
+                lon_lim=lon,
+                lat_lim=lat,
+                frame=selection["frame"],
+                inverted=selection["inverted"],
             )
 
-        elif selection['type'] == 'time_box':
+        elif selection["type"] == "time_box":
             return self.select_time_range(
-                'TSTART', selection['time_range'], selection['inverted']
+                "TSTART", selection["time_range"], selection["inverted"]
             )
 
-        elif selection['type'] == 'par_box':
+        elif selection["type"] == "par_box":
             return self.select_range(
-                selection['variable'], selection['value_range'], selection['inverted']
+                selection["variable"], selection["value_range"], selection["inverted"]
             )
 
         else:
-            raise ValueError('Invalid selection type: {}'.format(selection['type']))
+            raise ValueError("Invalid selection type: {}".format(selection["type"]))

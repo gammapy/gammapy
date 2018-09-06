@@ -62,7 +62,7 @@ def song(karaoke=False):
     import webbrowser
     import sys
 
-    webbrowser.open('http://gammapy.org/gammapy_song.mp3')
+    webbrowser.open("http://gammapy.org/gammapy_song.mp3")
 
     if karaoke:
         lyrics = (
@@ -78,5 +78,5 @@ def song(karaoke=False):
             "Supernova remnants, pulsar winds, AGN, Gamma, Gamma, Gammapy\n"
         )
 
-        centered = '\n'.join('{:^80}'.format(s) for s in lyrics.split('\n'))
+        centered = "\n".join("{:^80}".format(s) for s in lyrics.split("\n"))
         sys.stdout.write(centered)

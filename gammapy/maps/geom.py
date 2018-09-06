@@ -109,12 +109,12 @@ def find_and_read_bands(hdu, header=None):
             if "AXCOLS%i" % i in hdu.header:
                 axis_cols += [hdu.header["AXCOLS%i" % i].split(",")]
 
-    interp = 'lin'
+    interp = "lin"
     for i, cols in enumerate(axis_cols):
 
         if "ENERGY" in cols or "E_MIN" in cols:
             name = "energy"
-            interp = 'log'
+            interp = "log"
         elif re.search("(.+)_MIN", cols[0]):
             name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
@@ -904,7 +904,7 @@ class MapCoord(object):
         str_ += "\tcoordsys : {}\n".format(self.coordsys)
         return str_
 
-    #TODO: this is a temporary solution until we have decided how to handle
+    # TODO: this is a temporary solution until we have decided how to handle
     # quantities uniformly. This should be called after any `MapCoord.create()`
     # to support that users can pass quantities in any Map.xxx_by_coord() method.
     def match_axes_units(self, geom):
@@ -923,7 +923,7 @@ class MapCoord(object):
         coords = OrderedDict()
 
         for name, coord in self._data.items():
-            if name in ['lon', 'lat']:
+            if name in ["lon", "lat"]:
                 coords[name] = coord
             else:
                 ax = geom.get_axis_by_name(name)

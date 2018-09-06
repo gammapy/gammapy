@@ -10,20 +10,20 @@ from gammapy.background import ReflectedRegionsFinder
 exclusion_mask = WcsNDMap.create(npix=(801, 701), binsz=0.01, skydir=(83.6, 23.0))
 
 coords = exclusion_mask.geom.get_coord().skycoord
-mask = (Angle('23d') < coords.dec) & (coords.dec < Angle('24d'))
+mask = (Angle("23d") < coords.dec) & (coords.dec < Angle("24d"))
 exclusion_mask.data = np.invert(mask)
 
-pos = SkyCoord(83.633, 22.014, unit='deg')
-radius = Angle(0.3, 'deg')
+pos = SkyCoord(83.633, 22.014, unit="deg")
+radius = Angle(0.3, "deg")
 on_region = CircleSkyRegion(pos, radius)
-center = SkyCoord(83.633, 24, unit='deg')
+center = SkyCoord(83.633, 24, unit="deg")
 
 # One can impose a minimal distance between ON region and first reflected regions
 finder = ReflectedRegionsFinder(
     region=on_region,
     center=center,
     exclusion_mask=exclusion_mask,
-    min_distance_input='0.2 rad',
+    min_distance_input="0.2 rad",
 )
 finder.run()
 
@@ -35,8 +35,8 @@ finder = ReflectedRegionsFinder(
     region=on_region,
     center=center,
     exclusion_mask=exclusion_mask,
-    min_distance_input='0.2 rad',
-    min_distance='0.1 rad'
+    min_distance_input="0.2 rad",
+    min_distance="0.1 rad",
 )
 finder.run()
 fig2 = plt.figure(2)
@@ -47,9 +47,9 @@ finder = ReflectedRegionsFinder(
     region=on_region,
     center=center,
     exclusion_mask=exclusion_mask,
-    min_distance_input='0.2 rad',
+    min_distance_input="0.2 rad",
     max_region_number=5,
-    min_distance='0.1 rad'
+    min_distance="0.1 rad",
 )
 finder.run()
 fig3 = plt.figure(3)

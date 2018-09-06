@@ -9,9 +9,7 @@ from . import SpectrumObservation, SpectrumObservationList
 from ..utils.scripts import make_path
 from ..irf import PSF3D
 
-__all__ = [
-    'SpectrumExtraction',
-]
+__all__ = ["SpectrumExtraction"]
 
 log = logging.getLogger(__name__)
 
@@ -51,13 +49,22 @@ class SpectrumExtraction(object):
         Extract spectrum only within the recommended valid energy range of the
         effective area table (default is True).
     """
+
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
     """Reconstruced energy axis to be used if not specified otherwise"""
 
-    def __init__(self, obs_list, bkg_estimate, e_reco=None, e_true=None,
-                 containment_correction=False, max_alpha=1, use_recommended_erange=True):
+    def __init__(
+        self,
+        obs_list,
+        bkg_estimate,
+        e_reco=None,
+        e_true=None,
+        containment_correction=False,
+        max_alpha=1,
+        use_recommended_erange=True,
+    ):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
@@ -77,7 +84,7 @@ class SpectrumExtraction(object):
     def run(self):
         """Run all steps.
         """
-        log.info('Running {}'.format(self))
+        log.info("Running {}".format(self))
         for obs, bkg in zip(self.obs_list, self.bkg_estimate):
             if not self._alpha_ok(obs, bkg):
                 continue
@@ -87,7 +94,7 @@ class SpectrumExtraction(object):
         """Check if observation fulfills alpha criterion"""
         condition = bkg.a_off == 0 or bkg.a_on / bkg.a_off > self.max_alpha
         if condition:
-            msg = 'Skipping because {} / {} > {}'
+            msg = "Skipping because {} / {} > {}"
             log.info(msg.format(bkg.a_on, bkg.a_off, self.max_alpha))
             return False
         else:
@@ -108,7 +115,7 @@ class SpectrumExtraction(object):
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
             Spectrum observation
         """
-        log.info('Process observation\n {}'.format(obs))
+        log.info("Process observation\n {}".format(obs))
         self.make_empty_vectors(obs, bkg)
         self.extract_counts(bkg)
         self.extract_irfs(obs)
@@ -130,7 +137,7 @@ class SpectrumExtraction(object):
                 spectrum_observation.hi_threshold = obs.aeff.high_threshold
                 spectrum_observation.lo_threshold = obs.aeff.low_threshold
             except KeyError:
-                log.warning('No thresholds defined for obs {}'.format(obs))
+                log.warning("No thresholds defined for obs {}".format(obs))
 
         return spectrum_observation
 
@@ -146,10 +153,10 @@ class SpectrumExtraction(object):
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        log.info('Update observation meta info')
+        log.info("Update observation meta info")
 
         offset = obs.pointing_radec.separation(bkg.on_region.center)
-        log.info('Offset : {}\n'.format(offset))
+        log.info("Offset : {}\n".format(offset))
 
         self._on_vector = PHACountsSpectrum(
             energy_lo=self.e_reco[:-1],
@@ -157,7 +164,8 @@ class SpectrumExtraction(object):
             backscal=bkg.a_on,
             offset=offset,
             livetime=obs.observation_live_time_duration,
-            obs_id=obs.obs_id)
+            obs_id=obs.obs_id,
+        )
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
@@ -171,7 +179,7 @@ class SpectrumExtraction(object):
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        log.info('Fill events')
+        log.info("Fill events")
         self._on_vector.fill(bkg.on_events)
         self._off_vector.fill(bkg.off_events)
 
@@ -183,11 +191,12 @@ class SpectrumExtraction(object):
         obs : `~gammapy.data.DataStoreObservation`
             Observation
         """
-        log.info('Extract IRFs')
+        log.info("Extract IRFs")
         offset = self._on_vector.offset
         self._aeff = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
         self._edisp = obs.edisp.to_energy_dispersion(
-            offset, e_reco=self.e_reco, e_true=self.e_true)
+            offset, e_reco=self.e_reco, e_true=self.e_true
+        )
 
     def apply_containment_correction(self, obs, bkg):
         """Apply PSF containment correction.
@@ -201,10 +210,12 @@ class SpectrumExtraction(object):
         """
         # TODO: This should be split out into a separate class
         if not isinstance(bkg.on_region, CircleSkyRegion):
-            raise TypeError("Incorrect region type for containment correction."
-                            " Should be CircleSkyRegion.")
+            raise TypeError(
+                "Incorrect region type for containment correction."
+                " Should be CircleSkyRegion."
+            )
 
-        log.info('Apply containment correction')
+        log.info("Apply containment correction")
         # First need psf
         angles = np.linspace(0., 1.5, 150) * u.deg
         offset = self._on_vector.offset
@@ -219,7 +230,7 @@ class SpectrumExtraction(object):
             try:
                 cont_ = psf.integral(energy, 0. * u.deg, bkg.on_region.radius)
             except:
-                msg = 'Containment correction failed for bin {}, energy {}.'
+                msg = "Containment correction failed for bin {}, energy {}."
                 log.warning(msg.format(index, energy))
                 cont_ = 1
             finally:
@@ -238,7 +249,7 @@ class SpectrumExtraction(object):
         for obs in self.observations:
             obs.compute_energy_threshold(**kwargs)
 
-    def write(self, outdir, ogipdir='ogip_data', use_sherpa=False, overwrite=False):
+    def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk.
 
         Parameters
@@ -255,6 +266,8 @@ class SpectrumExtraction(object):
         outdir = make_path(outdir)
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite)
+        self.observations.write(
+            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
+        )
 
         # TODO : add more debug plots etc. here

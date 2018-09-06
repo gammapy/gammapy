@@ -48,13 +48,15 @@ class TestSpectrumEnergyGroup:
 class TestSpectrumEnergyGroups:
     @pytest.fixture()
     def groups(self):
-        return SpectrumEnergyGroups([
-            # energy_group_idx, bin_idx_min, bin_idx_max, bin_type, energy_min, energy_max
-            SpectrumEnergyGroup(0, 10, 20, "normal", 100 * u.TeV, 210 * u.TeV),
-            SpectrumEnergyGroup(1, 21, 25, "normal", 210 * u.TeV, 260 * u.TeV),
-            SpectrumEnergyGroup(5, 26, 26, "normal", 260 * u.TeV, 270 * u.TeV),
-            SpectrumEnergyGroup(6, 27, 30, "normal", 270 * u.TeV, 300 * u.TeV),
-        ])
+        return SpectrumEnergyGroups(
+            [
+                # energy_group_idx, bin_idx_min, bin_idx_max, bin_type, energy_min, energy_max
+                SpectrumEnergyGroup(0, 10, 20, "normal", 100 * u.TeV, 210 * u.TeV),
+                SpectrumEnergyGroup(1, 21, 25, "normal", 210 * u.TeV, 260 * u.TeV),
+                SpectrumEnergyGroup(5, 26, 26, "normal", 260 * u.TeV, 270 * u.TeV),
+                SpectrumEnergyGroup(6, 27, 30, "normal", 270 * u.TeV, 300 * u.TeV),
+            ]
+        )
 
     def test_repr(self, groups):
         assert repr(groups) == "SpectrumEnergyGroups(len=4)"
@@ -120,28 +122,32 @@ class TestSpectrumEnergyGroupMaker:
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
-        expected = SpectrumEnergyGroups([
-            SpectrumEnergyGroup(0, 0, 0, "normal", 1 * u.TeV, 2 * u.TeV),
-            SpectrumEnergyGroup(1, 1, 8, "normal", 2 * u.TeV, 10 * u.TeV),
-        ])
+        expected = SpectrumEnergyGroups(
+            [
+                SpectrumEnergyGroup(0, 0, 0, "normal", 1 * u.TeV, 2 * u.TeV),
+                SpectrumEnergyGroup(1, 1, 8, "normal", 2 * u.TeV, 10 * u.TeV),
+            ]
+        )
 
         assert groups == expected
 
-    @pytest.mark.parametrize("ebounds", [
-        [1.8, 4.8, 7.2] * u.TeV,
-        [2, 5, 7] * u.TeV,
-        [2000, 5000, 7000] * u.GeV])
+    @pytest.mark.parametrize(
+        "ebounds",
+        [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
+    )
     def test_compute_groups_fixed_edges(self, obs, ebounds):
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
-        expected = SpectrumEnergyGroups([
-            SpectrumEnergyGroup(0, 0, 0, "underflow", 1 * u.TeV, 2 * u.TeV),
-            SpectrumEnergyGroup(1, 1, 3, "normal", 2 * u.TeV, 5 * u.TeV),
-            SpectrumEnergyGroup(2, 4, 5, "normal", 5 * u.TeV, 7 * u.TeV),
-            SpectrumEnergyGroup(3, 6, 8, "overflow", 7 * u.TeV, 10 * u.TeV),
-        ])
+        expected = SpectrumEnergyGroups(
+            [
+                SpectrumEnergyGroup(0, 0, 0, "underflow", 1 * u.TeV, 2 * u.TeV),
+                SpectrumEnergyGroup(1, 1, 3, "normal", 2 * u.TeV, 5 * u.TeV),
+                SpectrumEnergyGroup(2, 4, 5, "normal", 5 * u.TeV, 7 * u.TeV),
+                SpectrumEnergyGroup(3, 6, 8, "overflow", 7 * u.TeV, 10 * u.TeV),
+            ]
+        )
 
         assert groups == expected
 
@@ -151,10 +157,12 @@ class TestSpectrumEnergyGroupMaker:
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
-        expected = SpectrumEnergyGroups([
-            SpectrumEnergyGroup(0, 0, 2, "normal", 1 * u.TeV, 4 * u.TeV),
-            SpectrumEnergyGroup(1, 3, 8, "overflow", 4 * u.TeV, 10 * u.TeV),
-        ])
+        expected = SpectrumEnergyGroups(
+            [
+                SpectrumEnergyGroup(0, 0, 2, "normal", 1 * u.TeV, 4 * u.TeV),
+                SpectrumEnergyGroup(1, 3, 8, "overflow", 4 * u.TeV, 10 * u.TeV),
+            ]
+        )
 
         assert groups == expected
 
@@ -164,11 +172,13 @@ class TestSpectrumEnergyGroupMaker:
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
-        expected = SpectrumEnergyGroups([
-            SpectrumEnergyGroup(0, 0, 3, "underflow", 1 * u.TeV, 5 * u.TeV),
-            SpectrumEnergyGroup(1, 4, 5, "normal", 5 * u.TeV, 7 * u.TeV),
-            SpectrumEnergyGroup(2, 6, 8, "normal", 7 * u.TeV, 10 * u.TeV),
-        ])
+        expected = SpectrumEnergyGroups(
+            [
+                SpectrumEnergyGroup(0, 0, 3, "underflow", 1 * u.TeV, 5 * u.TeV),
+                SpectrumEnergyGroup(1, 4, 5, "normal", 5 * u.TeV, 7 * u.TeV),
+                SpectrumEnergyGroup(2, 6, 8, "normal", 7 * u.TeV, 10 * u.TeV),
+            ]
+        )
 
         assert groups == expected
 

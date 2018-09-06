@@ -18,6 +18,6 @@ def test_stats_properties(stats):
 
 def test_stats_str(stats):
     text = str(stats)
-    assert 'alpha = 0.1' in text
-    assert 'background = 1.0' in text
-    assert 'excess = 9.0' in text
+    assert "alpha = 0.1" in text
+    assert "background = 1.0" in text
+    assert "excess = 9.0" in text

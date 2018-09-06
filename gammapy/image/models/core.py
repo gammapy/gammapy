@@ -12,17 +12,18 @@ from ...utils.modeling import Parameter, Parameters
 from ...maps import Map
 
 __all__ = [
-    'SkySpatialModel',
-    'SkyPointSource',
-    'SkyGaussian',
-    'SkyDisk',
-    'SkyShell',
-    'SkyDiffuseConstant',
-    'SkyDiffuseMap',
+    "SkySpatialModel",
+    "SkyPointSource",
+    "SkyGaussian",
+    "SkyDisk",
+    "SkyShell",
+    "SkyDiffuseConstant",
+    "SkyDiffuseMap",
 ]
 
 
 log = logging.getLogger(__name__)
+
 
 @six.add_metaclass(abc.ABCMeta)
 class SkySpatialModel(object):
@@ -31,15 +32,15 @@ class SkySpatialModel(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n\nParameters: \n\n\t'
+        ss += "\n\nParameters: \n\n\t"
 
         table = self.parameters.to_table()
-        ss += '\n\t'.join(table.pformat())
+        ss += "\n\t".join(table.pformat())
 
         if self.parameters.covariance is not None:
-            ss += '\n\nCovariance: \n\n\t'
+            ss += "\n\nCovariance: \n\n\t"
             covar = self.parameters.covariance_to_table()
-            ss += '\n\t'.join(covar.pformat())
+            ss += "\n\t".join(covar.pformat())
         return ss
 
     def __call__(self, lon, lat):
@@ -73,10 +74,9 @@ class SkyPointSource(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0))
-        ])
+        self.parameters = Parameters(
+            [Parameter("lon_0", Longitude(lon_0)), Parameter("lat_0", Latitude(lat_0))]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
@@ -93,7 +93,7 @@ class SkyPointSource(SkySpatialModel):
         lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0) / np.abs(grad_lon)
         lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0) / np.abs(grad_lat)
         val = lon_val * lat_val
-        return val.to('sr-1')
+        return val.to("sr-1")
 
 
 class SkyGaussian(SkySpatialModel):
@@ -117,24 +117,26 @@ class SkyGaussian(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, sigma):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('sigma', Angle(sigma))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter("lon_0", Longitude(lon_0)),
+                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("sigma", Angle(sigma)),
+            ]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, sigma):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        sep = sep.to('rad').value
-        sigma = sigma.to('rad').value
+        sep = sep.to("rad").value
+        sigma = sigma.to("rad").value
 
         norm = 1 / (2 * np.pi * sigma ** 2)
         exponent = -0.5 * (sep / sigma) ** 2
         val = norm * np.exp(exponent)
 
-        return val * u.Unit('sr-1')
+        return val * u.Unit("sr-1")
 
 
 class SkyDisk(SkySpatialModel):
@@ -161,23 +163,25 @@ class SkyDisk(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, r_0):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('r_0', Angle(r_0))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter("lon_0", Longitude(lon_0)),
+                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("r_0", Angle(r_0)),
+            ]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        sep = sep.to('rad').value
-        r_0 = r_0.to('rad').value
+        sep = sep.to("rad").value
+        r_0 = r_0.to("rad").value
 
         norm = 1. / (2 * np.pi * (1 - np.cos(r_0)))
         val = np.where(sep <= r_0, norm, 0)
 
-        return val * u.Unit('sr-1')
+        return val * u.Unit("sr-1")
 
 
 class SkyShell(SkySpatialModel):
@@ -212,29 +216,31 @@ class SkyShell(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, radius, width):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('radius', Angle(radius)),
-            Parameter('width', Angle(width))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter("lon_0", Longitude(lon_0)),
+                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("radius", Angle(radius)),
+                Parameter("width", Angle(width)),
+            ]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        sep = sep.to('rad').value
-        r_i = radius.to('rad').value
-        r_o = (radius + width).to('rad').value
+        sep = sep.to("rad").value
+        r_i = radius.to("rad").value
+        r_o = (radius + width).to("rad").value
 
         norm = 3 / (2 * np.pi * (r_o ** 3 - r_i ** 3))
 
-        with np.errstate(invalid='ignore'):
+        with np.errstate(invalid="ignore"):
             val_out = np.sqrt(r_o ** 2 - sep ** 2)
             val_in = val_out - np.sqrt(r_i ** 2 - sep ** 2)
             val = np.select([sep < r_i, sep < r_o], [val_in, val_out])
 
-        return norm * val * u.Unit('sr-1')
+        return norm * val * u.Unit("sr-1")
 
 
 class SkyDiffuseConstant(SkySpatialModel):
@@ -247,9 +253,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     """
 
     def __init__(self, value=1):
-        self.parameters = Parameters([
-            Parameter('value', value),
-        ])
+        self.parameters = Parameters([Parameter("value", value)])
 
     @staticmethod
     def evaluate(lon, lat, value):
@@ -279,29 +283,29 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
-            log.warn("Map template contains negative values, please check the"
-                     " data and fix if needed.")
+            log.warn(
+                "Map template contains negative values, please check the"
+                " data and fix if needed."
+            )
 
         self.map = map
 
         if normalize:
             self.normalize()
 
-        self.parameters = Parameters([
-            Parameter('norm', norm),
-        ])
+        self.parameters = Parameters([Parameter("norm", norm)])
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
-        interp_kwargs.setdefault('interp', 'linear')
-        interp_kwargs.setdefault('fill_value', 0)
+        interp_kwargs.setdefault("interp", "linear")
+        interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
 
     def normalize(self):
         """Normalize the diffuse map model so that it integrates to unity."""
         data = self.map.data / self.map.data.sum()
-        data /= self.map.geom.solid_angle().to('sr').value
-        self.map = self.map.copy(data=data, unit='sr-1')
+        data /= self.map.geom.solid_angle().to("sr").value
+        self.map = self.map.copy(data=data, unit="sr-1")
 
     @classmethod
     def read(cls, filename, normalize=True, **kwargs):
@@ -319,15 +323,12 @@ class SkyDiffuseMap(SkySpatialModel):
             Keyword arguments passed to `Map.read()`.
         """
         m = Map.read(filename, **kwargs)
-        if m.unit == '':
-            m.unit = 'sr-1'
+        if m.unit == "":
+            m.unit = "sr-1"
         return cls(m, normalize=normalize)
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
-        coord = {
-            'lon': lon.to('deg').value,
-            'lat': lat.to('deg').value,
-        }
+        coord = {"lon": lon.to("deg").value, "lat": lat.to("deg").value}
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(norm.value * val, self.map.unit, copy=False)

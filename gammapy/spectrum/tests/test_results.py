@@ -44,7 +44,7 @@ def flux_points():
     table = Table(
         data=[energies, dnde, dnde_err, is_ul, dnde_ul],
         names=["e_ref", "dnde", "dnde_err", "is_ul", "dnde_ul"],
-        meta={"SED_TYPE": "dnde"}
+        meta={"SED_TYPE": "dnde"},
     )
     return FluxPoints(table)
 

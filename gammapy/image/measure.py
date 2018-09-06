@@ -4,11 +4,11 @@ import numpy as np
 from astropy.units import Quantity
 
 __all__ = [
-    'measure_containment_fraction',
-    'measure_containment_radius',
-    'measure_image_moments',
-    'measure_containment',
-    'measure_curve_of_growth',
+    "measure_containment_fraction",
+    "measure_containment_radius",
+    "measure_image_moments",
+    "measure_containment",
+    "measure_curve_of_growth",
 ]
 
 
@@ -32,7 +32,7 @@ def measure_image_moments(image):
     data = image.quantity
 
     coords = image.geom.get_coord().skycoord
-    x, y = coords.data.lon.wrap_at('180d'), coords.data.lat
+    x, y = coords.data.lon.wrap_at("180d"), coords.data.lat
 
     A = data[np.isfinite(data)].sum()
 
@@ -88,6 +88,7 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
         Containment radius (pix)
     """
     from scipy.optimize import brentq
+
     data = image.quantity
     coords = image.geom.get_coord()
     separation = coords.skycoord.separation(position)
@@ -96,7 +97,10 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
     data = data / data[np.isfinite(data)].sum()
 
     def func(r):
-        return measure_containment_fraction(data, r, separation.value) - containment_fraction
+        return (
+            measure_containment_fraction(data, r, separation.value)
+            - containment_fraction
+        )
 
     containment_radius = brentq(func, a=0, b=separation.max().value)
     return Quantity(containment_radius, separation.unit)
@@ -151,11 +155,9 @@ def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
     containment : `~astropy.units.Quantity`
         Corresponding contained flux.
     """
-    radius_max = radius_max if radius_max is not None else Quantity(0.2, 'deg')
+    radius_max = radius_max if radius_max is not None else Quantity(0.2, "deg")
     containment = []
     radii = Quantity(np.linspace(0, radius_max.value, radius_n), radius_max.unit)
     for radius in radii:
         containment.append(measure_containment(image, position, radius))
     return radii, Quantity(containment)
-
-

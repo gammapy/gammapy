@@ -8,14 +8,14 @@ from ..main import cli
 def test_cli_no_args():
     # No arguments should print help
     result = run_cli(cli, [])
-    assert 'Usage' in result.output
+    assert "Usage" in result.output
 
 
 def test_cli_help():
-    result = run_cli(cli, ['--help'])
-    assert 'Usage' in result.output
+    result = run_cli(cli, ["--help"])
+    assert "Usage" in result.output
 
 
 def test_cli_version():
-    result = run_cli(cli, ['--version'])
-    assert 'gammapy version {}'.format(version.version) in result.output
+    result = run_cli(cli, ["--version"])
+    assert "gammapy version {}".format(version.version) in result.output

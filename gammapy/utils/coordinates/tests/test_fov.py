@@ -51,5 +51,9 @@ def test_sky_to_fov():
     az_pointing = np.array([52.42056255, 52.24706061, 52.06655505, 51.86795724])
     alt_pointing = np.array([51.11908203, 51.23454751, 51.35376141, 51.48385814])
     lon, lat = sky_to_fov(az, alt, az_pointing, alt_pointing)
-    assert_allclose(lon, np.array([0.7145614, 0.86603433, -0.05409698, 2.10295248]), rtol=1e-5)
-    assert_allclose(lat, np.array([-1.60829115, -1.19643974, 0.45800984, 3.26844192]), rtol=1e-5)
+    assert_allclose(
+        lon, np.array([0.7145614, 0.86603433, -0.05409698, 2.10295248]), rtol=1e-5
+    )
+    assert_allclose(
+        lat, np.array([-1.60829115, -1.19643974, 0.45800984, 3.26844192]), rtol=1e-5
+    )

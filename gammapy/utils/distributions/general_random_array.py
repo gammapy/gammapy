@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from ...utils.random import get_random_state
 
-__all__ = ['GeneralRandomArray']
+__all__ = ["GeneralRandomArray"]
 
 
 class GeneralRandomArray(object):
@@ -32,7 +32,7 @@ class GeneralRandomArray(object):
         self.ndim = pdf.ndim
         self.shape = pdf.shape
 
-    def draw(self, n=1, return_flat_index=False, random_state='random-seed'):
+    def draw(self, n=1, return_flat_index=False, random_state="random-seed"):
         """Returns n draws from the pdf.
 
         If return_flat_index == true, a linearized index is returned.

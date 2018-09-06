@@ -9,22 +9,22 @@ from ...utils.coordinates import cartesian, polar, D_SUN_TO_GALACTIC_CENTER
 from ...utils.random import get_random_state
 
 __all__ = [
-    'CaseBattacharya1998',
-    'FaucherKaspi2006',
-    'Lorimer2006',
-    'Paczynski1990',
-    'YusifovKucuk2004',
-    'YusifovKucuk2004B',
-    'Exponential',
-    'LogSpiral',
-    'FaucherSpiral',
-    'ValleeSpiral',
-    'radial_distributions',
+    "CaseBattacharya1998",
+    "FaucherKaspi2006",
+    "Lorimer2006",
+    "Paczynski1990",
+    "YusifovKucuk2004",
+    "YusifovKucuk2004B",
+    "Exponential",
+    "LogSpiral",
+    "FaucherSpiral",
+    "ValleeSpiral",
+    "radial_distributions",
 ]
 
 # Simulation range used for random number drawing
-RMIN, RMAX = Quantity([0, 20], 'kpc')
-ZMIN, ZMAX = Quantity([-0.5, 0.5], 'kpc')
+RMIN, RMAX = Quantity([0, 20], "kpc")
+ZMIN, ZMAX = Quantity([-0.5, 0.5], "kpc")
 
 
 class Paczynski1990(Fittable1DModel):
@@ -53,8 +53,7 @@ class Paczynski1990(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_exp=4.5, **kwargs):
-        super(Paczynski1990, self).__init__(amplitude=amplitude,
-                                            r_exp=r_exp, **kwargs)
+        super(Paczynski1990, self).__init__(amplitude=amplitude, r_exp=r_exp, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, r_exp):
@@ -92,14 +91,16 @@ class CaseBattacharya1998(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1., alpha=2, beta=3.53, **kwargs):
-        super(CaseBattacharya1998, self).__init__(amplitude=amplitude,
-                                                  alpha=alpha, beta=beta, **kwargs)
+        super(CaseBattacharya1998, self).__init__(
+            amplitude=amplitude, alpha=alpha, beta=beta, **kwargs
+        )
 
     @staticmethod
     def evaluate(r, amplitude, alpha, beta):
         """Evaluate model."""
-        term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** alpha
-        term2 = np.exp(-beta * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        term1 = (r / d_sun) ** alpha
+        term2 = np.exp(-beta * (r - d_sun) / d_sun)
         return amplitude * term1 * term2
 
 
@@ -138,14 +139,16 @@ class YusifovKucuk2004(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1, a=1.64, b=4.01, r_1=0.55, **kwargs):
-        super(YusifovKucuk2004, self).__init__(amplitude=amplitude,
-                                               a=a, b=b, r_1=r_1, **kwargs)
+        super(YusifovKucuk2004, self).__init__(
+            amplitude=amplitude, a=a, b=b, r_1=r_1, **kwargs
+        )
 
     @staticmethod
     def evaluate(r, amplitude, a, b, r_1):
         """Evaluate model."""
-        term1 = ((r + r_1) / (D_SUN_TO_GALACTIC_CENTER.value + r_1)) ** a
-        term2 = np.exp(-b * (r - D_SUN_TO_GALACTIC_CENTER.value) / (D_SUN_TO_GALACTIC_CENTER.value + r_1))
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        term1 = ((r + r_1) / (d_sun + r_1)) ** a
+        term2 = np.exp(-b * (r - d_sun) / (d_sun + r_1))
         return amplitude * term1 * term2
 
 
@@ -181,13 +184,13 @@ class YusifovKucuk2004B(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, a=4, b=6.8, **kwargs):
-        super(YusifovKucuk2004B, self).__init__(amplitude=amplitude,
-                                                a=a, b=b, **kwargs)
+        super(YusifovKucuk2004B, self).__init__(amplitude=amplitude, a=a, b=b, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, a, b):
         """Evaluate model."""
-        return amplitude * (r / D_SUN_TO_GALACTIC_CENTER.value) ** a * np.exp(-b * (r / D_SUN_TO_GALACTIC_CENTER.value))
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        return amplitude * (r / d_sun) ** a * np.exp(-b * (r / d_sun))
 
 
 class FaucherKaspi2006(Fittable1DModel):
@@ -220,8 +223,9 @@ class FaucherKaspi2006(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_0=7.04, sigma=1.83, **kwargs):
-        super(FaucherKaspi2006, self).__init__(amplitude=amplitude,
-                                               r_0=r_0, sigma=sigma, **kwargs)
+        super(FaucherKaspi2006, self).__init__(
+            amplitude=amplitude, r_0=r_0, sigma=sigma, **kwargs
+        )
 
     @staticmethod
     def evaluate(r, amplitude, r_0, sigma):
@@ -266,8 +270,9 @@ class Lorimer2006(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, B, C):
         """Evaluate model."""
-        term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** B
-        term2 = np.exp(-C * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        term1 = (r / d_sun) ** B
+        term2 = np.exp(-C * (r - d_sun) / d_sun)
         return amplitude * term1 * term2
 
 
@@ -334,7 +339,7 @@ class LogSpiral(object):
         elif (radius is None) and not (theta is None):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
         else:
-            ValueError('Specify only one of: theta, radius')
+            ValueError("Specify only one of: theta, radius")
 
         theta = np.radians(theta)
         x = radius * cos(theta)
@@ -393,12 +398,12 @@ class FaucherSpiral(LogSpiral):
     """
 
     # Parameters
-    k = Quantity([4.25, 4.25, 4.89, 4.89], 'rad')
-    r_0 = Quantity([3.48, 3.48, 4.9, 4.9], 'kpc')
-    theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], 'rad')
-    spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
+    k = Quantity([4.25, 4.25, 4.89, 4.89], "rad")
+    r_0 = Quantity([3.48, 3.48, 4.9, 4.9], "kpc")
+    theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], "rad")
+    spiralarms = np.array(["Norma", "Carina Sagittarius", "Perseus", "Crux Scutum"])
 
-    def _blur(self, radius, theta, amount=0.07, random_state='random-seed'):
+    def _blur(self, radius, theta, amount=0.07, random_state="random-seed"):
         """Blur the positions around the centroid of the spiralarm.
 
         The given positions are blurred by drawing a displacement in radius from
@@ -419,14 +424,15 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        dr = Quantity(abs(random_state.normal(0, amount * radius, radius.size)), 'kpc')
-        dtheta = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), 'rad')
+        dr = Quantity(abs(random_state.normal(0, amount * radius, radius.size)), "kpc")
+        dtheta = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), "rad")
         x, y = cartesian(radius, theta)
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
-    def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc'),
-                       random_state='random-seed'):
+    def _gc_correction(
+        self, radius, theta, r_corr=Quantity(2.857, "kpc"), random_state="random-seed"
+    ):
         """Correction of source distribution towards the galactic center.
 
         To avoid spiralarm features near the Galactic Center, the position angle theta
@@ -446,10 +452,10 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        theta_corr = Quantity(random_state.uniform(0, 2 * pi, radius.size), 'rad')
+        theta_corr = Quantity(random_state.uniform(0, 2 * pi, radius.size), "rad")
         return radius, theta + theta_corr * np.exp(-radius / r_corr)
 
-    def __call__(self, radius, blur=True, random_state='random-seed'):
+    def __call__(self, radius, blur=True, random_state="random-seed"):
         """Draw random position from spiral arm distribution.
 
         Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiralarm.
@@ -472,13 +478,16 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        N = random_state.randint(0, 4, radius.size)  # Choose Spiralarm
-        theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]  # Compute angle
-        spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
+        # Choose spiral arm
+        N = random_state.randint(0, 4, radius.size)
+        theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]
+        spiralarm = self.spiralarms[N]
 
         if blur:  # Apply blurring model according to Faucher
             radius, theta = self._blur(radius, theta, random_state=random_state)
-            radius, theta = self._gc_correction(radius, theta, random_state=random_state)
+            radius, theta = self._gc_correction(
+                radius, theta, random_state=random_state
+            )
         return radius, theta, spiralarm
 
 
@@ -489,19 +498,19 @@ class ValleeSpiral(LogSpiral):
     """
 
     # Model parameters
-    p = Quantity(12.8, 'deg')  # pitch angle in deg
+    p = Quantity(12.8, "deg")  # pitch angle in deg
     m = 4  # number of spiral arms
-    r_sun = Quantity(7.6, 'kpc')  # distance sun to Galactic center in kpc
-    r_0 = Quantity(2.1, 'kpc')  # spiral inner radius in kpc
-    theta_0 = Quantity(-20, 'deg')  # Norma spiral arm start angle
-    bar_radius = Quantity(3.0, 'kpc')  # Radius of the galactic bar (not equal r_0!)
+    r_sun = Quantity(7.6, "kpc")  # distance sun to Galactic center in kpc
+    r_0 = Quantity(2.1, "kpc")  # spiral inner radius in kpc
+    theta_0 = Quantity(-20, "deg")  # Norma spiral arm start angle
+    bar_radius = Quantity(3.0, "kpc")  # Radius of the galactic bar (not equal r_0!)
 
-    spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
+    spiralarms = np.array(["Norma", "Perseus", "Carina Sagittarius", "Crux Scutum"])
 
     def __init__(self):
         self.r_0 = self.r_0 * np.ones(4)
-        self.theta_0 = self.theta_0 + Quantity([0, 90, 180, 270], 'deg')
-        self.k = Quantity(1. / np.tan(np.radians(self.p.value)) * np.ones(4), 'rad')
+        self.theta_0 = self.theta_0 + Quantity([0, 90, 180, 270], "deg")
+        self.k = Quantity(1. / np.tan(np.radians(self.p.value)) * np.ones(4), "rad")
 
         # Compute start and end point of the bar
         x_0, y_0 = self.xy_position(radius=self.bar_radius, spiralarm_index=0)
@@ -511,10 +520,10 @@ class ValleeSpiral(LogSpiral):
 
 """Radial distribution (dict mapping names to classes)."""
 radial_distributions = {
-    'CB98': CaseBattacharya1998,
-    'F06': FaucherKaspi2006,
-    'L06': Lorimer2006,
-    'P90': Paczynski1990,
-    'YK04': YusifovKucuk2004,
-    'YK04B': YusifovKucuk2004B,
+    "CB98": CaseBattacharya1998,
+    "F06": FaucherKaspi2006,
+    "L06": Lorimer2006,
+    "P90": Paczynski1990,
+    "YK04": YusifovKucuk2004,
+    "YK04B": YusifovKucuk2004B,
 }

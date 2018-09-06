@@ -73,11 +73,9 @@ flake8:
     --ignore=E501
 
 black:
-	# TODO: clean up one sub-package at a time and remove from the exclude
-	black $(PROJECT)/ \
-	--exclude="_astropy_init.py|extern/|astro/|background/|catalog/|cube/|data/|detect/|image/|irf/|maps/|scripts/|spectrum/|stats/|time/|/utils" \
-	--line-length 88 \
-	--skip-string-normalization
+	black $(PROJECT)/ examples/ docs/ \
+	--exclude="_astropy_init.py|extern/" \
+	--line-length 88
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff

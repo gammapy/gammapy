@@ -9,11 +9,11 @@ from astropy.table import Table
 from .core import gammapy_extra
 
 __all__ = [
-    'load_poisson_stats_image',
-    'load_tev_spectrum',
-    'load_crab_flux_points',
-    'load_diffuse_gamma_spectrum',
-    'load_electron_spectrum',
+    "load_poisson_stats_image",
+    "load_tev_spectrum",
+    "load_crab_flux_points",
+    "load_diffuse_gamma_spectrum",
+    "load_electron_spectrum",
 ]
 
 
@@ -35,29 +35,29 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
     data : numpy array or dict of arrays or filenames
         Depending on the ``extra_info`` and ``return_filenames`` options.
     """
-    path = gammapy_extra.dir / 'test_datasets/unbundled/poisson_stats_image'
+    path = gammapy_extra.dir / "test_datasets/unbundled/poisson_stats_image"
 
     if extra_info:
         out = dict()
-        for name in ['counts', 'model', 'source', 'background', 'exposure']:
-            filename = str(path / '{}.fits.gz'.format(name))
+        for name in ["counts", "model", "source", "background", "exposure"]:
+            filename = str(path / "{}.fits.gz".format(name))
             if return_filenames:
                 out[name] = filename
             else:
                 data = fits.getdata(filename)
-                out[name] = data.astype('float64')
+                out[name] = data.astype("float64")
         if return_filenames:
-            out['psf'] = str(path / 'psf.json')
+            out["psf"] = str(path / "psf.json")
     else:
-        filename = str(path / 'counts.fits.gz')
+        filename = str(path / "counts.fits.gz")
         if return_filenames:
             out = filename
         else:
-            out = fits.getdata(filename).astype('float64')
+            out = fits.getdata(filename).astype("float64")
 
     if extra_info and not return_filenames:
-        filename = str(path / 'counts.fits.gz')
-        out['header'] = fits.getheader(filename)
+        filename = str(path / "counts.fits.gz")
+        out["header"] = fits.getheader(filename)
 
     return out
 
@@ -77,20 +77,20 @@ def load_tev_spectrum(source_name):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
-    if source_name == 'crab':
+    if source_name == "crab":
         filename = gammapy_extra.filename(
-            'test_datasets/unbundled/tev_spectra/crab_hess_spec.txt'
+            "test_datasets/unbundled/tev_spectra/crab_hess_spec.txt"
         )
     else:
-        raise ValueError('Data not available for source: {!r}'.format(source_name))
+        raise ValueError("Data not available for source: {!r}".format(source_name))
 
-    names = ['energy', 'flux', 'flux_lo', 'flux_hi']
-    table = Table.read(filename, format='ascii', names=names)
-    table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
+    names = ["energy", "flux", "flux_lo", "flux_hi"]
+    table = Table.read(filename, format="ascii", names=names)
+    table["flux_err"] = 0.5 * (table["flux_lo"] + table["flux_hi"])
     return table
 
 
-def load_crab_flux_points(component='both'):
+def load_crab_flux_points(component="both"):
     """Load published Crab pulsar and nebula flux points.
 
     Besides the usual flux point columns, this table contains
@@ -131,23 +131,23 @@ def load_crab_flux_points(component='both'):
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
     """
     filename = gammapy_extra.filename(
-        'test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz'
+        "test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz"
     )
 
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', UnitsWarning)
+        warnings.simplefilter("ignore", UnitsWarning)
         table = Table.read(filename)
 
-    if component == 'pulsar':
-        mask = table['component'] == 'pulsar'
+    if component == "pulsar":
+        mask = table["component"] == "pulsar"
         table = table[mask]
-    elif component == 'nebula':
-        mask = table['component'] == 'nebula'
+    elif component == "nebula":
+        mask = table["component"] == "nebula"
         table = table[mask]
-    elif component == 'both':
+    elif component == "both":
         pass
     else:
-        raise ValueError('Invalid component: {}'.format(component))
+        raise ValueError("Invalid component: {}".format(component))
 
     return table
 
@@ -167,31 +167,31 @@ def load_diffuse_gamma_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
-    dir = gammapy_extra.dir / 'test_datasets/unbundled/tev_spectra'
+    dir = gammapy_extra.dir / "test_datasets/unbundled/tev_spectra"
 
-    if reference == 'Fermi':
-        filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi.txt')
-    elif reference == 'Fermi2':
-        filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi2.txt')
+    if reference == "Fermi":
+        filename = str(dir / "diffuse_isotropic_gamma_spectrum_fermi.txt")
+    elif reference == "Fermi2":
+        filename = str(dir / "diffuse_isotropic_gamma_spectrum_fermi2.txt")
     else:
-        raise ValueError('Data not available for reference: {}'.format(reference))
+        raise ValueError("Data not available for reference: {}".format(reference))
 
     return _read_diffuse_gamma_spectrum_fermi(filename)
 
 
 def _read_diffuse_gamma_spectrum_fermi(filename):
     table = Table.read(
-        filename, format='ascii', names=['energy', 'flux', 'flux_hi', 'flux_lo']
+        filename, format="ascii", names=["energy", "flux", "flux_hi", "flux_lo"]
     )
-    table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
+    table["flux_err"] = 0.5 * (table["flux_lo"] + table["flux_hi"])
 
-    table['energy'] = Quantity(table['energy'], 'MeV').to('TeV')
+    table["energy"] = Quantity(table["energy"], "MeV").to("TeV")
 
     for colname in table.colnames:
-        if 'flux' in colname:
-            energy = Quantity(table['energy'], 'TeV')
-            energy2_flux = Quantity(table[colname], 'MeV cm^-2 s^-1 sr^-1')
-            table[colname] = (energy2_flux / energy ** 2).to('m^-2 s^-1 TeV^-1 sr^-1')
+        if "flux" in colname:
+            energy = Quantity(table["energy"], "TeV")
+            energy2_flux = Quantity(table[colname], "MeV cm^-2 s^-1 sr^-1")
+            table[colname] = (energy2_flux / energy ** 2).to("m^-2 s^-1 TeV^-1 sr^-1")
 
     return table
 
@@ -211,47 +211,47 @@ def load_electron_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
-    dir = gammapy_extra.dir / 'test_datasets/unbundled/tev_spectra'
+    dir = gammapy_extra.dir / "test_datasets/unbundled/tev_spectra"
 
-    if reference == 'HESS':
-        filename = str(dir / 'electron_spectrum_hess.txt')
+    if reference == "HESS":
+        filename = str(dir / "electron_spectrum_hess.txt")
         return _read_electron_spectrum_hess(filename)
-    elif reference == 'HESS low energy':
-        filename = str(dir / 'electron_spectrum_hess_low_energy.txt')
+    elif reference == "HESS low energy":
+        filename = str(dir / "electron_spectrum_hess_low_energy.txt")
         return _read_electron_spectrum_hess(filename)
-    elif reference == 'Fermi':
-        filename = str(dir / 'electron_spectrum_fermi.txt')
+    elif reference == "Fermi":
+        filename = str(dir / "electron_spectrum_fermi.txt")
         return _read_electron_spectrum_fermi(filename)
     else:
-        raise ValueError('Data not available for reference: {}'.format(reference))
+        raise ValueError("Data not available for reference: {}".format(reference))
 
 
 def _read_electron_spectrum_hess(filename):
     table = Table.read(
-        filename, format='ascii', names=['energy', 'flux', 'flux_lo', 'flux_hi']
+        filename, format="ascii", names=["energy", "flux", "flux_lo", "flux_hi"]
     )
-    table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
+    table["flux_err"] = 0.5 * (table["flux_lo"] + table["flux_hi"])
 
-    table['energy'] = Quantity(table['energy'], 'GeV').to('TeV')
+    table["energy"] = Quantity(table["energy"], "GeV").to("TeV")
 
     # The ascii files store fluxes as (E ** 3) * dN / dE.
     # Here we change this to dN / dE.
     for colname in table.colnames:
-        if 'flux' in colname:
-            energy = Quantity(table['energy'], 'TeV')
-            energy3_flux = Quantity(table[colname], 'GeV^2 m^-2 s^-1 sr^-1')
-            table[colname] = (energy3_flux / energy ** 3).to('m^-2 s^-1 TeV^-1 sr^-1')
+        if "flux" in colname:
+            energy = Quantity(table["energy"], "TeV")
+            energy3_flux = Quantity(table[colname], "GeV^2 m^-2 s^-1 sr^-1")
+            table[colname] = (energy3_flux / energy ** 3).to("m^-2 s^-1 TeV^-1 sr^-1")
 
     return table
 
 
 def _read_electron_spectrum_fermi(filename):
-    t = Table.read(filename, format='ascii')
+    t = Table.read(filename, format="ascii")
 
     table = Table()
-    table['energy'] = Quantity(t['E'], 'GeV').to('TeV')
-    table['flux'] = Quantity(t['y'], 'm-2 s-1 GeV-1 sr-1').to('m-2 s-1 TeV-1 sr-1')
-    val = 0.5 * (t['yerrtot_lo'] + t['yerrtot_up'])
-    table['flux_err'] = Quantity(val, 'm-2 s-1 GeV-1 sr-1').to('m-2 s-1 TeV-1 sr-1')
+    table["energy"] = Quantity(t["E"], "GeV").to("TeV")
+    table["flux"] = Quantity(t["y"], "m-2 s-1 GeV-1 sr-1").to("m-2 s-1 TeV-1 sr-1")
+    val = 0.5 * (t["yerrtot_lo"] + t["yerrtot_up"])
+    table["flux_err"] = Quantity(val, "m-2 s-1 GeV-1 sr-1").to("m-2 s-1 TeV-1 sr-1")
 
     return table

@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['cov_to_corr']
+__all__ = ["cov_to_corr"]
 
 
 def cov_to_corr(covariance):

@@ -7,10 +7,7 @@ from ..irf import EnergyDependentTablePSF
 from ..maps import Map
 from ..cube import PSFKernel
 
-__all__ = [
-    'make_psf_map',
-    'PSFMap'
-]
+__all__ = ["make_psf_map", "PSFMap"]
 
 
 def make_psf_map(psf, pointing, geom, max_offset):
@@ -36,10 +33,10 @@ def make_psf_map(psf, pointing, geom, max_offset):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.get_axis_by_name('energy')
+    energy_axis = geom.get_axis_by_name("energy")
     energy = energy_axis.center * energy_axis.unit
 
-    rad_axis = geom.get_axis_by_name('theta')
+    rad_axis = geom.get_axis_by_name("theta")
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
 
     # Compute separations with pointing position
@@ -53,7 +50,7 @@ def make_psf_map(psf, pointing, geom, max_offset):
     psf_values = np.transpose(psf_values, axes=(2, 0, 1))
 
     # Create Map and fill relevant entries
-    psfmap = Map.from_geom(geom, unit='sr-1')
+    psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to(psfmap.unit).value
 
     return PSFMap(psfmap)
@@ -110,10 +107,10 @@ class PSFMap(object):
     """
 
     def __init__(self, psf_map):
-        if psf_map.geom.axes[1].name.upper() != 'ENERGY':
+        if psf_map.geom.axes[1].name.upper() != "ENERGY":
             raise ValueError("Incorrect energy axis position in input Map")
 
-        if psf_map.geom.axes[0].name.upper() != 'THETA':
+        if psf_map.geom.axes[0].name.upper() != "THETA":
             raise ValueError("Incorrect theta axis position in input Map")
 
         self._psf_map = psf_map
@@ -162,7 +159,9 @@ class PSFMap(object):
             the table PSF
         """
         if position.size != 1:
-            raise ValueError("EnergyDependentTablePSF can be extracted at one single position only.")
+            raise ValueError(
+                "EnergyDependentTablePSF can be extracted at one single position only."
+            )
 
         # axes ordering fixed. Could be changed.
         pix_ener = np.arange(self.geom.axes[1].nbin)
@@ -175,7 +174,9 @@ class PSFMap(object):
         pix = np.meshgrid(pix_lon, pix_lat, pix_rad, pix_ener)
 
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit))
+        psf_values = np.squeeze(
+            self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit)
+        )
 
         energies = self.psf_map.geom.axes[1].center * self.psf_map.geom.axes[1].unit
         rad = self.psf_map.geom.axes[0].center * self.psf_map.geom.axes[0].unit
@@ -223,7 +224,7 @@ class PSFMap(object):
             Containment radius map
         """
         coords = self.geom.to_image().get_coord().skycoord.flatten()
-        m = Map.from_geom(self.geom.to_image(), unit='deg')
+        m = Map.from_geom(self.geom.to_image(), unit="deg")
 
         for coord in coords:
             psf_table = self.get_energy_dependent_table_psf(coord)

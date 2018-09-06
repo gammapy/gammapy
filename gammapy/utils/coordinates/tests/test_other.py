@@ -5,8 +5,8 @@ from ...coordinates import galactic
 
 
 def test_galactic():
-    x = Quantity(0, 'kpc')
-    y = Quantity(0, 'kpc')
-    z = Quantity(0, 'kpc')
-    reference = (Quantity(8.5, 'kpc'), Quantity(0, 'deg'), Quantity(0, 'deg'))
+    x = Quantity(0, "kpc")
+    y = Quantity(0, "kpc")
+    z = Quantity(0, "kpc")
+    reference = (Quantity(8.5, "kpc"), Quantity(0, "deg"), Quantity(0, "deg"))
     assert galactic(x, y, z) == reference

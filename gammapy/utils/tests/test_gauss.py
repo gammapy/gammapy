@@ -12,7 +12,7 @@ from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 BINSZ = 0.02
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 class TestGauss2DPDF:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
@@ -22,6 +22,7 @@ class TestGauss2DPDF:
 
     def test_call(self):
         from scipy.integrate import dblquad
+
         # Check that value at origin matches the one given here:
         # http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
         for g in self.gs:
@@ -30,12 +31,14 @@ class TestGauss2DPDF:
             assert_almost_equal(actual, desired)
             # Check that distribution integrates to 1
             xy_max = 5 * g.sigma  # integration range
-            integral = dblquad(g, -xy_max, xy_max,
-                               lambda _: -xy_max, lambda _: xy_max)[0]
+            integral = dblquad(g, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max)[
+                0
+            ]
             assert_almost_equal(integral, 1, decimal=5)
 
     def test_dpdtheta2(self):
         from scipy.integrate import quad
+
         for g in self.gs:
             theta2_max = (7 * g.sigma) ** 2
             integral = quad(g.dpdtheta2, 0, theta2_max)[0]
@@ -48,29 +51,34 @@ class TestGauss2DPDF:
 
     def test_theta(self):
         for g in self.gs:
-            assert_almost_equal(g.containment_radius(0.68) / g.sigma, 1.5095921854516636)
-            assert_almost_equal(g.containment_radius(0.95) / g.sigma, 2.4477468306808161)
+            assert_almost_equal(
+                g.containment_radius(0.68) / g.sigma, 1.5095921854516636
+            )
+            assert_almost_equal(
+                g.containment_radius(0.95) / g.sigma, 2.4477468306808161
+            )
 
     def test_gauss_convolve(self):
         g = Gauss2DPDF(sigma=3).gauss_convolve(sigma=4)
         assert_equal(g.sigma, 5)
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 class TestMultiGauss2D:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
 
     def test_call(self):
         from scipy.integrate import dblquad
+
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         xy_max = 5 * m.max_sigma  # integration range
-        integral = dblquad(m, -xy_max, xy_max,
-                           lambda _: -xy_max, lambda _: xy_max)[0]
+        integral = dblquad(m, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max)[0]
         assert_almost_equal(integral, 7, decimal=5)
 
     def test_dpdtheta2(self):
         from scipy.integrate import quad
+
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         theta2_max = (7 * m.max_sigma) ** 2
         integral = quad(m.dpdtheta2, 0, theta2_max)[0]
@@ -87,9 +95,13 @@ class TestMultiGauss2D:
         m = MultiGauss2D(sigmas=[1])
         m2 = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         for theta in [0, 0.1, 1, 5]:
-            assert_almost_equal(m.containment_fraction(theta), g.containment_fraction(theta))
+            assert_almost_equal(
+                m.containment_fraction(theta), g.containment_fraction(theta)
+            )
             actual = m2.containment_fraction(theta)
-            desired = 3 * g.containment_fraction(theta) + 4 * g2.containment_fraction(theta)
+            desired = 3 * g.containment_fraction(theta) + 4 * g2.containment_fraction(
+                theta
+            )
             assert_almost_equal(actual, desired)
 
     def test_theta(self):
@@ -111,7 +123,7 @@ class TestMultiGauss2D:
         assert_equal(m.norms, [5])
 
 
-@requires_dependency('uncertainties')
+@requires_dependency("uncertainties")
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
     """
@@ -148,6 +160,8 @@ def test_gaussian_sum_moments():
     x, y = image.geom.wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], 0)
     x = np.where(x > 180, x - 360, x)
 
-    moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0)
+    moments_ana, uncertainties = gaussian_sum_moments(
+        F, sigma, x, y, cov_matrix, shift=0
+    )
     assert_allclose(moments_ana, moments_num, 1e-6)
     assert_allclose(uncertainties, 0)

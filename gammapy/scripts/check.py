@@ -13,21 +13,21 @@ from .. import test
 log = logging.getLogger(__name__)
 
 
-@click.group('check')
+@click.group("check")
 def cli_check():
     """Run checks for Gammapy"""
 
 
-@cli_check.command('runtests')
+@cli_check.command("runtests")
 def cli_check_runtests():
     """Run Gammapy tests"""
     test(verbose=True)
 
 
-@cli_check.command('logging')
+@cli_check.command("logging")
 def cli_check_logging():
     """Check logging"""
-    log.debug('this is log.debug() output')
-    log.info('this is log.info() output')
-    log.warning('this is log.warning() output')
-    warnings.warn('this is warnings.warn() output')
+    log.debug("this is log.debug() output")
+    log.info("this is log.info() output")
+    log.warning("this is log.warning() output")
+    warnings.warn("this is warnings.warn() output")

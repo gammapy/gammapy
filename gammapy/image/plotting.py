@@ -7,14 +7,14 @@ import numpy as np
 from astropy.coordinates import Angle
 
 __all__ = [
-    'colormap_hess',
-    'colormap_milagro',
-    'MapPanelPlotter',
-    'illustrate_colormap',
-    'grayify_colormap',
+    "colormap_hess",
+    "colormap_milagro",
+    "MapPanelPlotter",
+    "illustrate_colormap",
+    "grayify_colormap",
 ]
 
-__doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
+__doctest_requires__ = {("colormap_hess", "colormap_milagro"): ["matplotlib"]}
 
 
 class MapPanelPlotter(object):
@@ -53,16 +53,18 @@ class MapPanelPlotter(object):
         aspect = ax.bbox.width / ax.bbox.height
 
         # compute width and height in world coordinates
-        height = np.abs(p['ylim'].diff())
+        height = np.abs(p["ylim"].diff())
         width = aspect * height
 
-        left, bottom = p['xlim'][0].wrap_at('180d'), p['ylim'][0]
+        left, bottom = p["xlim"][0].wrap_at("180d"), p["ylim"][0]
 
-        width_all = np.abs(p['xlim'].wrap_at('180d').diff())
-        xoverlap = ((p['npanels'] * width) - width_all) / (p['npanels'] - 1.)
+        width_all = np.abs(p["xlim"].wrap_at("180d").diff())
+        xoverlap = ((p["npanels"] * width) - width_all) / (p["npanels"] - 1.)
         if xoverlap < 0:
-            raise ValueError('No overlap between panels. Please reduce figure '
-                             'height or increase vertical space between the panels.')
+            raise ValueError(
+                "No overlap between panels. Please reduce figure "
+                "height or increase vertical space between the panels."
+            )
 
         left = left - panel * (width - xoverlap)
         return left[0], bottom, width, height
@@ -112,7 +114,7 @@ class MapPanelPlotter(object):
         """
         p = self.parameters
         axes = []
-        for panel in range(p['npanels']):
+        for panel in range(p["npanels"]):
             ax = self.plot_panel(image, panel=panel, **kwargs)
             axes.append(ax)
         return axes
@@ -181,13 +183,14 @@ def colormap_hess(transition=0.5, width=0.1):
 
     # Create custom colormap
     # List entries: (value, (R, G, B))
-    colors = [(black, 'k'),
-              (blue, (0, 0, 0.8)),
-              (red, 'r'),
-              (yellow, (1., 1., 0)),
-              (white, 'w'),
-              ]
-    cmap = LinearSegmentedColormap.from_list(name='hess', colors=colors)
+    colors = [
+        (black, "k"),
+        (blue, (0, 0, 0.8)),
+        (red, "r"),
+        (yellow, (1., 1., 0)),
+        (white, "w"),
+    ]
+    cmap = LinearSegmentedColormap.from_list(name="hess", colors=colors)
 
     return cmap
 
@@ -251,23 +254,24 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
 
     # Create custom colormap
     # List entries: (value, (H, L, S))
-    colors = [(0, (1, 1, 0)),
-              (transition - width, (1, 0, 0)),
-              (transition, (huestart, 0.4, 0.5)),
-              (transition + width, (huestart, 0.4, 1)),
-              (0.99, (0, 0.6, 1)),
-              (1, (0, 1, 1)),
-              ]
+    colors = [
+        (0, (1, 1, 0)),
+        (transition - width, (1, 0, 0)),
+        (transition, (huestart, 0.4, 0.5)),
+        (transition + width, (huestart, 0.4, 1)),
+        (0.99, (0, 0.6, 1)),
+        (1, (0, 1, 1)),
+    ]
 
     # Convert HLS values to RGB values
     rgb_colors = [(val, hls_to_rgb(*hls)) for (val, hls) in colors]
 
-    cmap = LinearSegmentedColormap.from_list(name='milagro', colors=rgb_colors)
+    cmap = LinearSegmentedColormap.from_list(name="milagro", colors=rgb_colors)
 
     return cmap
 
 
-def grayify_colormap(cmap, mode='hsp'):
+def grayify_colormap(cmap, mode="hsp"):
     """
     Return a grayscale version a the colormap.
 
@@ -294,19 +298,21 @@ def grayify_colormap(cmap, mode='hsp'):
        https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/
     """
     import matplotlib.pyplot as plt
+
     cmap = plt.cm.get_cmap(cmap)
     colors = cmap(np.arange(cmap.N))
 
-    if mode == 'skimage':
+    if mode == "skimage":
         from skimage.color import rgb2gray  # pylint:disable=import-error
+
         luminance = rgb2gray(np.array([colors]))
         colors[:, :3] = luminance[0][:, np.newaxis]
-    elif mode == 'hsp':
+    elif mode == "hsp":
         rgb_weight = [0.299, 0.587, 0.114]
         luminance = np.sqrt(np.dot(colors[:, :3] ** 2, rgb_weight))
         colors[:, :3] = luminance[:, np.newaxis]
     else:
-        raise ValueError('Not a valid grayscale conversion mode.')
+        raise ValueError("Not a valid grayscale conversion mode.")
 
     return cmap.from_list(cmap.name + "_grayscale", colors, cmap.N)
 
@@ -323,6 +329,7 @@ def illustrate_colormap(cmap, **kwargs):
         Keyword arguments passed to `grayify_colormap`.
     """
     import matplotlib.pyplot as plt
+
     cmap = plt.cm.get_cmap(cmap)
     cmap_gray = grayify_colormap(cmap, **kwargs)
     figure = plt.figure(figsize=(8, 6))
@@ -331,24 +338,24 @@ def illustrate_colormap(cmap, **kwargs):
     # Show colormap
     show_cmap = figure.add_axes([0.1, 0.8, 0.8, 0.1])
     im = np.outer(np.ones(50), v)
-    show_cmap.imshow(im, cmap=cmap, origin='lower')
+    show_cmap.imshow(im, cmap=cmap, origin="lower")
     show_cmap.set_xticklabels([])
     show_cmap.set_yticklabels([])
     show_cmap.set_yticks([])
-    show_cmap.set_title('RGB & Gray Luminance of colormap {}'.format(cmap.name))
+    show_cmap.set_title("RGB & Gray Luminance of colormap {}".format(cmap.name))
 
     # Show colormap gray
     show_cmap_gray = figure.add_axes([0.1, 0.72, 0.8, 0.09])
-    show_cmap_gray.imshow(im, cmap=cmap_gray, origin='lower')
+    show_cmap_gray.imshow(im, cmap=cmap_gray, origin="lower")
     show_cmap_gray.set_xticklabels([])
     show_cmap_gray.set_yticklabels([])
     show_cmap_gray.set_yticks([])
 
     # Plot RGB profiles
     plot_rgb = figure.add_axes([0.1, 0.1, 0.8, 0.6])
-    plot_rgb.plot(v, [cmap(_)[0] for _ in v], color='#A60628')
-    plot_rgb.plot(v, [cmap(_)[1] for _ in v], color='#467821')
-    plot_rgb.plot(v, [cmap(_)[2] for _ in v], color='#348ABD')
-    plot_rgb.plot(v, [cmap_gray(_)[0] for _ in v], color='k', linestyle='--')
-    plot_rgb.set_ylabel('Luminance')
+    plot_rgb.plot(v, [cmap(_)[0] for _ in v], color="#A60628")
+    plot_rgb.plot(v, [cmap(_)[1] for _ in v], color="#467821")
+    plot_rgb.plot(v, [cmap(_)[2] for _ in v], color="#348ABD")
+    plot_rgb.plot(v, [cmap_gray(_)[0] for _ in v], color="k", linestyle="--")
+    plot_rgb.set_ylabel("Luminance")
     plot_rgb.set_ylim(-0.005, 1.005)

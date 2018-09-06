@@ -6,14 +6,14 @@ from ..core import gammapy_extra
 from ...datasets import load_poisson_stats_image
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_gammapy_extra():
     """Try loading a file from gammapy-extra.
     """
     assert gammapy_extra.dir.is_dir()
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_load_poisson_stats_image():
     data = load_poisson_stats_image()
     assert data.sum() == 40896

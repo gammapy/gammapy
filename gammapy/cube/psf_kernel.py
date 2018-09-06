@@ -8,20 +8,24 @@ from ..utils.gauss import Gauss2DPDF
 from ..maps import Map, WcsGeom
 from ..irf import TablePSF
 
-__all__ = [
-    'PSFKernel',
-]
+__all__ = ["PSFKernel"]
 
 
 def _make_kernel_geom(geom, max_radius):
     # Create a new geom object with an odd number of pixel and a maximum size
     # This is useful for PSF kernel creation.
     center = geom.center_coord[:2]
-    binsz = Angle(np.abs(geom.wcs.wcs.cdelt[0]), 'deg')
+    binsz = Angle(np.abs(geom.wcs.wcs.cdelt[0]), "deg")
     max_radius = Angle(max_radius)
     npix = 2 * int(max_radius.deg / binsz.deg) + 1
-    return WcsGeom.create(skydir=center, binsz=binsz, npix=npix, proj=geom.projection,
-                          coordsys=geom.coordsys, axes=geom.axes)
+    return WcsGeom.create(
+        skydir=center,
+        binsz=binsz,
+        npix=npix,
+        proj=geom.projection,
+        coordsys=geom.coordsys,
+        axes=geom.axes,
+    )
 
 
 def _compute_kernel_separations(geom, factor):
@@ -36,7 +40,9 @@ def _compute_kernel_separations(geom, factor):
     # get coordinates
     map_c = upsampled_image_geom.get_coord()
     # compute distances to map center
-    separations = angular_separation(center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg)
+    separations = angular_separation(
+        center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg
+    )
 
     # Create map
     kernel_map = Map.from_geom(geom=upsampled_image_geom.to_cube(axes=geom.axes))
@@ -89,7 +95,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     factor : int
         the oversample factor to compute the PSF
     """
-    energy_axis = geom.get_axis_by_name('energy')
+    energy_axis = geom.get_axis_by_name("energy")
     energy_idx = geom.axes.index(energy_axis)
     energy_unit = u.Unit(energy_axis.unit)
 
@@ -202,10 +208,14 @@ class PSFKernel(object):
         if isinstance(table_psf, TablePSF):
             return cls(table_psf_to_kernel_map(table_psf, geom, factor))
         else:
-            return cls(energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor))
+            return cls(
+                energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor)
+            )
 
     @classmethod
-    def from_gauss(cls, geom, sigma, max_radius=None, containment_fraction=0.99, factor=4):
+    def from_gauss(
+        cls, geom, sigma, max_radius=None, containment_fraction=0.99, factor=4
+    ):
         """Create Gaussian PSF.
 
         This is used for testing and examples.
@@ -233,17 +243,21 @@ class PSFKernel(object):
         sigma = Angle(sigma)
 
         if max_radius is None:
-            max_radius = Gauss2DPDF(sigma.deg).containment_radius(
-                containment_fraction=containment_fraction) * u.deg
+            max_radius = (
+                Gauss2DPDF(sigma.deg).containment_radius(
+                    containment_fraction=containment_fraction
+                )
+                * u.deg
+            )
 
         max_radius = Angle(max_radius)
 
         # Create a new geom according to given input
         geom = _make_kernel_geom(geom, max_radius)
 
-        rad = Angle(np.linspace(0., max_radius.deg, 200), 'deg')
+        rad = Angle(np.linspace(0., max_radius.deg, 200), "deg")
 
-        table_psf = TablePSF.from_shape(shape='gauss', width=sigma, rad=rad)
+        table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
 
         return cls(table_psf_to_kernel_map(table_psf, geom, factor))
 

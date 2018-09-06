@@ -11,13 +11,13 @@ from numpy.testing import assert_allclose
 from ..datasets import gammapy_extra
 
 __all__ = [
-    'requires_dependency',
-    'requires_data',
-    'assert_quantity_allclose',
-    'assert_wcs_allclose',
-    'assert_skycoord_allclose',
-    'assert_time_allclose',
-    'Checker',
+    "requires_dependency",
+    "requires_data",
+    "assert_quantity_allclose",
+    "assert_wcs_allclose",
+    "assert_skycoord_allclose",
+    "assert_time_allclose",
+    "Checker",
 ]
 
 # Cache for `requires_dependency`
@@ -50,22 +50,23 @@ def requires_dependency(name):
 
         _requires_dependency_cache[name] = skip_it
 
-    reason = 'Missing dependency: {}'.format(name)
+    reason = "Missing dependency: {}".format(name)
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
 def has_data(name):
     """Is a certain set of data available?
     """
-    if name == 'gammapy-extra':
+    if name == "gammapy-extra":
         from ..datasets import gammapy_extra
+
         return gammapy_extra.is_available
-    elif name == 'gamma-cat':
-        return 'GAMMA_CAT' in os.environ
-    elif name == 'fermi-lat':
-        return 'GAMMAPY_FERMI_LAT_DATA' in os.environ
+    elif name == "gamma-cat":
+        return "GAMMA_CAT" in os.environ
+    elif name == "fermi-lat":
+        return "GAMMAPY_FERMI_LAT_DATA" in os.environ
     else:
-        raise ValueError('Invalid name: {}'.format(name))
+        raise ValueError("Invalid name: {}".format(name))
 
 
 def requires_data(name):
@@ -86,7 +87,7 @@ def requires_data(name):
     """
     skip_it = not has_data(name)
 
-    reason = 'Missing data: {}'.format(name)
+    reason = "Missing data: {}".format(name)
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
@@ -111,11 +112,12 @@ def run_cli(cli, args, exit_code=0):
         Result
     """
     from click.testing import CliRunner
+
     result = CliRunner().invoke(cli, args, catch_exceptions=False)
 
     if result.exit_code != exit_code:
-        sys.stderr.write('Exit code mismatch!\n')
-        sys.stderr.write('Ouput:\n')
+        sys.stderr.write("Exit code mismatch!\n")
+        sys.stderr.write("Ouput:\n")
         sys.stderr.write(result.output)
 
     return result
@@ -163,9 +165,10 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
     try:
         desired = desired.to(actual.unit)
     except u.UnitsError:
-        raise u.UnitsError("Units for 'desired' ({0}) and 'actual' ({1}) "
-                           "are not convertible"
-                           .format(desired.unit, actual.unit))
+        raise u.UnitsError(
+            "Units for 'desired' ({0}) and 'actual' ({1}) "
+            "are not convertible".format(desired.unit, actual.unit)
+        )
 
     if atol is None:
         # by default, we assume an absolute tolerance of 0
@@ -175,9 +178,10 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         try:
             atol = atol.to(actual.unit)
         except u.UnitsError:
-            raise u.UnitsError("Units for 'atol' ({0}) and 'actual' ({1}) "
-                               "are not convertible"
-                               .format(atol.unit, actual.unit))
+            raise u.UnitsError(
+                "Units for 'atol' ({0}) and 'actual' ({1}) "
+                "are not convertible".format(atol.unit, actual.unit)
+            )
 
     rtol = u.Quantity(rtol, subok=True, copy=False)
     try:
@@ -207,7 +211,7 @@ def mpl_plot_check():
             plt.figure()
 
         def __exit__(self, type, value, traceback):
-            plt.savefig(BytesIO(), format='png')
+            plt.savefig(BytesIO(), format="png")
             plt.close()
 
     return MPLPlotCheck()
@@ -216,13 +220,13 @@ def mpl_plot_check():
 class Checker(object):
     """Base class for checker classes in Gammapy."""
 
-    def run(self, checks='all'):
-        if checks == 'all':
+    def run(self, checks="all"):
+        if checks == "all":
             checks = self.CHECKS.keys()
 
-        unknown_checks = set(checks).difference(self.CHECKS.keys())
+        unknown_checks = sorted(set(checks).difference(self.CHECKS.keys()))
         if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+            raise ValueError("Unknown checks: {!r}".format(unknown_checks))
 
         for check in checks:
             for record in getattr(self, self.CHECKS[check])():

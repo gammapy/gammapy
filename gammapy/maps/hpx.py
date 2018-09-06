@@ -775,6 +775,7 @@ class HpxGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         import healpy as hp
+
         coords = MapCoord.create(coords, coordsys=self.coordsys)
         theta, phi = coords.theta, coords.phi
 

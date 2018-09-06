@@ -2,12 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import astropy.units as u
-from ....utils.testing import assert_quantity_allclose, requires_data, requires_dependency
+from ....utils.testing import (
+    assert_quantity_allclose,
+    requires_data,
+    requires_dependency,
+)
 from .. import PrimaryFlux
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 def test_primary_flux():
     with pytest.raises(ValueError):
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)

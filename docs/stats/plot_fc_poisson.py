@@ -27,22 +27,21 @@ matrix = [poisson(mu + background).pmf(x_bins) for mu in mu_bins]
 
 acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins,
-                                                acceptance_intervals)
+LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
 
 fc_fix_limits(LowerLimitNum, UpperLimitNum)
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-plt.plot(UpperLimitNum, mu_bins, ls='-', color='red')
-plt.plot(LowerLimitNum, mu_bins, ls='-', color='red')
+plt.plot(UpperLimitNum, mu_bins, ls="-", color="red")
+plt.plot(LowerLimitNum, mu_bins, ls="-", color="red")
 
 plt.grid(True)
 ax.yaxis.set_label_coords(-0.08, 0.5)
 plt.xticks(range(15))
 plt.yticks(range(15))
-ax.set_xlabel(r'Measured n')
-ax.set_ylabel(r'Signal Mean $\mu$')
+ax.set_xlabel(r"Measured n")
+ax.set_ylabel(r"Signal Mean $\mu$")
 plt.axis([0, 15, 0, 15])
 plt.show()

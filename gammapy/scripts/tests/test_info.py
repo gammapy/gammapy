@@ -5,13 +5,13 @@ from ..main import cli
 
 
 def test_cli_info_help():
-    result = run_cli(cli, ['info', '--help'])
-    assert 'Usage' in result.output
+    result = run_cli(cli, ["info", "--help"])
+    assert "Usage" in result.output
 
 
 def test_cli_info_no_args():
     # No arguments should print all infos
-    result = run_cli(cli, ['info'])
+    result = run_cli(cli, ["info"])
     assert "System" in result.output
     assert "Gammapy package" in result.output
     assert "Other packages" in result.output

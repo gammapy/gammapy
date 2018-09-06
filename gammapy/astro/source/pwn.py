@@ -8,9 +8,7 @@ import astropy.constants as const
 from ...extern.validator import validate_physical_type
 from ..source import Pulsar, SNRTrueloveMcKee
 
-__all__ = [
-    'PWN',
-]
+__all__ = ["PWN"]
 
 
 class PWN(object):
@@ -32,18 +30,24 @@ class PWN(object):
         Morphology model of the PWN
     """
 
-    def __init__(self, pulsar=Pulsar(), snr=SNRTrueloveMcKee(),
-                 eta_e=0.999, eta_B=0.001, morphology='Gaussian2D',
-                 age=None):
+    def __init__(
+        self,
+        pulsar=Pulsar(),
+        snr=SNRTrueloveMcKee(),
+        eta_e=0.999,
+        eta_B=0.001,
+        morphology="Gaussian2D",
+        age=None,
+    ):
         self.pulsar = pulsar
         if not isinstance(snr, SNRTrueloveMcKee):
-            raise ValueError('SNR must be instance of SNRTrueloveMcKee')
+            raise ValueError("SNR must be instance of SNRTrueloveMcKee")
         self.snr = snr
         self.eta_e = eta_e
         self.eta_B = eta_B
         self.morphology = morphology
         if age is not None:
-            validate_physical_type('age', age, 'time')
+            validate_physical_type("age", age, "time")
             self.age = age
 
     def _radius_free_expansion(self, t):
@@ -66,13 +70,13 @@ class PWN(object):
         from scipy.optimize import fsolve
 
         def time_coll(t):
-            t = Quantity(t, 'yr')
-            r_pwn = self._radius_free_expansion(t).to('cm').value
-            r_shock = self.snr.radius_reverse_shock(t).to('cm').value
+            t = Quantity(t, "yr")
+            r_pwn = self._radius_free_expansion(t).to("cm").value
+            r_shock = self.snr.radius_reverse_shock(t).to("cm").value
             return r_pwn - r_shock
 
         # 4e3 years is a typical value that works for fsolve
-        return Quantity(fsolve(time_coll, 4e3), 'yr')
+        return Quantity(fsolve(time_coll, 4e3), "yr")
 
     def radius(self, t=None):
         """Radius of the PWN at age t.
@@ -98,17 +102,17 @@ class PWN(object):
 
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         # Radius at time of collision
         r_coll = self._radius_free_expansion(self._collision_time)
-        r = np.where(t < self._collision_time,
-                     self._radius_free_expansion(t).value,
-                     r_coll.value)
-        return Quantity(r, 'cm')
+        r = np.where(
+            t < self._collision_time, self._radius_free_expansion(t).value, r_coll.value
+        )
+        return Quantity(r, "cm")
 
     def magnetic_field(self, t=None):
         """Estimate of the magnetic field inside the PWN.
@@ -123,14 +127,15 @@ class PWN(object):
             Time after birth of the SNR.
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
 
-        return np.sqrt(2 * const.mu0 * self.eta_B * self.pulsar.energy_integrated(t) /
-                       (4. / 3 * np.pi * self.radius(t) ** 3))
+        energy = self.pulsar.energy_integrated(t)
+        volume = 4. / 3 * np.pi * self.radius(t) ** 3
+        return np.sqrt(2 * const.mu0 * self.eta_B * energy / volume)
 
     def luminosity_tev(self, t=None, fraction=0.1):
         """TeV luminosity from a simple evolution model.
