@@ -35,9 +35,14 @@ def cli_jupyter_black(ctx):
         fmt = nb.cells[cellnumber]['source']
         if nb.cells[cellnumber]['cell_type'] == 'code':
             try:
+                semicolon = 0
                 fmt = comment_magics(fmt)
+                if fmt.endswith(';'):
+                    semicolon = 1
                 fmt = format_str(src_contents=fmt,
                                  line_length=79).rstrip()
+                if semicolon:
+                    fmt += ';'
             except Exception as ex:
                 logging.info(ex)
             fmt = fmt.replace("###-MAGIC COMMAND-", "")
