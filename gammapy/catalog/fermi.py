@@ -184,8 +184,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         ss += '{:<45s} : {}\n'.format('Spectrum type', d['SpectrumType'])
         fmt = '{:<45s} : {:.3f}\n'
-        args = ('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
-        ss += fmt.format(*args)
+        ss += fmt.format('Detection significance (100 MeV - 300 GeV)', d['Signif_Avg'])
         ss += '{:<45s} : {:.1f}\n'.format('Significance curvature', d['Signif_Curve'])
 
         if spec_type == 'PowerLaw':
@@ -194,19 +193,18 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
         elif spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
             fmt = '{:<45s} : {:.0f} +- {:.0f} {}\n'
-            args = (
+            ss += fmt.format(
                 'Cutoff energy',
                 d['Cutoff'].value,
                 d['Unc_Cutoff'].value,
                 d['Cutoff'].unit,
             )
-            ss += fmt.format(*args)
         elif spec_type == 'PLSuperExpCutoff':
             ss += '{:<45s} : {} +- {}\n'.format(
                 'Super-exponential cutoff index', d['Exp_Index'], d['Unc_Exp_Index']
             )
         else:
-            raise ValueError('This case should not exist. Please report this issue.')
+            raise ValueError('Invalid spec_type')
 
         ss += '{:<45s} : {:.0f} {}\n'.format(
             'Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit
@@ -217,38 +215,31 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         )
 
         fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
-        args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
-        ss += fmt.format(*args)
+        ss += fmt.format('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
 
-        unit = 'cm-2 MeV-1 s-1'
         fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
-        args = (
+        ss += fmt.format(
             'Flux Density at pivot energy',
             d['Flux_Density'].value,
             d['Unc_Flux_Density'].value,
-            unit,
+            'cm-2 MeV-1 s-1',
         )
-        ss += fmt.format(*args)
 
-        unit = 'cm-2 s-1'
         fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
-        args = (
+        ss += fmt.format(
             'Integral flux (1 - 100 GeV)',
             d['Flux1000'].value,
             d['Unc_Flux1000'].value,
-            unit,
+            'cm-2 s-1',
         )
-        ss += fmt.format(*args)
 
-        unit = 'erg cm-2 s-1'
         fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
-        args = (
+        ss += fmt.format(
             'Energy flux (100 MeV - 100 GeV)',
             d['Energy_Flux100'].value,
             d['Unc_Energy_Flux100'].value,
-            unit,
+            'erg cm-2 s-1',
         )
-        ss += fmt.format(*args)
 
         return ss
 
@@ -274,12 +265,11 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             )
 
             fmt = '{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n'
-            args = (
+            ss += fmt.format(
                 'Integral flux peak (100 MeV - 100 GeV)',
                 d['Flux_Peak'],
                 d['Unc_Flux_Peak'],
             )
-            ss += fmt.format(*args)
 
             # TODO: give time as UTC string, not MET
             ss += '{:<40s} : {:.3} s (Mission elapsed time)\n'.format(
@@ -331,9 +321,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs['ecut'] = self.data['Unc_Cutoff'].to('GeV')
             model = PLSuperExpCutoff3FGL(**pars)
         else:
-            raise ValueError(
-                'No spec_type: {}. Please report this issue.'.format(spec_type)
-            )
+            raise ValueError('Invalid spec_type: {!r}'.format(spec_type))
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -358,9 +346,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             morph_type = de['Model_Form'].strip()
 
             if morph_type == 'Disk':
-                return SkyDisk(
-                    lon_0=glon, lat_0=glat, r_0=de['Model_SemiMajor'].to('deg')
-                )
+                r_0 = de['Model_SemiMajor'].to('deg')
+                return SkyDisk(lon_0=glon, lat_0=glat, r_0=r_0)
             elif morph_type in ['Map', 'Ring', '2D Gaussian x2']:
                 filename = de['Spatial_Filename'].strip()
                 path = make_path(
@@ -369,11 +356,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
                 return SkyDiffuseMap.read(path / filename)
             elif morph_type == '2D Gaussian':
                 # TODO: fill elongation info as soon as model supports it
-                return SkyGaussian(
-                    lon_0=glon, lat_0=glat, sigma=de['Model_SemiMajor'].to('deg')
-                )
+                sigma = de['Model_SemiMajor'].to('deg')
+                return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
-                raise ValueError('Not a valid spatial model{}'.format(morph_type))
+                raise ValueError('Invalid spatial model: {!r}'.format(morph_type))
 
     @property
     def sky_model(self):
@@ -727,8 +713,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss += '{:<16s} : {}\n'.format('TeVCat flag', tevcat_message)
 
         fmt = '\n{:<32s} : {:.3f}\n'
-        args = ('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
-        ss += fmt.format(*args)
+        ss += fmt.format('Significance (10 GeV - 2 TeV)', d['Signif_Avg'])
         ss += '{:<32s} : {:.1f}\n'.format('Npred', d['Npred'])
 
         return ss
@@ -774,63 +759,50 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         # Power-law parameters are always given; give in any case
         fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
-        args = (
-            'Power-law spectral index',
-            d['PowerLaw_Index'],
-            d['Unc_PowerLaw_Index'],
+        ss += fmt.format(
+            'Power-law spectral index', d['PowerLaw_Index'], d['Unc_PowerLaw_Index']
         )
-        ss += fmt.format(*args)
 
         if spec_type == 'PowerLaw':
             pass
         elif spec_type == 'LogParabola':
             fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
-            args = (
+            ss += fmt.format(
                 'LogParabola spectral index',
                 d['Spectral_Index'],
                 d['Unc_Spectral_Index'],
             )
-            ss += fmt.format(*args)
 
             ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format(
                 'LogParabola beta', d['beta'], d['Unc_beta']
             )
         else:
-            raise ValueError('This case should not exist. Please report this issue.')
+            raise ValueError('Invalid spec_type')
 
         ss += '{:<32s} : {:.1f} {}\n'.format(
             'Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit
         )
 
-        unit = 'cm-2 GeV-1 s-1'
-        fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
-        args = (
+        ss += '{:<32s} : {:.3} +- {:.3} {}\n'.format(
             'Flux Density at pivot energy',
             d['Flux_Density'].value,
             d['Unc_Flux_Density'].value,
-            unit,
+            'cm-2 GeV-1 s-1',
         )
-        ss += fmt.format(*args)
 
-        unit = 'cm-2 s-1'
-        fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
-        args = (
+        ss += '{:<32s} : {:.3} +- {:.3} {}\n'.format(
             'Integral flux (10 GeV - 1 TeV)',
             d['Flux'].value,
             d['Unc_Flux'].value,
-            unit,
+            'cm-2 s-1',
         )
-        ss += fmt.format(*args)
 
-        unit = 'erg cm-2 s-1'
-        fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
-        args = (
+        ss += '{:<32s} : {:.3} +- {:.3} {}\n'.format(
             'Energy flux (10 GeV - TeV)',
             d['Energy_Flux'].value,
             d['Unc_Energy_Flux'].value,
-            unit,
+            'erg cm-2 s-1',
         )
-        ss += fmt.format(*args)
 
         return ss
 
@@ -888,9 +860,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             errs['beta'] = d['Unc_beta'] * u.dimensionless_unscaled
             model = LogParabola(**pars)
         else:
-            raise ValueError(
-                'No spec_type: {}. Please report this issue.'.format(spec_type)
-            )
+            raise ValueError('Invalid spec_type: {!r}'.format(spec_type))
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -978,9 +948,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             morph_type = de['Spatial_Function'].strip()
 
             if morph_type == 'RadialDisk':
-                return SkyDisk(
-                    lon_0=glon, lat_0=glat, r_0=de['Model_SemiMajor'].to('deg')
-                )
+                r_0 = de['Model_SemiMajor'].to('deg')
+                return SkyDisk(lon_0=glon, lat_0=glat, r_0=r_0)
             elif morph_type in ['SpatialMap']:
                 filename = de['Spatial_Filename'].strip()
                 path = make_path(
@@ -989,11 +958,10 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
                 return SkyDiffuseMap.read(path / filename)
             elif morph_type == 'RadialGauss':
                 # TODO: fill elongation info as soon as model supports it
-                return SkyGaussian(
-                    lon_0=glon, lat_0=glat, sigma=de['Model_SemiMajor'].to('deg')
-                )
+                sigma = de['Model_SemiMajor'].to('deg')
+                return SkyGaussian(lon_0=glon, lat_0=glat, sigma=sigma)
             else:
-                raise ValueError('Not a valid spatial model{}'.format(morph_type))
+                raise ValueError('Invalid morph_type: {!r}'.format(morph_type))
 
     @property
     def sky_model(self):
