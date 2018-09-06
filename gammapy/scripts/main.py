@@ -92,6 +92,20 @@ def cli_download(ctx, folder):
 def cli_jupyter(ctx, file, fold):
     """
     Perform a series of actions on Jupyter notebooks.
+
+    The chosen action is applied for every Jupyter notebook present in the
+    current working directory. Option --file allows to chose a single file,
+    while option --fold allows to choose a different folder to scan. These
+    options are mutually exclusive, only one is allowed.
+
+    \b
+    Examples
+    --------
+    \b
+    $ gammapy jupyter black
+    $ gammapy jupyter --file=notebook.ipynb execute
+    $ gammapy jupyter --fold=myfolder/tutorials test
+    $ gammapy jupyter stripout
     """
     ctx.obj = {
         'file': file,
@@ -99,7 +113,7 @@ def cli_jupyter(ctx, file, fold):
     }
 
     if file and fold != '.':
-        print('--file and --fold are exclusive options, only one is allowed.')
+        print('--file and --fold are mutually exclusive options, only one is allowed.')
         sys.exit()
 
 
