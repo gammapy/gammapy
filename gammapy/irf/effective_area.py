@@ -9,7 +9,7 @@ from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 
-__all__ = ['EffectiveAreaTable', 'EffectiveAreaTable2D']
+__all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
 
 
 class EffectiveAreaTable(object):
@@ -67,7 +67,7 @@ class EffectiveAreaTable(object):
     def __init__(self, energy_lo, energy_hi, data, meta=None):
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             )
         ]
         self.data = NDDataArray(axes=axes, data=data)
@@ -75,7 +75,7 @@ class EffectiveAreaTable(object):
 
     @property
     def energy(self):
-        return self.data.axis('energy')
+        return self.data.axis("energy")
 
     def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
         """Plot effective area.
@@ -98,7 +98,7 @@ class EffectiveAreaTable(object):
 
         ax = plt.gca() if ax is None else ax
 
-        kwargs.setdefault('lw', 2)
+        kwargs.setdefault("lw", 2)
 
         if energy is None:
             energy = self.energy.nodes
@@ -110,15 +110,15 @@ class EffectiveAreaTable(object):
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to(self.energy.unit).value
-            ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles='dashed')
-        ax.set_xscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
+            ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles="dashed")
+        ax.set_xscale("log")
+        ax.set_xlabel("Energy [{}]".format(self.energy.unit))
+        ax.set_ylabel("Effective Area [{}]".format(self.data.data.unit))
 
         return ax
 
     @classmethod
-    def from_parametrization(cls, energy, instrument='HESS'):
+    def from_parametrization(cls, energy, instrument="HESS"):
         """Get parametrized effective area.
 
         Parametrizations of the effective areas of different Cherenkov
@@ -141,17 +141,17 @@ class EffectiveAreaTable(object):
         # Note that whereas in the paper the parameter index is 1-based,
         # here it is 0-based
         pars = {
-            'HESS': [6.85e9, 0.0891, 5e5],
-            'HESS2': [2.05e9, 0.0891, 1e5],
-            'CTA': [1.71e11, 0.0891, 1e5],
+            "HESS": [6.85e9, 0.0891, 5e5],
+            "HESS2": [2.05e9, 0.0891, 1e5],
+            "CTA": [1.71e11, 0.0891, 1e5],
         }
 
         if instrument not in pars.keys():
-            ss = 'Unknown instrument: {}\n'.format(instrument)
-            ss += 'Valid instruments: HESS, HESS2, CTA'
+            ss = "Unknown instrument: {}\n".format(instrument)
+            ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
-        xx = energy.log_centers.to('MeV').value
+        xx = energy.log_centers.to("MeV").value
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
@@ -171,18 +171,18 @@ class EffectiveAreaTable(object):
 
         Data format specification: :ref:`gadf:ogip-arf`
         """
-        energy_lo = table['ENERG_LO'].quantity
-        energy_hi = table['ENERG_HI'].quantity
-        data = table['SPECRESP'].quantity
+        energy_lo = table["ENERG_LO"].quantity
+        energy_hi = table["ENERG_HI"].quantity
+        data = table["SPECRESP"].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='SPECRESP'):
+    def from_hdulist(cls, hdulist, hdu="SPECRESP"):
         """Create from `~astropy.io.fits.HDUList`."""
         return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
-    def read(cls, filename, hdu='SPECRESP'):
+    def read(cls, filename, hdu="SPECRESP"):
         """Read from file."""
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
@@ -190,7 +190,7 @@ class EffectiveAreaTable(object):
                 aeff = cls.from_hdulist(hdulist, hdu=hdu)
             except KeyError:
                 msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-                msg += '\n Available {}'.format([_.name for _ in hdulist])
+                msg += "\n Available {}".format([_.name for _ in hdulist])
                 raise ValueError(msg)
 
         return aeff
@@ -203,15 +203,15 @@ class EffectiveAreaTable(object):
         table = Table()
         table.meta = OrderedDict(
             [
-                ('EXTNAME', 'SPECRESP'),
-                ('hduclass', 'OGIP'),
-                ('hduclas1', 'RESPONSE'),
-                ('hduclas2', 'SPECRESP'),
+                ("EXTNAME", "SPECRESP"),
+                ("hduclass", "OGIP"),
+                ("hduclas1", "RESPONSE"),
+                ("hduclas2", "SPECRESP"),
             ]
         )
-        table['ENERG_LO'] = self.energy.lo
-        table['ENERG_HI'] = self.energy.hi
-        table['SPECRESP'] = self.evaluate_fill_nan()
+        table["ENERG_LO"] = self.energy.lo
+        table["ENERG_HI"] = self.energy.hi
+        table["SPECRESP"] = self.evaluate_fill_nan()
         return table
 
     def to_hdulist(self, name=None):
@@ -310,9 +310,9 @@ class EffectiveAreaTable(object):
         table = self.to_table()
         return DataARF(
             name=name,
-            energ_lo=table['ENERG_LO'].quantity.to('keV').value,
-            energ_hi=table['ENERG_HI'].quantity.to('keV').value,
-            specresp=table['SPECRESP'].quantity.to('cm2').value,
+            energ_lo=table["ENERG_LO"].quantity.to("keV").value,
+            energ_hi=table["ENERG_HI"].quantity.to("keV").value,
+            specresp=table["SPECRESP"].quantity.to("cm2").value,
         )
 
 
@@ -379,10 +379,10 @@ class EffectiveAreaTable2D(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             ),
             BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode='linear', name='offset'
+                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
             ),
         ]
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
@@ -390,38 +390,38 @@ class EffectiveAreaTable2D(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.data)
+        ss += "\n{}".format(self.data)
         return ss
 
     @property
     def low_threshold(self):
         """Low energy threshold"""
-        return self.meta['LO_THRES'] * u.TeV
+        return self.meta["LO_THRES"] * u.TeV
 
     @property
     def high_threshold(self):
         """High energy threshold"""
-        return self.meta['HI_THRES'] * u.TeV
+        return self.meta["HI_THRES"] * u.TeV
 
     @classmethod
     def from_table(cls, table):
         """Read from `~astropy.table.Table`."""
         return cls(
-            energy_lo=table['ENERG_LO'].quantity[0],
-            energy_hi=table['ENERG_HI'].quantity[0],
-            offset_lo=table['THETA_LO'].quantity[0],
-            offset_hi=table['THETA_HI'].quantity[0],
-            data=table['EFFAREA'].quantity[0].transpose(),
+            energy_lo=table["ENERG_LO"].quantity[0],
+            energy_hi=table["ENERG_HI"].quantity[0],
+            offset_lo=table["THETA_LO"].quantity[0],
+            offset_hi=table["THETA_HI"].quantity[0],
+            data=table["EFFAREA"].quantity[0].transpose(),
             meta=table.meta,
         )
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='EFFECTIVE AREA'):
+    def from_hdulist(cls, hdulist, hdu="EFFECTIVE AREA"):
         """Create from `~astropy.io.fits.HDUList`."""
         return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
-    def read(cls, filename, hdu='EFFECTIVE AREA'):
+    def read(cls, filename, hdu="EFFECTIVE AREA"):
         """Read from file."""
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
@@ -440,7 +440,7 @@ class EffectiveAreaTable2D(object):
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.data.axis('energy').bins
+            energy = self.data.axis("energy").bins
 
         energy = EnergyBounds(energy)
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
@@ -473,22 +473,22 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axis('offset').nodes[[0, -1]].value
-            offset = np.linspace(off_min, off_max, 4) * self.data.axis('offset').unit
+            off_min, off_max = self.data.axis("offset").nodes[[0, -1]].value
+            offset = np.linspace(off_min, off_max, 4) * self.data.axis("offset").unit
 
         if energy is None:
-            energy = self.data.axis('energy').nodes
+            energy = self.data.axis("energy").nodes
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy=energy)
-            label = 'offset = {:.1f}'.format(off)
+            label = "offset = {:.1f}".format(off)
             ax.plot(energy, area.value, label=label, **kwargs)
 
-        ax.set_xscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.data.axis('energy').unit))
-        ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
+        ax.set_xscale("log")
+        ax.set_xlabel("Energy [{}]".format(self.data.axis("energy").unit))
+        ax.set_ylabel("Effective Area [{}]".format(self.data.data.unit))
         ax.set_xlim(min(energy.value), max(energy.value))
-        ax.legend(loc='upper left')
+        ax.legend(loc="upper left")
 
         return ax
 
@@ -514,11 +514,11 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.data.axis('energy').nodes[[0, -1]].value)
-            energy = np.logspace(e_min, e_max, 4) * self.data.axis('energy').unit
+            e_min, e_max = np.log10(self.data.axis("energy").nodes[[0, -1]].value)
+            energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy").unit
 
         if offset is None:
-            off_lo, off_hi = self.data.axis('offset').nodes[[0, -1]].to('deg').value
+            off_lo, off_hi = self.data.axis("offset").nodes[[0, -1]].to("deg").value
             offset = np.linspace(off_lo, off_hi, 100) * u.deg
 
         for ee in energy:
@@ -526,13 +526,13 @@ class EffectiveAreaTable2D(object):
             area /= np.nanmax(area)
             if np.isnan(area).all():
                 continue
-            label = 'energy = {:.1f}'.format(ee)
+            label = "energy = {:.1f}".format(ee)
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel('Offset ({})'.format(self.data.axis('offset').unit))
-        ax.set_ylabel('Relative Effective Area')
-        ax.legend(loc='best')
+        ax.set_xlabel("Offset ({})".format(self.data.axis("offset").unit))
+        ax.set_ylabel("Relative Effective Area")
+        ax.legend(loc="best")
 
         return ax
 
@@ -542,28 +542,28 @@ class EffectiveAreaTable2D(object):
 
         ax = plt.gca() if ax is None else ax
 
-        offset = self.data.axis('offset').bins
-        energy = self.data.axis('energy').bins
+        offset = self.data.axis("offset").bins
+        energy = self.data.axis("energy").bins
         aeff = self.data.evaluate(offset=offset, energy=energy)
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
 
-        kwargs.setdefault('cmap', 'GnBu')
-        kwargs.setdefault('edgecolors', 'face')
-        kwargs.setdefault('vmin', vmin)
-        kwargs.setdefault('vmax', vmax)
+        kwargs.setdefault("cmap", "GnBu")
+        kwargs.setdefault("edgecolors", "face")
+        kwargs.setdefault("vmin", vmin)
+        kwargs.setdefault("vmax", vmax)
 
         caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
-        ax.set_xscale('log')
-        ax.set_ylabel('Offset ({})'.format(offset.unit))
-        ax.set_xlabel('Energy ({})'.format(energy.unit))
+        ax.set_xscale("log")
+        ax.set_ylabel("Offset ({})".format(offset.unit))
+        ax.set_xlabel("Energy ({})".format(energy.unit))
 
         xmin, xmax = energy.value.min(), energy.value.max()
         ax.set_xlim(xmin, xmax)
 
         if add_cbar:
-            label = 'Effective Area ({unit})'.format(unit=aeff.unit)
+            label = "Effective Area ({unit})".format(unit=aeff.unit)
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -582,13 +582,13 @@ class EffectiveAreaTable2D(object):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
         table = Table(meta=meta)
-        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
-        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
-        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
-        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
-        table['EFFAREA'] = self.data.data.T[np.newaxis]
+        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
+        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
+        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
+        table["EFFAREA"] = self.data.data.T[np.newaxis]
         return table
 
-    def to_fits(self, name='EFFECTIVE AREA'):
+    def to_fits(self, name="EFFECTIVE AREA"):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)

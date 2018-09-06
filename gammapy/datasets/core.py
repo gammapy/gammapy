@@ -9,14 +9,14 @@ from astropy.table import Table
 import astropy.utils.data
 from ..extern.pathlib import Path
 
-__all__ = ['Datasets', 'gammapy_extra']
+__all__ = ["Datasets", "gammapy_extra"]
 
 log = logging.getLogger(__name__)
 
 # This is the cross-platform way to get the HOME directory, also in Windows
 # https://docs.python.org/3/library/pathlib.html#pathlib.Path.home
 # http://stackoverflow.com/a/4028943
-DATASET_DIR = Path.home() / '.gammapy/datasets'
+DATASET_DIR = Path.home() / ".gammapy/datasets"
 
 
 def download_file(
@@ -55,11 +55,11 @@ def make_dataset(config):
     """Dataset factory function.
     """
     # For not we just have simple datasets
-    name = config['name']
-    filename = DATASET_DIR / config['filename']
-    url = config.get('url')
-    description = config.get('description')
-    tags = config.get('tags')
+    name = config["name"]
+    filename = DATASET_DIR / config["filename"]
+    url = config.get("url")
+    description = config.get("description")
+    tags = config.get("tags")
     ds = OneFileDataset(
         name=name, filename=filename, url=url, description=description, tags=tags
     )
@@ -90,8 +90,8 @@ class OneFileDataset(object):
         self._print_status(file=file)
 
     def _print_status(self, file):
-        available = 'yes' if self.is_available() else 'no'
-        print('Available: {}'.format(available), file=file)
+        available = "yes" if self.is_available() else "no"
+        print("Available: {}".format(available), file=file)
 
 
 class Datasets(object):
@@ -117,7 +117,7 @@ class Datasets(object):
     """
 
     # DEFAULT_CONFIG_FILE = Path.home() / '.gammapy/data-register.yaml'
-    DEFAULT_CONFIG_FILE = astropy.utils.data.get_pkg_data_filename('datasets.yaml')
+    DEFAULT_CONFIG_FILE = astropy.utils.data.get_pkg_data_filename("datasets.yaml")
 
     def __init__(self, config=None):
         if not config:
@@ -156,7 +156,7 @@ class Datasets(object):
         if not file:
             file = sys.stdout
 
-        print('Number of datasets: {}'.format(len(self.datasets)), file=file)
+        print("Number of datasets: {}".format(len(self.datasets)), file=file)
 
         self.info_table.pprint()
 
@@ -169,12 +169,12 @@ class Datasets(object):
         rows = []
         for ds in self.datasets.values():
             row = dict()
-            row['Name'] = ds.name
-            row['Available'] = 'yes' if ds.is_available() else 'no'
-            row['Filename'] = ds.filename
+            row["Name"] = ds.name
+            row["Available"] = "yes" if ds.is_available() else "no"
+            row["Filename"] = ds.filename
             rows.append(row)
 
-        table = Table(rows=rows, names=['Name', 'Available', 'Filename'])
+        table = Table(rows=rows, names=["Name", "Available", "Filename"])
         return table
 
     def __getitem__(self, name):
@@ -186,7 +186,7 @@ class Datasets(object):
         dataset = self.datasets[name]
         dataset.fetch()
 
-    def fetch_all(self, tags='catalog'):
+    def fetch_all(self, tags="catalog"):
         """Fetch all datasets that match one of the tags.
         """
         for dataset in self.datasets.values():
@@ -215,9 +215,9 @@ class _GammapyExtra(object):
     @property
     def is_available(self):
         """Is the gammapy-extra repo available?"""
-        if 'GAMMAPY_EXTRA' in os.environ:
+        if "GAMMAPY_EXTRA" in os.environ:
             # Make sure this is really pointing to a gammapy-extra folder
-            filename = Path(os.environ['GAMMAPY_EXTRA']) / 'logo/gammapy_logo.pdf'
+            filename = Path(os.environ["GAMMAPY_EXTRA"]) / "logo/gammapy_logo.pdf"
             if filename.is_file():
                 return True
 
@@ -230,11 +230,11 @@ class _GammapyExtra(object):
         Raises `GammapyExtraNotFoundError` if gammapy-extra isn't found.
         """
         if self.is_available:
-            return Path(os.environ['GAMMAPY_EXTRA'])
+            return Path(os.environ["GAMMAPY_EXTRA"])
         else:
-            msg = 'The gammapy-extra repo is not available. '
-            msg += 'You have to set the GAMMAPY_EXTRA environment variable '
-            msg += 'to point to the location for it to be found.'
+            msg = "The gammapy-extra repo is not available. "
+            msg += "You have to set the GAMMAPY_EXTRA environment variable "
+            msg += "to point to the location for it to be found."
             raise GammapyExtraNotFoundError(msg)
 
     def filename(self, filename):

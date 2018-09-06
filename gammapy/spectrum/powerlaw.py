@@ -15,19 +15,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 
 __all__ = [
-    'power_law_evaluate',
-    'power_law_pivot_energy',
-    'power_law_df_over_f',
-    'power_law_flux',
-    'power_law_energy_flux',
-    'power_law_integral_flux',
-    'power_law_g_from_f',
-    'power_law_g_from_points',
-    'power_law_I_from_points',
-    'power_law_f_from_points',
-    'power_law_f_with_err',
-    'power_law_I_with_err',
-    'power_law_compatibility',
+    "power_law_evaluate",
+    "power_law_pivot_energy",
+    "power_law_df_over_f",
+    "power_law_flux",
+    "power_law_energy_flux",
+    "power_law_integral_flux",
+    "power_law_g_from_f",
+    "power_law_g_from_points",
+    "power_law_I_from_points",
+    "power_law_f_from_points",
+    "power_law_f_with_err",
+    "power_law_I_with_err",
+    "power_law_compatibility",
 ]
 
 E_INF = 1e10
@@ -259,8 +259,8 @@ def power_law_compatibility(par_low, par_high):
     sigma_combined = np.sqrt(sigma_low ** 2 + sigma_high ** 2)
 
     return {
-        'g_match': g_match,
-        'sigma_low': sigma_low,
-        'sigma_high': sigma_high,
-        'sigma_combined': sigma_combined,
+        "g_match": g_match,
+        "sigma_low": sigma_low,
+        "sigma_high": sigma_high,
+        "sigma_combined": sigma_combined,
     }

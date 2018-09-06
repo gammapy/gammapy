@@ -8,7 +8,7 @@ from astropy.utils import lazyproperty
 from ...utils.scripts import make_path
 from ...spectrum.models import TableModel
 
-__all__ = ['PrimaryFlux']
+__all__ = ["PrimaryFlux"]
 
 
 class PrimaryFlux(object):
@@ -27,34 +27,34 @@ class PrimaryFlux(object):
     """
 
     channel_registry = {
-        'eL': 'eL',
-        'eR': 'eR',
-        'e': 'e',
-        'muL': '\\[Mu]L',
-        'muR': '\\[Mu]R',
-        'mu': '\\[Mu]',
-        'tauL': '\\[Tau]L',
-        'tauR': '\\[Tau]R',
-        'tau': '\\[Tau]',
-        'q': 'q',
-        'c': 'c',
-        'b': 'b',
-        't': 't',
-        'WL': 'WL',
-        'WT': 'WT',
-        'W': 'W',
-        'ZL': 'ZL',
-        'ZT': 'ZT',
-        'Z': 'Z',
-        'g': 'g',
-        'gamma': '\\[Gamma]',
-        'h': 'h',
-        'nu_e': '\\[Nu]e',
-        'nu_mu': '\\[Nu]\\[Mu]',
-        'nu_tau': '\\[Nu]\\[Tau]',
-        'V->e': 'V->e',
-        'V->mu': 'V->\\[Mu]',
-        'V->tau': 'V->\\[Tau]',
+        "eL": "eL",
+        "eR": "eR",
+        "e": "e",
+        "muL": "\\[Mu]L",
+        "muR": "\\[Mu]R",
+        "mu": "\\[Mu]",
+        "tauL": "\\[Tau]L",
+        "tauR": "\\[Tau]R",
+        "tau": "\\[Tau]",
+        "q": "q",
+        "c": "c",
+        "b": "b",
+        "t": "t",
+        "WL": "WL",
+        "WT": "WT",
+        "W": "W",
+        "ZL": "ZL",
+        "ZT": "ZT",
+        "Z": "Z",
+        "g": "g",
+        "gamma": "\\[Gamma]",
+        "h": "h",
+        "nu_e": "\\[Nu]e",
+        "nu_mu": "\\[Nu]\\[Mu]",
+        "nu_tau": "\\[Nu]\\[Tau]",
+        "V->e": "V->e",
+        "V->mu": "V->\\[Mu]",
+        "V->tau": "V->\\[Tau]",
     }
 
     def __init__(self, mDM, channel):
@@ -64,12 +64,12 @@ class PrimaryFlux(object):
     @lazyproperty
     def table(self):
         """Lookup table (`~astropy.table.Table`)."""
-        filename = '$GAMMAPY_EXTRA/datasets/dark_matter_spectra/AtProduction_gammas.dat'
+        filename = "$GAMMAPY_EXTRA/datasets/dark_matter_spectra/AtProduction_gammas.dat"
         return Table.read(
             str(make_path(filename)),
-            format='ascii.fast_basic',
+            format="ascii.fast_basic",
             guess=False,
-            delimiter=' ',
+            delimiter=" ",
         )
 
     @property
@@ -79,10 +79,10 @@ class PrimaryFlux(object):
 
     @mDM.setter
     def mDM(self, mDM):
-        mDM_vals = self.table['mDM'].data
-        mDM_ = Quantity(mDM).to('GeV').value
+        mDM_vals = self.table["mDM"].data
+        mDM_ = Quantity(mDM).to("GeV").value
         interp_idx = np.argmin(np.abs(mDM_vals - mDM_))
-        self._mDM = Quantity(mDM_vals[interp_idx], 'GeV')
+        self._mDM = Quantity(mDM_vals[interp_idx], "GeV")
 
     @property
     def allowed_channels(self):
@@ -106,10 +106,10 @@ class PrimaryFlux(object):
     @property
     def table_model(self):
         """Spectrum as `~gammapy.spectrum.models.TableModel`."""
-        subtable = self.table[self.table['mDM'] == self.mDM.value]
-        energies = (10 ** subtable['Log[10,x]']) * self.mDM
+        subtable = self.table[self.table["mDM"] == self.mDM.value]
+        energies = (10 ** subtable["Log[10,x]"]) * self.mDM
         channel_name = self.channel_registry[self.channel]
         dN_dlogx = subtable[channel_name]
         dN_dE = dN_dlogx / (energies * np.log(10))
 
-        return TableModel(energy=energies, values=dN_dE, values_scale='lin')
+        return TableModel(energy=energies, values=dN_dE, values_scale="lin")

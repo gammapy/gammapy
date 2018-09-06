@@ -5,7 +5,7 @@ import numpy as np
 from astropy.units import Quantity
 from ...source import SNR, SNRTrueloveMcKee
 
-t = Quantity([0, 1, 10, 100, 1000, 10000], 'yr')
+t = Quantity([0, 1, 10, 100, 1000, 10000], "yr")
 snr = SNR()
 snr_mckee = SNRTrueloveMcKee()
 

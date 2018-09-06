@@ -7,7 +7,7 @@ from astropy.stats import LombScargle
 from ..period import robust_periodogram
 from ...utils.testing import requires_dependency
 
-pytest.importorskip('astropy', '3.0')
+pytest.importorskip("astropy", "3.0")
 
 
 def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
@@ -91,7 +91,7 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     fap : dict
         false alarm probability dictionary (see description above).
     """
-    ls = LombScargle(t, y, dy, normalization='standard')
+    ls = LombScargle(t, y, dy, normalization="standard")
     maximum_frequency = freq.max()
 
     def _calc_fap(method, **kwargs):
@@ -101,25 +101,25 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
 
     fap = {}
 
-    if 'single' in method:
-        fap['single'] = _calc_fap('single')
-    if 'naive' in method:
-        fap['naive'] = _calc_fap('naive')
-    if 'davies' in method:
-        fap['davies'] = _calc_fap('davies')
-    if 'baluev' in method:
-        fap['baluev'] = _calc_fap('baluev')
-    if 'bootstrap' in method:
-        fap['bootstrap'] = _calc_fap(
-            'bootstrap', method_kwds=dict(n_bootstraps=100, random_seed=42)
+    if "single" in method:
+        fap["single"] = _calc_fap("single")
+    if "naive" in method:
+        fap["naive"] = _calc_fap("naive")
+    if "davies" in method:
+        fap["davies"] = _calc_fap("davies")
+    if "baluev" in method:
+        fap["baluev"] = _calc_fap("baluev")
+    if "bootstrap" in method:
+        fap["bootstrap"] = _calc_fap(
+            "bootstrap", method_kwds=dict(n_bootstraps=100, random_seed=42)
         )
 
     return fap
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 @pytest.mark.parametrize(
-    'pars',
+    "pars",
     [
         dict(
             period=7,
@@ -129,7 +129,7 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
             n_obs=500,
             n_outliers=50,
             periods=np.linspace(0.5, 100, 200),
-            loss='cauchy',
+            loss="cauchy",
             scale=1,
             fap=dict(
                 single=2.855680054527823e-93,
@@ -143,37 +143,37 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
 )
 def test_period(pars):
     test_data = simulate_test_data(
-        pars['period'],
-        pars['amplitude'],
-        pars['t_length'],
-        pars['n_data'],
-        pars['n_obs'],
-        pars['n_outliers'],
+        pars["period"],
+        pars["amplitude"],
+        pars["t_length"],
+        pars["n_data"],
+        pars["n_obs"],
+        pars["n_outliers"],
     )
 
     periodogram = robust_periodogram(
-        test_data['t'],
-        test_data['y'],
-        test_data['dy'],
-        periods=pars['periods'],
-        loss=pars['loss'],
-        scale=pars['scale'],
+        test_data["t"],
+        test_data["y"],
+        test_data["dy"],
+        periods=pars["periods"],
+        loss=pars["loss"],
+        scale=pars["scale"],
     )
 
     fap = fap_astropy(
-        periodogram['power'],
-        1. / periodogram['periods'],
-        test_data['t'],
-        test_data['y'],
-        test_data['dy'],
-        pars['fap'],
+        periodogram["power"],
+        1. / periodogram["periods"],
+        test_data["t"],
+        test_data["y"],
+        test_data["dy"],
+        pars["fap"],
     )
 
     assert_allclose(
-        periodogram['best_period'], pars['period'], atol=pars['periods'].min()
+        periodogram["best_period"], pars["period"], atol=pars["periods"].min()
     )
-    assert_allclose(fap['single'], pars['fap']['single'], rtol=1e-3)
-    assert_allclose(fap['naive'], pars['fap']['naive'], rtol=1e-3)
-    assert_allclose(fap['davies'], pars['fap']['davies'], rtol=1e-3)
-    assert_allclose(fap['baluev'], pars['fap']['baluev'], rtol=1e-3)
-    assert_allclose(fap['bootstrap'], pars['fap']['bootstrap'], rtol=1e-3)
+    assert_allclose(fap["single"], pars["fap"]["single"], rtol=1e-3)
+    assert_allclose(fap["naive"], pars["fap"]["naive"], rtol=1e-3)
+    assert_allclose(fap["davies"], pars["fap"]["davies"], rtol=1e-3)
+    assert_allclose(fap["baluev"], pars["fap"]["baluev"], rtol=1e-3)
+    assert_allclose(fap["bootstrap"], pars["fap"]["bootstrap"], rtol=1e-3)

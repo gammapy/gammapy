@@ -8,13 +8,13 @@ from ...utils.testing import requires_dependency, requires_data
 from ..background import Background3D, Background2D
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def bkg_3d():
     """Example with simple values to test evaluate"""
     energy = [0.1, 10, 1000] * u.TeV
     fov_lon = [0, 1, 2, 3] * u.deg
     fov_lat = [0, 1, 2, 3] * u.deg
-    data = np.zeros((2, 3, 3)) * u.Unit('s-1 MeV-1 sr-1')
+    data = np.zeros((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
     # Axis order is (energy, fov_lon, fov_lat)
     data.value[1, 0, 0] = 2
     data.value[1, 1, 1] = 4
@@ -29,26 +29,26 @@ def bkg_3d():
     )
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 def test_background_3d_basics(bkg_3d):
-    assert 'NDDataArray summary info' in str(bkg_3d.data)
+    assert "NDDataArray summary info" in str(bkg_3d.data)
 
-    axis = bkg_3d.data.axis('energy')
+    axis = bkg_3d.data.axis("energy")
     assert axis.nbins == 2
-    assert axis.unit == 'TeV'
+    assert axis.unit == "TeV"
 
-    axis = bkg_3d.data.axis('fov_lon')
+    axis = bkg_3d.data.axis("fov_lon")
     assert axis.nbins == 3
-    assert axis.unit == 'deg'
+    assert axis.unit == "deg"
 
-    axis = bkg_3d.data.axis('fov_lat')
+    axis = bkg_3d.data.axis("fov_lat")
     assert axis.nbins == 3
-    assert axis.unit == 'deg'
+    assert axis.unit == "deg"
 
     data = bkg_3d.data.data
     assert data.shape == (2, 3, 3)
-    assert data.unit == u.Unit('s-1 MeV-1 sr-1')
+    assert data.unit == u.Unit("s-1 MeV-1 sr-1")
 
 
 def test_background_3d_read_write(tmpdir, bkg_3d):
@@ -57,24 +57,24 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
 
     bkg_3d_2 = Background3D.read(filename)
 
-    axis = bkg_3d_2.data.axis('energy')
+    axis = bkg_3d_2.data.axis("energy")
     assert axis.nbins == 2
-    assert axis.unit == 'TeV'
+    assert axis.unit == "TeV"
 
-    axis = bkg_3d_2.data.axis('fov_lon')
+    axis = bkg_3d_2.data.axis("fov_lon")
     assert axis.nbins == 3
-    assert axis.unit == 'deg'
+    assert axis.unit == "deg"
 
-    axis = bkg_3d_2.data.axis('fov_lat')
+    axis = bkg_3d_2.data.axis("fov_lat")
     assert axis.nbins == 3
-    assert axis.unit == 'deg'
+    assert axis.unit == "deg"
 
     data = bkg_3d_2.data.data
     assert data.shape == (2, 3, 3)
-    assert data.unit == 's-1 MeV-1 sr-1'
+    assert data.unit == "s-1 MeV-1 sr-1"
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_background_3d_evaluate(bkg_3d):
     # Evaluate at nodes where we put a non-zero value
     res = bkg_3d.evaluate(
@@ -84,7 +84,7 @@ def test_background_3d_evaluate(bkg_3d):
     )
     assert_allclose(res.value, [2, 4])
     assert res.shape == (2,)
-    assert res.unit == 's-1 MeV-1 sr-1'
+    assert res.unit == "s-1 MeV-1 sr-1"
 
     res = bkg_3d.evaluate(
         fov_lon=[1, 0.5] * u.deg,
@@ -102,7 +102,7 @@ def test_background_3d_evaluate(bkg_3d):
     assert res.shape == (2, 2)
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_background_3d_integrate(bkg_3d):
     # Example has bkg rate = 4 s-1 MeV-1 sr-1 at this node:
     # fov_lon=1.5 deg, fov_lat=1.5 deg, energy=100 TeV
@@ -111,7 +111,7 @@ def test_background_3d_integrate(bkg_3d):
         fov_lon=1.5 * u.deg, fov_lat=1.5 * u.deg, energy_range=[100, 100 + 2e-6] * u.TeV
     )
     assert rate.shape == (1, 1)
-    assert rate.unit == 's-1 sr-1'
+    assert rate.unit == "s-1 sr-1"
     # Expect approximately `rate * de`
     # with `rate = 4 s-1 sr-1 MeV-1` and `de = 2 MeV`
     assert_allclose(rate.value, 8)
@@ -130,12 +130,12 @@ def test_background_3d_integrate(bkg_3d):
     assert_allclose(rate.value, [[74250000., 49500000], [49500000., 99000000.]])
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def bkg_2d():
     """A simple Background2D test case"""
     energy = [0.1, 10, 1000] * u.TeV
     offset = [0, 1, 2, 3] * u.deg
-    data = np.zeros((2, 3)) * u.Unit('s-1 MeV-1 sr-1')
+    data = np.zeros((2, 3)) * u.Unit("s-1 MeV-1 sr-1")
     data.value[1, 0] = 2
     data.value[1, 1] = 4
     return Background2D(
@@ -147,7 +147,7 @@ def bkg_2d():
     )
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_background_2d_evaluate(bkg_2d):
     # TODO: the test cases here can probably be improved a bit
     # There's some redundancy, and no case exactly at a node in energy
@@ -158,7 +158,7 @@ def test_background_2d_evaluate(bkg_2d):
     )
     assert_allclose(res.value, [0, 0])
     assert res.shape == (2,)
-    assert res.unit == 's-1 MeV-1 sr-1'
+    assert res.unit == "s-1 MeV-1 sr-1"
 
     res = bkg_2d.evaluate(
         fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[100, 100] * u.TeV
@@ -186,20 +186,20 @@ def test_background_2d_read_write(tmpdir, bkg_2d):
 
     bkg_2d_2 = Background2D.read(filename)
 
-    axis = bkg_2d_2.data.axis('energy')
+    axis = bkg_2d_2.data.axis("energy")
     assert axis.nbins == 2
-    assert axis.unit == 'TeV'
+    assert axis.unit == "TeV"
 
-    axis = bkg_2d_2.data.axis('offset')
+    axis = bkg_2d_2.data.axis("offset")
     assert axis.nbins == 3
-    assert axis.unit == 'deg'
+    assert axis.unit == "deg"
 
     data = bkg_2d_2.data.data
     assert data.shape == (2, 3)
-    assert data.unit == 's-1 MeV-1 sr-1'
+    assert data.unit == "s-1 MeV-1 sr-1"
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_background_2d_integrate(bkg_2d):
     # TODO: change test case to something better (with known answer)
     # e.g. constant spectrum or power-law.
@@ -209,7 +209,7 @@ def test_background_2d_integrate(bkg_2d):
     )
 
     assert rate.shape == (1, 2)
-    assert rate.unit == 's-1 sr-1'
+    assert rate.unit == "s-1 sr-1"
     assert_allclose(rate.value[0], [0, 0])
 
     rate = bkg_2d.integrate_on_energy_range(

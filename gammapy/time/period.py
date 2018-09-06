@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import numpy as np
 
-__all__ = ['robust_periodogram']
+__all__ = ["robust_periodogram"]
 
 
-def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', scale=1):
+def robust_periodogram(time, flux, flux_err=None, periods=None, loss="linear", scale=1):
     """
     Compute a light curve's period.
 
@@ -75,7 +75,7 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', s
     best_period = periods[np.argmax(psd_data)]
 
     return OrderedDict(
-        [('periods', periods), ('power', psd_data), ('best_period', best_period)]
+        [("periods", periods), ("power", psd_data), ("best_period", best_period)]
     )
 
 

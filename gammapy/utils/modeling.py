@@ -8,7 +8,7 @@ from astropy import units as u
 from astropy.table import Table
 from .array import check_type
 
-__all__ = ['Parameter', 'Parameters']
+__all__ = ["Parameter", "Parameters"]
 
 
 class Parameter(object):
@@ -33,10 +33,10 @@ class Parameter(object):
         Frozen? (used in fitting)
     """
 
-    __slots__ = ['_name', '_factor', '_scale', '_unit', '_min', '_max', '_frozen']
+    __slots__ = ["_name", "_factor", "_scale", "_unit", "_min", "_max", "_frozen"]
 
     def __init__(
-        self, name, factor, unit='', scale=1, min=np.nan, max=np.nan, frozen=False
+        self, name, factor, unit="", scale=1, min=np.nan, max=np.nan, frozen=False
     ):
         self.name = name
         self.scale = scale
@@ -58,7 +58,7 @@ class Parameter(object):
 
     @name.setter
     def name(self, val):
-        self._name = check_type(val, 'str')
+        self._name = check_type(val, "str")
 
     @property
     def factor(self):
@@ -67,7 +67,7 @@ class Parameter(object):
 
     @factor.setter
     def factor(self, val):
-        self._factor = check_type(val, 'number')
+        self._factor = check_type(val, "number")
 
     @property
     def scale(self):
@@ -76,7 +76,7 @@ class Parameter(object):
 
     @scale.setter
     def scale(self, val):
-        self._scale = check_type(val, 'number')
+        self._scale = check_type(val, "number")
 
     @property
     def unit(self):
@@ -112,7 +112,7 @@ class Parameter(object):
 
     @frozen.setter
     def frozen(self, val):
-        self._frozen = check_type(val, 'bool')
+        self._frozen = check_type(val, "bool")
 
     @property
     def value(self):
@@ -136,9 +136,9 @@ class Parameter(object):
 
     def __repr__(self):
         return (
-            'Parameter(name={name!r}, value={value!r}, '
-            'factor={factor!r}, scale={scale!r}, unit={unit!r}, '
-            'min={min!r}, max={max!r}, frozen={frozen!r})'
+            "Parameter(name={name!r}, value={value!r}, "
+            "factor={factor!r}, scale={scale!r}, unit={unit!r}, "
+            "min={min!r}, max={max!r}, frozen={frozen!r})"
         ).format(**self.to_dict())
 
     def to_dict(self):
@@ -147,13 +147,13 @@ class Parameter(object):
             value=self.value,
             factor=self.factor,
             scale=self.scale,
-            unit=self.unit.to_string('fits'),
+            unit=self.unit.to_string("fits"),
             min=self.min,
             max=self.max,
             frozen=self.frozen,
         )
 
-    def autoscale(self, method='scale10'):
+    def autoscale(self, method="scale10"):
         """Autoscale the parameters.
 
         Set ``factor`` and ``scale`` according to ``method``
@@ -169,17 +169,17 @@ class Parameter(object):
         method : {'factor1', 'scale10'}
             Method to apply
         """
-        if method == 'scale10':
+        if method == "scale10":
             value = self.value
             if value != 0:
                 power = int(np.log10(np.absolute(value)))
                 scale = 10 ** power
                 self.factor = value / scale
                 self.scale = scale
-        elif method == 'factor1':
+        elif method == "factor1":
             self.factor, self.scale = 1, self.value
         else:
-            raise ValueError('Invalid method: {}'.format(method))
+            raise ValueError("Invalid method: {}".format(method))
 
 
 class Parameters(object):
@@ -231,8 +231,8 @@ class Parameters(object):
     def __str__(self):
         ss = self.__class__.__name__
         for par in self.parameters:
-            ss += '\n{}'.format(par)
-        ss += '\n\nCovariance: \n{}'.format(self.covariance)
+            ss += "\n{}".format(par)
+        ss += "\n\nCovariance: \n{}".format(self.covariance)
         return ss
 
     def _get_idx(self, val):
@@ -241,7 +241,7 @@ class Parameters(object):
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
                     return idx
-            raise IndexError('Parameter {} not found for : {}'.format(val, self))
+            raise IndexError("Parameter {} not found for : {}".format(val, self))
 
         else:
             return val
@@ -254,46 +254,46 @@ class Parameters(object):
     def to_dict(self):
         retval = dict(parameters=[], covariance=None)
         for par in self.parameters:
-            retval['parameters'].append(par.to_dict())
+            retval["parameters"].append(par.to_dict())
         if self.covariance is not None:
-            retval['covariance'] = self.covariance.tolist()
+            retval["covariance"] = self.covariance.tolist()
         return retval
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
         t = Table()
-        t['name'] = [p.name for p in self.parameters]
-        t['value'] = [p.value for p in self.parameters]
+        t["name"] = [p.name for p in self.parameters]
+        t["value"] = [p.value for p in self.parameters]
         if self.covariance is None:
-            t['error'] = np.nan
+            t["error"] = np.nan
         else:
-            t['error'] = [self.error(idx) for idx in range(len(self.parameters))]
+            t["error"] = [self.error(idx) for idx in range(len(self.parameters))]
 
-        t['unit'] = [p.unit for p in self.parameters]
-        t['min'] = [p.min for p in self.parameters]
-        t['max'] = [p.max for p in self.parameters]
+        t["unit"] = [p.unit for p in self.parameters]
+        t["min"] = [p.min for p in self.parameters]
+        t["max"] = [p.max for p in self.parameters]
 
-        for name in ['value', 'error', 'min', 'max']:
-            t[name].format = '.3e'
+        for name in ["value", "error", "min", "max"]:
+            t[name].format = ".3e"
 
         return t
 
     @classmethod
     def from_dict(cls, val):
         pars = []
-        for par in val['parameters']:
+        for par in val["parameters"]:
             pars.append(
                 Parameter(
-                    name=par['name'],
-                    factor=float(par['value']),
-                    unit=par['unit'],
-                    min=float(par['min']),
-                    max=float(par['max']),
-                    frozen=par['frozen'],
+                    name=par["name"],
+                    factor=float(par["value"]),
+                    unit=par["unit"],
+                    min=float(par["min"]),
+                    max=float(par["max"]),
+                    frozen=par["frozen"],
                 )
             )
         try:
-            covariance = np.array(val['covariance'])
+            covariance = np.array(val["covariance"])
         except KeyError:
             covariance = None
 
@@ -302,10 +302,10 @@ class Parameters(object):
     def covariance_to_table(self):
         """Convert covariance matrix to `~astropy.table.Table`."""
         if self.covariance is None:
-            raise ValueError('No covariance available')
+            raise ValueError("No covariance available")
 
         table = Table()
-        table['name'] = self.names
+        table["name"] = self.names
         for idx, par in enumerate(self.parameters):
             vals = self.covariance[idx]
             table[par.name] = vals
@@ -324,7 +324,7 @@ class Parameters(object):
             # convert existing parameters to ufloats
             uarray = correlated_values(values, self.covariance)
         except np.linalg.LinAlgError:
-            raise ValueError('Covariance matrix not set.')
+            raise ValueError("Covariance matrix not set.")
 
         upars = {}
         for par, upar in zip(self.parameters, uarray):
@@ -360,7 +360,7 @@ class Parameters(object):
             Parameter name or index
         """
         if self.covariance is None:
-            raise ValueError('Covariance matrix not set.')
+            raise ValueError("Covariance matrix not set.")
 
         idx = self._get_idx(parname)
         return np.sqrt(self.covariance[idx, idx])
@@ -400,7 +400,7 @@ class Parameters(object):
         scale_matrix = scales[:, np.newaxis] * scales
         self.covariance = scale_matrix * matrix
 
-    def autoscale(self, method='scale10'):
+    def autoscale(self, method="scale10"):
         """Autoscale all parameters.
 
         See :func:`~gammapy.utils.modelling.Parameter.autoscale`

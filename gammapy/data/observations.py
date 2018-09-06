@@ -15,7 +15,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
 
-__all__ = ['ObservationCTA', 'DataStoreObservation', 'ObservationList']
+__all__ = ["ObservationCTA", "DataStoreObservation", "ObservationList"]
 
 log = logging.getLogger(__name__)
 
@@ -100,19 +100,19 @@ class ObservationCTA(object):
         self.meta = meta or OrderedDict()
 
     def __str__(self):
-        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
+        ss = "Info for OBS_ID = {}\n".format(self.obs_id)
 
-        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
-            self.pointing_radec.ra if self.pointing_radec else 'None',
-            self.pointing_radec.dec if self.pointing_radec else 'None',
+        ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
+            self.pointing_radec.ra if self.pointing_radec else "None",
+            self.pointing_radec.dec if self.pointing_radec else "None",
         )
 
-        tstart = np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None'
-        ss += '- Start time: {}\n'.format(tstart)
-        ss += '- Observation duration: {}\n'.format(
-            self.gti.time_sum if self.gti else 'None'
+        tstart = np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else "None"
+        ss += "- Start time: {}\n".format(tstart)
+        ss += "- Observation duration: {}\n".format(
+            self.gti.time_sum if self.gti else "None"
         )
-        ss += '- Dead-time fraction: {:5.3f} %\n'.format(
+        ss += "- Dead-time fraction: {:5.3f} %\n".format(
             100 * self.observation_dead_time_fraction
         )
 
@@ -132,22 +132,22 @@ class DataStoreObservation(object):
 
     def __init__(self, obs_id, data_store):
         # Assert that `obs_id` is available
-        if obs_id not in data_store.obs_table['OBS_ID']:
-            raise ValueError('OBS_ID = {} not in obs index table.'.format(obs_id))
-        if obs_id not in data_store.hdu_table['OBS_ID']:
-            raise ValueError('OBS_ID = {} not in HDU index table.'.format(obs_id))
+        if obs_id not in data_store.obs_table["OBS_ID"]:
+            raise ValueError("OBS_ID = {} not in obs index table.".format(obs_id))
+        if obs_id not in data_store.hdu_table["OBS_ID"]:
+            raise ValueError("OBS_ID = {} not in HDU index table.".format(obs_id))
 
         self.obs_id = obs_id
         self.data_store = data_store
 
     def __str__(self):
-        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd)
-        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
+        ss = "Info for OBS_ID = {}\n".format(self.obs_id)
+        ss += "- Start time: {:.2f}\n".format(self.tstart.mjd)
+        ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
             self.pointing_radec.ra, self.pointing_radec.dec
         )
-        ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
-        ss += '- Dead-time fraction: {:5.3f} %\n'.format(
+        ss += "- Observation duration: {}\n".format(self.observation_time_duration)
+        ss += "- Dead-time fraction: {:5.3f} %\n".format(
             100 * self.observation_dead_time_fraction
         )
 
@@ -195,32 +195,32 @@ class DataStoreObservation(object):
     @property
     def events(self):
         """Load `gammapy.data.EventList` object."""
-        return self.load(hdu_type='events')
+        return self.load(hdu_type="events")
 
     @property
     def gti(self):
         """Load `gammapy.data.GTI` object."""
-        return self.load(hdu_type='gti')
+        return self.load(hdu_type="gti")
 
     @property
     def aeff(self):
         """Load effective area object."""
-        return self.load(hdu_type='aeff')
+        return self.load(hdu_type="aeff")
 
     @property
     def edisp(self):
         """Load energy dispersion object."""
-        return self.load(hdu_type='edisp')
+        return self.load(hdu_type="edisp")
 
     @property
     def psf(self):
         """Load point spread function object."""
-        return self.load(hdu_type='psf')
+        return self.load(hdu_type="psf")
 
     @property
     def bkg(self):
         """Load background object."""
-        return self.load(hdu_type='bkg')
+        return self.load(hdu_type="bkg")
 
     @lazyproperty
     def obs_info(self):
@@ -232,7 +232,7 @@ class DataStoreObservation(object):
     def tstart(self):
         """Observation start time (`~astropy.time.Time`)."""
         met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
-        met = Quantity(self.obs_info['TSTART'].astype('float64'), 'second')
+        met = Quantity(self.obs_info["TSTART"].astype("float64"), "second")
         time = met_ref + met
         return time
 
@@ -240,7 +240,7 @@ class DataStoreObservation(object):
     def tstop(self):
         """Observation stop time (`~astropy.time.Time`)."""
         met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
-        met = Quantity(self.obs_info['TSTOP'].astype('float64'), 'second')
+        met = Quantity(self.obs_info["TSTOP"].astype("float64"), "second")
         time = met_ref + met
         return time
 
@@ -250,7 +250,7 @@ class DataStoreObservation(object):
 
         The wall time, including dead-time.
         """
-        return Quantity(self.obs_info['ONTIME'], 'second')
+        return Quantity(self.obs_info["ONTIME"], "second")
 
     @lazyproperty
     def observation_live_time_duration(self):
@@ -261,7 +261,7 @@ class DataStoreObservation(object):
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.obs_info['LIVETIME'], 'second')
+        return Quantity(self.obs_info["LIVETIME"], "second")
 
     @lazyproperty
     def observation_dead_time_fraction(self):
@@ -277,30 +277,30 @@ class DataStoreObservation(object):
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.obs_info['DEADC']
+        return 1 - self.obs_info["DEADC"]
 
     @lazyproperty
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = self.obs_info['RA_PNT'], self.obs_info['DEC_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        lon, lat = self.obs_info["RA_PNT"], self.obs_info["DEC_PNT"]
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @lazyproperty
     def pointing_altaz(self):
         """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        alt, az = self.obs_info['ALT_PNT'], self.obs_info['AZ_PNT']
-        return SkyCoord(az, alt, unit='deg', frame='altaz')
+        alt, az = self.obs_info["ALT_PNT"], self.obs_info["AZ_PNT"]
+        return SkyCoord(az, alt, unit="deg", frame="altaz")
 
     @lazyproperty
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
-        return Quantity(self.obs_info['ZEN_PNT'], unit='deg')
+        return Quantity(self.obs_info["ZEN_PNT"], unit="deg")
 
     @lazyproperty
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        lon, lat = self.obs_info['RA_OBJ'], self.obs_info['DEC_OBJ']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        lon, lat = self.obs_info["RA_OBJ"], self.obs_info["DEC_OBJ"]
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @lazyproperty
     def observatory_earth_location(self):
@@ -310,7 +310,7 @@ class DataStoreObservation(object):
     @lazyproperty
     def muoneff(self):
         """Observation muon efficiency."""
-        return self.obs_info['MUONEFF']
+        return self.obs_info["MUONEFF"]
 
     def peek(self):
         """Quick-look plots in a few panels."""
@@ -375,16 +375,16 @@ class DataStoreObservation(object):
         """
         # maps the ObservationCTA class attributes to the DataStoreObservation properties
         props = {
-            'obs_id': 'obs_id',
-            'gti': 'gti',
-            'events': 'events',
-            'aeff': 'aeff',
-            'edisp': 'edisp',
-            'psf': 'psf',
-            'bkg': 'bkg',
-            'pointing_radec': 'pointing_radec',
-            'observation_live_time_duration': 'observation_live_time_duration',
-            'observation_dead_time_fraction': 'observation_dead_time_fraction',
+            "obs_id": "obs_id",
+            "gti": "gti",
+            "events": "events",
+            "aeff": "aeff",
+            "edisp": "edisp",
+            "psf": "psf",
+            "bkg": "bkg",
+            "pointing_radec": "pointing_radec",
+            "observation_live_time_duration": "observation_live_time_duration",
+            "observation_dead_time_fraction": "observation_dead_time_fraction",
         }
 
         for obs_cta_kwarg, ds_obs_prop in props.items():
@@ -396,7 +396,7 @@ class DataStoreObservation(object):
 
         return ObservationCTA(**props)
 
-    def check(self, checks='all'):
+    def check(self, checks="all"):
         """Run checks.
 
         This is a generator that yields a list of dicts.
@@ -412,8 +412,8 @@ class ObservationList(UserList):
     """
 
     def __str__(self):
-        s = self.__class__.__name__ + '\n'
-        s += 'Number of observations: {}\n'.format(len(self))
+        s = self.__class__.__name__ + "\n"
+        s += "Number of observations: {}\n".format(len(self))
         for obs in self:
             s += str(obs)
         return s
@@ -525,26 +525,26 @@ class ObservationChecker(Checker):
     """
 
     CHECKS = {
-        'events': 'check_events',
-        'gti': 'check_gti',
-        'aeff': 'check_aeff',
-        'edisp': 'check_edisp',
-        'psf': 'check_psf',
+        "events": "check_events",
+        "gti": "check_gti",
+        "aeff": "check_aeff",
+        "edisp": "check_edisp",
+        "psf": "check_psf",
     }
 
     def __init__(self, obs):
         self.obs = obs
 
-    def _record(self, level='info', msg=None):
-        return {'level': level, 'obs_id': self.obs.obs_id, 'msg': msg}
+    def _record(self, level="info", msg=None):
+        return {"level": level, "obs_id": self.obs.obs_id, "msg": msg}
 
     def check_events(self):
-        yield self._record(level='debug', msg='Starting events check')
+        yield self._record(level="debug", msg="Starting events check")
 
         try:
-            events = self.obs.load('events')
+            events = self.obs.load("events")
         except:
-            yield self._record(level='warning', msg='Loading events failed')
+            yield self._record(level="warning", msg="Loading events failed")
             return
 
         for record in EventListChecker(events).run():
@@ -552,22 +552,22 @@ class ObservationChecker(Checker):
 
     # TODO: split this out into a GTIChecker
     def check_gti(self):
-        yield self._record(level='debug', msg='Starting gti check')
+        yield self._record(level="debug", msg="Starting gti check")
 
         try:
-            gti = self.obs.load('gti')
+            gti = self.obs.load("gti")
         except:
-            yield self._record(level='warning', msg='Loading GTI failed')
+            yield self._record(level="warning", msg="Loading GTI failed")
             return
 
         if len(gti.table) == 0:
-            yield self._record(level='error', msg='GTI table has zero rows')
+            yield self._record(level="error", msg="GTI table has zero rows")
 
-        columns_required = ['START', 'STOP']
+        columns_required = ["START", "STOP"]
         for name in columns_required:
             if name not in gti.table.colnames:
                 yield self._record(
-                    level='error', msg='Missing table column: {!r}'.format(name)
+                    level="error", msg="Missing table column: {!r}".format(name)
                 )
 
         # TODO: Check that header keywords agree with table entries
@@ -590,64 +590,64 @@ class ObservationChecker(Checker):
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
         telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01T00:00:00'), HESS=Time('2001-01-01T00:00:00')
+            FERMI=Time("2001-01-01T00:00:00"), HESS=Time("2001-01-01T00:00:00")
         )
 
         meta = self.dset.event_list.table.meta
-        telescope = meta['TELESCOP']
+        telescope = meta["TELESCOP"]
 
         if telescope in telescope_met_refs.keys():
             dt = self.time_ref - telescope_met_refs[telescope]
-            if dt > self.accuracy['time']:
+            if dt > self.accuracy["time"]:
                 yield self._record(
-                    level='error', msg='Reference time incorrect for telescope'
+                    level="error", msg="Reference time incorrect for telescope"
                 )
 
     def check_aeff(self):
-        yield self._record(level='debug', msg='Starting aeff check')
+        yield self._record(level="debug", msg="Starting aeff check")
 
         try:
-            aeff = self.obs.load('aeff')
+            aeff = self.obs.load("aeff")
         except:
-            yield self._record(level='warning', msg='Loading aeff failed')
+            yield self._record(level="warning", msg="Loading aeff failed")
             return
 
         # Check that thresholds are meaningful for aeff
         if (
-            'LO_THRES' in aeff.meta
-            and 'HI_THRES' in aeff.meta
-            and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']
+            "LO_THRES" in aeff.meta
+            and "HI_THRES" in aeff.meta
+            and aeff.meta["LO_THRES"] >= aeff.meta["HI_THRES"]
         ):
             yield self._record(
-                level='error', msg='LO_THRES >= HI_THRES in effective area meta data'
+                level="error", msg="LO_THRES >= HI_THRES in effective area meta data"
             )
 
         # Check that maximum value of aeff is greater than zero
         if np.max(aeff.data.data) <= 0:
             yield self._record(
-                level='error', msg='maximum entry of effective area table <= 0'
+                level="error", msg="maximum entry of effective area table <= 0"
             )
 
     def check_edisp(self):
-        yield self._record(level='debug', msg='Starting edisp check')
+        yield self._record(level="debug", msg="Starting edisp check")
 
         try:
-            edisp = self.obs.load('edisp')
+            edisp = self.obs.load("edisp")
         except:
-            yield self._record(level='warning', msg='Loading edisp failed')
+            yield self._record(level="warning", msg="Loading edisp failed")
             return
 
         # Check that maximum value of edisp matrix is greater than zero
         if np.max(edisp.data.data) <= 0:
-            yield self._record(level='error', msg='maximum entry of edisp is <= 0')
+            yield self._record(level="error", msg="maximum entry of edisp is <= 0")
 
     def check_psf(self):
-        yield self._record(level='debug', msg='Starting psf check')
+        yield self._record(level="debug", msg="Starting psf check")
 
         try:
-            psf = self.obs.load('psf')
+            psf = self.obs.load("psf")
         except:
-            yield self._record(level='warning', msg='Loading psf failed')
+            yield self._record(level="warning", msg="Loading psf failed")
             return
 
         # TODO: add some check that PSF is good, e.g. evaluate at 1 TeV?

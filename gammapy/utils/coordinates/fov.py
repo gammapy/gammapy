@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['fov_to_sky', 'sky_to_fov']
+__all__ = ["fov_to_sky", "sky_to_fov"]
 
 
 def fov_to_sky(lon, lat, lon_pnt, lat_pnt):

@@ -4,7 +4,7 @@ from .background_estimate import BackgroundEstimate
 from gammapy.data import EventList
 import numpy as np
 
-__all__ = ['PhaseBackgroundEstimator']
+__all__ = ["PhaseBackgroundEstimator"]
 
 
 class PhaseBackgroundEstimator(object):
@@ -41,10 +41,10 @@ class PhaseBackgroundEstimator(object):
 
     def __str__(self):
         s = self.__class__.__name__
-        s += '\n{}'.format(self.on_region)
-        s += '\n{}'.format(self.on_phase)
-        s += '\n{}'.format(self.off_phase)
-        s += '\n{}'.format(self.obs_list)
+        s += "\n{}".format(self.on_region)
+        s += "\n{}".format(self.on_phase)
+        s += "\n{}".format(self.off_phase)
+        s += "\n{}".format(self.obs_list)
         return s
 
     def run(self):
@@ -104,5 +104,5 @@ class PhaseBackgroundEstimator(object):
             off_events=off_events,
             a_on=a_on,
             a_off=a_off,
-            method='Phase Bkg Estimator',
+            method="Phase Bkg Estimator",
         )

@@ -201,7 +201,7 @@ from astropy.units import Quantity
 from .scripts import make_path
 from .energy import EnergyBounds
 
-__all__ = ['SmartHDUList', 'energy_axis_to_ebounds', 'earth_location_from_dict']
+__all__ = ["SmartHDUList", "energy_axis_to_ebounds", "earth_location_from_dict"]
 
 
 # TODO: decide what to call this class.
@@ -261,7 +261,7 @@ class SmartHDUList(object):
             Filename
         """
         filename = str(make_path(filename))
-        memmap = kwargs.pop('memmap', False)
+        memmap = kwargs.pop("memmap", False)
         hdu_list = fits.open(filename, memmap=memmap, **kwargs)
         return cls(hdu_list)
 
@@ -314,7 +314,7 @@ class SmartHDUList(object):
 
         if (hdu_key is None) and (hdu_type is None):
             raise ValueError(
-                'Must give either `hdu` or `hdu_type`. Got `None` for both.'
+                "Must give either `hdu` or `hdu_type`. Got `None` for both."
             )
 
         # if (hdu_key is not None) and (hdu_type is not None):
@@ -330,27 +330,27 @@ class SmartHDUList(object):
             # the number unchanged. Here we want to raise an error in this case.
             if not (0 <= idx < len(self.hdu_list)):
                 raise KeyError(
-                    'HDU not found: hdu={}. Index out of range.'.format(hdu_key)
+                    "HDU not found: hdu={}. Index out of range.".format(hdu_key)
                 )
             return idx
 
         if hdu_type is not None:
             for hdu_idx, hdu_object in enumerate(self.hdu_list):
-                if hdu_type == 'primary':
+                if hdu_type == "primary":
                     if isinstance(hdu_object, fits.PrimaryHDU):
                         return hdu_idx
-                elif hdu_type == 'image':
+                elif hdu_type == "image":
                     # The `hdu.shape` check is used to skip empty `PrimaryHDU`
                     # with no data. Those aren't very useful, now, are they?
                     if hdu_object.is_image and len(hdu_object.shape) > 0:
                         return hdu_idx
-                elif hdu_type == 'table':
+                elif hdu_type == "table":
                     if isinstance(hdu_object, fits.BinTableHDU):
                         return hdu_idx
                 else:
-                    raise ValueError('Invalid hdu_type={}'.format(hdu_type))
+                    raise ValueError("Invalid hdu_type={}".format(hdu_type))
 
-        raise KeyError('HDU not found: hdu={}, hdu_type={}'.format(hdu_key, hdu_type))
+        raise KeyError("HDU not found: hdu={}, hdu_type={}".format(hdu_key, hdu_type))
 
     def get_hdu(self, hdu=None, hdu_type=None):
         """Get HDU with given name, number or type.
@@ -378,8 +378,8 @@ def fits_header_to_meta_dict(header):
     # See https://github.com/astropy/astropy/blob/master/astropy/io/fits/connect.py
     # for how `astropy.table.Table.read` does it
     # and see https://github.com/gammapy/gammapy/issues/701
-    meta.pop('COMMENT', None)
-    meta.pop('HISTORY', None)
+    meta.pop("COMMENT", None)
+    meta.pop("HISTORY", None)
 
     return meta
 
@@ -417,11 +417,11 @@ def _fits_table_to_table(hdu):
         # Unit is already handled correctly in Astropy since a long time
         # col.unit = hdu.columns[colname].unit
 
-        description = hdu.header.pop('TCOMM' + idx, None)
-        col.meta['description'] = description
+        description = hdu.header.pop("TCOMM" + idx, None)
+        col.meta["description"] = description
 
-        ucd = hdu.header.pop('TUCD' + idx, None)
-        col.meta['ucd'] = ucd
+        ucd = hdu.header.pop("TUCD" + idx, None)
+        col.meta["ucd"] = ucd
 
     return table
 
@@ -434,23 +434,23 @@ def energy_axis_to_ebounds(energy):
     energy = EnergyBounds(energy)
     table = Table()
 
-    table['CHANNEL'] = np.arange(energy.nbins, dtype=np.int16)
-    table['E_MIN'] = energy[:-1]
-    table['E_MAX'] = energy[1:]
+    table["CHANNEL"] = np.arange(energy.nbins, dtype=np.int16)
+    table["E_MIN"] = energy[:-1]
+    table["E_MAX"] = energy[1:]
 
     hdu = fits.BinTableHDU(table)
 
     header = hdu.header
-    header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
-    header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
-    header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
-    header['FILTER'] = 'None', 'Filter information'
-    header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-    header['DETCHANS'] = energy.nbins, 'Total number of detector PHA channels'
-    header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-    header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-    header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
-    header['HDUVERS'] = '1.2.0', 'Version of file format'
+    header["EXTNAME"] = "EBOUNDS", "Name of this binary table extension"
+    header["TELESCOP"] = "DUMMY", "Mission/satellite name"
+    header["INSTRUME"] = "DUMMY", "Instrument/detector"
+    header["FILTER"] = "None", "Filter information"
+    header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
+    header["DETCHANS"] = energy.nbins, "Total number of detector PHA channels"
+    header["HDUCLASS"] = "OGIP", "Organisation devising file format"
+    header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
+    header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
+    header["HDUVERS"] = "1.2.0", "Version of file format"
 
     return hdu
 
@@ -459,8 +459,8 @@ def ebounds_to_energy_axis(ebounds):
     """Convert ``EBOUNDS`` extension to `~gammapy.utils.energy.EnergyBounds`
     """
     table = Table.read(ebounds)
-    emin = table['E_MIN'].quantity
-    emax = table['E_MAX'].quantity
+    emin = table["E_MIN"].quantity
+    emax = table["E_MAX"].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit
     return EnergyBounds(energy)
 
@@ -468,15 +468,15 @@ def ebounds_to_energy_axis(ebounds):
 # TODO: add unit test
 def earth_location_from_dict(meta):
     """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
-    lon = Angle(meta['GEOLON'], 'deg')
-    lat = Angle(meta['GEOLAT'], 'deg')
+    lon = Angle(meta["GEOLON"], "deg")
+    lat = Angle(meta["GEOLAT"], "deg")
     # TODO: should we support both here?
     # Check latest spec if ALTITUDE is used somewhere.
-    if 'GEOALT' in meta:
-        height = Quantity(meta['GEOALT'], 'meter')
-    elif 'ALTITUDE' in meta:
-        height = Quantity(meta['ALTITUDE'], 'meter')
+    if "GEOALT" in meta:
+        height = Quantity(meta["GEOALT"], "meter")
+    elif "ALTITUDE" in meta:
+        height = Quantity(meta["ALTITUDE"], "meter")
     else:
-        raise KeyError('The GEOALT or ALTITUDE header keyword must be set')
+        raise KeyError("The GEOALT or ALTITUDE header keyword must be set")
 
     return EarthLocation(lon=lon, lat=lat, height=height)

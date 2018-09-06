@@ -9,22 +9,22 @@ from ...utils.coordinates import cartesian, polar, D_SUN_TO_GALACTIC_CENTER
 from ...utils.random import get_random_state
 
 __all__ = [
-    'CaseBattacharya1998',
-    'FaucherKaspi2006',
-    'Lorimer2006',
-    'Paczynski1990',
-    'YusifovKucuk2004',
-    'YusifovKucuk2004B',
-    'Exponential',
-    'LogSpiral',
-    'FaucherSpiral',
-    'ValleeSpiral',
-    'radial_distributions',
+    "CaseBattacharya1998",
+    "FaucherKaspi2006",
+    "Lorimer2006",
+    "Paczynski1990",
+    "YusifovKucuk2004",
+    "YusifovKucuk2004B",
+    "Exponential",
+    "LogSpiral",
+    "FaucherSpiral",
+    "ValleeSpiral",
+    "radial_distributions",
 ]
 
 # Simulation range used for random number drawing
-RMIN, RMAX = Quantity([0, 20], 'kpc')
-ZMIN, ZMAX = Quantity([-0.5, 0.5], 'kpc')
+RMIN, RMAX = Quantity([0, 20], "kpc")
+ZMIN, ZMAX = Quantity([-0.5, 0.5], "kpc")
 
 
 class Paczynski1990(Fittable1DModel):
@@ -339,7 +339,7 @@ class LogSpiral(object):
         elif (radius is None) and not (theta is None):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
         else:
-            ValueError('Specify only one of: theta, radius')
+            ValueError("Specify only one of: theta, radius")
 
         theta = np.radians(theta)
         x = radius * cos(theta)
@@ -398,12 +398,12 @@ class FaucherSpiral(LogSpiral):
     """
 
     # Parameters
-    k = Quantity([4.25, 4.25, 4.89, 4.89], 'rad')
-    r_0 = Quantity([3.48, 3.48, 4.9, 4.9], 'kpc')
-    theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], 'rad')
-    spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
+    k = Quantity([4.25, 4.25, 4.89, 4.89], "rad")
+    r_0 = Quantity([3.48, 3.48, 4.9, 4.9], "kpc")
+    theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], "rad")
+    spiralarms = np.array(["Norma", "Carina Sagittarius", "Perseus", "Crux Scutum"])
 
-    def _blur(self, radius, theta, amount=0.07, random_state='random-seed'):
+    def _blur(self, radius, theta, amount=0.07, random_state="random-seed"):
         """Blur the positions around the centroid of the spiralarm.
 
         The given positions are blurred by drawing a displacement in radius from
@@ -424,14 +424,14 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        dr = Quantity(abs(random_state.normal(0, amount * radius, radius.size)), 'kpc')
-        dtheta = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), 'rad')
+        dr = Quantity(abs(random_state.normal(0, amount * radius, radius.size)), "kpc")
+        dtheta = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), "rad")
         x, y = cartesian(radius, theta)
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
     def _gc_correction(
-        self, radius, theta, r_corr=Quantity(2.857, 'kpc'), random_state='random-seed'
+        self, radius, theta, r_corr=Quantity(2.857, "kpc"), random_state="random-seed"
     ):
         """Correction of source distribution towards the galactic center.
 
@@ -452,10 +452,10 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        theta_corr = Quantity(random_state.uniform(0, 2 * pi, radius.size), 'rad')
+        theta_corr = Quantity(random_state.uniform(0, 2 * pi, radius.size), "rad")
         return radius, theta + theta_corr * np.exp(-radius / r_corr)
 
-    def __call__(self, radius, blur=True, random_state='random-seed'):
+    def __call__(self, radius, blur=True, random_state="random-seed"):
         """Draw random position from spiral arm distribution.
 
         Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiralarm.
@@ -498,19 +498,19 @@ class ValleeSpiral(LogSpiral):
     """
 
     # Model parameters
-    p = Quantity(12.8, 'deg')  # pitch angle in deg
+    p = Quantity(12.8, "deg")  # pitch angle in deg
     m = 4  # number of spiral arms
-    r_sun = Quantity(7.6, 'kpc')  # distance sun to Galactic center in kpc
-    r_0 = Quantity(2.1, 'kpc')  # spiral inner radius in kpc
-    theta_0 = Quantity(-20, 'deg')  # Norma spiral arm start angle
-    bar_radius = Quantity(3.0, 'kpc')  # Radius of the galactic bar (not equal r_0!)
+    r_sun = Quantity(7.6, "kpc")  # distance sun to Galactic center in kpc
+    r_0 = Quantity(2.1, "kpc")  # spiral inner radius in kpc
+    theta_0 = Quantity(-20, "deg")  # Norma spiral arm start angle
+    bar_radius = Quantity(3.0, "kpc")  # Radius of the galactic bar (not equal r_0!)
 
-    spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
+    spiralarms = np.array(["Norma", "Perseus", "Carina Sagittarius", "Crux Scutum"])
 
     def __init__(self):
         self.r_0 = self.r_0 * np.ones(4)
-        self.theta_0 = self.theta_0 + Quantity([0, 90, 180, 270], 'deg')
-        self.k = Quantity(1. / np.tan(np.radians(self.p.value)) * np.ones(4), 'rad')
+        self.theta_0 = self.theta_0 + Quantity([0, 90, 180, 270], "deg")
+        self.k = Quantity(1. / np.tan(np.radians(self.p.value)) * np.ones(4), "rad")
 
         # Compute start and end point of the bar
         x_0, y_0 = self.xy_position(radius=self.bar_radius, spiralarm_index=0)
@@ -520,10 +520,10 @@ class ValleeSpiral(LogSpiral):
 
 """Radial distribution (dict mapping names to classes)."""
 radial_distributions = {
-    'CB98': CaseBattacharya1998,
-    'F06': FaucherKaspi2006,
-    'L06': Lorimer2006,
-    'P90': Paczynski1990,
-    'YK04': YusifovKucuk2004,
-    'YK04B': YusifovKucuk2004B,
+    "CB98": CaseBattacharya1998,
+    "F06": FaucherKaspi2006,
+    "L06": Lorimer2006,
+    "P90": Paczynski1990,
+    "YK04": YusifovKucuk2004,
+    "YK04B": YusifovKucuk2004B,
 }

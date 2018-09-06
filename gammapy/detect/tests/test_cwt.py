@@ -7,14 +7,14 @@ from ...detect import CWT, CWTKernels, CWTData
 from ...maps import Map
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 class TestCWT:
     """Test CWT algorithm."""
 
     def setup(self):
         filename = (
-            '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz'
+            "$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz"
         )
         image = Map.read(filename)
         background = image.copy(data=np.ones(image.data.shape, dtype=float))
@@ -27,8 +27,8 @@ class TestCWT:
 
     def test_execute_iteration(self):
         cwt_data = CWTData(
-            counts=self.data['image'],
-            background=self.data['background'],
+            counts=self.data["image"],
+            background=self.data["background"],
             n_scale=self.kernels.n_scale,
         )
         self.cwt._execute_iteration(data=cwt_data)
@@ -39,8 +39,8 @@ class TestCWT:
 
     def test_transform(self):
         cwt_data = CWTData(
-            counts=self.data['image'],
-            background=self.data['background'],
+            counts=self.data["image"],
+            background=self.data["background"],
             n_scale=self.kernels.n_scale,
         )
         self.cwt._transform(data=cwt_data)
@@ -67,8 +67,8 @@ class TestCWT:
 
     def test_compute_support(self):
         cwt_data = CWTData(
-            counts=self.data['image'],
-            background=self.data['background'],
+            counts=self.data["image"],
+            background=self.data["background"],
             n_scale=self.kernels.n_scale,
         )
         self.cwt._transform(data=cwt_data)
@@ -80,8 +80,8 @@ class TestCWT:
 
     def test_inverse_transform(self):
         cwt_data = CWTData(
-            counts=self.data['image'],
-            background=self.data['background'],
+            counts=self.data["image"],
+            background=self.data["background"],
             n_scale=self.kernels.n_scale,
         )
         self.cwt._execute_iteration(data=cwt_data)
@@ -93,8 +93,8 @@ class TestCWT:
 
     def test_all_cwt_iterations(self):
         cwt_data = CWTData(
-            counts=self.data['image'],
-            background=self.data['background'],
+            counts=self.data["image"],
+            background=self.data["background"],
             n_scale=self.kernels.n_scale,
         )
         self.cwt.analyze(data=cwt_data)
@@ -129,8 +129,8 @@ class TestCWT:
         assert_allclose(transform_2d.sum(), 9.91731463861)
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 class TestCWTKernels:
     """Test CWTKernels"""
 
@@ -144,9 +144,9 @@ class TestCWTKernels:
 
     def test_info(self):
         info_dict = self.kernels_new._info()
-        assert_allclose(info_dict['Minimal scale'], self.kernels_new.min_scale)
-        assert_allclose(info_dict['Kernels approx sum'], 0.99988318386)
-        assert_allclose(info_dict['Kernels approx max'], 0.000386976177431)
+        assert_allclose(info_dict["Minimal scale"], self.kernels_new.min_scale)
+        assert_allclose(info_dict["Kernels approx sum"], 0.99988318386)
+        assert_allclose(info_dict["Kernels approx max"], 0.000386976177431)
 
     def test_cwt_kernels_new(self):
         assert_allclose(self.kernels_new.scales, [3., 7.8])
@@ -168,12 +168,12 @@ class TestCWTKernels:
 
     def test_info_table(self):
         t = self.kernels_new.info_table
-        assert_equal(t.colnames, ['Name', 'Source'])
+        assert_equal(t.colnames, ["Name", "Source"])
         assert_equal(len(t), 13)
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 class TestCWTData:
     """
     Test CWTData class.
@@ -181,7 +181,7 @@ class TestCWTData:
 
     def setup(self):
         filename = (
-            '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz'
+            "$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz"
         )
         image = Map.read(filename)
         background = image.copy(data=np.ones(image.data.shape, dtype=float))
@@ -198,44 +198,44 @@ class TestCWTData:
 
     def test_images(self):
         images = self.cwt_data.images()
-        assert_allclose(images['counts'].data[25, 25], self.data['image'].data[25, 25])
+        assert_allclose(images["counts"].data[25, 25], self.data["image"].data[25, 25])
         assert_allclose(
-            images['background'].data[36, 63], self.data['background'].data[36, 63]
+            images["background"].data[36, 63], self.data["background"].data[36, 63]
         )
 
-        model_plus_approx = images['model_plus_approx'].data
+        model_plus_approx = images["model_plus_approx"].data
         assert_allclose(model_plus_approx[100, 100], 0.753205544726)
         assert_allclose(model_plus_approx[10, 10], -0.0210240420041)
 
-        maximal = images['maximal'].data
+        maximal = images["maximal"].data
         assert_allclose(maximal[100, 100], 0.0401320295446)
         assert_allclose(maximal[10, 10], 0.)
 
-        support_2d = images['support_2d'].data
+        support_2d = images["support_2d"].data
         assert_allclose(support_2d.sum(), 2996)
 
     def test_cube_metrics_info(self):
         cubes = self.cwt_data.cubes()
-        name = 'transform_3d'
+        name = "transform_3d"
         cube = cubes[name].data
         info = self.cwt_data._metrics_info(data=cube, name=name)
 
-        assert_equal(info['Shape'], '3D cube')
-        assert_allclose(info['Variance'], 3.24405547338e-06)
-        assert_allclose(info['Max value'], 0.041216412114)
+        assert_equal(info["Shape"], "3D cube")
+        assert_allclose(info["Variance"], 3.24405547338e-06)
+        assert_allclose(info["Max value"], 0.041216412114)
 
     def test_image_info(self):
-        t = self.cwt_data.image_info(name='residual')
-        assert_equal(t.colnames, ['Metrics', 'Source'])
+        t = self.cwt_data.image_info(name="residual")
+        assert_equal(t.colnames, ["Metrics", "Source"])
         assert_equal(len(t), 7)
 
     def test_cube_info(self):
-        t = self.cwt_data.cube_info(name='error')
-        assert_equal(t.colnames, ['Metrics', 'Source'])
+        t = self.cwt_data.cube_info(name="error")
+        assert_equal(t.colnames, ["Metrics", "Source"])
         assert_equal(len(t), 7)
 
-        t = self.cwt_data.cube_info(name='error', per_scale=True)
-        assert_equal(t.colnames, ['Scale power', 'Metrics', 'Source'])
+        t = self.cwt_data.cube_info(name="error", per_scale=True)
+        assert_equal(t.colnames, ["Scale power", "Metrics", "Source"])
         assert_equal(len(t), 14)
 
     def test_info_table(self):
@@ -250,13 +250,13 @@ class TestCWTData:
         assert_allclose(diff.model.data.sum(), 20.4132906267)
 
     def test_io(self, tmpdir):
-        filename = str(tmpdir / 'test-cwt.fits')
+        filename = str(tmpdir / "test-cwt.fits")
         self.cwt_data.write(filename=filename, overwrite=True)
-        approx = Map.read(filename, hdu='APPROX')
+        approx = Map.read(filename, hdu="APPROX")
         assert_allclose(approx.data[100, 100], self.cwt_data._approx[100, 100])
         assert_allclose(approx.data[36, 63], self.cwt_data._approx[36, 63])
 
-        transform_2d = Map.read(filename, hdu='TRANSFORM_2D')
+        transform_2d = Map.read(filename, hdu="TRANSFORM_2D")
         assert_allclose(
             transform_2d.data[100, 100], self.cwt_data.transform_2d.data[100, 100]
         )

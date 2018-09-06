@@ -9,12 +9,12 @@ from ...utils.modeling import Parameter, Parameters
 from ...spectrum.utils import integrate_spectrum
 
 __all__ = [
-    'DMProfile',
-    'NFWProfile',
-    'EinastoProfile',
-    'IsothermalProfile',
-    'BurkertProfile',
-    'MooreProfile',
+    "DMProfile",
+    "NFWProfile",
+    "EinastoProfile",
+    "IsothermalProfile",
+    "BurkertProfile",
+    "MooreProfile",
 ]
 
 
@@ -37,8 +37,8 @@ class DMProfile(object):
 
     def scale_to_local_density(self):
         """Scale to local density."""
-        scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to('').value
-        self.parameters['rho_s'].value *= scale
+        scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to("").value
+        self.parameters["rho_s"].value *= scale
 
     def _eval_squared(self, radius):
         """Squared density at given radius."""
@@ -60,7 +60,7 @@ class DMProfile(object):
             Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
         """
         integral = integrate_spectrum(self._eval_squared, rmin, rmax, **kwargs)
-        return integral.to('GeV2 / cm5')
+        return integral.to("GeV2 / cm5")
 
 
 class NFWProfile(DMProfile):
@@ -86,10 +86,10 @@ class NFWProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
         self.parameters = Parameters(
-            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+            [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
         )
 
     @staticmethod
@@ -127,15 +127,15 @@ class EinastoProfile(DMProfile):
     DEFAULT_ALPHA = 0.17
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, alpha=None, rho_s=1 * u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, alpha=None, rho_s=1 * u.Unit("GeV / cm3")):
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = Parameters(
             [
-                Parameter('r_s', u.Quantity(r_s)),
-                Parameter('alpha', u.Quantity(alpha)),
-                Parameter('rho_s', u.Quantity(rho_s)),
+                Parameter("r_s", u.Quantity(r_s)),
+                Parameter("alpha", u.Quantity(alpha)),
+                Parameter("rho_s", u.Quantity(rho_s)),
             ]
         )
 
@@ -167,11 +167,11 @@ class IsothermalProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = Parameters(
-            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+            [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
         )
 
     @staticmethod
@@ -201,11 +201,11 @@ class BurkertProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = Parameters(
-            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+            [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
         )
 
     @staticmethod
@@ -236,11 +236,11 @@ class MooreProfile(DMProfile):
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
     """Default scale radius as given in reference 2"""
 
-    def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
+    def __init__(self, r_s=None, rho_s=1 * u.Unit("GeV / cm3")):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
         self.parameters = Parameters(
-            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+            [Parameter("r_s", u.Quantity(r_s)), Parameter("rho_s", u.Quantity(rho_s))]
         )
 
     @staticmethod

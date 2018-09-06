@@ -4,7 +4,7 @@ import numpy as np
 from ..spectrum.models import PowerLaw
 from ..maps import WcsNDMap
 
-__all__ = ['make_map_exposure_true_energy']
+__all__ = ["make_map_exposure_true_energy"]
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
@@ -38,7 +38,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
     if len(exposure.shape) < 3:
         exposure = np.expand_dims(exposure.value, 0) * exposure.unit
 
-    exposure = (exposure * livetime).to('m2 s')
+    exposure = (exposure * livetime).to("m2 s")
 
     return WcsNDMap(geom, exposure.value, unit=exposure.unit)
 

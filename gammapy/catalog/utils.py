@@ -5,16 +5,16 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
 __all__ = [
-    'coordinate_iau_format',
-    'ra_iau_format',
-    'dec_iau_format',
-    'skycoord_from_table',
-    'select_sky_box',
-    'select_sky_circle',
+    "coordinate_iau_format",
+    "ra_iau_format",
+    "dec_iau_format",
+    "skycoord_from_table",
+    "select_sky_box",
+    "select_sky_circle",
 ]
 
 
-def coordinate_iau_format(coordinate, ra_digits, dec_digits=None, prefix=''):
+def coordinate_iau_format(coordinate, ra_digits, dec_digits=None, prefix=""):
     """Coordinate format as an IAU source designation.
 
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
@@ -76,8 +76,8 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None, prefix=''):
     >>> print(designations)
     ['HESS J0042.7+4116', 'HESS J0535.2-0523']
     """
-    if coordinate.frame.name == 'galactic':
-        coordinate = coordinate.transform_to('icrs')
+    if coordinate.frame.name == "galactic":
+        coordinate = coordinate.transform_to("icrs")
 
     if dec_digits is None:
         dec_digits = max(2, ra_digits - 1)
@@ -122,7 +122,7 @@ def ra_iau_format(ra, digits):
         IAU format string representation of the angle.
     """
     if not isinstance(digits, int) and (digits >= 2):
-        raise ValueError('Invalid digits: {}. Valid options: int >= 2'.format(digits))
+        raise ValueError("Invalid digits: {}. Valid options: int >= 2".format(digits))
 
     if ra.isscalar:
         out = _ra_iau_format_scalar(ra, digits)
@@ -143,20 +143,20 @@ def _ra_iau_format_scalar(ra, digits):
     ra_s = ra.hms[2]
 
     if digits == 2:  # format: HH
-        ra_str = '{0:02d}'.format(ra_h)
+        ra_str = "{0:02d}".format(ra_h)
     elif digits == 3:  # format: HHh
-        ra_str = '{0:03d}'.format(int(10 * ra.hour))
+        ra_str = "{0:03d}".format(int(10 * ra.hour))
     elif digits == 4:  # format: HHMM
-        ra_str = '{0:02d}{1:02d}'.format(ra_h, ra_m)
+        ra_str = "{0:02d}{1:02d}".format(ra_h, ra_m)
     elif digits == 5:  # format : HHMM.m
-        ra_str = '{0:02d}{1:02d}.{2:01d}'.format(ra_h, ra_m, int(ra_s / 6))
+        ra_str = "{0:02d}{1:02d}.{2:01d}".format(ra_h, ra_m, int(ra_s / 6))
     elif digits == 6:  # format: HHMMSS
-        ra_str = '{0:02d}{1:02d}{2:02d}'.format(ra_h, ra_m, int(ra_s))
+        ra_str = "{0:02d}{1:02d}{2:02d}".format(ra_h, ra_m, int(ra_s))
     else:  # format: HHMMSS.s
         SS = int(ra_s)
         s_digits = digits - 6
         s = int(10 ** s_digits * (ra_s - SS))
-        fmt = '{0:02d}{1:02d}{2:02d}.{3:0' + str(s_digits) + 'd}'
+        fmt = "{0:02d}{1:02d}{2:02d}.{3:0" + str(s_digits) + "d}"
         ra_str = fmt.format(ra_h, ra_m, SS, s)
 
     return ra_str
@@ -191,7 +191,7 @@ def dec_iau_format(dec, digits):
         IAU format string representation of the angle.
     """
     if not isinstance(digits, int) and digits >= 2:
-        raise ValueError('Invalid digits: {}. Valid options: int >= 2'.format(digits))
+        raise ValueError("Invalid digits: {}. Valid options: int >= 2".format(digits))
 
     if dec.isscalar:
         out = _dec_iau_format_scalar(dec, digits)
@@ -207,26 +207,26 @@ def _dec_iau_format_scalar(dec, digits):
     # but the IAU spec requires to truncate instead.
     # That's why integers with the correct digits are computed and formatted
     # instead of formatting floats directly
-    dec_sign = '+' if dec.deg >= 0 else '-'
+    dec_sign = "+" if dec.deg >= 0 else "-"
     dec_d = int(abs(dec.dms[0]))
     dec_m = int(abs(dec.dms[1]))
     dec_s = abs(dec.dms[2])
 
     if digits == 2:  # format: +DD
-        dec_str = '{}{:02d}'.format(dec_sign, dec_d)
+        dec_str = "{}{:02d}".format(dec_sign, dec_d)
     elif digits == 3:  # format: +DDd
-        dec_str = '{:+04d}'.format(int(10 * dec.deg))
+        dec_str = "{:+04d}".format(int(10 * dec.deg))
     elif digits == 4:  # format : +DDMM
-        dec_str = '{}{:02d}{:02d}'.format(dec_sign, dec_d, dec_m)
+        dec_str = "{}{:02d}{:02d}".format(dec_sign, dec_d, dec_m)
     elif digits == 5:  # format: +DDMM.m
-        dec_str = '{}{:02d}{:02d}.{:01d}'.format(dec_sign, dec_d, dec_m, int(dec_s / 6))
+        dec_str = "{}{:02d}{:02d}.{:01d}".format(dec_sign, dec_d, dec_m, int(dec_s / 6))
     elif digits == 6:  # format: +DDMMSS
-        dec_str = '{}{:02d}{:02d}.{:02d}'.format(dec_sign, dec_d, dec_m, int(dec_s))
+        dec_str = "{}{:02d}{:02d}.{:02d}".format(dec_sign, dec_d, dec_m, int(dec_s))
     else:  # format: +DDMMSS.s
         SS = int(dec_s)
         s_digits = digits - 6
         s = int(10 ** s_digits * (dec_s - SS))
-        fmt = '{}{:02d}{:02d}{:02d}.{:0' + str(s_digits) + 'd}'
+        fmt = "{}{:02d}{:02d}{:02d}.{:0" + str(s_digits) + "d}"
         dec_str = fmt.format(dec_sign, dec_d, dec_m, SS, s)
 
     return dec_str
@@ -246,24 +246,24 @@ def skycoord_from_table(table):
     except AttributeError:
         keys = table.keys()
 
-    if set(['RAJ2000', 'DEJ2000']).issubset(keys):
-        lon, lat, frame = 'RAJ2000', 'DEJ2000', 'icrs'
-    elif set(['RA', 'DEC']).issubset(keys):
-        lon, lat, frame = 'RA', 'DEC', 'icrs'
-    elif set(['GLON', 'GLAT']).issubset(keys):
-        lon, lat, frame = 'GLON', 'GLAT', 'galactic'
-    elif set(['glon', 'glat']).issubset(keys):
-        lon, lat, frame = 'glon', 'glat', 'galactic'
+    if set(["RAJ2000", "DEJ2000"]).issubset(keys):
+        lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
+    elif set(["RA", "DEC"]).issubset(keys):
+        lon, lat, frame = "RA", "DEC", "icrs"
+    elif set(["GLON", "GLAT"]).issubset(keys):
+        lon, lat, frame = "GLON", "GLAT", "galactic"
+    elif set(["glon", "glat"]).issubset(keys):
+        lon, lat, frame = "glon", "glat", "galactic"
     else:
-        raise KeyError('No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.')
+        raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
 
-    unit = table[lon].unit.to_string() if table[lon].unit else 'deg'
+    unit = table[lon].unit.to_string() if table[lon].unit else "deg"
     skycoord = SkyCoord(table[lon], table[lat], unit=unit, frame=frame)
 
     return skycoord
 
 
-def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
+def select_sky_box(table, lon_lim, lat_lim, frame="icrs", inverted=False):
     """Select sky positions in a box.
 
     This function can be applied e.g. to event lists of source catalogs
@@ -304,8 +304,8 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     # SkyCoord automatically wraps lon angles at 360 deg, so in case
     # the lon range is wrapped at 180 deg, lon angles must be wrapped
     # also at 180 deg for the comparison to work
-    if any(l < Angle(0., 'deg') for l in lon_lim):
-        lon = lon.wrap_at(Angle(180, 'deg'))
+    if any(l < Angle(0., "deg") for l in lon_lim):
+        lon = lon.wrap_at(Angle(180, "deg"))
 
     lon_mask = (lon_lim[0] <= lon) & (lon < lon_lim[1])
     lat_mask = (lat_lim[0] <= lat) & (lat < lat_lim[1])
@@ -316,7 +316,7 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     return table[mask]
 
 
-def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=False):
+def select_sky_circle(table, lon_cen, lat_cen, radius, frame="icrs", inverted=False):
     """Select sky positions in a circle.
 
     This function can be applied e.g. to event lists of source catalogs

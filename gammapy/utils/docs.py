@@ -31,12 +31,12 @@ from nbconvert.exporters import PythonExporter
 from ..extern.pathlib import Path
 
 try:
-    gammapy_extra_path = Path(os.environ['GAMMAPY_EXTRA'])
+    gammapy_extra_path = Path(os.environ["GAMMAPY_EXTRA"])
     HAS_GP_EXTRA = True
 except KeyError:
     HAS_GP_EXTRA = False
 
-log = logging.getLogger('__name__')
+log = logging.getLogger("__name__")
 
 
 class ExtraImage(Image):
@@ -46,22 +46,22 @@ class ExtraImage(Image):
         filename = self.arguments[0]
 
         if HAS_GP_EXTRA:
-            path = gammapy_extra_path / 'figures' / filename
+            path = gammapy_extra_path / "figures" / filename
             if not path.is_file():
-                msg = 'Error in {} directive: File not found: {}'.format(
+                msg = "Error in {} directive: File not found: {}".format(
                     self.name, path
                 )
                 raise self.error(msg)
             # Usually Sphinx doesn't support absolute paths
             # But passing a POSIX string of the absolute path
             # with an extra "/" at the start seems to do the trick
-            self.arguments[0] = '/' + path.absolute().as_posix()
+            self.arguments[0] = "/" + path.absolute().as_posix()
         else:
             self.warning(
-                'GAMMAPY_EXTRA not available. '
-                'Missing image: name: {!r} filename: {!r}'.format(self.name, filename)
+                "GAMMAPY_EXTRA not available. "
+                "Missing image: name: {!r} filename: {!r}".format(self.name, filename)
             )
-            self.options['alt'] = self.arguments[1]
+            self.options["alt"] = self.arguments[1]
 
         return super(ExtraImage, self).run()
 
@@ -70,13 +70,13 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
     """Link to a notebook on gammapy-extra"""
 
     # check if file exists in local notebooks folder
-    nbfolder = Path('notebooks')
-    nbfilename = notebook + '.ipynb'
+    nbfolder = Path("notebooks")
+    nbfilename = notebook + ".ipynb"
     nbfile = nbfolder / nbfilename
 
     if not nbfile.is_file():
         msg = inliner.reporter.error(
-            'Unknown notebook {}'.format(notebook), line=lineno
+            "Unknown notebook {}".format(notebook), line=lineno
         )
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
@@ -91,10 +91,10 @@ def make_link_node(rawtext, app, refuri, notebook, options):
     # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
     # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
 
-    relpath = refuri.split(str(Path('/gammapy/docs')))[1]
+    relpath = refuri.split(str(Path("/gammapy/docs")))[1]
     foldersplit = relpath.split(os.sep)
-    base = (('..' + os.sep) * (len(foldersplit) - 2)) + 'notebooks' + os.sep
-    full_name = notebook + '.html'
+    base = ((".." + os.sep) * (len(foldersplit) - 2)) + "notebooks" + os.sep
+    full_name = notebook + ".html"
     ref = base + full_name
     roles.set_classes(options)
     node = nodes.reference(rawtext, full_name, refuri=ref, **options)
@@ -103,17 +103,17 @@ def make_link_node(rawtext, app, refuri, notebook, options):
 
 def gammapy_sphinx_ext_activate():
     if HAS_GP_EXTRA:
-        log.info('*** Found GAMMAPY_EXTRA = {}'.format(gammapy_extra_path))
-        log.info('*** Nice!')
+        log.info("*** Found GAMMAPY_EXTRA = {}".format(gammapy_extra_path))
+        log.info("*** Nice!")
     else:
-        log.info('*** gammapy-extra *not* found.')
-        log.info('*** Set the GAMMAPY_EXTRA environment variable!')
-        log.info('*** Docs build will be incomplete.')
-        log.info('*** Notebook links will not be verified.')
+        log.info("*** gammapy-extra *not* found.")
+        log.info("*** Set the GAMMAPY_EXTRA environment variable!")
+        log.info("*** Docs build will be incomplete.")
+        log.info("*** Notebook links will not be verified.")
 
     # Register our directives and roles with Sphinx
-    register_directive('gp-extra-image', ExtraImage)
-    roles.register_local_role('gp-extra-notebook', notebook_role)
+    register_directive("gp-extra-image", ExtraImage)
+    roles.register_local_role("gp-extra-notebook", notebook_role)
 
 
 def modif_nb_links(folder, url_docs, git_commit):
@@ -139,27 +139,27 @@ def modif_nb_links(folder, url_docs, git_commit):
 
     for filename in os.listdir(folder):
         filepath = os.path.join(folder, filename)
-        if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
-            if folder == 'notebooks':
-                py_filename = filename.replace('ipynb', 'py')
+        if os.path.isfile(filepath) and filepath[-6:] == ".ipynb":
+            if folder == "notebooks":
+                py_filename = filename.replace("ipynb", "py")
                 ctx = dict(
                     nb_filename=filename, py_filename=py_filename, git_commit=git_commit
                 )
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
-                nb.metadata['nbsphinx'] = {'orphan': bool('true')}
+                nb.metadata["nbsphinx"] = {"orphan": bool("true")}
                 nb.cells.insert(0, new_markdown_cell(strcell))
                 nbformat.write(nb, filepath)
 
             txt = Path(filepath).read_text(encoding="utf-8")
 
-            if folder == 'notebooks':
-                repl = r'..\/\1rst\2'
-            elif folder == '_static/notebooks':
-                repl = r'..\/..\/\1html\2'
+            if folder == "notebooks":
+                repl = r"..\/\1rst\2"
+            elif folder == "_static/notebooks":
+                repl = r"..\/..\/\1html\2"
 
             txt = re.sub(
-                pattern=url_docs + '(.*?)html(\)|#)',
+                pattern=url_docs + "(.*?)html(\)|#)",
                 repl=repl,
                 string=txt,
                 flags=re.M | re.I,
@@ -178,16 +178,16 @@ def convert_nb_to_script(path):
     """
     # https://nbconvert.readthedocs.io/en/latest/execute_api.html#executing-notebooks-using-the-python-api-interface
     # https://stackoverflow.com/a/38248141/498873
-    txt = path.read_text(encoding='utf-8')
+    txt = path.read_text(encoding="utf-8")
 
     nb = nbformat.reads(txt, nbformat.NO_CONVERT)
 
     exporter = PythonExporter()
     source, meta = exporter.from_notebook_node(nb)
 
-    path = path.with_suffix('.py')
-    log.info('Writing {}'.format(path))
-    path.write_text(source, encoding='utf-8')
+    path = path.with_suffix(".py")
+    log.info("Writing {}".format(path))
+    path.write_text(source, encoding="utf-8")
 
 
 def gammapy_sphinx_notebooks(setup_cfg):
@@ -195,19 +195,19 @@ def gammapy_sphinx_notebooks(setup_cfg):
     Manages the processes for the building of sphinx formatted notebooks
     """
 
-    if not strtobool(setup_cfg['build_notebooks']):
-        log.info('Config build_notebooks is False; skipping notebook processing')
+    if not strtobool(setup_cfg["build_notebooks"]):
+        log.info("Config build_notebooks is False; skipping notebook processing")
         return
 
     if not HAS_GP_EXTRA:
-        log.info('No GAMMAPY_EXTRA found; skipping notebook processing')
+        log.info("No GAMMAPY_EXTRA found; skipping notebook processing")
         return
 
-    url_docs = setup_cfg['url_docs']
-    git_commit = setup_cfg['git_commit']
+    url_docs = setup_cfg["url_docs"]
+    git_commit = setup_cfg["git_commit"]
 
     # copy and build notebooks
-    gammapy_extra_notebooks_folder = Path(os.environ['GAMMAPY_EXTRA']) / 'notebooks'
+    gammapy_extra_notebooks_folder = Path(os.environ["GAMMAPY_EXTRA"]) / "notebooks"
 
     if gammapy_extra_notebooks_folder.is_dir():
 
@@ -215,17 +215,17 @@ def gammapy_sphinx_notebooks(setup_cfg):
             f
             for f in files
             if os.path.isfile(os.path.join(d, f))
-            and f[-6:] != '.ipynb'
-            and f[-4:] != '.png'
+            and f[-6:] != ".ipynb"
+            and f[-4:] != ".png"
         ]
-        log.info('*** Converting notebooks to scripts')
+        log.info("*** Converting notebooks to scripts")
 
-        path_nbs = Path('notebooks')
-        path_static_nbs = Path('_static') / 'notebooks'
+        path_nbs = Path("notebooks")
+        path_static_nbs = Path("_static") / "notebooks"
 
         # remove existing notebooks
         rmtree(str(path_static_nbs), ignore_errors=True)
-        rmtree('notebooks', ignore_errors=True)
+        rmtree("notebooks", ignore_errors=True)
 
         # copy notebooks
         copytree(str(gammapy_extra_notebooks_folder), str(path_nbs), ignore=ignorefiles)
@@ -235,8 +235,8 @@ def gammapy_sphinx_notebooks(setup_cfg):
             ignore=ignorefiles,
         )
 
-        for path in path_static_nbs.glob('*.ipynb'):
+        for path in path_static_nbs.glob("*.ipynb"):
             convert_nb_to_script(path)
 
-        modif_nb_links('notebooks', url_docs, git_commit)
-        modif_nb_links('_static/notebooks', url_docs, git_commit)
+        modif_nb_links("notebooks", url_docs, git_commit)
+        modif_nb_links("_static/notebooks", url_docs, git_commit)

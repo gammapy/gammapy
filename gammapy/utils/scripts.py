@@ -6,10 +6,10 @@ import logging
 from os.path import expandvars
 from ..extern.pathlib import Path
 
-__all__ = ['read_yaml', 'write_yaml', 'make_path', 'recursive_merge_dicts']
+__all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
 
 
-def _configure_root_logger(level='info', format=None):
+def _configure_root_logger(level="info", format=None):
     """Configure root log level and format.
 
     This is a helper function that can be called form
@@ -20,13 +20,13 @@ def _configure_root_logger(level='info', format=None):
     # level = getattr(logging, level.upper())
     numeric_level = getattr(logging, level.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: {}'.format(level))
+        raise ValueError("Invalid log level: {}".format(level))
     log.setLevel(level=numeric_level)
 
     # Format log handler
     if not format:
         # format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-        format = '%(levelname)-8s %(message)s [%(name)s]'
+        format = "%(levelname)-8s %(message)s [%(name)s]"
     formatter = logging.Formatter(format)
 
     # Not sure why there sometimes is a handler attached to the root logger,
@@ -55,7 +55,7 @@ def read_yaml(filename, logger=None):
 
     filename = make_path(filename)
     if logger is not None:
-        logger.info('Reading {}'.format(filename))
+        logger.info("Reading {}".format(filename))
     with open(str(filename)) as fh:
         dictionary = yaml.safe_load(fh)
 
@@ -77,8 +77,8 @@ def write_yaml(dictionary, filename, logger=None):
     filename = make_path(filename)
     filename.parent.mkdir(exist_ok=True)
     if logger is not None:
-        logger.info('Writing {}'.format(filename))
-    with open(str(filename), 'w') as outfile:
+        logger.info("Writing {}".format(filename))
+    with open(str(filename), "w") as outfile:
         outfile.write(yaml.safe_dump(dictionary, default_flow_style=False))
 
 

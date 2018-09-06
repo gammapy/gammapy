@@ -8,7 +8,7 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fits import earth_location_from_dict
 
-__all__ = ['PointingInfo']
+__all__ = ["PointingInfo"]
 
 
 class PointingInfo(object):
@@ -32,7 +32,7 @@ class PointingInfo(object):
         self.table = table
 
     @classmethod
-    def read(cls, filename, hdu='POINTING'):
+    def read(cls, filename, hdu="POINTING"):
         """Read `PointingInfo` table from file.
 
         Parameters
@@ -52,30 +52,30 @@ class PointingInfo(object):
         return cls(table=table)
 
     def __str__(self):
-        ss = 'Pointing info:\n\n'
-        ss += 'Location:     {}\n'.format(self.location.geodetic)
+        ss = "Pointing info:\n\n"
+        ss += "Location:     {}\n".format(self.location.geodetic)
         m = self.table.meta
-        ss += 'MJDREFI, MJDREFF, TIMESYS = {}\n'.format(
-            (m['MJDREFI'], m['MJDREFF'], m['TIMESYS'])
+        ss += "MJDREFI, MJDREFF, TIMESYS = {}\n".format(
+            (m["MJDREFI"], m["MJDREFF"], m["TIMESYS"])
         )
-        ss += 'Time ref:     {}\n'.format(self.time_ref.fits)
-        ss += 'Time ref:     {} MJD (TT)\n'.format(self.time_ref.mjd)
-        sec = self.duration.to('second').value
-        hour = self.duration.to('hour').value
-        ss += 'Duration:     {} sec = {} hours\n'.format(sec, hour)
-        ss += 'Table length: {}\n'.format(len(self.table))
+        ss += "Time ref:     {}\n".format(self.time_ref.fits)
+        ss += "Time ref:     {} MJD (TT)\n".format(self.time_ref.mjd)
+        sec = self.duration.to("second").value
+        hour = self.duration.to("hour").value
+        ss += "Duration:     {} sec = {} hours\n".format(sec, hour)
+        ss += "Table length: {}\n".format(len(self.table))
 
-        ss += '\nSTART:\n' + self._str_for_index(0) + '\n'
-        ss += '\nEND:\n' + self._str_for_index(-1) + '\n'
+        ss += "\nSTART:\n" + self._str_for_index(0) + "\n"
+        ss += "\nEND:\n" + self._str_for_index(-1) + "\n"
 
         return ss
 
     def _str_for_index(self, idx):
         """Information for one point in the pointing table."""
-        ss = 'Time:  {}\n'.format(self.time[idx].fits)
-        ss += 'Time:  {} MJD (TT)\n'.format(self.time[idx].mjd)
-        ss += 'RADEC: {} deg\n'.format(self.radec[idx].to_string())
-        ss += 'ALTAZ: {} deg\n'.format(self.altaz[idx].to_string())
+        ss = "Time:  {}\n".format(self.time[idx].fits)
+        ss += "Time:  {} MJD (TT)\n".format(self.time[idx].mjd)
+        ss += "RADEC: {} deg\n".format(self.radec[idx].to_string())
+        ss += "ALTAZ: {} deg\n".format(self.altaz[idx].to_string())
         return ss
 
     @lazyproperty
@@ -99,16 +99,16 @@ class PointingInfo(object):
     @lazyproperty
     def time(self):
         """Time array (`~astropy.time.Time`)"""
-        met = Quantity(self.table['TIME'].astype('float64'), 'second')
+        met = Quantity(self.table["TIME"].astype("float64"), "second")
         time = self.time_ref + met
         return time.tt
 
     @lazyproperty
     def radec(self):
         """RA / DEC position from table (`~astropy.coordinates.SkyCoord`)"""
-        lon = self.table['RA_PNT']
-        lat = self.table['DEC_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        lon = self.table["RA_PNT"]
+        lat = self.table["DEC_PNT"]
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @lazyproperty
     def altaz_frame(self):
@@ -123,9 +123,9 @@ class PointingInfo(object):
     @lazyproperty
     def altaz_from_table(self):
         """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
-        lon = self.table['AZ_PNT']
-        lat = self.table['ALT_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame=self.altaz_frame)
+        lon = self.table["AZ_PNT"]
+        lat = self.table["ALT_PNT"]
+        return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
 
     def altaz_interpolate(self, time):
         """Interpolate pointing for a given time."""
@@ -140,5 +140,5 @@ class PointingInfo(object):
         xyz_new = CartesianRepresentation(x_new, y_new, z_new)
         altaz_frame = AltAz(obstime=time, location=self.location)
         return SkyCoord(
-            xyz_new, frame=altaz_frame, representation='unitspherical', unit='deg'
+            xyz_new, frame=altaz_frame, representation="unitspherical", unit="deg"
         )

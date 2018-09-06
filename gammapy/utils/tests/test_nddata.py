@@ -6,27 +6,27 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
 
-pytest.importorskip('scipy')
+pytest.importorskip("scipy")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def axis_x():
-    return DataAxis([1, 3, 6], name='x')
+    return DataAxis([1, 3, 6], name="x")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def axis_energy():
     return BinnedDataAxis.logspace(
-        0.1, 1000, 2, unit=u.TeV, name='energy', interpolation_mode='log'
+        0.1, 1000, 2, unit=u.TeV, name="energy", interpolation_mode="log"
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def axis_offset():
-    return DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name='offset')
+    return DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name="offset")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def nddata_1d(axis_x):
     return NDDataArray(
         axes=[axis_x],
@@ -35,7 +35,7 @@ def nddata_1d(axis_x):
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def nddata_2d(axis_energy, axis_offset):
     return NDDataArray(
         axes=[axis_energy, axis_offset],
@@ -48,11 +48,11 @@ class TestNDDataArray:
     def test_init_error(self):
         with pytest.raises(ValueError):
             NDDataArray(
-                axes=[DataAxis([1, 3, 6], name='x')], data=np.arange(8).reshape(4, 2)
+                axes=[DataAxis([1, 3, 6], name="x")], data=np.arange(8).reshape(4, 2)
             )
 
     def test_str(self, nddata_1d):
-        assert 'x' in str(nddata_1d)
+        assert "x" in str(nddata_1d)
 
     def test_find_node_1d(self, nddata_1d):
         node = nddata_1d.find_node(x=4)
@@ -112,7 +112,7 @@ class TestNDDataArray:
         # - evaluate on a given node: x=1
         # - evaluate in between nodes: x=2
         # - check that values < 0 are clipped to 0: x=3
-        out = nddata_1d.evaluate(x=[0, 1, 2, 3], method='linear')
+        out = nddata_1d.evaluate(x=[0, 1, 2, 3], method="linear")
         assert_allclose(out, [2, 1, 0, 0])
 
     def test_evaluate_on_nodes(self, nddata_2d):

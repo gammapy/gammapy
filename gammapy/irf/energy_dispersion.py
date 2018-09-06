@@ -11,7 +11,7 @@ from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.fits import energy_axis_to_ebounds
 
-__all__ = ['EnergyDispersion', 'EnergyDispersion2D']
+__all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 
 
 class EnergyDispersion(object):
@@ -51,7 +51,7 @@ class EnergyDispersion(object):
     EnergyDispersion2D
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=0, method='nearest')
+    default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
     """Default Interpolation kwargs for `~NDDataArray`. Fill zeros and do not
     interpolate"""
 
@@ -69,10 +69,10 @@ class EnergyDispersion(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                e_true_lo, e_true_hi, interpolation_mode='log', name='e_true'
+                e_true_lo, e_true_hi, interpolation_mode="log", name="e_true"
             ),
             BinnedDataAxis(
-                e_reco_lo, e_reco_hi, interpolation_mode='log', name='e_reco'
+                e_reco_lo, e_reco_hi, interpolation_mode="log", name="e_reco"
             ),
         ]
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
@@ -80,7 +80,7 @@ class EnergyDispersion(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.data)
+        ss += "\n{}".format(self.data)
         return ss
 
     def apply(self, data):
@@ -111,12 +111,12 @@ class EnergyDispersion(object):
     @property
     def e_reco(self):
         """Reconstructed energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)"""
-        return self.data.axis('e_reco')
+        return self.data.axis("e_reco")
 
     @property
     def e_true(self):
         """True energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)"""
-        return self.data.axis('e_true')
+        return self.data.axis("e_true")
 
     @property
     def pdf_matrix(self):
@@ -165,7 +165,7 @@ class EnergyDispersion(object):
         """
         migra = np.linspace(1. / 3, 3, 200)
         # A dummy offset axis (need length 2 for interpolation to work)
-        offset = Quantity([0, 1, 2], 'deg')
+        offset = Quantity([0, 1, 2], "deg")
 
         edisp = EnergyDispersion2D.from_gauss(
             e_true=e_true,
@@ -216,7 +216,7 @@ class EnergyDispersion(object):
         etrue_2d, ereco_hi_2d = np.meshgrid(e_true_center, e_reco[1:])
 
         data = np.logical_and(etrue_2d >= ereco_lo_2d, etrue_2d < ereco_hi_2d)
-        data = np.transpose(data).astype('float')
+        data = np.transpose(data).astype("float")
 
         return cls(
             e_true_lo=e_true[:-1],
@@ -227,7 +227,7 @@ class EnergyDispersion(object):
         )
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu1='MATRIX', hdu2='EBOUNDS'):
+    def from_hdulist(cls, hdulist, hdu1="MATRIX", hdu2="EBOUNDS"):
         """Create `EnergyDispersion` object from `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -245,18 +245,18 @@ class EnergyDispersion(object):
         data = matrix_hdu.data
         header = matrix_hdu.header
 
-        pdf_matrix = np.zeros([len(data), header['DETCHANS']], dtype=np.float64)
+        pdf_matrix = np.zeros([len(data), header["DETCHANS"]], dtype=np.float64)
 
         for i, l in enumerate(data):
-            if l.field('N_GRP'):
+            if l.field("N_GRP"):
                 m_start = 0
-                for k in range(l.field('N_GRP')):
+                for k in range(l.field("N_GRP")):
                     pdf_matrix[
                         i,
-                        l.field('F_CHAN')[k] : l.field('F_CHAN')[k]
-                        + l.field('N_CHAN')[k],
-                    ] = l.field('MATRIX')[m_start : m_start + l.field('N_CHAN')[k]]
-                    m_start += l.field('N_CHAN')[k]
+                        l.field("F_CHAN")[k] : l.field("F_CHAN")[k]
+                        + l.field("N_CHAN")[k],
+                    ] = l.field("MATRIX")[m_start : m_start + l.field("N_CHAN")[k]]
+                    m_start += l.field("N_CHAN")[k]
 
         e_reco = EnergyBounds.from_ebounds(ebounds_hdu)
         e_true = EnergyBounds.from_rmf_matrix(matrix_hdu)
@@ -270,7 +270,7 @@ class EnergyDispersion(object):
         )
 
     @classmethod
-    def read(cls, filename, hdu1='MATRIX', hdu2='EBOUNDS'):
+    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS"):
         """Read from file.
 
         Parameters
@@ -312,22 +312,22 @@ class EnergyDispersion(object):
         # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
 
         table = self.to_table()
-        name = table.meta.pop('name')
+        name = table.meta.pop("name")
 
         header = fits.Header()
         header.update(table.meta)
 
         cols = table.columns
         c0 = fits.Column(
-            name=cols[0].name, format='E', array=cols[0], unit='{}'.format(cols[0].unit)
+            name=cols[0].name, format="E", array=cols[0], unit="{}".format(cols[0].unit)
         )
         c1 = fits.Column(
-            name=cols[1].name, format='E', array=cols[1], unit='{}'.format(cols[1].unit)
+            name=cols[1].name, format="E", array=cols[1], unit="{}".format(cols[1].unit)
         )
-        c2 = fits.Column(name=cols[2].name, format='I', array=cols[2])
-        c3 = fits.Column(name=cols[3].name, format='PI()', array=cols[3])
-        c4 = fits.Column(name=cols[4].name, format='PI()', array=cols[4])
-        c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
+        c2 = fits.Column(name=cols[2].name, format="I", array=cols[2])
+        c3 = fits.Column(name=cols[3].name, format="PI()", array=cols[3])
+        c4 = fits.Column(name=cols[4].name, format="PI()", array=cols[4])
+        c5 = fits.Column(name=cols[5].name, format="PE()", array=cols[5])
 
         hdu = fits.BinTableHDU.from_columns(
             [c0, c1, c2, c3, c4, c5], header=header, name=name
@@ -379,24 +379,24 @@ class EnergyDispersion(object):
 
         table = Table()
 
-        table['ENERG_LO'] = self.e_true.lo
-        table['ENERG_HI'] = self.e_true.hi
-        table['N_GRP'] = n_grp
-        table['F_CHAN'] = f_chan
-        table['N_CHAN'] = n_chan
-        table['MATRIX'] = matrix
+        table["ENERG_LO"] = self.e_true.lo
+        table["ENERG_HI"] = self.e_true.hi
+        table["N_GRP"] = n_grp
+        table["F_CHAN"] = f_chan
+        table["N_CHAN"] = n_chan
+        table["MATRIX"] = matrix
 
         table.meta = OrderedDict(
             [
-                ('name', 'MATRIX'),
-                ('chantype', 'PHA'),
-                ('hduclass', 'OGIP'),
-                ('hduclas1', 'RESPONSE'),
-                ('hduclas2', 'RSP_MATRIX'),
-                ('detchans', self.e_reco.nbins),
-                ('numgrp', numgrp),
-                ('numelt', numelt),
-                ('tlmin4', 0),
+                ("name", "MATRIX"),
+                ("chantype", "PHA"),
+                ("hduclass", "OGIP"),
+                ("hduclas1", "RESPONSE"),
+                ("hduclas2", "RSP_MATRIX"),
+                ("detchans", self.e_reco.nbins),
+                ("numgrp", numgrp),
+                ("numelt", numelt),
+                ("tlmin4", 0),
             ]
         )
 
@@ -499,12 +499,12 @@ class EnergyDispersion(object):
         # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727
 
         table = self.to_table()
-        n_grp = table['N_GRP'].data.astype(SherpaUInt)
-        f_chan = table['F_CHAN'].data
+        n_grp = table["N_GRP"].data.astype(SherpaUInt)
+        f_chan = table["F_CHAN"].data
         f_chan = np.concatenate([row for row in f_chan]).astype(SherpaUInt)
-        n_chan = table['N_CHAN'].data
+        n_chan = table["N_CHAN"].data
         n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
-        matrix = table['MATRIX'].data
+        matrix = table["MATRIX"].data
 
         good = n_grp > 0
         matrix = matrix[good]
@@ -517,15 +517,15 @@ class EnergyDispersion(object):
 
         return DataRMF(
             name=name,
-            energ_lo=table['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
-            energ_hi=table['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
+            energ_lo=table["ENERG_LO"].quantity.to("keV").value.astype(SherpaFloat),
+            energ_hi=table["ENERG_HI"].quantity.to("keV").value.astype(SherpaFloat),
             matrix=matrix,
             n_grp=n_grp,
             n_chan=n_chan,
             f_chan=f_chan,
             detchans=self.e_reco.nbins,
-            e_min=self.e_reco.lo.to('keV').value,
-            e_max=self.e_reco.hi.to('keV').value,
+            e_min=self.e_reco.lo.to("keV").value,
+            e_max=self.e_reco.hi.to("keV").value,
             offset=0,
         )
 
@@ -549,9 +549,9 @@ class EnergyDispersion(object):
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
 
-        kwargs.setdefault('cmap', 'GnBu')
+        kwargs.setdefault("cmap", "GnBu")
         norm = PowerNorm(gamma=0.5)
-        kwargs.setdefault('norm', norm)
+        kwargs.setdefault("norm", norm)
 
         ax = plt.gca() if ax is None else ax
 
@@ -564,16 +564,16 @@ class EnergyDispersion(object):
 
         if show_energy is not None:
             ener_val = Quantity(show_energy).to(self.reco_energy.unit).value
-            ax.hlines(ener_val, 0, 200200, linestyles='dashed')
+            ax.hlines(ener_val, 0, 200200, linestyles="dashed")
 
         if add_cbar:
-            label = 'Probability density (A.U.)'
+            label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel('$E_\mathrm{{True}}$ [{unit}]'.format(unit=e_true.unit))
-        ax.set_ylabel('$E_\mathrm{{Reco}}$ [{unit}]'.format(unit=e_reco.unit))
-        ax.set_xscale('log')
-        ax.set_yscale('log')
+        ax.set_xlabel("$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
+        ax.set_ylabel("$E_\mathrm{{Reco}}$ [{unit}]".format(unit=e_reco.unit))
+        ax.set_xscale("log")
+        ax.set_yscale("log")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
         return ax
@@ -592,13 +592,13 @@ class EnergyDispersion(object):
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.e_true.nodes.to('TeV').value
+        x = self.e_true.nodes.to("TeV").value
         y = self.get_bias(self.e_true.nodes)
 
         ax.plot(x, y, **kwargs)
-        ax.set_xlabel('$E_\mathrm{{True}}$ [TeV]')
-        ax.set_ylabel(r'($E_\mathrm{{True}} - E_\mathrm{{Reco}} / E_\mathrm{{True}}$)')
-        ax.set_xscale('log')
+        ax.set_xlabel("$E_\mathrm{{True}}$ [TeV]")
+        ax.set_ylabel(r"($E_\mathrm{{True}} - E_\mathrm{{Reco}} / E_\mathrm{{True}}$)")
+        ax.set_xscale("log")
         return ax
 
     def peek(self, figsize=(15, 5)):
@@ -680,13 +680,13 @@ class EnergyDispersion2D(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                e_true_lo, e_true_hi, interpolation_mode='log', name='e_true'
+                e_true_lo, e_true_hi, interpolation_mode="log", name="e_true"
             ),
             BinnedDataAxis(
-                migra_lo, migra_hi, interpolation_mode='linear', name='migra'
+                migra_lo, migra_hi, interpolation_mode="linear", name="migra"
             ),
             BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode='linear', name='offset'
+                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
             ),
         ]
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
@@ -694,7 +694,7 @@ class EnergyDispersion2D(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.data)
+        ss += "\n{}".format(self.data)
         return ss
 
     @classmethod
@@ -728,7 +728,7 @@ class EnergyDispersion2D(object):
 
         e_true = EnergyBounds(e_true)
         # erf does not work with Quantities
-        true = e_true.log_centers.to('TeV').value
+        true = e_true.log_centers.to("TeV").value
 
         true2d, migra2d = np.meshgrid(true, migra)
 
@@ -758,23 +758,23 @@ class EnergyDispersion2D(object):
     @classmethod
     def from_table(cls, table):
         """Create from `~astropy.table.Table`."""
-        if 'ENERG_LO' in table.colnames:
-            e_lo = table['ENERG_LO'].quantity[0]
-            e_hi = table['ENERG_HI'].quantity[0]
-        elif 'ETRUE_LO' in table.colnames:
-            e_lo = table['ETRUE_LO'].quantity[0]
-            e_hi = table['ETRUE_HI'].quantity[0]
+        if "ENERG_LO" in table.colnames:
+            e_lo = table["ENERG_LO"].quantity[0]
+            e_hi = table["ENERG_HI"].quantity[0]
+        elif "ETRUE_LO" in table.colnames:
+            e_lo = table["ETRUE_LO"].quantity[0]
+            e_hi = table["ETRUE_HI"].quantity[0]
         else:
             raise ValueError(
                 'Invalid column names. Need "ENERG_LO/ENERG_HI" or "ETRUE_LO/ETRUE_HI"'
             )
-        o_lo = table['THETA_LO'].quantity[0]
-        o_hi = table['THETA_HI'].quantity[0]
-        m_lo = table['MIGRA_LO'].quantity[0]
-        m_hi = table['MIGRA_HI'].quantity[0]
+        o_lo = table["THETA_LO"].quantity[0]
+        o_hi = table["THETA_HI"].quantity[0]
+        m_lo = table["MIGRA_LO"].quantity[0]
+        m_hi = table["MIGRA_HI"].quantity[0]
 
         matrix = (
-            table['MATRIX'].quantity[0].transpose()
+            table["MATRIX"].quantity[0].transpose()
         )  ## TODO Why does this need to be transposed?
         return cls(
             e_true_lo=e_lo,
@@ -787,12 +787,12 @@ class EnergyDispersion2D(object):
         )
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='edisp_2d'):
+    def from_hdulist(cls, hdulist, hdu="edisp_2d"):
         """Create from `~astropy.io.fits.HDUList`."""
         return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
-    def read(cls, filename, hdu='edisp_2d'):
+    def read(cls, filename, hdu="edisp_2d"):
         """Read from FITS file.
 
         Parameters
@@ -827,8 +827,8 @@ class EnergyDispersion2D(object):
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.data.axis('e_true').bins if e_true is None else e_true
-        e_reco = self.data.axis('e_true').bins if e_reco is None else e_reco
+        e_true = self.data.axis("e_true").bins if e_true is None else e_true
+        e_reco = self.data.axis("e_true").bins if e_reco is None else e_reco
         e_true = EnergyBounds(e_true)
         e_reco = EnergyBounds(e_reco)
 
@@ -877,9 +877,9 @@ class EnergyDispersion2D(object):
         # Default: e_reco nodes = migra nodes * e_true nodes
         if e_reco is None:
             e_reco = EnergyBounds.from_lower_and_upper_bounds(
-                self.data.axis('migra').lo * e_true, self.data.axis('migra').hi * e_true
+                self.data.axis("migra").lo * e_true, self.data.axis("migra").hi * e_true
             )
-            migra = self.data.axis('migra').nodes
+            migra = self.data.axis("migra").nodes
         # Translate given e_reco binning to migra at bin center
         else:
             e_reco = EnergyBounds(e_reco)
@@ -890,15 +890,15 @@ class EnergyDispersion2D(object):
         migra_e_reco = e_reco / e_true
 
         # Define a vector of migration with mig_step step
-        mrec_min = self.data.axis('migra').lo[0]
-        mrec_max = self.data.axis('migra').hi[-1]
+        mrec_min = self.data.axis("migra").lo[0]
+        mrec_max = self.data.axis("migra").hi[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
         # Compute energy dispersion probability dP/dm for each element of migration array
         vals = self.data.evaluate(offset=offset, e_true=e_true, migra=mig_array)
 
         # Compute normalized cumulative sum to prepare integration
-        with np.errstate(invalid='ignore'):
+        with np.errstate(invalid="ignore"):
             tmp = np.nan_to_num(np.cumsum(vals) / np.sum(vals))
 
         # Determine positions (bin indices) of e_reco bounds in migration array
@@ -936,24 +936,24 @@ class EnergyDispersion2D(object):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            offset = Angle([1], 'deg')
+            offset = Angle([1], "deg")
         else:
             offset = np.atleast_1d(Angle(offset))
         if e_true is None:
-            e_true = Energy([0.1, 1, 10], 'TeV')
+            e_true = Energy([0.1, 1, 10], "TeV")
         else:
             e_true = np.atleast_1d(Energy(e_true))
-        migra = self.data.axis('migra').nodes if migra is None else migra
+        migra = self.data.axis("migra").nodes if migra is None else migra
 
         for ener in e_true:
             for off in offset:
                 disp = self.data.evaluate(offset=off, e_true=ener, migra=migra)
-                label = 'offset = {0:.1f}\nenergy = {1:.1f}'.format(off, ener)
+                label = "offset = {0:.1f}\nenergy = {1:.1f}".format(off, ener)
                 ax.plot(migra, disp, label=label, **kwargs)
 
-        ax.set_xlabel('$E_\mathrm{{Reco}} / E_\mathrm{{True}}$')
-        ax.set_ylabel('Probability density')
-        ax.legend(loc='upper left')
+        ax.set_xlabel("$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
+        ax.set_ylabel("Probability density")
+        ax.legend(loc="upper left")
 
         return ax
 
@@ -979,16 +979,16 @@ class EnergyDispersion2D(object):
         from matplotlib.colors import PowerNorm
         import matplotlib.pyplot as plt
 
-        kwargs.setdefault('cmap', 'GnBu')
-        kwargs.setdefault('norm', PowerNorm(gamma=0.5))
+        kwargs.setdefault("cmap", "GnBu")
+        kwargs.setdefault("norm", PowerNorm(gamma=0.5))
 
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            offset = Angle([1], 'deg')
+            offset = Angle([1], "deg")
 
-        e_true = self.data.axis('e_true').bins
-        migra = self.data.axis('migra').bins
+        e_true = self.data.axis("e_true").bins
+        migra = self.data.axis("migra").bins
 
         x = e_true.value
         y = migra.value
@@ -997,14 +997,14 @@ class EnergyDispersion2D(object):
         caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if add_cbar:
-            label = 'Probability density (A.U.)'
+            label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel('$E_\mathrm{{True}}$ [{unit}]'.format(unit=e_true.unit))
-        ax.set_ylabel('$E_\mathrm{{Reco}} / E_\mathrm{{True}}$')
+        ax.set_xlabel("$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
+        ax.set_ylabel("$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
-        ax.set_xscale('log')
+        ax.set_xscale("log")
         return ax
 
     def peek(self, figsize=(15, 5)):
@@ -1020,7 +1020,7 @@ class EnergyDispersion2D(object):
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])
-        edisp = self.to_energy_dispersion(offset='1 deg')
+        edisp = self.to_energy_dispersion(offset="1 deg")
         edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
@@ -1029,15 +1029,15 @@ class EnergyDispersion2D(object):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
         table = Table(meta=meta)
-        table['ENERG_LO'] = self.data.axis('e_true').lo[np.newaxis]
-        table['ENERG_HI'] = self.data.axis('e_true').hi[np.newaxis]
-        table['MIGRA_LO'] = self.data.axis('migra').hi[np.newaxis]
-        table['MIGRA_HI'] = self.data.axis('migra').hi[np.newaxis]
-        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
-        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
-        table['MATRIX'] = self.data.data.T[np.newaxis]
+        table["ENERG_LO"] = self.data.axis("e_true").lo[np.newaxis]
+        table["ENERG_HI"] = self.data.axis("e_true").hi[np.newaxis]
+        table["MIGRA_LO"] = self.data.axis("migra").hi[np.newaxis]
+        table["MIGRA_HI"] = self.data.axis("migra").hi[np.newaxis]
+        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
+        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
+        table["MATRIX"] = self.data.data.T[np.newaxis]
         return table
 
-    def to_fits(self, name='ENERGY DISPERSION'):
+    def to_fits(self, name="ENERGY DISPERSION"):
         """Convert to `~astropy.io.fits.BinTable`."""
         return fits.BinTableHDU(self.to_table(), name=name)

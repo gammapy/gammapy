@@ -9,7 +9,7 @@ from .lima import compute_lima_image
 
 log = logging.getLogger(__name__)
 
-__all__ = ['KernelBackgroundEstimator']
+__all__ = ["KernelBackgroundEstimator"]
 
 
 # TODO: use `Map.copy` or `Map.copy` once available
@@ -72,14 +72,14 @@ class KernelBackgroundEstimator(object):
         kernel_src,
         kernel_bkg,
         significance_threshold=5,
-        mask_dilation_radius='0.02 deg',
+        mask_dilation_radius="0.02 deg",
         keep_record=False,
     ):
 
         self.parameters = {
-            'significance_threshold': significance_threshold,
-            'mask_dilation_radius': Angle(mask_dilation_radius),
-            'keep_record': keep_record,
+            "significance_threshold": significance_threshold,
+            "mask_dilation_radius": Angle(mask_dilation_radius),
+            "keep_record": keep_record,
         }
 
         self.kernel_src = kernel_src
@@ -107,19 +107,19 @@ class KernelBackgroundEstimator(object):
             Sky images: background, exclusion, significance
         """
         # initial mask, if not present
-        if 'exclusion' not in images:
-            exclusion = Map.from_geom(images['counts'].geom)
+        if "exclusion" not in images:
+            exclusion = Map.from_geom(images["counts"].geom)
             exclusion.data += 1
-            images['exclusion'] = exclusion
+            images["exclusion"] = exclusion
 
         # initial background estimate, if not present
-        if 'background' not in images:
-            images['background'] = self._estimate_background(
-                images['counts'], images['exclusion']
+        if "background" not in images:
+            images["background"] = self._estimate_background(
+                images["counts"], images["exclusion"]
             )
 
-        images['significance'] = self._estimate_significance(
-            images['counts'], images['background']
+        images["significance"] = self._estimate_significance(
+            images["counts"], images["background"]
         )
 
         self.images_stack.append(images)
@@ -127,13 +127,13 @@ class KernelBackgroundEstimator(object):
         for idx in range(niter_max):
             result = self.run_iteration(images)
 
-            if self.parameters['keep_record']:
+            if self.parameters["keep_record"]:
                 self.images_stack.append(result)
 
             if self._is_converged(result, images) and (idx >= niter_min):
                 log.info(
-                    'Exclusion mask succesfully converged,'
-                    ' after {} iterations.'.format(idx)
+                    "Exclusion mask succesfully converged,"
+                    " after {} iterations.".format(idx)
                 )
                 break
 
@@ -148,38 +148,38 @@ class KernelBackgroundEstimator(object):
             Input sky images
         """
         significance = self._estimate_significance(
-            images['counts'], images['background']
+            images["counts"], images["background"]
         )
-        exclusion = self._estimate_exclusion(images['counts'], significance)
-        background = self._estimate_background(images['counts'], exclusion)
+        exclusion = self._estimate_exclusion(images["counts"], significance)
+        background = self._estimate_background(images["counts"], exclusion)
 
         return {
-            'counts': images['counts'],
-            'background': background,
-            'exclusion': exclusion,
-            'significance': significance,
+            "counts": images["counts"],
+            "background": background,
+            "exclusion": exclusion,
+            "significance": significance,
         }
 
     def _estimate_significance(self, counts, background):
         kernel = CustomKernel(self.kernel_src)
         images = compute_lima_image(counts, background, kernel=kernel)
-        return images['significance']
+        return images["significance"]
 
     def _estimate_exclusion(self, counts, significance):
         from scipy.ndimage import binary_erosion
 
-        radius = self.parameters['mask_dilation_radius'].deg
+        radius = self.parameters["mask_dilation_radius"].deg
         scale = counts.geom.pixel_scales.mean().deg
         mask_dilation_radius_pix = radius / scale
 
         structure = np.array(Tophat2DKernel(mask_dilation_radius_pix))
 
         mask = (
-            significance.data < self.parameters['significance_threshold']
+            significance.data < self.parameters["significance_threshold"]
         ) | np.isnan(significance.data)
         mask = binary_erosion(mask, structure, border_value=1)
 
-        return counts.copy(data=mask.astype('float'))
+        return counts.copy(data=mask.astype("float"))
 
     def _estimate_background(self, counts, exclusion):
         """
@@ -199,7 +199,7 @@ class KernelBackgroundEstimator(object):
         """
         from scipy.ndimage.morphology import binary_fill_holes
 
-        mask = result['exclusion'].data == result_previous['exclusion'].data
+        mask = result["exclusion"].data == result_previous["exclusion"].data
 
         # Because of pixel to pixel noise, the masks can still differ.
         # This is handled by removing structures of the scale of one pixel

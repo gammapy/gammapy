@@ -20,7 +20,7 @@ cl = 0.90
 x_bins = np.arange(0, n_bins_x)
 mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-print('Generating FC confidence belt for {} values of mu.'.format(len(mu_bins)))
+print("Generating FC confidence belt for {} values of mu.".format(len(mu_bins)))
 
 partial_func = partial(
     fc_find_acceptance_interval_poisson, background=background, x_bins=x_bins, alpha=cl
@@ -40,14 +40,14 @@ fc_fix_limits(LowerLimitAna, UpperLimitAna)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-plt.plot(LowerLimitAna, mu_bins, ls='-', color='red')
-plt.plot(UpperLimitAna, mu_bins, ls='-', color='red')
+plt.plot(LowerLimitAna, mu_bins, ls="-", color="red")
+plt.plot(UpperLimitAna, mu_bins, ls="-", color="red")
 
 plt.grid(True)
 ax.yaxis.set_label_coords(-0.08, 0.5)
 plt.xticks(range(15))
 plt.yticks(range(15))
-ax.set_xlabel(r'Measured n')
-ax.set_ylabel(r'Signal Mean $\mu$')
+ax.set_xlabel(r"Measured n")
+ax.set_ylabel(r"Signal Mean $\mu$")
 plt.axis([0, 15, 0, 15])
 plt.show()

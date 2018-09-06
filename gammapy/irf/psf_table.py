@@ -10,7 +10,7 @@ from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 
-__all__ = ['TablePSF', 'EnergyDependentTablePSF']
+__all__ = ["TablePSF", "EnergyDependentTablePSF"]
 
 log = logging.getLogger(__name__)
 
@@ -57,14 +57,14 @@ class TablePSF(object):
 
     def __init__(self, rad, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
-        self._rad = Angle(rad).to('radian')
-        self._dp_domega = Quantity(dp_domega).to('sr^-1')
+        self._rad = Angle(rad).to("radian")
+        self._dp_domega = Quantity(dp_domega).to("sr^-1")
 
         assert self._rad.ndim == self._dp_domega.ndim == 1
         assert self._rad.shape == self._dp_domega.shape
 
         # Store input arrays as quantities in default internal units
-        self._dp_dr = (2 * np.pi * self._rad * self._dp_domega).to('radian^-1')
+        self._dp_dr = (2 * np.pi * self._rad * self._dp_domega).to("radian^-1")
         self._spline_kwargs = spline_kwargs
 
         self._compute_splines(spline_kwargs)
@@ -100,27 +100,27 @@ class TablePSF(object):
         width = Angle(width)
         rad = Angle(rad)
 
-        if shape == 'disk':
+        if shape == "disk":
             amplitude = 1 / (np.pi * width.radian ** 2)
             psf_value = np.where(rad < width, amplitude, 0)
-        elif shape == 'gauss':
+        elif shape == "gauss":
             gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
             psf_value = gauss2d_pdf(rad.radian)
         else:
-            raise ValueError('Invalid shape: {}'.format(shape))
+            raise ValueError("Invalid shape: {}".format(shape))
 
-        psf_value = Quantity(psf_value, 'sr^-1')
+        psf_value = Quantity(psf_value, "sr^-1")
 
         return cls(rad, psf_value)
 
     def info(self):
         """Print basic info."""
-        ss = array_stats_str(self._rad.degree, 'offset')
-        ss += 'integral = {}\n'.format(self.integral())
+        ss = array_stats_str(self._rad.degree, "offset")
+        ss += "integral = {}\n".format(self.integral())
 
         for containment in [50, 68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += 'containment radius {} deg for {}%\n'.format(
+            ss += "containment radius {} deg for {}%\n".format(
                 radius.degree, containment
             )
 
@@ -142,12 +142,12 @@ class TablePSF(object):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        center = SkyCoord(0, 0, unit='radian')
+        center = SkyCoord(0, 0, unit="radian")
         point = SkyCoord(lon, lat)
         rad = center.separation(point)
         return self.evaluate(rad)
 
-    def evaluate(self, rad, quantity='dp_domega'):
+    def evaluate(self, rad, quantity="dp_domega"):
         r"""Evaluate PSF.
 
         The following PSF quantities are available:
@@ -177,14 +177,14 @@ class TablePSF(object):
         shape = rad.shape
         x = np.array(rad.radian).flat
 
-        if quantity == 'dp_domega':
+        if quantity == "dp_domega":
             y = self._dp_domega_spline(x)
-            unit = 'sr^-1'
-        elif quantity == 'dp_dr':
+            unit = "sr^-1"
+        elif quantity == "dp_dr":
             y = self._dp_dr_spline(x)
-            unit = 'radian^-1'
+            unit = "radian^-1"
         else:
-            ss = 'Invalid quantity: {}\n'.format(quantity)
+            ss = "Invalid quantity: {}\n".format(quantity)
             ss += "Choose one of: 'dp_domega', 'dp_dr'"
             raise ValueError(ss)
 
@@ -236,7 +236,7 @@ class TablePSF(object):
             Containment radius angle
         """
         rad = self._ppf_spline(fraction)
-        return Angle(rad, 'radian').to('deg')
+        return Angle(rad, "radian").to("deg")
 
     def normalize(self):
         """Normalize PSF to unit integral.
@@ -251,7 +251,7 @@ class TablePSF(object):
         # Clip to small positive number to avoid divide by 0
         rad = np.clip(self._rad.radian, 1e-6, None)
 
-        rad = Quantity(rad, 'radian')
+        rad = Quantity(rad, "radian")
         self._dp_domega = self._dp_dr / (2 * np.pi * rad)
         self._compute_splines(self._spline_kwargs)
 
@@ -276,13 +276,13 @@ class TablePSF(object):
         self._rad *= factor
         # We define broadening such that self._dp_domega remains the same
         # so we only have to re-compute self._dp_dr and the slines here.
-        self._dp_dr = (2 * np.pi * self._rad * self._dp_domega).to('radian^-1')
+        self._dp_dr = (2 * np.pi * self._rad * self._dp_domega).to("radian^-1")
         self._compute_splines(self._spline_kwargs)
 
         if normalize:
             self.normalize()
 
-    def plot_psf_vs_rad(self, ax=None, quantity='dp_domega', **kwargs):
+    def plot_psf_vs_rad(self, ax=None, quantity="dp_domega", **kwargs):
         """Plot PSF vs radius.
 
         TODO: describe PSF ``quantity`` argument in a central place and link to it from here.
@@ -291,13 +291,13 @@ class TablePSF(object):
 
         ax = plt.gca() if ax is None else ax
 
-        x = self._rad.to('deg')
+        x = self._rad.to("deg")
         y = self.evaluate(self._rad, quantity)
 
         ax.plot(x.value, y.value, **kwargs)
         ax.loglog()
-        ax.set_xlabel('Radius ({})'.format(x.unit))
-        ax.set_ylabel('PSF ({})'.format(y.unit))
+        ax.set_xlabel("Radius ({})".format(x.unit))
+        ax.set_ylabel("PSF ({})".format(y.unit))
 
     def _compute_splines(self, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
         """Compute two splines representing the PSF.
@@ -327,7 +327,7 @@ class TablePSF(object):
         # Here's a discussion on methods to compute the ppf
         # http://mail.scipy.org/pipermail/scipy-user/2010-May/025237.html
         y = self._rad.value
-        x = self.integral(Angle(0, 'rad'), self._rad)
+        x = self.integral(Angle(0, "rad"), self._rad)
 
         # Since scipy 1.0 the UnivariateSpline requires that x is strictly increasing
         # So only keep nodes where this is the case (and always keep the first one):
@@ -343,7 +343,7 @@ class TablePSF(object):
 
     def _rad_clip(self, rad):
         """Clip to radius support range, because spline extrapolation is unstable."""
-        rad = Angle(rad, 'radian').radian
+        rad = Angle(rad, "radian").radian
         rad = np.clip(rad, 0, self._rad[-1].radian)
         return rad
 
@@ -367,39 +367,39 @@ class EnergyDependentTablePSF(object):
 
     def __init__(self, energy, rad, exposure=None, psf_value=None):
 
-        self.energy = Quantity(energy).to('GeV')
-        self.rad = Quantity(rad).to('radian')
+        self.energy = Quantity(energy).to("GeV")
+        self.rad = Quantity(rad).to("radian")
         if exposure is None:
-            self.exposure = Quantity(np.ones(len(energy)), 'cm^2 s')
+            self.exposure = Quantity(np.ones(len(energy)), "cm^2 s")
         else:
-            self.exposure = Quantity(exposure).to('cm^2 s')
+            self.exposure = Quantity(exposure).to("cm^2 s")
 
         if psf_value is None:
-            self.psf_value = Quantity(np.zeros(len(energy), len(rad)), 'sr^-1')
+            self.psf_value = Quantity(np.zeros(len(energy), len(rad)), "sr^-1")
         else:
-            self.psf_value = Quantity(psf_value).to('sr^-1')
+            self.psf_value = Quantity(psf_value).to("sr^-1")
 
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
 
     def __str__(self):
-        ss = 'EnergyDependentTablePSF\n'
-        ss += '-----------------------\n'
-        ss += '\nAxis info:\n'
-        ss += '  ' + array_stats_str(self.rad.to('deg'), 'rad')
-        ss += '  ' + array_stats_str(self.energy, 'energy')
+        ss = "EnergyDependentTablePSF\n"
+        ss += "-----------------------\n"
+        ss += "\nAxis info:\n"
+        ss += "  " + array_stats_str(self.rad.to("deg"), "rad")
+        ss += "  " + array_stats_str(self.energy, "energy")
         # ss += '  ' + array_stats_str(self.exposure, 'exposure')
 
         # ss += 'integral = {}\n'.format(self.integral())
 
-        ss += '\nContainment info:\n'
+        ss += "\nContainment info:\n"
         # Print some example containment radii
         fractions = [0.68, 0.95]
-        energies = Quantity([10, 100], 'GeV')
+        energies = Quantity([10, 100], "GeV")
         for fraction in fractions:
             rads = self.containment_radius(energies=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
-                ss += '  ' + '{}% containment radius at {:3.0f}: {:.2f}\n'.format(
+                ss += "  " + "{}% containment radius at {:3.0f}: {:.2f}\n".format(
                     100 * fraction, energy, rad
                 )
         return ss
@@ -413,10 +413,10 @@ class EnergyDependentTablePSF(object):
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``THETA`` and ``PSF`` extensions.
         """
-        rad = Angle(hdu_list['THETA'].data['Theta'], 'deg')
-        energy = Quantity(hdu_list['PSF'].data['Energy'], 'MeV')
-        exposure = Quantity(hdu_list['PSF'].data['Exposure'], 'cm^2 s')
-        psf_value = Quantity(hdu_list['PSF'].data['PSF'], 'sr^-1')
+        rad = Angle(hdu_list["THETA"].data["Theta"], "deg")
+        energy = Quantity(hdu_list["PSF"].data["Energy"], "MeV")
+        exposure = Quantity(hdu_list["PSF"].data["Exposure"], "cm^2 s")
+        psf_value = Quantity(hdu_list["PSF"].data["PSF"], "sr^-1")
 
         return cls(energy, rad, exposure, psf_value)
 
@@ -431,10 +431,10 @@ class EnergyDependentTablePSF(object):
         # TODO: write HEADER keywords as gtpsf
 
         data = self.rad
-        theta_hdu = fits.BinTableHDU(data=data, name='Theta')
+        theta_hdu = fits.BinTableHDU(data=data, name="Theta")
 
         data = [self.energy, self.exposure, self.psf_value]
-        psf_hdu = fits.BinTableHDU(data=data, name='PSF')
+        psf_hdu = fits.BinTableHDU(data=data, name="PSF")
 
         hdu_list = fits.HDUList([theta_hdu, psf_hdu])
         return hdu_list
@@ -487,15 +487,15 @@ class EnergyDependentTablePSF(object):
             energy = self.energy
         if rad is None:
             rad = self.rad
-        energy = Energy(energy).to('TeV')
-        rad = Angle(rad).to('deg')
-        energy_bin = self.energy.to('TeV')
-        rad_bin = self.rad.to('deg')
+        energy = Energy(energy).to("TeV")
+        rad = Angle(rad).to("deg")
+        energy_bin = self.energy.to("TeV")
+        rad_bin = self.rad.to("deg")
         points = (energy_bin, rad_bin)
         interpolator = RegularGridInterpolator(
             points, self.psf_value.value, **interp_kwargs
         )
-        energy_grid, rad_grid = np.meshgrid(energy.value, rad.value, indexing='ij')
+        energy_grid, rad_grid = np.meshgrid(energy.value, rad.value, indexing="ij")
         shape = energy_grid.shape
         pix_coords = np.column_stack([energy_grid.flat, rad_grid.flat])
         data_interp = interpolator(pix_coords)
@@ -644,7 +644,7 @@ class EnergyDependentTablePSF(object):
         for energy in energies:
             energy_index = self._energy_index(energy)
             psf = self.psf_value[energy_index, :]
-            label = '{} GeV'.format(1e-3 * energy)
+            label = "{} GeV".format(1e-3 * energy)
             x = np.hstack([-self.rad[::-1], self.rad])
             y = 1e-6 * np.hstack([psf[::-1], psf])
             plt.plot(x, y, lw=2, label=label)
@@ -652,8 +652,8 @@ class EnergyDependentTablePSF(object):
         # plt.loglog()
         plt.legend()
         plt.xlim(-0.2, 0.5)
-        plt.xlabel('Offset (deg)')
-        plt.ylabel('PSF (1e-6 sr^-1)')
+        plt.xlabel("Offset (deg)")
+        plt.ylabel("PSF (1e-6 sr^-1)")
         plt.tight_layout()
 
     def plot_containment_vs_energy(
@@ -668,23 +668,23 @@ class EnergyDependentTablePSF(object):
 
         for fraction in fractions:
             rad = self.containment_radius(energy, fraction)
-            label = '{:.1f}% Containment'.format(100 * fraction)
+            label = "{:.1f}% Containment".format(100 * fraction)
             ax.plot(energy.value, rad.value, label=label, **kwargs)
 
         ax.semilogx()
-        ax.legend(loc='best')
-        ax.set_xlabel('Energy (GeV)')
-        ax.set_ylabel('Containment radius (deg)')
+        ax.legend(loc="best")
+        ax.set_xlabel("Energy (GeV)")
+        ax.set_ylabel("Containment radius (deg)")
 
     def plot_exposure_vs_energy(self):
         """Plot exposure versus energy."""
         import matplotlib.pyplot as plt
 
         plt.figure(figsize=(4, 3))
-        plt.plot(self.energy, self.exposure, color='black', lw=3)
+        plt.plot(self.energy, self.exposure, color="black", lw=3)
         plt.semilogx()
-        plt.xlabel('Energy (MeV)')
-        plt.ylabel('Exposure (cm^2 s)')
+        plt.xlabel("Energy (MeV)")
+        plt.ylabel("Exposure (cm^2 s)")
         plt.xlim(1e4 / 1.3, 1.3 * 1e6)
         plt.ylim(0, 1.5e11)
         plt.tight_layout()

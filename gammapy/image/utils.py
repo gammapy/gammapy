@@ -7,7 +7,7 @@ from functools import partial
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
 
-__all__ = ['scale_cube']
+__all__ = ["scale_cube"]
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def _fftconvolve_wrap(kernel, data):
         norm = kernel.array.sum()
         return norm * gaussian_filter(data, width)
     else:
-        return fftconvolve(data, kernel.array, mode='same')
+        return fftconvolve(data, kernel.array, mode="same")
 
 
 def scale_cube(data, kernels, parallel=True):

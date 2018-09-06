@@ -9,11 +9,11 @@ from ..utils.scripts import make_path
 from ..maps import Map
 
 __all__ = [
-    'SkyModelBase',
-    'SkyModels',
-    'SkyModel',
-    'CompoundSkyModel',
-    'SkyDiffuseCube',
+    "SkyModelBase",
+    "SkyModels",
+    "SkyModel",
+    "CompoundSkyModel",
+    "SkyDiffuseCube",
 ]
 
 
@@ -108,7 +108,7 @@ class SkyModels(object):
 
         xml = sky_models_to_xml(self)
         filename = make_path(filename)
-        with filename.open('w') as output:
+        with filename.open("w") as output:
             output.write(xml)
 
     def to_compound_model(self):
@@ -141,7 +141,7 @@ class SkyModel(SkyModelBase):
         Model identifier
     """
 
-    def __init__(self, spatial_model, spectral_model, name='SkyModel'):
+    def __init__(self, spatial_model, spectral_model, name="SkyModel"):
         self.name = name
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
@@ -172,15 +172,15 @@ class SkyModel(SkyModelBase):
         self._spectral_model.parameters.parameters = parameters.parameters[idx:]
 
     def __repr__(self):
-        fmt = '{}(spatial_model={!r}, spectral_model={!r})'
+        fmt = "{}(spatial_model={!r}, spectral_model={!r})"
         return fmt.format(
             self.__class__.__name__, self.spatial_model, self.spectral_model
         )
 
     def __str__(self):
-        ss = '{}\n\n'.format(self.__class__.__name__)
-        ss += 'spatial_model = {}\n\n'.format(self.spatial_model)
-        ss += 'spectral_model = {}\n'.format(self.spectral_model)
+        ss = "{}\n\n".format(self.__class__.__name__)
+        ss += "spatial_model = {}\n\n".format(self.spatial_model)
+        ss += "spectral_model = {}\n".format(self.spectral_model)
         return ss
 
     def evaluate(self, lon, lat, energy):
@@ -208,7 +208,7 @@ class SkyModel(SkyModelBase):
         val = val_spatial * val_spectral
         # TODO: shall remove hard coded return units? If really needed users can
         # always do this themselves. For fitting this also adds a performance penalty...
-        return val.to('cm-2 s-1 TeV-1 deg-2')
+        return val.to("cm-2 s-1 TeV-1 deg-2")
 
 
 class CompoundSkyModel(SkyModelBase):
@@ -245,9 +245,9 @@ class CompoundSkyModel(SkyModelBase):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n    Component 1 : {}'.format(self.model1)
-        ss += '\n    Component 2 : {}'.format(self.model2)
-        ss += '\n    Operator : {}'.format(self.operator)
+        ss += "\n    Component 1 : {}".format(self.model1)
+        ss += "\n    Component 2 : {}".format(self.model2)
+        ss += "\n    Operator : {}".format(self.operator)
         return ss
 
     def evaluate(self, lon, lat, energy):
@@ -294,18 +294,18 @@ class SkyDiffuseCube(SkyModelBase):
     """
 
     def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
-        axis = map.geom.get_axis_by_name('energy')
+        axis = map.geom.get_axis_by_name("energy")
 
-        if axis.node_type != 'center':
+        if axis.node_type != "center":
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self.parameters = Parameters([Parameter('norm', norm)])
+        self.parameters = Parameters([Parameter("norm", norm)])
         self.meta = {} if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
-        interp_kwargs.setdefault('interp', 'linear')
-        interp_kwargs.setdefault('fill_value', 0)
+        interp_kwargs.setdefault("interp", "linear")
+        interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
 
     @classmethod
@@ -320,17 +320,17 @@ class SkyDiffuseCube(SkyModelBase):
             FITS image filename.
         """
         m = Map.read(filename, **kwargs)
-        if m.unit == '':
-            m.unit = 'cm-2 s-1 MeV-1 sr-1'
+        if m.unit == "":
+            m.unit = "cm-2 s-1 MeV-1 sr-1"
         return cls(m)
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
         coord = {
-            'lon': lon.to('deg').value,
-            'lat': lat.to('deg').value,
-            'energy': energy,
+            "lon": lon.to("deg").value,
+            "lat": lat.to("deg").value,
+            "energy": energy,
         }
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
-        norm = self.parameters['norm'].value
+        norm = self.parameters["norm"].value
         return u.Quantity(norm * val, self.map.unit, copy=False)

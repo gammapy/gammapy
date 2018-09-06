@@ -10,7 +10,7 @@ from .background import Background3D
 from .energy_dispersion import EnergyDispersion2D
 from .psf_gauss import EnergyDependentMultiGaussPSF
 
-__all__ = ['CTAIrf', 'BgRateTable', 'Psf68Table', 'SensitivityTable', 'CTAPerf']
+__all__ = ["CTAIrf", "BgRateTable", "Psf68Table", "SensitivityTable", "CTAPerf"]
 
 
 class CTAIrf(object):
@@ -65,13 +65,13 @@ class CTAIrf(object):
         filename = str(make_path(filename))
         hdu_list = fits.open(filename)
 
-        aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
-        bkg = Background3D.read(filename, hdu='BACKGROUND')
-        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+        aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
+        bkg = Background3D.read(filename, hdu="BACKGROUND")
+        edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
-        if 'SENSITIVITY' in hdu_list:
-            sensi = SensitivityTable.read(filename, hdu='SENSITIVITY')
+        if "SENSITIVITY" in hdu_list:
+            sensi = SensitivityTable.read(filename, hdu="SENSITIVITY")
         else:
             sensi = None
 
@@ -96,7 +96,7 @@ class BgRateTable(object):
     def __init__(self, energy_lo, energy_hi, data):
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             )
         ]
         self.data = NDDataArray(axes=axes, data=data)
@@ -108,19 +108,19 @@ class BgRateTable(object):
     @classmethod
     def from_table(cls, table):
         """Background rate reader"""
-        energy_lo = table['ENERG_LO'].quantity
-        energy_hi = table['ENERG_HI'].quantity
-        data = table['BGD'].quantity
+        energy_lo = table["ENERG_LO"].quantity
+        energy_hi = table["ENERG_HI"].quantity
+        data = table["BGD"].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
+    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
         fits_table = hdulist[hdu]
         table = Table.read(fits_table)
         return cls.from_table(table)
 
     @classmethod
-    def read(cls, filename, hdu='BACKGROUND'):
+    def read(cls, filename, hdu="BACKGROUND"):
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
@@ -150,11 +150,11 @@ class BgRateTable(object):
             energy.value - self.energy.lo.value,
             self.energy.hi.value - energy.value,
         )
-        ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Background rate [{}]'.format(self.data.data.unit))
+        ax.errorbar(energy.value, values.value, xerr=xerr, fmt="o", **kwargs)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Energy [{}]".format(self.energy.unit))
+        ax.set_ylabel("Background rate [{}]".format(self.data.data.unit))
 
         return ax
 
@@ -177,7 +177,7 @@ class Psf68Table(object):
     def __init__(self, energy_lo, energy_hi, data):
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             )
         ]
         self.data = NDDataArray(axes=axes, data=data)
@@ -189,19 +189,19 @@ class Psf68Table(object):
     @classmethod
     def from_table(cls, table):
         """PSF reader"""
-        energy_lo = table['ENERG_LO'].quantity
-        energy_hi = table['ENERG_HI'].quantity
-        data = table['PSF68'].quantity
+        energy_lo = table["ENERG_LO"].quantity
+        energy_hi = table["ENERG_HI"].quantity
+        data = table["PSF68"].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='POINT SPREAD FUNCTION'):
+    def from_hdulist(cls, hdulist, hdu="POINT SPREAD FUNCTION"):
         fits_table = hdulist[hdu]
         table = Table.read(fits_table)
         return cls.from_table(table)
 
     @classmethod
-    def read(cls, filename, hdu='POINT SPREAD FUNCTION'):
+    def read(cls, filename, hdu="POINT SPREAD FUNCTION"):
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
@@ -231,11 +231,11 @@ class Psf68Table(object):
             energy.value - self.energy.lo.value,
             self.energy.hi.value - energy.value,
         )
-        ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
-        ax.set_xscale('log')
-        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.errorbar(energy.value, values.value, xerr=xerr, fmt="o", **kwargs)
+        ax.set_xscale("log")
+        ax.set_xlabel("Energy [{}]".format(self.energy.unit))
         ax.set_ylabel(
-            'Angular resolution 68 % containment [{}]'.format(self.data.data.unit)
+            "Angular resolution 68 % containment [{}]".format(self.data.data.unit)
         )
 
         return ax
@@ -259,30 +259,30 @@ class SensitivityTable(object):
     def __init__(self, energy_lo, energy_hi, data):
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             )
         ]
         self.data = NDDataArray(axes=axes, data=data)
 
     @property
     def energy(self):
-        return self.data.axis('energy')
+        return self.data.axis("energy")
 
     @classmethod
     def from_table(cls, table):
-        energy_lo = table['ENERG_LO'].quantity
-        energy_hi = table['ENERG_HI'].quantity
-        data = table['SENSITIVITY'].quantity
+        energy_lo = table["ENERG_LO"].quantity
+        energy_hi = table["ENERG_HI"].quantity
+        data = table["SENSITIVITY"].quantity
         return cls(energy_lo=energy_lo, energy_hi=energy_hi, data=data)
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='SENSITIVITY'):
+    def from_hdulist(cls, hdulist, hdu="SENSITIVITY"):
         fits_table = hdulist[hdu]
         table = Table.read(fits_table)
         return cls.from_table(table)
 
     @classmethod
-    def read(cls, filename, hdu='SENSITVITY'):
+    def read(cls, filename, hdu="SENSITVITY"):
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu=hdu)
@@ -312,11 +312,11 @@ class SensitivityTable(object):
             energy.value - self.energy.lo.value,
             self.energy.hi.value - energy.value,
         )
-        ax.errorbar(energy.value, values.value, xerr=xerr, fmt='o', **kwargs)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlabel('Reco Energy [{}]'.format(self.energy.unit))
-        ax.set_ylabel('Sensitivity [{}]'.format(self.data.data.unit))
+        ax.errorbar(energy.value, values.value, xerr=xerr, fmt="o", **kwargs)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Reco Energy [{}]".format(self.energy.unit))
+        ax.set_ylabel("Sensitivity [{}]".format(self.data.data.unit))
 
         return ax
 
@@ -362,7 +362,7 @@ class CTAPerf(object):
         self.rmf = rmf
 
     @classmethod
-    def read(cls, filename, offset='0.5 deg'):
+    def read(cls, filename, offset="0.5 deg"):
         """Read from a FITS file.
 
         Compute RMF at 0.5 deg offset on fly.
@@ -376,7 +376,7 @@ class CTAPerf(object):
 
         with fits.open(filename, memmap=False) as hdulist:
             aeff = EffectiveAreaTable.from_hdulist(hdulist=hdulist)
-            edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+            edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
             bkg = BgRateTable.from_hdulist(hdulist=hdulist)
             psf = Psf68Table.from_hdulist(hdulist=hdulist)
             sens = SensitivityTable.from_hdulist(hdulist=hdulist)
@@ -386,14 +386,14 @@ class CTAPerf(object):
         e_reco_max = bkg.energy.hi[-1]
         e_reco_bin = bkg.energy.nbins
         e_reco_axis = EnergyBounds.equal_log_spacing(
-            e_reco_min, e_reco_max, e_reco_bin, 'TeV'
+            e_reco_min, e_reco_max, e_reco_bin, "TeV"
         )
 
         e_true_min = aeff.energy.lo[0]
         e_true_max = aeff.energy.hi[-1]
         e_true_bin = aeff.energy.nbins
         e_true_axis = EnergyBounds.equal_log_spacing(
-            e_true_min, e_true_max, e_true_bin, 'TeV'
+            e_true_min, e_true_max, e_true_bin, "TeV"
         )
 
         rmf = edisp.to_energy_dispersion(
@@ -414,15 +414,15 @@ class CTAPerf(object):
         ax_resol = plt.subplot2grid((2, 4), (1, 1))
 
         self.bkg.plot(ax=ax_bkg)
-        self.aeff.plot(ax=ax_area).set_yscale('log')
+        self.aeff.plot(ax=ax_area).set_yscale("log")
         self.sens.plot(ax=ax_sens)
         self.psf.plot(ax=ax_psf)
-        self.edisp.plot_bias(ax=ax_resol, offset='0.5 deg')
+        self.edisp.plot_bias(ax=ax_resol, offset="0.5 deg")
 
-        ax_bkg.grid(which='both')
-        ax_area.grid(which='both')
-        ax_sens.grid(which='both')
-        ax_psf.grid(which='both')
+        ax_bkg.grid(which="both")
+        ax_area.grid(which="both")
+        ax_sens.grid(which="both")
+        ax_psf.grid(which="both")
         fig.tight_layout()
 
     @staticmethod
@@ -445,20 +445,20 @@ class CTAPerf(object):
         ax_sens = plt.subplot2grid((2, 2), (1, 1))
 
         for index, (perf, label) in enumerate(zip(cta_perf, labels)):
-            plot_label = {'label': label}
+            plot_label = {"label": label}
             perf.bkg.plot(ax=ax_bkg, **plot_label)
-            perf.aeff.plot(ax=ax_area, **plot_label).set_yscale('log')
+            perf.aeff.plot(ax=ax_area, **plot_label).set_yscale("log")
             perf.sens.plot(ax=ax_sens, **plot_label)
             perf.psf.plot(ax=ax_psf, **plot_label)
 
-        ax_bkg.legend(loc='best')
-        ax_area.legend(loc='best')
-        ax_psf.legend(loc='best')
-        ax_sens.legend(loc='best')
+        ax_bkg.legend(loc="best")
+        ax_area.legend(loc="best")
+        ax_psf.legend(loc="best")
+        ax_sens.legend(loc="best")
 
-        ax_bkg.grid(which='both')
-        ax_area.grid(which='both')
-        ax_psf.grid(which='both')
-        ax_sens.grid(which='both')
+        ax_bkg.grid(which="both")
+        ax_area.grid(which="both")
+        ax_psf.grid(which="both")
+        ax_sens.grid(which="both")
 
         fig.tight_layout()

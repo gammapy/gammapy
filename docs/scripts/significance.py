@@ -6,13 +6,13 @@ from gammapy.stats import significance
 # You can call the callback function for the click command anything you like.
 # `cli` is just a commonly used generic term for "command line interface".
 @click.command()
-@click.argument('n_observed')
-@click.argument('mu_background')
+@click.argument("n_observed")
+@click.argument("mu_background")
 @click.option(
-    '--method',
-    type=click.Choice(['lima', 'simple']),
-    default='lima',
-    help='Significance computation method',
+    "--method",
+    type=click.Choice(["lima", "simple"]),
+    default="lima",
+    help="Significance computation method",
 )
 def cli(n_observed, mu_background, method):
     """Compute significance for a Poisson count observation.
@@ -23,5 +23,5 @@ def cli(n_observed, mu_background, method):
     print(s)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

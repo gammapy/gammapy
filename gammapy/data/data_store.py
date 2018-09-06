@@ -9,7 +9,7 @@ from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .observations import DataStoreObservation, ObservationList, ObservationChecker
 
-__all__ = ['DataStore']
+__all__ = ["DataStore"]
 
 log = logging.getLogger(__name__)
 
@@ -38,10 +38,10 @@ class DataStore(object):
     >>> data_store.info()
     """
 
-    DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
+    DEFAULT_HDU_TABLE = "hdu-index.fits.gz"
     """Default HDU table filename."""
 
-    DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
+    DEFAULT_OBS_TABLE = "obs-index.fits.gz"
     """Default observation table filename."""
 
     def __init__(self, hdu_table=None, obs_table=None):
@@ -55,16 +55,16 @@ class DataStore(object):
     def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Construct from HDU and observation index table files."""
         if hdu_table_filename:
-            log.debug('Reading {}'.format(hdu_table_filename))
-            hdu_table = HDUIndexTable.read(str(hdu_table_filename), format='fits')
+            log.debug("Reading {}".format(hdu_table_filename))
+            hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
 
-            hdu_table.meta['BASE_DIR'] = str(base_dir)
+            hdu_table.meta["BASE_DIR"] = str(base_dir)
         else:
             hdu_table = None
 
         if obs_table_filename:
-            log.debug('Reading {}'.format(str(obs_table_filename)))
-            obs_table = ObservationTable.read(str(obs_table_filename), format='fits')
+            log.debug("Reading {}".format(str(obs_table_filename)))
+            obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
         else:
             obs_table = None
 
@@ -87,9 +87,9 @@ class DataStore(object):
     @classmethod
     def from_config(cls, config):
         """Create from a config dict."""
-        base_dir = config['base_dir']
-        hdu_table_filename = config.get('hduindx', cls.DEFAULT_HDU_TABLE)
-        obs_table_filename = config.get('obsindx', cls.DEFAULT_OBS_TABLE)
+        base_dir = config["base_dir"]
+        hdu_table_filename = config.get("hduindx", cls.DEFAULT_HDU_TABLE)
+        obs_table_filename = config.get("obsindx", cls.DEFAULT_OBS_TABLE)
 
         hdu_table_filename = cls._find_file(hdu_table_filename, base_dir)
         obs_table_filename = cls._find_file(obs_table_filename, base_dir)
@@ -116,15 +116,15 @@ class DataStore(object):
         elif path2.is_file():
             filename = path2
         else:
-            raise OSError('File not found at {} or {}'.format(path1, path2))
+            raise OSError("File not found at {} or {}".format(path1, path2))
 
         return filename
 
     def info(self, show=True):
         """Print some info."""
-        s = 'Data store:\n'
+        s = "Data store:\n"
         s += self.hdu_table.summary()
-        s += '\n\n'
+        s += "\n\n"
         s += self.obs_table.summary()
 
         if show:
@@ -168,7 +168,7 @@ class DataStore(object):
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warning('Skipping missing obs_id: {!r}'.format(_))
+                    log.warning("Skipping missing obs_id: {!r}".format(_))
                     continue
                 else:
                     raise err
@@ -196,15 +196,15 @@ class DataStore(object):
 
         outdir = make_path(outdir)
         if isinstance(obs_id, ObservationTable):
-            obs_id = obs_id['OBS_ID'].data
+            obs_id = obs_id["OBS_ID"].data
 
         hdutable = self.hdu_table
-        hdutable.add_index('OBS_ID')
-        with hdutable.index_mode('discard_on_copy'):
+        hdutable.add_index("OBS_ID")
+        with hdutable.index_mode("discard_on_copy"):
             subhdutable = hdutable.loc[obs_id]
         if hdu_class is not None:
-            subhdutable.add_index('HDU_CLASS')
-            with subhdutable.index_mode('discard_on_copy'):
+            subhdutable.add_index("HDU_CLASS")
+            with subhdutable.index_mode("discard_on_copy"):
                 subhdutable = subhdutable.loc[hdu_class]
         subobstable = self.obs_table.select_obs_id(obs_id)
 
@@ -213,19 +213,19 @@ class DataStore(object):
             loc = subhdutable.location_info(idx)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
-            cmd = ['cp', '-v'] if verbose else ['cp']
+            cmd = ["cp", "-v"] if verbose else ["cp"]
             if not overwrite:
-                cmd += ['-n']
+                cmd += ["-n"]
             cmd += [str(loc.path()), str(targetdir)]
             subprocess.call(cmd)
 
         filename = str(outdir / self.DEFAULT_HDU_TABLE)
-        subhdutable.write(filename, format='fits', overwrite=overwrite)
+        subhdutable.write(filename, format="fits", overwrite=overwrite)
 
         filename = str(outdir / self.DEFAULT_OBS_TABLE)
-        subobstable.write(filename, format='fits', overwrite=overwrite)
+        subobstable.write(filename, format="fits", overwrite=overwrite)
 
-    def check(self, checks='all'):
+    def check(self, checks="all"):
         """Check index tables and data files.
 
         This is a generator that yields a list of dicts.
@@ -241,10 +241,10 @@ class DataStoreChecker(Checker):
     """
 
     CHECKS = {
-        'obs_table': 'check_obs_table',
-        'hdu_table': 'check_hdu_table',
-        'observations': 'check_observations',
-        'consistency': 'check_consistency',
+        "obs_table": "check_obs_table",
+        "hdu_table": "check_hdu_table",
+        "observations": "check_observations",
+        "consistency": "check_consistency",
     }
 
     def __init__(self, data_store):
@@ -254,34 +254,34 @@ class DataStoreChecker(Checker):
         """Checks for the observation index table."""
         t = self.data_store.obs_table
         m = t.meta
-        if m.get('HDUCLAS1', '') != 'INDEX':
+        if m.get("HDUCLAS1", "") != "INDEX":
             yield {
-                'level': 'error',
-                'hdu': 'obs-index',
-                'msg': 'Invalid header key. Must have HDUCLAS1=INDEX',
+                "level": "error",
+                "hdu": "obs-index",
+                "msg": "Invalid header key. Must have HDUCLAS1=INDEX",
             }
-        if m.get('HDUCLAS2', '') != 'OBS':
+        if m.get("HDUCLAS2", "") != "OBS":
             yield {
-                'level': 'error',
-                'hdu': 'obs-index',
-                'msg': 'Invalid header key. Must have HDUCLAS2=OBS',
+                "level": "error",
+                "hdu": "obs-index",
+                "msg": "Invalid header key. Must have HDUCLAS2=OBS",
             }
 
     def check_hdu_table(self):
         """Checks for the HDU index table."""
         t = self.data_store.hdu_table
         m = t.meta
-        if m.get('HDUCLAS1', '') != 'INDEX':
+        if m.get("HDUCLAS1", "") != "INDEX":
             yield {
-                'level': 'error',
-                'hdu': 'hdu-index',
-                'msg': 'Invalid header key. Must have HDUCLAS1=INDEX',
+                "level": "error",
+                "hdu": "hdu-index",
+                "msg": "Invalid header key. Must have HDUCLAS1=INDEX",
             }
-        if m.get('HDUCLAS2', '') != 'HDU':
+        if m.get("HDUCLAS2", "") != "HDU":
             yield {
-                'level': 'error',
-                'hdu': 'hdu-index',
-                'msg': 'Invalid header key. Must have HDUCLAS2=HDU',
+                "level": "error",
+                "hdu": "hdu-index",
+                "msg": "Invalid header key. Must have HDUCLAS2=HDU",
             }
 
         # Check that all HDU in the data files exist
@@ -291,8 +291,8 @@ class DataStoreChecker(Checker):
                 location_info.get_hdu()
             except KeyError:
                 yield {
-                    'level': 'error',
-                    'msg': 'HDU not found: {!r}'.format(location_info.__dict__),
+                    "level": "error",
+                    "msg": "HDU not found: {!r}".format(location_info.__dict__),
                 }
 
         # TODO: all HDU in the index table should be present
@@ -300,19 +300,19 @@ class DataStoreChecker(Checker):
     def check_consistency(self):
         """Consistency checks between multiple HDUs"""
         # obs and HDU index should have the same OBS_ID
-        obs_table_obs_id = set(self.data_store.obs_table['OBS_ID'])
-        hdu_table_obs_id = set(self.data_store.hdu_table['OBS_ID'])
+        obs_table_obs_id = set(self.data_store.obs_table["OBS_ID"])
+        hdu_table_obs_id = set(self.data_store.hdu_table["OBS_ID"])
         if not obs_table_obs_id == hdu_table_obs_id:
             yield {
-                'level': 'error',
-                'msg': 'Inconsistent OBS_ID in obs and HDU index tables',
+                "level": "error",
+                "msg": "Inconsistent OBS_ID in obs and HDU index tables",
             }
 
         # TODO: obs table and events header should have the same times
 
     def check_observations(self):
         """Perform some sanity checks for all observations."""
-        for obs_id in self.data_store.obs_table['OBS_ID']:
+        for obs_id in self.data_store.obs_table["OBS_ID"]:
             obs = self.data_store.obs(obs_id)
             for records in ObservationChecker(obs).run():
                 yield records

@@ -5,7 +5,7 @@ import numpy as np
 from astropy.units import Quantity
 from ..irf import EffectiveAreaTable, EnergyDispersion
 
-__all__ = ['IRFStacker']
+__all__ = ["IRFStacker"]
 
 log = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class IRFStacker(object):
         Compute mean effective area (`~gammapy.irf.EffectiveAreaTable`).
         """
         nbins = self.list_aeff[0].energy.nbins
-        aefft = Quantity(np.zeros(nbins), 'cm2 s')
+        aefft = Quantity(np.zeros(nbins), "cm2 s")
         livetime_tot = np.sum(self.list_livetime)
 
         for i, aeff in enumerate(self.list_aeff):
@@ -82,7 +82,7 @@ class IRFStacker(object):
         self.stacked_aeff = EffectiveAreaTable(
             energy_lo=self.list_aeff[0].energy.lo,
             energy_hi=self.list_aeff[0].energy.hi,
-            data=stacked_data.to('cm2'),
+            data=stacked_data.to("cm2"),
         )
 
     def stack_edisp(self):
@@ -92,9 +92,9 @@ class IRFStacker(object):
         reco_bins = self.list_edisp[0].e_reco.nbins
         true_bins = self.list_edisp[0].e_true.nbins
 
-        aefft = Quantity(np.zeros(true_bins), 'cm2 s')
+        aefft = Quantity(np.zeros(true_bins), "cm2 s")
         temp = np.zeros(shape=(reco_bins, true_bins))
-        aefftedisp = Quantity(temp, 'cm2 s')
+        aefftedisp = Quantity(temp, "cm2 s")
 
         for i, edisp in enumerate(self.list_edisp):
             aeff_data = self.list_aeff[i].evaluate_fill_nan()
@@ -106,7 +106,7 @@ class IRFStacker(object):
 
             aefftedisp += edisp_data.transpose() * aefft_current
 
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             stacked_edisp = np.nan_to_num(aefftedisp / aefft)
 
         self.stacked_edisp = EnergyDispersion(

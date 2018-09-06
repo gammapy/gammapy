@@ -5,10 +5,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 
 __all__ = [
-    'significance_to_probability_normal',
-    'probability_to_significance_normal',
-    'probability_to_significance_normal_limit',
-    'significance_to_probability_normal_limit',
+    "significance_to_probability_normal",
+    "probability_to_significance_normal",
+    "probability_to_significance_normal_limit",
+    "significance_to_probability_normal_limit",
 ]
 
 

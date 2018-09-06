@@ -11,10 +11,10 @@ def make_test_hdu_list():
     return fits.HDUList(
         [
             fits.PrimaryHDU(),
-            fits.BinTableHDU(name='TABLE1'),
-            fits.ImageHDU(name='IMAGE1', data=np.zeros(shape=(1, 2, 3))),
-            fits.BinTableHDU(name='TABLE2'),
-            fits.ImageHDU(name='IMAGE2', data=np.zeros(shape=(4, 5))),
+            fits.BinTableHDU(name="TABLE1"),
+            fits.ImageHDU(name="IMAGE1", data=np.zeros(shape=(1, 2, 3))),
+            fits.BinTableHDU(name="TABLE2"),
+            fits.ImageHDU(name="IMAGE2", data=np.zeros(shape=(4, 5))),
         ]
     )
 
@@ -23,11 +23,11 @@ def make_test_hdu_list():
 # Need to move to conftest or can import?
 @pytest.fixture()
 def table():
-    t = Table(meta={'version': 42})
-    t['a'] = np.array([1, 2], dtype=np.int32)
-    t['b'] = Column(np.array([1, 2], dtype=np.int64), unit='m', description='Velocity')
-    t['b'].meta['ucd'] = 'spam'
-    t['c'] = Column(['x', 'yy'], 'c')
+    t = Table(meta={"version": 42})
+    t["a"] = np.array([1, 2], dtype=np.int32)
+    t["b"] = Column(np.array([1, 2], dtype=np.int64), unit="m", description="Velocity")
+    t["b"].meta["ucd"] = "spam"
+    t["c"] = Column(["x", "yy"], "c")
     return t
 
 
@@ -35,7 +35,7 @@ class TestSmartHDUList:
     def setup(self):
         self.hdus = SmartHDUList(hdu_list=make_test_hdu_list())
 
-        self.names = ['PRIMARY', 'TABLE1', 'IMAGE1', 'TABLE2', 'IMAGE2']
+        self.names = ["PRIMARY", "TABLE1", "IMAGE1", "TABLE2", "IMAGE2"]
         self.numbers = list(range(5))
 
     def test_names(self):
@@ -53,8 +53,8 @@ class TestSmartHDUList:
             assert g(hdu=name.lower()) == name
             assert g(hdu=number) == name
 
-        g(hdu_type='image') == 'IMAGE1'
-        g(hdu_type='table') == 'TABLE1'
+        g(hdu_type="image") == "IMAGE1"
+        g(hdu_type="table") == "TABLE1"
 
         # Call the method incorrectly, and assert that ValueError is raised:
 
@@ -62,7 +62,7 @@ class TestSmartHDUList:
             g()
         assert (
             str(exc.value)
-            == 'Must give either `hdu` or `hdu_type`. Got `None` for both.'
+            == "Must give either `hdu` or `hdu_type`. Got `None` for both."
         )
 
         # with pytest.raises(ValueError) as exc:
@@ -73,16 +73,16 @@ class TestSmartHDUList:
         # )
 
         with pytest.raises(ValueError) as exc:
-            g(hdu_type='bad value')
+            g(hdu_type="bad value")
         assert str(exc.value) == "Invalid hdu_type=bad value"
 
         # Query for non-existent HDUs, and assert that KeyError is raised:
 
         with pytest.raises(KeyError) as exc:
-            g(hdu=['bad', 'type'])
+            g(hdu=["bad", "type"])
 
         with pytest.raises(KeyError) as exc:
-            g(hdu='kronka lonka')
+            g(hdu="kronka lonka")
 
         with pytest.raises(KeyError) as exc:
             g(hdu=42)
@@ -92,10 +92,10 @@ class TestSmartHDUList:
         # We test almost everything above via `test_fits_get_hdu`
         # Here we just add a single test for `get_hdu_index` to
         # make sure it returns an int index all right.
-        assert self.hdus.get_hdu_index(hdu='TABLE2') == 3
+        assert self.hdus.get_hdu_index(hdu="TABLE2") == 3
 
     def test_read_write(self, tmpdir):
-        filename = str(tmpdir / 'data.fits')
+        filename = str(tmpdir / "data.fits")
         self.hdus.write(filename)
         hdus2 = SmartHDUList.open(filename)
         assert self.hdus.names == hdus2.names
@@ -116,14 +116,14 @@ def test_table_fits_io_astropy(table):
     """
     # Check Table -> BinTableHDU
     hdu = fits.BinTableHDU(table)
-    assert hdu.header['TTYPE2'] == 'b'
-    assert hdu.header['TFORM2'] == 'K'
-    assert hdu.header['TUNIT2'] == 'm'
+    assert hdu.header["TTYPE2"] == "b"
+    assert hdu.header["TFORM2"] == "K"
+    assert hdu.header["TUNIT2"] == "m"
 
     # Check BinTableHDU -> Table
     table2 = Table.read(hdu)
     assert isinstance(table2.meta, dict)
-    assert table2.meta == {'VERSION': 42}
-    assert table2['b'].unit == 'm'
+    assert table2.meta == {"VERSION": 42}
+    assert table2["b"].unit == "m"
     # Note: description doesn't come back in older versions of Astropy
     # that we still support, so we're not asserting on that here for now.

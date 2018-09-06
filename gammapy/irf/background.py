@@ -9,7 +9,7 @@ from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 
-__all__ = ['Background3D', 'Background2D']
+__all__ = ["Background3D", "Background2D"]
 
 
 class Background3D(object):
@@ -64,13 +64,13 @@ class Background3D(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             ),
             BinnedDataAxis(
-                fov_lon_lo, fov_lon_hi, interpolation_mode='linear', name='fov_lon'
+                fov_lon_lo, fov_lon_hi, interpolation_mode="linear", name="fov_lon"
             ),
             BinnedDataAxis(
-                fov_lat_lo, fov_lat_hi, interpolation_mode='linear', name='fov_lat'
+                fov_lat_lo, fov_lat_hi, interpolation_mode="linear", name="fov_lat"
             ),
         ]
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
@@ -78,7 +78,7 @@ class Background3D(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.data)
+        ss += "\n{}".format(self.data)
         return ss
 
     @classmethod
@@ -86,10 +86,10 @@ class Background3D(object):
         """Read from `~astropy.table.Table`."""
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
-        if 'BKG' in table.colnames:
-            bkg_name = 'BKG'
-        elif 'BGD' in table.colnames:
-            bkg_name = 'BGD'
+        if "BKG" in table.colnames:
+            bkg_name = "BKG"
+        elif "BGD" in table.colnames:
+            bkg_name = "BGD"
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
@@ -97,26 +97,26 @@ class Background3D(object):
         # '1/s/MeV/sr', which is invalid ( try: astropy.unit.Unit('1/s/MeV/sr')
         # This should be corrected.
         # For now, we hard-code the unit here:
-        data_unit = u.Unit('s-1 MeV-1 sr-1')
+        data_unit = u.Unit("s-1 MeV-1 sr-1")
 
         return cls(
-            energy_lo=table['ENERG_LO'].quantity[0],
-            energy_hi=table['ENERG_HI'].quantity[0],
-            fov_lon_lo=table['DETX_LO'].quantity[0],
-            fov_lon_hi=table['DETX_HI'].quantity[0],
-            fov_lat_lo=table['DETY_LO'].quantity[0],
-            fov_lat_hi=table['DETY_HI'].quantity[0],
+            energy_lo=table["ENERG_LO"].quantity[0],
+            energy_hi=table["ENERG_HI"].quantity[0],
+            fov_lon_lo=table["DETX_LO"].quantity[0],
+            fov_lon_hi=table["DETX_HI"].quantity[0],
+            fov_lat_lo=table["DETY_LO"].quantity[0],
+            fov_lat_hi=table["DETY_HI"].quantity[0],
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
+    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
         """Create from `~astropy.io.fits.HDUList`."""
         return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
-    def read(cls, filename, hdu='BACKGROUND'):
+    def read(cls, filename, hdu="BACKGROUND"):
         """Read from file."""
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
@@ -128,16 +128,16 @@ class Background3D(object):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
         table = Table(meta=meta)
-        table['DETX_LO'] = self.data.axis('fov_lon').lo[np.newaxis]
-        table['DETX_HI'] = self.data.axis('fov_lon').hi[np.newaxis]
-        table['DETY_LO'] = self.data.axis('fov_lat').lo[np.newaxis]
-        table['DETY_HI'] = self.data.axis('fov_lat').hi[np.newaxis]
-        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
-        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
-        table['BKG'] = self.data.data[np.newaxis]
+        table["DETX_LO"] = self.data.axis("fov_lon").lo[np.newaxis]
+        table["DETX_HI"] = self.data.axis("fov_lon").hi[np.newaxis]
+        table["DETY_LO"] = self.data.axis("fov_lat").lo[np.newaxis]
+        table["DETY_HI"] = self.data.axis("fov_lat").hi[np.newaxis]
+        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
+        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        table["BKG"] = self.data.data[np.newaxis]
         return table
 
-    def to_fits(self, name='BACKGROUND'):
+    def to_fits(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 
@@ -250,10 +250,10 @@ class Background2D(object):
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+                energy_lo, energy_hi, interpolation_mode="log", name="energy"
             ),
             BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode='linear', name='offset'
+                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
             ),
         ]
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
@@ -261,7 +261,7 @@ class Background2D(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.data)
+        ss += "\n{}".format(self.data)
         return ss
 
     @classmethod
@@ -269,10 +269,10 @@ class Background2D(object):
         """Read from `~astropy.table.Table`."""
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
-        if 'BKG' in table.colnames:
-            bkg_name = 'BKG'
-        elif 'BGD' in table.colnames:
-            bkg_name = 'BGD'
+        if "BKG" in table.colnames:
+            bkg_name = "BKG"
+        elif "BGD" in table.colnames:
+            bkg_name = "BGD"
         else:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
@@ -280,23 +280,23 @@ class Background2D(object):
         # '1/s/MeV/sr', which is invalid ( try: astropy.unit.Unit('1/s/MeV/sr')
         # This should be corrected.
         # For now, we hard-code the unit here:
-        data_unit = u.Unit('s-1 MeV-1 sr-1')
+        data_unit = u.Unit("s-1 MeV-1 sr-1")
         return cls(
-            energy_lo=table['ENERG_LO'].quantity[0],
-            energy_hi=table['ENERG_HI'].quantity[0],
-            offset_lo=table['THETA_LO'].quantity[0],
-            offset_hi=table['THETA_HI'].quantity[0],
+            energy_lo=table["ENERG_LO"].quantity[0],
+            energy_hi=table["ENERG_HI"].quantity[0],
+            offset_lo=table["THETA_LO"].quantity[0],
+            offset_hi=table["THETA_HI"].quantity[0],
             data=table[bkg_name].data[0] * data_unit,
             meta=table.meta,
         )
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu='BACKGROUND'):
+    def from_hdulist(cls, hdulist, hdu="BACKGROUND"):
         """Create from `~astropy.io.fits.HDUList`."""
         return cls.from_table(Table.read(hdulist[hdu]))
 
     @classmethod
-    def read(cls, filename, hdu='BACKGROUND'):
+    def read(cls, filename, hdu="BACKGROUND"):
         """Read from file."""
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
@@ -309,14 +309,14 @@ class Background2D(object):
         meta = self.meta.copy()
         table = Table(meta=meta)
 
-        table['THETA_LO'] = self.data.axis('offset').lo[np.newaxis]
-        table['THETA_HI'] = self.data.axis('offset').hi[np.newaxis]
-        table['ENERG_LO'] = self.data.axis('energy').lo[np.newaxis]
-        table['ENERG_HI'] = self.data.axis('energy').hi[np.newaxis]
-        table['BKG'] = self.data.data[np.newaxis]
+        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
+        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
+        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
+        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        table["BKG"] = self.data.data[np.newaxis]
         return table
 
-    def to_fits(self, name='BACKGROUND'):
+    def to_fits(self, name="BACKGROUND"):
         """Convert to `~astropy.io.fits.BinTableHDU`."""
         return fits.BinTableHDU(self.to_table(), name=name)
 

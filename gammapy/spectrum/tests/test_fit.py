@@ -16,7 +16,7 @@ from ...spectrum import (
 )
 
 
-@requires_dependency('sherpa')
+@requires_dependency("sherpa")
 class TestFit:
     """Test fitter on counts spectra without any IRFs"""
 
@@ -65,10 +65,10 @@ class TestFit:
         fit = SpectrumFit(
             obs_list=obs_list,
             model=self.source_model,
-            stat='cash',
+            stat="cash",
             forward_folded=False,
         )
-        assert 'Spectrum' in str(fit)
+        assert "Spectrum" in str(fit)
 
         fit.predict_counts()
         assert_allclose(fit.predicted_counts[0][5], 660.5171, rtol=1e-5)
@@ -76,12 +76,12 @@ class TestFit:
         fit.calc_statval()
         assert_allclose(np.sum(fit.statval[0]), -107346.5291, rtol=1e-5)
 
-        self.source_model.parameters['index'].value = 1.12
+        self.source_model.parameters["index"].value = 1.12
         fit.fit()
         # These values are check with sherpa fits, do not change
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 1.995525, rtol=1e-3)
-        assert_allclose(pars['amplitude'].value, 100245.9, rtol=1e-3)
+        assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
+        assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
 
     def test_wstat(self):
         """WStat with on source and background spectrum"""
@@ -94,13 +94,13 @@ class TestFit:
         fit = SpectrumFit(
             obs_list=obs_list,
             model=self.source_model,
-            stat='wstat',
+            stat="wstat",
             forward_folded=False,
         )
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 1.997342, rtol=1e-3)
-        assert_allclose(pars['amplitude'].value, 100245.187067, rtol=1e-3)
+        assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
+        assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
         assert_allclose(fit.result[0].statval, 30.022316, rtol=1e-3)
 
     def test_joint(self):
@@ -110,13 +110,13 @@ class TestFit:
         obs2 = SpectrumObservation(on_vector=src_rebinned)
         fit = SpectrumFit(
             obs_list=[obs1, obs2],
-            stat='cash',
+            stat="cash",
             model=self.source_model,
             forward_folded=False,
         )
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 1.996456, rtol=1e-3)
+        assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
@@ -153,51 +153,51 @@ class TestFit:
     def test_likelihood_profile(self):
         obs = SpectrumObservation(on_vector=self.src)
         fit = SpectrumFit(
-            obs_list=obs, stat='cash', model=self.source_model, forward_folded=False
+            obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
         fit.fit()
-        true_idx = fit.result[0].model.parameters['index'].value
+        true_idx = fit.result[0].model.parameters["index"].value
         scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         profile = fit.likelihood_1d(
-            model=fit.result[0].model, parname='index', parvals=scan_idx
+            model=fit.result[0].model, parname="index", parvals=scan_idx
         )
         argmin = np.argmin(profile)
         actual = scan_idx[argmin]
         assert_allclose(actual, true_idx, rtol=0.01)
 
-    @requires_dependency('matplotlib')
+    @requires_dependency("matplotlib")
     def test_plot(self):
         obs = SpectrumObservation(on_vector=self.src)
         fit = SpectrumFit(
-            obs_list=obs, stat='cash', model=self.source_model, forward_folded=False
+            obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
 
         scan_idx = np.linspace(1, 3, 20)
         with mpl_plot_check():
             fit.plot_likelihood_1d(
-                model=self.source_model, parname='index', parvals=scan_idx
+                model=self.source_model, parname="index", parvals=scan_idx
             )
         # TODO: add assert, see issue 294
 
 
-@requires_dependency('sherpa')
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("sherpa")
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
 
     def setup(self):
         self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha'
+            "$GAMMAPY_EXTRA/datasets/hess-crab4_pha"
         )
 
         self.pwl = models.PowerLaw(
-            index=2, amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.TeV
+            index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
         self.ecpl = models.ExponentialCutoffPowerLaw(
             index=2,
-            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
+            amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
         )
@@ -205,16 +205,16 @@ class TestSpectralFit:
         # Example fit for one observation
         self.fit = SpectrumFit(self.obs_list[0], self.pwl)
 
-    @requires_dependency('iminuit')
+    @requires_dependency("iminuit")
     def test_basic_results(self):
-        self.fit.method = 'iminuit'
+        self.fit.method = "iminuit"
         self.fit.fit()
         result = self.fit.result[0]
         assert_allclose(result.statval, 32.8387, rtol=1e-4)
         pars = result.model.parameters
-        assert_allclose(pars['index'].value, 2.25423, rtol=1e-2)
-        assert pars['amplitude'].unit == u.Unit('cm-2 s-1 TeV-1')
-        assert_allclose(pars['amplitude'].value, 2.008654e-11, rtol=1e-2)
+        assert_allclose(pars["index"].value, 2.25423, rtol=1e-2)
+        assert pars["amplitude"].unit == u.Unit("cm-2 s-1 TeV-1")
+        assert_allclose(pars["amplitude"].value, 2.008654e-11, rtol=1e-2)
         assert_allclose(result.npred[60], 0.5638139, rtol=1e-3)
         self.fit.result[0].to_table()
 
@@ -222,9 +222,9 @@ class TestSpectralFit:
         self.fit.fit()
         self.fit.est_errors()
         result = self.fit.result[0]
-        assert_allclose(result.model.parameters.error('index'), 0.097866953, rtol=1e-3)
+        assert_allclose(result.model.parameters.error("index"), 0.097866953, rtol=1e-3)
         assert_allclose(
-            result.model.parameters.error('amplitude'), 2.1994e-12, rtol=1e-3
+            result.model.parameters.error("amplitude"), 2.1994e-12, rtol=1e-3
         )
         self.fit.result[0].to_table()
 
@@ -234,9 +234,9 @@ class TestSpectralFit:
         fit.fit()
         result = fit.result[0]
         pars = result.model.parameters
-        assert_allclose(pars['index'].value, 2.254578, rtol=1e-3)
-        p = pars['amplitude']
-        assert p.unit == u.Unit('cm-2 s-1 TeV-1')
+        assert_allclose(pars["index"].value, 2.254578, rtol=1e-3)
+        p = pars["amplitude"]
+        assert p.unit == u.Unit("cm-2 s-1 TeV-1")
         assert_allclose(p.value, 3.169233e-12, rtol=1e-3)
 
     def test_npred(self):
@@ -261,7 +261,7 @@ class TestSpectralFit:
         obs = self.fit.obs_list[0]
         desired = obs.on_vector.lo_threshold
         actual = self.fit.true_fit_range[0][0]
-        assert actual.unit == 'keV'
+        assert actual.unit == "keV"
         assert_allclose(actual.value, desired.value)
 
         # Restrict fit range
@@ -292,23 +292,23 @@ class TestSpectralFit:
         obs.edisp = None
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
         fit.fit()
-        assert_allclose(fit.result[0].model.parameters['index'].value, 2.296, atol=0.02)
+        assert_allclose(fit.result[0].model.parameters["index"].value, 2.296, atol=0.02)
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
-        actual = fit.result[0].model.parameters['lambda_'].quantity
-        assert actual.unit == 'TeV-1'
+        actual = fit.result[0].model.parameters["lambda_"].quantity
+        assert actual.unit == "TeV-1"
         assert_allclose(actual.value, 0.034231, rtol=1e-2)
 
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
-        actual = fit.result[0].model.parameters['index'].value
+        actual = fit.result[0].model.parameters["index"].value
         assert_allclose(actual, 2.21225, rtol=1e-3)
 
-        actual = fit.result[0].model.parameters['amplitude'].quantity
-        assert actual.unit == 'cm-2 s-1 TeV-1'
+        actual = fit.result[0].model.parameters["amplitude"].quantity
+        assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 2.361871e-11, rtol=1e-3)
 
     def test_stacked_fit(self):
@@ -317,15 +317,15 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars['index'].value, 2.21338, rtol=1e-3)
-        assert u.Unit(pars['amplitude'].unit) == 'cm-2 s-1 TeV-1'
-        assert_allclose(pars['amplitude'].value, 2.361827e-11, rtol=1e-3)
+        assert_allclose(pars["index"].value, 2.21338, rtol=1e-3)
+        assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
+        assert_allclose(pars["amplitude"].value, 2.361827e-11, rtol=1e-3)
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run(outdir=tmpdir)
 
-        read_result = SpectrumFitResult.from_yaml(tmpdir / 'fit_result_PowerLaw.yaml')
+        read_result = SpectrumFitResult.from_yaml(tmpdir / "fit_result_PowerLaw.yaml")
 
         desired = fit.result[0].model.evaluate_error(1 * u.TeV)
         actual = read_result.model.evaluate_error(1 * u.TeV)
@@ -341,13 +341,13 @@ class TestSpectralFit:
         # from Sherpa remain. Not sure what to do, OK as-is for now.
         import logging
 
-        logging.getLogger("sherpa").setLevel('ERROR')
+        logging.getLogger("sherpa").setLevel("ERROR")
 
         self.obs_list.write(tmpdir, use_sherpa=True)
-        filename = tmpdir / 'pha_obs23523.fits'
+        filename = tmpdir / "pha_obs23523.fits"
         sau.load_pha(str(filename))
-        sau.set_stat('wstat')
-        model = PowLaw1D('powlaw1d.default')
+        sau.set_stat("wstat")
+        model = PowLaw1D("powlaw1d.default")
         model.ref = 1e9
         model.ampl = 1
         model.gamma = 2

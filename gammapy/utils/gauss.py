@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
+__doctest_requires__ = {("gaussian_sum_moments"): ["uncertainties"]}
 
 
 class Gauss2DPDF(object):
@@ -289,8 +289,8 @@ class MultiGauss2D(object):
         # is in the interval [0, theta_max] and then use good ol brentq
         if not containment_fraction < self.integral:
             raise ValueError(
-                'containment_fraction = {} not possible for integral = {}'
-                ''.format(containment_fraction, self.integral)
+                "containment_fraction = {} not possible for integral = {}"
+                "".format(containment_fraction, self.integral)
             )
         from scipy.optimize import brentq
 

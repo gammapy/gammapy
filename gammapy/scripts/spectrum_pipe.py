@@ -10,7 +10,7 @@ from ..spectrum import (
 )
 from ..background import ReflectedRegionsBackgroundEstimator
 
-__all__ = ['SpectrumAnalysisIACT']
+__all__ = ["SpectrumAnalysisIACT"]
 
 log = logging.getLogger(__name__)
 
@@ -49,8 +49,8 @@ class SpectrumAnalysisIACT(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.observations)
-        ss += '\n{}'.format(self.config)
+        ss += "\n{}".format(self.observations)
+        ss += "\n{}".format(self.config)
         return ss
 
     def run(self):
@@ -62,14 +62,14 @@ class SpectrumAnalysisIACT(object):
     def run_extraction(self):
         """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
-            obs_list=self.observations, **self.config['background']
+            obs_list=self.observations, **self.config["background"]
         )
         self.background_estimator.run()
 
         self.extraction = SpectrumExtraction(
             obs_list=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **self.config['extraction']
+            **self.config["extraction"]
         )
 
         self.extraction.run()
@@ -77,14 +77,14 @@ class SpectrumAnalysisIACT(object):
     def run_fit(self):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
-            obs_list=self.extraction.observations, **self.config['fit']
+            obs_list=self.extraction.observations, **self.config["fit"]
         )
-        self.fit.run(outdir=self.config['outdir'])
+        self.fit.run(outdir=self.config["outdir"])
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.observations.stack()
         self.egm = SpectrumEnergyGroupMaker(stacked_obs)
-        self.egm.compute_groups_fixed(self.config['fp_binning'])
+        self.egm.compute_groups_fixed(self.config["fp_binning"])
 
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,

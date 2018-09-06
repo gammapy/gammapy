@@ -10,7 +10,7 @@ from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
 from ..stats.poisson import significance_on_off
 
-__all__ = ['LightCurve', 'LightCurveEstimator']
+__all__ = ["LightCurve", "LightCurveEstimator"]
 
 
 class LightCurve(object):
@@ -35,7 +35,7 @@ class LightCurve(object):
         self.table = table
 
     def __repr__(self):
-        return '{}(len={})'.format(self.__class__.__name__, len(self.table))
+        return "{}(len={})".format(self.__class__.__name__, len(self.table))
 
     @property
     def time_scale(self):
@@ -45,12 +45,12 @@ class LightCurve(object):
         Common values: "TT" or "UTC".
         Assumed default is "UTC".
         """
-        return self.table.meta.get('TIMESYS', 'utc')
+        return self.table.meta.get("TIMESYS", "utc")
 
     @property
     def time_format(self):
         """Time format (str)."""
-        return 'mjd'
+        return "mjd"
 
     # @property
     # def time_ref(self):
@@ -66,17 +66,17 @@ class LightCurve(object):
     @property
     def time(self):
         """Time (`~astropy.time.Time`)."""
-        return self._make_time('time')
+        return self._make_time("time")
 
     @property
     def time_min(self):
         """Time bin start (`~astropy.time.Time`)."""
-        return self._make_time('time_min')
+        return self._make_time("time_min")
 
     @property
     def time_max(self):
         """Time bin end (`~astropy.time.Time`)."""
-        return self._make_time('time_max')
+        return self._make_time("time_max")
 
     @property
     def time_mid(self):
@@ -142,8 +142,8 @@ class LightCurve(object):
            curves from active galaxies", Vaughan et al. (2003)
            http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
-        flux = self.table['flux'].data.astype('float64')
-        flux_err = self.table['flux_err'].data.astype('float64')
+        flux = self.table["flux"].data.astype("float64")
+        flux_err = self.table["flux_err"].data.astype("float64")
 
         flux_mean = np.mean(flux)
         n_points = len(flux)
@@ -172,13 +172,13 @@ class LightCurve(object):
         """
         import scipy.stats as stats
 
-        flux = self.table['flux']
+        flux = self.table["flux"]
         yexp = np.mean(flux)
         yobs = flux.data
         chi2, pval = stats.chisquare(yobs, yexp)
         return chi2, pval
 
-    def plot(self, ax=None, time_format='mjd', flux_unit='cm-2 s-1', **kwargs):
+    def plot(self, ax=None, time_format="mjd", flux_unit="cm-2 s-1", **kwargs):
         """Plot flux points.
 
         Parameters
@@ -220,14 +220,14 @@ class LightCurve(object):
         yerr[0][is_ul] = ul_arr
 
         # set plotting defaults and plot
-        kwargs.setdefault('marker', '+')
-        kwargs.setdefault('ls', 'None')
+        kwargs.setdefault("marker", "+")
+        kwargs.setdefault("ls", "None")
 
         ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
-        ax.set_xlabel('Time ({})'.format(time_format.upper()))
-        ax.set_ylabel('Flux ({0:FITS})'.format(u.Unit(flux_unit)))
-        if time_format == 'iso':
-            ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
+        ax.set_xlabel("Time ({})".format(time_format.upper()))
+        ax.set_ylabel("Flux ({0:FITS})".format(u.Unit(flux_unit)))
+        if time_format == "iso":
+            ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
             plt.setp(
                 ax.xaxis.get_majorticklabels(),
                 rotation=30,
@@ -237,7 +237,7 @@ class LightCurve(object):
 
         return ax
 
-    def _get_fluxes_and_errors(self, unit='cm-2 s-1'):
+    def _get_fluxes_and_errors(self, unit="cm-2 s-1"):
         """Extract fluxes and corresponding errors
 
         Helper function for the plot method.
@@ -254,20 +254,20 @@ class LightCurve(object):
         (yn, yp) : tuple of `numpy.ndarray`
             Flux error values
         """
-        y = self.table['flux'].quantity.to(unit)
+        y = self.table["flux"].quantity.to(unit)
 
-        if all(k in self.table.colnames for k in ['flux_errp', 'flux_errn']):
-            yp = self.table['flux_errp'].quantity.to(unit)
-            yn = self.table['flux_errn'].quantity.to(unit)
-        elif 'flux_err' in self.table.colnames:
-            yp = self.table['flux_err'].quantity.to(unit)
-            yn = self.table['flux_err'].quantity.to(unit)
+        if all(k in self.table.colnames for k in ["flux_errp", "flux_errn"]):
+            yp = self.table["flux_errp"].quantity.to(unit)
+            yn = self.table["flux_errn"].quantity.to(unit)
+        elif "flux_err" in self.table.colnames:
+            yp = self.table["flux_err"].quantity.to(unit)
+            yn = self.table["flux_err"].quantity.to(unit)
         else:
             yp, yn = np.zeros_like(y), np.zeros_like(y)
 
         return y.value, (yn.value, yp.value)
 
-    def _get_flux_uls(self, unit='cm-2 s-1'):
+    def _get_flux_uls(self, unit="cm-2 s-1"):
         """Extract flux upper limits
 
         Helper function for the plot method.
@@ -285,19 +285,19 @@ class LightCurve(object):
             Flux upper limit values
         """
         try:
-            is_ul = self.table['is_ul'].data.astype('bool')
+            is_ul = self.table["is_ul"].data.astype("bool")
         except KeyError:
-            is_ul = np.zeros_like(self.table['flux']).data.astype('bool')
+            is_ul = np.zeros_like(self.table["flux"]).data.astype("bool")
 
         if is_ul.any():
-            yul = self.table['flux_ul'].quantity.to(unit)
+            yul = self.table["flux_ul"].quantity.to(unit)
         else:
-            yul = np.zeros_like(self.table['flux']).quantity
+            yul = np.zeros_like(self.table["flux"]).quantity
             yul[:] = np.nan
 
         return is_ul, yul.value
 
-    def _get_times_and_errors(self, time_format='mjd'):
+    def _get_times_and_errors(self, time_format="mjd"):
         """Extract times and corresponding errors
 
         Helper function for the plot method.
@@ -330,15 +330,15 @@ class LightCurve(object):
             xn, xp = x - x, x - x
 
         # convert to given time format
-        if time_format == 'iso':
+        if time_format == "iso":
             x = x.datetime
             # TODO: In astropy version >3.1 the TimeDelta.to_datetime() method
             # should start working, for now i will use num2timedelta.
-            xn = np.asarray(num2timedelta(xn.to('d').value))
-            xp = np.asarray(num2timedelta(xp.to('d').value))
-        elif time_format == 'mjd':
+            xn = np.asarray(num2timedelta(xn.to("d").value))
+            xp = np.asarray(num2timedelta(xp.to("d").value))
+        elif time_format == "mjd":
             x = x.mjd
-            xn, xp = xn.to('d').value, xp.to('d').value
+            xn, xp = xn.to("d").value, xp.to("d").value
         else:
             raise ValueError(
                 "The time format '{}' is not supported.".format(time_format)
@@ -424,8 +424,8 @@ class LightCurveEstimator(object):
             time += time_step
             rows.append(
                 dict(
-                    t_start=Time(time - time_step, format="mjd", scale='tt'),
-                    t_stop=Time(time, format="mjd", scale='tt'),
+                    t_start=Time(time - time_step, format="mjd", scale="tt"),
+                    t_stop=Time(time, format="mjd", scale="tt"),
                 )
             )
         return Table(rows=rows)
@@ -509,18 +509,18 @@ class LightCurveEstimator(object):
         time = 0
         xm1 = istart
         # loop over observations
-        for x in in_list('end', time_holder[istart : i + 1]):
+        for x in in_list("end", time_holder[istart : i + 1]):
             if tmp == 0:
                 alpha += (
-                    (1 - obs_properties['deadtime'][n])
+                    (1 - obs_properties["deadtime"][n])
                     * (
                         float(time_holder[x][0])
                         - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0]))
                         / 2
                     )
-                    * obs_properties['A_off'][n + tmp]
+                    * obs_properties["A_off"][n + tmp]
                 )
-                time += (1 - obs_properties['deadtime'][n]) * (
+                time += (1 - obs_properties["deadtime"][n]) * (
                     float(time_holder[x][0])
                     - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2
                 )
@@ -528,24 +528,24 @@ class LightCurveEstimator(object):
                 tmp += 1
             else:
                 alpha += (
-                    (1 - obs_properties['deadtime'][n + tmp])
+                    (1 - obs_properties["deadtime"][n + tmp])
                     * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
-                    * obs_properties['A_off'][n + tmp]
+                    * obs_properties["A_off"][n + tmp]
                 )
-                time += (1 - obs_properties['deadtime'][n + tmp]) * (
+                time += (1 - obs_properties["deadtime"][n + tmp]) * (
                     float(time_holder[x][0]) - float(time_holder[xm1][0])
                 )
                 xm1 = x + 1
                 tmp += 1
         alpha += (
-            (1 - obs_properties['deadtime'][n + tmp])
+            (1 - obs_properties["deadtime"][n + tmp])
             * (
                 (float(time_holder[i][0]) + float(time_holder[i][0])) / 2
                 - float(time_holder[xm1][0])
             )
-            * obs_properties['A_off'][n + tmp]
+            * obs_properties["A_off"][n + tmp]
         )
-        time += (1 - obs_properties['deadtime'][n + tmp]) * (
+        time += (1 - obs_properties["deadtime"][n + tmp]) * (
             (float(time_holder[i][0]) + float(time_holder[i][0])) / 2
             - float(time_holder[xm1][0])
         )
@@ -601,12 +601,12 @@ class LightCurveEstimator(object):
         # extract the separators
         if separators is not None:
             for time in separators:
-                time_holder.append([time.tt.mjd, 'break'])
+                time_holder.append([time.tt.mjd, "break"])
 
         # recovers the starting and ending time of each observations and useful properties
         for obs in spectrum_extraction.obs_list:
-            time_holder.append([obs.events.observation_time_start.tt.mjd, 'start'])
-            time_holder.append([obs.events.observation_time_end.tt.mjd, 'end'])
+            time_holder.append([obs.events.observation_time_start.tt.mjd, "start"])
+            time_holder.append([obs.events.observation_time_end.tt.mjd, "end"])
             obs_properties.append(
                 dict(
                     deadtime=obs.observation_dead_time_fraction,
@@ -623,9 +623,9 @@ class LightCurveEstimator(object):
             )
 
             for time in on.time.tt.mjd:
-                time_holder.append([time, 'on'])
+                time_holder.append([time, "on"])
             for time in off.time.tt.mjd:
-                time_holder.append([time, 'off'])
+                time_holder.append([time, "off"])
 
         # sort all elements in the table by time
         time_holder = sorted(time_holder, key=lambda item: item[0])
@@ -637,20 +637,20 @@ class LightCurveEstimator(object):
         n = 0
         while time_holder[i][0] < time_holder[-1][0]:
             i += 1
-            if time_holder[i][1] == 'break':
-                while time_holder[i + 1][1] != 'on' and time_holder[i + 1][1] != 'off':
+            if time_holder[i][1] == "break":
+                while time_holder[i + 1][1] != "on" and time_holder[i + 1][1] != "off":
                     i += 1
-                n += np.sum(time_holder[istart:i] == 'end')
+                n += np.sum(time_holder[istart:i] == "end")
                 istart = i
                 continue
-            if time_holder[i][1] != 'on' and time_holder[i][1] != 'off':
+            if time_holder[i][1] != "on" and time_holder[i][1] != "off":
                 continue
 
             # compute alpha
             alpha = self._alpha(time_holder, obs_properties, n, istart, i)
 
-            non = np.sum(time_holder[istart : i + 1] == 'on')
-            noff = np.sum(time_holder[istart : i + 1] == 'off')
+            non = np.sum(time_holder[istart : i + 1] == "on")
+            noff = np.sum(time_holder[istart : i + 1] == "off")
 
             # check the significance
             signif = significance_on_off(non, noff, alpha, method=significance_method)
@@ -673,16 +673,16 @@ class LightCurveEstimator(object):
                 # start the next interval
                 while (
                     time_holder[i + 1][0] < time_holder[-1][0]
-                    and time_holder[i + 1][1] != 'on'
-                    and time_holder[i + 1][1] != 'off'
+                    and time_holder[i + 1][1] != "on"
+                    and time_holder[i + 1][1] != "off"
                 ):
                     i += 1
-                n += np.sum(time_holder[istart : i + 1] == 'end')
+                n += np.sum(time_holder[istart : i + 1] == "end")
                 istart = i + 1
                 i = istart
         table = Table(rows=rows)
-        table['t_start'] = Time(table['t_start'], format='mjd', scale='tt')
-        table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
+        table["t_start"] = Time(table["t_start"], format="mjd", scale="tt")
+        table["t_stop"] = Time(table["t_stop"], format="mjd", scale="tt")
         return table
 
     def light_curve(
@@ -725,20 +725,20 @@ class LightCurveEstimator(object):
     @staticmethod
     def _make_lc_from_row_data(rows):
         table = Table()
-        table['time_min'] = [_['time_min'].value for _ in rows]
-        table['time_max'] = [_['time_max'].value for _ in rows]
+        table["time_min"] = [_["time_min"].value for _ in rows]
+        table["time_max"] = [_["time_max"].value for _ in rows]
 
-        table['flux'] = [_['flux'].value for _ in rows] * u.Unit('1 / (s cm2)')
-        table['flux_err'] = [_['flux_err'].value for _ in rows] * u.Unit('1 / (s cm2)')
-        table['flux_ul'] = [_['flux_ul'].value for _ in rows] * u.Unit('1 / (s cm2)')
-        table['is_ul'] = [_['is_ul'] for _ in rows]
+        table["flux"] = [_["flux"].value for _ in rows] * u.Unit("1 / (s cm2)")
+        table["flux_err"] = [_["flux_err"].value for _ in rows] * u.Unit("1 / (s cm2)")
+        table["flux_ul"] = [_["flux_ul"].value for _ in rows] * u.Unit("1 / (s cm2)")
+        table["is_ul"] = [_["is_ul"] for _ in rows]
 
-        table['livetime'] = [_['livetime'].value for _ in rows] * u.s
-        table['n_on'] = [_['n_on'] for _ in rows]
-        table['n_off'] = [_['n_off'] for _ in rows]
-        table['alpha'] = [_['alpha'] for _ in rows]
-        table['measured_excess'] = [_['measured_excess'] for _ in rows]
-        table['expected_excess'] = [_['expected_excess'] for _ in rows]
+        table["livetime"] = [_["livetime"].value for _ in rows] * u.s
+        table["n_on"] = [_["n_on"] for _ in rows]
+        table["n_off"] = [_["n_off"] for _ in rows]
+        table["alpha"] = [_["alpha"] for _ in rows]
+        table["measured_excess"] = [_["measured_excess"] for _ in rows]
+        table["expected_excess"] = [_["expected_excess"] for _ in rows]
 
         return LightCurve(table)
 
@@ -797,16 +797,16 @@ class LightCurveEstimator(object):
             # compute effective livetime (for the interval)
             if tmin >= obs_start and tmax <= obs_stop:
                 # interval included in obs
-                livetime_to_add = (tmax - tmin).to('s')
+                livetime_to_add = (tmax - tmin).to("s")
             elif tmin >= obs_start and tmax >= obs_stop:
                 # interval min above tstart from obs
-                livetime_to_add = (obs_stop - tmin).to('s')
+                livetime_to_add = (obs_stop - tmin).to("s")
             elif tmin <= obs_start and tmax <= obs_stop:
                 # interval min below tstart from obs
-                livetime_to_add = (tmax - obs_start).to('s')
+                livetime_to_add = (tmax - obs_start).to("s")
             elif tmin <= obs_start and tmax >= obs_stop:
                 # obs included in interval
-                livetime_to_add = (obs_stop - obs_start).to('s')
+                livetime_to_add = (obs_stop - obs_start).to("s")
             else:
                 livetime_to_add = 0 * u.s
 
@@ -870,7 +870,7 @@ class LightCurveEstimator(object):
             flux_err *= delta_excess
 
             sigma = significance_on_off(
-                n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima'
+                n_on=n_on, n_off=n_off, alpha=alpha_mean, method="lima"
             )
             is_ul = sigma <= 3
             flux_ul = excess_ul_helene(
@@ -887,18 +887,18 @@ class LightCurveEstimator(object):
             useinterval,
             OrderedDict(
                 [
-                    ('time_min', Time(tmin, format='mjd')),
-                    ('time_max', Time(tmax, format='mjd')),
-                    ('flux', flux * u.Unit('1 / (s cm2)')),
-                    ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
-                    ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
-                    ('is_ul', is_ul),
-                    ('livetime', livetime * u.s),
-                    ('alpha', alpha_mean),
-                    ('n_on', n_on),
-                    ('n_off', n_off),
-                    ('measured_excess', measured_excess),
-                    ('expected_excess', predicted_excess),
+                    ("time_min", Time(tmin, format="mjd")),
+                    ("time_max", Time(tmax, format="mjd")),
+                    ("flux", flux * u.Unit("1 / (s cm2)")),
+                    ("flux_err", flux_err * u.Unit("1 / (s cm2)")),
+                    ("flux_ul", flux_ul * u.Unit("1 / (s cm2)")),
+                    ("is_ul", is_ul),
+                    ("livetime", livetime * u.s),
+                    ("alpha", alpha_mean),
+                    ("n_on", n_on),
+                    ("n_off", n_off),
+                    ("measured_excess", measured_excess),
+                    ("expected_excess", predicted_excess),
                 ]
             ),
         )

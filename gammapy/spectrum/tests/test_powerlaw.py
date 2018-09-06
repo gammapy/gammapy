@@ -22,15 +22,15 @@ def test_powerlaw_energy_flux():
     """
     Test energy flux computation for power law against numerical solution.
     """
-    e1 = Quantity(1, 'TeV')
-    e2 = Quantity(10, 'TeV')
-    e = Quantity(1, 'TeV')
+    e1 = Quantity(1, "TeV")
+    e2 = Quantity(10, "TeV")
+    e = Quantity(1, "TeV")
     g = 2.3
-    I = Quantity(1e-12, 'cm-2 s-1')
+    I = Quantity(1e-12, "cm-2 s-1")
 
     val = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
 
-    ref = Quantity(2.1615219876151536e-12, 'TeV cm-2 s-1')
+    ref = Quantity(2.1615219876151536e-12, "TeV cm-2 s-1")
     assert_quantity_allclose(val, ref)
 
 
@@ -75,7 +75,7 @@ def test_compatibility():
     compatibility = power_law_compatibility(par_fermi, par_hess)
 
     # Note: I just put the numbers here, didn't verify them!
-    assert_allclose(compatibility['g_match'], 2.0901127509816506)
-    assert_allclose(compatibility['sigma_low'], -3.380819211512078)
-    assert_allclose(compatibility['sigma_high'], -0.5494362450917478)
-    assert_allclose(compatibility['sigma_combined'], 3.4251742624791612)
+    assert_allclose(compatibility["g_match"], 2.0901127509816506)
+    assert_allclose(compatibility["sigma_low"], -3.380819211512078)
+    assert_allclose(compatibility["sigma_high"], -0.5494362450917478)
+    assert_allclose(compatibility["sigma_combined"], 3.4251742624791612)

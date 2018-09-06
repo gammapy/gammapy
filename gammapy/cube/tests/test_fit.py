@@ -16,45 +16,45 @@ from ..models import SkyModel
 from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def geom():
     axis = MapAxis.from_edges(np.logspace(-1., 1., 3), name="energy", unit=u.TeV)
     return WcsGeom.create(
-        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys='GAL', axes=[axis]
+        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def exposure(geom):
-    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
-    aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
+    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     exposure_map = make_map_exposure_true_energy(
-        pointing=SkyCoord(1, 0.5, unit='deg', frame='galactic'),
-        livetime='1 hour',
+        pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
+        livetime="1 hour",
         aeff=aeff,
         geom=geom,
     )
     return exposure_map
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def background(geom):
     m = Map.from_geom(geom)
     m.quantity = np.ones(m.data.shape) * 1e-5
     return m
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def edisp(geom):
-    e_true = geom.get_axis_by_name('energy').edges
+    e_true = geom.get_axis_by_name("energy").edges
     return EnergyDispersion.from_diagonal_response(e_true=e_true)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def psf(geom):
-    filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
     psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=0.5 * u.deg)
@@ -63,9 +63,9 @@ def psf(geom):
 
 @pytest.fixture
 def sky_model():
-    spatial_model = SkyGaussian(lon_0='0.2 deg', lat_0='0.1 deg', sigma='0.2 deg')
+    spatial_model = SkyGaussian(lon_0="0.2 deg", lat_0="0.1 deg", sigma="0.2 deg")
     spectral_model = PowerLaw(
-        index=3, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV'
+        index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
@@ -73,7 +73,7 @@ def sky_model():
 @pytest.fixture
 def mask(geom, sky_model):
     p = sky_model.spatial_model.parameters
-    center = SkyCoord(p['lon_0'].value, p['lat_0'].value, frame='galactic', unit='deg')
+    center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
     data = geom.region_mask([circle])
     return WcsNDMap(geom=geom, data=data)
@@ -88,14 +88,14 @@ def counts(sky_model, exposure, background, psf, edisp):
     return WcsNDMap(exposure.geom, npred)
 
 
-@requires_dependency('scipy')
-@requires_dependency('iminuit')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_dependency("iminuit")
+@requires_data("gammapy-extra")
 def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
-    sky_model.parameters['lon_0'].value = 0.5
-    sky_model.parameters['lat_0'].value = 0.5
-    sky_model.parameters['index'].value = 2
-    sky_model.parameters['sigma'].frozen = True
+    sky_model.parameters["lon_0"].value = 0.5
+    sky_model.parameters["lat_0"].value = 0.5
+    sky_model.parameters["index"].value = 2
+    sky_model.parameters["sigma"].frozen = True
 
     fit = MapFit(
         model=sky_model,
@@ -110,18 +110,18 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
     pars = fit.model.parameters
 
     assert sky_model is fit.model
-    assert sky_model.parameters['lon_0'] is fit.model.parameters['lon_0']
-    assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
+    assert sky_model.parameters["lon_0"] is fit.model.parameters["lon_0"]
+    assert sky_model.parameters["lon_0"] is sky_model.spatial_model.parameters["lon_0"]
 
-    assert_allclose(pars['lon_0'].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error('lon_0'), 0.005895, rtol=1e-2)
+    assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.005895, rtol=1e-2)
 
-    assert_allclose(pars['index'].value, 3, rtol=1e-2)
-    assert_allclose(pars.error('index'), 0.05614, rtol=1e-2)
+    assert_allclose(pars["index"].value, 3, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.05614, rtol=1e-2)
 
-    assert_allclose(pars['amplitude'].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error('amplitude'), 3.936e-13, rtol=1e-2)
+    assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 3.936e-13, rtol=1e-2)
 
-    stat = np.sum(fit.stat, dtype='float64')
+    stat = np.sum(fit.stat, dtype="float64")
     stat_expected = 3840.0605649268496
     assert_allclose(stat, stat_expected, rtol=1e-2)

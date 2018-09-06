@@ -7,10 +7,10 @@ from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Angle
 
-__all__ = ['ImageProfile', 'ImageProfileEstimator']
+__all__ = ["ImageProfile", "ImageProfileEstimator"]
 
 
-def compute_binning(data, n_bins, method='equal width', eps=1e-10):
+def compute_binning(data, n_bins, method="equal width", eps=1e-10):
     """Computes 1D array of bin edges.
 
     The range of the bin_edges is always [min(data), max(data)]
@@ -37,15 +37,15 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
     """
     data = np.asanyarray(data)
 
-    if method == 'equal width':
+    if method == "equal width":
         bin_edges = np.linspace(np.nanmin(data), np.nanmax(data), n_bins + 1)
-    elif method == 'equal entries':
+    elif method == "equal entries":
         # We use np.percentile to achieve equal number of entries per bin
         # It takes a list of quantiles in the range [0, 100] as input
         quantiles = list(np.linspace(0, 100, n_bins + 1))
         bin_edges = np.percentile(data, quantiles)
     else:
-        raise ValueError('Invalid option: method = {}'.format(method))
+        raise ValueError("Invalid option: method = {}".format(method))
 
     bin_edges[-1] += eps
     return bin_edges
@@ -95,17 +95,17 @@ class ImageProfileEstimator(object):
 
     """
 
-    def __init__(self, x_edges=None, method='sum', axis='lon', center=None):
+    def __init__(self, x_edges=None, method="sum", axis="lon", center=None):
 
         self._x_edges = x_edges
 
-        if method not in ['sum', 'mean']:
+        if method not in ["sum", "mean"]:
             raise ValueError("Not a valid method, choose either 'sum' or 'mean'")
 
-        if axis not in ['lon', 'lat', 'radial']:
+        if axis not in ["lon", "lat", "radial"]:
             raise ValueError("Not a valid axis, choose either 'lon' or 'lat'")
 
-        if method == 'radial' and center is None:
+        if method == "radial" and center is None:
             raise ValueError("Please provide center coordinate for radial profiles")
 
         self.parameters = OrderedDict(method=method, axis=axis, center=center)
@@ -118,18 +118,18 @@ class ImageProfileEstimator(object):
             return self._x_edges
 
         p = self.parameters
-        coordinates = image.geom.get_coord(mode='edges').skycoord
+        coordinates = image.geom.get_coord(mode="edges").skycoord
 
-        if p['axis'] == 'lat':
+        if p["axis"] == "lat":
             x_edges = coordinates[:, 0].data.lat
-        elif p['axis'] == 'lon':
+        elif p["axis"] == "lon":
             lon = coordinates[0, :].data.lon
-            x_edges = lon.wrap_at('180d')
-        elif p['axis'] == 'radial':
+            x_edges = lon.wrap_at("180d")
+        elif p["axis"] == "radial":
             rad_step = image.geom.pixel_scales.mean()
             corners = [0, 0, -1, -1], [0, -1, 0, -1]
-            rad_max = coordinates[corners].separation(p['center']).max()
-            x_edges = Angle(np.arange(0, rad_max.deg, rad_step.deg), unit='deg')
+            rad_max = coordinates[corners].separation(p["center"]).max()
+            x_edges = Angle(np.arange(0, rad_max.deg, rad_step.deg), unit="deg")
         return x_edges
 
     def _estimate_profile(self, image, image_err, mask):
@@ -145,17 +145,17 @@ class ImageProfileEstimator(object):
 
         index = np.arange(1, len(self._get_x_edges(image)))
 
-        if p['method'] == 'sum':
+        if p["method"] == "sum":
             profile = ndimage.sum(image.data, labels.data, index)
 
-            if image.unit.is_equivalent('counts'):
+            if image.unit.is_equivalent("counts"):
                 profile_err = np.sqrt(profile)
             elif image_err:
                 # gaussian error propagation
                 err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
                 profile_err = np.sqrt(err_sum)
 
-        elif p['method'] == 'mean':
+        elif p["method"] == "mean":
             # gaussian error propagation
             profile = ndimage.mean(image.data, labels.data, index)
             if image_err:
@@ -174,16 +174,16 @@ class ImageProfileEstimator(object):
         coordinates = image.geom.get_coord().skycoord
         x_edges = self._get_x_edges(image)
 
-        if p['axis'] == 'lon':
-            lon = coordinates.data.lon.wrap_at('180d')
+        if p["axis"] == "lon":
+            lon = coordinates.data.lon.wrap_at("180d")
             data = np.digitize(lon.degree, x_edges.deg)
 
-        elif p['axis'] == 'lat':
+        elif p["axis"] == "lat":
             lat = coordinates.data.lat
             data = np.digitize(lat.degree, x_edges.deg)
 
-        elif p['axis'] == 'radial':
-            separation = coordinates.separation(p['center'])
+        elif p["axis"] == "radial":
+            separation = coordinates.separation(p["center"])
             data = np.digitize(separation.degree, x_edges.deg)
 
         if mask is not None:
@@ -212,22 +212,22 @@ class ImageProfileEstimator(object):
         """
         p = self.parameters
 
-        if image.unit.is_equivalent('count'):
+        if image.unit.is_equivalent("count"):
             image_err = image.copy(data=np.sqrt(image.data))
 
         profile, profile_err = self._estimate_profile(image, image_err, mask)
 
         result = Table()
         x_edges = self._get_x_edges(image)
-        result['x_min'] = x_edges[:-1]
-        result['x_max'] = x_edges[1:]
-        result['x_ref'] = (x_edges[:-1] + x_edges[1:]) / 2
-        result['profile'] = profile * image.unit
+        result["x_min"] = x_edges[:-1]
+        result["x_max"] = x_edges[1:]
+        result["x_ref"] = (x_edges[:-1] + x_edges[1:]) / 2
+        result["profile"] = profile * image.unit
 
         if profile_err is not None:
-            result['profile_err'] = profile_err * image.unit
+            result["profile_err"] = profile_err * image.unit
 
-        result.meta['PROFILE_TYPE'] = p['axis']
+        result.meta["PROFILE_TYPE"] = p["axis"]
         return ImageProfile(result)
 
 
@@ -254,7 +254,7 @@ class ImageProfile(object):
     def __init__(self, table):
         self.table = table
 
-    def smooth(self, kernel='box', radius=0.1 * u.deg, **kwargs):
+    def smooth(self, kernel="box", radius=0.1 * u.deg, **kwargs):
         """
         Smooth profile with error propagation.
 
@@ -297,37 +297,37 @@ class ImageProfile(object):
         from astropy.convolution import Gaussian1DKernel, Box1DKernel
 
         table = self.table.copy()
-        profile = table['profile']
+        profile = table["profile"]
 
         radius = np.abs(radius / np.diff(self.x_ref))[0]
         width = 2 * radius.value + 1
 
-        if kernel == 'box':
-            smoothed = uniform_filter(profile.astype('float'), width, **kwargs)
+        if kernel == "box":
+            smoothed = uniform_filter(profile.astype("float"), width, **kwargs)
             # renormalize data
-            if table['profile'].unit.is_equivalent('count'):
+            if table["profile"].unit.is_equivalent("count"):
                 smoothed *= int(width)
                 smoothed_err = np.sqrt(smoothed)
-            elif 'profile_err' in table.colnames:
-                profile_err = table['profile_err']
+            elif "profile_err" in table.colnames:
+                profile_err = table["profile_err"]
                 # use gaussian error propagation
                 box = Box1DKernel(width)
                 err_sum = convolve(profile_err ** 2, box.array ** 2)
                 smoothed_err = np.sqrt(err_sum)
-        elif kernel == 'gauss':
-            smoothed = gaussian_filter(profile.astype('float'), width, **kwargs)
+        elif kernel == "gauss":
+            smoothed = gaussian_filter(profile.astype("float"), width, **kwargs)
             # use gaussian error propagation
-            if 'profile_err' in table.colnames:
-                profile_err = table['profile_err']
+            if "profile_err" in table.colnames:
+                profile_err = table["profile_err"]
                 gauss = Gaussian1DKernel(width)
                 err_sum = convolve(profile_err ** 2, gauss.array ** 2)
                 smoothed_err = np.sqrt(err_sum)
         else:
             raise ValueError("Not valid kernel choose either 'box' or 'gauss'")
 
-        table['profile'] = smoothed * self.table['profile'].unit
-        if 'profile_err' in table.colnames:
-            table['profile_err'] = smoothed_err * self.table['profile'].unit
+        table["profile"] = smoothed * self.table["profile"].unit
+        if "profile_err" in table.colnames:
+            table["profile_err"] = smoothed_err * self.table["profile"].unit
         return self.__class__(table)
 
     def plot(self, ax=None, **kwargs):
@@ -351,11 +351,11 @@ class ImageProfile(object):
         if ax is None:
             ax = plt.gca()
 
-        y = self.table['profile'].data
+        y = self.table["profile"].data
         x = self.x_ref.value
         ax.plot(x, y, **kwargs)
-        ax.set_xlabel('lon')
-        ax.set_ylabel('profile')
+        ax.set_xlabel("lon")
+        ax.set_ylabel("profile")
         ax.set_xlim(x.max(), x.min())
         return ax
 
@@ -380,17 +380,17 @@ class ImageProfile(object):
         if ax is None:
             ax = plt.gca()
 
-        y = self.table['profile'].data
-        ymin = y - self.table['profile_err'].data
-        ymax = y + self.table['profile_err'].data
+        y = self.table["profile"].data
+        ymin = y - self.table["profile_err"].data
+        ymax = y + self.table["profile_err"].data
         x = self.x_ref.value
 
         # plotting defaults
-        kwargs.setdefault('alpha', 0.5)
+        kwargs.setdefault("alpha", 0.5)
 
         ax.fill_between(x, ymin, ymax, **kwargs)
-        ax.set_xlabel('x (deg)')
-        ax.set_ylabel('profile')
+        ax.set_xlabel("x (deg)")
+        ax.set_ylabel("profile")
         return ax
 
     @property
@@ -398,28 +398,28 @@ class ImageProfile(object):
         """
         Reference x coordinates.
         """
-        return self.table['x_ref'].quantity
+        return self.table["x_ref"].quantity
 
     @property
     def x_min(self):
         """
         Min. x coordinates.
         """
-        return self.table['x_min'].quantity
+        return self.table["x_min"].quantity
 
     @property
     def x_max(self):
         """
         Max. x coordinates.
         """
-        return self.table['x_max'].quantity
+        return self.table["x_max"].quantity
 
     @property
     def profile(self):
         """
         Image profile quantity.
         """
-        return self.table['profile'].quantity
+        return self.table["profile"].quantity
 
     @property
     def profile_err(self):
@@ -427,7 +427,7 @@ class ImageProfile(object):
         Image profile error quantity.
         """
         try:
-            return self.table['profile_err'].quantity
+            return self.table["profile_err"].quantity
         except KeyError:
             return None
 
@@ -451,13 +451,13 @@ class ImageProfile(object):
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         ax = self.plot(ax, **kwargs)
 
-        if 'profile_err' in self.table.colnames:
+        if "profile_err" in self.table.colnames:
             opts = {}
-            opts['color'] = kwargs.get('c')
+            opts["color"] = kwargs.get("c")
             ax = self.plot_err(ax, **opts)
         return ax
 
-    def normalize(self, mode='peak'):
+    def normalize(self, mode="peak"):
         """
         Normalize profile to peak value or integral.
 
@@ -473,19 +473,19 @@ class ImageProfile(object):
             Normalized image profile.
         """
         table = self.table.copy()
-        profile = self.table['profile']
-        if mode == 'peak':
+        profile = self.table["profile"]
+        if mode == "peak":
             norm = np.nanmax(profile)
-        elif mode == 'integral':
+        elif mode == "integral":
             norm = np.nansum(profile)
         else:
             raise ValueError(
                 "Not a valid normalization mode. Choose either" " 'peak' or 'integral'"
             )
 
-        table['profile'] /= norm
+        table["profile"] /= norm
 
-        if 'profile_err' in table.colnames:
-            table['profile_err'] /= norm
+        if "profile_err" in table.colnames:
+            table["profile_err"] /= norm
 
         return self.__class__(table)

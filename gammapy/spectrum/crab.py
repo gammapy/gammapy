@@ -5,27 +5,27 @@ from astropy import units as u
 from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
 from ..utils.modeling import Parameters
 
-__all__ = ['CrabSpectrum']
+__all__ = ["CrabSpectrum"]
 
 # HESS publication: 2006A&A...457..899A
 hess_pl = {
-    'amplitude': 3.45e-11 * u.Unit('1 / (cm2 s TeV)'),
-    'index': 2.63,
-    'reference': 1 * u.TeV,
+    "amplitude": 3.45e-11 * u.Unit("1 / (cm2 s TeV)"),
+    "index": 2.63,
+    "reference": 1 * u.TeV,
 }
 
 hess_ecpl = {
-    'amplitude': 3.76e-11 * u.Unit('1 / (cm2 s TeV)'),
-    'index': 2.39,
-    'lambda_': 1 / (14.3 * u.TeV),
-    'reference': 1 * u.TeV,
+    "amplitude": 3.76e-11 * u.Unit("1 / (cm2 s TeV)"),
+    "index": 2.39,
+    "lambda_": 1 / (14.3 * u.TeV),
+    "reference": 1 * u.TeV,
 }
 
 # HEGRA publication : 2004ApJ...614..897A
 hegra = {
-    'amplitude': 2.83e-11 * u.Unit('1 / (cm2 s TeV)'),
-    'index': 2.62,
-    'reference': 1 * u.TeV,
+    "amplitude": 2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
+    "index": 2.62,
+    "reference": 1 * u.TeV,
 }
 
 # MAGIC publication: 2015JHEAp...5...30A
@@ -34,17 +34,17 @@ hegra = {
 # Also MAGIC uses log10 in the LogParabola expression, gammapy uses ln, hence
 # the conversion factor
 magic_lp = {
-    'amplitude': 3.23e-11 * u.Unit('1 / (cm2 s TeV)'),
-    'alpha': 2.47,
-    'beta': 0.24 / np.log(10),
-    'reference': 1 * u.TeV,
+    "amplitude": 3.23e-11 * u.Unit("1 / (cm2 s TeV)"),
+    "alpha": 2.47,
+    "beta": 0.24 / np.log(10),
+    "reference": 1 * u.TeV,
 }
 
 magic_ecpl = {
-    'amplitude': 3.80e-11 * u.Unit('1 / (cm2 s TeV)'),
-    'index': 2.21,
-    'lambda_': 1 / (6. * u.TeV),
-    'reference': 1 * u.TeV,
+    "amplitude": 3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
+    "index": 2.21,
+    "lambda_": 1 / (6. * u.TeV),
+    "reference": 1 * u.TeV,
 }
 
 
@@ -62,9 +62,9 @@ class MeyerCrabModel(SpectralModel):
     @staticmethod
     def evaluate(energy):
         polynomial = np.poly1d(MeyerCrabModel.coefficients)
-        log_energy = np.log10(energy.to('TeV').value)
+        log_energy = np.log10(energy.to("TeV").value)
         log_flux = polynomial(log_energy)
-        flux = np.power(10, log_flux) * u.Unit('erg / (cm2 s)')
+        flux = np.power(10, log_flux) * u.Unit("erg / (cm2 s)")
         return flux / energy ** 2
 
 
@@ -117,25 +117,25 @@ class CrabSpectrum(object):
         3.5350582166 %
     """
 
-    references = ['meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl']
+    references = ["meyer", "hegra", "hess_pl", "hess_ecpl", "magic_lp", "magic_ecpl"]
     """Available references (see class docstring)."""
 
-    def __init__(self, reference='meyer'):
+    def __init__(self, reference="meyer"):
 
-        if reference == 'meyer':
+        if reference == "meyer":
             model = MeyerCrabModel()
-        elif reference == 'hegra':
+        elif reference == "hegra":
             model = PowerLaw(**hegra)
-        elif reference == 'hess_pl':
+        elif reference == "hess_pl":
             model = PowerLaw(**hess_pl)
-        elif reference == 'hess_ecpl':
+        elif reference == "hess_ecpl":
             model = ExponentialCutoffPowerLaw(**hess_ecpl)
-        elif reference == 'magic_lp':
+        elif reference == "magic_lp":
             model = LogParabola(**magic_lp)
-        elif reference == 'magic_ecpl':
+        elif reference == "magic_ecpl":
             model = ExponentialCutoffPowerLaw(**magic_ecpl)
         else:
-            fmt = 'Invalid reference: {!r}. Choices: {!r}'
+            fmt = "Invalid reference: {!r}. Choices: {!r}"
             raise ValueError(fmt.format(reference, self.references))
 
         self.model = model

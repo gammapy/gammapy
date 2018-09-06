@@ -7,20 +7,20 @@ from gammapy.irf import (
     Background3D,
 )
 
-filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits'
+filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
 event_list = EventList.read(filename)
 gti = GTI.read(filename)
 
 filename = (
-    '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
+    "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 aeff = EffectiveAreaTable2D.read(filename)
 bkg = Background3D.read(filename)
-edisp = EnergyDispersion2D.read(filename, hdu='Energy Dispersion')
-psf = EnergyDependentMultiGaussPSF.read(filename, hdu='Point Spread Function')
+edisp = EnergyDispersion2D.read(filename, hdu="Energy Dispersion")
+psf = EnergyDependentMultiGaussPSF.read(filename, hdu="Point Spread Function")
 
 obs = ObservationCTA(
-    obs_id=event_list.table.meta['OBS_ID'],
+    obs_id=event_list.table.meta["OBS_ID"],
     events=event_list,
     gti=gti,
     psf=psf,

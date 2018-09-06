@@ -10,18 +10,18 @@ from .significance import significance_to_probability_normal
 import numpy as np
 
 __all__ = [
-    'background',
-    'background_error',
-    'excess',
-    'excess_error',
-    'significance',
-    'significance_on_off',
-    'excess_matching_significance',
-    'excess_matching_significance_on_off',
-    'excess_ul_helene',
+    "background",
+    "background_error",
+    "excess",
+    "excess_error",
+    "significance",
+    "significance_on_off",
+    "excess_matching_significance",
+    "excess_matching_significance_on_off",
+    "excess_ul_helene",
 ]
 
-__doctest_skip__ = ['*']
+__doctest_skip__ = ["*"]
 
 
 def background(n_off, alpha):
@@ -166,7 +166,7 @@ def excess_error(n_on, n_off, alpha):
 # It currently has the same name as the `gammapy/stats/significance.py`
 # and shadows in in `gammapy/stats/__init.py`
 # Maybe `significance_poisson`?
-def significance(n_on, mu_bkg, method='lima', n_on_min=1):
+def significance(n_on, mu_bkg, method="lima", n_on_min=1):
     r"""Compute significance for an observed number of counts and known background.
 
     The simple significance estimate :math:`S_{simple}` is given by
@@ -224,14 +224,14 @@ def significance(n_on, mu_bkg, method='lima', n_on_min=1):
     n_on = np.asanyarray(n_on, dtype=np.float64)
     mu_bkg = np.asanyarray(mu_bkg, dtype=np.float64)
 
-    if method == 'simple':
+    if method == "simple":
         func = _significance_simple
-    elif method == 'lima':
+    elif method == "lima":
         func = _significance_lima
-    elif method == 'direct':
+    elif method == "direct":
         func = _significance_direct
     else:
-        raise ValueError('Invalid method: {}'.format(method))
+        raise ValueError("Invalid method: {}".format(method))
 
     # For low `n_on` values, don't try to compute a significance and return `NaN`.
     n_on = np.atleast_1d(n_on)
@@ -285,7 +285,7 @@ def _significance_direct(n_on, mu_bkg):
 
 
 def significance_on_off(
-    n_on, n_off, alpha, method='lima', neglect_background_uncertainty=False
+    n_on, n_off, alpha, method="lima", neglect_background_uncertainty=False
 ):
     r"""Compute significance of an on-off observation.
 
@@ -329,27 +329,27 @@ def significance_on_off(
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
 
-    with np.errstate(invalid='ignore', divide='ignore'):
-        if method == 'simple':
+    with np.errstate(invalid="ignore", divide="ignore"):
+        if method == "simple":
             if neglect_background_uncertainty:
                 mu_bkg = background(n_off, alpha)
                 return _significance_simple(n_on, mu_bkg)
             else:
                 return _significance_simple_on_off(n_on, n_off, alpha)
-        elif method == 'lima':
+        elif method == "lima":
             if neglect_background_uncertainty:
                 mu_bkg = background(n_off, alpha)
                 return _significance_lima(n_on, mu_bkg)
             else:
                 return _significance_lima_on_off(n_on, n_off, alpha)
-        elif method == 'direct':
+        elif method == "direct":
             if neglect_background_uncertainty:
                 mu_bkg = background(n_off, alpha)
                 return _significance_direct(n_on, mu_bkg)
             else:
                 return _significance_direct_on_off(n_on, n_off, alpha)
         else:
-            raise ValueError('Invalid method: {}'.format(method))
+            raise ValueError("Invalid method: {}".format(method))
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):
@@ -442,7 +442,7 @@ def excess_ul_helene(excess, excess_error, significance):
     conf_level1 = significance_to_probability_normal(significance)
 
     if excess_error <= 0:
-        raise ValueError('Non-positive excess_error: {}'.format(excess_error))
+        raise ValueError("Non-positive excess_error: {}".format(excess_error))
 
     from math import sqrt
     from scipy.special import erf
@@ -487,7 +487,7 @@ def excess_ul_helene(excess, excess_error, significance):
     return conf_limit
 
 
-def excess_matching_significance(mu_bkg, significance, method='lima'):
+def excess_matching_significance(mu_bkg, significance, method="lima"):
     r"""Compute excess matching a given significance.
 
     This function is the inverse of `significance`.
@@ -520,15 +520,15 @@ def excess_matching_significance(mu_bkg, significance, method='lima'):
     mu_bkg = np.asanyarray(mu_bkg, dtype=np.float64)
     significance = np.asanyarray(significance, dtype=np.float64)
 
-    if method == 'simple':
+    if method == "simple":
         return _excess_matching_significance_simple(mu_bkg, significance)
-    elif method == 'lima':
+    elif method == "lima":
         return _excess_matching_significance_lima(mu_bkg, significance)
     else:
-        raise ValueError('Invalid method: {}'.format(method))
+        raise ValueError("Invalid method: {}".format(method))
 
 
-def excess_matching_significance_on_off(n_off, alpha, significance, method='lima'):
+def excess_matching_significance_on_off(n_off, alpha, significance, method="lima"):
     r"""Compute sensitivity of an on-off observation.
 
     This function is the inverse of `significance_on_off`.
@@ -572,12 +572,12 @@ def excess_matching_significance_on_off(n_off, alpha, significance, method='lima
     alpha = np.asanyarray(alpha, dtype=np.float64)
     significance = np.asanyarray(significance, dtype=np.float64)
 
-    if method == 'simple':
+    if method == "simple":
         return _excess_matching_significance_on_off_simple(n_off, alpha, significance)
-    elif method == 'lima':
+    elif method == "lima":
         return _excess_matching_significance_on_off_lima(n_off, alpha, significance)
     else:
-        raise ValueError('Invalid method: {}'.format(method))
+        raise ValueError("Invalid method: {}".format(method))
 
 
 def _excess_matching_significance_simple(mu_bkg, significance):

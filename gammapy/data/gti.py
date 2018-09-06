@@ -5,7 +5,7 @@ from astropy.table import Table
 from ..utils.time import time_ref_from_dict
 from ..utils.scripts import make_path
 
-__all__ = ['GTI']
+__all__ = ["GTI"]
 
 
 class GTI(object):
@@ -63,26 +63,26 @@ class GTI(object):
             Filename
         """
         filename = make_path(filename)
-        kwargs.setdefault('hdu', 'GTI')
+        kwargs.setdefault("hdu", "GTI")
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
     def __str__(self):
-        ss = 'GTI info:\n'
-        ss += '- Number of GTIs: {}\n'.format(len(self.table))
-        ss += '- Duration: {}\n'.format(self.time_sum)
-        ss += '- Start: {} MET\n'.format(self.time_start[0])
-        ss += '- Start: {}\n'.format(self.time_start[0].fits)
-        ss += '- Stop: {} MET\n'.format(self.time_stop[-1])
-        ss += '- Stop: {}\n'.format(self.time_stop[-1].fits)
+        ss = "GTI info:\n"
+        ss += "- Number of GTIs: {}\n".format(len(self.table))
+        ss += "- Duration: {}\n".format(self.time_sum)
+        ss += "- Start: {} MET\n".format(self.time_start[0])
+        ss += "- Start: {}\n".format(self.time_start[0].fits)
+        ss += "- Stop: {} MET\n".format(self.time_stop[-1])
+        ss += "- Stop: {}\n".format(self.time_stop[-1].fits)
         return ss
 
     @property
     def time_delta(self):
         """GTI durations in seconds (`~astropy.units.Quantity`)."""
-        start = self.table['START'].astype('float64')
-        stop = self.table['STOP'].astype('float64')
-        return Quantity(stop - start, 'second')
+        start = self.table["START"].astype("float64")
+        stop = self.table["STOP"].astype("float64")
+        return Quantity(stop - start, "second")
 
     @property
     def time_sum(self):
@@ -93,12 +93,12 @@ class GTI(object):
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
         met_ref = time_ref_from_dict(self.table.meta)
-        met = Quantity(self.table['START'].astype('float64'), 'second')
+        met = Quantity(self.table["START"].astype("float64"), "second")
         return met_ref + met
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
         met_ref = time_ref_from_dict(self.table.meta)
-        met = Quantity(self.table['STOP'].astype('float64'), 'second')
+        met = Quantity(self.table["STOP"].astype("float64"), "second")
         return met_ref + met

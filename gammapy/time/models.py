@@ -8,7 +8,7 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.modeling import Parameter, Parameters
 
-__all__ = ['PhaseCurveTableModel', 'LightCurveTableModel']
+__all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 
 
 class PhaseCurveTableModel(object):
@@ -65,11 +65,11 @@ class PhaseCurveTableModel(object):
         self.table = table
         self.parameters = Parameters(
             [
-                Parameter('time_0', time_0),
-                Parameter('phase_0', phase_0),
-                Parameter('f0', f0),
-                Parameter('f1', f1),
-                Parameter('f2', f2),
+                Parameter("time_0", time_0),
+                Parameter("phase_0", phase_0),
+                Parameter("f0", f0),
+                Parameter("f1", f1),
+                Parameter("f2", f2),
             ]
         )
 
@@ -85,11 +85,11 @@ class PhaseCurveTableModel(object):
         phase : array_like
         """
         pars = self.parameters
-        time_0 = pars['time_0'].value
-        phase_0 = pars['phase_0'].value
-        f0 = pars['f0'].value
-        f1 = pars['f1'].value
-        f2 = pars['f2'].value
+        time_0 = pars["time_0"].value
+        phase_0 = pars["phase_0"].value
+        f0 = pars["f0"].value
+        f1 = pars["f1"].value
+        f2 = pars["f2"].value
 
         t = (time - time_0) * u.day.to(u.second)
         phase = self._evaluate_phase(t, phase_0, f0, f1, f2)
@@ -115,8 +115,8 @@ class PhaseCurveTableModel(object):
         return self.evaluate_norm_at_phase(phase)
 
     def evaluate_norm_at_phase(self, phase):
-        xp = self.table['PHASE']
-        fp = self.table['NORM']
+        xp = self.table["PHASE"]
+        fp = self.table["NORM"]
         return np.interp(x=phase, xp=xp, fp=fp, period=1)
 
 
@@ -171,11 +171,11 @@ class LightCurveTableModel(object):
         self.table = table
 
     def __str__(self):
-        ss = 'LightCurveTableModel model summary:\n'
-        ss += 'Start time: {} MJD\n'.format(self._time[0].mjd)
-        ss += 'End time: {} MJD\n'.format(self._time[-1].mjd)
-        ss += 'Norm min: {}\n'.format(self.table['NORM'].min())
-        ss += 'Norm max: {}\n'.format(self.table['NORM'].max())
+        ss = "LightCurveTableModel model summary:\n"
+        ss += "Start time: {} MJD\n".format(self._time[0].mjd)
+        ss += "End time: {} MJD\n".format(self._time[-1].mjd)
+        ss += "Norm min: {}\n".format(self.table["NORM"].min())
+        ss += "Norm max: {}\n".format(self.table["NORM"].max())
         return ss
 
     @classmethod
@@ -192,8 +192,8 @@ class LightCurveTableModel(object):
     def _interpolator(self):
         from scipy.interpolate import InterpolatedUnivariateSpline
 
-        x = self.table['TIME'].data
-        y = self.table['NORM'].data
+        x = self.table["TIME"].data
+        y = self.table["NORM"].data
 
         return InterpolatedUnivariateSpline(x, y, k=1)
 
@@ -203,7 +203,7 @@ class LightCurveTableModel(object):
 
     @lazyproperty
     def _time(self):
-        return self._time_ref + self.table['TIME'].data * u.s
+        return self._time_ref + self.table["TIME"].data * u.s
 
     def evaluate_norm_at_time(self, time):
         """Evaluate for a given time.

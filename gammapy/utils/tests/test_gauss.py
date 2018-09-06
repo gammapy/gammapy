@@ -12,7 +12,7 @@ from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 BINSZ = 0.02
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 class TestGauss2DPDF:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
@@ -63,7 +63,7 @@ class TestGauss2DPDF:
         assert_equal(g.sigma, 5)
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 class TestMultiGauss2D:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
@@ -123,7 +123,7 @@ class TestMultiGauss2D:
         assert_equal(m.norms, [5])
 
 
-@requires_dependency('uncertainties')
+@requires_dependency("uncertainties")
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
     """

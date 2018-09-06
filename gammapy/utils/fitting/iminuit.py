@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 
-__all__ = ['fit_iminuit']
+__all__ = ["fit_iminuit"]
 
 log = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
-    opts_minuit.setdefault('errordef', 1)
+    opts_minuit.setdefault("errordef", 1)
 
-    opts_minuit.setdefault('print_level', 0)
+    opts_minuit.setdefault("print_level", 0)
 
     parnames = _make_parnames(parameters)
     minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit)
@@ -64,7 +64,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 def _make_parnames(parameters):
     """Create list with unambigious parameter names"""
     return [
-        'par_{:03d}_{}'.format(idx, par.name)
+        "par_{:03d}_{}".format(idx, par.name)
         for idx, par in enumerate(parameters.parameters)
     ]
 
@@ -102,12 +102,12 @@ def make_minuit_par_kwargs(parameters):
 
         min_ = None if np.isnan(par.min) else par.min
         max_ = None if np.isnan(par.max) else par.max
-        kwargs['limit_{}'.format(parname_)] = (min_, max_)
+        kwargs["limit_{}".format(parname_)] = (min_, max_)
 
-        kwargs['error_{}'.format(parname_)] = 1
+        kwargs["error_{}".format(parname_)] = 1
 
         if par.frozen:
-            kwargs['fix_{}'.format(parname_)] = True
+            kwargs["fix_{}".format(parname_)] = True
 
     return kwargs
 

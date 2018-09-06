@@ -17,13 +17,13 @@ from .. import (
 )
 
 
-@requires_dependency('scipy')
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_dependency("sherpa")
+@requires_data("gammapy-extra")
 def test_spectrum_observation_1():
     """Obs read from file"""
     obs = SpectrumObservation.read(
-        '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+        "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits"
     )
     pars = dict(
         total_on=172,
@@ -36,9 +36,9 @@ def test_spectrum_observation_1():
     tester.test_all()
 
 
-@requires_dependency('scipy')
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_dependency("sherpa")
+@requires_data("gammapy-extra")
 def test_spectrum_observation_2():
     """Simulated obs without background"""
     energy = np.logspace(-2, 2, 100) * u.TeV
@@ -46,8 +46,8 @@ def test_spectrum_observation_2():
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
     livetime = 1 * u.h
     source_model = models.PowerLaw(
-        index=2.3 * u.Unit(''),
-        amplitude=2.3e-11 * u.Unit('cm-2 s-1 TeV-1'),
+        index=2.3 * u.Unit(""),
+        amplitude=2.3e-11 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1.4 * u.TeV,
     )
     sim = SpectrumSimulation(
@@ -67,9 +67,9 @@ def test_spectrum_observation_2():
     tester.test_all()
 
 
-@requires_dependency('scipy')
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_dependency("sherpa")
+@requires_data("gammapy-extra")
 def test_spectrum_observation_3():
     """obs without edisp"""
     energy = np.logspace(-1, 1, 20) * u.TeV
@@ -90,9 +90,9 @@ def test_spectrum_observation_3():
     tester.test_all()
 
 
-@requires_dependency('scipy')
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_dependency("sherpa")
+@requires_data("gammapy-extra")
 def make_observation_list():
     """obs with dummy IRF"""
     nbin = 3
@@ -144,52 +144,52 @@ class SpectrumObservationTester:
         self.test_npred()
 
     def test_basic(self):
-        assert 'Observation summary report' in str(self.obs)
+        assert "Observation summary report" in str(self.obs)
 
     def test_npred(self):
         pwl = models.PowerLaw(
-            index=2 * u.Unit(''),
-            amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            index=2 * u.Unit(""),
+            amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
         )
         npred = self.obs.predicted_counts(model=pwl)
-        assert_allclose(npred.total_counts.value, self.vals['npred'])
+        assert_allclose(npred.total_counts.value, self.vals["npred"])
 
     def test_stats_table(self):
         table = self.obs.stats_table()
-        assert table['n_on'].sum() == self.vals['total_on']
+        assert table["n_on"].sum() == self.vals["total_on"]
         assert_quantity_allclose(
-            table['livetime'].quantity.max(), self.vals['livetime']
+            table["livetime"].quantity.max(), self.vals["livetime"]
         )
 
     def test_total_stats(self):
         excess = self.obs.total_stats.excess
-        assert_allclose(excess, self.vals['excess'], atol=1e-3)
+        assert_allclose(excess, self.vals["excess"], atol=1e-3)
 
     def test_stats_in_safe_range(self):
         stats = self.obs.total_stats_safe_range
         assert_quantity_allclose(stats.energy_min, self.obs.lo_threshold)
         assert_quantity_allclose(stats.energy_max, self.obs.hi_threshold)
-        assert_allclose(stats.excess, self.vals['excess_safe_range'], atol=1e-3)
+        assert_allclose(stats.excess, self.vals["excess_safe_range"], atol=1e-3)
 
-    @requires_dependency('sherpa')
+    @requires_dependency("sherpa")
     def test_to_sherpa(self):
         # This method is not used anywhere but could be useful in the future
         sherpa_obs = self.obs.to_sherpa()
         assert sherpa_obs.counts[10] == self.obs.on_vector.data.data[10].value
 
-    @requires_dependency('matplotlib')
+    @requires_dependency("matplotlib")
     def test_peek(self):
         with mpl_plot_check():
             self.obs.peek()
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 class TestSpectrumObservationStacker:
     def setup(self):
         self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha'
+            "$GAMMAPY_EXTRA/datasets/hess-crab4_pha"
         )
 
         # Change threshold to make stuff more interesting
@@ -200,8 +200,8 @@ class TestSpectrumObservationStacker:
         self.obs_stacker.run()
 
     def test_basic(self):
-        assert 'Stacker' in str(self.obs_stacker)
-        assert 'stacked' in str(self.obs_stacker.stacked_obs.on_vector.phafile)
+        assert "Stacker" in str(self.obs_stacker)
+        assert "stacked" in str(self.obs_stacker.stacked_obs.on_vector.phafile)
         counts1 = self.obs_list[0].total_stats_safe_range.n_on
         counts2 = self.obs_list[1].total_stats_safe_range.n_on
         summed_counts = counts1 + counts2
@@ -220,8 +220,8 @@ class TestSpectrumObservationStacker:
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
         pwl = models.PowerLaw(
-            index=2 * u.Unit(''),
-            amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            index=2 * u.Unit(""),
+            amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
         )
 
@@ -247,17 +247,17 @@ class TestSpectrumObservationStacker:
         assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.)
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 class TestSpectrumObservationList:
     def setup(self):
         self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha'
+            "$GAMMAPY_EXTRA/datasets/hess-crab4_pha"
         )
 
     def test_stack_method(self):
         stacked_obs = self.obs_list.stack()
-        assert 'Observation summary report' in str(stacked_obs)
+        assert "Observation summary report" in str(stacked_obs)
         assert stacked_obs.obs_id == [23523, 23592]
         assert_quantity_allclose(
             stacked_obs.aeff.data.data[10], 86443352.23037884 * u.cm ** 2
@@ -268,18 +268,18 @@ class TestSpectrumObservationList:
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)
-        written_files = make_path(tmpdir).glob('*')
+        written_files = make_path(tmpdir).glob("*")
         assert len(list(written_files)) == len(self.obs_list) * 4
 
-        outdir = tmpdir / 'pha_typeII'
+        outdir = tmpdir / "pha_typeII"
         self.obs_list.write(outdir=str(outdir), pha_typeII=True)
 
         test_list = SpectrumObservationList.read(outdir, pha_typeII=True)
         assert str(test_list[0].total_stats) == str(self.obs_list[0].total_stats)
 
     def test_range(self):
-        erange = self.obs_list.safe_range('inclusive')
+        erange = self.obs_list.safe_range("inclusive")
         assert_quantity_allclose(erange, [0.5994843, 100] * u.TeV)
 
-        erange = self.obs_list.safe_range('exclusive')
+        erange = self.obs_list.safe_range("exclusive")
         assert_quantity_allclose(erange, [0.6812921, 100] * u.TeV)

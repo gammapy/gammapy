@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.units import Quantity
 
-__all__ = ['CountsPredictor', 'integrate_spectrum']
+__all__ = ["CountsPredictor", "integrate_spectrum"]
 
 
 class CountsPredictor(object):
@@ -82,11 +82,11 @@ class CountsPredictor(object):
             # TODO: True energy is converted to model amplitude unit. See issue 869
             ref_unit = None
             try:
-                for unit in self.model.parameters['amplitude'].quantity.unit.bases:
-                    if unit.is_equivalent('eV'):
+                for unit in self.model.parameters["amplitude"].quantity.unit.bases:
+                    if unit.is_equivalent("eV"):
                         ref_unit = unit
             except IndexError:
-                ref_unit = 'TeV'
+                ref_unit = "TeV"
             self.e_true = self.aeff.energy.bins.to(ref_unit)
         else:
             if self.e_true is None:
@@ -103,10 +103,10 @@ class CountsPredictor(object):
             cts = self.true_flux
 
         # Multiply with livetime if not already contained in aeff or model
-        if cts.unit.is_equivalent('s-1'):
+        if cts.unit.is_equivalent("s-1"):
             cts *= self.livetime
 
-        self.true_counts = cts.to('')
+        self.true_counts = cts.to("")
 
     def apply_edisp(self):
         from . import CountsSpectrum
@@ -221,7 +221,7 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
     slice1, slice2 = tuple(slice1), tuple(slice2)
 
     # arrays with uncertainties contain objects
-    if y.dtype == 'O':
+    if y.dtype == "O":
         from uncertainties.unumpy import log10
 
         # uncertainties.unumpy.log10 can't deal with tiny values see
@@ -237,7 +237,7 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         shape[axis] = x.shape[0]
         x = x.reshape(shape)
 
-    with np.errstate(invalid='ignore', divide='ignore'):
+    with np.errstate(invalid="ignore", divide="ignore"):
         # Compute the power law indices in each integration bin
         b = log10(y[slice2] / y[slice1]) / log10(x[slice2] / x[slice1])
 

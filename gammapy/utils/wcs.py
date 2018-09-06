@@ -6,10 +6,10 @@ from astropy.wcs import WCS
 from astropy.coordinates import Angle
 
 __all__ = [
-    'linear_wcs_to_arrays',
-    'linear_arrays_to_wcs',
-    'get_wcs_ctype',
-    'get_resampled_wcs',
+    "linear_wcs_to_arrays",
+    "linear_arrays_to_wcs",
+    "get_wcs_ctype",
+    "get_resampled_wcs",
 ]
 
 
@@ -29,10 +29,10 @@ def get_wcs_ctype(wcs):
         `~astropy.coordinates.SkyCoord`
     """
     ctype = wcs.wcs.ctype
-    if 'GLON' in ctype[0] or 'GLON' in ctype[1]:
-        return 'galactic'
-    elif 'RA' in ctype[0] or 'RA' in ctype[1]:
-        return 'icrs'
+    if "GLON" in ctype[0] or "GLON" in ctype[1]:
+        return "galactic"
+    elif "RA" in ctype[0] or "RA" in ctype[1]:
+        return "icrs"
     else:
         raise TypeError("Can't determine WCS coordinate type.")
 

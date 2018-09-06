@@ -5,18 +5,18 @@ import numpy as np
 from astropy.time import Time, TimeDelta
 
 __all__ = [
-    'time_ref_from_dict',
-    'time_ref_to_dict',
-    'time_relative_to_ref',
-    'absolute_time',
+    "time_ref_from_dict",
+    "time_ref_to_dict",
+    "time_relative_to_ref",
+    "absolute_time",
 ]
 
 # TODO: implement and document this properly.
 # see https://github.com/gammapy/gammapy/issues/284
-TIME_REF_FERMI = Time('2001-01-01T00:00:00')
+TIME_REF_FERMI = Time("2001-01-01T00:00:00")
 
 
-def time_ref_from_dict(meta, format='mjd', scale='tt'):
+def time_ref_from_dict(meta, format="mjd", scale="tt"):
     """Calculate the time reference from metadata.
 
     Parameters
@@ -30,12 +30,12 @@ def time_ref_from_dict(meta, format='mjd', scale='tt'):
         Time object with ``format='MJD'``
     """
     # Note: the float call here is to make sure we use 64-bit
-    mjd = float(meta['MJDREFI']) + float(meta['MJDREFF'])
-    scale = meta.get('TIMESYS', scale).lower()
+    mjd = float(meta["MJDREFI"]) + float(meta["MJDREFF"])
+    scale = meta.get("TIMESYS", scale).lower()
     return Time(mjd, format=format, scale=scale)
 
 
-def time_ref_to_dict(time, scale='tt'):
+def time_ref_to_dict(time, scale="tt"):
     """TODO: document and test.
 
     Parameters
@@ -73,7 +73,7 @@ def time_relative_to_ref(time, meta):
         time in seconds after the reference
     """
     time_ref = time_ref_from_dict(meta)
-    return TimeDelta(time - time_ref, format='sec')
+    return TimeDelta(time - time_ref, format="sec")
 
 
 def absolute_time(time_delta, meta):

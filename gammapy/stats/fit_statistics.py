@@ -8,17 +8,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 
 __all__ = [
-    'cash',
-    'cstat',
-    'wstat',
-    'get_wstat_mu_bkg',
-    'get_wstat_gof_terms',
-    'chi2',
-    'chi2constvar',
-    'chi2datavar',
-    'chi2gehrels',
-    'chi2modvar',
-    'chi2xspecvar',
+    "cash",
+    "cstat",
+    "wstat",
+    "get_wstat_mu_bkg",
+    "get_wstat_gof_terms",
+    "chi2",
+    "chi2constvar",
+    "chi2datavar",
+    "chi2gehrels",
+    "chi2modvar",
+    "chi2xspecvar",
 ]
 
 N_ON_MIN = 1e-25
@@ -57,7 +57,7 @@ def cash(n_on, mu_on):
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
         stat = np.where(mu_on > 0, stat, 0)
     return stat
@@ -165,7 +165,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     term1 = mu_sig + (1 + alpha) * mu_bkg
 
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         # This is a false positive error from pylint
         # See https://github.com/PyCQA/pylint/issues/2436
         term2_ = -n_on * np.log(
@@ -176,7 +176,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     term2 = np.where(condition, 0, term2_)
 
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         # This is a false positive error from pylint
         # See https://github.com/PyCQA/pylint/issues/2436
         term3_ = -n_off * np.log(mu_bkg)  # pylint:disable=invalid-unary-operand-type
@@ -218,7 +218,7 @@ def get_wstat_gof_terms(n_on, n_off):
     term = np.zeros(len(n_on))
 
     # suppress zero division warnings, they are corrected below
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         term1 = -n_on * (1 - np.log(n_on))
         term2 = -n_off * (1 - np.log(n_off))
 

@@ -17,7 +17,7 @@ def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
         assert_allclose(rgb_actual, rgb_expected, atol=1e-5)
 
 
-@requires_dependency('matplotlib')
+@requires_dependency("matplotlib")
 def test_colormap_hess():
     transition = 0.5
     cmap = colormap_hess(transition=transition)
@@ -31,7 +31,7 @@ def test_colormap_hess():
     _check_cmap_rgb_vals(vals, cmap)
 
 
-@requires_dependency('matplotlib')
+@requires_dependency("matplotlib")
 def test_colormap_milagro():
     transition = 0.5
     cmap = colormap_milagro(transition=transition)

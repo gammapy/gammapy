@@ -6,10 +6,10 @@ import numpy as np
 from astropy.coordinates import Angle
 
 __all__ = [
-    'get_random_state',
-    'sample_sphere',
-    'sample_sphere_distance',
-    'sample_powerlaw',
+    "get_random_state",
+    "sample_sphere",
+    "sample_sphere_distance",
+    "sample_powerlaw",
 ]
 
 
@@ -41,20 +41,20 @@ def get_random_state(init):
     """
     if isinstance(init, (numbers.Integral, np.integer)):
         return np.random.RandomState(init)
-    elif init == 'random-seed':
+    elif init == "random-seed":
         return np.random.RandomState(None)
-    elif init == 'global-rng':
+    elif init == "global-rng":
         return np.random.mtrand._rand
     elif isinstance(init, np.random.RandomState):
         return init
     else:
         raise ValueError(
-            '{} cannot be used to seed a numpy.random.RandomState'
-            ' instance'.format(init)
+            "{} cannot be used to seed a numpy.random.RandomState"
+            " instance".format(init)
         )
 
 
-def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-seed'):
+def sample_sphere(size, lon_range=None, lat_range=None, random_state="random-seed"):
     """Sample random points on the sphere.
 
     Reference: http://mathworld.wolfram.com/SpherePointPicking.html
@@ -79,10 +79,10 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
     random_state = get_random_state(random_state)
 
     if lon_range is None:
-        lon_range = Angle([0., 360.], 'deg')
+        lon_range = Angle([0., 360.], "deg")
 
     if lat_range is None:
-        lat_range = Angle([-90., 90.], 'deg')
+        lat_range = Angle([-90., 90.], "deg")
 
     # Sample random longitude
     u = random_state.uniform(size=size)
@@ -97,7 +97,7 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
     return lon, lat
 
 
-def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
+def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
     """Sample random values from a power law distribution.
 
     f(x) = x ** (-gamma) in the range x_min to x_max
@@ -137,7 +137,7 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
 
 
 def sample_sphere_distance(
-    distance_min=0, distance_max=1, size=None, random_state='random-seed'
+    distance_min=0, distance_max=1, size=None, random_state="random-seed"
 ):
     """Sample random distances if the 3-dim space density is constant.
 

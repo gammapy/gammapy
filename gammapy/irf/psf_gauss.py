@@ -16,7 +16,7 @@ from ..utils.gauss import MultiGauss2D
 from .psf_3d import PSF3D
 from . import EnergyDependentTablePSF
 
-__all__ = ['EnergyDependentMultiGaussPSF']
+__all__ = ["EnergyDependentMultiGaussPSF"]
 
 log = logging.getLogger(__name__)
 
@@ -71,36 +71,36 @@ class EnergyDependentMultiGaussPSF(object):
         theta,
         sigmas,
         norms,
-        energy_thresh_lo=Quantity(0.1, 'TeV'),
-        energy_thresh_hi=Quantity(100, 'TeV'),
+        energy_thresh_lo=Quantity(0.1, "TeV"),
+        energy_thresh_hi=Quantity(100, "TeV"),
     ):
 
         # Validate input
-        validate_physical_type('energy_lo', energy_lo, 'energy')
-        validate_physical_type('energy_hi', energy_hi, 'energy')
-        validate_physical_type('theta', theta, 'angle')
-        validate_physical_type('energy_thresh_lo', energy_thresh_lo, 'energy')
-        validate_physical_type('energy_thresh_hi', energy_thresh_hi, 'energy')
+        validate_physical_type("energy_lo", energy_lo, "energy")
+        validate_physical_type("energy_hi", energy_hi, "energy")
+        validate_physical_type("theta", theta, "angle")
+        validate_physical_type("energy_thresh_lo", energy_thresh_lo, "energy")
+        validate_physical_type("energy_thresh_hi", energy_thresh_hi, "energy")
 
         # Set attributes
-        self.energy_lo = energy_lo.to('TeV')
-        self.energy_hi = energy_hi.to('TeV')
+        self.energy_lo = energy_lo.to("TeV")
+        self.energy_hi = energy_hi.to("TeV")
         ebounds = EnergyBounds.from_lower_and_upper_bounds(
             self.energy_lo, self.energy_hi
         )
         self.energy = ebounds.log_centers
-        self.theta = theta.to('deg')
+        self.theta = theta.to("deg")
         sigmas[0][sigmas[0] == 0] = 1
         sigmas[1][sigmas[1] == 0] = 1
         sigmas[2][sigmas[2] == 0] = 1
         self.sigmas = sigmas
 
         self.norms = norms
-        self.energy_thresh_lo = energy_thresh_lo.to('TeV')
-        self.energy_thresh_hi = energy_thresh_hi.to('TeV')
+        self.energy_thresh_lo = energy_thresh_lo.to("TeV")
+        self.energy_thresh_hi = energy_thresh_hi.to("TeV")
 
     @classmethod
-    def read(cls, filename, hdu='PSF_2D_GAUSS'):
+    def read(cls, filename, hdu="PSF_2D_GAUSS"):
         """Create `EnergyDependentMultiGaussPSF` from FITS file.
 
         Parameters
@@ -123,27 +123,27 @@ class EnergyDependentMultiGaussPSF(object):
         hdu : `~astropy.io.fits.BintableHDU`
             HDU
         """
-        energy_lo = Quantity(hdu.data['ENERG_LO'][0], 'TeV')
-        energy_hi = Quantity(hdu.data['ENERG_HI'][0], 'TeV')
-        theta = Angle(hdu.data['THETA_LO'][0], 'deg')
+        energy_lo = Quantity(hdu.data["ENERG_LO"][0], "TeV")
+        energy_hi = Quantity(hdu.data["ENERG_HI"][0], "TeV")
+        theta = Angle(hdu.data["THETA_LO"][0], "deg")
 
         # Get sigmas
         shape = (len(theta), len(energy_hi))
         sigmas = []
-        for key in ['SIGMA_1', 'SIGMA_2', 'SIGMA_3']:
+        for key in ["SIGMA_1", "SIGMA_2", "SIGMA_3"]:
             sigma = hdu.data[key].reshape(shape).copy()
             sigmas.append(sigma)
 
         # Get amplitudes
         norms = []
-        for key in ['SCALE', 'AMPL_2', 'AMPL_3']:
+        for key in ["SCALE", "AMPL_2", "AMPL_3"]:
             norm = hdu.data[key].reshape(shape).copy()
             norms.append(norm)
 
         opts = {}
         try:
-            opts['energy_thresh_lo'] = Quantity(hdu.header['LO_THRES'], 'TeV')
-            opts['energy_thresh_hi'] = Quantity(hdu.header['HI_THRES'], 'TeV')
+            opts["energy_thresh_lo"] = Quantity(hdu.header["LO_THRES"], "TeV")
+            opts["energy_thresh_hi"] = Quantity(hdu.header["HI_THRES"], "TeV")
         except KeyError:
             pass
 
@@ -160,18 +160,18 @@ class EnergyDependentMultiGaussPSF(object):
         """
         # Set up data
         names = [
-            'ENERG_LO',
-            'ENERG_HI',
-            'THETA_LO',
-            'THETA_HI',
-            'SCALE',
-            'SIGMA_1',
-            'AMPL_2',
-            'SIGMA_2',
-            'AMPL_3',
-            'SIGMA_3',
+            "ENERG_LO",
+            "ENERG_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "SCALE",
+            "SIGMA_1",
+            "AMPL_2",
+            "SIGMA_2",
+            "AMPL_3",
+            "SIGMA_3",
         ]
-        units = ['TeV', 'TeV', 'deg', 'deg', '', 'deg', '', 'deg', '', 'deg']
+        units = ["TeV", "TeV", "deg", "deg", "", "deg", "", "deg", "", "deg"]
 
         data = [
             self.energy_lo,
@@ -193,8 +193,8 @@ class EnergyDependentMultiGaussPSF(object):
 
         # Create hdu and hdu list
         hdu = fits.BinTableHDU(table)
-        hdu.header['LO_THRES'] = self.energy_thresh_lo.value
-        hdu.header['HI_THRES'] = self.energy_thresh_hi.value
+        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
+        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
 
         return fits.HDUList([fits.PrimaryHDU(), hdu])
 
@@ -238,8 +238,8 @@ class EnergyDependentMultiGaussPSF(object):
         norms = [_[j][i] for _ in self.norms]
 
         pars = {}
-        pars['scale'], pars['A_2'], pars['A_3'] = norms
-        pars['sigma_1'], pars['sigma_2'], pars['sigma_3'] = sigmas
+        pars["scale"], pars["A_2"], pars["A_3"] = norms
+        pars["sigma_1"], pars["sigma_2"], pars["sigma_3"] = sigmas
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
 
@@ -266,7 +266,7 @@ class EnergyDependentMultiGaussPSF(object):
                     log.debug("Sigmas: {} Norms: {}".format(psf.sigmas, psf.norms))
                     radius[idx_theta, idx_energy] = np.nan
 
-        return Angle(radius, 'deg')
+        return Angle(radius, "deg")
 
     def plot_containment(
         self, fraction=0.68, ax=None, show_safe_energy=False, add_cbar=True, **kwargs
@@ -292,9 +292,9 @@ class EnergyDependentMultiGaussPSF(object):
         containment = self.containment_radius(energy, offset, fraction)
 
         # plotting defaults
-        kwargs.setdefault('cmap', 'GnBu')
-        kwargs.setdefault('vmin', np.nanmin(containment.value))
-        kwargs.setdefault('vmax', np.nanmax(containment.value))
+        kwargs.setdefault("cmap", "GnBu")
+        kwargs.setdefault("vmin", np.nanmin(containment.value))
+        kwargs.setdefault("vmax", np.nanmax(containment.value))
 
         # Plotting
         x = energy.value
@@ -303,8 +303,8 @@ class EnergyDependentMultiGaussPSF(object):
 
         # Axes labels and ticks, colobar
         ax.semilogx()
-        ax.set_ylabel('Offset ({unit})'.format(unit=offset.unit))
-        ax.set_xlabel('Energy ({unit})'.format(unit=energy.unit))
+        ax.set_ylabel("Offset ({unit})".format(unit=offset.unit))
+        ax.set_xlabel("Energy ({unit})".format(unit=energy.unit))
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
@@ -312,7 +312,7 @@ class EnergyDependentMultiGaussPSF(object):
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = 'Containment radius R{0:.0f} ({1})'.format(
+            label = "Containment radius R{0:.0f} ({1})".format(
                 100 * fraction, containment.unit
             )
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
@@ -325,11 +325,11 @@ class EnergyDependentMultiGaussPSF(object):
         omin = self.offset.value.min()
         omax = self.offset.value.max()
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
-        label = 'Safe energy threshold: {0:3.2f}'.format(esafe)
-        ax.text(x=0.1, y=0.9 * esafe.value, s=label, va='top')
+        label = "Safe energy threshold: {0:3.2f}".format(esafe)
+        ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 
     def plot_containment_vs_energy(
-        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], 'deg'), ax=None, **kwargs
+        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None, **kwargs
     ):
         """Plot containment fraction as a function of energy.
         """
@@ -342,13 +342,13 @@ class EnergyDependentMultiGaussPSF(object):
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction).squeeze()
-                label = '{} deg, {:.1f}%'.format(theta, 100 * fraction)
+                label = "{} deg, {:.1f}%".format(theta, 100 * fraction)
                 ax.plot(energy.value, radius.value, label=label)
 
         ax.semilogx()
-        ax.legend(loc='best')
-        ax.set_xlabel('Energy (TeV)')
-        ax.set_ylabel('Containment radius (deg)')
+        ax.legend(loc="best")
+        ax.set_xlabel("Energy (TeV)")
+        ax.set_ylabel("Containment radius (deg)")
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
@@ -369,8 +369,8 @@ class EnergyDependentMultiGaussPSF(object):
     def info(
         self,
         fractions=[0.68, 0.95],
-        energies=Quantity([1., 10.], 'TeV'),
-        thetas=Quantity([0.], 'deg'),
+        energies=Quantity([1., 10.], "TeV"),
+        thetas=Quantity([0.], "deg"),
     ):
         """
         Print PSF summary info.
@@ -395,11 +395,11 @@ class EnergyDependentMultiGaussPSF(object):
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
         # Summarise data members
-        ss += array_stats_str(self.theta.to('deg'), 'Theta')
-        ss += array_stats_str(self.energy_hi, 'Energy hi')
-        ss += array_stats_str(self.energy_lo, 'Energy lo')
-        ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)
-        ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
+        ss += array_stats_str(self.theta.to("deg"), "Theta")
+        ss += array_stats_str(self.energy_hi, "Energy hi")
+        ss += array_stats_str(self.energy_lo, "Energy lo")
+        ss += "Safe energy threshold lo: {0:6.3f}\n".format(self.energy_thresh_lo)
+        ss += "Safe energy threshold hi: {0:6.3f}\n".format(self.energy_thresh_hi)
 
         for fraction in fractions:
             containment = self.containment_radius(energies, thetas, fraction)
@@ -437,20 +437,20 @@ class EnergyDependentMultiGaussPSF(object):
         energies = self.energy
         # Defaults and input handling
         if theta is None:
-            theta = Angle(0, 'deg')
+            theta = Angle(0, "deg")
         else:
             theta = Angle(theta)
 
         if rad is None:
-            rad = Angle(np.arange(0, 1.5, 0.005), 'deg')
+            rad = Angle(np.arange(0, 1.5, 0.005), "deg")
         else:
-            rad = Angle(rad).to('deg')
+            rad = Angle(rad).to("deg")
 
-        psf_value = Quantity(np.zeros((energies.size, rad.size)), 'deg^-2')
+        psf_value = Quantity(np.zeros((energies.size, rad.size)), "deg^-2")
 
         for idx, energy in enumerate(energies):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
-            psf_value[idx] = Quantity(psf_gauss(rad), 'deg^-2')
+            psf_value[idx] = Quantity(psf_gauss(rad), "deg^-2")
 
         return EnergyDependentTablePSF(
             energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
@@ -478,7 +478,7 @@ class EnergyDependentMultiGaussPSF(object):
 
         psf_values = np.zeros(
             (rad_lo.shape[0], offsets.shape[0], energy_lo.shape[0])
-        ) * Unit('sr-1')
+        ) * Unit("sr-1")
 
         for i, offset in enumerate(offsets):
             psftable = self.to_energy_dependent_table_psf(offset)
@@ -521,9 +521,9 @@ class HESSMultiGaussPSF(object):
             self.pars = self._read_ascii(source)
         # Scale will be computed from normalization anyways,
         # so any default is fine here
-        self.pars['scale'] = self.pars.get('scale', 1)
+        self.pars["scale"] = self.pars.get("scale", 1)
         # This avoids handling the first PSF as a special case
-        self.pars['A_1'] = self.pars.get('A_1', 1)
+        self.pars["A_1"] = self.pars.get("A_1", 1)
 
     def _read_ascii(self, filename):
         """Parse file with parameters."""
@@ -532,7 +532,7 @@ class HESSMultiGaussPSF(object):
         for line in fh:
             try:
                 key, value = line.strip().split()[:2]
-                if key.startswith('#'):
+                if key.startswith("#"):
                     continue
                 else:
                     pars[key] = float(value)
@@ -543,17 +543,17 @@ class HESSMultiGaussPSF(object):
 
     def n_gauss(self):
         """Count number of Gaussians."""
-        return len([_ for _ in self.pars.keys() if 'sigma' in _])
+        return len([_ for _ in self.pars.keys() if "sigma" in _])
 
     def dpdtheta2(self, theta2):
         """dp / dtheta2 at position theta2 = theta ^ 2."""
-        theta2 = np.asarray(theta2, 'f')
+        theta2 = np.asarray(theta2, "f")
         total = np.zeros_like(theta2)
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars['A_{}'.format(ii)]
-            sigma = self.pars['sigma_{}'.format(ii)]
+            A = self.pars["A_{}".format(ii)]
+            sigma = self.pars["sigma_{}".format(ii)]
             total += A * np.exp(-theta2 / (2 * sigma ** 2))
-        return self.pars['scale'] * total
+        return self.pars["scale"] * total
 
     def to_MultiGauss2D(self, normalize=True):
         """Use this to compute containment angles and fractions.
@@ -563,9 +563,9 @@ class HESSMultiGaussPSF(object):
         represents the amplitude at 0."""
         sigmas, norms = [], []
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars['A_{}'.format(ii)]
-            sigma = self.pars['sigma_{}'.format(ii)]
-            norm = self.pars['scale'] * 2 * A * sigma ** 2
+            A = self.pars["A_{}".format(ii)]
+            sigma = self.pars["sigma_{}".format(ii)]
+            norm = self.pars["scale"] * 2 * A * sigma ** 2
             sigmas.append(sigma)
             norms.append(norm)
         m = MultiGauss2D(sigmas, norms)
@@ -606,9 +606,9 @@ def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs)
     psf = None
     for ii in range(1, 4):
         # Convert sigma and amplitude
-        pars = psf_parameters['psf{}'.format(ii)]
-        sigma = gaussian_fwhm_to_sigma * pars['fwhm'] * BINSZ / NEW_BINSZ
-        ampl = 2 * np.pi * sigma ** 2 * pars['ampl']
+        pars = psf_parameters["psf{}".format(ii)]
+        sigma = gaussian_fwhm_to_sigma * pars["fwhm"] * BINSZ / NEW_BINSZ
+        ampl = 2 * np.pi * sigma ** 2 * pars["ampl"]
         if psf is None:
             psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)
         else:

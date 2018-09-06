@@ -8,7 +8,7 @@ from .utils import CountsPredictor
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
 
-__all__ = ['SpectrumSimulation']
+__all__ = ["SpectrumSimulation"]
 
 log = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ class SpectrumSimulation(object):
         self.on_vector = None
         self.off_vector = None
 
-    def simulate_obs(self, obs_id, seed='random-seed'):
+    def simulate_obs(self, obs_id, seed="random-seed"):
         """Simulate one `~gammapy.spectrum.SpectrumObservation`.
 
         The result is stored as ``obs`` attribute
@@ -211,4 +211,4 @@ class SpectrumSimulation(object):
         self.off_vector = off_vector
 
     def _get_meta(self):
-        return OrderedDict([('CREATOR', self.__class__.__name__)])
+        return OrderedDict([("CREATOR", self.__class__.__name__)])

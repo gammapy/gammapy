@@ -2,6 +2,6 @@
 
 
 def get_package_data():
-    formats = 'fits root xml json conf txt csv'.split()
-    files = ['data/*.{}'.format(_) for _ in formats]
-    return {'gammapy.irf.tests': files}
+    formats = "fits root xml json conf txt csv".split()
+    files = ["data/*.{}".format(_) for _ in formats]
+    return {"gammapy.irf.tests": files}

@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy import log
 from ..extern import six
 
-__all__ = ['Energy', 'EnergyBounds']
+__all__ = ["Energy", "EnergyBounds"]
 
 
 class Energy(Quantity):
@@ -51,7 +51,7 @@ class Energy(Quantity):
             copy=copy,
         )
 
-        if not self.unit.is_equivalent('eV'):
+        if not self.unit.is_equivalent("eV"):
             raise ValueError(
                 "Given unit {} is not an" " energy".format(self.unit.to_string())
             )
@@ -62,7 +62,7 @@ class Energy(Quantity):
         super(Energy, self).__array_finalize__(obj)
 
     def __quantity_subclass__(self, unit):
-        if unit.is_equivalent('eV'):
+        if unit.is_equivalent("eV"):
             return Energy, True
         else:
             return super(Energy, self).__quantity_subclass__(unit)[0], False
@@ -125,7 +125,7 @@ class Energy(Quantity):
             Energy unit
         """
         header = hdu.header
-        fitsunit = header.get('TUNIT1')
+        fitsunit = header.get("TUNIT1")
 
         if fitsunit is None:
             if unit is not None:
@@ -138,7 +138,7 @@ class Energy(Quantity):
                     "No unit found in the FITS header." " Please specifiy a unit"
                 )
 
-        energy = cls(hdu.data['Energy'], fitsunit)
+        energy = cls(hdu.data["Energy"], fitsunit)
 
         return energy.to(unit)
 
@@ -150,11 +150,11 @@ class Energy(Quantity):
         hdu: `~astropy.io.fits.BinTableHDU`
             ENERGIES fits extension
         """
-        col1 = fits.Column(name='Energy', format='D', array=self.value)
+        col1 = fits.Column(name="Energy", format="D", array=self.value)
         cols = fits.ColDefs([col1])
         hdu = fits.BinTableHDU.from_columns(cols)
-        hdu.name = 'ENERGIES'
-        hdu.header['TUNIT1'] = "{}".format(self.unit.to_string('fits'))
+        hdu.name = "ENERGIES"
+        hdu.header["TUNIT1"] = "{}".format(self.unit.to_string("fits"))
 
         return hdu
 
@@ -262,15 +262,15 @@ class EnergyBounds(Energy):
         hdu: `~astropy.io.fits.BinTableHDU`
             ``EBOUNDS`` extensions.
         """
-        if hdu.name != 'EBOUNDS':
+        if hdu.name != "EBOUNDS":
             log.warning(
-                'This does not seem like an EBOUNDS extension. ' 'Are you sure?'
+                "This does not seem like an EBOUNDS extension. " "Are you sure?"
             )
 
         header = hdu.header
-        unit = header.get('TUNIT2')
-        low = hdu.data['E_MIN']
-        high = hdu.data['E_MAX']
+        unit = header.get("TUNIT2")
+        low = hdu.data["E_MIN"]
+        high = hdu.data["E_MAX"]
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
     @classmethod
@@ -282,13 +282,13 @@ class EnergyBounds(Energy):
         hdu: `~astropy.io.fits.BinTableHDU`
             ``MATRIX`` extensions.
         """
-        if hdu.name != 'MATRIX':
-            log.warning('This does not seem like a MATRIX extension. ' 'Are you sure?')
+        if hdu.name != "MATRIX":
+            log.warning("This does not seem like a MATRIX extension. " "Are you sure?")
 
         header = hdu.header
-        unit = header.get('TUNIT1')
-        low = hdu.data['ENERG_LO']
-        high = hdu.data['ENERG_HI']
+        unit = header.get("TUNIT1")
+        low = hdu.data["ENERG_LO"]
+        high = hdu.data["ENERG_HI"]
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
     def find_energy_bin(self, energy):
@@ -331,11 +331,11 @@ class EnergyBounds(Energy):
                 "This is not an energy range. Nbins: {}".format(self.nbins)
             )
 
-        d = dict(min=self[0].value, max=self[1].value, unit='{}'.format(self.unit))
+        d = dict(min=self[0].value, max=self[1].value, unit="{}".format(self.unit))
 
         return d
 
     @classmethod
     def from_dict(cls, d):
         """Read dict representing an energy range."""
-        return cls((d['min'], d['max']), d['unit'])
+        return cls((d["min"], d["max"]), d["unit"])

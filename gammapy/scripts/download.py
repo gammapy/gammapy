@@ -14,27 +14,27 @@ from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 
 log = logging.getLogger(__name__)
 
-apigitUrl = 'https://api.github.com/repos/gammapy/gammapy-extra/git/trees/master:'
-rawgitUrl = 'https://raw.githubusercontent.com/gammapy/gammapy-extra/master/'
+apigitUrl = "https://api.github.com/repos/gammapy/gammapy-extra/git/trees/master:"
+rawgitUrl = "https://raw.githubusercontent.com/gammapy/gammapy-extra/master/"
 
 
-@click.command(name='notebooks')
+@click.command(name="notebooks")
 @click.pass_context
 def cli_download_notebooks(ctx):
     """Download notebooks"""
 
-    localfolder = Path(ctx.obj['localfolder'])
-    downloadproc = DownloadProcess('notebooks', ['environment.yml'], localfolder)
+    localfolder = Path(ctx.obj["localfolder"])
+    downloadproc = DownloadProcess("notebooks", ["environment.yml"], localfolder)
     downloadproc.go()
 
 
-@click.command(name='datasets')
+@click.command(name="datasets")
 @click.pass_context
 def cli_download_datasets(ctx):
     """Download datasets"""
 
-    localfolder = Path(ctx.obj['localfolder'])
-    downloadproc = DownloadProcess('datasets', [], localfolder)
+    localfolder = Path(ctx.obj["localfolder"])
+    downloadproc = DownloadProcess("datasets", [], localfolder)
     downloadproc.go()
 
 
@@ -53,7 +53,7 @@ class DownloadProcess:
         self.parse_json_tree(json_files)
 
         # download files with progressbar
-        with click.progressbar(self.listfiles, label='Downloading files') as bar:
+        with click.progressbar(self.listfiles, label="Downloading files") as bar:
             for f in bar:
                 self.get_file(f)
 
@@ -62,24 +62,24 @@ class DownloadProcess:
 
     def get_json_tree(self):
 
-        url = apigitUrl + self.repofold + '?recursive=1'
+        url = apigitUrl + self.repofold + "?recursive=1"
 
         try:
             r = urlopen(url)
             json_items = json.loads(r.read())
             return json_items
         except Exception as ex:
-            log.error('Failed: bad response from GitHub API')
+            log.error("Failed: bad response from GitHub API")
             sys.exit()
 
     def parse_json_tree(self, json_files):
 
-        for item in json_files['tree']:
+        for item in json_files["tree"]:
 
-            ipath = self.repofold + '/' + item['path']
-            ifolder = self.localfolder / self.repofold / item['path']
+            ipath = self.repofold + "/" + item["path"]
+            ifolder = self.localfolder / self.repofold / item["path"]
 
-            if item['type'] == 'tree':
+            if item["type"] == "tree":
                 ifolder.mkdir(parents=True, exist_ok=True)
             else:
                 self.listfiles.append(ipath)
@@ -92,9 +92,9 @@ class DownloadProcess:
         try:
             urlretrieve(url, str(filepath))
         except Exception as ex:
-            log.error(str(filepath) + ' could not be copied')
+            log.error(str(filepath) + " could not be copied")
 
     def show_info(self,):
 
-        print('The files have been downloaded in folder {}.'.format(self.localfolder))
-        print('Process finished.')
+        print("The files have been downloaded in folder {}.".format(self.localfolder))
+        print("Process finished.")

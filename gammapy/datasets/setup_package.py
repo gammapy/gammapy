@@ -2,5 +2,5 @@
 
 
 def get_package_data():
-    files = ['datasets.yaml']
-    return {'gammapy.datasets': files}
+    files = ["datasets.yaml"]
+    return {"gammapy.datasets": files}

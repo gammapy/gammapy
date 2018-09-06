@@ -9,7 +9,7 @@ from .._sparse import merge_sparse_arrays
 test_params = [(8,), (8, 16), (8, 16, 32)]
 
 
-@pytest.mark.parametrize('shape', test_params)
+@pytest.mark.parametrize("shape", test_params)
 def test_sparse_init(shape):
     v = SparseArray(shape)
     assert v.shape == shape
@@ -42,7 +42,7 @@ def test_sparse_getitem():
     )
 
 
-@pytest.mark.parametrize('shape', test_params)
+@pytest.mark.parametrize("shape", test_params)
 def test_sparse_setitem(shape):
     data = np.random.poisson(np.ones(shape)).astype(float)
     v = SparseArray(shape)
@@ -72,7 +72,7 @@ def test_sparse_setitem(shape):
 
 
 @pytest.mark.parametrize(
-    ('dtype_idx', 'dtype_val'),
+    ("dtype_idx", "dtype_val"),
     [
         (np.int64, np.float64),
         (np.int32, np.float64),

@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from ..utils.random import get_random_state
 
-__all__ = ['Stats', 'make_stats', 'combine_stats', 'compute_total_stats']
+__all__ = ["Stats", "make_stats", "combine_stats", "compute_total_stats"]
 
 
 class Stats(object):
@@ -56,7 +56,7 @@ class Stats(object):
         return self.n_on - self.background
 
     def __str__(self):
-        keys = ['n_on', 'n_off', 'a_on', 'a_off', 'alpha', 'background', 'excess']
+        keys = ["n_on", "n_off", "a_on", "a_off", "alpha", "background", "excess"]
         values = [
             self.n_on,
             self.n_off,
@@ -66,7 +66,7 @@ class Stats(object):
             self.background,
             self.excess,
         ]
-        return '\n'.join(['%s = %s' % (k, v) for (k, v) in zip(keys, values)])
+        return "\n".join(["%s = %s" % (k, v) for (k, v) in zip(keys, values)])
 
 
 def make_stats(
@@ -75,7 +75,7 @@ def make_stats(
     area_factor,
     weight_method="background",
     poisson_fluctuate=False,
-    random_state='random-seed',
+    random_state="random-seed",
 ):
     """Fill using some weight method for the exposure.
 
@@ -213,28 +213,28 @@ def compute_total_stats(counts, exposure, background=None, solid_angle=None, mas
         mask = np.asanyarray(mask)
 
     t = dict()
-    t['n_pix_map'] = mask.size
-    t['n_pix_mask'] = mask.sum()
-    t['n_pix_fraction'] = t['n_pix_mask'] / float(t['n_pix_map'])
-    t['counts'] = counts[mask].sum(dtype=np.float64)
-    t['background'] = background[mask].sum(dtype=np.float64)
+    t["n_pix_map"] = mask.size
+    t["n_pix_mask"] = mask.sum()
+    t["n_pix_fraction"] = t["n_pix_mask"] / float(t["n_pix_map"])
+    t["counts"] = counts[mask].sum(dtype=np.float64)
+    t["background"] = background[mask].sum(dtype=np.float64)
     # Note that we use mean exposure (not sum) here!!!
-    t['exposure'] = exposure[mask].mean(dtype=np.float64)
-    t['solid_angle'] = solid_angle[mask].sum(dtype=np.float64)
+    t["exposure"] = exposure[mask].mean(dtype=np.float64)
+    t["solid_angle"] = solid_angle[mask].sum(dtype=np.float64)
 
     excess = counts - background
-    t['excess'] = t['counts'] - t['background']
-    t['excess_2'] = excess[mask].sum(dtype=np.float64)
+    t["excess"] = t["counts"] - t["background"]
+    t["excess_2"] = excess[mask].sum(dtype=np.float64)
 
     flux = excess / exposure
-    t['flux'] = (t['excess']) / t['exposure']
-    t['flux_2'] = t['excess_2'] / t['exposure']
-    t['flux_3'] = flux[mask].sum(dtype=np.float64)
+    t["flux"] = (t["excess"]) / t["exposure"]
+    t["flux_2"] = t["excess_2"] / t["exposure"]
+    t["flux_3"] = flux[mask].sum(dtype=np.float64)
 
     surface_brightness = flux / solid_angle
-    t['surface_brightness'] = t['flux'] / t['solid_angle']
-    t['surface_brightness_2'] = t['flux_2'] / t['solid_angle']
+    t["surface_brightness"] = t["flux"] / t["solid_angle"]
+    t["surface_brightness_2"] = t["flux_2"] / t["solid_angle"]
     # Note that we use mean exposure (not sum) here!!!
-    t['surface_brightness_3'] = surface_brightness[mask].mean(dtype=np.float64)
+    t["surface_brightness_3"] = surface_brightness[mask].mean(dtype=np.float64)
 
     return t

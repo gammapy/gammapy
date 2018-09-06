@@ -55,63 +55,63 @@ class TestIRFWrite:
         assert_equal(self.bkg.data.data, self.bkg_data)
 
     def test_container_to_table(self):
-        assert_equal(self.aeff.to_table()['ENERG_LO'].quantity[0], self.energy_lo)
-        assert_equal(self.edisp.to_table()['ENERG_LO'].quantity[0], self.energy_lo)
-        assert_equal(self.bkg.to_table()['ENERG_LO'].quantity[0], self.energy_lo)
+        assert_equal(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
+        assert_equal(self.edisp.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
+        assert_equal(self.bkg.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
 
-        assert_equal(self.aeff.to_table()['EFFAREA'].quantity[0].T, self.aeff_data)
-        assert_equal(self.edisp.to_table()['MATRIX'].quantity[0].T, self.edisp_data)
-        assert_equal(self.bkg.to_table()['BKG'].quantity[0], self.bkg_data)
+        assert_equal(self.aeff.to_table()["EFFAREA"].quantity[0].T, self.aeff_data)
+        assert_equal(self.edisp.to_table()["MATRIX"].quantity[0].T, self.edisp_data)
+        assert_equal(self.bkg.to_table()["BKG"].quantity[0], self.bkg_data)
 
-        assert self.aeff.to_table()['EFFAREA'].quantity[0].unit == self.aeff_data.unit
-        assert self.bkg.to_table()['BKG'].quantity[0].unit == self.bkg_data.unit
+        assert self.aeff.to_table()["EFFAREA"].quantity[0].unit == self.aeff_data.unit
+        assert self.bkg.to_table()["BKG"].quantity[0].unit == self.bkg_data.unit
 
     def test_container_to_fits(self):
-        assert_equal(self.aeff.to_table()['ENERG_LO'].quantity[0], self.energy_lo)
+        assert_equal(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
 
-        assert self.aeff.to_fits().header['EXTNAME'] == 'EFFECTIVE AREA'
-        assert self.edisp.to_fits().header['EXTNAME'] == 'ENERGY DISPERSION'
-        assert self.bkg.to_fits().header['EXTNAME'] == 'BACKGROUND'
+        assert self.aeff.to_fits().header["EXTNAME"] == "EFFECTIVE AREA"
+        assert self.edisp.to_fits().header["EXTNAME"] == "ENERGY DISPERSION"
+        assert self.bkg.to_fits().header["EXTNAME"] == "BACKGROUND"
 
-        assert self.aeff.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
-        assert self.edisp.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
-        assert self.bkg.to_fits(name='TEST').header['EXTNAME'] == 'TEST'
+        assert self.aeff.to_fits(name="TEST").header["EXTNAME"] == "TEST"
+        assert self.edisp.to_fits(name="TEST").header["EXTNAME"] == "TEST"
+        assert self.bkg.to_fits(name="TEST").header["EXTNAME"] == "TEST"
 
         hdu = self.aeff.to_fits()
         assert_equal(
-            hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
+            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
             self.aeff.data.axes[0].lo,
         )
         hdu = self.aeff.to_fits()
         assert_equal(
-            hdu.data[hdu.header['TTYPE5']][0].T * u.Unit(hdu.header['TUNIT5']),
+            hdu.data[hdu.header["TTYPE5"]][0].T * u.Unit(hdu.header["TUNIT5"]),
             self.aeff.data.data,
         )
 
         hdu = self.edisp.to_fits()
         assert_equal(
-            hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
+            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
             self.edisp.data.axes[0].lo,
         )
         hdu = self.edisp.to_fits()
         assert_equal(
-            hdu.data[hdu.header['TTYPE7']][0].T * u.Unit(hdu.header['TUNIT7']),
+            hdu.data[hdu.header["TTYPE7"]][0].T * u.Unit(hdu.header["TUNIT7"]),
             self.edisp.data.data,
         )
 
         hdu = self.bkg.to_fits()
         assert_equal(
-            hdu.data[hdu.header['TTYPE1']][0] * u.Unit(hdu.header['TUNIT1']),
+            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
             self.bkg.data.axes[1].lo,
         )
         hdu = self.bkg.to_fits()
         assert_equal(
-            hdu.data[hdu.header['TTYPE7']][0] * u.Unit(hdu.header['TUNIT7']),
+            hdu.data[hdu.header["TTYPE7"]][0] * u.Unit(hdu.header["TUNIT7"]),
             self.bkg.data.data,
         )
 
     def test_writeread(self, tmpdir):
-        filename = str(tmpdir / 'testirf.fits')
+        filename = str(tmpdir / "testirf.fits")
         fits.HDUList(
             [
                 fits.PrimaryHDU(),
@@ -121,11 +121,11 @@ class TestIRFWrite:
             ]
         ).writeto(filename)
 
-        read_aeff = EffectiveAreaTable2D.read(filename=filename, hdu='EFFECTIVE AREA')
+        read_aeff = EffectiveAreaTable2D.read(filename=filename, hdu="EFFECTIVE AREA")
         assert_equal(read_aeff.data.data, self.aeff_data)
 
-        read_edisp = EnergyDispersion2D.read(filename=filename, hdu='ENERGY DISPERSION')
+        read_edisp = EnergyDispersion2D.read(filename=filename, hdu="ENERGY DISPERSION")
         assert_equal(read_edisp.data.data, self.edisp_data)
 
-        read_bkg = Background3D.read(filename=filename, hdu='BACKGROUND')
+        read_bkg = Background3D.read(filename=filename, hdu="BACKGROUND")
         assert_equal(read_bkg.data.data, self.bkg_data)

@@ -75,8 +75,7 @@ flake8:
 black:
 	black $(PROJECT)/ examples/ docs/ \
 	--exclude="_astropy_init.py|extern/" \
-	--line-length 88 \
-	--skip-string-normalization
+	--line-length 88
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff

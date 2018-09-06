@@ -8,8 +8,8 @@ def test_recursive_merge_dicts():
     update = dict(d=99, b=dict(g=98, c=50))
 
     new = recursive_merge_dicts(old, update)
-    assert new['b']['c'] == 50
-    assert new['b']['e'] == 44
-    assert new['b']['g'] == 98
-    assert new['a'] == 42
-    assert new['d'] == 99
+    assert new["b"]["c"] == 50
+    assert new["b"]["e"] == 44
+    assert new["b"]["g"] == 98
+    assert new["a"] == 42
+    assert new["d"] == 99

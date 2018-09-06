@@ -1,16 +1,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__all__ = ['fit_sherpa']
+__all__ = ["fit_sherpa"]
 
 
 def get_sherpa_optimiser(name):
     from sherpa.optmethods import LevMar, NelderMead, MonCar, GridSearch
 
     return {
-        'levmar': LevMar,
-        'simplex': NelderMead,
-        'moncar': MonCar,
-        'gridsearch': GridSearch,
+        "levmar": LevMar,
+        "simplex": NelderMead,
+        "moncar": MonCar,
+        "gridsearch": GridSearch,
     }[name]()
 
 
@@ -34,7 +34,7 @@ class SherpaFunction(object):
         return self.function(self.parameters)
 
 
-def fit_sherpa(parameters, function, optimizer='simplex'):
+def fit_sherpa(parameters, function, optimizer="simplex"):
     """Sherpa optimization wrapper method.
 
     Parameters
@@ -69,16 +69,16 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
     )
 
     result = {
-        'success': result[0],
-        'factors': result[1],
-        'statval': result[2],
-        'message': result[3],
-        'info': result[4],  # that's a dict, content varies based on optimiser
+        "success": result[0],
+        "factors": result[1],
+        "statval": result[2],
+        "message": result[3],
+        "info": result[4],  # that's a dict, content varies based on optimiser
     }
 
-    result['nfev'] = result['info']['nfev']
+    result["nfev"] = result["info"]["nfev"]
 
     # Copy final results into the parameters object
-    parameters.set_parameter_factors(result['factors'])
+    parameters.set_parameter_factors(result["factors"])
 
     return result

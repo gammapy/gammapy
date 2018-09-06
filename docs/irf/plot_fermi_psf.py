@@ -4,10 +4,10 @@ from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import WcsGeom
 from gammapy.cube import PSFKernel
 
-filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits'
+filename = "$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits"
 fermi_psf = EnergyDependentTablePSF.read(filename)
 
-psf = fermi_psf.table_psf_at_energy(energy='1 GeV')
+psf = fermi_psf.table_psf_at_energy(energy="1 GeV")
 geom = WcsGeom.create(npix=100, binsz=0.01)
 kernel = PSFKernel.from_table_psf(psf, geom)
 

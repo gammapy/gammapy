@@ -7,7 +7,7 @@ from ..utils.fitting import fit_iminuit
 from ..stats import cash
 from ..maps import Map
 
-__all__ = ['MapFit', 'MapEvaluator']
+__all__ = ["MapFit", "MapEvaluator"]
 
 
 class MapFit(object):
@@ -228,15 +228,15 @@ class MapEvaluator(object):
         dnde = self.compute_dnde()
         volume = self.bin_volume
         flux = dnde * volume
-        return flux.to('cm-2 s-1')
+        return flux.to("cm-2 s-1")
 
     def apply_exposure(self, flux):
         """Compute npred cube
 
         For now just divide flux cube by exposure
         """
-        npred = Map.from_geom(self.geom, unit='')
-        npred.data = (flux * self.exposure.quantity).to('').value
+        npred = Map.from_geom(self.geom, unit="")
+        npred.data = (flux * self.exposure.quantity).to("").value
         return npred
 
     def apply_psf(self, npred):

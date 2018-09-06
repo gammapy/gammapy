@@ -9,7 +9,7 @@ cl = 0.90
 x_bins = np.arange(0, 100)
 
 table = Table()
-table['mu'] = [
+table["mu"] = [
     0.745,
     0.750,
     0.755,
@@ -22,14 +22,14 @@ table['mu'] = [
     1.060,
     1.065,
 ]
-table['x_min'] = 0.0
-table['x_max'] = 0.0
+table["x_min"] = 0.0
+table["x_max"] = 0.0
 
 for row in table:
     x_min, x_max = fc_find_acceptance_interval_poisson(
-        row['mu'], background, x_bins, cl
+        row["mu"], background, x_bins, cl
     )
-    row['x_min'] = x_min
-    row['x_max'] = x_max
+    row["x_min"] = x_min
+    row["x_max"] = x_max
 
 table.pprint()

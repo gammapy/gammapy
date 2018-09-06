@@ -6,8 +6,8 @@ from ...utils.wcs import linear_wcs_to_arrays, linear_arrays_to_wcs
 
 
 def test_wcs_object():
-    bins_x = Angle([1., 2., 3., 4.], 'deg')
-    bins_y = Angle([-1.5, 0., 1.5], 'deg')
+    bins_x = Angle([1., 2., 3., 4.], "deg")
+    bins_y = Angle([-1.5, 0., 1.5], "deg")
     wcs = linear_arrays_to_wcs("X", "Y", bins_x, bins_y)
     nbins_x = len(bins_x) - 1
     nbins_y = len(bins_y) - 1

@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from ..stats import significance, significance_on_off
 
-__all__ = ['compute_lima_image', 'compute_lima_on_off_image']
+__all__ = ["compute_lima_image", "compute_lima_on_off_image"]
 
 log = logging.getLogger(__name__)
 
@@ -34,18 +34,18 @@ def compute_lima_image(counts, background, kernel):
     """
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
-    kernel.normalize('peak')
+    kernel.normalize("peak")
 
     counts_conv = counts.convolve(kernel.array).data
     background_conv = background.convolve(kernel.array).data
     excess_conv = counts_conv - background_conv
-    significance_conv = significance(counts_conv, background_conv, method='lima')
+    significance_conv = significance(counts_conv, background_conv, method="lima")
 
     return {
-        'significance': counts.copy(data=significance_conv),
-        'counts': counts.copy(data=counts_conv),
-        'background': counts.copy(data=background_conv),
-        'excess': counts.copy(data=excess_conv),
+        "significance": counts.copy(data=significance_conv),
+        "counts": counts.copy(data=counts_conv),
+        "background": counts.copy(data=background_conv),
+        "excess": counts.copy(data=excess_conv),
     }
 
 
@@ -77,24 +77,24 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     """
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
-    kernel.normalize('peak')
+    kernel.normalize("peak")
 
     n_on_conv = n_on.convolve(kernel.array).data
     a_on_conv = a_on.convolve(kernel.array).data
     alpha_conv = a_on_conv / a_off.data
 
     significance_conv = significance_on_off(
-        n_on_conv, n_off.data, alpha_conv, method='lima'
+        n_on_conv, n_off.data, alpha_conv, method="lima"
     )
 
-    with np.errstate(invalid='ignore'):
+    with np.errstate(invalid="ignore"):
         background_conv = alpha_conv * n_off.data
     excess_conv = n_on_conv - background_conv
 
     return {
-        'significance': n_on.copy(data=significance_conv),
-        'n_on': n_on.copy(data=n_on_conv),
-        'background': n_on.copy(data=background_conv),
-        'excess': n_on.copy(data=excess_conv),
-        'alpha': n_on.copy(data=alpha_conv),
+        "significance": n_on.copy(data=significance_conv),
+        "n_on": n_on.copy(data=n_on_conv),
+        "background": n_on.copy(data=background_conv),
+        "excess": n_on.copy(data=excess_conv),
+        "alpha": n_on.copy(data=alpha_conv),
     }

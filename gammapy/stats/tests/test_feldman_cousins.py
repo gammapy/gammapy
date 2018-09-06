@@ -16,7 +16,7 @@ from ...stats import (
 )
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_acceptance_interval_gauss():
     sigma = 1
     n_sigma = 10
@@ -45,7 +45,7 @@ def test_acceptance_interval_gauss():
         fc_find_acceptance_interval_gauss(0, 1, x_bins, cl)
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_acceptance_interval_poisson():
     background = 0.5
     n_bins_x = 100
@@ -68,7 +68,7 @@ def test_acceptance_interval_poisson():
         fc_find_acceptance_interval_poisson(0, 7, x_bins[0:10], cl)
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_numerical_confidence_interval_pdfs():
     from scipy import stats
 
@@ -117,7 +117,7 @@ def test_numerical_confidence_interval_pdfs():
     assert_allclose(average_upper_limit, 4.42, atol=0.1)
 
 
-@requires_dependency('scipy')
+@requires_dependency("scipy")
 def test_numerical_confidence_interval_values():
     from scipy import stats
 

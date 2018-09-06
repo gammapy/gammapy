@@ -11,29 +11,29 @@ from .. import version
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    print('gammapy version {}'.format(version.version))
+    print("gammapy version {}".format(version.version))
     ctx.exit()
 
 
 # http://click.pocoo.org/5/documentation/#help-parameter-customization
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
-@click.group('gammapy', context_settings=CONTEXT_SETTINGS)
+@click.group("gammapy", context_settings=CONTEXT_SETTINGS)
 @click.option(
-    '--log-level',
-    default='info',
-    help='Logging verbosity level',
-    type=click.Choice(['debug', 'info', 'warning', 'error']),
+    "--log-level",
+    default="info",
+    help="Logging verbosity level",
+    type=click.Choice(["debug", "info", "warning", "error"]),
 )
-@click.option('--ignore-warnings', is_flag=True, help='Ignore warnings?')
+@click.option("--ignore-warnings", is_flag=True, help="Ignore warnings?")
 @click.option(
-    '--version',
+    "--version",
     is_flag=True,
     callback=print_version,
     expose_value=False,
     is_eager=True,
-    help='Print version and exit',
+    help="Print version and exit",
 )
 def cli(log_level, ignore_warnings):
     """Gammapy command line interface (CLI).
@@ -58,20 +58,20 @@ def cli(log_level, ignore_warnings):
     logging.basicConfig(level=log_level.upper())
 
     if ignore_warnings:
-        warnings.simplefilter('ignore')
+        warnings.simplefilter("ignore")
 
 
-@cli.group('image')
+@cli.group("image")
 def cli_image():
     """Analysis - 2D images"""
 
 
-@cli.group('download', short_help='Download datasets and notebooks')
+@cli.group("download", short_help="Download datasets and notebooks")
 @click.option(
-    '--folder',
-    prompt='target folder',
-    default='gammapy-tutorials',
-    help='Folder where the files will be copied.',
+    "--folder",
+    prompt="target folder",
+    default="gammapy-tutorials",
+    help="Folder where the files will be copied.",
 )
 @click.pass_context
 def cli_download(ctx, folder):
@@ -80,7 +80,7 @@ def cli_download(ctx, folder):
     'datasets' or 'notebooks' folders. The files are copied into a folder
     created at the current working directory.
     """
-    ctx.obj = {'localfolder': folder}
+    ctx.obj = {"localfolder": folder}
 
 
 def add_subcommands():

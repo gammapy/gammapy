@@ -41,8 +41,8 @@ def plot_1d():
     counts_obs = np.histogram(samples, bins=nbins)[0]
     counts_obs_err = np.sqrt(counts_obs)
 
-    plt.errorbar(i, counts_obs, counts_obs_err, fmt='bo', label='observed counts')
-    plt.plot(counts_exp, 'ro', label='expected counts')
+    plt.errorbar(i, counts_obs, counts_obs_err, fmt="bo", label="observed counts")
+    plt.plot(counts_exp, "ro", label="expected counts")
     plt.legend()
     plt.xlim(-0.5, nbins - 0.5)
     plt.ylim(-0.1, counts_exp.max() * 1.5)
@@ -59,7 +59,7 @@ def plot_simple_2d():
     indices = r.draw(1000)
     plt.figure()
     counts = np.histogramdd(indices, bins=(pdf.shape))[0]
-    plt.imshow(counts, interpolation='nearest')
+    plt.imshow(counts, interpolation="nearest")
     plt.colorbar()
     # plt.show()
 
@@ -94,6 +94,6 @@ def plot_2d_example():
     # Plot the distributions
     for map in [brightness_map, count_map, ratio_map]:
         plt.figure()
-        plt.imshow(map, interpolation='nearest')
+        plt.imshow(map, interpolation="nearest")
         plt.colorbar()
     # plt.show()

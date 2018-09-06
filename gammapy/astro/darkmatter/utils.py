@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 
-__all__ = ['JFactory', 'compute_dm_flux']
+__all__ = ["JFactory", "compute_dm_flux"]
 
 
 class JFactory(object):
@@ -40,7 +40,7 @@ class JFactory(object):
         rmin = separation.rad * self.distance
         rmax = self.distance
         val = [self.profile.integral(_, rmax) for _ in rmin.flatten()]
-        jfact = u.Quantity(val).to('GeV2 cm-5').reshape(rmin.shape)
+        jfact = u.Quantity(val).to("GeV2 cm-5").reshape(rmin.shape)
         return jfact / u.steradian
 
     def compute_jfactor(self):
@@ -90,4 +90,4 @@ def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
     int_flux = prim_flux.table_model.integral(
         emin=energy_range[0], emax=energy_range[1]
     )
-    return (jfact * prefactor * int_flux).to('cm-2 s-1')
+    return (jfact * prefactor * int_flux).to("cm-2 s-1")

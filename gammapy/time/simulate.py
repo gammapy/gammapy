@@ -3,15 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.time import TimeDelta
 from ..utils.random import get_random_state
 
-__all__ = ['random_times']
+__all__ = ["random_times"]
 
 
 def random_times(
     size,
     rate,
-    dead_time=TimeDelta(0, format='sec'),
+    dead_time=TimeDelta(0, format="sec"),
     return_diff=False,
-    random_state='random-seed',
+    random_state="random-seed",
 ):
     """Make random times assuming a Poisson process.
 
@@ -57,12 +57,12 @@ def random_times(
     random_state = get_random_state(random_state)
 
     dead_time = TimeDelta(dead_time)
-    scale = (1 / rate).to('second').value
+    scale = (1 / rate).to("second").value
     time_delta = random_state.exponential(scale=scale, size=size)
-    time_delta += dead_time.to('second').value
+    time_delta += dead_time.to("second").value
 
     if return_diff:
-        return TimeDelta(time_delta, format='sec')
+        return TimeDelta(time_delta, format="sec")
     else:
         time = time_delta.cumsum()
-        return TimeDelta(time, format='sec')
+        return TimeDelta(time, format="sec")

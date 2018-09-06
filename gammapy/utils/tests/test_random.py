@@ -12,12 +12,12 @@ def test_sample_sphere():
 
     # test general case
     lon, lat = sample_sphere(size=2, random_state=random_state)
-    assert_quantity_allclose(lon, Angle([3.44829694, 4.49366732], 'radian'))
-    assert_quantity_allclose(lat, Angle([0.20700192, 0.08988736], 'radian'))
+    assert_quantity_allclose(lon, Angle([3.44829694, 4.49366732], "radian"))
+    assert_quantity_allclose(lat, Angle([0.20700192, 0.08988736], "radian"))
 
     # test specify a limited range
-    lon_range = Angle([40., 45.], 'deg')
-    lat_range = Angle([10., 15.], 'deg')
+    lon_range = Angle([40., 45.], "deg")
+    lat_range = Angle([10., 15.], "deg")
     lon, lat = sample_sphere(
         size=10, lon_range=lon_range, lat_range=lat_range, random_state=random_state
     )
@@ -25,17 +25,17 @@ def test_sample_sphere():
     assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
 
     # test lon within (-180, 180) deg range
-    lon_range = Angle([-40., 0.], 'deg')
+    lon_range = Angle([-40., 0.], "deg")
     lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=random_state)
     assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
-    lat_range = Angle([-90., 90.], 'deg')
+    lat_range = Angle([-90., 90.], "deg")
     assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
 
     # test lon range explicitly (0, 360) deg
-    lon_range = Angle([0., 360.], 'deg')
+    lon_range = Angle([0., 360.], "deg")
     lon, lat = sample_sphere(size=100, lon_range=lon_range, random_state=random_state)
     # test values in the desired range
-    lat_range = Angle([-90., 90.], 'deg')
+    lat_range = Angle([-90., 90.], "deg")
     assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
     assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
     # test if values are distributed along the whole range
@@ -53,10 +53,10 @@ def test_sample_sphere():
         ).any()
 
     # test lon range explicitly (-180, 180) deg
-    lon_range = Angle([-180., 180.], 'deg')
+    lon_range = Angle([-180., 180.], "deg")
     lon, lat = sample_sphere(size=100, lon_range=lon_range, random_state=random_state)
     # test values in the desired range
-    lat_range = Angle([-90., 90.], 'deg')
+    lat_range = Angle([-90., 90.], "deg")
     assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
     assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
     # test if values are distributed along the whole range
@@ -74,7 +74,7 @@ def test_sample_sphere():
         ).any()
 
     # test box around Galactic center
-    lon_range = Angle([-5., 5.], 'deg')
+    lon_range = Angle([-5., 5.], "deg")
     lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=random_state)
     # test if values are distributed along the whole range
     nbins = 2
@@ -86,7 +86,7 @@ def test_sample_sphere():
         ).any()
 
     # test box around Galactic anticenter
-    lon_range = Angle([175., 185.], 'deg')
+    lon_range = Angle([175., 185.], "deg")
     lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=random_state)
     # test if values are distributed along the whole range
     nbins = 2

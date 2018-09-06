@@ -82,9 +82,9 @@ counts_map.sum_over_axes().plot()
 plt.clf()
 
 compound_model.parameters.set_error(2, 0.1 * u.deg)
-compound_model.parameters.set_error(4, 1e-12 * u.Unit('cm-2 s-1 TeV-1'))
+compound_model.parameters.set_error(4, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
 compound_model.parameters.set_error(8, 0.1 * u.deg)
-compound_model.parameters.set_error(10, 1e-12 * u.Unit('cm-2 s-1 TeV-1'))
+compound_model.parameters.set_error(10, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
 
 fit = MapFit(model=compound_model, counts=counts_map, exposure=exposure_map)
 fit.fit()

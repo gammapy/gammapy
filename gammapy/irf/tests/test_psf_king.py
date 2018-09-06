@@ -8,16 +8,16 @@ from ...utils.testing import requires_data
 from ...irf import PSFKing
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def psf_king():
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_psf_king_023523.fits.gz'
+    filename = "$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_psf_king_023523.fits.gz"
     return PSFKing.read(filename)
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_psf_king_evaluate(psf_king):
-    param_off1 = psf_king.evaluate(energy='1 TeV', offset='0 deg')
-    param_off2 = psf_king.evaluate('1 TeV', '1 deg')
+    param_off1 = psf_king.evaluate(energy="1 TeV", offset="0 deg")
+    param_off2 = psf_king.evaluate("1 TeV", "1 deg")
 
     assert_quantity_allclose(param_off1["gamma"], psf_king.gamma[0, 8])
     assert_quantity_allclose(param_off2["gamma"], psf_king.gamma[2, 8])
@@ -25,7 +25,7 @@ def test_psf_king_evaluate(psf_king):
     assert_quantity_allclose(param_off2["sigma"], psf_king.sigma[2, 8])
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_psf_king_to_table(psf_king):
     theta1 = Angle(0, "deg")
     theta2 = Angle(1, "deg")
@@ -53,9 +53,9 @@ def test_psf_king_to_table(psf_king):
     assert_quantity_allclose(integral, 1, atol=0.03)
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-extra")
 def test_psf_king_write(psf_king, tmpdir):
-    filename = str(tmpdir / 'king.fits')
+    filename = str(tmpdir / "king.fits")
     psf_king.write(filename)
     psf_king2 = PSFKing.read(filename)
     assert_quantity_allclose(psf_king2.energy, psf_king.energy)

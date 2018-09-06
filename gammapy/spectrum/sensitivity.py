@@ -6,7 +6,7 @@ from gammapy.stats import excess_matching_significance_on_off
 from gammapy.spectrum.models import PowerLaw
 from gammapy.spectrum.utils import CountsPredictor
 
-__all__ = ['SensitivityEstimator']
+__all__ = ["SensitivityEstimator"]
 
 
 class SensitivityEstimator(object):
@@ -59,7 +59,7 @@ class SensitivityEstimator(object):
         self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05
     ):
         self.irf = irf
-        self.livetime = u.Quantity(livetime).to('s')
+        self.livetime = u.Quantity(livetime).to("s")
         self.slope = slope
         self.alpha = alpha
         self.sigma = sigma
@@ -90,7 +90,7 @@ class SensitivityEstimator(object):
 
         model = PowerLaw(
             index=self.slope,
-            amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
+            amplitude=1 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
         )
 
@@ -100,53 +100,53 @@ class SensitivityEstimator(object):
         )
         predictor.run()
         counts = predictor.npred.data.data.value
-        phi_0 = excess_counts / counts * u.Unit('cm-2 s-1 TeV-1')
+        phi_0 = excess_counts / counts * u.Unit("cm-2 s-1 TeV-1")
         # TODO: should use model.__call__ here
         dnde_model = model.evaluate(
             energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV
         )
-        diff_flux = (phi_0 * dnde_model * energy ** 2).to('erg / (cm2 s)')
+        diff_flux = (phi_0 * dnde_model * energy ** 2).to("erg / (cm2 s)")
 
         # TODO: take self.bkg_sys into account
         # and add a criterion 'bkg sys'
         criterion = []
         for idx in range(len(energy)):
             if is_gamma_limited[idx]:
-                c = 'gamma'
+                c = "gamma"
             else:
-                c = 'significance'
+                c = "significance"
             criterion.append(c)
 
         table = Table(
             [
                 Column(
                     data=energy,
-                    name='energy',
-                    format='5g',
-                    description='Reconstructed Energy',
+                    name="energy",
+                    format="5g",
+                    description="Reconstructed Energy",
                 ),
                 Column(
                     data=diff_flux,
-                    name='e2dnde',
-                    format='5g',
-                    description='Energy squared times differential flux',
+                    name="e2dnde",
+                    format="5g",
+                    description="Energy squared times differential flux",
                 ),
                 Column(
                     data=excess_counts,
-                    name='excess',
-                    format='5g',
-                    description='Number of excess counts in the bin',
+                    name="excess",
+                    format="5g",
+                    description="Number of excess counts in the bin",
                 ),
                 Column(
                     data=bkg_counts,
-                    name='background',
-                    format='5g',
-                    description='Number of background counts in the bin',
+                    name="background",
+                    format="5g",
+                    description="Number of background counts in the bin",
                 ),
                 Column(
                     data=criterion,
-                    name='criterion',
-                    description='Sensitivity-limiting criterion',
+                    name="criterion",
+                    description="Sensitivity-limiting criterion",
                 ),
             ]
         )

@@ -7,7 +7,7 @@ from regions import PixCoord, CirclePixelRegion
 from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 
-__all__ = ['ReflectedRegionsFinder', 'ReflectedRegionsBackgroundEstimator']
+__all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
 
 log = logging.getLogger(__name__)
 
@@ -113,9 +113,9 @@ class ReflectedRegionsFinder(object):
         self,
         region,
         center,
-        angle_increment='0.1 rad',
-        min_distance='0 rad',
-        min_distance_input='0.1 rad',
+        angle_increment="0.1 rad",
+        min_distance="0 rad",
+        min_distance_input="0.1 rad",
         max_region_number=10000,
         exclusion_mask=None,
     ):
@@ -123,7 +123,7 @@ class ReflectedRegionsFinder(object):
         self.center = center
 
         self.angle_increment = Angle(angle_increment)
-        if self.angle_increment < Angle(1, 'deg'):
+        if self.angle_increment < Angle(1, "deg"):
             raise ValueError("angle_increment is too small")
 
         self.min_distance = Angle(min_distance)
@@ -154,12 +154,12 @@ class ReflectedRegionsFinder(object):
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
         """
-        log.debug('No exclusion mask provided, creating an emtpy one')
+        log.debug("No exclusion mask provided, creating an emtpy one")
         min_size = region.center.separation(center)
         binsz = 0.02
         npix = int((3 * min_size / binsz).value)
         maskmap = WcsNDMap.create(
-            skydir=center, binsz=binsz, npix=npix, coordsys='GAL', proj='TAN'
+            skydir=center, binsz=binsz, npix=npix, coordsys="GAL", proj="TAN"
         )
         maskmap.data += 1.
         return maskmap
@@ -176,17 +176,17 @@ class ReflectedRegionsFinder(object):
         self._offset = np.hypot(dx, dy)
 
         # Starting angle of region
-        self._angle = Angle(np.arctan2(dx, dy), 'rad')
+        self._angle = Angle(np.arctan2(dx, dy), "rad")
 
         # Minimum angle a circle has to be moved to not overlap with previous one
-        min_ang = Angle(2 * np.arcsin(self._pix_region.radius / self._offset), 'rad')
+        min_ang = Angle(2 * np.arcsin(self._pix_region.radius / self._offset), "rad")
 
         # Add required minimal distance between two off regions
         self._min_ang = min_ang + self.min_distance
 
         # Maximum possible angle before regions is reached again
         self._max_angle = (
-            self._angle + Angle('360deg') - self._min_ang - self.min_distance_input
+            self._angle + Angle("360deg") - self._min_ang - self.min_distance_input
         )
 
         # Distance image
@@ -201,7 +201,7 @@ class ReflectedRegionsFinder(object):
             test_reg = CirclePixelRegion(test_pos, self._pix_region.radius)
             if not self._is_inside_exclusion(test_reg, self._distance_image):
                 refl_region = test_reg.to_sky(self.exclusion_mask.geom.wcs)
-                log.debug('Placing reflected region\n{}'.format(refl_region))
+                log.debug("Placing reflected region\n{}".format(refl_region))
                 reflected_regions.append(refl_region)
                 curr_angle = curr_angle + self._min_ang
                 if self.max_region_number <= len(reflected_regions):
@@ -209,7 +209,7 @@ class ReflectedRegionsFinder(object):
             else:
                 curr_angle = curr_angle + self.angle_increment
 
-        log.debug('Found {} reflected regions'.format(len(reflected_regions)))
+        log.debug("Found {} reflected regions".format(len(reflected_regions)))
         self.reflected_regions = reflected_regions
 
     def plot(self, fig=None, ax=None):
@@ -217,25 +217,25 @@ class ReflectedRegionsFinder(object):
 
         See example here: :ref:'regions_reflected'.
         """
-        fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap='gray')
+        fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap="gray")
         wcs = self.exclusion_mask.geom.wcs
-        on_patch = self.region.to_pixel(wcs=wcs).as_patch(color='red', alpha=0.6)
+        on_patch = self.region.to_pixel(wcs=wcs).as_patch(color="red", alpha=0.6)
         ax.add_patch(on_patch)
 
         for off in self.reflected_regions:
             tmp = off.to_pixel(wcs=wcs)
-            off_patch = tmp.as_patch(color='blue', alpha=0.6)
+            off_patch = tmp.as_patch(color="blue", alpha=0.6)
             ax.add_patch(off_patch)
 
             test_pointing = self.center
             ax.scatter(
                 test_pointing.galactic.l.degree,
                 test_pointing.galactic.b.degree,
-                transform=ax.get_transform('galactic'),
-                marker='+',
+                transform=ax.get_transform("galactic"),
+                marker="+",
                 s=300,
                 linewidths=3,
-                color='green',
+                color="green",
             )
 
         return fig, ax
@@ -295,14 +295,14 @@ class ReflectedRegionsBackgroundEstimator(object):
 
     def __str__(self):
         s = self.__class__.__name__
-        s += '\n{}'.format(self.on_region)
-        s += '\n{}'.format(self.obs_list)
-        s += '\n{}'.format(self.finder)
+        s += "\n{}".format(self.on_region)
+        s += "\n{}".format(self.obs_list)
+        s += "\n{}".format(self.finder)
         return s
 
     def run(self):
         """Run all steps."""
-        log.debug('Computing reflected regions')
+        log.debug("Computing reflected regions")
         result = []
         for obs in self.obs_list:
             temp = self.process(obs=obs)
@@ -312,7 +312,7 @@ class ReflectedRegionsBackgroundEstimator(object):
 
     def process(self, obs):
         """Estimate background for one observation."""
-        log.debug('Processing observation {}'.format(obs))
+        log.debug("Processing observation {}".format(obs))
         self.finder.center = obs.pointing_radec
         self.finder.run()
         off_region = self.finder.reflected_regions
@@ -327,7 +327,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             off_events=off_events,
             a_on=a_on,
             a_off=a_off,
-            method='Reflected Regions',
+            method="Reflected Regions",
         )
 
     def plot(self, fig=None, ax=None, cmap=None, idx=None):
@@ -345,7 +345,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         fig, ax, cbar = self.finder.exclusion_mask.plot(fig=fig, ax=ax)
 
         wcs = self.finder.exclusion_mask.geom.wcs
-        on_patch = self.on_region.to_pixel(wcs=wcs).as_patch(color='red')
+        on_patch = self.on_region.to_pixel(wcs=wcs).as_patch(color="red")
         ax.add_patch(on_patch)
 
         result = self.result
@@ -356,7 +356,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             result = np.asarray(self.result)[idx]
             result = np.atleast_1d(result)
 
-        cmap = cmap or plt.get_cmap('viridis')
+        cmap = cmap or plt.get_cmap("viridis")
         colors = cmap(np.linspace(0, 1, len(self.obs_list)))
 
         handles = []
@@ -366,7 +366,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             off_regions = result[idx_].off_region
             for off in off_regions:
                 off_patch = off.to_pixel(wcs=wcs).as_patch(
-                    alpha=0.8, color=colors[idx_], label='Obs {}'.format(obs.obs_id)
+                    alpha=0.8, color=colors[idx_], label="Obs {}".format(obs.obs_id)
                 )
                 handle = ax.add_patch(off_patch)
             if off_regions:
@@ -376,8 +376,8 @@ class ReflectedRegionsBackgroundEstimator(object):
             ax.scatter(
                 test_pointing.l.degree,
                 test_pointing.b.degree,
-                transform=ax.get_transform('galactic'),
-                marker='+',
+                transform=ax.get_transform("galactic"),
+                marker="+",
                 color=colors[idx_],
                 s=300,
                 linewidths=3,

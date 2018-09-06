@@ -4,14 +4,14 @@ from astropy.coordinates import Angle
 from gammapy.maps import Map
 from gammapy.image import MapPanelPlotter
 
-filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
-survey_map = Map.read(filename, hdu='counts')
-survey_map.data = survey_map.data.astype('float')
-smoothed_map = survey_map.smooth(radius=Angle(0.2, unit='deg'))
+filename = "$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz"
+survey_map = Map.read(filename, hdu="counts")
+survey_map.data = survey_map.data.astype("float")
+smoothed_map = survey_map.smooth(radius=Angle(0.2, unit="deg"))
 
 fig = plt.figure(figsize=(15, 8))
-xlim = Angle([70, 262], unit='deg')
-ylim = Angle([-4, 4], unit='deg')
+xlim = Angle([70, 262], unit="deg")
+ylim = Angle([-4, 4], unit="deg")
 plotter = MapPanelPlotter(
     figure=fig,
     xlim=xlim,
@@ -23,5 +23,5 @@ plotter = MapPanelPlotter(
     left=0.05,
     hspace=0.15,
 )
-axes = plotter.plot(smoothed_map, cmap='inferno', stretch='log', vmax=50)
-plt.savefig('survey_example.png')
+axes = plotter.plot(smoothed_map, cmap="inferno", stretch="log", vmax=50)
+plt.savefig("survey_example.png")

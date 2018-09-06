@@ -6,14 +6,14 @@ from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
 
 __all__ = [
-    'FaucherKaspi2006VelocityMaxwellian',
-    'FaucherKaspi2006VelocityBimodal',
-    'Paczynski1990Velocity',
-    'velocity_distributions',
+    "FaucherKaspi2006VelocityMaxwellian",
+    "FaucherKaspi2006VelocityBimodal",
+    "Paczynski1990Velocity",
+    "velocity_distributions",
 ]
 
 # Simulation range used for random number drawing
-VMIN, VMAX = Quantity([0, 4000], 'km/s')
+VMIN, VMAX = Quantity([0, 4000], "km/s")
 
 
 class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
@@ -122,7 +122,7 @@ class Paczynski1990Velocity(Fittable1DModel):
 
 """Velocity distributions (dict mapping names to classes)."""
 velocity_distributions = {
-    'H05': FaucherKaspi2006VelocityMaxwellian,
-    'F06B': FaucherKaspi2006VelocityBimodal,
-    'F06P': Paczynski1990Velocity,
+    "H05": FaucherKaspi2006VelocityMaxwellian,
+    "F06B": FaucherKaspi2006VelocityBimodal,
+    "F06P": Paczynski1990Velocity,
 }

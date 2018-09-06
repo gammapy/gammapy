@@ -11,7 +11,7 @@ from ...serialization import xml_to_sky_models, UnknownModelError
 
 
 def test_from_xml():
-    xml = '''<?xml version="1.0" encoding="utf-8"?>
+    xml = """<?xml version="1.0" encoding="utf-8"?>
         <source_library title="source library">
             <source name="3C 273" type="PointSource">
                 <spectrum type="PowerLaw">;i
@@ -25,10 +25,10 @@ def test_from_xml():
                 </spatialModel>
             </source>
         </source_library>
-        '''
+        """
     sky_models = SkyModels.from_xml(xml)
     sky_model = sky_models.skymodels[0]
-    assert_allclose(sky_model.parameters['lon_0'].value, 187.25)
+    assert_allclose(sky_model.parameters["lon_0"].value, 187.25)
 
 
 def test_xml_errors():
@@ -37,9 +37,9 @@ def test_xml_errors():
     xml += '    <source name="CrabShell" type="ExtendedSource">\n'
     xml += '        <spatialModel type="ElefantShapedSource">\n'
     xml += '            <parameter name="RA" value="1" scale="1" min="1" max="1" free="1"/>\n'
-    xml += '        </spatialModel>\n'
-    xml += '    </source>\n'
-    xml += '</source_library>'
+    xml += "        </spatialModel>\n"
+    xml += "    </source>\n"
+    xml += "</source_library>"
 
     with pytest.raises(UnknownModelError):
         xml_to_sky_models(xml)
@@ -47,10 +47,10 @@ def test_xml_errors():
     # TODO: Think about a more elaborate XML validation scheme
 
 
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
+@requires_data("gammapy-extra")
+@requires_dependency("scipy")
 def test_complex():
-    filename = '$GAMMAPY_EXTRA/test_datasets/models/examples.xml'
+    filename = "$GAMMAPY_EXTRA/test_datasets/models/examples.xml"
     sourcelib = SkyModels.read(filename)
 
     assert len(sourcelib.skymodels) == 7
@@ -64,49 +64,49 @@ def test_complex():
     assert isinstance(model1.spatial_model, spatial.SkyPointSource)
 
     pars1 = model1.parameters
-    assert pars1['index'].value == 2.1
-    assert pars1['index'].unit == ''
-    assert pars1['index'].max is np.nan
-    assert pars1['index'].min is np.nan
-    assert pars1['index'].frozen is False
+    assert pars1["index"].value == 2.1
+    assert pars1["index"].unit == ""
+    assert pars1["index"].max is np.nan
+    assert pars1["index"].min is np.nan
+    assert pars1["index"].frozen is False
 
-    assert pars1['lon_0'].value == 0.5
-    assert pars1['lon_0'].unit == 'deg'
-    assert pars1['lon_0'].max == 360
-    assert pars1['lon_0'].min == -360
-    assert pars1['lon_0'].frozen is True
+    assert pars1["lon_0"].value == 0.5
+    assert pars1["lon_0"].unit == "deg"
+    assert pars1["lon_0"].max == 360
+    assert pars1["lon_0"].min == -360
+    assert pars1["lon_0"].frozen is True
 
-    assert pars1['lat_0'].value == 1.0
-    assert pars1['lat_0'].unit == 'deg'
-    assert pars1['lat_0'].max == 90
-    assert pars1['lat_0'].min == -90
-    assert pars1['lat_0'].frozen is True
+    assert pars1["lat_0"].value == 1.0
+    assert pars1["lat_0"].unit == "deg"
+    assert pars1["lat_0"].max == 90
+    assert pars1["lat_0"].min == -90
+    assert pars1["lat_0"].frozen is True
 
     model2 = sourcelib.skymodels[2]
     assert isinstance(model2.spectral_model, spectral.ExponentialCutoffPowerLaw)
     assert isinstance(model2.spatial_model, spatial.SkyGaussian)
 
     pars2 = model2.parameters
-    assert pars2['sigma'].unit == 'deg'
-    assert pars2['lambda_'].value == 0.01
-    assert pars2['lambda_'].unit == 'MeV-1'
-    assert pars2['lambda_'].min is np.nan
-    assert pars2['lambda_'].max is np.nan
-    assert pars2['index'].value == 2.2
-    assert pars2['index'].unit == ''
-    assert pars2['index'].max is np.nan
-    assert pars2['index'].min is np.nan
+    assert pars2["sigma"].unit == "deg"
+    assert pars2["lambda_"].value == 0.01
+    assert pars2["lambda_"].unit == "MeV-1"
+    assert pars2["lambda_"].min is np.nan
+    assert pars2["lambda_"].max is np.nan
+    assert pars2["index"].value == 2.2
+    assert pars2["index"].unit == ""
+    assert pars2["index"].max is np.nan
+    assert pars2["index"].min is np.nan
 
     model3 = sourcelib.skymodels[3]
     assert isinstance(model3.spatial_model, spatial.SkyDisk)
     pars3 = model3.parameters
-    assert pars3['r_0'].unit == 'deg'
+    assert pars3["r_0"].unit == "deg"
 
     model4 = sourcelib.skymodels[4]
     assert isinstance(model4.spatial_model, spatial.SkyShell)
     pars4 = model4.parameters
-    assert pars4['radius'].unit == 'deg'
-    assert pars4['width'].unit == 'deg'
+    assert pars4["radius"].unit == "deg"
+    assert pars4["width"].unit == "deg"
 
     model5 = sourcelib.skymodels[5]
     assert isinstance(model5.spatial_model, spatial.SkyDiffuseMap)
@@ -115,18 +115,18 @@ def test_complex():
     assert isinstance(model6.spatial_model, spatial.SkyDiffuseMap)
 
 
-@pytest.mark.xfail(reason='Need to improve XML read')
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
+@pytest.mark.xfail(reason="Need to improve XML read")
+@requires_data("gammapy-extra")
+@requires_dependency("scipy")
 @pytest.mark.parametrize(
-    'filename',
+    "filename",
     [
-        '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
-        '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
+        "$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml",
+        "$GAMMAPY_EXTRA/test_datasets/models/shell.xml",
     ],
 )
 def test_models(filename, tmpdir):
-    outfile = tmpdir / 'models_out.xml'
+    outfile = tmpdir / "models_out.xml"
     sourcelib = SkyModels.read(filename)
     sourcelib.to_xml(outfile)
 
@@ -138,37 +138,37 @@ def test_models(filename, tmpdir):
         assert str(model) == str(model_roundtrip)
 
 
-@pytest.mark.xfail(reason='Need to improve XML read')
-@requires_data('gammapy-extra')
+@pytest.mark.xfail(reason="Need to improve XML read")
+@requires_data("gammapy-extra")
 def test_sky_models_old_xml_file():
-    filename = '$GAMMAPY_EXTRA/test_datasets/models/shell.xml'
+    filename = "$GAMMAPY_EXTRA/test_datasets/models/shell.xml"
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 2
 
     source = sources.source_list[0]
-    assert source.source_name == 'CrabShell'
-    assert_allclose(source.spectral_model.parameters['Index'].value, 2.48)
+    assert source.source_name == "CrabShell"
+    assert_allclose(source.spectral_model.parameters["Index"].value, 2.48)
 
     xml = sources.to_xml()
-    assert 'sources' in xml
+    assert "sources" in xml
 
 
-@pytest.mark.xfail(reason='Need to improve XML read')
-@requires_data('gammapy-extra')
+@pytest.mark.xfail(reason="Need to improve XML read")
+@requires_data("gammapy-extra")
 def test_sky_models_new_xml_file():
     filename = (
-        '$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml'
+        "$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml"
     )
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 47
 
     source = sources.source_list[0]
-    assert source.source_name == 'HESS J0632+057'
+    assert source.source_name == "HESS J0632+057"
     assert_allclose(
-        source.spectral_model.parameters['Index'].value, -2.5299999713897705
+        source.spectral_model.parameters["Index"].value, -2.5299999713897705
     )
 
     xml = sources.to_xml()
-    assert 'sources' in xml
+    assert "sources" in xml

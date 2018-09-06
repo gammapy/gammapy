@@ -14,38 +14,38 @@ from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
 
 __all__ = [
-    'FluxPoints',
+    "FluxPoints",
     # 'FluxPointProfiles',
-    'FluxPointEstimator',
-    'FluxPointFitter',
+    "FluxPointEstimator",
+    "FluxPointFitter",
 ]
 
 log = logging.getLogger(__name__)
 
 REQUIRED_COLUMNS = OrderedDict(
     [
-        ('dnde', ['e_ref', 'dnde']),
-        ('e2dnde', ['e_ref', 'e2dnde']),
-        ('flux', ['e_min', 'e_max', 'flux']),
-        ('eflux', ['e_min', 'e_max', 'eflux']),
+        ("dnde", ["e_ref", "dnde"]),
+        ("e2dnde", ["e_ref", "e2dnde"]),
+        ("flux", ["e_min", "e_max", "flux"]),
+        ("eflux", ["e_min", "e_max", "eflux"]),
     ]
 )
 
 OPTIONAL_COLUMNS = OrderedDict(
     [
-        ('dnde', ['dnde_err', 'dnde_errp', 'dnde_errn', 'dnde_ul', 'is_ul']),
-        ('e2dnde', ['e2dnde_err', 'e2dnde_errp', 'e2dnde_errn', 'e2dnde_ul', 'is_ul']),
-        ('flux', ['flux_err', 'flux_errp', 'flux_errn', 'flux_ul', 'is_ul']),
-        ('eflux', ['eflux_err', 'eflux_errp', 'eflux_errn', 'eflux_ul', 'is_ul']),
+        ("dnde", ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "is_ul"]),
+        ("e2dnde", ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"]),
+        ("flux", ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"]),
+        ("eflux", ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"]),
     ]
 )
 
 DEFAULT_UNIT = OrderedDict(
     [
-        ('dnde', u.Unit('cm-2 s-1 TeV-1')),
-        ('e2dnde', u.Unit('erg cm-2 s-1')),
-        ('flux', u.Unit('cm-2 s-1')),
-        ('eflux', u.Unit('erg cm-2 s-1')),
+        ("dnde", u.Unit("cm-2 s-1 TeV-1")),
+        ("e2dnde", u.Unit("erg cm-2 s-1")),
+        ("flux", u.Unit("cm-2 s-1")),
+        ("eflux", u.Unit("erg cm-2 s-1")),
     ]
 )
 
@@ -159,12 +159,12 @@ class FluxPoints(object):
         try:
             table = Table.read(str(filename), **kwargs)
         except IORegistryError:
-            kwargs.setdefault('format', 'ascii.ecsv')
+            kwargs.setdefault("format", "ascii.ecsv")
             table = Table.read(str(filename), **kwargs)
 
-        if 'SED_TYPE' not in table.meta.keys():
+        if "SED_TYPE" not in table.meta.keys():
             sed_type = cls._guess_sed_type(table)
-            table.meta['SED_TYPE'] = sed_type
+            table.meta["SED_TYPE"] = sed_type
 
         return cls(table=table)
 
@@ -182,7 +182,7 @@ class FluxPoints(object):
         try:
             self.table.write(str(filename), **kwargs)
         except IORegistryError:
-            kwargs.setdefault('format', 'ascii.ecsv')
+            kwargs.setdefault("format", "ascii.ecsv")
             self.table.write(str(filename), **kwargs)
 
     @classmethod
@@ -214,7 +214,7 @@ class FluxPoints(object):
             tables.append(table[reference.colnames])
 
         table_stacked = vstack(tables)
-        table_stacked.meta['SED_TYPE'] = reference.meta['SED_TYPE']
+        table_stacked.meta["SED_TYPE"] = reference.meta["SED_TYPE"]
 
         return cls(table_stacked)
 
@@ -240,7 +240,7 @@ class FluxPoints(object):
         table_drop_ul = self.table[~self.is_ul]
         return self.__class__(table_drop_ul)
 
-    def to_sed_type(self, sed_type, method='log_center', model=None, pwl_approx=False):
+    def to_sed_type(self, sed_type, method="log_center", model=None, pwl_approx=False):
         """Convert to a different SED type (return new `FluxPoints`).
 
         See: http://adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
@@ -281,13 +281,13 @@ class FluxPoints(object):
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
         """
         # TODO: implement other directions. Refactor!
-        if sed_type != 'dnde':
+        if sed_type != "dnde":
             raise NotImplementedError
 
         if model is None:
             model = PowerLaw(
-                index=2 * u.Unit(''),
-                amplitude=1 * u.Unit('cm-2 s-1 TeV-1'),
+                index=2 * u.Unit(""),
+                amplitude=1 * u.Unit("cm-2 s-1 TeV-1"),
                 reference=1 * u.TeV,
             )
 
@@ -296,40 +296,40 @@ class FluxPoints(object):
         e_min, e_max = self.e_min, self.e_max
 
         # Compute e_ref
-        if method == 'table':
-            e_ref = input_table['e_ref'].quantity
-        elif method == 'log_center':
+        if method == "table":
+            e_ref = input_table["e_ref"].quantity
+        elif method == "log_center":
             e_ref = np.sqrt(e_min * e_max)
-        elif method == 'lafferty':
+        elif method == "lafferty":
             # set e_ref that it represents the mean dnde in the given energy bin
             e_ref = self._e_ref_lafferty(model, e_min, e_max)
         else:
-            raise ValueError('Invalid method: {}'.format(method))
+            raise ValueError("Invalid method: {}".format(method))
 
-        flux = input_table['flux'].quantity
+        flux = input_table["flux"].quantity
         dnde = self._dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx)
 
         # Add to result table
         table = input_table.copy()
-        table['e_ref'] = e_ref
-        table['dnde'] = dnde
+        table["e_ref"] = e_ref
+        table["dnde"] = dnde
 
-        if 'flux_err' in table.colnames:
+        if "flux_err" in table.colnames:
             # TODO: implement better error handling, e.g. MC based method
-            table['dnde_err'] = dnde * table['flux_err'].quantity / flux
+            table["dnde_err"] = dnde * table["flux_err"].quantity / flux
 
-        if 'flux_errn' in table.colnames:
-            table['dnde_errn'] = dnde * table['flux_errn'].quantity / flux
-            table['dnde_errp'] = dnde * table['flux_errp'].quantity / flux
+        if "flux_errn" in table.colnames:
+            table["dnde_errn"] = dnde * table["flux_errn"].quantity / flux
+            table["dnde_errp"] = dnde * table["flux_errp"].quantity / flux
 
-        if 'flux_ul' in table.colnames:
-            flux_ul = table['flux_ul'].quantity
+        if "flux_ul" in table.colnames:
+            flux_ul = table["flux_ul"].quantity
             dnde_ul = self._dnde_from_flux(
                 flux_ul, model, e_ref, e_min, e_max, pwl_approx
             )
-            table['dnde_ul'] = dnde_ul
+            table["dnde_ul"] = dnde_ul
 
-        table.meta['SED_TYPE'] = 'dnde'
+        table.meta["SED_TYPE"] = "dnde"
         return FluxPoints(table)
 
     @staticmethod
@@ -368,7 +368,7 @@ class FluxPoints(object):
 
         One of: {'dnde', 'e2dnde', 'flux', 'eflux'}
         """
-        return self.table.meta['SED_TYPE']
+        return self.table.meta["SED_TYPE"]
 
     @staticmethod
     def _guess_sed_type(table):
@@ -392,7 +392,7 @@ class FluxPoints(object):
         # TODO: do we really want to error out on tables that don't have `SED_TYPE` in meta?
         # If yes, then this needs to be documented in the docstring,
         # and the workaround pointed out (to add the meta key before creating FluxPoints).
-        sed_type = table.meta['SED_TYPE']
+        sed_type = table.meta["SED_TYPE"]
         required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
@@ -404,9 +404,9 @@ class FluxPoints(object):
     def _get_y_energy_unit(self, y_unit):
         """Get energy part of the given y unit."""
         try:
-            return [_ for _ in y_unit.bases if _.physical_type == 'energy'][0]
+            return [_ for _ in y_unit.bases if _.physical_type == "energy"][0]
         except IndexError:
-            return u.Unit('TeV')
+            return u.Unit("TeV")
 
     def get_energy_err(self, sed_type=None):
         """Compute energy error for given sed type"""
@@ -414,8 +414,8 @@ class FluxPoints(object):
         if sed_type is None:
             sed_type = self.sed_type
         try:
-            e_min = self.table['e_min'].quantity
-            e_max = self.table['e_max'].quantity
+            e_min = self.table["e_min"].quantity
+            e_max = self.table["e_max"].quantity
             e_ref = self.e_ref
             x_err = ((e_ref - e_min), (e_max - e_ref))
         except KeyError:
@@ -428,13 +428,13 @@ class FluxPoints(object):
             sed_type = self.sed_type
         try:
             # asymmetric error
-            y_errn = self.table[sed_type + '_errn'].quantity
-            y_errp = self.table[sed_type + '_errp'].quantity
+            y_errn = self.table[sed_type + "_errn"].quantity
+            y_errp = self.table[sed_type + "_errp"].quantity
             y_err = (y_errn, y_errp)
         except KeyError:
             try:
                 # symmetric error
-                y_err = self.table[sed_type + '_err'].quantity
+                y_err = self.table[sed_type + "_err"].quantity
                 y_err = (y_err, y_err)
             except KeyError:
                 # no error at all
@@ -444,7 +444,7 @@ class FluxPoints(object):
     @property
     def is_ul(self):
         try:
-            return self.table['is_ul'].data.astype('bool')
+            return self.table["is_ul"].data.astype("bool")
         except KeyError:
             return np.isnan(self.table[self.sed_type])
 
@@ -461,7 +461,7 @@ class FluxPoints(object):
             Reference energy.
         """
         try:
-            return self.table['e_ref'].quantity
+            return self.table["e_ref"].quantity
         except KeyError:
             return np.sqrt(self.e_min * self.e_max)
 
@@ -476,7 +476,7 @@ class FluxPoints(object):
         e_min : `~astropy.units.Quantity`
             Lower bound of energy bin.
         """
-        return self.table['e_min'].quantity
+        return self.table["e_min"].quantity
 
     @property
     def e_max(self):
@@ -489,13 +489,13 @@ class FluxPoints(object):
         e_max : `~astropy.units.Quantity`
             Upper bound of energy bin.
         """
-        return self.table['e_max'].quantity
+        return self.table["e_max"].quantity
 
     def plot(
         self,
         ax=None,
         sed_type=None,
-        energy_unit='TeV',
+        energy_unit="TeV",
         flux_unit=None,
         energy_power=0,
         **kwargs
@@ -558,8 +558,8 @@ class FluxPoints(object):
             )
 
         # set flux points plotting defaults
-        kwargs.setdefault('marker', '+')
-        kwargs.setdefault('ls', 'None')
+        kwargs.setdefault("marker", "+")
+        kwargs.setdefault("ls", "None")
 
         ebar = ax.errorbar(
             x[~is_ul].value, y[~is_ul].value, yerr=y_err, xerr=x_err, **kwargs
@@ -573,15 +573,15 @@ class FluxPoints(object):
                     x_errp[is_ul].to(energy_unit).value,
                 )
 
-            y_ul = self.table[sed_type + '_ul'].quantity
+            y_ul = self.table[sed_type + "_ul"].quantity
             y_ul = (y_ul * np.power(x, energy_power)).to(y_unit)
 
             y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
 
-            kwargs.setdefault('c', ebar[0].get_color())
+            kwargs.setdefault("c", ebar[0].get_color())
 
             # pop label keyword to avoid that it appears twice in the legend
-            kwargs.pop('label', None)
+            kwargs.pop("label", None)
             ax.errorbar(
                 x[is_ul].value,
                 y_ul[is_ul].value,
@@ -591,10 +591,10 @@ class FluxPoints(object):
                 **kwargs
             )
 
-        ax.set_xscale('log', nonposx='clip')
-        ax.set_yscale('log', nonposy='clip')
-        ax.set_xlabel('Energy ({})'.format(energy_unit))
-        ax.set_ylabel('{} ({})'.format(self.sed_type, y_unit))
+        ax.set_xscale("log", nonposx="clip")
+        ax.set_yscale("log", nonposy="clip")
+        ax.set_xlabel("Energy ({})".format(energy_unit))
+        ax.set_ylabel("{} ({})".format(self.sed_type, y_unit))
         return ax
 
 
@@ -632,10 +632,10 @@ class FluxPointEstimator(object):
         self._fit = None
 
     def __str__(self):
-        s = '{}:\n'.format(self.__class__.__name__)
-        s += str(self.obs) + '\n'
-        s += str(self.groups) + '\n'
-        s += str(self.model) + '\n'
+        s = "{}:\n".format(self.__class__.__name__)
+        s += str(self.obs) + "\n"
+        s += str(self.groups) + "\n"
+        s += str(self.model) + "\n"
         return s
 
     @property
@@ -658,19 +658,19 @@ class FluxPointEstimator(object):
     def compute_points(self):
         rows = []
         for group in self.groups:
-            if group.bin_type != 'normal':
-                log.debug('Skipping energy group:\n{}'.format(group))
+            if group.bin_type != "normal":
+                log.debug("Skipping energy group:\n{}".format(group))
                 continue
 
             row = self.compute_flux_point(group)
             rows.append(row)
 
-        meta = OrderedDict([('method', 'TODO'), ('SED_TYPE', 'dnde')])
+        meta = OrderedDict([("method", "TODO"), ("SED_TYPE", "dnde")])
         table = table_from_row_data(rows=rows, meta=meta)
         self.flux_points = FluxPoints(table)
 
     def compute_flux_point(self, energy_group):
-        log.debug('Computing flux point for energy group:\n{}'.format(energy_group))
+        log.debug("Computing flux point for energy group:\n{}".format(energy_group))
 
         model = self._get_spectral_model(self.model)
 
@@ -685,7 +685,7 @@ class FluxPointEstimator(object):
     def _get_spectral_model(global_model):
         model = global_model.copy()
         for par in model.parameters.parameters:
-            if par.name != 'amplitude':
+            if par.name != "amplitude":
                 par.frozen = True
         return model
 
@@ -727,8 +727,8 @@ class FluxPointEstimator(object):
         model = fit.result[0].model.copy()
         # this is a prototype for fast flux point upper limit
         # calculation using brentq
-        amplitude = model.parameters['amplitude'].value / 1E-12
-        amplitude_err = model.parameters.error('amplitude') / 1E-12
+        amplitude = model.parameters["amplitude"].value / 1E-12
+        amplitude_err = model.parameters.error("amplitude") / 1E-12
 
         if negative:
             amplitude_max = amplitude
@@ -738,7 +738,7 @@ class FluxPointEstimator(object):
             amplitude_min = amplitude
 
         def ts_diff(x):
-            model.parameters['amplitude'].value = x * 1E-12
+            model.parameters["amplitude"].value = x * 1E-12
             stat = fit.total_stat(model.parameters)
             return (stat_best_fit + delta_ts) - stat
 
@@ -746,12 +746,12 @@ class FluxPointEstimator(object):
             result = brentq(
                 ts_diff, amplitude_min, amplitude_max, maxiter=100, rtol=1e-2
             )
-            model.parameters['amplitude'].value = result * 1E-12
-            return model(model.parameters['reference'].quantity)
+            model.parameters["amplitude"].value = result * 1E-12
+            return model(model.parameters["reference"].quantity)
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
-            log.debug('Flux point upper limit computation failed.')
-            return np.nan * u.Unit(fit.model.parameters['amplitude'].unit)
+            log.debug("Flux point upper limit computation failed.")
+            return np.nan * u.Unit(fit.model.parameters["amplitude"].unit)
 
     def compute_flux_point_sqrt_ts(self, fit, stat_best_fit):
         """
@@ -774,14 +774,14 @@ class FluxPointEstimator(object):
         """
         model = fit.result[0].model.copy()
         # store best fit amplitude, set amplitude of fit model to zero
-        amplitude = model.parameters['amplitude'].value
+        amplitude = model.parameters["amplitude"].value
 
         # determine TS value for amplitude zero
-        model.parameters['amplitude'].value = 0
+        model.parameters["amplitude"].value = 0
         stat_null = fit.total_stat(model.parameters)
 
         # set amplitude of fit model to best fit amplitude
-        model.parameters['amplitude'].value = amplitude
+        model.parameters["amplitude"].value = amplitude
 
         # compute sqrt TS
         ts = np.abs(stat_null - stat_best_fit)
@@ -805,13 +805,13 @@ class FluxPointEstimator(object):
                 if (
                     (bin < energy_group.bin_idx_min)
                     or (bin > energy_group.bin_idx_max)
-                    or (energy_group.bin_type != 'normal')
+                    or (energy_group.bin_type != "normal")
                 ):
                     quality[bin] = 1
             self.obs[index].on_vector.quality = quality
 
         # Set reference and remove min amplitude
-        model.parameters['reference'].value = energy_ref.to('TeV').value
+        model.parameters["reference"].value = energy_ref.to("TeV").value
 
         self._fit = SpectrumFit(self.obs, model)
 
@@ -819,8 +819,8 @@ class FluxPointEstimator(object):
             self.obs[index].on_vector.quality = quality_orig[index]
 
         log.debug(
-            'Calling Sherpa fit for flux point '
-            ' in energy range:\n{}'.format(self.fit)
+            "Calling Sherpa fit for flux point "
+            " in energy range:\n{}".format(self.fit)
         )
 
         self.fit.fit()
@@ -845,16 +845,16 @@ class FluxPointEstimator(object):
 
         return OrderedDict(
             [
-                ('e_ref', energy_ref),
-                ('e_min', energy_min),
-                ('e_max', energy_max),
-                ('dnde', dnde.to(DEFAULT_UNIT['dnde'])),
-                ('dnde_err', dnde_err.to(DEFAULT_UNIT['dnde'])),
-                ('dnde_ul', dnde_ul.to(DEFAULT_UNIT['dnde'])),
-                ('is_ul', sqrt_ts < sqrt_ts_threshold),
-                ('sqrt_ts', sqrt_ts),
-                ('dnde_errp', dnde_errp),
-                ('dnde_errn', dnde_errn),
+                ("e_ref", energy_ref),
+                ("e_min", energy_min),
+                ("e_max", energy_max),
+                ("dnde", dnde.to(DEFAULT_UNIT["dnde"])),
+                ("dnde_err", dnde_err.to(DEFAULT_UNIT["dnde"])),
+                ("dnde_ul", dnde_ul.to(DEFAULT_UNIT["dnde"])),
+                ("is_ul", sqrt_ts < sqrt_ts_threshold),
+                ("sqrt_ts", sqrt_ts),
+                ("dnde_errp", dnde_errp),
+                ("dnde_errn", dnde_errn),
             ]
         )
 
@@ -890,8 +890,8 @@ def chi2_flux_points(flux_points, gp_model):
     Chi2 statistics for a list of flux points and model.
     """
     model = gp_model(flux_points.e_ref)
-    data = flux_points.table['dnde'].quantity
-    data_err = flux_points.table['dnde_err'].quantity
+    data = flux_points.table["dnde"].quantity
+    data_err = flux_points.table["dnde_err"].quantity
     stat_per_bin = ((data - model) / data_err).value ** 2
     return np.nansum(stat_per_bin), stat_per_bin
 
@@ -901,10 +901,10 @@ def chi2_flux_points_assym(flux_points, gp_model):
     Assymetric chi2 statistics for a list of flux points and model.
     """
     model = gp_model(flux_points.e_ref)
-    data = flux_points.table['dnde'].quantity
+    data = flux_points.table["dnde"].quantity
 
-    data_errp = flux_points.table['dnde_errp'].quantity
-    data_errn = flux_points.table['dnde_errn'].quantity
+    data_errp = flux_points.table["dnde_errp"].quantity
+    data_errn = flux_points.table["dnde_errn"].quantity
 
     data_err = np.where(model > data, data_errp, data_errn)
     stat_per_bin = ((data - model) / data_err).value ** 2
@@ -946,11 +946,11 @@ class FluxPointFitter(object):
     """
 
     def __init__(
-        self, stat='chi2', optimizer='minuit', ul_handling='ignore', opts_minuit=None
+        self, stat="chi2", optimizer="minuit", ul_handling="ignore", opts_minuit=None
     ):
-        if stat == 'chi2':
+        if stat == "chi2":
             self.stat = chi2_flux_points
-        elif stat == 'chi2assym':
+        elif stat == "chi2assym":
             self.stat = chi2_flux_points_assym
         else:
             raise ValueError(
@@ -958,15 +958,15 @@ class FluxPointFitter(object):
                 " either 'chi2' or 'chi2assym'"
             )
 
-        if ul_handling != 'ignore':
-            raise NotImplementedError('No handling of upper limits implemented.')
+        if ul_handling != "ignore":
+            raise NotImplementedError("No handling of upper limits implemented.")
 
         self.parameters = OrderedDict(
             [
-                ('stat', stat),
-                ('optimizer', optimizer),
-                ('ul_handling', ul_handling),
-                ('opts_minuit', opts_minuit),
+                ("stat", stat),
+                ("optimizer", optimizer),
+                ("ul_handling", ul_handling),
+                ("opts_minuit", opts_minuit),
             ]
         )
 
@@ -987,7 +987,7 @@ class FluxPointFitter(object):
         p = self.parameters
         model = model.copy()
 
-        if p['optimizer'] == 'minuit':
+        if p["optimizer"] == "minuit":
 
             def total_stat(parameters):
                 model.parameters = parameters
@@ -996,11 +996,11 @@ class FluxPointFitter(object):
             minuit = fit_iminuit(
                 parameters=model.parameters,
                 function=total_stat,
-                opts_minuit=p['opts_minuit'],
+                opts_minuit=p["opts_minuit"],
             )
             self._minuit = minuit
         else:
-            raise ValueError('Only the minuit fitting backend is supported.')
+            raise ValueError("Only the minuit fitting backend is supported.")
         return model
 
     def run(self, data, model):
@@ -1028,9 +1028,9 @@ class FluxPointFitter(object):
 
         return OrderedDict(
             [
-                ('best-fit-model', best_fit_model),
-                ('dof', int(dof)),
-                ('statval', float(statval)),
-                ('statval/dof', float(statval / dof)),
+                ("best-fit-model", best_fit_model),
+                ("dof", int(dof)),
+                ("statval", float(statval)),
+                ("statval/dof", float(statval / dof)),
             ]
         )

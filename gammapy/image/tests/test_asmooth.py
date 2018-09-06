@@ -10,24 +10,24 @@ from ...maps import Map
 from ..asmooth import ASmooth
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 def test_asmooth():
-    filename = make_path('$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz')
-    counts = Map.read(filename, hdu='Counts')
-    background = Map.read(filename, hdu='BACKGROUND')
+    filename = make_path("$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz")
+    counts = Map.read(filename, hdu="Counts")
+    background = Map.read(filename, hdu="BACKGROUND")
 
     kernel = Gaussian2DKernel
     scales = ASmooth.make_scales(15, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmooth(kernel=kernel, scales=scales[6:], method='lima', threshold=4)
+    asmooth = ASmooth(kernel=kernel, scales=scales[6:], method="lima", threshold=4)
     smoothed = asmooth.run(counts, background)
 
     desired = {
-        'counts': 0.02089332998318483,
-        'background': 0.022048139647973686,
-        'scale': np.nan,
-        'significance': np.nan,
+        "counts": 0.02089332998318483,
+        "background": 0.022048139647973686,
+        "scale": np.nan,
+        "significance": np.nan,
     }
 
     for name in smoothed:

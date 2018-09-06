@@ -12,9 +12,9 @@ from ..spectrum_pipe import SpectrumAnalysisIACT
 def get_config():
     """Get test config, extend to several scenarios"""
     model = PowerLaw(
-        index=2, amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.TeV
+        index=2, amplitude=1e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
     )
-    fp_binning = EnergyBounds.equal_log_spacing(1, 50, 4, 'TeV')
+    fp_binning = EnergyBounds.equal_log_spacing(1, 50, 4, "TeV")
     return dict(
         outdir=None,
         background=dict(on_region=on_region()),
@@ -24,12 +24,12 @@ def get_config():
     )
 
 
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-@requires_dependency('sherpa')
+@requires_data("gammapy-extra")
+@requires_dependency("scipy")
+@requires_dependency("sherpa")
 def test_spectrum_analysis_iact(tmpdir):
     config = get_config()
-    config['outdir'] = tmpdir
+    config["outdir"] = tmpdir
 
     analysis = SpectrumAnalysisIACT(observations=obs_list(), config=config)
     analysis.run()
@@ -37,7 +37,7 @@ def test_spectrum_analysis_iact(tmpdir):
 
     assert len(flux_points.table) == 4
 
-    dnde = flux_points.table['dnde'].quantity
-    dnde.unit == 'cm-2 s-1 TeV-1'
+    dnde = flux_points.table["dnde"].quantity
+    dnde.unit == "cm-2 s-1 TeV-1"
     assert_allclose(dnde[0].value, 6.601518e-12, rtol=1e-2)
     assert_allclose(dnde[-1].value, 1.295918e-15, rtol=1e-2)

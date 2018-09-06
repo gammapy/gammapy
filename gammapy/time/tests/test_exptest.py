@@ -7,7 +7,7 @@ from ..simulate import random_times
 
 
 def test_exptest():
-    rate = Quantity(10, 's^-1')
+    rate = Quantity(10, "s^-1")
     time_delta = random_times(100, rate=rate, return_diff=True, random_state=0)
     mr = exptest(time_delta)
     assert_allclose(mr, 0.11395763079)

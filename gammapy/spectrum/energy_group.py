@@ -24,7 +24,7 @@ from astropy.table import Table
 from astropy.table import vstack as table_vstack
 from ..utils.table import table_from_row_data, table_row_to_dict
 
-__all__ = ['SpectrumEnergyGroup', 'SpectrumEnergyGroups', 'SpectrumEnergyGroupMaker']
+__all__ = ["SpectrumEnergyGroup", "SpectrumEnergyGroups", "SpectrumEnergyGroupMaker"]
 
 log = logging.getLogger(__name__)
 
@@ -36,16 +36,16 @@ class SpectrumEnergyGroup(object):
     """
 
     fields = [
-        'energy_group_idx',
-        'bin_idx_min',
-        'bin_idx_max',
-        'bin_type',
-        'energy_min',
-        'energy_max',
+        "energy_group_idx",
+        "bin_idx_min",
+        "bin_idx_max",
+        "bin_type",
+        "energy_min",
+        "energy_max",
     ]
     """List of data members of this class."""
 
-    valid_bin_types = ['normal', 'underflow', 'overflow']
+    valid_bin_types = ["normal", "underflow", "overflow"]
     """Valid values for ``bin_types`` attribute."""
 
     def __init__(
@@ -61,7 +61,7 @@ class SpectrumEnergyGroup(object):
         self.bin_idx_min = bin_idx_min
         self.bin_idx_max = bin_idx_max
         if bin_type not in self.valid_bin_types:
-            raise ValueError('Invalid bin type: {}'.format(bin_type))
+            raise ValueError("Invalid bin type: {}".format(bin_type))
         self.bin_type = bin_type
         self.energy_min = Quantity(energy_min)
         self.energy_max = Quantity(energy_max)
@@ -76,8 +76,8 @@ class SpectrumEnergyGroup(object):
         return [(_, getattr(self, _)) for _ in self.fields]
 
     def __repr__(self):
-        txt = ['{}={!r}'.format(k, v) for k, v in self._data]
-        return '{}({})'.format(self.__class__.__name__, ', '.join(txt))
+        txt = ["{}={!r}".format(k, v) for k, v in self._data]
+        return "{}({})".format(self.__class__.__name__, ", ".join(txt))
 
     def __eq__(self, other):
         return self.to_dict() == other.to_dict()
@@ -97,11 +97,11 @@ class SpectrumEnergyGroup(object):
         Columns are: ``energy_group_idx``, ``bin_idx``, ``bin_type``
         """
         table = Table()
-        table['bin_idx'] = self.bin_idx_array
-        table['energy_group_idx'] = self.energy_group_idx
-        table['bin_type'] = self.bin_type
-        table['energy_min'] = self.energy_min
-        table['energy_max'] = self.energy_max
+        table["bin_idx"] = self.bin_idx_array
+        table["energy_group_idx"] = self.energy_group_idx
+        table["bin_type"] = self.bin_type
+        table["energy_min"] = self.energy_min
+        table["energy_max"] = self.energy_max
         return table
 
 
@@ -112,13 +112,13 @@ class SpectrumEnergyGroups(UserList):
     """
 
     def __repr__(self):
-        return '{}(len={})'.format(self.__class__.__name__, len(self))
+        return "{}(len={})".format(self.__class__.__name__, len(self))
 
     def __str__(self):
-        ss = '{}:\n'.format(self.__class__.__name__)
+        ss = "{}:\n".format(self.__class__.__name__)
         lines = self.to_group_table().pformat(max_width=-1, max_lines=-1)
-        ss += '\n'.join(lines)
-        return ss + '\n'
+        ss += "\n".join(lines)
+        return ss + "\n"
 
     def copy(self):
         """Deep copy"""
@@ -129,16 +129,16 @@ class SpectrumEnergyGroups(UserList):
         """Create list of SpectrumEnergyGroup objects from table."""
         groups = cls()
 
-        for energy_group_idx in np.unique(table['energy_group_idx']):
-            mask = table['energy_group_idx'] == energy_group_idx
+        for energy_group_idx in np.unique(table["energy_group_idx"]):
+            mask = table["energy_group_idx"] == energy_group_idx
             group_table = table[mask]
-            bin_idx_min = group_table['bin_idx'][0]
-            bin_idx_max = group_table['bin_idx'][-1]
-            if len(set(group_table['bin_type'])) > 1:
-                raise ValueError('Inconsistent bin_type within group.')
-            bin_type = group_table['bin_type'][0]
-            energy_min = group_table['energy_min'].quantity[0]
-            energy_max = group_table['energy_max'].quantity[-1]
+            bin_idx_min = group_table["bin_idx"][0]
+            bin_idx_max = group_table["bin_idx"][-1]
+            if len(set(group_table["bin_type"])) > 1:
+                raise ValueError("Inconsistent bin_type within group.")
+            bin_type = group_table["bin_type"][0]
+            energy_min = group_table["energy_min"].quantity[0]
+            energy_max = group_table["energy_max"].quantity[-1]
 
             group = SpectrumEnergyGroup(
                 energy_group_idx=energy_group_idx,
@@ -240,11 +240,11 @@ class SpectrumEnergyGroupMaker(object):
         ebounds_obs = self.obs.e_reco
         size = ebounds_obs.nbins
         table = Table()
-        table['bin_idx'] = np.arange(size)
-        table['energy_group_idx'] = np.arange(size)
-        table['bin_type'] = ['normal'] * size
-        table['energy_min'] = ebounds_obs.lower_bounds
-        table['energy_max'] = ebounds_obs.upper_bounds
+        table["bin_idx"] = np.arange(size)
+        table["energy_group_idx"] = np.arange(size)
+        table["bin_type"] = ["normal"] * size
+        table["energy_min"] = ebounds_obs.lower_bounds
+        table["energy_max"] = ebounds_obs.upper_bounds
         self.groups = SpectrumEnergyGroups.from_total_table(table)
 
     def compute_groups_fixed(self, ebounds):
@@ -279,7 +279,7 @@ class SpectrumEnergyGroupMaker(object):
                 energy_group_idx=-1,
                 bin_idx_min=bin_edges[idx],
                 bin_idx_max=bin_edges[idx + 1] - 1,
-                bin_type='normal',
+                bin_type="normal",
                 energy_min=ebounds_src[bin_edges[idx]],
                 energy_max=ebounds_src[bin_edges[idx + 1]],
             )
@@ -297,7 +297,7 @@ class SpectrumEnergyGroupMaker(object):
                 energy_group_idx=-1,
                 bin_idx_min=0,
                 bin_idx_max=start_edge - 1,
-                bin_type='underflow',
+                bin_type="underflow",
                 energy_min=ebounds_src[0],
                 energy_max=ebounds_src[start_edge],
             )
@@ -310,7 +310,7 @@ class SpectrumEnergyGroupMaker(object):
                 energy_group_idx=-1,
                 bin_idx_min=end_edge + 1,
                 bin_idx_max=ebounds_src.nbins - 1,
-                bin_type='overflow',
+                bin_type="overflow",
                 energy_min=ebounds_src[end_edge + 1],
                 energy_max=ebounds_src[-1],
             )

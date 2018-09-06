@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from ..maps import WcsNDMap
 
-__all__ = ['find_peaks']
+__all__ = ["find_peaks"]
 
 
 def find_peaks(image, threshold, min_distance=1):
@@ -55,10 +55,10 @@ def find_peaks(image, threshold, min_distance=1):
     # Input validation
 
     if not isinstance(image, WcsNDMap):
-        raise TypeError('find_peaks only supports WcsNDMap')
+        raise TypeError("find_peaks only supports WcsNDMap")
 
     if not image.geom.is_image:
-        raise ValueError('find_peaks only supports 2D images')
+        raise ValueError("find_peaks only supports 2D images")
 
     size = 2 * min_distance + 1
 
@@ -71,7 +71,7 @@ def find_peaks(image, threshold, min_distance=1):
         return Table()
 
     # Run peak finder
-    data_max = maximum_filter(data, size=size, mode='constant')
+    data_max = maximum_filter(data, size=size, mode="constant")
     mask = (data == data_max) & (data > threshold)
     y, x = mask.nonzero()
     value = data[y, x]
@@ -84,17 +84,17 @@ def find_peaks(image, threshold, min_distance=1):
     coord = SkyCoord.from_pixel(x, y, wcs=image.geom.wcs).icrs
 
     table = Table()
-    table['value'] = value * image.unit
-    table['x'] = x
-    table['y'] = y
-    table['ra'] = coord.ra
-    table['dec'] = coord.dec
+    table["value"] = value * image.unit
+    table["x"] = x
+    table["y"] = y
+    table["ra"] = coord.ra
+    table["dec"] = coord.dec
 
-    table['ra'].format = '.5f'
-    table['dec'].format = '.5f'
-    table['value'].format = '.5g'
+    table["ra"].format = ".5f"
+    table["dec"].format = ".5f"
+    table["value"].format = ".5g"
 
-    table.sort('value')
+    table.sort("value")
     table.reverse()
 
     return table

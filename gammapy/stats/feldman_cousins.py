@@ -5,14 +5,14 @@ import logging
 import numpy as np
 
 __all__ = [
-    'fc_find_acceptance_interval_gauss',
-    'fc_find_acceptance_interval_poisson',
-    'fc_construct_acceptance_intervals_pdfs',
-    'fc_get_limits',
-    'fc_fix_limits',
-    'fc_find_limit',
-    'fc_find_average_upper_limit',
-    'fc_construct_acceptance_intervals',
+    "fc_find_acceptance_interval_gauss",
+    "fc_find_acceptance_interval_poisson",
+    "fc_construct_acceptance_intervals_pdfs",
+    "fc_get_limits",
+    "fc_fix_limits",
+    "fc_find_limit",
+    "fc_find_average_upper_limit",
+    "fc_construct_acceptance_intervals",
 ]
 
 log = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
             "desired confidence level for this mu!"
         )
 
-    rank = stats.rankdata(-r, method='dense')
+    rank = stats.rankdata(-r, method="dense")
 
     index_array = np.arange(x_bins.size)
 
@@ -154,7 +154,7 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
             "desired confidence level for this mu!"
         )
 
-    rank = stats.rankdata(-r, method='dense')
+    rank = stats.rankdata(-r, method="dense")
 
     index_array = np.arange(x_bins.size)
 

@@ -9,12 +9,12 @@ from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def aeff():
     filename = (
-        '$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz'
+        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
-    return EffectiveAreaTable2D.read(filename, hdu='AEFF')
+    return EffectiveAreaTable2D.read(filename, hdu="AEFF")
 
 
 class TestEffectiveAreaTable2D:
@@ -22,21 +22,21 @@ class TestEffectiveAreaTable2D:
     # TODO: split this out into separate tests, especially the plotting
     # Add I/O test
     @staticmethod
-    @requires_dependency('scipy')
-    @requires_data('gammapy-extra')
+    @requires_dependency("scipy")
+    @requires_data("gammapy-extra")
     def test(aeff):
-        assert aeff.data.axis('energy').nbins == 96
-        assert aeff.data.axis('offset').nbins == 6
+        assert aeff.data.axis("energy").nbins == 96
+        assert aeff.data.axis("offset").nbins == 6
         assert aeff.data.data.shape == (96, 6)
 
-        assert aeff.data.axis('energy').unit == 'TeV'
-        assert aeff.data.axis('offset').unit == 'deg'
-        assert aeff.data.data.unit == 'm2'
+        assert aeff.data.axis("energy").unit == "TeV"
+        assert aeff.data.axis("offset").unit == "deg"
+        assert aeff.data.data.unit == "m2"
 
         assert_quantity_allclose(aeff.high_threshold, 100 * u.TeV, rtol=1e-3)
         assert_quantity_allclose(aeff.low_threshold, 0.870964 * u.TeV, rtol=1e-3)
 
-        test_val = aeff.data.evaluate(energy='14 TeV', offset='0.2 deg')
+        test_val = aeff.data.evaluate(energy="14 TeV", offset="0.2 deg")
         assert_allclose(test_val.value, 683177.5, rtol=1e-3)
 
         # Test ARF export
@@ -50,8 +50,8 @@ class TestEffectiveAreaTable2D:
             energy_lo=e_axis[:-1], energy_hi=e_axis[1:], data=area
         )
 
-        actual = effareafrom2d.data.evaluate(energy='2.34 TeV')
-        desired = effarea1d.data.evaluate(energy='2.34 TeV')
+        actual = effareafrom2d.data.evaluate(energy="2.34 TeV")
+        desired = effarea1d.data.evaluate(energy="2.34 TeV")
         assert_equal(actual, desired)
 
         # Test ARF export #2
@@ -61,8 +61,8 @@ class TestEffectiveAreaTable2D:
         assert_equal(actual.value, desired.value)
 
     @staticmethod
-    @requires_dependency('matplotlib')
-    @requires_data('gammapy-extra')
+    @requires_dependency("matplotlib")
+    @requires_data("gammapy-extra")
     def test_plot(aeff):
         with mpl_plot_check():
             aeff.plot()
@@ -76,9 +76,9 @@ class TestEffectiveAreaTable2D:
 
 class TestEffectiveAreaTable:
     @staticmethod
-    @requires_dependency('scipy')
-    @requires_dependency('matplotlib')
-    @requires_data('gammapy-extra')
+    @requires_dependency("scipy")
+    @requires_dependency("matplotlib")
+    @requires_data("gammapy-extra")
     def test_EffectiveAreaTable(tmpdir, aeff):
         arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 
@@ -87,7 +87,7 @@ class TestEffectiveAreaTable:
         with mpl_plot_check():
             arf.plot()
 
-        filename = str(tmpdir / 'effarea_test.fits')
+        filename = str(tmpdir / "effarea_test.fits")
         arf.write(filename)
         arf2 = EffectiveAreaTable.read(filename)
 
@@ -95,7 +95,7 @@ class TestEffectiveAreaTable:
 
         test_aeff = 0.6 * arf.max_area
         node_above = np.where(arf.data.data > test_aeff)[0][0]
-        energy = arf.data.axis('energy')
+        energy = arf.data.axis("energy")
         ener_above = energy.nodes[node_above]
         ener_below = energy.nodes[node_above - 1]
         test_ener = arf.find_energy(test_aeff)
@@ -103,7 +103,7 @@ class TestEffectiveAreaTable:
         assert ener_below < test_ener and test_ener < ener_above
 
         elo_threshold = arf.find_energy(0.1 * arf.max_area)
-        assert elo_threshold.unit == 'TeV'
+        assert elo_threshold.unit == "TeV"
         assert_allclose(elo_threshold.value, 0.552741, rtol=1e-3)
 
         # Test evaluation outside safe range
@@ -122,7 +122,7 @@ class TestEffectiveAreaTable:
         energy = [80, 125] * u.GeV
         area_ref = 1.65469579e+07 * u.cm ** 2
 
-        area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
+        area = EffectiveAreaTable.from_parametrization(energy, "HESS")
 
         assert_allclose(area.data.data, area_ref)
         assert area.data.data.unit == area_ref.unit
@@ -131,7 +131,7 @@ class TestEffectiveAreaTable:
         energy = [0.08, 0.125, 32] * u.TeV
         area_ref = [1.65469579e+07, 1.46451957e+09] * u.cm * u.cm
 
-        area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
+        area = EffectiveAreaTable.from_parametrization(energy, "HESS")
         assert_allclose(area.data.data, area_ref)
         assert area.data.data.unit == area_ref.unit
 
@@ -155,5 +155,5 @@ class TestEffectiveAreaTable:
             data=data,
         )
         hdu = aeff.to_fits()
-        assert_equal(hdu.data['ENERG_LO'][0], aeff.data.axis('energy').lo.value)
-        assert hdu.header['TUNIT1'] == aeff.data.axis('energy').lo.unit
+        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy").lo.value)
+        assert hdu.header["TUNIT1"] == aeff.data.axis("energy").lo.unit

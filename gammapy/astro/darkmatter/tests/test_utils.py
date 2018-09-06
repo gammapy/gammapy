@@ -27,8 +27,8 @@ def prim_flux():
     return PrimaryFlux(mDM=1 * u.TeV, channel="W")
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
+@requires_dependency("scipy")
+@requires_data("gammapy-extra")
 def test_dmfluxmapmaker(jfact, prim_flux):
     x_section = 1e-26 * u.Unit("cm3 s-1")
     energy_range = [0.1, 1] * u.TeV

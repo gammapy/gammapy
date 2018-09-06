@@ -10,7 +10,7 @@ from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
 
-__all__ = ['SpectrumFit']
+__all__ = ["SpectrumFit"]
 
 log = logging.getLogger(__name__)
 
@@ -46,10 +46,10 @@ class SpectrumFit(object):
         self,
         obs_list,
         model,
-        stat='wstat',
+        stat="wstat",
         forward_folded=True,
         fit_range=None,
-        method='iminuit',
+        method="iminuit",
     ):
         self.obs_list = obs_list
         self._model = model
@@ -68,11 +68,11 @@ class SpectrumFit(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\nSource model {}'.format(self._model.__class__.__name__)
-        ss += '\nStat {}'.format(self.stat)
-        ss += '\nForward Folded {}'.format(self.forward_folded)
-        ss += '\nFit range {}'.format(self.fit_range)
-        ss += '\nBackend {}'.format(self.method)
+        ss += "\nSource model {}".format(self._model.__class__.__name__)
+        ss += "\nStat {}".format(self.stat)
+        ss += "\nForward Folded {}".format(self.forward_folded)
+        ss += "\nFit range {}".format(self.fit_range)
+        ss += "\nBackend {}".format(self.method)
         return ss
 
     @property
@@ -221,10 +221,10 @@ class SpectrumFit(object):
         counts = predictor.npred.data.data
 
         # Check count unit (~unit of model amplitude)
-        if counts.unit.is_equivalent(''):
+        if counts.unit.is_equivalent(""):
             counts = counts.value
         else:
-            raise ValueError('Predicted counts {}'.format(counts))
+            raise ValueError("Predicted counts {}".format(counts))
 
         # Apply AREASCAL column
         counts *= obs.on_vector.areascal
@@ -259,11 +259,11 @@ class SpectrumFit(object):
         statsval : tuple of `~numpy.ndarray`
             Statval
         """
-        if self.stat == 'cash':
+        if self.stat == "cash":
             return stats.cash(n_on=obs.on_vector.data.data.value, mu_on=prediction)
-        elif self.stat == 'cstat':
+        elif self.stat == "cstat":
             return stats.cstat(n_on=obs.on_vector.data.data.value, mu_on=prediction)
-        elif self.stat == 'wstat':
+        elif self.stat == "wstat":
             on_stat_ = stats.wstat(
                 n_on=obs.on_vector.data.data.value,
                 n_off=obs.off_vector.data.data.value,
@@ -272,7 +272,7 @@ class SpectrumFit(object):
             )
             return np.nan_to_num(on_stat_)
         else:
-            raise NotImplementedError('{}'.format(self.stat))
+            raise NotImplementedError("{}".format(self.stat))
 
     def total_stat(self, parameters):
         """Statistic summed over all bins and all observations.
@@ -304,13 +304,13 @@ class SpectrumFit(object):
         test_obs = self.obs_list[0]
         irfs_exist = test_obs.aeff is not None or test_obs.edisp is not None
         if self.forward_folded and not irfs_exist:
-            raise ValueError('IRFs required for forward folded fit')
-        if self.stat == 'wstat' and self.obs_list[0].off_vector is None:
-            raise ValueError('Off vector required for WStat fit')
+            raise ValueError("IRFs required for forward folded fit")
+        if self.stat == "wstat" and self.obs_list[0].off_vector is None:
+            raise ValueError("Off vector required for WStat fit")
         try:
             test_obs.livetime
         except KeyError:
-            raise ValueError('No observation livetime given')
+            raise ValueError("No observation livetime given")
 
     def likelihood_1d(self, model, parname, parvals):
         """Compute likelihood profile.
@@ -342,8 +342,8 @@ class SpectrumFit(object):
         ax = plt.gca() if ax is None else ax
 
         yy = self.likelihood_1d(**kwargs)
-        ax.plot(kwargs['parvals'], yy)
-        ax.set_xlabel(kwargs['parname'])
+        ax.plot(kwargs["parvals"], yy)
+        ax.set_xlabel(kwargs["parname"])
 
         return ax
 
@@ -355,10 +355,10 @@ class SpectrumFit(object):
         opts_minuit : dict (optional)
             Options passed to `iminuit.Minuit` constructor
         """
-        if self.method == 'iminuit':
+        if self.method == "iminuit":
             self._fit_iminuit(opts_minuit)
         else:
-            raise NotImplementedError('method: {}'.format(self.method))
+            raise NotImplementedError("method: {}".format(self.method))
 
     def _fit_iminuit(self, opts_minuit):
         """Iminuit minimization"""
@@ -421,7 +421,7 @@ class SpectrumFit(object):
         outdir : Path, str
             directory to write results files to (if given)
         """
-        log.info('Running {}'.format(self))
+        log.info("Running {}".format(self))
 
         self.fit()
         self.est_errors()
@@ -435,6 +435,6 @@ class SpectrumFit(object):
 
         # Assume only one model is fit to all data
         modelname = self.result[0].model.__class__.__name__
-        filename = outdir / 'fit_result_{}.yaml'.format(modelname)
-        log.info('Writing {}'.format(filename))
+        filename = outdir / "fit_result_{}.yaml".format(modelname)
+        log.info("Writing {}".format(filename))
         self.result[0].to_yaml(filename)

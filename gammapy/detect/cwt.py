@@ -8,7 +8,7 @@ from astropy.table import Table
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
 from ..maps import WcsNDMap, MapAxis, WcsGeom
 
-__all__ = ['CWT', 'CWTData', 'CWTKernels']
+__all__ = ["CWT", "CWTData", "CWTKernels"]
 
 log = logging.getLogger(__name__)
 
@@ -126,29 +126,29 @@ class CWT(object):
 
         total_background = data._model + data._background + data._approx
         excess = data._counts - total_background
-        log.debug('Excess sum: {0:.4f}'.format(excess.sum()))
-        log.debug('Excess max: {0:.4f}'.format(excess.max()))
+        log.debug("Excess sum: {0:.4f}".format(excess.sum()))
+        log.debug("Excess max: {0:.4f}".format(excess.max()))
 
-        log.debug('Computing transform and error')
+        log.debug("Computing transform and error")
         for idx_scale, kern in self.kernels.kern_base.items():
-            data._transform_3d[idx_scale] = fftconvolve(excess, kern, mode='same')
+            data._transform_3d[idx_scale] = fftconvolve(excess, kern, mode="same")
             data._error[idx_scale] = np.sqrt(
-                fftconvolve(total_background, kern ** 2, mode='same')
+                fftconvolve(total_background, kern ** 2, mode="same")
             )
-        log.debug('Error sum: {0:.4f}'.format(data._error.sum()))
-        log.debug('Error max: {0:.4f}'.format(data._error.max()))
+        log.debug("Error sum: {0:.4f}".format(data._error.sum()))
+        log.debug("Error max: {0:.4f}".format(data._error.max()))
 
-        log.debug('Computing approx and approx_bkg')
+        log.debug("Computing approx and approx_bkg")
         data._approx = fftconvolve(
             data._counts - data._model - data._background,
             self.kernels.kern_approx,
-            mode='same',
+            mode="same",
         )
         data._approx_bkg = fftconvolve(
-            data._background, self.kernels.kern_approx, mode='same'
+            data._background, self.kernels.kern_approx, mode="same"
         )
-        log.debug('Approximate sum: {0:.4f}'.format(data._approx.sum()))
-        log.debug('Approximate background sum: {0:.4f}'.format(data._approx_bkg.sum()))
+        log.debug("Approximate sum: {0:.4f}".format(data._approx.sum()))
+        log.debug("Approximate background sum: {0:.4f}".format(data._approx_bkg.sum()))
 
     def _compute_support(self, data):
         """Compute the multiresolution support with hard sigma clipping.
@@ -177,19 +177,19 @@ class CWT(object):
         """
         from scipy.ndimage import label
 
-        log.debug('Computing significance')
+        log.debug("Computing significance")
         significance = data._transform_3d / data._error
 
-        log.debug('For each scale start to compute support')
+        log.debug("For each scale start to compute support")
         for idx_scale in range(self.kernels.n_scale):
             log.debug(
-                'Start to compute support for scale '
-                '{:.2f}'.format(self.kernels.scales[idx_scale])
+                "Start to compute support for scale "
+                "{:.2f}".format(self.kernels.scales[idx_scale])
             )
 
             log.debug(
-                'Create mask based on significance '
-                'threshold {:.2f}'.format(self.significance_threshold)
+                "Create mask based on significance "
+                "threshold {:.2f}".format(self.significance_threshold)
             )
             mask = significance[idx_scale] > self.significance_threshold
 
@@ -200,7 +200,7 @@ class CWT(object):
 
                 # Remove isolated pixels from support
                 if self.remove_isolated and coords[0].size == 1:
-                    log.debug('Remove isolated pixels from support')
+                    log.debug("Remove isolated pixels from support")
                     mask[coords] = False
 
                 if self.significance_island_threshold is not None:
@@ -209,18 +209,18 @@ class CWT(object):
                     struct_signif = significance[idx_scale][coords]
                     if struct_signif.max() < self.significance_island_threshold:
                         log.debug(
-                            'Remove significant pixels island {} from support'.format(
+                            "Remove significant pixels island {} from support".format(
                                 struct_label + 1
                             )
                         )
                         mask[coords] = False
 
             log.debug(
-                'Update support for scale {:.2f}'.format(self.kernels.scales[idx_scale])
+                "Update support for scale {:.2f}".format(self.kernels.scales[idx_scale])
             )
             data._support[idx_scale] |= mask
 
-        log.debug('Support sum: {}'.format(data._support.sum()))
+        log.debug("Support sum: {}".format(data._support.sum()))
 
     def _inverse_transform(self, data):
         """Do the inverse transform (reconstruct the image).
@@ -233,10 +233,10 @@ class CWT(object):
             Images for inverse transform.
         """
         data._transform_2d = np.sum(data._support * data._transform_3d, axis=0)
-        log.debug('Update model')
+        log.debug("Update model")
         data._model += data._transform_2d * (data._transform_2d > 0)
-        log.debug('Model sum: {:.4f}'.format(data._model.sum()))
-        log.debug('Model max: {:.4f}'.format(data._model.max()))
+        log.debug("Model sum: {:.4f}".format(data._model.sum()))
+        log.debug("Model max: {:.4f}".format(data._model.max()))
 
     def _is_converged(self, data):
         """Check if the algorithm has converged on current iteration.
@@ -253,12 +253,12 @@ class CWT(object):
         answer : boolean
             Answer if CWT has converged.
         """
-        log.debug('Check the convergence')
+        log.debug("Check the convergence")
         residual = data._counts - (data._model + data._approx)
         variance = residual.var()
-        log.info('Residual sum: {0:.4f}'.format(residual.sum()))
-        log.info('Residual max: {0:.4f}'.format(residual.max()))
-        log.info('Residual variance: {0:.4f}'.format(residual.var()))
+        log.info("Residual sum: {0:.4f}".format(residual.sum()))
+        log.info("Residual max: {0:.4f}".format(residual.max()))
+        log.info("Residual variance: {0:.4f}".format(residual.var()))
 
         if self.previous_variance is None:
             self.previous_variance = variance
@@ -267,7 +267,7 @@ class CWT(object):
         variance_ratio = abs(
             (self.previous_variance - variance) / self.previous_variance
         )
-        log.info('Variance ratio: {:.7f}'.format(variance_ratio))
+        log.info("Variance ratio: {:.7f}".format(variance_ratio))
 
         self.previous_variance = variance
         return variance_ratio < self.tol
@@ -286,20 +286,20 @@ class CWT(object):
             self.history = [copy.deepcopy(data)]
 
         for n_iter in range(self.max_iter):
-            log.info('************ Start iteration {} ************'.format(n_iter + 1))
+            log.info("************ Start iteration {} ************".format(n_iter + 1))
             self._execute_iteration(data=data)
             if self.history is not None:
-                log.debug('Save current data')
+                log.debug("Save current data")
                 self.history.append(copy.deepcopy(data))
             converge_answer = self._is_converged(data=data)
             if converge_answer:
                 break
 
         if converge_answer:
-            log.info('Convergence reached at iteration {}'.format(n_iter + 1))
+            log.info("Convergence reached at iteration {}".format(n_iter + 1))
         else:
             log.info(
-                'Convergence not formally reached at iteration {}'.format(n_iter + 1)
+                "Convergence not formally reached at iteration {}".format(n_iter + 1)
             )
 
 
@@ -388,22 +388,22 @@ class CWTKernels(object):
             characteristic results as values.
         """
         info_dict = {}
-        info_dict['Number of scales'] = self.n_scale
-        info_dict['Minimal scale'] = self.min_scale
-        info_dict['Step scale'] = self.step_scale
-        info_dict['Scales'] = str(self.scales)
-        info_dict['Kernels approx width'] = len(self.kern_approx)
-        info_dict['Kernels approx sum'] = self.kern_approx.sum()
-        info_dict['Kernels approx max'] = self.kern_approx.max()
+        info_dict["Number of scales"] = self.n_scale
+        info_dict["Minimal scale"] = self.min_scale
+        info_dict["Step scale"] = self.step_scale
+        info_dict["Scales"] = str(self.scales)
+        info_dict["Kernels approx width"] = len(self.kern_approx)
+        info_dict["Kernels approx sum"] = self.kern_approx.sum()
+        info_dict["Kernels approx max"] = self.kern_approx.max()
 
         for idx_scale, scale in enumerate(self.scales):
-            info_dict['Kernels base width for {} scale'.format(scale)] = len(
+            info_dict["Kernels base width for {} scale".format(scale)] = len(
                 self.kern_base[idx_scale]
             )
-            info_dict['Kernels base sum for {} scale'.format(scale)] = self.kern_base[
+            info_dict["Kernels base sum for {} scale".format(scale)] = self.kern_base[
                 idx_scale
             ].sum()
-            info_dict['Kernels base max for {} scale'.format(scale)] = self.kern_base[
+            info_dict["Kernels base max for {} scale".format(scale)] = self.kern_base[
                 idx_scale
             ].max()
 
@@ -422,9 +422,9 @@ class CWTKernels(object):
 
         rows = []
         for name in info_dict:
-            rows.append({'Name': name, 'Source': info_dict[name]})
+            rows.append({"Name": name, "Source": info_dict[name]})
 
-        return Table(rows=rows, names=['Name', 'Source'])
+        return Table(rows=rows, names=["Name", "Source"])
 
 
 class CWTData(object):
@@ -648,13 +648,13 @@ class CWTData(object):
             The information about the data.
         """
         return {
-            'Name': name,
-            'Shape': '2D image' if len(data.shape) == 2 else '3D cube',
-            'Variance': data.var(),
-            'Mean': data.mean(),
-            'Max value': data.max(),
-            'Min value': data.min(),
-            'Sum values': data.sum(),
+            "Name": name,
+            "Shape": "2D image" if len(data.shape) == 2 else "3D cube",
+            "Variance": data.var(),
+            "Mean": data.mean(),
+            "Max value": data.max(),
+            "Min value": data.min(),
+            "Sum values": data.sum(),
         }
 
     def image_info(self, name):
@@ -688,9 +688,9 @@ class CWTData(object):
 
         rows = []
         for metric in info_dict:
-            rows.append({'Metrics': metric, 'Source': info_dict[metric]})
+            rows.append({"Metrics": metric, "Source": info_dict[metric]})
 
-        return Table(rows=rows, names=['Metrics', 'Source'])
+        return Table(rows=rows, names=["Metrics", "Source"])
 
     def cube_info(self, name, per_scale=False):
         """Compute cube info.
@@ -725,9 +725,9 @@ class CWTData(object):
                 for metric in info_dict:
                     rows.append(
                         {
-                            'Scale power': index + 1,
-                            'Metrics': metric,
-                            'Source': info_dict[metric],
+                            "Scale power": index + 1,
+                            "Metrics": metric,
+                            "Source": info_dict[metric],
                         }
                     )
 
@@ -736,17 +736,17 @@ class CWTData(object):
                 scale_mask[0] = False
                 mask.extend(scale_mask)
 
-            columns = ['Scale power', 'Metrics', 'Source']
+            columns = ["Scale power", "Metrics", "Source"]
             table = Table(rows=rows, names=columns, masked=True)
-            table['Scale power'].mask = mask
+            table["Scale power"].mask = mask
         elif per_scale is False:
             info_dict = self._metrics_info(data=cube.data, name=name)
             for metric in info_dict:
-                rows.append({'Metrics': metric, 'Source': info_dict[metric]})
-            columns = ['Metrics', 'Source']
+                rows.append({"Metrics": metric, "Source": info_dict[metric]})
+            columns = ["Metrics", "Source"]
             table = Table(rows=rows, names=columns)
         else:
-            raise ValueError('Incorrect value for per_scale attribute.')
+            raise ValueError("Incorrect value for per_scale attribute.")
 
         return table
 
@@ -782,16 +782,16 @@ class CWTData(object):
         header = self._geom2d.make_header()
         hdu_list = fits.HDUList()
         hdu_list.append(fits.PrimaryHDU())
-        hdu_list.append(fits.ImageHDU(data=self._counts, header=header, name='counts'))
+        hdu_list.append(fits.ImageHDU(data=self._counts, header=header, name="counts"))
         hdu_list.append(
-            fits.ImageHDU(data=self._background, header=header, name='background')
+            fits.ImageHDU(data=self._background, header=header, name="background")
         )
-        hdu_list.append(fits.ImageHDU(data=self._model, header=header, name='model'))
-        hdu_list.append(fits.ImageHDU(data=self._approx, header=header, name='approx'))
+        hdu_list.append(fits.ImageHDU(data=self._model, header=header, name="model"))
+        hdu_list.append(fits.ImageHDU(data=self._approx, header=header, name="approx"))
         hdu_list.append(
-            fits.ImageHDU(data=self._transform_2d, header=header, name='transform_2d')
+            fits.ImageHDU(data=self._transform_2d, header=header, name="transform_2d")
         )
         hdu_list.append(
-            fits.ImageHDU(data=self._approx_bkg, header=header, name='approx_bkg')
+            fits.ImageHDU(data=self._approx_bkg, header=header, name="approx_bkg")
         )
         hdu_list.writeto(filename, overwrite=overwrite)
