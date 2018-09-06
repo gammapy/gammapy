@@ -13,6 +13,7 @@ import time
 from unittest import TestCase
 from ..extern.pathlib import Path
 
+
 log = logging.getLogger(__name__)
 
 
@@ -21,38 +22,40 @@ log = logging.getLogger(__name__)
 def cli_jupyter_black(ctx):
     """Format code cells with black."""
 
-    jupyterfile = Path(ctx.obj['file'])
+    nblist = build_nblist(ctx)
 
-    try:
-        nb = nbformat.read(str(jupyterfile), as_version=nbformat.NO_CONVERT)
-    except Exception as ex:
-        log.error('Error parsing file {}'.format(str(jupyterfile)))
-        log.error(ex)
-        sys.exit()
+    for notebook in nblist:
 
-    # paint cells in black
-    for cellnumber, cell in enumerate(nb.cells):
-        fmt = nb.cells[cellnumber]['source']
-        if nb.cells[cellnumber]['cell_type'] == 'code':
-            try:
-                semicolon = 0
-                fmt = comment_magics(fmt)
-                if fmt.endswith(';'):
-                    semicolon = 1
-                fmt = format_str(src_contents=fmt,
-                                 line_length=79).rstrip()
-                if semicolon:
-                    fmt += ';'
-            except Exception as ex:
-                logging.info(ex)
-            fmt = fmt.replace("###-MAGIC COMMAND-", "")
-        nb.cells[cellnumber]['source'] = fmt
+        try:
+            nb = nbformat.read(str(notebook), as_version=nbformat.NO_CONVERT)
+        except Exception as ex:
+            log.error('Error parsing file {}'.format(str(notebook)))
+            log.error(ex)
+            sys.exit()
 
-    # write formatted notebook
-    nbformat.write(nb, str(jupyterfile))
+        # paint cells in black
+        for cellnumber, cell in enumerate(nb.cells):
+            fmt = nb.cells[cellnumber]['source']
+            if nb.cells[cellnumber]['cell_type'] == 'code':
+                try:
+                    semicolon = 0
+                    fmt = comment_magics(fmt)
+                    if fmt.endswith(';'):
+                        semicolon = 1
+                    fmt = format_str(src_contents=fmt,
+                                     line_length=79).rstrip()
+                    if semicolon:
+                        fmt += ';'
+                except Exception as ex:
+                    logging.info(ex)
+                fmt = fmt.replace("###-MAGIC COMMAND-", "")
+            nb.cells[cellnumber]['source'] = fmt
 
-    # inform
-    print('Jupyter notebook {} painted in black.'.format(str(jupyterfile)))
+        # write formatted notebook
+        nbformat.write(nb, str(notebook))
+
+        # inform
+        print('Jupyter notebook {} painted in black.'.format(str(notebook)))
 
 
 @click.command(name='stripout')
@@ -60,14 +63,16 @@ def cli_jupyter_black(ctx):
 def cli_jupyter_stripout(ctx):
     """Strip output cells."""
 
-    jupyterfile = Path(ctx.obj['file'])
+    nblist = build_nblist(ctx)
 
-    try:
-        subprocess.call(f'nbstripout {jupyterfile}', shell=True)
-        print('Jupyter notebook {} stripped out.'.format(str(jupyterfile)))
-    except Exception as ex:
-        log.error('Error stripping file {}'.format(str(jupyterfile)))
-        log.error(ex)
+    for notebook in nblist:
+
+        try:
+            subprocess.call(f'nbstripout {notebook}', shell=True)
+            print('Jupyter notebook {} stripped out.'.format(str(notebook)))
+        except Exception as ex:
+            log.error('Error stripping file {}'.format(str(notebook)))
+            log.error(ex)
 
 
 @click.command(name='execute')
@@ -75,18 +80,20 @@ def cli_jupyter_stripout(ctx):
 def cli_jupyter_execute(ctx):
     """Execute jupyter notebook."""
 
-    jupyterfile = Path(ctx.obj['file'])
+    nblist = build_nblist(ctx)
 
-    try:
-        t = time.time()
-        subprocess.call(
-            f'jupyter nbconvert --ExecutePreprocessor.timeout=None --to notebook --execute {jupyterfile} --output {jupyterfile}',
-            shell=True)
-        t = (time.time() - t) / 60
-        print(f'Executing duration: {t:.2f} mn')
-    except Exception as ex:
-        log.error('Error executing file {}'.format(str(jupyterfile)))
-        log.error(ex)
+    for notebook in nblist:
+
+        try:
+            t = time.time()
+            subprocess.call(
+                f"jupyter nbconvert --allow-errors --ExecutePreprocessor.timeout=None --ExecutePreprocessor.kernel_name=python3 --to notebook --execute '{notebook}' --inplace",
+                shell=True)
+            t = (time.time() - t) / 60
+            print(f'Executing duration: {t:.2f} mn')
+        except Exception as ex:
+            log.error('Error executing file {}'.format(str(notebook)))
+            log.error(ex)
 
 
 @click.command(name='test')
@@ -94,17 +101,22 @@ def cli_jupyter_execute(ctx):
 def cli_jupyter_test(ctx):
     """Check if jupyter notebook is broken."""
 
-    jupyterfile = Path(ctx.obj['file'])
-
-    # ignore all files except jupyterfile
+    notebook = Path(ctx.obj['file'])
+    folder = Path(ctx.obj['fold'])
     ignorelist = []
-    for f in jupyterfile.parent.iterdir():
-        if jupyterfile.name != f.name and f.name.endswith('.ipynb'):
-            nbname = f.name.replace('.ipynb', '')
-            ignorelist.append(nbname)
+
+    if ctx.obj['file']:
+        # ignore all files except jupyterfile
+        for f in notebook.parent.iterdir():
+            if notebook.name != f.name and f.name.endswith('.ipynb'):
+                nbname = f.name.replace('.ipynb', '')
+                ignorelist.append(nbname)
+        folder = notebook.parent
+
+        print('oups')
 
     testnb = testipynb.TestNotebooks(
-        directory=str(jupyterfile.parent), ignore=ignorelist)
+        directory=str(folder), ignore=ignorelist)
     TestCase.assertTrue(testnb, testnb.run_tests())
 
 
@@ -122,3 +134,16 @@ def comment_magics(input):
         else:
             output = output + line
     return output
+
+
+def build_nblist(ctx):
+    """Fill list of notebooks in a the given folder."""
+
+    nblist = []
+    if ctx.obj['file']:
+        nblist.append(Path(ctx.obj['file']))
+    else:
+        for f in Path(ctx.obj['fold']).iterdir():
+            if f.name.endswith('.ipynb'):
+                nblist.append(f)
+    return nblist

@@ -84,16 +84,23 @@ def cli_download(ctx, folder):
 
 
 @cli.group('jupyter', short_help='Perform actions on notebooks')
-@click.option('--file', prompt='target file',
+@click.option('--file', default='',
               help='Jupyter notebook filename.')
+@click.option('--fold', default='.',
+              help='Local folder with Jupyter notebooks.')
 @click.pass_context
-def cli_jupyter(ctx, file):
+def cli_jupyter(ctx, file, fold):
     """
     Perform a series of actions on Jupyter notebooks.
     """
     ctx.obj = {
         'file': file,
+        'fold': fold,
     }
+
+    if file and fold != '.':
+        print('--file and --fold are exclusive options, only one is allowed.')
+        sys.exit()
 
 
 def add_subcommands():
