@@ -71,16 +71,12 @@ def exptest_multi(table_events):
                 and table_obs['obs_id'][i] == table_events['obs_id'][j]
                 and table_events['obs_id'][j] == table_events['obs_id'][j + 1]
             ):
-                time_delta_each_run.append(
-                    (table_events['mjd'][j + 1] - table_events['mjd'][j])
-                    * 0.5
-                    * (table_events['expCount'][j + 1] + table_events['expCount'][j])
+                time_delta = (table_events['mjd'][j + 1] - table_events['mjd'][j]) / 2
+                time_delta *= (
+                    table_events['expCount'][j + 1] + table_events['expCount'][j]
                 )
-                time_delta_all.append(
-                    (table_events['mjd'][j + 1] - table_events['mjd'][j])
-                    * 0.5
-                    * (table_events['expCount'][j + 1] + table_events['expCount'][j])
-                )
+                time_delta_each_run.append(time_delta)
+                time_delta_all.append(time_delta)
 
         if len(time_delta_each_run) == 0:
             continue

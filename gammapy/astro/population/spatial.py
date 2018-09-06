@@ -98,12 +98,9 @@ class CaseBattacharya1998(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, alpha, beta):
         """Evaluate model."""
-        term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** alpha
-        term2 = np.exp(
-            -beta
-            * (r - D_SUN_TO_GALACTIC_CENTER.value)
-            / D_SUN_TO_GALACTIC_CENTER.value
-        )
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        term1 = (r / d_sun) ** alpha
+        term2 = np.exp(-beta * (r - d_sun) / d_sun)
         return amplitude * term1 * term2
 
 
@@ -149,12 +146,9 @@ class YusifovKucuk2004(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, a, b, r_1):
         """Evaluate model."""
-        term1 = ((r + r_1) / (D_SUN_TO_GALACTIC_CENTER.value + r_1)) ** a
-        term2 = np.exp(
-            -b
-            * (r - D_SUN_TO_GALACTIC_CENTER.value)
-            / (D_SUN_TO_GALACTIC_CENTER.value + r_1)
-        )
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        term1 = ((r + r_1) / (d_sun + r_1)) ** a
+        term2 = np.exp(-b * (r - d_sun) / (d_sun + r_1))
         return amplitude * term1 * term2
 
 
@@ -195,11 +189,8 @@ class YusifovKucuk2004B(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, a, b):
         """Evaluate model."""
-        return (
-            amplitude
-            * (r / D_SUN_TO_GALACTIC_CENTER.value) ** a
-            * np.exp(-b * (r / D_SUN_TO_GALACTIC_CENTER.value))
-        )
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        return amplitude * (r / d_sun) ** a * np.exp(-b * (r / d_sun))
 
 
 class FaucherKaspi2006(Fittable1DModel):
@@ -279,10 +270,9 @@ class Lorimer2006(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, B, C):
         """Evaluate model."""
-        term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** B
-        term2 = np.exp(
-            -C * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value
-        )
+        d_sun = D_SUN_TO_GALACTIC_CENTER.value
+        term1 = (r / d_sun) ** B
+        term2 = np.exp(-C * (r - d_sun) / d_sun)
         return amplitude * term1 * term2
 
 
@@ -488,11 +478,10 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        N = random_state.randint(0, 4, radius.size)  # Choose Spiralarm
-        theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]  # Compute angle
-        spiralarm = self.spiralarms[
-            N
-        ]  # List that contains in wich spiralarm a postion lies
+        # Choose spiral arm
+        N = random_state.randint(0, 4, radius.size)
+        theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]
+        spiralarm = self.spiralarms[N]
 
         if blur:  # Apply blurring model according to Faucher
             radius, theta = self._blur(radius, theta, random_state=random_state)

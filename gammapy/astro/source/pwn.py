@@ -133,13 +133,9 @@ class PWN(object):
         else:
             raise ValueError('Need time variable or age attribute.')
 
-        return np.sqrt(
-            2
-            * const.mu0
-            * self.eta_B
-            * self.pulsar.energy_integrated(t)
-            / (4. / 3 * np.pi * self.radius(t) ** 3)
-        )
+        energy = self.pulsar.energy_integrated(t)
+        volume = 4. / 3 * np.pi * self.radius(t) ** 3
+        return np.sqrt(2 * const.mu0 * self.eta_B * energy / volume)
 
     def luminosity_tev(self, t=None, fraction=0.1):
         """TeV luminosity from a simple evolution model.
