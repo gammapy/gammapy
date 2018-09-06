@@ -1,12 +1,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__all__ = [
-    'fit_sherpa',
-]
+__all__ = ['fit_sherpa']
 
 
 def get_sherpa_optimiser(name):
     from sherpa.optmethods import LevMar, NelderMead, MonCar, GridSearch
+
     return {
         'levmar': LevMar,
         'simplex': NelderMead,
@@ -66,10 +65,7 @@ def fit_sherpa(parameters, function, optimizer='simplex'):
     statfunc = SherpaFunction(function, parameters)
 
     result = optimizer.fit(
-        statfunc=statfunc.fcn,
-        pars=pars,
-        parmins=parmins,
-        parmaxes=parmaxes,
+        statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
     )
 
     result = {

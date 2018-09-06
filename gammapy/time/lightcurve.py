@@ -10,10 +10,7 @@ from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
 from ..stats.poisson import significance_on_off
 
-__all__ = [
-    'LightCurve',
-    'LightCurveEstimator',
-]
+__all__ = ['LightCurve', 'LightCurveEstimator']
 
 
 class LightCurve(object):
@@ -174,6 +171,7 @@ class LightCurve(object):
             Tuple of Chi-square and P-value
         """
         import scipy.stats as stats
+
         flux = self.table['flux']
         yexp = np.mean(flux)
         yobs = flux.data
@@ -212,8 +210,10 @@ class LightCurve(object):
         x, xerr = self._get_times_and_errors(time_format)
 
         # length of the ul arrow
-        ul_arr = (np.nanmax(np.concatenate((y[~is_ul], yul[is_ul]))) -
-                  np.nanmin(np.concatenate((y[~is_ul], yul[is_ul])))) * 0.1
+        ul_arr = (
+            np.nanmax(np.concatenate((y[~is_ul], yul[is_ul])))
+            - np.nanmin(np.concatenate((y[~is_ul], yul[is_ul])))
+        ) * 0.1
 
         # join fluxes and upper limits for the plot
         y[is_ul] = yul[is_ul]
@@ -228,8 +228,12 @@ class LightCurve(object):
         ax.set_ylabel('Flux ({0:FITS})'.format(u.Unit(flux_unit)))
         if time_format == 'iso':
             ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d %H:%M:%S'))
-            plt.setp(ax.xaxis.get_majorticklabels(), rotation=30, ha="right",
-                     rotation_mode="anchor")
+            plt.setp(
+                ax.xaxis.get_majorticklabels(),
+                rotation=30,
+                ha="right",
+                rotation_mode="anchor",
+            )
 
         return ax
 
@@ -337,7 +341,8 @@ class LightCurve(object):
             xn, xp = xn.to('d').value, xp.to('d').value
         else:
             raise ValueError(
-                "The time format '{}' is not supported.".format(time_format))
+                "The time format '{}' is not supported.".format(time_format)
+            )
 
         return x, (xn, xp)
 
@@ -417,12 +422,17 @@ class LightCurveEstimator(object):
         time = time_start.value
         while time < time_end.value:
             time += time_step
-            rows.append(dict(
-                t_start=Time(time - time_step, format="mjd", scale='tt'),
-                t_stop=Time(time, format="mjd", scale='tt')))
+            rows.append(
+                dict(
+                    t_start=Time(time - time_step, format="mjd", scale='tt'),
+                    t_stop=Time(time, format="mjd", scale='tt'),
+                )
+            )
         return Table(rows=rows)
 
-    def _create_and_filter_onofflists(self, t_index, energy_range=None, interval=None, extra=False):
+    def _create_and_filter_onofflists(
+        self, t_index, energy_range=None, interval=None, extra=False
+    ):
         """Extract on and off events list from an observation and apply energy and time filters
 
         Helper function for compute_flux_point and make_time_intervals_min_significance
@@ -453,7 +463,9 @@ class LightCurveEstimator(object):
         e_reco = spec.e_reco
         if energy_range is not None:
             emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
-            emax = e_reco[e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1]
+            emax = e_reco[
+                e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1
+            ]
             # filter the event list with energy
             on = on.select_energy([emin, emax])
             on = on.select_energy(energy_range)
@@ -497,33 +509,57 @@ class LightCurveEstimator(object):
         time = 0
         xm1 = istart
         # loop over observations
-        for x in in_list('end', time_holder[istart:i + 1]):
+        for x in in_list('end', time_holder[istart : i + 1]):
             if tmp == 0:
-                alpha += (1 - obs_properties['deadtime'][n]) * (
-                        float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2) * \
-                         obs_properties['A_off'][n + tmp]
+                alpha += (
+                    (1 - obs_properties['deadtime'][n])
+                    * (
+                        float(time_holder[x][0])
+                        - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0]))
+                        / 2
+                    )
+                    * obs_properties['A_off'][n + tmp]
+                )
                 time += (1 - obs_properties['deadtime'][n]) * (
-                        float(time_holder[x][0]) - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2)
+                    float(time_holder[x][0])
+                    - (float(time_holder[xm1][0]) + float(time_holder[xm1 - 1][0])) / 2
+                )
                 xm1 = x + 1
                 tmp += 1
             else:
-                alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
-                        float(time_holder[x][0]) - float(time_holder[xm1][0])) * \
-                         obs_properties['A_off'][n + tmp]
+                alpha += (
+                    (1 - obs_properties['deadtime'][n + tmp])
+                    * (float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                    * obs_properties['A_off'][n + tmp]
+                )
                 time += (1 - obs_properties['deadtime'][n + tmp]) * (
-                        float(time_holder[x][0]) - float(time_holder[xm1][0]))
+                    float(time_holder[x][0]) - float(time_holder[xm1][0])
+                )
                 xm1 = x + 1
                 tmp += 1
-        alpha += (1 - obs_properties['deadtime'][n + tmp]) * (
-                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0])) * \
-                 obs_properties['A_off'][n + tmp]
+        alpha += (
+            (1 - obs_properties['deadtime'][n + tmp])
+            * (
+                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2
+                - float(time_holder[xm1][0])
+            )
+            * obs_properties['A_off'][n + tmp]
+        )
         time += (1 - obs_properties['deadtime'][n + tmp]) * (
-                (float(time_holder[i][0]) + float(time_holder[i][0])) / 2 - float(time_holder[xm1][0]))
+            (float(time_holder[i][0]) + float(time_holder[i][0])) / 2
+            - float(time_holder[xm1][0])
+        )
         alpha = time / alpha
         return alpha
 
-    def make_time_intervals_min_significance(self, significance, significance_method, energy_range,
-                                             spectrum_extraction, separators=None):
+    def make_time_intervals_min_significance(
+        self,
+        significance,
+        significance_method,
+        energy_range,
+        spectrum_extraction,
+        separators=None,
+    ):
         """
         Create time intervals such that each bin of a light curve reach a given significance
 
@@ -571,14 +607,20 @@ class LightCurveEstimator(object):
         for obs in spectrum_extraction.obs_list:
             time_holder.append([obs.events.observation_time_start.tt.mjd, 'start'])
             time_holder.append([obs.events.observation_time_end.tt.mjd, 'end'])
-            obs_properties.append(dict(deadtime=obs.observation_dead_time_fraction,
-                                       A_off=spectrum_extraction.bkg_estimate[n_obs].a_off))
+            obs_properties.append(
+                dict(
+                    deadtime=obs.observation_dead_time_fraction,
+                    A_off=spectrum_extraction.bkg_estimate[n_obs].a_off,
+                )
+            )
             n_obs += 1
         obs_properties = Table(rows=obs_properties)
 
         # prepare the on and off photon list as in the flux point computation -> should be updated accordingly
         for t_index, obs in enumerate(self.obs_list):
-            on, off = self._create_and_filter_onofflists(t_index=t_index, energy_range=energy_range)
+            on, off = self._create_and_filter_onofflists(
+                t_index=t_index, energy_range=energy_range
+            )
 
             for time in on.time.tt.mjd:
                 time_holder.append([time, 'on'])
@@ -607,21 +649,35 @@ class LightCurveEstimator(object):
             # compute alpha
             alpha = self._alpha(time_holder, obs_properties, n, istart, i)
 
-            non = np.sum(time_holder[istart:i + 1] == 'on')
-            noff = np.sum(time_holder[istart:i + 1] == 'off')
+            non = np.sum(time_holder[istart : i + 1] == 'on')
+            noff = np.sum(time_holder[istart : i + 1] == 'off')
 
             # check the significance
             signif = significance_on_off(non, noff, alpha, method=significance_method)
             if signif > significance:
-                rows.append(dict(
-                    t_start=(float(time_holder[istart - 1][0]) + float(time_holder[istart][0])) / 2,
-                    t_stop=(float(time_holder[i][0]) + float(time_holder[i + 1][0])) / 2,
-                    n_on=non, n_off=noff, alpha=alpha, significance=signif))
+                rows.append(
+                    dict(
+                        t_start=(
+                            float(time_holder[istart - 1][0])
+                            + float(time_holder[istart][0])
+                        )
+                        / 2,
+                        t_stop=(float(time_holder[i][0]) + float(time_holder[i + 1][0]))
+                        / 2,
+                        n_on=non,
+                        n_off=noff,
+                        alpha=alpha,
+                        significance=signif,
+                    )
+                )
                 # start the next interval
-                while time_holder[i + 1][0] < time_holder[-1][0] and time_holder[i + 1][1] != 'on' and \
-                        time_holder[i + 1][1] != 'off':
+                while (
+                    time_holder[i + 1][0] < time_holder[-1][0]
+                    and time_holder[i + 1][1] != 'on'
+                    and time_holder[i + 1][1] != 'off'
+                ):
                     i += 1
-                n += np.sum(time_holder[istart:i + 1] == 'end')
+                n += np.sum(time_holder[istart : i + 1] == 'end')
                 istart = i + 1
                 i = istart
         table = Table(rows=rows)
@@ -629,7 +685,9 @@ class LightCurveEstimator(object):
         table['t_stop'] = Time(table['t_stop'], format='mjd', scale='tt')
         return table
 
-    def light_curve(self, time_intervals, spectral_model, energy_range, ul_significance=3):
+    def light_curve(
+        self, time_intervals, spectral_model, energy_range, ul_significance=3
+    ):
         """Compute light curve.
 
         Implementation follows what is done in:
@@ -656,7 +714,9 @@ class LightCurveEstimator(object):
         """
         rows = []
         for time_interval in time_intervals:
-            useinterval, row = self.compute_flux_point(time_interval, spectral_model, energy_range, ul_significance)
+            useinterval, row = self.compute_flux_point(
+                time_interval, spectral_model, energy_range, ul_significance
+            )
             if useinterval:
                 rows.append(row)
 
@@ -682,7 +742,9 @@ class LightCurveEstimator(object):
 
         return LightCurve(table)
 
-    def compute_flux_point(self, time_interval, spectral_model, energy_range, ul_significance=3):
+    def compute_flux_point(
+        self, time_interval, spectral_model, energy_range, ul_significance=3
+    ):
         """Compute one flux point for one time interval.
 
         Parameters
@@ -723,8 +785,12 @@ class LightCurveEstimator(object):
                 continue
             useinterval = True
             # get ON and OFF evt list
-            on, off, spec, e_reco = self._create_and_filter_onofflists(t_index=t_index, energy_range=energy_range,
-                                                                       interval=[tmin, tmax], extra=True)
+            on, off, spec, e_reco = self._create_and_filter_onofflists(
+                t_index=t_index,
+                energy_range=energy_range,
+                interval=[tmin, tmax],
+                extra=True,
+            )
             n_on_obs = len(on.table)
             n_off_obs = len(off.table)
 
@@ -745,7 +811,7 @@ class LightCurveEstimator(object):
                 livetime_to_add = 0 * u.s
 
             # Take into account dead time
-            livetime_to_add *= (1. - obs.observation_dead_time_fraction)
+            livetime_to_add *= 1. - obs.observation_dead_time_fraction
 
             # Compute excess
             obs_measured_excess = n_on_obs - spec.alpha * n_off_obs
@@ -754,17 +820,21 @@ class LightCurveEstimator(object):
             # but must respect the energy threshold of the observation
             # (to match the energy range of the measured excess)
             # We use the effective livetime and the right energy threshold
-            e_idx = np.where(np.logical_and.reduce(
-                (e_reco >= spec.lo_threshold,  # threshold
-                 e_reco <= spec.hi_threshold,  # threshold
-                 e_reco >= energy_range[0],  # user
-                 e_reco <= energy_range[-1])  # user
-            ))[0]
+            e_idx = np.where(
+                np.logical_and.reduce(
+                    (
+                        e_reco >= spec.lo_threshold,  # threshold
+                        e_reco <= spec.hi_threshold,  # threshold
+                        e_reco >= energy_range[0],  # user
+                        e_reco <= energy_range[-1],
+                    )  # user
+                )
+            )[0]
             counts_predictor = CountsPredictor(
                 livetime=livetime_to_add,
                 aeff=spec.aeff,
                 edisp=spec.edisp,
-                model=spectral_model
+                model=spectral_model,
             )
             counts_predictor.run()
             counts_predicted_excess = counts_predictor.npred.data.data[e_idx[:-1]]
@@ -799,9 +869,13 @@ class LightCurveEstimator(object):
             delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
             flux_err *= delta_excess
 
-            sigma = significance_on_off(n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima')
+            sigma = significance_on_off(
+                n_on=n_on, n_off=n_off, alpha=alpha_mean, method='lima'
+            )
             is_ul = sigma <= 3
-            flux_ul = excess_ul_helene(n_on - alpha_mean * n_off, delta_excess, ul_significance)
+            flux_ul = excess_ul_helene(
+                n_on - alpha_mean * n_off, delta_excess, ul_significance
+            )
             flux_ul *= int_flux / predicted_excess.value
         else:
             flux = 0
@@ -809,17 +883,22 @@ class LightCurveEstimator(object):
             flux_ul = -1
 
         # Store measurements in a dict and return that
-        return useinterval, OrderedDict([
-            ('time_min', Time(tmin, format='mjd')),
-            ('time_max', Time(tmax, format='mjd')),
-            ('flux', flux * u.Unit('1 / (s cm2)')),
-            ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
-            ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
-            ('is_ul', is_ul),
-            ('livetime', livetime * u.s),
-            ('alpha', alpha_mean),
-            ('n_on', n_on),
-            ('n_off', n_off),
-            ('measured_excess', measured_excess),
-            ('expected_excess', predicted_excess),
-        ])
+        return (
+            useinterval,
+            OrderedDict(
+                [
+                    ('time_min', Time(tmin, format='mjd')),
+                    ('time_max', Time(tmax, format='mjd')),
+                    ('flux', flux * u.Unit('1 / (s cm2)')),
+                    ('flux_err', flux_err * u.Unit('1 / (s cm2)')),
+                    ('flux_ul', flux_ul * u.Unit('1 / (s cm2)')),
+                    ('is_ul', is_ul),
+                    ('livetime', livetime * u.s),
+                    ('alpha', alpha_mean),
+                    ('n_on', n_on),
+                    ('n_off', n_off),
+                    ('measured_excess', measured_excess),
+                    ('expected_excess', predicted_excess),
+                ]
+            ),
+        )

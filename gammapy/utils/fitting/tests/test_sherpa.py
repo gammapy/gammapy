@@ -17,12 +17,11 @@ def fcn(parameters):
 # TODO: levmar doesn't work yet; needs array of statval as return in likelihood
 # optimiser='gridsearch' would require very low tolerance asserts, not added for now
 
+
 @requires_dependency('sherpa')
 @pytest.mark.parametrize('optimizer', ['moncar', 'simplex'])
 def test_sherpa(optimizer):
-    pars = Parameters(
-        [Parameter('x', 2.2), Parameter('y', 3.4), Parameter('z', 4.5)]
-    )
+    pars = Parameters([Parameter('x', 2.2), Parameter('y', 3.4), Parameter('z', 4.5)])
 
     result = fit_sherpa(function=fcn, parameters=pars, optimizer=optimizer)
 

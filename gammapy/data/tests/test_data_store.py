@@ -19,8 +19,14 @@ def test_datastore_hd_hap(data_store):
 
     assert str(type(obs.events)) == "<class 'gammapy.data.event_list.EventList'>"
     assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
-    assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
-    assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
+    assert (
+        str(type(obs.aeff))
+        == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
+    )
+    assert (
+        str(type(obs.edisp))
+        == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
+    )
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_3d.PSF3D'>"
 
 
@@ -33,8 +39,14 @@ def test_datastore_pa():
     filename = str(obs.location(hdu_type='bkg').path(abs_path=False))
     assert filename == 'background/bgmodel_alt7_az0.fits.gz'
 
-    assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
-    assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
+    assert (
+        str(type(obs.aeff))
+        == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
+    )
+    assert (
+        str(type(obs.edisp))
+        == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
+    )
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_king.PSFKing'>"
     assert str(type(obs.bkg)) == "<class 'gammapy.irf.background.Background3D'>"
 
@@ -82,7 +94,9 @@ def test_datastore_subset(tmpdir, data_store):
 @requires_data('gammapy-extra')
 class TestDataStoreChecker:
     def setup(self):
-        self.data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps')
+        self.data_store = DataStore.from_dir(
+            '$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps'
+        )
 
     def test_check_all(self):
         records = list(self.data_store.check())

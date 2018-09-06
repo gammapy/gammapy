@@ -82,12 +82,12 @@ def test_psf_3d_plot_vs_rad(psf_3d):
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
 def test_psf_3d_plot_containment(psf_3d):
-    with mpl_plot_check():     
+    with mpl_plot_check():
         psf_3d.plot_containment(show_safe_energy=True)
 
 
 @requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
 def test_psf_3d_peek(psf_3d):
-    with mpl_plot_check():    
+    with mpl_plot_check():
         psf_3d.peek()

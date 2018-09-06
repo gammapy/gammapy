@@ -3,13 +3,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.time import TimeDelta
 from ..utils.random import get_random_state
 
-__all__ = [
-    'random_times',
-]
+__all__ = ['random_times']
 
 
-def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
-                 return_diff=False, random_state='random-seed'):
+def random_times(
+    size,
+    rate,
+    dead_time=TimeDelta(0, format='sec'),
+    return_diff=False,
+    random_state='random-seed',
+):
     """Make random times assuming a Poisson process.
 
     This function can be used to test event time series,

@@ -37,7 +37,9 @@ def test_powerlaw_energy_flux():
 def test_e_pivot():
     """Hard-coded example from fit example in survey/spectra.
     """
-    e_pivot = power_law_pivot_energy(energy_ref=1, f0=5.35510540e-11, d_gamma=0.0318377, cov=6.56889442e-14)
+    e_pivot = power_law_pivot_energy(
+        energy_ref=1, f0=5.35510540e-11, d_gamma=0.0318377, cov=6.56889442e-14
+    )
 
     assert_allclose(e_pivot, 3.3540034240210987)
 

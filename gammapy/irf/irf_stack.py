@@ -5,9 +5,7 @@ import numpy as np
 from astropy.units import Quantity
 from ..irf import EffectiveAreaTable, EnergyDispersion
 
-__all__ = [
-    'IRFStacker',
-]
+__all__ = ['IRFStacker']
 
 log = logging.getLogger(__name__)
 
@@ -51,8 +49,14 @@ class IRFStacker(object):
         list of high energy threshold, optional for effective area mean computation
     """
 
-    def __init__(self, list_aeff, list_livetime, list_edisp=None,
-                 list_low_threshold=None, list_high_threshold=None):
+    def __init__(
+        self,
+        list_aeff,
+        list_livetime,
+        list_edisp=None,
+        list_low_threshold=None,
+        list_high_threshold=None,
+    ):
         self.list_aeff = list_aeff
         self.list_livetime = Quantity(list_livetime)
         self.list_edisp = list_edisp
@@ -78,7 +82,7 @@ class IRFStacker(object):
         self.stacked_aeff = EffectiveAreaTable(
             energy_lo=self.list_aeff[0].energy.lo,
             energy_hi=self.list_aeff[0].energy.hi,
-            data=stacked_data.to('cm2')
+            data=stacked_data.to('cm2'),
         )
 
     def stack_edisp(self):
@@ -96,8 +100,9 @@ class IRFStacker(object):
             aeff_data = self.list_aeff[i].evaluate_fill_nan()
             aefft_current = aeff_data * self.list_livetime[i]
             aefft += aefft_current
-            edisp_data = edisp.pdf_in_safe_range(self.list_low_threshold[i],
-                                                 self.list_high_threshold[i])
+            edisp_data = edisp.pdf_in_safe_range(
+                self.list_low_threshold[i], self.list_high_threshold[i]
+            )
 
             aefftedisp += edisp_data.transpose() * aefft_current
 
@@ -109,4 +114,5 @@ class IRFStacker(object):
             e_true_hi=self.list_edisp[0].e_true.hi,
             e_reco_lo=self.list_edisp[0].e_reco.lo,
             e_reco_hi=self.list_edisp[0].e_reco.hi,
-            data=stacked_edisp.transpose())
+            data=stacked_edisp.transpose(),
+        )

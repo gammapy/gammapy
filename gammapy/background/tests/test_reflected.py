@@ -3,8 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from ...utils.testing import (requires_data, requires_dependency,
-                              assert_quantity_allclose, mpl_plot_check)
+from ...utils.testing import (
+    requires_data,
+    requires_dependency,
+    assert_quantity_allclose,
+    mpl_plot_check,
+)
 from ...maps import WcsNDMap, WcsGeom
 from ...data import DataStore
 from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
@@ -41,9 +45,7 @@ def obs_list():
 def bkg_estimator():
     """Example background estimator for testing."""
     return ReflectedRegionsBackgroundEstimator(
-        obs_list=obs_list(),
-        on_region=on_region(),
-        exclusion_mask=mask(),
+        obs_list=obs_list(), on_region=on_region(), exclusion_mask=mask()
     )
 
 
@@ -51,10 +53,12 @@ def bkg_estimator():
 @requires_data('gammapy-extra')
 def test_find_reflected_regions(mask, on_region):
     pointing = SkyCoord(83.2, 22.5, unit='deg')
-    fregions = ReflectedRegionsFinder(center=pointing,
-                                      region=on_region,
-                                      exclusion_mask=mask,
-                                      min_distance_input=Angle('0 deg'))
+    fregions = ReflectedRegionsFinder(
+        center=pointing,
+        region=on_region,
+        exclusion_mask=mask,
+        min_distance_input=Angle('0 deg'),
+    )
     fregions.run()
     regions = fregions.reflected_regions
     assert len(regions) == 15
@@ -84,7 +88,6 @@ def test_find_reflected_regions(mask, on_region):
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 class TestReflectedRegionBackgroundEstimator:
-
     def setup(self):
         self.bg_maker = bkg_estimator()
 

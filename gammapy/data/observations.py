@@ -15,11 +15,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
 
-__all__ = [
-    'ObservationCTA',
-    'DataStoreObservation',
-    'ObservationList',
-]
+__all__ = ['ObservationCTA', 'DataStoreObservation', 'ObservationList']
 
 log = logging.getLogger(__name__)
 
@@ -77,9 +73,20 @@ class ObservationCTA(object):
 
     """
 
-    def __init__(self, obs_id=None, gti=None, events=None, aeff=None, edisp=None, psf=None, bkg=None,
-                 pointing_radec=None, observation_live_time_duration=None, observation_dead_time_fraction=None,
-                 meta=None):
+    def __init__(
+        self,
+        obs_id=None,
+        gti=None,
+        events=None,
+        aeff=None,
+        edisp=None,
+        psf=None,
+        bkg=None,
+        pointing_radec=None,
+        observation_live_time_duration=None,
+        observation_dead_time_fraction=None,
+        meta=None,
+    ):
         self.obs_id = obs_id
         self.gti = gti
         self.events = events
@@ -97,12 +104,17 @@ class ObservationCTA(object):
 
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
             self.pointing_radec.ra if self.pointing_radec else 'None',
-            self.pointing_radec.dec if self.pointing_radec else 'None')
+            self.pointing_radec.dec if self.pointing_radec else 'None',
+        )
 
         tstart = np.atleast_1d(self.gti.time_start.fits)[0] if self.gti else 'None'
         ss += '- Start time: {}\n'.format(tstart)
-        ss += '- Observation duration: {}\n'.format(self.gti.time_sum if self.gti else 'None')
-        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+        ss += '- Observation duration: {}\n'.format(
+            self.gti.time_sum if self.gti else 'None'
+        )
+        ss += '- Dead-time fraction: {:5.3f} %\n'.format(
+            100 * self.observation_dead_time_fraction
+        )
 
         return ss
 
@@ -131,9 +143,13 @@ class DataStoreObservation(object):
     def __str__(self):
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
         ss += '- Start time: {:.2f}\n'.format(self.tstart.mjd)
-        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)
+        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(
+            self.pointing_radec.ra, self.pointing_radec.dec
+        )
         ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
-        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+        ss += '- Dead-time fraction: {:5.3f} %\n'.format(
+            100 * self.observation_dead_time_fraction
+        )
 
         # TODO: Which target was observed?
         # TODO: print info about available HDUs for this observation ...
@@ -155,9 +171,7 @@ class DataStoreObservation(object):
             HDU location
         """
         return self.data_store.hdu_table.hdu_location(
-            obs_id=self.obs_id,
-            hdu_type=hdu_type,
-            hdu_class=hdu_class,
+            obs_id=self.obs_id, hdu_type=hdu_type, hdu_class=hdu_class
         )
 
     def load(self, hdu_type=None, hdu_class=None):
@@ -332,15 +346,20 @@ class DataStoreObservation(object):
         if isinstance(self.psf, PSF3D):
             # PSF3D is a table PSF, so we use the native RAD binning by default
             # TODO: should handle this via a uniform caller API
-            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
+            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset).evaluate(
+                energy
+            )
         else:
-            psf_value = self.psf.to_energy_dependent_table_psf(theta=offset, rad=rad).evaluate(energy)
+            psf_value = self.psf.to_energy_dependent_table_psf(
+                theta=offset, rad=rad
+            ).evaluate(energy)
 
         arf = self.aeff.data.evaluate(offset=offset, energy=energy)
         exposure = arf * self.observation_live_time_duration
 
-        psf = EnergyDependentTablePSF(energy=energy, rad=rad,
-                                      exposure=exposure, psf_value=psf_value)
+        psf = EnergyDependentTablePSF(
+            energy=energy, rad=rad, exposure=exposure, psf_value=psf_value
+        )
         return psf
 
     def to_observation_cta(self):
@@ -436,14 +455,19 @@ class ObservationList(UserList):
             psf_value += psf.psf_value.T * psf.exposure
 
         psf_value /= exposure
-        psf_tot = EnergyDependentTablePSF(energy=energy, rad=rad,
-                                          exposure=exposure,
-                                          psf_value=psf_value.T)
+        psf_tot = EnergyDependentTablePSF(
+            energy=energy, rad=rad, exposure=exposure, psf_value=psf_value.T
+        )
         return psf_tot
 
-    def make_mean_edisp(self, position, e_true, e_reco,
-                        low_reco_threshold=Energy(0.002, "TeV"),
-                        high_reco_threshold=Energy(150, "TeV")):
+    def make_mean_edisp(
+        self,
+        position,
+        e_true,
+        e_reco,
+        low_reco_threshold=Energy(0.002, "TeV"),
+        high_reco_threshold=Energy(150, "TeV"),
+    ):
         """Compute mean energy dispersion.
 
         Compute the mean edisp of a set of observations j at a given position
@@ -476,17 +500,19 @@ class ObservationList(UserList):
 
         for obs in self:
             offset = position.separation(obs.pointing_radec)
-            list_aeff.append(obs.aeff.to_effective_area_table(offset,
-                                                              energy=e_true))
-            list_edisp.append(obs.edisp.to_energy_dispersion(offset,
-                                                             e_reco=e_reco,
-                                                             e_true=e_true))
+            list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
+            list_edisp.append(
+                obs.edisp.to_energy_dispersion(offset, e_reco=e_reco, e_true=e_true)
+            )
             list_livetime.append(obs.observation_live_time_duration)
 
-        irf_stack = IRFStacker(list_aeff=list_aeff, list_edisp=list_edisp,
-                               list_livetime=list_livetime,
-                               list_low_threshold=list_low_threshold,
-                               list_high_threshold=list_high_threshold)
+        irf_stack = IRFStacker(
+            list_aeff=list_aeff,
+            list_edisp=list_edisp,
+            list_livetime=list_livetime,
+            list_low_threshold=list_low_threshold,
+            list_high_threshold=list_high_threshold,
+        )
         irf_stack.stack_edisp()
 
         return irf_stack.stacked_edisp
@@ -498,23 +524,21 @@ class ObservationChecker(Checker):
     Checks data format and a bit about the content.
     """
 
-    CHECKS = OrderedDict([
-        ('events', 'check_events'),
-        ('gti', 'check_gti'),
-        ('aeff', 'check_aeff'),
-        ('edisp', 'check_edisp'),
-        ('psf', 'check_psf'),
-    ])
+    CHECKS = OrderedDict(
+        [
+            ('events', 'check_events'),
+            ('gti', 'check_gti'),
+            ('aeff', 'check_aeff'),
+            ('edisp', 'check_edisp'),
+            ('psf', 'check_psf'),
+        ]
+    )
 
     def __init__(self, obs):
         self.obs = obs
 
     def _record(self, level='info', msg=None):
-        return {
-            'level': level,
-            'obs_id': self.obs.obs_id,
-            'msg': msg,
-        }
+        return {'level': level, 'obs_id': self.obs.obs_id, 'msg': msg}
 
     def check_events(self):
         yield self._record(level='debug', msg='Starting events check')
@@ -544,7 +568,9 @@ class ObservationChecker(Checker):
         columns_required = ['START', 'STOP']
         for name in columns_required:
             if name not in gti.table.colnames:
-                yield self._record(level='error', msg='Missing table column: {!r}'.format(name))
+                yield self._record(
+                    level='error', msg='Missing table column: {!r}'.format(name)
+                )
 
         # TODO: Check that header keywords agree with table entries
         # TSTART, TSTOP, MJDREFI, MJDREFF
@@ -566,17 +592,18 @@ class ObservationChecker(Checker):
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
         telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01T00:00:00'),
-            HESS=Time('2001-01-01T00:00:00'),
+            FERMI=Time('2001-01-01T00:00:00'), HESS=Time('2001-01-01T00:00:00')
         )
 
         meta = self.dset.event_list.table.meta
         telescope = meta['TELESCOP']
 
         if telescope in telescope_met_refs.keys():
-            dt = (self.time_ref - telescope_met_refs[telescope])
+            dt = self.time_ref - telescope_met_refs[telescope]
             if dt > self.accuracy['time']:
-                yield self._record(level='error', msg='Reference time incorrect for telescope')
+                yield self._record(
+                    level='error', msg='Reference time incorrect for telescope'
+                )
 
     def check_aeff(self):
         yield self._record(level='debug', msg='Starting aeff check')
@@ -588,12 +615,20 @@ class ObservationChecker(Checker):
             return
 
         # Check that thresholds are meaningful for aeff
-        if 'LO_THRES' in aeff.meta and 'HI_THRES' in aeff.meta and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']:
-            yield self._record(level='error', msg='LO_THRES >= HI_THRES in effective area meta data')
+        if (
+            'LO_THRES' in aeff.meta
+            and 'HI_THRES' in aeff.meta
+            and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']
+        ):
+            yield self._record(
+                level='error', msg='LO_THRES >= HI_THRES in effective area meta data'
+            )
 
         # Check that maximum value of aeff is greater than zero
         if np.max(aeff.data.data) <= 0:
-            yield self._record(level='error', msg='maximum entry of effective area table <= 0')
+            yield self._record(
+                level='error', msg='maximum entry of effective area table <= 0'
+            )
 
     def check_edisp(self):
         yield self._record(level='debug', msg='Starting edisp check')

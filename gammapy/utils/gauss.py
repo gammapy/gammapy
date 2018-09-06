@@ -213,8 +213,7 @@ class MultiGauss2D(object):
         where ``N`` is normalization and ``sigma`` is width.
 
         """
-        sigma2s = np.array([component._sigma2 for component
-                            in self.components])
+        sigma2s = np.array([component._sigma2 for component in self.components])
         return np.sqrt(np.sum(self.norms * sigma2s))
 
     def dpdtheta2(self, theta2):
@@ -289,8 +288,10 @@ class MultiGauss2D(object):
         # So instead I'll find a theta_max myself so that theta
         # is in the interval [0, theta_max] and then use good ol brentq
         if not containment_fraction < self.integral:
-            raise ValueError('containment_fraction = {} not possible for integral = {}'
-                             ''.format(containment_fraction, self.integral))
+            raise ValueError(
+                'containment_fraction = {} not possible for integral = {}'
+                ''.format(containment_fraction, self.integral)
+            )
         from scipy.optimize import brentq
 
         def f(theta):
@@ -484,7 +485,14 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     var_x_sum, var_y_sum = second_moment(parameters, F_sum, x_sum, y_sum, shift)
 
     # Return values and stddevs separately
-    values = [F_sum, x_sum, y_sum, var_x_sum ** 0.5, var_y_sum ** 0.5, (var_x_sum * var_y_sum) ** 0.25]
+    values = [
+        F_sum,
+        x_sum,
+        y_sum,
+        var_x_sum ** 0.5,
+        var_y_sum ** 0.5,
+        (var_x_sum * var_y_sum) ** 0.25,
+    ]
     nominal_values = [_.nominal_value for _ in values]
     std_devs = [float(_.std_dev) for _ in values]
 

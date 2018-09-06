@@ -40,7 +40,7 @@ def test_measure_image_moments(gaussian_image):
         0 * u.deg,
         0.2 * u.deg,
         0.2 * u.deg,
-        0.2 * u.deg
+        0.2 * u.deg,
     ]
 
     for val, ref in zip(moments, reference):
@@ -71,5 +71,7 @@ def test_measure_curve_of_growth(gaussian_image):
     radius_max = 0.6 * u.deg
     radius, containment = measure_curve_of_growth(gaussian_image, position, radius_max)
     sigma = 0.2 * u.deg
-    containment_ana = u.Quantity(1 - np.exp(-0.5 * (radius / sigma) ** 2).value, 'cm-2 s-1')
+    containment_ana = u.Quantity(
+        1 - np.exp(-0.5 * (radius / sigma) ** 2).value, 'cm-2 s-1'
+    )
     assert_quantity_allclose(containment, containment_ana, rtol=0.1)

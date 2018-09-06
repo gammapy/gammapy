@@ -35,15 +35,18 @@ def lc():
 
     meta = dict(TIMESYS='utc')
 
-    table = Table(meta=meta, data=[
-        Column(Time(['2010-01-02', '2010-01-05']).mjd, 'time'),
-        Column(Time(['2010-01-01', '2010-01-03']).mjd, 'time_min'),
-        Column(Time(['2010-01-03', '2010-01-10']).mjd, 'time_max'),
-        Column([1e-11, 3e-11], 'flux', unit='cm-2 s-1'),
-        Column([0.1e-11, 0.3e-11], 'flux_err', unit='cm-2 s-1'),
-        Column([np.nan, 3.6e-11], 'flux_ul', unit='cm-2 s-1'),
-        Column([False, True], 'is_ul'),
-    ])
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(['2010-01-02', '2010-01-05']).mjd, 'time'),
+            Column(Time(['2010-01-01', '2010-01-03']).mjd, 'time_min'),
+            Column(Time(['2010-01-03', '2010-01-10']).mjd, 'time_max'),
+            Column([1e-11, 3e-11], 'flux', unit='cm-2 s-1'),
+            Column([0.1e-11, 0.3e-11], 'flux_err', unit='cm-2 s-1'),
+            Column([np.nan, 3.6e-11], 'flux_ul', unit='cm-2 s-1'),
+            Column([False, True], 'is_ul'),
+        ],
+    )
 
     return LightCurve(table=table)
 
@@ -132,12 +135,23 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
 
 
 @requires_dependency('matplotlib')
-@pytest.mark.parametrize('time_format, output', [
-    ('mjd', (np.array([55198., 55201]), (np.array([1., 2.]), np.array([1., 5.])))),
-    ('iso', (np.array([datetime(2010, 1, 2), datetime(2010, 1, 5)]),
-             (np.array([timedelta(1), timedelta(2)]),
-              np.array([timedelta(1), timedelta(5)])))),
-    ('unsupported', ValueError)])
+@pytest.mark.parametrize(
+    'time_format, output',
+    [
+        ('mjd', (np.array([55198., 55201]), (np.array([1., 2.]), np.array([1., 5.])))),
+        (
+            'iso',
+            (
+                np.array([datetime(2010, 1, 2), datetime(2010, 1, 5)]),
+                (
+                    np.array([timedelta(1), timedelta(2)]),
+                    np.array([timedelta(1), timedelta(5)]),
+                ),
+            ),
+        ),
+        ('unsupported', ValueError),
+    ],
+)
 def test_lightcurve_plot_time(lc, time_format, output):
     try:
         t, terr = lc._get_times_and_errors(time_format)
@@ -158,17 +172,20 @@ def spec_extraction():
     on_region_radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
 
-    bkg_estimator = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                                        obs_list=obs_list)
+    bkg_estimator = ReflectedRegionsBackgroundEstimator(
+        on_region=on_region, obs_list=obs_list
+    )
     bkg_estimator.run()
 
     e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit='TeV')  # fine binning
     e_true = EnergyBounds.equal_log_spacing(0.05, 100, 200, unit='TeV')
-    extraction = SpectrumExtraction(obs_list=obs_list,
-                                    bkg_estimate=bkg_estimator.result,
-                                    containment_correction=False,
-                                    e_reco=e_reco,
-                                    e_true=e_true)
+    extraction = SpectrumExtraction(
+        obs_list=obs_list,
+        bkg_estimate=bkg_estimator.result,
+        containment_correction=False,
+        e_reco=e_reco,
+        e_true=e_true,
+    )
     extraction.run()
     extraction.compute_energy_threshold(method_lo='area_max', area_percent_lo=10.0)
     return extraction
@@ -192,9 +209,7 @@ def test_lightcurve_estimator():
     )
 
     lc = lc_estimator.light_curve(
-        time_intervals=intervals,
-        spectral_model=model,
-        energy_range=[0.5, 100] * u.TeV,
+        time_intervals=intervals, spectral_model=model, energy_range=[0.5, 100] * u.TeV
     )
     table = lc.table
 
@@ -215,9 +230,7 @@ def test_lightcurve_estimator():
 
     # same but with threshold equal to 2 TeV
     lc = lc_estimator.light_curve(
-        time_intervals=intervals,
-        spectral_model=model,
-        energy_range=[2, 100] * u.TeV,
+        time_intervals=intervals, spectral_model=model, energy_range=[2, 100] * u.TeV
     )
     table = lc.table
 
@@ -245,13 +258,16 @@ def test_lightcurve_interval_maker():
 def test_lightcurve_adaptative_interval_maker():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)
-    separator = [Time((53343.94050200008 + 53343.952979345195) / 2, scale='tt', format='mjd')]
+    separator = [
+        Time((53343.94050200008 + 53343.952979345195) / 2, scale='tt', format='mjd')
+    ]
     table = lc_estimator.make_time_intervals_min_significance(
         significance=3,
         significance_method='lima',
         energy_range=[0.2, 100] * u.TeV,
         spectrum_extraction=spec_extract,
-        separators=separator)
+        separators=separator,
+    )
     assert_allclose(table['significance'] >= 3, True)
     assert_allclose(table['t_start'][5].value, 53343.927374, rtol=1e-10)
     assert_allclose(table['alpha'][5], 0.0833333, rtol=1e-5)

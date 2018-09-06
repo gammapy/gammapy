@@ -10,14 +10,16 @@ from ...catalog import skycoord_from_table
 from .. import ObservationTable, observatory_locations
 
 
-def make_test_observation_table(observatory_name='hess', n_obs=10,
-                                az_range=Angle([0, 360], 'deg'),
-                                alt_range=Angle([45, 90], 'deg'),
-                                date_range=(Time('2010-01-01'),
-                                            Time('2015-01-01')),
-                                use_abs_time=False,
-                                n_tels_range=(3, 4),
-                                random_state='random-seed'):
+def make_test_observation_table(
+    observatory_name='hess',
+    n_obs=10,
+    az_range=Angle([0, 360], 'deg'),
+    alt_range=Angle([45, 90], 'deg'),
+    date_range=(Time('2010-01-01'), Time('2015-01-01')),
+    use_abs_time=False,
+    n_tels_range=(3, 4),
+    random_state='random-seed',
+):
     """Make a test observation table.
     Create an observation table following a specific pattern.
     For the moment, only random observation tables are created.
@@ -117,9 +119,9 @@ def make_test_observation_table(observatory_name='hess', n_obs=10,
         # time for the last run to finish
         night_start = Quantity(22., 'hour')
         night_duration = Quantity(5.5, 'hour')
-        hour_start = random_state.uniform(night_start.value,
-                                          night_start.value + night_duration.value,
-                                          len(obs_id))
+        hour_start = random_state.uniform(
+            night_start.value, night_start.value + night_duration.value, len(obs_id)
+        )
         hour_start = Quantity(hour_start, 'hour')
 
         # add night hour to integer part of MJD
@@ -151,10 +153,12 @@ def make_test_observation_table(observatory_name='hess', n_obs=10,
 
     # az, alt
     # random points in a portion of sphere; default: above 45 deg altitude
-    az, alt = sample_sphere(size=len(obs_id),
-                            lon_range=az_range,
-                            lat_range=alt_range,
-                            random_state=random_state)
+    az, alt = sample_sphere(
+        size=len(obs_id),
+        lon_range=az_range,
+        lat_range=alt_range,
+        random_state=random_state,
+    )
     az = Angle(az, 'deg')
     alt = Angle(alt, 'deg')
     obs_table['AZ'] = az
@@ -205,10 +209,14 @@ def common_sky_region_select_test_routines(obs_table, selection):
         raise ValueError("Invalid type: {}".format(type))
 
     if type == 'sky_box':
-        lon_range_eff = (selection['lon'][0] - selection['border'],
-                         selection['lon'][1] + selection['border'])
-        lat_range_eff = (selection['lat'][0] - selection['border'],
-                         selection['lat'][1] + selection['border'])
+        lon_range_eff = (
+            selection['lon'][0] - selection['border'],
+            selection['lon'][1] + selection['border'],
+        )
+        lat_range_eff = (
+            selection['lat'][0] - selection['border'],
+            selection['lat'][1] + selection['border'],
+        )
     elif type == 'sky_circle':
         lon_cen = selection['lon']
         lat_cen = selection['lat']
@@ -229,8 +237,12 @@ def common_sky_region_select_test_routines(obs_table, selection):
         lat = skycoord.data.lat
         if do_wrapping:
             lon = lon.wrap_at(Angle(180, 'deg'))
-        assert ((lon_range_eff[0] < lon) & (lon < lon_range_eff[1]) &
-                (lat_range_eff[0] < lat) & (lat < lat_range_eff[1])).all()
+        assert (
+            (lon_range_eff[0] < lon)
+            & (lon < lon_range_eff[1])
+            & (lat_range_eff[0] < lat)
+            & (lat < lat_range_eff[1])
+        ).all()
     elif type == 'sky_circle':
         ang_distance = skycoord.separation(center)
         assert (ang_distance < radius_eff).all()
@@ -245,8 +257,12 @@ def common_sky_region_select_test_routines(obs_table, selection):
         lat = skycoord.data.lat
         if do_wrapping:
             lon = lon.wrap_at(Angle(180, 'deg'))
-        assert ((lon_range_eff[0] >= lon) | (lon >= lon_range_eff[1]) |
-                (lat_range_eff[0] >= lat) | (lat >= lat_range_eff[1])).all()
+        assert (
+            (lon_range_eff[0] >= lon)
+            | (lon >= lon_range_eff[1])
+            | (lat_range_eff[0] >= lat)
+            | (lat >= lat_range_eff[1])
+        ).all()
     elif type == 'sky_circle':
         ang_distance = skycoord.separation(center)
         assert (ang_distance >= radius_eff).all()
@@ -279,12 +295,15 @@ def test_select_parameter_box():
     assert (selected_obs_table[variable] < value_range[1]).all()
 
     # test box selection in obs_id inverted
-    selection = dict(type='par_box', variable=variable,
-                     value_range=value_range, inverted=True)
+    selection = dict(
+        type='par_box', variable=variable, value_range=value_range, inverted=True
+    )
     selected_obs_table = obs_table.select_observations(selection)
     assert len(selected_obs_table) == 7
-    assert ((value_range[0] > selected_obs_table[variable]) |
-            (selected_obs_table[variable] >= value_range[1])).all()
+    assert (
+        (value_range[0] > selected_obs_table[variable])
+        | (selected_obs_table[variable] >= value_range[1])
+    ).all()
 
     # test box selection in alt
     variable = 'ALT'
@@ -301,10 +320,12 @@ def test_select_time_box():
     datestart = Time('2012-01-01T00:30:00')
     dateend = Time('2012-01-01T02:30:00')
     random_state = np.random.RandomState(seed=0)
-    obs_table_time = make_test_observation_table(n_obs=10,
-                                                 date_range=(datestart, dateend),
-                                                 use_abs_time=True,
-                                                 random_state=random_state)
+    obs_table_time = make_test_observation_table(
+        n_obs=10,
+        date_range=(datestart, dateend),
+        use_abs_time=True,
+        random_state=random_state,
+    )
 
     # test box selection in time: (time_start, time_stop) within value_range
     value_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])
@@ -325,10 +346,9 @@ def test_select_sky_regions():
     lat_range = Angle([-25., 25.], 'deg')
     frame = 'galactic'
     border = Angle(2., 'deg')
-    selection = dict(type='sky_box', frame=frame,
-                     lon=lon_range,
-                     lat=lat_range,
-                     border=border)
+    selection = dict(
+        type='sky_box', frame=frame, lon=lon_range, lat=lat_range, border=border
+    )
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky box selection in radec coordinates
@@ -336,10 +356,9 @@ def test_select_sky_regions():
     lat_range = Angle([-50., 0.], 'deg')
     frame = 'icrs'
     border = Angle(2., 'deg')
-    selection = dict(type='sky_box', frame=frame,
-                     lon=lon_range,
-                     lat=lat_range,
-                     border=border)
+    selection = dict(
+        type='sky_box', frame=frame, lon=lon_range, lat=lat_range, border=border
+    )
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in gal coordinates
@@ -348,9 +367,14 @@ def test_select_sky_regions():
     radius = Angle(50., 'deg')
     frame = 'galactic'
     border = Angle(2., 'deg')
-    selection = dict(type='sky_circle', frame=frame,
-                     lon=lon_cen, lat=lat_cen,
-                     radius=radius, border=border)
+    selection = dict(
+        type='sky_circle',
+        frame=frame,
+        lon=lon_cen,
+        lat=lat_cen,
+        radius=radius,
+        border=border,
+    )
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in radec coordinates
@@ -359,7 +383,12 @@ def test_select_sky_regions():
     radius = Angle(50., 'deg')
     frame = 'icrs'
     border = Angle(2., 'deg')
-    selection = dict(type='sky_circle', frame=frame,
-                     lon=lon_cen, lat=lat_cen,
-                     radius=radius, border=border)
+    selection = dict(
+        type='sky_circle',
+        frame=frame,
+        lon=lon_cen,
+        lat=lat_cen,
+        radius=radius,
+        border=border,
+    )
     common_sky_region_select_test_routines(obs_table, selection)

@@ -7,10 +7,7 @@ from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Angle
 
-__all__ = [
-    'ImageProfile',
-    'ImageProfileEstimator',
-]
+__all__ = ['ImageProfile', 'ImageProfileEstimator']
 
 
 def compute_binning(data, n_bins, method='equal width', eps=1e-10):
@@ -449,6 +446,7 @@ class ImageProfile(object):
             Axes object
         """
         import matplotlib.pyplot as plt
+
         fig = plt.figure(figsize=figsize)
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         ax = self.plot(ax, **kwargs)
@@ -481,8 +479,9 @@ class ImageProfile(object):
         elif mode == 'integral':
             norm = np.nansum(profile)
         else:
-            raise ValueError("Not a valid normalization mode. Choose either"
-                             " 'peak' or 'integral'")
+            raise ValueError(
+                "Not a valid normalization mode. Choose either" " 'peak' or 'integral'"
+            )
 
         table['profile'] /= norm
 

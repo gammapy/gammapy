@@ -67,11 +67,17 @@ plot_html_show_source_link = False
 intersphinx_mapping.pop('h5py', None)
 intersphinx_mapping['matplotlib'] = ('https://matplotlib.org/', None)
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
-intersphinx_mapping['regions'] = ('https://astropy-regions.readthedocs.io/en/latest/', None)
+intersphinx_mapping['regions'] = (
+    'https://astropy-regions.readthedocs.io/en/latest/',
+    None,
+)
 intersphinx_mapping['reproject'] = ('https://reproject.readthedocs.io/en/latest/', None)
 intersphinx_mapping['uncertainties'] = ('https://pythonhosted.org/uncertainties/', None)
 intersphinx_mapping['naima'] = ('https://naima.readthedocs.io/en/latest/', None)
-intersphinx_mapping['gadf'] = ('https://gamma-astro-data-formats.readthedocs.io/en/latest/', None)
+intersphinx_mapping['gadf'] = (
+    'https://gamma-astro-data-formats.readthedocs.io/en/latest/',
+    None,
+)
 intersphinx_mapping['iminuit'] = ('https://iminuit.readthedocs.io/en/latest/', None)
 
 
@@ -84,12 +90,14 @@ exclude_patterns.append('**.ipynb_checkpoints')
 
 #
 # -- nbsphinx settings
-extensions.extend([
-    'nbsphinx',
-    'sphinx_click.ext',
-    'IPython.sphinxext.ipython_console_highlighting',
-    'sphinx.ext.mathjax',
-])
+extensions.extend(
+    [
+        'nbsphinx',
+        'sphinx_click.ext',
+        'IPython.sphinxext.ipython_console_highlighting',
+        'sphinx.ext.mathjax',
+    ]
+)
 nbsphinx_execute = setup_cfg['execute_notebooks']
 
 # --
@@ -104,8 +112,7 @@ rst_epilog += """
 # This does not *have* to match the package name, but typically does
 project = setup_cfg['package_name']
 author = setup_cfg['author']
-copyright = '{0}, {1}'.format(
-    datetime.datetime.now().year, setup_cfg['author'])
+copyright = '{0}, {1}'.format(datetime.datetime.now().year, setup_cfg['author'])
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -128,11 +135,11 @@ release = package.__version__
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
-#html_theme_options = {
+# html_theme_options = {
 #    'logotext1': 'gamma',  # white,  semi-bold
 #    'logotext2': 'py',  # orange, light
 #    'logotext3': ':docs'  # white,  light
-#}
+# }
 
 html_theme_options = {
     'canonical_url': setup_cfg['url_docs'],
@@ -143,7 +150,7 @@ html_theme_options = {
     # Toc options
     'collapse_navigation': False,
     'sticky_navigation': True,
-    'navigation_depth': 4
+    'navigation_depth': 4,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -192,6 +199,7 @@ def setup(app):
     app.add_stylesheet('gammapy.css')
     app.add_javascript('copybutton.js')
 
+
 # copybutton.js provides hide/show button for python prompts >>>
 # slightly modified to work on RTD theme from javascript file in easydev package
 # https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
@@ -202,15 +210,15 @@ html_favicon = os.path.join(html_static_path[0], 'gammapy_logo.ico')
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [('index', project + '.tex', project + u' Documentation',
-                    author, 'manual')]
+latex_documents = [
+    ('index', project + '.tex', project + u' Documentation', author, 'manual')
+]
 
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [('index', project.lower(), project + u' Documentation',
-              [author], 1)]
+man_pages = [('index', project.lower(), project + u' Documentation', [author], 1)]
 
 # -- Options for the edit_on_github extension ----------------------------------------
 
@@ -243,8 +251,6 @@ automodsumm_inherited_members = True
 # The following config option suppresses the warning.
 # http://www.sphinx-doc.org/en/stable/rest.html#citations
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
-suppress_warnings = [
-    'ref.citation'
-]
+suppress_warnings = ['ref.citation']
 
 # nitpicky = True

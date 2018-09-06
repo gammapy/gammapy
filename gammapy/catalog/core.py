@@ -11,10 +11,7 @@ from ..utils.array import _is_int
 from ..utils.table import table_row_to_dict
 from .utils import skycoord_from_table
 
-__all__ = [
-    'SourceCatalog',
-    'SourceCatalogObject',
-]
+__all__ = ['SourceCatalog', 'SourceCatalogObject']
 
 
 class SourceCatalogObject(object):
@@ -31,6 +28,7 @@ class SourceCatalogObject(object):
     The catalog table row index is stored in `_table_row_index` though,
     because it can be useful for debugging or display.
     """
+
     _source_name_key = 'Source_Name'
     _source_index_key = 'catalog_row_index'
 
@@ -98,6 +96,7 @@ class SourceCatalog(object):
         Columns with source name aliases. This will allow accessing the source
         row by alias names as well.
     """
+
     source_object_class = SourceCatalogObject
 
     # TODO: at the moment these are duplicated in SourceCatalogObject.

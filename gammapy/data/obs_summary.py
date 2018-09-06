@@ -6,10 +6,7 @@ from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from .obs_stats import ObservationStats
 
-__all__ = [
-    'ObservationTableSummary',
-    'ObservationSummary',
-]
+__all__ = ['ObservationTableSummary', 'ObservationSummary']
 
 
 class ObservationTableSummary(object):
@@ -34,9 +31,9 @@ class ObservationTableSummary(object):
     def offset(self):
         """Observation pointing ot target offset (`~astropy.coordinates.Angle`).
         """
-        pnt_pos = SkyCoord(self.obs_table['RA_PNT'],
-                           self.obs_table['DEC_PNT'],
-                           unit='deg')
+        pnt_pos = SkyCoord(
+            self.obs_table['RA_PNT'], self.obs_table['DEC_PNT'], unit='deg'
+        )
 
         return pnt_pos.separation(self.target_pos)
 
@@ -50,10 +47,10 @@ class ObservationTableSummary(object):
         ss += 'Livetime: {:.2f}\n'.format(livetime.to('hour'))
         zenith = self.obs_table['ZEN_PNT']
         ss += 'Zenith angle: (mean={:.2f}, std={:.2f})\n'.format(
-            zenith.mean(), zenith.std())
+            zenith.mean(), zenith.std()
+        )
         offset = self.offset
-        ss += 'Offset: (mean={:.2f}, std={:.2f})\n'.format(
-            offset.mean(), offset.std())
+        ss += 'Offset: (mean={:.2f}, std={:.2f})\n'.format(offset.mean(), offset.std())
 
         return ss
 
@@ -75,6 +72,7 @@ class ObservationTableSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         zenith = self.obs_table['ZEN_PNT']
@@ -107,6 +105,7 @@ class ObservationTableSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         offset = self.offset
@@ -202,13 +201,20 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.sigma, "o", **kwargs)
 
         ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Significance ($\sigma$)')
-        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
-                 0., np.amax(self.sigma) * 1.2])
+        ax.axis(
+            [
+                0.,
+                np.amax(self.livetime.to(u.h).value) * 1.2,
+                0.,
+                np.amax(self.sigma) * 1.2,
+            ]
+        )
         ax.set_title('Significance evolution')
         return ax
 
@@ -226,13 +232,20 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.excess, "o", **kwargs)
 
         ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Excess')
-        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
-                 0., np.amax(self.excess) * 1.2])
+        ax.axis(
+            [
+                0.,
+                np.amax(self.livetime.to(u.h).value) * 1.2,
+                0.,
+                np.amax(self.excess) * 1.2,
+            ]
+        )
         ax.set_title('Excess evolution')
         return ax
 
@@ -250,13 +263,20 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.background, "o", **kwargs)
 
         ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Background')
-        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
-                 0., np.amax(self.background) * 1.2])
+        ax.axis(
+            [
+                0.,
+                np.amax(self.livetime.to(u.h).value) * 1.2,
+                0.,
+                np.amax(self.background) * 1.2,
+            ]
+        )
         ax.set_title('Background evolution')
         return ax
 
@@ -274,6 +294,7 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         xtick_vals, xtick_labels = self._get_xtick_info()
@@ -284,8 +305,7 @@ class ObservationSummary(object):
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
         ax.set_ylabel('$\gamma$ rate ({})'.format(self.gamma_rate.unit))
-        ax.axis([0, len(self.gamma_rate),
-                 0., np.amax(self.gamma_rate.value) * 1.2])
+        ax.axis([0, len(self.gamma_rate), 0., np.amax(self.gamma_rate.value) * 1.2])
         ax.set_title('$\gamma$ rates')
         return ax
 
@@ -303,6 +323,7 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         xtick_vals, xtick_labels = self._get_xtick_info()
@@ -313,8 +334,7 @@ class ObservationSummary(object):
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
         ax.set_ylabel('Background rate ({})'.format(self.bg_rate.unit))
-        ax.axis([0, len(self.bg_rate),
-                 0., np.amax(self.bg_rate.value) * 1.2])
+        ax.axis([0, len(self.bg_rate), 0., np.amax(self.bg_rate.value) * 1.2])
         ax.set_title('Background rates')
         return ax
 

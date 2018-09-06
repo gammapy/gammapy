@@ -97,6 +97,7 @@ class SpectralModel(object):
 
     def _parse_uarray(self, uarray):
         from uncertainties import unumpy
+
         values = unumpy.nominal_values(uarray)
         errors = unumpy.std_devs(uarray)
         return values, errors
@@ -241,9 +242,16 @@ class SpectralModel(object):
         model.parameters.covariance = parameters.covariance
         return model
 
-    def plot(self, energy_range, ax=None,
-             energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-             energy_power=0, n_points=100, **kwargs):
+    def plot(
+        self,
+        energy_range,
+        ax=None,
+        energy_unit='TeV',
+        flux_unit='cm-2 s-1 TeV-1',
+        energy_power=0,
+        n_points=100,
+        **kwargs
+    ):
         """Plot spectral model curve.
 
         kwargs are forwarded to `matplotlib.pyplot.plot`
@@ -282,11 +290,11 @@ class SpectralModel(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(
-            emin, emax, n_points, energy_unit)
+        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
 
         # evaluate model
         flux = self(energy).to(flux_unit)
@@ -298,9 +306,16 @@ class SpectralModel(object):
         self._plot_format_ax(ax, energy, y, energy_power)
         return ax
 
-    def plot_error(self, energy_range, ax=None,
-                   energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                   energy_power=0, n_points=100, **kwargs):
+    def plot_error(
+        self,
+        energy_range,
+        ax=None,
+        energy_unit='TeV',
+        flux_unit='cm-2 s-1 TeV-1',
+        energy_power=0,
+        n_points=100,
+        **kwargs
+    ):
         """Plot spectral model error band.
 
         .. note::
@@ -341,6 +356,7 @@ class SpectralModel(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault('facecolor', 'black')
@@ -348,8 +364,7 @@ class SpectralModel(object):
         kwargs.setdefault('linewidth', 0)
 
         emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(
-            emin, emax, n_points, energy_unit)
+        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
 
         flux, flux_err = self.evaluate_error(energy).to(flux_unit)
 
@@ -422,6 +437,7 @@ class SpectralModel(object):
 
         energies = []
         for val in np.atleast_1d(value):
+
             def f(x):
                 # scale by 1e12 to achieve better precision
                 y = self(x * u.TeV).to(value.unit).value
@@ -451,9 +467,7 @@ class ConstantModel(SpectralModel):
     """
 
     def __init__(self, const):
-        self.parameters = Parameters([
-            Parameter('const', const)
-        ])
+        self.parameters = Parameters([Parameter('const', const)])
 
     @staticmethod
     def evaluate(energy, const):
@@ -536,13 +550,16 @@ class PowerLaw(SpectralModel):
 
     """
 
-    def __init__(self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV):
-        self.parameters = Parameters([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, min=0, frozen=True)
-        ])
+    def __init__(
+        self, index=2., amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.TeV
+    ):
+        self.parameters = Parameters(
+            [
+                Parameter('index', index),
+                Parameter('amplitude', amplitude),
+                Parameter('reference', reference, min=0, frozen=True),
+            ]
+        )
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
@@ -569,7 +586,9 @@ class PowerLaw(SpectralModel):
 
         if np.isclose(pars['index'].value, 1):
             e_unit = emin.unit
-            prefactor = pars['amplitude'].quantity * pars['reference'].quantity.to(e_unit)
+            prefactor = pars['amplitude'].quantity * pars['reference'].quantity.to(
+                e_unit
+            )
             upper = np.log(emax.to(e_unit).value)
             lower = np.log(emin.value)
         else:
@@ -637,7 +656,9 @@ class PowerLaw(SpectralModel):
             temp = pars['amplitude'].quantity * pars['reference'].quantity ** 2
             return temp * np.log(emax / emin)
         else:
-            prefactor = pars['amplitude'].quantity * pars['reference'].quantity ** 2 / val
+            prefactor = (
+                pars['amplitude'].quantity * pars['reference'].quantity ** 2 / val
+            )
             upper = (emax / pars['reference'].quantity) ** val
             lower = (emin / pars['reference'].quantity) ** val
             return prefactor * (upper - lower)
@@ -686,7 +707,7 @@ class PowerLaw(SpectralModel):
         """
         p = self.parameters
         base = value / p['amplitude'].quantity
-        return p['reference'].quantity * np.power(base, - 1. / p['index'].value)
+        return p['reference'].quantity * np.power(base, -1. / p['index'].value)
 
 
 class PowerLaw2(SpectralModel):
@@ -724,14 +745,21 @@ class PowerLaw2(SpectralModel):
         plt.show()
     """
 
-    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1'), index=2,
-                 emin=0.1 * u.TeV, emax=100 * u.TeV):
-        self.parameters = Parameters([
-            Parameter('amplitude', amplitude),
-            Parameter('index', index),
-            Parameter('emin', emin, frozen=True),
-            Parameter('emax', emax, frozen=True)
-        ])
+    def __init__(
+        self,
+        amplitude=1E-12 * u.Unit('cm-2 s-1'),
+        index=2,
+        emin=0.1 * u.TeV,
+        emax=100 * u.TeV,
+    ):
+        self.parameters = Parameters(
+            [
+                Parameter('amplitude', amplitude),
+                Parameter('index', index),
+                Parameter('emin', emin, frozen=True),
+                Parameter('emax', emax, frozen=True),
+            ]
+        )
 
     @staticmethod
     def evaluate(energy, amplitude, index, emin, emax):
@@ -809,8 +837,9 @@ class PowerLaw2(SpectralModel):
         p = self.parameters
         index = p['index'].value
         top = -index + 1
-        bottom = (p['emax'].quantity.to('TeV').value ** (-index + 1) -
-                  p['emin'].quantity.to('TeV').value ** (-index + 1))
+        bottom = p['emax'].quantity.to('TeV').value ** (-index + 1) - p[
+            'emin'
+        ].quantity.to('TeV').value ** (-index + 1)
         term = (bottom / top) * (value / p['amplitude'].quantity).to('1 / TeV')
         return np.power(term.value, -1. / index) * u.TeV
 
@@ -847,14 +876,21 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         plt.show()
     """
 
-    def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV, lambda_=0.1 / u.TeV):
-        self.parameters = Parameters([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('lambda_', lambda_)
-        ])
+    def __init__(
+        self,
+        index=1.5,
+        amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+        reference=1 * u.TeV,
+        lambda_=0.1 / u.TeV,
+    ):
+        self.parameters = Parameters(
+            [
+                Parameter('index', index),
+                Parameter('amplitude', amplitude),
+                Parameter('reference', reference, frozen=True),
+                Parameter('lambda_', lambda_),
+            ]
+        )
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, lambda_):
@@ -864,6 +900,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             cutoff = np.exp(-energy * lambda_)
         except AttributeError:
             from uncertainties.unumpy import exp
+
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
 
@@ -923,14 +960,21 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         plt.show()
     """
 
-    def __init__(self, index=1.5, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV, ecut=10 * u.TeV):
-        self.parameters = Parameters([
-            Parameter('index', index),
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('ecut', ecut)
-        ])
+    def __init__(
+        self,
+        index=1.5,
+        amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+        reference=1 * u.TeV,
+        ecut=10 * u.TeV,
+    ):
+        self.parameters = Parameters(
+            [
+                Parameter('index', index),
+                Parameter('amplitude', amplitude),
+                Parameter('reference', reference, frozen=True),
+                Parameter('ecut', ecut),
+            ]
+        )
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, ecut):
@@ -940,6 +984,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
             cutoff = np.exp((reference - energy) / ecut)
         except AttributeError:
             from uncertainties.unumpy import exp
+
             cutoff = exp((reference - energy) / ecut)
         return pwl * cutoff
 
@@ -981,32 +1026,35 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         plt.show()
     """
 
-    def __init__(self, index_1=1.5, index_2=2, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
-                 reference=1 * u.TeV, ecut=10 * u.TeV):
+    def __init__(
+        self,
+        index_1=1.5,
+        index_2=2,
+        amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+        reference=1 * u.TeV,
+        ecut=10 * u.TeV,
+    ):
         # TODO: order or parameters is different from argument list / docstring. Make uniform!
-        self.parameters = Parameters([
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('ecut', ecut),
-            Parameter('index_1', index_1),
-            Parameter('index_2', index_2),
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter('amplitude', amplitude),
+                Parameter('reference', reference, frozen=True),
+                Parameter('ecut', ecut),
+                Parameter('index_1', index_1),
+                Parameter('index_2', index_2),
+            ]
+        )
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
-            cutoff = np.exp(
-                (reference / ecut) ** index_2 -
-                (energy / ecut) ** index_2
-            )
+            cutoff = np.exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
         except AttributeError:
             from uncertainties.unumpy import exp
-            cutoff = exp(
-                (reference / ecut) ** index_2 -
-                (energy / ecut) ** index_2
-            )
+
+            cutoff = exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
         return pwl * cutoff
 
 
@@ -1054,21 +1102,27 @@ class LogParabola(SpectralModel):
         plt.show()
     """
 
-    def __init__(self, amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'), reference=10 * u.TeV,
-                 alpha=2, beta=1):
-        self.parameters = Parameters([
-            Parameter('amplitude', amplitude),
-            Parameter('reference', reference, frozen=True),
-            Parameter('alpha', alpha),
-            Parameter('beta', beta)
-        ])
+    def __init__(
+        self,
+        amplitude=1E-12 * u.Unit('cm-2 s-1 TeV-1'),
+        reference=10 * u.TeV,
+        alpha=2,
+        beta=1,
+    ):
+        self.parameters = Parameters(
+            [
+                Parameter('amplitude', amplitude),
+                Parameter('reference', reference, frozen=True),
+                Parameter('alpha', alpha),
+                Parameter('beta', beta),
+            ]
+        )
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
         """Construct LogParabola from :math:`log_{10}` parametrization"""
         beta_ = beta / np.log(10)
-        return cls(amplitude=amplitude, reference=reference, alpha=alpha,
-                   beta=beta_)
+        return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
@@ -1081,6 +1135,7 @@ class LogParabola(SpectralModel):
             exponent = -alpha - beta * np.log(xx)
         except AttributeError:
             from uncertainties.unumpy import log
+
             xx = energy / reference
             exponent = -alpha - beta * log(xx)
         return amplitude * np.power(xx, exponent)
@@ -1134,11 +1189,12 @@ class TableModel(SpectralModel):
         Meta information, meta['filename'] will be used for serialization
     """
 
-    def __init__(self, energy, values, norm=1, values_scale='log', interp_kwargs=None, meta=None):
+    def __init__(
+        self, energy, values, norm=1, values_scale='log', interp_kwargs=None, meta=None
+    ):
         from scipy.interpolate import interp1d
-        self.parameters = Parameters([
-            Parameter('norm', norm, min=0, unit='')
-        ])
+
+        self.parameters = Parameters([Parameter('norm', norm, min=0, unit='')])
         self.energy = energy
         self.values = values
         self.values_scale = values_scale
@@ -1199,7 +1255,8 @@ class TableModel(SpectralModel):
         param_max = table_param['MAXIMUM']
         if param < param_min or param > param_max:
             err = 'Parameter out of range, param={}, param_min={}, param_max={}'.format(
-                param, param_min, param_max)
+                param, param_min, param_max
+            )
             raise ValueError(err)
 
         # Get energy values
@@ -1208,9 +1265,9 @@ class TableModel(SpectralModel):
         energy_hi = table_energy['ENERG_HI']
 
         # Hack while format is not fixed, energy values are in keV
-        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
-                                                                 upper=energy_hi,
-                                                                 unit=u.keV)
+        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(
+            lower=energy_lo, upper=energy_hi, unit=u.keV
+        )
         energy = energy_bounds.log_centers
 
         # Get spectrum values (no interpolation, take closest value for param)
@@ -1298,8 +1355,12 @@ class Absorption(object):
 
     def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
         axes = [
-            BinnedDataAxis(param_lo, param_hi, interpolation_mode='linear', name='parameter'),
-            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+            BinnedDataAxis(
+                param_lo, param_hi, interpolation_mode='linear', name='parameter'
+            ),
+            BinnedDataAxis(
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            ),
         ]
 
         self.data = NDDataArray(axes=axes, data=data)
@@ -1338,9 +1399,9 @@ class Absorption(object):
         energy_hi = table_energy['ENERG_HI'] * u.keV  # unit not stored in file
 
         # Energies are in keV
-        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(lower=energy_lo,
-                                                                 upper=energy_hi,
-                                                                 unit=u.keV)
+        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(
+            lower=energy_lo, upper=energy_hi, unit=u.keV
+        )
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu='SPECTRA')
@@ -1349,7 +1410,9 @@ class Absorption(object):
         return cls(
             energy_lo=energy_bounds.lower_bounds,
             energy_hi=energy_bounds.upper_bounds,
-            param_lo=param_lo, param_hi=param_hi, data=data,
+            param_lo=param_lo,
+            param_hi=param_hi,
+            data=data,
         )
 
     @classmethod
@@ -1414,8 +1477,9 @@ class AbsorbedSpectralModel(SpectralModel):
         parameter name
     """
 
-    def __init__(self, spectral_model, absorption,
-                 parameter, parameter_name='redshift'):
+    def __init__(
+        self, spectral_model, absorption, parameter, parameter_name='redshift'
+    ):
         self.spectral_model = spectral_model
         self.absorption = absorption
         self.parameter = parameter
@@ -1429,9 +1493,7 @@ class AbsorbedSpectralModel(SpectralModel):
         # Add parameter to the list
         min_ = self.absorption.data.axes[0].lo[0]
         max_ = self.absorption.data.axes[0].lo[-1]
-        par = Parameter(parameter_name, parameter,
-                        min=min_, max=max_,
-                        frozen=True)
+        par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         param_list.append(par)
 
         self.parameters = Parameters(param_list)
@@ -1444,6 +1506,5 @@ class AbsorbedSpectralModel(SpectralModel):
         del kwargs[self.parameter_name]
 
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
-        absorption = self.absorption.evaluate(energy=energy,
-                                              parameter=parameter)
+        absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption

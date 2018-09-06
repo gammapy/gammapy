@@ -8,13 +8,15 @@ from ..fits import SmartHDUList
 
 
 def make_test_hdu_list():
-    return fits.HDUList([
-        fits.PrimaryHDU(),
-        fits.BinTableHDU(name='TABLE1'),
-        fits.ImageHDU(name='IMAGE1', data=np.zeros(shape=(1, 2, 3))),
-        fits.BinTableHDU(name='TABLE2'),
-        fits.ImageHDU(name='IMAGE2', data=np.zeros(shape=(4, 5))),
-    ])
+    return fits.HDUList(
+        [
+            fits.PrimaryHDU(),
+            fits.BinTableHDU(name='TABLE1'),
+            fits.ImageHDU(name='IMAGE1', data=np.zeros(shape=(1, 2, 3))),
+            fits.BinTableHDU(name='TABLE2'),
+            fits.ImageHDU(name='IMAGE2', data=np.zeros(shape=(4, 5))),
+        ]
+    )
 
 
 # TODO: merge this fixture with the one in `test_table.py`.
@@ -58,7 +60,10 @@ class TestSmartHDUList:
 
         with pytest.raises(ValueError) as exc:
             g()
-        assert str(exc.value) == 'Must give either `hdu` or `hdu_type`. Got `None` for both.'
+        assert (
+            str(exc.value)
+            == 'Must give either `hdu` or `hdu_type`. Got `None` for both.'
+        )
 
         # with pytest.raises(ValueError) as exc:
         #     g(hdu='TABLE1', hdu_type='table')

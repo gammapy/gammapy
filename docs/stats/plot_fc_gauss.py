@@ -24,12 +24,14 @@ cl = 0.90
 x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x, endpoint=True)
 mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-matrix = [dist / sum(dist) for dist in (norm(loc=mu, scale=sigma).pdf(x_bins) for mu in mu_bins)]
+matrix = [
+    dist / sum(dist)
+    for dist in (norm(loc=mu, scale=sigma).pdf(x_bins) for mu in mu_bins)
+]
 
 acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins,
-                                                acceptance_intervals)
+LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
 
 fc_fix_limits(LowerLimitNum, UpperLimitNum)
 

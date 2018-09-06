@@ -2,12 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = [
-    'plot_periodogram',
-]
+__all__ = ['plot_periodogram']
 
 
-def plot_periodogram(time, flux, periods, power, flux_err=None, best_period=None, fap=None):
+def plot_periodogram(
+    time, flux, periods, power, flux_err=None, best_period=None, fap=None
+):
     """
     Plot a light curve and its periodogram.
 
@@ -47,7 +47,9 @@ def plot_periodogram(time, flux, periods, power, flux_err=None, best_period=None
 
     # plot the light curve
     ax = fig.add_subplot(grid_spec[0, :])
-    ax.errorbar(time, flux, flux_err, fmt='ok', label='light curve', elinewidth=1.5, capsize=0)
+    ax.errorbar(
+        time, flux, flux_err, fmt='ok', label='light curve', elinewidth=1.5, capsize=0
+    )
     ax.set_xlabel('time')
     ax.set_ylabel('flux')
     ax.legend()
@@ -58,11 +60,15 @@ def plot_periodogram(time, flux, periods, power, flux_err=None, best_period=None
     # mark the best period and label with significance
     if best_period is not None:
         if fap is None:
-            raise ValueError('Must give a false alarm probability if you give a best_period')
+            raise ValueError(
+                'Must give a false alarm probability if you give a best_period'
+            )
 
         # set precision for period format
         pre = int(abs(np.floor(np.log10(np.max(np.diff(periods))))))
-        label = 'Detected period p = {:.{}f} with {:.2E} FAP'.format(best_period, pre, fap)
+        label = 'Detected period p = {:.{}f} with {:.2E} FAP'.format(
+            best_period, pre, fap
+        )
         ymax = power[periods == best_period]
         ax.axvline(best_period, ymin=0, ymax=ymax, label=label, c='r')
 

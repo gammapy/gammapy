@@ -4,12 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from ..utils.random import get_random_state
 
-__all__ = [
-    'Stats',
-    'make_stats',
-    'combine_stats',
-    'compute_total_stats',
-]
+__all__ = ['Stats', 'make_stats', 'combine_stats', 'compute_total_stats']
 
 
 class Stats(object):
@@ -26,6 +21,7 @@ class Stats(object):
     a_off : array_like
         Relative background exposure in the off region
     """
+
     # TODO: use numpy arrays and properties
     # TODO: add gamma exposure
 
@@ -60,16 +56,27 @@ class Stats(object):
         return self.n_on - self.background
 
     def __str__(self):
-        keys = ['n_on', 'n_off', 'a_on', 'a_off',
-                'alpha', 'background', 'excess']
-        values = [self.n_on, self.n_off, self.a_on, self.a_off,
-                  self.alpha, self.background, self.excess]
-        return '\n'.join(['%s = %s' % (k, v)
-                          for (k, v) in zip(keys, values)])
+        keys = ['n_on', 'n_off', 'a_on', 'a_off', 'alpha', 'background', 'excess']
+        values = [
+            self.n_on,
+            self.n_off,
+            self.a_on,
+            self.a_off,
+            self.alpha,
+            self.background,
+            self.excess,
+        ]
+        return '\n'.join(['%s = %s' % (k, v) for (k, v) in zip(keys, values)])
 
 
-def make_stats(signal, background, area_factor, weight_method="background",
-               poisson_fluctuate=False, random_state='random-seed'):
+def make_stats(
+    signal,
+    background,
+    area_factor,
+    weight_method="background",
+    poisson_fluctuate=False,
+    random_state='random-seed',
+):
     """Fill using some weight method for the exposure.
 
     Parameters
@@ -148,8 +155,7 @@ def combine_stats(stats_1, stats_2, weight_method="none"):
     return Stats(n_on, n_off, a_on, a_off)
 
 
-def compute_total_stats(counts, exposure, background=None,
-                        solid_angle=None, mask=None):
+def compute_total_stats(counts, exposure, background=None, solid_angle=None, mask=None):
     r"""Compute total stats for arrays of per-bin stats.
 
     The ``result`` dictionary contains a ``flux`` entry computed as

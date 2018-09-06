@@ -37,19 +37,23 @@ mapbase_args = [
 mapbase_args_with_axes = [_ for _ in mapbase_args if _[4] is not None]
 
 
-@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
-                         mapbase_args)
+@pytest.mark.parametrize(
+    ('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'), mapbase_args
+)
 def test_map_create(binsz, width, map_type, skydir, axes, unit):
-    m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                   skydir=skydir, axes=axes, unit=unit)
+    m = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
+    )
     assert m.unit == unit
 
 
-@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
-                         mapbase_args_with_axes)
+@pytest.mark.parametrize(
+    ('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'), mapbase_args_with_axes
+)
 def test_map_copy(binsz, width, map_type, skydir, axes, unit):
-    m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                   skydir=skydir, axes=axes, unit=unit)
+    m = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
+    )
 
     m_copy = m.copy()
     assert repr(m) == repr(m_copy)
@@ -79,14 +83,16 @@ def test_map_from_geom():
     assert m.geom.is_image
 
 
-@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
-                         mapbase_args_with_axes)
+@pytest.mark.parametrize(
+    ('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'), mapbase_args_with_axes
+)
 def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
-    m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                   skydir=skydir, axes=axes, unit=unit)
+    m = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
+    )
     m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
 
-    coords = (3.456, 0.1234)[:len(m.geom.axes)]
+    coords = (3.456, 0.1234)[: len(m.geom.axes)]
     m_image = m.get_image_by_coord(coords)
 
     im_geom = m.geom.to_image()
@@ -95,12 +101,14 @@ def test_map_get_image_by_coord(binsz, width, map_type, skydir, axes, unit):
     assert_equal(m_image.data, m_vals)
 
 
-@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
-                         mapbase_args_with_axes)
+@pytest.mark.parametrize(
+    ('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'), mapbase_args_with_axes
+)
 def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
-    m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                   skydir=skydir, axes=axes, unit=unit)
-    pix = (1.2345, 0.1234)[:len(m.geom.axes)]
+    m = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
+    )
+    pix = (1.2345, 0.1234)[: len(m.geom.axes)]
     m_image = m.get_image_by_pix(pix)
 
     im_geom = m.geom.to_image()
@@ -109,11 +117,13 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
     assert_equal(m_image.data, m_vals)
 
 
-@pytest.mark.parametrize(('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'),
-                         mapbase_args_with_axes)
+@pytest.mark.parametrize(
+    ('binsz', 'width', 'map_type', 'skydir', 'axes', 'unit'), mapbase_args_with_axes
+)
 def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
-    m = Map.create(binsz=binsz, width=width, map_type=map_type,
-                   skydir=skydir, axes=axes, unit=unit)
+    m = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
+    )
     data = np.arange(m.data.size, dtype=float)
     m.data = data.reshape(m.data.shape)
 
@@ -121,16 +131,14 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
     sliced = m.slice_by_idx({})
     assert_equal(m.geom.shape, sliced.geom.shape)
 
-    slices = {'energy': slice(0, 1),
-              'time': slice(0, 2)}
+    slices = {'energy': slice(0, 1), 'time': slice(0, 2)}
     sliced = m.slice_by_idx(slices)
     assert not sliced.geom.is_image
     slices = tuple([slices[ax.name] for ax in m.geom.axes])
     assert_equal(m.data[slices[::-1]], sliced.data)
     assert sliced.data.base is data
 
-    slices = {'energy': 0,
-              'time': 1}
+    slices = {'energy': 0, 'time': 1}
     sliced = m.slice_by_idx(slices)
     assert sliced.geom.is_image
     slices = tuple([slices[ax.name] for ax in m.geom.axes])
@@ -140,12 +148,15 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
 
 @pytest.mark.parametrize('map_type', ['wcs', 'hpx', 'hpx-sparse'])
 def test_map_meta_read_write(map_type):
-    meta = OrderedDict([
-        ('user', 'test'),
-    ])
+    meta = OrderedDict([('user', 'test')])
 
-    m = Map.create(binsz=0.1, width=10.0, map_type=map_type,
-                   skydir=SkyCoord(0.0, 30.0, unit='deg'), meta=meta)
+    m = Map.create(
+        binsz=0.1,
+        width=10.0,
+        map_type=map_type,
+        skydir=SkyCoord(0.0, 30.0, unit='deg'),
+        meta=meta,
+    )
 
     hdulist = m.to_hdulist(hdu='COUNTS')
     header = hdulist['COUNTS'].header
@@ -156,12 +167,7 @@ def test_map_meta_read_write(map_type):
     assert m2.meta == meta
 
 
-unit_args = [
-    ('wcs', 's'),
-    ('wcs', ''),
-    ('wcs', Unit('sr')),
-    ('hpx', 'm^2')
-]
+unit_args = [('wcs', 's'), ('wcs', ''), ('wcs', Unit('sr')), ('hpx', 'm^2')]
 
 
 @pytest.mark.parametrize(('map_type', 'unit'), unit_args)
@@ -252,10 +258,16 @@ def test_map_reproject_wcs_to_wcs():
 
     axis1 = MapAxis(energy_nodes, interp='lin', name='energy', node_type='center')
     axis2 = MapAxis(time_nodes, interp='lin', name='time', node_type='center')
-    geom_wcs_1 = WcsGeom.create(skydir=(266.405, -28.936), npix=(11, 11),
-                                binsz=0.1, axes=[axis1, axis2], coordsys='CEL')
-    geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1,
-                                axes=[axis1, axis2], coordsys='GAL')
+    geom_wcs_1 = WcsGeom.create(
+        skydir=(266.405, -28.936),
+        npix=(11, 11),
+        binsz=0.1,
+        axes=[axis1, axis2],
+        coordsys='CEL',
+    )
+    geom_wcs_2 = WcsGeom.create(
+        skydir=(0, 0), npix=(11, 11), binsz=0.1, axes=[axis1, axis2], coordsys='GAL'
+    )
 
     spatial_data = np.zeros((11, 11))
     energy_data = energy_nodes.reshape(3, 1, 1)
@@ -274,9 +286,12 @@ def test_map_reproject_wcs_to_wcs():
 
 @requires_dependency('reproject')
 def test_map_reproject_wcs_to_hpx():
-    axis = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
-    geom_wcs = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=10,
-                              axes=[axis], coordsys='GAL')
+    axis = MapAxis.from_bounds(
+        1.0, 10.0, 3, interp='log', name='energy', node_type='center'
+    )
+    geom_wcs = WcsGeom.create(
+        skydir=(0, 0), npix=(11, 11), binsz=10, axes=[axis], coordsys='GAL'
+    )
     geom_hpx = HpxGeom.create(binsz=10, coordsys='GAL', axes=[axis])
 
     data = np.arange(11 * 11 * 3).reshape(geom_wcs.data_shape)
@@ -289,9 +304,12 @@ def test_map_reproject_wcs_to_hpx():
 
 @requires_dependency('reproject')
 def test_map_reproject_hpx_to_wcs():
-    axis = MapAxis.from_bounds(1.0, 10.0, 3, interp='log', name='energy', node_type='center')
-    geom_wcs = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=10,
-                              axes=[axis], coordsys='GAL')
+    axis = MapAxis.from_bounds(
+        1.0, 10.0, 3, interp='log', name='energy', node_type='center'
+    )
+    geom_wcs = WcsGeom.create(
+        skydir=(0, 0), npix=(11, 11), binsz=10, axes=[axis], coordsys='GAL'
+    )
     geom_hpx = HpxGeom.create(binsz=10, coordsys='GAL', axes=[axis])
 
     data = np.arange(3 * 768).reshape(geom_hpx.data_shape)

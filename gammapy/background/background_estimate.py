@@ -3,10 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from regions import CircleSkyRegion
 from .ring import ring_area_factor
 
-__all__ = [
-    'BackgroundEstimate',
-    'ring_background_estimate',
-]
+__all__ = ['BackgroundEstimate', 'ring_background_estimate']
 
 
 class BackgroundEstimate(object):
@@ -35,8 +32,16 @@ class BackgroundEstimate(object):
         Background estimation method
     """
 
-    def __init__(self, on_region, on_events, off_region,
-                 off_events, a_on, a_off, method='default'):
+    def __init__(
+        self,
+        on_region,
+        on_events,
+        off_region,
+        off_events,
+        a_on,
+        a_off,
+        method='default',
+    ):
         self.on_region = on_region
         self.on_events = on_events
         self.off_region = off_region

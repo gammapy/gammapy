@@ -88,6 +88,7 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
         Containment radius (pix)
     """
     from scipy.optimize import brentq
+
     data = image.quantity
     coords = image.geom.get_coord()
     separation = coords.skycoord.separation(position)
@@ -96,7 +97,10 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
     data = data / data[np.isfinite(data)].sum()
 
     def func(r):
-        return measure_containment_fraction(data, r, separation.value) - containment_fraction
+        return (
+            measure_containment_fraction(data, r, separation.value)
+            - containment_fraction
+        )
 
     containment_radius = brentq(func, a=0, b=separation.max().value)
     return Quantity(containment_radius, separation.unit)
@@ -157,5 +161,3 @@ def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
     for radius in radii:
         containment.append(measure_containment(image, position, radius))
     return radii, Quantity(containment)
-
-

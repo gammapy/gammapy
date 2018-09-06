@@ -7,10 +7,7 @@ from ..irf import EnergyDependentTablePSF
 from ..maps import Map
 from ..cube import PSFKernel
 
-__all__ = [
-    'make_psf_map',
-    'PSFMap'
-]
+__all__ = ['make_psf_map', 'PSFMap']
 
 
 def make_psf_map(psf, pointing, geom, max_offset):
@@ -162,7 +159,9 @@ class PSFMap(object):
             the table PSF
         """
         if position.size != 1:
-            raise ValueError("EnergyDependentTablePSF can be extracted at one single position only.")
+            raise ValueError(
+                "EnergyDependentTablePSF can be extracted at one single position only."
+            )
 
         # axes ordering fixed. Could be changed.
         pix_ener = np.arange(self.geom.axes[1].nbin)
@@ -175,7 +174,9 @@ class PSFMap(object):
         pix = np.meshgrid(pix_lon, pix_lat, pix_rad, pix_ener)
 
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit))
+        psf_values = np.squeeze(
+            self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit)
+        )
 
         energies = self.psf_map.geom.axes[1].center * self.psf_map.geom.axes[1].unit
         rad = self.psf_map.geom.axes[0].center * self.psf_map.geom.axes[0].unit

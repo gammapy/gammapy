@@ -7,14 +7,12 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = [
-    'SourceCatalogSNRcat',
-    'SourceCatalogObjectSNRcat',
-]
+__all__ = ['SourceCatalogSNRcat', 'SourceCatalogObjectSNRcat']
 
 
 class SourceCatalogObjectSNRcat(SourceCatalogObject):
     """One source from the SNRcat catalog."""
+
     pass
 
 
@@ -38,6 +36,7 @@ class SourceCatalogSNRcat(SourceCatalog):
 
     Each table has a ``version`` string containing the download date in the ``table.meta`` dictionary.
     """
+
     name = 'snrcat'
     description = 'SNRcat supernova remnant catalog.'
     source_object_class = SourceCatalogObjectSNRcat
@@ -100,12 +99,18 @@ def _fetch_catalog_snrcat_snr_table(cache):
     table.rename_column('size_radio', 'diameter_radio_str')
     diameter_radio_mean = _snrcat_parse_diameter(table['diameter_radio_str'])
     index = table.index_column('diameter_radio_str') + 1
-    table.add_column(Column(diameter_radio_mean, name='diameter_radio_mean', unit='arcmin'), index=index)
+    table.add_column(
+        Column(diameter_radio_mean, name='diameter_radio_mean', unit='arcmin'),
+        index=index,
+    )
 
     table.rename_column('size_X', 'diameter_xray_str')
     diameter_xray_mean = _snrcat_parse_diameter(table['diameter_xray_str'])
     index = table.index_column('diameter_xray_str') + 1
-    table.add_column(Column(diameter_xray_mean, name='diameter_xray_mean', unit='arcmin'), index=index)
+    table.add_column(
+        Column(diameter_xray_mean, name='diameter_xray_mean', unit='arcmin'),
+        index=index,
+    )
 
     table.rename_column('size_coarse (arcmin)', 'diameter_mean')
     table['diameter_mean'].unit = 'arcmin'
@@ -134,8 +139,8 @@ def _snrcat_fix_na(table):
     """Fix N/A entries in string columns in SNRcat."""
     for colname in table.colnames:
         if isinstance(table[colname][0], six.text_type):
-            mask1 = (table[colname] == 'N / A')
-            mask2 = (table[colname] == 'N/A')
+            mask1 = table[colname] == 'N / A'
+            mask2 = table[colname] == 'N/A'
             table[colname].mask = mask1 | mask2
             table[colname].fill_value = ''
 

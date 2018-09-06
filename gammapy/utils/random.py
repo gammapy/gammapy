@@ -48,8 +48,10 @@ def get_random_state(init):
     elif isinstance(init, np.random.RandomState):
         return init
     else:
-        raise ValueError('{} cannot be used to seed a numpy.random.RandomState'
-                         ' instance'.format(init))
+        raise ValueError(
+            '{} cannot be used to seed a numpy.random.RandomState'
+            ' instance'.format(init)
+        )
 
 
 def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-seed'):
@@ -134,8 +136,9 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
     return x
 
 
-def sample_sphere_distance(distance_min=0, distance_max=1, size=None,
-                           random_state='random-seed'):
+def sample_sphere_distance(
+    distance_min=0, distance_max=1, size=None, random_state='random-seed'
+):
     """Sample random distances if the 3-dim space density is constant.
 
     This function uses inverse transform sampling
@@ -168,7 +171,7 @@ def sample_sphere_distance(distance_min=0, distance_max=1, size=None,
     #     b = -a * r_min ** 3
 
     a = 1. / (distance_max ** 3 - distance_min ** 3)
-    b = - a * distance_min ** 3
+    b = -a * distance_min ** 3
 
     # Now for inverse transform sampling we need to use the inverse of
     #     u = a * r ^ 3 + b

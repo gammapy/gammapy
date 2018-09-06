@@ -39,8 +39,8 @@ model_registry = {
                 'Prefactor': ['amplitude', 'cm-2 s-1 MeV-1'],
                 'Index': ['index', ''],
                 'Scale': ['reference', 'MeV'],
-                'PivotEnergy': ['reference', 'MeV']
-            }
+                'PivotEnergy': ['reference', 'MeV'],
+            },
         },
         'ExponentialCutoffPowerLaw': {
             'model': spectral.ExponentialCutoffPowerLaw,
@@ -49,24 +49,27 @@ model_registry = {
                 'Index': ['index', ''],
                 'Scale': ['reference', 'MeV'],
                 'PivotEnergy': ['reference', 'MeV'],
-                'CutoffEnergy': ['lambda_', 'MeV'],  # parameter lambda_=1/Ecut will be inverted on model creation
-            }
+                'CutoffEnergy': [
+                    'lambda_',
+                    'MeV',
+                ],  # parameter lambda_=1/Ecut will be inverted on model creation
+            },
         },
         'ConstantValue': {
             'model': spectral.ConstantModel,
             'parameters': {
                 'Value': ['const', 'cm-2 s-1 MeV-1'],
-                'Normalization': ['const', 'cm-2 s-1 MeV-1']
-            }
+                'Normalization': ['const', 'cm-2 s-1 MeV-1'],
+            },
         },
         # TODO: FileFunction is not working
         'FileFunction': {
             'model': spectral.TableModel,
             'parameters': {
                 'Value': ['const', 'cm-2 s-1 MeV-1'],
-                'Normalization': ['const', 'cm-2 s-1 MeV-1']
-            }
-        }
+                'Normalization': ['const', 'cm-2 s-1 MeV-1'],
+            },
+        },
     },
     'spatial': {
         'PointSource': {
@@ -75,8 +78,8 @@ model_registry = {
                 'RA': ['lon_0', 'deg'],
                 'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
-                'GLAT': ['lat_0', 'deg']
-            }
+                'GLAT': ['lat_0', 'deg'],
+            },
         },
         'RadialGaussian': {
             'model': spatial.SkyGaussian,
@@ -85,8 +88,8 @@ model_registry = {
                 'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg'],
-                'Sigma': ['sigma', 'deg']
-            }
+                'Sigma': ['sigma', 'deg'],
+            },
         },
         'RadialDisk': {
             'model': spatial.SkyDisk,
@@ -95,9 +98,8 @@ model_registry = {
                 'DEC': ['lat_0', 'deg'],
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg'],
-                'Radius': ['r_0', 'deg']
-
-            }
+                'Radius': ['r_0', 'deg'],
+            },
         },
         'RadialShell': {
             'model': spatial.SkyShell,
@@ -107,34 +109,35 @@ model_registry = {
                 'GLON': ['lon_0', 'deg'],
                 'GLAT': ['lat_0', 'deg'],
                 'Radius': ['radius', 'deg'],
-                'Width': ['width', 'deg']
-
-            }
+                'Width': ['width', 'deg'],
+            },
         },
         'DiffuseMap': {
             'model': spatial.SkyDiffuseMap,
             'parameters': {
                 'Prefactor': ['norm', ''],
                 'Normalization': ['norm', ''],
-                'Value': ['norm', '']
-            }
+                'Value': ['norm', ''],
+            },
         },
         'DiffuseIsotropic': {
             'model': spatial.SkyDiffuseConstant,
             'parameters': {
                 'Prefactor': ['value', ''],
                 'Normalization': ['value', ''],
-                'Value': ['value', '']
-            }
-        }
-    }
+                'Value': ['value', ''],
+            },
+        },
+    },
 }
 # For compatibility with the Fermi/LAT ScienceTools the model type PointSource can be replaced by SkyDirFunction.
 model_registry['spatial']['SkyDirFunction'] = model_registry['spatial']['PointSource']
 model_registry['spatial']['SpatialMap'] = model_registry['spatial']['DiffuseMap']
 model_registry['spatial']['DiffuseMapCube'] = model_registry['spatial']['DiffuseMap']
 model_registry['spatial']['MapCubeFunction'] = model_registry['spatial']['DiffuseMap']
-model_registry['spatial']['ConstantValue'] = model_registry['spatial']['DiffuseIsotropic']
+model_registry['spatial']['ConstantValue'] = model_registry['spatial'][
+    'DiffuseIsotropic'
+]
 model_registry['spectral']['Constant'] = model_registry['spectral']['ConstantValue']
 
 
@@ -198,8 +201,7 @@ def xml_to_model(xml, which):
         model.parameters = parameters
     elif type_ == 'FileFunction':
         filename = xml['@file']
-        model = model.read_fermi_isotropic_model(filename,
-                                                 meta=dict(filename=filename))
+        model = model.read_fermi_isotropic_model(filename, meta=dict(filename=filename))
     else:
         # TODO: The new model API should support this, see issue #1398
         # >>> return model(parameters)
@@ -218,7 +220,9 @@ def xml_to_model(xml, which):
             model.parameters['index'].max = np.nan
         if type_ == 'ExponentialCutoffPowerLaw':
             model.parameters['lambda_'].value = 1 / model.parameters['lambda_'].value
-            model.parameters['lambda_'].unit = model.parameters['lambda_'].unit.to_string('fits') + '-1'
+            model.parameters['lambda_'].unit = (
+                model.parameters['lambda_'].unit.to_string('fits') + '-1'
+            )
             model.parameters['lambda_'].min = np.nan
             model.parameters['lambda_'].max = np.nan
             model.parameters['index'].value *= -1
@@ -244,15 +248,17 @@ def xml_to_parameters(xml, which, type_):
         max_ = float(par.get('@max', 'nan'))
         frozen = bool(1 - int(par['@free']))
 
-        parameters.append(Parameter(
-            name=name,
-            factor=factor,
-            scale=scale,
-            unit=unit,
-            min=min_,
-            max=max_,
-            frozen=frozen,
-        ))
+        parameters.append(
+            Parameter(
+                name=name,
+                factor=factor,
+                scale=scale,
+                unit=unit,
+                min=min_,
+                max=max_,
+                frozen=frozen,
+            )
+        )
 
     return Parameters(parameters)
 

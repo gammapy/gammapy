@@ -201,11 +201,7 @@ from astropy.units import Quantity
 from .scripts import make_path
 from .energy import EnergyBounds
 
-__all__ = [
-    'SmartHDUList',
-    'energy_axis_to_ebounds',
-    'earth_location_from_dict',
-]
+__all__ = ['SmartHDUList', 'energy_axis_to_ebounds', 'earth_location_from_dict']
 
 
 # TODO: decide what to call this class.
@@ -317,7 +313,9 @@ class SmartHDUList(object):
         del hdu
 
         if (hdu_key is None) and (hdu_type is None):
-            raise ValueError('Must give either `hdu` or `hdu_type`. Got `None` for both.')
+            raise ValueError(
+                'Must give either `hdu` or `hdu_type`. Got `None` for both.'
+            )
 
         # if (hdu_key is not None) and (hdu_type is not None):
         #     raise ValueError(
@@ -331,7 +329,9 @@ class SmartHDUList(object):
             # `HDUList.index_of` for integer input doesn't raise, just return
             # the number unchanged. Here we want to raise an error in this case.
             if not (0 <= idx < len(self.hdu_list)):
-                raise KeyError('HDU not found: hdu={}. Index out of range.'.format(hdu_key))
+                raise KeyError(
+                    'HDU not found: hdu={}. Index out of range.'.format(hdu_key)
+                )
             return idx
 
         if hdu_type is not None:

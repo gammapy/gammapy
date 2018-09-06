@@ -14,8 +14,7 @@ __all__ = [
 ]
 
 
-def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
-                          prefix=''):
+def coordinate_iau_format(coordinate, ra_digits, dec_digits=None, prefix=''):
     """Coordinate format as an IAU source designation.
 
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html

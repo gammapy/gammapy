@@ -12,20 +12,14 @@ from ...cube.models import SkyDiffuseCube
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..fit import MapEvaluator
-from ..models import (
-    SkyModel,
-    SkyModels,
-    CompoundSkyModel,
-)
+from ..models import SkyModel, SkyModels, CompoundSkyModel
 
 
 @pytest.fixture(scope='session')
 def sky_model():
-    spatial_model = SkyGaussian(
-        lon_0='3 deg', lat_0='4 deg', sigma='3 deg',
-    )
+    spatial_model = SkyGaussian(lon_0='3 deg', lat_0='4 deg', sigma='3 deg')
     spectral_model = PowerLaw(
-        index=2, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV',
+        index=2, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV'
     )
     return SkyModel(spatial_model, spectral_model)
 
@@ -100,7 +94,10 @@ class TestSkyModels:
         assert sky_models.parameters.names == parnames
 
         # Check that model parameters are references to the parts
-        assert sky_models.parameters['lon_0'] is sky_models.skymodels[0].parameters['lon_0']
+        assert (
+            sky_models.parameters['lon_0']
+            is sky_models.skymodels[0].parameters['lon_0']
+        )
 
         # Check that parameter assignment works
         assert sky_models.parameters.parameters[-1].value == 1
@@ -132,8 +129,13 @@ class TestSkyModel:
     @staticmethod
     def test_parameters(sky_model):
         # Check that model parameters are references to the spatial and spectral parts
-        assert sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
-        assert sky_model.parameters['amplitude'] is sky_model.spectral_model.parameters['amplitude']
+        assert (
+            sky_model.parameters['lon_0'] is sky_model.spatial_model.parameters['lon_0']
+        )
+        assert (
+            sky_model.parameters['amplitude']
+            is sky_model.spectral_model.parameters['amplitude']
+        )
 
     @staticmethod
     def test_evaluate_scalar(sky_model):
@@ -160,7 +162,6 @@ class TestSkyModel:
 
 
 class TestCompoundSkyModel:
-
     @staticmethod
     @pytest.fixture()
     def compound_model(sky_model):
@@ -172,7 +173,10 @@ class TestCompoundSkyModel:
         assert compound_model.parameters.names == parnames
 
         # Check that model parameters are references to the parts
-        assert compound_model.parameters['lon_0'] is compound_model.model1.parameters['lon_0']
+        assert (
+            compound_model.parameters['lon_0']
+            is compound_model.model1.parameters['lon_0']
+        )
 
         # Check that parameter assignment works
         assert compound_model.parameters.parameters[-1].value == 1
@@ -224,7 +228,9 @@ class TestSkyDiffuseCube:
     @staticmethod
     @requires_data('gammapy-extra')
     def test_read():
-        model = SkyDiffuseCube.read('$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits')
+        model = SkyDiffuseCube.read(
+            '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits'
+        )
         assert model.map.unit == 'cm-2 s-1 MeV-1 sr-1'
 
         # Check pixel inside map
@@ -277,10 +283,8 @@ class TestSkyDiffuseCubeMapEvaluator:
         assert_allclose(out[0, 0, 0], 1.380614e+09, rtol=1e-5)
 
 
-
 @requires_dependency('scipy')
 class TestSkyModelMapEvaluator:
-
     @staticmethod
     def test_energy_center(evaluator):
         val = evaluator.energy_center

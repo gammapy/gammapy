@@ -5,9 +5,7 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ..maps import WcsNDMap
 
-__all__ = [
-    'make_map_background_irf',
-]
+__all__ = ['make_map_background_irf']
 
 
 def make_map_background_irf(pointing, livetime, bkg, geom, n_integration_bins=1):

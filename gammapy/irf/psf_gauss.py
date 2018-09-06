@@ -64,10 +64,16 @@ class EnergyDependentMultiGaussPSF(object):
         plt.show()
     """
 
-    def __init__(self, energy_lo, energy_hi, theta, sigmas, norms,
-                 energy_thresh_lo=Quantity(0.1, 'TeV'),
-                 energy_thresh_hi=Quantity(100, 'TeV'),
-                 ):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        theta,
+        sigmas,
+        norms,
+        energy_thresh_lo=Quantity(0.1, 'TeV'),
+        energy_thresh_hi=Quantity(100, 'TeV'),
+    ):
 
         # Validate input
         validate_physical_type('energy_lo', energy_lo, 'energy')
@@ -79,8 +85,9 @@ class EnergyDependentMultiGaussPSF(object):
         # Set attributes
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
-        ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo,
-                                                           self.energy_hi)
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(
+            self.energy_lo, self.energy_hi
+        )
         self.energy = ebounds.log_centers
         self.theta = theta.to('deg')
         sigmas[0][sigmas[0] == 0] = 1
@@ -152,15 +159,32 @@ class EnergyDependentMultiGaussPSF(object):
             PSF in HDU list format.
         """
         # Set up data
-        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
-                 'SCALE', 'SIGMA_1', 'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
-        units = ['TeV', 'TeV', 'deg', 'deg',
-                 '', 'deg', '', 'deg', '', 'deg']
+        names = [
+            'ENERG_LO',
+            'ENERG_HI',
+            'THETA_LO',
+            'THETA_HI',
+            'SCALE',
+            'SIGMA_1',
+            'AMPL_2',
+            'SIGMA_2',
+            'AMPL_3',
+            'SIGMA_3',
+        ]
+        units = ['TeV', 'TeV', 'deg', 'deg', '', 'deg', '', 'deg', '', 'deg']
 
-        data = [self.energy_lo, self.energy_hi, self.theta, self.theta,
-                self.norms[0], self.sigmas[0],
-                self.norms[1], self.sigmas[1],
-                self.norms[2], self.sigmas[2]]
+        data = [
+            self.energy_lo,
+            self.energy_hi,
+            self.theta,
+            self.theta,
+            self.norms[0],
+            self.sigmas[0],
+            self.norms[1],
+            self.sigmas[1],
+            self.norms[2],
+            self.sigmas[2],
+        ]
 
         table = Table()
         for name_, data_, unit_ in zip(names, data, units):
@@ -230,18 +254,23 @@ class EnergyDependentMultiGaussPSF(object):
         for idx_energy in range(len(energy)):
             for idx_theta in range(len(theta)):
                 try:
-                    psf = self.psf_at_energy_and_theta(energy[idx_energy], theta[idx_theta])
+                    psf = self.psf_at_energy_and_theta(
+                        energy[idx_energy], theta[idx_theta]
+                    )
                     radius[idx_theta, idx_energy] = psf.containment_radius(fraction)
                 except ValueError:
-                    log.debug("Computing containment failed for E = {:.2f}"
-                              " and Theta={:.2f}".format(energy[idx_energy], theta[idx_theta]))
+                    log.debug(
+                        "Computing containment failed for E = {:.2f}"
+                        " and Theta={:.2f}".format(energy[idx_energy], theta[idx_theta])
+                    )
                     log.debug("Sigmas: {} Norms: {}".format(psf.sigmas, psf.norms))
                     radius[idx_theta, idx_energy] = np.nan
 
         return Angle(radius, 'deg')
 
-    def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
-                         add_cbar=True, **kwargs):
+    def plot_containment(
+        self, fraction=0.68, ax=None, show_safe_energy=False, add_cbar=True, **kwargs
+    ):
         """
         Plot containment image with energy and theta axes.
 
@@ -283,8 +312,9 @@ class EnergyDependentMultiGaussPSF(object):
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = 'Containment radius R{0:.0f} ({1})'.format(100 * fraction,
-                                                               containment.unit)
+            label = 'Containment radius R{0:.0f} ({1})'.format(
+                100 * fraction, containment.unit
+            )
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -298,16 +328,16 @@ class EnergyDependentMultiGaussPSF(object):
         label = 'Safe energy threshold: {0:3.2f}'.format(esafe)
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va='top')
 
-    def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
-                                   thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
+    def plot_containment_vs_energy(
+        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], 'deg'), ax=None, **kwargs
+    ):
         """Plot containment fraction as a function of energy.
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy = Energy.equal_log_spacing(
-            self.energy_lo[0], self.energy_hi[-1], 100)
+        energy = Energy.equal_log_spacing(self.energy_lo[0], self.energy_hi[-1], 100)
 
         for theta in thetas:
             for fraction in fractions:
@@ -323,6 +353,7 @@ class EnergyDependentMultiGaussPSF(object):
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
+
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         self.plot_containment(fraction=0.68, ax=axes[0])
@@ -335,8 +366,12 @@ class EnergyDependentMultiGaussPSF(object):
 
         plt.tight_layout()
 
-    def info(self, fractions=[0.68, 0.95], energies=Quantity([1., 10.], 'TeV'),
-             thetas=Quantity([0.], 'deg')):
+    def info(
+        self,
+        fractions=[0.68, 0.95],
+        energies=Quantity([1., 10.], 'TeV'),
+        thetas=Quantity([0.], 'deg'),
+    ):
         """
         Print PSF summary info.
 
@@ -371,9 +406,11 @@ class EnergyDependentMultiGaussPSF(object):
             for i, energy in enumerate(energies):
                 for j, theta in enumerate(thetas):
                     radius = containment[j, i]
-                    ss += ("{0:2.0f}% containment radius at theta = {1} and "
-                           "E = {2:4.1f}: {3:5.8f}\n"
-                           "".format(100 * fraction, theta, energy, radius))
+                    ss += (
+                        "{0:2.0f}% containment radius at theta = {1} and "
+                        "E = {2:4.1f}: {3:5.8f}\n"
+                        "".format(100 * fraction, theta, energy, radius)
+                    )
         return ss
 
     def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
@@ -415,8 +452,9 @@ class EnergyDependentMultiGaussPSF(object):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
             psf_value[idx] = Quantity(psf_gauss(rad), 'deg^-2')
 
-        return EnergyDependentTablePSF(energy=energies, rad=rad,
-                                       exposure=exposure, psf_value=psf_value)
+        return EnergyDependentTablePSF(
+            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
+        )
 
     def to_psf3d(self, rad):
         """ Creates a PSF3D from an analytical PSF.
@@ -438,14 +476,24 @@ class EnergyDependentMultiGaussPSF(object):
         rad_lo = rad[:-1]
         rad_hi = rad[1:]
 
-        psf_values = np.zeros((rad_lo.shape[0], offsets.shape[0], energy_lo.shape[0])) * Unit('sr-1')
+        psf_values = np.zeros(
+            (rad_lo.shape[0], offsets.shape[0], energy_lo.shape[0])
+        ) * Unit('sr-1')
 
         for i, offset in enumerate(offsets):
             psftable = self.to_energy_dependent_table_psf(offset)
             psf_values[:, i, :] = psftable.evaluate(energy, 0.5 * (rad_lo + rad_hi)).T
 
-        return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values,
-                     self.energy_thresh_lo, self.energy_thresh_hi)
+        return PSF3D(
+            energy_lo,
+            energy_hi,
+            offsets,
+            rad_lo,
+            rad_hi,
+            psf_values,
+            self.energy_thresh_lo,
+            self.energy_thresh_hi,
+        )
 
 
 class HESSMultiGaussPSF(object):

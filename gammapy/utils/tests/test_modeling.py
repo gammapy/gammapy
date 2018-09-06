@@ -70,17 +70,12 @@ def test_parameter_to_dict():
 
 @pytest.fixture()
 def pars():
-    return Parameters([
-        Parameter('spam', 42, 'deg'),
-        Parameter('ham', 99, 'TeV'),
-    ])
+    return Parameters([Parameter('spam', 42, 'deg'), Parameter('ham', 99, 'TeV')])
 
 
 def test_parameters_basics(pars):
     # This applies a unit transformation
-    pars.set_parameter_errors({
-        'ham': '10000 GeV',
-    })
+    pars.set_parameter_errors({'ham': '10000 GeV'})
     pars.set_error(0, 0.1)
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
     assert_allclose(pars.error('spam'), 0.1)
@@ -121,13 +116,15 @@ def _test_parameters_set_covariance_factors(pars):
 
 
 def test_parameters_scale():
-    pars = Parameters([
-        Parameter('', factor=10, scale=5),
-        Parameter('', factor=10, scale=50),
-        Parameter('', factor=100, scale=5),
-        Parameter('', factor=-10, scale=1),
-        Parameter('', factor=0, scale=1),
-    ])
+    pars = Parameters(
+        [
+            Parameter('', factor=10, scale=5),
+            Parameter('', factor=10, scale=50),
+            Parameter('', factor=100, scale=5),
+            Parameter('', factor=-10, scale=1),
+            Parameter('', factor=0, scale=1),
+        ]
+    )
 
     pars.autoscale()  # default: 'scale10'
 

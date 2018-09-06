@@ -19,9 +19,12 @@ def bkg_3d():
     data.value[1, 0, 0] = 2
     data.value[1, 1, 1] = 4
     return Background3D(
-        energy_lo=energy[:-1], energy_hi=energy[1:],
-        fov_lon_lo=fov_lon[:-1], fov_lon_hi=fov_lon[1:],
-        fov_lat_lo=fov_lat[:-1], fov_lat_hi=fov_lat[1:],
+        energy_lo=energy[:-1],
+        energy_hi=energy[1:],
+        fov_lon_lo=fov_lon[:-1],
+        fov_lon_hi=fov_lon[1:],
+        fov_lat_lo=fov_lat[:-1],
+        fov_lat_hi=fov_lat[1:],
         data=data,
     )
 
@@ -105,8 +108,7 @@ def test_background_3d_integrate(bkg_3d):
     # fov_lon=1.5 deg, fov_lat=1.5 deg, energy=100 TeV
 
     rate = bkg_3d.integrate_on_energy_range(
-        fov_lon=1.5 * u.deg, fov_lat=1.5 * u.deg,
-        energy_range=[100, 100 + 2e-6] * u.TeV,
+        fov_lon=1.5 * u.deg, fov_lat=1.5 * u.deg, energy_range=[100, 100 + 2e-6] * u.TeV
     )
     assert rate.shape == (1, 1)
     assert rate.unit == 's-1 sr-1'
@@ -115,8 +117,7 @@ def test_background_3d_integrate(bkg_3d):
     assert_allclose(rate.value, 8)
 
     rate = bkg_3d.integrate_on_energy_range(
-        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg,
-        energy_range=[1, 100] * u.TeV,
+        fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy_range=[1, 100] * u.TeV
     )
     assert_allclose(rate.value, 99000000)
 
@@ -138,8 +139,10 @@ def bkg_2d():
     data.value[1, 0] = 2
     data.value[1, 1] = 4
     return Background2D(
-        energy_lo=energy[:-1], energy_hi=energy[1:],
-        offset_lo=offset[:-1], offset_hi=offset[1:],
+        energy_lo=energy[:-1],
+        energy_hi=energy[1:],
+        offset_lo=offset[:-1],
+        offset_hi=offset[1:],
         data=data,
     )
 
@@ -151,18 +154,14 @@ def test_background_2d_evaluate(bkg_2d):
 
     # Evaluate at log center between nodes in energy
     res = bkg_2d.evaluate(
-        fov_lon=[1, 0.5] * u.deg,
-        fov_lat=0 * u.deg,
-        energy_reco=[1, 1] * u.TeV,
+        fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 1] * u.TeV
     )
     assert_allclose(res.value, [0, 0])
     assert res.shape == (2,)
     assert res.unit == 's-1 MeV-1 sr-1'
 
     res = bkg_2d.evaluate(
-        fov_lon=[1, 0.5] * u.deg,
-        fov_lat=0 * u.deg,
-        energy_reco=[100, 100] * u.TeV,
+        fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_reco=[100, 100] * u.TeV
     )
     assert_allclose(res.value, [3, 2])
     res = bkg_2d.evaluate(
@@ -175,9 +174,7 @@ def test_background_2d_evaluate(bkg_2d):
     assert res.shape == (2, 2)
 
     res = bkg_2d.evaluate(
-        fov_lon=[1, 1] * u.deg,
-        fov_lat=0 * u.deg,
-        energy_reco=[1, 100] * u.TeV,
+        fov_lon=[1, 1] * u.deg, fov_lat=0 * u.deg, energy_reco=[1, 100] * u.TeV
     )
     assert_allclose(res.value, [0, 3])
     assert res.shape == (2,)
@@ -208,9 +205,7 @@ def test_background_2d_integrate(bkg_2d):
     # e.g. constant spectrum or power-law.
 
     rate = bkg_2d.integrate_on_energy_range(
-        fov_lon=[1, 0.5] * u.deg,
-        fov_lat=0 * u.deg,
-        energy_range=[0.1, 0.5] * u.TeV,
+        fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_range=[0.1, 0.5] * u.TeV
     )
 
     assert rate.shape == (1, 2)
@@ -218,9 +213,7 @@ def test_background_2d_integrate(bkg_2d):
     assert_allclose(rate.value[0], [0, 0])
 
     rate = bkg_2d.integrate_on_energy_range(
-        fov_lon=[1, 0.5] * u.deg,
-        fov_lat=0 * u.deg,
-        energy_range=[1, 100] * u.TeV,
+        fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_range=[1, 100] * u.TeV
     )
     assert_allclose(rate.value[0], [1.485e+08, 9.900e+07])
 

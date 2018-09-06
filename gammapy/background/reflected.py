@@ -7,10 +7,7 @@ from regions import PixCoord, CirclePixelRegion
 from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 
-__all__ = [
-    'ReflectedRegionsFinder',
-    'ReflectedRegionsBackgroundEstimator',
-]
+__all__ = ['ReflectedRegionsFinder', 'ReflectedRegionsBackgroundEstimator']
 
 log = logging.getLogger(__name__)
 
@@ -112,16 +109,24 @@ class ReflectedRegionsFinder(object):
         radius: 0.400147197682 deg
     """
 
-    def __init__(self, region, center,
-                 angle_increment='0.1 rad', min_distance='0 rad',
-                 min_distance_input='0.1 rad', max_region_number=10000,
-                 exclusion_mask=None):
+    def __init__(
+        self,
+        region,
+        center,
+        angle_increment='0.1 rad',
+        min_distance='0 rad',
+        min_distance_input='0.1 rad',
+        max_region_number=10000,
+        exclusion_mask=None,
+    ):
         self.region = region
         self.center = center
 
         self.angle_increment = Angle(angle_increment)
         if self.angle_increment < Angle(1, 'deg'):
-            raise ValueError("ReflectedRegionsFinder: the angle_increment parameter is too small.")
+            raise ValueError(
+                "ReflectedRegionsFinder: the angle_increment parameter is too small."
+            )
 
         self.min_distance = Angle(min_distance)
         self.min_distance_input = Angle(min_distance_input)
@@ -155,7 +160,9 @@ class ReflectedRegionsFinder(object):
         min_size = region.center.separation(center)
         binsz = 0.02
         npix = int((3 * min_size / binsz).value)
-        maskmap = WcsNDMap.create(skydir=center, binsz=binsz, npix=npix, coordsys='GAL', proj='TAN', unit='')
+        maskmap = WcsNDMap.create(
+            skydir=center, binsz=binsz, npix=npix, coordsys='GAL', proj='TAN', unit=''
+        )
         maskmap.data += 1.
         return maskmap
 
@@ -180,7 +187,9 @@ class ReflectedRegionsFinder(object):
         self._min_ang = min_ang + self.min_distance
 
         # Maximum possible angle before regions is reached again
-        self._max_angle = self._angle + Angle('360deg') - self._min_ang - self.min_distance_input
+        self._max_angle = (
+            self._angle + Angle('360deg') - self._min_ang - self.min_distance_input
+        )
 
         # Distance image
         self._distance_image = _compute_distance_image(self.exclusion_mask)
@@ -221,9 +230,15 @@ class ReflectedRegionsFinder(object):
             ax.add_patch(off_patch)
 
             test_pointing = self.center
-            ax.scatter(test_pointing.galactic.l.degree, test_pointing.galactic.b.degree,
-                       transform=ax.get_transform('galactic'),
-                       marker='+', s=300, linewidths=3, color='green')
+            ax.scatter(
+                test_pointing.galactic.l.degree,
+                test_pointing.galactic.b.degree,
+                transform=ax.get_transform('galactic'),
+                marker='+',
+                s=300,
+                linewidths=3,
+                color='green',
+            )
 
         return fig, ax
 
@@ -235,8 +250,7 @@ class ReflectedRegionsFinder(object):
         """
         x, y = pixreg.center.x, pixreg.center.y
         try:
-            val = distance_image.data[np.round(y).astype(int),
-                                      np.round(x).astype(int)]
+            val = distance_image.data[np.round(y).astype(int), np.round(x).astype(int)]
         except IndexError:
             return False
         else:
@@ -277,9 +291,7 @@ class ReflectedRegionsBackgroundEstimator(object):
     def __init__(self, on_region, obs_list, **kwargs):
         self.on_region = on_region
         self.obs_list = obs_list
-        self.finder = ReflectedRegionsFinder(region=on_region,
-                                             center=None,
-                                             **kwargs)
+        self.finder = ReflectedRegionsFinder(region=on_region, center=None, **kwargs)
 
         self.result = None
 
@@ -310,13 +322,15 @@ class ReflectedRegionsBackgroundEstimator(object):
         on_events = obs.events.select_circular_region(self.on_region)
         a_on = 1
         a_off = len(off_region)
-        return BackgroundEstimate(on_region=self.on_region,
-                                  on_events=on_events,
-                                  off_region=off_region,
-                                  off_events=off_events,
-                                  a_on=a_on,
-                                  a_off=a_off,
-                                  method='Reflected Regions')
+        return BackgroundEstimate(
+            on_region=self.on_region,
+            on_events=on_events,
+            off_region=off_region,
+            off_events=off_events,
+            a_on=a_on,
+            a_off=a_off,
+            method='Reflected Regions',
+        )
 
     def plot(self, fig=None, ax=None, cmap=None, idx=None):
         """Standard debug plot.
@@ -354,8 +368,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             off_regions = result[idx_].off_region
             for off in off_regions:
                 off_patch = off.to_pixel(wcs=wcs).as_patch(
-                    alpha=0.8, color=colors[idx_],
-                    label='Obs {}'.format(obs.obs_id),
+                    alpha=0.8, color=colors[idx_], label='Obs {}'.format(obs.obs_id)
                 )
                 handle = ax.add_patch(off_patch)
             if off_regions:
@@ -363,9 +376,13 @@ class ReflectedRegionsBackgroundEstimator(object):
 
             test_pointing = obs.pointing_radec.galactic
             ax.scatter(
-                test_pointing.l.degree, test_pointing.b.degree,
+                test_pointing.l.degree,
+                test_pointing.b.degree,
                 transform=ax.get_transform('galactic'),
-                marker='+', color=colors[idx_], s=300, linewidths=3,
+                marker='+',
+                color=colors[idx_],
+                s=300,
+                linewidths=3,
             )
 
         ax.legend(handles=handles)

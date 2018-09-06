@@ -3,9 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import numpy as np
 
-__all__ = [
-    'robust_periodogram',
-]
+__all__ = ['robust_periodogram']
 
 
 def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', scale=1):
@@ -76,11 +74,9 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss='linear', s
     # find period of highest periodogram peak
     best_period = periods[np.argmax(psd_data)]
 
-    return OrderedDict([
-        ('periods', periods),
-        ('power', psd_data),
-        ('best_period', best_period),
-    ])
+    return OrderedDict(
+        [('periods', periods), ('power', psd_data), ('best_period', best_period)]
+    )
 
 
 def _period_grid(time):
@@ -129,10 +125,16 @@ def _robust_regression(time, flux, flux_err, periods, loss, scale):
     chi_noise = np.empty([len(periods)])
 
     for i in range(len(periods)):
-        chi_model[i] = least_squares(_model, beta0, loss=loss, f_scale=scale,
-                                     args=(x, periods[i], time, flux, flux_err)).cost
-        chi_noise[i] = least_squares(_noise, mu, loss=loss, f_scale=scale,
-                                     args=(time, flux, flux_err)).cost
+        chi_model[i] = least_squares(
+            _model,
+            beta0,
+            loss=loss,
+            f_scale=scale,
+            args=(x, periods[i], time, flux, flux_err),
+        ).cost
+        chi_noise[i] = least_squares(
+            _noise, mu, loss=loss, f_scale=scale, args=(time, flux, flux_err)
+        ).cost
     power = 1 - chi_model / chi_noise
 
     return power

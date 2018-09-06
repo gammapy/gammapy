@@ -20,10 +20,14 @@ def images():
     mask = coords.separation(center) < fov
 
     images = dict()
-    images['counts'] = reference_image.copy(data=np.zeros_like(reference_image.data) + 2.)
+    images['counts'] = reference_image.copy(
+        data=np.zeros_like(reference_image.data) + 2.
+    )
     images['counts'].data *= mask
 
-    images['exposure_on'] = reference_image.copy(data=np.zeros_like(reference_image.data) + 1.)
+    images['exposure_on'] = reference_image.copy(
+        data=np.zeros_like(reference_image.data) + 1.
+    )
     images['exposure_on'].data *= mask
 
     exclusion = reference_image.copy(data=np.zeros_like(reference_image.data) + 1.)
@@ -81,7 +85,9 @@ class TestAdaptiveRingBackgroundEstimator:
 
     def test_run_const_r_in(self):
         ring = AdaptiveRingBackgroundEstimator(
-            r_in=0.22 * u.deg, r_out_max=0.8 * u.deg, width=0.1 * u.deg,
+            r_in=0.22 * u.deg,
+            r_out_max=0.8 * u.deg,
+            width=0.1 * u.deg,
             method='fixed_r_in',
         )
         result = ring.run(self.images)

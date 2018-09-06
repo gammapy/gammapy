@@ -4,10 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from ..extern import six
 import numpy as np
 
-__all__ = ['array_stats_str',
-           'shape_2N',
-           'shape_divisible_by',
-           'symmetric_crop_pad_width']
+__all__ = [
+    'array_stats_str',
+    'shape_2N',
+    'shape_divisible_by',
+    'symmetric_crop_pad_width',
+]
 
 
 def array_stats_str(x, label=''):
@@ -99,8 +101,10 @@ def symmetric_crop_pad_width(shape, new_shape):
     ydiff = abs(shape[0] - new_shape[0])
 
     if (np.array([xdiff, ydiff]) % 2).any():
-        raise ValueError('For symmetric crop / pad width, difference to new shape '
-                         'must be even in all axes.')
+        raise ValueError(
+            'For symmetric crop / pad width, difference to new shape '
+            'must be even in all axes.'
+        )
 
     ywidth = (ydiff // 2, ydiff // 2)
     xwidth = (xdiff // 2, xdiff // 2)

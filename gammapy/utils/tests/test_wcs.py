@@ -2,8 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.coordinates import Angle
 from ...utils.testing import assert_quantity_allclose
-from ...utils.wcs import (linear_wcs_to_arrays,
-                          linear_arrays_to_wcs)
+from ...utils.wcs import linear_wcs_to_arrays, linear_arrays_to_wcs
 
 
 def test_wcs_object():

@@ -48,15 +48,19 @@ class ExtraImage(Image):
         if HAS_GP_EXTRA:
             path = gammapy_extra_path / 'figures' / filename
             if not path.is_file():
-                msg = 'Error in {} directive: File not found: {}'.format(self.name, path)
+                msg = 'Error in {} directive: File not found: {}'.format(
+                    self.name, path
+                )
                 raise self.error(msg)
             # Usually Sphinx doesn't support absolute paths
             # But passing a POSIX string of the absolute path
             # with an extra "/" at the start seems to do the trick
             self.arguments[0] = '/' + path.absolute().as_posix()
         else:
-            self.warning('GAMMAPY_EXTRA not available. '
-                         'Missing image: name: {!r} filename: {!r}'.format(self.name, filename))
+            self.warning(
+                'GAMMAPY_EXTRA not available. '
+                'Missing image: name: {!r} filename: {!r}'.format(self.name, filename)
+            )
             self.options['alt'] = self.arguments[1]
 
         return super(ExtraImage, self).run()
@@ -72,8 +76,7 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
 
     if not nbfile.is_file():
         msg = inliner.reporter.error(
-            'Unknown notebook {}'.format(notebook),
-            line=lineno,
+            'Unknown notebook {}'.format(notebook), line=lineno
         )
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
@@ -139,8 +142,9 @@ def modif_nb_links(folder, url_docs, git_commit):
         if os.path.isfile(filepath) and filepath[-6:] == '.ipynb':
             if folder == 'notebooks':
                 py_filename = filename.replace('ipynb', 'py')
-                ctx = dict(nb_filename=filename, py_filename=py_filename,
-                           git_commit=git_commit)
+                ctx = dict(
+                    nb_filename=filename, py_filename=py_filename, git_commit=git_commit
+                )
                 strcell = DOWNLOAD_CELL.format(**ctx)
                 nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
                 nb.metadata['nbsphinx'] = {'orphan': bool('true')}
@@ -156,7 +160,9 @@ def modif_nb_links(folder, url_docs, git_commit):
 
             txt = re.sub(
                 pattern=url_docs + '(.*?)html(\)|#)',
-                repl=repl, string=txt, flags=re.M | re.I,
+                repl=repl,
+                string=txt,
+                flags=re.M | re.I,
             )
 
             Path(filepath).write_text(txt, encoding="utf-8")
@@ -206,8 +212,11 @@ def gammapy_sphinx_notebooks(setup_cfg):
     if gammapy_extra_notebooks_folder.is_dir():
 
         ignorefiles = lambda d, files: [
-            f for f in files
-            if os.path.isfile(os.path.join(d, f)) and f[-6:] != '.ipynb' and f[-4:] != '.png'
+            f
+            for f in files
+            if os.path.isfile(os.path.join(d, f))
+            and f[-6:] != '.ipynb'
+            and f[-4:] != '.png'
         ]
         log.info('*** Converting notebooks to scripts')
 
@@ -220,7 +229,11 @@ def gammapy_sphinx_notebooks(setup_cfg):
 
         # copy notebooks
         copytree(str(gammapy_extra_notebooks_folder), str(path_nbs), ignore=ignorefiles)
-        copytree(str(gammapy_extra_notebooks_folder), str(path_static_nbs), ignore=ignorefiles)
+        copytree(
+            str(gammapy_extra_notebooks_folder),
+            str(path_static_nbs),
+            ignore=ignorefiles,
+        )
 
         for path in path_static_nbs.glob('*.ipynb'):
             convert_nb_to_script(path)

@@ -2,10 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = [
-    'fov_to_sky',
-    'sky_to_fov'
-]
+__all__ = ['fov_to_sky', 'sky_to_fov']
 
 
 def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
@@ -46,8 +43,16 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
     # transform
     lat_pnt = np.deg2rad(90 - lat_pnt)
     lon_pnt = -np.deg2rad(lon_pnt)
-    x_t = x_ * np.cos(lat_pnt) * np.cos(lon_pnt) - y_ * np.sin(lon_pnt) + z_ * np.sin(lat_pnt) * np.cos(lon_pnt)
-    y_t = x_ * np.sin(lon_pnt) * np.cos(lat_pnt) + y_ * np.cos(lon_pnt) + z_ * np.sin(lon_pnt) * np.sin(lat_pnt)
+    x_t = (
+        x_ * np.cos(lat_pnt) * np.cos(lon_pnt)
+        - y_ * np.sin(lon_pnt)
+        + z_ * np.sin(lat_pnt) * np.cos(lon_pnt)
+    )
+    y_t = (
+        x_ * np.sin(lon_pnt) * np.cos(lat_pnt)
+        + y_ * np.cos(lon_pnt)
+        + z_ * np.sin(lon_pnt) * np.sin(lat_pnt)
+    )
     z_t = -x_ * np.sin(lat_pnt) + z_ * np.cos(lat_pnt)
 
     # compute new lon, lat
@@ -95,9 +100,17 @@ def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
     # transform
     lat_pnt = np.deg2rad(90 - lat_pnt)
     lon_pnt = -np.deg2rad(lon_pnt)
-    x_t = x * np.cos(lat_pnt) * np.cos(lon_pnt) + y * np.sin(lon_pnt) * np.cos(lat_pnt) - z * np.sin(lat_pnt)
+    x_t = (
+        x * np.cos(lat_pnt) * np.cos(lon_pnt)
+        + y * np.sin(lon_pnt) * np.cos(lat_pnt)
+        - z * np.sin(lat_pnt)
+    )
     y_t = -x * np.sin(lon_pnt) + y * np.cos(lon_pnt)
-    z_t = x * np.sin(lat_pnt) * np.cos(lon_pnt) + y * np.sin(lat_pnt) * np.sin(lon_pnt) + z * np.cos(lat_pnt)
+    z_t = (
+        x * np.sin(lat_pnt) * np.cos(lon_pnt)
+        + y * np.sin(lat_pnt) * np.sin(lon_pnt)
+        + z * np.cos(lat_pnt)
+    )
 
     # switch coordinates due to axis convention
     x_ = z_t

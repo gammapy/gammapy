@@ -12,7 +12,9 @@ pytest.importorskip('scipy')
 
 @pytest.fixture(scope='session')
 def input_maps():
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+    filename = (
+        '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+    )
     return {
         'counts': Map.read(filename, hdu='counts'),
         'exposure': Map.read(filename, hdu='exposure'),
@@ -41,8 +43,9 @@ def test_compute_ts_map_downsampled(input_maps):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(2.5)
 
-    ts_estimator = TSMapEstimator(method='root brentq', n_jobs=4,
-                                  error_method='conf', ul_method='conf')
+    ts_estimator = TSMapEstimator(
+        method='root brentq', n_jobs=4, error_method='conf', ul_method='conf'
+    )
     result = ts_estimator.run(input_maps, kernel=kernel, downsampling_factor=2)
 
     assert_allclose(result['ts'].data[99, 99], 1675.28, rtol=1e-2)

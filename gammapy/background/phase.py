@@ -4,9 +4,7 @@ from .background_estimate import BackgroundEstimate
 from gammapy.data import EventList
 import numpy as np
 
-__all__ = [
-    'PhaseBackgroundEstimator',
-]
+__all__ = ['PhaseBackgroundEstimator']
 
 
 class PhaseBackgroundEstimator(object):
@@ -83,12 +81,27 @@ class PhaseBackgroundEstimator(object):
         self.off_phase = self._check_phase_intervals(self.off_phase)
 
         # Loop over all ON- and OFF- phase intervals to filter the ON- and OFF- events
-        list_on_events = [self.filter_events(all_events, each_on_phase) for each_on_phase in self.on_phase]
-        list_off_events = [self.filter_events(all_events, each_off_phase) for each_off_phase in self.off_phase]
+        list_on_events = [
+            self.filter_events(all_events, each_on_phase)
+            for each_on_phase in self.on_phase
+        ]
+        list_off_events = [
+            self.filter_events(all_events, each_off_phase)
+            for each_off_phase in self.off_phase
+        ]
 
         # Loop over all ON- and OFF- phase intervals to compute the normalization factors a_on and a_off
-        a_on = np.fromiter((each_on_phase[1] - each_on_phase[0] for each_on_phase in self.on_phase), np.float).sum()
-        a_off = np.fromiter((each_off_phase[1] - each_off_phase[0] for each_off_phase in self.off_phase), np.float).sum()
+        a_on = np.fromiter(
+            (each_on_phase[1] - each_on_phase[0] for each_on_phase in self.on_phase),
+            np.float,
+        ).sum()
+        a_off = np.fromiter(
+            (
+                each_off_phase[1] - each_off_phase[0]
+                for each_off_phase in self.off_phase
+            ),
+            np.float,
+        ).sum()
 
         on_events = EventList.stack(list_on_events)
         off_events = EventList.stack(list_off_events)

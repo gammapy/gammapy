@@ -42,6 +42,7 @@ def test_integrate_spectrum_uncertainties():
     Test numerical integration against analytical solution.
     """
     from uncertainties import unumpy
+
     e1 = 1.
     e2 = 10.
     einf = 1e10
@@ -70,10 +71,9 @@ def test_integrate_spectrum_ecpl():
         reference=1 * u.TeV,
         lambda_=0.1 / u.TeV,
     )
-    ecpl.parameters.set_parameter_errors({
-        'index': 0.2,
-        'amplitude': 1e-13 * u.Unit('cm-2 s-1 TeV-1'),
-    })
+    ecpl.parameters.set_parameter_errors(
+        {'index': 0.2, 'amplitude': 1e-13 * u.Unit('cm-2 s-1 TeV-1')}
+    )
     emin, emax = 1 * u.TeV, 1e10 * u.TeV
     res = ecpl.integral_error(emin, emax)
 
@@ -91,36 +91,56 @@ def get_test_cases():
         return []
     else:
         return [
-            dict(model=PowerLaw(index=2,
-                                reference=Quantity(1, 'TeV'),
-                                amplitude=Quantity(1e2, 'TeV-1')),
-                 e_true=e_true,
-                 npred=999),
-            dict(model=PowerLaw(index=2,
-                                reference=Quantity(1, 'TeV'),
-                                amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
-                 aeff=EffectiveAreaTable.from_parametrization(e_true),
-                 livetime=Quantity(10, 'h'),
-                 npred=1448.059605038253),
-            dict(model=PowerLaw(index=2,
-                                reference=Quantity(1, 'GeV'),
-                                amplitude=Quantity(1e-11, 'GeV-1 cm-2 s-1')),
-                 aeff=EffectiveAreaTable.from_parametrization(e_true),
-                 livetime=Quantity(30, 'h'),
-                 npred=4.344178815114759),
-            dict(model=PowerLaw(index=2,
-                                reference=Quantity(1, 'TeV'),
-                                amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1')),
-                 aeff=EffectiveAreaTable.from_parametrization(e_true),
-                 edisp=EnergyDispersion.from_gauss(e_reco=e_reco,
-                                                   e_true=e_true,
-                                                   bias=0, sigma=0.2),
-                 livetime=Quantity(10, 'h'),
-                 npred=1437.4542016322125),
-            dict(model=TableModel(energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
-                                  values=[4., 3., 1., 0.1] * u.Unit('TeV-1')),
-                 npred=0.5545130625383198,
-                 e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV)
+            dict(
+                model=PowerLaw(
+                    index=2,
+                    reference=Quantity(1, 'TeV'),
+                    amplitude=Quantity(1e2, 'TeV-1'),
+                ),
+                e_true=e_true,
+                npred=999,
+            ),
+            dict(
+                model=PowerLaw(
+                    index=2,
+                    reference=Quantity(1, 'TeV'),
+                    amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1'),
+                ),
+                aeff=EffectiveAreaTable.from_parametrization(e_true),
+                livetime=Quantity(10, 'h'),
+                npred=1448.059605038253,
+            ),
+            dict(
+                model=PowerLaw(
+                    index=2,
+                    reference=Quantity(1, 'GeV'),
+                    amplitude=Quantity(1e-11, 'GeV-1 cm-2 s-1'),
+                ),
+                aeff=EffectiveAreaTable.from_parametrization(e_true),
+                livetime=Quantity(30, 'h'),
+                npred=4.344178815114759,
+            ),
+            dict(
+                model=PowerLaw(
+                    index=2,
+                    reference=Quantity(1, 'TeV'),
+                    amplitude=Quantity(1e-11, 'TeV-1 cm-2 s-1'),
+                ),
+                aeff=EffectiveAreaTable.from_parametrization(e_true),
+                edisp=EnergyDispersion.from_gauss(
+                    e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
+                ),
+                livetime=Quantity(10, 'h'),
+                npred=1437.4542016322125,
+            ),
+            dict(
+                model=TableModel(
+                    energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+                    values=[4., 3., 1., 0.1] * u.Unit('TeV-1'),
+                ),
+                npred=0.5545130625383198,
+                e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+            ),
         ]
 
 

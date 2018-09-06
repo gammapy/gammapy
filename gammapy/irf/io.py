@@ -10,13 +10,7 @@ from .background import Background3D
 from .energy_dispersion import EnergyDispersion2D
 from .psf_gauss import EnergyDependentMultiGaussPSF
 
-__all__ = [
-    'CTAIrf',
-    'BgRateTable',
-    'Psf68Table',
-    'SensitivityTable',
-    'CTAPerf',
-]
+__all__ = ['CTAIrf', 'BgRateTable', 'Psf68Table', 'SensitivityTable', 'CTAPerf']
 
 
 class CTAIrf(object):
@@ -81,13 +75,7 @@ class CTAIrf(object):
         else:
             sensi = None
 
-        return cls(
-            aeff=aeff,
-            bkg=bkg,
-            edisp=edisp,
-            psf=psf,
-            ref_sensi=sensi,
-        )
+        return cls(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf, ref_sensi=sensi)
 
 
 class BgRateTable(object):
@@ -107,7 +95,9 @@ class BgRateTable(object):
 
     def __init__(self, energy_lo, energy_hi, data):
         axes = [
-            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+            BinnedDataAxis(
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            )
         ]
         self.data = NDDataArray(axes=axes, data=data)
 
@@ -151,6 +141,7 @@ class BgRateTable(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         energy = energy or self.energy.nodes
@@ -185,7 +176,9 @@ class Psf68Table(object):
 
     def __init__(self, energy_lo, energy_hi, data):
         axes = [
-            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+            BinnedDataAxis(
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            )
         ]
         self.data = NDDataArray(axes=axes, data=data)
 
@@ -229,6 +222,7 @@ class Psf68Table(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         energy = energy or self.energy.nodes
@@ -264,7 +258,9 @@ class SensitivityTable(object):
 
     def __init__(self, energy_lo, energy_hi, data):
         axes = [
-            BinnedDataAxis(energy_lo, energy_hi, interpolation_mode='log', name='energy'),
+            BinnedDataAxis(
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            )
         ]
         self.data = NDDataArray(axes=axes, data=data)
 
@@ -307,6 +303,7 @@ class SensitivityTable(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         energy = energy or self.energy.nodes
@@ -389,28 +386,21 @@ class CTAPerf(object):
         e_reco_max = bkg.energy.hi[-1]
         e_reco_bin = bkg.energy.nbins
         e_reco_axis = EnergyBounds.equal_log_spacing(
-            e_reco_min, e_reco_max, e_reco_bin, 'TeV',
+            e_reco_min, e_reco_max, e_reco_bin, 'TeV'
         )
 
         e_true_min = aeff.energy.lo[0]
         e_true_max = aeff.energy.hi[-1]
         e_true_bin = aeff.energy.nbins
         e_true_axis = EnergyBounds.equal_log_spacing(
-            e_true_min, e_true_max, e_true_bin, 'TeV',
+            e_true_min, e_true_max, e_true_bin, 'TeV'
         )
 
         rmf = edisp.to_energy_dispersion(
-            offset=offset, e_reco=e_reco_axis, e_true=e_true_axis,
+            offset=offset, e_reco=e_reco_axis, e_true=e_true_axis
         )
 
-        return cls(
-            aeff=aeff,
-            bkg=bkg,
-            edisp=edisp,
-            psf=psf,
-            sens=sens,
-            rmf=rmf
-        )
+        return cls(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf, sens=sens, rmf=rmf)
 
     def peek(self, figsize=(15, 8)):
         """Quick-look summary plots."""

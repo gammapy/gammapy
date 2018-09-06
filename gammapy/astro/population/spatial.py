@@ -53,8 +53,7 @@ class Paczynski1990(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_exp=4.5, **kwargs):
-        super(Paczynski1990, self).__init__(amplitude=amplitude,
-                                            r_exp=r_exp, **kwargs)
+        super(Paczynski1990, self).__init__(amplitude=amplitude, r_exp=r_exp, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, r_exp):
@@ -92,14 +91,19 @@ class CaseBattacharya1998(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1., alpha=2, beta=3.53, **kwargs):
-        super(CaseBattacharya1998, self).__init__(amplitude=amplitude,
-                                                  alpha=alpha, beta=beta, **kwargs)
+        super(CaseBattacharya1998, self).__init__(
+            amplitude=amplitude, alpha=alpha, beta=beta, **kwargs
+        )
 
     @staticmethod
     def evaluate(r, amplitude, alpha, beta):
         """Evaluate model."""
         term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** alpha
-        term2 = np.exp(-beta * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
+        term2 = np.exp(
+            -beta
+            * (r - D_SUN_TO_GALACTIC_CENTER.value)
+            / D_SUN_TO_GALACTIC_CENTER.value
+        )
         return amplitude * term1 * term2
 
 
@@ -138,14 +142,19 @@ class YusifovKucuk2004(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1, a=1.64, b=4.01, r_1=0.55, **kwargs):
-        super(YusifovKucuk2004, self).__init__(amplitude=amplitude,
-                                               a=a, b=b, r_1=r_1, **kwargs)
+        super(YusifovKucuk2004, self).__init__(
+            amplitude=amplitude, a=a, b=b, r_1=r_1, **kwargs
+        )
 
     @staticmethod
     def evaluate(r, amplitude, a, b, r_1):
         """Evaluate model."""
         term1 = ((r + r_1) / (D_SUN_TO_GALACTIC_CENTER.value + r_1)) ** a
-        term2 = np.exp(-b * (r - D_SUN_TO_GALACTIC_CENTER.value) / (D_SUN_TO_GALACTIC_CENTER.value + r_1))
+        term2 = np.exp(
+            -b
+            * (r - D_SUN_TO_GALACTIC_CENTER.value)
+            / (D_SUN_TO_GALACTIC_CENTER.value + r_1)
+        )
         return amplitude * term1 * term2
 
 
@@ -181,13 +190,16 @@ class YusifovKucuk2004B(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, a=4, b=6.8, **kwargs):
-        super(YusifovKucuk2004B, self).__init__(amplitude=amplitude,
-                                                a=a, b=b, **kwargs)
+        super(YusifovKucuk2004B, self).__init__(amplitude=amplitude, a=a, b=b, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, a, b):
         """Evaluate model."""
-        return amplitude * (r / D_SUN_TO_GALACTIC_CENTER.value) ** a * np.exp(-b * (r / D_SUN_TO_GALACTIC_CENTER.value))
+        return (
+            amplitude
+            * (r / D_SUN_TO_GALACTIC_CENTER.value) ** a
+            * np.exp(-b * (r / D_SUN_TO_GALACTIC_CENTER.value))
+        )
 
 
 class FaucherKaspi2006(Fittable1DModel):
@@ -220,8 +232,9 @@ class FaucherKaspi2006(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_0=7.04, sigma=1.83, **kwargs):
-        super(FaucherKaspi2006, self).__init__(amplitude=amplitude,
-                                               r_0=r_0, sigma=sigma, **kwargs)
+        super(FaucherKaspi2006, self).__init__(
+            amplitude=amplitude, r_0=r_0, sigma=sigma, **kwargs
+        )
 
     @staticmethod
     def evaluate(r, amplitude, r_0, sigma):
@@ -267,7 +280,9 @@ class Lorimer2006(Fittable1DModel):
     def evaluate(r, amplitude, B, C):
         """Evaluate model."""
         term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** B
-        term2 = np.exp(-C * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
+        term2 = np.exp(
+            -C * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value
+        )
         return amplitude * term1 * term2
 
 
@@ -425,8 +440,9 @@ class FaucherSpiral(LogSpiral):
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
-    def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc'),
-                       random_state='random-seed'):
+    def _gc_correction(
+        self, radius, theta, r_corr=Quantity(2.857, 'kpc'), random_state='random-seed'
+    ):
         """Correction of source distribution towards the galactic center.
 
         To avoid spiralarm features near the Galactic Center, the position angle theta
@@ -474,11 +490,15 @@ class FaucherSpiral(LogSpiral):
 
         N = random_state.randint(0, 4, radius.size)  # Choose Spiralarm
         theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]  # Compute angle
-        spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
+        spiralarm = self.spiralarms[
+            N
+        ]  # List that contains in wich spiralarm a postion lies
 
         if blur:  # Apply blurring model according to Faucher
             radius, theta = self._blur(radius, theta, random_state=random_state)
-            radius, theta = self._gc_correction(radius, theta, random_state=random_state)
+            radius, theta = self._gc_correction(
+                radius, theta, random_state=random_state
+            )
         return radius, theta, spiralarm
 
 

@@ -8,10 +8,7 @@ from astropy.table import Table
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 
-__all__ = [
-    'HDULocation',
-    'HDUIndexTable',
-]
+__all__ = ['HDULocation', 'HDUIndexTable']
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +24,9 @@ class HDULocation(object):
     See also :ref:`gadf:hdu-index`.
     """
 
-    def __init__(self, obs_id, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name):
+    def __init__(
+        self, obs_id, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name
+    ):
         self.obs_id = obs_id
         self.hdu_type = hdu_type
         self.hdu_class = hdu_class
@@ -76,30 +75,39 @@ class HDULocation(object):
 
         if hdu_class == 'events':
             from ..data import EventList
+
             return EventList.read(filename, hdu=hdu)
         elif hdu_class == 'gti':
             from ..data import GTI
+
             return GTI.read(filename, hdu=hdu)
         elif hdu_class == 'aeff_2d':
             from ..irf import EffectiveAreaTable2D
+
             return EffectiveAreaTable2D.read(filename, hdu=hdu)
         elif hdu_class == 'edisp_2d':
             from ..irf import EnergyDispersion2D
+
             return EnergyDispersion2D.read(filename, hdu=hdu)
         elif hdu_class == 'psf_table':
             from ..irf import PSF3D
+
             return PSF3D.read(filename, hdu=hdu)
         elif hdu_class == 'psf_3gauss':
             from ..irf import EnergyDependentMultiGaussPSF
+
             return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu)
         elif hdu_class == 'psf_king':
             from ..irf import PSFKing
+
             return PSFKing.read(filename, hdu=hdu)
         elif hdu_class == 'bkg_2d':
             from ..irf import Background2D
+
             return Background2D.read(filename, hdu=hdu)
         elif hdu_class == 'bkg_3d':
             from ..irf import Background3D
+
             return Background3D.read(filename, hdu=hdu)
         else:
             raise ValueError('Invalid hdu_class: {}'.format(hdu_class))
@@ -110,14 +118,20 @@ class HDUIndexTable(Table):
 
     See :ref:`gadf:hdu-index`.
     """
-    VALID_HDU_TYPE = [
-        'events', 'gti', 'aeff', 'edisp', 'psf', 'bkg'
-    ]
+
+    VALID_HDU_TYPE = ['events', 'gti', 'aeff', 'edisp', 'psf', 'bkg']
     """Valid values for `HDU_TYPE`."""
 
     VALID_HDU_CLASS = [
-        'events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table',
-        'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d',
+        'events',
+        'gti',
+        'aeff_2d',
+        'edisp_2d',
+        'psf_table',
+        'psf_3gauss',
+        'psf_king',
+        'bkg_2d',
+        'bkg_3d',
     ]
     """Valid values for `HDU_CLASS`."""
 
@@ -165,14 +179,16 @@ class HDUIndexTable(Table):
         if len(idx) == 1:
             idx = idx[0]
         elif len(idx) == 0:
-            raise IndexError('No HDU found matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}'
-                             ''.format(obs_id, hdu_type, hdu_class))
+            raise IndexError(
+                'No HDU found matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}'
+                ''.format(obs_id, hdu_type, hdu_class)
+            )
         else:
             idx = idx[0]
             log.warning(
                 'Found multiple HDU matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}.'
-                ''.format(obs_id, hdu_type, hdu_class) +
-                ' Returning the first entry, which has HDU_TYPE = {} and HDU_CLASS = {}'
+                ''.format(obs_id, hdu_type, hdu_class)
+                + ' Returning the first entry, which has HDU_TYPE = {} and HDU_CLASS = {}'
                 ''.format(self[idx]['HDU_TYPE'], self[idx]['HDU_CLASS'])
             )
 
@@ -269,11 +285,15 @@ class HDUIndexTable(Table):
 
     def summary(self):
         """Summary report (str)"""
-        return '\n'.join([
-            'HDU index table:',
-            'BASE_DIR: {}'.format(self.base_dir),
-            'Rows: {}'.format(len(self)),
-            'OBS_ID: {} -- {}'.format(self.obs_id_unique[0], self.obs_id_unique[-1]),
-            'HDU_TYPE: {}'.format(self.hdu_type_unique),
-            'HDU_CLASS: {}'.format(self.hdu_class_unique),
-        ])
+        return '\n'.join(
+            [
+                'HDU index table:',
+                'BASE_DIR: {}'.format(self.base_dir),
+                'Rows: {}'.format(len(self)),
+                'OBS_ID: {} -- {}'.format(
+                    self.obs_id_unique[0], self.obs_id_unique[-1]
+                ),
+                'HDU_TYPE: {}'.format(self.hdu_type_unique),
+                'HDU_CLASS: {}'.format(self.hdu_class_unique),
+            ]
+        )

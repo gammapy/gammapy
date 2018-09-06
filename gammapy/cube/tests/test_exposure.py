@@ -30,25 +30,28 @@ def geom(map_type, ebounds):
 
 
 @requires_data('gammapy-extra')
-@pytest.mark.parametrize("pars", [
-    {
-        'geom': geom(map_type='wcs', ebounds=[0.1, 1, 10]),
-        'shape': (2, 3, 4),
-        'sum': 8.103974e+08,
-    },
-    {
-        'geom': geom(map_type='wcs', ebounds=[0.1, 10]),
-        'shape': (1, 3, 4),
-        'sum': 2.387916e+08,
-    },
-    # TODO: make this work for HPX
-    # 'HpxGeom' object has no attribute 'separation'
-    # {
-    #     'geom': geom(map_type='hpx', ebounds=[0.1, 1, 10]),
-    #     'shape': '???',
-    #     'sum': '???',
-    # },
-])
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            'geom': geom(map_type='wcs', ebounds=[0.1, 1, 10]),
+            'shape': (2, 3, 4),
+            'sum': 8.103974e+08,
+        },
+        {
+            'geom': geom(map_type='wcs', ebounds=[0.1, 10]),
+            'shape': (1, 3, 4),
+            'sum': 2.387916e+08,
+        },
+        # TODO: make this work for HPX
+        # 'HpxGeom' object has no attribute 'separation'
+        # {
+        #     'geom': geom(map_type='hpx', ebounds=[0.1, 1, 10]),
+        #     'shape': '???',
+        #     'sum': '???',
+        # },
+    ],
+)
 def test_make_map_exposure_true_energy(aeff, pars):
     m = make_map_exposure_true_energy(
         pointing=SkyCoord(2, 1, unit='deg'),

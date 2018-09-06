@@ -2,10 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.table import Table
 
-__all__ = [
-    'source_catalogs',
-    'SourceCatalogRegistry',
-]
+__all__ = ['source_catalogs', 'SourceCatalogRegistry']
 
 
 class SourceCatalogRegistry(object):
@@ -31,27 +28,35 @@ class SourceCatalogRegistry(object):
         source_catalogs = cls()
 
         import os
+
         if 'HGPS_ANALYSIS' in os.environ:
             from .hess import SourceCatalogHGPS
+
             source_catalogs.register('hgps', SourceCatalogHGPS)
 
         if 'GAMMA_CAT' in os.environ:
             from .gammacat import SourceCatalogGammaCat
+
             source_catalogs.register('gamma-cat', SourceCatalogGammaCat)
 
         from .fermi import SourceCatalog3FGL
+
         source_catalogs.register('3fgl', SourceCatalog3FGL)
 
         from .fermi import SourceCatalog1FHL
+
         source_catalogs.register('1fhl', SourceCatalog1FHL)
 
         from .fermi import SourceCatalog2FHL
+
         source_catalogs.register('2fhl', SourceCatalog2FHL)
 
         from .fermi import SourceCatalog3FHL
+
         source_catalogs.register('3fhl', SourceCatalog3FHL)
 
         from .hawc import SourceCatalog2HWC
+
         source_catalogs.register('2hwc', SourceCatalog2HWC)
 
         return source_catalogs
@@ -94,11 +99,13 @@ class SourceCatalogRegistry(object):
         rows = []
         for name in self._available_catalogs.keys():
             cat = self[name]
-            rows.append({
-                'name': name,
-                'description': cat.description,
-                'sources': len(cat.table),
-            })
+            rows.append(
+                {
+                    'name': name,
+                    'description': cat.description,
+                    'sources': len(cat.table),
+                }
+            )
 
         return Table(rows=rows, names=['name', 'description', 'sources'])
 

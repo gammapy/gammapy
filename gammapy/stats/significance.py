@@ -44,6 +44,7 @@ def significance_to_probability_normal(significance):
     7.6198530241604696e-24
     """
     from scipy.stats import norm
+
     return norm.sf(significance)
 
 
@@ -71,6 +72,7 @@ def probability_to_significance_normal(probability):
     6.3613409024040557
     """
     from scipy.stats import norm
+
     return norm.isf(probability)
 
 
@@ -80,6 +82,7 @@ def _p_to_s_direct(probability, one_sided=True):
     Reference: RooStats User Guide Equations (6,7).
     """
     from scipy.special import erfinv
+
     probability = 1 - probability  # We want p to be the tail probability
     temp = np.where(one_sided, 2 * probability - 1, probability)
     return np.sqrt(2) * erfinv(temp)
@@ -91,6 +94,7 @@ def _s_to_p_direct(significance, one_sided=True):
     Note: _p_to_s_direct was solved for p.
     """
     from scipy.special import erf
+
     temp = erf(significance / np.sqrt(2))
     probability = np.where(one_sided, (temp + 1) / 2., temp)
     return 1 - probability  # We want p to be the tail probability

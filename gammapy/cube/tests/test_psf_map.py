@@ -39,7 +39,9 @@ def test_make_psf_map():
     energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy')
     rad_axis = MapAxis(nodes=np.linspace(0., 1., 51), unit='deg', name='theta')
 
-    geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
+    geom = WcsGeom.create(
+        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+    )
 
     psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
 
@@ -57,7 +59,9 @@ def test_psfmap(tmpdir):
     energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit='TeV', name='energy')
     rad_axis = MapAxis(nodes=np.linspace(0., 0.6, 50), unit='deg', name='theta')
 
-    geom = WcsGeom.create(skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis])
+    geom = WcsGeom.create(
+        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+    )
 
     psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
 
@@ -65,14 +69,22 @@ def test_psfmap(tmpdir):
     table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit='deg'))
 
     # Check that containment radius is consistent between psf_table and psf3d
-    assert_allclose(table_psf.containment_radius(1 * u.TeV, 0.9)[0],
-                    psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.9), rtol=1e-3)
-    assert_allclose(table_psf.containment_radius(1 * u.TeV, 0.5)[0],
-                    psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.5), rtol=1e-3)
+    assert_allclose(
+        table_psf.containment_radius(1 * u.TeV, 0.9)[0],
+        psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.9),
+        rtol=1e-3,
+    )
+    assert_allclose(
+        table_psf.containment_radius(1 * u.TeV, 0.5)[0],
+        psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.5),
+        rtol=1e-3,
+    )
 
     # create PSFKernel
     kern_geom = WcsGeom.create(binsz=0.02, width=5., axes=[energy_axis])
-    psfkernel = psfmap.get_psf_kernel(SkyCoord(1, 1, unit='deg'), kern_geom, max_radius=1 * u.deg)
+    psfkernel = psfmap.get_psf_kernel(
+        SkyCoord(1, 1, unit='deg'), kern_geom, max_radius=1 * u.deg
+    )
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0)
 
     # test read/write
@@ -89,7 +101,9 @@ def test_containment_radius_map(tmpdir):
     pointing = SkyCoord(0, 0, unit='deg')
     energy_axis = MapAxis(nodes=[0.2, 1, 2], unit='TeV', name='energy')
     psf_theta_axis = MapAxis(nodes=np.linspace(0., 0.6, 30), unit='deg', name='theta')
-    geom = WcsGeom.create(skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis])
+    geom = WcsGeom.create(
+        skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
+    )
 
     psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
     m = psfmap.containment_radius_map(2 * u.TeV)

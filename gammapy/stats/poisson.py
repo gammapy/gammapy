@@ -236,7 +236,7 @@ def significance(n_on, mu_bkg, method='lima', n_on_min=1):
     # For low `n_on` values, don't try to compute a significance and return `NaN`.
     n_on = np.atleast_1d(n_on)
     mu_bkg = np.atleast_1d(mu_bkg)
-    mask = (n_on >= n_on_min)
+    mask = n_on >= n_on_min
     s = np.ones_like(n_on) * np.nan
     s[mask] = func(n_on[mask], mu_bkg[mask])
 
@@ -284,8 +284,9 @@ def _significance_direct(n_on, mu_bkg):
     return significance
 
 
-def significance_on_off(n_on, n_off, alpha, method='lima',
-                        neglect_background_uncertainty=False):
+def significance_on_off(
+    n_on, n_off, alpha, method='lima', neglect_background_uncertainty=False
+):
     r"""Compute significance of an on-off observation.
 
     TODO: describe available methods.
@@ -638,7 +639,9 @@ def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
             # This high value is to tell the optimiser to stay n_on >= 0
             return 1e10
 
-    excess_guess = _excess_matching_significance_on_off_simple(n_off, alpha, significance)
+    excess_guess = _excess_matching_significance_on_off_simple(
+        n_off, alpha, significance
+    )
     n_on_guess = excess_guess + background(n_off, alpha)
 
     # solver options to control robustness / accuracy / speed
@@ -648,4 +651,6 @@ def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
 
 
 _excess_matching_significance_lima = np.vectorize(_excess_matching_significance_lima)
-_excess_matching_significance_on_off_lima = np.vectorize(_excess_matching_significance_on_off_lima)
+_excess_matching_significance_on_off_lima = np.vectorize(
+    _excess_matching_significance_on_off_lima
+)

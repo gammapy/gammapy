@@ -74,8 +74,10 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     r = np.asarray(r)
 
     if sum(p) < alpha:
-        raise ValueError("X bins don't contain enough probability to reach "
-                         "desired confidence level for this mu!")
+        raise ValueError(
+            "X bins don't contain enough probability to reach "
+            "desired confidence level for this mu!"
+        )
 
     rank = stats.rankdata(-r, method='dense')
 
@@ -147,8 +149,10 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     r = np.asarray(r)
 
     if sum(p) < alpha:
-        raise ValueError("X bins don't contain enough probability to reach "
-                         "desired confidence level for this mu!")
+        raise ValueError(
+            "X bins don't contain enough probability to reach "
+            "desired confidence level for this mu!"
+        )
 
     rank = stats.rankdata(-r, method='dense')
 
@@ -215,8 +219,12 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
     # Set the rank to 1 and add probability
     for i in range(number_mus):
         distributions_re_scaled[i][largest_entry[i]] = 1
-        summed_propability[i] += np.sum(np.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0))
-        distributions_scaled[i] = np.where(distributions_re_scaled[i] == 1, 1, distributions_scaled[i])
+        summed_propability[i] += np.sum(
+            np.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0)
+        )
+        distributions_scaled[i] = np.where(
+            distributions_re_scaled[i] == 1, 1, distributions_scaled[i]
+        )
 
     # Identify next largest entry not yet ranked. While there are entries
     # smaller than 1, some bins don't have a rank yet.
@@ -224,13 +232,16 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
         # For each mu, this is the largest rank attributed so far.
         largest_rank = np.amax(distributions_re_scaled, axis=1)
         # For each mu, this is the largest entry that is not yet a rank.
-        largest_entry = np.where(distributions_re_scaled < 1, distributions_re_scaled, -1)
+        largest_entry = np.where(
+            distributions_re_scaled < 1, distributions_re_scaled, -1
+        )
         # For each mu, this is the position of the largest entry that is not yet a rank.
         largest_entry_position = np.argmax(largest_entry, axis=1)
         # Invalidate indices where there is no maximum (every entry is already a rank)
         largest_entry_position = [
             largest_entry_position[i]
-            if largest_entry[i][largest_entry_position[i]] != -1 else -1
+            if largest_entry[i][largest_entry_position[i]] != -1
+            else -1
             for i in range(len(largest_entry_position))
         ]
         # Replace the largest entry with the highest rank so far plus one
@@ -240,7 +251,9 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
                 continue
             distributions_re_scaled[i][largest_entry_position[i]] = largest_rank[i] + 1
             if summed_propability[i] < alpha:
-                summed_propability[i] += distributions_scaled[i][largest_entry_position[i]]
+                summed_propability[i] += distributions_scaled[i][
+                    largest_entry_position[i]
+                ]
                 distributions_scaled[i][largest_entry_position[i]] = 1
             else:
                 distributions_scaled[i][largest_entry_position[i]] = 0
@@ -363,8 +376,7 @@ def fc_find_limit(x_value, x_values, y_values):
             return y_values[i + 1]
 
 
-def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins,
-                                prob_limit=1e-5):
+def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins, prob_limit=1e-5):
     r"""
     Function to calculate the average upper limit for a confidence belt
 
@@ -439,6 +451,8 @@ def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
         integral = float(sum(entries))
         distributions_scaled.append(entries / integral)
 
-    acceptance_intervals = fc_construct_acceptance_intervals_pdfs(distributions_scaled, alpha)
+    acceptance_intervals = fc_construct_acceptance_intervals_pdfs(
+        distributions_scaled, alpha
+    )
 
     return acceptance_intervals

@@ -9,9 +9,7 @@ from . import SpectrumObservation, SpectrumObservationList
 from ..utils.scripts import make_path
 from ..irf import PSF3D
 
-__all__ = [
-    'SpectrumExtraction',
-]
+__all__ = ['SpectrumExtraction']
 
 log = logging.getLogger(__name__)
 
@@ -51,13 +49,22 @@ class SpectrumExtraction(object):
         Extract spectrum only within the recommended valid energy range of the
         effective area table (default is True).
     """
+
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
     """Reconstruced energy axis to be used if not specified otherwise"""
 
-    def __init__(self, obs_list, bkg_estimate, e_reco=None, e_true=None,
-                 containment_correction=False, max_alpha=1, use_recommended_erange=True):
+    def __init__(
+        self,
+        obs_list,
+        bkg_estimate,
+        e_reco=None,
+        e_true=None,
+        containment_correction=False,
+        max_alpha=1,
+        use_recommended_erange=True,
+    ):
 
         self.obs_list = obs_list
         self.bkg_estimate = bkg_estimate
@@ -157,7 +164,8 @@ class SpectrumExtraction(object):
             backscal=bkg.a_on,
             offset=offset,
             livetime=obs.observation_live_time_duration,
-            obs_id=obs.obs_id)
+            obs_id=obs.obs_id,
+        )
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
@@ -187,7 +195,8 @@ class SpectrumExtraction(object):
         offset = self._on_vector.offset
         self._aeff = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
         self._edisp = obs.edisp.to_energy_dispersion(
-            offset, e_reco=self.e_reco, e_true=self.e_true)
+            offset, e_reco=self.e_reco, e_true=self.e_true
+        )
 
     def apply_containment_correction(self, obs, bkg):
         """Apply PSF containment correction.
@@ -201,8 +210,10 @@ class SpectrumExtraction(object):
         """
         # TODO: This should be split out into a separate class
         if not isinstance(bkg.on_region, CircleSkyRegion):
-            raise TypeError("Incorrect region type for containment correction."
-                            " Should be CircleSkyRegion.")
+            raise TypeError(
+                "Incorrect region type for containment correction."
+                " Should be CircleSkyRegion."
+            )
 
         log.info('Apply containment correction')
         # First need psf
@@ -255,6 +266,8 @@ class SpectrumExtraction(object):
         outdir = make_path(outdir)
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite)
+        self.observations.write(
+            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
+        )
 
         # TODO : add more debug plots etc. here

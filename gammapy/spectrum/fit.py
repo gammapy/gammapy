@@ -10,9 +10,7 @@ from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
 
-__all__ = [
-    'SpectrumFit',
-]
+__all__ = ['SpectrumFit']
 
 log = logging.getLogger(__name__)
 
@@ -44,8 +42,15 @@ class SpectrumFit(object):
         Optimization backend for the fit
     """
 
-    def __init__(self, obs_list, model, stat='wstat', forward_folded=True,
-                 fit_range=None, method='iminuit'):
+    def __init__(
+        self,
+        obs_list,
+        model,
+        stat='wstat',
+        forward_folded=True,
+        fit_range=None,
+        method='iminuit',
+    ):
         self.obs_list = obs_list
         self._model = model
         self.stat = stat
@@ -182,9 +187,7 @@ class SpectrumFit(object):
         """
         predicted_counts = []
         for obs in self.obs_list:
-            mu_sig = self._predict_counts_helper(obs,
-                                                 self._model,
-                                                 self.forward_folded)
+            mu_sig = self._predict_counts_helper(obs, self._model, self.forward_folded)
             predicted_counts.append(mu_sig)
         self._predicted_counts = predicted_counts
 
@@ -257,15 +260,9 @@ class SpectrumFit(object):
             Statval
         """
         if self.stat == 'cash':
-            return stats.cash(
-                n_on=obs.on_vector.data.data.value,
-                mu_on=prediction,
-            )
+            return stats.cash(n_on=obs.on_vector.data.data.value, mu_on=prediction)
         elif self.stat == 'cstat':
-            return stats.cstat(
-                n_on=obs.on_vector.data.data.value,
-                mu_on=prediction,
-            )
+            return stats.cstat(n_on=obs.on_vector.data.data.value, mu_on=prediction)
         elif self.stat == 'wstat':
             on_stat_ = stats.wstat(
                 n_on=obs.on_vector.data.data.value,
@@ -341,6 +338,7 @@ class SpectrumFit(object):
         See :func:`~gammapy.spectrum.SpectrumFit.likelihood_1d`
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         yy = self.likelihood_1d(**kwargs)
@@ -364,9 +362,11 @@ class SpectrumFit(object):
 
     def _fit_iminuit(self, opts_minuit):
         """Iminuit minimization"""
-        minuit = fit_iminuit(parameters=self._model.parameters,
-                             function=self.total_stat,
-                             opts_minuit=opts_minuit)
+        minuit = fit_iminuit(
+            parameters=self._model.parameters,
+            function=self.total_stat,
+            opts_minuit=opts_minuit,
+        )
         self._iminuit_fit = minuit
         log.debug(minuit)
         self._make_fit_result(self._model.parameters)
@@ -394,15 +394,17 @@ class SpectrumFit(object):
             stat_per_bin = self.statval[idx]
             npred = copy.deepcopy(self.predicted_counts[idx])
 
-            results.append(SpectrumFitResult(
-                model=model,
-                fit_range=fit_range,
-                statname=statname,
-                statval=statval,
-                stat_per_bin=stat_per_bin,
-                npred=npred,
-                obs=obs
-            ))
+            results.append(
+                SpectrumFitResult(
+                    model=model,
+                    fit_range=fit_range,
+                    statname=statname,
+                    statval=statval,
+                    stat_per_bin=stat_per_bin,
+                    npred=npred,
+                    obs=obs,
+                )
+            )
 
         self._result = results
 

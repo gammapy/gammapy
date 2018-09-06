@@ -155,7 +155,9 @@ class SpectrumObservation(object):
         if self.off_vector is not None:
             self.off_vector.reset_thresholds()
 
-    def compute_energy_threshold(self, method_lo='none', method_hi='none', reset=False, **kwargs):
+    def compute_energy_threshold(
+        self, method_lo='none', method_hi='none', reset=False, **kwargs
+    ):
         """Compute and set the safe energy threshold.
 
         Set the high and low energy threshold for each observation based on a
@@ -209,8 +211,7 @@ class SpectrumObservation(object):
         elif method_lo == 'none':
             thres_lo = self.e_true[0]
         else:
-            raise ValueError('Undefine method for low threshold: {}'.format(
-                method_lo))
+            raise ValueError('Undefine method for low threshold: {}'.format(method_lo))
 
         self.on_vector.lo_threshold = thres_lo
         if self.off_vector is not None:
@@ -221,12 +222,15 @@ class SpectrumObservation(object):
             aeff_thres = kwargs['area_percent_hi'] / 100 * self.aeff.max_area
             thres_hi = self.aeff.find_energy(aeff_thres, reverse=True)
         elif method_hi == 'energy_bias':
-            thres_hi = self._find_bias_energy(kwargs['bias_percent_hi'] / 100, reverse=True)
+            thres_hi = self._find_bias_energy(
+                kwargs['bias_percent_hi'] / 100, reverse=True
+            )
         elif method_hi == 'none':
             thres_hi = self.e_true[-1]
         else:
-            raise ValueError('Undefined method for high threshold: {}'.format(
-                method_hi))
+            raise ValueError(
+                'Undefined method for high threshold: {}'.format(method_hi)
+            )
 
         self.on_vector.hi_threshold = thres_hi
         if self.off_vector is not None:
@@ -245,16 +249,16 @@ class SpectrumObservation(object):
             if idx == 0:
                 energy = self.e_true[idx].value
             else:
-                energy = np.interp(bias_value,
-                                   (bias[[idx - 1, idx]].value),
-                                   (e[[idx - 1, idx]].value))
+                energy = np.interp(
+                    bias_value, (bias[[idx - 1, idx]].value), (e[[idx - 1, idx]].value)
+                )
         else:
             if idx == e.size - 1:
                 energy = self.e_true[idx + 1].value
             else:
-                energy = np.interp(bias_value,
-                                   (bias[[idx, idx + 1]].value),
-                                   (e[[idx, idx + 1]].value))
+                energy = np.interp(
+                    bias_value, (bias[[idx, idx + 1]].value), (e[[idx, idx + 1]].value)
+                )
         return energy * self.e_true.unit
 
     @property
@@ -269,8 +273,7 @@ class SpectrumObservation(object):
         """
         energy = self.off_vector.energy
         data = self.off_vector.data.data * self.alpha
-        return CountsSpectrum(data=data, energy_lo=energy.lo,
-                              energy_hi=energy.hi)
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
 
     @property
     def excess_vector(self):
@@ -280,8 +283,7 @@ class SpectrumObservation(object):
         """
         energy = self.off_vector.energy
         data = self.on_vector.data.data - self.background_vector.data.data
-        return CountsSpectrum(data=data, energy_lo=energy.lo,
-                              energy_hi=energy.hi)
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
 
     @property
     def total_stats(self):
@@ -374,10 +376,9 @@ class SpectrumObservation(object):
         npred : `~gammapy.spectrum.CountsSpectrum`
             Predicted counts
         """
-        predictor = CountsPredictor(model=model,
-                                    edisp=self.edisp,
-                                    aeff=self.aeff,
-                                    livetime=self.livetime)
+        predictor = CountsPredictor(
+            model=model, edisp=self.edisp, aeff=self.aeff, livetime=self.livetime
+        )
         predictor.run()
         return predictor.npred
 
@@ -412,10 +413,12 @@ class SpectrumObservation(object):
 
         effective_area = EffectiveAreaTable.read(str(dirname / arf))
 
-        return cls(on_vector=on_vector,
-                   aeff=effective_area,
-                   off_vector=off_vector,
-                   edisp=energy_dispersion)
+        return cls(
+            on_vector=on_vector,
+            aeff=effective_area,
+            off_vector=off_vector,
+            edisp=energy_dispersion,
+        )
 
     def write(self, outdir=None, use_sherpa=False, overwrite=False):
         """Write OGIP files.
@@ -480,25 +483,29 @@ class SpectrumObservation(object):
         ax1.set_title('Counts')
         energy_unit = 'TeV'
         if self.off_vector is not None:
-            self.background_vector.plot_hist(ax=ax1,
-                                             label='alpha * n_off',
-                                             color='darkblue',
-                                             energy_unit=energy_unit)
-        self.on_vector.plot_hist(ax=ax1,
-                                 label='n_on',
-                                 color='darkred',
-                                 energy_unit=energy_unit,
-                                 show_energy=(self.hi_threshold, self.lo_threshold))
-        ax1.set_xlim(0.7 * self.lo_threshold.to(energy_unit).value,
-                     1.3 * self.hi_threshold.to(energy_unit).value)
+            self.background_vector.plot_hist(
+                ax=ax1, label='alpha * n_off', color='darkblue', energy_unit=energy_unit
+            )
+        self.on_vector.plot_hist(
+            ax=ax1,
+            label='n_on',
+            color='darkred',
+            energy_unit=energy_unit,
+            show_energy=(self.hi_threshold, self.lo_threshold),
+        )
+        ax1.set_xlim(
+            0.7 * self.lo_threshold.to(energy_unit).value,
+            1.3 * self.hi_threshold.to(energy_unit).value,
+        )
         ax1.legend(numpoints=1)
 
         ax2.set_title('Effective Area')
         e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2,
-                       show_energy=(self.hi_threshold, self.lo_threshold))
-        ax2.set_xlim(0.7 * self.lo_threshold.to(e_unit).value,
-                     1.3 * self.hi_threshold.to(e_unit).value)
+        self.aeff.plot(ax=ax2, show_energy=(self.hi_threshold, self.lo_threshold))
+        ax2.set_xlim(
+            0.7 * self.lo_threshold.to(e_unit).value,
+            1.3 * self.hi_threshold.to(e_unit).value,
+        )
 
         ax3.axis('off')
         if self.off_vector is not None:
@@ -689,8 +696,9 @@ class SpectrumObservationList(UserList):
             edisp = EnergyDispersion.read(directory / 'rmf.fits')
 
             for on, off in zip(on_vectors, off_vectors):
-                obs = SpectrumObservation(on_vector=on, off_vector=off,
-                                          aeff=aeff, edisp=edisp)
+                obs = SpectrumObservation(
+                    on_vector=on, off_vector=off, aeff=aeff, edisp=edisp
+                )
                 obs_list.append(obs)
 
         return obs_list
@@ -702,6 +710,7 @@ class SpectrumObservationList(UserList):
         TODO: Change to bokeh
         """
         from ipywidgets import interact
+
         max_ = len(self) - 1
 
         def show_obs(idx):
@@ -821,8 +830,7 @@ class SpectrumObservationStacker(object):
         stacked_quality = np.ones(energy.nbins)
         for spec in counts_spectrum_list:
             stacked_data += spec.counts_in_safe_range.value
-            temp = np.logical_and(stacked_quality,
-                                  spec.quality)
+            temp = np.logical_and(stacked_quality, spec.quality)
             stacked_quality = np.array(temp, dtype=int)
 
         return PHACountsSpectrum(
@@ -843,12 +851,16 @@ class SpectrumObservationStacker(object):
         for obs in self.obs_list:
             bkscal_on_data = obs.on_vector._backscal_array.copy()
             bkscal_off_data = obs.off_vector._backscal_array.copy()
-            bkscal_off += (bkscal_on_data / bkscal_off_data) * obs.off_vector.counts_in_safe_range.value
+            bkscal_off += (
+                bkscal_on_data / bkscal_off_data
+            ) * obs.off_vector.counts_in_safe_range.value
             alpha_sum += (obs.alpha * obs.off_vector.counts_in_safe_range).sum()
 
         with np.errstate(divide='ignore', invalid='ignore'):
             stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
-            alpha_average = alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
+            alpha_average = (
+                alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
+            )
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data

@@ -5,10 +5,7 @@ import numpy as np
 from astropy.units import Quantity
 from ...extern.validator import validate_physical_type
 
-__all__ = [
-    'Pulsar',
-    'SimplePulsar',
-]
+__all__ = ['Pulsar', 'SimplePulsar']
 
 DEFAULT_I = Quantity(1e45, 'g cm2')
 """Pulsar default moment of inertia"""
@@ -107,8 +104,17 @@ class Pulsar(SimplePulsar):
         Radius
     """
 
-    def __init__(self, P_0=Quantity(0.1, 's'), logB=10, n=3, I=DEFAULT_I,
-                 R=DEFAULT_R, age=None, L_0=None, morphology='Delta2D'):
+    def __init__(
+        self,
+        P_0=Quantity(0.1, 's'),
+        logB=10,
+        n=3,
+        I=DEFAULT_I,
+        R=DEFAULT_R,
+        age=None,
+        L_0=None,
+        morphology='Delta2D',
+    ):
         self.I = I
         self.R = R
         self.P_0 = P_0

@@ -904,7 +904,7 @@ class MapCoord(object):
         str_ += "\tcoordsys : {}\n".format(self.coordsys)
         return str_
 
-    #TODO: this is a temporary solution until we have decided how to handle
+    # TODO: this is a temporary solution until we have decided how to handle
     # quantities uniformly. This should be called after any `MapCoord.create()`
     # to support that users can pass quantities in any Map.xxx_by_coord() method.
     def match_axes_units(self, geom):

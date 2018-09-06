@@ -32,10 +32,7 @@ class TestEnergyDispersion:
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
 
         assert edisp.pdf_matrix.shape == (4, 2)
-        expected = [[0, 0],
-                    [0, 0],
-                    [1, 0],
-                    [0, 1]]
+        expected = [[0, 0], [0, 0], [1, 0], [0, 1]]
 
         assert_equal(edisp.pdf_matrix, expected)
 
@@ -105,7 +102,9 @@ class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp (see below)
         # At the moment only 1 test uses it (test_get_response)
-        filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
+        filename = (
+            '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
+        )
         self.edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 
         # Make a test case
@@ -142,9 +141,11 @@ class TestEnergyDispersion2D:
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
-        desired = (self.edisp.data.axis('e_true').nbins,
-                   self.edisp.data.axis('migra').nbins,
-                   self.edisp.data.axis('offset').nbins)
+        desired = (
+            self.edisp.data.axis('e_true').nbins,
+            self.edisp.data.axis('migra').nbins,
+            self.edisp.data.axis('offset').nbins,
+        )
         assert_equal(actual, desired)
 
     def test_get_response(self):
@@ -172,12 +173,19 @@ class TestEnergyDispersion2D:
         migra_lo = np.linspace(0, 3, 4)[:-1]
         migra_hi = np.linspace(0, 3, 4)[1:]
 
-        data = np.ones(shape=(len(energy_lo), len(migra_lo), len(offset_lo))) * u.cm * u.cm
+        data = (
+            np.ones(shape=(len(energy_lo), len(migra_lo), len(offset_lo))) * u.cm * u.cm
+        )
 
-        edisp = EnergyDispersion2D(e_true_lo=energy_lo, e_true_hi=energy_hi,
-                                   migra_lo=migra_lo, migra_hi=migra_hi,
-                                   offset_lo=offset_lo, offset_hi=offset_hi,
-                                   data=data)
+        edisp = EnergyDispersion2D(
+            e_true_lo=energy_lo,
+            e_true_hi=energy_hi,
+            migra_lo=migra_lo,
+            migra_hi=migra_hi,
+            offset_lo=offset_lo,
+            offset_hi=offset_hi,
+            data=data,
+        )
 
         hdu = edisp.to_fits()
         assert_equal(hdu.data['ENERG_LO'][0], edisp.data.axis('e_true').lo.value)

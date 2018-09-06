@@ -4,10 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import astropy.units as u
 
-__all__ = [
-    'standardise_unit',
-    'unit_from_fits_image_hdu',
-]
+__all__ = ['standardise_unit', 'unit_from_fits_image_hdu']
 
 log = logging.getLogger('__name__')
 
@@ -64,7 +61,9 @@ def unit_from_fits_image_hdu(header):
     try:
         u.Unit(unit)
     except ValueError:
-        log.warning('Invalid value BUNIT={!r} in FITS header. Setting empty unit.'.format(unit))
+        log.warning(
+            'Invalid value BUNIT={!r} in FITS header. Setting empty unit.'.format(unit)
+        )
         unit = ""
 
     return standardise_unit(unit)

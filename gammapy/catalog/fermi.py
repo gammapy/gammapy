@@ -49,9 +49,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
+
     _ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
-    _ebounds_suffix = ['100_300', '300_1000',
-                       '1000_3000', '3000_10000', '10000_100000']
+    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000']
     energy_range = u.Quantity([100, 100000], 'MeV')
     """Energy range of the catalog.
 
@@ -99,7 +99,14 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             vals = [d[_].strip() for _ in keys]
             return ', '.join([_ for _ in vals if _ != ''])
 
-        keys = ['ASSOC1', 'ASSOC2', 'ASSOC_TEV', 'ASSOC_GAM1', 'ASSOC_GAM2', 'ASSOC_GAM3']
+        keys = [
+            'ASSOC1',
+            'ASSOC2',
+            'ASSOC_TEV',
+            'ASSOC_GAM1',
+            'ASSOC_GAM2',
+            'ASSOC_GAM3',
+        ]
         associations = get_nonentry_keys(keys)
         ss += '{:<20s} : {}\n'.format('Associations', associations)
 
@@ -123,26 +130,28 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         flag_message = {
             0: 'None',
             1: 'Source with TS > 35 which went to TS < 25 when changing the diffuse model. Note that sources with TS < '
-               '35 are not flagged with this bit because normal statistical fluctuations can push them to TS < 25.',
+            '35 are not flagged with this bit because normal statistical fluctuations can push them to TS < 25.',
             3: 'Flux (> 1 GeV) or energy flux (> 100 MeV) changed by more than 3 sigma when changing the diffuse model.'
-               ' Requires also that the flux change by more than 35% (to not flag strong sources).',
+            ' Requires also that the flux change by more than 35% (to not flag strong sources).',
             4: 'Source-to-background ratio less than 10% in highest band in which TS > 25. Background is integrated '
-               'over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.',
+            'over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.',
             5: 'Closer than theta_ref from a brighter neighbor, where theta_ref is defined in the highest band in which'
-               ' source TS > 25, or the band with highest TS if all are < 25. theta_ref is set to 2.17 degrees (FWHM)'
-               ' below 300 MeV, 1.38 degrees between 300 MeV and 1 GeV, 0.87 degrees between 1 GeV and 3 GeV, 0.67'
-               ' degrees between 3 and 10 GeV and 0.45 degrees about 10 GeV (2*r_68).',
+            ' source TS > 25, or the band with highest TS if all are < 25. theta_ref is set to 2.17 degrees (FWHM)'
+            ' below 300 MeV, 1.38 degrees between 300 MeV and 1 GeV, 0.87 degrees between 1 GeV and 3 GeV, 0.67'
+            ' degrees between 3 and 10 GeV and 0.45 degrees about 10 GeV (2*r_68).',
             6: 'On top of an interstellar gas clump or small-scale defect in the model of diffuse emission. This flag '
-               'is equivalent to the "c" suffix in the source name.',
+            'is equivalent to the "c" suffix in the source name.',
             7: 'Unstable position determination; result from gtfindsrc outside the 95% ellipse from pointlike.',
             9: 'Localization Quality > 8 in pointlike (see Section 3.1 in catalog paper) or long axis of 95% ellipse >'
-               ' 0.25.',
+            ' 0.25.',
             10: 'Spectral Fit Quality > 16.3 (see Equation 3 in 2FGL catalog paper).',
             11: 'Possibly due to the Sun (see Section 3.6 in catalog paper).',
             12: 'Highly curved spectrum; LogParabola beta fixed to 1 or PLExpCutoff Spectral Index fixed to 0 (see '
-                'Section 3.3 in catalog paper).'
+            'Section 3.3 in catalog paper).',
         }
-        ss += '{:<20s} : {}\n'.format('Other flags', flag_message.get(d['Flags'], 'N/A'))
+        ss += '{:<20s} : {}\n'.format(
+            'Other flags', flag_message.get(d['Flags'], 'N/A')
+        )
 
         return ss
 
@@ -185,16 +194,27 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += '{:<45s} : {} +- {}\n'.format('beta', d['beta'], d['Unc_beta'])
         elif spec_type in ['PLExpCutoff', 'PlSuperExpCutoff']:
             fmt = '{:<45s} : {:.0f} +- {:.0f} {}\n'
-            args = ('Cutoff energy', d['Cutoff'].value, d['Unc_Cutoff'].value, d['Cutoff'].unit)
+            args = (
+                'Cutoff energy',
+                d['Cutoff'].value,
+                d['Unc_Cutoff'].value,
+                d['Cutoff'].unit,
+            )
             ss += fmt.format(*args)
         elif spec_type == 'PLSuperExpCutoff':
-            ss += '{:<45s} : {} +- {}\n'.format('Super-exponential cutoff index', d['Exp_Index'], d['Unc_Exp_Index'])
+            ss += '{:<45s} : {} +- {}\n'.format(
+                'Super-exponential cutoff index', d['Exp_Index'], d['Unc_Exp_Index']
+            )
         else:
             raise ValueError('This case should not exist. Please report this issue.')
 
-        ss += '{:<45s} : {:.0f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
+        ss += '{:<45s} : {:.0f} {}\n'.format(
+            'Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit
+        )
 
-        ss += '{:<45s} : {:.3f}\n'.format('Power law spectral index', d['PowerLaw_Index'])
+        ss += '{:<45s} : {:.3f}\n'.format(
+            'Power law spectral index', d['PowerLaw_Index']
+        )
 
         fmt = '{:<45s} : {:.3f} +- {:.3f}\n'
         args = ('Spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
@@ -202,17 +222,32 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         unit = 'cm-2 MeV-1 s-1'
         fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
-        args = ('Flux Density at pivot energy', d['Flux_Density'].value, d['Unc_Flux_Density'].value, unit)
+        args = (
+            'Flux Density at pivot energy',
+            d['Flux_Density'].value,
+            d['Unc_Flux_Density'].value,
+            unit,
+        )
         ss += fmt.format(*args)
 
         unit = 'cm-2 s-1'
         fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
-        args = ('Integral flux (1 - 100 GeV)', d['Flux1000'].value, d['Unc_Flux1000'].value, unit)
+        args = (
+            'Integral flux (1 - 100 GeV)',
+            d['Flux1000'].value,
+            d['Unc_Flux1000'].value,
+            unit,
+        )
         ss += fmt.format(*args)
 
         unit = 'erg cm-2 s-1'
         fmt = '{:<45s} : {:.3} +- {:.3} {}\n'
-        args = ('Energy flux (100 MeV - 100 GeV)', d['Energy_Flux100'].value, d['Unc_Energy_Flux100'].value, unit)
+        args = (
+            'Energy flux (100 MeV - 100 GeV)',
+            d['Energy_Flux100'].value,
+            d['Unc_Energy_Flux100'].value,
+            unit,
+        )
         ss += fmt.format(*args)
 
         return ss
@@ -234,14 +269,22 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         ss += '{:<15s} : {:.3f}\n'.format('Variability index', d['Variability_Index'])
 
         if d['Signif_Peak'] == np.nan:
-            ss += '{:<40s} : {:.3f}\n'.format('Significance peak (100 MeV - 100 GeV)', d['Signif_Peak'])
+            ss += '{:<40s} : {:.3f}\n'.format(
+                'Significance peak (100 MeV - 100 GeV)', d['Signif_Peak']
+            )
 
             fmt = '{:<40s} : {:.3} +- {:.3} cm^-2 s^-1\n'
-            args = ('Integral flux peak (100 MeV - 100 GeV)', d['Flux_Peak'], d['Unc_Flux_Peak'])
+            args = (
+                'Integral flux peak (100 MeV - 100 GeV)',
+                d['Flux_Peak'],
+                d['Unc_Flux_Peak'],
+            )
             ss += fmt.format(*args)
 
             # TODO: give time as UTC string, not MET
-            ss += '{:<40s} : {:.3} s (Mission elapsed time)\n'.format('Time peak', d['Time_Peak'])
+            ss += '{:<40s} : {:.3} s (Mission elapsed time)\n'.format(
+                'Time peak', d['Time_Peak']
+            )
             peak_interval = d['Peak_Interval'].to('day').value
             ss += '{:<40s} : {:.3} day\n'.format('Peak interval', peak_interval)
         else:
@@ -288,7 +331,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             errs['ecut'] = self.data['Unc_Cutoff'].to('GeV')
             model = PLSuperExpCutoff3FGL(**pars)
         else:
-            raise ValueError('No spec_type: {}. Please report this issue.'.format(spec_type))
+            raise ValueError(
+                'No spec_type: {}. Please report this issue.'.format(spec_type)
+            )
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -307,30 +352,25 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         if self.is_pointlike:
             pars['lon_0'] = glon
             pars['lat_0'] = glat
-            return SkyPointSource(
-                lon_0=glon,
-                lat_0=glat,
-            )
+            return SkyPointSource(lon_0=glon, lat_0=glat)
         else:
             de = self.data_extended
             morph_type = de['Model_Form'].strip()
 
             if morph_type == 'Disk':
                 return SkyDisk(
-                    lon_0=glon,
-                    lat_0=glat,
-                    r_0=de['Model_SemiMajor'].to('deg'),
+                    lon_0=glon, lat_0=glat, r_0=de['Model_SemiMajor'].to('deg')
                 )
             elif morph_type in ['Map', 'Ring', '2D Gaussian x2']:
                 filename = de['Spatial_Filename'].strip()
-                path = make_path('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v15/Templates/')
+                path = make_path(
+                    '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v15/Templates/'
+                )
                 return SkyDiffuseMap.read(path / filename)
             elif morph_type == '2D Gaussian':
                 # TODO: fill elongation info as soon as model supports it
                 return SkyGaussian(
-                    lon_0=glon,
-                    lat_0=glat,
-                    sigma=de['Model_SemiMajor'].to('deg'),
+                    lon_0=glon, lat_0=glat, sigma=de['Model_SemiMajor'].to('deg')
                 )
             else:
                 raise ValueError('Not a valid spatial model{}'.format(morph_type))
@@ -350,8 +390,17 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'e2dnde', 'e2dnde_errn',
-                     'e2dnde_errp', 'flux_ul', 'e2dnde_ul', 'dnde']
+        flux_cols = [
+            'flux',
+            'flux_errn',
+            'flux_errp',
+            'e2dnde',
+            'e2dnde_errn',
+            'e2dnde_errp',
+            'flux_ul',
+            'e2dnde_ul',
+            'dnde',
+        ]
         table['sqrt_TS'].format = '.1f'
         table['e_ref'].format = '.1f'
         for _ in flux_cols:
@@ -437,13 +486,15 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         time_step = (time_end - time_start) / n_points
         time_bounds = time_start + np.arange(n_points + 1) * time_step
 
-        table = Table([
-            Column(time_bounds[:-1].utc.mjd, 'time_min'),
-            Column(time_bounds[1:].utc.mjd, 'time_max'),
-            Column(flux, 'flux'),
-            Column(flux_errp, 'flux_errp'),
-            Column(flux_errn, 'flux_errn'),
-        ])
+        table = Table(
+            [
+                Column(time_bounds[:-1].utc.mjd, 'time_min'),
+                Column(time_bounds[1:].utc.mjd, 'time_max'),
+                Column(flux, 'flux'),
+                Column(flux_errp, 'flux_errp'),
+                Column(flux_errn, 'flux_errn'),
+            ]
+        )
         return LightCurve(table)
 
 
@@ -452,6 +503,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog1FHL`.
     """
+
     _ebounds = EnergyBounds([10, 30, 100, 500], 'GeV')
     _ebounds_suffix = ['10_30', '30_100', '100_500']
     energy_range = u.Quantity([0.01, 0.5], 'TeV')
@@ -528,6 +580,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog2FHL`.
     """
+
     _ebounds = EnergyBounds([50, 171, 585, 2000], 'GeV')
     _ebounds_suffix = ['50_171', '171_585', '585_2000']
     energy_range = u.Quantity([0.05, 2], 'TeV')
@@ -606,6 +659,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FHL`.
     """
+
     energy_range = u.Quantity([0.01, 2], 'TeV')
     """Energy range of the Fermi 1FHL source catalog"""
 
@@ -720,35 +774,62 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         # Power-law parameters are always given; give in any case
         fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
-        args = ('Power-law spectral index', d['PowerLaw_Index'], d['Unc_PowerLaw_Index'])
+        args = (
+            'Power-law spectral index',
+            d['PowerLaw_Index'],
+            d['Unc_PowerLaw_Index'],
+        )
         ss += fmt.format(*args)
 
         if spec_type == 'PowerLaw':
             pass
         elif spec_type == 'LogParabola':
             fmt = '{:<32s} : {:.3f} +- {:.3f}\n'
-            args = ('LogParabola spectral index', d['Spectral_Index'], d['Unc_Spectral_Index'])
+            args = (
+                'LogParabola spectral index',
+                d['Spectral_Index'],
+                d['Unc_Spectral_Index'],
+            )
             ss += fmt.format(*args)
 
-            ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format('LogParabola beta', d['beta'], d['Unc_beta'])
+            ss += '{:<32s} : {:.3f} +- {:.3f}\n'.format(
+                'LogParabola beta', d['beta'], d['Unc_beta']
+            )
         else:
             raise ValueError('This case should not exist. Please report this issue.')
 
-        ss += '{:<32s} : {:.1f} {}\n'.format('Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit)
+        ss += '{:<32s} : {:.1f} {}\n'.format(
+            'Pivot energy', d['Pivot_Energy'].value, d['Pivot_Energy'].unit
+        )
 
         unit = 'cm-2 GeV-1 s-1'
         fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
-        args = ('Flux Density at pivot energy', d['Flux_Density'].value, d['Unc_Flux_Density'].value, unit)
+        args = (
+            'Flux Density at pivot energy',
+            d['Flux_Density'].value,
+            d['Unc_Flux_Density'].value,
+            unit,
+        )
         ss += fmt.format(*args)
 
         unit = 'cm-2 s-1'
         fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
-        args = ('Integral flux (10 GeV - 1 TeV)', d['Flux'].value, d['Unc_Flux'].value, unit)
+        args = (
+            'Integral flux (10 GeV - 1 TeV)',
+            d['Flux'].value,
+            d['Unc_Flux'].value,
+            unit,
+        )
         ss += fmt.format(*args)
 
         unit = 'erg cm-2 s-1'
         fmt = '{:<32s} : {:.3} +- {:.3} {}\n'
-        args = ('Energy flux (10 GeV - TeV)', d['Energy_Flux'].value, d['Unc_Energy_Flux'].value, unit)
+        args = (
+            'Energy flux (10 GeV - TeV)',
+            d['Energy_Flux'].value,
+            d['Unc_Energy_Flux'].value,
+            unit,
+        )
         ss += fmt.format(*args)
 
         return ss
@@ -764,7 +845,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         """Print other info."""
         d = self.data
         ss = '\n*** Other info ***\n\n'
-        ss += '{:<16s} : {:.3f} {}\n'.format('HEP Energy', d['HEP_Energy'].value, d['HEP_Energy'].unit)
+        ss += '{:<16s} : {:.3f} {}\n'.format(
+            'HEP Energy', d['HEP_Energy'].value, d['HEP_Energy'].unit
+        )
         ss += '{:<16s} : {:.3f}\n'.format('HEP Probability', d['HEP_Prob'])
 
         # This is the number of Bayesian blocks for most sources,
@@ -777,7 +860,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         ss += '{:<16s} : {}\n'.format('Bayesian Blocks', msg)
 
         ss += '{:<16s} : {:.3f}\n'.format('Redshift', d['Redshift'])
-        ss += '{:<16s} : {:.3} {}\n'.format('NuPeak_obs', d['NuPeak_obs'].value, d['NuPeak_obs'].unit)
+        ss += '{:<16s} : {:.3} {}\n'.format(
+            'NuPeak_obs', d['NuPeak_obs'].value, d['NuPeak_obs'].unit
+        )
 
         return ss
 
@@ -803,7 +888,9 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             errs['beta'] = d['Unc_beta'] * u.dimensionless_unscaled
             model = LogParabola(**pars)
         else:
-            raise ValueError('No spec_type: {}. Please report this issue.'.format(spec_type))
+            raise ValueError(
+                'No spec_type: {}. Please report this issue.'.format(spec_type)
+            )
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -812,8 +899,17 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _flux_points_table_formatted(self):
         """Returns formatted version of self.flux_points.table"""
         table = self.flux_points.table.copy()
-        flux_cols = ['flux', 'flux_errn', 'flux_errp', 'e2dnde', 'e2dnde_errn',
-                     'e2dnde_errp', 'flux_ul', 'e2dnde_ul', 'dnde']
+        flux_cols = [
+            'flux',
+            'flux_errn',
+            'flux_errp',
+            'e2dnde',
+            'e2dnde_errn',
+            'e2dnde_errp',
+            'flux_ul',
+            'e2dnde_ul',
+            'dnde',
+        ]
         table['sqrt_ts'].format = '.1f'
         table['e_ref'].format = '.1f'
         for _ in flux_cols:
@@ -876,30 +972,25 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         if self.is_pointlike:
             pars['lon_0'] = glon
             pars['lat_0'] = glat
-            return SkyPointSource(
-                lon_0=glon,
-                lat_0=glat,
-            )
+            return SkyPointSource(lon_0=glon, lat_0=glat)
         else:
             de = self.data_extended
             morph_type = de['Spatial_Function'].strip()
 
             if morph_type == 'RadialDisk':
                 return SkyDisk(
-                    lon_0=glon,
-                    lat_0=glat,
-                    r_0=de['Model_SemiMajor'].to('deg'),
+                    lon_0=glon, lat_0=glat, r_0=de['Model_SemiMajor'].to('deg')
                 )
             elif morph_type in ['SpatialMap']:
                 filename = de['Spatial_Filename'].strip()
-                path = make_path('$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/')
+                path = make_path(
+                    '$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/'
+                )
                 return SkyDiffuseMap.read(path / filename)
             elif morph_type == 'RadialGauss':
                 # TODO: fill elongation info as soon as model supports it
                 return SkyGaussian(
-                    lon_0=glon,
-                    lat_0=glat,
-                    sigma=de['Model_SemiMajor'].to('deg'),
+                    lon_0=glon, lat_0=glat, sigma=de['Model_SemiMajor'].to('deg')
                 )
             else:
                 raise ValueError('Not a valid spatial model{}'.format(morph_type))
@@ -923,20 +1014,45 @@ class SourceCatalog3FGL(SourceCatalog):
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.
     """
+
     name = '3fgl'
     description = 'LAT 4-year point source catalog'
     source_object_class = SourceCatalogObject3FGL
     source_categories = {
         'galactic': ['psr', 'pwn', 'snr', 'spp', 'glc'],
-        'extra-galactic': ['css', 'bll', 'fsrq', 'agn', 'nlsy1',
-                           'rdg', 'sey', 'bcu', 'gal', 'sbg', 'ssrq'],
+        'extra-galactic': [
+            'css',
+            'bll',
+            'fsrq',
+            'agn',
+            'nlsy1',
+            'rdg',
+            'sey',
+            'bcu',
+            'gal',
+            'sbg',
+            'ssrq',
+        ],
         'GALACTIC': ['PSR', 'PWN', 'SNR', 'HMB', 'BIN', 'NOV', 'SFR'],
-        'EXTRA-GALACTIC': ['CSS', 'BLL', 'FSRQ', 'AGN', 'NLSY1',
-                           'RDG', 'SEY', 'BCU', 'GAL', 'SBG', 'SSRQ'],
+        'EXTRA-GALACTIC': [
+            'CSS',
+            'BLL',
+            'FSRQ',
+            'AGN',
+            'NLSY1',
+            'RDG',
+            'SEY',
+            'BCU',
+            'GAL',
+            'SBG',
+            'SSRQ',
+        ],
         'unassociated': [''],
     }
 
-    def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'):
+    def __init__(
+        self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz'
+    ):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -946,9 +1062,16 @@ class SourceCatalog3FGL(SourceCatalog):
         table_standardise_units_inplace(table)
 
         source_name_key = 'Source_Name'
-        source_name_alias = ('Extended_Source_Name', '0FGL_Name', '1FGL_Name',
-                             '2FGL_Name', '1FHL_Name', 'ASSOC_TEV', 'ASSOC1',
-                             'ASSOC2')
+        source_name_alias = (
+            'Extended_Source_Name',
+            '0FGL_Name',
+            '1FGL_Name',
+            '2FGL_Name',
+            '1FHL_Name',
+            'ASSOC_TEV',
+            'ASSOC1',
+            'ASSOC2',
+        )
         super(SourceCatalog3FGL, self).__init__(
             table=table,
             source_name_key=source_name_key,
@@ -1029,11 +1152,14 @@ class SourceCatalog1FHL(SourceCatalog):
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject1FHL`.
     """
+
     name = '1fhl'
     description = 'First Fermi-LAT Catalog of Sources above 10 GeV'
     source_object_class = SourceCatalogObject1FHL
 
-    def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v07.fit.gz'):
+    def __init__(
+        self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v07.fit.gz'
+    ):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -1060,11 +1186,14 @@ class SourceCatalog2FHL(SourceCatalog):
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
+
     name = '2fhl'
     description = 'LAT second high-energy source catalog'
     source_object_class = SourceCatalogObject2FHL
 
-    def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v08.fit.gz'):
+    def __init__(
+        self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v08.fit.gz'
+    ):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -1093,6 +1222,7 @@ class SourceCatalog3FHL(SourceCatalog):
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """
+
     name = '3fhl'
     description = 'LAT third high-energy source catalog'
     source_object_class = SourceCatalogObject3FHL
@@ -1104,7 +1234,9 @@ class SourceCatalog3FHL(SourceCatalog):
         'unassociated': [''],
     }
 
-    def __init__(self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz'):
+    def __init__(
+        self, filename='$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz'
+    ):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings

@@ -36,7 +36,7 @@ finder = ReflectedRegionsFinder(
     center=center,
     exclusion_mask=exclusion_mask,
     min_distance_input='0.2 rad',
-    min_distance='0.1 rad'
+    min_distance='0.1 rad',
 )
 finder.run()
 fig2 = plt.figure(2)
@@ -49,7 +49,7 @@ finder = ReflectedRegionsFinder(
     exclusion_mask=exclusion_mask,
     min_distance_input='0.2 rad',
     max_region_number=5,
-    min_distance='0.1 rad'
+    min_distance='0.1 rad',
 )
 finder.run()
 fig3 = plt.figure(3)

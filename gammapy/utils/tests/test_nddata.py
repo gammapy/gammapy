@@ -16,7 +16,9 @@ def axis_x():
 
 @pytest.fixture(scope='session')
 def axis_energy():
-    return BinnedDataAxis.logspace(0.1, 1000, 2, unit=u.TeV, name='energy', interpolation_mode='log')
+    return BinnedDataAxis.logspace(
+        0.1, 1000, 2, unit=u.TeV, name='energy', interpolation_mode='log'
+    )
 
 
 @pytest.fixture(scope='session')
@@ -46,8 +48,7 @@ class TestNDDataArray:
     def test_init_error(self):
         with pytest.raises(ValueError):
             NDDataArray(
-                axes=[DataAxis([1, 3, 6], name='x')],
-                data=np.arange(8).reshape(4, 2),
+                axes=[DataAxis([1, 3, 6], name='x')], data=np.arange(8).reshape(4, 2)
             )
 
     def test_str(self, nddata_1d):
@@ -85,17 +86,23 @@ class TestNDDataArray:
         assert out.shape == (3, 2)
 
         # Case 3: axis1 array, axis2 = 2Darray
-        out = nddata_2d.evaluate(energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg)
+        out = nddata_2d.evaluate(
+            energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg
+        )
         assert out.shape == (12, 3, 2)
 
     @pytest.mark.parametrize("shape", [(2,), (3, 2), (4, 2, 3)])
     def test_evaluate_at_coord_2d(self, nddata_2d, shape):
-        points = dict(energy=np.ones(shape) * 1 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        points = dict(
+            energy=np.ones(shape) * 1 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg
+        )
         out = nddata_2d.evaluate_at_coord(points=points)
         assert out.shape == shape
         assert_allclose(out.value, 1)
 
-        points = dict(energy=np.ones(shape) * 100 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg)
+        points = dict(
+            energy=np.ones(shape) * 100 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg
+        )
         out = nddata_2d.evaluate_at_coord(points=points)
         assert_allclose(out.value, 5)
 

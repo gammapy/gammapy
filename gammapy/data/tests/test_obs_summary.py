@@ -13,7 +13,6 @@ from ...background import ReflectedRegionsBackgroundEstimator
 
 @requires_data('gammapy-extra')
 class TestObservationSummaryTable:
-
     @classmethod
     def setup_class(cls):
         data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
@@ -56,16 +55,14 @@ class TestObservationSummary:
         obs_ids = [23523, 23526]
 
         on_region = CircleSkyRegion(
-            SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs'),
-            0.3 * u.deg,
+            SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs'), 0.3 * u.deg
         )
 
         obs_stats_list = []
         for obs_id in obs_ids:
             obs = datastore.obs(obs_id)
             bkg = ReflectedRegionsBackgroundEstimator(
-                on_region=on_region,
-                obs_list=[obs],
+                on_region=on_region, obs_list=[obs]
             )
             bkg.run()
             bg_estimate = bkg.result[0]

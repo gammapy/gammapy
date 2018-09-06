@@ -2,9 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = [
-    'exptest',
-]
+__all__ = ['exptest']
 
 
 def exptest(time_delta):

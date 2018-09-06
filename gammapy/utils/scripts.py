@@ -6,12 +6,7 @@ import logging
 from os.path import expandvars
 from ..extern.pathlib import Path
 
-__all__ = [
-    'read_yaml',
-    'write_yaml',
-    'make_path',
-    'recursive_merge_dicts',
-]
+__all__ = ['read_yaml', 'write_yaml', 'make_path', 'recursive_merge_dicts']
 
 
 def _configure_root_logger(level='info', format=None):
@@ -78,6 +73,7 @@ def write_yaml(dictionary, filename, logger=None):
         file to write
     """
     import yaml
+
     filename = make_path(filename)
     filename.parent.mkdir(exist_ok=True)
     if logger is not None:

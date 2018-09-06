@@ -66,8 +66,14 @@ class TestSourceCatalogGammaCat:
         assert len(gammacat.table) == 162
 
     def test_w28_alias_names(self, gammacat):
-        names = ['W28', 'HESS J1801-233', 'W 28', 'SNR G6.4-0.1',
-                 'SNR G006.4-00.1', 'GRO J1801-2320']
+        names = [
+            'W28',
+            'HESS J1801-233',
+            'W 28',
+            'SNR G6.4-0.1',
+            'SNR G006.4-00.1',
+            'GRO J1801-2320',
+        ]
         for name in names:
             assert str(gammacat[name]) == str(gammacat['W28'])
 
@@ -140,7 +146,9 @@ class TestSourceCatalogObjectGammaCat:
 
         dnde, dnde_err = spectral_model.evaluate_error(e_min)
         flux, flux_err = spectral_model.integral_error(emin=e_min, emax=e_inf)
-        eflux, eflux_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to('erg cm-2 s-1')
+        eflux, eflux_err = spectral_model.energy_flux_error(emin=e_min, emax=e_max).to(
+            'erg cm-2 s-1'
+        )
 
         assert_quantity_allclose(dnde, ref['dnde_1TeV'], rtol=1e-3)
         assert_quantity_allclose(flux, ref['flux_1TeV'], rtol=1e-3)
@@ -177,7 +185,9 @@ class TestSourceCatalogObjectGammaCat:
 
 class TestGammaCatResource:
     def setup(self):
-        self.resource = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2)
+        self.resource = GammaCatResource(
+            source_id=42, reference_id='2010A&A...516A..62A', file_id=2
+        )
         self.global_id = '42|2010A&A...516A..62A|2|none'
 
     def test_global_id(self):
@@ -191,26 +201,43 @@ class TestGammaCatResource:
         assert resource1 != resource2
 
     def test_lt(self):
-        resource = GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2)
+        resource = GammaCatResource(
+            source_id=42, reference_id='2010A&A...516A..62A', file_id=2
+        )
 
         assert not resource < resource
 
-        assert resource < GammaCatResource(source_id=43, reference_id='2010A&A...516A..62A', file_id=2)
-        assert resource < GammaCatResource(source_id=42, reference_id='2010A&A...516A..62B', file_id=2)
-        assert resource < GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=3)
+        assert resource < GammaCatResource(
+            source_id=43, reference_id='2010A&A...516A..62A', file_id=2
+        )
+        assert resource < GammaCatResource(
+            source_id=42, reference_id='2010A&A...516A..62B', file_id=2
+        )
+        assert resource < GammaCatResource(
+            source_id=42, reference_id='2010A&A...516A..62A', file_id=3
+        )
 
-        assert resource > GammaCatResource(source_id=41, reference_id='2010A&A...516A..62A', file_id=2)
+        assert resource > GammaCatResource(
+            source_id=41, reference_id='2010A&A...516A..62A', file_id=2
+        )
 
     def test_repr(self):
-        expected = ("GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', "
-                    "file_id=2, type='none', location='none')")
+        expected = (
+            "GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', "
+            "file_id=2, type='none', location='none')"
+        )
         assert repr(self.resource) == expected
 
     def test_to_dict(self):
-        expected = OrderedDict([
-            ('source_id', 42), ('reference_id', '2010A&A...516A..62A'),
-            ('file_id', 2), ('type', 'none'), ('location', 'none'),
-        ])
+        expected = OrderedDict(
+            [
+                ('source_id', 42),
+                ('reference_id', '2010A&A...516A..62A'),
+                ('file_id', 2),
+                ('type', 'none'),
+                ('location', 'none'),
+            ]
+        )
         assert self.resource.to_dict() == expected
 
     def test_dict_roundtrip(self):
@@ -220,11 +247,20 @@ class TestGammaCatResource:
 
 class TestGammaCatResourceIndex:
     def setup(self):
-        self.resource_index = GammaCatResourceIndex([
-            GammaCatResource(source_id=99, reference_id='2014ApJ...780..168A'),
-            GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2, type='sed'),
-            GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=1),
-        ])
+        self.resource_index = GammaCatResourceIndex(
+            [
+                GammaCatResource(source_id=99, reference_id='2014ApJ...780..168A'),
+                GammaCatResource(
+                    source_id=42,
+                    reference_id='2010A&A...516A..62A',
+                    file_id=2,
+                    type='sed',
+                ),
+                GammaCatResource(
+                    source_id=42, reference_id='2010A&A...516A..62A', file_id=1
+                ),
+            ]
+        )
 
     def test_repr(self):
         assert repr(self.resource_index) == 'GammaCatResourceIndex(n_resources=3)'
@@ -273,7 +309,13 @@ class TestGammaCatResourceIndex:
     def test_to_table(self):
         table = self.resource_index.to_table()
         assert len(table) == 3
-        assert table.colnames == ['source_id', 'reference_id', 'file_id', 'type', 'location']
+        assert table.colnames == [
+            'source_id',
+            'reference_id',
+            'file_id',
+            'type',
+            'location',
+        ]
 
     def test_table_roundtrip(self):
         table = self.resource_index.to_table()
@@ -301,7 +343,9 @@ class TestGammaCatResourceIndex:
 
 SOURCES_STR = {}
 
-SOURCES_STR['Vela X'] = """
+SOURCES_STR[
+    'Vela X'
+] = """
 *** Basic info ***
 
 Catalog row index (zero-based) : 36
@@ -404,7 +448,9 @@ e_ref        dnde         dnde_errn       dnde_errp
 52.370       1.002e-15       8.327e-16       1.615e-15
 """
 
-SOURCES_STR['HESS J1848-018'] = """
+SOURCES_STR[
+    'HESS J1848-018'
+] = """
 *** Basic info ***
 
 Catalog row index (zero-based) : 134
@@ -493,7 +539,9 @@ e_ref        dnde         dnde_errn       dnde_errp
 27.173      -5.317e-16       9.236e-16       8.568e-16
 """
 
-SOURCES_STR['HESS J1813-178'] = """
+SOURCES_STR[
+    'HESS J1813-178'
+] = """
 *** Basic info ***
 
 Catalog row index (zero-based) : 118

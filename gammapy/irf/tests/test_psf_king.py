@@ -34,16 +34,22 @@ def test_psf_king_to_table(psf_king):
     offset = Angle(1, "deg")
     # energy = Quantity(1, "TeV") match with bin number 8
     # offset equal 1 degre match with the bin 200 in the psf_table
-    value_off1 = psf_king.evaluate_direct(offset, psf_king.gamma[0, 8], psf_king.sigma[0, 8])
-    value_off2 = psf_king.evaluate_direct(offset, psf_king.gamma[2, 8], psf_king.sigma[2, 8])
+    value_off1 = psf_king.evaluate_direct(
+        offset, psf_king.gamma[0, 8], psf_king.sigma[0, 8]
+    )
+    value_off2 = psf_king.evaluate_direct(
+        offset, psf_king.gamma[2, 8], psf_king.sigma[2, 8]
+    )
     # Test that the value at 1 degree in the histogram for the energy 1 Tev and theta=0 or 1 degree is equal to the one
     # obtained from the self.evaluate_direct() method at 1 degree
     assert_quantity_allclose(psf_king_table_off1.psf_value[8, 200], value_off1)
     assert_quantity_allclose(psf_king_table_off2.psf_value[8, 200], value_off2)
 
     # Test that the integral value is close to one
-    bin_off = (psf_king_table_off1.rad[1] - psf_king_table_off1.rad[0])
-    integral = np.sum(psf_king_table_off1.psf_value[8] * 2 * np.pi * psf_king_table_off1.rad * bin_off)
+    bin_off = psf_king_table_off1.rad[1] - psf_king_table_off1.rad[0]
+    integral = np.sum(
+        psf_king_table_off1.psf_value[8] * 2 * np.pi * psf_king_table_off1.rad * bin_off
+    )
     assert_quantity_allclose(integral, 1, atol=0.03)
 
 

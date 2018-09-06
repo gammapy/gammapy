@@ -24,8 +24,7 @@ def test_make_catalog_random_positions_cube():
 
 def test_make_catalog_random_positions_sphere():
     size = 100
-    table = make_catalog_random_positions_sphere(size=size,
-                                                 center='Milky Way')
+    table = make_catalog_random_positions_sphere(size=size, center='Milky Way')
     assert len(table) == size
 
 
@@ -39,10 +38,19 @@ def test_make_base_catalog_galactic():
     table = make_base_catalog_galactic(n_sources=10, random_state=0)
     assert len(table) == 10
     assert table.colnames == [
-        'age', 'n_ISM', 'spiralarm',
-        'x_birth', 'y_birth', 'z_birth',
-        'x', 'y', 'z',
-        'vx', 'vy', 'vz', 'v_abs',
+        'age',
+        'n_ISM',
+        'spiralarm',
+        'x_birth',
+        'y_birth',
+        'z_birth',
+        'x',
+        'y',
+        'z',
+        'vx',
+        'vy',
+        'vz',
+        'v_abs',
     ]
 
     d = table[0]
@@ -68,9 +76,9 @@ def test_add_observed_parameters():
     table = add_observed_parameters(table)
 
     assert len(table) == 10
-    assert set(table.colnames).issuperset([
-        'distance', 'GLON', 'GLAT', 'VGLON', 'VGLAT', 'RA', 'DEC',
-    ])
+    assert set(table.colnames).issuperset(
+        ['distance', 'GLON', 'GLAT', 'VGLON', 'VGLAT', 'RA', 'DEC']
+    )
 
     d = table[0]
 
@@ -106,8 +114,18 @@ def test_add_pulsar_parameters():
     table = add_pulsar_parameters(table, random_state=0)
 
     assert len(table) == 2
-    assert table.colnames == ['age', 'P0', 'P1', 'P0_birth', 'P1_birth', 'CharAge',
-                              'Tau0', 'L_PSR', 'L0_PSR', 'logB']
+    assert table.colnames == [
+        'age',
+        'P0',
+        'P1',
+        'P0_birth',
+        'P1_birth',
+        'CharAge',
+        'Tau0',
+        'L_PSR',
+        'L0_PSR',
+        'logB',
+    ]
 
     assert_allclose(table['P0'], [0.322829453422, 0.51352778881])
     assert_allclose(table['P1'], [4.54295751161e-14, 6.98423128444e-13])

@@ -71,7 +71,9 @@ class TestEventListFermi:
 @requires_data('gammapy-extra')
 class TestEventListChecker:
     def setup(self):
-        self.event_list = EventList.read('$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_111140.fits')
+        self.event_list = EventList.read(
+            '$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_111140.fits'
+        )
 
     def test_check_all(self):
         records = list(self.event_list.check())

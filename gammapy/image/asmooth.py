@@ -39,8 +39,9 @@ class ASmooth(object):
         Smoothing scales.
     """
 
-    def __init__(self, kernel=Gaussian2DKernel, method='simple', threshold=5,
-                 scales=None):
+    def __init__(
+        self, kernel=Gaussian2DKernel, method='simple', threshold=5, scales=None
+    ):
         self.parameters = {
             'kernel': kernel,
             'method': method,
@@ -83,9 +84,11 @@ class ASmooth(object):
         elif method == 'ts':
             raise NotImplementedError()
         else:
-            raise ValueError("Not a valid significance estimation method."
-                             " Choose one of the following: 'lima', 'simple',"
-                             " 'asmooth' or 'ts'")
+            raise ValueError(
+                "Not a valid significance estimation method."
+                " Choose one of the following: 'lima', 'simple',"
+                " 'asmooth' or 'ts'"
+            )
         return scube
 
     def run(self, counts, background=None, exposure=None):
@@ -129,7 +132,9 @@ class ASmooth(object):
             flux = (counts.data - background.data) / exposure.data
             cubes['flux'] = scale_cube(flux, kernels)
 
-        cubes['significance'] = self._significance_cube(cubes, method=self.parameters['method'])
+        cubes['significance'] = self._significance_cube(
+            cubes, method=self.parameters['method']
+        )
 
         smoothed = self._reduce_cubes(cubes, kernels)
 

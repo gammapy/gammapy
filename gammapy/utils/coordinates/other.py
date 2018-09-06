@@ -5,9 +5,16 @@ import numpy as np
 from astropy.units import Unit, Quantity
 
 __all__ = [
-    'cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
-    'radius_to_angle', 'angle_to_radius', 'velocity_glon_glat',
-    'motion_since_birth', 'polar', 'D_SUN_TO_GALACTIC_CENTER',
+    'cartesian',
+    'galactic',
+    'luminosity_to_flux',
+    'flux_to_luminosity',
+    'radius_to_angle',
+    'angle_to_radius',
+    'velocity_glon_glat',
+    'motion_since_birth',
+    'polar',
+    'D_SUN_TO_GALACTIC_CENTER',
 ]
 
 # TODO: replace this with the default from the Galactocentric frame in astropy.coordinates
@@ -93,8 +100,9 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
     r = np.sqrt(x ** 2 + y_prime ** 2)
 
     v_glon = (-y_prime * vx + x * vy) / r ** 2
-    v_glat = (vz / (np.sqrt(1 - (z / d) ** 2) * d) - np.sqrt(vx ** 2 + vy ** 2 + vz ** 2) * z /
-              ((np.sqrt(1 - (z / d) ** 2) * d ** 2)))
+    v_glat = vz / (np.sqrt(1 - (z / d) ** 2) * d) - np.sqrt(
+        vx ** 2 + vy ** 2 + vz ** 2
+    ) * z / ((np.sqrt(1 - (z / d) ** 2) * d ** 2))
     return v_glon * Unit('rad'), v_glat * Unit('rad')
 
 

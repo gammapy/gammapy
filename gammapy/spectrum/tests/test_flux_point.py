@@ -6,15 +6,24 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 import astropy.units as u
 from ...catalog.fermi import SourceCatalog3FGL
-from ...utils.testing import (requires_dependency, requires_data,
-                              assert_quantity_allclose, mpl_plot_check)
+from ...utils.testing import (
+    requires_dependency,
+    requires_data,
+    assert_quantity_allclose,
+    mpl_plot_check,
+)
 from ...utils.modeling import Parameters
 from ..results import SpectrumResult
 from ..fit import SpectrumFit
 from ..observation import SpectrumObservation
 from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, SpectralModel
-from ..flux_point import FluxPoints, FluxPointProfiles, FluxPointFitter, FluxPointEstimator
+from ..flux_point import (
+    FluxPoints,
+    FluxPointProfiles,
+    FluxPointFitter,
+    FluxPointEstimator,
+)
 
 FLUX_POINTS_FILES = [
     'diff_flux_points.ecsv',
@@ -32,10 +41,10 @@ class LWTestModel(SpectralModel):
         return 1e4 * np.exp(-6 * x)
 
     def integral(self, xmin, xmax, **kwargs):
-        return - 1. / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
+        return -1. / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
 
     def inverse(self, y):
-        return - 1. / 6 * np.log(y * 1e-4)
+        return -1. / 6 * np.log(y * 1e-4)
 
 
 class XSqrTestModel(SpectralModel):
@@ -95,7 +104,9 @@ def test_dnde_from_flux():
     # Get values
     model = XSqrTestModel()
     e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
-    dnde = FluxPoints._dnde_from_flux(flux, model, e_ref, e_min, e_max, pwl_approx=False)
+    dnde = FluxPoints._dnde_from_flux(
+        flux, model, e_ref, e_min, e_max, pwl_approx=False
+    )
 
     # Set up test case comparison
     dnde_model = model(e_ref)
@@ -177,11 +188,7 @@ def seg():
 @requires_dependency('scipy')
 class TestFluxPointEstimator:
     def setup(self):
-        self.fpe = FluxPointEstimator(
-            obs=obs(),
-            model=model(),
-            groups=seg()
-        )
+        self.fpe = FluxPointEstimator(obs=obs(), model=model(), groups=seg())
 
     def test_basic(self):
         assert 'FluxPointEstimator' in str(self.fpe)
@@ -215,10 +222,7 @@ class TestFluxPointEstimator:
     def test_spectrum_result(self):
         # TODO: Don't run this again
         self.fpe.compute_points()
-        result = SpectrumResult(
-            model=self.fpe.model,
-            points=self.fpe.flux_points,
-        )
+        result = SpectrumResult(model=self.fpe.model, points=self.fpe.flux_points)
 
         actual = result.flux_point_residuals[0][0]
         assert_allclose(actual, -0.32176, rtol=1e-2)
@@ -331,8 +335,9 @@ def test_compute_flux_points_dnde_fermi():
     fermi_3fgl = SourceCatalog3FGL()
     source = fermi_3fgl['3FGL J0835.3-4510']
 
-    flux_points = source.flux_points.to_sed_type('dnde', model=source.spectral_model,
-                                                 method='log_center', pwl_approx=True)
+    flux_points = source.flux_points.to_sed_type(
+        'dnde', model=source.spectral_model, method='log_center', pwl_approx=True
+    )
 
     for column in ['dnde', 'dnde_errn', 'dnde_errp', 'dnde_ul']:
         actual = flux_points.table['e2' + column].quantity
@@ -355,6 +360,8 @@ class TestFluxPointFitter:
         index = result['best-fit-model'].parameters['index']
         assert_quantity_allclose(index.quantity, 2.216 * u.Unit(''), rtol=1e-3)
         amplitude = result['best-fit-model'].parameters['amplitude']
-        assert_quantity_allclose(amplitude.quantity, 2.1616E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1e-3)
+        assert_quantity_allclose(
+            amplitude.quantity, 2.1616E-13 * u.Unit('cm-2 s-1 TeV-1'), rtol=1e-3
+        )
         assert_allclose(result['statval'], 25.2059, rtol=1e-3)
         assert_allclose(result['dof'], 22)

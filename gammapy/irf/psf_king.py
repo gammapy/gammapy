@@ -35,8 +35,16 @@ class PSFKing(object):
         PSF parameter (2D)
     """
 
-    def __init__(self, energy_lo, energy_hi, offset, gamma, sigma, energy_thresh_lo=Quantity(0.1, 'TeV'),
-                 energy_thresh_hi=Quantity(100, 'TeV')):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        offset,
+        gamma,
+        sigma,
+        energy_thresh_lo=Quantity(0.1, 'TeV'),
+        energy_thresh_hi=Quantity(100, 'TeV'),
+    ):
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
         self.offset = Angle(offset)
@@ -123,8 +131,14 @@ class PSFKing(object):
         # Set up data
         names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI', 'SIGMA', 'GAMMA']
         units = ['TeV', 'TeV', 'deg', 'deg', 'deg', '']
-        data = [self.energy_lo, self.energy_hi, self.offset, self.offset,
-                self.sigma, self.gamma]
+        data = [
+            self.energy_lo,
+            self.energy_hi,
+            self.offset,
+            self.offset,
+            self.sigma,
+            self.gamma,
+        ]
 
         table = Table()
         for name_, data_, unit_ in zip(names, data, units):
@@ -242,5 +256,6 @@ class PSFKing(object):
             val = self.evaluate_direct(rad, param_king["gamma"], param_king["sigma"])
             psf_value[i] = Quantity(val, 'deg^-2')
 
-        return EnergyDependentTablePSF(energy=energies, rad=rad,
-                                       exposure=exposure, psf_value=psf_value)
+        return EnergyDependentTablePSF(
+            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
+        )

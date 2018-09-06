@@ -3,10 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.units import Quantity
 
-__all__ = [
-    'CountsPredictor',
-    'integrate_spectrum',
-]
+__all__ = ['CountsPredictor', 'integrate_spectrum']
 
 
 class CountsPredictor(object):
@@ -95,9 +92,9 @@ class CountsPredictor(object):
             if self.e_true is None:
                 raise ValueError("No true energy binning given")
 
-        self.true_flux = self.model.integral(emin=self.e_true[:-1],
-                                             emax=self.e_true[1:],
-                                             intervals=True)
+        self.true_flux = self.model.integral(
+            emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
+        )
 
     def apply_aeff(self):
         if self.aeff is not None:
@@ -113,6 +110,7 @@ class CountsPredictor(object):
 
     def apply_edisp(self):
         from . import CountsSpectrum
+
         if self.edisp is not None:
             cts = self.edisp.apply(self.true_counts)
             self.e_reco = self.edisp.e_reco.bins
@@ -120,9 +118,9 @@ class CountsPredictor(object):
             cts = self.true_counts
             self.e_reco = self.e_true
 
-        self.npred = CountsSpectrum(data=cts,
-                                    energy_lo=self.e_reco[:-1],
-                                    energy_hi=self.e_reco[1:])
+        self.npred = CountsSpectrum(
+            data=cts, energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
+        )
 
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
@@ -176,6 +174,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
 # This function is copied over from https://github.com/zblz/naima/blob/master/naima/utils.py#L261
 # and slightly modified to allow use with the uncertainties package
 
+
 def _trapz_loglog(y, x, axis=-1, intervals=False):
     """
     Integrate along the given axis using the composite trapezoidal rule in
@@ -224,6 +223,7 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
     # arrays with uncertainties contain objects
     if y.dtype == 'O':
         from uncertainties.unumpy import log10
+
         # uncertainties.unumpy.log10 can't deal with tiny values see
         # https://github.com/gammapy/gammapy/issues/687, so we filter out the values
         # here. As the values are so small it doesn't affect the final result.
@@ -244,9 +244,11 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         # if local powerlaw index is -1, use \int 1/x = log(x); otherwise use normal
         # powerlaw integration
         trapzs = np.where(
-            np.abs(b + 1.) > 1e-10, (y[slice1] * (
-                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (b + 1),
-            x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
+            np.abs(b + 1.) > 1e-10,
+            (y[slice1] * (x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1]))
+            / (b + 1),
+            x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]),
+        )
 
     tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
     trapzs[tozero] = 0.

@@ -12,11 +12,7 @@ from ..utils.scripts import make_path
 from ..utils.fits import energy_axis_to_ebounds, ebounds_to_energy_axis
 from ..data import EventList
 
-__all__ = [
-    'CountsSpectrum',
-    'PHACountsSpectrum',
-    'PHACountsSpectrumList',
-]
+__all__ = ['CountsSpectrum', 'PHACountsSpectrum', 'PHACountsSpectrumList']
 
 log = logging.getLogger('__name__')
 
@@ -51,12 +47,16 @@ class CountsSpectrum(object):
         )
         spec.plot(show_poisson_errors=True)
     """
+
     default_interp_kwargs = dict(bounds_error=False, method='nearest')
     """Default interpolation kwargs"""
 
     def __init__(self, energy_lo, energy_hi, data=None, interp_kwargs=None):
-        axes = [BinnedDataAxis(energy_lo, energy_hi,
-                               interpolation_mode='log', name='energy')]
+        axes = [
+            BinnedDataAxis(
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            )
+        ]
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
@@ -72,8 +72,9 @@ class CountsSpectrum(object):
         counts_table = Table.read(hdulist[hdu1])
         counts = counts_table['COUNTS'].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
-        return cls(data=counts, energy_lo=ebounds.lower_bounds,
-                   energy_hi=ebounds.upper_bounds)
+        return cls(
+            data=counts, energy_lo=ebounds.lower_bounds, energy_hi=ebounds.upper_bounds
+        )
 
     @classmethod
     def read(cls, filename, hdu1='COUNTS', hdu2='EBOUNDS'):
@@ -134,8 +135,14 @@ class CountsSpectrum(object):
         """
         return self.data.data.sum()
 
-    def plot(self, ax=None, energy_unit='TeV', show_poisson_errors=False,
-             show_energy=None, **kwargs):
+    def plot(
+        self,
+        ax=None,
+        energy_unit='TeV',
+        show_poisson_errors=False,
+        show_energy=None,
+        **kwargs
+    ):
         """Plot as data points.
 
         kwargs are forwarded to `~matplotlib.pyplot.errorbar`
@@ -168,8 +175,7 @@ class CountsSpectrum(object):
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to(energy_unit).value
-            ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value),
-                      linestyles='dashed')
+            ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value), linestyles='dashed')
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
@@ -201,8 +207,7 @@ class CountsSpectrum(object):
         ax.hist(x, bins=bins, weights=weights, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to(energy_unit).value
-            ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value),
-                      linestyles='dashed')
+            ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value), linestyles='dashed')
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
@@ -234,14 +239,17 @@ class CountsSpectrum(object):
             Rebinned spectrum
         """
         if len(self.data.data) % parameter != 0:
-            raise ValueError("Invalid rebin parameter: {}, nbins: {}".format(
-                parameter, len(self.data.data)))
+            raise ValueError(
+                "Invalid rebin parameter: {}, nbins: {}".format(
+                    parameter, len(self.data.data)
+                )
+            )
 
         # Copy to keep attributes
         retval = self.copy()
         energy = retval.energy
         energy.lo = energy.lo[0::parameter]
-        energy.hi = energy.hi[parameter - 1::parameter]
+        energy.hi = energy.hi[parameter - 1 :: parameter]
         split_indices = np.arange(parameter, len(retval.data.data), parameter)
         counts_grp = np.split(retval.data.data, split_indices)
         counts_rebinned = np.sum(counts_grp, axis=1)
@@ -283,9 +291,20 @@ class PHACountsSpectrum(CountsSpectrum):
         Meta information
     """
 
-    def __init__(self, energy_lo, energy_hi, data=None, quality=None,
-                 backscal=None, areascal=None, is_bkg=False, obs_id=None,
-                 livetime=None, offset=None, meta=None):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        data=None,
+        quality=None,
+        backscal=None,
+        areascal=None,
+        is_bkg=False,
+        obs_id=None,
+        livetime=None,
+        offset=None,
+        meta=None,
+    ):
         super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype='i2')
@@ -387,10 +406,10 @@ class PHACountsSpectrum(CountsSpectrum):
         quality_grp = np.split(retval.quality, split_indices)
         quality_summed = np.sum(quality_grp, axis=1)
         # Exclude groups where not all bins are within the safe threshold
-        condition = (quality_summed == parameter)
-        quality_rebinned = np.where(condition,
-                                    np.ones(len(retval.data.data)),
-                                    np.zeros(len(retval.data.data)))
+        condition = quality_summed == parameter
+        quality_rebinned = np.where(
+            condition, np.ones(len(retval.data.data)), np.zeros(len(retval.data.data))
+        )
         retval.quality = np.array(quality_rebinned, dtype=int)
 
         # if backscal is not the same in all channels cannot merge
@@ -481,7 +500,7 @@ class PHACountsSpectrum(CountsSpectrum):
             quality=quality,
             areascal=areascal,
             livetime=counts_table.meta['EXPOSURE'] * u.s,
-            obs_id=counts_table.meta['OBS_ID']
+            obs_id=counts_table.meta['OBS_ID'],
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs['is_bkg'] = True
@@ -593,10 +612,7 @@ class PHACountsSpectrumList(list):
     def from_hdulist(cls, hdulist):
         """Create from `~astropy.io.fits.HDUList`."""
         energy = ebounds_to_energy_axis(hdulist[2])
-        kwargs = dict(
-            energy_lo=energy[:-1],
-            energy_hi=energy[1:],
-        )
+        kwargs = dict(energy_lo=energy[:-1], energy_hi=energy[1:])
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             kwargs['is_bkg'] = True
 

@@ -118,10 +118,13 @@ def test_complex():
 @pytest.mark.xfail(reason='Need to improve XML read')
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
-@pytest.mark.parametrize('filename', [
-    '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
-    '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
-])
+@pytest.mark.parametrize(
+    'filename',
+    [
+        '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml',
+        '$GAMMAPY_EXTRA/test_datasets/models/shell.xml',
+    ],
+)
 def test_models(filename, tmpdir):
     outfile = tmpdir / 'models_out.xml'
     sourcelib = SkyModels.read(filename)
@@ -129,8 +132,9 @@ def test_models(filename, tmpdir):
 
     sourcelib_roundtrip = SkyModels.from_xml(outfile)
 
-    for model, model_roundtrip in zip(sourcelib.skymodels,
-                                      sourcelib_roundtrip.skymodels):
+    for model, model_roundtrip in zip(
+        sourcelib.skymodels, sourcelib_roundtrip.skymodels
+    ):
         assert str(model) == str(model_roundtrip)
 
 
@@ -153,14 +157,18 @@ def test_sky_models_old_xml_file():
 @pytest.mark.xfail(reason='Need to improve XML read')
 @requires_data('gammapy-extra')
 def test_sky_models_new_xml_file():
-    filename = '$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml'
+    filename = (
+        '$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml'
+    )
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 47
 
     source = sources.source_list[0]
     assert source.source_name == 'HESS J0632+057'
-    assert_allclose(source.spectral_model.parameters['Index'].value, -2.5299999713897705)
+    assert_allclose(
+        source.spectral_model.parameters['Index'].value, -2.5299999713897705
+    )
 
     xml = sources.to_xml()
     assert 'sources' in xml

@@ -8,9 +8,7 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fits import earth_location_from_dict
 
-__all__ = [
-    'PointingInfo',
-]
+__all__ = ['PointingInfo']
 
 
 class PointingInfo(object):
@@ -57,7 +55,9 @@ class PointingInfo(object):
         ss = 'Pointing info:\n\n'
         ss += 'Location:     {}\n'.format(self.location.geodetic)
         m = self.table.meta
-        ss += 'MJDREFI, MJDREFF, TIMESYS = {}\n'.format((m['MJDREFI'], m['MJDREFF'], m['TIMESYS']))
+        ss += 'MJDREFI, MJDREFF, TIMESYS = {}\n'.format(
+            (m['MJDREFI'], m['MJDREFF'], m['TIMESYS'])
+        )
         ss += 'Time ref:     {}\n'.format(self.time_ref.fits)
         ss += 'Time ref:     {} MJD (TT)\n'.format(self.time_ref.mjd)
         sec = self.duration.to('second').value
@@ -130,6 +130,7 @@ class PointingInfo(object):
     def altaz_interpolate(self, time):
         """Interpolate pointing for a given time."""
         from scipy.interpolate import interp1d
+
         t_new = time.mjd
         t = self.time.mjd
         xyz = self.altaz.cartesian
@@ -138,4 +139,6 @@ class PointingInfo(object):
         z_new = interp1d(t, xyz.z)(t_new)
         xyz_new = CartesianRepresentation(x_new, y_new, z_new)
         altaz_frame = AltAz(obstime=time, location=self.location)
-        return SkyCoord(xyz_new, frame=altaz_frame, representation='unitspherical', unit='deg')
+        return SkyCoord(
+            xyz_new, frame=altaz_frame, representation='unitspherical', unit='deg'
+        )

@@ -24,6 +24,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 @six.add_metaclass(abc.ABCMeta)
 class SkySpatialModel(object):
     """SkySpatial model base class.
@@ -73,10 +74,9 @@ class SkyPointSource(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0))
-        ])
+        self.parameters = Parameters(
+            [Parameter('lon_0', Longitude(lon_0)), Parameter('lat_0', Latitude(lat_0))]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
@@ -117,11 +117,13 @@ class SkyGaussian(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, sigma):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('sigma', Angle(sigma))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter('lon_0', Longitude(lon_0)),
+                Parameter('lat_0', Latitude(lat_0)),
+                Parameter('sigma', Angle(sigma)),
+            ]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, sigma):
@@ -161,11 +163,13 @@ class SkyDisk(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, r_0):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('r_0', Angle(r_0))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter('lon_0', Longitude(lon_0)),
+                Parameter('lat_0', Latitude(lat_0)),
+                Parameter('r_0', Angle(r_0)),
+            ]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0):
@@ -212,12 +216,14 @@ class SkyShell(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, radius, width):
-        self.parameters = Parameters([
-            Parameter('lon_0', Longitude(lon_0)),
-            Parameter('lat_0', Latitude(lat_0)),
-            Parameter('radius', Angle(radius)),
-            Parameter('width', Angle(width))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter('lon_0', Longitude(lon_0)),
+                Parameter('lat_0', Latitude(lat_0)),
+                Parameter('radius', Angle(radius)),
+                Parameter('width', Angle(width)),
+            ]
+        )
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
@@ -247,9 +253,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     """
 
     def __init__(self, value=1):
-        self.parameters = Parameters([
-            Parameter('value', value),
-        ])
+        self.parameters = Parameters([Parameter('value', value)])
 
     @staticmethod
     def evaluate(lon, lat, value):
@@ -279,17 +283,17 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
-            log.warn("Map template contains negative values, please check the"
-                     " data and fix if needed.")
+            log.warn(
+                "Map template contains negative values, please check the"
+                " data and fix if needed."
+            )
 
         self.map = map
 
         if normalize:
             self.normalize()
 
-        self.parameters = Parameters([
-            Parameter('norm', norm),
-        ])
+        self.parameters = Parameters([Parameter('norm', norm)])
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
@@ -325,9 +329,6 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
-        coord = {
-            'lon': lon.to('deg').value,
-            'lat': lat.to('deg').value,
-        }
+        coord = {'lon': lon.to('deg').value, 'lat': lat.to('deg').value}
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(norm.value * val, self.map.unit, copy=False)

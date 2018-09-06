@@ -8,12 +8,7 @@ import numpy as np
 from astropy.units import Quantity
 from .array import array_stats_str
 
-__all__ = [
-    'NDDataArray',
-    'DataAxis',
-    'BinnedDataAxis',
-    'sqrt_space',
-]
+__all__ = ['NDDataArray', 'DataAxis', 'BinnedDataAxis', 'sqrt_space']
 
 
 class NDDataArray(object):
@@ -32,6 +27,7 @@ class NDDataArray(object):
     interp_kwargs : dict
         TODO
     """
+
     default_interp_kwargs = dict(bounds_error=False)
     """Default interpolation kwargs used to initialize the
     `scipy.interpolate.RegularGridInterpolator`.  The interpolation behaviour
@@ -88,17 +84,19 @@ class NDDataArray(object):
         data = Quantity(data)
         dimension = len(data.shape)
         if dimension != self.dim:
-            raise ValueError('Overall dimensions to not match. '
-                             'Data: {}, Hist: {}'.format(dimension, self.dim))
+            raise ValueError(
+                'Overall dimensions to not match. '
+                'Data: {}, Hist: {}'.format(dimension, self.dim)
+            )
 
         for dim in np.arange(self.dim):
             axis = self.axes[dim]
             if axis.nbins != data.shape[dim]:
                 msg = 'Data shape does not match in dimension {d}\n'
                 msg += 'Axis {n} : {sa}, Data {sd}'
-                raise ValueError(msg.format(d=dim, n=axis.name,
-                                            sa=axis.nbins,
-                                            sd=data.shape[dim]))
+                raise ValueError(
+                    msg.format(d=dim, n=axis.name, sa=axis.nbins, sd=data.shape[dim])
+                )
         self._regular_grid_interp = None
         self._data = data
 
@@ -205,10 +203,12 @@ class NDDataArray(object):
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        points = tuple([
-            axis._interp_values(points[axis.name].to(axis.unit).value)
-            for axis in self.axes
-        ])
+        points = tuple(
+            [
+                axis._interp_values(points[axis.name].to(axis.unit).value)
+                for axis in self.axes
+            ]
+        )
         res = self._regular_grid_interp(points, method=method, **kwargs)
 
         # Clip interpolated values to be non-negative
@@ -239,15 +239,18 @@ class NDDataArray(object):
         # If values contains nan, only setup interpolator in valid range
         if np.isnan(values).any():
             if self.dim > 1:
-                raise NotImplementedError('Data grid contains nan. This is not'
-                                          'supported for arrays dimension > 1')
+                raise NotImplementedError(
+                    'Data grid contains nan. This is not'
+                    'supported for arrays dimension > 1'
+                )
             else:
                 mask = np.isfinite(values)
                 points = [points[0][mask]]
                 values = values[mask]
 
-        self._regular_grid_interp = RegularGridInterpolator(points, values,
-                                                            **interp_kwargs)
+        self._regular_grid_interp = RegularGridInterpolator(
+            points, values, **interp_kwargs
+        )
 
 
 class DataAxis(object):
@@ -333,8 +336,7 @@ class DataAxis(object):
         val = Quantity(val)
 
         if not val.unit.is_equivalent(self.unit):
-            raise ValueError('Units {} and {} do not match'.format(
-                val.unit, self.unit))
+            raise ValueError('Units {} and {} do not match'.format(val.unit, self.unit))
 
         val = val.to(self.nodes.unit)
         val = np.atleast_1d(val)

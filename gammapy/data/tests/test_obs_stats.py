@@ -27,21 +27,19 @@ def on_region():
 @pytest.fixture(scope='session')
 def stats(on_region, obs_list):
     obs = obs_list[0]
-    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                              obs_list=obs)
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, obs_list=obs)
     bg = bge.process(obs)
     return ObservationStats.from_obs(obs, bg)
 
 
 @pytest.fixture(scope='session')
 def stats_stacked(on_region, obs_list):
-    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region,
-                                              obs_list=obs_list)
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, obs_list=obs_list)
     bge.run()
 
-    return ObservationStats.stack([
-        ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)
-    ])
+    return ObservationStats.stack(
+        [ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)]
+    )
 
 
 @requires_data('gammapy-extra')

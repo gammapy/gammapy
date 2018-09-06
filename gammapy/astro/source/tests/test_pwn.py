@@ -13,14 +13,28 @@ pwn = PWN()
 @requires_dependency('scipy')
 def test_PWN_radius():
     """Test SNR luminosity"""
-    reference = [0.00000000e+00, 1.33404629e+14, 2.11432089e+15,
-                 3.35097278e+16, 5.31093395e+17, 6.92792702e+17, 6.92792702e+17]
+    reference = [
+        0.00000000e+00,
+        1.33404629e+14,
+        2.11432089e+15,
+        3.35097278e+16,
+        5.31093395e+17,
+        6.92792702e+17,
+        6.92792702e+17,
+    ]
     assert_allclose(pwn.radius(t).value, reference, rtol=1e-3)
 
 
 @requires_dependency('scipy')
 def test_magnetic_field():
     """Test SNR luminosity"""
-    reference = [np.nan, 1.75348134e-03, 8.78822460e-05, 4.40454585e-06,
-                 2.20750154e-07, 4.68544888e-07, 1.48162794e-06]
+    reference = [
+        np.nan,
+        1.75348134e-03,
+        8.78822460e-05,
+        4.40454585e-06,
+        2.20750154e-07,
+        4.68544888e-07,
+        1.48162794e-06,
+    ]
     assert_allclose(pwn.magnetic_field(t).to('gauss').value, reference, rtol=1e-3)

@@ -26,52 +26,44 @@ mapaxis_geoms_node_type = [
 ]
 
 
-@pytest.mark.parametrize(('edges', 'interp'),
-                         mapaxis_geoms)
+@pytest.mark.parametrize(('edges', 'interp'), mapaxis_geoms)
 def test_mapaxis_init_from_edges(edges, interp):
     axis = MapAxis(edges, interp=interp)
     assert_allclose(axis.edges, edges)
     assert_allclose(axis.nbin, len(edges) - 1)
 
 
-@pytest.mark.parametrize(('nodes', 'interp'),
-                         mapaxis_geoms)
+@pytest.mark.parametrize(('nodes', 'interp'), mapaxis_geoms)
 def test_mapaxis_from_nodes(nodes, interp):
     axis = MapAxis.from_nodes(nodes, interp=interp)
     assert_allclose(axis.center, nodes)
     assert_allclose(axis.nbin, len(nodes))
 
 
-@pytest.mark.parametrize(('nodes', 'interp'),
-                         mapaxis_geoms)
+@pytest.mark.parametrize(('nodes', 'interp'), mapaxis_geoms)
 def test_mapaxis_from_bounds(nodes, interp):
-    axis = MapAxis.from_bounds(nodes[0], nodes[-1], 3,
-                               interp=interp)
+    axis = MapAxis.from_bounds(nodes[0], nodes[-1], 3, interp=interp)
     assert_allclose(axis.edges[0], nodes[0])
     assert_allclose(axis.edges[-1], nodes[-1])
     assert_allclose(axis.nbin, 3)
 
 
-@pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
-                         mapaxis_geoms_node_type)
+@pytest.mark.parametrize(('nodes', 'interp', 'node_type'), mapaxis_geoms_node_type)
 def test_mapaxis_pix_to_coord(nodes, interp, node_type):
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
-    assert_allclose(axis.center,
-                    axis.pix_to_coord(np.arange(axis.nbin, dtype=float)))
-    assert_allclose(np.arange(axis.nbin + 1, dtype=float) - 0.5,
-                    axis.coord_to_pix(axis.edges))
+    assert_allclose(axis.center, axis.pix_to_coord(np.arange(axis.nbin, dtype=float)))
+    assert_allclose(
+        np.arange(axis.nbin + 1, dtype=float) - 0.5, axis.coord_to_pix(axis.edges)
+    )
 
 
-@pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
-                         mapaxis_geoms_node_type)
+@pytest.mark.parametrize(('nodes', 'interp', 'node_type'), mapaxis_geoms_node_type)
 def test_mapaxis_coord_to_idx(nodes, interp, node_type):
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
-    assert_allclose(np.arange(axis.nbin, dtype=int),
-                    axis.coord_to_idx(axis.center))
+    assert_allclose(np.arange(axis.nbin, dtype=int), axis.coord_to_idx(axis.center))
 
 
-@pytest.mark.parametrize(('nodes', 'interp', 'node_type'),
-                         mapaxis_geoms_node_type)
+@pytest.mark.parametrize(('nodes', 'interp', 'node_type'), mapaxis_geoms_node_type)
 def test_mapaxis_slice(nodes, interp, node_type):
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
     saxis = axis.slice(slice(1, 3))
@@ -176,9 +168,9 @@ def test_mapcoords_create():
     assert coords.ndim == 3
 
     # 3D OrderedDict w/ vectors
-    coords = MapCoord.create(OrderedDict([
-        ('energy', energy), ('lat', lat), ('lon', lon)
-    ]))
+    coords = MapCoord.create(
+        OrderedDict([('energy', energy), ('lat', lat), ('lon', lon)])
+    )
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords['energy'], energy)
@@ -198,33 +190,31 @@ def test_mapcoords_to_coordsys():
     skycoord_cel = SkyCoord(lon, lat, unit='deg', frame='icrs')
     skycoord_gal = SkyCoord(lon, lat, unit='deg', frame='galactic')
 
-    coords = MapCoord.create(
-        dict(lon=lon, lat=lat, energy=energy), coordsys='CEL')
+    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), coordsys='CEL')
     assert coords.coordsys == 'CEL'
-    assert_allclose(coords.skycoord.transform_to(
-        'icrs').ra.deg, skycoord_cel.ra.deg)
-    assert_allclose(coords.skycoord.transform_to(
-        'icrs').dec.deg, skycoord_cel.dec.deg)
+    assert_allclose(coords.skycoord.transform_to('icrs').ra.deg, skycoord_cel.ra.deg)
+    assert_allclose(coords.skycoord.transform_to('icrs').dec.deg, skycoord_cel.dec.deg)
     coords = coords.to_coordsys('GAL')
     assert coords.coordsys == 'GAL'
-    assert_allclose(coords.skycoord.transform_to(
-        'galactic').l.deg, skycoord_cel.galactic.l.deg)
-    assert_allclose(coords.skycoord.transform_to(
-        'galactic').b.deg, skycoord_cel.galactic.b.deg)
+    assert_allclose(
+        coords.skycoord.transform_to('galactic').l.deg, skycoord_cel.galactic.l.deg
+    )
+    assert_allclose(
+        coords.skycoord.transform_to('galactic').b.deg, skycoord_cel.galactic.b.deg
+    )
 
-    coords = MapCoord.create(
-        dict(lon=lon, lat=lat, energy=energy), coordsys='GAL')
+    coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy), coordsys='GAL')
     assert coords.coordsys == 'GAL'
-    assert_allclose(coords.skycoord.transform_to(
-        'galactic').l.deg, skycoord_gal.l.deg)
-    assert_allclose(coords.skycoord.transform_to(
-        'galactic').b.deg, skycoord_gal.b.deg)
+    assert_allclose(coords.skycoord.transform_to('galactic').l.deg, skycoord_gal.l.deg)
+    assert_allclose(coords.skycoord.transform_to('galactic').b.deg, skycoord_gal.b.deg)
     coords = coords.to_coordsys('CEL')
     assert coords.coordsys == 'CEL'
-    assert_allclose(coords.skycoord.transform_to(
-        'icrs').ra.deg, skycoord_gal.icrs.ra.deg)
-    assert_allclose(coords.skycoord.transform_to(
-        'icrs').dec.deg, skycoord_gal.icrs.dec.deg)
+    assert_allclose(
+        coords.skycoord.transform_to('icrs').ra.deg, skycoord_gal.icrs.ra.deg
+    )
+    assert_allclose(
+        coords.skycoord.transform_to('icrs').dec.deg, skycoord_gal.icrs.dec.deg
+    )
 
 
 def test_mapaxis_repr():

@@ -24,11 +24,7 @@ from astropy.table import Table
 from astropy.table import vstack as table_vstack
 from ..utils.table import table_from_row_data, table_row_to_dict
 
-__all__ = [
-    'SpectrumEnergyGroup',
-    'SpectrumEnergyGroups',
-    'SpectrumEnergyGroupMaker',
-]
+__all__ = ['SpectrumEnergyGroup', 'SpectrumEnergyGroups', 'SpectrumEnergyGroupMaker']
 
 log = logging.getLogger(__name__)
 
@@ -38,17 +34,29 @@ class SpectrumEnergyGroup(object):
 
     Represents a consecutive range of bin indices (both ends inclusive).
     """
+
     fields = [
-        'energy_group_idx', 'bin_idx_min', 'bin_idx_max',
-        'bin_type', 'energy_min', 'energy_max',
+        'energy_group_idx',
+        'bin_idx_min',
+        'bin_idx_max',
+        'bin_type',
+        'energy_min',
+        'energy_max',
     ]
     """List of data members of this class."""
 
     valid_bin_types = ['normal', 'underflow', 'overflow']
     """Valid values for ``bin_types`` attribute."""
 
-    def __init__(self, energy_group_idx, bin_idx_min, bin_idx_max, bin_type,
-                 energy_min, energy_max):
+    def __init__(
+        self,
+        energy_group_idx,
+        bin_idx_min,
+        bin_idx_max,
+        bin_type,
+        energy_min,
+        energy_max,
+    ):
         self.energy_group_idx = energy_group_idx
         self.bin_idx_min = bin_idx_min
         self.bin_idx_max = bin_idx_max
@@ -147,10 +155,9 @@ class SpectrumEnergyGroups(UserList):
     @classmethod
     def from_group_table(cls, table):
         """Create from energy groups in `~astropy.table.Table` format."""
-        return cls([
-            SpectrumEnergyGroup.from_dict(table_row_to_dict(row))
-            for row in table
-        ])
+        return cls(
+            [SpectrumEnergyGroup.from_dict(table_row_to_dict(row)) for row in table]
+        )
 
     def to_total_table(self):
         """Table with one energy bin per row (`~astropy.table.Table`).

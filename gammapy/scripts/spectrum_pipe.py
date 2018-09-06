@@ -10,9 +10,7 @@ from ..spectrum import (
 )
 from ..background import ReflectedRegionsBackgroundEstimator
 
-__all__ = [
-    'SpectrumAnalysisIACT',
-]
+__all__ = ['SpectrumAnalysisIACT']
 
 log = logging.getLogger(__name__)
 
@@ -64,8 +62,7 @@ class SpectrumAnalysisIACT(object):
     def run_extraction(self):
         """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
-            obs_list=self.observations,
-            **self.config['background']
+            obs_list=self.observations, **self.config['background']
         )
         self.background_estimator.run()
 
@@ -80,8 +77,7 @@ class SpectrumAnalysisIACT(object):
     def run_fit(self):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
-            obs_list=self.extraction.observations,
-            **self.config['fit']
+            obs_list=self.extraction.observations, **self.config['fit']
         )
         self.fit.run(outdir=self.config['outdir'])
 
@@ -101,6 +97,5 @@ class SpectrumAnalysisIACT(object):
     def spectrum_result(self):
         """`~gammapy.spectrum.SpectrumResult`"""
         return SpectrumResult(
-            points=self.flux_point_estimator.flux_points,
-            model=self.fit.result[0].model
+            points=self.flux_point_estimator.flux_points, model=self.fit.result[0].model
         )

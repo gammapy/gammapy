@@ -4,10 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 
-__all__ = [
-    'JFactory',
-    'compute_dm_flux',
-]
+__all__ = ['JFactory', 'compute_dm_flux']
 
 
 class JFactory(object):
@@ -89,9 +86,8 @@ def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
     ----------
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
-    prefactor = (x_section / (8 * np.pi * prim_flux.mDM ** 2))
+    prefactor = x_section / (8 * np.pi * prim_flux.mDM ** 2)
     int_flux = prim_flux.table_model.integral(
-        emin=energy_range[0],
-        emax=energy_range[1],
+        emin=energy_range[0], emax=energy_range[1]
     )
     return (jfact * prefactor * int_flux).to('cm-2 s-1')

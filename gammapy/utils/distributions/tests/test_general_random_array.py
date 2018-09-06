@@ -6,6 +6,7 @@ from ....utils.distributions import GeneralRandomArray
 
 def plot_simple_1d():
     import matplotlib.pyplot as plt
+
     # A 1d example with 5 bins
     pdf = np.array([1, 1, 1, 1, 1])
     r = GeneralRandomArray(pdf)
@@ -23,6 +24,7 @@ def plot_1d():
     the true to the random distribution
     """
     import matplotlib.pyplot as plt
+
     # A vector of probabilities
     p = np.array([1, 3, 4, 2, 1])
     nbins = p.size
@@ -49,6 +51,7 @@ def plot_1d():
 
 def plot_simple_2d():
     import matplotlib.pyplot as plt
+
     # A 2d example with 6 bins
     pdf = np.array([1, 1, 1, 1, 1, 1])
     pdf.shape = 2, 3
@@ -69,12 +72,15 @@ def plot_2d_example():
     image representing a brightness distribution.
     """
     import matplotlib.pyplot as plt
+
     # Generate some 2D array for demonstration.
     # In reality this could e.g. be read from a FITS file.
     shape = (100, 200)
     y, x = np.indices(shape)
     sigma = 10.
-    brightness_map = 1 + 3. * np.exp(-((x - 50) ** 2 + (y - 50) ** 2) / (2 * sigma ** 2))
+    brightness_map = 1 + 3. * np.exp(
+        -((x - 50) ** 2 + (y - 50) ** 2) / (2 * sigma ** 2)
+    )
     # Generate random positions from this distribution
     r = GeneralRandomArray(brightness_map)
     photon_list = r.draw(1e5)

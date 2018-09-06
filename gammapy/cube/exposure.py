@@ -4,9 +4,7 @@ import numpy as np
 from ..spectrum.models import PowerLaw
 from ..maps import WcsNDMap
 
-__all__ = [
-    'make_map_exposure_true_energy',
-]
+__all__ = ['make_map_exposure_true_energy']
 
 
 def make_map_exposure_true_energy(pointing, livetime, aeff, geom):

@@ -8,10 +8,7 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.modeling import Parameter, Parameters
 
-__all__ = [
-    'PhaseCurveTableModel',
-    'LightCurveTableModel',
-]
+__all__ = ['PhaseCurveTableModel', 'LightCurveTableModel']
 
 
 class PhaseCurveTableModel(object):
@@ -66,12 +63,14 @@ class PhaseCurveTableModel(object):
 
     def __init__(self, table, time_0, phase_0, f0, f1, f2):
         self.table = table
-        self.parameters = Parameters([
-            Parameter('time_0', time_0),
-            Parameter('phase_0', phase_0),
-            Parameter('f0', f0),
-            Parameter('f1', f1),
-            Parameter('f2', f2)]
+        self.parameters = Parameters(
+            [
+                Parameter('time_0', time_0),
+                Parameter('phase_0', phase_0),
+                Parameter('f0', f0),
+                Parameter('f1', f1),
+                Parameter('f2', f2),
+            ]
         )
 
     def phase(self, time):

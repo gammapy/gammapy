@@ -34,6 +34,7 @@ log = logging.getLogger(__name__)
 class NoDataAvailableError(LookupError):
     """Generic error used in Gammapy, when some data isn't available.
     """
+
     pass
 
 
@@ -42,6 +43,7 @@ class GammaCatNotFoundError(OSError):
 
     You have to set the GAMMA_CAT environment variable so that it's found.
     """
+
     pass
 
 
@@ -50,6 +52,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     Catalog is represented by `~gammapy.catalog.SourceCatalogGammaCat`.
     """
+
     _source_name_key = 'common_name'
     _source_index_key = 'catalog_row_index'
 
@@ -168,33 +171,58 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         # Spectral model parameters
         if spec_type == 'pl':
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
-                'norm', d['spec_pl_norm'].value, d['spec_pl_norm_err'].value,
-                d['spec_pl_norm_err_sys'].value, 'cm-2 s-1 TeV-1')
+                'norm',
+                d['spec_pl_norm'].value,
+                d['spec_pl_norm_err'].value,
+                d['spec_pl_norm_err_sys'].value,
+                'cm-2 s-1 TeV-1',
+            )
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
-                'index', d['spec_pl_index'], d['spec_pl_index_err'],
-                d['spec_pl_index_err_sys'])
+                'index',
+                d['spec_pl_index'],
+                d['spec_pl_index_err'],
+                d['spec_pl_index_err_sys'],
+            )
             ss += '{:<15s} : {:.3}\n'.format('reference', d['spec_pl_e_ref'])
 
         elif spec_type == 'pl2':
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys) {}\n'.format(
-                'flux', d['spec_pl2_flux'].value, d['spec_pl2_flux_err'].value,
-                d['spec_pl2_flux_err_sys'].value, 'cm-2 s-1')
+                'flux',
+                d['spec_pl2_flux'].value,
+                d['spec_pl2_flux_err'].value,
+                d['spec_pl2_flux_err_sys'].value,
+                'cm-2 s-1',
+            )
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
-                'index', d['spec_pl2_index'], d['spec_pl2_index_err'],
-                d['spec_pl2_index_err_sys'])
+                'index',
+                d['spec_pl2_index'],
+                d['spec_pl2_index_err'],
+                d['spec_pl2_index_err_sys'],
+            )
             ss += '{:<15s} : {:.3}\n'.format('e_min', d['spec_pl2_e_min'])
             ss += '{:<15s} : {:.3}\n'.format('e_max', d['spec_pl2_e_max'])
 
         elif spec_type == 'ecpl':
             ss += '{:<15s} : {:.3g} +- {:.3g} (stat) +- {:.03g} (sys) {}\n'.format(
-                'norm', d['spec_ecpl_norm'].value, d['spec_ecpl_norm_err'].value,
-                d['spec_ecpl_norm_err_sys'].value, 'cm-2 s-1 TeV-1')
+                'norm',
+                d['spec_ecpl_norm'].value,
+                d['spec_ecpl_norm_err'].value,
+                d['spec_ecpl_norm_err_sys'].value,
+                'cm-2 s-1 TeV-1',
+            )
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (sys)\n'.format(
-                'index', d['spec_ecpl_index'], d['spec_ecpl_index_err'],
-                d['spec_ecpl_index_err_sys'])
+                'index',
+                d['spec_ecpl_index'],
+                d['spec_ecpl_index_err'],
+                d['spec_ecpl_index_err_sys'],
+            )
             ss += '{:<15s} : {:.3} +- {:.3} (stat) +- {:.3} (stat) {}\n'.format(
-                'e_cut', d['spec_ecpl_e_cut'].value, d['spec_ecpl_e_cut_err'].value,
-                d['spec_ecpl_e_cut_err_sys'].value, 'TeV')
+                'e_cut',
+                d['spec_ecpl_e_cut'].value,
+                d['spec_ecpl_e_cut_err'].value,
+                d['spec_ecpl_e_cut_err_sys'].value,
+                'TeV',
+            )
             ss += '{:<15s} : {:.3}\n'.format('reference', d['spec_ecpl_e_ref'])
 
         else:
@@ -202,23 +230,36 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             ss += '\nSpectral model printout not yet implemented.\n'
 
         ss += '\n{:<20s} : ({:.3}, {:.3}) TeV\n'.format(
-            'Energy range', d['spec_erange_min'].value, d['spec_erange_max'].value)
+            'Energy range', d['spec_erange_min'].value, d['spec_erange_max'].value
+        )
         ss += '{:<20s} : {:.3}\n'.format('theta', d['spec_theta'])
 
         ss += '\n\nDerived fluxes:\n'
 
         ss += '{:<30s} : {:.3} +- {:.3} (stat) {}\n'.format(
-            'Spectral model norm (1 TeV)', d['spec_dnde_1TeV'].value,
-            d['spec_dnde_1TeV_err'].value, 'cm-2 s-1 TeV-1')
+            'Spectral model norm (1 TeV)',
+            d['spec_dnde_1TeV'].value,
+            d['spec_dnde_1TeV_err'].value,
+            'cm-2 s-1 TeV-1',
+        )
         ss += '{:<30s} : {:.3} +- {:.3} (stat) {}\n'.format(
-            'Integrated flux (>1 TeV)', d['spec_flux_1TeV'].value,
-            d['spec_flux_1TeV_err'].value, 'cm-2 s-1')
+            'Integrated flux (>1 TeV)',
+            d['spec_flux_1TeV'].value,
+            d['spec_flux_1TeV_err'].value,
+            'cm-2 s-1',
+        )
         ss += '{:<30s} : {:.3f} +- {:.3f} {}\n'.format(
-            'Integrated flux (>1 TeV)', d['spec_flux_1TeV_crab'],
-            d['spec_flux_1TeV_crab_err'], '(% Crab)')
+            'Integrated flux (>1 TeV)',
+            d['spec_flux_1TeV_crab'],
+            d['spec_flux_1TeV_crab_err'],
+            '(% Crab)',
+        )
         ss += '{:<30s} : {:.3} +- {:.3} (stat) {}\n'.format(
-            'Integrated flux (1-10 TeV)', d['spec_eflux_1TeV_10TeV'].value,
-            d['spec_eflux_1TeV_10TeV_err'].value, 'erg cm-2 s-1')
+            'Integrated flux (1-10 TeV)',
+            d['spec_eflux_1TeV_10TeV'].value,
+            d['spec_eflux_1TeV_10TeV_err'].value,
+            'erg cm-2 s-1',
+        )
 
         return ss
 
@@ -231,7 +272,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += '{:<25s} : {}\n\n'.format('Number of upper limits', d['sed_n_ul'])
 
         try:
-            lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+            lines = self._flux_points_table_formatted.pformat(
+                max_width=-1, max_lines=-1
+            )
             ss += '\n'.join(lines)
         except NoDataAvailableError:
             ss += '\nNo spectral points available for this source.'
@@ -297,10 +340,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         glat = d['glat']
 
         if morph_type == 'point':
-            return SkyPointSource(
-                lon_0=glon,
-                lat_0=glat,
-            )
+            return SkyPointSource(lon_0=glon, lat_0=glat)
         elif morph_type == 'gauss':
             # TODO: add infos back once model support elongation
             # pars['x_stddev'] = d['morph_sigma']
@@ -310,11 +350,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             # if not np.isnan(d['morph_pa']):
             #     # TODO: handle reference frame for rotation angle
             #     pars['theta'] = Angle(d['morph_pa'], 'deg').rad
-            return SkyGaussian(
-                lon_0=glon,
-                lat_0=glat,
-                sigma=d['morph_sigma'],
-            )
+            return SkyGaussian(lon_0=glon, lat_0=glat, sigma=d['morph_sigma'])
         elif morph_type == 'shell':
             return SkyShell(
                 lon_0=glon,
@@ -324,7 +360,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 width=0.2 * d['morph_sigma'],
             )
         elif morph_type == 'none':
-            raise NoDataAvailableError('No spatial model available: {}'.format(self.name))
+            raise NoDataAvailableError(
+                'No spatial model available: {}'.format(self.name)
+            )
         else:
             raise NotImplementedError('Unknown spatial model: {!r}'.format(morph_type))
 
@@ -427,6 +465,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     >>> source.spectral_model.plot_error()
     >>> source.flux_points.plot()
     """
+
     name = 'gamma-cat'
     description = 'An open catalog of gamma-ray sources'
     source_object_class = SourceCatalogObjectGammaCat
@@ -456,7 +495,9 @@ class SourceCatalogGammaCat(SourceCatalog):
             try:
                 source_list.append(source.sky_model)
             except NoDataAvailableError:
-                log.warning('Skipping source {} (missing data in gamma-cat)'.format(source.name))
+                log.warning(
+                    'Skipping source {} (missing data in gamma-cat)'.format(source.name)
+                )
                 continue
 
         return SkyModels(source_list)
@@ -519,9 +560,12 @@ class GammaCatResource(object):
     >>> resource
     GammaCatResource(source_id=42, reference_id='2010A&A...516A..62A', file_id=2, type='none', location='none')
     """
+
     _NA_FILL = dict(file_id=-1, type='none', location='none')
 
-    def __init__(self, source_id, reference_id, file_id=-1, type='none', location='none'):
+    def __init__(
+        self, source_id, reference_id, file_id=-1, type='none', location='none'
+    ):
         self.source_id = int(source_id)
         self.reference_id = six.text_type(reference_id)
         self.file_id = int(file_id)
@@ -534,12 +578,20 @@ class GammaCatResource(object):
 
         (see class docstring for explanation and example).
         """
-        return '|'.join((str(self.source_id), self.reference_id, str(self.file_id), self.type))
+        return '|'.join(
+            (str(self.source_id), self.reference_id, str(self.file_id), self.type)
+        )
 
     def __repr__(self):
         fmt = '{}(source_id={!r}, reference_id={!r}, file_id={!r}, type={!r}, location={!r})'
-        return fmt.format(self.__class__.__name__, self.source_id, str(self.reference_id),
-                          self.file_id, str(self.type), str(self.location))
+        return fmt.format(
+            self.__class__.__name__,
+            self.source_id,
+            str(self.reference_id),
+            self.file_id,
+            str(self.type),
+            str(self.location),
+        )
 
     def __eq__(self, other):
         return self.to_namedtuple() == other.to_namedtuple()
@@ -570,7 +622,7 @@ class GammaCatResource(object):
             reference_id=data['reference_id'],
             file_id=data.get('file_id', cls._NA_FILL['file_id']),
             type=data.get('type', cls._NA_FILL['type']),
-            location=data.get('location', cls._NA_FILL['location'])
+            location=data.get('location', cls._NA_FILL['location']),
         )
 
 

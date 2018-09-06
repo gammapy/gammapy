@@ -6,10 +6,7 @@ from astropy.io import fits
 from astropy import log
 from ..extern import six
 
-__all__ = [
-    'Energy',
-    'EnergyBounds',
-]
+__all__ = ['Energy', 'EnergyBounds']
 
 
 class Energy(Quantity):
@@ -46,12 +43,18 @@ class Energy(Quantity):
 
         # This is a pylint error false positive
         # See https://github.com/PyCQA/pylint/issues/2335#issuecomment-415055075
-        self = super(Energy, cls).__new__(cls, energy, unit,  # pylint:disable=redundant-keyword-arg
-                                          dtype=dtype, copy=copy)
+        self = super(Energy, cls).__new__(
+            cls,
+            energy,
+            unit,  # pylint:disable=redundant-keyword-arg
+            dtype=dtype,
+            copy=copy,
+        )
 
         if not self.unit.is_equivalent('eV'):
-            raise ValueError("Given unit {} is not an"
-                             " energy".format(self.unit.to_string()))
+            raise ValueError(
+                "Given unit {} is not an" " energy".format(self.unit.to_string())
+            )
 
         return self
 
@@ -72,7 +75,7 @@ class Energy(Quantity):
     @property
     def range(self):
         """The covered energy range (tuple)."""
-        return self[0:self.size:self.size - 1]
+        return self[0 : self.size : self.size - 1]
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None, per_decade=False):
@@ -126,12 +129,14 @@ class Energy(Quantity):
 
         if fitsunit is None:
             if unit is not None:
-                log.warning("No unit found in the FITS header."
-                            " Setting it to {}".format(unit))
+                log.warning(
+                    "No unit found in the FITS header." " Setting it to {}".format(unit)
+                )
                 fitsunit = unit
             else:
-                raise ValueError("No unit found in the FITS header."
-                                 " Please specifiy a unit")
+                raise ValueError(
+                    "No unit found in the FITS header." " Please specifiy a unit"
+                )
 
         energy = cls(hdu.data['Energy'], fitsunit)
 
@@ -246,8 +251,7 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
-        return super(EnergyBounds, cls).equal_log_spacing(
-            emin, emax, nbins + 1, unit)
+        return super(EnergyBounds, cls).equal_log_spacing(emin, emax, nbins + 1, unit)
 
     @classmethod
     def from_ebounds(cls, hdu):
@@ -259,8 +263,9 @@ class EnergyBounds(Energy):
             ``EBOUNDS`` extensions.
         """
         if hdu.name != 'EBOUNDS':
-            log.warning('This does not seem like an EBOUNDS extension. '
-                        'Are you sure?')
+            log.warning(
+                'This does not seem like an EBOUNDS extension. ' 'Are you sure?'
+            )
 
         header = hdu.header
         unit = header.get('TUNIT2')
@@ -278,8 +283,7 @@ class EnergyBounds(Energy):
             ``MATRIX`` extensions.
         """
         if hdu.name != 'MATRIX':
-            log.warning('This does not seem like a MATRIX extension. '
-                        'Are you sure?')
+            log.warning('This does not seem like a MATRIX extension. ' 'Are you sure?')
 
         header = hdu.header
         unit = header.get('TUNIT1')
@@ -324,7 +328,8 @@ class EnergyBounds(Energy):
         """Construct dict representing an energy range."""
         if len(self) != 2:
             raise ValueError(
-                "This is not an energy range. Nbins: {}".format(self.nbins))
+                "This is not an energy range. Nbins: {}".format(self.nbins)
+            )
 
         d = dict(min=self[0].value, max=self[1].value, unit='{}'.format(self.unit))
 

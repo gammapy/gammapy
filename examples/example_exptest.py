@@ -66,9 +66,21 @@ def exptest_multi(table_events):
         time_delta_each_run = []
 
         for j in range(0, len(table_events) - 1):
-            if table_obs['n_events'][i] > 20 and table_obs['obs_id'][i] == table_events['obs_id'][j] and table_events['obs_id'][j] == table_events['obs_id'][j + 1]:
-                time_delta_each_run.append((table_events['mjd'][j + 1] - table_events['mjd'][j]) * 0.5 * (table_events['expCount'][j + 1] + table_events['expCount'][j]))
-                time_delta_all.append((table_events['mjd'][j + 1] - table_events['mjd'][j]) * 0.5 * (table_events['expCount'][j + 1] + table_events['expCount'][j]))
+            if (
+                table_obs['n_events'][i] > 20
+                and table_obs['obs_id'][i] == table_events['obs_id'][j]
+                and table_events['obs_id'][j] == table_events['obs_id'][j + 1]
+            ):
+                time_delta_each_run.append(
+                    (table_events['mjd'][j + 1] - table_events['mjd'][j])
+                    * 0.5
+                    * (table_events['expCount'][j + 1] + table_events['expCount'][j])
+                )
+                time_delta_all.append(
+                    (table_events['mjd'][j + 1] - table_events['mjd'][j])
+                    * 0.5
+                    * (table_events['expCount'][j + 1] + table_events['expCount'][j])
+                )
 
         if len(time_delta_each_run) == 0:
             continue
@@ -90,7 +102,8 @@ def plot(m_value):
     """
     (mu, sigma) = norm.fit(m_value)
     n, bins, patches = plt.hist(
-        m_value, bins=30, normed=1, facecolor='green', alpha=0.75)
+        m_value, bins=30, normed=1, facecolor='green', alpha=0.75
+    )
     plt.mlab.normpdf(bins, mu, sigma)
     print("mu:{:10.3f}".format(mu), " sigma:{:10.4f}".format(sigma))
     plt.xlim(-3, 3)

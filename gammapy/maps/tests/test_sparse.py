@@ -6,18 +6,14 @@ from numpy.testing import assert_allclose
 from ..sparse import SparseArray
 from .._sparse import merge_sparse_arrays
 
-test_params = [
-    (8,),
-    (8, 16),
-    (8, 16, 32),
-]
+test_params = [(8,), (8, 16), (8, 16, 32)]
 
 
 @pytest.mark.parametrize('shape', test_params)
 def test_sparse_init(shape):
     v = SparseArray(shape)
-    assert (v.shape == shape)
-    assert (v.size == 0)
+    assert v.shape == shape
+    assert v.size == 0
 
     data = np.ones(shape)
     v = SparseArray.from_array(data)
@@ -38,10 +34,12 @@ def test_sparse_getitem():
     assert_allclose(v[1, :, 10], data[1, :, 10])
     assert_allclose(v[1, 3, :], data[1, 3, :])
     assert_allclose(v[1, np.arange(4), :], data[1, np.arange(4), :])
-    assert_allclose(v[np.arange(4), np.arange(4), :],
-                    data[np.arange(4), np.arange(4), :])
-    assert_allclose(v[:, np.arange(4), np.arange(4)],
-                    data[:, np.arange(4), np.arange(4)])
+    assert_allclose(
+        v[np.arange(4), np.arange(4), :], data[np.arange(4), np.arange(4), :]
+    )
+    assert_allclose(
+        v[:, np.arange(4), np.arange(4)], data[:, np.arange(4), np.arange(4)]
+    )
 
 
 @pytest.mark.parametrize('shape', test_params)
@@ -73,12 +71,15 @@ def test_sparse_setitem(shape):
     assert_allclose(v[...], data)
 
 
-@pytest.mark.parametrize(('dtype_idx', 'dtype_val'),
-                         [(np.int64, np.float64),
-                          (np.int32, np.float64),
-                          (np.int32, np.float32),
-                          (np.int32, np.float64),
-                          ])
+@pytest.mark.parametrize(
+    ('dtype_idx', 'dtype_val'),
+    [
+        (np.int64, np.float64),
+        (np.int32, np.float64),
+        (np.int32, np.float32),
+        (np.int32, np.float64),
+    ],
+)
 def test_merge_sparse_arrays(dtype_idx, dtype_val):
     idx0 = np.array([0, 0, 1, 4], dtype=dtype_idx)
     val0 = np.array([1.0, 2.0, 3.0, 7.0], dtype=dtype_val)

@@ -8,9 +8,7 @@ import astropy.constants as const
 from ...extern.validator import validate_physical_type
 from ..source import Pulsar, SNRTrueloveMcKee
 
-__all__ = [
-    'PWN',
-]
+__all__ = ['PWN']
 
 
 class PWN(object):
@@ -32,9 +30,15 @@ class PWN(object):
         Morphology model of the PWN
     """
 
-    def __init__(self, pulsar=Pulsar(), snr=SNRTrueloveMcKee(),
-                 eta_e=0.999, eta_B=0.001, morphology='Gaussian2D',
-                 age=None):
+    def __init__(
+        self,
+        pulsar=Pulsar(),
+        snr=SNRTrueloveMcKee(),
+        eta_e=0.999,
+        eta_B=0.001,
+        morphology='Gaussian2D',
+        age=None,
+    ):
         self.pulsar = pulsar
         if not isinstance(snr, SNRTrueloveMcKee):
             raise ValueError('SNR must be instance of SNRTrueloveMcKee')
@@ -105,9 +109,9 @@ class PWN(object):
             raise ValueError('Need time variable or age attribute.')
         # Radius at time of collision
         r_coll = self._radius_free_expansion(self._collision_time)
-        r = np.where(t < self._collision_time,
-                     self._radius_free_expansion(t).value,
-                     r_coll.value)
+        r = np.where(
+            t < self._collision_time, self._radius_free_expansion(t).value, r_coll.value
+        )
         return Quantity(r, 'cm')
 
     def magnetic_field(self, t=None):
@@ -129,8 +133,13 @@ class PWN(object):
         else:
             raise ValueError('Need time variable or age attribute.')
 
-        return np.sqrt(2 * const.mu0 * self.eta_B * self.pulsar.energy_integrated(t) /
-                       (4. / 3 * np.pi * self.radius(t) ** 3))
+        return np.sqrt(
+            2
+            * const.mu0
+            * self.eta_B
+            * self.pulsar.energy_integrated(t)
+            / (4. / 3 * np.pi * self.radius(t) ** 3)
+        )
 
     def luminosity_tev(self, t=None, fraction=0.1):
         """TeV luminosity from a simple evolution model.

@@ -9,13 +9,15 @@ from multiprocessing import Pool
 import numpy as np
 from astropy.convolution import CustomKernel, Kernel2D
 from ..utils.array import shape_2N, symmetric_crop_pad_width
-from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
-                                      _cash_sum_cython, _f_cash_root_cython,
-                                      _x_best_leastsq)
+from ._test_statistics_cython import (
+    _cash_cython,
+    _amplitude_bounds_cython,
+    _cash_sum_cython,
+    _f_cash_root_cython,
+    _x_best_leastsq,
+)
 
-__all__ = [
-    'TSMapEstimator',
-]
+__all__ = ['TSMapEstimator']
 
 log = logging.getLogger(__name__)
 
@@ -127,8 +129,17 @@ class TSMapEstimator(object):
     [Stewart2009]_
     """
 
-    def __init__(self, method='root brentq', error_method='covar', error_sigma=1,
-                 ul_method='covar', ul_sigma=2, n_jobs=1, threshold=None, rtol=0.001):
+    def __init__(
+        self,
+        method='root brentq',
+        error_method='covar',
+        error_sigma=1,
+        ul_method='covar',
+        ul_sigma=2,
+        n_jobs=1,
+        threshold=None,
+        rtol=0.001,
+    ):
 
         if method not in ['root brentq', 'root newton', 'leastsq iter']:
             raise ValueError("Not a valid method: '{}'".format(method))
@@ -191,7 +202,7 @@ class TSMapEstimator(object):
         mask[slice_y, slice_x] = 1
 
         # positions where exposure == 0 are not processed
-        mask &= (maps['exposure'].data > 0)
+        mask &= maps['exposure'].data > 0
 
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
@@ -256,8 +267,10 @@ class TSMapEstimator(object):
         p = self.parameters
 
         if (np.array(kernel.shape) > np.array(maps['counts'].data.shape)).any():
-            raise ValueError('Kernel shape larger than map shape, please adjust'
-                             ' size of the kernel')
+            raise ValueError(
+                'Kernel shape larger than map shape, please adjust'
+                ' size of the kernel'
+            )
 
         if downsampling_factor:
             shape = maps['counts'].data.shape
@@ -266,8 +279,9 @@ class TSMapEstimator(object):
             for name in maps:
                 maps[name] = maps[name].pad(pad_width)
                 preserve_counts = name in ['counts', 'background', 'exclusion']
-                maps[name] = maps[name].downsample(downsampling_factor,
-                                                   preserve_counts=preserve_counts)
+                maps[name] = maps[name].downsample(
+                    downsampling_factor, preserve_counts=preserve_counts
+                )
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
@@ -315,7 +329,7 @@ class TSMapEstimator(object):
             error_sigma=p['error_sigma'],
             ul_method=ul_method,
             ul_sigma=p['ul_sigma'],
-            rtol=p['rtol']
+            rtol=p['rtol'],
         )
 
         x, y = np.where(mask.data)
@@ -344,9 +358,7 @@ class TSMapEstimator(object):
             for name in which:
                 order = 0 if name == 'niter' else 1
                 result[name] = result[name].upsample(
-                    factor=downsampling_factor,
-                    preserve_counts=False,
-                    order=order
+                    factor=downsampling_factor, preserve_counts=False, order=order
                 )
                 result[name] = result[name].crop(crop_width=pad_width)
 
@@ -361,8 +373,22 @@ class TSMapEstimator(object):
         return info
 
 
-def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
-              method, error_method, error_sigma, ul_method, ul_sigma, threshold, rtol):
+def _ts_value(
+    position,
+    counts,
+    exposure,
+    background,
+    c_0,
+    kernel,
+    flux,
+    method,
+    error_method,
+    error_sigma,
+    ul_method,
+    ul_sigma,
+    threshold,
+    rtol,
+):
     """Compute TS value at a given pixel position.
 
     Uses approach described in Stewart (2009).
@@ -394,7 +420,7 @@ def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
     exposure_ = _extract_array(exposure, kernel.shape, position)
     c_0_ = _extract_array(c_0, kernel.shape, position)
 
-    model = (exposure_ * kernel._array)
+    model = exposure_ * kernel._array
 
     c_0 = c_0_.sum()
 
@@ -413,11 +439,17 @@ def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
             return result
 
     if method == 'root brentq':
-        amplitude, niter = _root_amplitude_brentq(counts_, background_, model, rtol=rtol)
+        amplitude, niter = _root_amplitude_brentq(
+            counts_, background_, model, rtol=rtol
+        )
     elif method == 'root newton':
-        amplitude, niter = _root_amplitude(counts_, background_, model, flux[position], rtol=rtol)
+        amplitude, niter = _root_amplitude(
+            counts_, background_, model, flux[position], rtol=rtol
+        )
     elif method == 'leastsq iter':
-        amplitude, niter = _leastsq_iter_amplitude(counts_, background_, model, rtol=rtol)
+        amplitude, niter = _leastsq_iter_amplitude(
+            counts_, background_, model, rtol=rtol
+        )
     else:
         raise ValueError('Invalid method: {}'.format(method))
 
@@ -433,15 +465,17 @@ def _ts_value(position, counts, exposure, background, c_0, kernel, flux,
         flux_err = _compute_flux_err_covar(amplitude, counts_, background_, model)
         result['flux_err'] = flux_err * error_sigma
     elif error_method == 'conf':
-        flux_err = _compute_flux_err_conf(amplitude, counts_, background_, model,
-                                          c_1, error_sigma)
+        flux_err = _compute_flux_err_conf(
+            amplitude, counts_, background_, model, c_1, error_sigma
+        )
         result['flux_err'] = FLUX_FACTOR * flux_err
 
     if ul_method == 'covar':
         result['flux_ul'] = result['flux'] + ul_sigma * result['flux_err']
     elif ul_method == 'conf':
-        flux_ul = _compute_flux_err_conf(amplitude, counts_, background_, model,
-                                         c_1, ul_sigma)
+        flux_ul = _compute_flux_err_conf(
+            amplitude, counts_, background_, model, c_1, ul_sigma
+        )
         result['flux_ul'] = FLUX_FACTOR * flux_ul + result['flux']
     return result
 
@@ -517,7 +551,12 @@ def _root_amplitude(counts, background, model, flux, rtol=RTOL):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            return newton(_f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=rtol), 0
+            return (
+                newton(
+                    _f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=rtol
+                ),
+                0,
+            )
         except RuntimeError:
             # Where the root finding fails NaN is set as amplitude
             return np.nan, MAX_NITER
@@ -557,8 +596,15 @@ def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            result = brentq(_f_cash_root_cython, amplitude_min, amplitude_max, args=args,
-                            maxiter=MAX_NITER, full_output=True, rtol=rtol)
+            result = brentq(
+                _f_cash_root_cython,
+                amplitude_min,
+                amplitude_max,
+                args=args,
+                maxiter=MAX_NITER,
+                full_output=True,
+                rtol=rtol,
+            )
             return max(result[0], amplitude_min_total), result[1].iterations
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
@@ -589,8 +635,14 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigm
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            result = brentq(ts_diff, amplitude, amplitude_max, args=args,
-                            maxiter=MAX_NITER, rtol=1e-3)
+            result = brentq(
+                ts_diff,
+                amplitude,
+                amplitude_max,
+                args=args,
+                maxiter=MAX_NITER,
+                rtol=1e-3,
+            )
             return result - amplitude
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude

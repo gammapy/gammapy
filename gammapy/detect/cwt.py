@@ -8,11 +8,7 @@ from astropy.table import Table
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
 from ..maps import WcsNDMap, MapAxis, WcsGeom
 
-__all__ = [
-    'CWT',
-    'CWTData',
-    'CWTKernels',
-]
+__all__ = ['CWT', 'CWTData', 'CWTKernels']
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +24,7 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
     radius = float(radius)
     xc = 0.5 * sizex
     yc = 0.5 * sizey
-    y, x = np.mgrid[0:sizey - 1, 0:sizex - 1]
+    y, x = np.mgrid[0 : sizey - 1, 0 : sizex - 1]
     x = x - xc
     y = y - yc
     x1 = x / radius
@@ -81,12 +77,16 @@ class CWT(object):
     See http://adsabs.harvard.edu/abs/2001ICRC....7.2923T
     """
 
-    def __init__(self, kernels,
-                 max_iter=10, tol=1e-5,
-                 significance_threshold=3.0,
-                 significance_island_threshold=None,
-                 remove_isolated=True,
-                 keep_history=False):
+    def __init__(
+        self,
+        kernels,
+        max_iter=10,
+        tol=1e-5,
+        significance_threshold=3.0,
+        significance_island_threshold=None,
+        remove_isolated=True,
+        keep_history=False,
+    ):
         self.kernels = kernels
         self.max_iter = max_iter
         self.tol = tol
@@ -132,14 +132,21 @@ class CWT(object):
         log.debug('Computing transform and error')
         for idx_scale, kern in self.kernels.kern_base.items():
             data._transform_3d[idx_scale] = fftconvolve(excess, kern, mode='same')
-            data._error[idx_scale] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
+            data._error[idx_scale] = np.sqrt(
+                fftconvolve(total_background, kern ** 2, mode='same')
+            )
         log.debug('Error sum: {0:.4f}'.format(data._error.sum()))
         log.debug('Error max: {0:.4f}'.format(data._error.max()))
 
         log.debug('Computing approx and approx_bkg')
-        data._approx = fftconvolve(data._counts - data._model - data._background,
-                                   self.kernels.kern_approx, mode='same')
-        data._approx_bkg = fftconvolve(data._background, self.kernels.kern_approx, mode='same')
+        data._approx = fftconvolve(
+            data._counts - data._model - data._background,
+            self.kernels.kern_approx,
+            mode='same',
+        )
+        data._approx_bkg = fftconvolve(
+            data._background, self.kernels.kern_approx, mode='same'
+        )
         log.debug('Approximate sum: {0:.4f}'.format(data._approx.sum()))
         log.debug('Approximate background sum: {0:.4f}'.format(data._approx_bkg.sum()))
 
@@ -175,11 +182,15 @@ class CWT(object):
 
         log.debug('For each scale start to compute support')
         for idx_scale in range(self.kernels.n_scale):
-            log.debug('Start to compute support for scale '
-                      '{:.2f}'.format(self.kernels.scales[idx_scale]))
+            log.debug(
+                'Start to compute support for scale '
+                '{:.2f}'.format(self.kernels.scales[idx_scale])
+            )
 
-            log.debug('Create mask based on significance '
-                      'threshold {:.2f}'.format(self.significance_threshold))
+            log.debug(
+                'Create mask based on significance '
+                'threshold {:.2f}'.format(self.significance_threshold)
+            )
             mask = significance[idx_scale] > self.significance_threshold
 
             # Produce a list of connex structures in the support
@@ -197,10 +208,16 @@ class CWT(object):
                     # island threshold, remove significant pixels island from support
                     struct_signif = significance[idx_scale][coords]
                     if struct_signif.max() < self.significance_island_threshold:
-                        log.debug('Remove significant pixels island {} from support'.format(struct_label + 1))
+                        log.debug(
+                            'Remove significant pixels island {} from support'.format(
+                                struct_label + 1
+                            )
+                        )
                         mask[coords] = False
 
-            log.debug('Update support for scale {:.2f}'.format(self.kernels.scales[idx_scale]))
+            log.debug(
+                'Update support for scale {:.2f}'.format(self.kernels.scales[idx_scale])
+            )
             data._support[idx_scale] |= mask
 
         log.debug('Support sum: {}'.format(data._support.sum()))
@@ -247,7 +264,9 @@ class CWT(object):
             self.previous_variance = variance
             return False
 
-        variance_ratio = abs((self.previous_variance - variance) / self.previous_variance)
+        variance_ratio = abs(
+            (self.previous_variance - variance) / self.previous_variance
+        )
         log.info('Variance ratio: {:.7f}'.format(variance_ratio))
 
         self.previous_variance = variance
@@ -279,7 +298,9 @@ class CWT(object):
         if converge_answer:
             log.info('Convergence reached at iteration {}'.format(n_iter + 1))
         else:
-            log.info('Convergence not formally reached at iteration {}'.format(n_iter + 1))
+            log.info(
+                'Convergence not formally reached at iteration {}'.format(n_iter + 1)
+            )
 
 
 class CWTKernels(object):
@@ -341,13 +362,16 @@ class CWTKernels(object):
         self.n_scale = n_scale
         self.min_scale = min_scale
         self.step_scale = step_scale
-        self.scales = np.array([min_scale * step_scale ** _ for _ in range(n_scale)],
-                               dtype=float)
+        self.scales = np.array(
+            [min_scale * step_scale ** _ for _ in range(n_scale)], dtype=float
+        )
 
         self.kern_base = {}
         for idx_scale, scale in enumerate(self.scales):
             if old:
-                self.kern_base[idx_scale] = difference_of_gauss_kernel(scale, step_scale)
+                self.kern_base[idx_scale] = difference_of_gauss_kernel(
+                    scale, step_scale
+                )
             else:
                 self.kern_base[idx_scale] = MexicanHat2DKernel(scale * step_scale).array
 
@@ -373,9 +397,15 @@ class CWTKernels(object):
         info_dict['Kernels approx max'] = self.kern_approx.max()
 
         for idx_scale, scale in enumerate(self.scales):
-            info_dict['Kernels base width for {} scale'.format(scale)] = len(self.kern_base[idx_scale])
-            info_dict['Kernels base sum for {} scale'.format(scale)] = self.kern_base[idx_scale].sum()
-            info_dict['Kernels base max for {} scale'.format(scale)] = self.kern_base[idx_scale].max()
+            info_dict['Kernels base width for {} scale'.format(scale)] = len(
+                self.kern_base[idx_scale]
+            )
+            info_dict['Kernels base sum for {} scale'.format(scale)] = self.kern_base[
+                idx_scale
+            ].sum()
+            info_dict['Kernels base max for {} scale'.format(scale)] = self.kern_base[
+                idx_scale
+            ].max()
 
         return info_dict
 
@@ -392,10 +422,7 @@ class CWTKernels(object):
 
         rows = []
         for name in info_dict:
-            rows.append({
-                'Name': name,
-                'Source': info_dict[name],
-            })
+            rows.append({'Name': name, 'Source': info_dict[name]})
 
         return Table(rows=rows, names=['Name', 'Source'])
 
@@ -429,7 +456,9 @@ class CWTData(object):
         self._background = np.array(background.data, dtype=float)
         self._geom2d = counts.geom.copy()
         scale_axis = MapAxis(np.arange(n_scale + 1))
-        self._geom3d = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[scale_axis])
+        self._geom3d = WcsGeom(
+            wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[scale_axis]
+        )
 
         shape_2d = self._counts.shape
         self._model = np.zeros(shape_2d)
@@ -495,7 +524,7 @@ class CWTData(object):
 
         Created from support_3d by OR-operation per 0 axis.
         """
-        support_2d = (self._support.sum(0) > 0)
+        support_2d = self._support.sum(0) > 0
         return WcsNDMap(self._geom2d, support_2d)
 
     @property
@@ -551,9 +580,11 @@ class CWTData(object):
         return WcsNDMap(self._geom2d, maximal_image)
 
     def __sub__(self, other):
-        data = CWTData(counts=self.counts,
-                       background=self.background,
-                       n_scale=len(self._transform_3d))
+        data = CWTData(
+            counts=self.counts,
+            background=self.background,
+            n_scale=len(self._transform_3d),
+        )
         data._model = self._model - other._model
         data._approx = self._approx - other._approx
         data._approx_bkg = self._approx_bkg - other._approx_bkg
@@ -597,9 +628,7 @@ class CWTData(object):
             `~numpy.ndarray` cubes as values.
         """
         return dict(
-            transform_3d=self.transform_3d,
-            error=self.error,
-            support=self.support_3d,
+            transform_3d=self.transform_3d, error=self.error, support=self.support_3d
         )
 
     @staticmethod
@@ -647,20 +676,19 @@ class CWTData(object):
             Information about the object.
         """
         if name not in self.images():
-            raise ValueError("Incorrect name of image. It should be one of the following:"
-                             "{'counts', 'background', 'model', 'approx', 'approx_bkg', "
-                             "'transform_2d', 'model_plus_approx', 'residual', 'support_2d', "
-                             "'maximal'}")
+            raise ValueError(
+                "Incorrect name of image. It should be one of the following:"
+                "{'counts', 'background', 'model', 'approx', 'approx_bkg', "
+                "'transform_2d', 'model_plus_approx', 'residual', 'support_2d', "
+                "'maximal'}"
+            )
 
         image = self.images()[name]
         info_dict = self._metrics_info(data=image.data, name=name)
 
         rows = []
         for metric in info_dict:
-            rows.append({
-                'Metrics': metric,
-                'Source': info_dict[metric],
-            })
+            rows.append({'Metrics': metric, 'Source': info_dict[metric]})
 
         return Table(rows=rows, names=['Metrics', 'Source'])
 
@@ -683,22 +711,25 @@ class CWTData(object):
             Information about the object.
         """
         if name not in self.cubes():
-            raise ValueError("Incorrect name of cube. It should be one of the following:"
-                             "{'transform_3d', 'error', 'support'}")
+            raise ValueError(
+                "Incorrect name of cube. It should be one of the following:"
+                "{'transform_3d', 'error', 'support'}"
+            )
         cube = self.cubes()[name]
 
         rows = []
         if per_scale:
             mask = []
             for index in range(len(cube.data)):
-                info_dict = self._metrics_info(data=cube.data[index],
-                                               name=name)
+                info_dict = self._metrics_info(data=cube.data[index], name=name)
                 for metric in info_dict:
-                    rows.append({
-                        'Scale power': index + 1,
-                        'Metrics': metric,
-                        'Source': info_dict[metric],
-                    })
+                    rows.append(
+                        {
+                            'Scale power': index + 1,
+                            'Metrics': metric,
+                            'Source': info_dict[metric],
+                        }
+                    )
 
                 # For missing values in `Power scale` column
                 scale_mask = np.ones(len(info_dict), dtype=bool)
@@ -711,10 +742,7 @@ class CWTData(object):
         elif per_scale is False:
             info_dict = self._metrics_info(data=cube.data, name=name)
             for metric in info_dict:
-                rows.append({
-                    'Metrics': metric,
-                    'Source': info_dict[metric],
-                })
+                rows.append({'Metrics': metric, 'Source': info_dict[metric]})
             columns = ['Metrics', 'Source']
             table = Table(rows=rows, names=columns)
         else:
@@ -755,9 +783,15 @@ class CWTData(object):
         hdu_list = fits.HDUList()
         hdu_list.append(fits.PrimaryHDU())
         hdu_list.append(fits.ImageHDU(data=self._counts, header=header, name='counts'))
-        hdu_list.append(fits.ImageHDU(data=self._background, header=header, name='background'))
+        hdu_list.append(
+            fits.ImageHDU(data=self._background, header=header, name='background')
+        )
         hdu_list.append(fits.ImageHDU(data=self._model, header=header, name='model'))
         hdu_list.append(fits.ImageHDU(data=self._approx, header=header, name='approx'))
-        hdu_list.append(fits.ImageHDU(data=self._transform_2d, header=header, name='transform_2d'))
-        hdu_list.append(fits.ImageHDU(data=self._approx_bkg, header=header, name='approx_bkg'))
+        hdu_list.append(
+            fits.ImageHDU(data=self._transform_2d, header=header, name='transform_2d')
+        )
+        hdu_list.append(
+            fits.ImageHDU(data=self._approx_bkg, header=header, name='approx_bkg')
+        )
         hdu_list.writeto(filename, overwrite=overwrite)

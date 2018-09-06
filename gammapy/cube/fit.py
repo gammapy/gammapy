@@ -7,10 +7,7 @@ from ..utils.fitting import fit_iminuit
 from ..stats import cash
 from ..maps import Map
 
-__all__ = [
-    'MapFit',
-    'MapEvaluator',
-]
+__all__ = ['MapFit', 'MapEvaluator']
 
 
 class MapFit(object):
@@ -38,7 +35,9 @@ class MapFit(object):
         Energy dispersion
     """
 
-    def __init__(self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None):
+    def __init__(
+        self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None
+    ):
         self.model = model
         self.counts = counts
         self.exposure = exposure
@@ -80,10 +79,7 @@ class MapFit(object):
 
     def compute_stat(self):
         """Compute fit statistic per bin"""
-        self._stat = cash(
-            n_on=self.counts.data,
-            mu_on=self.npred
-        )
+        self._stat = cash(n_on=self.counts.data, mu_on=self.npred)
 
     def total_stat(self, parameters):
         """Likelihood for a given set of model parameters"""
@@ -105,9 +101,11 @@ class MapFit(object):
         opts_minuit : dict (optional)
             Options passed to `iminuit.Minuit` constructor
         """
-        minuit = fit_iminuit(parameters=self.model.parameters,
-                             function=self.total_stat,
-                             opts_minuit=opts_minuit)
+        minuit = fit_iminuit(
+            parameters=self.model.parameters,
+            function=self.total_stat,
+            opts_minuit=opts_minuit,
+        )
         self._minuit = minuit
 
 
@@ -144,7 +142,9 @@ class MapEvaluator(object):
         Energy dispersion
     """
 
-    def __init__(self, model=None, exposure=None, background=None, psf=None, edisp=None):
+    def __init__(
+        self, model=None, exposure=None, background=None, psf=None, edisp=None
+    ):
         self.model = model
         self.exposure = exposure
         self.background = background

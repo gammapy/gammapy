@@ -11,9 +11,7 @@ from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .observations import DataStoreObservation, ObservationList, ObservationChecker
 
-__all__ = [
-    'DataStore',
-]
+__all__ = ['DataStore']
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +39,7 @@ class DataStore(object):
     >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
     >>> data_store.info()
     """
+
     DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
     """Default HDU table filename."""
 
@@ -71,10 +70,7 @@ class DataStore(object):
         else:
             obs_table = None
 
-        return cls(
-            hdu_table=hdu_table,
-            obs_table=obs_table,
-        )
+        return cls(hdu_table=hdu_table, obs_table=obs_table)
 
     @classmethod
     def from_dir(cls, base_dir):
@@ -151,10 +147,7 @@ class DataStore(object):
         obs : `~gammapy.data.DataStoreObservation`
             Observation container
         """
-        return DataStoreObservation(
-            obs_id=int(obs_id),
-            data_store=self,
-        )
+        return DataStoreObservation(obs_id=int(obs_id), data_store=self)
 
     def obs_list(self, obs_id, skip_missing=False):
         """Generate a `~gammapy.data.ObservationList`.
@@ -177,7 +170,9 @@ class DataStore(object):
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warning('Skipping observation that is not available: {}'.format(_))
+                    log.warning(
+                        'Skipping observation that is not available: {}'.format(_)
+                    )
                     continue
                 else:
                     raise err
@@ -228,8 +223,12 @@ class DataStore(object):
             cmd += [str(loc.path()), str(targetdir)]
             subprocess.call(cmd)
 
-        subhdutable.write(str(outdir / self.DEFAULT_HDU_TABLE), format='fits', overwrite=overwrite)
-        subobstable.write(str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=overwrite)
+        subhdutable.write(
+            str(outdir / self.DEFAULT_HDU_TABLE), format='fits', overwrite=overwrite
+        )
+        subobstable.write(
+            str(outdir / self.DEFAULT_OBS_TABLE), format='fits', overwrite=overwrite
+        )
 
     def check(self, checks='all'):
         """Check index tables and data files.
@@ -246,12 +245,14 @@ class DataStoreChecker(Checker):
     Checks data format and a bit about the content.
     """
 
-    CHECKS = OrderedDict([
-        ('obs_table', 'check_obs_table'),
-        ('hdu_table', 'check_hdu_table'),
-        ('observations', 'check_observations'),
-        ('consistency', 'check_consistency'),
-    ])
+    CHECKS = OrderedDict(
+        [
+            ('obs_table', 'check_obs_table'),
+            ('hdu_table', 'check_hdu_table'),
+            ('observations', 'check_observations'),
+            ('consistency', 'check_consistency'),
+        ]
+    )
 
     def __init__(self, data_store):
         self.data_store = data_store
@@ -261,18 +262,34 @@ class DataStoreChecker(Checker):
         t = self.data_store.obs_table
         m = t.meta
         if m.get('HDUCLAS1', '') != 'INDEX':
-            yield {'level': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
+            yield {
+                'level': 'error',
+                'hdu': 'obs-index',
+                'msg': 'Invalid header key. Must have HDUCLAS1=INDEX',
+            }
         if m.get('HDUCLAS2', '') != 'OBS':
-            yield {'level': 'error', 'hdu': 'obs-index', 'msg': 'Invalid header key. Must have HDUCLAS2=OBS'}
+            yield {
+                'level': 'error',
+                'hdu': 'obs-index',
+                'msg': 'Invalid header key. Must have HDUCLAS2=OBS',
+            }
 
     def check_hdu_table(self):
         """Checks for the HDU index table."""
         t = self.data_store.hdu_table
         m = t.meta
         if m.get('HDUCLAS1', '') != 'INDEX':
-            yield {'level': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS1=INDEX'}
+            yield {
+                'level': 'error',
+                'hdu': 'hdu-index',
+                'msg': 'Invalid header key. Must have HDUCLAS1=INDEX',
+            }
         if m.get('HDUCLAS2', '') != 'HDU':
-            yield {'level': 'error', 'hdu': 'hdu-index', 'msg': 'Invalid header key. Must have HDUCLAS2=HDU'}
+            yield {
+                'level': 'error',
+                'hdu': 'hdu-index',
+                'msg': 'Invalid header key. Must have HDUCLAS2=HDU',
+            }
 
         # Check that all HDU in the data files exist
         for idx in range(len(t)):
@@ -280,7 +297,10 @@ class DataStoreChecker(Checker):
             try:
                 location_info.get_hdu()
             except KeyError:
-                yield {'level': 'error', 'msg': 'HDU not found: {!r}'.format(location_info.__dict__)}
+                yield {
+                    'level': 'error',
+                    'msg': 'HDU not found: {!r}'.format(location_info.__dict__),
+                }
 
         # TODO: all HDU in the index table should be present
 
@@ -290,7 +310,10 @@ class DataStoreChecker(Checker):
         obs_table_obs_id = set(self.data_store.obs_table['OBS_ID'])
         hdu_table_obs_id = set(self.data_store.hdu_table['OBS_ID'])
         if not obs_table_obs_id == hdu_table_obs_id:
-            yield {'level': 'error', 'msg': 'Inconsistent OBS_ID in obs and HDU index tables'}
+            yield {
+                'level': 'error',
+                'msg': 'Inconsistent OBS_ID in obs and HDU index tables',
+            }
 
         # TODO: obs table and events header should have the same times
 
@@ -300,4 +323,3 @@ class DataStoreChecker(Checker):
             obs = self.data_store.obs(obs_id)
             for records in ObservationChecker(obs).run():
                 yield records
-

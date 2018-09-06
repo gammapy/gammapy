@@ -7,9 +7,7 @@ from functools import partial
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
 
-__all__ = [
-    'scale_cube',
-]
+__all__ = ['scale_cube']
 
 log = logging.getLogger(__name__)
 

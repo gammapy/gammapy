@@ -1,7 +1,12 @@
 """Example to show how to plot spectrum of Fermi/LAT sources.
 """
 import matplotlib.pyplot as plt
-from gammapy.catalog import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
+from gammapy.catalog import (
+    SourceCatalog3FGL,
+    SourceCatalog2FHL,
+    SourceCatalog1FHL,
+    SourceCatalog3FHL,
+)
 
 
 def plot_source_spectrum(source, label, color):
@@ -16,10 +21,18 @@ def plot_source_spectrum(source, label, color):
 
 
 def plot_source_spectra(name):
-    plot_source_spectrum(source=SourceCatalog3FGL()[name], label='Fermi 3FGL', color='r')
-    plot_source_spectrum(source=SourceCatalog2FHL()[name], label='Fermi 2FHL', color='g')
-    plot_source_spectrum(source=SourceCatalog1FHL()[name], label='Fermi 1FHL', color='c')
-    plot_source_spectrum(source=SourceCatalog3FHL()[name], label='Fermi 3FHL', color='b')
+    plot_source_spectrum(
+        source=SourceCatalog3FGL()[name], label='Fermi 3FGL', color='r'
+    )
+    plot_source_spectrum(
+        source=SourceCatalog2FHL()[name], label='Fermi 2FHL', color='g'
+    )
+    plot_source_spectrum(
+        source=SourceCatalog1FHL()[name], label='Fermi 1FHL', color='c'
+    )
+    plot_source_spectrum(
+        source=SourceCatalog3FHL()[name], label='Fermi 3FHL', color='b'
+    )
 
     ax = plt.gca()
     ax.set_ylim(1.e-12, 7.e-11)

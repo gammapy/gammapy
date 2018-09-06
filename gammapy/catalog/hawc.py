@@ -8,10 +8,7 @@ from ..utils.scripts import make_path
 from ..spectrum.models import PowerLaw
 from .core import SourceCatalog, SourceCatalogObject
 
-__all__ = [
-    'SourceCatalog2HWC',
-    'SourceCatalogObject2HWC',
-]
+__all__ = ['SourceCatalog2HWC', 'SourceCatalogObject2HWC']
 
 
 class SourceCatalogObject2HWC(SourceCatalogObject):
@@ -74,7 +71,12 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
     def _info_spectrum_one(d, idx):
         label = 'spec{}_'.format(idx)
         ss = 'Spectrum {}:\n'.format(idx)
-        args = 'Flux at 7 TeV', d[label + 'dnde'].value, d[label + 'dnde_err'].value, 'cm-2 s-1 TeV-1'
+        args = (
+            'Flux at 7 TeV',
+            d[label + 'dnde'].value,
+            d[label + 'dnde_err'].value,
+            'cm-2 s-1 TeV-1',
+        )
         ss += '{:20s} : {:.3} +- {:.3} {}\n'.format(*args)
         args = 'Spectral index', d[label + 'index'], d[label + 'index_err']
         ss += '{:20s} : {:.3f} +- {:.3f}\n'.format(*args)
@@ -155,6 +157,7 @@ class SourceCatalog2HWC(SourceCatalog):
     .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
        On ADS: `2017ApJ...843...40A <http://adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
     """
+
     name = '2hwc'
     """Catalog name"""
 
@@ -170,6 +173,5 @@ class SourceCatalog2HWC(SourceCatalog):
         source_name_key = 'source_name'
 
         super(SourceCatalog2HWC, self).__init__(
-            table=table,
-            source_name_key=source_name_key,
+            table=table, source_name_key=source_name_key
         )

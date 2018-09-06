@@ -60,7 +60,7 @@ def simulate_test_data(period, amplitude, t_length, n_data, n_obs, n_outliers):
     mag = amplitude * np.sin(2 * np.pi * t / period) + dmag
 
     for n in range(n_outliers):
-        mask = (t >= outliers[n])
+        mask = t >= outliers[n]
         mag[mask] = mag[mask] + 10 * amplitude * np.exp(-1 * (t[mask] - outliers[n]))
 
     mag_obs = mag[np.searchsorted(t, t_obs)]
@@ -95,7 +95,9 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     maximum_frequency = freq.max()
 
     def _calc_fap(method, **kwargs):
-        return ls.false_alarm_probability(power.max(), maximum_frequency=maximum_frequency, method=method, **kwargs)
+        return ls.false_alarm_probability(
+            power.max(), maximum_frequency=maximum_frequency, method=method, **kwargs
+        )
 
     fap = {}
 
@@ -108,43 +110,68 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     if 'baluev' in method:
         fap['baluev'] = _calc_fap('baluev')
     if 'bootstrap' in method:
-        fap['bootstrap'] = _calc_fap('bootstrap', method_kwds=dict(n_bootstraps=100, random_seed=42))
+        fap['bootstrap'] = _calc_fap(
+            'bootstrap', method_kwds=dict(n_bootstraps=100, random_seed=42)
+        )
 
     return fap
 
 
 @requires_dependency('scipy')
-@pytest.mark.parametrize('pars', [
-    dict(
-        period=7, amplitude=2, t_length=100,
-        n_data=1000, n_obs=500, n_outliers=50,
-        periods=np.linspace(0.5, 100, 200), loss='cauchy', scale=1,
-        fap=dict(
-            single=2.855680054527823e-93,
-            naive=5.705643031869405e-91,
-            davies=6.752853065345455e-90,
-            baluev=6.752853065345455e-90,
-            bootstrap=0.43,
-        ),
-    ),
-])
+@pytest.mark.parametrize(
+    'pars',
+    [
+        dict(
+            period=7,
+            amplitude=2,
+            t_length=100,
+            n_data=1000,
+            n_obs=500,
+            n_outliers=50,
+            periods=np.linspace(0.5, 100, 200),
+            loss='cauchy',
+            scale=1,
+            fap=dict(
+                single=2.855680054527823e-93,
+                naive=5.705643031869405e-91,
+                davies=6.752853065345455e-90,
+                baluev=6.752853065345455e-90,
+                bootstrap=0.43,
+            ),
+        )
+    ],
+)
 def test_period(pars):
     test_data = simulate_test_data(
-        pars['period'], pars['amplitude'], pars['t_length'],
-        pars['n_data'], pars['n_obs'], pars['n_outliers'],
+        pars['period'],
+        pars['amplitude'],
+        pars['t_length'],
+        pars['n_data'],
+        pars['n_obs'],
+        pars['n_outliers'],
     )
 
     periodogram = robust_periodogram(
-        test_data['t'], test_data['y'], test_data['dy'],
-        periods=pars['periods'], loss=pars['loss'], scale=pars['scale'],
+        test_data['t'],
+        test_data['y'],
+        test_data['dy'],
+        periods=pars['periods'],
+        loss=pars['loss'],
+        scale=pars['scale'],
     )
 
     fap = fap_astropy(
-        periodogram['power'], 1. / periodogram['periods'],
-        test_data['t'], test_data['y'], test_data['dy'], pars['fap']
+        periodogram['power'],
+        1. / periodogram['periods'],
+        test_data['t'],
+        test_data['y'],
+        test_data['dy'],
+        pars['fap'],
     )
 
-    assert_allclose(periodogram['best_period'], pars['period'], atol=pars['periods'].min())
+    assert_allclose(
+        periodogram['best_period'], pars['period'], atol=pars['periods'].min()
+    )
     assert_allclose(fap['single'], pars['fap']['single'], rtol=1e-3)
     assert_allclose(fap['naive'], pars['fap']['naive'], rtol=1e-3)
     assert_allclose(fap['davies'], pars['fap']['davies'], rtol=1e-3)

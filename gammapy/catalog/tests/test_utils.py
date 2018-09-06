@@ -33,9 +33,9 @@ def test_make_source_designation():
     assert strrep == '0048-42'
 
     # Check that array coordinate input works
-    coordinates = SkyCoord(ra=[10.68458, 83.82208],
-                           dec=[41.26917, -5.39111],
-                           unit=('deg', 'deg'))
+    coordinates = SkyCoord(
+        ra=[10.68458, 83.82208], dec=[41.26917, -5.39111], unit=('deg', 'deg')
+    )
     strreps = coordinate_iau_format(coordinates, ra_digits=5, prefix='HESS J')
     assert strreps == ['HESS J0042.7+4116', 'HESS J0535.2-0523']
 

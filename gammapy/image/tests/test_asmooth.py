@@ -20,12 +20,7 @@ def test_asmooth():
     kernel = Gaussian2DKernel
     scales = ASmooth.make_scales(15, kernel=kernel) * 0.1 * u.deg
 
-    asmooth = ASmooth(
-        kernel=kernel,
-        scales=scales[6:],
-        method='lima',
-        threshold=4,
-    )
+    asmooth = ASmooth(kernel=kernel, scales=scales[6:], method='lima', threshold=4)
     smoothed = asmooth.run(counts, background)
 
     desired = {

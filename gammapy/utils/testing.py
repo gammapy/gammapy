@@ -59,6 +59,7 @@ def has_data(name):
     """
     if name == 'gammapy-extra':
         from ..datasets import gammapy_extra
+
         return gammapy_extra.is_available
     elif name == 'gamma-cat':
         return 'GAMMA_CAT' in os.environ
@@ -111,6 +112,7 @@ def run_cli(cli, args, exit_code=0):
         Result
     """
     from click.testing import CliRunner
+
     result = CliRunner().invoke(cli, args, catch_exceptions=False)
 
     if result.exit_code != exit_code:
@@ -163,9 +165,10 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
     try:
         desired = desired.to(actual.unit)
     except u.UnitsError:
-        raise u.UnitsError("Units for 'desired' ({0}) and 'actual' ({1}) "
-                           "are not convertible"
-                           .format(desired.unit, actual.unit))
+        raise u.UnitsError(
+            "Units for 'desired' ({0}) and 'actual' ({1}) "
+            "are not convertible".format(desired.unit, actual.unit)
+        )
 
     if atol is None:
         # by default, we assume an absolute tolerance of 0
@@ -175,9 +178,10 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         try:
             atol = atol.to(actual.unit)
         except u.UnitsError:
-            raise u.UnitsError("Units for 'atol' ({0}) and 'actual' ({1}) "
-                               "are not convertible"
-                               .format(atol.unit, actual.unit))
+            raise u.UnitsError(
+                "Units for 'atol' ({0}) and 'actual' ({1}) "
+                "are not convertible".format(atol.unit, actual.unit)
+            )
 
     rtol = u.Quantity(rtol, subok=True, copy=False)
     try:

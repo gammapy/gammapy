@@ -10,9 +10,7 @@ from ..utils.energy import Energy
 from ..utils.scripts import make_path
 from .psf_table import TablePSF, EnergyDependentTablePSF
 
-__all__ = [
-    'PSF3D',
-]
+__all__ = ['PSF3D']
 
 
 class PSF3D(object):
@@ -40,9 +38,17 @@ class PSF3D(object):
         Upper energy threshold.
     """
 
-    def __init__(self, energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value,
-                 energy_thresh_lo=Quantity(0.1, 'TeV'),
-                 energy_thresh_hi=Quantity(100, 'TeV')):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        offset,
+        rad_lo,
+        rad_hi,
+        psf_value,
+        energy_thresh_lo=Quantity(0.1, 'TeV'),
+        energy_thresh_hi=Quantity(100, 'TeV'),
+    ):
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
         self.offset = Angle(offset)
@@ -139,12 +145,25 @@ class PSF3D(object):
             PSF in HDU list format.
         """
         # Set up data
-        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
-                 'RAD_LO', 'RAD_HI', 'RPSF']
-        units = ['TeV', 'TeV', 'deg', 'deg',
-                 'deg', 'deg', 'sr^-1']
-        data = [self.energy_lo, self.energy_hi, self.offset, self.offset,
-                self.rad_lo, self.rad_hi, self.psf_value]
+        names = [
+            'ENERG_LO',
+            'ENERG_HI',
+            'THETA_LO',
+            'THETA_HI',
+            'RAD_LO',
+            'RAD_HI',
+            'RPSF',
+        ]
+        units = ['TeV', 'TeV', 'deg', 'deg', 'deg', 'deg', 'sr^-1']
+        data = [
+            self.energy_lo,
+            self.energy_hi,
+            self.offset,
+            self.offset,
+            self.rad_lo,
+            self.rad_hi,
+            self.psf_value,
+        ]
 
         table = Table()
         for name_, data_, unit_ in zip(names, data, units):
@@ -164,8 +183,7 @@ class PSF3D(object):
         """
         self.to_fits().writeto(filename, *args, **kwargs)
 
-    def evaluate(self, energy=None, offset=None, rad=None,
-                 interp_kwargs=None):
+    def evaluate(self, energy=None, offset=None, rad=None, interp_kwargs=None):
         """Interpolate PSF value at a given offset and energy.
 
         Parameters
@@ -185,6 +203,7 @@ class PSF3D(object):
             Interpolated value
         """
         from scipy.interpolate import RegularGridInterpolator
+
         if not interp_kwargs:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
 
@@ -243,8 +262,7 @@ class PSF3D(object):
         psf_value = psf_value[:, 0, :].transpose()
 
         return EnergyDependentTablePSF(
-            energy=energies, rad=rad,
-            exposure=exposure, psf_value=psf_value,
+            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
         )
 
     def to_table_psf(self, energy, theta='0 deg', interp_kwargs=None, **kwargs):
@@ -270,7 +288,9 @@ class PSF3D(object):
         rad = self._rad_center()
         return TablePSF(rad, psf_value, **kwargs)
 
-    def containment_radius(self, energy, theta='0 deg', fraction=0.68, interp_kwargs=None):
+    def containment_radius(
+        self, energy, theta='0 deg', fraction=0.68, interp_kwargs=None
+    ):
         """Containment radius.
 
         Parameters
@@ -313,16 +333,16 @@ class PSF3D(object):
 
         return Quantity(radius.squeeze(), unit)
 
-    def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
-                                   thetas=Angle([0, 1], 'deg'), ax=None):
+    def plot_containment_vs_energy(
+        self, fractions=[0.68, 0.95], thetas=Angle([0, 1], 'deg'), ax=None
+    ):
         """Plot containment fraction as a function of energy.
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy = Energy.equal_log_spacing(
-            self.energy_lo[0], self.energy_hi[-1], 100)
+        energy = Energy.equal_log_spacing(self.energy_lo[0], self.energy_hi[-1], 100)
 
         for theta in thetas:
             for fraction in fractions:
@@ -349,8 +369,9 @@ class PSF3D(object):
         table = self.to_table_psf(energy=energy, theta=theta)
         return table.plot_psf_vs_rad()
 
-    def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
-                         add_cbar=True, **kwargs):
+    def plot_containment(
+        self, fraction=0.68, ax=None, show_safe_energy=False, add_cbar=True, **kwargs
+    ):
         """
         Plot containment image with energy and theta axes.
 
@@ -392,8 +413,9 @@ class PSF3D(object):
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = ('Containment radius R{0:.0f} ({1})'
-                     ''.format(100 * fraction, containment.unit))
+            label = 'Containment radius R{0:.0f} ({1})' ''.format(
+                100 * fraction, containment.unit
+            )
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -410,6 +432,7 @@ class PSF3D(object):
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
+
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         self.plot_containment(fraction=0.68, ax=axes[0])

@@ -9,7 +9,7 @@ __all__ = [
     'linear_wcs_to_arrays',
     'linear_arrays_to_wcs',
     'get_wcs_ctype',
-    'get_resampled_wcs'
+    'get_resampled_wcs',
 ]
 
 
@@ -78,8 +78,7 @@ def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):
     """
     # check number of dimensions
     if wcs.wcs.naxis != 2:
-        raise ValueError("Expected exactly 2 dimensions, got {}"
-                         .format(wcs.wcs.naxis))
+        raise ValueError("Expected exactly 2 dimensions, got {}".format(wcs.wcs.naxis))
 
     # check that wcs axes are linear
     # TODO: is there an easy way to do this?
@@ -137,7 +136,9 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     unit_x = bin_edges_x.unit
     unit_y = bin_edges_y.unit
     if unit_x != unit_y:
-        ss_error = "Units of X ({}) and Y ({}) bins do not match!".format(unit_x, unit_y)
+        ss_error = "Units of X ({}) and Y ({}) bins do not match!".format(
+            unit_x, unit_y
+        )
         ss_error += " Is this expected?"
         raise ValueError(ss_error)
 
@@ -157,7 +158,9 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     # ref as lower left corner (start of (X, Y) bin coordinates)
     # coordinate start at pix = 0.5
     wcs.wcs.crpix = [0.5, 0.5]
-    wcs.wcs.crval = [(bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5) * delta_x).to(unit_x).value,
-                     (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5) * delta_y).to(unit_y).value]
+    wcs.wcs.crval = [
+        (bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5) * delta_x).to(unit_x).value,
+        (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5) * delta_y).to(unit_y).value,
+    ]
 
     return wcs

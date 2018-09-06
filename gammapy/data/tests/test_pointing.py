@@ -7,7 +7,6 @@ from ..pointing import PointingInfo
 
 @requires_data('gammapy-extra')
 class TestPointingInfo:
-
     @classmethod
     def setup_class(cls):
         filename = '$GAMMAPY_EXTRA/test_datasets/hess_event_list.fits'

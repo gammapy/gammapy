@@ -22,44 +22,48 @@ def obs_list():
 def geom(ebounds):
     skydir = SkyCoord(0, -1, unit="deg", frame='galactic')
     energy_axis = MapAxis.from_edges(ebounds, name='energy', unit='TeV', interp='log')
-    return WcsGeom.create(binsz=0.5 * u.deg, skydir=skydir, width=(10, 5),
-                          coordsys='GAL', axes=[energy_axis])
+    return WcsGeom.create(
+        binsz=0.5 * u.deg,
+        skydir=skydir,
+        width=(10, 5),
+        coordsys='GAL',
+        axes=[energy_axis],
+    )
 
 
 @requires_data('gammapy-extra')
-@pytest.mark.parametrize("pars", [
-    {
-        # Default, normal test case
-        'geom': geom(ebounds=[0.1, 1, 10]),
-        'counts': 34366,
-        'exposure': 3.99815e+11,
-        'exposure_image': 7.921993e+10,
-        'background': 187528.89,
-    },
-    {
-        # Test single energy bin
-        'geom': geom(ebounds=[0.1, 10]),
-        'counts': 34366,
-        'exposure': 1.16866e+11,
-        'exposure_image': 1.16866e+11,
-        'background': 1988492.8,
-    },
-    {
-        # Test single energy bin
-        'geom': geom(ebounds=[0.1, 10]),
-        'exclusion_mask': Map.from_geom(geom(ebounds=[0.1, 10])),
-        'counts': 34366,
-        'exposure': 1.16866e+11,
-        'exposure_image': 1.16866e+11,
-        'background': 1988492.8,
-    },
-
-])
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            # Default, normal test case
+            'geom': geom(ebounds=[0.1, 1, 10]),
+            'counts': 34366,
+            'exposure': 3.99815e+11,
+            'exposure_image': 7.921993e+10,
+            'background': 187528.89,
+        },
+        {
+            # Test single energy bin
+            'geom': geom(ebounds=[0.1, 10]),
+            'counts': 34366,
+            'exposure': 1.16866e+11,
+            'exposure_image': 1.16866e+11,
+            'background': 1988492.8,
+        },
+        {
+            # Test single energy bin
+            'geom': geom(ebounds=[0.1, 10]),
+            'exclusion_mask': Map.from_geom(geom(ebounds=[0.1, 10])),
+            'counts': 34366,
+            'exposure': 1.16866e+11,
+            'exposure_image': 1.16866e+11,
+            'background': 1988492.8,
+        },
+    ],
+)
 def test_map_maker(pars, obs_list):
-    maker = MapMaker(
-        geom=pars['geom'],
-        offset_max='2 deg',
-    )
+    maker = MapMaker(geom=pars['geom'], offset_max='2 deg')
 
     maps = maker.run(obs_list)
 

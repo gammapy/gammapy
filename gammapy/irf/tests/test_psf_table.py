@@ -13,7 +13,6 @@ pytest.importorskip('scipy')
 
 
 class TestTablePSF:
-
     @staticmethod
     def test_gauss():
         # Make an example PSF for testing
@@ -76,7 +75,6 @@ class TestTablePSF:
 
 @requires_data('gammapy-extra')
 class TestEnergyDependentTablePSF:
-
     def setup(self):
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits'
         self.psf = EnergyDependentTablePSF.read(filename)

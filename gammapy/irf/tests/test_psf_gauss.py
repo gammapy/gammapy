@@ -60,14 +60,14 @@ def make_test_psf(energy_bins=15, theta_bins=12):
         u.Quantity(energies_lo, 'TeV'),
         u.Quantity(energies_hi, 'TeV'),
         u.Quantity(theta_lo, 'deg'),
-        sigmas, norms,
+        sigmas,
+        norms,
     )
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 class TestEnergyDependentMultiGaussPSF:
-
     @pytest.fixture(scope='session')
     def psf(self):
         filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/irfs/psf.fits'
@@ -118,8 +118,12 @@ class TestEnergyDependentMultiGaussPSF:
         energy = 0.5 * u.TeV
 
         containment = np.linspace(0.1, 0.95, 10)
-        desired = np.array([psf.containment_radius(energy, theta, _).value for _ in containment])
-        actual = np.array([psf_3d.containment_radius(energy, theta, _).value for _ in containment])
+        desired = np.array(
+            [psf.containment_radius(energy, theta, _).value for _ in containment]
+        )
+        actual = np.array(
+            [psf_3d.containment_radius(energy, theta, _).value for _ in containment]
+        )
         assert_allclose(np.squeeze(desired), actual, rtol=0.01)
 
 
@@ -184,13 +188,15 @@ class TestHESS:
         HESS software has very large binning errors (they compute
         containment radius from the theta2 histogram directly, not
         using the triple-Gauss approximation)."""
-        vals = [(68, 0.0663391),
-                # TODO: check why this was different before
-                # (95, 0.173846),  # 0.15310963243226974
-                (95, 0.15310967713539758),
-                (10, 0.0162602),
-                (40, 0.0379536),
-                (80, 0.088608)]
+        vals = [
+            (68, 0.0663391),
+            # TODO: check why this was different before
+            # (95, 0.173846),  # 0.15310963243226974
+            (95, 0.15310967713539758),
+            (10, 0.0162602),
+            (40, 0.0379536),
+            (80, 0.088608),
+        ]
         filename = get_pkg_data_filename('data/psf.txt')
         hess = HESSMultiGaussPSF(filename)
         m = hess.to_MultiGauss2D()
@@ -201,9 +207,11 @@ class TestHESS:
 
 
 def test_multi_gauss_psf_kernel():
-    psf_data = {'psf1': {'ampl': 1, 'fwhm': 2.5496814916215014},
-                'psf2': {'ampl': 0.062025099992752075, 'fwhm': 11.149272133127273},
-                'psf3': {'ampl': 0.47460201382637024, 'fwhm': 5.164014607542117}}
+    psf_data = {
+        'psf1': {'ampl': 1, 'fwhm': 2.5496814916215014},
+        'psf2': {'ampl': 0.062025099992752075, 'fwhm': 11.149272133127273},
+        'psf3': {'ampl': 0.47460201382637024, 'fwhm': 5.164014607542117},
+    }
     psf_kernel = multi_gauss_psf_kernel(psf_data, x_size=51)
 
     assert_allclose(psf_kernel.array[25, 25], 0.05047558713797154)

@@ -7,10 +7,7 @@ from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from ..image.utils import scale_cube
 
-__all__ = [
-    'AdaptiveRingBackgroundEstimator',
-    'RingBackgroundEstimator',
-]
+__all__ = ['AdaptiveRingBackgroundEstimator', 'RingBackgroundEstimator']
 
 
 class AdaptiveRingBackgroundEstimator(object):
@@ -64,8 +61,16 @@ class AdaptiveRingBackgroundEstimator(object):
     RingBackgroundEstimator, gammapy.detect.KernelBackgroundEstimator
     """
 
-    def __init__(self, r_in, r_out_max, width, stepsize='0.02 deg',
-                 threshold_alpha=0.1, theta='0.22 deg', method='fixed_width'):
+    def __init__(
+        self,
+        r_in,
+        r_out_max,
+        width,
+        stepsize='0.02 deg',
+        threshold_alpha=0.1,
+        theta='0.22 deg',
+        method='fixed_width',
+    ):
 
         stepsize = Angle(stepsize)
         theta = Angle(theta)
@@ -160,7 +165,9 @@ class AdaptiveRingBackgroundEstimator(object):
         tophat = Tophat2DKernel(theta.value)
         tophat.normalize('peak')
         exposure_on = exposure_on.convolve(tophat.array)
-        exposure_on_cube = np.repeat(exposure_on.data[:, :, np.newaxis], len(kernels), axis=2)
+        exposure_on_cube = np.repeat(
+            exposure_on.data[:, :, np.newaxis], len(kernels), axis=2
+        )
         return exposure_on_cube
 
     @staticmethod
@@ -213,8 +220,9 @@ class AdaptiveRingBackgroundEstimator(object):
         counts, exposure_on, exclusion = [images[_] for _ in required]
 
         if not counts.geom.is_image:
-            raise ValueError('Adaptive ring background estimation only supported'
-                             ' for 2D images.')
+            raise ValueError(
+                'Adaptive ring background estimation only supported' ' for 2D images.'
+            )
 
         kernels = self.kernels(counts)
         cubes = {}
@@ -342,10 +350,16 @@ class RingBackgroundEstimator(object):
         ring = self.kernel(counts)
 
         counts_excluded = counts.copy(data=counts.data * exclusion.data.astype('float'))
-        result['off'] = counts_excluded.convolve(ring.array, use_fft=p['use_fft_convolution'])
+        result['off'] = counts_excluded.convolve(
+            ring.array, use_fft=p['use_fft_convolution']
+        )
 
-        exposure_on_excluded = exposure_on.copy(data=exposure_on.data * exclusion.data.astype('float'))
-        result['exposure_off'] = exposure_on_excluded.convolve(ring.array, use_fft=p['use_fft_convolution'])
+        exposure_on_excluded = exposure_on.copy(
+            data=exposure_on.data * exclusion.data.astype('float')
+        )
+        result['exposure_off'] = exposure_on_excluded.convolve(
+            ring.array, use_fft=p['use_fft_convolution']
+        )
 
         with np.errstate(divide='ignore', invalid='ignore'):
             # set pixels, where ring is too small to NaN
@@ -356,10 +370,14 @@ class RingBackgroundEstimator(object):
             result['off'].data[not_has_exposure] = 0
             result['exposure_off'].data[not_has_exposure] = 0
 
-            result['alpha'] = exposure_on.copy(data=exposure_on.data / result['exposure_off'].data)
+            result['alpha'] = exposure_on.copy(
+                data=exposure_on.data / result['exposure_off'].data
+            )
             result['alpha'].data[not_has_exposure] = 0
 
-        result['background'] = counts.copy(data=result['alpha'].data * result['off'].data)
+        result['background'] = counts.copy(
+            data=result['alpha'].data * result['off'].data
+        )
 
         return result
 

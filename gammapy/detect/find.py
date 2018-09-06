@@ -5,9 +5,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from ..maps import WcsNDMap
 
-__all__ = [
-    'find_peaks',
-]
+__all__ = ['find_peaks']
 
 
 def find_peaks(image, threshold, min_distance=1):

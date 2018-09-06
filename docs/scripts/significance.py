@@ -8,8 +8,12 @@ from gammapy.stats import significance
 @click.command()
 @click.argument('n_observed')
 @click.argument('mu_background')
-@click.option('--method', type=click.Choice(['lima', 'simple']),
-              default='lima', help='Significance computation method')
+@click.option(
+    '--method',
+    type=click.Choice(['lima', 'simple']),
+    default='lima',
+    help='Significance computation method',
+)
 def cli(n_observed, mu_background, method):
     """Compute significance for a Poisson count observation.
 

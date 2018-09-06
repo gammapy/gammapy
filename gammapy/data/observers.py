@@ -3,9 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.coordinates import EarthLocation
 
-__all__ = [
-    'observatory_locations',
-]
+__all__ = ['observatory_locations']
 
 
 observatory_locations = {}
@@ -52,29 +50,47 @@ Examples
 # Latitude: 24d41m0.34s South, Longitude: 70d18m58.84s West, Height: not given
 # Email from Gernot Maier on Sep 8, 2017, stating what they use in the CTA MC group:
 # lon=-70.31634499364885d, lat=-24.68342915473787d, height=2150m
-observatory_locations['cta_south'] = EarthLocation(lon='-70d18m58.84s', lat='-24d41m0.34s', height='2150m')
+observatory_locations['cta_south'] = EarthLocation(
+    lon='-70d18m58.84s', lat='-24d41m0.34s', height='2150m'
+)
 
 # Values from https://www.cta-observatory.org/about/array-locations/la-palma/
 # Latitude: 28d45m43.7904s North, Longitude: 17d53m31.218s West, Height: 2200 m
 # Email from Gernot Maier on Sep 8, 2017, stating what they use in the CTA MC group for MST-1:
 # lon=-17.891571d, lat=28.762158d, height=2147m
-observatory_locations['cta_north'] = EarthLocation(lon='-17d53m31.218s', lat='28d45m43.7904s', height='2147m')
+observatory_locations['cta_north'] = EarthLocation(
+    lon='-17d53m31.218s', lat='28d45m43.7904s', height='2147m'
+)
 
 # HAWC location taken from https://arxiv.org/pdf/1108.6034v2.pdf
-observatory_locations['hawc'] = EarthLocation(lon='-97d18m34s', lat='18d59m48s', height='4100m')
+observatory_locations['hawc'] = EarthLocation(
+    lon='-97d18m34s', lat='18d59m48s', height='4100m'
+)
 
 # https://en.wikipedia.org/wiki/HEGRA
-observatory_locations['hegra'] = EarthLocation(lon='28d45m42s', lat='17d53m27s', height='2200m')
+observatory_locations['hegra'] = EarthLocation(
+    lon='28d45m42s', lat='17d53m27s', height='2200m'
+)
 
 # Precision position of HESS from the HESS software (slightly different from Wikipedia)
-observatory_locations['hess'] = EarthLocation(lon='16d30m00.8s', lat='-23d16m18.4s', height='1835m')
+observatory_locations['hess'] = EarthLocation(
+    lon='16d30m00.8s', lat='-23d16m18.4s', height='1835m'
+)
 
-observatory_locations['magic'] = EarthLocation(lon='-17d53m24s', lat='28d45m43s', height='2200m')
+observatory_locations['magic'] = EarthLocation(
+    lon='-17d53m24s', lat='28d45m43s', height='2200m'
+)
 
-observatory_locations['milagro'] = EarthLocation(lon='-106.67625d', lat='35.87835d', height='2530m')
+observatory_locations['milagro'] = EarthLocation(
+    lon='-106.67625d', lat='35.87835d', height='2530m'
+)
 
-observatory_locations['veritas'] = EarthLocation(lon='-110d57m07.77s', lat='31d40m30.21s', height='1268m')
+observatory_locations['veritas'] = EarthLocation(
+    lon='-110d57m07.77s', lat='31d40m30.21s', height='1268m'
+)
 
 # WHIPPLE coordinates taken from the Observatory Wikipedia page:
 # https://en.wikipedia.org/wiki/Fred_Lawrence_Whipple_Observatory
-observatory_locations['whipple'] = EarthLocation(lon='-110d52m42s', lat='31d40m52s', height='2606m')
+observatory_locations['whipple'] = EarthLocation(
+    lon='-110d52m42s', lat='31d40m52s', height='2606m'
+)

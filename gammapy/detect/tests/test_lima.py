@@ -13,7 +13,9 @@ def test_compute_lima_image():
     """
     Test Li & Ma image against TS image for Tophat kernel
     """
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+    filename = (
+        '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+    )
     counts = Map.read(filename, hdu='counts')
     background = Map.read(filename, hdu='background')
 
@@ -30,7 +32,9 @@ def test_compute_lima_on_off_image():
     """
     Test Li & Ma image with snippet from the H.E.S.S. survey data.
     """
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/survey/hess_survey_snippet.fits.gz'
+    filename = (
+        '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/survey/hess_survey_snippet.fits.gz'
+    )
     n_on = Map.read(filename, hdu='ON')
     n_off = Map.read(filename, hdu='OFF')
     a_on = Map.read(filename, hdu='ONEXPOSURE')

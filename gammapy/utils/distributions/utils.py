@@ -22,6 +22,7 @@ def normalize(func, x_min, x_max):
 def pdf(func):
     """Returns the one dimensional PDF of a given radial surface density.
     """
+
     def f(x):
         return x * func(x)
 
@@ -31,6 +32,7 @@ def pdf(func):
 def density(func):
     """Returns the radial surface density of a given one dimensional PDF.
     """
+
     def f(x):
         return func(x) / x
 

@@ -12,7 +12,15 @@ from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
 from ...utils.distributions import draw, pdf
 from ...utils.random import sample_sphere, sample_sphere_distance, get_random_state
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
-from ..population.spatial import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
+from ..population.spatial import (
+    Exponential,
+    FaucherSpiral,
+    RMIN,
+    RMAX,
+    ZMIN,
+    ZMAX,
+    radial_distributions,
+)
 from ..population.velocity import VMIN, VMAX, velocity_distributions
 
 __all__ = [
@@ -27,8 +35,9 @@ __all__ = [
 ]
 
 
-def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
-                                       random_state='random-seed'):
+def make_catalog_random_positions_cube(
+    size=100, dimension=3, dmax=10, random_state='random-seed'
+):
     """Make a catalog of sources randomly distributed on a line, square or cube.
 
     TODO: is this useful enough for general use or should we hide it as an
@@ -75,9 +84,9 @@ def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
     return table
 
 
-def make_catalog_random_positions_sphere(size, center='Earth',
-                                         distance=Quantity([0, 1], 'Mpc'),
-                                         random_state='random-seed'):
+def make_catalog_random_positions_sphere(
+    size, center='Earth', distance=Quantity([0, 1], 'Mpc'), random_state='random-seed'
+):
     """Sample random source locations in a sphere.
 
     This can be used to generate an isotropic source population
@@ -107,8 +116,9 @@ def make_catalog_random_positions_sphere(size, center='Earth',
     random_state = get_random_state(random_state)
 
     lon, lat = sample_sphere(size, random_state=random_state)
-    radius = sample_sphere_distance(distance[0], distance[1], size,
-                                    random_state=random_state)
+    radius = sample_sphere_distance(
+        distance[0], distance[1], size, random_state=random_state
+    )
 
     # TODO: it shouldn't be necessary here to convert to cartesian ourselves ...
     x, y, z = spherical_to_cartesian(radius, lat, lon)
@@ -140,10 +150,15 @@ def make_catalog_random_positions_sphere(size, center='Earth',
     return table
 
 
-def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
-                               max_age=Quantity(1e6, 'yr'),
-                               spiralarms=True, n_ISM=Quantity(1, 'cm-3'),
-                               random_state='random-seed'):
+def make_base_catalog_galactic(
+    n_sources,
+    rad_dis='YK04',
+    vel_dis='H05',
+    max_age=Quantity(1e6, 'yr'),
+    spiralarms=True,
+    n_ISM=Quantity(1, 'cm-3'),
+    random_state='random-seed',
+):
     """Make a catalog of Galactic sources, with basic source parameters.
 
     Choose a radial distribution, a velocity distribution, the number
@@ -190,12 +205,22 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     age = Quantity(age, 'yr')
 
     # Draw r and z values from the given distribution
-    r = draw(RMIN.to('kpc').value, RMAX.to('kpc').value,
-             n_sources, pdf(rad_dis()), random_state=random_state)
+    r = draw(
+        RMIN.to('kpc').value,
+        RMAX.to('kpc').value,
+        n_sources,
+        pdf(rad_dis()),
+        random_state=random_state,
+    )
     r = Quantity(r, 'kpc')
 
-    z = draw(ZMIN.to('kpc').value, ZMAX.to('kpc').value,
-             n_sources, Exponential(), random_state=random_state)
+    z = draw(
+        ZMIN.to('kpc').value,
+        ZMAX.to('kpc').value,
+        n_sources,
+        Exponential(),
+        random_state=random_state,
+    )
     z = Quantity(z, 'kpc')
 
     # Apply spiralarm modelling or not
@@ -209,8 +234,13 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     x, y = astrometry.cartesian(r, theta)
 
     # Draw values from velocity distribution
-    v = draw(VMIN.to('km/s').value, VMAX.to('km/s').value,
-             n_sources, vel_dis(), random_state=random_state)
+    v = draw(
+        VMIN.to('km/s').value,
+        VMAX.to('km/s').value,
+        n_sources,
+        vel_dis(),
+        random_state=random_state,
+    )
     v = Quantity(v, 'km/s')
 
     # Draw random direction of initial velocity
@@ -230,22 +260,44 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
 
     table = Table()
     table['age'] = Column(age, unit='yr', description='Age of the source')
-    table['n_ISM'] = Column(n_ISM, unit='cm-3', description='Interstellar medium density')
+    table['n_ISM'] = Column(
+        n_ISM, unit='cm-3', description='Interstellar medium density'
+    )
     if spiralarms:
         table['spiralarm'] = Column(spiralarm, description='Which spiralarm?')
 
-    table['x_birth'] = Column(x, unit='kpc', description='Galactocentric x coordinate at birth')
-    table['y_birth'] = Column(y, unit='kpc', description='Galactocentric y coordinate at birth')
-    table['z_birth'] = Column(z, unit='kpc', description='Galactocentric z coordinate at birth')
+    table['x_birth'] = Column(
+        x, unit='kpc', description='Galactocentric x coordinate at birth'
+    )
+    table['y_birth'] = Column(
+        y, unit='kpc', description='Galactocentric y coordinate at birth'
+    )
+    table['z_birth'] = Column(
+        z, unit='kpc', description='Galactocentric z coordinate at birth'
+    )
 
-    table['x'] = Column(x_moved.to('kpc'), unit='kpc', description='Galactocentric x coordinate')
-    table['y'] = Column(y_moved.to('kpc'), unit='kpc', description='Galactocentric y coordinate')
-    table['z'] = Column(z_moved.to('kpc'), unit='kpc', description='Galactocentric z coordinate')
+    table['x'] = Column(
+        x_moved.to('kpc'), unit='kpc', description='Galactocentric x coordinate'
+    )
+    table['y'] = Column(
+        y_moved.to('kpc'), unit='kpc', description='Galactocentric y coordinate'
+    )
+    table['z'] = Column(
+        z_moved.to('kpc'), unit='kpc', description='Galactocentric z coordinate'
+    )
 
-    table['vx'] = Column(vx.to('km/s'), unit='km/s', description='Galactocentric velocity in x direction')
-    table['vy'] = Column(vy.to('km/s'), unit='km/s', description='Galactocentric velocity in y direction')
-    table['vz'] = Column(vz.to('km/s'), unit='km/s', description='Galactocentric velocity in z direction')
-    table['v_abs'] = Column(v, unit='km/s', description='Galactocentric velocity (absolute)')
+    table['vx'] = Column(
+        vx.to('km/s'), unit='km/s', description='Galactocentric velocity in x direction'
+    )
+    table['vy'] = Column(
+        vy.to('km/s'), unit='km/s', description='Galactocentric velocity in y direction'
+    )
+    table['vz'] = Column(
+        vz.to('km/s'), unit='km/s', description='Galactocentric velocity in z direction'
+    )
+    table['v_abs'] = Column(
+        v, unit='km/s', description='Galactocentric velocity (absolute)'
+    )
 
     return table
 
@@ -271,9 +323,14 @@ def add_snr_parameters(table):
     return table
 
 
-def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
-                          P_mean=0.3, P_stdv=0.15,
-                          random_state='random-seed'):
+def add_pulsar_parameters(
+    table,
+    B_mean=12.05,
+    B_stdv=0.55,
+    P_mean=0.3,
+    P_stdv=0.15,
+    random_state='random-seed',
+):
     """Add pulsar parameters to the table.
 
     For the initial normal distribution of period and logB can exist the following
@@ -313,7 +370,9 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
     table['P0'] = Column(p0, unit='s', description='Pulsar period')
     table['P1'] = Column(p1, unit='', description='Pulsar period derivative')
     table['P0_birth'] = Column(p0_birth, unit='s', description='Pulsar birth period')
-    table['P1_birth'] = Column(p1_birth, unit='', description='Pulsar birth period derivative')
+    table['P1_birth'] = Column(
+        p1_birth, unit='', description='Pulsar birth period derivative'
+    )
     table['CharAge'] = Column(tau, unit='yr', description='Pulsar characteristic age')
     table['Tau0'] = Column(tau_0, unit='yr')
     table['L_PSR'] = Column(l_psr, unit='erg s-1')
@@ -346,12 +405,12 @@ def add_pwn_parameters(table):
 
     # Add columns to table
     table['r_out_PWN'] = Column(
-        [_['r_out_pwn'] for _ in results],
-        unit='pc', description='PWN outer radius',
+        [_['r_out_pwn'] for _ in results], unit='pc', description='PWN outer radius'
     )
     table['L_PWN'] = Column(
         [_['L_PWN'] for _ in results],
-        unit='erg', description='PWN luminosity above 1 TeV',
+        unit='erg',
+        description='PWN luminosity above 1 TeV',
     )
     return table
 
@@ -430,14 +489,21 @@ def add_observed_parameters(table, obs_pos=None):
     ra, dec = coordinate.ra.deg, coordinate.dec.deg
 
     # Add columns to table
-    table['distance'] = Column(distance, unit='pc',
-                               description='Distance observer to source center')
+    table['distance'] = Column(
+        distance, unit='pc', description='Distance observer to source center'
+    )
     table['GLON'] = Column(glon, unit='deg', description='Galactic longitude')
     table['GLAT'] = Column(glat, unit='deg', description='Galactic latitude')
-    table['VGLON'] = Column(v_glon.to('deg/Myr'), unit='deg/Myr',
-                            description='Velocity in Galactic longitude')
-    table['VGLAT'] = Column(v_glat.to('deg/Myr'), unit='deg/Myr',
-                            description='Velocity in Galactic latitude')
+    table['VGLON'] = Column(
+        v_glon.to('deg/Myr'),
+        unit='deg/Myr',
+        description='Velocity in Galactic longitude',
+    )
+    table['VGLAT'] = Column(
+        v_glat.to('deg/Myr'),
+        unit='deg/Myr',
+        description='Velocity in Galactic latitude',
+    )
     table['RA'] = Column(ra, unit='deg', description='Right ascension')
     table['DEC'] = Column(dec, unit='deg', description='Declination')
 
@@ -451,8 +517,11 @@ def add_observed_parameters(table, obs_pos=None):
     try:
         extension = table['extension']
         angular_extension = degrees(arctan(extension / distance))
-        table['angular_extension'] = Column(angular_extension, unit='deg',
-                                            description='Source angular radius (i.e. half-diameter)')
+        table['angular_extension'] = Column(
+            angular_extension,
+            unit='deg',
+            description='Source angular radius (i.e. half-diameter)',
+        )
     except KeyError:
         pass
 

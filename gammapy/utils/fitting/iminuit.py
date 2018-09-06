@@ -5,9 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 
-__all__ = [
-    'fit_iminuit',
-]
+__all__ = ['fit_iminuit']
 
 log = logging.getLogger(__name__)
 
@@ -49,11 +47,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     opts_minuit.setdefault('print_level', 0)
 
     parnames = _make_parnames(parameters)
-    minuit = Minuit(
-        minuit_func.fcn,
-        forced_parameters=parnames,
-        **opts_minuit
-    )
+    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit)
 
     minuit.migrad()
 
@@ -102,7 +96,7 @@ def make_minuit_par_kwargs(parameters):
     """
     kwargs = {}
     parnames = _make_parnames(parameters)
-    for idx, parname_, in enumerate(parnames):
+    for idx, parname_ in enumerate(parnames):
         par = parameters[idx]
         kwargs[parname_] = par.factor
 

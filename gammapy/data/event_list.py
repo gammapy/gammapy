@@ -14,11 +14,7 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.testing import Checker
 
-__all__ = [
-    'EventListBase',
-    'EventList',
-    'EventListLAT',
-]
+__all__ = ['EventListBase', 'EventList', 'EventListLAT']
 
 log = logging.getLogger(__name__)
 
@@ -261,16 +257,16 @@ class EventListBase(object):
         >>> event_list = event_list.select_energy()
         """
         energy = self.energy
-        mask = (energy_band[0] <= energy)
-        mask &= (energy < energy_band[1])
+        mask = energy_band[0] <= energy
+        mask &= energy < energy_band[1]
         return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
         """Select events in time interval.
         """
         time = self.time
-        mask = (time_interval[0] <= time)
-        mask &= (time < time_interval[1])
+        mask = time_interval[0] <= time
+        mask &= time < time_interval[1]
         return self.select_row_subset(mask)
 
     def select_sky_cone(self, center, radius):
@@ -321,6 +317,7 @@ class EventListBase(object):
         TODO: move `gammapy.catalog.select_sky_box` to gammapy.utils.
         """
         from ..catalog import select_sky_box
+
         selected = select_sky_box(self.table, lon_lim, lat_lim, frame)
         return self.__class__(selected)
 
@@ -377,7 +374,9 @@ class EventListBase(object):
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
         spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
-        spec.fill(self.energy)  # leaving spec.fill(self) was triggering an issue for the LAT event list
+        spec.fill(
+            self.energy
+        )  # leaving spec.fill(self) was triggering an issue for the LAT event list
         spec.plot(ax=ax, **kwargs)
         return ax
 
@@ -486,6 +485,7 @@ class EventListBase(object):
         in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         if center is None:
@@ -603,13 +603,14 @@ class EventList(EventListBase):
             Copy of event list with selection applied.
         """
         offset = self.offset
-        mask = (offset_band[0] <= offset)
-        mask &= (offset < offset_band[1])
+        mask = offset_band[0] <= offset
+        mask &= offset < offset_band[1]
         return self.select_row_subset(mask)
 
     def peek(self):
         """Summary plots."""
         import matplotlib.pyplot as plt
+
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
         self.plot_image_radec(ax=axes[0])
         self.plot_time(ax=axes[1])
@@ -627,19 +628,30 @@ class EventList(EventListBase):
         ax = plt.gca() if ax is None else ax
 
         count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins)
+            self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins
+        )
 
         ax.set_title('# Photons')
 
         ax.set_xlabel('RA')
         ax.set_ylabel('DEC')
 
-        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value,
-                '+', ms=20, mew=3, color='white')
+        ax.plot(
+            self.pointing_radec.ra.value,
+            self.pointing_radec.dec.value,
+            '+',
+            ms=20,
+            mew=3,
+            color='white',
+        )
 
-        im = ax.imshow(count_image, interpolation='nearest', origin='low',
-                       extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
-                       norm=PowerNorm(gamma=0.5))
+        im = ax.imshow(
+            count_image,
+            interpolation='nearest',
+            origin='low',
+            extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
+            norm=PowerNorm(gamma=0.5),
+        )
 
         ax.invert_xaxis()
         ax.grid()
@@ -652,6 +664,7 @@ class EventList(EventListBase):
         """Plot a counts image in field of view coordinates.
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         max_x = max(self.table['DETX'])
@@ -663,16 +676,19 @@ class EventList(EventListBase):
         y_edges = np.linspace(min_y, max_y, number_bins)
 
         count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]['DETY'], self.table[:]['DETX'],
-            bins=(x_edges, y_edges)
+            self.table[:]['DETY'], self.table[:]['DETX'], bins=(x_edges, y_edges)
         )
 
         ax.set_title('# Photons')
 
         ax.set_xlabel('x / deg')
         ax.set_ylabel('y / deg')
-        ax.imshow(count_image, interpolation='nearest', origin='low',
-                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
+        ax.imshow(
+            count_image,
+            interpolation='nearest',
+            origin='low',
+            extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
+        )
 
 
 class EventListLAT(EventListBase):
@@ -702,9 +718,8 @@ class EventListLAT(EventListBase):
     def plot_image(self):
         """Quick look counts map sky plot."""
         from ..maps import WcsNDMap
-        m = WcsNDMap.create(
-            npix=(360, 180), binsz=1.0, proj='AIT', coordsys='GAL',
-        )
+
+        m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj='AIT', coordsys='GAL')
         coord = self.radec
         m.fill_by_coord(coord)
         m.plot(stretch='sqrt')
@@ -720,18 +735,18 @@ class EventListChecker(Checker):
     event_list : `~gammapy.data.EventList`
         Event list
     """
-    CHECKS = OrderedDict([
-        ('meta', 'check_meta'),
-        ('columns', 'check_columns'),
-        ('times', 'check_times'),
-        ('coordinates_galactic', 'check_coordinates_galactic'),
-        ('coordinates_altaz', 'check_coordinates_altaz'),
-    ])
 
-    accuracy = {
-        'angle': Angle('1 arcsec'),
-        'time': Quantity(1, 'microsecond'),
-    }
+    CHECKS = OrderedDict(
+        [
+            ('meta', 'check_meta'),
+            ('columns', 'check_columns'),
+            ('times', 'check_times'),
+            ('coordinates_galactic', 'check_coordinates_galactic'),
+            ('coordinates_altaz', 'check_coordinates_altaz'),
+        ]
+    )
+
+    accuracy = {'angle': Angle('1 arcsec'), 'time': Quantity(1, 'microsecond')}
 
     # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
     meta_required = [
@@ -739,34 +754,28 @@ class EventListChecker(Checker):
         'HDUDOC',
         'HDUVERS',
         'HDUCLAS1',
-        
         'OBS_ID',
-
         'TSTART',
         'TSTOP',
         'ONTIME',
         'LIVETIME',
         'DEADC',
-
         # TODO: what to do about these?
         # They are currently listed as required in the spec,
         # but I think we should just require ICRS and those
         # are irrelevant, should not be used.
         # 'RADECSYS',
         # 'EQUINOX',
-
         'ORIGIN',
         'TELESCOP',
         'INSTRUME',
         'CREATOR',
-
         # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
         'MJDREFI',
         'MJDREFF',
         'TIMEUNIT',
         'TIMESYS',
         'TIMEREF',
-
         # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location
         'GEOLON',
         'GEOLAT',
@@ -787,16 +796,14 @@ class EventListChecker(Checker):
 
     def _record(self, level='info', msg=None):
         obs_id = self.event_list.table.meta['OBS_ID']
-        return {
-            'level': level,
-            'obs_id': obs_id,
-            'msg': msg,
-        }
+        return {'level': level, 'obs_id': obs_id, 'msg': msg}
 
     def check_meta(self):
         meta_missing = sorted(set(self.meta_required) - set(self.event_list.table.meta))
         if meta_missing:
-            yield self._record(level='error', msg='Missing meta keys: {!r}'.format(meta_missing))
+            yield self._record(
+                level='error', msg='Missing meta keys: {!r}'.format(meta_missing)
+            )
 
     def check_columns(self):
         t = self.event_list.table
@@ -806,10 +813,14 @@ class EventListChecker(Checker):
 
         for name, unit in self.columns_required:
             if name not in t.colnames:
-                yield self._record(level='error', msg='Missing table column: {!r}'.format(name))
+                yield self._record(
+                    level='error', msg='Missing table column: {!r}'.format(name)
+                )
             else:
                 if Unit(unit) != (t[name].unit or ''):
-                    yield self._record(level='error', msg='Invalid unit for column: {!r}'.format(name))
+                    yield self._record(
+                        level='error', msg='Invalid unit for column: {!r}'.format(name)
+                    )
 
     def check_times(self):
         dt = (self.event_list.time - self.event_list.observation_time_start).sec
@@ -833,7 +844,9 @@ class EventListChecker(Checker):
         galactic = SkyCoord(t['GLON'], t['GLAT'], unit='deg', frame='galactic')
         separation = self.event_list.radec.separation(galactic).to('arcsec')
         if separation.max() > self.accuracy['angle']:
-            yield self._record(level='error', msg='GLON / GLAT not consistent with RA / DEC')
+            yield self._record(
+                level='error', msg='GLON / GLAT not consistent with RA / DEC'
+            )
 
     def check_coordinates_altaz(self):
         """Check if ALT / AZ matches RA / DEC."""
@@ -844,8 +857,12 @@ class EventListChecker(Checker):
 
         altaz_astropy = self.event_list.altaz
         separation = angular_separation(
-            altaz_astropy.data.lon, altaz_astropy.data.lat,
-            t['AZ'].quantity, t['ALT'].quantity,
+            altaz_astropy.data.lon,
+            altaz_astropy.data.lat,
+            t['AZ'].quantity,
+            t['ALT'].quantity,
         )
         if separation.max() > self.accuracy['angle']:
-            yield self._record(level='error', msg='ALT / AZ not consistent with RA / DEC')
+            yield self._record(
+                level='error', msg='ALT / AZ not consistent with RA / DEC'
+            )

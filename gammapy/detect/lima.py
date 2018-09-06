@@ -5,10 +5,7 @@ import logging
 import numpy as np
 from ..stats import significance, significance_on_off
 
-__all__ = [
-    'compute_lima_image',
-    'compute_lima_on_off_image',
-]
+__all__ = ['compute_lima_image', 'compute_lima_on_off_image']
 
 log = logging.getLogger(__name__)
 
@@ -86,7 +83,9 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     a_on_conv = a_on.convolve(kernel.array).data
     alpha_conv = a_on_conv / a_off.data
 
-    significance_conv = significance_on_off(n_on_conv, n_off.data, alpha_conv, method='lima')
+    significance_conv = significance_on_off(
+        n_on_conv, n_off.data, alpha_conv, method='lima'
+    )
 
     with np.errstate(invalid='ignore'):
         background_conv = alpha_conv * n_off.data

@@ -23,11 +23,7 @@ def images():
     exclusion = Map.from_geom(counts.geom)
     exclusion.data += 1
 
-    return {
-        'counts': counts,
-        'background': background,
-        'exclusion': exclusion,
-    }
+    return {'counts': counts, 'background': background, 'exclusion': exclusion}
 
 
 @pytest.fixture()

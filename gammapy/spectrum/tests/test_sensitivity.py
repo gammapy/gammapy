@@ -23,10 +23,7 @@ def test_cta_sensitivity_estimator(sens):
     table = sens.results_table
 
     assert len(table) == 21
-    assert table.colnames == [
-        'energy', 'e2dnde', 'excess',
-        'background', 'criterion',
-    ]
+    assert table.colnames == ['energy', 'e2dnde', 'excess', 'background', 'criterion']
     assert table['energy'].unit == 'TeV'
     assert table['e2dnde'].unit == 'erg / (cm2 s)'
 

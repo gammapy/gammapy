@@ -12,7 +12,12 @@ from ...spectrum.models import (
     ExponentialCutoffPowerLaw3FGL,
     PLSuperExpCutoff3FGL,
 )
-from .. import SourceCatalog3FGL, SourceCatalog2FHL, SourceCatalog1FHL, SourceCatalog3FHL
+from .. import (
+    SourceCatalog3FGL,
+    SourceCatalog2FHL,
+    SourceCatalog1FHL,
+    SourceCatalog3FHL,
+)
 
 SOURCES_3FGL = [
     dict(
@@ -38,7 +43,7 @@ SOURCES_3FGL = [
         spec_type=PLSuperExpCutoff3FGL,
         dnde=u.Quantity(1.6547128794756733e-06, 'cm-2 s-1 GeV-1'),
         dnde_err=u.Quantity(1.6621504e-11, 'cm-2 s-1 MeV-1'),
-    )
+    ),
 ]
 
 SOURCES_3FHL = [
@@ -53,7 +58,7 @@ SOURCES_3FHL = [
         spec_type=LogParabola,
         dnde=u.Quantity(2.056998292908196e-12, 'cm-2 s-1 GeV-1'),
         dnde_err=u.Quantity(4.219030630302381e-13, 'cm-2 s-1 GeV-1'),
-    )
+    ),
 ]
 
 
@@ -80,7 +85,10 @@ class TestFermi3FGLObject:
         assert 'Source name          : 3FGL J0534.5+2201' in ss
         assert 'RA                   : 83.637 deg' in ss
         assert 'Detection significance (100 MeV - 300 GeV)    : 30.670' in ss
-        assert 'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1' in ss
+        assert (
+            'Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1'
+            in ss
+        )
 
     @pytest.mark.parametrize('ref', SOURCES_3FGL, ids=lambda _: _['name'])
     def test_str_all(self, ref):
@@ -136,17 +144,37 @@ class TestFermi3FGLObject:
         table = lc.table
 
         assert len(table) == 48
-        assert table.colnames == ['time_min', 'time_max', 'flux', 'flux_errp', 'flux_errn']
+        assert table.colnames == [
+            'time_min',
+            'time_max',
+            'flux',
+            'flux_errp',
+            'flux_errn',
+        ]
 
         assert lc.time_min[0].fits == '2008-08-02T00:33:19.000(UTC)'
         assert lc.time_max[0].fits == '2008-09-01T10:31:04.625(UTC)'
-        assert_quantity_allclose(table['flux'].quantity[0], 2.38471262e-06 * u.Unit('cm-2 s-1'))
-        assert_quantity_allclose(table['flux_errp'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1'))
-        assert_quantity_allclose(table['flux_errn'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1'))
+        assert_quantity_allclose(
+            table['flux'].quantity[0], 2.38471262e-06 * u.Unit('cm-2 s-1')
+        )
+        assert_quantity_allclose(
+            table['flux_errp'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1')
+        )
+        assert_quantity_allclose(
+            table['flux_errn'].quantity[0], 8.07127023e-08 * u.Unit('cm-2 s-1')
+        )
 
-    @pytest.mark.parametrize('name', [
-        'Crab', '3FGL J0534.5+2201', '1FHL J0534.5+2201',
-        '2FGL J0534.5+2201', 'PSR J0534+2200', '0FGL J0534.6+2201'])
+    @pytest.mark.parametrize(
+        'name',
+        [
+            'Crab',
+            '3FGL J0534.5+2201',
+            '1FHL J0534.5+2201',
+            '2FGL J0534.5+2201',
+            'PSR J0534+2200',
+            '0FGL J0534.6+2201',
+        ],
+    )
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
 
@@ -273,10 +301,18 @@ class TestFermi3FHLObject:
         assert len(flux_points.table) == 5
         assert 'flux_ul' in flux_points.table.colnames
 
-        desired = [5.12440652532e-07, 7.37024993524e-08, 9.04493849264e-09, 7.68135443661e-10, 4.30737078315e-11]
+        desired = [
+            5.12440652532e-07,
+            7.37024993524e-08,
+            9.04493849264e-09,
+            7.68135443661e-10,
+            4.30737078315e-11,
+        ]
         assert_allclose(flux_points.table['dnde'].data, desired, rtol=1e-5)
 
-    @pytest.mark.parametrize('name', ['Crab Nebula', '3FHL J0534.5+2201', '3FGL J0534.5+2201i'])
+    @pytest.mark.parametrize(
+        'name', ['Crab Nebula', '3FHL J0534.5+2201', '3FGL J0534.5+2201i']
+    )
     def test_crab_alias(self, name):
         assert str(self.cat['Crab Nebula']) == str(self.cat[name])
 
@@ -324,8 +360,9 @@ class TestSourceCatalog1FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 18
 
-    @pytest.mark.parametrize('name', [
-        'Crab', '1FHL J0534.5+2201', '2FGL J0534.5+2201', 'PSR J0534+2200'])
+    @pytest.mark.parametrize(
+        'name', ['Crab', '1FHL J0534.5+2201', '2FGL J0534.5+2201', 'PSR J0534+2200']
+    )
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
 
@@ -343,8 +380,9 @@ class TestSourceCatalog2FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 25
 
-    @pytest.mark.parametrize('name', [
-        'Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201', 'TeV J0534+2200'])
+    @pytest.mark.parametrize(
+        'name', ['Crab', '3FGL J0534.5+2201i', '1FHL J0534.5+2201', 'TeV J0534+2200']
+    )
     def test_crab_alias(self, name):
         assert str(self.cat['Crab']) == str(self.cat[name])
 

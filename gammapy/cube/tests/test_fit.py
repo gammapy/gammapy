@@ -13,19 +13,15 @@ from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import SkyModel
-from .. import (
-    MapEvaluator,
-    MapFit,
-    make_map_exposure_true_energy,
-    PSFKernel,
-)
+from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
 
 
 @pytest.fixture(scope='session')
 def geom():
     axis = MapAxis.from_edges(np.logspace(-1., 1., 3), name="energy", unit=u.TeV)
-    return WcsGeom.create(skydir=(0, 0), binsz=0.02, width=(2, 2),
-                          coordsys='GAL', axes=[axis])
+    return WcsGeom.create(
+        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys='GAL', axes=[axis]
+    )
 
 
 @pytest.fixture(scope='session')
@@ -61,28 +57,17 @@ def psf(geom):
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
-    psf_kernel = PSFKernel.from_table_psf(table_psf,
-                                          geom,
-                                          max_radius=0.5 * u.deg)
+    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=0.5 * u.deg)
     return psf_kernel
 
 
 @pytest.fixture
 def sky_model():
-    spatial_model = SkyGaussian(
-        lon_0='0.2 deg',
-        lat_0='0.1 deg',
-        sigma='0.2 deg',
-    )
+    spatial_model = SkyGaussian(lon_0='0.2 deg', lat_0='0.1 deg', sigma='0.2 deg')
     spectral_model = PowerLaw(
-        index=3,
-        amplitude='1e-11 cm-2 s-1 TeV-1',
-        reference='1 TeV',
+        index=3, amplitude='1e-11 cm-2 s-1 TeV-1', reference='1 TeV'
     )
-    return SkyModel(
-        spatial_model=spatial_model,
-        spectral_model=spectral_model,
-    )
+    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
 @pytest.fixture
@@ -97,11 +82,7 @@ def mask(geom, sky_model):
 @pytest.fixture
 def counts(sky_model, exposure, background, psf, edisp):
     evaluator = MapEvaluator(
-        model=sky_model,
-        exposure=exposure,
-        background=background,
-        psf=psf,
-        edisp=edisp,
+        model=sky_model, exposure=exposure, background=background, psf=psf, edisp=edisp
     )
     npred = evaluator.compute_npred()
     return WcsNDMap(exposure.geom, npred)

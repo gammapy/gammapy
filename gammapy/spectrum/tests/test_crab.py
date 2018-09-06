@@ -42,7 +42,6 @@ CRAB_SPECTRA = [
         flux=u.Quantity(2.070767119534948e-11, 'cm-2 s-1'),
         index=2.5433349999859405,
     ),
-
 ]
 
 

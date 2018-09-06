@@ -12,7 +12,9 @@ from ..models import PhaseCurveTableModel, LightCurveTableModel
 def phase_curve():
     filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
     table = Table.read(str(filename))
-    return PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
+    return PhaseCurveTableModel(
+        table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0
+    )
 
 
 @requires_data('gammapy-extra')

@@ -8,10 +8,7 @@ from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from .background import make_map_background_irf
 
-__all__ = [
-    'MapMaker',
-    'MapMakerObs',
-]
+__all__ = ['MapMaker', 'MapMakerObs']
 
 log = logging.getLogger(__name__)
 
@@ -73,7 +70,9 @@ class MapMaker(object):
             try:
                 self._process_obs(obs, selection)
             except NoOverlapError:
-                log.info('Skipping observation {}, no overlap with map.'.format(obs.obs_id))
+                log.info(
+                    'Skipping observation {}, no overlap with map.'.format(obs.obs_id)
+                )
                 continue
 
         return self.maps
@@ -81,9 +80,7 @@ class MapMaker(object):
     def _process_obs(self, obs, selection):
         # Compute cutout geometry and slices to stack results back later
         cutout_map = Map.from_geom(self.geom).cutout(
-            position=obs.pointing_radec,
-            width=2 * self.offset_max,
-            mode='trim',
+            position=obs.pointing_radec, width=2 * self.offset_max, mode='trim'
         )
 
         log.info('Processing observation: OBS_ID = {}'.format(obs.obs_id))
@@ -97,9 +94,7 @@ class MapMaker(object):
         exclusion_mask = self.maps.get('exclusion', None)
         if exclusion_mask is not None:
             exclusion_mask = exclusion_mask.cutout(
-                position=obs.pointing_radec,
-                width=2 * self.offset_max,
-                mode='trim',
+                position=obs.pointing_radec, width=2 * self.offset_max, mode='trim'
             )
 
         # Make maps for this observation

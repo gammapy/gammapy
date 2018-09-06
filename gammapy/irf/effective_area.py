@@ -9,10 +9,7 @@ from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 
-__all__ = [
-    'EffectiveAreaTable',
-    'EffectiveAreaTable2D',
-]
+__all__ = ['EffectiveAreaTable', 'EffectiveAreaTable2D']
 
 
 class EffectiveAreaTable(object):
@@ -68,8 +65,11 @@ class EffectiveAreaTable(object):
     """
 
     def __init__(self, energy_lo, energy_hi, data, meta=None):
-        axes = [BinnedDataAxis(energy_lo, energy_hi,
-                               interpolation_mode='log', name='energy')]
+        axes = [
+            BinnedDataAxis(
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            )
+        ]
         self.data = NDDataArray(axes=axes, data=data)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
@@ -95,6 +95,7 @@ class EffectiveAreaTable(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault('lw', 2)
@@ -102,13 +103,14 @@ class EffectiveAreaTable(object):
         if energy is None:
             energy = self.energy.nodes
         eff_area = self.data.evaluate(energy=energy)
-        xerr = (energy.value - self.energy.lo.value,
-                self.energy.hi.value - energy.value)
+        xerr = (
+            energy.value - self.energy.lo.value,
+            self.energy.hi.value - energy.value,
+        )
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to(self.energy.unit).value
-            ax.vlines(ener_val, 0, 1.1 * self.max_area.value,
-                      linestyles='dashed')
+            ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles='dashed')
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Effective Area [{}]'.format(self.data.data.unit))
@@ -138,9 +140,11 @@ class EffectiveAreaTable(object):
         # Units: g1 (cm^2), g2 (), g3 (MeV)
         # Note that whereas in the paper the parameter index is 1-based,
         # here it is 0-based
-        pars = {'HESS': [6.85e9, 0.0891, 5e5],
-                'HESS2': [2.05e9, 0.0891, 1e5],
-                'CTA': [1.71e11, 0.0891, 1e5]}
+        pars = {
+            'HESS': [6.85e9, 0.0891, 5e5],
+            'HESS2': [2.05e9, 0.0891, 1e5],
+            'CTA': [1.71e11, 0.0891, 1e5],
+        }
 
         if instrument not in pars.keys():
             ss = 'Unknown instrument: {}\n'.format(instrument)
@@ -158,9 +162,7 @@ class EffectiveAreaTable(object):
         data = value * u.cm ** 2
 
         return cls(
-            energy_lo=energy.lower_bounds,
-            energy_hi=energy.upper_bounds,
-            data=data,
+            energy_lo=energy.lower_bounds, energy_hi=energy.upper_bounds, data=data
         )
 
     @classmethod
@@ -199,12 +201,14 @@ class EffectiveAreaTable(object):
         Data format specification: :ref:`gadf:ogip-arf`
         """
         table = Table()
-        table.meta = OrderedDict([
-            ('EXTNAME', 'SPECRESP'),
-            ('hduclass', 'OGIP'),
-            ('hduclas1', 'RESPONSE'),
-            ('hduclas2', 'SPECRESP'),
-        ])
+        table.meta = OrderedDict(
+            [
+                ('EXTNAME', 'SPECRESP'),
+                ('hduclass', 'OGIP'),
+                ('hduclas1', 'RESPONSE'),
+                ('hduclas2', 'SPECRESP'),
+            ]
+        )
         table['ENERG_LO'] = self.energy.lo
         table['ENERG_HI'] = self.energy.hi
         table['SPECRESP'] = self.evaluate_fill_nan()
@@ -212,10 +216,9 @@ class EffectiveAreaTable(object):
 
     def to_hdulist(self, name=None):
         """Convert to `~astropy.io.fits.HDUList`."""
-        return fits.HDUList([
-            fits.PrimaryHDU(),
-            fits.BinTableHDU(self.to_table(), name=name),
-        ])
+        return fits.HDUList(
+            [fits.PrimaryHDU(), fits.BinTableHDU(self.to_table(), name=name)]
+        )
 
     def write(self, filename, **kwargs):
         """Write to file."""
@@ -276,18 +279,22 @@ class EffectiveAreaTable(object):
                 energy = self.energy.lo[idx].value
             # Perform linear interpolation otherwise
             else:
-                energy = np.interp(aeff.value,
-                                   (self.data.data[[idx - 1, idx]].value),
-                                   (self.energy.nodes[[idx - 1, idx]].value))
+                energy = np.interp(
+                    aeff.value,
+                    (self.data.data[[idx - 1, idx]].value),
+                    (self.energy.nodes[[idx - 1, idx]].value),
+                )
         else:
             # Return upper edge if last bin is selected
             if idx == self.data.data.size - 1:
                 energy = self.energy.hi[idx].value
             # Perform linear interpolation otherwise
             else:
-                energy = np.interp(aeff.value,
-                                   (self.data.data[[idx, idx + 1]].value),
-                                   (self.energy.nodes[[idx, idx + 1]].value))
+                energy = np.interp(
+                    aeff.value,
+                    (self.data.data[[idx, idx + 1]].value),
+                    (self.energy.nodes[[idx, idx + 1]].value),
+                )
         return energy * self.energy.unit
 
     def to_sherpa(self, name):
@@ -299,6 +306,7 @@ class EffectiveAreaTable(object):
             Instance name
         """
         from sherpa.astro.data import DataARF
+
         table = self.to_table()
         return DataARF(
             name=name,
@@ -352,24 +360,32 @@ class EffectiveAreaTable2D(object):
     offset         : size =     4, min =  0.000 deg, max =  1.000 deg
     Data           : size =    30, min =  1.000 cm2, max =  1.000 cm2
     """
+
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~NDDataArray`. Extrapolate."""
 
-    def __init__(self, energy_lo, energy_hi, offset_lo, offset_hi, data,
-                 meta=None, interp_kwargs=None):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        offset_lo,
+        offset_hi,
+        data,
+        meta=None,
+        interp_kwargs=None,
+    ):
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi,
-                interpolation_mode='log', name='energy'),
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            ),
             BinnedDataAxis(
-                offset_lo, offset_hi,
-                interpolation_mode='linear', name='offset')
+                offset_lo, offset_hi, interpolation_mode='linear', name='offset'
+            ),
         ]
-        self.data = NDDataArray(axes=axes, data=data,
-                                interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -430,9 +446,7 @@ class EffectiveAreaTable2D(object):
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
 
         return EffectiveAreaTable(
-            energy_lo=energy.lower_bounds,
-            energy_hi=energy.upper_bounds,
-            data=area,
+            energy_lo=energy.lower_bounds, energy_hi=energy.upper_bounds, data=area
         )
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
@@ -557,6 +571,7 @@ class EffectiveAreaTable2D(object):
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
+
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot(ax=axes[2])
         self.plot_energy_dependence(ax=axes[0])

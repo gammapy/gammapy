@@ -27,8 +27,7 @@ matrix = [poisson(mu + background).pmf(x_bins) for mu in mu_bins]
 
 acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins,
-                                                acceptance_intervals)
+LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
 
 fc_fix_limits(LowerLimitNum, UpperLimitNum)
 

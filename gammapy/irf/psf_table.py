@@ -10,10 +10,7 @@ from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 
-__all__ = [
-    'TablePSF',
-    'EnergyDependentTablePSF',
-]
+__all__ = ['TablePSF', 'EnergyDependentTablePSF']
 
 log = logging.getLogger(__name__)
 
@@ -123,8 +120,9 @@ class TablePSF(object):
 
         for containment in [50, 68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += ('containment radius {} deg for {}%\n'
-                   .format(radius.degree, containment))
+            ss += 'containment radius {} deg for {}%\n'.format(
+                radius.degree, containment
+            )
 
         return ss
 
@@ -290,6 +288,7 @@ class TablePSF(object):
         TODO: describe PSF ``quantity`` argument in a central place and link to it from here.
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         x = self._rad.to('deg')
@@ -400,7 +399,9 @@ class EnergyDependentTablePSF(object):
         for fraction in fractions:
             rads = self.containment_radius(energies=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
-                ss += '  ' + '{}% containment radius at {:3.0f}: {:.2f}\n'.format(100 * fraction, energy, rad)
+                ss += '  ' + '{}% containment radius at {:3.0f}: {:.2f}\n'.format(
+                    100 * fraction, energy, rad
+                )
         return ss
 
     @classmethod
@@ -481,6 +482,7 @@ class EnergyDependentTablePSF(object):
             interp_kwargs = dict(bounds_error=False, fill_value=None)
 
         from scipy.interpolate import RegularGridInterpolator
+
         if energy is None:
             energy = self.energy
         if rad is None:
@@ -490,7 +492,9 @@ class EnergyDependentTablePSF(object):
         energy_bin = self.energy.to('TeV')
         rad_bin = self.rad.to('deg')
         points = (energy_bin, rad_bin)
-        interpolator = RegularGridInterpolator(points, self.psf_value.value, **interp_kwargs)
+        interpolator = RegularGridInterpolator(
+            points, self.psf_value.value, **interp_kwargs
+        )
         energy_grid, rad_grid = np.meshgrid(energy.value, rad.value, indexing='ij')
         shape = energy_grid.shape
         pix_coords = np.column_stack([energy_grid.flat, rad_grid.flat])
@@ -515,8 +519,9 @@ class EnergyDependentTablePSF(object):
         psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
         return TablePSF(self.rad, psf_value, **kwargs)
 
-    def table_psf_in_energy_band(self, energy_band, spectral_index=2,
-                                 spectrum=None, **kwargs):
+    def table_psf_in_energy_band(
+        self, energy_band, spectral_index=2, spectrum=None, **kwargs
+    ):
         """Average PSF in a given energy band.
 
         Expected counts in sub energy bands given the given exposure
@@ -633,6 +638,7 @@ class EnergyDependentTablePSF(object):
         TODO
         """
         import matplotlib.pyplot as plt
+
         plt.figure(figsize=(6, 4))
 
         for energy in energies:
@@ -650,14 +656,15 @@ class EnergyDependentTablePSF(object):
         plt.ylabel('PSF (1e-6 sr^-1)')
         plt.tight_layout()
 
-    def plot_containment_vs_energy(self, ax=None, fractions=[0.63, 0.8, 0.95], **kwargs):
+    def plot_containment_vs_energy(
+        self, ax=None, fractions=[0.63, 0.8, 0.95], **kwargs
+    ):
         """Plot containment versus energy."""
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        energy = Energy.equal_log_spacing(
-            self.energy.min(), self.energy.max(), 10)
+        energy = Energy.equal_log_spacing(self.energy.min(), self.energy.max(), 10)
 
         for fraction in fractions:
             rad = self.containment_radius(energy, fraction)
@@ -672,6 +679,7 @@ class EnergyDependentTablePSF(object):
     def plot_exposure_vs_energy(self):
         """Plot exposure versus energy."""
         import matplotlib.pyplot as plt
+
         plt.figure(figsize=(4, 3))
         plt.plot(self.energy, self.exposure, color='black', lw=3)
         plt.semilogx()

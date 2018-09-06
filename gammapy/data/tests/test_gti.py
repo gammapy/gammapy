@@ -6,7 +6,9 @@ from ...data import GTI
 
 @requires_data('gammapy-extra')
 def test_gti_hess():
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
+    filename = (
+        '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
+    )
     gti = GTI.read(filename)
     assert 'GTI' in str(gti)
 

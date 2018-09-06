@@ -39,8 +39,9 @@ class PSF3DChecker(object):
         print('results: ', checker.results)
     """
 
-    def __init__(self, psf, d_norm=0.01, containment_fraction=0.68,
-                 d_rel_containment=0.7):
+    def __init__(
+        self, psf, d_norm=0.01, containment_fraction=0.68, d_rel_containment=0.7
+    ):
         self.psf = psf
 
         self.config = OrderedDict(
@@ -233,7 +234,7 @@ class PSF3DChecker(object):
                 jj = j + 1
 
                 # retrieve array of neighbors
-                nb = radii[ii - d:ii + d + 1, jj - d:jj + d + 1].flatten()
+                nb = radii[ii - d : ii + d + 1, jj - d : jj + d + 1].flatten()
 
                 # loop over neighbors
                 for n in nb:
@@ -263,11 +264,7 @@ class PSF3DChecker(object):
 def check_all_table_psf(data_store):
     """Check all `gammapy.irf.PSF3D` for a given `gammapy.data.DataStore`.
     """
-    config = OrderedDict(
-        d_norm=0.01,
-        containment_fraction=0.68,
-        d_rel_containment=0.7,
-    )
+    config = OrderedDict(d_norm=0.01, containment_fraction=0.68, d_rel_containment=0.7)
 
     obs_ids = data_store.obs_table['OBS_ID'].data
 

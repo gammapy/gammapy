@@ -15,9 +15,7 @@ def fcn(parameters):
 
 @requires_dependency('iminuit')
 def test_iminuit():
-    pars = Parameters(
-        [Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)]
-    )
+    pars = Parameters([Parameter('x', 2.1), Parameter('y', 3.1), Parameter('z', 4.1)])
 
     minuit = fit_iminuit(function=fcn, parameters=pars)
 

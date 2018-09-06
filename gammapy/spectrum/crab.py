@@ -5,9 +5,7 @@ from astropy import units as u
 from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
 from ..utils.modeling import Parameters
 
-__all__ = [
-    'CrabSpectrum',
-]
+__all__ = ['CrabSpectrum']
 
 # HESS publication: 2006A&A...457..899A
 hess_pl = {
@@ -55,6 +53,7 @@ class MeyerCrabModel(SpectralModel):
 
     See 2010A%26A...523A...2M, Appendix D.
     """
+
     coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708])
 
     def __init__(self):
@@ -118,9 +117,7 @@ class CrabSpectrum(object):
         3.5350582166 %
     """
 
-    references = [
-        'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'
-    ]
+    references = ['meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl']
     """Available references (see class docstring)."""
 
     def __init__(self, reference='meyer'):

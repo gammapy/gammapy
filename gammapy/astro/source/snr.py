@@ -7,10 +7,7 @@ import astropy.constants as const
 from astropy.utils import lazyproperty
 from ...extern.validator import validate_physical_type
 
-__all__ = [
-    'SNR',
-    'SNRTrueloveMcKee',
-]
+__all__ = ['SNR', 'SNRTrueloveMcKee']
 
 
 class SNR(object):
@@ -34,10 +31,17 @@ class SNR(object):
         Post-shock temperature where gamma-ray emission stops.
     """
 
-    def __init__(self, e_sn=Quantity(1e51, 'erg'), theta=Quantity(0.1),
-                 n_ISM=Quantity(1, 'cm-3'), m_ejecta=const.M_sun,
-                 t_stop=Quantity(1e6, 'K'), age=None, morphology='Shell2D',
-                 spectral_index=2.1):
+    def __init__(
+        self,
+        e_sn=Quantity(1e51, 'erg'),
+        theta=Quantity(0.1),
+        n_ISM=Quantity(1, 'cm-3'),
+        m_ejecta=const.M_sun,
+        t_stop=Quantity(1e6, 'K'),
+        age=None,
+        morphology='Shell2D',
+        spectral_index=2.1,
+    ):
         self.e_sn = e_sn
         self.theta = theta
         self.rho_ISM = n_ISM * const.m_p
@@ -81,9 +85,11 @@ class SNR(object):
             t = self.age
         else:
             raise ValueError('Need time variable or age attribute.')
-        r = np.where(t > self.sedov_taylor_begin,
-                     self._radius_sedov_taylor(t).to('cm').value,
-                     self._radius_free_expansion(t).to('cm').value)
+        r = np.where(
+            t > self.sedov_taylor_begin,
+            self._radius_sedov_taylor(t).to('cm').value,
+            self._radius_free_expansion(t).to('cm').value,
+        )
         return Quantity(r, 'cm')
 
     def _radius_free_expansion(self, t):
@@ -164,7 +170,9 @@ class SNR(object):
         L = self.theta * term_0 ** (1 - self.spectral_index) * term_1 * term_2
 
         # Corresponding luminosity
-        L = np.select([t <= self.sedov_taylor_begin, t <= self.sedov_taylor_end], [0, L])
+        L = np.select(
+            [t <= self.sedov_taylor_begin, t <= self.sedov_taylor_end], [0, L]
+        )
         return Quantity(1.0768E34, 's-1') * L
 
     @lazyproperty
@@ -223,7 +231,11 @@ class SNRTrueloveMcKee(SNR):
 
         # Characteristic dimensions
         self.r_c = self.m_ejecta ** (1. / 3) * self.rho_ISM ** (-1. / 3)
-        self.t_c = self.e_sn ** (-1. / 2) * self.m_ejecta ** (5. / 6) * self.rho_ISM ** (-1. / 3)
+        self.t_c = (
+            self.e_sn ** (-1. / 2)
+            * self.m_ejecta ** (5. / 6)
+            * self.rho_ISM ** (-1. / 3)
+        )
 
     def radius(self, t=None):
         """Outer shell radius at age t.
@@ -337,10 +349,8 @@ class SNRTrueloveMcKee(SNR):
         t_core = 0.25 * self.t_c
 
         term1 = (t - t_core) / (self.t_c)
-        term2 = (1.49 - 0.16 * term1 - 0.46 * np.log(t / t_core))
+        term2 = 1.49 - 0.16 * term1 - 0.46 * np.log(t / t_core)
         R_1 = self._radius_free_expansion(t) / 1.19
         R_RS = term2 * (self.r_c / self.t_c) * t
-        r = np.where(t < t_core,
-                     R_1.to('cm').value,
-                     R_RS.to('cm').value)
+        r = np.where(t < t_core, R_1.to('cm').value, R_RS.to('cm').value)
         return Quantity(r, 'cm')

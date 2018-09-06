@@ -88,10 +88,9 @@ class NFWProfile(DMProfile):
 
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
-        self.parameters = Parameters([
-            Parameter('r_s', u.Quantity(r_s)),
-            Parameter('rho_s', u.Quantity(rho_s))
-        ])
+        self.parameters = Parameters(
+            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+        )
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
@@ -132,11 +131,13 @@ class EinastoProfile(DMProfile):
         alpha = self.DEFAULT_ALPHA if alpha is None else alpha
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = Parameters([
-            Parameter('r_s', u.Quantity(r_s)),
-            Parameter('alpha', u.Quantity(alpha)),
-            Parameter('rho_s', u.Quantity(rho_s))
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter('r_s', u.Quantity(r_s)),
+                Parameter('alpha', u.Quantity(alpha)),
+                Parameter('rho_s', u.Quantity(rho_s)),
+            ]
+        )
 
     @staticmethod
     def evaluate(radius, r_s, alpha, rho_s):
@@ -169,10 +170,9 @@ class IsothermalProfile(DMProfile):
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = Parameters([
-            Parameter('r_s', u.Quantity(r_s)),
-            Parameter('rho_s', u.Quantity(rho_s))
-        ])
+        self.parameters = Parameters(
+            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+        )
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
@@ -204,10 +204,9 @@ class BurkertProfile(DMProfile):
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = Parameters([
-            Parameter('r_s', u.Quantity(r_s)),
-            Parameter('rho_s', u.Quantity(rho_s))
-        ])
+        self.parameters = Parameters(
+            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+        )
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):
@@ -240,10 +239,9 @@ class MooreProfile(DMProfile):
     def __init__(self, r_s=None, rho_s=1 * u.Unit('GeV / cm3')):
         r_s = self.DEFAULT_SCALE_RADIUS if r_s is None else r_s
 
-        self.parameters = Parameters([
-            Parameter('r_s', u.Quantity(r_s)),
-            Parameter('rho_s', u.Quantity(rho_s))
-        ])
+        self.parameters = Parameters(
+            [Parameter('r_s', u.Quantity(r_s)), Parameter('rho_s', u.Quantity(rho_s))]
+        )
 
     @staticmethod
     def evaluate(radius, r_s, rho_s):

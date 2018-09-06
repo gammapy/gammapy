@@ -86,7 +86,9 @@ def test_numerical_confidence_interval_pdfs():
 
     acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-    lower_limit_num, upper_limit_num, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+    lower_limit_num, upper_limit_num, _ = fc_get_limits(
+        mu_bins, x_bins, acceptance_intervals
+    )
 
     fc_fix_limits(lower_limit_num, upper_limit_num)
 
@@ -105,8 +107,9 @@ def test_numerical_confidence_interval_pdfs():
     # Calculate the average upper limit. The upper limit calculated here is
     # only defined for a small x range, so limit the x bins here so the
     # calculation of the average limit is meaningful.
-    average_upper_limit = fc_find_average_upper_limit(x_bins, matrix,
-                                                      upper_limit_num, mu_bins)
+    average_upper_limit = fc_find_average_upper_limit(
+        x_bins, matrix, upper_limit_num, mu_bins
+    )
 
     # Values are taken from Table XII in the Feldman and Cousins paper.
     # A higher accuracy would require a higher mu_max, which would increase
@@ -129,11 +132,17 @@ def test_numerical_confidence_interval_values():
     x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x, endpoint=True)
     mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-    distribution_dict = dict((mu, [stats.norm.rvs(loc=mu, scale=sigma, size=5000)]) for mu in mu_bins)
+    distribution_dict = dict(
+        (mu, [stats.norm.rvs(loc=mu, scale=sigma, size=5000)]) for mu in mu_bins
+    )
 
-    acceptance_intervals = fc_construct_acceptance_intervals(distribution_dict, x_bins, cl)
+    acceptance_intervals = fc_construct_acceptance_intervals(
+        distribution_dict, x_bins, cl
+    )
 
-    lower_limit_num, upper_limit_num, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+    lower_limit_num, upper_limit_num, _ = fc_get_limits(
+        mu_bins, x_bins, acceptance_intervals
+    )
 
     fc_fix_limits(lower_limit_num, upper_limit_num)
 

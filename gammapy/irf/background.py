@@ -9,10 +9,7 @@ from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 
-__all__ = [
-    'Background3D',
-    'Background2D',
-]
+__all__ = ['Background3D', 'Background2D']
 
 
 class Background3D(object):
@@ -46,28 +43,37 @@ class Background3D(object):
     fov_lat           : size =    36, min = -5.833 deg, max =  5.833 deg
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
+
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
-    def __init__(self, energy_lo, energy_hi,
-                 fov_lon_lo, fov_lon_hi, fov_lat_lo, fov_lat_hi,
-                 data, meta=None, interp_kwargs=None):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        fov_lon_lo,
+        fov_lon_hi,
+        fov_lat_lo,
+        fov_lat_hi,
+        data,
+        meta=None,
+        interp_kwargs=None,
+    ):
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi,
-                interpolation_mode='log', name='energy'),
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            ),
             BinnedDataAxis(
-                fov_lon_lo, fov_lon_hi,
-                interpolation_mode='linear', name='fov_lon'),
+                fov_lon_lo, fov_lon_hi, interpolation_mode='linear', name='fov_lon'
+            ),
             BinnedDataAxis(
-                fov_lat_lo, fov_lat_hi,
-                interpolation_mode='linear', name='fov_lat'),
+                fov_lat_lo, fov_lat_hi, interpolation_mode='linear', name='fov_lat'
+            ),
         ]
-        self.data = NDDataArray(axes=axes, data=data,
-                                interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -158,8 +164,15 @@ class Background3D(object):
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
-    def integrate_on_energy_range(self, fov_lon, fov_lat, energy_range, n_integration_bins=1,
-                                  method="linear", **kwargs):
+    def integrate_on_energy_range(
+        self,
+        fov_lon,
+        fov_lat,
+        energy_range,
+        n_integration_bins=1,
+        method="linear",
+        **kwargs
+    ):
         """Integrate over an energy range.
 
         Parameters
@@ -183,7 +196,7 @@ class Background3D(object):
         fov_lon = np.atleast_2d(fov_lon)
         fov_lat = np.atleast_2d(fov_lat)
         energy_edges = EnergyBounds.equal_log_spacing(
-            energy_range[0], energy_range[1], n_integration_bins,
+            energy_range[0], energy_range[1], n_integration_bins
         )
 
         # TODO: insert new axes, remove tile and use numpy broadcasting
@@ -218,25 +231,32 @@ class Background2D(object):
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
     """
+
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
-    def __init__(self, energy_lo, energy_hi,
-                 offset_lo, offset_hi,
-                 data, meta=None, interp_kwargs=None):
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        offset_lo,
+        offset_hi,
+        data,
+        meta=None,
+        interp_kwargs=None,
+    ):
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
         axes = [
             BinnedDataAxis(
-                energy_lo, energy_hi,
-                interpolation_mode='log', name='energy'),
+                energy_lo, energy_hi, interpolation_mode='log', name='energy'
+            ),
             BinnedDataAxis(
-                offset_lo, offset_hi,
-                interpolation_mode='linear', name='offset'),
+                offset_lo, offset_hi, interpolation_mode='linear', name='offset'
+            ),
         ]
-        self.data = NDDataArray(axes=axes, data=data,
-                                interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -327,8 +347,15 @@ class Background2D(object):
         points = dict(offset=offset, energy=energy_reco)
         return self.data.evaluate_at_coord(points=points, method=method, **kwargs)
 
-    def integrate_on_energy_range(self, fov_lon, fov_lat, energy_range, n_integration_bins=1,
-                                  method="linear", **kwargs):
+    def integrate_on_energy_range(
+        self,
+        fov_lon,
+        fov_lat,
+        energy_range,
+        n_integration_bins=1,
+        method="linear",
+        **kwargs
+    ):
         """Integrate over an energy range.
 
         Parameters
@@ -352,7 +379,7 @@ class Background2D(object):
         fov_lon = np.atleast_2d(fov_lon)
         fov_lat = np.atleast_2d(fov_lat)
         energy_edges = EnergyBounds.equal_log_spacing(
-            energy_range[0], energy_range[1], n_integration_bins,
+            energy_range[0], energy_range[1], n_integration_bins
         )
         # TODO: insert new axes, remove tile and use numpy broadcasting
         energy_reco = np.tile(energy_edges, reps=fov_lon.shape + (1,))
@@ -365,7 +392,8 @@ class Background2D(object):
             fov_lon=fov_lon,
             fov_lat=fov_lat,
             energy_reco=energy_reco,
-            method=method, **kwargs
+            method=method,
+            **kwargs
         )
 
         # TODO: use gammapy.spectrum.utils._trapz_loglog for better precision

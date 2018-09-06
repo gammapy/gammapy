@@ -8,10 +8,7 @@ from astropy import units as u
 from astropy.table import Table
 from .array import check_type
 
-__all__ = [
-    'Parameter',
-    'Parameters',
-]
+__all__ = ['Parameter', 'Parameters']
 
 
 class Parameter(object):
@@ -35,10 +32,12 @@ class Parameter(object):
     frozen : bool, optional
         Frozen? (used in fitting)
     """
+
     __slots__ = ['_name', '_factor', '_scale', '_unit', '_min', '_max', '_frozen']
 
-    def __init__(self, name, factor, unit='', scale=1, min=np.nan, max=np.nan,
-                 frozen=False):
+    def __init__(
+        self, name, factor, unit='', scale=1, min=np.nan, max=np.nan, frozen=False
+    ):
         self.name = name
         self.scale = scale
 
@@ -283,14 +282,16 @@ class Parameters(object):
     def from_dict(cls, val):
         pars = []
         for par in val['parameters']:
-            pars.append(Parameter(
-                name=par['name'],
-                factor=float(par['value']),
-                unit=par['unit'],
-                min=float(par['min']),
-                max=float(par['max']),
-                frozen=par['frozen'],
-            ))
+            pars.append(
+                Parameter(
+                    name=par['name'],
+                    factor=float(par['value']),
+                    unit=par['unit'],
+                    min=float(par['min']),
+                    max=float(par['max']),
+                    frozen=par['frozen'],
+                )
+            )
         try:
             covariance = np.array(val['covariance'])
         except KeyError:
@@ -316,6 +317,7 @@ class Parameters(object):
         Return dict of ufloats with covariance
         """
         from uncertainties import correlated_values
+
         values = [_.value for _ in self.parameters]
 
         try:

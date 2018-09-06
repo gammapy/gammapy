@@ -8,9 +8,7 @@ from astropy.utils import lazyproperty
 from ...utils.scripts import make_path
 from ...spectrum.models import TableModel
 
-__all__ = [
-    'PrimaryFlux'
-]
+__all__ = ['PrimaryFlux']
 
 
 class PrimaryFlux(object):
@@ -114,8 +112,4 @@ class PrimaryFlux(object):
         dN_dlogx = subtable[channel_name]
         dN_dE = dN_dlogx / (energies * np.log(10))
 
-        return TableModel(
-            energy=energies,
-            values=dN_dE,
-            values_scale='lin'
-        )
+        return TableModel(energy=energies, values=dN_dE, values_scale='lin')

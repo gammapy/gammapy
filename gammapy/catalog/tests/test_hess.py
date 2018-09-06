@@ -20,7 +20,6 @@ def cat():
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogHGPS:
-
     @staticmethod
     def test_source_table(cat):
         assert cat.name == 'hgps'
@@ -48,7 +47,6 @@ class TestSourceCatalogHGPS:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogObjectHGPS:
-
     @pytest.fixture(scope='class')
     def source(self, cat):
         return cat['HESS J1843-033']
@@ -162,7 +160,13 @@ class TestSourceCatalogObjectHGPS:
     @staticmethod
     def test_spatial_model_type(cat):
         morph_types = Counter([_.spatial_model_type for _ in cat])
-        assert morph_types == {'gaussian': 52, '2-gaussian': 8, 'shell': 7, 'point-like': 6, '3-gaussian': 5}
+        assert morph_types == {
+            'gaussian': 52,
+            '2-gaussian': 8,
+            'shell': 7,
+            'point-like': 6,
+            '3-gaussian': 5,
+        }
 
     @staticmethod
     def test_sky_model_point(cat):
@@ -208,9 +212,15 @@ class TestSourceCatalogObjectHGPS:
     @staticmethod
     def test_sky_model_gaussian3(cat):
         model = cat['HESS J1825-137'].sky_model
-        assert_allclose(model.skymodels[0].parameters['amplitude'].value, 5.022436459778401e-12)
-        assert_allclose(model.skymodels[1].parameters['amplitude'].value, 1.1829840926291801e-11)
-        assert_allclose(model.skymodels[2].parameters['amplitude'].value, 1.5557788347539403e-12)
+        assert_allclose(
+            model.skymodels[0].parameters['amplitude'].value, 5.022436459778401e-12
+        )
+        assert_allclose(
+            model.skymodels[1].parameters['amplitude'].value, 1.1829840926291801e-11
+        )
+        assert_allclose(
+            model.skymodels[2].parameters['amplitude'].value, 1.5557788347539403e-12
+        )
 
     @staticmethod
     def test_sky_model_gaussian_extern(cat):
@@ -235,7 +245,6 @@ class TestSourceCatalogObjectHGPS:
 
 @requires_data('gammapy-extra')
 class TestSourceCatalogObjectHGPSComponent:
-
     @pytest.fixture(scope='class')
     def component(self, cat):
         return cat.gaussian_component(83)
@@ -302,6 +311,8 @@ class TestSourceCatalogLargeScaleHGPS:
 
     def test_parvals(self):
         glon = Angle(10, unit='deg')
-        assert_quantity_allclose(self.model.peak_brightness(glon), 10 * u.Unit('cm-2 s-1 sr-1'))
+        assert_quantity_allclose(
+            self.model.peak_brightness(glon), 10 * u.Unit('cm-2 s-1 sr-1')
+        )
         assert_quantity_allclose(self.model.peak_latitude(glon), 1 * u.deg)
         assert_quantity_allclose(self.model.width(glon), 0.3 * u.deg)

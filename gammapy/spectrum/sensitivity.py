@@ -55,7 +55,9 @@ class SensitivityEstimator(object):
     number of background events in the ON region.
     """
 
-    def __init__(self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05):
+    def __init__(
+        self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05
+    ):
         self.irf = irf
         self.livetime = u.Quantity(livetime).to('s')
         self.slope = slope
@@ -81,9 +83,7 @@ class SensitivityEstimator(object):
         bkg_counts = (self.irf.bkg.data.data * self.livetime).value
 
         excess_counts = excess_matching_significance_on_off(
-            n_off=bkg_counts / self.alpha,
-            alpha=self.alpha,
-            significance=self.sigma,
+            n_off=bkg_counts / self.alpha, alpha=self.alpha, significance=self.sigma
         )
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
@@ -95,12 +95,16 @@ class SensitivityEstimator(object):
         )
 
         # TODO: simplify the following computation
-        predictor = CountsPredictor(model, aeff=self.irf.aeff, edisp=self.irf.rmf, livetime=self.livetime)
+        predictor = CountsPredictor(
+            model, aeff=self.irf.aeff, edisp=self.irf.rmf, livetime=self.livetime
+        )
         predictor.run()
         counts = predictor.npred.data.data.value
         phi_0 = excess_counts / counts * u.Unit('cm-2 s-1 TeV-1')
         # TODO: should use model.__call__ here
-        dnde_model = model.evaluate(energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV)
+        dnde_model = model.evaluate(
+            energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV
+        )
         diff_flux = (phi_0 * dnde_model * energy ** 2).to('erg / (cm2 s)')
 
         # TODO: take self.bkg_sys into account
@@ -113,26 +117,37 @@ class SensitivityEstimator(object):
                 c = 'significance'
             criterion.append(c)
 
-        table = Table([
-            Column(
-                data=energy, name='energy', format='5g',
-                description='Reconstructed Energy',
-            ),
-            Column(
-                data=diff_flux, name='e2dnde', format='5g',
-                description='Energy squared times differential flux',
-            ),
-            Column(
-                data=excess_counts, name='excess', format='5g',
-                description='Number of excess counts in the bin',
-            ),
-            Column(
-                data=bkg_counts, name='background', format='5g',
-                description='Number of background counts in the bin',
-            ),
-            Column(
-                data=criterion, name='criterion',
-                description='Sensitivity-limiting criterion',
-            ),
-        ])
+        table = Table(
+            [
+                Column(
+                    data=energy,
+                    name='energy',
+                    format='5g',
+                    description='Reconstructed Energy',
+                ),
+                Column(
+                    data=diff_flux,
+                    name='e2dnde',
+                    format='5g',
+                    description='Energy squared times differential flux',
+                ),
+                Column(
+                    data=excess_counts,
+                    name='excess',
+                    format='5g',
+                    description='Number of excess counts in the bin',
+                ),
+                Column(
+                    data=bkg_counts,
+                    name='background',
+                    format='5g',
+                    description='Number of background counts in the bin',
+                ),
+                Column(
+                    data=criterion,
+                    name='criterion',
+                    description='Sensitivity-limiting criterion',
+                ),
+            ]
+        )
         self._results_table = table

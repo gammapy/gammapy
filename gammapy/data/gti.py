@@ -5,9 +5,7 @@ from astropy.table import Table
 from ..utils.time import time_ref_from_dict
 from ..utils.scripts import make_path
 
-__all__ = [
-    'GTI',
-]
+__all__ = ['GTI']
 
 
 class GTI(object):

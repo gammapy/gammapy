@@ -22,7 +22,9 @@ from .. import (
 @requires_data('gammapy-extra')
 def test_spectrum_observation_1():
     """Obs read from file"""
-    obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
+    obs = SpectrumObservation.read(
+        '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+    )
     pars = dict(
         total_on=172,
         livetime=1581.73681640625 * u.second,
@@ -41,14 +43,16 @@ def test_spectrum_observation_2():
     """Simulated obs without background"""
     energy = np.logspace(-2, 2, 100) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
-    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy,
-                                        sigma=0.2, bias=0)
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
     livetime = 1 * u.h
-    source_model = models.PowerLaw(index=2.3 * u.Unit(''),
-                                   amplitude=2.3e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                                   reference=1.4 * u.TeV)
-    sim = SpectrumSimulation(aeff=aeff, edisp=edisp, source_model=source_model,
-                             livetime=livetime)
+    source_model = models.PowerLaw(
+        index=2.3 * u.Unit(''),
+        amplitude=2.3e-11 * u.Unit('cm-2 s-1 TeV-1'),
+        reference=1.4 * u.TeV,
+    )
+    sim = SpectrumSimulation(
+        aeff=aeff, edisp=edisp, source_model=source_model, livetime=livetime
+    )
     sim.simulate_obs(seed=2309, obs_id=2309)
     obs = sim.obs
 
@@ -70,22 +74,17 @@ def test_spectrum_observation_3():
     """obs without edisp"""
     energy = np.logspace(-1, 1, 20) * u.TeV
     livetime = 2 * u.h
-    on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
-                                  energy_hi=energy[1:],
-                                  data=np.arange(19),
-                                  backscal=1)
+    on_vector = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=np.arange(19), backscal=1
+    )
     on_vector.livetime = livetime
     on_vector.obs_id = 2
-    aeff = EffectiveAreaTable(energy_lo=energy[:-1],
-                              energy_hi=energy[1:],
-                              data=np.ones(19) * 1e5 * u.m ** 2)
+    aeff = EffectiveAreaTable(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=np.ones(19) * 1e5 * u.m ** 2
+    )
     obs = SpectrumObservation(on_vector=on_vector, aeff=aeff)
     pars = dict(
-        total_on=171,
-        livetime=livetime,
-        npred=1425.6,
-        excess=171,
-        excess_safe_range=171,
+        total_on=171, livetime=livetime, npred=1425.6, excess=171, excess_safe_range=171
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
@@ -104,27 +103,27 @@ def make_observation_list():
     dataoff_2 = np.ones(3) * 3
     dataoff_1[1] = 0
     dataoff_2[1] = 0
-    on_vector = PHACountsSpectrum(energy_lo=energy[:-1],
-                                  energy_hi=energy[1:],
-                                  data=data_on,
-                                  backscal=1)
-    off_vector1 = PHACountsSpectrum(energy_lo=energy[:-1],
-                                    energy_hi=energy[1:],
-                                    data=dataoff_1,
-                                    backscal=2)
-    off_vector2 = PHACountsSpectrum(energy_lo=energy[:-1],
-                                    energy_hi=energy[1:],
-                                    data=dataoff_2,
-                                    backscal=4)
-    aeff = EffectiveAreaTable(energy_lo=energy[:-1],
-                              energy_hi=energy[1:],
-                              data=np.ones(nbin) * 1e5 * u.m ** 2)
-    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy,
-                                        sigma=0.2, bias=0)
+    on_vector = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=data_on, backscal=1
+    )
+    off_vector1 = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_1, backscal=2
+    )
+    off_vector2 = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2, backscal=4
+    )
+    aeff = EffectiveAreaTable(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=np.ones(nbin) * 1e5 * u.m ** 2
+    )
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
     on_vector.livetime = livetime
     on_vector.obs_id = 2
-    obs1 = SpectrumObservation(on_vector=on_vector, off_vector=off_vector1, aeff=aeff, edisp=edisp)
-    obs2 = SpectrumObservation(on_vector=on_vector, off_vector=off_vector2, aeff=aeff, edisp=edisp)
+    obs1 = SpectrumObservation(
+        on_vector=on_vector, off_vector=off_vector1, aeff=aeff, edisp=edisp
+    )
+    obs2 = SpectrumObservation(
+        on_vector=on_vector, off_vector=off_vector2, aeff=aeff, edisp=edisp
+    )
 
     obs_list = [obs1, obs2]
     return obs_list
@@ -148,16 +147,20 @@ class SpectrumObservationTester:
         assert 'Observation summary report' in str(self.obs)
 
     def test_npred(self):
-        pwl = models.PowerLaw(index=2 * u.Unit(''),
-                              amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                              reference=1 * u.TeV)
+        pwl = models.PowerLaw(
+            index=2 * u.Unit(''),
+            amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            reference=1 * u.TeV,
+        )
         npred = self.obs.predicted_counts(model=pwl)
         assert_allclose(npred.total_counts.value, self.vals['npred'])
 
     def test_stats_table(self):
         table = self.obs.stats_table()
         assert table['n_on'].sum() == self.vals['total_on']
-        assert_quantity_allclose(table['livetime'].quantity.max(), self.vals['livetime'])
+        assert_quantity_allclose(
+            table['livetime'].quantity.max(), self.vals['livetime']
+        )
 
     def test_total_stats(self):
         excess = self.obs.total_stats.excess
@@ -185,7 +188,9 @@ class SpectrumObservationTester:
 @requires_data('gammapy-extra')
 class TestSpectrumObservationStacker:
     def setup(self):
-        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read(
+            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha'
+        )
 
         # Change threshold to make stuff more interesting
         self.obs_list.obs(23523).lo_threshold = 1.2 * u.TeV
@@ -214,9 +219,11 @@ class TestSpectrumObservationStacker:
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
-        pwl = models.PowerLaw(index=2 * u.Unit(''),
-                              amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                              reference=1 * u.TeV)
+        pwl = models.PowerLaw(
+            index=2 * u.Unit(''),
+            amplitude=2e-11 * u.Unit('cm-2 s-1 TeV-1'),
+            reference=1 * u.TeV,
+        )
 
         npred_stacked = self.obs_stacker.stacked_obs.predicted_counts(model=pwl)
 
@@ -244,16 +251,20 @@ class TestSpectrumObservationStacker:
 @requires_data('gammapy-extra')
 class TestSpectrumObservationList:
     def setup(self):
-        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read(
+            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha'
+        )
 
     def test_stack_method(self):
         stacked_obs = self.obs_list.stack()
         assert 'Observation summary report' in str(stacked_obs)
         assert stacked_obs.obs_id == [23523, 23592]
-        assert_quantity_allclose(stacked_obs.aeff.data.data[10],
-                                 86443352.23037884 * u.cm ** 2)
-        assert_quantity_allclose(stacked_obs.edisp.data.data[50, 52],
-                                 0.027995003769343767)
+        assert_quantity_allclose(
+            stacked_obs.aeff.data.data[10], 86443352.23037884 * u.cm ** 2
+        )
+        assert_quantity_allclose(
+            stacked_obs.edisp.data.data[50, 52], 0.027995003769343767
+        )
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)

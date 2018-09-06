@@ -23,15 +23,15 @@ spatial_model_1 = SkyGaussian(
     lon_0=lon_0_1 * u.deg, lat_0=lat_0_1 * u.deg, sigma="0.3 deg"
 )
 spatial_model_2 = SkyGaussian(
-    lon_0=lon_0_2 * u.deg, lat_0=lat_0_2 * u.deg, sigma="0.2 deg",
+    lon_0=lon_0_2 * u.deg, lat_0=lat_0_2 * u.deg, sigma="0.2 deg"
 )
 
 spectral_model_1 = PowerLaw(
-    index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV",
+    index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
 )
 
 spectral_model_2 = PowerLaw(
-    index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV",
+    index=3, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
 )
 
 sky_model_1 = SkyModel(spatial_model=spatial_model_1, spectral_model=spectral_model_1)
@@ -53,7 +53,7 @@ pointing = SkyCoord(0.2, 0.5, unit="deg", frame="galactic")
 livetime = 20 * u.hour
 
 exposure_map = make_map_exposure_true_energy(
-    pointing=pointing, livetime=livetime, aeff=aeff, geom=geom,
+    pointing=pointing, livetime=livetime, aeff=aeff, geom=geom
 )
 
 evaluator = MapEvaluator(model=compound_model, exposure=exposure_map)

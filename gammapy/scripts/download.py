@@ -94,7 +94,7 @@ class DownloadProcess:
         except Exception as ex:
             log.error(str(filepath) + ' could not be copied')
 
-    def show_info(self, ):
+    def show_info(self,):
 
         print('The files have been downloaded in folder {}.'.format(self.localfolder))
         print('Process finished.')

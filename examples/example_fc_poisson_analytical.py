@@ -7,10 +7,7 @@ from multiprocessing import Pool
 from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.stats import (
-    fc_find_acceptance_interval_poisson,
-    fc_fix_limits,
-)
+from gammapy.stats import fc_find_acceptance_interval_poisson, fc_fix_limits
 
 background = 3.0
 
@@ -25,7 +22,9 @@ mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
 print('Generating FC confidence belt for {} values of mu.'.format(len(mu_bins)))
 
-partial_func = partial(fc_find_acceptance_interval_poisson, background=background, x_bins=x_bins, alpha=cl)
+partial_func = partial(
+    fc_find_acceptance_interval_poisson, background=background, x_bins=x_bins, alpha=cl
+)
 
 pool = Pool()
 

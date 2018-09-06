@@ -17,15 +17,12 @@ GAMMAPY_DEPENDENCIES = [
     'scipy',
     'matplotlib',
     'cython',
-
     'astropy',
     'astropy_healpix',
     'reproject',
     'sherpa',
-
     'pytest',
     'sphinx',
-
     'healpy',
     'regions',
     'iminuit',
@@ -44,7 +41,9 @@ GAMMAPY_ENV_VARIABLES = [
 @click.command(name='info')
 @click.option('--system/--no-system', default=True, help='Show system info')
 @click.option('--version/--no-version', default=True, help='Show version info')
-@click.option('--dependencies/--no-dependencies', default=True, help='Show dependencies info')
+@click.option(
+    '--dependencies/--no-dependencies', default=True, help='Show dependencies info'
+)
 @click.option('--envvar/--no-envvar', default=True, help='Show environment variables')
 def cli_info(system, version, dependencies, envvar):
     """Display information about Gammapy

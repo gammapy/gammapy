@@ -42,6 +42,7 @@ class SourceCatalogObjectHGPSComponent(object):
     --------
     SourceCatalogHGPS, SourceCatalogObjectHGPS
     """
+
     _source_name_key = 'Component_ID'
     _source_index_key = 'row_index'
 
@@ -62,7 +63,9 @@ class SourceCatalogObjectHGPSComponent(object):
         ss += fmt.format('Size', d['Size'].value, d['Size_Err'].value)
         val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
         fmt = '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'
-        ss += fmt.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+        ss += fmt.format(
+            'Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB
+        )
         return ss
 
     @property
@@ -80,16 +83,10 @@ class SourceCatalogObjectHGPSComponent(object):
     def spatial_model(self):
         """Component spatial model (`~gammapy.image.models.SkyGaussian`)."""
         d = self.data
-        model = SkyGaussian(
-            lon_0=d['GLON'],
-            lat_0=d['GLAT'],
-            sigma=d['Size'],
+        model = SkyGaussian(lon_0=d['GLON'], lat_0=d['GLAT'], sigma=d['Size'])
+        model.parameters.set_parameter_errors(
+            dict(lon_0=d['GLON_Err'], lat_0=d['GLAT_Err'], sigma=d['Size_Err'])
         )
-        model.parameters.set_parameter_errors(dict(
-            lon_0=d['GLON_Err'],
-            lat_0=d['GLAT_Err'],
-            sigma=d['Size_Err'],
-        ))
         return model
 
     @property
@@ -97,14 +94,9 @@ class SourceCatalogObjectHGPSComponent(object):
         """Component spectral model (`gammapy.spectrum.models.PowerLaw2`)."""
         d = self.data
         model = PowerLaw2(
-            amplitude=d['Flux_Map'],
-            index=2.3,
-            emin='1 TeV',
-            emax='1e5 TeV',
+            amplitude=d['Flux_Map'], index=2.3, emin='1 TeV', emax='1e5 TeV'
         )
-        model.parameters.set_parameter_errors(dict(
-            amplitude=d['Flux_Map_Err'],
-        ))
+        model.parameters.set_parameter_errors(dict(amplitude=d['Flux_Map_Err']))
         return model
 
     @property
@@ -177,7 +169,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def _info_id(self):
         ss = '\n*** Source identification info ***\n\n'
-        ss += '\n'.join('{}: {}'.format(k, v) for k, v in self.identification_info.items())
+        ss += '\n'.join(
+            '{}: {}'.format(k, v) for k, v in self.identification_info.items()
+        )
         return ss + '\n'
 
     def _info_map(self):
@@ -190,8 +184,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {:8.3f} = {}\n'.format('RA', d['RAJ2000'], ra_str)
         ss += '{:<20s} : {:8.3f} = {}\n'.format('DEC', d['DEJ2000'], dec_str)
 
-        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLON', d['GLON'].value, d['GLON_Err'].value)
-        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLAT', d['GLAT'].value, d['GLAT_Err'].value)
+        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format(
+            'GLON', d['GLON'].value, d['GLON_Err'].value
+        )
+        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format(
+            'GLAT', d['GLAT'].value, d['GLAT_Err'].value
+        )
 
         ss += '{:<20s} : {:.3f}\n'.format('Position Error (68%)', d['Pos_Err_68'])
         ss += '{:<20s} : {:.3f}\n'.format('Position Error (95%)', d['Pos_Err_95'])
@@ -204,14 +202,17 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {:.1f}\n'.format('sqrt(TS)', d['Sqrt_TS'])
 
         ss += '{:<20s} : {:.3f} +/- {:.3f} (UL: {:.3f}) deg\n'.format(
-            'Size', d['Size'].value, d['Size_Err'].value, d['Size_UL'].value)
+            'Size', d['Size'].value, d['Size_Err'].value, d['Size_UL'].value
+        )
 
         ss += '{:<20s} : {:.3f}\n'.format('R70', d['R70'])
         ss += '{:<20s} : {:.3f}\n'.format('RSpec', d['RSpec'])
 
         ss += '{:<20s} : {:.1f}\n'.format('Total model excess', d['Excess_Model_Total'])
         ss += '{:<20s} : {:.1f}\n'.format('Excess in RSpec', d['Excess_RSpec'])
-        ss += '{:<20s} : {:.1f}\n'.format('Model Excess in RSpec', d['Excess_RSpec_Model'])
+        ss += '{:<20s} : {:.1f}\n'.format(
+            'Model Excess in RSpec', d['Excess_RSpec_Model']
+        )
         ss += '{:<20s} : {:.1f}\n'.format('Background in RSpec', d['Background_RSpec'])
 
         ss += '{:<20s} : {:.1f} hours\n'.format('Livetime', d['Livetime'].value)
@@ -220,7 +221,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val, err = d['Flux_Map'].value, d['Flux_Map_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'Source flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+            'Source flux (>1 TeV)',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB,
+        )
 
         ss += '\nFluxes in RSpec (> 1 TeV):\n'
 
@@ -254,11 +260,21 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             d['Flux_Map_RSpec_Total'].value * FLUX_TO_CRAB,
         )
 
-        ss += '{:<35s} : {:5.1f} %\n'.format('Containment in RSpec', 100 * d['Containment_RSpec'])
-        ss += '{:<35s} : {:5.1f} %\n'.format('Contamination in RSpec', 100 * d['Contamination_RSpec'])
-        label, val = 'Flux correction (RSpec -> Total)', 100 * d['Flux_Correction_RSpec_To_Total']
+        ss += '{:<35s} : {:5.1f} %\n'.format(
+            'Containment in RSpec', 100 * d['Containment_RSpec']
+        )
+        ss += '{:<35s} : {:5.1f} %\n'.format(
+            'Contamination in RSpec', 100 * d['Contamination_RSpec']
+        )
+        label, val = (
+            'Flux correction (RSpec -> Total)',
+            100 * d['Flux_Correction_RSpec_To_Total'],
+        )
         ss += '{:<35s} : {:5.1f} %\n'.format(label, val)
-        label, val = 'Flux correction (Total -> RSpec)', 100 * (1 / d['Flux_Correction_RSpec_To_Total'])
+        label, val = (
+            'Flux correction (Total -> RSpec)',
+            100 * (1 / d['Flux_Correction_RSpec_To_Total']),
+        )
         ss += '{:<35s} : {:5.1f} %\n'.format(label, val)
 
         return ss
@@ -284,12 +300,18 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         val = d['Flux_Spec_Int_1TeV'].value
         err = d['Flux_Spec_Int_1TeV_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'Best-fit model flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+            'Best-fit model flux(> 1 TeV)',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB,
+        )
 
         val = d['Flux_Spec_Energy_1_10_TeV'].value
         err = d['Flux_Spec_Energy_1_10_TeV_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 erg cm^-2 s^-1\n'.format(
-            'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF)
+            'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF
+        )
 
         ss += self._info_spec_pl()
         ss += self._info_spec_ecpl()
@@ -303,17 +325,32 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         val = d['Flux_Spec_PL_Diff_Pivot'].value
         err = d['Flux_Spec_PL_Diff_Pivot_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'Flux at pivot energy', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
+            'Flux at pivot energy',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB_DIFF,
+        )
 
         val = d['Flux_Spec_PL_Int_1TeV'].value
         err = d['Flux_Spec_PL_Int_1TeV_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'PL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+            'PL   Flux(> 1 TeV)',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB,
+        )
 
         val = d['Flux_Spec_PL_Diff_1TeV'].value
         err = d['Flux_Spec_PL_Diff_1TeV_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'PL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
+            'PL   Flux(@ 1 TeV)',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB_DIFF,
+        )
 
         val = d['Index_Spec_PL']
         err = d['Index_Spec_PL_Err']
@@ -329,12 +366,22 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         val = d['Flux_Spec_ECPL_Diff_1TeV'].value
         err = d['Flux_Spec_ECPL_Diff_1TeV_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'ECPL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
+            'ECPL   Flux(@ 1 TeV)',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB_DIFF,
+        )
 
         val = d['Flux_Spec_ECPL_Int_1TeV'].value
         err = d['Flux_Spec_ECPL_Int_1TeV_Err'].value
         ss += '{:<20s} : ({:.3f} +/- {:.3f}) x 10^-12 cm^-2 s^-1  = ({:.2f} +/- {:.2f}) % Crab\n'.format(
-            'ECPL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+            'ECPL   Flux(> 1 TeV)',
+            val / FF,
+            err / FF,
+            val * FLUX_TO_CRAB,
+            err * FLUX_TO_CRAB,
+        )
 
         val = d['Index_Spec_ECPL']
         err = d['Index_Spec_ECPL_Err']
@@ -392,10 +439,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def energy_range(self):
         """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
-        e = u.Quantity([
-            self.data['Energy_Range_Spec_Min'],
-            self.data['Energy_Range_Spec_Max'],
-        ])
+        e = u.Quantity(
+            [self.data['Energy_Range_Spec_Min'], self.data['Energy_Range_Spec_Max']]
+        )
         # Some EXTERN sources have no energy range information.
         # In those cases, we put a default
         use_default = np.isnan(e)
@@ -494,16 +540,9 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         spatial_type = self.spatial_model_type
 
         if self.is_pointlike:
-            model = SkyPointSource(
-                lon_0=glon,
-                lat_0=glat,
-            )
+            model = SkyPointSource(lon_0=glon, lat_0=glat)
         elif spatial_type == 'gaussian':
-            model = SkyGaussian(
-                lon_0=glon,
-                lat_0=glat,
-                sigma=d['Size'],
-            )
+            model = SkyGaussian(lon_0=glon, lat_0=glat, sigma=d['Size'])
         elif spatial_type in {'2-gaussian', '3-gaussian'}:
             raise ValueError('For Gaussian or Multi-Gaussian models, use sky_model()!')
         elif spatial_type == 'shell':
@@ -512,13 +551,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             r_out = d['Size']
             radius = 0.95 * r_out
             width = r_out - radius
-            model = SkyShell(
-                lon_0=glon,
-                lat_0=glat,
-                width=width,
-                radius=radius,
-
-            )
+            model = SkyShell(lon_0=glon, lat_0=glat, width=width, radius=radius)
         else:
             raise ValueError('Not a valid spatial model: {}'.format(spatial_type))
 
@@ -600,6 +633,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     More examples here: :gp-extra-notebook:`hgps`
     """
+
     name = 'hgps'
     """Source catalog name (str)."""
 
@@ -610,21 +644,25 @@ class SourceCatalogHGPS(SourceCatalog):
 
     def __init__(self, filename=None, hdu='HGPS_SOURCES'):
         if not filename:
-            filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
+            filename = (
+                Path(os.environ['HGPS_ANALYSIS'])
+                / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
+            )
 
         filename = str(make_path(filename))
         table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ('Identified_Object',)
         super(SourceCatalogHGPS, self).__init__(
-            table=table,
-            source_name_alias=source_name_alias,
+            table=table, source_name_alias=source_name_alias
         )
 
         self._table_components = Table.read(filename, hdu='HGPS_GAUSS_COMPONENTS')
         self._table_associations = Table.read(filename, hdu='HGPS_ASSOCIATIONS')
         self._table_identifications = Table.read(filename, hdu='HGPS_IDENTIFICATIONS')
-        self._table_large_scale_component = Table.read(filename, hdu='HGPS_LARGE_SCALE_COMPONENT')
+        self._table_large_scale_component = Table.read(
+            filename, hdu='HGPS_LARGE_SCALE_COMPONENT'
+        )
 
     @property
     def table_components(self):

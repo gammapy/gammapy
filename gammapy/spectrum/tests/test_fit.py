@@ -23,21 +23,23 @@ class TestFit:
     def setup(self):
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = models.PowerLaw(index=2,
-                                            amplitude=1e5 / u.TeV,
-                                            reference=0.1 * u.TeV)
-        self.bkg_model = models.PowerLaw(index=3,
-                                         amplitude=1e4 / u.TeV,
-                                         reference=0.1 * u.TeV)
+        self.source_model = models.PowerLaw(
+            index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
+        )
+        self.bkg_model = models.PowerLaw(
+            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
+        )
 
         self.alpha = 0.1
         random_state = get_random_state(23)
         npred = self.source_model.integral(binning[:-1], binning[1:])
         source_counts = random_state.poisson(npred)
-        self.src = PHACountsSpectrum(energy_lo=binning[:-1],
-                                     energy_hi=binning[1:],
-                                     data=source_counts,
-                                     backscal=1)
+        self.src = PHACountsSpectrum(
+            energy_lo=binning[:-1],
+            energy_hi=binning[1:],
+            data=source_counts,
+            backscal=1,
+        )
         # Currently it's necessary to specify a lifetime
         self.src.livetime = 1 * u.s
 
@@ -45,21 +47,27 @@ class TestFit:
 
         bkg_counts = random_state.poisson(npred_bkg)
         off_counts = random_state.poisson(npred_bkg * 1. / self.alpha)
-        self.bkg = PHACountsSpectrum(energy_lo=binning[:-1],
-                                     energy_hi=binning[1:],
-                                     data=bkg_counts)
-        self.off = PHACountsSpectrum(energy_lo=binning[:-1],
-                                     energy_hi=binning[1:],
-                                     data=off_counts,
-                                     backscal=1. / self.alpha)
+        self.bkg = PHACountsSpectrum(
+            energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
+        )
+        self.off = PHACountsSpectrum(
+            energy_lo=binning[:-1],
+            energy_hi=binning[1:],
+            data=off_counts,
+            backscal=1. / self.alpha,
+        )
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
         obs = SpectrumObservation(on_vector=self.src)
         obs_list = SpectrumObservationList([obs])
 
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
-                          stat='cash', forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=obs_list,
+            model=self.source_model,
+            stat='cash',
+            forward_folded=False,
+        )
         assert 'Spectrum' in str(fit)
 
         fit.predict_counts()
@@ -83,8 +91,12 @@ class TestFit:
         obs_list = SpectrumObservationList([obs])
 
         self.source_model.parameters.index = 1.12
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
-                          stat='wstat', forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=obs_list,
+            model=self.source_model,
+            stat='wstat',
+            forward_folded=False,
+        )
         fit.fit()
         pars = fit.result[0].model.parameters
         assert_allclose(pars['index'].value, 1.997342, rtol=1e-3)
@@ -96,8 +108,12 @@ class TestFit:
         obs1 = SpectrumObservation(on_vector=self.src)
         src_rebinned = self.src.rebin(2)
         obs2 = SpectrumObservation(on_vector=src_rebinned)
-        fit = SpectrumFit(obs_list=[obs1, obs2], stat='cash',
-                          model=self.source_model, forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=[obs1, obs2],
+            stat='cash',
+            model=self.source_model,
+            forward_folded=False,
+        )
         fit.fit()
         pars = fit.result[0].model.parameters
         assert_allclose(pars['index'].value, 1.996456, rtol=1e-3)
@@ -107,8 +123,9 @@ class TestFit:
         obs = SpectrumObservation(on_vector=self.src)
         obs_list = SpectrumObservationList([obs])
 
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
-                          stat=None, forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=obs_list, model=self.source_model, stat=None, forward_folded=False
+        )
         assert np.sum(fit._bins_in_fit_range[0]) == self.nbins
         assert_allclose(fit.true_fit_range[0][-1].value, 10)
         assert_allclose(fit.true_fit_range[0][0].value, 0.1)
@@ -126,21 +143,24 @@ class TestFit:
         obs2 = SpectrumObservation(on_vector=on_vector2)
         obs2.lo_threshold = 5 * u.TeV
         obs_list.append(obs2)
-        fit = SpectrumFit(obs_list=obs_list, model=self.source_model,
-                          stat=None, forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=obs_list, model=self.source_model, stat=None, forward_folded=False
+        )
         fit.fit_range = [2, 8] * u.TeV
         assert_allclose(fit.true_fit_range[0][0].value, 2.15443, rtol=1e-3)
         assert_allclose(fit.true_fit_range[1][0].value, 5.41169, rtol=1e-3)
 
     def test_likelihood_profile(self):
         obs = SpectrumObservation(on_vector=self.src)
-        fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
-                          forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=obs, stat='cash', model=self.source_model, forward_folded=False
+        )
         fit.fit()
         true_idx = fit.result[0].model.parameters['index'].value
         scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.likelihood_1d(model=fit.result[0].model, parname='index',
-                                    parvals=scan_idx)
+        profile = fit.likelihood_1d(
+            model=fit.result[0].model, parname='index', parvals=scan_idx
+        )
         argmin = np.argmin(profile)
         actual = scan_idx[argmin]
         assert_allclose(actual, true_idx, rtol=0.01)
@@ -148,13 +168,15 @@ class TestFit:
     @requires_dependency('matplotlib')
     def test_plot(self):
         obs = SpectrumObservation(on_vector=self.src)
-        fit = SpectrumFit(obs_list=obs, stat='cash', model=self.source_model,
-                          forward_folded=False)
+        fit = SpectrumFit(
+            obs_list=obs, stat='cash', model=self.source_model, forward_folded=False
+        )
 
         scan_idx = np.linspace(1, 3, 20)
         with mpl_plot_check():
-            fit.plot_likelihood_1d(model=self.source_model, parname='index',
-                                   parvals=scan_idx)
+            fit.plot_likelihood_1d(
+                model=self.source_model, parname='index', parvals=scan_idx
+            )
         # TODO: add assert, see issue 294
 
 
@@ -165,19 +187,19 @@ class TestSpectralFit:
     """Test fitter in astrophysical scenario"""
 
     def setup(self):
-        self.obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+        self.obs_list = SpectrumObservationList.read(
+            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha'
+        )
 
         self.pwl = models.PowerLaw(
-            index=2,
-            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            reference=1 * u.TeV,
+            index=2, amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'), reference=1 * u.TeV
         )
 
         self.ecpl = models.ExponentialCutoffPowerLaw(
             index=2,
             amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
             reference=1 * u.TeV,
-            lambda_=0.1 / u.TeV
+            lambda_=0.1 / u.TeV,
         )
 
         # Example fit for one observation
@@ -201,7 +223,9 @@ class TestSpectralFit:
         self.fit.est_errors()
         result = self.fit.result[0]
         assert_allclose(result.model.parameters.error('index'), 0.097866953, rtol=1e-3)
-        assert_allclose(result.model.parameters.error('amplitude'), 2.1994e-12, rtol=1e-3)
+        assert_allclose(
+            result.model.parameters.error('amplitude'), 2.1994e-12, rtol=1e-3
+        )
         self.fit.result[0].to_table()
 
     def test_compound(self):
@@ -217,7 +241,11 @@ class TestSpectralFit:
 
     def test_npred(self):
         self.fit.fit()
-        actual = self.fit.obs_list[0].predicted_counts(self.fit.result[0].model).data.data.value
+        actual = (
+            self.fit.obs_list[0]
+            .predicted_counts(self.fit.result[0].model)
+            .data.data.value
+        )
         desired = self.fit.result[0].npred
         assert_allclose(actual, desired)
 
@@ -256,9 +284,11 @@ class TestSpectralFit:
         obs = self.obs_list[0]
         # Bring aeff in RECO space
         data = obs.aeff.data.evaluate(energy=obs.on_vector.energy.nodes)
-        obs.aeff = EffectiveAreaTable(data=data,
-                                      energy_lo=obs.on_vector.energy.lo,
-                                      energy_hi=obs.on_vector.energy.hi)
+        obs.aeff = EffectiveAreaTable(
+            data=data,
+            energy_lo=obs.on_vector.energy.lo,
+            energy_hi=obs.on_vector.energy.hi,
+        )
         obs.edisp = None
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
         fit.fit()
@@ -310,6 +340,7 @@ class TestSpectralFit:
         # TODO: this works a little bit, but some info and warnings
         # from Sherpa remain. Not sure what to do, OK as-is for now.
         import logging
+
         logging.getLogger("sherpa").setLevel('ERROR')
 
         self.obs_list.write(tmpdir, use_sherpa=True)

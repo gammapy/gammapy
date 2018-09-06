@@ -4,9 +4,7 @@ import numpy as np
 import astropy.units as u
 from ..stats import Stats, significance_on_off
 
-__all__ = [
-    'ObservationStats',
-]
+__all__ = ['ObservationStats']
 
 
 class ObservationStats(Stats):
@@ -37,15 +35,20 @@ class ObservationStats(Stats):
         Gamma rate (/min)
     """
 
-    def __init__(self,
-                 n_on=None, n_off=None, a_on=None, a_off=None,
-                 obs_id=None, livetime=None, alpha=None,
-                 gamma_rate=None, bg_rate=None):
+    def __init__(
+        self,
+        n_on=None,
+        n_off=None,
+        a_on=None,
+        a_off=None,
+        obs_id=None,
+        livetime=None,
+        alpha=None,
+        gamma_rate=None,
+        bg_rate=None,
+    ):
         super(ObservationStats, self).__init__(
-            n_on=n_on,
-            n_off=n_off,
-            a_on=a_on,
-            a_off=a_off,
+            n_on=n_on, n_off=n_off, a_on=a_on, a_off=a_off
         )
 
         self.obs_id = obs_id
@@ -91,15 +94,17 @@ class ObservationStats(Stats):
 
         gamma_rate = n_on / livetime.to(u.min)
         bg_rate = (alpha * n_off) / livetime.to(u.min)
-        stats = cls(n_on=n_on,
-                    n_off=n_off,
-                    a_on=a_on,
-                    a_off=a_off,
-                    obs_id=obs_id,
-                    livetime=livetime,
-                    alpha=alpha,
-                    gamma_rate=gamma_rate,
-                    bg_rate=bg_rate)
+        stats = cls(
+            n_on=n_on,
+            n_off=n_off,
+            a_on=a_on,
+            a_off=a_off,
+            obs_id=obs_id,
+            livetime=livetime,
+            alpha=alpha,
+            gamma_rate=gamma_rate,
+            bg_rate=bg_rate,
+        )
         return stats
 
     @property
@@ -180,7 +185,7 @@ class ObservationStats(Stats):
             livetime=livetime,
             alpha=alpha,
             gamma_rate=gamma_rate,
-            bg_rate=bg_rate
+            bg_rate=bg_rate,
         )
 
     def to_dict(self):

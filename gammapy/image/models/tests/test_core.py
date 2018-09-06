@@ -16,10 +16,7 @@ from ..core import (
 
 
 def test_sky_point_source():
-    model = SkyPointSource(
-        lon_0='2.5 deg',
-        lat_0='2.5 deg'
-    )
+    model = SkyPointSource(lon_0='2.5 deg', lat_0='2.5 deg')
     lat, lon = np.mgrid[0:6, 0:6] * u.deg
     val = model(lon, lat)
     assert val.unit == 'sr-1'
@@ -27,11 +24,7 @@ def test_sky_point_source():
 
 
 def test_sky_gaussian():
-    model = SkyGaussian(
-        lon_0='1 deg',
-        lat_0='45 deg',
-        sigma='1 deg',
-    )
+    model = SkyGaussian(lon_0='1 deg', lat_0='45 deg', sigma='1 deg')
     lon = [1, 359] * u.deg
     lat = 46 * u.deg
     val = model(lon, lat)
@@ -40,11 +33,7 @@ def test_sky_gaussian():
 
 
 def test_sky_disk():
-    model = SkyDisk(
-        lon_0='1 deg',
-        lat_0='45 deg',
-        r_0='2 deg',
-    )
+    model = SkyDisk(lon_0='1 deg', lat_0='45 deg', r_0='2 deg')
     lon = [1, 5, 359] * u.deg
     lat = 46 * u.deg
     val = model(lon, lat)
@@ -54,12 +43,7 @@ def test_sky_disk():
 
 
 def test_sky_shell():
-    model = SkyShell(
-        lon_0='1 deg',
-        lat_0='45 deg',
-        radius='2 deg',
-        width='2 deg',
-    )
+    model = SkyShell(lon_0='1 deg', lat_0='45 deg', radius='2 deg', width='2 deg')
 
     lon = [1, 2, 4] * u.deg
     lat = 45 * u.deg
@@ -70,9 +54,7 @@ def test_sky_shell():
 
 
 def test_sky_diffuse_constant():
-    model = SkyDiffuseConstant(
-        value='42 sr-1'
-    )
+    model = SkyDiffuseConstant(value='42 sr-1')
     lon = [1, 2] * u.deg
     lat = 45 * u.deg
     val = model(lon, lat)
