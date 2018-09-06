@@ -18,8 +18,10 @@ Alphabetical order:
   Origin: https://github.com/astrofrog/sedfitter/blob/master/sedfitter/utils/validator.py
 * ``xmltodict.py`` for easily converting XML from / to Python dicts
   Origin: https://github.com/martinblech/xmltodict/blob/master/xmltodict.py
-* ``zeros.py`` - Modified copy of the file from ``scipy.optimize``,
-  used by the TS map computation code.
 * ``skimage.py`` - utility functions copied from scikit-image
   They have the same BSD license as we do.
+* ``testipynb.py`` is a modification of copy from Github on 2018-09-06
+  Origin: https://github.com/opengeophysics/testipynb/blob/master/testipynb/testipynb.py
+  See also: https://github.com/opengeophysics/testipynb
+  MIT license.
 """

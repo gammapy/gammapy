@@ -4,12 +4,12 @@ Test if IPython notebooks work.
 """
 import os
 import sys
-import testipynb
 import unittest
 import logging
 from pkg_resources import working_set
 from pprint import pprint
 from gammapy.extern.pathlib import Path
+from gammapy.extern import testipynb
 import yaml
 
 logging.basicConfig(level=logging.INFO)
