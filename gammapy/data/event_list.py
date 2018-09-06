@@ -736,15 +736,13 @@ class EventListChecker(Checker):
         Event list
     """
 
-    CHECKS = OrderedDict(
-        [
-            ('meta', 'check_meta'),
-            ('columns', 'check_columns'),
-            ('times', 'check_times'),
-            ('coordinates_galactic', 'check_coordinates_galactic'),
-            ('coordinates_altaz', 'check_coordinates_altaz'),
-        ]
-    )
+    CHECKS = {
+        'meta': 'check_meta',
+        'columns': 'check_columns',
+        'times': 'check_times',
+        'coordinates_galactic': 'check_coordinates_galactic',
+        'coordinates_altaz': 'check_coordinates_altaz',
+    }
 
     accuracy = {'angle': Angle('1 arcsec'), 'time': Quantity(1, 'microsecond')}
 

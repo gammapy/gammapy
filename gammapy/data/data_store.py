@@ -240,14 +240,12 @@ class DataStoreChecker(Checker):
     Checks data format and a bit about the content.
     """
 
-    CHECKS = OrderedDict(
-        [
-            ('obs_table', 'check_obs_table'),
-            ('hdu_table', 'check_hdu_table'),
-            ('observations', 'check_observations'),
-            ('consistency', 'check_consistency'),
-        ]
-    )
+    CHECKS = {
+        'obs_table': 'check_obs_table',
+        'hdu_table': 'check_hdu_table',
+        'observations': 'check_observations',
+        'consistency': 'check_consistency',
+    }
 
     def __init__(self, data_store):
         self.data_store = data_store

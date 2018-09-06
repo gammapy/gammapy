@@ -224,9 +224,9 @@ class Checker(object):
         if checks == 'all':
             checks = self.CHECKS.keys()
 
-        unknown_checks = set(checks).difference(self.CHECKS.keys())
+        unknown_checks = sorted(set(checks).difference(self.CHECKS.keys()))
         if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
+            raise ValueError('Unknown checks: {!r}'.format(unknown_checks))
 
         for check in checks:
             for record in getattr(self, self.CHECKS[check])():
