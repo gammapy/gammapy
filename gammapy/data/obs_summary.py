@@ -31,9 +31,8 @@ class ObservationTableSummary(object):
     def offset(self):
         """Observation pointing ot target offset (`~astropy.coordinates.Angle`).
         """
-        pnt_pos = SkyCoord(
-            self.obs_table['RA_PNT'], self.obs_table['DEC_PNT'], unit='deg'
-        )
+        t = self.obs_table
+        pnt_pos = SkyCoord(t['RA_PNT'], t['DEC_PNT'], unit='deg')
 
         return pnt_pos.separation(self.target_pos)
 
@@ -112,6 +111,7 @@ class ObservationTableSummary(object):
 
         if bins is None:
             bins = np.linspace(0, offset.degree.max() + 0.5, 10)
+
         ax.hist(offset.degree, bins=bins)
         ax.set_title('Offset distribution')
         ax.set_xlabel('Offset (Deg)')
@@ -207,14 +207,10 @@ class ObservationSummary(object):
 
         ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Significance ($\sigma$)')
-        ax.axis(
-            [
-                0.,
-                np.amax(self.livetime.to(u.h).value) * 1.2,
-                0.,
-                np.amax(self.sigma) * 1.2,
-            ]
-        )
+
+        xmax = np.amax(self.livetime.to(u.h).value) * 1.2
+        ymax = np.amax(self.sigma) * 1.2
+        ax.axis([0, xmax, 0, ymax])
         ax.set_title('Significance evolution')
         return ax
 
@@ -238,14 +234,10 @@ class ObservationSummary(object):
 
         ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Excess')
-        ax.axis(
-            [
-                0.,
-                np.amax(self.livetime.to(u.h).value) * 1.2,
-                0.,
-                np.amax(self.excess) * 1.2,
-            ]
-        )
+
+        xmax = np.amax(self.livetime.to(u.h).value) * 1.2
+        ymax = np.amax(self.excess) * 1.2
+        ax.axis([0, xmax, 0, ymax])
         ax.set_title('Excess evolution')
         return ax
 
@@ -269,14 +261,10 @@ class ObservationSummary(object):
 
         ax.set_xlabel('Livetime ({})'.format(u.h))
         ax.set_ylabel('Background')
-        ax.axis(
-            [
-                0.,
-                np.amax(self.livetime.to(u.h).value) * 1.2,
-                0.,
-                np.amax(self.background) * 1.2,
-            ]
-        )
+
+        xmax = np.amax(self.livetime.to(u.h).value) * 1.2
+        ymax = np.amax(self.background) * 1.2
+        ax.axis([0, xmax, 0, ymax])
         ax.set_title('Background evolution')
         return ax
 

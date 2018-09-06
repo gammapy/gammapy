@@ -285,14 +285,13 @@ class HDUIndexTable(Table):
 
     def summary(self):
         """Summary report (str)"""
+        obs_id = self.obs_id_unique
         return '\n'.join(
             [
                 'HDU index table:',
                 'BASE_DIR: {}'.format(self.base_dir),
                 'Rows: {}'.format(len(self)),
-                'OBS_ID: {} -- {}'.format(
-                    self.obs_id_unique[0], self.obs_id_unique[-1]
-                ),
+                'OBS_ID: {} -- {}'.format(obs_id[0], obs_id[-1]),
                 'HDU_TYPE: {}'.format(self.hdu_type_unique),
                 'HDU_CLASS: {}'.format(self.hdu_class_unique),
             ]

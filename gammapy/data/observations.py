@@ -74,18 +74,18 @@ class ObservationCTA(object):
     """
 
     def __init__(
-            self,
-            obs_id=None,
-            gti=None,
-            events=None,
-            aeff=None,
-            edisp=None,
-            psf=None,
-            bkg=None,
-            pointing_radec=None,
-            observation_live_time_duration=None,
-            observation_dead_time_fraction=None,
-            meta=None,
+        self,
+        obs_id=None,
+        gti=None,
+        events=None,
+        aeff=None,
+        edisp=None,
+        psf=None,
+        bkg=None,
+        pointing_radec=None,
+        observation_live_time_duration=None,
+        observation_dead_time_fraction=None,
+        meta=None,
     ):
         self.obs_id = obs_id
         self.gti = gti
@@ -461,12 +461,12 @@ class ObservationList(UserList):
         return psf_tot
 
     def make_mean_edisp(
-            self,
-            position,
-            e_true,
-            e_reco,
-            low_reco_threshold=Energy(0.002, "TeV"),
-            high_reco_threshold=Energy(150, "TeV"),
+        self,
+        position,
+        e_true,
+        e_reco,
+        low_reco_threshold=Energy(0.002, "TeV"),
+        high_reco_threshold=Energy(150, "TeV"),
     ):
         """Compute mean energy dispersion.
 
@@ -614,9 +614,9 @@ class ObservationChecker(Checker):
 
         # Check that thresholds are meaningful for aeff
         if (
-                'LO_THRES' in aeff.meta
-                and 'HI_THRES' in aeff.meta
-                and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']
+            'LO_THRES' in aeff.meta
+            and 'HI_THRES' in aeff.meta
+            and aeff.meta['LO_THRES'] >= aeff.meta['HI_THRES']
         ):
             yield self._record(
                 level='error', msg='LO_THRES >= HI_THRES in effective area meta data'

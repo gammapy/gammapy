@@ -374,9 +374,7 @@ class EventListBase(object):
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
         spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
-        spec.fill(
-            self.energy
-        )  # leaving spec.fill(self) was triggering an issue for the LAT event list
+        spec.fill(self.energy)
         spec.plot(ax=ax, **kwargs)
         return ax
 
