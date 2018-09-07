@@ -68,7 +68,7 @@ def cli_jupyter_stripout(ctx):
     for notebook in nblist:
 
         try:
-            subprocess.call(f'nbstripout {notebook}', shell=True)
+            subprocess.call("nbstripout '{}'".format(notebook), shell=True)
             print('Jupyter notebook {} stripped out.'.format(str(notebook)))
         except Exception as ex:
             log.error('Error stripping file {}'.format(str(notebook)))
@@ -87,10 +87,10 @@ def cli_jupyter_execute(ctx):
         try:
             t = time.time()
             subprocess.call(
-                f"jupyter nbconvert --allow-errors --ExecutePreprocessor.timeout=None --ExecutePreprocessor.kernel_name=python3 --to notebook --execute '{notebook}' --inplace",
+                "jupyter nbconvert --allow-errors --ExecutePreprocessor.timeout=None --ExecutePreprocessor.kernel_name=python3 --to notebook --execute '{}'.format(notebook) --inplace",
                 shell=True)
             t = (time.time() - t) / 60
-            print(f'Executing duration: {t:.2f} mn')
+            print('Executing duration: {:.2f} mn'.format(t))
         except Exception as ex:
             log.error('Error executing file {}'.format(str(notebook)))
             log.error(ex)
