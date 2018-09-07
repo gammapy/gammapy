@@ -43,4 +43,6 @@ def test_iminuit():
 
     assert states[1]["has_limits"]
     assert states[1]["lower_limit"] == 4
-    assert states[1]["upper_limit"] is None
+    # The next assert can be added when we no longer test on iminuit 1.2
+    # See https://github.com/gammapy/gammapy/pull/1771
+    # assert states[1]["upper_limit"] is None
