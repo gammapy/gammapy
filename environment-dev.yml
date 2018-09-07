@@ -30,7 +30,7 @@ dependencies:
   - healpy
   - reproject
   - sherpa
-  - iminuit
+  - iminuit>=1.3.2
   - pytest
   - pytest-cov
   - sphinx
