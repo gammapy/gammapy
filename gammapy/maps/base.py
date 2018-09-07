@@ -961,18 +961,18 @@ class Map(object):
         for axis in self.geom.axes:
             if axis.node_type == "edges":
                 options = [
-                    "{:.0f} - {:.0f} {}".format(val_min, val_max, axis.unit)
+                    "{:.2f} - {:.2f} {}".format(val_min, val_max, axis.unit)
                     for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])
                 ]
             else:
-                options = ["{:.0f} {}".format(val, axis.unit) for val in axis.center]
+                options = ["{:.2f} {}".format(val, axis.unit) for val in axis.center]
 
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
                 description="Select {}:".format(axis.name),
                 continuous_update=False,
                 style={"description_width": "initial"},
-                layout={"width": "36%"},
+                layout={"width": "50%"},
             )
             interact_kwargs[axis.name + "_options"] = fixed(options)
 
