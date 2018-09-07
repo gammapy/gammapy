@@ -31,7 +31,7 @@ env:
         - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima regions reproject pandoc ipython iminuit'
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima pygments sherpa libgfortran regions reproject pandoc ipython'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit runipy regions reproject pandoc ipython nbstripout'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit runipy regions reproject pandoc ipython'
 
         - PIP_DEPENDENCIES='nbsphinx==0.2.17 sphinx-click sphinx_rtd_theme properties black'
 
