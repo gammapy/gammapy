@@ -77,7 +77,7 @@ passing a list of `~MapAxis` objects for non-spatial dimensions with the
     from astropy.coordinates import SkyCoord
 
     position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
-    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', name='energy', unit='GeV')
 
     # Create a WCS Map
     m_wcs = Map.create(binsz=0.1, map_type='wcs', skydir=position, width=10.0,
@@ -100,7 +100,7 @@ cube with a pixel size proportional to the Fermi-LAT PSF:
     from astropy.coordinates import SkyCoord
 
     position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
-    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', name='energy', unit='GeV')
 
     binsz = np.sqrt((3.0*(energy_axis.center/100.)**-0.8)**2 + 0.1**2)
 
@@ -133,8 +133,8 @@ the use of `~Map.slice_by_idx()` on a map with a time and energy axes:
     from astropy.coordinates import SkyCoord
 
     position = SkyCoord(0.0, 5.0, frame='galactic', unit='deg')
-    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', unit='GeV')
-    time_axis = MapAxis.from_bounds(0., 12, 12, interp='lin', unit='h')
+    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log', unit='GeV', name='energy')
+    time_axis = MapAxis.from_bounds(0., 12, 12, interp='lin', unit='h', name='time')
 
     # Create a WCS Map
     m_wcs = Map.create(binsz=0.02, map_type='wcs', skydir=position, width=10.0,
@@ -242,8 +242,8 @@ following demonstrates how one can set pixel values:
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
-    m.set_by_coord( ([-0.05,-0.05],[0.05,0.05]), [0.5, 1.5] )
-    m.fill_by_coord( ([-0.05,-0.05],[0.05,0.05]), weights=[0.5, 1.5] )
+    m.set_by_coord(([-0.05, -0.05], [0.05, 0.05]), [0.5, 1.5])
+    m.fill_by_coord( ([-0.05, -0.05], [0.05, 0.05]), weights=[0.5, 1.5])
 
 Interface with `~MapCoord` and `~astropy.coordinates.SkyCoord`
 --------------------------------------------------------------
@@ -270,8 +270,8 @@ transformed to match the coordinate system of the map.
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0,
                   coordsys='GAL', axes=[energy_axis])
 
-    m.set_by_coord( (skycoord, energy), [0.5, 1.5] )
-    m.get_by_coord( (skycoord, energy) )
+    m.set_by_coord((skycoord, energy), [0.5, 1.5])
+    m.get_by_coord((skycoord, energy))
 
 A `~MapCoord` or `dict` argument can be used to interact with a map object
 without reference to the axis ordering of the map geometry:
@@ -279,10 +279,10 @@ without reference to the axis ordering of the map geometry:
 .. code:: python
 
     coord = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
-    m.set_by_coord( coord, [0.5, 1.5] )
-    m.get_by_coord( coord, )
-    m.set_by_coord( dict(lon=lon, lat=lat, energy=energy), [0.5, 1.5] )
-    m.get_by_coord( dict(lon=lon, lat=lat, energy=energy) )
+    m.set_by_coord(coord, [0.5, 1.5])
+    m.get_by_coord(coord)
+    m.set_by_coord(dict(lon=lon, lat=lat, energy=energy), [0.5, 1.5])
+    m.get_by_coord(dict(lon=lon, lat=lat, energy=energy))
 
 However when using the named axis interface the axis name string (e.g. as given
 by `MapAxis.name`) must match the name given in the method argument.  The two
@@ -381,8 +381,8 @@ coordinates is only supported for WCS-based maps.
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
 
-    m.interp_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='linear' )
-    m.interp_by_coord( ([-0.05,-0.05],[0.05,0.05]), interp='cubic' )
+    m.interp_by_coord(([-0.05, -0.05], [0.05, 0.05]), interp='linear')
+    m.interp_by_coord(([-0.05, -0.05], [0.05, 0.05]), interp='cubic')
 
 Projection
 ----------
@@ -397,10 +397,10 @@ of the original map will be copied over to the projected map.
 
     from gammapy.maps import WcsNDMap, HpxGeom
 
-    m = WcsNDMap.read('gll_iem_v06.fits')
+    m = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/fermi_3fhl/gll_iem_v06_cutout.fits')
     geom = HpxGeom.create(nside=8, coordsys='GAL')
     # Convert LAT standard IEM to HPX (nside=8)
-    m_proj = m.project(geom)
+    m_proj = m.reproject(geom)
     m_proj.write('gll_iem_v06_hpx_nside8.fits')
 
 .. _mapiter:
@@ -524,8 +524,8 @@ further tweak/customize the image.
 
     m = Map.create(binsz=0.1, map_type='wcs', width=10.0)
     fill_poisson(m, mu=1.0, random_state=0)
-    fig, ax, im = m.plot(cmap='magma')
-    plt.colorbar(im)
+    m.plot(cmap='magma')
+    plt.show()
 
 
 Examples
@@ -541,7 +541,7 @@ This example shows how to fill a counts cube from an FT1 file:
     from astropy.io import fits
     from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
 
-    h = fits.open('ft1.fits')
+    h = fits.open('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
     energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
     m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
                         coordsys='CEL', axes=[energy_axis])
@@ -560,8 +560,8 @@ using the `~Map.reproject` method:
 
     from gammapy.maps import WcsGeom, WcsNDMap
 
-    m = WcsNDMap.read('gll_iem_v06.fits')
-    geom = WcsGeom(binsz=0.125, skydir=(45.0,30.0), coordsys='GAL', proj='AIT')
+    m = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/fermi_3fhl/gll_iem_v06_cutout.fits')
+    geom = WcsGeom(binsz=0.125, skydir=(0, 0), coordsys='GAL', proj='AIT')
     m_proj = m.reproject(geom)
     m_proj.write('cutout.fits', conv='fgst-template')
 
