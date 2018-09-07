@@ -116,7 +116,7 @@ setup(
           'reproject',
           'uncertainties>=2.4',
           'naima',
-          'iminuit',
+          'iminuit>=1.3.2',
           'sherpa',
       ],
       plotting=[
