@@ -7,12 +7,8 @@ import click
 import logging
 import nbformat
 import subprocess
-import sys
-import testipynb
 import time
-from unittest import TestCase
 from ..extern.pathlib import Path
-
 
 log = logging.getLogger(__name__)
 
@@ -23,14 +19,9 @@ def cli_jupyter_black(ctx):
     """Format code cells with black."""
 
     for path in build_nblist(ctx):
-        try:
-            nb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
-        except Exception as ex:
-            log.error('Error parsing file {}'.format(str(path)))
-            log.error(ex)
-            sys.exit()
+        rawnb = read_notebook(path)
 
-        for cell in nb.cells:
+        for cell in rawnb.cells:
             fmt = cell['source']
             if cell['cell_type'] == 'code':
                 try:
@@ -45,8 +36,9 @@ def cli_jupyter_black(ctx):
                 fmt = fmt.replace("###-MAGIC COMMAND-", "")
             cell['source'] = fmt
 
-        nbformat.write(nb, str(path))
-        log.info('Jupyter notebook {} painted in black.'.format(str(path)))
+        if rawnb:
+            nbformat.write(rawnb, str(path))
+            log.info('Jupyter notebook {} painted in black.'.format(str(path)))
 
 
 @click.command(name='stripout')
@@ -55,19 +47,15 @@ def cli_jupyter_stripout(ctx):
     """Strip output cells."""
 
     for path in build_nblist(ctx):
-        try:
-            nb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
-        except Exception as ex:
-            log.error('Error parsing file {}'.format(str(path)))
-            log.error(ex)
-            sys.exit()
+        rawnb = read_notebook(path)
 
-        for cell in nb.cells:
+        for cell in rawnb.cells:
             if cell['cell_type'] == 'code':
                 cell['outputs'] = []
 
-        nbformat.write(nb, str(path))
-        log.info('Jupyter notebook {} output stripped.'.format(str(path)))
+        if rawnb:
+            nbformat.write(rawnb, str(path))
+            log.info('Jupyter notebook {} output stripped.'.format(str(path)))
 
 
 @click.command(name='execute')
@@ -76,50 +64,49 @@ def cli_jupyter_execute(ctx):
     """Execute jupyter notebook."""
 
     for path in build_nblist(ctx):
-        try:
-            t = time.time()
-            subprocess.call(
-                "jupyter nbconvert "
-                "--allow-errors "
-                "--ExecutePreprocessor.timeout=None "
-                "--ExecutePreprocessor.kernel_name=python3 "
-                "--to notebook "
-                "--inplace "
-                "--execute '{}'".format(path),
-                shell=True)
-            t = (time.time() - t) / 60
-            log.info('Executing duration: {:.2f} mn'.format(t))
-        except Exception as ex:
-            log.error('Error executing file {}'.format(str(path)))
-            log.error(ex)
+        run_notebook(path)
 
 
 @click.command(name='test')
 @click.pass_context
 def cli_jupyter_test(ctx):
-    """Check if jupyter notebook is broken."""
+    """Check if Jupyter notebook is broken."""
 
-    path = Path(ctx.obj['file'])
-    folder = Path(ctx.obj['fold'])
-    ignorelist = []
+    for path in build_nblist(ctx):
+        run_notebook(path)
+        rawnb = read_notebook(path)
 
-    if ctx.obj['file']:
-        # ignore all files except --file
-        for f in path.parent.iterdir():
-            if path.name != f.name and f.name.endswith('.ipynb'):
-                nbname = f.name.replace('.ipynb', '')
-                ignorelist.append(nbname)
-        folder = path.parent
+        if rawnb:
+            report = ""
+            passed = True
+            log.info("   ... Testing {}".format(str(path)))
+            for cell in rawnb.cells:
+                if 'outputs' in cell.keys():
+                    for output in cell['outputs']:
+                        if output['output_type'] == 'error':
+                            passed = False
+                            traceitems = ["--TRACEBACK: "]
+                            for o in output['traceback']:
+                                traceitems.append("{}".format(o))
+                            traceback = "\n".join(traceitems)
+                            infos = "\n\n{} in cell [{}]\n\n" \
+                                    "--SOURCE CODE: \n{}\n\n".format(
+                                        output['ename'],
+                                        cell['execution_count'],
+                                        cell['source']
+                                    )
+                            report = report + infos + traceback
+            if passed:
+                log.info("   ... {} Passed".format(str(path)))
+            else:
+                log.info("   ... {} Failed".format(str(path)))
+                log.info(report)
 
-    testnb = testipynb.TestNotebooks(
-        directory=str(folder), ignore=ignorelist)
-    TestCase.assertTrue(testnb, testnb.run_tests())
 
-
-def tag_magics(input):
+def tag_magics(cellcode):
     """Comment magic commands when formatting cells."""
 
-    lines = input.splitlines(False)
+    lines = cellcode.splitlines(False)
     for line in lines:
         if line.startswith("%") or line.startswith("!"):
             magic_line = "###-MAGIC COMMAND-" + line
@@ -137,3 +124,34 @@ def build_nblist(ctx):
         for f in Path(ctx.obj['fold']).iterdir():
             if f.name.endswith('.ipynb'):
                 yield f
+
+
+def run_notebook(path):
+    """Execute a Jupyter notebook."""
+
+    try:
+        t = time.time()
+        subprocess.call(
+            "jupyter nbconvert "
+            "--allow-errors "
+            "--ExecutePreprocessor.timeout=None "
+            "--ExecutePreprocessor.kernel_name=python3 "
+            "--to notebook "
+            "--inplace "
+            "--execute '{}'".format(path),
+            shell=True)
+        t = (time.time() - t) / 60
+        log.info('Executing duration: {:.2f} mn'.format(t))
+    except Exception as ex:
+        log.error('Error executing file {}'.format(str(path)))
+        log.error(ex)
+
+
+def read_notebook(path):
+    """Read a Jupyter notebook raw structure."""
+    try:
+        return nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
+    except Exception as ex:
+        log.error('Error parsing file {}'.format(str(path)))
+        log.error(ex)
+        return

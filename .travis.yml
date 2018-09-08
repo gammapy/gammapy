@@ -33,7 +33,7 @@ env:
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima pygments sherpa libgfortran regions reproject pandoc ipython'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit runipy regions reproject pandoc ipython'
 
-        - PIP_DEPENDENCIES='nbsphinx==0.2.17 sphinx-click sphinx_rtd_theme properties black'
+        - PIP_DEPENDENCIES='nbsphinx==0.2.17 sphinx-click sphinx_rtd_theme black'
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
