@@ -38,6 +38,9 @@ class MapFit(object):
     def __init__(
         self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None
     ):
+        if mask is not None and mask.data.dtype != np.dtype('bool'):
+            raise ValueError('mask data must have dtype bool')
+
         self.model = model
         self.counts = counts
         self.exposure = exposure
