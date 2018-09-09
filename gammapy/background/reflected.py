@@ -219,12 +219,12 @@ class ReflectedRegionsFinder(object):
         """
         fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap="gray")
         wcs = self.exclusion_mask.geom.wcs
-        on_patch = self.region.to_pixel(wcs=wcs).as_patch(color="red", alpha=0.6)
+        on_patch = self.region.to_pixel(wcs=wcs).as_artist(color="red", alpha=0.6)
         ax.add_patch(on_patch)
 
         for off in self.reflected_regions:
             tmp = off.to_pixel(wcs=wcs)
-            off_patch = tmp.as_patch(color="blue", alpha=0.6)
+            off_patch = tmp.as_artist(color="blue", alpha=0.6)
             ax.add_patch(off_patch)
 
             test_pointing = self.center
@@ -345,7 +345,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         fig, ax, cbar = self.finder.exclusion_mask.plot(fig=fig, ax=ax)
 
         wcs = self.finder.exclusion_mask.geom.wcs
-        on_patch = self.on_region.to_pixel(wcs=wcs).as_patch(color="red")
+        on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(color="red")
         ax.add_patch(on_patch)
 
         result = self.result
@@ -365,7 +365,7 @@ class ReflectedRegionsBackgroundEstimator(object):
 
             off_regions = result[idx_].off_region
             for off in off_regions:
-                off_patch = off.to_pixel(wcs=wcs).as_patch(
+                off_patch = off.to_pixel(wcs=wcs).as_artist(
                     alpha=0.8, color=colors[idx_], label="Obs {}".format(obs.obs_id)
                 )
                 handle = ax.add_patch(off_patch)
