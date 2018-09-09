@@ -74,7 +74,7 @@ flake8:
 
 black:
 	black $(PROJECT)/ examples/ docs/ \
-	--exclude="_astropy_init.py|extern/" \
+	--exclude="_astropy_init.py|version.py|extern/|docs/_static|docs/_build" \
 	--line-length 88
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
