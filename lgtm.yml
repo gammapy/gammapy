@@ -1,0 +1,19 @@
+# Config for lgtm.com code analysis
+# https://lgtm.com/projects/g/gammapy/gammapy
+
+path_classifiers:
+  test:
+    - "gammapy/*/test_*.py"
+  docs:
+    - docs
+
+extraction:
+  python:
+    prepare:
+      packages:
+        - "bison"
+        - "flex"
+    index:
+      exclude:
+        - "gammapy/extern"
+        - "_astropy_init.py"

@@ -33,6 +33,10 @@ Status shields
     :target: https://landscape.io/github/gammapy/gammapy/master
     :alt: Landscape
 
+* .. image:: https://img.shields.io/lgtm/alerts/g/gammapy/gammapy.svg?logo=lgtm&logoWidth=18
+    :target: https://lgtm.com/projects/g/gammapy/gammapy/alerts/
+    :alt: LGTM
+
 * .. image:: https://api.codacy.com/project/badge/Grade/32cac57dfd9a4d4cb96e7563d5350298
     :target: https://www.codacy.com/app/cdeil/gammapy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
     :alt: Codacy
