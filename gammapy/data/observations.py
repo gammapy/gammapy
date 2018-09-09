@@ -543,7 +543,7 @@ class ObservationChecker(Checker):
 
         try:
             events = self.obs.load("events")
-        except:
+        except Exception:
             yield self._record(level="warning", msg="Loading events failed")
             return
 
@@ -556,7 +556,7 @@ class ObservationChecker(Checker):
 
         try:
             gti = self.obs.load("gti")
-        except:
+        except Exception:
             yield self._record(level="warning", msg="Loading GTI failed")
             return
 
@@ -608,7 +608,7 @@ class ObservationChecker(Checker):
 
         try:
             aeff = self.obs.load("aeff")
-        except:
+        except Exception:
             yield self._record(level="warning", msg="Loading aeff failed")
             return
 
@@ -622,10 +622,10 @@ class ObservationChecker(Checker):
                 level="error", msg="LO_THRES >= HI_THRES in effective area meta data"
             )
 
-        # Check that maximum value of aeff is greater than zero
+        # Check that data isn't all null
         if np.max(aeff.data.data) <= 0:
             yield self._record(
-                level="error", msg="maximum entry of effective area table <= 0"
+                level="error", msg="maximum entry of effective area is <= 0"
             )
 
     def check_edisp(self):
@@ -633,11 +633,11 @@ class ObservationChecker(Checker):
 
         try:
             edisp = self.obs.load("edisp")
-        except:
+        except Exception:
             yield self._record(level="warning", msg="Loading edisp failed")
             return
 
-        # Check that maximum value of edisp matrix is greater than zero
+        # Check that data isn't all null
         if np.max(edisp.data.data) <= 0:
             yield self._record(level="error", msg="maximum entry of edisp is <= 0")
 
@@ -646,8 +646,12 @@ class ObservationChecker(Checker):
 
         try:
             psf = self.obs.load("psf")
-        except:
+        except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return
 
-        # TODO: add some check that PSF is good, e.g. evaluate at 1 TeV?
+        # Check that data isn't all null
+        if np.max(psf.data.data) <= 0:
+            yield self._record(
+                level="error", msg="maximum entry of psf is <= 0"
+            )
