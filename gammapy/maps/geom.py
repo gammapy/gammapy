@@ -11,7 +11,6 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from ..utils.scripts import make_path
 from .utils import find_hdu, find_bands_hdu
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]

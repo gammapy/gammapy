@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.io import fits
-from astropy.units import Quantity
 import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
@@ -217,7 +216,7 @@ class WcsNDMap(WcsMap):
         idx = [t[msk] for t in idx]
 
         if weights is not None:
-            if isinstance(weights, Quantity):
+            if isinstance(weights, u.Quantity):
                 weights = weights.to(self.unit).value
             weights = weights[msk]
 
@@ -519,7 +518,7 @@ class WcsNDMap(WcsMap):
         """
         from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
-        if isinstance(radius, Quantity):
+        if isinstance(radius, u.Quantity):
             radius = (radius.to("deg") / self.geom.pixel_scales.mean()).value
 
         smoothed_data = np.empty_like(self.data)

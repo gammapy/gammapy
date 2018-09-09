@@ -352,7 +352,6 @@ class EnergyDispersion(object):
 
         # Make RMF type matrix
         for i, row in enumerate(self.data.data.value):
-            subsets = 1
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
             # add 1 to borders for correct behaviour of np.split
@@ -874,17 +873,15 @@ class EnergyDispersion2D(object):
         """
         e_true = Energy(e_true)
 
-        # Default: e_reco nodes = migra nodes * e_true nodes
         if e_reco is None:
+            # Default: e_reco nodes = migra nodes * e_true nodes
+            migra_axis = self.data.axis("migra")
             e_reco = EnergyBounds.from_lower_and_upper_bounds(
-                self.data.axis("migra").lo * e_true, self.data.axis("migra").hi * e_true
+                migra_axis.lo * e_true, migra_axis.hi * e_true
             )
-            migra = self.data.axis("migra").nodes
-        # Translate given e_reco binning to migra at bin center
         else:
+            # Translate given e_reco binning to migra at bin center
             e_reco = EnergyBounds(e_reco)
-            center = e_reco.log_centers
-            migra = center / e_true
 
         # migration value of e_reco bounds
         migra_e_reco = e_reco / e_true
@@ -998,7 +995,7 @@ class EnergyDispersion2D(object):
 
         if add_cbar:
             label = "Probability density (A.U.)"
-            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
         ax.set_xlabel("$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
         ax.set_ylabel("$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")

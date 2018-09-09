@@ -10,7 +10,6 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
 import astropy.units as u
 from regions import SkyRegion
-from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes, find_and_read_bands

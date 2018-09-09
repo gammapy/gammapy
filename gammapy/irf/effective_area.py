@@ -564,7 +564,7 @@ class EffectiveAreaTable2D(object):
 
         if add_cbar:
             label = "Effective Area ({unit})".format(unit=aeff.unit)
-            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
 

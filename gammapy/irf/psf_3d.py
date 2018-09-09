@@ -416,7 +416,7 @@ class PSF3D(object):
             label = "Containment radius R{0:.0f} ({1})" "".format(
                 100 * fraction, containment.unit
             )
-            cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
 
