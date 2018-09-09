@@ -203,7 +203,6 @@ def mpl_plot_check():
     than writing to disk.
     """
     import matplotlib.pyplot as plt
-    import matplotlib.pyplot as plt
     from io import BytesIO
 
     class MPLPlotCheck(object):
