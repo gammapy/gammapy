@@ -352,13 +352,12 @@ class WcsNDMap(WcsMap):
 
         geom = self.geom.crop(crop_width)
         if self.geom.is_regular:
-            slices = [
-                slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
+            slices = [slice(None)] * len(self.geom.axes)
+            slices += [
                 slice(crop_width[1], int(self.geom.npix[1] - crop_width[1])),
+                slice(crop_width[0], int(self.geom.npix[0] - crop_width[0])),
             ]
-            for ax in self.geom.axes:
-                slices += [slice(None)]
-            data = self.data[tuple(slices[::-1])]
+            data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
         else:
             # FIXME: This could be done more efficiently by
