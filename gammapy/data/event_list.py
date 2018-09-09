@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 import numpy as np
 from astropy.units import Quantity, Unit
 from astropy.coordinates import SkyCoord, Angle, AltAz

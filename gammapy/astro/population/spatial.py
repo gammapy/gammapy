@@ -2,7 +2,6 @@
 """Galactic radial source distribution probability density functions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
 from astropy.modeling import Fittable1DModel, Parameter
 from ...utils.coordinates import cartesian, polar, D_SUN_TO_GALACTIC_CENTER
@@ -230,7 +229,7 @@ class FaucherKaspi2006(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, r_0, sigma):
         """Evaluate model."""
-        term1 = 1. / np.sqrt(2 * pi * sigma)
+        term1 = 1. / np.sqrt(2 * np.pi * sigma)
         term2 = np.exp(-(r - r_0) ** 2 / (2 * sigma ** 2))
         return amplitude * term1 * term2
 
@@ -342,8 +341,8 @@ class LogSpiral(object):
             raise ValueError("Specify only one of: theta, radius")
 
         theta = np.radians(theta)
-        x = radius * cos(theta)
-        y = radius * sin(theta)
+        x = radius * np.cos(theta)
+        y = radius * np.sin(theta)
         return x, y
 
     def radius(self, theta, spiralarm_index):
@@ -365,7 +364,7 @@ class LogSpiral(object):
         r_0 = self.r_0[spiralarm_index]
         theta_0 = self.theta_0[spiralarm_index]
         d_theta = np.radians(theta - theta_0)
-        radius = r_0 * exp(d_theta / k)
+        radius = r_0 * np.exp(d_theta / k)
         return radius
 
     def theta(self, radius, spiralarm_index):
@@ -387,7 +386,7 @@ class LogSpiral(object):
         r_0 = self.r_0[spiralarm_index]
         theta_0 = self.theta_0[spiralarm_index]
         theta_0 = np.radians(theta_0)
-        theta = k * log(radius / r_0) + theta_0
+        theta = k * np.log(radius / r_0) + theta_0
         return np.degrees(theta)
 
 
@@ -452,7 +451,7 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        theta_corr = Quantity(random_state.uniform(0, 2 * pi, radius.size), "rad")
+        theta_corr = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), "rad")
         return radius, theta + theta_corr * np.exp(-radius / r_corr)
 
     def __call__(self, radius, blur=True, random_state="random-seed"):
@@ -480,7 +479,7 @@ class FaucherSpiral(LogSpiral):
 
         # Choose spiral arm
         N = random_state.randint(0, 4, radius.size)
-        theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]
+        theta = self.k[N] * np.log(radius / self.r_0[N]) + self.theta_0[N]
         spiralarm = self.spiralarms[N]
 
         if blur:  # Apply blurring model according to Faucher

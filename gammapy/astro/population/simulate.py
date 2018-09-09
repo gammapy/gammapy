@@ -2,7 +2,6 @@
 """Simulate source catalogs."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy import degrees, pi, arctan, exp
 from ...extern import six
 from astropy.table import Table, Column
 from astropy.units import Quantity
@@ -227,7 +226,7 @@ def make_base_catalog_galactic(
     if spiralarms:
         r, theta, spiralarm = FaucherSpiral()(r, random_state=random_state)
     else:
-        theta = Quantity(random_state.uniform(0, 2 * pi, n_sources), "rad")
+        theta = Quantity(random_state.uniform(0, 2 * np.pi, n_sources), "rad")
         spiralarm = None
 
     # Compute cartesian coordinates
@@ -244,8 +243,8 @@ def make_base_catalog_galactic(
     v = Quantity(v, "km/s")
 
     # Draw random direction of initial velocity
-    theta = Quantity(random_state.uniform(0, pi, x.size), "rad")
-    phi = Quantity(random_state.uniform(0, 2 * pi, x.size), "rad")
+    theta = Quantity(random_state.uniform(0, np.pi, x.size), "rad")
+    phi = Quantity(random_state.uniform(0, 2 * np.pi, x.size), "rad")
 
     # Compute new position
     dx, dy, dz, vx, vy, vz = astrometry.motion_since_birth(v, age, theta, phi)
@@ -349,7 +348,7 @@ def add_pulsar_parameters(
 
     # Draw the initial values for the period and magnetic field
     def p_dist(x):
-        return exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
+        return np.exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
 
     p0_birth = draw(0, 2, len(table), p_dist, random_state=random_state)
     p0_birth = Quantity(p0_birth, "s")
@@ -432,7 +431,7 @@ def add_observed_source_parameters(table):
     ext_out_PWN = astrometry.radius_to_angle(r_out_PWN, distance)
 
     # Ellipse parameters not used for now
-    theta = pi / 2 * np.ones(len(table))  # Position angle?
+    theta = np.pi / 2 * np.ones(len(table))  # Position angle?
     epsilon = np.zeros(len(table))  # Ellipticity?
 
     S_SNR = astrometry.luminosity_to_flux(L_SNR, distance)
@@ -516,7 +515,7 @@ def add_observed_parameters(table, obs_pos=None):
 
     try:
         extension = table["extension"]
-        angular_extension = degrees(arctan(extension / distance))
+        angular_extension = np.degrees(np.arctan(extension / distance))
         table["angular_extension"] = Column(
             angular_extension,
             unit="deg",

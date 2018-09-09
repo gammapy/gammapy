@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
 import subprocess
 from ..utils.scripts import make_path
 from ..utils.testing import Checker

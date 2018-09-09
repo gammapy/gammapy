@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from .obs_stats import ObservationStats
 
@@ -42,7 +41,7 @@ class ObservationTableSummary(object):
 
         ss += "Number of observations: {}\n".format(len(self.obs_table))
 
-        livetime = Quantity(sum(self.obs_table["LIVETIME"]), "second")
+        livetime = u.Quantity(sum(self.obs_table["LIVETIME"]), "second")
         ss += "Livetime: {:.2f}\n".format(livetime.to("hour"))
         zenith = self.obs_table["ZEN_PNT"]
         ss += "Zenith angle: (mean={:.2f}, std={:.2f})\n".format(
