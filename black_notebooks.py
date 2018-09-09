@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def comment_magics(input):
-    """Coment magic commands."""
+    """Comment magic commands."""
     lines = input.splitlines(True)
     output = ""
     for line in lines:

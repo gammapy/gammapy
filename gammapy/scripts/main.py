@@ -3,7 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import warnings
 import logging
 import click
+import sys
 from .. import version
+from ..extern.pathlib import Path
 
 
 # We implement the --version following the example from here:
@@ -83,26 +85,72 @@ def cli_download(ctx, folder):
     ctx.obj = {"localfolder": folder}
 
 
+@cli.group('jupyter', short_help='Perform actions on notebooks')
+@click.option('--src', default='.',
+              help='Local folder or Jupyter notebook filename.')
+@click.pass_context
+def cli_jupyter(ctx, src):
+    """
+    Perform a series of actions on Jupyter notebooks.
+
+    The chosen action is applied for every Jupyter notebook present in the
+    current working directory. Option --file allows to chose a single file,
+    while option --fold allows to choose a different folder to scan. These
+    options are mutually exclusive, only one is allowed.
+
+    \b
+    Examples
+    --------
+    \b
+    $ gammapy jupyter stripout
+    $ gammapy jupyter --src=mynotebooks.ipynb execute
+    $ gammapy jupyter --src=myfolder/tutorials test
+    $ gammapy jupyter black
+    """
+    log = logging.getLogger(__name__)
+
+    path = Path(src)
+    if not path.exists():
+        log.error("File or folder {} not found.".format(src))
+        sys.exit()
+
+    if path.is_dir():
+        paths = list(path.glob('*.ipynb'))
+    else:
+        paths = [path]
+
+    ctx.obj = {
+        'paths': paths,
+    }
+
+
 def add_subcommands():
     from .info import cli_info
-
     cli.add_command(cli_info)
 
     from .check import cli_check
-
     cli.add_command(cli_check)
 
     from .image_bin import cli_image_bin
-
     cli_image.add_command(cli_image_bin)
 
     from .download import cli_download_notebooks
-
     cli_download.add_command(cli_download_notebooks)
 
     from .download import cli_download_datasets
-
     cli_download.add_command(cli_download_datasets)
+
+    from .jupyter import cli_jupyter_black
+    cli_jupyter.add_command(cli_jupyter_black)
+
+    from .jupyter import cli_jupyter_stripout
+    cli_jupyter.add_command(cli_jupyter_stripout)
+
+    from .jupyter import cli_jupyter_execute
+    cli_jupyter.add_command(cli_jupyter_execute)
+
+    from .jupyter import cli_jupyter_test
+    cli_jupyter.add_command(cli_jupyter_test)
 
 
 add_subcommands()
