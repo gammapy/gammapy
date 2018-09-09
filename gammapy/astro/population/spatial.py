@@ -339,7 +339,7 @@ class LogSpiral(object):
         elif (radius is None) and not (theta is None):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
         else:
-            ValueError("Specify only one of: theta, radius")
+            raise ValueError("Specify only one of: theta, radius")
 
         theta = np.radians(theta)
         x = radius * cos(theta)
