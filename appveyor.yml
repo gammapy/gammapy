@@ -24,6 +24,10 @@ environment:
         ASTROPY_VERSION: "stable"
         NUMPY_VERSION: "stable"
 
+      - PYTHON_VERSION: "3.7"
+        ASTROPY_VERSION: "stable"
+        NUMPY_VERSION: "stable"
+
 
 platform:
     -x64
