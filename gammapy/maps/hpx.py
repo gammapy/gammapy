@@ -1791,36 +1791,6 @@ class HpxToWcsMapping(object):
         HEALPIX region"""
         return self._valid
 
-    def write(self, filename, overwrite=False):
-        """Write this mapping to a FITS file.
-
-        This can be useful to avoid having to recompute it.
-
-        Parameters
-        ----------
-        filename : str
-            FITS file name
-        overwrite : bool
-            Overwrite existing file?
-        """
-        from .wcsnd import WcsNDMap
-
-        index_map = WcsNDMap(self.ipix, self.wcs)
-
-        # TODO: Figure out where to write HPX header information
-        # hpx_header = self._hpx.make_header()
-        # mult_map = WcsNDMap(self.mult_val, self.wcs)
-        # prim_hdu = index_map.create_primary_hdu()
-        # mult_hdu = index_map.create_image_hdu()
-        # for key in ['COORDSYS', 'ORDERING', 'PIXTYPE',
-        #            'ORDERING', 'ORDER', 'NSIDE',
-        #            'FIRSTPIX', 'LASTPIX']:
-        #    prim_hdu.header[key] = hpx_header[key]
-        #    mult_hdu.header[key] = hpx_header[key]
-
-        hdulist = index_map.to_hdulist()
-        hdulist.writeto(filename, overwrite=overwrite)
-
     @classmethod
     def create(cls, hpx, wcs):
         """Create an object that maps pixels from HEALPix geometry ``hpx`` to
@@ -1840,22 +1810,6 @@ class HpxToWcsMapping(object):
         """
         ipix, mult_val, npix = make_hpx_to_wcs_mapping(hpx, wcs)
         return cls(hpx, wcs, ipix, mult_val, npix)
-
-    @classmethod
-    def read(cls, filename):
-        """Read a FITS file and use it to make a mapping."""
-        from .wcsnd import WcsNDMap
-
-        filename = str(make_path(filename))
-        index_map = WcsNDMap.read(filename)
-        mult_map = WcsNDMap.read(filename, hdu=1)
-        with fits.open(filename, memmap=False) as hdu_list:
-            hpx = HpxGeom.from_header(hdu_list[0])
-            ipix = index_map.data
-            mult_val = mult_map.data
-            npix = mult_map.counts.shape
-
-        return cls(hpx, index_map.wcs, ipix, mult_val, npix)
 
     def fill_wcs_map_from_hpx_data(
         self, hpx_data, wcs_data, normalize=True, fill_nan=True
