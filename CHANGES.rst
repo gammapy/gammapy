@@ -88,7 +88,20 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
 
-- [#1696] Add paramter auto scale (Johannes Kind and Christoph Deil)
+- [#1764] Format all code in Gammapy black (Christoph Deil)
+- [#1761] Add black notebooks functionality (José Enrique Ruiz)
+- [#1760] Add conda env file for release v0.8 (José Enrique Ruiz)
+- [#1759] Add find_peaks for images (Christoph Deil)
+- [#1755] Change map FITS unit header key to standard "BUNIT" (Christoph Deil)
+- [#1751] Improve EventList and data checkers (Christoph Deil)
+- [#1750] Remove EventListDataset class (Christoph Deil)
+- [#1748] Add DataStoreChecker and ObservationChecker (Christoph Deil)
+- [#1746] Unify and fix testing of plot methods (Axel Donath)
+- [#1731] Fix and unify Map.iter_by_image (Axel Donath)
+- [#1711] Clean up map reprojection code (Axel Donath)
+- [#1702] Add mask filter option to MapFit (Axel Donath)
+- [#1697] Improve convolution code and tests (Axel Donath)
+- [#1696] Add parameter auto scale (Johannes Kind and Christoph Deil)
 - [#1695] Add WcsNDMap convolve method (Axel Donath)
 - [#1685] Add quantity support to map coordinates (Axel Donath)
 - [#1681] Add make_images method in MapMaker (Axel Donath)
