@@ -11,9 +11,12 @@ extraction:
   python:
     prepare:
       packages:
-        - "bison"
-        - "flex"
+        - bison
+        - flex
     index:
       exclude:
-        - "gammapy/extern"
-        - "_astropy_init.py"
+        - dev
+        - gammapy/extern
+        - _astropy_init.py
+        - ah_bootstrap.py
+        - ez_setup.py
