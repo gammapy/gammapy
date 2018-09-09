@@ -53,8 +53,8 @@ class TestSmartHDUList:
             assert g(hdu=name.lower()) == name
             assert g(hdu=number) == name
 
-        g(hdu_type="image") == "IMAGE1"
-        g(hdu_type="table") == "TABLE1"
+        assert g(hdu_type="image") == "IMAGE1"
+        assert g(hdu_type="table") == "TABLE1"
 
         # Call the method incorrectly, and assert that ValueError is raised:
 
@@ -65,28 +65,20 @@ class TestSmartHDUList:
             == "Must give either `hdu` or `hdu_type`. Got `None` for both."
         )
 
-        # with pytest.raises(ValueError) as exc:
-        #     g(hdu='TABLE1', hdu_type='table')
-        # assert str(exc.value) == (
-        #     "Must give either `hdu` or `hdu_type`."
-        #     " Got a value for both: hdu=TABLE1 and hdu_type=table"
-        # )
-
         with pytest.raises(ValueError) as exc:
             g(hdu_type="bad value")
         assert str(exc.value) == "Invalid hdu_type=bad value"
 
         # Query for non-existent HDUs, and assert that KeyError is raised:
 
-        with pytest.raises(KeyError) as exc:
+        with pytest.raises(KeyError):
             g(hdu=["bad", "type"])
 
-        with pytest.raises(KeyError) as exc:
+        with pytest.raises(KeyError):
             g(hdu="kronka lonka")
 
-        with pytest.raises(KeyError) as exc:
+        with pytest.raises(KeyError):
             g(hdu=42)
-        # assert str(exc.value) == 'HDU not found: hdu=42. Index out of range.'
 
     def test_fits_get_hdu_index(self):
         # We test almost everything above via `test_fits_get_hdu`
