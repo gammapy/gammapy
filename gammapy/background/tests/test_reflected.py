@@ -102,6 +102,9 @@ class TestReflectedRegionBackgroundEstimator:
 
     @requires_dependency("matplotlib")
     def test_plot(self):
+        # The following line can be removed once we drop support for regions 0.2
+        # See https://github.com/gammapy/gammapy/issues/1758
+        pytest.importorskip("regions", minversion="0.3")
         self.bg_maker.run()
         with mpl_plot_check():
             self.bg_maker.plot()
