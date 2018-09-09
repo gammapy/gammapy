@@ -3,7 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import warnings
 import logging
 import click
+import sys
 from .. import version
+from ..extern.pathlib import Path
 
 
 # We implement the --version following the example from here:
@@ -84,12 +86,10 @@ def cli_download(ctx, folder):
 
 
 @cli.group('jupyter', short_help='Perform actions on notebooks')
-@click.option('--file', default='',
-              help='Jupyter notebook filename.')
-@click.option('--fold', default='.',
-              help='Local folder with Jupyter notebooks.')
+@click.option('--src', default='.',
+              help='Local folder or Jupyter notebook filename.')
 @click.pass_context
-def cli_jupyter(ctx, file, fold):
+def cli_jupyter(ctx, src):
     """
     Perform a series of actions on Jupyter notebooks.
 
@@ -102,40 +102,42 @@ def cli_jupyter(ctx, file, fold):
     Examples
     --------
     \b
-    $ gammapy jupyter black
-    $ gammapy jupyter --file=notebook.ipynb execute
-    $ gammapy jupyter --fold=myfolder/tutorials test
     $ gammapy jupyter stripout
+    $ gammapy jupyter --src=mynotebooks.ipynb execute
+    $ gammapy jupyter --src=myfolder/tutorials test
+    $ gammapy jupyter black
     """
-    ctx.obj = {
-        'file': file,
-        'fold': fold,
-    }
+    log = logging.getLogger(__name__)
 
-    if file and fold != '.':
-        print('--file and --fold are mutually exclusive options, only one is allowed.')
+    path = Path(src)
+    if not path.exists():
+        log.error("File or folder {} not found.".format(src))
         sys.exit()
+
+    if path.is_dir():
+        paths = list(path.glob('*.ipynb'))
+    else:
+        paths = [path]
+
+    ctx.obj = {
+        'paths': paths,
+    }
 
 
 def add_subcommands():
     from .info import cli_info
-
     cli.add_command(cli_info)
 
     from .check import cli_check
-
     cli.add_command(cli_check)
 
     from .image_bin import cli_image_bin
-
     cli_image.add_command(cli_image_bin)
 
     from .download import cli_download_notebooks
-
     cli_download.add_command(cli_download_notebooks)
 
     from .download import cli_download_datasets
-
     cli_download.add_command(cli_download_datasets)
 
     from .jupyter import cli_jupyter_black
