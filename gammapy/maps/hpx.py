@@ -347,6 +347,7 @@ def get_hpxregion_dir(region, coordsys):
     import healpy as hp
 
     frame = coordsys_to_frame(coordsys)
+
     if region is None:
         return SkyCoord(0., 0., frame=frame, unit="deg")
 
@@ -369,8 +370,6 @@ def get_hpxregion_dir(region, coordsys):
         return SkyCoord(lon, lat, frame=frame, unit="deg")
     else:
         raise ValueError("Invalid region type: {!r}".format(tokens[0]))
-
-    return None
 
 
 def get_hpxregion_size(region):
