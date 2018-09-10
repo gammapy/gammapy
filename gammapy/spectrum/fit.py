@@ -413,7 +413,7 @@ class SpectrumFit(object):
         # TODO: add this back once fitting backends support optimisation
         # and error estimation as separate steps
 
-    def run(self, outdir=None):
+    def run(self, outdir=None, opts_minuit=None):
         """Run all steps and write result to disk.
 
         Parameters
@@ -423,7 +423,7 @@ class SpectrumFit(object):
         """
         log.info("Running {}".format(self))
 
-        self.fit()
+        self.fit(opts_minuit)
         self.est_errors()
 
         if outdir is not None:
