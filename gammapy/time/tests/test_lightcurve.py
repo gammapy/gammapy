@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import sys
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -84,6 +85,12 @@ def test_lightcurve_properties_flux(lc):
 # TODO: extend these tests to cover other time scales.
 # In those cases, CSV should not round-trip because there
 # is no header info in CSV to store the time scale!
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 7),
+    reason="https://github.com/astropy/astropy/issues/7744#issuecomment-419813519",
+)
 @requires_dependency("yaml")
 @pytest.mark.parametrize("format", ["fits", "ascii.ecsv", "ascii.csv"])
 def test_lightcurve_read_write(tmpdir, lc, format):
