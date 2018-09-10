@@ -18,25 +18,15 @@ def print_version(ctx, param, value):
 
 
 # http://click.pocoo.org/5/documentation/#help-parameter-customization
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
-@click.group("gammapy", context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "--log-level",
-    default="info",
-    help="Logging verbosity level",
-    type=click.Choice(["debug", "info", "warning", "error"]),
-)
-@click.option("--ignore-warnings", is_flag=True, help="Ignore warnings?")
-@click.option(
-    "--version",
-    is_flag=True,
-    callback=print_version,
-    expose_value=False,
-    is_eager=True,
-    help="Print version and exit",
-)
+@click.group('gammapy', context_settings=CONTEXT_SETTINGS)
+@click.option('--log-level', default='info', help='Logging verbosity level.',
+              type=click.Choice(['debug', 'info', 'warning', 'error']))
+@click.option('--ignore-warnings', is_flag=True, help='Ignore warnings?')
+@click.option('--version', is_flag=True, callback=print_version,
+              expose_value=False, is_eager=True, help='Print version and exit.')
 def cli(log_level, ignore_warnings):
     """Gammapy command line interface (CLI).
 
@@ -68,21 +58,42 @@ def cli_image():
     """Analysis - 2D images"""
 
 
-@cli.group("download", short_help="Download datasets and notebooks")
-@click.option(
-    "--folder",
-    prompt="target folder",
-    default="gammapy-tutorials",
-    help="Folder where the files will be copied.",
-)
+@cli.group('download', short_help='Download datasets and notebooks')
+@click.option('--dest', prompt='destination folder', default='gammapy-tutorials',
+              help='Folder where the files will be copied.')
+@click.option('--file', default='',
+              help='Specific file to download.')
+@click.option('--fold', default='',
+              help='Specific folder to download.')
+@click.option('--release', default='',
+              help='Release or commit hash in Github repo.')
+@click.option('--recursive/--no-recursive', default=True, help='Deactivate recursive scan of a folder.')
 @click.pass_context
-def cli_download(ctx, folder):
-    """
+def cli_download(ctx, dest, file, fold, release, recursive):
+    """Download datasets and notebooks.
+
     Download from the 'gammapy-extra' Github repository the content of
     'datasets' or 'notebooks' folders. The files are copied into a folder
     created at the current working directory.
+
+    \b
+    Examples
+    --------
+
+    \b
+    $ gammapy download notebooks
+    $ gammapy download datasets
+    $ gammapy download --file=first_steps.ipynb notebooks
+    $ gammapy download --dest=localfolder --fold=catalogs/fermi --no-recursive datasets
+    $ gammapy download --release=master notebooks
     """
-    ctx.obj = {"localfolder": folder}
+    ctx.obj = {
+        'localfold': dest,
+        'specfile': file,
+        'specfold': fold,
+        'release': release,
+        'recursive': recursive
+    }
 
 
 @cli.group('jupyter', short_help='Perform actions on notebooks')
