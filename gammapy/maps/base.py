@@ -631,8 +631,9 @@ class Map(object):
             coords = OrderedDict(zip(axes_names, coords))
 
         idx = []
-        for axis, value in zip(self.geom.axes, coords.values()):
-            idx.append(axis.coord_to_idx(value))
+        for ax in self.geom.axes:
+            value = coords[ax.name]
+            idx.append(ax.coord_to_idx(value))
 
         return self.get_image_by_idx(idx)
 
