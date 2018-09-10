@@ -623,6 +623,9 @@ class MapAxis(object):
         str_ += fmt.format("interp", self._interp)
         return str_
 
+    def copy(self):
+        """Copy `MapAxis` object"""
+        return copy.deepcopy(self)
 
 class MapCoord(object):
     """Represents a sequence of n-dimensional map coordinates.
@@ -891,7 +894,7 @@ class MapCoord(object):
         return self.__class__(data, self.coordsys, self._match_by_name)
 
     def copy(self):
-        """Copy geom object."""
+        """Copy `MapCoord` object."""
         return copy.deepcopy(self)
 
     def __repr__(self):
@@ -1403,6 +1406,17 @@ class MapGeom(object):
 
         return self.__class__(**kwargs)
 
-    def copy(self):
-        """Deep copy."""
-        return copy.deepcopy(self)
+    def copy(self, **kwargs):
+        """Copy `MapGeom` instance and overwrite given attributes.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map geometry constructor.
+
+        Returns
+        --------
+        copy : `MapGeom`
+            Copied map geometry.
+        """
+        return self._init_copy(**kwargs)

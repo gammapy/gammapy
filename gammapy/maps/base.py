@@ -442,16 +442,20 @@ class Map(object):
         map : `Map`
             Reprojected map.
         """
-        axes_eq = geom.ndim == self.geom.ndim
-        axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)])
+        if geom.is_image:
+            axes = [ax.copy() for ax in self.geom.axes]
+            geom = geom.copy(axes=axes)
+        else:
+            axes_eq = geom.ndim == self.geom.ndim
+            axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)])
 
-        if not axes_eq and not geom.is_image:
-            raise ValueError(
-                "Map and target geometry non-spatial axes must match."
-                "Use interp_by_coord to interpolate in non-spatial axes."
-            )
+            if not axes_eq:
+                raise ValueError(
+                    "Map and target geometry non-spatial axes must match."
+                    "Use interp_by_coord to interpolate in non-spatial axes."
+                )
 
-        if geom.projection == "HPX":
+        if geom.is_hpx:
             return self._reproject_to_hpx(geom, mode=mode, order=order)
         else:
             return self._reproject_to_wcs(geom, mode=mode, order=order)
