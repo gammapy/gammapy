@@ -265,9 +265,7 @@ def test_map_reproject_wcs_to_wcs():
         axes=[axis1, axis2],
         coordsys="CEL",
     )
-    geom_wcs_2 = WcsGeom.create(
-        skydir=(0, 0), npix=(11, 11), binsz=0.1, coordsys="GAL"
-    )
+    geom_wcs_2 = WcsGeom.create(skydir=(0, 0), npix=(11, 11), binsz=0.1, coordsys="GAL")
 
     spatial_data = np.zeros((11, 11))
     energy_data = energy_nodes.reshape(3, 1, 1)

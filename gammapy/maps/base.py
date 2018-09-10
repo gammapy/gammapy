@@ -447,7 +447,9 @@ class Map(object):
             geom = geom.copy(axes=axes)
         else:
             axes_eq = geom.ndim == self.geom.ndim
-            axes_eq &= np.all([ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)])
+            axes_eq &= np.all(
+                [ax0 == ax1 for ax0, ax1 in zip(geom.axes, self.geom.axes)]
+            )
 
             if not axes_eq:
                 raise ValueError(

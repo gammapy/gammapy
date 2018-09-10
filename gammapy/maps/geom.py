@@ -627,6 +627,7 @@ class MapAxis(object):
         """Copy `MapAxis` object"""
         return copy.deepcopy(self)
 
+
 class MapCoord(object):
     """Represents a sequence of n-dimensional map coordinates.
 
