@@ -61,8 +61,10 @@ class HDULocation(object):
     def get_hdu(self):
         """Get HDU."""
         filename = str(self.path(abs_path=True))
-        with fits.open(filename, memmap=False) as hdu_list:
-            return hdu_list[self.hdu_name]
+        # Here we're intentionally not calling `with fits.open`
+        # because we don't want the file to remain open.
+        hdu_list = fits.open(filename, memmap=False)
+        return hdu_list[self.hdu_name]
 
     def load(self):
         """Load HDU as appropriate class.
