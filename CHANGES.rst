@@ -13,14 +13,14 @@ Summary
 
 **What's new?**
 
-This release contains a big change: the new ``gammapy.maps`` is used for all
+Gammapy v0.8 contains a big change: the new ``gammapy.maps`` is used for all
 map-based analysis (2D images and 3D cubes with an energy axis). The old
 SkyImage and SkyCube classes have been removed. All code and
 documentation has been updated to use ``gammapy.maps``. To learn about the new
 maps classes, see the ``intro_maps`` tutorial at :ref:`tutorials` and the
 :ref:`gammapy.maps <maps>` documentation page.
 
-Gammapy v0.8 also contains a first version of new classes for modeling and fitting of 3D cubes.
+This release also contains a first version of new classes for modeling and fitting of 3D cubes.
 The classes in `gammapy.cube.models` (3D cube models), `gammapy.image.models` (2D image models)
 and `gammapy.spectrum.models` (1D spectrum models) are now all written using a simple modeling
 system in `gammapy.utils.modeling` (the ``Parameter`` and ``Parameters`` class) and can be
@@ -41,7 +41,7 @@ using gamma-ray data.
 The number of optional dependencies used in Gammapy has been reduced. Sherpa is now
 an optional fitting backend, modeling is built-in in Gammapy. The following packages
 are no longer used in Gammapy: scikit-image, photutils, pandas, aplpy.
-The code quality and test coverage in Gammapy has been improved a lot in the past months.
+The code quality and test coverage in Gammapy has been improved a lot.
 
 This release also contains a large number of small improvements and bug fixes to the existing code,
 listed below in the changelog.
@@ -53,6 +53,9 @@ for science studies and papers and have to update your scripts and notebooks to 
 the new Gammapy version. If possible, just stick with a given stable version of Gammapy.
 If you need or want to update to a newer version, let us know if you have any issues or questions.
 We're happy to help!
+
+Gammapy v0.8 works on Linux, MacOS and Windows,
+with Python 3.5, 3.6, 3.7 as well as legacy Python 2.7.
 
 **Contributors:**
 
