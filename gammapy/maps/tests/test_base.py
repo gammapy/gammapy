@@ -266,7 +266,7 @@ def test_map_reproject_wcs_to_wcs():
         coordsys="CEL",
     )
     geom_wcs_2 = WcsGeom.create(
-        skydir=(0, 0), npix=(11, 11), binsz=0.1, axes=[axis1, axis2], coordsys="GAL"
+        skydir=(0, 0), npix=(11, 11), binsz=0.1, coordsys="GAL"
     )
 
     spatial_data = np.zeros((11, 11))
