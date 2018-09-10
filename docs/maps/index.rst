@@ -538,17 +538,19 @@ This example shows how to fill a counts cube from an FT1 file:
 
 .. code:: python
 
-    from astropy.io import fits
+    from gammapy.data import EventList
     from gammapy.maps import WcsGeom, WcsNDMap, MapAxis
 
-    h = fits.open('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
-    energy_axis = MapAxis.from_bounds(100., 1E5, 12, interp='log')
+
+    energy_axis = MapAxis.from_bounds(10., 2E3, 12, interp='log', name='energy', unit='GeV')
     m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
                         coordsys='CEL', axes=[energy_axis])
-    m.fill_by_coord((h['EVENTS'].data.field('RA'),
-                    h['EVENTS'].data.field('DEC'),
-                    h['EVENTS'].data.field('ENERGY')))
+
+    events = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
+
+    m.fill_by_coord({'skycoord': events.radec, 'energy': events.energy})
     m.write('ccube.fits', conv='fgst-ccube')
+
 
 Generating a Cutout of a Model Cube
 -----------------------------------
@@ -561,10 +563,10 @@ using the `~Map.reproject` method:
     from gammapy.maps import WcsGeom, WcsNDMap
 
     m = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/fermi_3fhl/gll_iem_v06_cutout.fits')
-    geom = WcsGeom(binsz=0.125, skydir=(0, 0), coordsys='GAL', proj='AIT')
+
+    geom = WcsGeom.create(binsz=0.1, skydir=(0, 0), coordsys='GAL', proj='AIT', width=(3, 3))
     m_proj = m.reproject(geom)
     m_proj.write('cutout.fits', conv='fgst-template')
-
 
 Using `gammapy.maps`
 ====================
