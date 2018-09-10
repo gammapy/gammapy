@@ -61,6 +61,10 @@ def test_hdu_index_table_hd_hap():
     hdu = location.get_hdu()
     assert hdu.name == "EVENTS"
 
+    # The next line is to check if the HDU is still accessible
+    # See https://github.com/gammapy/gammapy/issues/1775
+    assert hdu.filebytes() == 285120
+
     assert (
         str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
