@@ -53,11 +53,11 @@ class SpectrumAnalysisIACT(object):
         ss += "\n{}".format(self.config)
         return ss
 
-    def run(self):
+    def run(self, opts_minuit=None):
         """Run all steps."""
         log.info("Running {}".format(self.__class__.__name__))
         self.run_extraction()
-        self.run_fit()
+        self.run_fit(opts_minuit)
 
     def run_extraction(self):
         """Run all steps for the spectrum extraction."""
@@ -74,12 +74,12 @@ class SpectrumAnalysisIACT(object):
 
         self.extraction.run()
 
-    def run_fit(self):
+    def run_fit(self, opts_minuit=None):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
             obs_list=self.extraction.observations, **self.config["fit"]
         )
-        self.fit.run(outdir=self.config["outdir"])
+        self.fit.run(outdir=self.config["outdir"], opts_minuit=opts_minuit)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.observations.stack()
