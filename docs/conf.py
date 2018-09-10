@@ -98,7 +98,7 @@ extensions.extend(
         "sphinx.ext.mathjax",
     ]
 )
-nbsphinx_execute = setup_cfg["execute_notebooks"]
+nbsphinx_execute = 'never'
 
 # --
 
