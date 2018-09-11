@@ -921,6 +921,8 @@ class FluxPointFitter(object):
         Select optimizer
     ul_handling : {'ignore'}
         How to handle flux point upper limits in the fit
+    opts_minuit : dict
+        Options passed to the `Minuit` fit object.
 
     Examples
     --------
@@ -976,6 +978,8 @@ class FluxPointFitter(object):
 
         Parameters
         ----------
+        data : list of `~gammapy.spectrum.FluxPoints`
+            Flux points.
         model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model (with fit start parameters)
 

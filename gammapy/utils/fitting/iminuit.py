@@ -34,24 +34,27 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     if parameters.apply_autoscale:
         parameters.autoscale()
 
-    minuit_func = MinuitFunction(function, parameters)
-
-    if opts_minuit is None:
-        opts_minuit = {}
-    opts_minuit.update(make_minuit_par_kwargs(parameters))
-
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
-    opts_minuit.setdefault("errordef", 1)
+    opts_minuit_all = {
+        "errordef": 1,
+        "print_level": 0
+    }
 
-    opts_minuit.setdefault("print_level", 0)
+    if opts_minuit:
+        opts_minuit_all.update(opts_minuit)
+
+    opts_minuit_all.update(make_minuit_par_kwargs(parameters))
 
     parnames = _make_parnames(parameters)
-    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit)
+    minuit_func = MinuitFunction(function, parameters)
+
+    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit_all)
 
     minuit.migrad()
 
     parameters.set_parameter_factors(minuit.args)
+
     if minuit.covariance is not None:
         parameters.set_covariance_factors(_get_covar(minuit))
     else:
