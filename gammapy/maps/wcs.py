@@ -187,7 +187,9 @@ class WcsGeom(MapGeom):
 
         # By convention CRPIX is indexed from 1
         if crpix is None:
-            self._crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.)
+            crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.)
+
+        self._crpix = crpix
 
     @property
     def data_shape(self):
