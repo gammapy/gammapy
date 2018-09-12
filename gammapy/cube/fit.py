@@ -3,14 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
-from ..utils.fitting import fit_iminuit
+from ..utils.fitting import Fit
 from ..stats import cash
 from ..maps import Map
 
 __all__ = ["MapFit", "MapEvaluator"]
 
 
-class MapFit(object):
+class MapFit(Fit):
     """Perform sky model likelihood fit on maps.
 
     This is the first go at such a class. It's geared to the
@@ -72,36 +72,6 @@ class MapFit(object):
         else:
             stat = self.stat
         return np.sum(stat, dtype=np.float64)
-
-    @property
-    def total_stat(self):
-        """Total likelihood given the current model parameters"""
-        return self._total_stat(self._model.parameters)
-
-    def fit(self, opts_minuit=None):
-        """Run the fit
-
-        Parameters
-        ----------
-        opts_minuit : dict (optional)
-            Options passed to `iminuit.Minuit` constructor
-
-        Returns
-        -------
-        fit_result : dict
-            Dictionary with the fit result.
-        """
-        minuit = fit_iminuit(
-            parameters=self._model.parameters,
-            function=self._total_stat,
-            opts_minuit=opts_minuit,
-        )
-        self._minuit = minuit
-
-        return {
-            'best_fit_model': self._model.copy(),
-            'statval': self.total_stat,
-        }
 
 
 class MapEvaluator(object):
