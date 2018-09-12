@@ -79,7 +79,10 @@ class SpectrumAnalysisIACT(object):
         self.fit = SpectrumFit(
             obs_list=self.extraction.observations, **self.config["fit"]
         )
-        self.fit.run(outdir=self.config["outdir"], opts_minuit=opts_minuit)
+        self.fit.run(opts_minuit=opts_minuit)
+        modelname = self.fit.result[0].model.__class__.__name__
+        filename = self.config["outdir"] / "fit_result_{}.yaml".format(modelname)
+        self.fit.result[0].to_yaml(filename=filename)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.observations.stack()
