@@ -825,7 +825,6 @@ class FluxPointEstimator(object):
         )
 
         self.fit.fit()
-        self.fit.est_errors()
 
         # compute TS value for all observations
         stat_best_fit = np.sum([res.statval for res in self.fit.result])

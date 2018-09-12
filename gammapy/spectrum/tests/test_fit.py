@@ -220,7 +220,6 @@ class TestSpectralFit:
 
     def test_basic_errors(self):
         self.fit.fit()
-        self.fit.est_errors()
         result = self.fit.result[0]
         assert_allclose(result.model.parameters.error("index"), 0.097866953, rtol=1e-3)
         assert_allclose(

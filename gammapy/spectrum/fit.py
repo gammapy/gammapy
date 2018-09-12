@@ -18,9 +18,8 @@ log = logging.getLogger(__name__)
 class SpectrumFit(Fit):
     """Orchestrate a 1D counts spectrum fit.
 
-    After running the :func:`~gammapy.spectrum.SpectrumFit.fit` and
-    :func:`~gammapy.spectrum.SpectrumFit.est_errors` methods, the fit results
-    are available in :func:`~gammapy.spectrum.SpectrumFit.result`. For usage
+    After running the :func:`~gammapy.spectrum.SpectrumFit.fit` method, the fit
+    results are available in :func:`~gammapy.spectrum.SpectrumFit.result`. For usage
     examples see :ref:`spectral_fitting`
 
     Parameters
