@@ -262,7 +262,7 @@ class SpectrumFit(Fit):
         else:
             raise NotImplementedError("{}".format(self.stat))
 
-    def _total_stat(self, parameters):
+    def total_stat(self, parameters):
         """Statistic summed over all bins and all observations.
 
         This is the likelihood function that is passed to the optimizers
@@ -316,7 +316,7 @@ class SpectrumFit(Fit):
         self._model = model
         for val in parvals:
             self._model.parameters[parname].value = val
-            stat = self._total_stat(self._model.parameters)
+            stat = self.total_stat(self._model.parameters)
             likelihood.append(stat)
         return np.array(likelihood)
 
@@ -335,7 +335,7 @@ class SpectrumFit(Fit):
         return ax
 
     @property
-    def result_per_obs(self):
+    def result(self):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
 
         Parameters

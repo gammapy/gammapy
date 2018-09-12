@@ -169,9 +169,8 @@ def obs():
 def model():
     model = PowerLaw()
     fit = SpectrumFit(obs(), model)
-    fit.fit()
-    fit.est_errors()
-    return fit.result[0].model
+    result = fit.fit()
+    return result['best-fit-model']
 
 
 @pytest.fixture(scope="session")

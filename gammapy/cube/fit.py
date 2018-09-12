@@ -64,7 +64,7 @@ class MapFit(Fit):
         npred = self.evaluator.compute_npred()
         return cash(n_on=self.counts.data, mu_on=npred)
 
-    def _total_stat(self, parameters):
+    def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         self._model.parameters = parameters
         if self.mask:

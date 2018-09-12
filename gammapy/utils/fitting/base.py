@@ -21,14 +21,9 @@ class Fit(object):
     """Abstract Fit base class.
     """
     @abc.abstractmethod
-    def _total_stat(self, parameters):
+    def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         pass
-
-    @property
-    def total_stat(self):
-        """Total likelihood given the current model parameters"""
-        return self._total_stat(self._model.parameters)
 
     def fit(self, opts_minuit=None):
         """Run the fit
@@ -45,14 +40,14 @@ class Fit(object):
         """
         minuit = fit_iminuit(
             parameters=self._model.parameters,
-            function=self._total_stat,
+            function=self.total_stat,
             opts_minuit=opts_minuit,
         )
         self._minuit = minuit
 
         return {
             'best-fit-model': self._model.copy(),
-            'statval': self.total_stat,
+            'statval': self.total_stat(self._model.parameters),
         }
 
     def run(self, steps='all', opts_minuit=None):
@@ -70,5 +65,3 @@ class Fit(object):
 
     def est_errors(self):
         return {}
-
-
