@@ -2,3 +2,4 @@
 """
 from .iminuit import *
 from .sherpa import *
+from .base import *
