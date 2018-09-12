@@ -61,7 +61,12 @@ def fit_iminuit(parameters, function, opts_minuit=None):
         log.warning("No covariance matrix found")
         parameters.covariance = None
 
-    return minuit
+    return {
+        "success": minuit.migrad_ok(),
+        "factors": minuit.args,
+        "nfev": minuit.get_num_call_fcn(),
+        "minuit": minuit
+    }
 
 
 def _make_parnames(parameters):

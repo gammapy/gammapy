@@ -38,17 +38,19 @@ class Fit(object):
         fit_result : dict
             Dictionary with the fit result.
         """
-        minuit = fit_iminuit(
+        result = fit_iminuit(
             parameters=self._model.parameters,
             function=self.total_stat,
             opts_minuit=opts_minuit,
         )
-        self._minuit = minuit
+        self._minuit = result.pop('minuit')
 
-        return {
-            'best-fit-model': self._model.copy(),
-            'statval': self.total_stat(self._model.parameters),
-        }
+        if not result['success']:
+            log.info('Fit failed with message {}'.format(result['message']))
+
+        result['best-fit-model'] = self._model.copy()
+        result['statval'] = self.total_stat(self._model.parameters)
+        return result
 
     def run(self, steps='all', opts_minuit=None):
         """
