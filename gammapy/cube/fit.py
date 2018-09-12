@@ -41,7 +41,7 @@ class MapFit(object):
         if mask is not None and mask.data.dtype != np.dtype('bool'):
             raise ValueError('mask data must have dtype bool')
 
-        # Create a copy of the input model that is owned by MapFit
+        # Create a copy of the input model that is owned and modified by MapFit
         self._model = model.copy()
         self.counts = counts
         self.exposure = exposure
@@ -50,12 +50,8 @@ class MapFit(object):
         self.psf = psf
         self.edisp = edisp
 
-        self._npred = None
-        self._stat = None
-        self._minuit = None
-
         self.evaluator = MapEvaluator(
-            model=self.model,
+            model=self._model,
             exposure=exposure,
             background=self.background,
             psf=self.psf,
@@ -63,39 +59,24 @@ class MapFit(object):
         )
 
     @property
-    def npred(self):
-        """Predicted counts cube"""
-        return self._npred
-
-    @property
     def stat(self):
-        """Fit statistic per bin"""
-        return self._stat
+        """Likelihood per bin given the current model parameters"""
+        npred = self.evaluator.compute_npred()
+        return cash(n_on=self.counts.data, mu_on=npred)
 
-    @property
-    def minuit(self):
-        """`~iminuit.Minuit` object"""
-        return self._minuit
-
-    def compute_npred(self):
-        """Compute predicted counts"""
-        self._npred = self.evaluator.compute_npred()
-
-    def compute_stat(self):
-        """Compute fit statistic per bin"""
-        self._stat = cash(n_on=self.counts.data, mu_on=self.npred)
-
-    def total_stat(self, parameters):
-        """Likelihood for a given set of model parameters"""
+    def _total_stat(self, parameters):
+        """Total likelihood given the current model parameters"""
         self._model.parameters = parameters
-        self.compute_npred()
-        self.compute_stat()
-
         if self.mask:
             stat = self.stat[self.mask.data]
         else:
             stat = self.stat
         return np.sum(stat, dtype=np.float64)
+
+    @property
+    def total_stat(self):
+        """Total likelihood given the current model parameters"""
+        return self._total_stat(self._model.parameters)
 
     def fit(self, opts_minuit=None):
         """Run the fit
@@ -104,13 +85,23 @@ class MapFit(object):
         ----------
         opts_minuit : dict (optional)
             Options passed to `iminuit.Minuit` constructor
+
+        Returns
+        -------
+        fit_result : dict
+            Dictionary with the fit result.
         """
         minuit = fit_iminuit(
             parameters=self._model.parameters,
-            function=self.total_stat,
+            function=self._total_stat,
             opts_minuit=opts_minuit,
         )
         self._minuit = minuit
+
+        return {
+            'best_fit_model': self._model.copy(),
+            'statval': self.total_stat,
+        }
 
 
 class MapEvaluator(object):
