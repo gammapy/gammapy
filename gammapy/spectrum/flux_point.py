@@ -8,7 +8,8 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
-from ..utils.fitting import fit_iminuit
+from ..utils.fitting import Fit
+from ..stats.fit_statistics import chi2
 from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
@@ -885,44 +886,16 @@ class FluxPointProfiles(object):
         return cls(table=table)
 
 
-def chi2_flux_points(flux_points, gp_model):
-    """
-    Chi2 statistics for a list of flux points and model.
-    """
-    model = gp_model(flux_points.e_ref)
-    data = flux_points.table["dnde"].quantity
-    data_err = flux_points.table["dnde_err"].quantity
-    stat_per_bin = ((data - model) / data_err).value ** 2
-    return np.nansum(stat_per_bin), stat_per_bin
-
-
-def chi2_flux_points_assym(flux_points, gp_model):
-    """
-    Assymetric chi2 statistics for a list of flux points and model.
-    """
-    model = gp_model(flux_points.e_ref)
-    data = flux_points.table["dnde"].quantity
-
-    data_errp = flux_points.table["dnde_errp"].quantity
-    data_errn = flux_points.table["dnde_errn"].quantity
-
-    data_err = np.where(model > data, data_errp, data_errn)
-    stat_per_bin = ((data - model) / data_err).value ** 2
-    return np.nansum(stat_per_bin), stat_per_bin
-
-
-class FluxPointFit(object):
+class FluxPointFit(Fit):
     """
     Fit a set of flux points with a parametric model.
 
     Parameters
     ----------
-    optimizer : {'minuit'}
-        Select optimizer
-    ul_handling : {'ignore'}
-        How to handle flux point upper limits in the fit
-    opts_minuit : dict
-        Options passed to the `Minuit` fit object.
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Spectral model (with fit start parameters)
+    data : `~gammapy.spectrum.FluxPoints`
+        Flux points.
 
     Examples
     --------
@@ -942,99 +915,51 @@ class FluxPointFit(object):
             reference=1. * u.TeV,
         )
 
-        fitter = FluxPointFit()
-        result = fitter.run(flux_points, model)
+        fitter = FluxPointFit(model, flux_points)
+        result = fitter.run()
         print(result['best_fit_model'])
     """
 
-    def __init__(
-        self, stat="chi2", optimizer="minuit", ul_handling="ignore", opts_minuit=None
-    ):
-        if stat == "chi2":
-            self.stat = chi2_flux_points
-        elif stat == "chi2assym":
-            self.stat = chi2_flux_points_assym
+    def __init__(self, model, data, stat="chi2"):
+        self._model = model.copy()
+        self.data = data
+
+        if stat in  ["chi2", "chi2assym"]:
+            self._stat = stat
         else:
             raise ValueError(
                 "'{stat}' is not a valid fit statistic, please choose"
                 " either 'chi2' or 'chi2assym'"
             )
 
-        if ul_handling != "ignore":
-            raise NotImplementedError("No handling of upper limits implemented.")
+    @property
+    def _stat_chi2(self):
+        """Likelihood per bin given the current model parameters"""
+        model = self._model(self.data.e_ref)
+        data = self.data.table["dnde"].quantity
+        sigma = self.data.table["dnde_err"].quantity
+        return ((data - model) / sigma).to('').value ** 2
 
-        self.parameters = OrderedDict(
-            [
-                ("stat", stat),
-                ("optimizer", optimizer),
-                ("ul_handling", ul_handling),
-                ("opts_minuit", opts_minuit),
-            ]
-        )
-
-    def fit(self, data, model):
+    @property
+    def _stat_chi2_assym(self):
         """
-        Fit given model to data.
-
-        Parameters
-        ----------
-        data : list of `~gammapy.spectrum.FluxPoints`
-            Flux points.
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model (with fit start parameters)
-
-        Returns
-        -------
-        best_fit_model : `~gammapy.spectrum.models.SpectralModel`
-            Best fit model
+        Assymetric chi2 statistics for a list of flux points and model.
         """
-        p = self.parameters
-        model = model.copy()
+        model = self._model(self.data.e_ref)
+        data = self.data.table["dnde"].quantity
+        data_errp = self.data.table["dnde_errp"].quantity
+        data_errn = self.data.table["dnde_errn"].quantity
+        sigma = np.where(model > data, data_errp, data_errn)
+        return ((data - model) / sigma).to('').value ** 2
 
-        if p["optimizer"] == "minuit":
-
-            def total_stat(parameters):
-                model.parameters = parameters
-                return self.stat(data, model)[0]
-
-            minuit = fit_iminuit(
-                parameters=model.parameters,
-                function=total_stat,
-                opts_minuit=p["opts_minuit"],
-            )
-            self._minuit = minuit
+    @property
+    def stat(self):
+        if self._stat == 'chi2':
+            return self._stat_chi2
         else:
-            raise ValueError("Only the minuit fitting backend is supported.")
-        return model
+            return self._stat_chi2_assym
 
-    def run(self, data, model):
-        """Run all fitting and extra information steps.
-
-        Parameters
-        ----------
-        data : list of `~gammapy.spectrum.FluxPoints`
-            Flux points.
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Spectral model
-
-        Returns
-        -------
-        result : `~collections.OrderedDict`
-            Dictionary with fit results and debug output.
-        """
-        best_fit_model = self.fit(data, model)
-        statval = self.stat(data, best_fit_model)[0]
-
-        # Compute degrees of freedom
-        n = len(data.table)
-        m = sum(1 for par in best_fit_model.parameters if not par.frozen)
-        dof = n - m
-
-        return OrderedDict(
-            [
-                ("best-fit-model", best_fit_model),
-                ("dof", int(dof)),
-                ("statval", float(statval)),
-                ("statval/dof", float(statval / dof)),
-            ]
-        )
+    def _total_stat(self, parameters):
+        """Total likelihood given the current model parameters"""
+        self._model.parameters = parameters
+        return np.nansum(self.stat, dtype=np.float64)

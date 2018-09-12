@@ -51,6 +51,6 @@ class Fit(object):
         self._minuit = minuit
 
         return {
-            'best_fit_model': self._model.copy(),
+            'best-fit-model': self._model.copy(),
             'statval': self.total_stat,
         }

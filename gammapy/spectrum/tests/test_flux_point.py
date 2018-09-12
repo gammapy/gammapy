@@ -346,16 +346,15 @@ def test_compute_flux_points_dnde_fermi():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("sherpa")
+@requires_dependency("iminuit")
 class TestFluxPointFit:
-    def setup(self):
-        path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
-        self.flux_points = FluxPoints.read(path)
-
     def test_fit_pwl(self):
-        fitter = FluxPointFit()
+        path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
+        data = FluxPoints.read(path)
         model = PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
-        result = fitter.run(self.flux_points, model)
+
+        fitter = FluxPointFit(model, data)
+        result = fitter.fit()
 
         index = result["best-fit-model"].parameters["index"]
         assert_quantity_allclose(index.quantity, 2.216 * u.Unit(""), rtol=1e-3)
@@ -364,4 +363,3 @@ class TestFluxPointFit:
             amplitude.quantity, 2.1616E-13 * u.Unit("cm-2 s-1 TeV-1"), rtol=1e-3
         )
         assert_allclose(result["statval"], 25.2059, rtol=1e-3)
-        assert_allclose(result["dof"], 22)
