@@ -41,7 +41,8 @@ class MapFit(object):
         if mask is not None and mask.data.dtype != np.dtype('bool'):
             raise ValueError('mask data must have dtype bool')
 
-        self.model = model
+        # Create a copy of the input model that is owned by MapFit
+        self._model = model.copy()
         self.counts = counts
         self.exposure = exposure
         self.background = background
@@ -86,7 +87,7 @@ class MapFit(object):
 
     def total_stat(self, parameters):
         """Likelihood for a given set of model parameters"""
-        self.model.parameters = parameters
+        self._model.parameters = parameters
         self.compute_npred()
         self.compute_stat()
 
@@ -105,7 +106,7 @@ class MapFit(object):
             Options passed to `iminuit.Minuit` constructor
         """
         minuit = fit_iminuit(
-            parameters=self.model.parameters,
+            parameters=self._model.parameters,
             function=self.total_stat,
             opts_minuit=opts_minuit,
         )
