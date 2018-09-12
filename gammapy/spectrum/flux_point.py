@@ -17,7 +17,7 @@ __all__ = [
     "FluxPoints",
     # 'FluxPointProfiles',
     "FluxPointEstimator",
-    "FluxPointFitter",
+    "FluxPointFit",
 ]
 
 log = logging.getLogger(__name__)
@@ -911,7 +911,7 @@ def chi2_flux_points_assym(flux_points, gp_model):
     return np.nansum(stat_per_bin), stat_per_bin
 
 
-class FluxPointFitter(object):
+class FluxPointFit(object):
     """
     Fit a set of flux points with a parametric model.
 
@@ -930,7 +930,7 @@ class FluxPointFitter(object):
     Load flux points from file and fit with a power-law model::
 
         from astropy import units as u
-        from gammapy.spectrum import FluxPoints, FluxPointFitter
+        from gammapy.spectrum import FluxPoints, FluxPointFit
         from gammapy.spectrum.models import PowerLaw
 
         filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
@@ -942,7 +942,7 @@ class FluxPointFitter(object):
             reference=1. * u.TeV,
         )
 
-        fitter = FluxPointFitter()
+        fitter = FluxPointFit()
         result = fitter.run(flux_points, model)
         print(result['best_fit_model'])
     """

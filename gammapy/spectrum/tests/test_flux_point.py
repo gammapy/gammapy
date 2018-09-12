@@ -21,7 +21,7 @@ from ..models import PowerLaw, SpectralModel
 from ..flux_point import (
     FluxPoints,
     FluxPointProfiles,
-    FluxPointFitter,
+    FluxPointFit,
     FluxPointEstimator,
 )
 
@@ -347,13 +347,13 @@ def test_compute_flux_points_dnde_fermi():
 
 @requires_data("gammapy-extra")
 @requires_dependency("sherpa")
-class TestFluxPointFitter:
+class TestFluxPointFit:
     def setup(self):
         path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
         self.flux_points = FluxPoints.read(path)
 
     def test_fit_pwl(self):
-        fitter = FluxPointFitter()
+        fitter = FluxPointFit()
         model = PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
         result = fitter.run(self.flux_points, model)
 
