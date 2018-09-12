@@ -79,7 +79,7 @@ class TestFit:
         self.source_model.parameters["index"].value = 1.12
         fit.fit()
         # These values are check with sherpa fits, do not change
-        pars = fit.result[0].model.parameters
+        pars = fit.result_per_obs[0].model.parameters
         assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
 
@@ -98,10 +98,10 @@ class TestFit:
             forward_folded=False,
         )
         fit.fit()
-        pars = fit.result[0].model.parameters
+        pars = fit.result_per_obs[0].model.parameters
         assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
-        assert_allclose(fit.result[0].statval, 30.022316, rtol=1e-3)
+        assert_allclose(fit.result_per_obs[0].statval, 30.022316, rtol=1e-3)
 
     def test_joint(self):
         """Test joint fit for obs with different energy binning"""
@@ -115,7 +115,7 @@ class TestFit:
             forward_folded=False,
         )
         fit.fit()
-        pars = fit.result[0].model.parameters
+        pars = fit.result_per_obs[0].model.parameters
         assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
 
     def test_fit_range(self):
@@ -156,10 +156,10 @@ class TestFit:
             obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
         fit.fit()
-        true_idx = fit.result[0].model.parameters["index"].value
+        true_idx = fit.result_per_obs[0].model.parameters["index"].value
         scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         profile = fit.likelihood_1d(
-            model=fit.result[0].model, parname="index", parvals=scan_idx
+            model=fit.result_per_obs[0].model, parname="index", parvals=scan_idx
         )
         argmin = np.argmin(profile)
         actual = scan_idx[argmin]
@@ -209,30 +209,30 @@ class TestSpectralFit:
     def test_basic_results(self):
         self.fit.method = "iminuit"
         self.fit.fit()
-        result = self.fit.result[0]
+        result = self.fit.result_per_obs[0]
         assert_allclose(result.statval, 32.8387, rtol=1e-4)
         pars = result.model.parameters
         assert_allclose(pars["index"].value, 2.25423, rtol=1e-2)
         assert pars["amplitude"].unit == u.Unit("cm-2 s-1 TeV-1")
         assert_allclose(pars["amplitude"].value, 2.008654e-11, rtol=1e-2)
         assert_allclose(result.npred[60], 0.5638139, rtol=1e-3)
-        self.fit.result[0].to_table()
+        self.fit.result_per_obs[0].to_table()
 
     def test_basic_errors(self):
         self.fit.fit()
         self.fit.est_errors()
-        result = self.fit.result[0]
+        result = self.fit.result_per_obs[0]
         assert_allclose(result.model.parameters.error("index"), 0.097866953, rtol=1e-3)
         assert_allclose(
             result.model.parameters.error("amplitude"), 2.1994e-12, rtol=1e-3
         )
-        self.fit.result[0].to_table()
+        self.fit.result_per_obs[0].to_table()
 
     def test_compound(self):
         model = self.pwl * 2
         fit = SpectrumFit(self.obs_list[0], model)
         fit.fit()
-        result = fit.result[0]
+        result = fit.result_per_obs[0]
         pars = result.model.parameters
         assert_allclose(pars["index"].value, 2.254578, rtol=1e-3)
         p = pars["amplitude"]
@@ -243,17 +243,17 @@ class TestSpectralFit:
         self.fit.fit()
         actual = (
             self.fit.obs_list[0]
-            .predicted_counts(self.fit.result[0].model)
+            .predicted_counts(self.fit.result_per_obs[0].model)
             .data.data.value
         )
-        desired = self.fit.result[0].npred
+        desired = self.fit.result_per_obs[0].npred
         assert_allclose(actual, desired)
 
     def test_stats(self):
         self.fit.fit()
-        stats = self.fit.result[0].stat_per_bin
+        stats = self.fit.result_per_obs[0].stat_per_bin
         actual = np.sum(stats)
-        desired = self.fit.result[0].statval
+        desired = self.fit.result_per_obs[0].statval
         assert_allclose(actual, desired)
 
     def test_fit_range(self):
@@ -292,22 +292,22 @@ class TestSpectralFit:
         obs.edisp = None
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
         fit.fit()
-        assert_allclose(fit.result[0].model.parameters["index"].value, 2.296, atol=0.02)
+        assert_allclose(fit.result_per_obs[0].model.parameters["index"].value, 2.296, atol=0.02)
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
         fit.fit()
-        actual = fit.result[0].model.parameters["lambda_"].quantity
+        actual = fit.result_per_obs[0].model.parameters["lambda_"].quantity
         assert actual.unit == "TeV-1"
         assert_allclose(actual.value, 0.034231, rtol=1e-2)
 
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.fit()
-        actual = fit.result[0].model.parameters["index"].value
+        actual = fit.result_per_obs[0].model.parameters["index"].value
         assert_allclose(actual, 2.21225, rtol=1e-3)
 
-        actual = fit.result[0].model.parameters["amplitude"].quantity
+        actual = fit.result_per_obs[0].model.parameters["amplitude"].quantity
         assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 2.361871e-11, rtol=1e-3)
 
@@ -316,18 +316,23 @@ class TestSpectralFit:
         obs_list = SpectrumObservationList([stacked_obs])
         fit = SpectrumFit(obs_list, self.pwl)
         fit.fit()
-        pars = fit.result[0].model.parameters
+        pars = fit.result_per_obs[0].model.parameters
         assert_allclose(pars["index"].value, 2.21338, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 2.361827e-11, rtol=1e-3)
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.run(outdir=tmpdir)
+        fit.run()
+
+        result = fit.result_per_obs[0]
+        modelname = result.model.__class__.__name__
+        filename = tmpdir / "fit_result_{}.yaml".format(modelname)
+        result.to_yaml(filename)
 
         read_result = SpectrumFitResult.from_yaml(tmpdir / "fit_result_PowerLaw.yaml")
 
-        desired = fit.result[0].model.evaluate_error(1 * u.TeV)
+        desired = fit.result_per_obs[0].model.evaluate_error(1 * u.TeV)
         actual = read_result.model.evaluate_error(1 * u.TeV)
         assert actual.unit == desired.unit
         assert_allclose(actual.value, desired.value)

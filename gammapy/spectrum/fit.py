@@ -5,7 +5,7 @@ import copy
 import numpy as np
 import astropy.units as u
 from ..utils.scripts import make_path
-from ..utils.fitting import fit_iminuit
+from ..utils.fitting import Fit
 from .. import stats
 from .utils import CountsPredictor
 from . import SpectrumObservationList, SpectrumObservation
@@ -15,7 +15,7 @@ __all__ = ["SpectrumFit"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumFit(object):
+class SpectrumFit(Fit):
     """Orchestrate a 1D counts spectrum fit.
 
     After running the :func:`~gammapy.spectrum.SpectrumFit.fit` and
@@ -52,7 +52,7 @@ class SpectrumFit(object):
         method="iminuit",
     ):
         self.obs_list = obs_list
-        self._model = model
+        self._model = model.copy()
         self.stat = stat
         self.forward_folded = forward_folded
         self.fit_range = fit_range
@@ -74,18 +74,6 @@ class SpectrumFit(object):
         ss += "\nFit range {}".format(self.fit_range)
         ss += "\nBackend {}".format(self.method)
         return ss
-
-    @property
-    def result(self):
-        """Fit result
-
-        The result is a list of length ``n``, where ``n`` ist the number of
-        observations that participated in the fit. The best fit model is
-        usually the same for all observations but the results differ in the
-        fitted energy range, predicted counts, final fit statistic value
-        etc.
-        """
-        return self._result
 
     @property
     def obs_list(self):
@@ -274,7 +262,7 @@ class SpectrumFit(object):
         else:
             raise NotImplementedError("{}".format(self.stat))
 
-    def total_stat(self, parameters):
+    def _total_stat(self, parameters):
         """Statistic summed over all bins and all observations.
 
         This is the likelihood function that is passed to the optimizers
@@ -328,7 +316,7 @@ class SpectrumFit(object):
         self._model = model
         for val in parvals:
             self._model.parameters[parname].value = val
-            stat = self.total_stat(self._model.parameters)
+            stat = self._total_stat(self._model.parameters)
             likelihood.append(stat)
         return np.array(likelihood)
 
@@ -344,34 +332,10 @@ class SpectrumFit(object):
         yy = self.likelihood_1d(**kwargs)
         ax.plot(kwargs["parvals"], yy)
         ax.set_xlabel(kwargs["parname"])
-
         return ax
 
-    def fit(self, opts_minuit=None):
-        """Run the fit
-
-        Parameters
-        ----------
-        opts_minuit : dict (optional)
-            Options passed to `iminuit.Minuit` constructor
-        """
-        if self.method == "iminuit":
-            self._fit_iminuit(opts_minuit)
-        else:
-            raise NotImplementedError("method: {}".format(self.method))
-
-    def _fit_iminuit(self, opts_minuit):
-        """Iminuit minimization"""
-        minuit = fit_iminuit(
-            parameters=self._model.parameters,
-            function=self.total_stat,
-            opts_minuit=opts_minuit,
-        )
-        self._iminuit_fit = minuit
-        log.debug(minuit)
-        self._make_fit_result(self._model.parameters)
-
-    def _make_fit_result(self, parameters):
+    @property
+    def result_per_obs(self):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
 
         Parameters
@@ -382,7 +346,6 @@ class SpectrumFit(object):
         from . import SpectrumFitResult
 
         # run again with best fit parameters
-        self.total_stat(parameters)
         model = self._model.copy()
 
         statname = self.stat
@@ -406,35 +369,4 @@ class SpectrumFit(object):
                 )
             )
 
-        self._result = results
-
-    def est_errors(self):
-        """Estimate parameter errors."""
-        # TODO: add this back once fitting backends support optimisation
-        # and error estimation as separate steps
-
-    def run(self, outdir=None, opts_minuit=None):
-        """Run all steps and write result to disk.
-
-        Parameters
-        ----------
-        outdir : Path, str
-            directory to write results files to (if given)
-        """
-        log.info("Running {}".format(self))
-
-        self.fit(opts_minuit)
-        self.est_errors()
-
-        if outdir is not None:
-            self._write_result(outdir)
-
-    def _write_result(self, outdir):
-        outdir = make_path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
-
-        # Assume only one model is fit to all data
-        modelname = self.result[0].model.__class__.__name__
-        filename = outdir / "fit_result_{}.yaml".format(modelname)
-        log.info("Writing {}".format(filename))
-        self.result[0].to_yaml(filename)
+        return results
