@@ -10,7 +10,7 @@ import sys
 import json
 # from .. import version
 from ..extern.pathlib import Path
-from ..extern.six.moves.urllib.request import Request, urlretrieve, urlopen
+from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 
 log = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class DownloadProcess:
         url = apigitUrl + self.repo + '/git/' + refhash
 
         try:
-            urlopen(Request(url, headers={'User-Agent': 'Bultako'}))
+            urlopen(url)
         except Exception as ex:
             log.error('Bad response from GitHub API.')
             log.error(
@@ -165,7 +165,7 @@ class DownloadProcess:
             url = url + '?recursive=1'
 
         try:
-            r = urlopen(Request(url, headers={'User-Agent': 'Bultako'}))
+            r = urlopen(url)
             json_items = json.loads(r.read())
             return json_items
         except Exception as ex:

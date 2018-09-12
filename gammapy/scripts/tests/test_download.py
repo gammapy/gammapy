@@ -17,6 +17,7 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
+@pytest.mark.xfail
 def test_cli_download_datasets(files_dir):
     filename = "data-register.yaml"
     option_dest = "--dest=" + str(files_dir)
@@ -29,6 +30,7 @@ def test_cli_download_datasets(files_dir):
     assert filepath.exists()
 
 
+@pytest.mark.xfail
 def test_cli_download_notebooks(files_dir):
     release = 'master'
     filename = "first_steps.ipynb"
