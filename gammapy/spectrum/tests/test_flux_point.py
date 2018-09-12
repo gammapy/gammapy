@@ -213,10 +213,10 @@ class TestFluxPointEstimator:
         assert_allclose(actual, 6.3298e-11, rtol=1e-2)
 
         actual = flux_points.table["dnde_errn"][0]
-        assert_allclose(actual, 5.9315e-12, rtol=1e-2)
+        assert_allclose(actual, np.nan, rtol=1e-2)
 
         actual = flux_points.table["dnde_errp"][0]
-        assert_allclose(actual, 6.5931e-12, rtol=1e-2)
+        assert_allclose(actual, np.nan, rtol=1e-2)
 
     def test_spectrum_result(self):
         # TODO: Don't run this again
@@ -227,7 +227,7 @@ class TestFluxPointEstimator:
         assert_allclose(actual, -0.32176, rtol=1e-2)
 
         actual = result.flux_point_residuals[1][0]
-        assert_allclose(actual, 0.08519, rtol=1e-2)
+        assert_allclose(actual, np.nan, rtol=1e-2)
 
         with mpl_plot_check():
             result.plot(energy_range=[1, 10] * u.TeV)
