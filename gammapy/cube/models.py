@@ -334,3 +334,7 @@ class SkyDiffuseCube(SkyModelBase):
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         norm = self.parameters["norm"].value
         return u.Quantity(norm * val, self.map.unit, copy=False)
+
+    def copy(self):
+        """A shallow copy"""
+        return copy.copy(self)
