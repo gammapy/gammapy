@@ -54,3 +54,21 @@ class Fit(object):
             'best-fit-model': self._model.copy(),
             'statval': self.total_stat,
         }
+
+    def run(self, steps='all', opts_minuit=None):
+        """
+        """
+        if steps == 'all':
+            steps = ['fit', 'errors']
+
+        result = {}
+        if 'fit' in steps:
+            result.update(self.fit(opts_minuit=opts_minuit))
+        if 'errors' in steps:
+            result.update(self.est_errors())
+        return result
+
+    def est_errors(self):
+        return {}
+
+
