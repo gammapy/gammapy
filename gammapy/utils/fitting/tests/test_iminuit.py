@@ -17,7 +17,7 @@ def fcn(parameters):
 def test_iminuit():
     pars = Parameters([Parameter("x", 2.1), Parameter("y", 3.1), Parameter("z", 4.1)])
 
-    minuit = fit_iminuit(function=fcn, parameters=pars)['minuit']
+    minuit = fit_iminuit(function=fcn, parameters=pars)["minuit"]
 
     assert_allclose(pars["x"].value, 2, rtol=1e-2)
     assert_allclose(pars["y"].value, 3, rtol=1e-2)
@@ -29,13 +29,13 @@ def test_iminuit():
 
     # Test freeze
     pars["x"].frozen = True
-    minuit = fit_iminuit(function=fcn, parameters=pars)['minuit']
+    minuit = fit_iminuit(function=fcn, parameters=pars)["minuit"]
     assert minuit.migrad_ok()
     assert minuit.list_of_fixed_param() == ["par_000_x"]
 
     # Test limits
     pars["y"].min = 4
-    minuit = fit_iminuit(function=fcn, parameters=pars)['minuit']
+    minuit = fit_iminuit(function=fcn, parameters=pars)["minuit"]
     assert minuit.migrad_ok()
     states = minuit.get_param_states()
     assert not states[0]["has_limits"]

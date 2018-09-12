@@ -36,10 +36,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
-    opts_minuit_all = {
-        "errordef": 1,
-        "print_level": 0
-    }
+    opts_minuit_all = {"errordef": 1, "print_level": 0}
 
     if opts_minuit:
         opts_minuit_all.update(opts_minuit)
@@ -65,7 +62,7 @@ def fit_iminuit(parameters, function, opts_minuit=None):
         "success": minuit.migrad_ok(),
         "factors": minuit.args,
         "nfev": minuit.get_num_call_fcn(),
-        "minuit": minuit
+        "minuit": minuit,
     }
 
 

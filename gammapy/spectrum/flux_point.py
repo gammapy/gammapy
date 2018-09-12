@@ -827,7 +827,7 @@ class FluxPointEstimator(object):
         result = self.fit.fit()
 
         # compute TS value for all observations
-        stat_best_fit = result['statval']
+        stat_best_fit = result["statval"]
 
         dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
@@ -923,7 +923,7 @@ class FluxPointFit(Fit):
         self._model = model.copy()
         self.data = data
 
-        if stat in  ["chi2", "chi2assym"]:
+        if stat in ["chi2", "chi2assym"]:
             self._stat = stat
         else:
             raise ValueError(
@@ -937,7 +937,7 @@ class FluxPointFit(Fit):
         model = self._model(self.data.e_ref)
         data = self.data.table["dnde"].quantity
         sigma = self.data.table["dnde_err"].quantity
-        return ((data - model) / sigma).to('').value ** 2
+        return ((data - model) / sigma).to("").value ** 2
 
     @property
     def _stat_chi2_assym(self):
@@ -949,11 +949,11 @@ class FluxPointFit(Fit):
         data_errp = self.data.table["dnde_errp"].quantity
         data_errn = self.data.table["dnde_errn"].quantity
         sigma = np.where(model > data, data_errp, data_errn)
-        return ((data - model) / sigma).to('').value ** 2
+        return ((data - model) / sigma).to("").value ** 2
 
     @property
     def stat(self):
-        if self._stat == 'chi2':
+        if self._stat == "chi2":
             return self._stat_chi2
         else:
             return self._stat_chi2_assym

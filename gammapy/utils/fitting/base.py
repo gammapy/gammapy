@@ -20,6 +20,7 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
 class Fit(object):
     """Abstract Fit base class.
     """
+
     @abc.abstractmethod
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
@@ -43,16 +44,16 @@ class Fit(object):
             function=self.total_stat,
             opts_minuit=opts_minuit,
         )
-        self._minuit = result.pop('minuit')
+        self._minuit = result.pop("minuit")
 
-        if not result['success']:
-            log.info('Fit failed with message {}'.format(result['message']))
+        if not result["success"]:
+            log.info("Fit failed with message {}".format(result["message"]))
 
-        result['best-fit-model'] = self._model.copy()
-        result['statval'] = self.total_stat(self._model.parameters)
+        result["best-fit-model"] = self._model.copy()
+        result["statval"] = self.total_stat(self._model.parameters)
         return result
 
-    def run(self, steps='all', opts_minuit=None):
+    def run(self, steps="all", opts_minuit=None):
         """
         Run all fitting steps.
 
@@ -62,11 +63,10 @@ class Fit(object):
             Options passed to `iminuit.Minuit` constructor
 
         """
-        if steps == 'all':
-            steps = ['fit']
+        if steps == "all":
+            steps = ["fit"]
 
         result = {}
-        if 'fit' in steps:
+        if "fit" in steps:
             result.update(self.fit(opts_minuit=opts_minuit))
         return result
-
