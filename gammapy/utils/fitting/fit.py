@@ -39,12 +39,13 @@ class Fit(object):
         Parameters
         ----------
         backend : {"minuit", "sherpa"}
-            Which optimizer to use. See https://iminuit.readthedocs.io for details
-            on the the option `"minuit"`.
-            See http://cxc.cfa.harvard.edu/sherpa/methods/index.html for details
-            on the other methods.
+            Which fitting backend to use.
         opts : dict (optional)
-            Options passed to `iminuit.Minuit` constructor
+            Options passed to the optmizer. See https://iminuit.readthedocs.io
+            for details on the `"minuit"` backend.
+            See http://cxc.cfa.harvard.edu/sherpa/methods/index.html for details
+            on the on the `"sherpa"` backend. To choose sherpa optimization method
+            use e.g. `opts = {"method": "simplex"}`.
 
         Returns
         -------
@@ -93,7 +94,7 @@ class Fit(object):
             parameters.covariance = None
         return fit_result
 
-    def run(self, steps="all", optimizer='minuit', opts_minuit=None):
+    def run(self, steps="all", backend='minuit', opts=None):
         """
         Run all fitting steps.
 
@@ -101,10 +102,10 @@ class Fit(object):
         ----------
         steps : {"all", "optimize", "errors"}
             Which fitting steps to run.
-        optimizer : {"minuit", "levmar", "simplex", "moncar", "gridsearch"}
-            Which optimizer to use. See `.optimize()` for details.
-        opts_minuit : dict (optional)
-            Options passed to `iminuit.Minuit` constructor
+        backend : {"minuit", "sherpa"}
+            Which fitting backend to use. See `optimize` for details.
+        opts : dict (optional)
+            Options passed to the optimizer. See `optimize` for details.
 
         Returns
         -------
@@ -115,7 +116,7 @@ class Fit(object):
             steps = ["optimize", "errors"]
 
         if "optimize" in steps:
-            result = self.optimize(optimizer=optimizer, opts_minuit=opts_minuit)
+            result = self.optimize(backend=backend, opts=opts)
 
         if "errors" in steps:
             result = self._estimate_errors(result)
