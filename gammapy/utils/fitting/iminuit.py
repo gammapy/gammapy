@@ -10,7 +10,7 @@ __all__ = ["optimize_iminuit"]
 log = logging.getLogger(__name__)
 
 
-def optimize_iminuit(parameters, function, opts_minuit=None):
+def optimize_iminuit(parameters, function, opts=None):
     """iminuit optimization
 
     Parameters
@@ -19,38 +19,37 @@ def optimize_iminuit(parameters, function, opts_minuit=None):
         Parameters with starting values
     function : callable
         Likelihood function
-    opts_minuit : dict (optional)
+    opts : dict (optional)
         Options passed to `iminuit.Minuit` constructor
 
     Returns
     -------
-    result : dict
-        Result dict with the best fit parameters and optimizer info.
+    result : (factors, info, optmizer)
+        Tuple containing the best fit factors, some info and the optimizer instance.
     """
     from iminuit import Minuit
 
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
-    opts_minuit_all = {"errordef": 1, "print_level": 0}
+    opts_minuit = {"errordef": 1, "print_level": 0}
 
-    if opts_minuit:
-        opts_minuit_all.update(opts_minuit)
+    if opts:
+        opts_minuit.update(opts)
 
-    opts_minuit_all.update(make_minuit_par_kwargs(parameters))
+    opts_minuit.update(make_minuit_par_kwargs(parameters))
 
     parnames = _make_parnames(parameters)
     minuit_func = MinuitFunction(function, parameters)
 
-    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit_all)
+    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit)
     minuit.migrad()
 
-    return {
+    info = {
         "success": minuit.migrad_ok(),
-        "factors": minuit.args,
         "nfev": minuit.get_num_call_fcn(),
-        "minuit": minuit,
         "message": _get_message(minuit),
     }
+    return minuit.args, info, minuit
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95

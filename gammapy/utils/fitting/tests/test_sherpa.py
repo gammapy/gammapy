@@ -18,15 +18,16 @@ def fcn(parameters):
 
 
 @requires_dependency("sherpa")
-@pytest.mark.parametrize("optimizer", ["moncar", "simplex"])
-def test_sherpa(optimizer):
+@pytest.mark.parametrize("method", ["moncar", "simplex"])
+def test_sherpa(method):
     pars = Parameters([Parameter("x", 2.2), Parameter("y", 3.4), Parameter("z", 4.5)])
 
-    result = optimize_sherpa(function=fcn, parameters=pars, optimizer=optimizer)
+    opts = {"method": method}
+    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars, opts=opts)
 
-    assert result["success"]
-    assert result["nfev"] > 10
-    assert_allclose(result["factors"], [2, 3, 4], rtol=1e-2)
+    assert info["success"]
+    assert info["nfev"] > 10
+    assert_allclose(factors, [2, 3, 4], rtol=1e-2)
     assert_allclose(pars["x"].value, 2, rtol=1e-2)
     assert_allclose(pars["y"].value, 3, rtol=1e-2)
     assert_allclose(pars["z"].value, 4, rtol=1e-2)

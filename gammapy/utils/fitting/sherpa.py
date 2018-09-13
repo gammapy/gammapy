@@ -35,7 +35,7 @@ class SherpaFunction(object):
         return self.function(self.parameters), 0
 
 
-def optimize_sherpa(parameters, function, optimizer="simplex"):
+def optimize_sherpa(parameters, function, opts=None):
     """Sherpa optimization wrapper method.
 
     Parameters
@@ -44,17 +44,21 @@ def optimize_sherpa(parameters, function, optimizer="simplex"):
         Parameter list with starting values.
     function : callable
         Likelihood function
-    optimizer : {'levmar', 'simplex', 'moncar', 'gridsearch'}
-        Which optimizer to use for the fit. See
-        http://cxc.cfa.harvard.edu/sherpa/methods/index.html
+    opts : dict
+        Options dict passed to the optimizer. Can contain the "method"
+        keyword to choose from {'levmar', 'simplex', 'moncar', 'gridsearch'}.
+        See http://cxc.cfa.harvard.edu/sherpa/methods/index.html
         for details on the different options available.
 
     Returns
     -------
-    result : dict
-        Result dict with the best fit parameters and optimizer info.
+    result : (factors, info, optimizer)
+        Tuple containing the best fit factors, some info and the optimizer instance.
     """
-    optimizer = get_sherpa_optimiser(optimizer)
+    if opts is None:
+        opts = {"method": "simplex"}
+
+    optimizer = get_sherpa_optimiser(opts["method"])
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]
@@ -67,9 +71,10 @@ def optimize_sherpa(parameters, function, optimizer="simplex"):
             statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
         )
 
-    return {
+    info = {
         "success": result[0],
-        "factors": result[1],
         "message": result[3],
         "nfev": result[4]["nfev"],
     }
+
+    return result[1], info, optimizer

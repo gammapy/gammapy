@@ -14,6 +14,7 @@ __all__ = ["Fit"]
 log = logging.getLogger(__name__)
 
 
+
 class FitMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
@@ -22,22 +23,27 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
 class Fit(object):
     """Abstract Fit base class.
     """
+    _optimize_funcs = {
+        "minuit": optimize_iminuit,
+        "sherpa": optimize_sherpa,
+    }
+
     @abc.abstractmethod
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         pass
 
-    def optimize(self, optimizer="minuit", opts_minuit=None):
+    def optimize(self, backend="minuit", opts=None):
         """Run the optimization
 
         Parameters
         ----------
-        optimizer : {"minuit", "levmar", "simplex", "moncar", "gridsearch"}
+        backend : {"minuit", "sherpa"}
             Which optimizer to use. See https://iminuit.readthedocs.io for details
             on the the option `"minuit"`.
             See http://cxc.cfa.harvard.edu/sherpa/methods/index.html for details
             on the other methods.
-        opts_minuit : dict (optional)
+        opts : dict (optional)
             Options passed to `iminuit.Minuit` constructor
 
         Returns
@@ -50,32 +56,27 @@ class Fit(object):
         if parameters.apply_autoscale:
             parameters.autoscale()
 
-        if optimizer == 'minuit':
-            result = optimize_iminuit(
-                parameters=parameters,
-                function=self.total_stat,
-                opts_minuit=opts_minuit,
-            )
-            # As a preliminary solution we attach the Minuit object to the Fit
-            # class as a hidden attribute, so that it becomes available to the
-            # user
-            self._minuit = result.pop("minuit")
-        elif optimizer in ["levmar", "simplex", "moncar", "gridsearch"]:
-            result = optimize_sherpa(
-                parameters=parameters,
-                function=self.total_stat,
-                optimizer=optimizer,
-            )
-        else:
-            raise ValueError("{} is not a valid optimizer.",format(optimizer))
+        optimize = self._optimize_funcs[backend]
+
+        factors, info, optimizer = optimize(
+            parameters=parameters,
+            function=self.total_stat,
+            opts=opts,
+        )
+
+        if backend == "minuit":
+            self.minuit = optimizer
 
         # Copy final results into the parameters object
-        parameters.set_parameter_factors(result.pop("factors"))
+        parameters.set_parameter_factors(factors)
 
-        result["model"] = self._model.copy()
-        result["total_stat"] = self.total_stat(self._model.parameters)
-        result["optimizer"] = optimizer
-        return FitResult(**result)
+        return FitResult(
+            model=self._model.copy(),
+            total_stat=self.total_stat(self._model.parameters),
+            backend=backend,
+            method=opts.get('method'),
+            **info
+            )
 
     # TODO: this is a preliminary solution to restore the old behaviour, that's
     # why the method is hidden.
@@ -124,13 +125,14 @@ class Fit(object):
 
 class FitResult(object):
     """Fit result object."""
-    def __init__(self, model, success, nfev, total_stat, message, optimizer):
+    def __init__(self, model, success, nfev, total_stat, message, backend, method):
         self._model = model
         self._success = success
         self._nfev = nfev
         self._total_stat = total_stat
         self._message = message
-        self._optimizer = optimizer
+        self._backend = backend
+        self._method = method
 
     @property
     def model(self):
@@ -158,14 +160,20 @@ class FitResult(object):
         return self._message
 
     @property
-    def optimizer(self):
-        """Optimizer used for the fit."""
-        return self._optimizer
+    def backend(self):
+        """Optimizer backend used for the fit."""
+        return self._backend
+
+    @property
+    def method(self):
+        """Optimizer method used for the fit."""
+        return self._method
 
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\toptimizer  : {}\n".format(self.optimizer)
+        str_ += "\tbackend    : {}\n".format(self.backend)
+        str_ += "\tmethod    : {}\n".format(self.method)
         str_ += "\tsuccess    : {}\n".format(self.success)
         str_ += "\tnfev       : {}\n".format(self.nfev)
         str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
