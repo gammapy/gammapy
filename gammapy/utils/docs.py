@@ -16,19 +16,17 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import nbformat
 import os
 import re
-from shutil import copytree, rmtree
+from ..extern.pathlib import Path
 from distutils.util import strtobool
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst import roles
 from docutils import nodes
 from sphinx.util import logging
-import nbformat
 from nbformat.v4 import new_markdown_cell
-from nbconvert.exporters import PythonExporter
-from ..extern.pathlib import Path
 
 try:
     gammapy_extra_path = Path(os.environ["GAMMAPY_EXTRA"])
@@ -109,7 +107,6 @@ def gammapy_sphinx_ext_activate():
         log.info("*** gammapy-extra *not* found.")
         log.info("*** Set the GAMMAPY_EXTRA environment variable!")
         log.info("*** Docs build will be incomplete.")
-        log.info("*** Notebook links will not be verified.")
 
     # Register our directives and roles with Sphinx
     register_directive("gp-extra-image", ExtraImage)
@@ -118,7 +115,7 @@ def gammapy_sphinx_ext_activate():
 
 def modif_nb_links(folder, url_docs, git_commit):
     """
-    Modifies links in raw and sphinx formatted notebooks and so they
+    Modifies links in raw and sphinx formatted notebooks so they
     point to and from the same version of the documentation. Adds a box to the
     sphinx formatted notebooks with info and link to the ipynb file.
     """
@@ -155,7 +152,7 @@ def modif_nb_links(folder, url_docs, git_commit):
 
             if folder == "notebooks":
                 repl = r"..\/\1rst\2"
-            elif folder == "_static/notebooks":
+            else:
                 repl = r"..\/..\/\1html\2"
 
             txt = re.sub(
@@ -168,28 +165,6 @@ def modif_nb_links(folder, url_docs, git_commit):
             Path(filepath).write_text(txt, encoding="utf-8")
 
 
-def convert_nb_to_script(path):
-    """Convert notebook to Python script using the nbconvert API.
-
-    Before we were shelling out to call ``nbconvert``, but that
-    didn't always work because the cli tool is sometimes called
-    differently, e.g. ``nbconvert-3.6``. This should always work
-    and makes sure the right Python / nbconvert is used.
-    """
-    # https://nbconvert.readthedocs.io/en/latest/execute_api.html#executing-notebooks-using-the-python-api-interface
-    # https://stackoverflow.com/a/38248141/498873
-    txt = path.read_text(encoding="utf-8")
-
-    nb = nbformat.reads(txt, nbformat.NO_CONVERT)
-
-    exporter = PythonExporter()
-    source, meta = exporter.from_notebook_node(nb)
-
-    path = path.with_suffix(".py")
-    log.info("Writing {}".format(path))
-    path.write_text(source, encoding="utf-8")
-
-
 def gammapy_sphinx_notebooks(setup_cfg):
     """
     Manages the processes for the building of sphinx formatted notebooks
@@ -199,44 +174,13 @@ def gammapy_sphinx_notebooks(setup_cfg):
         log.info("Config build_notebooks is False; skipping notebook processing")
         return
 
-    if not HAS_GP_EXTRA:
-        log.info("No GAMMAPY_EXTRA found; skipping notebook processing")
-        return
-
     url_docs = setup_cfg["url_docs"]
     git_commit = setup_cfg["git_commit"]
 
-    # copy and build notebooks
-    gammapy_extra_notebooks_folder = Path(os.environ["GAMMAPY_EXTRA"]) / "notebooks"
+    # fix links
+    filled_notebooks_folder = Path('notebooks')
+    download_notebooks_folder = Path('_static') / 'notebooks'
+    if filled_notebooks_folder.is_dir():
 
-    if gammapy_extra_notebooks_folder.is_dir():
-
-        ignorefiles = lambda d, files: [
-            f
-            for f in files
-            if os.path.isfile(os.path.join(d, f))
-            and f[-6:] != ".ipynb"
-            and f[-4:] != ".png"
-        ]
-        log.info("*** Converting notebooks to scripts")
-
-        path_nbs = Path("notebooks")
-        path_static_nbs = Path("_static") / "notebooks"
-
-        # remove existing notebooks
-        rmtree(str(path_static_nbs), ignore_errors=True)
-        rmtree("notebooks", ignore_errors=True)
-
-        # copy notebooks
-        copytree(str(gammapy_extra_notebooks_folder), str(path_nbs), ignore=ignorefiles)
-        copytree(
-            str(gammapy_extra_notebooks_folder),
-            str(path_static_nbs),
-            ignore=ignorefiles,
-        )
-
-        for path in path_static_nbs.glob("*.ipynb"):
-            convert_nb_to_script(path)
-
-        modif_nb_links("notebooks", url_docs, git_commit)
-        modif_nb_links("_static/notebooks", url_docs, git_commit)
+        modif_nb_links(str(filled_notebooks_folder), url_docs, git_commit)
+        modif_nb_links(str(download_notebooks_folder), url_docs, git_commit)
