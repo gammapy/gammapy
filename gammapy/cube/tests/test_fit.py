@@ -106,12 +106,17 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
         psf=psf,
         edisp=edisp,
     )
-    result = fit.run()
-    pars = result.model.parameters
+    result = fit.run(optimizer='minuit')
 
     assert sky_model is not fit._model
     assert sky_model is not result.model
+    assert result.success
+    assert 'minuit' in repr(result)
 
+    stat_expected = 3840.0605649268496
+    assert_allclose(result.total_stat, stat_expected, rtol=1e-2)
+
+    pars = result.model.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars.error("lon_0"), 0.005895, rtol=1e-2)
 
@@ -120,7 +125,3 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars.error("amplitude"), 3.936e-13, rtol=1e-2)
-
-    stat = np.sum(fit.stat, dtype="float64")
-    stat_expected = 3840.0605649268496
-    assert_allclose(stat, stat_expected, rtol=1e-2)
