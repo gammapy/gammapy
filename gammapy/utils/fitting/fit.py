@@ -139,12 +139,12 @@ class FitResult(object):
 
     @property
     def success(self):
-        """Best fit model."""
+        """Fit success status flag."""
         return self._success
 
     @property
     def nfev(self):
-        """Number of function evaluations."""
+        """Number of function evaluations until convergence or stop."""
         return self._nfev
 
     @property
@@ -154,7 +154,7 @@ class FitResult(object):
 
     @property
     def message(self):
-        """Optimizer message."""
+        """Optimizer status message."""
         return self._message
 
     @property
