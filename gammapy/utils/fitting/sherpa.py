@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 
 __all__ = ["optimize_sherpa"]
 
@@ -31,7 +32,7 @@ class SherpaFunction(object):
 
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function(self.parameters)
+        return self.function(self.parameters), 0
 
 
 def optimize_sherpa(parameters, function, optimizer="simplex"):
@@ -61,9 +62,10 @@ def optimize_sherpa(parameters, function, optimizer="simplex"):
 
     statfunc = SherpaFunction(function, parameters)
 
-    result = optimizer.fit(
-        statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
-    )
+    with np.errstate(invalid='ignore'):
+        result = optimizer.fit(
+            statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
+        )
 
     return {
         "success": result[0],

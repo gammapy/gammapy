@@ -160,9 +160,9 @@ class FitResult(object):
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\toptimizer : {}".format(self.optimizer)
-        str_ += "\tsuccess   : {}".format(self.success)
-        str_ += "\tnfev      : {}".format(self.nfev)
-        str_ += "\ttotal stat: {}".format(self.total_stat)
-        str_ += "\tmessage   : {}".format(self.message)
+        str_ += "\toptimizer  : {}\n".format(self.optimizer)
+        str_ += "\tsuccess    : {}\n".format(self.success)
+        str_ += "\tnfev       : {}\n".format(self.nfev)
+        str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
+        str_ += "\tmessage    : {}\n".format(self.message)
         return str_
