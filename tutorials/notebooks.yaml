@@ -1,0 +1,154 @@
+# This is a list of available notebooks.
+# It's used for automatic testing and downloading of datesets tutorials.
+# Let's keep it alphabetical.
+- name: analysis_3d
+  test: true
+  requires: iminuit
+  published: true
+  datasets:
+    - cta-1dc
+- name: astro_dark_matter
+  test: true
+  requires:
+  published: true
+  datasets:
+    - dark_matter_spectra
+- name: astropy_introduction
+  test: true
+  requires:
+  published: true
+  datasets:
+    - catalogs/fermi/gll_psc_v16.fit.gz
+- name: background_model
+  test: false
+  requires:
+  published: false
+  datasets:
+    - hess-dl3-dr1
+    - hess-crab4-hd-hap-prod2
+- name: cta_1dc_introduction
+  test: true
+  requires:
+  published: true
+  datasets:
+- name: cta_data_analysis
+  test: true
+  requires: sherpa
+  published: true
+  datasets:
+    - cta-1dc
+- name: cta_sensitivity
+  test: false
+  requires:
+  published: false
+  datasets:
+      - cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz
+- name: cwt
+  test: true
+  requires:
+  published: true
+  datasets:
+    - fermi_survey/all.fits.gz
+- name: detect_ts
+  test: true
+  requires:
+  published: true
+  datasets:
+    - fermi_survey/all.fits.gz
+    - catalogs/fermi/gll_psch_v08.fit.gz
+- name: fermi_lat
+  test: true
+  requires:
+  published: true
+  datasets:
+    - fermi_3fhl
+- name: first_steps
+  test: true
+  requires:
+  published: true
+  datasets:
+    - fermi_2fhl/fermi_2fhl_vela.fits.gz
+    - fermi_2fhl/2fhl_events.fits.gz
+    - images/Vela_region_WMAP_K.fits
+    - catalogs/fermi/gll_psch_v08.fit.gz
+- name: hgps
+  test: true
+  requires:
+  published: true
+  datasets:
+- name: image_fitting_with_sherpa
+  test: true
+  requires: sherpa
+  published: true
+  datasets:
+- name: intro_maps
+  test: true
+  requires:
+  published: true
+  datasets:
+    - fermi_2fhl/fermi_2fhl_gc.fits.gz
+    - fermi_3fhl/gll_iem_v06_cutout.fits
+    - fermi_survey/all.fits.gz
+- name: light_curve
+  test: true
+  requires: iminuit
+  published: false
+  datasets:
+    - hess-dl3-dr1
+- name: nddata_demo
+  test: false
+  requires:
+  published: false
+  datasets:
+- name: sed_fitting_gammacat_fermi
+  test: true
+  requires: iminuit
+  published: true
+  datasets:
+    - catalogs/fermi/gll_psc_v16.fit.gz
+    - catalogs/fermi/gll_psch_v13.fit.gz
+- name: simulate_3d
+  test: true
+  requires: iminuit
+  published: true
+  datasets:
+    - cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits
+- name: source_population_model
+  test: true
+  requires:
+  published: true
+  datasets:
+- name: spectrum_analysis
+  test: true
+  requires: iminuit
+  published: true
+  datasets:
+      - hess-dl3-dr1
+- name: spectrum_fitting_with_sherpa
+  test: true
+  requires: sherpa
+  published: true
+  datasets:
+    - hess-crab4_pha
+- name: spectrum_models
+  test: true
+  requires:
+  published: true
+  datasets:
+- name: spectrum_pipe
+  test: true
+  requires: iminuit
+  published: true
+  datasets:
+    - hess-dl3-dr1
+- name: spectrum_simulation_cta
+  test: false
+  requires: iminuit
+  published: true
+  datasets:
+    - cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits
+- name: spectrum_simulation
+  test: false
+  requires: iminuit
+  published: false
+  datasets:
