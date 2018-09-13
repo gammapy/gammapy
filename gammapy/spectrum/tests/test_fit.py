@@ -207,7 +207,6 @@ class TestSpectralFit:
 
     @requires_dependency("iminuit")
     def test_basic_results(self):
-        self.fit.method = "iminuit"
         self.fit.run()
         result = self.fit.result[0]
         assert_allclose(result.statval, 32.8387, rtol=1e-4)

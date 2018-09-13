@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class SpectrumFit(Fit):
     """Orchestrate a 1D counts spectrum fit.
 
-    After running the :func:`~gammapy.spectrum.SpectrumFit.fit` method, the fit
+    After running the :func:`~gammapy.spectrum.SpectrumFit.run` method, the fit
     results are available in :func:`~gammapy.spectrum.SpectrumFit.result`. For usage
     examples see :ref:`spectral_fitting`
 
@@ -37,8 +37,6 @@ class SpectrumFit(Fit):
         The intersection between the fit range and the observation thresholds will be used.
         If you want to control which bins are taken into account in the fit for each
         observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
-    method : {'iminuit'}
-        Optimization backend for the fit
     """
 
     def __init__(
@@ -48,14 +46,12 @@ class SpectrumFit(Fit):
         stat="wstat",
         forward_folded=True,
         fit_range=None,
-        method="iminuit",
     ):
         self.obs_list = obs_list
         self._model = model.copy()
         self.stat = stat
         self.forward_folded = forward_folded
         self.fit_range = fit_range
-        self.method = method
 
         self._predicted_counts = None
         self._statval = None
@@ -71,7 +67,6 @@ class SpectrumFit(Fit):
         ss += "\nStat {}".format(self.stat)
         ss += "\nForward Folded {}".format(self.forward_folded)
         ss += "\nFit range {}".format(self.fit_range)
-        ss += "\nBackend {}".format(self.method)
         return ss
 
     @property
