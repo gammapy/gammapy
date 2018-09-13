@@ -3,8 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from numpy.testing import assert_allclose
 from ...testing import requires_dependency
-from ...modeling import Parameter, Parameters
-from ..sherpa import fit_sherpa
+from .. import Parameter, Parameters, fit_sherpa
 
 
 def fcn(parameters):

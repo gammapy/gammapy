@@ -3,10 +3,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import copy
-from ..extern import six
+from ...extern import six
 from astropy import units as u
 from astropy.table import Table
-from .array import check_type
+from ..array import check_type
 
 __all__ = ["Parameter", "Parameters"]
 

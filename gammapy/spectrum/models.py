@@ -10,7 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
-from ..utils.modeling import Parameter, Parameters
+from ..utils.fitting import Parameter, Parameters
 
 __all__ = [
     "SpectralModel",

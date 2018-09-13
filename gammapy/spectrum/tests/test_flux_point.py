@@ -12,7 +12,7 @@ from ...utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
 )
-from ...utils.modeling import Parameters
+from ...utils.fitting import Parameters
 from ..results import SpectrumResult
 from ..fit import SpectrumFit
 from ..observation import SpectrumObservation

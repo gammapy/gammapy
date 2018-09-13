@@ -5,7 +5,7 @@ import abc
 import numpy as np
 import astropy.units as u
 from ...extern import six
-from ...utils.modeling import Parameter, Parameters
+from ...utils.fitting import Parameter, Parameters
 from ...spectrum.utils import integrate_spectrum
 
 __all__ = [
