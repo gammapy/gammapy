@@ -152,9 +152,9 @@ def test_notebook(path):
             break
 
     if passed:
-        log.info("   ... PASSED {}".format(str(path)))
+        log.info("   ... PASSED")
         return True
     else:
-        log.info("   ... FAILED {}".format(str(path)))
+        log.info("   ... FAILED")
         log.info(report)
         return False
