@@ -106,11 +106,11 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
         psf=psf,
         edisp=edisp,
     )
-    result = fit.fit()
-    pars = result['best-fit-model'].parameters
+    result = fit.run()
+    pars = result.model.parameters
 
     assert sky_model is not fit._model
-    assert sky_model is not result['best-fit-model']
+    assert sky_model is not result.model
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars.error("lon_0"), 0.005895, rtol=1e-2)

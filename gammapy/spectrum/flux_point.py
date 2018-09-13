@@ -824,10 +824,10 @@ class FluxPointEstimator(object):
             " in energy range:\n{}".format(self.fit)
         )
 
-        result = self.fit.fit()
+        result = self.fit.run()
 
         # compute TS value for all observations
-        stat_best_fit = result["statval"]
+        stat_best_fit = result.total_stat
 
         dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)

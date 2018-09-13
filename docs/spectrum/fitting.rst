@@ -38,7 +38,7 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
 
     fit = SpectrumFit(obs_list=obs_list, model=model)
     fit.statistic = 'WStat'
-    fit.fit()
+    fit.run()
 
 You can check the fit results by looking at
 `~gammapy.spectrum.SpectrumFitResult` that is attached to the

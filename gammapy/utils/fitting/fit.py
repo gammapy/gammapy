@@ -77,19 +77,22 @@ class Fit(object):
         result["optimizer"] = optimizer
         return FitResult(**result)
 
-    # TODO: this is a preliminary solution to restore the old behaviour
+    # TODO: this is a preliminary solution to restore the old behaviour, that's
+    # why the method is hidden.
     def _estimate_errors(self, fit_result):
         """Run the error estimation"""
         parameters = fit_result.model.parameters
 
         if self._minuit.covariance is not None:
-            parameters.set_covariance_factors(_get_covar(self._minuit))
+            covar = _get_covar(self._minuit)
+            parameters.set_covariance_factors(covar)
+            self._model.parameters.set_covariance_factors(covar)
         else:
             log.warning("No covariance matrix found")
             parameters.covariance = None
         return fit_result
 
-    def run(self, steps="all", opts_minuit=None):
+    def run(self, steps="all", optimizer='minuit', opts_minuit=None):
         """
         Run all fitting steps.
 
@@ -97,6 +100,8 @@ class Fit(object):
         ----------
         steps : {"all", "optimize", "errors"}
             Which fitting steps to run.
+        optimizer : {"minuit", "levmar", "simplex", "moncar", "gridsearch"}
+            Which optimizer to use. See `.optimize()` for details.
         opts_minuit : dict (optional)
             Options passed to `iminuit.Minuit` constructor
 
@@ -109,7 +114,7 @@ class Fit(object):
             steps = ["optimize", "errors"]
 
         if "optimize" in steps:
-            result = self.optimize(opts_minuit=opts_minuit)
+            result = self.optimize(optimizer=optimizer, opts_minuit=opts_minuit)
 
         if "errors" in steps:
             result = self._estimate_errors(result)

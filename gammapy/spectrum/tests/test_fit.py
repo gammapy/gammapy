@@ -77,7 +77,7 @@ class TestFit:
         assert_allclose(np.sum(fit.statval[0]), -107346.5291, rtol=1e-5)
 
         self.source_model.parameters["index"].value = 1.12
-        fit.fit()
+        fit.run()
         # These values are check with sherpa fits, do not change
         pars = fit.result[0].model.parameters
         assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
@@ -97,7 +97,7 @@ class TestFit:
             stat="wstat",
             forward_folded=False,
         )
-        fit.fit()
+        fit.run()
         pars = fit.result[0].model.parameters
         assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
@@ -114,7 +114,7 @@ class TestFit:
             model=self.source_model,
             forward_folded=False,
         )
-        fit.fit()
+        fit.run()
         pars = fit.result[0].model.parameters
         assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
 
@@ -155,7 +155,7 @@ class TestFit:
         fit = SpectrumFit(
             obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
-        fit.fit()
+        fit.run()
         true_idx = fit.result[0].model.parameters["index"].value
         scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         profile = fit.likelihood_1d(
@@ -208,7 +208,7 @@ class TestSpectralFit:
     @requires_dependency("iminuit")
     def test_basic_results(self):
         self.fit.method = "iminuit"
-        self.fit.fit()
+        self.fit.run()
         result = self.fit.result[0]
         assert_allclose(result.statval, 32.8387, rtol=1e-4)
         pars = result.model.parameters
@@ -219,7 +219,7 @@ class TestSpectralFit:
         self.fit.result[0].to_table()
 
     def test_basic_errors(self):
-        self.fit.fit()
+        self.fit.run()
         result = self.fit.result[0]
         assert_allclose(result.model.parameters.error("index"), 0.097866953, rtol=1e-3)
         assert_allclose(
@@ -230,7 +230,7 @@ class TestSpectralFit:
     def test_compound(self):
         model = self.pwl * 2
         fit = SpectrumFit(self.obs_list[0], model)
-        fit.fit()
+        fit.run()
         result = fit.result[0]
         pars = result.model.parameters
         assert_allclose(pars["index"].value, 2.254578, rtol=1e-3)
@@ -239,7 +239,7 @@ class TestSpectralFit:
         assert_allclose(p.value, 3.169233e-12, rtol=1e-3)
 
     def test_npred(self):
-        self.fit.fit()
+        self.fit.run()
         actual = (
             self.fit.obs_list[0]
             .predicted_counts(self.fit.result[0].model)
@@ -249,7 +249,7 @@ class TestSpectralFit:
         assert_allclose(actual, desired)
 
     def test_stats(self):
-        self.fit.fit()
+        self.fit.run()
         stats = self.fit.result[0].stat_per_bin
         actual = np.sum(stats)
         desired = self.fit.result[0].statval
@@ -290,19 +290,19 @@ class TestSpectralFit:
         )
         obs.edisp = None
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
-        fit.fit()
+        fit.run()
         assert_allclose(fit.result[0].model.parameters["index"].value, 2.296, atol=0.02)
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)
-        fit.fit()
+        fit.run()
         actual = fit.result[0].model.parameters["lambda_"].quantity
         assert actual.unit == "TeV-1"
         assert_allclose(actual.value, 0.034231, rtol=1e-2)
 
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.fit()
+        fit.run()
         actual = fit.result[0].model.parameters["index"].value
         assert_allclose(actual, 2.21225, rtol=1e-3)
 
@@ -314,7 +314,7 @@ class TestSpectralFit:
         stacked_obs = self.obs_list.stack()
         obs_list = SpectrumObservationList([stacked_obs])
         fit = SpectrumFit(obs_list, self.pwl)
-        fit.fit()
+        fit.run()
         pars = fit.result[0].model.parameters
         assert_allclose(pars["index"].value, 2.21338, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"

@@ -42,7 +42,7 @@ OGIP format and fit a spectral model.
         reference=1*u.TeV,
     )
     fit = SpectrumFit(obs_list=obs, model=model)
-    fit.fit()
+    fit.run()
     print(fit.result[0])
 
 It will print the following output to the console:
