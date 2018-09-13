@@ -50,13 +50,10 @@ def fit_sherpa(parameters, function, optimizer="simplex"):
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameter list with best-fit values
+    result : dict
+        Result dict with the best fit parameters and optimizer info.
     """
     optimizer = get_sherpa_optimiser(optimizer)
-
-    if parameters.covariance is None:
-        parameters.autoscale()
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]
@@ -68,17 +65,9 @@ def fit_sherpa(parameters, function, optimizer="simplex"):
         statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
     )
 
-    result = {
+    return {
         "success": result[0],
         "factors": result[1],
-        "statval": result[2],
         "message": result[3],
-        "info": result[4],  # that's a dict, content varies based on optimiser
+        "nfev": result[4]["nfev"],
     }
-
-    result["nfev"] = result["info"]["nfev"]
-
-    # Copy final results into the parameters object
-    parameters.set_parameter_factors(result["factors"])
-
-    return result

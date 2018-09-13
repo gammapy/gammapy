@@ -24,15 +24,10 @@ def fit_iminuit(parameters, function, opts_minuit=None):
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameters with best-fit values
-    minuit : `~iminuit.Minuit`
-        Minuit object
+    result : dict
+        Result dict with the best fit parameters and optimizer info.
     """
     from iminuit import Minuit
-
-    if parameters.apply_autoscale:
-        parameters.autoscale()
 
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
@@ -47,23 +42,29 @@ def fit_iminuit(parameters, function, opts_minuit=None):
     minuit_func = MinuitFunction(function, parameters)
 
     minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit_all)
-
     minuit.migrad()
-
-    parameters.set_parameter_factors(minuit.args)
-
-    if minuit.covariance is not None:
-        parameters.set_covariance_factors(_get_covar(minuit))
-    else:
-        log.warning("No covariance matrix found")
-        parameters.covariance = None
 
     return {
         "success": minuit.migrad_ok(),
         "factors": minuit.args,
         "nfev": minuit.get_num_call_fcn(),
         "minuit": minuit,
+        "message": _get_message(minuit),
     }
+
+
+# this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
+def _get_message(m):
+    message = "Optimization terminated successfully."
+    success = m.migrad_ok()
+    if not success:
+        message = "Optimization failed."
+        fmin = m.get_fmin()
+        if fmin.has_reached_call_limit:
+            message += " Call limit was reached."
+        if fmin.is_above_max_edm:
+            message += " Estimated distance to minimum too large."
+    return message
 
 
 def _make_parnames(parameters):
