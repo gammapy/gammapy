@@ -5,8 +5,8 @@ import abc
 from astropy.utils.misc import InheritDocstrings
 
 from ...extern import six
-from .iminuit import fit_iminuit, _get_covar
-from .sherpa import fit_sherpa
+from .iminuit import optimize_iminuit, _get_covar
+from .sherpa import optimize_sherpa
 
 
 __all__ = ["Fit"]
@@ -27,8 +27,8 @@ class Fit(object):
         """Total likelihood given the current model parameters"""
         pass
 
-    def fit(self, optimizer="minuit", opts_minuit=None):
-        """Run the fit
+    def optimize(self, optimizer="minuit", opts_minuit=None):
+        """Run the optimization
 
         Parameters
         ----------
@@ -43,7 +43,7 @@ class Fit(object):
         Returns
         -------
         fit_result : `FitResult`
-            Fit result object with the fit results.
+            Fit result object with the best fit model and additional information.
         """
         parameters = self._model.parameters
 
@@ -51,7 +51,7 @@ class Fit(object):
             parameters.autoscale()
 
         if optimizer == 'minuit':
-            result = fit_iminuit(
+            result = optimize_iminuit(
                 parameters=parameters,
                 function=self.total_stat,
                 opts_minuit=opts_minuit,
@@ -61,7 +61,7 @@ class Fit(object):
             # user
             self._minuit = result.pop("minuit")
         elif optimizer in ["levmar", "simplex", "moncar", "gridsearch"]:
-            result = fit_sherpa(
+            result = optimize_sherpa(
                 parameters=parameters,
                 function=self.total_stat,
                 optimizer=optimizer,
@@ -79,6 +79,7 @@ class Fit(object):
 
     # TODO: this is a preliminary solution to restore the old behaviour
     def _estimate_errors(self, fit_result):
+        """Run the error estimation"""
         parameters = fit_result.model.parameters
 
         if self._minuit.covariance is not None:
@@ -94,15 +95,21 @@ class Fit(object):
 
         Parameters
         ----------
+        steps : {"all", "optimize", "errors"}
+            Which fitting steps to run.
         opts_minuit : dict (optional)
             Options passed to `iminuit.Minuit` constructor
 
+        Returns
+        -------
+        fit_result : `FitResult`
+            Fit result object with the best fit model and additional information.
         """
         if steps == "all":
-            steps = ["fit", "errors"]
+            steps = ["optimize", "errors"]
 
-        if "fit" in steps:
-            result = self.fit(opts_minuit=opts_minuit)
+        if "optimize" in steps:
+            result = self.optimize(opts_minuit=opts_minuit)
 
         if "errors" in steps:
             result = self._estimate_errors(result)

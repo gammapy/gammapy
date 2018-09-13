@@ -5,12 +5,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 
-__all__ = ["fit_iminuit"]
+__all__ = ["optimize_iminuit"]
 
 log = logging.getLogger(__name__)
 
 
-def fit_iminuit(parameters, function, opts_minuit=None):
+def optimize_iminuit(parameters, function, opts_minuit=None):
     """iminuit optimization
 
     Parameters

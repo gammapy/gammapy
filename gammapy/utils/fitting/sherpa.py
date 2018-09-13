@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-__all__ = ["fit_sherpa"]
+__all__ = ["optimize_sherpa"]
 
 
 def get_sherpa_optimiser(name):
@@ -34,7 +34,7 @@ class SherpaFunction(object):
         return self.function(self.parameters)
 
 
-def fit_sherpa(parameters, function, optimizer="simplex"):
+def optimize_sherpa(parameters, function, optimizer="simplex"):
     """Sherpa optimization wrapper method.
 
     Parameters
