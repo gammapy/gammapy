@@ -214,10 +214,6 @@ Reference/API
     :no-inheritance-diagram:
     :include-all-objects:
 
-.. automodapi:: gammapy.utils.modeling
-    :no-inheritance-diagram:
-    :include-all-objects:
-
 .. automodapi:: gammapy.utils.fitting
     :no-inheritance-diagram:
     :include-all-objects:

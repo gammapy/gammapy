@@ -12,7 +12,7 @@ import logging
 import numpy as np
 import astropy.units as u
 from ...extern import xmltodict
-from ..modeling import Parameter, Parameters
+from ..fitting import Parameter, Parameters
 from ...maps import Map
 from ...image import models as spatial
 from ...spectrum import models as spectral

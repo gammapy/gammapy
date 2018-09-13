@@ -2,8 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import units as u
+from ..utils.fitting import Parameters
 from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
-from ..utils.modeling import Parameters
 
 __all__ = ["CrabSpectrum"]
 

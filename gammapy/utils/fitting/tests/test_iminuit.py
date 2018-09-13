@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from ...modeling import Parameters, Parameter
 from ...testing import requires_dependency
-from .. import fit_iminuit
+from .. import Parameter, Parameters, fit_iminuit
 
 
 def fcn(parameters):

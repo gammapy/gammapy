@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import astropy.units as u
 import operator
-from ..utils.modeling import Parameters, Parameter
+from ..utils.fitting import Parameters, Parameter
 from ..utils.scripts import make_path
 from ..maps import Map
 

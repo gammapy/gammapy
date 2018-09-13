@@ -8,7 +8,7 @@ import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude
 from ...extern import six
-from ...utils.modeling import Parameter, Parameters
+from ...utils.fitting import Parameter, Parameters
 from ...maps import Map
 
 __all__ = [
