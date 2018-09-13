@@ -75,7 +75,7 @@ class Fit(object):
         result["model"] = self._model.copy()
         result["total_stat"] = self.total_stat(self._model.parameters)
         result["optimizer"] = optimizer
-        return result
+        return FitResult(**result)
 
     # TODO: this is a preliminary solution to restore the old behaviour
     def _estimate_errors(self, fit_result):
@@ -108,3 +108,54 @@ class Fit(object):
             result = self._estimate_errors(result)
 
         return result
+
+
+class FitResult(object):
+    """Fit result object."""
+    def __init__(self, model, success, nfev, total_stat, message, optimizer):
+        self._model = model
+        self._success = success
+        self._nfev = nfev
+        self._total_stat = total_stat
+        self._message = message
+        self._optimizer = optimizer
+
+    @property
+    def model(self):
+        """Best fit model."""
+        return self._model
+
+    @property
+    def success(self):
+        """Best fit model."""
+        return self._success
+
+    @property
+    def nfev(self):
+        """Number of function evaluations."""
+        return self._nfev
+
+    @property
+    def total_stat(self):
+        """Value of the fit statistic at minimum."""
+        return self._total_stat
+
+    @property
+    def message(self):
+        """Optimizer message."""
+        return self._message
+
+    @property
+    def optimizer(self):
+        """Optimizer used for the fit."""
+        return self._optimizer
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        str_ += "\toptimizer : {}".format(self.optimizer)
+        str_ += "\tsuccess   : {}".format(self.success)
+        str_ += "\tnfev      : {}".format(self.nfev)
+        str_ += "\ttotal stat: {}".format(self.total_stat)
+        str_ += "\tmessage   : {}".format(self.message)
+        return str_
