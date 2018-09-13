@@ -43,7 +43,6 @@ OGIP format and fit a spectral model.
     )
     fit = SpectrumFit(obs_list=obs, model=model)
     fit.fit()
-    fit.est_errors()
     print(fit.result[0])
 
 It will print the following output to the console:

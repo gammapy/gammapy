@@ -220,7 +220,6 @@ class TestSpectralFit:
 
     def test_basic_errors(self):
         self.fit.fit()
-        self.fit.est_errors()
         result = self.fit.result[0]
         assert_allclose(result.model.parameters.error("index"), 0.097866953, rtol=1e-3)
         assert_allclose(
@@ -323,7 +322,12 @@ class TestSpectralFit:
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.run(outdir=tmpdir)
+        fit.run()
+
+        result = fit.result[0]
+        modelname = result.model.__class__.__name__
+        filename = tmpdir / "fit_result_{}.yaml".format(modelname)
+        result.to_yaml(filename)
 
         read_result = SpectrumFitResult.from_yaml(tmpdir / "fit_result_PowerLaw.yaml")
 

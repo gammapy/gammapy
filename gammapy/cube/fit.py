@@ -3,14 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
-from ..utils.fitting import fit_iminuit
+from ..utils.fitting import Fit
 from ..stats import cash
 from ..maps import Map
 
 __all__ = ["MapFit", "MapEvaluator"]
 
 
-class MapFit(object):
+class MapFit(Fit):
     """Perform sky model likelihood fit on maps.
 
     This is the first go at such a class. It's geared to the
@@ -38,10 +38,11 @@ class MapFit(object):
     def __init__(
         self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None
     ):
-        if mask is not None and mask.data.dtype != np.dtype('bool'):
-            raise ValueError('mask data must have dtype bool')
+        if mask is not None and mask.data.dtype != np.dtype("bool"):
+            raise ValueError("mask data must have dtype bool")
 
-        self.model = model
+        # Create a copy of the input model that is owned and modified by MapFit
+        self._model = model.copy()
         self.counts = counts
         self.exposure = exposure
         self.background = background
@@ -49,12 +50,8 @@ class MapFit(object):
         self.psf = psf
         self.edisp = edisp
 
-        self._npred = None
-        self._stat = None
-        self._minuit = None
-
         self.evaluator = MapEvaluator(
-            model=self.model,
+            model=self._model,
             exposure=exposure,
             background=self.background,
             psf=self.psf,
@@ -62,54 +59,19 @@ class MapFit(object):
         )
 
     @property
-    def npred(self):
-        """Predicted counts cube"""
-        return self._npred
-
-    @property
     def stat(self):
-        """Fit statistic per bin"""
-        return self._stat
-
-    @property
-    def minuit(self):
-        """`~iminuit.Minuit` object"""
-        return self._minuit
-
-    def compute_npred(self):
-        """Compute predicted counts"""
-        self._npred = self.evaluator.compute_npred()
-
-    def compute_stat(self):
-        """Compute fit statistic per bin"""
-        self._stat = cash(n_on=self.counts.data, mu_on=self.npred)
+        """Likelihood per bin given the current model parameters"""
+        npred = self.evaluator.compute_npred()
+        return cash(n_on=self.counts.data, mu_on=npred)
 
     def total_stat(self, parameters):
-        """Likelihood for a given set of model parameters"""
-        self.model.parameters = parameters
-        self.compute_npred()
-        self.compute_stat()
-
+        """Total likelihood given the current model parameters"""
+        self._model.parameters = parameters
         if self.mask:
             stat = self.stat[self.mask.data]
         else:
             stat = self.stat
         return np.sum(stat, dtype=np.float64)
-
-    def fit(self, opts_minuit=None):
-        """Run the fit
-
-        Parameters
-        ----------
-        opts_minuit : dict (optional)
-            Options passed to `iminuit.Minuit` constructor
-        """
-        minuit = fit_iminuit(
-            parameters=self.model.parameters,
-            function=self.total_stat,
-            opts_minuit=opts_minuit,
-        )
-        self._minuit = minuit
 
 
 class MapEvaluator(object):
