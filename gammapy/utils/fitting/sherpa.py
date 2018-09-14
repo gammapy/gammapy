@@ -35,7 +35,7 @@ class SherpaFunction(object):
         return self.function(self.parameters), 0
 
 
-def optimize_sherpa(parameters, function, opts=None):
+def optimize_sherpa(parameters, function, **kwargs):
     """Sherpa optimization wrapper method.
 
     Parameters
@@ -44,21 +44,17 @@ def optimize_sherpa(parameters, function, opts=None):
         Parameter list with starting values.
     function : callable
         Likelihood function
-    opts : dict
-        Options dict passed to the optimizer. Can contain the "method"
-        keyword to choose from {'levmar', 'simplex', 'moncar', 'gridsearch'}.
-        See http://cxc.cfa.harvard.edu/sherpa/methods/index.html
-        for details on the different options available.
+    **kwargs : dict
+        Options passed to the optimizer instance.
 
     Returns
     -------
     result : (factors, info, optimizer)
         Tuple containing the best fit factors, some info and the optimizer instance.
     """
-    if opts is None:
-        opts = {"method": "simplex"}
-
-    optimizer = get_sherpa_optimiser(opts["method"])
+    method = kwargs.pop("method", "simplex")
+    optimizer = get_sherpa_optimiser(method)
+    optimizer.config.update(kwargs)
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]

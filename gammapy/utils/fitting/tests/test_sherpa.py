@@ -22,8 +22,7 @@ def fcn(parameters):
 def test_sherpa(method):
     pars = Parameters([Parameter("x", 2.2), Parameter("y", 3.4), Parameter("z", 4.5)])
 
-    opts = {"method": method}
-    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars, opts=opts)
+    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars, method=method)
 
     assert info["success"]
     assert info["nfev"] > 10

@@ -10,7 +10,7 @@ __all__ = ["optimize_iminuit"]
 log = logging.getLogger(__name__)
 
 
-def optimize_iminuit(parameters, function, opts=None):
+def optimize_iminuit(parameters, function, **kwargs):
     """iminuit optimization
 
     Parameters
@@ -19,7 +19,7 @@ def optimize_iminuit(parameters, function, opts=None):
         Parameters with starting values
     function : callable
         Likelihood function
-    opts : dict (optional)
+    **kwargs : dict
         Options passed to `iminuit.Minuit` constructor
 
     Returns
@@ -31,17 +31,14 @@ def optimize_iminuit(parameters, function, opts=None):
 
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
-    opts_minuit = {"errordef": 1, "print_level": 0}
-
-    if opts:
-        opts_minuit.update(opts)
-
-    opts_minuit.update(make_minuit_par_kwargs(parameters))
+    kwargs.setdefault("errordef", 1)
+    kwargs.setdefault("print_level", 0)
+    kwargs.update(make_minuit_par_kwargs(parameters))
 
     parnames = _make_parnames(parameters)
     minuit_func = MinuitFunction(function, parameters)
 
-    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit)
+    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **kwargs)
     minuit.migrad()
 
     info = {

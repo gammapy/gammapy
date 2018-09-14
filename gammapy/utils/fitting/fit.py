@@ -33,19 +33,28 @@ class Fit(object):
         """Total likelihood given the current model parameters"""
         pass
 
-    def optimize(self, backend="minuit", opts=None):
+    def optimize(self, backend="minuit", **kwargs):
         """Run the optimization
 
         Parameters
         ----------
         backend : {"minuit", "sherpa"}
             Which fitting backend to use.
-        opts : dict (optional)
-            Options passed to the optmizer. See https://iminuit.readthedocs.io
-            for details on the `"minuit"` backend.
-            See http://cxc.cfa.harvard.edu/sherpa/methods/index.html for details
-            on the on the `"sherpa"` backend. To choose sherpa optimization method
-            use e.g. `opts = {"method": "simplex"}`.
+        **kwargs : dict
+            Keyword arguments passed to the optimizer. For the `"minuit"` backend
+            see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+            for a detailed description of the available options. For the `"sherpa"`
+            backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
+            Those methods are described and compared in detail on
+            http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
+            options of the optimization methods are described on the following
+            pages in detail:
+
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
+
 
         Returns
         -------
@@ -58,13 +67,14 @@ class Fit(object):
             parameters.autoscale()
 
         optimize = self._optimize_funcs[backend]
-
         factors, info, optimizer = optimize(
             parameters=parameters,
             function=self.total_stat,
-            opts=opts,
+            **kwargs,
         )
 
+        # As preliminary solution would like to provide a possibility that the user
+        # can access the Minuit object, because it features a lot useful functionality
         if backend == "minuit":
             self.minuit = optimizer
 
@@ -75,7 +85,7 @@ class Fit(object):
             model=self._model.copy(),
             total_stat=self.total_stat(self._model.parameters),
             backend=backend,
-            method=opts.get('method'),
+            method=kwargs.get("method"),
             **info
             )
 
@@ -85,8 +95,8 @@ class Fit(object):
         """Run the error estimation"""
         parameters = fit_result.model.parameters
 
-        if self._minuit.covariance is not None:
-            covar = _get_covar(self._minuit)
+        if self.minuit.covariance is not None:
+            covar = _get_covar(self.minuit)
             parameters.set_covariance_factors(covar)
             self._model.parameters.set_covariance_factors(covar)
         else:
@@ -94,7 +104,7 @@ class Fit(object):
             parameters.covariance = None
         return fit_result
 
-    def run(self, steps="all", backend='minuit', opts=None):
+    def run(self, steps="all", optimize_opts=None):
         """
         Run all fitting steps.
 
@@ -104,8 +114,8 @@ class Fit(object):
             Which fitting steps to run.
         backend : {"minuit", "sherpa"}
             Which fitting backend to use. See `optimize` for details.
-        opts : dict (optional)
-            Options passed to the optimizer. See `optimize` for details.
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
 
         Returns
         -------
@@ -116,7 +126,9 @@ class Fit(object):
             steps = ["optimize", "errors"]
 
         if "optimize" in steps:
-            result = self.optimize(backend=backend, opts=opts)
+            if optimize_opts == None:
+                optimize_opts = {}
+            result = self.optimize(backend=backend, **optimize_opts)
 
         if "errors" in steps:
             result = self._estimate_errors(result)
