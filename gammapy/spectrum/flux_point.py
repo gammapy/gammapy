@@ -948,8 +948,10 @@ class FluxPointFit(Fit):
         data = self.data.table["dnde"].quantity.to(model.unit)
         data_errp = self.data.table["dnde_errp"].quantity
         data_errn = self.data.table["dnde_errn"].quantity
-        sigma = np.where(model > data, data_errp, data_errn)
-        return ((data - model) / sigma).to("").value ** 2
+
+        val_n = ((data - model) / data_errn).to("").value ** 2
+        val_p = ((data - model) / data_errp).to("").value ** 2
+        return np.where(model > data, val_p, val_n)
 
     @property
     def stat(self):
