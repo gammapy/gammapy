@@ -70,7 +70,7 @@ class Fit(object):
         factors, info, optimizer = optimize(
             parameters=parameters,
             function=self.total_stat,
-            **kwargs,
+            **kwargs
         )
 
         # As preliminary solution would like to provide a possibility that the user
