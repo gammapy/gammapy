@@ -51,8 +51,8 @@ class DataStore(object):
         return self.info(show=False)
 
     @classmethod
-    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
-        """Construct from HDU and observation index table files.
+    def from_dir(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
+        """Create from a directory.
 
         If no filenames are specified, files with default filenames
         will be looked for in `base_dir`.
