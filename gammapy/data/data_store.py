@@ -54,11 +54,18 @@ class DataStore(object):
     def from_dir(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Create from a directory.
 
-        If no filenames are specified, files with default filenames
-        will be looked for in `base_dir`.
-
-        Alternatively, the filenames can be specified explicitly, either
-        relative to `base_dir` (will be checked first) or by giving absolute paths.
+        Parameters
+        ----------
+        base_dir : str, Path
+            Base directory of the data files.
+        hdu_table_filename : str, Path
+            Filename of the HDU index file. May be specified either relative
+            to `base_dir` or as an absolute path. If None, the default filename
+            will be looked for.
+        obs_table_filename : str, Path
+            Filename of the observation index file. May be specified either relative
+            to `base_dir` or as an absolute path. If None, the default filename
+            will be looked for.
         """
         base_dir = make_path(base_dir)
 
