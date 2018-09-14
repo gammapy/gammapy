@@ -824,10 +824,10 @@ class FluxPointEstimator(object):
             " in energy range:\n{}".format(self.fit)
         )
 
-        result = self.fit.fit()
+        result = self.fit.run()
 
         # compute TS value for all observations
-        stat_best_fit = result["statval"]
+        stat_best_fit = result.total_stat
 
         dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
@@ -945,11 +945,13 @@ class FluxPointFit(Fit):
         Assymetric chi2 statistics for a list of flux points and model.
         """
         model = self._model(self.data.e_ref)
-        data = self.data.table["dnde"].quantity
+        data = self.data.table["dnde"].quantity.to(model.unit)
         data_errp = self.data.table["dnde_errp"].quantity
         data_errn = self.data.table["dnde_errn"].quantity
-        sigma = np.where(model > data, data_errp, data_errn)
-        return ((data - model) / sigma).to("").value ** 2
+
+        val_n = ((data - model) / data_errn).to("").value ** 2
+        val_p = ((data - model) / data_errp).to("").value ** 2
+        return np.where(model > data, val_p, val_n)
 
     @property
     def stat(self):

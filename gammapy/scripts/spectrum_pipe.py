@@ -9,6 +9,7 @@ from ..spectrum import (
     SpectrumResult,
 )
 from ..background import ReflectedRegionsBackgroundEstimator
+from ..utils.scripts import make_path
 
 __all__ = ["SpectrumAnalysisIACT"]
 
@@ -53,11 +54,11 @@ class SpectrumAnalysisIACT(object):
         ss += "\n{}".format(self.config)
         return ss
 
-    def run(self, opts_minuit=None):
+    def run(self, optimize_opts=None):
         """Run all steps."""
         log.info("Running {}".format(self.__class__.__name__))
         self.run_extraction()
-        self.run_fit(opts_minuit)
+        self.run_fit(optimize_opts)
 
     def run_extraction(self):
         """Run all steps for the spectrum extraction."""
@@ -74,14 +75,14 @@ class SpectrumAnalysisIACT(object):
 
         self.extraction.run()
 
-    def run_fit(self, opts_minuit=None):
+    def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
             obs_list=self.extraction.observations, **self.config["fit"]
         )
-        self.fit.run(opts_minuit=opts_minuit)
+        self.fit.run(optimize_opts=optimize_opts)
         modelname = self.fit.result[0].model.__class__.__name__
-        filename = self.config["outdir"] / "fit_result_{}.yaml".format(modelname)
+        filename = make_path(self.config["outdir"]) / "fit_result_{}.yaml".format(modelname)
         self.fit.result[0].to_yaml(filename=filename)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking

@@ -5,12 +5,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 
-__all__ = ["fit_iminuit"]
+__all__ = ["optimize_iminuit"]
 
 log = logging.getLogger(__name__)
 
 
-def fit_iminuit(parameters, function, opts_minuit=None):
+def optimize_iminuit(parameters, function, **kwargs):
     """iminuit optimization
 
     Parameters
@@ -19,51 +19,48 @@ def fit_iminuit(parameters, function, opts_minuit=None):
         Parameters with starting values
     function : callable
         Likelihood function
-    opts_minuit : dict (optional)
+    **kwargs : dict
         Options passed to `iminuit.Minuit` constructor
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameters with best-fit values
-    minuit : `~iminuit.Minuit`
-        Minuit object
+    result : (factors, info, optmizer)
+        Tuple containing the best fit factors, some info and the optimizer instance.
     """
     from iminuit import Minuit
 
-    if parameters.apply_autoscale:
-        parameters.autoscale()
-
     # In Gammapy, we have the factor 2 in the likelihood function
     # This means `errordef=1` in the Minuit interface is correct
-    opts_minuit_all = {"errordef": 1, "print_level": 0}
-
-    if opts_minuit:
-        opts_minuit_all.update(opts_minuit)
-
-    opts_minuit_all.update(make_minuit_par_kwargs(parameters))
+    kwargs.setdefault("errordef", 1)
+    kwargs.setdefault("print_level", 0)
+    kwargs.update(make_minuit_par_kwargs(parameters))
 
     parnames = _make_parnames(parameters)
     minuit_func = MinuitFunction(function, parameters)
 
-    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **opts_minuit_all)
-
+    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **kwargs)
     minuit.migrad()
 
-    parameters.set_parameter_factors(minuit.args)
-
-    if minuit.covariance is not None:
-        parameters.set_covariance_factors(_get_covar(minuit))
-    else:
-        log.warning("No covariance matrix found")
-        parameters.covariance = None
-
-    return {
+    info = {
         "success": minuit.migrad_ok(),
-        "factors": minuit.args,
         "nfev": minuit.get_num_call_fcn(),
-        "minuit": minuit,
+        "message": _get_message(minuit),
     }
+    return minuit.args, info, minuit
+
+
+# this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
+def _get_message(m):
+    message = "Optimization terminated successfully."
+    success = m.migrad_ok()
+    if not success:
+        message = "Optimization failed."
+        fmin = m.get_fmin()
+        if fmin.has_reached_call_limit:
+            message += " Call limit was reached."
+        if fmin.is_above_max_edm:
+            message += " Estimated distance to minimum too large."
+    return message
 
 
 def _make_parnames(parameters):

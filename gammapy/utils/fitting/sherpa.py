@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 
-__all__ = ["fit_sherpa"]
+__all__ = ["optimize_sherpa"]
 
 
 def get_sherpa_optimiser(name):
@@ -31,10 +32,10 @@ class SherpaFunction(object):
 
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function(self.parameters)
+        return self.function(self.parameters), 0
 
 
-def fit_sherpa(parameters, function, optimizer="simplex"):
+def optimize_sherpa(parameters, function, **kwargs):
     """Sherpa optimization wrapper method.
 
     Parameters
@@ -43,20 +44,17 @@ def fit_sherpa(parameters, function, optimizer="simplex"):
         Parameter list with starting values.
     function : callable
         Likelihood function
-    optimizer : {'levmar', 'simplex', 'moncar', 'gridsearch'}
-        Which optimizer to use for the fit. See
-        http://cxc.cfa.harvard.edu/sherpa/methods/index.html
-        for details on the different options available.
+    **kwargs : dict
+        Options passed to the optimizer instance.
 
     Returns
     -------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameter list with best-fit values
+    result : (factors, info, optimizer)
+        Tuple containing the best fit factors, some info and the optimizer instance.
     """
-    optimizer = get_sherpa_optimiser(optimizer)
-
-    if parameters.covariance is None:
-        parameters.autoscale()
+    method = kwargs.pop("method", "simplex")
+    optimizer = get_sherpa_optimiser(method)
+    optimizer.config.update(kwargs)
 
     pars = [par.value for par in parameters.parameters]
     parmins = [par.min for par in parameters.parameters]
@@ -64,21 +62,15 @@ def fit_sherpa(parameters, function, optimizer="simplex"):
 
     statfunc = SherpaFunction(function, parameters)
 
-    result = optimizer.fit(
-        statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
-    )
+    with np.errstate(invalid='ignore'):
+        result = optimizer.fit(
+            statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
+        )
 
-    result = {
+    info = {
         "success": result[0],
-        "factors": result[1],
-        "statval": result[2],
         "message": result[3],
-        "info": result[4],  # that's a dict, content varies based on optimiser
+        "nfev": result[4]["nfev"],
     }
 
-    result["nfev"] = result["info"]["nfev"]
-
-    # Copy final results into the parameters object
-    parameters.set_parameter_factors(result["factors"])
-
-    return result
+    return result[1], info, optimizer
