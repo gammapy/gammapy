@@ -344,21 +344,41 @@ def test_compute_flux_points_dnde_fermi():
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
 
 
-@requires_data("gammapy-extra")
-@requires_dependency("iminuit")
-class TestFluxPointFit:
-    def test_fit_pwl(self):
-        path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
-        data = FluxPoints.read(path)
-        model = PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
+@pytest.fixture(scope='session')
+def sed_flux_points():
+    path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
+    return FluxPoints.read(path)
 
-        fitter = FluxPointFit(model, data)
-        result = fitter.run()
+@pytest.fixture(scope='session')
+def sed_model():
+    return PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
+
+
+@requires_data("gammapy-extra")
+class TestFluxPointFit:
+    @requires_dependency("iminuit")
+    def test_fit_pwl_minuit(self, sed_model, sed_flux_points):
+        optimize_opts = {"backend": "minuit"}
+        fitter = FluxPointFit(sed_model, sed_flux_points)
+        result = fitter.run(optimize_opts=optimize_opts)
+        self.assert_result(result)
+
+    @requires_dependency("sherpa")
+    def test_fit_pwl_sherpa(self, sed_model, sed_flux_points):
+        optimize_opts = {"backend": "sherpa", "method": "simplex"}
+        fitter = FluxPointFit(sed_model, sed_flux_points)
+        result = fitter.run(optimize_opts=optimize_opts, steps=["optimize"])
+        self.assert_result(result)
+
+    @staticmethod
+    def assert_result(result):
+        assert result.success
+        assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
 
         index = result.model.parameters["index"]
-        assert_quantity_allclose(index.quantity, 2.216 * u.Unit(""), rtol=1e-3)
-        amplitude = result.model.parameters["amplitude"]
-        assert_quantity_allclose(
-            amplitude.quantity, 2.1616E-13 * u.Unit("cm-2 s-1 TeV-1"), rtol=1e-3
-        )
-        assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
+        assert_allclose(index.value, 2.216, rtol=1e-3)
+
+        # Right now sherpa also fits the reference energy
+        amplitude = result.model(1 * u.TeV).to('cm-2 s-1 TeV-1')
+        assert_allclose(amplitude.value, 2.1616E-13, rtol=1e-3)
+

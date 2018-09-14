@@ -945,7 +945,7 @@ class FluxPointFit(Fit):
         Assymetric chi2 statistics for a list of flux points and model.
         """
         model = self._model(self.data.e_ref)
-        data = self.data.table["dnde"].quantity
+        data = self.data.table["dnde"].quantity.to(model.unit)
         data_errp = self.data.table["dnde_errp"].quantity
         data_errn = self.data.table["dnde_errn"].quantity
         sigma = np.where(model > data, data_errp, data_errn)
