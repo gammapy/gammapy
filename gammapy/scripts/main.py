@@ -18,15 +18,25 @@ def print_version(ctx, param, value):
 
 
 # http://click.pocoo.org/5/documentation/#help-parameter-customization
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
-@click.group('gammapy', context_settings=CONTEXT_SETTINGS)
-@click.option('--log-level', default='info', help='Logging verbosity level.',
-              type=click.Choice(['debug', 'info', 'warning', 'error']))
-@click.option('--ignore-warnings', is_flag=True, help='Ignore warnings?')
-@click.option('--version', is_flag=True, callback=print_version,
-              expose_value=False, is_eager=True, help='Print version and exit.')
+@click.group("gammapy", context_settings=CONTEXT_SETTINGS)
+@click.option(
+    "--log-level",
+    default="info",
+    help="Logging verbosity level.",
+    type=click.Choice(["debug", "info", "warning", "error"]),
+)
+@click.option("--ignore-warnings", is_flag=True, help="Ignore warnings?")
+@click.option(
+    "--version",
+    is_flag=True,
+    callback=print_version,
+    expose_value=False,
+    is_eager=True,
+    help="Print version and exit.",
+)
 def cli(log_level, ignore_warnings):
     """Gammapy command line interface (CLI).
 
@@ -58,16 +68,21 @@ def cli_image():
     """Analysis - 2D images"""
 
 
-@cli.group('download', short_help='Download datasets and notebooks')
-@click.option('--dest', prompt='destination folder', default='gammapy-tutorials',
-              help='Folder where the files will be copied.')
-@click.option('--file', default='',
-              help='Specific file to download.')
-@click.option('--fold', default='',
-              help='Specific folder to download.')
-@click.option('--release', default='',
-              help='Release or commit hash in Github repo.')
-@click.option('--recursive/--no-recursive', default=True, help='Deactivate recursive scan of a folder.')
+@cli.group("download", short_help="Download datasets and notebooks")
+@click.option(
+    "--dest",
+    prompt="destination folder",
+    default="gammapy-tutorials",
+    help="Folder where the files will be copied.",
+)
+@click.option("--file", default="", help="Specific file to download.")
+@click.option("--fold", default="", help="Specific folder to download.")
+@click.option("--release", default="", help="Release or commit hash in Github repo.")
+@click.option(
+    "--recursive/--no-recursive",
+    default=True,
+    help="Deactivate recursive scan of a folder.",
+)
 @click.pass_context
 def cli_download(ctx, dest, file, fold, release, recursive):
     """Download datasets and notebooks.
@@ -83,22 +98,21 @@ def cli_download(ctx, dest, file, fold, release, recursive):
     \b
     $ gammapy download notebooks
     $ gammapy download datasets
+    $ gammapy download --release=master tutorials
     $ gammapy download --file=first_steps.ipynb notebooks
     $ gammapy download --dest=localfolder --fold=catalogs/fermi --no-recursive datasets
-    $ gammapy download --release=master notebooks
     """
     ctx.obj = {
-        'localfold': dest,
-        'specfile': file,
-        'specfold': fold,
-        'release': release,
-        'recursive': recursive
+        "localfold": dest,
+        "specfile": file,
+        "specfold": fold,
+        "release": release,
+        "recursive": recursive,
     }
 
 
-@cli.group('jupyter', short_help='Perform actions on notebooks')
-@click.option('--src', default='.',
-              help='Local folder or Jupyter notebook filename.')
+@cli.group("jupyter", short_help="Perform actions on notebooks")
+@click.option("--src", default=".", help="Local folder or Jupyter notebook filename.")
 @click.pass_context
 def cli_jupyter(ctx, src):
     """
@@ -126,41 +140,52 @@ def cli_jupyter(ctx, src):
         sys.exit()
 
     if path.is_dir():
-        paths = list(path.glob('*.ipynb'))
+        paths = list(path.glob("*.ipynb"))
     else:
         paths = [path]
 
-    ctx.obj = {
-        'paths': paths,
-    }
+    ctx.obj = {"paths": paths}
 
 
 def add_subcommands():
     from .info import cli_info
+
     cli.add_command(cli_info)
 
     from .check import cli_check
+
     cli.add_command(cli_check)
 
     from .image_bin import cli_image_bin
+
     cli_image.add_command(cli_image_bin)
 
     from .download import cli_download_notebooks
+
     cli_download.add_command(cli_download_notebooks)
 
     from .download import cli_download_datasets
+
     cli_download.add_command(cli_download_datasets)
 
+    from .download import cli_download_tutorials
+
+    cli_download.add_command(cli_download_tutorials)
+
     from .jupyter import cli_jupyter_black
+
     cli_jupyter.add_command(cli_jupyter_black)
 
     from .jupyter import cli_jupyter_stripout
+
     cli_jupyter.add_command(cli_jupyter_stripout)
 
     from .jupyter import cli_jupyter_execute
+
     cli_jupyter.add_command(cli_jupyter_execute)
 
     from .jupyter import cli_jupyter_test
+
     cli_jupyter.add_command(cli_jupyter_test)
 
 
