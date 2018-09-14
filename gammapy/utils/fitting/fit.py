@@ -85,7 +85,7 @@ class Fit(object):
             model=self._model.copy(),
             total_stat=self.total_stat(self._model.parameters),
             backend=backend,
-            method=kwargs.get("method"),
+            method=kwargs.get("method", backend),
             **info
             )
 
@@ -184,7 +184,7 @@ class FitResult(object):
         str_ = self.__class__.__name__
         str_ += "\n\n"
         str_ += "\tbackend    : {}\n".format(self.backend)
-        str_ += "\tmethod    : {}\n".format(self.method)
+        str_ += "\tmethod     : {}\n".format(self.method)
         str_ += "\tsuccess    : {}\n".format(self.success)
         str_ += "\tnfev       : {}\n".format(self.nfev)
         str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
