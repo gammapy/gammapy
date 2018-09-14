@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from ...utils.testing import run_cli
 from ..main import cli
 from ...extern.pathlib import Path
+from ...utils.testing import requires_dependency
 import pytest
 
 
@@ -18,6 +19,7 @@ def test_cli_download_help():
 
 
 @pytest.mark.xfail
+@requires_dependency("yaml")
 def test_cli_download_datasets(files_dir):
     filename = "data-register.yaml"
     option_dest = "--dest=" + str(files_dir)
@@ -31,6 +33,7 @@ def test_cli_download_datasets(files_dir):
 
 
 @pytest.mark.xfail
+@requires_dependency("yaml")
 def test_cli_download_notebooks(files_dir):
     release = 'master'
     filename = "first_steps.ipynb"

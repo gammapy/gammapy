@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import sys
-import yaml
 from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 from ..extern.pathlib import Path
 
@@ -159,6 +158,7 @@ class DownloadProcess(object):
                     self.listfiles.append(item["path"])
 
     def parse_yaml(self, datasets=False):
+        import yaml
 
         if datasets:
             notebooksfolder = "notebooks-" + self.release
