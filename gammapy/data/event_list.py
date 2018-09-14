@@ -99,11 +99,18 @@ class EventListBase(object):
         return cls(stacked_table)
 
     def __str__(self):
-        ss = "EventList info:\n"
-        ss += "- Number of events: {}\n".format(len(self.table))
-        # TODO: add time, RA, DEC and if present GLON, GLAT info ...
+        ss = (
+                "EventList info:\n"
+                + "- Number of events: {}\n".format(len(self.table))
+                + "- Median energy: {:.3g} {}\n".format(
+            np.median(self.energy.value), self.energy.unit
+        )
+        )
 
-        ss += "- Median energy: {}\n".format(np.median(self.energy))
+        if "OBS_ID" in self.table.meta:
+            ss += "- OBS_ID = {}".format(self.table.meta["OBS_ID"])
+
+        # TODO: add time, RA, DEC and if present GLON, GLAT info ...
 
         if "AZ" in self.table.colnames:
             # TODO: azimuth should be circular median
@@ -364,18 +371,22 @@ class EventListBase(object):
             mask = np.union1d(mask, temp)
         return mask
 
-    def plot_energy_hist(self, ax=None, ebounds=None, **kwargs):
-        """Plot counts as a function of energy."""
+    def _default_plot_ebounds(self):
+        energy = self.energy
+        return EnergyBounds.equal_log_spacing(energy.min(), energy.max(), 50)
+
+    def _counts_spectrum(self, ebounds):
         from ..spectrum import CountsSpectrum
-
-        if ebounds is None:
-            emin = np.min(self.table["ENERGY"].quantity)
-            emax = np.max(self.table["ENERGY"].quantity)
-            ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
-
+        if not ebounds:
+            ebounds = self._default_plot_ebounds()
         spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
         spec.fill(self.energy)
-        spec.plot(ax=ax, **kwargs)
+        return spec
+
+    def plot_energy(self, ax=None, ebounds=None, **kwargs):
+        """Plot counts as a function of energy."""
+        spec = self._counts_spectrum(ebounds)
+        ax = spec.plot(ax=ax, **kwargs)
         return ax
 
     def plot_time(self, ax=None):
@@ -409,20 +420,19 @@ class EventListBase(object):
 
         ax = plt.gca() if ax is None else ax
 
-        time = self.table["TIME"]
-        first_event_time = np.min(time)
-
         # Note the events are not necessarily in time order
-        relative_event_times = time - first_event_time
+        time = self.table["TIME"]
+        time = time - np.min(time)
 
-        ax.set_title("Event rate ")
+        ax.set_xlabel("Time (sec)")
+        ax.set_ylabel("Counts")
+        y, x_edges = np.histogram(time, bins=30)
+        # x = (x_edges[1:] + x_edges[:-1]) / 2
+        xerr = np.diff(x_edges) / 2
+        x = x_edges[:-1] + xerr
+        yerr = np.sqrt(y)
 
-        ax.set_xlabel("seconds")
-        ax.set_ylabel("Events / s")
-        rate, t = np.histogram(relative_event_times, bins=50)
-        t_center = (t[1:] + t[:-1]) / 2
-
-        ax.plot(t_center, rate)
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, fmt="none")
 
         return ax
 
@@ -496,6 +506,27 @@ class EventListBase(object):
         ax.set_ylabel("Counts")
 
         return ax
+
+    def plot_energy_offset(self, ax=None):
+        """Plot counts histogram with energy and offset axes."""
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
+
+        ax = plt.gca() if ax is None else ax
+
+        energy_bounds = self._default_plot_ebounds()
+        offset_bounds = np.linspace(0, 4, 30)
+
+        counts = np.histogram2d(
+            x=self.energy,
+            y=self.offset,
+            bins=(energy_bounds, offset_bounds),
+        )[0]
+
+        ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
+        ax.set_xscale("log")
+        ax.set_xlabel("Energy (TeV)")
+        ax.set_ylabel("Offset (deg)")
 
     def check(self, checks="all"):
         """Run checks.
@@ -606,87 +637,51 @@ class EventList(EventListBase):
         return self.select_row_subset(mask)
 
     def peek(self):
-        """Summary plots."""
+        """Quick look plots."""
         import matplotlib.pyplot as plt
 
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
-        self.plot_image_radec(ax=axes[0])
-        self.plot_time(ax=axes[1])
-        # TODO: self.plot_energy_dependence(ax=axes[x])
-        # TODO: self.plot_offset_dependence(ax=axes[x])
+        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
+
+        self.plot_energy(ax=axes[0, 0])
+        bins = np.linspace(start=0, stop=4 ** 2, num=30)
+        self.plot_offset2_distribution(ax=axes[0, 1], bins=bins)
+        self.plot_time(ax=axes[0, 2])
+
+        axes[1, 0].axis("off")
+        m = self._counts_image()
+        ax = plt.subplot(2, 3, 4, projection=m.geom.wcs)
+        m.plot(ax=ax, stretch="sqrt")
+
+        self.plot_energy_offset(ax=axes[1, 1])
+
+        self._plot_text_summary(ax=axes[1, 2])
+
         plt.tight_layout()
 
-    def plot_image_radec(self, ax=None, number_bins=50):
-        """Plot a sky counts image in RA/DEC coordinates.
-        """
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
-        from matplotlib.colors import PowerNorm
+    def _plot_text_summary(self, ax):
+        ax.axis("off")
+        txt = str(self)
+        ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
-        ax = plt.gca() if ax is None else ax
+    def _counts_image(self):
+        from ..maps import WcsNDMap
 
-        count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]["RA"], self.table[:]["DEC"], bins=number_bins
-        )
+        opts = {
+            "width": (7, 7),
+            "binsz": 0.1,
+            "proj": "TAN",
+            "coordsys": "GAL",
+            "skydir": self.pointing_radec,
+        }
+        m = WcsNDMap.create(**opts)
+        m.fill_by_coord(self.radec)
+        m = m.smooth(radius=1)
+        return m
 
-        ax.set_title("# Photons")
-
-        ax.set_xlabel("RA")
-        ax.set_ylabel("DEC")
-
-        ax.plot(
-            self.pointing_radec.ra.value,
-            self.pointing_radec.dec.value,
-            "+",
-            ms=20,
-            mew=3,
-            color="white",
-        )
-
-        im = ax.imshow(
-            count_image,
-            interpolation="nearest",
-            origin="low",
-            extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
-            norm=PowerNorm(gamma=0.5),
-        )
-
-        ax.invert_xaxis()
-        ax.grid()
-
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im, cax=cax)
-
-    def plot_image(self, ax=None, number_bins=50):
-        """Plot a counts image in field of view coordinates.
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        max_x = max(self.table["DETX"])
-        min_x = min(self.table["DETX"])
-        max_y = max(self.table["DETY"])
-        min_y = min(self.table["DETY"])
-
-        x_edges = np.linspace(min_x, max_x, number_bins)
-        y_edges = np.linspace(min_y, max_y, number_bins)
-
-        count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]["DETY"], self.table[:]["DETX"], bins=(x_edges, y_edges)
-        )
-
-        ax.set_title("# Photons")
-
-        ax.set_xlabel("x / deg")
-        ax.set_ylabel("y / deg")
-        ax.imshow(
-            count_image,
-            interpolation="nearest",
-            origin="low",
-            extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
-        )
+    def plot_image(self):
+        """Quick look counts map sky plot."""
+        m = self._counts_image()
+        m.plot(stretch="sqrt")
 
 
 class EventListLAT(EventListBase):
@@ -718,8 +713,7 @@ class EventListLAT(EventListBase):
         from ..maps import WcsNDMap
 
         m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj="AIT", coordsys="GAL")
-        coord = self.radec
-        m.fill_by_coord(coord)
+        m.fill_by_coord(self.radec)
         m.plot(stretch="sqrt")
 
 

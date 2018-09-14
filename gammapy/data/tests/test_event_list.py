@@ -43,14 +43,34 @@ class TestEventListHESS:
         assert len(stacked_list.table) == 49 * 3
 
     @requires_dependency("matplotlib")
-    def test_peek(self):
+    def test_plot_time(self):
         with mpl_plot_check():
-            self.events.peek()
+            self.events.plot_time()
+
+    @requires_dependency("matplotlib")
+    def test_plot_energy(self):
+        with mpl_plot_check():
+            self.events.plot_energy()
 
     @requires_dependency("matplotlib")
     def test_plot_offset2_distribution(self):
         with mpl_plot_check():
             self.events.plot_offset2_distribution()
+
+    @requires_dependency("matplotlib")
+    def test_plot_energy_offset(self):
+        with mpl_plot_check():
+            self.events.plot_energy_offset()
+
+    @requires_dependency("matplotlib")
+    def test_plot_image(self):
+        with mpl_plot_check():
+            self.events.plot_image()
+
+    @requires_dependency("matplotlib")
+    def test_peek(self):
+        with mpl_plot_check():
+            self.events.peek()
 
 
 @requires_data("gammapy-extra")
