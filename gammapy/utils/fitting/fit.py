@@ -112,8 +112,6 @@ class Fit(object):
         ----------
         steps : {"all", "optimize", "errors"}
             Which fitting steps to run.
-        backend : {"minuit", "sherpa"}
-            Which fitting backend to use. See `optimize` for details.
         optimize_opts : dict
             Options passed to `Fit.optimize`.
 
@@ -128,7 +126,7 @@ class Fit(object):
         if "optimize" in steps:
             if optimize_opts == None:
                 optimize_opts = {}
-            result = self.optimize(backend=backend, **optimize_opts)
+            result = self.optimize(**optimize_opts)
 
         if "errors" in steps:
             result = self._estimate_errors(result)

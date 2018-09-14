@@ -106,7 +106,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
         psf=psf,
         edisp=edisp,
     )
-    result = fit.run(backend='minuit')
+    result = fit.run()
 
     assert sky_model is not fit._model
     assert sky_model is not result.model
