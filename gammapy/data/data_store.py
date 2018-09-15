@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import subprocess
-from ..utils.scripts import make_path
+from ..utils.scripts import Path, make_path
 from ..utils.testing import Checker
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
@@ -51,37 +51,48 @@ class DataStore(object):
         return self.info(show=False)
 
     @classmethod
-    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
-        """Construct from HDU and observation index table files."""
-        if hdu_table_filename:
-            log.debug("Reading {}".format(hdu_table_filename))
-            hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
-
-            hdu_table.meta["BASE_DIR"] = str(base_dir)
-        else:
-            hdu_table = None
-
-        if obs_table_filename:
-            log.debug("Reading {}".format(str(obs_table_filename)))
-            obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
-        else:
-            obs_table = None
-
-        return cls(hdu_table=hdu_table, obs_table=obs_table)
-
-    @classmethod
-    def from_dir(cls, base_dir):
+    def from_dir(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Create from a directory.
 
-        This assumes that the HDU and observations index tables
-        have the default filename.
+        Parameters
+        ----------
+        base_dir : str, Path
+            Base directory of the data files.
+        hdu_table_filename : str, Path
+            Filename of the HDU index file. May be specified either relative
+            to `base_dir` or as an absolute path. If None, the default filename
+            will be looked for.
+        obs_table_filename : str, Path
+            Filename of the observation index file. May be specified either relative
+            to `base_dir` or as an absolute path. If None, the default filename
+            will be looked for.
         """
         base_dir = make_path(base_dir)
-        return cls.from_files(
-            base_dir=base_dir,
-            hdu_table_filename=base_dir / cls.DEFAULT_HDU_TABLE,
-            obs_table_filename=base_dir / cls.DEFAULT_OBS_TABLE,
-        )
+
+        if hdu_table_filename:
+            if Path.exists(base_dir / hdu_table_filename):
+                hdu_table_filename = base_dir / hdu_table_filename
+        else:
+            hdu_table_filename = base_dir / cls.DEFAULT_HDU_TABLE
+
+        if obs_table_filename:
+            if Path.exists(base_dir / obs_table_filename):
+                obs_table_filename = base_dir / obs_table_filename
+        else:
+            obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
+
+        if not Path.exists(hdu_table_filename):
+            raise IOError("File not found: {}".format(hdu_table_filename))
+        log.debug("Reading {}".format(hdu_table_filename))
+        hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
+        hdu_table.meta["BASE_DIR"] = str(base_dir)
+
+        if not Path.exists(obs_table_filename):
+            raise IOError("File not found: {}".format(obs_table_filename))
+        log.debug("Reading {}".format(str(obs_table_filename)))
+        obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
+
+        return cls(hdu_table=hdu_table, obs_table=obs_table)
 
     @classmethod
     def from_config(cls, config):
