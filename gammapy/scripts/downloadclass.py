@@ -177,20 +177,19 @@ class DownloadProcess(object):
 
         set_folders = set()
         for nb in confignbs:
-            if nb["published"]:
-                if not datasets:
-                    self.listfiles.append(nb["name"] + ".ipynb")
-                else:
-                    if nb["datasets"]:
-                        for ds in nb["datasets"]:
-                            name, ext = os.path.splitext(ds)
-                            if not ext:
-                                set_folders.add(ds)
-                            else:
-                                if "/" in ds:
-                                    ifolder = self.localfold / Path(ds).parent
-                                    ifolder.mkdir(parents=True, exist_ok=True)
-                                self.listfiles.append(ds)
+            if not datasets:
+                self.listfiles.append(nb["name"] + ".ipynb")
+            else:
+                if nb["datasets"]:
+                    for ds in nb["datasets"]:
+                        name, ext = os.path.splitext(ds)
+                        if not ext:
+                            set_folders.add(ds)
+                        else:
+                            if "/" in ds:
+                                ifolder = self.localfold / Path(ds).parent
+                                ifolder.mkdir(parents=True, exist_ok=True)
+                            self.listfiles.append(ds)
         return set_folders
 
     def get_file(self, filename):

@@ -18,8 +18,8 @@ def cli_download_notebooks(ctx):
     """Download notebooks"""
 
     downloadproc = DownloadProcess(
-        "gammapy-extra",
-        "notebooks",
+        "gammapy",
+        "tutorials",
         ctx.obj["specfile"],
         ctx.obj["specfold"],
         ctx.obj["release"],
@@ -68,8 +68,8 @@ def cli_download_tutorials(ctx):
         log.info("--recursive is True for tutorials.")
 
     downnotebooks = DownloadProcess(
-        "gammapy-extra",
-        "notebooks",
+        "gammapy",
+        "tutorials",
         "",
         "",
         ctx.obj["release"],
