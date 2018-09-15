@@ -34,36 +34,40 @@ def requirement_missing(notebook):
     return False
 
 
-if 'GAMMAPY_EXTRA' not in os.environ:
-    logging.info('GAMMAPY_EXTRA environment variable not set.')
-    logging.info('Running notebook tests requires gammapy-extra.')
-    logging.info('Exiting now.')
-    sys.exit()
+def main():
+    if 'GAMMAPY_EXTRA' not in os.environ:
+        logging.info('GAMMAPY_EXTRA environment variable not set.')
+        logging.info('Running notebook tests requires gammapy-extra.')
+        logging.info('Exiting now.')
+        sys.exit()
 
-try:
-    path_datasets = Path(os.environ['GAMMAPY_EXTRA']) / 'datasets'
-    os.symlink(str(path_datasets), 'datasets')
-except Exception as ex:
-    logging.error('It was not possible to create a /datasets symlink')
-    logging.error(ex)
-    sys.exit()
+    try:
+        path_datasets = Path(os.environ['GAMMAPY_EXTRA']) / 'datasets'
+        os.symlink(str(path_datasets), 'datasets')
+    except Exception as ex:
+        logging.error('It was not possible to create a /datasets symlink')
+        logging.error(ex)
+        sys.exit()
+
+    passed = True
+    yamlfile = get_notebooks()
+    dirnbs = Path('tutorials')
+
+    for notebook in yamlfile:
+        if requirement_missing(notebook):
+            logging.info('Skipping notebook {} because requirement is missing.'.format(
+                notebook['name']))
+            continue
+
+        filename = notebook['name'] + '.ipynb'
+        path = dirnbs / filename
+
+        if not test_notebook(path):
+            passed = False
+
+    os.unlink('datasets')
+    assert passed
 
 
-passed = True
-yamlfile = get_notebooks()
-dirnbs = Path('tutorials')
-
-for notebook in yamlfile:
-    if requirement_missing(notebook):
-        logging.info('Skipping notebook {} because requirement is missing.'.format(
-            notebook['name']))
-        continue
-
-    filename = notebook['name'] + '.ipynb'
-    path = dirnbs / filename
-
-    if not test_notebook(path):
-        passed = False
-
-os.unlink('datasets')
-assert passed
+if __name__ == '__main__':
+    main()
