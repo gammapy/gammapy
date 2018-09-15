@@ -57,10 +57,8 @@ class EventListBase(object):
 
     def __init__(self, table):
 
-        # TODO: remove this temp fix once we change to a new test dataset
-        # This is a temp fix because this test dataset is used for many Gammapy tests
-        # but it doesn't have the units set properly
-        # '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+        # TODO: remove this temp fix once we drop support for `hess-hd-hap-prod2`
+        # There the unit wasn't set correctly in the FITS table, so this hack is needed.
         if "ENERGY" in table.colnames:
             if not table["ENERGY"].unit:
                 table["ENERGY"].unit = "TeV"
@@ -402,20 +400,6 @@ class EventListBase(object):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes
-
-        Examples
-        --------
-        Plot the rate of the events:
-
-        .. plot::
-            :include-source:
-
-            import matplotlib.pyplot as plt
-            from gammapy.data import EventList
-
-            events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
-            events.plot_time()
-            plt.show()
         """
         import matplotlib.pyplot as plt
 
@@ -474,7 +458,7 @@ class EventListBase(object):
         Load an example event list:
 
         >>> from gammapy.data import EventList
-        >>> events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
+        >>> events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
         Plot the offset^2 distribution wrt. the observation pointing position
         (this is a commonly used plot to check the background spatial distribution):
@@ -553,7 +537,8 @@ class EventList(EventListBase):
     To load an example H.E.S.S. event list:
 
     >>> from gammapy.data import EventList
-    >>> events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz')
+    >>> filename = '$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    >>> events = EventList.read(filename)
     """
 
     @property

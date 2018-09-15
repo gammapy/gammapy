@@ -29,19 +29,18 @@ OGIP format and fit a spectral model.
 
 .. code-block:: python
 
-    import astropy.units as u
-    from gammapy.datasets import gammapy_extra
-    from gammapy.spectrum import SpectrumObservation, SpectrumFit, models
+    from gammapy.spectrum import SpectrumObservation, SpectrumFit
+    from gammapy.spectrum.models import PowerLaw
 
-    filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits'
+    filename = '$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/pha_obs23523.fits'
     obs = SpectrumObservation.read(filename)
 
-    model = models.PowerLaw(
-        index=2 * u.Unit(''),
-        amplitude=1e-12*u.Unit('cm-2 s-1 TeV-1'),
-        reference=1*u.TeV,
+    model = PowerLaw(
+        index=2,
+        amplitude='1e-12 cm-2 s-1 TeV-1',
+        reference='1 TeV',
     )
-    fit = SpectrumFit(obs_list=obs, model=model)
+    fit = SpectrumFit(obs_list=[obs], model=model)
     fit.run()
     print(fit.result[0])
 
@@ -52,17 +51,25 @@ It will print the following output to the console:
     Fit result info
     ---------------
     Model: PowerLaw
-    Parameters
-    Parameter(name='index', value=2.1473880540790522, unit=Unit(dimensionless), min=0, max=None, frozen=False)
-    Parameter(name='amplitude', value=2.7914083679020973e-11, unit=Unit("1 / (cm2 s TeV)"), min=0, max=None, frozen=False)
-    Parameter(name='reference', value=1.0, unit=Unit("TeV"), min=None, max=None, frozen=True)
 
-    Covariance: [[  6.89132245e-03   1.12566759e-13   0.00000000e+00]
-     [  1.12566759e-13   7.26865610e-24   0.00000000e+00]
-     [  0.00000000e+00   0.00000000e+00   0.00000000e+00]]
+    Parameters:
 
-    Statistic: 46.051 (wstat)
-    Fit Range: [  5.99484250e+08   1.00000000e+11] keV
+           name     value     error         unit         min    max
+        --------- --------- --------- --------------- --------- ---
+            index 2.791e+00 1.456e-01                       nan nan
+        amplitude 5.030e-11 6.251e-12 1 / (cm2 s TeV)       nan nan
+        reference 1.000e+00 0.000e+00             TeV 0.000e+00 nan
+
+    Covariance:
+
+           name           index               amplitude        reference
+        --------- --------------------- ---------------------- ---------
+            index  0.021213640646334082  5.788340722422449e-13       0.0
+        amplitude 5.788340722422449e-13 3.9079614123597625e-23       0.0
+        reference                   0.0                    0.0       0.0
+
+    Statistic: 41.756 (wstat)
+    Fit Range: [8.79922544e+08 1.00000000e+11] keV
 
 Using `gammapy.spectrum`
 ========================

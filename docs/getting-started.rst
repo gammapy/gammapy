@@ -76,8 +76,8 @@ Getting the answer from Gammapy is easy. You import and call the
 .. code-block:: python
 
     >>> from gammapy.stats import significance
-    >>> significance(n_observed=10, mu_background=4.2, method='lima')
-    2.3979181291475453
+    >>> significance(n_on=10, mu_bkg=4.2, method='lima')
+    array([2.39791813])
 
 As another example, here's how you can create `gammapy.data.DataStore` and
 `gammapy.data.EventList` objects and start exploring some properties of the
@@ -86,12 +86,16 @@ As another example, here's how you can create `gammapy.data.DataStore` and
 .. code-block:: python
 
     >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
     >>> events = data_store.obs(obs_id=23523).events
-    >>> len(events)
-    1527
+    >>> print(events)
+    EventList info:
+    - Number of events: 7613
+    - Median energy: 0.953 TeV
+    - OBS_ID = 23523
     >>> events.energy.mean()
-    <Quantity 3.585395097732544 TeV>
+    <Quantity 4.418008 TeV>
+    >>> events.peek()
 
 How do you find something in Gammapy?
 
