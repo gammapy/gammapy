@@ -36,7 +36,7 @@ def test_datastore_from_dir():
     data_store = DataStore.from_dir(
         "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/",
         "hdu-index.fits.gz",
-        "obs-index.fits.gz"
+        "obs-index.fits.gz",
     )
 
     assert "Data store" in data_store.info(show=False)

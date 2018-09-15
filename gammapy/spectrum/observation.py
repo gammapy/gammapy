@@ -609,7 +609,7 @@ class SpectrumObservationList(UserList):
         method : str, {'inclusive', 'exclusive'}
             Maximum or minimum range
         """
-        unit = 'TeV'
+        unit = "TeV"
         lo = [obs.lo_threshold.to(unit).value for obs in self]
         hi = [obs.hi_threshold.to(unit).value for obs in self]
 

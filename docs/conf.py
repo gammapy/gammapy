@@ -98,7 +98,7 @@ extensions.extend(
         "sphinx.ext.mathjax",
     ]
 )
-nbsphinx_execute = 'never'
+nbsphinx_execute = "never"
 
 # --
 

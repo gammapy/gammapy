@@ -45,9 +45,7 @@ def test_spectrum_observation_2():
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
     livetime = 1 * u.h
     source_model = models.PowerLaw(
-        index=2.3,
-        amplitude=2.3e-11 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1.4 * u.TeV,
+        index=2.3, amplitude=2.3e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1.4 * u.TeV
     )
     sim = SpectrumSimulation(
         aeff=aeff, edisp=edisp, source_model=source_model, livetime=livetime
@@ -150,9 +148,7 @@ class SpectrumObservationTester:
 
     def test_npred(self):
         pwl = models.PowerLaw(
-            index=2,
-            amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
+            index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
         npred = self.obs.predicted_counts(model=pwl)
         assert_allclose(npred.total_counts.value, self.vals["npred"])
@@ -217,19 +213,17 @@ class TestSpectrumObservationStacker:
 
     def test_thresholds(self):
         energy = self.obs_stacker.stacked_obs.lo_threshold
-        assert energy.unit == 'keV'
+        assert energy.unit == "keV"
         assert_allclose(energy.value, 8.799e+08, rtol=1e-3)
 
         energy = self.obs_stacker.stacked_obs.hi_threshold
-        assert energy.unit == 'keV'
+        assert energy.unit == "keV"
         assert_allclose(energy.value, 4.641e+10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
         pwl = models.PowerLaw(
-            index=2,
-            amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
+            index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
         npred_stacked = self.obs_stacker.stacked_obs.predicted_counts(model=pwl)
@@ -265,12 +259,12 @@ class TestSpectrumObservationList:
         assert "Observation summary report" in str(obs)
         assert obs.obs_id == [23523, 23592]
 
-        val = obs.aeff.data.evaluate(energy='1.1 TeV')
-        assert val.unit == 'cm2'
+        val = obs.aeff.data.evaluate(energy="1.1 TeV")
+        assert val.unit == "cm2"
         assert_allclose(val.value, 1.3466e+09, rtol=1e-3)
 
-        val = obs.edisp.data.evaluate(e_true='1.1 TeV', e_reco='1.3 TeV')
-        assert val.unit == ''
+        val = obs.edisp.data.evaluate(e_true="1.1 TeV", e_reco="1.3 TeV")
+        assert val.unit == ""
         assert_allclose(val.value, 0.06406, rtol=1e-3)
 
     def test_write(self, tmpdir):
@@ -286,7 +280,7 @@ class TestSpectrumObservationList:
 
     def test_range(self):
         energy = self.obs_list.safe_range("inclusive")
-        assert energy.unit == 'TeV'
+        assert energy.unit == "TeV"
         assert_allclose(energy.value, [0.8799, 100], rtol=1e-3)
 
         # TODO: this is not a great test case, should pick two

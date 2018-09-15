@@ -290,7 +290,9 @@ class TestSpectralFit:
         obs.edisp = None
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
         fit.run()
-        assert_allclose(fit.result[0].model.parameters["index"].value, 2.7709, atol=0.02)
+        assert_allclose(
+            fit.result[0].model.parameters["index"].value, 2.7709, atol=0.02
+        )
 
     def test_ecpl_fit(self):
         fit = SpectrumFit(self.obs_list[0], self.ecpl)

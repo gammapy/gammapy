@@ -178,8 +178,8 @@ def gammapy_sphinx_notebooks(setup_cfg):
     git_commit = setup_cfg["git_commit"]
 
     # fix links
-    filled_notebooks_folder = Path('notebooks')
-    download_notebooks_folder = Path('_static') / 'notebooks'
+    filled_notebooks_folder = Path("notebooks")
+    download_notebooks_folder = Path("_static") / "notebooks"
     if filled_notebooks_folder.is_dir():
 
         modif_nb_links(str(filled_notebooks_folder), url_docs, git_commit)
