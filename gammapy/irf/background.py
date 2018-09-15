@@ -216,6 +216,23 @@ class Background3D(object):
         # TODO: use gammapy.spectrum.utils._trapz_loglog for better precision
         return np.trapz(bkg_evaluated, energy_edges).decompose()
 
+    def to_2d(self):
+        """Convert to `Background2D`.
+
+        This takes the values at Y = 0 and X >= 0.
+        """
+        idx_lon = self.data.axis("fov_lon").find_node("0 deg")[0]
+        idx_lat = self.data.axis("fov_lat").find_node("0 deg")[0]
+        data = self.data.data[:, idx_lon:, idx_lat].copy()
+
+        return Background2D(
+            energy_lo=self.data.axis("energy").lo,
+            energy_hi=self.data.axis("energy").hi,
+            offset_lo=self.data.axis("fov_lon").lo[idx_lon:],
+            offset_hi=self.data.axis("fov_lon").hi[idx_lon:],
+            data=data,
+        )
+
 
 class Background2D(object):
     """Background 2D.
@@ -398,3 +415,20 @@ class Background2D(object):
 
         # TODO: use gammapy.spectrum.utils._trapz_loglog for better precision
         return np.trapz(bkg_evaluated, energy_edges).decompose()
+
+    def to_3d(self):
+        """Convert to `Background3D`.
+
+        Fill in a radially symmetric way.
+        """
+        raise NotImplementedError
+
+    def plot(self, **kwargs):
+        from .effective_area import EffectiveAreaTable2D
+
+        return EffectiveAreaTable2D.plot(self, **kwargs)
+
+    def peek(self):
+        from .effective_area import EffectiveAreaTable2D
+
+        return EffectiveAreaTable2D.peek(self)

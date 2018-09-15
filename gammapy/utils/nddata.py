@@ -336,7 +336,11 @@ class DataAxis(object):
         val = Quantity(val)
 
         if not val.unit.is_equivalent(self.unit):
-            raise ValueError("Units {} and {} do not match".format(val.unit, self.unit))
+            raise ValueError(
+                "Units mismatch: val.unit = {!r}, self.unit = {!r}".format(
+                    val.unit, self.unit
+                )
+            )
 
         val = val.to(self.nodes.unit)
         val = np.atleast_1d(val)
