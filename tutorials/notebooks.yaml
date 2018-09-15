@@ -1,0 +1,81 @@
+# This is a list of available notebooks.
+# It's used for automatic testing and downloading of datesets tutorials.
+# Let's keep it alphabetical.
+- name: analysis_3d
+  requires: iminuit
+  datasets:
+    - cta-1dc
+- name: astro_dark_matter
+  requires:
+  datasets:
+    - dark_matter_spectra
+- name: astropy_introduction
+  requires:
+  datasets:
+    - catalogs/fermi/gll_psc_v16.fit.gz
+- name: cta_1dc_introduction
+  requires:
+  datasets:
+- name: cta_data_analysis
+  requires: sherpa
+  datasets:
+    - cta-1dc
+- name: cwt
+  requires:
+  datasets:
+    - fermi_survey/all.fits.gz
+- name: detect_ts
+  requires:
+  datasets:
+    - fermi_survey/all.fits.gz
+    - catalogs/fermi/gll_psch_v08.fit.gz
+- name: fermi_lat
+  requires:
+  datasets:
+    - fermi_3fhl
+- name: first_steps
+  requires:
+  datasets:
+    - fermi_2fhl/fermi_2fhl_vela.fits.gz
+    - fermi_2fhl/2fhl_events.fits.gz
+    - images/Vela_region_WMAP_K.fits
+    - catalogs/fermi/gll_psch_v08.fit.gz
+- name: hgps
+  requires:
+  datasets:
+- name: image_fitting_with_sherpa
+  requires: sherpa
+  datasets:
+- name: intro_maps
+  requires:
+  datasets:
+    - fermi_2fhl/fermi_2fhl_gc.fits.gz
+    - fermi_3fhl/gll_iem_v06_cutout.fits
+    - fermi_survey/all.fits.gz
+- name: sed_fitting_gammacat_fermi
+  requires: iminuit
+  datasets:
+    - catalogs/fermi/gll_psc_v16.fit.gz
+    - catalogs/fermi/gll_psch_v13.fit.gz
+- name: simulate_3d
+  requires: iminuit
+  datasets:
+    - cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits
+- name: source_population_model
+  requires:
+  datasets:
+- name: spectrum_analysis
+  requires: iminuit
+  datasets:
+      - hess-dl3-dr1
+- name: spectrum_fitting_with_sherpa
+  requires: sherpa
+  datasets:
+    - hess-crab4_pha
+- name: spectrum_models
+  requires:
+  datasets:
+- name: spectrum_pipe
+  requires: iminuit
+  datasets:
+    - hess-dl3-dr1
