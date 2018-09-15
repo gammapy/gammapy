@@ -155,7 +155,7 @@ def test_compute_flux_points_dnde_exp(method):
 
 @pytest.fixture(scope="session")
 def obs():
-    filename = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits"
+    filename = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/pha_obs23523.fits"
     obs = SpectrumObservation.read(filename)
     return obs
 
@@ -199,13 +199,13 @@ class TestFluxPointEstimator:
         flux_points = self.fpe.flux_points
 
         actual = flux_points.table["dnde"][0]
-        assert_allclose(actual, 4.988e-11, rtol=1e-2)
+        assert_allclose(actual, 2.361e-10, rtol=1e-2)
 
         actual = flux_points.table["dnde_err"][0]
-        assert_allclose(actual, 6.2382e-12, rtol=1e-2)
+        assert_allclose(actual, 2.9128e-11, rtol=1e-2)
 
         actual = flux_points.table["dnde_ul"][0]
-        assert_allclose(actual, 6.3298e-11, rtol=1e-2)
+        assert_allclose(actual, 2.994e-10, rtol=1e-2)
 
         actual = flux_points.table["dnde_errn"][0]
         assert_allclose(actual, np.nan, rtol=1e-2)
@@ -219,7 +219,7 @@ class TestFluxPointEstimator:
         result = SpectrumResult(model=self.fpe.model, points=self.fpe.flux_points)
 
         actual = result.flux_point_residuals[0][0]
-        assert_allclose(actual, -0.32176, rtol=1e-2)
+        assert_allclose(actual, -0.058407, rtol=1e-2)
 
         actual = result.flux_point_residuals[1][0]
         assert_allclose(actual, np.nan, rtol=1e-2)

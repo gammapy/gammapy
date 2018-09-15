@@ -71,7 +71,7 @@ class SpectrumObservation(object):
     ::
 
         from gammapy.spectrum import SpectrumObservation
-        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+        filename = '$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/pha_obs23523.fits'
         obs = SpectrumObservation.read(filename)
         print(obs)
     """
@@ -609,17 +609,16 @@ class SpectrumObservationList(UserList):
         method : str, {'inclusive', 'exclusive'}
             Maximum or minimum range
         """
-        lo_thres = Quantity([obs.lo_threshold for obs in self])
-        hi_thres = Quantity([obs.hi_threshold for obs in self])
+        unit = 'TeV'
+        lo = [obs.lo_threshold.to(unit).value for obs in self]
+        hi = [obs.hi_threshold.to(unit).value for obs in self]
 
         if method == "inclusive":
-            safe_range = [np.min(lo_thres), np.max(hi_thres)]
+            return Quantity([min(lo), max(hi)], unit)
         elif method == "exclusive":
-            safe_range = [np.max(lo_thres), np.min(hi_thres)]
+            return Quantity([max(lo), min(hi)], unit)
         else:
             raise ValueError("Invalid method: {}".format(method))
-
-        return safe_range
 
     def write(self, outdir=None, pha_typeII=False, **kwargs):
         """Create OGIP files
@@ -756,7 +755,7 @@ class SpectrumObservationStacker(object):
     Examples
     --------
     >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
-    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess')
     >>> obs_stacker = SpectrumObservationStacker(obs_list)
     >>> obs_stacker.run()
     >>> print(obs_stacker.stacked_obs)

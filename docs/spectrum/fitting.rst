@@ -21,24 +21,23 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
 
 .. code-block:: python
 
-    import astropy.units as u
     from gammapy.spectrum import SpectrumObservation, SpectrumObservationList, SpectrumFit
     from gammapy.spectrum.models import PowerLaw
     import matplotlib.pyplot as plt
 
-    pha1 = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits"
-    pha2 = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits"
-    obs1 = SpectrumObservation.read(pha1)
-    obs2 = SpectrumObservation.read(pha2)
+    path = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/"
+    obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
+    obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
     obs_list = SpectrumObservationList([obs1, obs2])
 
-    model = PowerLaw(index = 2 * u.Unit(''),
-                     amplitude = 10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
-                     reference = 1 * u.TeV)
+    model = PowerLaw(
+        index=2,
+        amplitude='1e-12  cm-2 s-1 TeV-1',
+        reference='1 TeV',
+    )
 
-    fit = SpectrumFit(obs_list=obs_list, model=model)
-    fit.statistic = 'WStat'
-    fit.run()
+    fit = SpectrumFit(obs_list=obs_list, model=model, stat='wstat')
+    result = fit.run()
 
 You can check the fit results by looking at
 `~gammapy.spectrum.SpectrumFitResult` that is attached to the
@@ -46,22 +45,40 @@ You can check the fit results by looking at
 
 .. code-block:: python
 
-    >>> print(fit.global_result)
+    >>> print(result)
+    FitResult
+
+        backend    : minuit
+        method     : minuit
+        success    : True
+        nfev       : 99
+        total stat : 63.00
+        message    : Optimization terminated successfully.
+
+    >>> print(fit.result[0])
 
     Fit result info
     ---------------
-    Best Fit Model: PowerLaw
-    index : 2.12+/-0.05
-    reference : 1e+09
-    amplitude : (2.08+/-0.00)e-20
-    --> Units: keV, cm, s
+    Model: PowerLaw
 
-    Statistic: 103.596 (wstat)
+    Parameters:
+
+           name     value     error         unit         min    max
+        --------- --------- --------- --------------- --------- ---
+            index 2.761e+00 1.094e-01                       nan nan
+        amplitude 5.118e-11 4.849e-12 1 / (cm2 s TeV)       nan nan
+        reference 1.000e+00 0.000e+00             TeV 0.000e+00 nan
+
     Covariance:
-    [u'index', u'amplitude']
-    [[  2.95033865e-03   3.08066478e-43]
-     [  3.08066478e-43   1.70801015e-82]]
-    Fit Range: [  0.49582929  82.70931131] TeV
+
+           name           index                amplitude        reference
+        --------- ---------------------- ---------------------- ---------
+            index   0.011973084948262436 3.3890114528842897e-13       0.0
+        amplitude 3.3890114528842897e-13 2.3510477262284227e-23       0.0
+        reference                    0.0                    0.0       0.0
+
+    Statistic: 21.076 (wstat)
+    Fit Range: [8.79922544e+08 1.00000000e+11] keV
 
 
 Interactive Sherpa Fit
@@ -79,8 +96,8 @@ example dataset used above. It makes use of the Sherpa `datastack module
     from sherpa.astro import datastack
     from sherpa.models import PowLaw1D
 
-    pha1 = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23592.fits')
-    pha2 = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits')
+    pha1 = gammapy_extra.filename('datasets/joint-crab/spectra/hess//pha_obs23592.fits')
+    pha2 = gammapy_extra.filename('datasets/joint-crab/spectra/hess//pha_obs23523.fits')
     phalist = ','.join([pha1, pha2])
 
     ds = datastack.DataStack()

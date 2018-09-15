@@ -13,10 +13,10 @@ from .. import SpectrumObservation, SpectrumFitResult, FluxPoints, SpectrumResul
 
 @pytest.fixture(scope="session")
 def fit_result():
-    filename = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits"
+    filename = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/pha_obs23592.fits"
     obs = SpectrumObservation.read(filename)
     best_fit_model = PowerLaw(
-        index=2.1 * u.Unit(""),
+        index=2.1,
         amplitude=1e-11 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1 * u.TeV,
     )

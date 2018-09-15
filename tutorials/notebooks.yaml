@@ -67,11 +67,11 @@
 - name: spectrum_analysis
   requires: iminuit
   datasets:
-      - hess-dl3-dr1
+    - hess-dl3-dr1
 - name: spectrum_fitting_with_sherpa
   requires: sherpa
   datasets:
-    - hess-crab4_pha
+    - joint-crab
 - name: spectrum_models
   requires:
   datasets:
