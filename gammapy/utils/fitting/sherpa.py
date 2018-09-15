@@ -62,15 +62,11 @@ def optimize_sherpa(parameters, function, **kwargs):
 
     statfunc = SherpaFunction(function, parameters)
 
-    with np.errstate(invalid='ignore'):
+    with np.errstate(invalid="ignore"):
         result = optimizer.fit(
             statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
         )
 
-    info = {
-        "success": result[0],
-        "message": result[3],
-        "nfev": result[4]["nfev"],
-    }
+    info = {"success": result[0], "message": result[3], "nfev": result[4]["nfev"]}
 
     return result[1], info, optimizer

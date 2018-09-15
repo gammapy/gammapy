@@ -111,7 +111,7 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
     assert sky_model is not fit._model
     assert sky_model is not result.model
     assert result.success
-    assert 'minuit' in repr(result)
+    assert "minuit" in repr(result)
 
     stat_expected = 3840.0605649268496
     assert_allclose(result.total_stat, stat_expected, rtol=1e-2)

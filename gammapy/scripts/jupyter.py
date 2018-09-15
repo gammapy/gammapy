@@ -10,12 +10,12 @@ import time
 log = logging.getLogger(__name__)
 
 
-@click.command(name='execute')
+@click.command(name="execute")
 @click.pass_context
 def cli_jupyter_execute(ctx):
     """Execute Jupyter notebooks."""
 
-    for path in ctx.obj['paths']:
+    for path in ctx.obj["paths"]:
         run_notebook(path)
 
 
@@ -33,44 +33,45 @@ def run_notebook(path, loglevel=20):
             "--to notebook "
             "--inplace "
             "--execute '{}'".format(loglevel, path),
-            shell=True)
+            shell=True,
+        )
         t = (time.time() - t) / 60
-        log.info('   ... Executing duration: {:.2f} mn'.format(t))
+        log.info("   ... Executing duration: {:.2f} mn".format(t))
     except Exception as ex:
-        log.error('Error executing file {}'.format(str(path)))
+        log.error("Error executing file {}".format(str(path)))
         log.error(ex)
 
 
-@click.command(name='stripout')
+@click.command(name="stripout")
 @click.pass_context
 def cli_jupyter_stripout(ctx):
     """Strip output cells."""
     import nbformat
 
-    for path in ctx.obj['paths']:
+    for path in ctx.obj["paths"]:
         rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
         for cell in rawnb.cells:
-            if cell['cell_type'] == 'code':
-                cell['outputs'] = []
+            if cell["cell_type"] == "code":
+                cell["outputs"] = []
 
         nbformat.write(rawnb, str(path))
-        log.info('Jupyter notebook {} stripped out.'.format(str(path)))
+        log.info("Jupyter notebook {} stripped out.".format(str(path)))
 
 
-@click.command(name='black')
+@click.command(name="black")
 @click.pass_context
 def cli_jupyter_black(ctx):
     """Format code cells with black."""
     import nbformat
 
-    for path in ctx.obj['paths']:
+    for path in ctx.obj["paths"]:
         rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
         blacknb = BlackNotebook(rawnb)
         blacknb.blackformat()
         rawnb = blacknb.rawnb
         nbformat.write(rawnb, str(path))
-        log.info('Jupyter notebook {} blacked.'.format(str(path)))
+        log.info("Jupyter notebook {} blacked.".format(str(path)))
 
 
 class BlackNotebook:
@@ -87,19 +88,18 @@ class BlackNotebook:
         from black import format_str
 
         for cell in self.rawnb.cells:
-            fmt = cell['source']
-            if cell['cell_type'] == 'code':
+            fmt = cell["source"]
+            if cell["cell_type"] == "code":
                 try:
-                    fmt = '\n'.join(self.tag_magics(fmt))
-                    has_semicolon = fmt.endswith(';')
-                    fmt = format_str(src_contents=fmt,
-                                     line_length=79).rstrip()
+                    fmt = "\n".join(self.tag_magics(fmt))
+                    has_semicolon = fmt.endswith(";")
+                    fmt = format_str(src_contents=fmt, line_length=79).rstrip()
                     if has_semicolon:
-                        fmt += ';'
+                        fmt += ";"
                 except Exception as ex:
                     logging.info(ex)
                 fmt = fmt.replace(self.MAGIC_TAG, "")
-            cell['source'] = fmt
+            cell["source"] = fmt
 
     def tag_magics(self, cellcode):
         """Comment magic commands."""
@@ -113,12 +113,12 @@ class BlackNotebook:
                 yield line
 
 
-@click.command(name='test')
+@click.command(name="test")
 @click.pass_context
 def cli_jupyter_test(ctx):
     """Check if Jupyter notebooks are broken."""
 
-    for path in ctx.obj['paths']:
+    for path in ctx.obj["paths"]:
         test_notebook(path)
 
 
@@ -132,20 +132,17 @@ def test_notebook(path):
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
     for cell in rawnb.cells:
-        if 'outputs' in cell.keys():
-            for output in cell['outputs']:
-                if output['output_type'] == 'error':
+        if "outputs" in cell.keys():
+            for output in cell["outputs"]:
+                if output["output_type"] == "error":
                     passed = False
                     traceitems = ["--TRACEBACK: "]
-                    for o in output['traceback']:
+                    for o in output["traceback"]:
                         traceitems.append("{}".format(o))
                     traceback = "\n".join(traceitems)
-                    infos = "\n\n{} in cell [{}]\n\n" \
-                            "--SOURCE CODE: \n{}\n\n".format(
-                                output['ename'],
-                                cell['execution_count'],
-                                cell['source']
-                            )
+                    infos = "\n\n{} in cell [{}]\n\n" "--SOURCE CODE: \n{}\n\n".format(
+                        output["ename"], cell["execution_count"], cell["source"]
+                    )
                     report = infos + traceback
                     break
         if not passed:

@@ -17,7 +17,7 @@ def test_iminuit():
     pars = Parameters([Parameter("x", 2.1), Parameter("y", 3.1), Parameter("z", 4.1)])
 
     factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars)
-    assert info['success']
+    assert info["success"]
 
     assert_allclose(factors, [2, 3, 4], rtol=1e-2)
     assert_allclose(minuit.values["par_000_x"], 2, rtol=1e-2)
@@ -27,14 +27,14 @@ def test_iminuit():
     # Test freeze
     pars["x"].frozen = True
     factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars)
-    assert info['success']
+    assert info["success"]
     assert minuit.list_of_fixed_param() == ["par_000_x"]
 
     # Test limits
     pars["y"].min = 4
     factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars)
 
-    assert info['success']
+    assert info["success"]
     states = minuit.get_param_states()
     assert not states[0]["has_limits"]
     assert not states[2]["has_limits"]

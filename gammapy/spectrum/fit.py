@@ -40,12 +40,7 @@ class SpectrumFit(Fit):
     """
 
     def __init__(
-        self,
-        obs_list,
-        model,
-        stat="wstat",
-        forward_folded=True,
-        fit_range=None,
+        self, obs_list, model, stat="wstat", forward_folded=True, fit_range=None
     ):
         self.obs_list = obs_list
         self._model = model.copy()

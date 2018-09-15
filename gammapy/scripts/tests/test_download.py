@@ -7,9 +7,9 @@ from ...utils.testing import requires_dependency
 import pytest
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def files_dir(tmpdir_factory):
-    filesdir = tmpdir_factory.mktemp('tmpdwn')
+    filesdir = tmpdir_factory.mktemp("tmpdwn")
     return filesdir
 
 
@@ -28,17 +28,17 @@ def test_cli_download_datasets(files_dir):
     args = ["download", option_file, option_dest, "datasets"]
     run_cli(cli, args)
 
-    filepath = Path(str(files_dir)) / 'datasets' / filename
+    filepath = Path(str(files_dir)) / "datasets" / filename
     assert filepath.exists()
 
 
 @pytest.mark.xfail
 @requires_dependency("yaml")
 def test_cli_download_notebooks(files_dir):
-    release = 'master'
+    release = "master"
     filename = "first_steps.ipynb"
-    envfilename = 'environment-' + release + '.yml'
-    dirnbsname = 'notebooks-' + release
+    envfilename = "environment-" + release + ".yml"
+    dirnbsname = "notebooks-" + release
     option_dest = "--dest=" + str(files_dir)
     option_file = "--file=" + filename
     option_release = "--release=" + release

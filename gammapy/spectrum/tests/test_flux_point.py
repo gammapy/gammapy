@@ -18,12 +18,7 @@ from ..fit import SpectrumFit
 from ..observation import SpectrumObservation
 from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, SpectralModel
-from ..flux_point import (
-    FluxPoints,
-    FluxPointProfiles,
-    FluxPointFit,
-    FluxPointEstimator,
-)
+from ..flux_point import FluxPoints, FluxPointProfiles, FluxPointFit, FluxPointEstimator
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
@@ -344,12 +339,13 @@ def test_compute_flux_points_dnde_fermi():
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def sed_flux_points():
     path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
     return FluxPoints.read(path)
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def sed_model():
     return PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
 
@@ -379,6 +375,5 @@ class TestFluxPointFit:
         assert_allclose(index.value, 2.216, rtol=1e-3)
 
         # Right now sherpa also fits the reference energy
-        amplitude = result.model(1 * u.TeV).to('cm-2 s-1 TeV-1')
+        amplitude = result.model(1 * u.TeV).to("cm-2 s-1 TeV-1")
         assert_allclose(amplitude.value, 2.1616E-13, rtol=1e-3)
-

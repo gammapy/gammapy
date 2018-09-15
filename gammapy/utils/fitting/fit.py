@@ -14,7 +14,6 @@ __all__ = ["Fit"]
 log = logging.getLogger(__name__)
 
 
-
 class FitMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
@@ -23,10 +22,8 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
 class Fit(object):
     """Abstract Fit base class.
     """
-    _optimize_funcs = {
-        "minuit": optimize_iminuit,
-        "sherpa": optimize_sherpa,
-    }
+
+    _optimize_funcs = {"minuit": optimize_iminuit, "sherpa": optimize_sherpa}
 
     @abc.abstractmethod
     def total_stat(self, parameters):
@@ -68,9 +65,7 @@ class Fit(object):
 
         optimize = self._optimize_funcs[backend]
         factors, info, optimizer = optimize(
-            parameters=parameters,
-            function=self.total_stat,
-            **kwargs
+            parameters=parameters, function=self.total_stat, **kwargs
         )
 
         # As preliminary solution would like to provide a possibility that the user
@@ -87,7 +82,7 @@ class Fit(object):
             backend=backend,
             method=kwargs.get("method", backend),
             **info
-            )
+        )
 
     # TODO: this is a preliminary solution to restore the old behaviour, that's
     # why the method is hidden.
@@ -136,6 +131,7 @@ class Fit(object):
 
 class FitResult(object):
     """Fit result object."""
+
     def __init__(self, model, success, nfev, total_stat, message, backend, method):
         self._model = model
         self._success = success

@@ -100,11 +100,11 @@ class EventListBase(object):
 
     def __str__(self):
         ss = (
-                "EventList info:\n"
-                + "- Number of events: {}\n".format(len(self.table))
-                + "- Median energy: {:.3g} {}\n".format(
-            np.median(self.energy.value), self.energy.unit
-        )
+            "EventList info:\n"
+            + "- Number of events: {}\n".format(len(self.table))
+            + "- Median energy: {:.3g} {}\n".format(
+                np.median(self.energy.value), self.energy.unit
+            )
         )
 
         if "OBS_ID" in self.table.meta:
@@ -377,6 +377,7 @@ class EventListBase(object):
 
     def _counts_spectrum(self, ebounds):
         from ..spectrum import CountsSpectrum
+
         if not ebounds:
             ebounds = self._default_plot_ebounds()
         spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
@@ -518,9 +519,7 @@ class EventListBase(object):
         offset_bounds = np.linspace(0, 4, 30)
 
         counts = np.histogram2d(
-            x=self.energy,
-            y=self.offset,
-            bins=(energy_bounds, offset_bounds),
+            x=self.energy, y=self.offset, bins=(energy_bounds, offset_bounds)
         )[0]
 
         ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())

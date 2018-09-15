@@ -82,7 +82,9 @@ class SpectrumAnalysisIACT(object):
         )
         self.fit.run(optimize_opts=optimize_opts)
         modelname = self.fit.result[0].model.__class__.__name__
-        filename = make_path(self.config["outdir"]) / "fit_result_{}.yaml".format(modelname)
+        filename = make_path(self.config["outdir"]) / "fit_result_{}.yaml".format(
+            modelname
+        )
         self.fit.result[0].to_yaml(filename=filename)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
