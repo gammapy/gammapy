@@ -136,9 +136,8 @@ def test_make_psf(pars, data_store):
 
 @requires_dependency("scipy")
 @requires_data("gammapy-extra")
-def test_make_psftable():
+def test_make_psftable(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
-    data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2")
     obs1 = data_store.obs(23523)
     obs2 = data_store.obs(23526)
     energy = EnergyBounds.equal_log_spacing(1, 10, 100, "TeV")
@@ -154,15 +153,9 @@ def test_make_psftable():
 
     # Check that the mean PSF is consistent with the individual PSFs
     # (in this case the R68 of the mean PSF is in between the R68 of the individual PSFs)
-    assert_quantity_allclose(
-        psf1_int.containment_radius(0.68), Angle(0.1050259592154517, "deg")
-    )
-    assert_quantity_allclose(
-        psf2_int.containment_radius(0.68), Angle(0.09173224724288895, "deg")
-    )
-    assert_quantity_allclose(
-        psf_tot_int.containment_radius(0.68), Angle(0.09838901174312292, "deg")
-    )
+    assert_allclose(psf1_int.containment_radius(0.68).deg, 0.12307, rtol=1e-3)
+    assert_allclose(psf2_int.containment_radius(0.68).deg, 0.11231, rtol=1e-3)
+    assert_allclose(psf_tot_int.containment_radius(0.68).deg, 0.117803, rtol=1e-3)
 
 
 @requires_dependency("scipy")
