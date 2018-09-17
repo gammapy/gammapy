@@ -4,10 +4,12 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord, AltAz
 from astropy.time import Time, TimeDelta
+from ...utils.testing import requires_data
 from ...utils.time import time_ref_from_dict, time_relative_to_ref
 from ...utils.random import sample_sphere, get_random_state
 from ...catalog import skycoord_from_table
-from .. import ObservationTable, observatory_locations
+from ..obs_table import ObservationTable, ObservationTableChecker
+from ..observers import observatory_locations
 
 
 def make_test_observation_table(
@@ -392,3 +394,13 @@ def test_select_sky_regions():
         border=border,
     )
     common_sky_region_select_test_routines(obs_table, selection)
+
+
+@requires_data("gammapy-extra")
+def test_observation_table_checker():
+    path = "$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/obs-index.fits.gz"
+    obs_table = ObservationTable.read(path)
+    checker = ObservationTableChecker(obs_table)
+
+    records = list(checker.run())
+    assert len(records) == 7

@@ -734,6 +734,8 @@ class EventListChecker(Checker):
         "ONTIME",
         "LIVETIME",
         "DEADC",
+        "RA_PNT",
+        "DEC_PNT",
         # TODO: what to do about these?
         # They are currently listed as required in the spec,
         # but I think we should just require ICRS and those

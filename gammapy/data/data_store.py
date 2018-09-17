@@ -6,6 +6,7 @@ from ..utils.scripts import Path, make_path
 from ..utils.testing import Checker
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
+from .obs_table import ObservationTableChecker
 from .observations import DataStoreObservation, ObservationList, ObservationChecker
 
 __all__ = ["DataStore"]
@@ -262,20 +263,9 @@ class DataStoreChecker(Checker):
 
     def check_obs_table(self):
         """Checks for the observation index table."""
-        t = self.data_store.obs_table
-        m = t.meta
-        if m.get("HDUCLAS1", "") != "INDEX":
-            yield {
-                "level": "error",
-                "hdu": "obs-index",
-                "msg": "Invalid header key. Must have HDUCLAS1=INDEX",
-            }
-        if m.get("HDUCLAS2", "") != "OBS":
-            yield {
-                "level": "error",
-                "hdu": "obs-index",
-                "msg": "Invalid header key. Must have HDUCLAS2=OBS",
-            }
+        checker = ObservationTableChecker(self.data_store.obs_table)
+        for record in checker.run():
+            yield record
 
     def check_hdu_table(self):
         """Checks for the HDU index table."""
@@ -305,8 +295,6 @@ class DataStoreChecker(Checker):
                     "msg": "HDU not found: {!r}".format(location_info.__dict__),
                 }
 
-        # TODO: all HDU in the index table should be present
-
     def check_consistency(self):
         """Consistency checks between multiple HDUs"""
         # obs and HDU index should have the same OBS_ID
@@ -324,5 +312,5 @@ class DataStoreChecker(Checker):
         """Perform some sanity checks for all observations."""
         for obs_id in self.data_store.obs_table["OBS_ID"]:
             obs = self.data_store.obs(obs_id)
-            for records in ObservationChecker(obs).run():
-                yield records
+            for record in ObservationChecker(obs).run():
+                yield record
