@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import namedtuple
 import numpy as np
 from astropy.table import Table
-from astropy.units import Quantity
+from astropy.units import Unit, Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 from ..utils.time import time_relative_to_ref
+from ..utils.testing import Checker
 
 __all__ = ["ObservationTable"]
 
@@ -348,3 +350,90 @@ class ObservationTable(Table):
 
         else:
             raise ValueError("Invalid selection type: {}".format(selection["type"]))
+
+
+class ObservationTableChecker(Checker):
+    """Event list checker.
+
+    Data format specification: ref:`gadf:iact-events`
+
+    Parameters
+    ----------
+    event_list : `~gammapy.data.EventList`
+        Event list
+    """
+
+    CHECKS = {
+        "meta": "check_meta",
+        "columns": "check_columns",
+        # "times": "check_times",
+        # "coordinates_galactic": "check_coordinates_galactic",
+        # "coordinates_altaz": "check_coordinates_altaz",
+    }
+
+    # accuracy = {"angle": Angle("1 arcsec"), "time": Quantity(1, "microsecond")}
+
+    # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
+    meta_required = [
+        "HDUCLASS",
+        "HDUDOC",
+        "HDUVERS",
+        "HDUCLAS1",
+        "HDUCLAS2",
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        "MJDREFI",
+        "MJDREFF",
+        "TIMEUNIT",
+        "TIMESYS",
+        "TIMEREF",
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location
+        "GEOLON",
+        "GEOLAT",
+        "ALTITUDE",
+    ]
+
+    _col = namedtuple("col", ["name", "unit"])
+    columns_required = [
+        _col(name="OBS_ID", unit=""),
+        _col(name="RA_PNT", unit="deg"),
+        _col(name="DEC_PNT", unit="deg"),
+        _col(name="TSTART", unit="s"),
+        _col(name="TSTOP", unit="s"),
+    ]
+
+    def __init__(self, obs_table):
+        self.obs_table = obs_table
+
+    def _record(self, level="info", msg=None):
+        return {"level": level, "hdu": "obs-index", "msg": msg}
+
+    def check_meta(self):
+        m = self.obs_table.meta
+
+        meta_missing = sorted(set(self.meta_required) - set(m))
+        if meta_missing:
+            yield self._record(
+                level="error", msg="Missing meta keys: {!r}".format(meta_missing)
+            )
+
+        if m.get("HDUCLAS1", "") != "INDEX":
+            yield self._record(level="error", msg="HDUCLAS1 must be INDEX")
+        if m.get("HDUCLAS2", "") != "OBS":
+            yield self._record(level="error", msg="HDUCLAS2 must be OBS")
+
+    def check_columns(self):
+        t = self.obs_table
+
+        if len(t) == 0:
+            yield self._record(level="error", msg="Observation table has zero rows")
+
+        for name, unit in self.columns_required:
+            if name not in t.colnames:
+                yield self._record(
+                    level="error", msg="Missing table column: {!r}".format(name)
+                )
+            else:
+                if Unit(unit) != (t[name].unit or ""):
+                    yield self._record(
+                        level="error", msg="Invalid unit for column: {!r}".format(name)
+                    )
