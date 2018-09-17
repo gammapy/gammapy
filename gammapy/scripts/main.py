@@ -127,7 +127,7 @@ def cli_jupyter(ctx, src):
     Examples
     --------
     \b
-    $ gammapy jupyter stripout
+    $ gammapy jupyter strip
     $ gammapy jupyter --src=mynotebooks.ipynb execute
     $ gammapy jupyter --src=myfolder/tutorials test
     $ gammapy jupyter black
@@ -176,9 +176,9 @@ def add_subcommands():
 
     cli_jupyter.add_command(cli_jupyter_black)
 
-    from .jupyter import cli_jupyter_stripout
+    from .jupyter import cli_jupyter_strip
 
-    cli_jupyter.add_command(cli_jupyter_stripout)
+    cli_jupyter.add_command(cli_jupyter_strip)
 
     from .jupyter import cli_jupyter_execute
 

@@ -42,9 +42,9 @@ def run_notebook(path, loglevel=20):
         log.error(ex)
 
 
-@click.command(name="stripout")
+@click.command(name="strip")
 @click.pass_context
-def cli_jupyter_stripout(ctx):
+def cli_jupyter_strip(ctx):
     """Strip output cells."""
     import nbformat
 
@@ -53,6 +53,7 @@ def cli_jupyter_stripout(ctx):
 
         for cell in rawnb.cells:
             if cell["cell_type"] == "code":
+                cell["execution_count"] = None
                 cell["outputs"] = []
 
         nbformat.write(rawnb, str(path))
