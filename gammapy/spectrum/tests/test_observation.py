@@ -139,7 +139,7 @@ class SpectrumObservationTester:
         # TODO: fix the to_sherpa
         # It broke with the update to the hess-dl3-dr1 dataset.
         # Error: https://gist.github.com/cdeil/0cf3456e0dd4204cdabc71eaa2cbb70f
-        # self.test_to_sherpa()
+        self.test_to_sherpa()
         self.test_peek()
         self.test_npred()
 

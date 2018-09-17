@@ -484,7 +484,7 @@ class EnergyDispersion(object):
         return var / norm
 
     def to_sherpa(self, name):
-        """Convert to `sherpa.astro.data.DataARF`.
+        """Convert to `sherpa.astro.data.DataRMF`.
 
         Parameters
         ----------
@@ -500,9 +500,7 @@ class EnergyDispersion(object):
         table = self.to_table()
         n_grp = table["N_GRP"].data.astype(SherpaUInt)
         f_chan = table["F_CHAN"].data
-        f_chan = np.concatenate([row for row in f_chan]).astype(SherpaUInt)
         n_chan = table["N_CHAN"].data
-        n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
         matrix = table["MATRIX"].data
 
         good = n_grp > 0
@@ -512,7 +510,9 @@ class EnergyDispersion(object):
 
         good = n_grp > 0
         f_chan = f_chan[good]
+        f_chan = np.concatenate([row for row in f_chan]).astype(SherpaUInt)
         n_chan = n_chan[good]
+        n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
 
         return DataRMF(
             name=name,
