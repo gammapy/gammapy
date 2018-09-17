@@ -128,7 +128,7 @@ def cli_jupyter(ctx, src):
     --------
     \b
     $ gammapy jupyter strip
-    $ gammapy jupyter --src=mynotebooks.ipynb execute
+    $ gammapy jupyter --src=mynotebooks.ipynb run
     $ gammapy jupyter --src=myfolder/tutorials test
     $ gammapy jupyter black
     """
@@ -180,9 +180,9 @@ def add_subcommands():
 
     cli_jupyter.add_command(cli_jupyter_strip)
 
-    from .jupyter import cli_jupyter_execute
+    from .jupyter import cli_jupyter_run
 
-    cli_jupyter.add_command(cli_jupyter_execute)
+    cli_jupyter.add_command(cli_jupyter_run)
 
     from .jupyter import cli_jupyter_test
 

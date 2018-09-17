@@ -10,16 +10,16 @@ import time
 log = logging.getLogger(__name__)
 
 
-@click.command(name="execute")
+@click.command(name="run")
 @click.pass_context
-def cli_jupyter_execute(ctx):
+def cli_jupyter_run(ctx):
     """Execute Jupyter notebooks."""
 
     for path in ctx.obj["paths"]:
-        run_notebook(path)
+        execute_notebook(path)
 
 
-def run_notebook(path, loglevel=20):
+def execute_notebook(path, loglevel=20):
     """Execute a Jupyter notebook."""
 
     try:
@@ -129,7 +129,7 @@ def test_notebook(path):
 
     passed = True
     log.info("   ... TESTING {}".format(str(path)))
-    run_notebook(path, 30)
+    execute_notebook(path, 30)
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
     for cell in rawnb.cells:
