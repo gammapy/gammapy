@@ -79,6 +79,10 @@ def main():
         logging.info('Notebook file does not exist.')
         sys.exit()
 
+    # strip and blackformat
+    subprocess.call('gammapy jupyter --src temp black', shell=True)
+    subprocess.call('gammapy jupyter --src temp strip', shell=True)
+
     # test /run
     passed = True
     for path in path_temp.glob("*.ipynb"):
