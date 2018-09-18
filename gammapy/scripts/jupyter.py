@@ -29,7 +29,6 @@ def execute_notebook(path, loglevel=20):
             "--allow-errors "
             "--log-level={} "
             "--ExecutePreprocessor.timeout=None "
-            "--ExecutePreprocessor.kernel_name=python3 "
             "--to notebook "
             "--inplace "
             "--execute '{}'".format(loglevel, path),
