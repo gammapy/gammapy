@@ -44,6 +44,10 @@
 - name: image_fitting_with_sherpa
   requires: sherpa
   datasets:
+      - G300-0_test_background.fits
+      - G300-0_test_counts.fits
+      - G300-0_test_exposure.fits
+      - G300-0_test_psf.fits
 - name: intro_maps
   requires:
   datasets:
