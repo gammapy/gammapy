@@ -2,9 +2,8 @@
 # It's used for automatic testing and downloading of datesets tutorials.
 # Let's keep it alphabetical.
 - name: analysis_3d
-  requires: iminuit
+  requires: iminuit cta_data
   datasets:
-    - cta-1dc
 - name: astro_dark_matter
   requires:
   datasets:
@@ -14,12 +13,11 @@
   datasets:
     - catalogs/fermi/gll_psc_v16.fit.gz
 - name: cta_1dc_introduction
-  requires:
+  requires: cta_data
   datasets:
 - name: cta_data_analysis
-  requires: sherpa
+  requires: sherpa cta_data
   datasets:
-    - cta-1dc
 - name: cwt
   requires:
   datasets:
@@ -58,9 +56,8 @@
     - catalogs/fermi/gll_psc_v16.fit.gz
     - catalogs/fermi/gll_psch_v13.fit.gz
 - name: simulate_3d
-  requires: iminuit
+  requires: iminuit cta_data
   datasets:
-    - cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits
 - name: source_population_model
   requires:
   datasets:
