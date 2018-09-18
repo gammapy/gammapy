@@ -33,6 +33,13 @@ RUN adduser --disabled-password \
 
 RUN gammapy download --release=master --dest=${HOME}/gammapy-tutorials notebooks
 
+# remove tutorials using CTA 1DC
+RUN rm ${HOME}/gammapy-tutorials/notebooks-master/analysis_3d.ipynb
+RUN rm ${HOME}/gammapy-tutorials/notebooks-master/cta_1dc_introduction.ipynb
+RUN rm ${HOME}/gammapy-tutorials/notebooks-master/cta_data_analysis.ipynb
+RUN rm ${HOME}/gammapy-tutorials/notebooks-master/simulate_3d.ipynb
+RUN rm ${HOME}/gammapy-tutorials/notebooks-master/spectrum_simulation_cta.ipynb
+
 # setting ownerships
 USER root
 RUN chown -R ${NB_UID} ${HOME}
