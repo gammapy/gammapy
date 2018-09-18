@@ -519,14 +519,14 @@ class WcsNDMap(WcsMap):
         """
         from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
-        if isinstance(radius, u.Quantity):
-            radius = (radius.to("deg") / self.geom.pixel_scales.mean()).value
+        if isinstance(width, u.Quantity):
+            width = (width.to("deg") / self.geom.pixel_scales.mean()).value
 
         smoothed_data = np.empty_like(self.data)
 
         for img, idx in self.iter_by_image():
             if kernel == "gauss":
-                data = gaussian_filter(img, width, **kwargs)
+                data = gaussian_filter(img, width/2.0, **kwargs)
             elif kernel == "disk":
                 disk = Tophat2DKernel(width)
                 disk.normalize("integral")
