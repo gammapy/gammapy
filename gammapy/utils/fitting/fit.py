@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import abc
 
+import numpy as np
 from astropy.utils.misc import InheritDocstrings
 
 from ...extern import six
@@ -29,6 +30,70 @@ class Fit(object):
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         pass
+
+    def likelihood_profiles(self, model, parnames="all"):
+        """Compute likelihood profiles for multiple parameters.
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel` or `~gammapy.cube.models.SkyModel`
+            Model to compute the likelihood profile for.
+        parnames : list of str or "all"
+            For which parameters to compute likelihood profiles.
+        """
+        profiles = {}
+
+        if parnames == "all":
+            parnames = [par.name for par in model.paramaters]
+
+        for parname in parnames:
+            profiles[parname] = self.likelihood_profile(model, parname)
+        return profiles
+
+    def likelihood_profile(self, model, parname, parvalues=None, nvalues=11, bounds=2):
+        """Compute likelihood profile for a single parameter of the model.
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Model to compute the likelihood profile for.
+        parname : str
+            Parameter to calculate profile for
+        values : `~astropy.units.Quantity` (optional)
+            Parameter values
+        nvalues : int
+            Number of parameter grid points to use.
+        sigma : int
+            Pass
+
+        Returns
+        -------
+        likelihood_profile : dict
+            Dict of parameter values and likelihood values.
+        """
+        self._model = model.copy()
+
+        likelihood = []
+
+        if parvalues is None:
+            if isinstance(bounds, tuple):
+                parmin, parmax = bounds
+            else:
+                parerr = model.parameters.error(parname)
+                parval = model.parameters[parname].value
+                parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
+
+            values = np.linspace(parmin, parmax, nvalues)
+
+        for value in values:
+            self._model.parameters[parname].value = value
+            stat = self.total_stat(self._model.parameters)
+            likelihood.append(stat)
+
+        return {
+            'values': values,
+            'likelihood': np.array(likelihood),
+        }
 
     def optimize(self, backend="minuit", **kwargs):
         """Run the optimization
@@ -99,7 +164,7 @@ class Fit(object):
             parameters.covariance = None
         return fit_result
 
-    def run(self, steps="all", optimize_opts=None):
+    def run(self, steps="all", optimize_opts=None, profile_opts=None):
         """
         Run all fitting steps.
 
@@ -125,6 +190,12 @@ class Fit(object):
 
         if "errors" in steps:
             result = self._estimate_errors(result)
+
+        if "profiles" in steps:
+            if profile_opts == None:
+                profile_opts = {}
+
+            profiles = self.likelihood_profiles(result.model, **profile_opts)
 
         return result
 
@@ -186,3 +257,27 @@ class FitResult(object):
         str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
         str_ += "\tmessage    : {}\n".format(self.message)
         return str_
+
+    @property
+    def likelihood_profiles(self):
+        """Likelihood profiles for paramaters."""
+        return self._likelihood_profiles
+
+    def plot_likelihood_profile(self, parameter, ax=None, **kwargs):
+        """Plot likelihood profile for a given parameter.
+
+        Parameters
+        ----------
+
+        """
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            ax = plt.gca()
+
+        likelihood = self.likelihood_profiles[parameter]['likelihood']
+        values = self.likelihood_profiles[parameter]['values']
+
+        ax.plot(values, likelihood, **kwargs)
+        ax.set_xlabel(parameter)
+        ax.set_ylabel('Likelihood')
