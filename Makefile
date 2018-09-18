@@ -96,9 +96,15 @@ pydocstyle:
 doc-show:
 	open docs/_build/html/index.html
 
+docs-all:
+	cp -R tutorials docs/notebooks
+	cp -R tutorials docs/_static/notebooks
+	jupyter nbconvert --to script docs/_static/notebooks/*.ipynb
+	python setup.py build_docs -w
+
 test-notebooks:
 	which python
-	python setup.py install --user
+	pip install -e .
 	python test_notebooks.py
 
 conda:
