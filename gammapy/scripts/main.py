@@ -98,9 +98,9 @@ def cli_download(ctx, dest, file, fold, release, recursive):
     \b
     $ gammapy download notebooks
     $ gammapy download datasets
-    $ gammapy download --release=master tutorials
-    $ gammapy download --file=first_steps.ipynb notebooks
-    $ gammapy download --dest=localfolder --fold=catalogs/fermi --no-recursive datasets
+    $ gammapy download --release master tutorials
+    $ gammapy download --file first_steps.ipynb notebooks
+    $ gammapy download --dest localfolder --fold catalogs/fermi --no-recursive datasets
     """
     ctx.obj = {
         "localfold": dest,
@@ -128,8 +128,8 @@ def cli_jupyter(ctx, src):
     --------
     \b
     $ gammapy jupyter strip
-    $ gammapy jupyter --src=mynotebooks.ipynb run
-    $ gammapy jupyter --src=myfolder/tutorials test
+    $ gammapy jupyter --src mynotebooks.ipynb run
+    $ gammapy jupyter --src myfolder/tutorials test
     $ gammapy jupyter black
     """
     log = logging.getLogger(__name__)
