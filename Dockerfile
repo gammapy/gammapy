@@ -31,7 +31,7 @@ RUN adduser --disabled-password \
 # copy repo in /home/gammapy
 # COPY . ${HOME}
 
-RUN gammapy download --release=master --dest=${HOME}/gammapy-tutorials tutorials
+RUN gammapy download --release=master --dest=${HOME}/gammapy-tutorials notebooks
 
 # setting ownerships
 USER root
@@ -42,5 +42,11 @@ USER ${NB_USER}
 WORKDIR ${HOME}/gammapy-tutorials/notebooks-master
 
 # env vars used in tutorials
-ENV GAMMAPY_EXTRA /home/${NB_USER}/gammapy-tutorials
-ENV CTADATA /home/${NB_USER}/gammapy-tutorials/datasets/cta-1dc
+RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-tutorials/gammapy-extra
+ENV GAMMAPY_EXTRA ${HOME}/gammapy-tutorials/gammapy-extra
+
+RUN git clone https://github.com/gammapy/gamma-cat.git  ${HOME}/gammapy-tutorials/gammapy-cat
+ENV GAMMAPY_CAT ${HOME}/gammapy-tutorials/gammapy-cat
+
+RUN git clone https://github.com/gammapy/gammapy-fermi-lat-data.git ${HOME}/gammapy-tutorials/gammapy-fermi-lat-data
+ENV GAMMAPY_FERMI_LAT_DATA ${HOME}/gammapy-tutorials/gammapy-fermi-lat-data
