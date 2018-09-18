@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
-    filename = str(Path('tutorials') / 'notebooks.yaml')
+    filename = str(Path("tutorials") / "notebooks.yaml")
     with open(filename) as fh:
         notebooks = yaml.safe_load(fh)
     return notebooks
@@ -23,10 +23,10 @@ def get_notebooks():
 
 def requirement_missing(notebook):
     """Check if one of the requirements is missing."""
-    if notebook['requires'] is None:
+    if notebook["requires"] is None:
         return False
 
-    for package in notebook['requires'].split():
+    for package in notebook["requires"].split():
         try:
             working_set.require(package)
         except Exception as ex:
@@ -35,39 +35,36 @@ def requirement_missing(notebook):
 
 
 def main():
-    if 'GAMMAPY_EXTRA' not in os.environ:
-        logging.info('GAMMAPY_EXTRA environment variable not set.')
-        logging.info('Running notebook tests requires gammapy-extra.')
-        logging.info('Exiting now.')
-        sys.exit()
 
-    try:
-        path_datasets = Path(os.environ['GAMMAPY_EXTRA']) / 'datasets'
-        os.symlink(str(path_datasets), 'datasets')
-    except Exception as ex:
-        logging.error('It was not possible to create a /datasets symlink')
-        logging.error(ex)
-        sys.exit()
+    env_vars = ["GAMMAPY_EXTRA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA"]
+    for var in env_vars:
+        if var not in os.environ:
+            logging.info(var + " environment variable not set.")
+            logging.info("Running notebook tests requires this environment variable.")
+            logging.info("Exiting now.")
+            sys.exit()
 
     passed = True
     yamlfile = get_notebooks()
-    dirnbs = Path('tutorials')
+    dirnbs = Path("tutorials")
 
     for notebook in yamlfile:
         if requirement_missing(notebook):
-            logging.info('Skipping notebook {} because requirement is missing.'.format(
-                notebook['name']))
+            logging.info(
+                "Skipping notebook {} because requirement is missing.".format(
+                    notebook["name"]
+                )
+            )
             continue
 
-        filename = notebook['name'] + '.ipynb'
+        filename = notebook["name"] + ".ipynb"
         path = dirnbs / filename
 
         if not test_notebook(path):
             passed = False
 
-    os.unlink('datasets')
     assert passed
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

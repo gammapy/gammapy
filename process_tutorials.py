@@ -34,32 +34,25 @@ def ignoreall(d, files): return [
 def main():
 
     if len(sys.argv) != 2:
-        logging.info('Usage:')
-        logging.info('python process_tutorials.py tutorials')
-        logging.info('python process_tutorials.py tutorials/mynotebook.ipynb')
+        logging.info("Usage:")
+        logging.info("python process_tutorials.py tutorials")
+        logging.info("python process_tutorials.py tutorials/mynotebook.ipynb")
         sys.exit()
 
-    if 'GAMMAPY_EXTRA' not in os.environ:
-        logging.info('GAMMAPY_EXTRA environment variable not set.')
-        logging.info('Running notebook tests requires gammapy-extra.')
-        logging.info('Exiting now.')
-        sys.exit()
-
-    # make datasets symlink
-    try:
-        path_datasets = Path(os.environ['GAMMAPY_EXTRA']) / 'datasets'
-        os.symlink(str(path_datasets), 'datasets')
-    except Exception as ex:
-        logging.error('It was not possible to create a /datasets symlink')
-        logging.error(ex)
-        sys.exit()
+    env_vars = ["GAMMAPY_EXTRA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA", "CTADATA"]
+    for var in env_vars:
+        if var not in os.environ:
+            logging.info(var + " environment variable not set.")
+            logging.info("Running notebook tests requires this environment variable.")
+            logging.info("Exiting now.")
+            sys.exit()
 
     # prepare folder structure
     pathsrc = Path(sys.argv[1])
-    path_temp = Path('temp')
-    path_empty_nbs = Path('tutorials')
-    path_filled_nbs = Path('docs') / 'notebooks'
-    path_static_nbs = Path('docs') / '_static' / 'notebooks'
+    path_temp = Path("temp")
+    path_empty_nbs = Path("tutorials")
+    path_filled_nbs = Path("docs") / "notebooks"
+    path_static_nbs = Path("docs") / "_static" / "notebooks"
 
     rmtree(str(path_temp), ignore_errors=True)
     path_temp.mkdir(parents=True, exist_ok=True)
@@ -76,12 +69,12 @@ def main():
         pathdest = path_temp / notebookname
         copyfile(str(pathsrc), str(pathdest))
     else:
-        logging.info('Notebook file does not exist.')
+        logging.info("Notebook file does not exist.")
         sys.exit()
 
     # strip and blackformat
-    subprocess.call('gammapy jupyter --src temp black', shell=True)
-    subprocess.call('gammapy jupyter --src temp strip', shell=True)
+    subprocess.call("gammapy jupyter --src temp black", shell=True)
+    subprocess.call("gammapy jupyter --src temp strip", shell=True)
 
     # test /run
     passed = True
@@ -98,27 +91,26 @@ def main():
             copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignoreall)
             for path in path_static_nbs.glob("*.ipynb"):
                 subprocess.call(
-                    "jupyter nbconvert --to script '{}'".format(str(path)),
-                    shell=True)
+                    "jupyter nbconvert --to script '{}'".format(str(path)), shell=True
+                )
             copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
         else:
             pathsrc = path_temp / notebookname
             pathdest = path_static_nbs / notebookname
             copyfile(str(pathsrc), str(pathdest))
             subprocess.call(
-                "jupyter nbconvert --to script '{}'".format(str(pathdest)),
-                shell=True)
+                "jupyter nbconvert --to script '{}'".format(str(pathdest)), shell=True
+            )
             pathdest = path_filled_nbs / notebookname
             copyfile(str(pathsrc), str(pathdest))
     else:
-        logging.info('Tests have not passed.')
-        logging.info('Tutorials not ready for documentation building process.')
+        logging.info("Tests have not passed.")
+        logging.info("Tutorials not ready for documentation building process.")
         rmtree(str(path_static_nbs), ignore_errors=True)
 
     # tear down
     rmtree(str(path_temp), ignore_errors=True)
-    os.unlink('datasets')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
