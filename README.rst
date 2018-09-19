@@ -11,6 +11,8 @@ A Python Package for Gamma-ray Astronomy.
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
 
+.. image:: http://mybinder.org/badge.svg
+    :target: https://mybinder.org/v2/gh/gammapy/gammapy/master?urlpath=lab/tree/first_steps.ipynb
 
 Status shields
 ++++++++++++++
