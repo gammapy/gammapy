@@ -5,94 +5,19 @@
 Tutorial notebooks
 ==================
 
-What is this?
--------------
+This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
 
--  This is an overview of tutorial `Jupyter <http://jupyter.org/>`__
-   notebooks for `Gammapy <http://gammapy.org>`__, a Python package for
-   gamma-ray astronomy.
--  The notebooks complement the Gammapy Sphinx-based documentation at
-   http://docs.gammapy.org
--  The notebooks and example datasets are available at
-   https://github.com/gammapy/gammapy-extra
+You can read them here, or execute them using a temporary cloud server in Binder.
 
-Set up
-------
+To execute them locally, you have to first install Gammapy locally and download
+the tutorial notebooks and example datasets. The setup steps are described here:
+:ref:`getting-started`. Remember that you can always use ``gammapy info`` to check your setup.
 
-The Gammapy installation instructions are here: :ref:`install`
-
-One quick way to get set up, that works the same on Linux, Mac and Windows is
-this:
-
-* Install Anaconda or Miniconda (see https://www.anaconda.com/download/ )
-* Get the following repository that contains the Gammapy tutorial notebooks::
-
-    git clone https://github.com/gammapy/gammapy-extra.git
-    export GAMMAPY_EXTRA=$PWD/gammapy-extra
-
-* Create a Python conda environment that contains all software used in the tutorials::
-
-    cd gammapy-extra
-    conda env create -f environment.yml
-
-* If you already have that environment, but want to update::
-
-    conda env update -f environment.yml
-
-* Activate the environment and start Jupyter::
-
-    source activate gammapy-tutorial
-    cd notebooks
-    jupyter notebook
-
-* Select and start the notebook you want in your webbrowser.
-
-If you have any questions, ask for help. See http://gammapy.org/contact.html
-
-Execute tutorials online
-------------------------
-
-.. image:: http://mybinder.org/badge.svg
-
-You can execute the notebooks on-line.
-Just click on the *launch binder* badge placed at the top of each of the notebooks below.
-
-Note that this is a free, temporary notebook server. You cannot save your work there and retrieve it afterwards.
-For that, install Gammapy on your machine and work there.
-
-The basics
-----------
-
-Gammapy is a Python package built on Numpy and Astropy, and the tutorials are
-Jupyter notebooks. If you're already familar with those, you can skip to the
-next section and start learning about Gammapy.
-
-To learn the basics, here are a few good resources.
-
-Python
-++++++
-
-- `A Whirlwind tour of Python <http://nbviewer.jupyter.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb>`__ (learn Python)
-
-Scientific Python
-+++++++++++++++++
-
-- `Python data science handbook <http://nbviewer.jupyter.org/github/jakevdp/PythonDataScienceHandbook/blob/master/notebooks/Index.ipynb>`__ (learn IPython, Numpy, matplotlib)
-
-Astropy
-+++++++
-
-- `Astropy introduction for Gammapy users <notebooks/astropy_introduction.html>`__  | *astropy_introduction.ipynb*
-- `Astropy Hands On (1st ASTERICS-OBELICS International School) <https://github.com/Asterics2020-Obelics/School2017/blob/master/astropy/astropy_hands_on.ipynb>`__
-
-Other useful resources:
-
-- http://www.astropy.org/astropy-tutorials
-- http://astropy.readthedocs.io
-- https://python4astronomers.github.io/
+.. _tutorials_notebooks:
 
 Notebooks
 ---------
+
 .. toctree::
    :hidden:
 
@@ -141,6 +66,8 @@ Interested to do a first analysis of simulated CTA data?
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
+.. _tutorials_extras:
+
 Extra topics
 ------------
 .. toctree::
@@ -157,3 +84,28 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
 - `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
+
+.. _tutorials_basics:
+
+Basics
+------
+
+Gammapy is a Python package built on Numpy and Astropy, so for now you have to learn
+a bit of Python, Numpy and Astropy to be able to use Gammapy.
+To make plots you have to learn a bit of matplotlib.
+
+We plan to add a very simple to use high-level interface to Gammapy where you just have to
+adjust a config file, but that isn't available yet.
+
+Here are some great resources:
+
+- Python: `A Whirlwind tour of Python <https://nbviewer.jupyter.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb>`__
+- IPython, Jupyter, Numpy, matplotlib: `Python data science handbook <http://nbviewer.jupyter.org/github/jakevdp/PythonDataScienceHandbook/blob/master/notebooks/Index.ipynb>`__
+- `Astropy introduction for Gammapy users <notebooks/astropy_introduction.html>`__  | *astropy_introduction.ipynb*
+- `Astropy Hands On (1st ASTERICS-OBELICS International School) <https://github.com/Asterics2020-Obelics/School2017/blob/master/astropy/astropy_hands_on.ipynb>`__
+
+Other useful resources:
+
+- http://www.astropy.org/astropy-tutorials
+- http://astropy.readthedocs.io
+- https://python4astronomers.github.io
