@@ -10,6 +10,7 @@ help:
 	@echo '     help             Print this help message (the default)'
 	@echo ''
 	@echo '     doc-show         Open local HTML docs in browser'
+	@echo '     docs-all         Build documentation'
 	@echo '     clean            Remove generated files'
 	@echo '     clean-repo       Remove all untracked files and directories (use with care!)'
 	@echo '     cython           Compile cython files'
@@ -97,6 +98,10 @@ doc-show:
 	open docs/_build/html/index.html
 
 docs-all:
+	python process_tutorials.py tutorials/
+	python setup.py build_docs
+
+travis-docs-all:
 	cp -R tutorials docs/notebooks
 	cp -R tutorials docs/_static/notebooks
 	jupyter nbconvert --to script docs/_static/notebooks/*.ipynb
