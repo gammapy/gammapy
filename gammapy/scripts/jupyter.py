@@ -6,6 +6,7 @@ import click
 import logging
 import subprocess
 import time
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,10 @@ def cli_jupyter_run(ctx):
 def execute_notebook(path, loglevel=20):
     """Execute a Jupyter notebook."""
 
+    kernel_name = "python3"
+    if sys.version_info[0] < 3:
+        kernel_name = "python2"
+
     try:
         t = time.time()
         subprocess.call(
@@ -29,9 +34,10 @@ def execute_notebook(path, loglevel=20):
             "--allow-errors "
             "--log-level={} "
             "--ExecutePreprocessor.timeout=None "
+            "--ExecutePreprocessor.kernel_name={} "
             "--to notebook "
             "--inplace "
-            "--execute '{}'".format(loglevel, path),
+            "--execute '{}'".format(loglevel, kernel_name, path),
             shell=True,
         )
         t = (time.time() - t) / 60

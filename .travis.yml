@@ -31,7 +31,7 @@ env:
         - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima regions reproject pandoc ipython iminuit'
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit runipy regions reproject pandoc ipython jupyter'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib==2.2.3 pyyaml uncertainties pandas naima sherpa libgfortran iminuit runipy regions reproject pandoc ipython jupyter'
 
         - PIP_DEPENDENCIES='nbsphinx sphinx-click sphinx_rtd_theme'
 
@@ -39,6 +39,7 @@ env:
 
         - FETCH_GAMMAPY_EXTRA=true
         - FETCH_GAMMA_CAT=true
+        - FETCH_GAMMAPY_FERMI_LAT_DATA=true
         - PACKAGING_TEST=false
         - TEST_FERMIPY=false
 
@@ -79,9 +80,9 @@ matrix:
                CONDA_DEPENDENCIES='Cython click regions pyyaml'
                PIP_DEPENDENCIES=''
 
-        # Run tests without GAMMAPY_EXTRA available
+        # Run tests without GAMMAPY_EXTRA/GAMMA_CAT/GAMMAPY_FERMI_LAT_DATA available
         - os: linux
-          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.7 SETUP_CMD='test -V'
+          env: FETCH_GAMMAPY_EXTRA=false FETCH_GAMMA_CAT=false FETCH_GAMMAPY_FERMI_LAT_DATA=false PYTHON_VERSION=3.7 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Build docs
@@ -169,6 +170,10 @@ install:
           export GAMMA_CAT=${HOME}/gamma-cat;
       fi
 
+    - if $FETCH_GAMMAPY_FERMI_LAT_DATA; then
+          git clone https://github.com/gammapy/gammapy-fermi-lat-data.git $HOME/gammapy-fermi-lat-data;
+          export GAMMAPY_FERMI_LAT_DATA=${HOME}/gammapy-fermi-lat-data;
+      fi
     # From https://conda.io/docs/bdist_conda.html
     # bdist_conda must be installed into a root conda environment,
     # as it imports conda and conda_build. It is included as part of the conda build package.
