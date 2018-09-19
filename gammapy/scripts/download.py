@@ -18,20 +18,11 @@ def cli_download_notebooks(ctx):
     """Download notebooks"""
 
     downloadproc = DownloadProcess(
-        "gammapy",
-        "tutorials",
-        ctx.obj["specfile"],
-        ctx.obj["specfold"],
-        ctx.obj["release"],
-        ["../environment.yml"],
-        Path(ctx.obj["localfold"]),
-        ctx.obj["recursive"],
+        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "notebooks"
     )
 
-    downloadproc.check_hash()
-    downloadproc.label_version()
-    downloadproc.build_folders()
-    downloadproc.build_files()
+    downloadproc.setup()
+    downloadproc.files()
     downloadproc.run()
 
 
@@ -41,19 +32,11 @@ def cli_download_datasets(ctx):
     """Download datasets"""
 
     downloadproc = DownloadProcess(
-        "gammapy-extra",
-        "datasets",
-        ctx.obj["specfile"],
-        ctx.obj["specfold"],
-        ctx.obj["release"],
-        [],
-        Path(ctx.obj["localfold"]) / "datasets",
-        ctx.obj["recursive"],
+        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "datasets"
     )
 
-    downloadproc.check_hash()
-    downloadproc.build_folders()
-    downloadproc.build_files()
+    downloadproc.setup()
+    downloadproc.files()
     downloadproc.run()
 
 
@@ -62,40 +45,18 @@ def cli_download_datasets(ctx):
 def cli_download_tutorials(ctx):
     """Download tutorial notebooks and datasets"""
 
-    if ctx.obj["specfile"] or ctx.obj["specfile"]:
-        log.info("--file and --foder are not allowed options for tutorials.")
-    if not ctx.obj["recursive"]:
-        log.info("--recursive is True for tutorials.")
-
     downnotebooks = DownloadProcess(
-        "gammapy",
-        "tutorials",
-        "",
-        "",
-        ctx.obj["release"],
-        ["../environment.yml"],
-        Path(ctx.obj["localfold"]),
-        True,
+        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "notebooks"
     )
-
-    downnotebooks.check_hash()
-    downnotebooks.label_version()
-    downnotebooks.build_folders()
-    downnotebooks.build_files(tutorials=True)
+    downnotebooks.setup()
+    downnotebooks.files()
     downnotebooks.run()
 
     downdatasets = DownloadProcess(
-        "gammapy-extra",
-        "datasets",
-        "",
-        "",
-        ctx.obj["release"],
-        [],
-        Path(ctx.obj["localfold"]) / "datasets",
-        True,
+        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "tutorials"
     )
-
-    downdatasets.check_hash()
-    downdatasets.build_folders()
-    downdatasets.build_files(tutorials=True, datasets=True)
+    downdatasets.setup()
+    downdatasets.files()
     downdatasets.run()
+
+    downnotebooks.show_info()

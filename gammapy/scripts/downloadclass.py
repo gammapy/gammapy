@@ -8,213 +8,178 @@ import os
 import sys
 from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 from ..extern.pathlib import Path
-
-# from .. import version
+from .. import version
 
 log = logging.getLogger(__name__)
 
-APIGIT_URL = "https://api.github.com/repos/gammapy/"
-RAWGIT_URL = "https://raw.githubusercontent.com/gammapy/"
-YAMLFLNAME = "notebooks.yaml"
+RELEASES = ["0.8"]
+BASE_URL = "http://gammapy.org/download"
 
 
 class DownloadProcess(object):
-    """Manages the process of downloading content from the Github repository"""
+    """Manages the process of downloading content"""
 
-    def __init__(
-        self,
-        repo,
-        repofold,
-        specfile,
-        specfold,
-        release,
-        listfiles,
-        localfold,
-        recursive,
-    ):
+    def __init__(self, src, out, release, option):
 
-        self.repo = repo
-        self.repofold = repofold
-        self.specfile = specfile
-        self.specfold = specfold
+        self.src = src
+        self.localfold = Path(out)
         self.release = release
-        self.listfiles = listfiles
-        self.localfold = localfold
-        self.recursive = recursive
+        self.option = option
+        self.listfiles = {}
 
-        if specfile and specfold:
-            log.error(
-                "--file and --foder are mutually exclusive options, only one is allowed."
-            )
-            sys.exit()
+    def setup(self):
+
+        if self.release == "":
+            self.release = str(version.major) + "." + str(version.minor)
+
+        filename_env = "gammapy-" + self.release + "-environment.yml"
+        filepath_env = str(self.localfold / filename_env)
+        url_env = BASE_URL + "/install/" + filename_env
+
+        if self.option == "datasets" or self.option == "tutorials":
+            self.localfold = self.localfold / "datasets"
+        else:
+            try:
+                urlopen(url_env)
+            except Exception as ex:
+                log.info("Release {} not found".format(self.release))
+                exit()
+            nbfolder = "notebooks-" + self.release
+            self.localfold = self.localfold / nbfolder
+            self.get_file(url_env, filepath_env)
+
+    def files(self):
+
+        self.parse_yaml()
+        filename_dat = "gammapy-data-index.json"
+        url_dat = BASE_URL + "/data/" + filename_dat
+        jsondata = json.loads(urlopen(url_dat).read())
+
+        if self.option == "notebooks" or self.option == "tutorials":
+            if self.src != "":
+                keyrec = "nb: " + self.src
+                if keyrec in self.listfiles:
+                    record = self.listfiles[keyrec]
+                    self.listfiles = {}
+                    self.listfiles[keyrec] = record
+                else:
+                    log.info("Notebook {} not found".format(self.src))
+                    sys.exit()
+
+            imagefiles = self.parse_imagefiles()
+            self.listfiles.update(imagefiles)
+
+        if self.option == "datasets" or self.option == "tutorials":
+            datafound = {}
+
+            if self.option == "datasets":
+                datafound.update(self.parse_datafiles(self.src, jsondata))
+
+            if not self.src:
+                for item in self.listfiles:
+                    record = self.listfiles[item]
+                    if "datasets" in record:
+                        if record["datasets"] != "":
+                            for ds in record["datasets"]:
+                                datafound.update(self.parse_datafiles(ds, jsondata))
+
+            if not datafound:
+                log.info("Dataset {} not found".format(self.src))
+                sys.exit()
+
+            self.listfiles = datafound
 
     def run(self):
 
         log.info("Content will be downloaded in {}".format(self.localfold))
 
-        # download files
-        if self.listfiles:
-            with click.progressbar(self.listfiles, label="Downloading files") as bar:
-                for f in bar:
-                    self.get_file(f)
-        else:
-            sys.exit()
+        with click.progressbar(self.listfiles, label="Downloading files") as bar:
+            for f in bar:
+                url = self.listfiles[f]["url"]
+                path = self.localfold / self.listfiles[f]["path"]
+                self.get_file(url, str(path))
 
-    def check_hash(self):
+    def show_info(self):
 
-        # installed local gammapy hash
-        if self.release == "" or self.release == "master":
-            # uncomment when notebooks moved to gammapy repo
-            # self.release = version.githash
-            # refhash = 'refs/commits/' + self.release
-            self.release = "master"
-            refhash = "refs/heads/" + self.release
-        # release
-        elif self.release.startswith("v") and len(self.release) == 4:
-            refhash = "refs/tags/" + self.release
-        # commit hash
-        elif len(self.release) == 40:
-            refhash = "commits/" + self.release
-        # not allowed
-        else:
-            refhash = "refs/tags/notallowed"
+        localfolder = self.localfold.parent
+        condaname = "gammapy-" + self.release
+        envfilename = condaname + "-environment.yml"
+        GAMMAPY_DATA = Path.cwd() / localfolder / "datasets"
 
-        # check hash
-        url = APIGIT_URL + self.repo + "/git/" + refhash
-        try:
-            urlopen(url)
-        except Exception as ex:
-            log.error("Bad response from GitHub API.")
-            log.error("Bad value for release or commit hash: " + self.release)
-            log.error(url)
-            sys.exit()
+        print("")
+        print("")
+        print("***** Enter the following commands below to play with tutorials")
+        print("cd {}".format(localfolder))
+        print("conda env create -f {}".format(envfilename))
+        print("conda activate {}".format(condaname))
+        print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
+        print("jupyter lab")
+        print("")
 
-    def label_version(self):
-
-        # rename notebooks folder with version label
-        verfolder = str(Path(self.localfold) / "notebooks-") + self.release
-        self.localfold = Path(verfolder)
-
-    def build_folders(self):
-
-        # make base folders
-        if self.specfile:
-            ifolder = self.localfold / Path(self.specfile).parent
-            ifolder.mkdir(parents=True, exist_ok=True)
-            self.listfiles.append(self.specfile)
-        elif self.specfold:
-            ifolder = self.localfold / Path(self.specfold)
-            ifolder.mkdir(parents=True, exist_ok=True)
-        else:
-            ifolder = self.localfold
-            ifolder.mkdir(parents=True, exist_ok=True)
-
-    def build_files(self, tutorials=False, datasets=False):
-
-        # fill files list
-        if not self.specfile:
-            if tutorials:
-                for folder in self.parse_yaml(datasets):
-                    self.specfold = folder
-                    ifolder = self.localfold / Path(self.specfold)
-                    ifolder.mkdir(parents=True, exist_ok=True)
-                    json_files = self.get_json_tree()
-                    self.parse_json_tree(json_files)
-            else:
-                json_files = self.get_json_tree()
-                self.parse_json_tree(json_files)
-
-    def get_json_tree(self):
-
-        url = (
-            APIGIT_URL + self.repo + "/git/trees/" + self.release + ":" + self.repofold
-        )
-        if self.specfold:
-            url = url + "/" + self.specfold
-        if self.recursive:
-            url = url + "?recursive=1"
-
-        try:
-            r = urlopen(url)
-            json_items = json.loads(r.read())
-            return json_items
-        except Exception as ex:
-            log.error("Bad response from GitHub API.")
-            log.error(url)
-            log.error(ex)
-            sys.exit()
-
-    def parse_json_tree(self, json_files):
-
-        if json_files:
-            for item in json_files["tree"]:
-                if self.specfold:
-                    item["path"] = self.specfold + "/" + item["path"]
-                ifolder = self.localfold / Path(item["path"])
-                if item["type"] == "tree":
-                    if self.recursive:
-                        ifolder.mkdir(parents=True, exist_ok=True)
-                else:
-                    self.listfiles.append(item["path"])
-
-    def parse_yaml(self, datasets=False):
+    def parse_yaml(self):
         import yaml
 
-        if datasets:
-            notebooksfolder = "notebooks-" + self.release
-            yamlpath = self.localfold.parent / notebooksfolder / YAMLFLNAME
-        else:
-            self.localfold.mkdir(parents=True, exist_ok=True)
-            self.get_file("notebooks.yaml")
-            yamlpath = self.localfold / YAMLFLNAME
+        filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
+        url_nbs = BASE_URL + "/tutorials/" + filename_nbs
+        r = urlopen(url_nbs)
 
-        try:
-            with open(str(yamlpath)) as fh:
-                confignbs = yaml.safe_load(fh)
-        except IOError as ex:
-            log.error("{} could not be read.".format(str(yamlpath)))
-            sys.exit()
-
-        set_folders = set()
-        for nb in confignbs:
-            if not datasets:
-                self.listfiles.append(nb["name"] + ".ipynb")
-            else:
+        for nb in yaml.safe_load(r.read()):
+            path = nb["name"] + ".ipynb"
+            label = "nb: " + nb["name"]
+            self.listfiles[label] = {}
+            self.listfiles[label]["url"] = nb["url"]
+            self.listfiles[label]["path"] = path
+            self.listfiles[label]["datasets"] = []
+            self.listfiles[label]["images"] = []
+            if "datasets" in nb:
                 if nb["datasets"]:
                     for ds in nb["datasets"]:
-                        name, ext = os.path.splitext(ds)
-                        if not ext:
-                            set_folders.add(ds)
-                        else:
-                            if "/" in ds:
-                                ifolder = self.localfold / Path(ds).parent
-                                ifolder.mkdir(parents=True, exist_ok=True)
-                            self.listfiles.append(ds)
-        return set_folders
+                        self.listfiles[label]["datasets"].append(ds)
+            if "images" in nb:
+                if nb["images"]:
+                    for im in nb["images"]:
+                        self.listfiles[label]["images"].append(im)
 
-    def get_file(self, filename):
+    def parse_imagefiles(self):
 
-        url = (
-            RAWGIT_URL
-            + self.repo
-            + "/"
-            + self.release
-            + "/"
-            + self.repofold
-            + "/"
-            + filename
-        )
-        filepath = str(self.localfold / filename)
+        imagefiles = {}
+        for item in self.listfiles:
+            record = self.listfiles[item]
+            if "images" in record:
+                if record["images"] != "":
+                    for im in record["images"]:
+                        label = "im: " + im
+                        path = "images/" + im + ".png"
+                        url = str(Path(record["url"]).parent)
+                        url = url.replace(":/", "://")
+                        url = url + "/" + path
+                        imagefiles[label] = {}
+                        imagefiles[label]["url"] = url
+                        imagefiles[label]["path"] = path
+        return imagefiles
 
-        if filepath.endswith("../environment.yml"):
-            labelrelease = self.release
-            if labelrelease.startswith('v'):
-                labelrelease = self.release[1:]
-            verfilename = "environment-" + labelrelease + ".yml"
-            filepath = filepath.replace("environment.yml", verfilename)
+    def parse_datafiles(self, df, jsondata):
+
+        datafiles = {}
+        for dataset in jsondata:
+            if df == dataset["name"]:
+                if dataset["files"]:
+                    for ds in dataset["files"]:
+                        label = ds["path"]
+                        datafiles[label] = {}
+                        datafiles[label]["url"] = ds["url"]
+                        datafiles[label]["path"] = ds["path"]
+
+        return datafiles
+
+    @staticmethod
+    def get_file(url, filepath):
 
         try:
+            ifolder = Path(filepath).parent
+            ifolder.mkdir(parents=True, exist_ok=True)
             urlretrieve(url, filepath)
         except Exception as ex:
             log.error(filepath + " could not be copied.")
+            log.error(url)
             log.error(ex)
