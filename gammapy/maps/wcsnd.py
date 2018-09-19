@@ -526,7 +526,7 @@ class WcsNDMap(WcsMap):
 
         for img, idx in self.iter_by_image():
             if kernel == "gauss":
-                data = gaussian_filter(img, width/2.0, **kwargs)
+                data = gaussian_filter(img, width, **kwargs)
             elif kernel == "disk":
                 disk = Tophat2DKernel(width)
                 disk.normalize("integral")
