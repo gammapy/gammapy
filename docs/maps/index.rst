@@ -556,17 +556,18 @@ Generating a Cutout of a Model Cube
 -----------------------------------
 
 This example shows how to extract a cut-out of LAT galactic diffuse model cube
-using the `~Map.reproject` method:
+using the `~Map.cutout` method:
 
 .. code:: python
 
     from gammapy.maps import WcsGeom, WcsNDMap
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
 
     m = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/fermi_3fhl/gll_iem_v06_cutout.fits')
-
-    geom = WcsGeom.create(binsz=0.1, skydir=(0, 0), coordsys='GAL', proj='AIT', width=(3, 3))
-    m_proj = m.reproject(geom)
-    m_proj.write('cutout.fits', conv='fgst-template')
+    position = SkyCoord(0, 0, frame="galactic", unit="deg")
+    m_cutout = m.cutout(position=position, width=(5 * u.deg, 2 * u.deg))
+    m_cutout.write('cutout.fits', conv='fgst-template')
 
 Using `gammapy.maps`
 ====================
