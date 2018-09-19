@@ -207,7 +207,10 @@ class DownloadProcess(object):
         filepath = str(self.localfold / filename)
 
         if filepath.endswith("../environment.yml"):
-            verfilename = "environment-" + self.release + ".yml"
+            labelrelease = self.release
+            if labelrelease.startswith('v'):
+                labelrelease = self.release[1:]
+            verfilename = "environment-" + labelrelease + ".yml"
             filepath = filepath.replace("environment.yml", verfilename)
 
         try:
