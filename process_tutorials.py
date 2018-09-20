@@ -39,7 +39,7 @@ def main():
         logging.info("python process_tutorials.py tutorials/mynotebook.ipynb")
         sys.exit()
 
-    env_vars = ["GAMMAPY_EXTRA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA", "CTADATA"]
+    env_vars = ["GAMMAPY_EXTRA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA"]
     for var in env_vars:
         if var not in os.environ:
             logging.info(var + " environment variable not set.")
