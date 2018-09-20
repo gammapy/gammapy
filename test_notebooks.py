@@ -36,13 +36,11 @@ def requirement_missing(notebook):
 
 def main():
 
-    env_vars = ["GAMMAPY_EXTRA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA"]
-    for var in env_vars:
-        if var not in os.environ:
-            logging.info(var + " environment variable not set.")
-            logging.info("Running notebook tests requires this environment variable.")
-            logging.info("Exiting now.")
-            sys.exit()
+    if "GAMMAPY_DATA" not in os.environ:
+        logging.info("GAMMAPY_DATA environment variable not set.")
+        logging.info("Running notebook tests requires this environment variable.")
+        logging.info("Exiting now.")
+        sys.exit()
 
     passed = True
     yamlfile = get_notebooks()
