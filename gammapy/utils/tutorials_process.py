@@ -31,12 +31,16 @@ def ignoreall(d, files): return [
 ]
 
 
+def setuo_sphinx_params():
+    pass
+
+
 def main():
 
     if len(sys.argv) != 2:
         logging.info("Usage:")
-        logging.info("python process_tutorials.py tutorials")
-        logging.info("python process_tutorials.py tutorials/mynotebook.ipynb")
+        logging.info("python tutorials_process.py tutorials)
+        logging.info("python tutorials_process.py tutorials/mynotebook.ipynb")
         sys.exit()
 
     if "GAMMAPY_DATA" not in os.environ:

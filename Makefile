@@ -100,13 +100,13 @@ doc-show:
 docs-all:
 	which python
 	pip install -e .
-	python process_tutorials.py tutorials/
+	python -m gammapy.utils.tutorials_process tutorials/
 	python setup.py build_docs
 
 test-notebooks:
 	which python
 	pip install -e .
-	python test_notebooks.py
+	python -m gammapy.utils.tutorials_test
 
 conda:
 	python setup.py bdist_conda
