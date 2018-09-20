@@ -32,7 +32,7 @@ RUN adduser --disabled-password \
 # copy repo in /home/gammapy
 # COPY . ${HOME}
 
-RUN gammapy download --dest=${HOME}/gammapy-tutorials tutorials
+RUN gammapy download --out=${HOME}/gammapy-tutorials tutorials
 
 # setting ownerships
 USER root
