@@ -31,22 +31,22 @@ class Fit(object):
         """Total likelihood given the current model parameters"""
         pass
 
-    def likelihood_profiles(self, model, parnames="all"):
+    def likelihood_profiles(self, model, parameters="all"):
         """Compute likelihood profiles for multiple parameters.
 
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel` or `~gammapy.cube.models.SkyModel`
             Model to compute the likelihood profile for.
-        parnames : list of str or "all"
+        parameters : list of str or "all"
             For which parameters to compute likelihood profiles.
         """
         profiles = {}
 
-        if parnames == "all":
-            parnames = [par.name for par in model.paramaters]
+        if parameters == "all":
+            parameters = [par.name for par in model.paramaters]
 
-        for parname in parnames:
+        for parname in parameters:
             profiles[parname] = self.likelihood_profile(model, parname)
         return profiles
 
@@ -253,13 +253,6 @@ class FitResult(object):
     def method(self):
         """Optimizer method used for the fit."""
         return self._method
-
-    def to_dict(self):
-        """Convert to `dict` object"""
-        data = {}
-        for name in []:
-            data[name] = getattr(self, name)
-        return data
 
     def __repr__(self):
         str_ = self.__class__.__name__

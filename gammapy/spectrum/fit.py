@@ -289,40 +289,6 @@ class SpectrumFit(Fit):
         except KeyError:
             raise ValueError("No observation livetime given")
 
-    def likelihood_1d(self, model, parname, parvals):
-        """Compute likelihood profile.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Model to draw likelihood profile for
-        parname : str
-            Parameter to calculate profile for
-        parvals : `~astropy.units.Quantity`
-            Parameter values
-        """
-        likelihood = []
-        self._model = model
-        for val in parvals:
-            self._model.parameters[parname].value = val
-            stat = self.total_stat(self._model.parameters)
-            likelihood.append(stat)
-        return np.array(likelihood)
-
-    def plot_likelihood_1d(self, ax=None, **kwargs):
-        """Plot 1-dim likelihood profile.
-
-        See :func:`~gammapy.spectrum.SpectrumFit.likelihood_1d`
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        yy = self.likelihood_1d(**kwargs)
-        ax.plot(kwargs["parvals"], yy)
-        ax.set_xlabel(kwargs["parname"])
-        return ax
-
     @property
     def result(self):
         """Bundle fit results into `~gammapy.spectrum.SpectrumFitResult`.
