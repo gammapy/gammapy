@@ -7,7 +7,7 @@ from gammapy.image import MapPanelPlotter
 filename = "$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz"
 survey_map = Map.read(filename, hdu="counts")
 survey_map.data = survey_map.data.astype("float")
-smoothed_map = survey_map.smooth(radius=Angle(0.2, unit="deg"))
+smoothed_map = survey_map.smooth(width=Angle(0.1, unit="deg"))
 
 fig = plt.figure(figsize=(15, 8))
 xlim = Angle([70, 262], unit="deg")

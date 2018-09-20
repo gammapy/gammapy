@@ -503,7 +503,7 @@ class WcsNDMap(WcsMap):
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
             It corresponds to the standard deviation in case of a Gaussian kernel,
-            the radius in case of a disk (isotropic) kernel, and the size in case
+            the radius in case of a disk kernel, and the side length in case
             of a box kernel.
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
