@@ -70,26 +70,21 @@ def cli_image():
 
 @cli.group("download", short_help="Download datasets and notebooks")
 @click.option(
-    "--dest",
+    "--out",
     prompt="destination folder",
     default="gammapy-tutorials",
     help="Folder where the files will be copied.",
 )
-@click.option("--file", default="", help="Specific file to download.")
-@click.option("--fold", default="", help="Specific folder to download.")
-@click.option("--release", default="", help="Release or commit hash in Github repo.")
-@click.option(
-    "--recursive/--no-recursive",
-    default=True,
-    help="Deactivate recursive scan of a folder.",
-)
+@click.option("--src", default="", help="Specific notebook or dataset to download.")
+@click.option("--release", default="", help="Gammapy release for notebboks.")
 @click.pass_context
-def cli_download(ctx, dest, file, fold, release, recursive):
+def cli_download(ctx, out, src, release):
     """Download datasets and notebooks.
 
-    Download from the 'gammapy-extra' Github repository the content of
-    'datasets' or 'notebooks' folders. The files are copied into a folder
-    created at the current working directory.
+    Download notebooks published as tutorials and the related datasets needed
+    to execute them. It is also possible to download individual notebooks
+    or datasets. The files are copied into a folder created at the current
+    working directory.
 
     \b
     Examples
@@ -98,17 +93,11 @@ def cli_download(ctx, dest, file, fold, release, recursive):
     \b
     $ gammapy download notebooks
     $ gammapy download datasets
-    $ gammapy download --release master tutorials
-    $ gammapy download --file first_steps.ipynb notebooks
-    $ gammapy download --dest localfolder --fold catalogs/fermi --no-recursive datasets
+    $ gammapy download --release 0.8 tutorials
+    $ gammapy download --src first_steps notebooks
+    $ gammapy download --src fermi_3fhl --out localfolder datasets
     """
-    ctx.obj = {
-        "localfold": dest,
-        "specfile": file,
-        "specfold": fold,
-        "release": release,
-        "recursive": recursive,
-    }
+    ctx.obj = {"out": out, "src": src, "release": release}
 
 
 @cli.group("jupyter", short_help="Perform actions on notebooks")

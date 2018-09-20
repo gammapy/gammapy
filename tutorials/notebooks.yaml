@@ -2,81 +2,105 @@
 # It's used for automatic testing and downloading of datesets tutorials.
 # Let's keep it alphabetical.
 - name: analysis_3d
-  requires: iminuit cta_data
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_3d.ipynb
+  requires: iminuit
   datasets:
+    - cta-1dc
 - name: astro_dark_matter
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astro_dark_matter.ipynb
   datasets:
     - dark_matter_spectra
 - name: astropy_introduction
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astropy_introduction.ipynb
   datasets:
-    - catalogs/fermi/gll_psc_v16.fit.gz
+    - catalogs/fermi
 - name: cta_1dc_introduction
-  requires: cta_data
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_1dc_introduction.ipynb
   datasets:
+    - cta-1dc
+  images:
+    - cta-1dc
+    - gammapy_datastore_butler
 - name: cta_data_analysis
-  requires: sherpa cta_data
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_data_analysis.ipynb
+  requires: sherpa
   datasets:
+    - cta-1dc
+  images:
+    - cta-1dc
 - name: cwt
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cwt.ipynb
   datasets:
-    - fermi_survey/all.fits.gz
+    - fermi_survey
 - name: detect_ts
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/detect_ts.ipynb
   datasets:
-    - fermi_survey/all.fits.gz
-    - catalogs/fermi/gll_psch_v08.fit.gz
+    - fermi_survey
+    - catalogs/fermi
 - name: fermi_lat
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/fermi_lat.ipynb
   datasets:
     - fermi_3fhl
 - name: first_steps
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/first_steps.ipynb
   datasets:
-    - fermi_2fhl/fermi_2fhl_vela.fits.gz
-    - fermi_2fhl/2fhl_events.fits.gz
-    - images/Vela_region_WMAP_K.fits
-    - catalogs/fermi/gll_psch_v08.fit.gz
+    - fermi_2fhl
+    - images
+    - catalogs/fermi
 - name: hgps
-  requires:
-  datasets:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
 - name: image_fitting_with_sherpa
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_fitting_with_sherpa.ipynb
   requires: sherpa
   datasets:
-      - G300-0_test_background.fits
-      - G300-0_test_counts.fits
-      - G300-0_test_exposure.fits
-      - G300-0_test_psf.fits
+    - sherpaCTA
 - name: intro_maps
-  requires:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/intro_maps.ipynb
   datasets:
-    - fermi_2fhl/fermi_2fhl_gc.fits.gz
-    - fermi_3fhl/gll_iem_v06_cutout.fits
-    - fermi_survey/all.fits.gz
+    - fermi_2fhl
+    - fermi_3fhl
+    - fermi_survey
+  images:
+    - gammapy_maps
+- name: light_curve
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve.ipynb
+- name: nddata_demo
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/nddata_demo.ipynb
 - name: sed_fitting_gammacat_fermi
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting_gammacat_fermi.ipynb
   requires: iminuit
   datasets:
-    - catalogs/fermi/gll_psc_v16.fit.gz
-    - catalogs/fermi/gll_psch_v13.fit.gz
+    - catalogs/fermi
+    - catalogs/fermi
 - name: simulate_3d
-  requires: iminuit cta_data
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/simulate_3d.ipynb
+  requires: iminuit
   datasets:
+    - cta-1dc
 - name: source_population_model
-  requires:
-  datasets:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/source_population_model.ipynb
 - name: spectrum_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_analysis.ipynb
   requires: iminuit
   datasets:
     - hess-dl3-dr1
 - name: spectrum_fitting_with_sherpa
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_fitting_with_sherpa.ipynb
   requires: sherpa
   datasets:
     - joint-crab
 - name: spectrum_models
-  requires:
-  datasets:
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_models.ipynb
 - name: spectrum_pipe
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_pipe.ipynb
   requires: iminuit
   datasets:
     - hess-dl3-dr1
+- name: spectrum_simulation
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
+  datasets:
+    - cta-1dc
+- name: spectrum_simulation_cta
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation_cta.ipynb
+  datasets:
+    - cta-1dc
