@@ -13,7 +13,7 @@ RUN pip install --upgrade pip
 
 # install dependencies - including the dev version of Gammapy
 COPY binder.py tmp/
-RUN curl -o tmp/environment.yml http://gammapy.org/download/install/gammapy-environment-0.8.yml
+RUN curl -o tmp/environment.yml http://gammapy.org/download/install/gammapy-0.8-environment.yml
 WORKDIR tmp/
 RUN conda update conda
 RUN conda install -q -y pyyaml
