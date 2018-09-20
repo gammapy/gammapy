@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 RELEASES = ["0.8"]
 BASE_URL = "http://gammapy.org/download"
+YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
 
 
 class DownloadProcess(object):
@@ -119,8 +120,12 @@ class DownloadProcess(object):
     def parse_yaml(self):
         import yaml
 
-        filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
-        url_nbs = BASE_URL + "/tutorials/" + filename_nbs
+        if version.release:
+            filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
+            url_nbs = BASE_URL + "/tutorials/" + filename_nbs
+        else:
+            url_nbs = YAML_URL
+
         r = urlopen(url_nbs)
 
         for nb in yaml.safe_load(r.read()):
