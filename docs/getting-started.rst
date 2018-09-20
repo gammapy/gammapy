@@ -5,88 +5,178 @@
 Getting Started
 ===============
 
-If you'd like to get started using Gammapy, you've come to the right place!
+The best way to learn about Gammapy is to read and play with the examples in the
+Gammapy :ref:`tutorials`.
 
-Reading through this page will just take you a few minutes.
+This section explains the steps to get set up for the Gammapy tutorials on your
+machine:
 
-But we hope that you'll get curious and start executing the examples yourself,
-using Gammapy to analyse (simulated) H.E.S.S. and real Fermi-LAT data.
+1. Install Anaconda and the Gammapy environment
+2. Download tutorial notebooks and example datasets
+3. Check your setup
+4. Use Gammapy with Python, IPython or Jupyter
 
-If you're new to Python for gamma-ray astronomy and would like to learn the
-basics, we recommend you go to the `Scipy Lecture Notes`_ or the `Practical
-Python for Astronomers Tutorial`_.
+If you have used conda, Python, IPython and Jupyter before, you can just skim
+this page, and quickly copy & paste the commands to get set up.
 
-Gammapy as a Python package and set of science tools
-----------------------------------------------------
+Help!?
+------
 
-Gammapy is a Python package, consisting of functions and classes, that you can
-use as a flexible and extensible toolbox to implement and execute exactly the
-analysis you want.
+If you have any questions or issues, please ask for help on the Gammapy Slack,
+mailing list or on Github (whatever is easiest for you). (see `Gammapy contact`_)
 
-On top of that, Gammapy provides some command line tools (sometimes driven by a
-config file), and in the future we plan on adding web apps with a graphical user
-interface. To use those no Python programming skills are required, you'll just
-have to specify which data to analyse, with which method and parameters.
+Install
+-------
 
-Getting set up
---------------
+To install Gammapy, we recommend that you install the Anaconda distribution from
+https://www.anaconda.com/download/.
 
-First, make sure you have Gammapy installed (see :ref:`install`).
+It's free, works on Linux, MacOS and Windows. It installs in your home
+directory, no system privileges needed, and you can just delete it without
+problems if you don't need or want it any more.
 
-You can use this command to make sure the Python package is available::
+Besides the software included in the Anaconda distribution, it gives you the
+`conda`_ tool, which is a package and environment manager. We will use it to
+create a dedicated environment for the latest stable Gammapy version and a known
+good set of Gammapy dependencies (e.g. Python, Numpy and Astropy).
 
-    $ python -c 'import gammapy'
+Use the following commands to install and activate the ``gammapy-0.8`` conda
+environment:
 
-To check if the Gammapy command line tool has been installed and are available
-on your PATH, use this command::
+.. code-block:: bash
 
-    $ gammapy --version
+    # install anaconda
+    curl -O http://gammapy.org/install/gammapy-0.8-environment.yml
+    conda env create -f gammapy-0.8-environment.yml
+    conda activate gammapy-0.8
 
-The Gammapy tutorials use some example datasets that are stored in the
-``gammapy-extra`` repository on Github. So please go follow the instructions at
-:ref:`gammapyextra` to fetch those, then come back here.
+You should now be able to execute the following command, and it should print
+detailed information about your installation to the terminal:
 
-To check if ``gammapy-extra`` is available and the ``GAMMAPY_EXTRA`` shell
-environment variable set, use this command::
+.. code-block:: bash
 
-    $ echo $GAMMAPY_EXTRA
-    $ ls $GAMMAPY_EXTRA/logo/gammapy_banner.png
+    gammapy info
 
-Need help?
-----------
+If there is some issue, the following commands could help you to figure out
+your setup:
 
-If you have any questions or issues with installation, setup or Gammapy usage,
-lease use the `Gammapy mailing list`_!
+.. code-block:: bash
 
-Gammapy is a very young project, we know there are many missing features and
-issues. Please have some patience, and let us know what you want to do, so that
-we can set priorities.
+    conda info
+    which python
+    which ipython
+    which jupyter
+    which gammapy
+    env | grep PATH
+    python -c 'import gammapy; print(gammapy); print(gammapy.__version__)'
 
-Using Gammapy as a Python package
----------------------------------
+Note that every time you open a new terminal window, you will have to activate
+the Gammapy conda environment again before you can use it via:
 
-Here's a few very simple examples how to use Gammapy as a Python package.
+.. code-block:: bash
 
-What's the statistical significance when 10 events have been observed with a
-known background level of 4.2 according to [LiMa1983]_?
+    conda activate gammapy-0.8
 
-Getting the answer from Gammapy is easy. You import and call the
-`gammapy.stats.significance` function:
+Use the following commands to check which conda environment is active and which
+ones you have set up:
 
-.. code-block:: python
+.. code-block:: bash
 
+    conda info
+    conda env list
+
+If you're new to conda, you could also print out the `conda cheat sheet`_, which
+lists the common commands to install packages and work with environments.
+
+Download tutorials
+------------------
+
+The next step is to download the Gammapy tutorial notebooks and the example
+datasets used there (at the moment from CTA, H.E.S.S. and Fermi-LAT).
+
+.. code-block:: bash
+
+    gammapy download tutorials
+    cd gammapy-tutorials
+    export GAMMAPY_DATA=$PWD/datasets
+
+You might want to put the definition of the ``$GAMMAPY_DATA`` environment
+variable in your shell profile setup file that is executed when you open a new
+terminal (for example ``$HOME/.bash_profile``).
+
+The data files this will download, and also the files generated by the tutorial
+notebooks are small, in total less than 100 MB.
+
+The datasets are curated and stable, the notebooks are still under development
+just like Gammapy itself, and thus stored in a sub-folder that contains the
+Gammapy version number.
+
+The ``gammapy download`` command and versioning of the notebooks is new. If
+there are issues, note that you can just delete the folder any time using ``rm
+-r gammapy-tutorials`` and start over.
+
+Also note that it's of course possible to download just the notebooks or just
+the data files. See the help:
+
+.. code-block:: bash
+
+    gammapy download --help
+
+Use Gammapy
+-----------
+
+Congratulations: you are all set to start using Gammapy!
+
+Python
+++++++
+
+Gammapy is a Python package, so you can of course import and use it from Python:
+
+.. code-block:: bash
+
+    $ python
+    Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35) 
+    [GCC 4.2.1 Compatible Apple LLVM 7.3.0 (clang-703.0.31)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
     >>> from gammapy.stats import significance
     >>> significance(n_on=10, mu_bkg=4.2, method='lima')
     array([2.39791813])
 
+IPython
++++++++
+
+IPython is nicer to use for interactive analysis:
+
+.. code-block:: bash
+
+    $ ipython
+    Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35) 
+    Type 'copyright', 'credits' or 'license' for more information
+    IPython 6.5.0 -- An enhanced Interactive Python. Type '?' for help.
+
+    In [1]: from gammapy.stats import significance
+
+    In [2]: significance(n_on=10, mu_bkg=4.2, method='lima')
+    Out[2]: array([2.39791813])
+
+For example you can use ``?`` to look up help for any Gammapy function, class or
+method from IPython:
+
+.. code-block:: bash
+
+    In [3]: significance?
+
+Of course, you can also use the Gammapy online docs if you prefer. For example
+see `gammapy.stats.significance`. The "search docs" field in the upper left is
+your friend.
+
 As another example, here's how you can create `gammapy.data.DataStore` and
-`gammapy.data.EventList` objects and start exploring some properties of the
-(simulated) H.E.S.S. event data:
+`gammapy.data.EventList` objects and start exploring H.E.S.S. data:
 
 .. code-block:: python
 
     >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/')
+    >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
     >>> events = data_store.obs(obs_id=23523).events
     >>> print(events)
     EventList info:
@@ -95,58 +185,90 @@ As another example, here's how you can create `gammapy.data.DataStore` and
     - OBS_ID = 23523
     >>> events.energy.mean()
     <Quantity 4.418008 TeV>
+
+Try to make your first plot using a helper method in Gammapy that uses
+matplotlib:
+
+.. code-block:: python
+
     >>> events.peek()
+    >>> plt.savefig("events.png")
 
-How do you find something in Gammapy?
+Python script
++++++++++++++
 
-Often using the full-text search field is the quickest and simplest way. As you
-get to know the package, you'll learn the names of the different sub-packages
-that are available, like `gammapy.stats` or `gammapy.data`, and what
-functionality they contain.
+Another common way to use Gammapy is to write a Python script.
+Try it and put the following code into a file called ``example.py``:
 
-Another good way is tutorials, IPython and Jupyter notebooks ...
+.. code-block:: python
 
-Using Gammapy from the Jupyter notebooks
-----------------------------------------
+    """Example Python script using Gammapy"""
+    from gammapy.data import DataStore
+    data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
+    events = data_store.obs(obs_id=23523).events
+    print(events.energy.mean())
 
-In the last section you've seen how to use Gammapy as a Python package. To
-become good at using it, you have to learn the Gammapy API (application
-programming interface). One way to do this is to read documentation. A more
-interactive (and arguably more fun) way is to play with Gammapy code and
-gamma-ray data in Jupyter notebooks.
+You can run it with Python:
 
-Jupyter notebooks are documents that combine code input and text and graphical
-output, and are wonderful tools to learn and explore (both programming and the
-data), and finally to share results with your colleagues.
+.. code-block:: bash
 
-So now is a good time to have a look here: :ref:`tutorials`. Try executing the
-cells locally on your machine as you read through the text and code.
+    $ python example.py
+    4.418007850646973 TeV
 
-Using Gammapy via command line tools
-------------------------------------
+If you want to continue with interactive data or results analysis after
+running some Python code, use IPython like this:
 
-The ``gammapy`` command line tool lets you execute some very common analysis
-tasks directly from the command line. Try this::
+.. code-block:: bash
 
-    $ gammapy --help
-    $ gammapy --version
+    $ ipython -i example.py
 
-Further information about the ``gammapy`` command line interface is here:
-:ref:`scripts`
+Command line
+++++++++++++
 
-That page also includes information how the ``gammapy`` command line tool works
-and what to do if it doesn't work (likely you have to add the ``bin`` directory
-where Gammapy is installed to your ``PATH`` shell environment variable). It even
-has a section with a tutorial how to write your own command line tools if this
-is something you want.
+As you have already seen, installing Gammapy gives you a ``gammapy`` command line
+tool with subcommands such as ``gammapy info`` or ``gammapy download``.
 
-What next?
-----------
+We plan to add a high-level interface to Gammapy soon that will let you run
+Gammapy analyses via the command line interface, probably driven by a config
+file. This is not available yet, for now you have to use Gammapy as a Python
+package.
 
-If you'd like to continue with tutorials to learn Gammapy, go here:
+Jupyter notebooks
++++++++++++++++++
+
+To learn more about Gammapy, and also for interactive data analysis in general,
+we recommend you use Jupyter notebooks. Assuming you have Gammapy installed and
+the Gammapy conda environment activated, and your terminal current working
+directory is the ``gammapy-tutorials`` folder as explained above, start
+`JupyterLab`_ like this:
+
+.. code-block:: bash
+
+    $ jupyter lab
+
+This should open up your the JupyterLab app in your web browser, where you can
+create new Jupyter notebooks or open up existing ones.
+
+If you haven't used Jupyter before, try typing ``print("Hello Jupyter")`` in the
+first input cell, and use the keyboard shortcut ``SHIFT + ENTER`` to execute it.
+
+If you have problems and think you might not be using the right Python or
+importing Gammapy isn't working or giving you the right version, checking your
+Python executable and import path might help you find the issue:
+
+.. code-block:: python
+
+    import sys
+    print(sys.executable)
+    print(sys.path)
+
+To check which Gammapy you are using you can use this:
+
+.. code-block:: python
+
+    import gammapy
+    print(gammapy)
+    print(gammapy.__version__)
+
+Now you should be all set and to use Gammapy. Let's move on to the
 :ref:`tutorials`.
-
-To learn about some specific functionality that could be useful for your work,
-start browsing the "Getting Started" section of Gammapy sub-package that might
-be of interest to you (e.g. `gammapy.data`, `gammapy.catalog`,
-`gammapy.spectrum`, ...).

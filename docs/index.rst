@@ -7,8 +7,8 @@
 
 
 Gammapy is a community-developed, open-source Python package for gamma-ray
-astronomy. It is a prototype for the `CTA`_ science tools. This page (
-http://docs.gammapy.org ) contains the Gammapy documentation. The Gammapy
+astronomy. It is a prototype for the `CTA`_ science tools. This page
+(http://docs.gammapy.org ) contains the Gammapy documentation. The Gammapy
 webpage ( http://gammapy.org ) contains information about Gammapy, including
 news and contact information if you have any questions, want to report and issue
 or request a feature, or need help with anything Gammapy-related.
@@ -18,16 +18,16 @@ or request a feature, or need help with anything Gammapy-related.
 Getting started
 ---------------
 
-Gammapy works with Python 2 and 3, on Linux, Mac OS X and (partly) Windows. See
-:ref:`install` for information how to get started and the :ref:`tutorials` to
-start to learn how to use Gammapy.
+Gammapy works with Python 2 and 3, on Linux, Mac OS X and Windows. To get
+started, we recommend you follow the installation and setup instructions in
+:ref:`getting-started` and then learn Gammapy via the Jupyter :ref:`tutorials`.
 
 .. toctree::
     :maxdepth: 1
 
-    install/index
     getting-started
     tutorials
+    install/index
 
 .. _gammapy_package:
 

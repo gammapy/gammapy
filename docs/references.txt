@@ -29,7 +29,8 @@
 .. _pandas: http://pandas.pydata.org
 .. _pip: https://pip.pypa.io/en/stable/
 .. _pip install instructions: https://pip.pypa.io/en/latest/installing.html#install-pip
-.. _conda: http://conda.pydata.org/
+.. _conda: https://conda.io/docs/
+.. _conda cheat sheet: https://conda.io/docs/_downloads/conda-cheatsheet.pdf
 .. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
 .. _healpy: https://healpy.readthedocs.io/en/latest/
 .. _HEALPix: https://en.wikipedia.org/wiki/HEALPix
@@ -86,6 +87,7 @@
 .. _Gammapy mailing list: https://groups.google.com/forum/#!forum/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
 .. _Gammapy documentation: http://docs.gammapy.org/
+.. _Gammapy contact: http://gammapy.org/contact.html
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
 .. _Gammapy page on PyPI: https://pypi.org/project/gammapy
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
@@ -106,7 +108,8 @@
 
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
 
-.. _Gammapy tutorial notebooks on nbviewer: https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/index.ipynb
+.. _Jupyter: http://jupyter.org
+.. _JupyterLab: https://jupyterlab.readthedocs.io/
 .. _nbsphinx: https://nbsphinx.readthedocs.io
 .. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
 

@@ -1,5 +1,15 @@
 .. include:: ../references.txt
 
+.. note::
+
+    The recommended way to install Gammapy is to use conda and to follow
+    the simple instructions in :ref:`getting-started`.
+
+    This section contains some additional information concerning the conda
+    installation as well as information on alternative ways to install Gammapy and
+    it's dependencies like Numpy and Astropy, e.g. using pip or Macports or your
+    Linux package manager.
+
 .. _install:
 
 ************
