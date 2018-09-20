@@ -392,7 +392,7 @@ class TestFluxPointFit:
             )
 
         ts_diff = profile['likelihood'] - result.total_stat
-        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2)
+        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=5e-2)
 
 
         value = result.model.parameters["amplitude"].value
@@ -406,5 +406,5 @@ class TestFluxPointFit:
                 )
 
         ts_diff = profile['likelihood'] - result.total_stat
-        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2)
+        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=5e-2)
 
