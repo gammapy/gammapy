@@ -491,19 +491,20 @@ class WcsNDMap(WcsMap):
         lat.grid(alpha=0.2, linestyle="solid", color="w")
         return ax
 
-    def smooth(self, radius, kernel="gauss", **kwargs):
+    def smooth(self, width, kernel="gauss", **kwargs):
         """
         Smooth the image (works on a 2D image and returns a copy).
 
-        The definition of the smoothing parameter radius is equivalent to the
-        one that is used in ds9 (see `ds9 smoothing <http://ds9.si.edu/doc/ref/how.html#Smoothing>`_).
 
         Parameters
         ----------
-        radius : `~astropy.units.Quantity` or float
+        width : `~astropy.units.Quantity` or float
             Smoothing width given as quantity or float. If a float is given it
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
+            It corresponds to the standard deviation in case of a Gaussian kernel,
+            the radius in case of a disk kernel, and the side length in case
+            of a box kernel.
         kernel : {'gauss', 'disk', 'box'}
             Kernel shape
         kwargs : dict
@@ -518,22 +519,19 @@ class WcsNDMap(WcsMap):
         """
         from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
-        if isinstance(radius, u.Quantity):
-            radius = (radius.to("deg") / self.geom.pixel_scales.mean()).value
+        if isinstance(width, u.Quantity):
+            width = (width.to("deg") / self.geom.pixel_scales.mean()).value
 
         smoothed_data = np.empty_like(self.data)
 
         for img, idx in self.iter_by_image():
             if kernel == "gauss":
-                width = radius / 2.
                 data = gaussian_filter(img, width, **kwargs)
             elif kernel == "disk":
-                width = 2 * radius + 1
                 disk = Tophat2DKernel(width)
                 disk.normalize("integral")
                 data = convolve(img, disk.array, **kwargs)
             elif kernel == "box":
-                width = 2 * radius + 1
                 data = uniform_filter(img, width, **kwargs)
             else:
                 raise ValueError("Invalid kernel: {!r}".format(kernel))

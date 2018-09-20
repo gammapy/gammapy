@@ -659,7 +659,7 @@ class EventList(EventListBase):
         }
         m = WcsNDMap.create(**opts)
         m.fill_by_coord(self.radec)
-        m = m.smooth(radius=1)
+        m = m.smooth(width=1)
         return m
 
     def plot_image(self):
