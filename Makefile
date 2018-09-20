@@ -98,6 +98,8 @@ doc-show:
 	open docs/_build/html/index.html
 
 docs-all:
+	which python
+	pip install -e .
 	python process_tutorials.py tutorials/
 	python setup.py build_docs
 
