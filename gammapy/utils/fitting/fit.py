@@ -50,7 +50,7 @@ class Fit(object):
             profiles[parname] = self.likelihood_profile(model, parname)
         return profiles
 
-    def likelihood_profile(self, model, parname, parvalues=None, nvalues=11, bounds=2):
+    def likelihood_profile(self, model, parname, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile for a single parameter of the model.
 
         Parameters
@@ -60,11 +60,15 @@ class Fit(object):
         parname : str
             Parameter to calculate profile for
         values : `~astropy.units.Quantity` (optional)
-            Parameter values
+            Parameter values to evaluate the likelihood for.
+        bounds : int or tuple of float
+            When an `int` is passed the bounds are computed from `bounds * sigma`
+            from the best fit value of the parameter, where `sigma` corresponds to
+            the one sigma error on the parameter. If a tuple of floats is given
+            those are taken as the min and max values and `nvalues` are linearly
+            spaced between those.
         nvalues : int
             Number of parameter grid points to use.
-        sigma : int
-            Pass
 
         Returns
         -------
@@ -75,7 +79,7 @@ class Fit(object):
 
         likelihood = []
 
-        if parvalues is None:
+        if values is None:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
