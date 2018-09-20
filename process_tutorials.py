@@ -84,29 +84,30 @@ def main():
 
     # convert into scripts
     # copy generated filled notebooks to doc
-    if passed:
+    # if passed:
 
-        if pathsrc == path_empty_nbs:
-            # copytree is needed to copy subfolder images
-            copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignoreall)
-            for path in path_static_nbs.glob("*.ipynb"):
-                subprocess.call(
-                    "jupyter nbconvert --to script '{}'".format(str(path)), shell=True
-                )
-            copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
-        else:
-            pathsrc = path_temp / notebookname
-            pathdest = path_static_nbs / notebookname
-            copyfile(str(pathsrc), str(pathdest))
+    if pathsrc == path_empty_nbs:
+        # copytree is needed to copy subfolder images
+        copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignoreall)
+        for path in path_static_nbs.glob("*.ipynb"):
             subprocess.call(
-                "jupyter nbconvert --to script '{}'".format(str(pathdest)), shell=True
+                "jupyter nbconvert --to script '{}'".format(str(path)), shell=True
             )
-            pathdest = path_filled_nbs / notebookname
-            copyfile(str(pathsrc), str(pathdest))
+        copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
     else:
-        logging.info("Tests have not passed.")
-        logging.info("Tutorials not ready for documentation building process.")
-        rmtree(str(path_static_nbs), ignore_errors=True)
+        pathsrc = path_temp / notebookname
+        pathdest = path_static_nbs / notebookname
+        copyfile(str(pathsrc), str(pathdest))
+        subprocess.call(
+            "jupyter nbconvert --to script '{}'".format(str(pathdest)), shell=True
+        )
+        pathdest = path_filled_nbs / notebookname
+        copyfile(str(pathsrc), str(pathdest))
+
+    # else:
+    #    logging.info("Tests have not passed.")
+    #    logging.info("Tutorials not ready for documentation building process.")
+    #    rmtree(str(path_static_nbs), ignore_errors=True)
 
     # tear down
     rmtree(str(path_temp), ignore_errors=True)
