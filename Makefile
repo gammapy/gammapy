@@ -101,12 +101,6 @@ docs-all:
 	python process_tutorials.py tutorials/
 	python setup.py build_docs
 
-travis-docs-all:
-	cp -R tutorials docs/notebooks
-	cp -R tutorials docs/_static/notebooks
-	jupyter nbconvert --to script docs/_static/notebooks/*.ipynb
-	python setup.py build_docs -w
-
 test-notebooks:
 	which python
 	pip install -e .
