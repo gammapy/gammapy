@@ -386,7 +386,7 @@ class TestFluxPointFit:
 
         profile = fitter.likelihood_profile(
             model=result.model,
-            parname="amplitude",
+            parameter="amplitude",
             nvalues=3,
             bounds=1
             )
@@ -401,7 +401,7 @@ class TestFluxPointFit:
 
         profile = fitter.likelihood_profile(
                 model=result.model,
-                parname="amplitude",
+                parameter="amplitude",
                 values=values,
                 )
 

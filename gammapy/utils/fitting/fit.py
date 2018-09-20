@@ -50,14 +50,14 @@ class Fit(object):
             profiles[parname] = self.likelihood_profile(model, parname)
         return profiles
 
-    def likelihood_profile(self, model, parname, values=None, bounds=2, nvalues=11):
+    def likelihood_profile(self, model, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile for a single parameter of the model.
 
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
             Model to compute the likelihood profile for.
-        parname : str
+        parameter : str
             Parameter to calculate profile for
         values : `~astropy.units.Quantity` (optional)
             Parameter values to evaluate the likelihood for.
@@ -83,14 +83,14 @@ class Fit(object):
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
-                parerr = model.parameters.error(parname)
-                parval = model.parameters[parname].value
+                parerr = model.parameters.error(parameter)
+                parval = model.parameters[parameter].value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
 
             values = np.linspace(parmin, parmax, nvalues)
 
         for value in values:
-            self._model.parameters[parname].value = value
+            self._model.parameters[parameter].value = value
             stat = self.total_stat(self._model.parameters)
             likelihood.append(stat)
 
@@ -124,8 +124,8 @@ class Fit(object):
 
         Returns
         -------
-        fit_result : `FitResult`
-            Fit result object with the best fit model and additional information.
+        fit_result : `dict`
+            Optimize info dict with the best fit model and additional information.
         """
         parameters = self._model.parameters
 
@@ -145,7 +145,7 @@ class Fit(object):
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
 
-        return FitResult(
+        return dict(
             model=self._model.copy(),
             total_stat=self.total_stat(self._model.parameters),
             backend=backend,
@@ -155,18 +155,19 @@ class Fit(object):
 
     # TODO: this is a preliminary solution to restore the old behaviour, that's
     # why the method is hidden.
-    def _estimate_errors(self, fit_result):
+    def _estimate_errors(self, model):
         """Run the error estimation"""
-        parameters = fit_result.model.parameters
+        parameters = model.parameters
 
-        if self.minuit.covariance is not None:
+        if hasattr(self, "minuit"):
             covar = _get_covar(self.minuit)
             parameters.set_covariance_factors(covar)
             self._model.parameters.set_covariance_factors(covar)
         else:
-            log.warning("No covariance matrix found")
+            log.warning("No covariance matrix found. Error estimation currently"
+                        " only works with iminuit backend.")
             parameters.covariance = None
-        return fit_result
+        return model
 
     def run(self, steps="all", optimize_opts=None, profile_opts=None):
         """
@@ -174,10 +175,12 @@ class Fit(object):
 
         Parameters
         ----------
-        steps : {"all", "optimize", "errors"}
+        steps : {"all", "optimize", "errors", "profiles"}
             Which fitting steps to run.
         optimize_opts : dict
             Options passed to `Fit.optimize`.
+        profile_opts : dict
+            Options passed to `Fit.likelihood_profiles`.
 
         Returns
         -------
@@ -193,21 +196,20 @@ class Fit(object):
             result = self.optimize(**optimize_opts)
 
         if "errors" in steps:
-            result = self._estimate_errors(result)
+            result["model"] = self._estimate_errors(result["model"])
 
         if "profiles" in steps:
             if profile_opts == None:
                 profile_opts = {}
+            result["likelihood_profiles"] = self.likelihood_profiles(result["model"], **profile_opts)
 
-            profiles = self.likelihood_profiles(result.model, **profile_opts)
-
-        return result
+        return FitResult(**result)
 
 
 class FitResult(object):
     """Fit result object."""
 
-    def __init__(self, model, success, nfev, total_stat, message, backend, method):
+    def __init__(self, model, success, nfev, total_stat, message, backend, method, likelihood_profiles=None):
         self._model = model
         self._success = success
         self._nfev = nfev
@@ -215,6 +217,7 @@ class FitResult(object):
         self._message = message
         self._backend = backend
         self._method = method
+        self._likelihood_profiles = likelihood_profiles
 
     @property
     def model(self):
@@ -251,6 +254,13 @@ class FitResult(object):
         """Optimizer method used for the fit."""
         return self._method
 
+    def to_dict(self):
+        """Convert to `dict` object"""
+        data = {}
+        for name in []:
+            data[name] = getattr(self, name)
+        return data
+
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
@@ -272,16 +282,24 @@ class FitResult(object):
 
         Parameters
         ----------
+        parameter : str
+            Parameter to plot profile for.
 
+        Returns
+        -------
+        ax : `matplotlib.pyplot.Axes`
+            Axes object.
         """
         import matplotlib.pyplot as plt
 
         if ax is None:
             ax = plt.gca()
 
-        likelihood = self.likelihood_profiles[parameter]['likelihood']
+        ts_diff = self.likelihood_profiles[parameter]['likelihood'] - self.total_stat
         values = self.likelihood_profiles[parameter]['values']
 
-        ax.plot(values, likelihood, **kwargs)
-        ax.set_xlabel(parameter)
-        ax.set_ylabel('Likelihood')
+        ax.plot(values, ts_diff, **kwargs)
+        unit = self.model.parameters[parameter].unit
+        ax.set_xlabel(parameter + "[unit]".format(unit=unit))
+        ax.set_ylabel('TS difference')
+        return ax
