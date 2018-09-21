@@ -159,9 +159,8 @@ install:
     - source ci-helpers/travis/setup_conda.sh
 
     - if $FETCH_GAMMAPY_DATA; then
-          pip install -e .;
-          gammapy download --out=${HOME}/gammapy-data datasets;
-          export GAMMAPY_DATA=${HOME}/gammapy-data/datasets;
+          git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;
+          export GAMMAPY_DATA=${HOME}/gammapy-extra/datasets;
       fi
 
     # From https://conda.io/docs/bdist_conda.html
