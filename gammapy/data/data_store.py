@@ -71,12 +71,14 @@ class DataStore(object):
         base_dir = make_path(base_dir)
 
         if hdu_table_filename:
+            hdu_table_filename = make_path(hdu_table_filename)
             if Path.exists(base_dir / hdu_table_filename):
                 hdu_table_filename = base_dir / hdu_table_filename
         else:
             hdu_table_filename = base_dir / cls.DEFAULT_HDU_TABLE
 
         if obs_table_filename:
+            obs_table_filename = make_path(obs_table_filename)
             if Path.exists(base_dir / obs_table_filename):
                 obs_table_filename = base_dir / obs_table_filename
         else:
