@@ -79,12 +79,13 @@ class DownloadProcess(object):
                 datafound.update(self.parse_datafiles(dssearch, jsondata))
 
             if not dssearch:
-                for item in self.listfiles:
-                    record = self.listfiles[item]
-                    if "datasets" in record:
-                        if record["datasets"] != "":
-                            for ds in record["datasets"]:
-                                datafound.update(self.parse_datafiles(ds, jsondata))
+                if self.option == "tutorials":
+                    for item in self.listfiles:
+                        record = self.listfiles[item]
+                        if "datasets" in record:
+                            if record["datasets"] != "":
+                                for ds in record["datasets"]:
+                                    datafound.update(self.parse_datafiles(ds, jsondata))
 
             if not datafound:
                 log.info("Dataset {} not found".format(self.src))
@@ -173,14 +174,13 @@ class DownloadProcess(object):
 
         datafiles = {}
         for dataset in jsondata:
-            if df == dataset["name"]:
+            if df == dataset["name"] or df == "":
                 if dataset["files"]:
                     for ds in dataset["files"]:
                         label = ds["path"]
                         datafiles[label] = {}
                         datafiles[label]["url"] = ds["url"]
                         datafiles[label]["path"] = ds["path"]
-
         return datafiles
 
     @staticmethod
