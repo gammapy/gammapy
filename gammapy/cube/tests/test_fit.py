@@ -126,5 +126,5 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars.error("amplitude"), 3.936e-13, rtol=1e-2)
 
-    assert result.model.spectral_model.covariance is not None
-    assert result.model.spatial_model.covariance is not None
+    assert result.model.spectral_model.parameters.covariance is not None
+    assert result.model.spatial_model.parameters.covariance is not None
