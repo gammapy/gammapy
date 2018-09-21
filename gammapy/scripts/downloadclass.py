@@ -73,6 +73,7 @@ class DownloadProcess(object):
         if self.option == "datasets" or self.option == "tutorials":
             datafound = {}
 
+            dssearch = ''
             if self.option == "datasets":
                 dssearch = self.src
                 datafound.update(self.parse_datafiles(dssearch, jsondata))
