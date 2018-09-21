@@ -377,3 +377,34 @@ class TestFluxPointFit:
         # Right now sherpa also fits the reference energy
         amplitude = result.model(1 * u.TeV).to("cm-2 s-1 TeV-1")
         assert_allclose(amplitude.value, 2.1616E-13, rtol=1e-3)
+
+    @requires_dependency("iminuit")
+    def test_likelihood_profile(self, sed_model, sed_flux_points):
+        optimize_opts = {"backend": "minuit"}
+        fitter = FluxPointFit(sed_model, sed_flux_points)
+        result = fitter.run(optimize_opts=optimize_opts)
+
+        profile = fitter.likelihood_profile(
+            model=result.model,
+            parameter="amplitude",
+            nvalues=3,
+            bounds=1
+            )
+
+        ts_diff = profile['likelihood'] - result.total_stat
+        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+
+
+        value = result.model.parameters["amplitude"].value
+        err = result.model.parameters.error("amplitude")
+        values = np.array([value - err, value, value + err])
+
+        profile = fitter.likelihood_profile(
+                model=result.model,
+                parameter="amplitude",
+                values=values,
+                )
+
+        ts_diff = profile['likelihood'] - result.total_stat
+        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+

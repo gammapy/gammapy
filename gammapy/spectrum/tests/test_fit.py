@@ -155,14 +155,13 @@ class TestFit:
         fit = SpectrumFit(
             obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
-        fit.run()
-        true_idx = fit.result[0].model.parameters["index"].value
-        scan_idx = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.likelihood_1d(
-            model=fit.result[0].model, parname="index", parvals=scan_idx
+        result = fit.run()
+        true_idx = result.model.parameters["index"].value
+        values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
+        profile = fit.likelihood_profile(
+            model=result.model, parameter="index", values=values
         )
-        argmin = np.argmin(profile)
-        actual = scan_idx[argmin]
+        actual = values[np.argmin(profile["likelihood"])]
         assert_allclose(actual, true_idx, rtol=0.01)
 
     @requires_dependency("matplotlib")
@@ -172,13 +171,11 @@ class TestFit:
             obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
 
-        scan_idx = np.linspace(1, 3, 20)
-        with mpl_plot_check():
-            fit.plot_likelihood_1d(
-                model=self.source_model, parname="index", parvals=scan_idx
-            )
-        # TODO: add assert, see issue 294
+        profile_opts = {"parameters": ["index"]}
+        result = fit.run(steps=["optimize", "errors", "profiles"], profile_opts=profile_opts)
 
+        with mpl_plot_check():
+            result.plot_likelihood_profile("index")
 
 @requires_dependency("sherpa")
 @requires_dependency("scipy")
