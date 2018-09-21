@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import subprocess
-from ..utils.scripts import Path, make_path
+from ..utils.scripts import make_path
 from ..utils.testing import Checker
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
@@ -72,25 +72,25 @@ class DataStore(object):
 
         if hdu_table_filename:
             hdu_table_filename = make_path(hdu_table_filename)
-            if Path.exists(base_dir / hdu_table_filename):
+            if (base_dir / hdu_table_filename).exists():
                 hdu_table_filename = base_dir / hdu_table_filename
         else:
             hdu_table_filename = base_dir / cls.DEFAULT_HDU_TABLE
 
         if obs_table_filename:
             obs_table_filename = make_path(obs_table_filename)
-            if Path.exists(base_dir / obs_table_filename):
+            if (base_dir / obs_table_filename).exists():
                 obs_table_filename = base_dir / obs_table_filename
         else:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
-        if not Path.exists(hdu_table_filename):
+        if not hdu_table_filename.exists():
             raise IOError("File not found: {}".format(hdu_table_filename))
         log.debug("Reading {}".format(hdu_table_filename))
         hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
-        if not Path.exists(obs_table_filename):
+        if not obs_table_filename.exists():
             raise IOError("File not found: {}".format(obs_table_filename))
         log.debug("Reading {}".format(str(obs_table_filename)))
         obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
