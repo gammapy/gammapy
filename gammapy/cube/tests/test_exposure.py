@@ -15,7 +15,7 @@ pytest.importorskip("healpy")
 
 @pytest.fixture(scope="session")
 def aeff():
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc//caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     return EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
 

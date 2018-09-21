@@ -13,7 +13,7 @@
 - name: astropy_introduction
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astropy_introduction.ipynb
   datasets:
-    - catalogs/fermi
+    - catalogs
 - name: cta_1dc_introduction
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_1dc_introduction.ipynb
   datasets:
@@ -36,7 +36,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/detect_ts.ipynb
   datasets:
     - fermi_survey
-    - catalogs/fermi
+    - catalogs
 - name: fermi_lat
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/fermi_lat.ipynb
   datasets:
@@ -46,12 +46,7 @@
   datasets:
     - fermi_2fhl
     - images
-    - catalogs/fermi
-- name: hess
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hess.ipynb
-  requires: iminuit
-  datasets:
-    - hess-dl3-dr1
+    - catalogs
 - name: hgps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
 - name: image_fitting_with_sherpa
@@ -75,8 +70,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting_gammacat_fermi.ipynb
   requires: iminuit
   datasets:
-    - catalogs/fermi
-    - catalogs/fermi
+    - catalogs
 - name: simulate_3d
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/simulate_3d.ipynb
   requires: iminuit

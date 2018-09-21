@@ -445,7 +445,7 @@ class CWTData(object):
     --------
     >>> from gammapy.maps import Map
     >>> from gammapy.detect import CWTData
-    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
+    >>> filename = '$GAMMAPY_DATA/fermi_survey/all.fits.gz'
     >>> image = Map.read(filename, hdu='COUNTS')
     >>> background = Map.read(filename, hdu='BACKGROUND')
     >>> data = CWTData(counts=image, background=background, n_scale=2)

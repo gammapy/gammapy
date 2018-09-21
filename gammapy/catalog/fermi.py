@@ -351,7 +351,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
                 filename = de["Spatial_Filename"].strip()
                 path = make_path(
-                    "$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v15/Templates/"
+                    "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
                 return SkyDiffuseMap.read(path / filename)
             elif morph_type == "2D Gaussian":
@@ -953,7 +953,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
             elif morph_type in ["SpatialMap"]:
                 filename = de["Spatial_Filename"].strip()
                 path = make_path(
-                    "$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/"
+                    "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
                 )
                 return SkyDiffuseMap.read(path / filename)
             elif morph_type == "RadialGauss":
@@ -1019,7 +1019,7 @@ class SourceCatalog3FGL(SourceCatalog):
     }
 
     def __init__(
-        self, filename="$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psc_v16.fit.gz"
+        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v16.fit.gz"
     ):
         filename = str(make_path(filename))
 
@@ -1126,7 +1126,7 @@ class SourceCatalog1FHL(SourceCatalog):
     source_object_class = SourceCatalogObject1FHL
 
     def __init__(
-        self, filename="$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v07.fit.gz"
+        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v07.fit.gz"
     ):
         filename = str(make_path(filename))
 
@@ -1160,7 +1160,7 @@ class SourceCatalog2FHL(SourceCatalog):
     source_object_class = SourceCatalogObject2FHL
 
     def __init__(
-        self, filename="$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v08.fit.gz"
+        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz"
     ):
         filename = str(make_path(filename))
 
@@ -1203,7 +1203,7 @@ class SourceCatalog3FHL(SourceCatalog):
     }
 
     def __init__(
-        self, filename="$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v13.fit.gz"
+        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v13.fit.gz"
     ):
         filename = str(make_path(filename))
 

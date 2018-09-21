@@ -22,7 +22,7 @@ You can use the `~gammapy.data.EventList` class to load IACT gamma-ray event lis
 .. code-block:: python
 
     >>> from gammapy.data import EventList
-    >>> filename = '$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
     >>> events = EventList.read(filename)
 
 To load Fermi-LAT event lists, use the `~gammapy.data.EventListLAT` class:
@@ -30,7 +30,7 @@ To load Fermi-LAT event lists, use the `~gammapy.data.EventListLAT` class:
 .. code-block:: python
 
     >>> from gammapy.data import EventListLAT
-    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
+    >>> filename = '$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz'
     >>> events = EventListLAT.read(filename)
 
 The other main class in `gammapy.data` is the `~gammapy.data.DataStore`, which makes it easy
@@ -39,7 +39,7 @@ to load IACT data. E.g. an alternative way to load the events for observation ID
 .. code-block:: python
 
     >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1')
+    >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
     >>> events = data_store.obs(23523).events
 
 Using `gammapy.data`

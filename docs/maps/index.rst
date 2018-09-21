@@ -397,7 +397,7 @@ of the original map will be copied over to the projected map.
 
     from gammapy.maps import WcsNDMap, HpxGeom
 
-    m = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/fermi_3fhl/gll_iem_v06_cutout.fits')
+    m = WcsNDMap.read('$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits')
     geom = HpxGeom.create(nside=8, coordsys='GAL')
     # Convert LAT standard IEM to HPX (nside=8)
     m_proj = m.reproject(geom)
@@ -546,7 +546,7 @@ This example shows how to fill a counts cube from an FT1 file:
     m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
                         coordsys='CEL', axes=[energy_axis])
 
-    events = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
+    events = EventList.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz')
 
     m.fill_by_coord({'skycoord': events.radec, 'energy': events.energy})
     m.write('ccube.fits', conv='fgst-ccube')
@@ -564,7 +564,7 @@ using the `~Map.cutout` method:
     from astropy import units as u
     from astropy.coordinates import SkyCoord
 
-    m = WcsNDMap.read('$GAMMAPY_EXTRA/datasets/fermi_3fhl/gll_iem_v06_cutout.fits')
+    m = WcsNDMap.read('$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits')
     position = SkyCoord(0, 0, frame="galactic", unit="deg")
     m_cutout = m.cutout(position=position, width=(5 * u.deg, 2 * u.deg))
     m_cutout.write('cutout.fits', conv='fgst-template')

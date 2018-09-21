@@ -517,7 +517,7 @@ class GammaCatDataCollection(object):
         self.data_index = data_index
 
     @classmethod
-    def from_index_file(cls, filename="$GAMMA_CAT/docs/data/gammacat-datasets.json"):
+    def from_index_file(cls, filename="$GAMMA_CAT/output/gammacat-datasets.json"):
         """Create from index file."""
         path = make_path(filename)
         # TODO: make a list of `GammaCatResource`, as well as a dict by ``resource_id`` for lookup!

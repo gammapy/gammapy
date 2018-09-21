@@ -4,7 +4,7 @@ from astropy.coordinates import Angle
 from gammapy.maps import Map
 from gammapy.image import MapPanelPlotter
 
-filename = "$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz"
+filename = "$GAMMAPY_DATA/fermi_survey/all.fits.gz"
 survey_map = Map.read(filename, hdu="counts")
 survey_map.data = survey_map.data.astype("float")
 smoothed_map = survey_map.smooth(width=Angle(0.1, unit="deg"))

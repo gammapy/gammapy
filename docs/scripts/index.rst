@@ -194,8 +194,8 @@ the counts image we're creating.
       -h, --help   Show this message and exit.
 
     $ gammapy image bin \
-        $GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz \
-        $GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz \
+        $GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz \
+        $GAMMAPY_DATA/fermi_survey/all.fits.gz \
         out.fits
     INFO:gammapy.scripts.image_bin:Executing cli_image_bin
     INFO:gammapy.scripts.image_bin:Reading /Users/deil/code/gammapy-extra/datasets/fermi_2fhl/2fhl_events.fits.gz
@@ -205,7 +205,7 @@ the counts image we're creating.
 If you have the FTOOLS_ installed or other tools that can work with the files
 that Gammapy supports, you can of course use them together::
 
-    $ ftlist $GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz H
+    $ ftlist $GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz H
 
             Name               Type       Dimensions
             ----               ----       ----------

@@ -1244,7 +1244,7 @@ class TableModel(SpectralModel):
         Fill table from an EBL model (Franceschini, 2008)
 
         >>> from gammapy.spectrum.models import TableModel
-        >>> filename = '$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz'
+        >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
         """
         filename = str(make_path(filename))
@@ -1434,9 +1434,9 @@ class Absorption(object):
             `Link <http://adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
         """
         models = dict()
-        models["franceschini"] = "$GAMMAPY_EXTRA/datasets/ebl/ebl_franceschini.fits.gz"
-        models["dominguez"] = "$GAMMAPY_EXTRA/datasets/ebl/ebl_dominguez11.fits.gz"
-        models["finke"] = "$GAMMAPY_EXTRA/datasets/ebl/frd_abs.fits.gz"
+        models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+        models["dominguez"] = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
+        models["finke"] = "$GAMMAPY_DATA/ebl/frd_abs.fits.gz"
 
         return cls.read(models[name])
 
