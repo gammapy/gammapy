@@ -39,6 +39,8 @@ def cli_download_datasets(ctx):
     downloadproc.files()
     downloadproc.run()
 
+    downloadproc.show_info()
+
 
 @click.command(name="tutorials")
 @click.pass_context

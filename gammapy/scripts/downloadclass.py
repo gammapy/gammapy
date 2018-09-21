@@ -111,12 +111,16 @@ class DownloadProcess(object):
 
         print("")
         print("")
-        print("***** Enter the following commands below to play with tutorials")
-        print("cd {}".format(localfolder))
-        print("conda env create -f {}".format(envfilename))
-        print("conda activate {}".format(condaname))
-        print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
-        print("jupyter lab")
+        if self.option == "datasets":
+            print("***** You might want to declare GAMMAPY_DATA env variable")
+            print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
+        else:
+            print("***** Enter the following commands below to play with tutorials")
+            print("cd {}".format(localfolder))
+            print("conda env create -f {}".format(envfilename))
+            print("conda activate {}".format(condaname))
+            print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
+            print("jupyter lab")
         print("")
 
     def parse_yaml(self):
