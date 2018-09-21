@@ -33,13 +33,20 @@ def test_datastore_hd_hap(data_store):
 @requires_data("gammapy-extra")
 def test_datastore_from_dir():
     """Test the `from_dir` method."""
-    data_store = DataStore.from_dir(
+    data_store_rel_path = DataStore.from_dir(
         "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/",
         "hdu-index.fits.gz",
         "obs-index.fits.gz",
     )
 
-    assert "Data store" in data_store.info(show=False)
+    data_store_abs_path = DataStore.from_dir(
+        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/",
+        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz",
+        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/obs-index.fits.gz",
+    )
+
+    assert "Data store" in data_store_rel_path.info(show=False)
+    assert "Data store" in data_store_abs_path.info(show=False)
 
 
 @requires_data("gammapy-extra")
