@@ -224,7 +224,7 @@ class SmartHDUList(object):
     object, and then stores it away in the ``hdu_list`` attribute:
 
     >>> from gammapy.utils.fits import SmartHDUList
-    >>> hdus = SmartHDUList.open('$GAMMAPY_EXTRA/datasets/catalogs/fermi/gll_psch_v08.fit.gz')
+    >>> hdus = SmartHDUList.open('$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz')
     >>> type(hdus.hdu_list)
     astropy.io.fits.hdu.hdulist.HDUList
 

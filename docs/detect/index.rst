@@ -57,7 +57,7 @@ The following example shows how to compute a TS image for Fermi-LAT survey data:
     from gammapy.detect import TSMapEstimator
     from gammapy.maps import Map
 
-    filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
+    filename = '$GAMMAPY_DATA/fermi_survey/all.fits.gz'
     maps = {}
     maps['counts'] = Map.read(filename, hdu='counts')
     maps['exposure'] = Map.read(filename, hdu='exposure')
@@ -88,7 +88,7 @@ dataset as above, the corresponding images can be computed using the
     from astropy.convolution import Tophat2DKernel
     from gammapy.maps import Map
     from gammapy.detect import compute_lima_image
-    filename = '$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz'
+    filename = '$GAMMAPY_DATA/fermi_survey/all.fits.gz'
     counts = Map.read(filename, hdu='COUNTS')
     background = Map.read(filename, hdu='BACKGROUND')
     kernel = Tophat2DKernel(5)

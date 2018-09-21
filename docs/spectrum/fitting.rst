@@ -25,7 +25,7 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
     from gammapy.spectrum.models import PowerLaw
     import matplotlib.pyplot as plt
 
-    path = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/"
+    path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
     obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
     obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
     obs_list = SpectrumObservationList([obs1, obs2])

@@ -30,7 +30,7 @@ def fill_map_counts(counts_map, events):
         from gammapy.maps import Map
         from gammapy.data import EventList
         from gammapy.cube import fill_map_counts
-        events = EventList.read('$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
+        events = EventList.read('$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits')
         counts = Map.create(coordsys='GAL', skydir=(0, 0), binsz=0.1, npix=(120, 100))
         fill_map_counts(counts, events)
         counts.plot()
@@ -41,8 +41,8 @@ def fill_map_counts(counts_map, events):
         from gammapy.maps import Map
         from gammapy.data import EventList
         from gammapy.cube import fill_map_counts
-        events = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz')
-        reference_map = Map.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+        events = EventList.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz')
+        reference_map = Map.read('$GAMMAPY_DATA/fermi_2fhl/fermi_2fhl_gc.fits.gz')
         counts = Map.from_geom(reference_map.geom)
         fill_map_counts(counts, events)
         counts.smooth(3).plot()

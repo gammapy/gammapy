@@ -26,7 +26,7 @@ def geom():
 
 @pytest.fixture(scope="session")
 def exposure(geom):
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     exposure_map = make_map_exposure_true_energy(
@@ -53,7 +53,7 @@ def edisp(geom):
 
 @pytest.fixture(scope="session")
 def psf(geom):
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)

@@ -7,12 +7,12 @@ from gammapy.irf import (
     Background3D,
 )
 
-filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
 event_list = EventList.read(filename)
 gti = GTI.read(filename)
 
 filename = (
-    "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 aeff = EffectiveAreaTable2D.read(filename)
 bkg = Background3D.read(filename)

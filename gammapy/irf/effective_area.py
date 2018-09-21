@@ -335,7 +335,7 @@ class EffectiveAreaTable2D(object):
     Here's an example you can use to learn about this class:
 
     >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> filename = '$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits'
+    >>> filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
     >>> aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
     >>> print(aeff)
     EffectiveAreaTable2D

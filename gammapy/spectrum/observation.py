@@ -71,7 +71,7 @@ class SpectrumObservation(object):
     ::
 
         from gammapy.spectrum import SpectrumObservation
-        filename = '$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/pha_obs23523.fits'
+        filename = '$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits'
         obs = SpectrumObservation.read(filename)
         print(obs)
     """
@@ -755,7 +755,7 @@ class SpectrumObservationStacker(object):
     Examples
     --------
     >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
-    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess')
+    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_DATA/joint-crab/spectra/hess')
     >>> obs_stacker = SpectrumObservationStacker(obs_list)
     >>> obs_stacker.run()
     >>> print(obs_stacker.stacked_obs)

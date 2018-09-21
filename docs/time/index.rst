@@ -73,7 +73,7 @@ TODO: apply this to the 2FHL events and check which sources are variable as a ni
 
     from gammapy.data import EventList
     from gammapy.time import exptest
-    events = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz ', hdu='EVENTS')
+    events = EventList.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz ', hdu='EVENTS')
     # TODO: cone select events for 2FHL catalog sources, compute mr for each and print 10 most variable sources
 
 Other codes

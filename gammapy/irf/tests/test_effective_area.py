@@ -12,7 +12,7 @@ from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 @pytest.fixture(scope="session")
 def aeff():
     filename = (
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1//data/hess_dl3_dr1_obs_id_023523.fits.gz"
+        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
     return EffectiveAreaTable2D.read(filename, hdu="AEFF")
 

@@ -458,7 +458,7 @@ class EventListBase(object):
         Load an example event list:
 
         >>> from gammapy.data import EventList
-        >>> events = EventList.read('$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
+        >>> events = EventList.read('$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
         Plot the offset^2 distribution wrt. the observation pointing position
         (this is a commonly used plot to check the background spatial distribution):
@@ -537,7 +537,7 @@ class EventList(EventListBase):
     To load an example H.E.S.S. event list:
 
     >>> from gammapy.data import EventList
-    >>> filename = '$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
     >>> events = EventList.read(filename)
     """
 
@@ -688,7 +688,7 @@ class EventListLAT(EventListBase):
     To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
 
     >>> from gammapy.data import EventListLAT
-    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
+    >>> filename = '$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz'
     >>> events = EventListLAT.read(filename)
     """
 

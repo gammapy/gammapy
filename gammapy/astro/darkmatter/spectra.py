@@ -64,7 +64,7 @@ class PrimaryFlux(object):
     @lazyproperty
     def table(self):
         """Lookup table (`~astropy.table.Table`)."""
-        filename = "$GAMMAPY_EXTRA/datasets/dark_matter_spectra/AtProduction_gammas.dat"
+        filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
         return Table.read(
             str(make_path(filename)),
             format="ascii.fast_basic",
