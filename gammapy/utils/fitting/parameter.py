@@ -309,6 +309,7 @@ class Parameters(object):
         for idx, par in enumerate(self.parameters):
             vals = self.covariance[idx]
             table[par.name] = vals
+            table[par.name].format = ".3e"
         return table
 
     @property
