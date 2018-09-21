@@ -28,6 +28,7 @@ Notebooks
    notebooks/cta_data_analysis.ipynb
    notebooks/analysis_3d.ipynb
    notebooks/simulate_3d.ipynb
+   notebooks/hess.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
    notebooks/spectrum_models.ipynb
@@ -46,6 +47,10 @@ Interested to do a first analysis of simulated CTA data?
 
 - `CTA first data challenge (1DC) with Gammapy <notebooks/cta_1dc_introduction.html>`__ | *cta_1dc_introduction.ipynb*
 - `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__ | *cta_data_analysis.ipynb*
+
+To get started with H.E.S.S. data analysis see here:
+
+- `H.E.S.S. with Gammapy <notebooks/hess.html>`__ | *hess.ipynb*
 
 3-dimensional cube analysis:
 
@@ -78,6 +83,7 @@ Extra topics
     notebooks/source_population_model.ipynb
     notebooks/cwt.ipynb
     notebooks/astro_dark_matter.ipynb
+    notebooks/background_model.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
@@ -85,6 +91,7 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Astrophysical source population modeling with Gammapy <notebooks/source_population_model.html>`__ | *source_population_model.ipynb*
 - `Continuous wavelet transform on gamma-ray images <notebooks/cwt.html>`__ | *cwt.ipynb*
 - `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
+- `Make template background model <notebooks/background_model.html>`__ | *background_model.ipynb*
 
 .. _tutorials_basics:
 
