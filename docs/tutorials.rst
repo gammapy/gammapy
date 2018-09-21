@@ -10,8 +10,9 @@ This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks
 You can read them here, or execute them using a temporary cloud server in Binder.
 
 To execute them locally, you have to first install Gammapy locally and download
-the tutorial notebooks and example datasets. The setup steps are described here:
-:ref:`getting-started`. Remember that you can always use ``gammapy info`` to check your setup.
+the tutorial notebooks and example datasets. The setup steps are described in
+:ref:`getting-started`. Once Gammapy installed, remember that you can always use
+``gammapy info`` to check your setup.
 
 .. _tutorials_notebooks:
 
@@ -91,8 +92,8 @@ Basics
 ------
 
 Gammapy is a Python package built on Numpy and Astropy, so for now you have to learn
-a bit of Python, Numpy and Astropy to be able to use Gammapy.
-To make plots you have to learn a bit of matplotlib.
+a bit of `Python`_, `Numpy`_ and `Astropy`_ to be able to use Gammapy.
+To make plots you have to learn a bit of `matplotlib`_.
 
 We plan to add a very simple to use high-level interface to Gammapy where you just have to
 adjust a config file, but that isn't available yet.
