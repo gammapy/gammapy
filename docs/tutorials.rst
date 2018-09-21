@@ -92,8 +92,8 @@ Basics
 ------
 
 Gammapy is a Python package built on Numpy and Astropy, so for now you have to learn
-a bit of `Python`_, `Numpy`_ and `Astropy`_ to be able to use Gammapy.
-To make plots you have to learn a bit of `matplotlib`_.
+a bit of Python, Numpy and Astropy to be able to use Gammapy.
+To make plots you have to learn a bit of matplotlib.
 
 We plan to add a very simple to use high-level interface to Gammapy where you just have to
 adjust a config file, but that isn't available yet.
