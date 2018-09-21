@@ -74,9 +74,10 @@ class DownloadProcess(object):
             datafound = {}
 
             if self.option == "datasets":
-                datafound.update(self.parse_datafiles(self.src, jsondata))
+                dssearch = self.src
+                datafound.update(self.parse_datafiles(dssearch, jsondata))
 
-            if not self.src:
+            if not dssearch:
                 for item in self.listfiles:
                     record = self.listfiles[item]
                     if "datasets" in record:
