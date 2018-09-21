@@ -160,6 +160,7 @@ install:
 
     - if $FETCH_GAMMAPY_DATA; then
           git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;
+          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
           export GAMMAPY_DATA=${HOME}/gammapy-extra/datasets;
       fi
 
