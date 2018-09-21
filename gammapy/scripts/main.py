@@ -69,12 +69,7 @@ def cli_image():
 
 
 @cli.group("download", short_help="Download datasets and notebooks")
-@click.option(
-    "--out",
-    prompt="destination folder",
-    default="gammapy-tutorials",
-    help="Folder where the files will be copied.",
-)
+@click.option("--out", default="gammapy-tutorials", help="Folder where the files will be copied.")
 @click.option("--src", default="", help="Specific notebook or dataset to download.")
 @click.option("--release", default="", help="Gammapy release for notebboks.")
 @click.pass_context
