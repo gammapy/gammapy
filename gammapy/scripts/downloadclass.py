@@ -12,7 +12,6 @@ from .. import version
 
 log = logging.getLogger(__name__)
 
-RELEASES = ["0.8"]
 BASE_URL = "http://gammapy.org/download"
 YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
 
@@ -37,13 +36,13 @@ class DownloadProcess(object):
         filepath_env = str(self.localfold / filename_env)
         url_env = BASE_URL + "/install/" + filename_env
 
-        if self.option == "datasets" or self.option == "tutorials":
+        if self.option == "tutorials":
             self.localfold = self.localfold / "datasets"
-        else:
+        if self.option == "notebooks":
             try:
                 urlopen(url_env)
             except Exception as ex:
-                log.info("Release {} not found".format(self.release))
+                log.error(ex)
                 exit()
             nbfolder = "notebooks-" + self.release
             self.localfold = self.localfold / nbfolder
@@ -192,5 +191,4 @@ class DownloadProcess(object):
             urlretrieve(url, filepath)
         except Exception as ex:
             log.error(filepath + " could not be copied.")
-            log.error(url)
             log.error(ex)

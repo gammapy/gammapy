@@ -13,12 +13,14 @@ log = logging.getLogger(__name__)
 
 
 @click.command(name="notebooks")
-@click.pass_context
-def cli_download_notebooks(ctx):
+@click.option("--src", default="", help="Specific notebook to download.")
+@click.option("--out", default="gammapy-notebooks", help="Path where the versioned notebook files will be copied.", show_default=True)
+@click.option("--release", default="", help="Gammapy release environment.")
+def cli_download_notebooks(src, out, release):
     """Download notebooks"""
 
     downloadproc = DownloadProcess(
-        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "notebooks"
+        src, out, release, "notebooks"
     )
 
     downloadproc.setup()
@@ -27,12 +29,13 @@ def cli_download_notebooks(ctx):
 
 
 @click.command(name="datasets")
-@click.pass_context
-def cli_download_datasets(ctx):
+@click.option("--src", default="", help="Specific dataset to download.")
+@click.option("--out", default="datasets", help="Path where datasets will be copied.", show_default=True)
+def cli_download_datasets(src, out):
     """Download datasets"""
 
     downloadproc = DownloadProcess(
-        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "datasets"
+        src, out, '', "datasets"
     )
 
     downloadproc.setup()
@@ -43,19 +46,21 @@ def cli_download_datasets(ctx):
 
 
 @click.command(name="tutorials")
-@click.pass_context
-def cli_download_tutorials(ctx):
+@click.option("--src", default="", help="Specific tutorial to download.")
+@click.option("--out", default="gammapy-tutorials", help="Path where notebooks and datasets folders will be copied.", show_default=True)
+@click.option("--release", default="", help="Gammapy release environment.")
+def cli_download_tutorials(src, out, release):
     """Download tutorial notebooks and datasets"""
 
     downnotebooks = DownloadProcess(
-        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "notebooks"
+        src, out, release, "notebooks"
     )
     downnotebooks.setup()
     downnotebooks.files()
     downnotebooks.run()
 
     downdatasets = DownloadProcess(
-        ctx.obj["src"], ctx.obj["out"], ctx.obj["release"], "tutorials"
+        src, out, release, "tutorials"
     )
     downdatasets.setup()
     downdatasets.files()
