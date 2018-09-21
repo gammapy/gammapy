@@ -69,7 +69,7 @@ def cli_image():
 
 
 @cli.group("download", short_help="Download datasets and notebooks")
-@click.option("--out", default="gammapy-tutorials", help="Folder where the files will be copied.")
+@click.option("--out", default="gammapy-tutorials", help="Path where notebooks and datasets folders will be copied.")
 @click.option("--src", default="", help="Specific notebook or dataset to download.")
 @click.option("--release", default="", help="Gammapy release for notebboks.")
 @click.pass_context
@@ -78,7 +78,7 @@ def cli_download(ctx, out, src, release):
 
     Download notebooks published as tutorials and the related datasets needed
     to execute them. It is also possible to download individual notebooks
-    or datasets. By default the files are copied  into a `gammapy-tutorials`
+    or datasets. By default the files are copied into a `gammapy-tutorials`
     folder created at the current working directory.
 
     \b
