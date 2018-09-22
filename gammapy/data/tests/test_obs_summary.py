@@ -17,7 +17,7 @@ class TestObservationSummaryTable:
     def setup_class(cls):
         data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
         obs_table = data_store.obs_table
-        obs_table = obs_table[obs_table["OBS_SUBSET_NAME"] == "Crab"]
+        obs_table = obs_table[obs_table["TARGET_NAME"] == "Crab"]
         target_pos = SkyCoord(83.633083, 22.0145, unit="deg")
         cls.table_summary = ObservationTableSummary(obs_table, target_pos)
 
