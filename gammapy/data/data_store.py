@@ -52,6 +52,29 @@ class DataStore(object):
         return self.info(show=False)
 
     @classmethod
+    def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
+        """Create from a FITS file.
+
+        The FITS file must contain both index files.
+
+        Parameters
+        ----------
+        filename : str, Path
+            FITS filename
+        hdu_hdu : str or int
+            FITS HDU name or number for the HDU index table
+        hdu_obs : str or int
+            FITS HDU name or number for the observation index table
+        """
+        filename = make_path(filename)
+
+        hdu_table = HDUIndexTable.read(filename, hdu=hdu_hdu, format="fits")
+
+        obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
+
+        return cls(hdu_table=hdu_table, obs_table=obs_table)
+
+    @classmethod
     def from_dir(cls, base_dir, hdu_table_filename=None, obs_table_filename=None):
         """Create from a directory.
 
