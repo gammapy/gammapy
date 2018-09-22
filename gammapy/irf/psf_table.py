@@ -628,7 +628,7 @@ class EnergyDependentTablePSF(object):
 
     def info(self):
         """Print basic info"""
-        print(self.__str__)
+        print(str(self))
 
     def plot_psf_vs_rad(self, energies=[1e4, 1e5, 1e6]):
         """Plot PSF vs radius.
