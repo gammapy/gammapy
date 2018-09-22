@@ -248,10 +248,10 @@ class TSMapEstimator(object):
 
         Parameters
         ----------
-        kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
-            Source model kernel.
         maps : dict
             Input sky maps.
+        kernel : `astropy.convolution.Kernel2D` or 2D `~numpy.ndarray`
+            Source model kernel.
         which : list of str or 'all'
             Which maps to compute.
         downsampling_factor : int
