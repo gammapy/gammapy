@@ -18,35 +18,34 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
-@pytest.mark.xfail
 @requires_dependency("yaml")
 def test_cli_download_datasets(files_dir):
-    filename = "data-register.yaml"
-    option_dest = "--dest=" + str(files_dir)
-    option_file = "--file=" + filename
+    dataset = "ebl"
+    option_out = "--out=" + str(files_dir)
+    option_src = "--src=" + dataset
 
-    args = ["download", option_file, option_dest, "datasets"]
+    args = ["download", "datasets", option_src, option_out]
     run_cli(cli, args)
 
-    filepath = Path(str(files_dir)) / "datasets" / filename
+    filepath = Path(str(files_dir)) / dataset
     assert filepath.exists()
 
 
-@pytest.mark.xfail
 @requires_dependency("yaml")
 def test_cli_download_notebooks(files_dir):
-    release = "master"
-    filename = "first_steps.ipynb"
-    envfilename = "environment-" + release + ".yml"
+    release = "0.8"
+    notebook = "first_steps"
+    nbfilename = notebook + ".ipynb"
+    envfilename = "gammapy-" + release + "-environment.yml"
     dirnbsname = "notebooks-" + release
-    option_dest = "--dest=" + str(files_dir)
-    option_file = "--file=" + filename
+    option_out = "--out=" + str(files_dir)
+    option_src = "--src=" + notebook
     option_release = "--release=" + release
 
-    args = ["download", option_file, option_dest, option_release, "notebooks"]
+    args = ["download", "notebooks", option_src, option_out, option_release]
     run_cli(cli, args)
 
     envfilepath = Path(str(files_dir)) / envfilename
-    nbfilepath = Path(str(files_dir)) / dirnbsname / filename
+    nbfilepath = Path(str(files_dir)) / dirnbsname / nbfilename
     assert envfilepath.exists()
     assert nbfilepath.exists()
