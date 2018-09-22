@@ -212,6 +212,10 @@ class TestFluxPointEstimator:
         actual = flux_points.table["dnde_errp"][0]
         assert_allclose(actual, np.nan, rtol=1e-2)
 
+        actual = flux_points.table["sqrt_ts"][0]
+        assert_allclose(actual, 13.66, rtol=1e-2)
+
+
     def test_spectrum_result(self):
         # TODO: Don't run this again
         flux_points = self.fpe.run()

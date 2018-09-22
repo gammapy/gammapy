@@ -755,40 +755,6 @@ class FluxPointEstimator(object):
             log.debug("Flux point upper limit computation failed.")
             return np.nan * u.Unit(model.parameters["amplitude"].unit)
 
-    def compute_flux_point_sqrt_ts(self, fit, stat_best_fit):
-        """
-        Compute sqrt(TS) for flux point.
-
-
-        Parameters
-        ----------
-        fit : `SpectrumFit`
-            Instance of spectrum fit.
-        stat_best_fit : float
-            TS value for best fit result.
-
-
-        Returns
-        -------
-        sqrt_ts : float
-            Sqrt(TS) for flux point.
-
-        """
-        model = fit.result[0].model.copy()
-        # store best fit amplitude, set amplitude of fit model to zero
-        amplitude = model.parameters["amplitude"].value
-
-        # determine TS value for amplitude zero
-        model.parameters["amplitude"].value = 0
-        stat_null = fit.total_stat(model.parameters)
-
-        # set amplitude of fit model to best fit amplitude
-        model.parameters["amplitude"].value = amplitude
-
-        # compute sqrt TS
-        ts = np.abs(stat_null - stat_best_fit)
-        return np.sign(amplitude) * np.sqrt(ts)
-
     def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
         from .fit import SpectrumFit
 
@@ -826,7 +792,7 @@ class FluxPointEstimator(object):
         stat_best_fit = result.total_stat
 
         dnde, dnde_err = result.model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
+        sqrt_ts = self.fit.sqrt_ts(result.model.parameters)
 
         dnde_ul = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit)
         dnde_errp = (

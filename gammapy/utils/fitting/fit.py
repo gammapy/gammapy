@@ -96,6 +96,25 @@ class Fit(object):
 
         return {"values": values, "likelihood": np.array(likelihood)}
 
+    def sqrt_ts(self, parameters):
+        """Compute the sqrt(TS) of a model against the null hypthesis, that
+        the amplitude of the model is zero.
+        """
+        stat_best_fit = self.total_stat(parameters)
+
+        # store best fit amplitude, set amplitude of fit model to zero
+        amplitude = parameters["amplitude"].value
+        parameters["amplitude"].value = 0
+        stat_null = self.total_stat(parameters)
+
+        # set amplitude of fit model to best fit amplitude
+        parameters["amplitude"].value = amplitude
+
+        # compute sqrt TS
+        ts = np.abs(stat_null - stat_best_fit)
+        return np.sign(amplitude) * np.sqrt(ts)
+
+
     def optimize(self, backend="minuit", **kwargs):
         """Run the optimization
 
