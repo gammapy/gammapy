@@ -33,7 +33,7 @@ def test_spectrum_analysis_iact(tmpdir):
 
     analysis = SpectrumAnalysisIACT(observations=obs_list(), config=config)
     analysis.run()
-    flux_points = analysis.flux_point_estimator.flux_points
+    flux_points = analysis.flux_points
 
     assert len(flux_points.table) == 4
 
