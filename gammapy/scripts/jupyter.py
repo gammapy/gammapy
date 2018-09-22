@@ -125,10 +125,10 @@ def cli_jupyter_test(ctx):
     """Check if Jupyter notebooks are broken."""
 
     for path in ctx.obj["paths"]:
-        test_notebook(path)
+        notebook_test(path)
 
 
-def test_notebook(path):
+def notebook_test(path):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 

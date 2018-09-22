@@ -7,7 +7,7 @@ import sys
 import logging
 from pkg_resources import working_set
 from gammapy.extern.pathlib import Path
-from gammapy.scripts.jupyter import test_notebook
+from gammapy.scripts.jupyter import notebook_test
 import yaml
 
 logging.basicConfig(level=logging.INFO)
@@ -58,7 +58,7 @@ def main():
         filename = notebook["name"] + ".ipynb"
         path = dirnbs / filename
 
-        if not test_notebook(path):
+        if not notebook_test(path):
             passed = False
 
     assert passed

@@ -8,7 +8,7 @@ import subprocess
 import sys
 from shutil import copyfile, copytree, rmtree
 from gammapy.extern.pathlib import Path
-from gammapy.scripts.jupyter import test_notebook
+from gammapy.scripts.jupyter import notebook_test
 
 
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +39,7 @@ def main():
 
     if len(sys.argv) != 2:
         logging.info("Usage:")
-        logging.info("python tutorials_process.py tutorials)
+        logging.info("python tutorials_process.py tutorials")
         logging.info("python tutorials_process.py tutorials/mynotebook.ipynb")
         sys.exit()
 
@@ -81,7 +81,7 @@ def main():
     # test /run
     passed = True
     for path in path_temp.glob("*.ipynb"):
-        if not test_notebook(path):
+        if not notebook_test(path):
             passed = False
 
     # convert into scripts
