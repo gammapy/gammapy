@@ -18,7 +18,7 @@ from ..fit import SpectrumFit
 from ..observation import SpectrumObservation
 from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, SpectralModel
-from ..flux_point import FluxPoints, FluxPointProfiles, FluxPointFit, FluxPointEstimator
+from ..flux_point import FluxPoints, FluxPointFit, FluxPointEstimator
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
@@ -226,16 +226,6 @@ class TestFluxPointEstimator:
 
         with mpl_plot_check():
             result.plot(energy_range=[1, 10] * u.TeV)
-
-
-@requires_data("gammapy-extra")
-class TestFluxPointProfiles:
-    def setup(self):
-        filename = "$GAMMAPY_EXTRA/datasets/spectrum/llsed_hights.fits"
-        self.sed = FluxPointProfiles.read(filename)
-
-    def test_basics(self):
-        assert isinstance(self.sed.table, Table)
 
 
 @pytest.fixture(params=FLUX_POINTS_FILES, scope="session")

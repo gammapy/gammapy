@@ -16,7 +16,6 @@ from . import SpectrumObservationList, SpectrumObservation
 
 __all__ = [
     "FluxPoints",
-    # 'FluxPointProfiles',
     "FluxPointEstimator",
     "FluxPointFit",
 ]
@@ -857,32 +856,6 @@ class FluxPointEstimator(object):
                 ("dnde_errn", dnde_errn),
             ]
         )
-
-
-class FluxPointProfiles(object):
-    """Flux point likelihood profiles.
-
-    See :ref:`gadf:likelihood_sed`.
-
-    TODO: merge this class with the classes in ``fermipy/castro.py``,
-    which are much more advanced / feature complete.
-    This is just a temp solution because we don't have time for that.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table holding the data
-    """
-
-    def __init__(self, table):
-        self.table = table
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read from file."""
-        filename = make_path(filename)
-        table = Table.read(str(filename), **kwargs)
-        return cls(table=table)
 
 
 class FluxPointFit(Fit):
