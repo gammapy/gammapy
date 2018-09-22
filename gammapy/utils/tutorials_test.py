@@ -23,7 +23,7 @@ def get_notebooks():
 
 def requirement_missing(notebook):
     """Check if one of the requirements is missing."""
-    if 'requires' in notebook:
+    if "requires" in notebook:
         if notebook["requires"] is None:
             return False
         for package in notebook["requires"].split():

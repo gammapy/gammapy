@@ -164,12 +164,8 @@ install:
           export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
       fi
 
-    # If breaks replace the block by the line below
-    # export GAMMAPY_DATA=${HOME}/gammapy-extra/datasets;
     - if $FETCH_GAMMAPY_DATA; then
-          pip install -e .;
-          gammapy download datasets --out ${HOME}/datasets;
-          export GAMMAPY_DATA=${HOME}/datasets;
+          export GAMMAPY_DATA=${HOME}/gammapy-extra/datasets;
       fi
 
     # From https://conda.io/docs/bdist_conda.html

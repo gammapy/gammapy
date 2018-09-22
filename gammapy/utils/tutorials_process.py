@@ -5,11 +5,12 @@ Process tutorials notebooks for publication in documentation.
 import logging
 import os
 import subprocess
+import argparse
 import sys
 from shutil import copyfile, copytree, rmtree
 from gammapy.extern.pathlib import Path
 from gammapy.scripts.jupyter import notebook_test
-
+from distutils.util import strtobool
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,17 +32,29 @@ def ignoreall(d, files): return [
 ]
 
 
-def setuo_sphinx_params():
-    pass
+def setup_sphinx_params(args):
+
+    flagnotebooks = "True"
+    setupfilename = "setup.cfg"
+    if not args.nbs:
+        flagnotebooks = "False"
+    build_notebooks_line = "build_notebooks = {}\n".format(flagnotebooks)
+    git_commit_line = "git_commit = {}\n".format(args.release)
+
+    file_str = ""
+    with open(setupfilename) as f:
+        for line in f:
+            if line.startswith("build_notebooks ="):
+                line = build_notebooks_line
+            if line.startswith("git_commit ="):
+                line = git_commit_line
+            file_str += line
+
+    with open(setupfilename, "w") as f:
+        f.write(file_str)
 
 
 def main():
-
-    if len(sys.argv) != 2:
-        logging.info("Usage:")
-        logging.info("python tutorials_process.py tutorials")
-        logging.info("python tutorials_process.py tutorials/mynotebook.ipynb")
-        sys.exit()
 
     if "GAMMAPY_DATA" not in os.environ:
         logging.info("GAMMAPY_DATA environment variable not set.")
@@ -49,8 +62,32 @@ def main():
         logging.info("Exiting now.")
         sys.exit()
 
+    # check params passed
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--src', help='Tutorial notebook or folder to process')
+    parser.add_argument('--release', help='Release tag for Binder links')
+    parser.add_argument('--nbs', help='Notebooks are considered in Sphinx')
+    args = parser.parse_args()
+
+    if not args.src:
+        args.src = "tutorials"
+    if not args.release:
+        args.release = "master"
+    if not args.nbs:
+        args.nbs = "True"
+
+    try:
+        args.nbs = strtobool(args.nbs)
+    except Exception as ex:
+        logging.error(ex)
+        sys.exit()
+    if not args.release.startswith("v") and args.release != "master":
+        args.release = "v" + args.release
+
+    setup_sphinx_params(args)
+
     # prepare folder structure
-    pathsrc = Path(sys.argv[1])
+    pathsrc = Path(args.src)
     path_temp = Path("temp")
     path_empty_nbs = Path("tutorials")
     path_filled_nbs = Path("docs") / "notebooks"

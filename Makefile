@@ -100,7 +100,7 @@ doc-show:
 docs-all:
 	which python
 	pip install -e .
-	python -m gammapy.utils.tutorials_process tutorials/
+	python -m gammapy.utils.tutorials_process --src="$(src)" --release="$(release)" --nbs="$(nbs)"
 	python setup.py build_docs
 
 test-notebooks:
