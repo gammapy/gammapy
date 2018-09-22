@@ -195,8 +195,7 @@ class TestFluxPointEstimator:
         assert_quantity_allclose(fit_range[1], group.energy_max)
 
     def test_values(self):
-        self.fpe.compute_points()
-        flux_points = self.fpe.flux_points
+        flux_points = self.fpe.run()
 
         actual = flux_points.table["dnde"][0]
         assert_allclose(actual, 2.361e-10, rtol=1e-2)
@@ -215,8 +214,8 @@ class TestFluxPointEstimator:
 
     def test_spectrum_result(self):
         # TODO: Don't run this again
-        self.fpe.compute_points()
-        result = SpectrumResult(model=self.fpe.model, points=self.fpe.flux_points)
+        flux_points = self.fpe.run()
+        result = SpectrumResult(model=self.fpe.model, points=flux_points)
 
         actual = result.flux_point_residuals[0][0]
         assert_allclose(actual, -0.058407, rtol=1e-2)

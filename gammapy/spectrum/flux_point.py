@@ -655,7 +655,14 @@ class FluxPointEstimator(object):
 
         self._obs = SpectrumObservationList(obs)
 
-    def compute_points(self):
+    def run(self):
+        """Run the flux point estimator
+        
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Estmated flux points.
+        """
         rows = []
         for group in self.groups:
             if group.bin_type != "normal":
@@ -667,7 +674,7 @@ class FluxPointEstimator(object):
 
         meta = OrderedDict([("method", "TODO"), ("SED_TYPE", "dnde")])
         table = table_from_row_data(rows=rows, meta=meta)
-        self.flux_points = FluxPoints(table)
+        return FluxPoints(table)
 
     def compute_flux_point(self, energy_group):
         log.debug("Computing flux point for energy group:\n{}".format(energy_group))
