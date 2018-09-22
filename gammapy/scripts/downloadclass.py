@@ -20,12 +20,14 @@ YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/n
 class DownloadProcess(object):
     """Manages the process of downloading content"""
 
-    def __init__(self, src, out, release, option):
+    def __init__(self, src, out, release, option, modetutor):
 
         self.src = src
         self.localfold = Path(out)
         self.release = release
+        self.getenvfile = release
         self.option = option
+        self.modetutor = modetutor
         self.listfiles = {}
         self.bar = 0
 
@@ -38,17 +40,20 @@ class DownloadProcess(object):
         filepath_env = str(self.localfold / filename_env)
         url_env = BASE_URL + "/install/" + filename_env
 
-        if self.option == "tutorials":
+        if self.option == "datasets" and self.modetutor:
             self.localfold = self.localfold / "datasets"
+
         if self.option == "notebooks":
-            try:
-                urlopen(url_env)
-            except Exception as ex:
-                log.error(ex)
-                exit()
-            nbfolder = "notebooks-" + self.release
-            self.localfold = self.localfold / nbfolder
-            self.get_file((url_env, filepath_env))
+            if self.modetutor or self.getenvfile:
+                nbfolder = "notebooks-" + self.release
+                self.localfold = self.localfold / nbfolder
+            if self.getenvfile:
+                try:
+                    urlopen(url_env)
+                    self.get_file((url_env, filepath_env))
+                except Exception as ex:
+                    log.error(ex)
+                    exit()
 
     def files(self):
 
@@ -57,7 +62,7 @@ class DownloadProcess(object):
         url_dat = BASE_URL + "/data/" + filename_dat
         jsondata = json.loads(urlopen(url_dat).read())
 
-        if self.option == "notebooks" or self.option == "tutorials":
+        if self.option == "notebooks" or self.modetutor:
             if self.src != "":
                 keyrec = "nb: " + self.src
                 if keyrec in self.listfiles:
@@ -71,16 +76,16 @@ class DownloadProcess(object):
             imagefiles = self.parse_imagefiles()
             self.listfiles.update(imagefiles)
 
-        if self.option == "datasets" or self.option == "tutorials":
+        if self.option == "datasets":
             datafound = {}
 
-            dssearch = ''
-            if self.option == "datasets":
-                dssearch = self.src
-                datafound.update(self.parse_datafiles(dssearch, jsondata))
+            search = ''
+            if self.option == "datasets" and not self.modetutor:
+                search = self.src
+                datafound.update(self.parse_datafiles(search, jsondata))
 
-            if not dssearch:
-                if self.option == "tutorials":
+            if not search:
+                if self.modetutor:
                     for item in self.listfiles:
                         record = self.listfiles[item]
                         if "datasets" in record:
@@ -123,8 +128,11 @@ class DownloadProcess(object):
             print("***** You might want to declare GAMMAPY_DATA env variable")
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
         else:
-            print("***** Enter the following commands below to get started with tutorials")
+            print("***** Enter the following commands below to get started with Gammapy")
             print("cd {}".format(localfolder))
+            if self.getenvfile:
+                print("conda env create -f {}".format(envfilename))
+                print("conda activate {}".format(condaname))
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
             print("jupyter lab")
         print("")

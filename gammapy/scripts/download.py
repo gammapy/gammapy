@@ -20,7 +20,7 @@ def cli_download_notebooks(src, out, release):
     """Download notebooks"""
 
     downloadproc = DownloadProcess(
-        src, out, release, "notebooks"
+        src, out, release, "notebooks", False
     )
 
     downloadproc.setup()
@@ -30,12 +30,12 @@ def cli_download_notebooks(src, out, release):
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
-@click.option("--out", default="datasets", help="Path where datasets will be copied.", show_default=True)
+@click.option("--out", default="gammapy-datasets", help="Path where datasets will be copied.", show_default=True)
 def cli_download_datasets(src, out):
     """Download datasets"""
 
     downloadproc = DownloadProcess(
-        src, out, '', "datasets"
+        src, out, '', "datasets", False
     )
 
     downloadproc.setup()
@@ -53,14 +53,14 @@ def cli_download_tutorials(src, out, release):
     """Download tutorial notebooks and datasets"""
 
     downnotebooks = DownloadProcess(
-        src, out, release, "notebooks"
+        src, out, release, "notebooks", True
     )
     downnotebooks.setup()
     downnotebooks.files()
     downnotebooks.run()
 
     downdatasets = DownloadProcess(
-        src, out, release, "tutorials"
+        src, out, release, "datasets", True
     )
     downdatasets.setup()
     downdatasets.files()

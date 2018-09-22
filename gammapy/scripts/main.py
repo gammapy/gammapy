@@ -74,11 +74,13 @@ def cli_download():
 
     Download notebooks published as tutorials and the related datasets needed
     to execute them. It is also possible to download individual notebooks
-    or datasets. If we choose the options `tutorials` or `notebooks` the
-    versioned file-structure of the tutorials together with a conda environment
-    file will be copied by default into a `gammapy-tutorials` folder created
-    at the current working directory. If we choose the option `datasets` the
-    files are copied  by default into a `datasets` folder.
+    or datasets. The option `tutorials` will download by default the versioned
+    file-structure of the  tutorials into a `gammapy-tutorials` folder created
+    at the current working directory. The option `datasets` will download by
+    default the datasets used by Gammapy into a `gammapy-datasets` folder
+    created at the current working directory. The option `notebooks` will
+    download by default the jupyter notebook files used in the tutorilas into
+    a `gammapy-notebooks` folder created at the current working directory.
 
     \b
     Examples
