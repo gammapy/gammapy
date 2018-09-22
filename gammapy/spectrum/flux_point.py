@@ -818,17 +818,12 @@ class FluxPointEstimator(object):
         for index in range(len(quality_orig)):
             self.obs[index].on_vector.quality = quality_orig[index]
 
-        log.debug(
-            "Calling Sherpa fit for flux point "
-            " in energy range:\n{}".format(self.fit)
-        )
-
         result = self.fit.run()
 
         # compute TS value for all observations
         stat_best_fit = result.total_stat
 
-        dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
+        dnde, dnde_err = result.model.evaluate_error(energy_ref)
         sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
 
         dnde_ul = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit)
