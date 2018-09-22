@@ -625,10 +625,12 @@ class FluxPointEstimator(object):
     """
 
     def __init__(self, obs, groups, model):
-        self.obs = obs
+        if isinstance(obs, SpectrumObservation):
+            obs = SpectrumObservationList([obs])
+        self._obs = SpectrumObservationList(obs)
+        
         self.groups = groups
         self.model = model
-        self.flux_points = None
         self._fit = None
 
     def __str__(self):
@@ -647,13 +649,6 @@ class FluxPointEstimator(object):
     def obs(self):
         """Observations participating in the fit"""
         return self._obs
-
-    @obs.setter
-    def obs(self, obs):
-        if isinstance(obs, SpectrumObservation):
-            obs = SpectrumObservationList([obs])
-
-        self._obs = SpectrumObservationList(obs)
 
     def run(self):
         """Run the flux point estimator
