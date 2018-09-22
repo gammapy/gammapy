@@ -4,20 +4,28 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import click
 import logging
+import os
 import subprocess
-import time
 import sys
+import time
 
 log = logging.getLogger(__name__)
 
 
 @click.command(name="run")
 @click.pass_context
-def cli_jupyter_run(ctx):
+@click.option("--tutoenv", is_flag=True, default=False, help="Tutorials environment?", show_default=True)
+def cli_jupyter_run(ctx, tutoenv):
     """Execute Jupyter notebooks."""
+
+    if tutoenv:
+        envpths = unsetenv()
 
     for path in ctx.obj["paths"]:
         execute_notebook(path)
+
+    if tutoenv:
+        envback(envpths)
 
 
 def execute_notebook(path, loglevel=20):
@@ -121,11 +129,18 @@ class BlackNotebook:
 
 @click.command(name="test")
 @click.pass_context
-def cli_jupyter_test(ctx):
+@click.option("--tutoenv", is_flag=True, default=False, help="Tutorials environment?", show_default=True)
+def cli_jupyter_test(ctx, tutoenv):
     """Check if Jupyter notebooks are broken."""
+
+    if tutoenv:
+        envpths = unsetenv()
 
     for path in ctx.obj["paths"]:
         notebook_test(path)
+
+    if tutoenv:
+        envback(envpths)
 
 
 def notebook_test(path):
@@ -161,3 +176,22 @@ def notebook_test(path):
         log.info("   ... FAILED")
         log.info(report)
         return False
+
+
+def unsetenv():
+
+    envpths = {}
+    envars = ["GAMMAPY_EXTRA", "CTADATA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA"]
+    for item in envars:
+        if item in os.environ:
+            envpths[item] = os.environ[item]
+            del os.environ[item]
+            logging.info("Unsetting {} environment variable.".format(item))
+    return envpths
+
+
+def envback(envpths):
+
+    for item in envpths:
+        os.environ[item] = envpths[item]
+        logging.info("Setting {}={}".format(item, envpths[item]))
