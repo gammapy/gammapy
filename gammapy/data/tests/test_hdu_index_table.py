@@ -52,7 +52,7 @@ def test_hdu_index_table_hd_hap():
         "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz"
     )
 
-    assert list(hdu_index.meta) == ["BASE_DIR"]
+    assert 'BASE_DIR' in hdu_index.meta
     assert hdu_index.base_dir == make_path("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
 
     # A few valid queries
@@ -63,7 +63,7 @@ def test_hdu_index_table_hd_hap():
 
     # The next line is to check if the HDU is still accessible
     # See https://github.com/gammapy/gammapy/issues/1775
-    assert hdu.filebytes() == 285120
+    assert hdu.filebytes() == 224640
 
     assert (
         str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
