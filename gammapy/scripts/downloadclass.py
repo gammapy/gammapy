@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import sys
+import multiprocessing as mp
 from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 from ..extern.pathlib import Path
 from .. import version
@@ -26,6 +27,7 @@ class DownloadProcess(object):
         self.release = release
         self.option = option
         self.listfiles = {}
+        self.bar = 0
 
     def setup(self):
 
@@ -46,7 +48,7 @@ class DownloadProcess(object):
                 exit()
             nbfolder = "notebooks-" + self.release
             self.localfold = self.localfold / nbfolder
-            self.get_file(url_env, filepath_env)
+            self.get_file((url_env, filepath_env))
 
     def files(self):
 
@@ -96,11 +98,17 @@ class DownloadProcess(object):
 
         log.info("Content will be downloaded in {}".format(self.localfold))
 
-        with click.progressbar(self.listfiles, label="Downloading files") as bar:
-            for f in bar:
-                url = self.listfiles[f]["url"]
-                path = self.localfold / self.listfiles[f]["path"]
-                self.get_file(url, str(path))
+        ftuplelist = []
+        pool = mp.Pool(5)
+        for rec in self.listfiles:
+            url = self.listfiles[rec]["url"]
+            path = self.localfold / self.listfiles[rec]["path"]
+            ftuple = (url, str(path))
+            ftuplelist.append(ftuple)
+            pool.apply_async(self.get_file, args=(ftuple,), callback=self.progressbar)
+        pool.close()
+        pool.join()
+        pool.close()
 
     def show_info(self):
 
@@ -115,10 +123,8 @@ class DownloadProcess(object):
             print("***** You might want to declare GAMMAPY_DATA env variable")
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
         else:
-            print("***** Enter the following commands below to play with tutorials")
+            print("***** Enter the following commands below to get started with tutorials")
             print("cd {}".format(localfolder))
-            print("conda env create -f {}".format(envfilename))
-            print("conda activate {}".format(condaname))
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
             print("jupyter lab")
         print("")
@@ -182,9 +188,24 @@ class DownloadProcess(object):
                         datafiles[label]["path"] = ds["path"]
         return datafiles
 
-    @staticmethod
-    def get_file(url, filepath):
+    def progressbar(self, args):
 
+        self.bar += 1
+        barLength, status = 50, ""
+        progress = self.bar / len(self.listfiles)
+        if progress >= 1.:
+            progress, status = 1, "\r\n"
+        block = int(round(barLength * progress))
+        text = "\rDownloading files [{}] {:.0f}% {}".format(
+            "=" * block + "." * (barLength - block), round(progress * 100, 0),
+            status)
+        sys.stdout.write(text)
+        sys.stdout.flush()
+
+    @staticmethod
+    def get_file(ftuple):
+
+        url, filepath = ftuple
         try:
             ifolder = Path(filepath).parent
             ifolder.mkdir(parents=True, exist_ok=True)
