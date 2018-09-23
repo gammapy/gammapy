@@ -1,61 +1,86 @@
 .. _gammapy_0p8_release:
 
-0.8 (2018-08-15)
+0.8 (2018-09-23)
 ----------------
 
 Summary
 +++++++
 
-- Released on August 15, 2018 (`Gammapy 0.8 on PyPI <https://pypi.org/project/gammapy/0.8>`__)
+- Released on September 23, 2018 (`Gammapy 0.8 on PyPI <https://pypi.org/project/gammapy/0.8>`__)
 - 24 contributors (6 new)
-- 6 months of work (from Feb 28, 2018 to Aug 15, 2018)
-- 252 pull requests (not all listed below)
+- 7 months of work (from Feb 28, 2018 to Sep 23, 2018)
+- 314 pull requests (not all listed below)
 
 **What's new?**
 
-Gammapy v0.8 contains a big change: the new ``gammapy.maps`` is used for all
-map-based analysis (2D images and 3D cubes with an energy axis). The old
-SkyImage and SkyCube classes have been removed. All code and
-documentation has been updated to use ``gammapy.maps``. To learn about the new
-maps classes, see the ``intro_maps`` tutorial at :ref:`tutorials` and the
-:ref:`gammapy.maps <maps>` documentation page.
+Gammapy v0.8 features major updates to maps and modeling, as well as
+installation and how to get started with tutorial notebooks. It also contains
+many smaller additions, as well as many fixes and improvements.
 
-This release also contains a first version of new classes for modeling and fitting of 3D cubes.
-The classes in `gammapy.cube.models` (3D cube models), `gammapy.image.models` (2D image models)
-and `gammapy.spectrum.models` (1D spectrum models) are now all written using a simple modeling
-system in `gammapy.utils.modeling` (the ``Parameter`` and ``Parameters`` class) and can be
-fit with iminuit using `gammapy.utils.fitting`. Development of these models, and
-adding additional optional parameter optimisation and error estimation backends (e.g. Sherpa or emcee) is work in progress.
+The new ``gammapy.maps`` is now used for all map-based analysis (2D images and
+3D cubes with an energy axis). The old SkyImage and SkyCube classes have been
+removed. All code and documentation has been updated to use ``gammapy.maps``. To
+learn about the new maps classes, see the ``intro_maps`` tutorial at
+:ref:`tutorials` and the :ref:`gammapy.maps <maps>` documentation page.
 
-The ``analysis_3d`` notebook shows how to run a 3D analysis for IACT data using the
-``MapMaker`` and ``MapFit`` classes. The ``simulate_3d`` shows how to simulate and fit
-a source using CTA instrument response functions. The simulation is done on a binned
-3D cube, not via unbinned event sampling. The ``data_fermi_lat`` tutorial shows how to
-analyse high-energy Fermi-LAT data with events, exposure and PSF pre-computed using the
-Fermi science tools. You can find these tutorials and more at :ref:`tutorials`.
+The new ``gammapy.utils.fitting`` contains a simple modeling and fitting
+framework, that allows the use of ``iminuit`` and ``sherpa`` optimisers as
+"backends" for any fit in Gammapy. The classes in `gammapy.spectrum.models` (1D
+spectrum models) are updated, and `gammapy.image.models` (2D spatial models) and
+`gammapy.cube.models` (3D cube models) was added. The ``SpectrumFit`` class was
+updated and a ``MapFit`` to fit models to maps was added. This part of Gammapy
+remains work in progress, some changes and major improvements are planned for
+the coming months.
 
-A new addition in Gammapy v0.8 is :ref:`gammapy.astro.darkmatter <astro-darkmatter>`,
-which contains spatial and spectral models commonly used in dark matter searches
-using gamma-ray data.
+With Gammapy v0.8, we introduce the ``gammapy download`` command to download
+tutorial notebooks and example datasets. A step by step guide is here:
+:ref:`getting-started`. Previously tutorial notebooks were maintained in a
+separate ``gammapy-extra`` repository, which was inconvenient for users to clone
+and use, and more importantly wasn't version-coupled with the Gammapy code
+repository, causing major issues in this phase where Gammapy is still under
+heavy development.
 
-The number of optional dependencies used in Gammapy has been reduced. Sherpa is now
-an optional fitting backend, modeling is built-in in Gammapy. The following packages
-are no longer used in Gammapy: scikit-image, photutils, pandas, aplpy.
+The recommended way to install Gammapy (described at :ref:`getting-started`) is
+now to use conda and to create an environment with dependencies pinned to fixed
+versions to get a consistent and reproducible environment. E.g. the Gammapy v0.8
+environment uses Python 3.6, Numpy 1.15 and Astropy 3.0. As before, Gammapy is
+compatible with a wide range of versions of Numpy and Astropy from the past
+years and many installation options are available for Gammapy (e.g. pip or
+Macports) in addition to conda. But we wanted to offer this new "stable
+recommended environment" option for Gammapy as a default.
+
+The new ``analysis_3d`` notebook shows how to run a 3D analysis for IACT data
+using the ``MapMaker`` and ``MapFit`` classes. The ``simulate_3d`` shows how to
+simulate and fit a source using CTA instrument response functions. The
+simulation is done on a binned 3D cube, not via unbinned event sampling. The
+``fermi_lat`` tutorial shows how to analyse high-energy Fermi-LAT data with
+events, exposure and PSF pre-computed using the Fermi science tools. The
+``hess`` and ``light_curve`` tutorial show how to analyse data from the recent
+first H.E.S.S. test data release. You can find these tutorials and more at
+:ref:`tutorials`.
+
+Another addition in Gammapy v0.8 is :ref:`gammapy.astro.darkmatter
+<astro-darkmatter>`, which contains spatial and spectral models commonly used in
+dark matter searches using gamma-ray data.
+
+The number of optional dependencies used in Gammapy has been reduced. Sherpa is
+now an optional fitting backend, modeling is built-in in Gammapy. The following
+packages are no longer used in Gammapy: scikit-image, photutils, pandas, aplpy.
 The code quality and test coverage in Gammapy has been improved a lot.
 
-This release also contains a large number of small improvements and bug fixes to the existing code,
-listed below in the changelog.
+This release also contains a large number of small improvements and bug fixes to
+the existing code, listed below in the changelog.
 
 We are continuing to develop Gammapy at high speed, significant improvements on
-maps and modeling, but also on the data and IRF classes are planned for the coming
-months and the v0.9 release in fall 2019. We apologise if you are already using Gammapy
-for science studies and papers and have to update your scripts and notebooks to work with
-the new Gammapy version. If possible, just stick with a given stable version of Gammapy.
-If you need or want to update to a newer version, let us know if you have any issues or questions.
-We're happy to help!
+maps and modeling, but also on the data and IRF classes are planned for the
+coming months and the v0.9 release in fall 2019. We apologise if you are already
+using Gammapy for science studies and papers and have to update your scripts and
+notebooks to work with the new Gammapy version. If possible, stick with a given
+stable version of Gammapy. If you update to a newer version, let us know if you
+have any issues or questions. We're happy to help!
 
-Gammapy v0.8 works on Linux, MacOS and Windows,
-with Python 3.5, 3.6, 3.7 as well as legacy Python 2.7.
+Gammapy v0.8 works on Linux, MacOS and Windows, with Python 3.5, 3.6 as well as
+legacy Python 2.7.
 
 **Contributors:**
 
@@ -91,6 +116,15 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.8 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.8+is%3Amerged+>`__.
 
+- [#1822] Use GAMMAPY_DATA in Gammapy codebase (José Enrique Ruiz)
+- [#1821] Improve analysis 3D tutorial (Axel Donath)
+- [#1818] Add HESS and background modeling tutorial (Christoph Deil)
+- [#1812] Add Fit likelihood profile method (Axel Donath)
+- [#1808] Rewrite getting started, improve tutorials and install pages (Christoph Deil)
+- [#1800] Add ObservationTableChecker and improve EVENTS checker (Christoph Deil)
+- [#1799] Fix EnergyDispersion write and to_sherpa (Régis Terrier)
+- [#1791] Move tutorial notebooks to the Gammapy repository (José Enrique Ruiz)
+- [#1785] Unify API of Gammapy Fit classes (Axel Donath)
 - [#1764] Format all code in Gammapy black (Christoph Deil)
 - [#1761] Add black notebooks functionality (José Enrique Ruiz)
 - [#1760] Add conda env file for release v0.8 (José Enrique Ruiz)
@@ -198,16 +232,18 @@ Summary
 Installation:
 
 - Gammapy 0.7 supports legacy Python 2.7, as well as Python 3.5 and 3.6.
-  If you are still using Python 2.7 with Gammapy, please update to Python 3. Let us
-  know if you need any help with the update, or are blocked from updating for some reason,
-  by filling out the 1-minute `Gammapy installation questionnaire`_ form.
-  This will help us make a plan how to finish the Python 2 -> 3 transition and to set a timeline (`PIG 3`_).
+  If you are still using Python 2.7 with Gammapy, please update to Python 3. Let
+  us know if you need any help with the update, or are blocked from updating for
+  some reason, by filling out the 1-minute `Gammapy installation questionnaire`_
+  form. This will help us make a plan how to finish the Python 2 -> 3 transition
+  and to set a timeline (`PIG 3`_).
 - The Gammapy conda packages are now distributed via the ``conda-forge`` channel,
-  i.e. to install or update Gammapy use the command ``conda install gammapy -c conda-forge``.
-  Most other packages have also moved to ``conda-forge`` in the past years, the previously used
-  ``astropy`` and ``openastronomy`` channels are no longer needed.
-- We now have a conda ``environment.yml`` file that contains all packages used in the tutorials.
-  See instructions here: :ref:`tutorials`.
+  i.e. to install or update Gammapy use the command ``conda install gammapy -c
+  conda-forge``. Most other packages have also moved to ``conda-forge`` in the
+  past years, the previously used ``astropy`` and ``openastronomy`` channels are
+  no longer needed.
+- We now have a conda ``environment.yml`` file that contains all packages used
+  in the tutorials. See instructions here: :ref:`tutorials`.
 
 Documentation:
 
@@ -225,40 +261,46 @@ Documentation:
 Gammapy Python package:
 
 - This release contains many bug fixes and improvements to the existing code,
-  ranging from IRF interpolation to spectrum and lightcurve computation.
-  Most of the improvements (see the list of pull requests below) were driven by
-  user reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis.
-  Please update to the new version and keep filing bug reports and feature requests!
+  ranging from IRF interpolation to spectrum and lightcurve computation. Most of
+  the improvements (see the list of pull requests below) were driven by user
+  reports and feedback from CTA, HESS, MAGIC and Fermi-LAT analysis. Please
+  update to the new version and keep filing bug reports and feature requests!
 - A new sub-package `gammapy.maps` was added that features WCS and HEALPix based maps,
-  arbitrary extra axes in addition to the two spatial dimensions (e.g. energy, time or event type).
-  Support for multi-resolution and sparse maps is work in progress.
-  These new maps classes were implemented based on the experience gained from
-  the existing ``SkyImage`` and ``SkyCube`` classes as well as the Fermi science tools, Fermipy and pointlike.
-  Work on new analysis code based on ``gammapy.maps`` within Gammapy is starting now (see `PIG 2`_).
-  Users are encouraged to start using ``gammapy.maps`` in their scripts. The plan is to keep the
-  existing ``SkyImage`` and ``SkyCube`` and image / cube analysis code that we have now mostly unchanged
-  (only apply bugfixes), and to remove them at some future date after the transition to the use of
-  ``gammapy.maps`` within Gammapy (including all tests and documentation and tutorials) is complete and
-  users had some time to update their code. If you have any questions or need help with ``gammapy.maps``
-  or find an issue or missing feature, let us know!
+  arbitrary extra axes in addition to the two spatial dimensions (e.g. energy,
+  time or event type). Support for multi-resolution and sparse maps is work in
+  progress. These new maps classes were implemented based on the experience
+  gained from the existing ``SkyImage`` and ``SkyCube`` classes as well as the
+  Fermi science tools, Fermipy and pointlike. Work on new analysis code based on
+  ``gammapy.maps`` within Gammapy is starting now (see `PIG 2`_). Users are
+  encouraged to start using ``gammapy.maps`` in their scripts. The plan is to
+  keep the existing ``SkyImage`` and ``SkyCube`` and image / cube analysis code
+  that we have now mostly unchanged (only apply bugfixes), and to remove them at
+  some future date after the transition to the use of ``gammapy.maps`` within
+  Gammapy (including all tests and documentation and tutorials) is complete and
+  users had some time to update their code. If you have any questions or need
+  help with ``gammapy.maps`` or find an issue or missing feature, let us know!
 
 Command line interface:
 
-- The Gammapy command-line interface was changed to use a single command ``gammapy`` multiple
-  sub-commands (like ``gammapy info`` or ``gammapy image bin``). Discussions on developing
-  the high-level interface for Gammapy (e.g. as a set of command line tools, or a config file
-  driven analysis) are starting now. See :ref:`scripts`.
+- The Gammapy command-line interface was changed to use a single command
+  ``gammapy`` multiple sub-commands (like ``gammapy info`` or ``gammapy image
+  bin``). Discussions on developing the high-level interface for Gammapy (e.g.
+  as a set of command l ine tools, or a config file driven analysis) are starting
+  now. See :ref:`scripts`.
 
 
 Organisation:
 
-- A webpage at http://gammapy.org/ was set up, separate from the Gammapy documentation page http://docs.gammapy.org/ .
-- The Gammapy project and team organisation was set up with clear roles and responsibilities,
-  in a way to help the Gammapy project grow, and to support astronomers and projects like CTA using Gammapy better.
-  This is described at http://gammapy.org/team.html .
-- To improve the quality of Gammapy, we have set up a proposal-driven process for major improvements for Gammapy,
-  described in :ref:`pig-001`. We are now starting to use this to design a better low-level analysis code (`PIG 2`_)
-  and to define a plan to finish the Python 2-> 3 transition (`PIG 3`_).
+- A webpage at http://gammapy.org/ was set up, separate from the Gammapy
+  documentation page http://docs.gammapy.org/ .
+- The Gammapy project and team organisation was set up with clear roles and
+  responsibilities, in a way to help the Gammapy project grow, and to support
+  astronomers and projects like CTA using Gammapy better. This is described at
+  http://gammapy.org/team.html .
+- To improve the quality of Gammapy, we have set up a proposal-driven process
+  for major improvements for Gammapy, described in :ref:`pig-001`. We are now
+  starting to use this to design a better low-level analysis code (`PIG 2`_) and
+  to define a plan to finish the Python 2-> 3 transition (`PIG 3`_).
 
 .. _PIG 2: https://github.com/gammapy/gammapy/pull/1277
 .. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
