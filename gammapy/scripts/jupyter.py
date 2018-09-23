@@ -5,12 +5,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import click
 import logging
 import os
+from ..extern.pathlib import Path
 import subprocess
 import sys
 import time
 
 log = logging.getLogger(__name__)
-OFF = ["CTADATA", "GAMMA_CAT", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
+OFF = [
+    "CTADATA",
+    "GAMMA_CAT",
+    "GAMMAPY_DATA",
+    "GAMMAPY_EXTRA",
+    "GAMMAPY_FERMI_LAT_DATA",
+]
 
 
 @click.command(name="run")
@@ -25,7 +32,7 @@ OFF = ["CTADATA", "GAMMA_CAT", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
 def cli_jupyter_run(ctx, tutor):
     """Execute Jupyter notebooks."""
 
-    with environment(OFF, tutor):
+    with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
             execute_notebook(path)
 
@@ -141,7 +148,7 @@ class BlackNotebook:
 def cli_jupyter_test(ctx, tutor):
     """Check if Jupyter notebooks are broken."""
 
-    with environment(OFF, tutor):
+    with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
             notebook_test(path)
 
@@ -186,9 +193,10 @@ class environment:
     Helper for setting environmental variables
     """
 
-    def __init__(self, envs, tutor):
+    def __init__(self, envs, tutor, ctx):
         self.envs = envs
         self.tutor = tutor
+        self.ctx = ctx
 
     def __enter__(self):
 
@@ -198,6 +206,9 @@ class environment:
                 if item in os.environ:
                     del os.environ[item]
                     logging.info("Unsetting {} environment variable.".format(item))
+            pathgpdata = self.ctx.obj["pathsrc"].parent / "datasets"
+            os.environ["GAMMAPY_DATA"] = str(pathgpdata.absolute())
+            logging.info("Setting GAMMAPY_DATA={}".format(os.environ["GAMMAPY_DATA"]))
 
     def __exit__(self, type, value, traceback):
         if self.tutor:

@@ -128,7 +128,7 @@ def cli_jupyter(ctx, src):
     else:
         paths = [path]
 
-    ctx.obj = {"paths": paths}
+    ctx.obj = {"paths": paths, "pathsrc": path}
 
 
 def add_subcommands():
