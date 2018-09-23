@@ -206,8 +206,9 @@ class environment:
                 if item in os.environ:
                     del os.environ[item]
                     logging.info("Unsetting {} environment variable.".format(item))
-            pathgpdata = self.ctx.obj["pathsrc"].parent / "datasets"
-            os.environ["GAMMAPY_DATA"] = str(pathgpdata.absolute())
+            abspath = self.ctx.obj["pathsrc"].absolute()
+            datapath = abspath.parent / "datasets"
+            os.environ["GAMMAPY_DATA"] = str(datapath)
             logging.info("Setting GAMMAPY_DATA={}".format(os.environ["GAMMAPY_DATA"]))
 
     def __exit__(self, type, value, traceback):
