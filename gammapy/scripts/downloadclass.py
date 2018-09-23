@@ -14,7 +14,9 @@ from .. import version
 log = logging.getLogger(__name__)
 
 BASE_URL = "http://gammapy.org/download"
-YAML_URL = "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
+YAML_URL = (
+    "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
+)
 
 
 class DownloadProcess(object):
@@ -79,7 +81,7 @@ class DownloadProcess(object):
         if self.option == "datasets":
             datafound = {}
 
-            search = ''
+            search = ""
             if self.option == "datasets" and not self.modetutor:
                 search = self.src
                 datafound.update(self.parse_datafiles(search, jsondata))
@@ -128,7 +130,9 @@ class DownloadProcess(object):
             print("***** You might want to declare GAMMAPY_DATA env variable")
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
         else:
-            print("***** Enter the following commands below to get started with Gammapy")
+            print(
+                "***** Enter the following commands below to get started with Gammapy"
+            )
             print("cd {}".format(localfolder))
             if self.getenvfile:
                 print("conda env create -f {}".format(envfilename))
@@ -205,8 +209,8 @@ class DownloadProcess(object):
             progress, status = 1, "\r\n"
         block = int(round(barLength * progress))
         text = "\rDownloading files [{}] {:.0f}% {}".format(
-            "=" * block + "." * (barLength - block), round(progress * 100, 0),
-            status)
+            "=" * block + "." * (barLength - block), round(progress * 100, 0), status
+        )
         sys.stdout.write(text)
         sys.stdout.flush()
 

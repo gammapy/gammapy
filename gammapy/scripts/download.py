@@ -14,14 +14,17 @@ log = logging.getLogger(__name__)
 
 @click.command(name="notebooks")
 @click.option("--src", default="", help="Specific notebook to download.")
-@click.option("--out", default="gammapy-notebooks", help="Path where the versioned notebook files will be copied.", show_default=True)
+@click.option(
+    "--out",
+    default="gammapy-notebooks",
+    help="Path where the versioned notebook files will be copied.",
+    show_default=True,
+)
 @click.option("--release", default="", help="Gammapy release environment.")
 def cli_download_notebooks(src, out, release):
     """Download notebooks"""
 
-    downloadproc = DownloadProcess(
-        src, out, release, "notebooks", False
-    )
+    downloadproc = DownloadProcess(src, out, release, "notebooks", False)
 
     downloadproc.setup()
     downloadproc.files()
@@ -30,13 +33,16 @@ def cli_download_notebooks(src, out, release):
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
-@click.option("--out", default="gammapy-datasets", help="Path where datasets will be copied.", show_default=True)
+@click.option(
+    "--out",
+    default="gammapy-datasets",
+    help="Path where datasets will be copied.",
+    show_default=True,
+)
 def cli_download_datasets(src, out):
     """Download datasets"""
 
-    downloadproc = DownloadProcess(
-        src, out, '', "datasets", False
-    )
+    downloadproc = DownloadProcess(src, out, "", "datasets", False)
 
     downloadproc.setup()
     downloadproc.files()
@@ -47,21 +53,22 @@ def cli_download_datasets(src, out):
 
 @click.command(name="tutorials")
 @click.option("--src", default="", help="Specific tutorial to download.")
-@click.option("--out", default="gammapy-tutorials", help="Path where notebooks and datasets folders will be copied.", show_default=True)
+@click.option(
+    "--out",
+    default="gammapy-tutorials",
+    help="Path where notebooks and datasets folders will be copied.",
+    show_default=True,
+)
 @click.option("--release", default="", help="Gammapy release environment.")
 def cli_download_tutorials(src, out, release):
     """Download tutorial notebooks and datasets"""
 
-    downnotebooks = DownloadProcess(
-        src, out, release, "notebooks", True
-    )
+    downnotebooks = DownloadProcess(src, out, release, "notebooks", True)
     downnotebooks.setup()
     downnotebooks.files()
     downnotebooks.run()
 
-    downdatasets = DownloadProcess(
-        src, out, release, "datasets", True
-    )
+    downdatasets = DownloadProcess(src, out, release, "datasets", True)
     downdatasets.setup()
     downdatasets.files()
     downdatasets.run()

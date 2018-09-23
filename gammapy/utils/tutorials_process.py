@@ -64,9 +64,9 @@ def main():
 
     # check params passed
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src', help='Tutorial notebook or folder to process')
-    parser.add_argument('--release', help='Release tag for Binder links')
-    parser.add_argument('--nbs', help='Notebooks are considered in Sphinx')
+    parser.add_argument("--src", help="Tutorial notebook or folder to process")
+    parser.add_argument("--release", help="Release tag for Binder links")
+    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
     args = parser.parse_args()
 
     if not args.src:
