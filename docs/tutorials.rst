@@ -37,6 +37,8 @@ Notebooks
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
    notebooks/fermi_lat.ipynb
+   notebooks/light_curve.ipynb
+
 
 For a quick introduction to Gammapy, go here:
 
@@ -71,6 +73,11 @@ To get started with H.E.S.S. data analysis see here:
 - `Spectral analysis with Gammapy (individual steps) <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
 - `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
+
+Time-dependent analysis:
+
+- `Light curves <notebooks/light_curve.html>`__ | *light_curve.ipynb*
+
 
 .. _tutorials_extras:
 
