@@ -32,7 +32,7 @@ RUN adduser --disabled-password \
 # copy repo in /home/gammapy
 # COPY . ${HOME}
 
-RUN gammapy download --out=${HOME}/gammapy-tutorials tutorials
+RUN gammapy download tutorials --out=${HOME}/gammapy-tutorials
 
 # setting ownerships
 USER root
@@ -43,4 +43,4 @@ USER ${NB_USER}
 WORKDIR ${HOME}/gammapy-tutorials/notebooks-0.8
 
 # env vars used in tutorials
-ENV GAMMAPY_DATA ${HOME}/gammapy-tutorials/gammapy-extra/datasets
+ENV GAMMAPY_DATA ${HOME}/gammapy-tutorials/datasets
