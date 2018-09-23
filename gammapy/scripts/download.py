@@ -6,7 +6,6 @@ https://developer.github.com/v3/
 from __future__ import absolute_import, division, print_function, unicode_literals
 import click
 import logging
-from ..extern.pathlib import Path
 from .downloadclass import DownloadProcess
 
 log = logging.getLogger(__name__)
@@ -23,7 +22,6 @@ log = logging.getLogger(__name__)
 @click.option("--release", default="", help="Gammapy release environment.")
 def cli_download_notebooks(src, out, release):
     """Download notebooks"""
-
     downloadproc = DownloadProcess(src, out, release, "notebooks", False)
 
     downloadproc.setup()
@@ -41,7 +39,6 @@ def cli_download_notebooks(src, out, release):
 )
 def cli_download_datasets(src, out):
     """Download datasets"""
-
     downloadproc = DownloadProcess(src, out, "", "datasets", False)
 
     downloadproc.setup()
@@ -62,7 +59,6 @@ def cli_download_datasets(src, out):
 @click.option("--release", default="", help="Gammapy release environment.")
 def cli_download_tutorials(src, out, release):
     """Download tutorial notebooks and datasets"""
-
     downnotebooks = DownloadProcess(src, out, release, "notebooks", True)
     downnotebooks.setup()
     downnotebooks.files()

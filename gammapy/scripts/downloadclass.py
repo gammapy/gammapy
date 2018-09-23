@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Download class for gammapy download CLI."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import click
 import json
 import logging
-import os
 import sys
 import multiprocessing as mp
 from ..extern.six.moves.urllib.request import urlretrieve, urlopen
@@ -20,10 +18,9 @@ YAML_URL = (
 
 
 class DownloadProcess(object):
-    """Manages the process of downloading content"""
+    """Manage the process of downloading content"""
 
     def __init__(self, src, out, release, option, modetutor):
-
         self.src = src
         self.localfold = Path(out)
         self.release = release
@@ -34,7 +31,6 @@ class DownloadProcess(object):
         self.bar = 0
 
     def setup(self):
-
         if self.release == "":
             self.release = str(version.major) + "." + str(version.minor)
 
@@ -58,7 +54,6 @@ class DownloadProcess(object):
                     exit()
 
     def files(self):
-
         self.parse_yaml()
         filename_dat = "gammapy-data-index.json"
         url_dat = BASE_URL + "/data/" + filename_dat
@@ -102,7 +97,6 @@ class DownloadProcess(object):
             self.listfiles = datafound
 
     def run(self):
-
         log.info("Content will be downloaded in {}".format(self.localfold))
 
         ftuplelist = []
@@ -118,7 +112,6 @@ class DownloadProcess(object):
         pool.close()
 
     def show_info(self):
-
         localfolder = self.localfold.parent
         condaname = "gammapy-" + self.release
         envfilename = condaname + "-environment.yml"
@@ -170,7 +163,6 @@ class DownloadProcess(object):
                         self.listfiles[label]["images"].append(im)
 
     def parse_imagefiles(self):
-
         imagefiles = {}
         for item in self.listfiles:
             record = self.listfiles[item]
@@ -188,7 +180,6 @@ class DownloadProcess(object):
         return imagefiles
 
     def parse_datafiles(self, df, jsondata):
-
         datafiles = {}
         for dataset in jsondata:
             if df == dataset["name"] or df == "":
@@ -201,7 +192,6 @@ class DownloadProcess(object):
         return datafiles
 
     def progressbar(self, args):
-
         self.bar += 1
         barLength, status = 50, ""
         progress = self.bar / len(self.listfiles)
@@ -216,7 +206,6 @@ class DownloadProcess(object):
 
     @staticmethod
     def get_file(ftuple):
-
         url, filepath = ftuple
         try:
             ifolder = Path(filepath).parent

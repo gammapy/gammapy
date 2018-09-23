@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import click
 import logging
 import os
-from ..extern.pathlib import Path
 import subprocess
 import sys
 import time
