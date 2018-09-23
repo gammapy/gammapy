@@ -15,21 +15,20 @@ from distutils.util import strtobool
 logging.basicConfig(level=logging.INFO)
 
 
-def ignorefiles(d, files): return [
-    f
-    for f in files
-    if os.path.isfile(os.path.join(d, f))
-    and f[-6:] != '.ipynb'
-    and f[-4:] != '.png'
-]
+def ignorefiles(d, files):
+    return [
+        f
+        for f in files
+        if os.path.isfile(os.path.join(d, f))
+        and f[-6:] != ".ipynb"
+        and f[-4:] != ".png"
+    ]
 
 
-def ignoreall(d, files): return [
-    f
-    for f in files
-    if os.path.isfile(os.path.join(d, f))
-    and f[-6:] != '.ipynb'
-]
+def ignoreall(d, files):
+    return [
+        f for f in files if os.path.isfile(os.path.join(d, f)) and f[-6:] != ".ipynb"
+    ]
 
 
 def setup_sphinx_params(args):

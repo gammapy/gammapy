@@ -172,10 +172,13 @@ class TestFit:
         )
 
         profile_opts = {"parameters": ["index"]}
-        result = fit.run(steps=["optimize", "errors", "profiles"], profile_opts=profile_opts)
+        result = fit.run(
+            steps=["optimize", "errors", "profiles"], profile_opts=profile_opts
+        )
 
         with mpl_plot_check():
             result.plot_likelihood_profile("index")
+
 
 @requires_dependency("sherpa")
 @requires_dependency("scipy")

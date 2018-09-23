@@ -94,10 +94,7 @@ class Fit(object):
             stat = self.total_stat(self._model.parameters)
             likelihood.append(stat)
 
-        return {
-            'values': values,
-            'likelihood': np.array(likelihood),
-        }
+        return {"values": values, "likelihood": np.array(likelihood)}
 
     def optimize(self, backend="minuit", **kwargs):
         """Run the optimization
@@ -164,8 +161,10 @@ class Fit(object):
             parameters.set_covariance_factors(covar)
             self._model.parameters.set_covariance_factors(covar)
         else:
-            log.warning("No covariance matrix found. Error estimation currently"
-                        " only works with iminuit backend.")
+            log.warning(
+                "No covariance matrix found. Error estimation currently"
+                " only works with iminuit backend."
+            )
             parameters.covariance = None
         return model
 
@@ -201,7 +200,9 @@ class Fit(object):
         if "profiles" in steps:
             if profile_opts == None:
                 profile_opts = {}
-            result["likelihood_profiles"] = self.likelihood_profiles(result["model"], **profile_opts)
+            result["likelihood_profiles"] = self.likelihood_profiles(
+                result["model"], **profile_opts
+            )
 
         return FitResult(**result)
 
@@ -209,7 +210,17 @@ class Fit(object):
 class FitResult(object):
     """Fit result object."""
 
-    def __init__(self, model, success, nfev, total_stat, message, backend, method, likelihood_profiles=None):
+    def __init__(
+        self,
+        model,
+        success,
+        nfev,
+        total_stat,
+        message,
+        backend,
+        method,
+        likelihood_profiles=None,
+    ):
         self._model = model
         self._success = success
         self._nfev = nfev
@@ -288,11 +299,11 @@ class FitResult(object):
         if ax is None:
             ax = plt.gca()
 
-        ts_diff = self.likelihood_profiles[parameter]['likelihood'] - self.total_stat
-        values = self.likelihood_profiles[parameter]['values']
+        ts_diff = self.likelihood_profiles[parameter]["likelihood"] - self.total_stat
+        values = self.likelihood_profiles[parameter]["values"]
 
         ax.plot(values, ts_diff, **kwargs)
         unit = self.model.parameters[parameter].unit
         ax.set_xlabel(parameter + "[unit]".format(unit=unit))
-        ax.set_ylabel('TS difference')
+        ax.set_ylabel("TS difference")
         return ax

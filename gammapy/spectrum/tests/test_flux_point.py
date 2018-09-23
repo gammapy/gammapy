@@ -385,26 +385,19 @@ class TestFluxPointFit:
         result = fitter.run(optimize_opts=optimize_opts)
 
         profile = fitter.likelihood_profile(
-            model=result.model,
-            parameter="amplitude",
-            nvalues=3,
-            bounds=1
-            )
+            model=result.model, parameter="amplitude", nvalues=3, bounds=1
+        )
 
-        ts_diff = profile['likelihood'] - result.total_stat
+        ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
-
 
         value = result.model.parameters["amplitude"].value
         err = result.model.parameters.error("amplitude")
         values = np.array([value - err, value, value + err])
 
         profile = fitter.likelihood_profile(
-                model=result.model,
-                parameter="amplitude",
-                values=values,
-                )
+            model=result.model, parameter="amplitude", values=values
+        )
 
-        ts_diff = profile['likelihood'] - result.total_stat
+        ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
-

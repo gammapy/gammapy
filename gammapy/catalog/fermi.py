@@ -1018,9 +1018,7 @@ class SourceCatalog3FGL(SourceCatalog):
         "unassociated": [""],
     }
 
-    def __init__(
-        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v16.fit.gz"
-    ):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v16.fit.gz"):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -1125,9 +1123,7 @@ class SourceCatalog1FHL(SourceCatalog):
     description = "First Fermi-LAT Catalog of Sources above 10 GeV"
     source_object_class = SourceCatalogObject1FHL
 
-    def __init__(
-        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v07.fit.gz"
-    ):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v07.fit.gz"):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -1159,9 +1155,7 @@ class SourceCatalog2FHL(SourceCatalog):
     description = "LAT second high-energy source catalog"
     source_object_class = SourceCatalogObject2FHL
 
-    def __init__(
-        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz"
-    ):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz"):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
@@ -1202,9 +1196,7 @@ class SourceCatalog3FHL(SourceCatalog):
         "unassociated": [""],
     }
 
-    def __init__(
-        self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v13.fit.gz"
-    ):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psch_v13.fit.gz"):
         filename = str(make_path(filename))
 
         with warnings.catch_warnings():  # ignore FITS units warnings
