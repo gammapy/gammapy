@@ -10,22 +10,24 @@ import sys
 import time
 
 log = logging.getLogger(__name__)
+OFF = ["CTADATA", "GAMMA_CAT", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
 
 
 @click.command(name="run")
 @click.pass_context
-@click.option("--tutoenv", is_flag=True, default=False, help="Tutorials environment?", show_default=True)
-def cli_jupyter_run(ctx, tutoenv):
+@click.option(
+    "--tutor",
+    is_flag=True,
+    default=False,
+    help="Tutorials environment?",
+    show_default=True,
+)
+def cli_jupyter_run(ctx, tutor):
     """Execute Jupyter notebooks."""
 
-    if tutoenv:
-        envpths = unsetenv()
-
-    for path in ctx.obj["paths"]:
-        execute_notebook(path)
-
-    if tutoenv:
-        envback(envpths)
+    with environment(OFF, tutor):
+        for path in ctx.obj["paths"]:
+            execute_notebook(path)
 
 
 def execute_notebook(path, loglevel=20):
@@ -129,18 +131,19 @@ class BlackNotebook:
 
 @click.command(name="test")
 @click.pass_context
-@click.option("--tutoenv", is_flag=True, default=False, help="Tutorials environment?", show_default=True)
-def cli_jupyter_test(ctx, tutoenv):
+@click.option(
+    "--tutor",
+    is_flag=True,
+    default=False,
+    help="Tutorials environment?",
+    show_default=True,
+)
+def cli_jupyter_test(ctx, tutor):
     """Check if Jupyter notebooks are broken."""
 
-    if tutoenv:
-        envpths = unsetenv()
-
-    for path in ctx.obj["paths"]:
-        notebook_test(path)
-
-    if tutoenv:
-        envback(envpths)
+    with environment(OFF, tutor):
+        for path in ctx.obj["paths"]:
+            notebook_test(path)
 
 
 def notebook_test(path):
@@ -178,20 +181,25 @@ def notebook_test(path):
         return False
 
 
-def unsetenv():
+class environment:
+    """
+    Helper for setting environmental variables
+    """
 
-    envpths = {}
-    envars = ["GAMMAPY_EXTRA", "CTADATA", "GAMMA_CAT", "GAMMAPY_FERMI_LAT_DATA"]
-    for item in envars:
-        if item in os.environ:
-            envpths[item] = os.environ[item]
-            del os.environ[item]
-            logging.info("Unsetting {} environment variable.".format(item))
-    return envpths
+    def __init__(self, envs, tutor):
+        self.envs = envs
+        self.tutor = tutor
 
+    def __enter__(self):
 
-def envback(envpths):
+        self.old = os.environ
+        if self.tutor:
+            for item in self.envs:
+                if item in os.environ:
+                    del os.environ[item]
+                    logging.info("Unsetting {} environment variable.".format(item))
 
-    for item in envpths:
-        os.environ[item] = envpths[item]
-        logging.info("Setting {}={}".format(item, envpths[item]))
+    def __exit__(self, type, value, traceback):
+        if self.tutor:
+            os.environ = self.old
+            logging.info("Environment variables recovered.")
