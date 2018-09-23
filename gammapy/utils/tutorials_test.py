@@ -7,7 +7,7 @@ import sys
 import logging
 from pkg_resources import working_set
 from gammapy.extern.pathlib import Path
-from gammapy.scripts.jupyter import test_notebook
+from gammapy.scripts.jupyter import notebook_test
 import yaml
 
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +23,7 @@ def get_notebooks():
 
 def requirement_missing(notebook):
     """Check if one of the requirements is missing."""
-    if 'requires' in notebook:
+    if "requires" in notebook:
         if notebook["requires"] is None:
             return False
         for package in notebook["requires"].split():
@@ -58,7 +58,7 @@ def main():
         filename = notebook["name"] + ".ipynb"
         path = dirnbs / filename
 
-        if not test_notebook(path):
+        if not notebook_test(path):
             passed = False
 
     assert passed

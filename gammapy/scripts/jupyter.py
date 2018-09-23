@@ -4,20 +4,30 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import click
 import logging
+import os
 import subprocess
-import time
 import sys
+import time
 
 log = logging.getLogger(__name__)
+OFF = ["CTADATA", "GAMMA_CAT", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
 
 
 @click.command(name="run")
 @click.pass_context
-def cli_jupyter_run(ctx):
+@click.option(
+    "--tutor",
+    is_flag=True,
+    default=False,
+    help="Tutorials environment?",
+    show_default=True,
+)
+def cli_jupyter_run(ctx, tutor):
     """Execute Jupyter notebooks."""
 
-    for path in ctx.obj["paths"]:
-        execute_notebook(path)
+    with environment(OFF, tutor):
+        for path in ctx.obj["paths"]:
+            execute_notebook(path)
 
 
 def execute_notebook(path, loglevel=20):
@@ -121,14 +131,22 @@ class BlackNotebook:
 
 @click.command(name="test")
 @click.pass_context
-def cli_jupyter_test(ctx):
+@click.option(
+    "--tutor",
+    is_flag=True,
+    default=False,
+    help="Tutorials environment?",
+    show_default=True,
+)
+def cli_jupyter_test(ctx, tutor):
     """Check if Jupyter notebooks are broken."""
 
-    for path in ctx.obj["paths"]:
-        test_notebook(path)
+    with environment(OFF, tutor):
+        for path in ctx.obj["paths"]:
+            notebook_test(path)
 
 
-def test_notebook(path):
+def notebook_test(path):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
@@ -161,3 +179,27 @@ def test_notebook(path):
         log.info("   ... FAILED")
         log.info(report)
         return False
+
+
+class environment:
+    """
+    Helper for setting environmental variables
+    """
+
+    def __init__(self, envs, tutor):
+        self.envs = envs
+        self.tutor = tutor
+
+    def __enter__(self):
+
+        self.old = os.environ
+        if self.tutor:
+            for item in self.envs:
+                if item in os.environ:
+                    del os.environ[item]
+                    logging.info("Unsetting {} environment variable.".format(item))
+
+    def __exit__(self, type, value, traceback):
+        if self.tutor:
+            os.environ = self.old
+            logging.info("Environment variables recovered.")

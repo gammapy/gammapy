@@ -52,7 +52,7 @@ help:
 	@echo '     python -m gammapy info'
 
 clean:
-	rm -rf build dist docs/_build docs/api docs/notebooks docs/_static/notebooks htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache
+	rm -rf build dist docs/_build docs/api temp/ docs/notebooks docs/_static/notebooks htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
@@ -100,13 +100,13 @@ doc-show:
 docs-all:
 	which python
 	pip install -e .
-	python process_tutorials.py tutorials/
+	python -m gammapy.utils.tutorials_process --src="$(src)" --release="$(release)" --nbs="$(nbs)"
 	python setup.py build_docs
 
 test-notebooks:
 	which python
 	pip install -e .
-	python test_notebooks.py
+	python -m gammapy.utils.tutorials_test
 
 conda:
 	python setup.py bdist_conda
