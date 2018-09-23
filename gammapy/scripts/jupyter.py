@@ -208,6 +208,8 @@ class environment:
                     logging.info("Unsetting {} environment variable.".format(item))
             abspath = self.ctx.obj["pathsrc"].absolute()
             datapath = abspath.parent / "datasets"
+            if abspath.is_file():
+                datapath = abspath.parent.parent / "datasets"
             os.environ["GAMMAPY_DATA"] = str(datapath)
             logging.info("Setting GAMMAPY_DATA={}".format(os.environ["GAMMAPY_DATA"]))
 
