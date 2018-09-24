@@ -106,7 +106,7 @@ setup(
     install_requires=[
       'numpy>=1.10',
       'astropy>=1.3',
-      'regions',
+      'regions>=0.3',
       'click',
     ],
     extras_require=dict(
