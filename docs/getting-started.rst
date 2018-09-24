@@ -23,7 +23,7 @@ Help!?
 ------
 
 If you have any questions or issues, please ask for help on the Gammapy Slack,
-mailing list or on Github (whatever is easiest for you), see `Gammapy contact`_)
+mailing list or on Github (whatever is easiest for you, see `Gammapy contact`_)
 
 Install
 -------

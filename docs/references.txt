@@ -11,7 +11,6 @@
 .. _Numpy: http://www.numpy.org/
 .. _affiliated package: http://www.astropy.org/affiliated/index.html
 .. _regions: https://astropy-regions.readthedocs.io
-.. _Astropy: http://www.astropy.org
 .. _reproject: https://reproject.readthedocs.io
 .. _photutils: https://photutils.readthedocs.io
 .. _astroplan: https://astroplan.readthedocs.io

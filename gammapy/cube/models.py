@@ -152,11 +152,19 @@ class SkyModel(SkyModelBase):
     @property
     def spatial_model(self):
         """`~gammapy.image.models.SkySpatialModel`"""
+        # propagate sub-covariance
+        if self.parameters.covariance is not None:
+            idx = len(self._spatial_model.parameters.parameters)
+            self._spatial_model.parameters.covariance = self.parameters.covariance[:idx, :idx]
         return self._spatial_model
 
     @property
     def spectral_model(self):
         """`~gammapy.spectrum.models.SpectralModel`"""
+        # propagate sub-covariance
+        if self.parameters.covariance is not None:
+            idx = len(self._spatial_model.parameters.parameters)
+            self._spectral_model.parameters.covariance = self.parameters.covariance[idx:, idx:]
         return self._spectral_model
 
     @property
