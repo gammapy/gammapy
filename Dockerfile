@@ -35,11 +35,12 @@ RUN adduser --disabled-password \
 # setting ownerships
 USER root
 RUN chown -R ${NB_UID} ${HOME}
-RUN gammapy download tutorials --out=${HOME}/gammapy-tutorials  --release=0.8
+RUN gammapy download notebooks --out=${HOME}/gammapy-tutorials  --release=0.8
+RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
 
 # start JupyterLab server in tutorials dir
 USER ${NB_USER}
 WORKDIR ${HOME}/gammapy-tutorials/notebooks-0.8
 
 # env vars used in tutorials
-ENV GAMMAPY_DATA ${HOME}/gammapy-tutorials/datasets
+ENV GAMMAPY_DATA ${HOME}/gammapy-extra/datasets
