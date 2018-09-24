@@ -57,7 +57,8 @@ class DownloadProcess(object):
         self.parse_yaml()
         filename_dat = "gammapy-data-index.json"
         url_dat = BASE_URL + "/data/" + filename_dat
-        jsondata = json.loads(urlopen(url_dat).read())
+        jsonstream = urlopen(url_dat).read().decode('utf-8')
+        jsondata = json.loads(jsonstream)
 
         if self.option == "notebooks" or self.modetutor:
             if self.src != "":
@@ -144,8 +145,8 @@ class DownloadProcess(object):
             url_nbs = YAML_URL
 
         r = urlopen(url_nbs)
-
-        for nb in yaml.safe_load(r.read()):
+        yamlstream = r.read().decode('utf-8')
+        for nb in yaml.safe_load(yamlstream):
             path = nb["name"] + ".ipynb"
             label = "nb: " + nb["name"]
             self.listfiles[label] = {}
@@ -207,9 +208,10 @@ class DownloadProcess(object):
     @staticmethod
     def get_file(ftuple):
         url, filepath = ftuple
+        ifolder = Path(filepath).parent
+        ifolder.mkdir(parents=True, exist_ok=True)
+
         try:
-            ifolder = Path(filepath).parent
-            ifolder.mkdir(parents=True, exist_ok=True)
             urlretrieve(url, filepath)
         except Exception as ex:
             log.error(filepath + " could not be copied.")
