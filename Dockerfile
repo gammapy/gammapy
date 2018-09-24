@@ -32,11 +32,10 @@ RUN adduser --disabled-password \
 # copy repo in /home/gammapy
 # COPY . ${HOME}
 
-RUN gammapy download tutorials --out=${HOME}/gammapy-tutorials  --release=0.8
-
 # setting ownerships
 USER root
 RUN chown -R ${NB_UID} ${HOME}
+RUN gammapy download tutorials --out=${HOME}/gammapy-tutorials  --release=0.8
 
 # start JupyterLab server in tutorials dir
 USER ${NB_USER}
