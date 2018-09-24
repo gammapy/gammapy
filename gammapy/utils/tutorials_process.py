@@ -53,35 +53,13 @@ def setup_sphinx_params(args):
         f.write(file_str)
 
 
-def main():
+def build_notebooks(args):
 
     if "GAMMAPY_DATA" not in os.environ:
         logging.info("GAMMAPY_DATA environment variable not set.")
         logging.info("Running notebook tests requires this environment variable.")
         logging.info("Exiting now.")
         sys.exit()
-
-    # check params passed
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--src", help="Tutorial notebook or folder to process")
-    parser.add_argument("--release", help="Release tag for Binder links")
-    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
-    args = parser.parse_args()
-
-    if not args.src:
-        args.src = "tutorials"
-    if not args.release:
-        args.release = "master"
-    if not args.nbs:
-        args.nbs = "True"
-
-    try:
-        args.nbs = strtobool(args.nbs)
-    except Exception as ex:
-        logging.error(ex)
-        sys.exit()
-    # if not args.release.startswith("v") and args.release != "master":
-    #    args.release = "v" + args.release
 
     setup_sphinx_params(args)
 
@@ -149,6 +127,34 @@ def main():
 
     # tear down
     rmtree(str(path_temp), ignore_errors=True)
+
+
+def main():
+
+    # check params passed
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--src", help="Tutorial notebook or folder to process")
+    parser.add_argument("--release", help="Release tag for Binder links")
+    parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
+    args = parser.parse_args()
+
+    if not args.src:
+        args.src = "tutorials"
+    if not args.release:
+        args.release = "master"
+    if not args.nbs:
+        args.nbs = "True"
+
+    try:
+        args.nbs = strtobool(args.nbs)
+    except Exception as ex:
+        logging.error(ex)
+        sys.exit()
+    # if not args.release.startswith("v") and args.release != "master":
+    #    args.release = "v" + args.release
+
+    if args.nbs:
+        build_notebooks(args)
 
 
 if __name__ == "__main__":
