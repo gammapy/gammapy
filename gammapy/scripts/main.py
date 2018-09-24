@@ -104,10 +104,8 @@ def cli_jupyter(ctx, src):
     """
     Perform a series of actions on Jupyter notebooks.
 
-    The chosen action is applied for every Jupyter notebook present in the
-    current working directory. Option --file allows to chose a single file,
-    while option --fold allows to choose a different folder to scan. These
-    options are mutually exclusive, only one is allowed.
+    The chosen action is applied by default for every Jupyter notebook present
+    in the current working directory.
 
     \b
     Examples

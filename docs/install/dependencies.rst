@@ -37,3 +37,4 @@ Optional dependencies of Gammapy:
 * `emcee`_ for fitting by MCMC sampling
 * `healpy`_ for `HEALPIX`_ data handling
 * `naima`_ for SED modeling
+* `Sherpa`_ for modelling and fitting

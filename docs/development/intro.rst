@@ -166,7 +166,7 @@ more details here: :ref:`setup_cython`. If you want remove the generated files
 run ``make clean``.
 
 For the development it is also convenient to fork and set up the
-:ref:`dev_gammapy-extra`:
+:ref:`dev_gammapy-extra`, as well as declaring some environment variables:
 
 .. code-block:: bash
 
@@ -174,6 +174,7 @@ For the development it is also convenient to fork and set up the
     cd code
     git clone https://github.com/[your-github-username]/gammapy-extra.git
     export GAMMAPY_EXTRA=$PWD/gammapy-extra
+    export GAMMAPY_DATA=$PWD/gammapy-extra/datasets
 
 * install dependencies
 * git clone dev version
@@ -201,6 +202,13 @@ Integrate the code in Gammapy
 * check tests locally
 * check docs locally
 
+Contribute with Jupyter notebooks
+=================================
+
+* check tests with user tutorials environment
+* strip the output cells and code format
+* diff stripped notebooks
+
 Make a pull request
 ===================
 
@@ -217,4 +225,3 @@ Close the loop
 ==============
 
 tbd
-

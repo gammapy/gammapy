@@ -22,5 +22,5 @@ To update to the latest version:
     conda update gammapy
 
 Overall ``conda`` is a great cross-platform package manager, you can quickly
-learn how to use it by reading the docs `here
+learn how to use it by reading the `conda docs
 <http://conda.pydata.org/docs/>`__.
