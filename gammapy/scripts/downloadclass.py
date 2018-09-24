@@ -32,7 +32,7 @@ class DownloadProcess(object):
 
     def setup(self):
         if self.release == "":
-            self.release = str(version.major) + "." + str(version.minor)
+            self.release = version.version
 
         filename_env = "gammapy-" + self.release + "-environment.yml"
         filepath_env = str(self.localfold / filename_env)
