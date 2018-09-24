@@ -80,8 +80,8 @@ def main():
     except Exception as ex:
         logging.error(ex)
         sys.exit()
-    if not args.release.startswith("v") and args.release != "master":
-        args.release = "v" + args.release
+    # if not args.release.startswith("v") and args.release != "master":
+    #    args.release = "v" + args.release
 
     setup_sphinx_params(args)
 
