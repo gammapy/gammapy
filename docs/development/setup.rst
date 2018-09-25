@@ -44,14 +44,18 @@ generated during the documentation building process.
 
 We do have automated testing for notebooks set up (just check that they run
 and don't raise an exception) in Travis CI (see below) which runs
-``python -m gammapy.utils.tutorials_test`` and looks at the ``tutorials/notebooks.yaml`` file for which notebooks to test or not to test. It is also possible to perform
+``python -m gammapy.utils.tutorials_test`` and looks at the ``tutorials/notebooks.yaml``
+file for which notebooks to test or not to test. It is also possible to perform
 tests locally on notebooks  with the ``gammapy jupyter`` command. This command provides
-functionalities for testing, code formatting, stripping output cells and execution. See ``gammapy jupyter -h`` for more info on this.
+functionalities for testing, code formatting, stripping output cells and execution. See
+``gammapy jupyter -h`` for more info on this.
 
 The ``gammapy download`` command allows to download notebooks published as tutorials
 as well as the related datasets needed to execute them. For stable releases, the list of
-tutorials to download, their locations and datasets used are declared in YAML files placed in the ``download/tutorials`` folder of the Gammapy Web-page Github
-repository. The same happens for conda working environments of stable releases declared
+tutorials to download, their locations and datasets used are declared in YAML files
+placed in the ``download/tutorials`` folder of the `gammapy-webpage`
+`Github repository <https://github.com/gammapy/gammapy-webpage>`__.
+The same happens for conda working environments of stable releases declared
 in ``download/install`` folder of that repository. The datasets are not versioned and
 are similarly declared in the ``download/data`` folder.
 
@@ -248,12 +252,14 @@ that you can find in the :ref:`tutorials` section has a link to Binder that allo
 you to execute the tutorial in the myBinder cloud infrastructure.
 
 myBinder provides versioned virtual environments coupled with every Github commit
-of the Gammapy repo. The Binder image is created using the ``Dockerfile`` and
-``binder.py`` files in the Gammapy Github repository. The Dockerfile makes the Docker
-image used by Binder running some linux commands to install base-packages and copy
-the tutorials and datasets neeeded. It executes ``binder.py`` to conda install Gammapy
-dependencies listed in the environment YAML file placed in the ``download/install``
-folder of the Gammapy-web Github repository.
+of the `gammapy`
+`Github repository <https://github.com/gammapy/gammapy>`__. The Binder docker image
+is created using the ``Dockerfile`` and ``binder.py`` files. The Dockerfile makes
+the Docker image used by Binder running some linux commands to install base-packages
+and copy the tutorials and datasets neeeded. It executes ``binder.py`` to conda
+install Gammapy dependencies listed in the environment YAML file placed in the
+``download/install`` folder of the `gammapy-webpage`
+`Github repository <https://github.com/gammapy/gammapy-webpage>`__
 
 Continuous integration
 ======================

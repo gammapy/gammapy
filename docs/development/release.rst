@@ -73,8 +73,8 @@ Steps for the day of the release:
 #. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
 #. Update the Gammapy stable branch to point to the new tag
    as described `here <http://docs.astropy.org/en/latest/development/releasing.html>`__.
-#. Add the new version of docs in Gammapy-web Github repository
-#. Add the environment and tutorials YAML files in Gammapy-web Github repository
+#. Add the new version of docs in `gammapy-docs` `Github repository<https://github.com/gammapy/gammapy-docs>`__
+#. Add the environment and tutorials YAML files in `gammapy-webpage` `Github repository<https://github.com/gammapy/gammapy-webpage>`__
 #. Edit the Binder link in README.rst file to point to the released version branch
 #. Draft the release announcement as a new file in https://github.com/gammapy/gammapy/tree/master/dev/notes
    (usually by copy & pasting the announcement from the last release)

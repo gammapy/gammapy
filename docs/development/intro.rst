@@ -174,7 +174,19 @@ For the development it is also convenient to fork and set up the
     cd code
     git clone https://github.com/[your-github-username]/gammapy-extra.git
     export GAMMAPY_EXTRA=$PWD/gammapy-extra
-    export GAMMAPY_DATA=$PWD/gammapy-extra/datasets
+
+`$GAMMAPY_EXTRA`` is mainly used for testing purposes, on the contrary the datasets
+provided in ``gammapy.catalog`` and those used in the tutorial Jupyter notebooks
+should be in a different path declared in a `$GAMMAPY_DATA` environment variable.
+You can download these datasets with `gammapy download datasets` and then point
+your `$GAMMAPY_DATA` to the local path you have chosen.
+
+.. code-block:: bash
+
+    # Download GAMMAPY_DATA
+    cd code
+    gammapy download datasets --out GAMMAPY_DATA
+    export GAMMAPY_DATA=$PWD/GAMMAPY_DATA
 
 * install dependencies
 * git clone dev version
@@ -205,9 +217,9 @@ Integrate the code in Gammapy
 Contribute with Jupyter notebooks
 =================================
 
-* check tests with user tutorials environment
-* strip the output cells and code format
-* diff stripped notebooks
+* check tests with user tutorials environment: `gammapy jupyter test --tutor`
+* strip the output cells and format code: `gammapy jupyter strip` `gammapy jupyter black`
+* diff stripped notebooks: `git diff mynotbeook.pynb`
 
 Make a pull request
 ===================

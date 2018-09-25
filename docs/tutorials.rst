@@ -39,7 +39,6 @@ Notebooks
    notebooks/fermi_lat.ipynb
    notebooks/light_curve.ipynb
    notebooks/cta_sensitivity.ipynb
-   notebooks/nddata_demo.ipynb
    notebooks/spectrum_simulation.ipynb
    notebooks/spectrum_simulation_cta.ipynb
    notebooks/astropy_introduction.ipynb
