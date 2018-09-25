@@ -61,8 +61,6 @@ def build_notebooks(args):
         logging.info("Exiting now.")
         sys.exit()
 
-    setup_sphinx_params(args)
-
     # prepare folder structure
     pathsrc = Path(args.src)
     path_temp = Path("temp")
@@ -152,6 +150,8 @@ def main():
         sys.exit()
     # if not args.release.startswith("v") and args.release != "master":
     #    args.release = "v" + args.release
+
+    setup_sphinx_params(args)
 
     if args.nbs:
         build_notebooks(args)
