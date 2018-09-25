@@ -86,8 +86,8 @@ def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=
 
 
 def make_link_node(rawtext, app, refuri, notebook, options):
-    # base = 'https://github.com/gammapy/gammapy-extra/tree/master/notebooks/'
-    # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/'
+    # base = 'https://github.com/gammapy/gammapy/tree/master/notebooks/'
+    # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy/blob/master/notebooks/'
 
     relpath = refuri.split(str(Path("/gammapy/docs")))[1]
     foldersplit = relpath.split(os.sep)
@@ -113,11 +113,11 @@ def gammapy_sphinx_ext_activate():
     roles.register_local_role("gp-extra-notebook", notebook_role)
 
 
-def modif_nb_links(folder, url_docs, git_commit):
+def parse_notebooks(folder, url_docs, git_commit):
     """
-    Modifies links in raw and sphinx formatted notebooks so they
-    point to and from the same version of the documentation. Adds a box to the
-    sphinx formatted notebooks with info and link to the ipynb file.
+    Modifies raw and html-fixed notebooks so they will not have broken links
+    to other files in the documentation. Adds a box to the sphinx formatted
+    notebooks with info and links to the *.ipynb and *.py files.
     """
 
     DOWNLOAD_CELL = """
@@ -134,35 +134,44 @@ def modif_nb_links(folder, url_docs, git_commit):
 </div>
 """
 
-    for filename in os.listdir(folder):
-        filepath = os.path.join(folder, filename)
-        if os.path.isfile(filepath) and filepath[-6:] == ".ipynb":
-            if folder == "notebooks":
-                py_filename = filename.replace("ipynb", "py")
-                ctx = dict(
-                    nb_filename=filename, py_filename=py_filename, git_commit=git_commit
-                )
-                strcell = DOWNLOAD_CELL.format(**ctx)
-                nb = nbformat.read(filepath, as_version=nbformat.NO_CONVERT)
-                nb.metadata["nbsphinx"] = {"orphan": bool("true")}
-                nb.cells.insert(0, new_markdown_cell(strcell))
-                nbformat.write(nb, filepath)
+    for nbpath in list(folder.glob("*.ipynb")):
+        if str(folder) == "notebooks":
 
-            txt = Path(filepath).read_text(encoding="utf-8")
-
-            if folder == "notebooks":
-                repl = r"..\/\1rst\2"
-            else:
-                repl = r"..\/..\/\1html\2"
-
-            txt = re.sub(
-                pattern=url_docs + "(.*?)html(\)|#)",
-                repl=repl,
-                string=txt,
-                flags=re.M | re.I,
+            # add binder cell
+            nb_filename = str(nbpath).replace("notebooks/", "")
+            py_filename = nb_filename.replace("ipynb", "py")
+            ctx = dict(
+                nb_filename=nb_filename, py_filename=py_filename, git_commit=git_commit
             )
+            strcell = DOWNLOAD_CELL.format(**ctx)
+            rawnb = nbformat.read(str(nbpath), as_version=nbformat.NO_CONVERT)
 
-            Path(filepath).write_text(txt, encoding="utf-8")
+            if "nbsphinx" not in rawnb.metadata:
+                rawnb.metadata["nbsphinx"] = {"orphan": bool("true")}
+                rawnb.cells.insert(0, new_markdown_cell(strcell))
+
+                # add latex format
+                for cell in rawnb.cells:
+                    if "outputs" in cell.keys():
+                        for output in cell["outputs"]:
+                            if output["output_type"] == "execute_result":
+                                if "text/latex" in output["data"].keys():
+                                    output["data"]["text/latex"] = output["data"]["text/latex"].replace('$', '$$')
+                nbformat.write(rawnb, str(nbpath))
+
+        # modif links to rst /html doc files
+        txt = nbpath.read_text(encoding="utf-8")
+        if str(folder) == "notebooks":
+            repl = r"..\/\1rst\2"
+        else:
+            repl = r"..\/..\/\1html\2"
+        txt = re.sub(
+            pattern=url_docs + "(.*?)html(\)|#)",
+            repl=repl,
+            string=txt,
+            flags=re.M | re.I,
+        )
+        nbpath.write_text(txt, encoding="utf-8")
 
 
 def gammapy_sphinx_notebooks(setup_cfg):
@@ -180,7 +189,7 @@ def gammapy_sphinx_notebooks(setup_cfg):
     # fix links
     filled_notebooks_folder = Path("notebooks")
     download_notebooks_folder = Path("_static") / "notebooks"
-    if filled_notebooks_folder.is_dir():
 
-        modif_nb_links(str(filled_notebooks_folder), url_docs, git_commit)
-        modif_nb_links(str(download_notebooks_folder), url_docs, git_commit)
+    if filled_notebooks_folder.is_dir():
+        parse_notebooks(filled_notebooks_folder, url_docs, git_commit)
+        parse_notebooks(download_notebooks_folder, url_docs, git_commit)
