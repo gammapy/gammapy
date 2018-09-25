@@ -90,7 +90,8 @@ passing a list of `~MapAxis` objects for non-spatial dimensions with the
 Multi-resolution maps (maps with a different pixel size or geometry in each
 image plane) can be constructed by passing a vector argument for any of the
 geometry parameters. This vector must have the same shape as the non-spatial
-dimensions of the map. The following example demonstrates creating an energy
+dimensions of the map. Please note that we do not fully support operations on 
+multi-resolution maps yet. The following example demonstrates creating an energy
 cube with a pixel size proportional to the Fermi-LAT PSF:
 
 .. code:: python
