@@ -17,6 +17,18 @@ YAML_URL = (
 )
 
 
+def get_file(ftuple):
+    url, filepath = ftuple
+    ifolder = Path(filepath).parent
+    ifolder.mkdir(parents=True, exist_ok=True)
+
+    try:
+        urlretrieve(url, filepath)
+    except Exception as ex:
+        log.error(filepath + " could not be copied.")
+        log.error(ex)
+
+
 class DownloadProcess(object):
     """Manage the process of downloading content"""
 
@@ -48,7 +60,7 @@ class DownloadProcess(object):
             if self.getenvfile:
                 try:
                     urlopen(url_env)
-                    self.get_file((url_env, filepath_env))
+                    get_file((url_env, filepath_env))
                 except Exception as ex:
                     log.error(ex)
                     exit()
@@ -100,14 +112,12 @@ class DownloadProcess(object):
     def run(self):
         log.info("Content will be downloaded in {}".format(self.localfold))
 
-        ftuplelist = []
         pool = mp.Pool(5)
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.localfold / self.listfiles[rec]["path"]
             ftuple = (url, str(path))
-            ftuplelist.append(ftuple)
-            pool.apply_async(self.get_file, args=(ftuple,), callback=self.progressbar)
+            pool.apply_async(get_file, args=(ftuple,), callback=self.progressbar)
         pool.close()
         pool.join()
         pool.close()
@@ -205,14 +215,3 @@ class DownloadProcess(object):
         sys.stdout.write(text)
         sys.stdout.flush()
 
-    @staticmethod
-    def get_file(ftuple):
-        url, filepath = ftuple
-        ifolder = Path(filepath).parent
-        ifolder.mkdir(parents=True, exist_ok=True)
-
-        try:
-            urlretrieve(url, filepath)
-        except Exception as ex:
-            log.error(filepath + " could not be copied.")
-            log.error(ex)
