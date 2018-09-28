@@ -118,6 +118,7 @@ class MapEvaluator(object):
 
     @lazyproperty
     def geom(self):
+        """This will give the energy axes in e_true"""
         return self.exposure.geom
 
     @lazyproperty
@@ -126,15 +127,15 @@ class MapEvaluator(object):
 
     @lazyproperty
     def energy_center(self):
-        """Energy axis bin centers (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.axes[0]
+        """True energy axis bin centers (`~astropy.units.Quantity`)"""
+        energy_axis = self.geom.get_axis_by_name("energy")
         energy = energy_axis.center * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_edges(self):
         """Energy axis bin edges (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.axes[0]
+        energy_axis = self.geom.get_axis_by_name("energy")
         energy = energy_axis.edges * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
 
@@ -208,22 +209,28 @@ class MapEvaluator(object):
         """Convolve npred cube with PSF"""
         return npred.convolve(self.psf)
 
-    def apply_edisp(self, data):
+    def apply_edisp(self, npred):
         """Convolve map data with energy dispersion."""
-        data = np.rollaxis(data, 0, 3)
+        loc = npred.geom.get_axes_dimension_by_name("energy")
+        data = np.moveaxis(npred.data, loc, -1)
         data = np.dot(data, self.edisp.pdf_matrix)
-        return np.rollaxis(data, 2, 0)
+        npred.data = np.moveaxis(data, -1, loc)
+        return npred
 
     def compute_npred(self):
-        """Evaluate model predicted counts.
+        """
+        Evaluate model predicted counts.
+        Returns
+        -------
+        npred.data : numpy array
+            array of the predicted counts in each bin (in reco energy)
         """
         flux = self.compute_flux()
         npred = self.apply_exposure(flux)
         if self.psf is not None:
             npred = self.apply_psf(npred)
-        # TODO: discuss and decide whether we need to make map objects in `apply_aeff` and `apply_psf`.
         if self.edisp is not None:
-            npred.data = self.apply_edisp(npred.data)
+            npred = self.apply_edisp(npred)
         if self.background:
             npred.data += self.background.data
         return npred.data
