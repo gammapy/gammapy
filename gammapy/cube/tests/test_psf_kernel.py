@@ -49,3 +49,16 @@ def test_psf_kernel_from_gauss_read_write(tmpdir):
     kernel.write(filename, overwrite=True)
     newkernel = PSFKernel.read(filename)
     assert_allclose(kernel.psf_kernel_map.data, newkernel.psf_kernel_map.data)
+
+
+def test_make_image():
+    energy_axis = MapAxis.from_edges(
+        [100, 200, 1000], name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(binsz=0.1, npix=20, axes=[energy_axis])
+    exposures = np.ones(geom.shape)
+    sigma = 0.5 * u.deg
+    kernel = PSFKernel.from_gauss(geom, sigma)
+    psf2D = kernel.make_image(exposures=exposures)
+    assert_allclose(psf2D.psf_kernel_map.data.sum(), 1.0, rtol=1e-3)
+    assert_allclose(psf2D.data[10,14], 0.0038, rtol=1e-2)
