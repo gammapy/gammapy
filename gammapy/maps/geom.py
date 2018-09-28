@@ -1421,3 +1421,26 @@ class MapGeom(object):
             Copied map geometry.
         """
         return self._init_copy(**kwargs)
+
+    def get_axes_dimension_by_name(self, name):
+        """
+        Get an axis location by name (case in-sensitive).
+
+        Parameters
+        ----------
+        name : str
+           Name of the requested axis
+
+        Returns
+        -------
+        i : integer
+            The number of the dimension of the specified axis in the map geom
+
+        """
+        for i in range(self.ndim - 2):
+            if (self.axes[i].name.lower() == name.lower()):
+                return i
+
+
+
+
