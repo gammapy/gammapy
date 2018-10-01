@@ -99,11 +99,13 @@ class MapMaker(object):
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
+        # Compute field of view mask on the cutout in true energy
         coords_etrue = cutout_map_etrue.geom.get_coord()
         offset_etrue = coords_etrue.skycoord.separation(obs.pointing_radec)
         fov_mask_etrue = offset_etrue >= self.offset_max
 
         # Only if there is an exclusion mask, make a cutout
+        # Exclusion mask only on the background, so only in reco-energy
         exclusion_mask = self.maps.get("exclusion", None)
         if exclusion_mask is not None:
             exclusion_mask = exclusion_mask.cutout(
@@ -116,7 +118,7 @@ class MapMaker(object):
             geom=cutout_map.geom,
             geom_true=self.geom_true,
             fov_mask=fov_mask,
-            fov_mask_etrue = fov_mask_etrue,
+            fov_mask_etrue=fov_mask_etrue,
             exclusion_mask=exclusion_mask,
         ).run(selection)
 
@@ -212,8 +214,8 @@ class MapMakerObs(object):
             aeff=self.obs.aeff,
             geom=self.geom_true,
         )
-        if self.fov_mask_etrue is not None:
-            exposure.data[..., self.fov_mask_etrue] = 0
+        if self.fov_mask is not None:
+            exposure.data[..., self.fov_mask] = 0
         self.maps["exposure"] = exposure
 
     def _make_background(self):
