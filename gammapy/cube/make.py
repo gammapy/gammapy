@@ -19,14 +19,17 @@ class MapMaker(object):
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
-        Reference image geometry
+        Reference image geometry in reco energy
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
+    geom_true : `~gammapy.maps.WcsGeom`
+        Reference image geometry in true energy, used for exposure maps and PSF.
+         If none, the same as geom is assumed
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
     """
 
-    def __init__(self, geom, offset_max, exclusion_mask=None):
+    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
 
@@ -34,6 +37,7 @@ class MapMaker(object):
             raise ValueError("MapMaker only works with geom with an energy axis")
 
         self.geom = geom
+        self.geom_true = geom_true if geom_true else geom
         self.offset_max = Angle(offset_max)
         self.maps = {}
 
@@ -63,8 +67,10 @@ class MapMaker(object):
 
         # Initialise zero-filled maps
         for name in selection:
-            unit = "m2 s" if name == "exposure" else ""
-            self.maps[name] = Map.from_geom(self.geom, unit=unit)
+            if name == "exposure":
+                self.maps[name] = Map.from_geom(self.geom_true, unit="m2")
+            else:
+                self.maps[name] = Map.from_geom(self.geom, unit="")
 
         for obs in obs_list:
             try:
@@ -82,6 +88,9 @@ class MapMaker(object):
         cutout_map = Map.from_geom(self.geom).cutout(
             position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
         )
+        cutout_map_etrue = Map.from_geom(self.geom_true).cutout(
+            position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
+        )
 
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
 
@@ -89,6 +98,10 @@ class MapMaker(object):
         coords = cutout_map.geom.get_coord()
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
+
+        coords_etrue = cutout_map_etrue.geom.get_coord()
+        offset_etrue = coords_etrue.skycoord.separation(obs.pointing_radec)
+        fov_mask_etrue = offset_etrue >= self.offset_max
 
         # Only if there is an exclusion mask, make a cutout
         exclusion_mask = self.maps.get("exclusion", None)
@@ -101,7 +114,9 @@ class MapMaker(object):
         maps_obs = MapMakerObs(
             obs=obs,
             geom=cutout_map.geom,
+            geom_true=self.geom_true,
             fov_mask=fov_mask,
+            fov_mask_etrue = fov_mask_etrue,
             exclusion_mask=exclusion_mask,
         ).run(selection)
 
@@ -146,16 +161,21 @@ class MapMakerObs(object):
         Observation
     geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
+    geom_true : `~gammapy.maps.WcsGeom`
+        Reference image geometry in true energy, used for exposure maps and PSF.
+        If none, the same as geom is assumed
     fov_mask : `~numpy.ndarray`
         Mask to select pixels in field of view
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask (used by some background estimators)
     """
 
-    def __init__(self, obs, geom, fov_mask=None, exclusion_mask=None):
+    def __init__(self, obs, geom, geom_true=None, fov_mask=None, fov_mask_etrue=None, exclusion_mask=None):
         self.obs = obs
         self.geom = geom
+        self.geom_true = geom_true if geom_true else geom
         self.fov_mask = fov_mask
+        self.fov_mask_etrue = fov_mask_etrue
         self.exclusion_mask = exclusion_mask
         self.maps = {}
 
@@ -190,10 +210,10 @@ class MapMakerObs(object):
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
             aeff=self.obs.aeff,
-            geom=self.geom,
+            geom=self.geom_true,
         )
-        if self.fov_mask is not None:
-            exposure.data[..., self.fov_mask] = 0
+        if self.fov_mask_etrue is not None:
+            exposure.data[..., self.fov_mask_etrue] = 0
         self.maps["exposure"] = exposure
 
     def _make_background(self):
