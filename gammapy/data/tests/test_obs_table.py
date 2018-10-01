@@ -403,4 +403,4 @@ def test_observation_table_checker():
     checker = ObservationTableChecker(obs_table)
 
     records = list(checker.run())
-    assert len(records) == 7
+    assert len(records) == 1

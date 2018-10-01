@@ -202,4 +202,4 @@ class TestObservationChecker:
 
     def test_check_all(self):
         records = list(self.observation.check())
-        assert len(records) == 10
+        assert len(records) == 8
