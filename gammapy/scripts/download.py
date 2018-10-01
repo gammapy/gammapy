@@ -1,8 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Command line tool to download datasets and notebooks from gammapy-extra GitHub repo.
-GitHub REST API is used to scan the tree-folder strucutre and get commmit hash.
-https://developer.github.com/v3/
-"""
+"""Command line tool to download datasets and notebooks"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import click
 import logging
