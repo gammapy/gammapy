@@ -3,12 +3,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import os
-import pytest
 import astropy.units as u
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from numpy.testing import assert_allclose
-from ..datasets import gammapy_extra
 
 __all__ = [
     "requires_dependency",
@@ -39,6 +37,7 @@ def requires_dependency(name):
             import scipy
             ...
     """
+    import pytest
     if name in _requires_dependency_cache:
         skip_it = _requires_dependency_cache[name]
     else:
@@ -85,6 +84,7 @@ def requires_data(name):
             filename = gammapy_extra.filename('...')
             ...
     """
+    import pytest
     skip_it = not has_data(name)
 
     reason = "Missing data: {}".format(name)
