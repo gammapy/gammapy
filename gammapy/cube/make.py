@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import numpy as np
 from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
@@ -68,7 +69,7 @@ class MapMaker(object):
         # Initialise zero-filled maps
         for name in selection:
             if name == "exposure":
-                self.maps[name] = Map.from_geom(self.geom_true, unit="m2")
+                self.maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
             else:
                 self.maps[name] = Map.from_geom(self.geom, unit="")
 
@@ -116,7 +117,7 @@ class MapMaker(object):
         maps_obs = MapMakerObs(
             obs=obs,
             geom=cutout_map.geom,
-            geom_true=self.geom_true,
+            geom_true=cutout_map_etrue.geom,
             fov_mask=fov_mask,
             fov_mask_etrue=fov_mask_etrue,
             exclusion_mask=exclusion_mask,
@@ -214,8 +215,8 @@ class MapMakerObs(object):
             aeff=self.obs.aeff,
             geom=self.geom_true,
         )
-        if self.fov_mask is not None:
-            exposure.data[..., self.fov_mask] = 0
+        if self.fov_mask_etrue is not None:
+            exposure.data[..., self.fov_mask_etrue] = 0
         self.maps["exposure"] = exposure
 
     def _make_background(self):
