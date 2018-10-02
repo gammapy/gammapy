@@ -48,14 +48,6 @@ Now you install, run tests or build the documentation:
    $ python setup.py test
    $ python setup.py build_docs
 
-Also you have easy access to the Python scripts from the tutorials and examples:
-
-.. code-block:: bash
-
-   $ cd docs/tutorials
-   $ cd examples
-
 If you want to contribute to Gammapy, but are not familiar with Python or git or
 Astropy yet, please have a look at the `Astropy developer documentation
 <http://docs.astropy.org/en/latest/#developer-documentation>`__.
-

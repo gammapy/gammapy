@@ -761,19 +761,18 @@ Gammapy has a class for generic n-dimensional data arrays,
 should use this class. The goal is to reuse code for interpolation
 and have an coherent I/O interface, mainly in `~gammapy.irf`.
 
-A usage example can be found in :gp-extra-notebooks:``nddata_demo``.
+A usage example can be found in :gp-extra-notebook:`nddata_demo`.
 
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator.
-
 
 Sphinx docs build
 -----------------
 
 Generating the HTML docs for Gammapy is straight-forward::
 
-    python setup.py build_docs
-    open docs/_build/html/index.html
+    make docs-all
+    make docs-show
 
 Generating the PDF docs is more complex.
 This should work::
@@ -786,17 +785,31 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
-Jupyter notebooks present in the ``gammapy-extra`` repository are by default copied
-to the ``docs/notebooks`` and ``docs/_static/notebooks`` folders during
-the process of generating HTML docs. This triggers its conversion to  Sphinx
-formatted HTML files and .py scripts. The Sphinx formatted versions of the notebooks provide access to the raw .ipynb Jupyter files and .py script versions stored in ``docs/_static/notebooks`` folder.
+Jupyter notebooks stripped of output cells are present in the ``tutorials`` folder.
+They are by default tested, executed, and copied to the ``docs/notebooks`` and
+``docs/_static/notebooks`` folders during the process of generating HTML docs. This
+triggers its conversion to Sphinx formatted HTML files and ``.py`` scripts. The Sphinx
+formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter files
+and ``.py`` script versions stored in ``docs/_static/notebooks`` folder.
 
 Once the documentation built you can optimize the speed of re-building processes,
 for example in case you are modifying or creating new docs and you would like to check
-these changes are displayed nicely. For that purpose, if your modified doc file
-does not contain links to notebooks, you may set the flag ``build_notebooks`` to False
-in the ``setup.cfg`` file, so they are not re-written again by Sphinx.
+these changes are displayed nicely. For that purpose, if your modified RST file
+does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
+that notebooks are not executed during the docs build.
 
+In the case one single notebook is modified or added to the documentation, you can
+execute the build doc process with the ``src`` parameter with value the name of the
+considered notebook. i.e. ``make docs-all src=tutorials/my-notebook.ipynb``
+
+Each *fixed-text* Sphinx formatted notebook present in the documentation has its
+own link pointing to its specific space in Gammapy Binder. Since notebooks are
+evolving with Gammapy functionalities and documentation, it is possible to link
+the different versions of the notebooks to the same versions built in Gammapy Binder.
+For stable releases, it is useful to use the ``release`` parameter with the value
+of the release label tag used in Github. This value will be used to build the links
+to Binder for that specific stable release for each of the tutorials published in
+the :ref:`tutorials` section. i.e. ``make docs-all release=v0.8``
 
 Documentation guidelines
 ------------------------
@@ -894,19 +907,6 @@ One solution is to always use properties, but that can get very verbose if we ha
 so many getters and setters. We could start using descriptors.
 
 TODO: make a decision on this and describe the issue / solution here.
-
-
-Different versions of notebooks in Binder
------------------------------------------
-
-Jupyter notebooks may be accessed and executed on-line in the
-`Gammapy Binder <http://mybinder.org/repo/gammapy/gammapy-extra>`__ space. Each *fixed-text* sphinx
-formatted notebook present in the documentation has its own link pointing to its specific space in
-Gammapy Binder. Since notebooks are evolving with Gammapy functionalities and documentation, it is
-possible to link the different versions of the notebooks stored in GitHub repository ``gammapy-extra``
-to the same versions built in Gammapy Binder. For this purpose just edit the variable **git_commit**
-in ``setup.cfg`` file and provide the branch, tag or commit of GitHub repository ``gammapy-extra``
-that will be used to access the same version of the notebook in Gammapy Binder.
 
 Link to a notebook in gammapy-extra from the docs
 -------------------------------------------------

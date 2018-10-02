@@ -11,10 +11,6 @@ Gammapy and run the unit tests::
 
     $ python -c 'import gammapy; gammapy.test()'
 
-To check if the Gammapy command line tools are on your ``$PATH`` try this::
-
-    $ gammapy info --tools
-
 To check which dependencies of Gammapy you have installed::
 
     $ gammapy info --dependencies
@@ -38,4 +34,3 @@ If your issue is not adressed, please send an email to the mailing list.
       which python
       echo $PYTHONPATH
       python -c 'import astropy'
-

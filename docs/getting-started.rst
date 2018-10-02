@@ -52,12 +52,21 @@ environment:
 
 Congratulations! You are all set to start using Gammapy!
 
+.. note::
+
+    Every time you open a new terminal window, you will have to activate
+    the Gammapy conda environment again before you can use it.
+
+.. code-block:: bash
+
+    conda activate gammapy-0.8
+
 Download tutorials
 ------------------
 
-You might want to download the Gammapy tutorial notebooks and the example
+You can now proceed to download the Gammapy tutorial notebooks and the example
 datasets used there (at the moment from CTA, H.E.S.S. and Fermi-LAT). The total
-size of the to download is about 100 MB.
+size to download is about 100 MB.
 
 .. code-block:: bash
 
@@ -108,14 +117,7 @@ your setup:
     env | grep PATH
     python -c 'import gammapy; print(gammapy); print(gammapy.__version__)'
 
-**Note that every time you open a new terminal window, you will have to activate
-the Gammapy conda environment again before you can use it via:**
-
-.. code-block:: bash
-
-    conda activate gammapy-0.8
-
-Use the following commands to check which conda environment is active and which
+You can also use the following commands to check which conda environment is active and which
 ones you have set up:
 
 .. code-block:: bash
@@ -162,8 +164,8 @@ IPython is nicer to use for interactive analysis:
     In [2]: significance(n_on=10, mu_bkg=4.2, method='lima')
     Out[2]: array([2.39791813])
 
-For example you can use ``?`` to look up **help for any Gammapy function**, class or
-method from IPython:
+For example you can use ``?`` to look up **help for any Gammapy function, class or
+method** from IPython:
 
 .. code-block:: bash
 
@@ -245,7 +247,7 @@ we recommend you use Jupyter notebooks. Assuming you have followed the steps abo
 
     $ jupyter lab
 
-This should open up your the JupyterLab app in your web browser, where you can
+This should open up JupyterLab app in your web browser, where you can
 create new Jupyter notebooks or open up existing ones. If you have downloaded the
 tutorials with `gammapy download tutorials`, you can browse your `gammapy-tutorials`
 folder with Jupyterlab and execute them there.

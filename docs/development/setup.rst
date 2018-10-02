@@ -32,15 +32,32 @@ folder contains the documentation pages in restructured text (RST) format. The
 Sphinx documentation generator is used to convert those RST files to the HTML
 documentation.
 
-Jupyter notebooks present in the ``gammapy-extra`` GitHub repository are also
-part of the documentation. They are copied to a ``docs/notebooks`` folder during
+Tutorials
+---------
+
+The ``tutorials`` folder contains Jupyter notebooks that are part of the user
+documentation for Gammapy. They are copied to a ``docs/notebooks`` folder during
 the process of documentation building and converted to the Sphinx-formatted HTML
-files present in the :ref:`tutorials` section. Raw Jupyter notebooks files and
-.py scripts versions are placed in the ``docs/_static/notebooks`` folder
+files that you find in the :ref:`tutorials` section. Raw Jupyter notebooks files and
+``.py`` scripts versions are placed in the ``docs/_static/notebooks`` folder
 generated during the documentation building process.
 
-In the repository you will find a bunch of other files and folders. We will explain
-some of them here, but not all. Just ignore the rest.
+We do have automated testing for notebooks set up (just check that they run
+and don't raise an exception) in Travis CI (see below) which runs
+``python -m gammapy.utils.tutorials_test`` and looks at the ``tutorials/notebooks.yaml``
+file for which notebooks to test or not to test. It is also possible to perform
+tests locally on notebooks  with the ``gammapy jupyter`` command. This command provides
+functionalities for testing, code formatting, stripping output cells and execution. See
+``gammapy jupyter -h`` for more info on this.
+
+The ``gammapy download`` command allows to download notebooks published as tutorials
+as well as the related datasets needed to execute them. For stable releases, the list of
+tutorials to download, their locations and datasets used are declared in YAML files
+placed in the ``download/tutorials`` folder of the `gammapy-webpage`
+`Github repository <https://github.com/gammapy/gammapy-webpage>`__.
+The same happens for conda working environments of stable releases declared
+in ``download/install`` folder of that repository. The datasets are not versioned and
+are similarly declared in the ``download/data`` folder.
 
 .. _dev_build:
 
@@ -69,6 +86,8 @@ https://github.com/astropy/package-template and there are besides the
 ignored. The Astropy team has set up a bot that from time to time makes pull
 requests to update the affiliated packages (including Gammapy) as new versions
 of ``astropy_helpers`` and the extra files are released.
+
+The ``Dockerfile`` and ``binder.py`` files are used for Binder, see below.
 
 Version
 -------
@@ -147,23 +166,6 @@ notebooks and a few other things:
 
     https://github.com/gammapy/gammapy-extra
 
-Jupyter notebooks
------------------
-
-The ``notebooks`` folder contains Jupyter notebooks that are part of the user
-documentation for Gammapy. We do have automated testing for notebooks set up
-(just check that they run and don't raise an exception), via the
-``test_notebooks.py`` script in the ``gammapy`` repo, which looks at
-``gammapy-extra/notebooks/notebooks.yaml`` for which notebooks to test or not to
-test.
-
-The ``index.ipynb`` file is just a placeholder, the notebook index was moved to
-``docs/tutorials.rst`` in the ``gammapy`` repo and is now visible at
-http://docs.gammapy.org/en/latest/tutorials.html It can be removed after a while
-(say in January 2018).
-
-The ``Dockerfile`` is used for Binder, see below.
-
 Example data
 ------------
 
@@ -196,14 +198,6 @@ Other
   somewhere else on the web. It's hugely incomplete and probably not very useful
   as-is, and we should discuss if this is useful at all, and if yes, how we want
   to maintain it.
-
-Versioning
-----------
-
-At this time, the ``gammapy`` and ``gammapy-extra`` repositories aren't
-version-coupled, and we don't have a good solution for how to handle example
-data files yet. What we do now is tell users to download ``gammapy-extra``
-locally, which isn't nice, but it's hard to implement something better.
 
 Other repositories
 ==================
@@ -253,9 +247,19 @@ Gammapy Binder
 We have set up https://mybinder.org/ for Gammapy, which allows users to execute
 the tutorial Jupyter notebooks in the web browser, without having to install
 software or download data to their local machine. This can be useful for people
-to get started, and for tutorials.
+to get started, and for tutorials. Every HTML-fixed version of the tutorial notebooks
+that you can find in the :ref:`tutorials` section has a link to Binder that allows
+you to execute the tutorial in the myBinder cloud infrastructure.
 
-TODO: describe a bit how it works.
+myBinder provides versioned virtual environments coupled with every Github commit
+of the `gammapy`
+`Github repository <https://github.com/gammapy/gammapy>`__. The Binder docker image
+is created using the ``Dockerfile`` and ``binder.py`` files. The Dockerfile makes
+the Docker image used by Binder running some linux commands to install base-packages
+and copy the tutorials and datasets neeeded. It executes ``binder.py`` to conda
+install Gammapy dependencies listed in the environment YAML file placed in the
+``download/install`` folder of the `gammapy-webpage`
+`Github repository <https://github.com/gammapy/gammapy-webpage>`__
 
 Continuous integration
 ======================

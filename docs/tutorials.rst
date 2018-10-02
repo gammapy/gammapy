@@ -38,6 +38,10 @@ Notebooks
    notebooks/sed_fitting_gammacat_fermi.ipynb
    notebooks/fermi_lat.ipynb
    notebooks/light_curve.ipynb
+   notebooks/cta_sensitivity.ipynb
+   notebooks/spectrum_simulation.ipynb
+   notebooks/spectrum_simulation_cta.ipynb
+   notebooks/astropy_introduction.ipynb
 
 
 For a quick introduction to Gammapy, go here:
