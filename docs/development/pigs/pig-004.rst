@@ -16,9 +16,11 @@ Abstract
 ========
 
 For the past years, we have had tutorial notebooks and example datasets in a
-second ``gammapy-extra`` repository. The motivation was to keep the main
-``gammapy`` code repository small. But we always had problems with code,
-tutorials and data changing and versions not being linked.
+second ``gammapy-extra`` repository, as well as others example datasets placed in
+differente repositories like ``gamma-cat`` and ``gammapy-fermi-lat-data``.
+The motivation was to keep the main ``gammapy`` code repository small. 
+But we always had problems with code, tutorials and data changing and versions 
+not being linked.
 
 We propose to move the notebooks to the ``gammapy`` repository so that code and 
 tutorials can be version-coupled, and to only use stable datasets in tutorials to 
@@ -27,7 +29,8 @@ repository.
 
 To ship tutorials and datasets to users, we propose to add a ``gammapy download``
 command. The ``gammapy-extra`` repository will remain as a repository for 
-developers and as one place where datasets can be put, but it will not be mentioned to users.
+developers and as one place where datasets can be put, but it will not be mentioned 
+to users.
 
 What we have
 ============
@@ -51,8 +54,8 @@ for years.
 Given that Gammapy code changes (and probably always will, even if the pace will
 become slower and slower over the years), the tutorials have to be version-coupled to 
 the code. A related question is how tutorial notebooks, datasets used in tutorials and 
-other datasets not used in the tutorials are shipped to users.  Possible solutions to
-this and related problems have been discussed serval times, see e.g. `GH 1237`_, `GH 1369`_, 
+other datasets not used in the tutorials are shipped to users.  Some related discussions
+may be found in the following references, see e.g. `GH 1237`_, `GH 1369`_, 
 `GH 700`_, `GH 431`_, `GH 405`_, `GH 228`_, `GH 1131`_ (probably missed a few).
 
 
@@ -65,26 +68,21 @@ of tutorials and datasets. Other related issues that may appear will be faced
 iteratively with or without an extra PIG.
 
 To solve the versioning issue for notebooks, we propose to move the notebooks
-from ``gammapy-extra/notebooks`` to ``gammapy/notebooks``. Whether to store
-notebooks with or without output cells filled in the repository is a difficult
-decision. Removing output cells before committing has the advantage that the
-files are small, and that the diff in the pull request is also small and review
-becomes possible. On the other hand, the output is not directly visible on
-Github. Note that in any case, a rendered version of the notebooks will be
-available via the docs, that is already in place. We propose to remove the
-output and try that workflow for a while, see if we like it. Since notebooks
-aren't very large, and updates are not needed very often, we think changing to
-notebooks with output would also be acceptable in the ``gammapy`` repository. 
-We count on developer documentation and code review to guarantee empty-output 
-notebooks stored in ``gammapy/notebooks``, though we can also explore 
-`nbstripout`_ for a potential implementation of an automated mechamism to 
-remove outputs from notebooks in the Github repository.
+from ``gammapy-extra/notebooks`` to ``gammapy/notebooks``. We propose to store
+the notebooks in the repository without output cells filled. Removing output 
+cells before committing has the advantage that the files are small, and that 
+the diff in the pull request is also small and review becomes possible. 
+On the other hand, the output is not directly visible on Github. Note that in 
+any case, a rendered version of the notebooks will be available via the docs, 
+that is already in place.  We count on developer documentation and code review 
+to guarantee empty-output notebooks stored in ``gammapy/notebooks``, though we 
+can also explore `nbstripout`_ for a potential implementation of an automated 
+mechamism to remove outputs from notebooks in the Github repository.
 
-When preparing for the Sphinx documentation building one can tweak some parameters 
-in the ``setup.cfg`` file to execute notebooks during the process and get the static 
-notebooks with output cells rendered in the the documentation. On the contrary, 
-links to Binder notebooks and download of *.ipynb files will point to empty-output 
-notebooks.
+In the process of documentation building the notebooks will be texted and executed
+automatically, so the static HTML-formatted notebooks will contain output cells 
+rendered in the the documentation. On the contrary, links to Binder notebooks and 
+download links to *.ipynb files will point to empty-output notebooks.
 
 To solve the versioning issue for datasets, we propose to only use stable
 example datasets. Examples are `gammapy-fermi-lat-data`_ or
@@ -100,20 +98,22 @@ download`` command. This work and discussion how it should work in detail has
 started in `GH 1369`_. Roughly, the idea is that users will use ``gammapy
 download`` to download a version of the notebooks matching the version of the
 Gammapy code, by fetching the files from Github. A ``gammapy download tutorials``
-command will download all notebooks and the input datasets related. Not output datasets
-from the notebooks will be downloaded. All files will be copied into a 
-``$CWD/gammapy-tutorials`` folder, the datasets placed in a ``datasets`` subfolder and 
-the notebooks into a ``v.x.x`` subfolder accounting for the version downloaded. The URLs 
-of the input files used by the notebooks should be noted in the ``notebooks.yaml`` file.
-The management of updating the ``gammapy-tutorials`` folder after a local update of ``gammapy`` 
-is left up to the user. We could also implement a function with some check and version
-printout that we put in the first cell at the top of each notebook.
+command will download all notebooks and the input datasets related. Not output 
+datasets from the notebooks will be downloaded. All files will be copied into a 
+``$CWD/gammapy-tutorials`` folder, the datasets placed in a ``datasets`` subfolder
+and the notebooks into a ``notebooks-x.x`` subfolder accounting for the version 
+downloaded. The management of  updating the ``gammapy-tutorials`` folder after a 
+local update of ``gammapy`` is left up to the user. 
 
-One issue with ``gammapy download`` is that one cannot go back and fix or change something
-for released version. E.g. if Github disappears, ``gammapy download`` from older
-versions will no longer work. For this specific issue, a level of indirection
-like a ``gammapy.org/config.json`` file might help. As you can see, this part of
-the proposal is just a draft, feedback welcome!
+The URLs of the input files used by the notebooks should be noted in the
+``tutorials/notebooks.yaml`` file in the Gammapy repository, also accounting
+for the list of notebooks to download as tutorials. For the different stable releases, 
+the list of tutorials to download, their locations and datasets used are declared in 
+YAML files placed in the ``download/tutorials`` folder of the [Gammapy Web-page Github
+repository](https://github.com/gammapy/gammapy-webpage). The same happens for conda 
+working environments of stable releases declared in files placed in the ``download/install`` 
+folder of that repository. The datasets are not versioned and are similarly declared in 
+the ``download/data`` folder.
 
 As far as we can see, for testing and online Binder these changes don't introduce 
 significant improvements or new problems, though a Dockerfile in the ``gammapy`` repository 
