@@ -772,7 +772,7 @@ Sphinx docs build
 Generating the HTML docs for Gammapy is straight-forward::
 
     make docs-all
-    make doc-show
+    make docs-show
 
 Generating the PDF docs is more complex.
 This should work::

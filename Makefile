@@ -9,7 +9,7 @@ help:
 	@echo ''
 	@echo '     help             Print this help message (the default)'
 	@echo ''
-	@echo '     doc-show         Open local HTML docs in browser'
+	@echo '     docs-show        Open local HTML docs in browser'
 	@echo '     docs-all         Build documentation'
 	@echo '     clean            Remove generated files'
 	@echo '     clean-repo       Remove all untracked files and directories (use with care!)'
@@ -94,7 +94,7 @@ pydocstyle:
 
 # TODO: add test and code quality checks for `examples`
 
-doc-show:
+docs-show:
 	open docs/_build/html/index.html
 
 docs-all:
