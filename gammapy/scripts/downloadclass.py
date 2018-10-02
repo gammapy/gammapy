@@ -123,21 +123,21 @@ class DownloadProcess(object):
         pool.close()
 
     def show_info(self):
-        localfolder = self.localfold.parent
         condaname = "gammapy-" + self.release
         envfilename = condaname + "-environment.yml"
-        GAMMAPY_DATA = Path.cwd() / localfolder / "datasets"
 
         print("")
         print("")
         if self.option == "datasets":
+            GAMMAPY_DATA = Path.cwd() / self.localfold / "datasets"
             print("***** You might want to declare GAMMAPY_DATA env variable")
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
         else:
+            GAMMAPY_DATA = Path.cwd() / self.localfold.parent / "datasets"
             print(
                 "***** Enter the following commands below to get started with Gammapy"
             )
-            print("cd {}".format(localfolder))
+            print("cd {}".format(self.localfold.parent))
             if self.getenvfile:
                 print("conda env create -f {}".format(envfilename))
                 print("conda activate {}".format(condaname))
