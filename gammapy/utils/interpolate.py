@@ -1,8 +1,12 @@
-
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Interpolation utilities"""
+from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 
 
 class ScaledRegularGridInterpolator(object):
-    """
+    """Thin wrapper around `scipy.interpolate.RegularGridInterpolator`.
+
     Parameters
     ----------
     points : 
@@ -16,34 +20,42 @@ class ScaledRegularGridInterpolator(object):
         Keyword arguments passed to `RegularGridInterpolator`.
     """
 
-    def __init__(self, points, values, values_scale='linear', **kwargs):
+    def __init__(self, points, values, values_scale="lin", **kwargs):
         from scipy.interpolate import RegularGridInterpolator
         
         self.values_scale = values_scale
 
-        kwargs.setdefault("bounds_error", False)
+        #kwargs.setdefault("bounds_error", False)
         kwargs.setdefault("method", "linear")
         
         if values_scale == "log":
-            fn_0, fn_1 = np.log, np.exp
+            values = values.copy()
+            tiny = np.finfo(values.dtype).tiny
+            values[values == 0] = tiny
+            scale, scale_inv = np.log, np.exp
             kwargs.setdefault("fill_value", -np.inf)
         elif values_scale == "lin":
-            fn_0, fn_1 = lambda x: x, lambda x: x
+            scale, scale_inv = lambda x: x, lambda x: x
             kwargs.setdefault("fill_value", 0)
         elif values_scale == "sqrt":
             kwargs.setdefault("fill_value", 0)
-            fn_0, fn_1 = np.sqrt, lambda x: x ** 2
+            scale, scale_inv = np.sqrt, lambda x: x ** 2
         else:
-            raise ValueError("Not a valid scaling mode.")
+            raise ValueError("Not a valid value scaling mode.")
         
-        self._fn0, self.fn_1 = fn_0, fn_1
+        self._scale, self._scale_inv = scale, scale_inv
 
-        values_scaled = self._fn0(values)
+        if (values < 0).any() and values_scale != "lin":
+            raise ValueError("Can't apply scaled interpolation to negative values."
+                             "Choose 'lin' scaling.")
+
+        values_scaled = self._scale(values)
         self._interpolate = RegularGridInterpolator(
                                     points=points,
                                     values=values_scaled,
-                                    **kwargs)
+                                    **kwargs
+                                    )
 
-    def __call__(self, **kwargs):
-        values = self._interpolate(**kwargs)
-        return self._fn1(values)
+    def __call__(self, points, method='linear', **kwargs):
+        values = self._interpolate(points, method, **kwargs)
+        return self._scale_inv(values)
