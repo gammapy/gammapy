@@ -129,4 +129,4 @@ class TestDataStoreChecker:
 
     def test_check_all(self):
         records = list(self.data_store.check())
-        assert len(records) == 25
+        assert len(records) == 32
