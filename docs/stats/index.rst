@@ -65,6 +65,7 @@ Getting Started
 
 Li \& Ma Significance
 ---------------------
+[LiMa1983]_ (see equation 17)
 
 As an example, assume you measured :math:`n_{on} = 18` counts in a region where
 you suspect a source might be present and :math:`n_{off} = 97` counts in a
