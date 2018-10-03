@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_data
 from ...data import DataStore
 from ...maps import WcsGeom, MapAxis, Map
-from ..make import MapMaker
+from ..make import MapMaker, ImageMaker
 
 pytest.importorskip("scipy")
 
@@ -92,3 +92,9 @@ def test_map_maker(pars, obs_list):
     background = images["background"]
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
+
+
+def _test_image_maker(geom, obs_list):
+    maker = ImageMaker(geom, offset_max='2 deg')
+    images = maker.run(obs_list)
+    print(images)

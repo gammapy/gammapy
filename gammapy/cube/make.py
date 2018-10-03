@@ -68,7 +68,8 @@ class MapMaker(object):
 
         for obs in obs_list:
             try:
-                self._process_obs(obs, selection)
+                map_obs = self._process_obs(obs, selection)
+
             except NoOverlapError:
                 log.info(
                     "Skipping observation {}, no overlap with map.".format(obs.obs_id)
@@ -77,16 +78,18 @@ class MapMaker(object):
 
         return self.maps
 
-    def _process_obs(self, obs, selection):
+    def _obs_geom(self, obs):
         # Compute cutout geometry and slices to stack results back later
         cutout_map = Map.from_geom(self.geom).cutout(
             position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
         )
+        return cutout_map.geom
 
+    def _process_obs(self, obs, selection):
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
-
+        geom = self._obs_geom(obs)
         # Compute field of view mask on the cutout
-        coords = cutout_map.geom.get_coord()
+        coords = geom.get_coord()
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
@@ -98,13 +101,17 @@ class MapMaker(object):
             )
 
         # Make maps for this observation
-        maps_obs = MapMakerObs(
+        return MapMakerObs(
             obs=obs,
-            geom=cutout_map.geom,
+            geom=geom,
             fov_mask=fov_mask,
             exclusion_mask=exclusion_mask,
         ).run(selection)
 
+        return
+        self._stack_maps(maps_obs, selection, coords)
+
+    def _stack_maps(self, maps_obs, selection, coords):
         # Stack observation maps to total
         for name in selection:
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
@@ -227,3 +234,33 @@ def _check_selection(selection):
             raise ValueError("Selection not available: {!r}".format(name))
 
     return selection
+
+
+class ImageMaker(MapMaker):
+    """Make 2D images.
+
+    The main motivation for this class in addition to the `MapMaker`
+    is to have the common 2D image background estimation methods,
+    like `~gammapy.background.RingBackgroundEstimator`,
+    that work using on and off maps.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.WcsGeom`
+        Reference image geometry
+    offset_max : `~astropy.coordinates.Angle`
+        Maximum offset angle
+    exclusion_mask : `~gammapy.maps.Map`
+        Exclusion mask
+    background_estimator : `~gammapy.background.RingBackgroundEstimator`
+        Ring background estimator or something with an equivalend API.
+    """
+
+    def __init__(self, geom, offset_max, exclusion_mask=None, background_estimator=None):
+        super(ImageMaker, self).__init__(geom, offset_max, exclusion_mask)
+        self.background_estimator = background_estimator
+
+    def _process_obs(self, obs, selection):
+        super(ImageMaker, self)._process_obs(obs, selection)
+        images = self.make_images()
+        self.background_estimator(images)
