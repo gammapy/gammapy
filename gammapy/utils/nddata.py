@@ -7,6 +7,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
 from .array import array_stats_str
+from .interpolate import ScaledRegularGridInterpolator
 
 __all__ = ["NDDataArray", "DataAxis", "BinnedDataAxis", "sqrt_space"]
 
@@ -167,7 +168,6 @@ class NDDataArray(object):
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        method = method or self.default_interp_kwargs.get("method", None)
         res = self._regular_grid_interp(points, method=method, **kwargs)
 
         out = np.reshape(res, shapes).squeeze()
@@ -228,8 +228,6 @@ class NDDataArray(object):
         interp_kwargs : dict, optional
             Interpolation kwargs
         """
-        from scipy.interpolate import RegularGridInterpolator
-
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
         points = [a._interp_nodes() for a in self.axes]
@@ -248,7 +246,7 @@ class NDDataArray(object):
                 points = [points[0][mask]]
                 values = values[mask]
 
-        self._regular_grid_interp = RegularGridInterpolator(
+        self._regular_grid_interp = ScaledRegularGridInterpolator(
             points, values, **interp_kwargs
         )
 
