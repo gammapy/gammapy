@@ -126,7 +126,7 @@ class MapMaker(object):
         # Stack observation maps to total
         for name in selection:
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
-            self.maps[name].fill_by_coord(coords, data)
+            self.maps[name].fill_by_coord(coords_etrue, data) if name == "exposure" else self.maps[name].fill_by_coord(coords, data)
 
     def make_images(self, spectrum=None):
         """Create 2D images by summing over the energy axis.

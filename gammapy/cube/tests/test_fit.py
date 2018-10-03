@@ -25,7 +25,15 @@ def geom():
 
 
 @pytest.fixture(scope="session")
-def exposure(geom):
+def geom_etrue():
+    axis = MapAxis.from_edges(np.logspace(-1., 1., 4), name="energy", unit=u.TeV)
+    return WcsGeom.create(
+        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+    )
+
+
+@pytest.fixture(scope="session")
+def exposure(geom_etrue):
     filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
@@ -33,7 +41,7 @@ def exposure(geom):
         pointing=SkyCoord(1, 0.5, unit="deg", frame="galactic"),
         livetime="1 hour",
         aeff=aeff,
-        geom=geom,
+        geom=geom_etrue,
     )
     return exposure_map
 
@@ -46,18 +54,19 @@ def background(geom):
 
 
 @pytest.fixture(scope="session")
-def edisp(geom):
-    e_true = geom.get_axis_by_name("energy").edges
-    return EnergyDispersion.from_diagonal_response(e_true=e_true)
+def edisp(geom, geom_etrue):
+    e_true = geom_etrue.get_axis_by_name("energy").edges
+    e_reco = geom.get_axis_by_name("energy").edges
+    return EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
 @pytest.fixture(scope="session")
-def psf(geom):
+def psf(geom_etrue):
     filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
-    psf_kernel = PSFKernel.from_table_psf(table_psf, geom, max_radius=0.5 * u.deg)
+    psf_kernel = PSFKernel.from_table_psf(table_psf, geom_etrue, max_radius=0.5 * u.deg)
     return psf_kernel
 
 
@@ -85,7 +94,7 @@ def counts(sky_model, exposure, background, psf, edisp):
         model=sky_model, exposure=exposure, background=background, psf=psf, edisp=edisp
     )
     npred = evaluator.compute_npred()
-    return WcsNDMap(exposure.geom, npred)
+    return WcsNDMap(background.geom, npred)
 
 
 @requires_dependency("scipy")
@@ -113,18 +122,18 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
     assert result.success
     assert "minuit" in repr(result)
 
-    stat_expected = 3840.0605649268496
+    stat_expected = 5417.350078
     assert_allclose(result.total_stat, stat_expected, rtol=1e-2)
 
     pars = result.model.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.005895, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.004177, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.05614, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.033947, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 3.936e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 4.03049e-13, rtol=1e-2)
 
     assert result.model.spectral_model.parameters.covariance is not None
     assert result.model.spatial_model.parameters.covariance is not None
