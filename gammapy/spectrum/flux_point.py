@@ -16,7 +16,6 @@ from . import SpectrumObservationList, SpectrumObservation
 
 __all__ = [
     "FluxPoints",
-    # 'FluxPointProfiles',
     "FluxPointEstimator",
     "FluxPointFit",
 ]
@@ -626,10 +625,12 @@ class FluxPointEstimator(object):
     """
 
     def __init__(self, obs, groups, model):
-        self.obs = obs
+        if isinstance(obs, SpectrumObservation):
+            obs = SpectrumObservationList([obs])
+        self._obs = SpectrumObservationList(obs)
+        
         self.groups = groups
         self.model = model
-        self.flux_points = None
         self._fit = None
 
     def __str__(self):
@@ -649,14 +650,14 @@ class FluxPointEstimator(object):
         """Observations participating in the fit"""
         return self._obs
 
-    @obs.setter
-    def obs(self, obs):
-        if isinstance(obs, SpectrumObservation):
-            obs = SpectrumObservationList([obs])
-
-        self._obs = SpectrumObservationList(obs)
-
-    def compute_points(self):
+    def run(self):
+        """Run the flux point estimator
+        
+        Returns
+        -------
+        flux_points : `FluxPoints`
+            Estmated flux points.
+        """
         rows = []
         for group in self.groups:
             if group.bin_type != "normal":
@@ -668,7 +669,7 @@ class FluxPointEstimator(object):
 
         meta = OrderedDict([("method", "TODO"), ("SED_TYPE", "dnde")])
         table = table_from_row_data(rows=rows, meta=meta)
-        self.flux_points = FluxPoints(table)
+        return FluxPoints(table)
 
     def compute_flux_point(self, energy_group):
         log.debug("Computing flux point for energy group:\n{}".format(energy_group))
@@ -678,9 +679,10 @@ class FluxPointEstimator(object):
         # Put at log center of the bin
         energy_ref = np.sqrt(energy_group.energy_min * energy_group.energy_max)
 
-        return self.fit_point(
-            model=model, energy_group=energy_group, energy_ref=energy_ref
-        )
+        result = self.compute_dnde(model=model, energy_group=energy_group, energy_ref=energy_ref)
+        result.update(self.compute_dnde_err())
+        result.update(self.compute_dnde_ul())
+        return result
 
     @staticmethod
     def _get_spectral_model(global_model):
@@ -690,105 +692,43 @@ class FluxPointEstimator(object):
                 par.frozen = True
         return model
 
-    def compute_flux_point_ul(self, fit, stat_best_fit, delta_ts=4, negative=False):
+    def compute_dnde_err(self, sigma=1.):
         """
-        Compute upper limits for flux point values.
-
-
-        Parameters
-        ----------
-        fit : `SpectrumFit`
-            Instance of spectrum fit.
-        stat_best_fit : float
-            TS value for best fit result.
-        delta_ts : float (4)
-            Difference in log-likelihood for given confidence interval.
-            See Example below.
-        negative : bool
-            Compute limit in negative direction.
-
-
-        Examples
-        --------
-        To compute ~95% confidence upper limits (or 2 sigma) you can use::
-
-            from scipy.stats import chi2, norm
-
-            sigma = 2
-            cl = 1 - 2 * norm.sf(sigma) # using two sided p-value
-            delta_ts = chi2.isf(1 - cl, df=1)
+        Compute assymetric errors for a flux point.
 
         Returns
         -------
         dnde_ul : `~astropy.units.Quantity`
             Flux point upper limit.
         """
-        from scipy.optimize import brentq
-
-        model = fit.result[0].model.copy()
-        # this is a prototype for fast flux point upper limit
-        # calculation using brentq
-        amplitude = model.parameters["amplitude"].value / 1E-12
-        amplitude_err = model.parameters.error("amplitude") / 1E-12
-
-        if negative:
-            amplitude_max = amplitude
-            amplitude_min = amplitude_max - 1E3 * amplitude_err
-        else:
-            amplitude_max = amplitude + 1E3 * amplitude_err
-            amplitude_min = amplitude
-
-        def ts_diff(x):
-            model.parameters["amplitude"].value = x * 1E-12
-            stat = fit.total_stat(model.parameters)
-            return (stat_best_fit + delta_ts) - stat
-
+        amplitude = self._best_fit_model.parameters['amplitude']
         try:
-            result = brentq(
-                ts_diff, amplitude_min, amplitude_max, maxiter=100, rtol=1e-2
-            )
-            model.parameters["amplitude"].value = result * 1E-12
-            return model(model.parameters["reference"].quantity)
-        except (RuntimeError, ValueError):
-            # Where the root finding fails NaN is set as amplitude
-            log.debug("Flux point upper limit computation failed.")
-            return np.nan * u.Unit(model.parameters["amplitude"].unit)
-
-    def compute_flux_point_sqrt_ts(self, fit, stat_best_fit):
+            result = self.fit.minuit.minos(var="par_001_amplitude", sigma=sigma)
+            errp = result["par_001_amplitude"].upper * amplitude.scale
+            errn = - result["par_001_amplitude"].lower * amplitude.scale
+        except RuntimeError:
+            errp, errn = np.nan, np.nan
+        return {"dnde_errp": u.Quantity(errp, amplitude.unit),
+                "dnde_errn": u.Quantity(errn, amplitude.unit)}
+    
+    def compute_dnde_ul(self, sigma=2):
         """
-        Compute sqrt(TS) for flux point.
-
-
-        Parameters
-        ----------
-        fit : `SpectrumFit`
-            Instance of spectrum fit.
-        stat_best_fit : float
-            TS value for best fit result.
-
+        Compute upper limit for a flux point.
 
         Returns
         -------
-        sqrt_ts : float
-            Sqrt(TS) for flux point.
-
+        dnde_ul : `~astropy.units.Quantity`
+            Flux point upper limit.
         """
-        model = fit.result[0].model.copy()
-        # store best fit amplitude, set amplitude of fit model to zero
-        amplitude = model.parameters["amplitude"].value
+        amplitude = self._best_fit_model.parameters['amplitude']
+        try:
+            result = self.fit.minuit.minos(var="par_001_amplitude", sigma=sigma)
+            ul = result["par_001_amplitude"].upper * amplitude.scale + amplitude.value
+        except RuntimeError:
+            ul = np.nan        
+        return {'dnde_ul': u.Quantity(ul, amplitude.unit)}
 
-        # determine TS value for amplitude zero
-        model.parameters["amplitude"].value = 0
-        stat_null = fit.total_stat(model.parameters)
-
-        # set amplitude of fit model to best fit amplitude
-        model.parameters["amplitude"].value = amplitude
-
-        # compute sqrt TS
-        ts = np.abs(stat_null - stat_best_fit)
-        return np.sign(amplitude) * np.sqrt(ts)
-
-    def fit_point(self, model, energy_group, energy_ref, sqrt_ts_threshold=1):
+    def compute_dnde(self, model, energy_group, energy_ref, sqrt_ts_threshold=2):
         from .fit import SpectrumFit
 
         energy_min = energy_group.energy_min
@@ -815,34 +755,14 @@ class FluxPointEstimator(object):
         model.parameters["reference"].value = energy_ref.to("TeV").value
 
         self._fit = SpectrumFit(self.obs, model)
-
+        result = self.fit.run()
+  
         for index in range(len(quality_orig)):
             self.obs[index].on_vector.quality = quality_orig[index]
 
-        log.debug(
-            "Calling Sherpa fit for flux point "
-            " in energy range:\n{}".format(self.fit)
-        )
-
-        result = self.fit.run()
-
-        # compute TS value for all observations
-        stat_best_fit = result.total_stat
-
-        dnde, dnde_err = self.fit.result[0].model.evaluate_error(energy_ref)
-        sqrt_ts = self.compute_flux_point_sqrt_ts(self.fit, stat_best_fit=stat_best_fit)
-
-        dnde_ul = self.compute_flux_point_ul(self.fit, stat_best_fit=stat_best_fit)
-        dnde_errp = (
-            self.compute_flux_point_ul(
-                self.fit, stat_best_fit=stat_best_fit, delta_ts=1.
-            )
-            - dnde
-        )
-        dnde_errn = dnde - self.compute_flux_point_ul(
-            self.fit, stat_best_fit=stat_best_fit, delta_ts=1., negative=True
-        )
-
+        self._best_fit_model = result.model
+        dnde, dnde_err = result.model.evaluate_error(energy_ref)
+        sqrt_ts = self.fit.sqrt_ts(result.model.parameters)
         return OrderedDict(
             [
                 ("e_ref", energy_ref),
@@ -850,39 +770,10 @@ class FluxPointEstimator(object):
                 ("e_max", energy_max),
                 ("dnde", dnde.to(DEFAULT_UNIT["dnde"])),
                 ("dnde_err", dnde_err.to(DEFAULT_UNIT["dnde"])),
-                ("dnde_ul", dnde_ul.to(DEFAULT_UNIT["dnde"])),
                 ("is_ul", sqrt_ts < sqrt_ts_threshold),
                 ("sqrt_ts", sqrt_ts),
-                ("dnde_errp", dnde_errp),
-                ("dnde_errn", dnde_errn),
             ]
         )
-
-
-class FluxPointProfiles(object):
-    """Flux point likelihood profiles.
-
-    See :ref:`gadf:likelihood_sed`.
-
-    TODO: merge this class with the classes in ``fermipy/castro.py``,
-    which are much more advanced / feature complete.
-    This is just a temp solution because we don't have time for that.
-
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Table holding the data
-    """
-
-    def __init__(self, table):
-        self.table = table
-
-    @classmethod
-    def read(cls, filename, **kwargs):
-        """Read from file."""
-        filename = make_path(filename)
-        table = Table.read(str(filename), **kwargs)
-        return cls(table=table)
 
 
 class FluxPointFit(Fit):
