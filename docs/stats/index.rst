@@ -30,8 +30,8 @@ Variable          Definition
 ``mu_off``        Total expected counts in the off region
 ``mu_sig``        Signal expected counts in the on region
 ``mu_bkg``        Background expected counts in the on region
-``a_on``          Relative background efficiency in the on region
-``a_off``         Relative background efficiency in the off region
+``a_on``          Relative background exposure in the on region  
+``a_off``         Relative background exposure in the off region
 ``alpha``         Background efficiency ratio ``a_on`` / ``a_off``
 ``n_bkg``         Background estimate in the on region
 ================= ====================================================
