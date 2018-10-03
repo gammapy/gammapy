@@ -114,7 +114,6 @@ class Fit(object):
         ts = np.abs(stat_null - stat_best_fit)
         return np.sign(amplitude) * np.sqrt(ts)
 
-
     def optimize(self, backend="minuit", **kwargs):
         """Run the optimization
 

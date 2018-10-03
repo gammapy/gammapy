@@ -38,6 +38,7 @@ def requires_dependency(name):
             ...
     """
     import pytest
+
     if name in _requires_dependency_cache:
         skip_it = _requires_dependency_cache[name]
     else:
@@ -85,6 +86,7 @@ def requires_data(name):
             ...
     """
     import pytest
+
     skip_it = not has_data(name)
 
     reason = "Missing data: {}".format(name)

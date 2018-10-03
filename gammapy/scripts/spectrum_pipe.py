@@ -102,6 +102,4 @@ class SpectrumAnalysisIACT(object):
     @property
     def spectrum_result(self):
         """`~gammapy.spectrum.SpectrumResult`"""
-        return SpectrumResult(
-            points=self.flux_points, model=self.fit.result[0].model
-        )
+        return SpectrumResult(points=self.flux_points, model=self.fit.result[0].model)

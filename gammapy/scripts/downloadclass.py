@@ -69,7 +69,7 @@ class DownloadProcess(object):
         self.parse_yaml()
         filename_dat = "gammapy-data-index.json"
         url_dat = BASE_URL + "/data/" + filename_dat
-        jsontext = urlopen(url_dat).read().decode('utf-8')
+        jsontext = urlopen(url_dat).read().decode("utf-8")
         jsondata = json.loads(jsontext)
 
         if self.option == "notebooks" or self.modetutor:
@@ -155,7 +155,7 @@ class DownloadProcess(object):
             url_nbs = YAML_URL
 
         r = urlopen(url_nbs)
-        yamltext = r.read().decode('utf-8')
+        yamltext = r.read().decode("utf-8")
         for nb in yaml.safe_load(yamltext):
             path = nb["name"] + ".ipynb"
             label = "nb: " + nb["name"]
@@ -214,4 +214,3 @@ class DownloadProcess(object):
         )
         sys.stdout.write(text)
         sys.stdout.flush()
-

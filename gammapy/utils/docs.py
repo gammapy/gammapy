@@ -156,7 +156,9 @@ def parse_notebooks(folder, url_docs, git_commit):
                         for output in cell["outputs"]:
                             if output["output_type"] == "execute_result":
                                 if "text/latex" in output["data"].keys():
-                                    output["data"]["text/latex"] = output["data"]["text/latex"].replace('$', '$$')
+                                    output["data"]["text/latex"] = output["data"][
+                                        "text/latex"
+                                    ].replace("$", "$$")
                 nbformat.write(rawnb, str(nbpath))
 
         # modif links to rst /html doc files

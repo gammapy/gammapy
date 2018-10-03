@@ -14,11 +14,7 @@ from .models import PowerLaw
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
 
-__all__ = [
-    "FluxPoints",
-    "FluxPointEstimator",
-    "FluxPointFit",
-]
+__all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointFit"]
 
 log = logging.getLogger(__name__)
 
@@ -628,7 +624,7 @@ class FluxPointEstimator(object):
         if isinstance(obs, SpectrumObservation):
             obs = SpectrumObservationList([obs])
         self._obs = SpectrumObservationList(obs)
-        
+
         self.groups = groups
         self.model = model
         self._fit = None
@@ -679,7 +675,9 @@ class FluxPointEstimator(object):
         # Put at log center of the bin
         energy_ref = np.sqrt(energy_group.energy_min * energy_group.energy_max)
 
-        result = self.compute_dnde(model=model, energy_group=energy_group, energy_ref=energy_ref)
+        result = self.compute_dnde(
+            model=model, energy_group=energy_group, energy_ref=energy_ref
+        )
         result.update(self.compute_dnde_err())
         result.update(self.compute_dnde_ul())
         return result
@@ -701,16 +699,18 @@ class FluxPointEstimator(object):
         dnde_ul : `~astropy.units.Quantity`
             Flux point upper limit.
         """
-        amplitude = self._best_fit_model.parameters['amplitude']
+        amplitude = self._best_fit_model.parameters["amplitude"]
         try:
             result = self.fit.minuit.minos(var="par_001_amplitude", sigma=sigma)
             errp = result["par_001_amplitude"].upper * amplitude.scale
-            errn = - result["par_001_amplitude"].lower * amplitude.scale
+            errn = -result["par_001_amplitude"].lower * amplitude.scale
         except RuntimeError:
             errp, errn = np.nan, np.nan
-        return {"dnde_errp": u.Quantity(errp, amplitude.unit),
-                "dnde_errn": u.Quantity(errn, amplitude.unit)}
-    
+        return {
+            "dnde_errp": u.Quantity(errp, amplitude.unit),
+            "dnde_errn": u.Quantity(errn, amplitude.unit),
+        }
+
     def compute_dnde_ul(self, sigma=2):
         """
         Compute upper limit for a flux point.
@@ -720,13 +720,13 @@ class FluxPointEstimator(object):
         dnde_ul : `~astropy.units.Quantity`
             Flux point upper limit.
         """
-        amplitude = self._best_fit_model.parameters['amplitude']
+        amplitude = self._best_fit_model.parameters["amplitude"]
         try:
             result = self.fit.minuit.minos(var="par_001_amplitude", sigma=sigma)
             ul = result["par_001_amplitude"].upper * amplitude.scale + amplitude.value
         except RuntimeError:
-            ul = np.nan        
-        return {'dnde_ul': u.Quantity(ul, amplitude.unit)}
+            ul = np.nan
+        return {"dnde_ul": u.Quantity(ul, amplitude.unit)}
 
     def compute_dnde(self, model, energy_group, energy_ref, sqrt_ts_threshold=2):
         from .fit import SpectrumFit
@@ -756,7 +756,7 @@ class FluxPointEstimator(object):
 
         self._fit = SpectrumFit(self.obs, model)
         result = self.fit.run()
-  
+
         for index in range(len(quality_orig)):
             self.obs[index].on_vector.quality = quality_orig[index]
 
