@@ -82,7 +82,7 @@ mechamism to remove outputs from notebooks in the Github repository.
 In the process of documentation building the notebooks will be texted and executed
 automatically, so the static HTML-formatted notebooks will contain output cells 
 rendered in the the documentation. On the contrary, links to Binder notebooks and 
-download links to *.ipynb files will point to empty-output notebooks.
+download links to .ipynb files will point to empty-output notebooks.
 
 To solve the versioning issue for datasets, we propose to only use stable
 example datasets. Examples are `gammapy-fermi-lat-data`_ or
