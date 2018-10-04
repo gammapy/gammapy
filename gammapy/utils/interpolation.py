@@ -40,7 +40,7 @@ class ScaledRegularGridInterpolator(object):
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
         # the regular grid interpolator does not work with scalars, so we 
-        # apply np.atleast_1d()
+        # use this workaround
         if np.isscalar(points):
             values = self._interpolate([points], method, **kwargs)
         else:    
