@@ -11,6 +11,7 @@ from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameter, Parameters
+from ..utils.interpolation import interpolation_scale
 
 __all__ = [
     "SpectralModel",
@@ -1197,30 +1198,19 @@ class TableModel(SpectralModel):
         self.parameters = Parameters([Parameter("norm", norm, min=0, unit="")])
         self.energy = energy
         self.values = values
-        self.values_scale = values_scale
         self.meta = dict() if meta is None else meta
 
+        scale = interpolation_scale(values_scale)
+        
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("bounds_error", False)
         interp_kwargs.setdefault("kind", "cubic")
+        interp_kwargs.setdefault("fill_value", scale.fill_value)
 
-        if values_scale == "log":
-            fn_0, fn_1 = np.log, np.exp
-            interp_kwargs.setdefault("fill_value", -np.inf)
-        elif values_scale == "lin":
-            fn_0, fn_1 = lambda x: x, lambda x: x
-            interp_kwargs.setdefault("fill_value", 0)
-        elif values_scale == "sqrt":
-            interp_kwargs.setdefault("fill_value", 0)
-            fn_0, fn_1 = np.sqrt, lambda x: x ** 2
-        else:
-            raise ValueError("Not a valid interpolation mode.")
-
-        with np.errstate(divide="ignore"):
-            y = fn_0(values.value)
+        y = scale(values.value, clip=True)
         x = np.log(energy.value)
         interpy = interp1d(x, y, **interp_kwargs)
-        self._evaluate = lambda x: fn_1(interpy(x))
+        self._evaluate = lambda x: scale.inverse(interpy(x))
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
