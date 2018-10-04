@@ -8,8 +8,8 @@ PIG 4 - Setup for tutorial notebooks and data
 
 * Author: José Enrique Ruiz, Christoph Deil
 * Created: May 16, 2018
-* Accepted: tbd
-* Status: draft
+* Accepted: Oct 4, 2018
+* Status: accepted
 * Discussion:  `GH 1419`_
 
 Abstract
@@ -133,6 +133,16 @@ For datasets this is not a good option, it would limit us to 10 - 30 MB max,
 i.e. we would get a split between some datasets distributed this way, and larger
 ones still via ``gammapy download``. Overall it doesn't seem useful; note that
 we also don't ship HTML documentation with the code, but separately.
+
+Decision
+========
+
+This PIG was extensively discussed on Github, as well as online and in-person meetings.
+It was then implemented in summer 2018, and we shipped the new setup with Gammapy v0.8
+and tried the development workflow for a few weeks. The solution works well so far
+and does solve the notebook and dataset issues that motivated the work.
+It was finally approved during the Gammapy coding sprint on Oct 4, 2018.
+
 
 .. _gammapy: https://github.com/gammapy/gammapy
 .. _gammapy-extra: https://github.com/gammapy/gammapy-extra
