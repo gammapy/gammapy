@@ -81,6 +81,9 @@ Time-dependent analysis:
 
 - `Light curves <notebooks/light_curve.html>`__ | *light_curve.ipynb*
 
+Sensitivity:
+
+- `Compute the CTA sensitivity <notebooks/cta_sensitivity.html>`__ | *cta_sensitivity.ipynb*
 
 .. _tutorials_extras:
 
