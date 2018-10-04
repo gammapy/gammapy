@@ -39,7 +39,9 @@ class ScaledRegularGridInterpolator(object):
                                     )
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
-        values = self._interpolate(points, method, **kwargs)
+        # the regular grid interpolator does not work with scalars, so we 
+        # apply np.atleast_1d()
+        values = self._interpolate(np.atleast_1d(points), method, **kwargs)
         values = self.scale.inverse(values)
         
         if clip:
