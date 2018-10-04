@@ -14,10 +14,11 @@ def bkg_3d():
     energy = [0.1, 10, 1000] * u.TeV
     fov_lon = [0, 1, 2, 3] * u.deg
     fov_lat = [0, 1, 2, 3] * u.deg
-    data = np.zeros((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+    
+    data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
     # Axis order is (energy, fov_lon, fov_lat)
-    data.value[1, 0, 0] = 2
-    data.value[1, 1, 1] = 4
+    #data.value[1, 0, 0] = 1
+    data.value[1, 1, 1] = 100
     return Background3D(
         energy_lo=energy[:-1],
         energy_hi=energy[1:],
@@ -82,7 +83,7 @@ def test_background_3d_evaluate(bkg_3d):
         fov_lat=[0.5, 1.5] * u.deg,
         energy_reco=[100, 100] * u.TeV,
     )
-    assert_allclose(res.value, [2, 4])
+    assert_allclose(res.value, [1, 100])
     assert res.shape == (2,)
     assert res.unit == "s-1 MeV-1 sr-1"
 
@@ -91,14 +92,14 @@ def test_background_3d_evaluate(bkg_3d):
         fov_lat=[1, 0.5] * u.deg,
         energy_reco=[100, 100] * u.TeV,
     )
-    assert_allclose(res.value, [1.5, 2])
+    assert_allclose(res.value, [3.162278, 1], rtol=1e-5)
 
     res = bkg_3d.evaluate(
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
         fov_lat=[[1, 0.5], [1, 0.5]] * u.deg,
         energy_reco=[[1, 1], [100, 100]] * u.TeV,
     )
-    assert_allclose(res.value, [[0, 0], [1.5, 2]])
+    assert_allclose(res.value, [[1, 1], [3.162278, 1]], rtol=1e-5)
     assert res.shape == (2, 2)
 
 
@@ -114,7 +115,7 @@ def test_background_3d_integrate(bkg_3d):
     assert rate.unit == "s-1 sr-1"
     # Expect approximately `rate * de`
     # with `rate = 4 s-1 sr-1 MeV-1` and `de = 2 MeV`
-    assert_allclose(rate.value, 8)
+    assert_allclose(rate.value, 200, rtol=1e-5)
 
     rate = bkg_3d.integrate_on_energy_range(
         fov_lon=0.5 * u.deg, fov_lat=0.5 * u.deg, energy_range=[1, 100] * u.TeV
@@ -127,7 +128,7 @@ def test_background_3d_integrate(bkg_3d):
         energy_range=[1, 100] * u.TeV,
     )
     assert rate.shape == (2, 2)
-    assert_allclose(rate.value, [[74250000., 49500000], [49500000., 99000000.]])
+    assert_allclose(rate.value, [[2.060327e+08, 99000000], [99000000., 99000000.]], rtol=1e-5)
 
 
 @pytest.fixture(scope="session")

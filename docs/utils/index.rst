@@ -178,6 +178,10 @@ Reference/API
     :no-inheritance-diagram:
     :include-all-objects:
 
+.. automodapi:: gammapy.utils.interpolation
+    :no-inheritance-diagram:
+    :include-all-objects:
+
 .. automodapi:: gammapy.utils.table
     :no-inheritance-diagram:
     :include-all-objects:

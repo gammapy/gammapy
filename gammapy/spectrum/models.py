@@ -11,6 +11,7 @@ from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameter, Parameters
+from ..utils.interpolation import ScaledRegularGridInterpolator
 
 __all__ = [
     "SpectralModel",
@@ -1192,36 +1193,21 @@ class TableModel(SpectralModel):
     def __init__(
         self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
     ):
-        from scipy.interpolate import interp1d
-
         self.parameters = Parameters([Parameter("norm", norm, min=0, unit="")])
         self.energy = energy
         self.values = values
-        self.values_scale = values_scale
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = interp_kwargs or {}
-        interp_kwargs.setdefault("bounds_error", False)
-        interp_kwargs.setdefault("kind", "cubic")
-
-        if values_scale == "log":
-            fn_0, fn_1 = np.log, np.exp
-            interp_kwargs.setdefault("fill_value", -np.inf)
-        elif values_scale == "lin":
-            fn_0, fn_1 = lambda x: x, lambda x: x
-            interp_kwargs.setdefault("fill_value", 0)
-        elif values_scale == "sqrt":
-            interp_kwargs.setdefault("fill_value", 0)
-            fn_0, fn_1 = np.sqrt, lambda x: x ** 2
-        else:
-            raise ValueError("Not a valid interpolation mode.")
-
-        with np.errstate(divide="ignore"):
-            y = fn_0(values.value)
-        x = np.log(energy.value)
-        interpy = interp1d(x, y, **interp_kwargs)
-        self._evaluate = lambda x: fn_1(interpy(x))
-
+        interp_kwargs.setdefault("values_scale", "log")
+        
+        self._evaluate = ScaledRegularGridInterpolator(
+            points=(np.log(energy.value),),
+            values=values.value,
+            **interp_kwargs
+        )
+        
+    
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
         """Read XSPEC table model
@@ -1298,8 +1284,7 @@ class TableModel(SpectralModel):
     def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
         x = np.log(energy.to(self.energy.unit).value)
-        vals = self._evaluate(x)
-        vals = np.clip(vals, 0, np.inf)
+        vals = self._evaluate(x, clip=True)
         return u.Quantity(norm.value * vals, self.values.unit, copy=False)
 
 

@@ -44,7 +44,7 @@ class Background3D(object):
     Data           : size = 27216, min =  0.000 1 / (MeV s sr), max =  0.421 1 / (MeV s sr)
     """
 
-    default_interp_kwargs = dict(bounds_error=False, fill_value=None)
+    default_interp_kwargs = dict(bounds_error=False, fill_value=None, values_scale="log")
     """Default Interpolation kwargs for `~gammapy.utils.nddata.NDDataArray`. Extrapolate."""
 
     def __init__(

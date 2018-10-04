@@ -37,5 +37,5 @@ def test_dmfluxmapmaker(jfact, prim_flux):
     )
 
     actual = flux[5, 5]
-    desired = 6.503327e-13 / u.cm ** 2 / u.s
+    desired = 6.49463e-13 / u.cm ** 2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-5)

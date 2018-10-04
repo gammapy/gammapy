@@ -70,7 +70,8 @@ class EffectiveAreaTable(object):
                 energy_lo, energy_hi, interpolation_mode="log", name="energy"
             )
         ]
-        self.data = NDDataArray(axes=axes, data=data)
+        interp_kwargs = {"extrapolate": False, "bounds_error": False}
+        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     @property
