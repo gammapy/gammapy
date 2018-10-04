@@ -7,19 +7,23 @@ import numpy as np
 class ScaledRegularGridInterpolator(object):
     """Thin wrapper around `scipy.interpolate.RegularGridInterpolator`.
 
+    The values are scaled before the interpolation and back-scaled after the
+    interpolation.
+
     Parameters
     ----------
     points : tuple
         Tuple of points passed to `RegularGridInterpolator`.
     values :
         Values passed to `RegularGridInterpolator`.
-    values_scale : {'log', 'lin', 'sqrt'}
+    values_scale : {'lin', 'log', 'sqrt'}
         Interpolation scaling applied to values. If the values vary over many magnitudes
         a 'log' scaling is recommended.
     **kwargs : dict
         Keyword arguments passed to `RegularGridInterpolator`.
     """
-    # TODO: add points scaling or axis scaling argument 
+
+    # TODO: add points scaling or axis scaling argument
     def __init__(self, points, values, values_scale="lin", extrapolate=True, **kwargs):
         from scipy.interpolate import RegularGridInterpolator
 
@@ -29,22 +33,20 @@ class ScaledRegularGridInterpolator(object):
         if extrapolate:
             kwargs.setdefault("bounds_error", False)
             kwargs.setdefault("fill_value", None)
-        
+
         self._interpolate = RegularGridInterpolator(
-                                    points=points,
-                                    values=values_scaled,
-                                    **kwargs
-                                    )
+            points=points, values=values_scaled, **kwargs
+        )
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
-        # the regular grid interpolator does not work with scalars, so we 
+        # the regular grid interpolator does not work with scalars, so we
         # use this workaround
         if np.isscalar(points):
             values = self._interpolate([points], method, **kwargs)
-        else:    
+        else:
             values = self._interpolate(points, method, **kwargs)
         values = self.scale.inverse(values)
-        
+
         if clip:
             np.clip(values, 0, np.inf, out=values)
 
@@ -60,40 +62,43 @@ def interpolation_scale(scale="lin"):
         Choose interpolation scaling.
     """
     if scale == "lin":
-        return LinearScaling()                
+        return LinearScaling()
     elif scale == "log":
-        return LogScaling()                
+        return LogScaling()
     elif scale == "sqrt":
-        return SqrtScaling()                
+        return SqrtScaling()
     else:
         raise ValueError("Not a valid value scaling mode.")
 
 
 class LogScaling(object):
     """Logarithmic scaling"""
+
     def __call__(self, values):
         tiny = np.finfo(values.dtype).tiny
         values = np.clip(values, tiny, np.inf)
         return np.log(values)
-    
+
     def inverse(self, values):
         return np.exp(values)
 
 
 class SqrtScaling(object):
     """Sqrt scaling"""
+
     def __call__(self, values):
         values = np.clip(values, 0, np.inf)
         return np.sqrt(values)
-    
+
     def inverse(self, values):
         return np.power(values, 2)
 
 
 class LinearScaling(object):
     """Linear scaling"""
+
     def __call__(self, values):
         return values
-    
+
     def inverse(self, values):
         return values
