@@ -4,6 +4,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 
 
+__all__ = ["ScaledRegularGridInterpolator", "interpolation_scale"]
+
+
 class ScaledRegularGridInterpolator(object):
     """Thin wrapper around `scipy.interpolate.RegularGridInterpolator`.
 
@@ -62,16 +65,16 @@ def interpolation_scale(scale="lin"):
         Choose interpolation scaling.
     """
     if scale == "lin":
-        return LinearScaling()
+        return LinearScale()
     elif scale == "log":
-        return LogScaling()
+        return LogScale()
     elif scale == "sqrt":
-        return SqrtScaling()
+        return SqrtScale()
     else:
         raise ValueError("Not a valid value scaling mode.")
 
 
-class LogScaling(object):
+class LogScale(object):
     """Logarithmic scaling"""
 
     def __call__(self, values):
@@ -83,7 +86,7 @@ class LogScaling(object):
         return np.exp(values)
 
 
-class SqrtScaling(object):
+class SqrtScale(object):
     """Sqrt scaling"""
 
     def __call__(self, values):
@@ -94,7 +97,7 @@ class SqrtScaling(object):
         return np.power(values, 2)
 
 
-class LinearScaling(object):
+class LinearScale(object):
     """Linear scaling"""
 
     def __call__(self, values):
