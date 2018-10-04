@@ -1405,12 +1405,12 @@ class MapGeom(object):
 
         Returns
         -------
-        i : integer
+        index : int
             The number of the dimension of the specified axis in the map geom
 
         """
-        axes = {axis.name.upper(): idx for idx, axis in enumerate(self.axes)}
-        return axes[name.upper()]
+        names = [axis.name.upper() for axis in self.axes]
+        return names.index(name.upper())
 
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self.
