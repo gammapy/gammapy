@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import numpy as np
 from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
 from ..maps import Map, WcsGeom
@@ -19,14 +20,17 @@ class MapMaker(object):
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
-        Reference image geometry
+        Reference image geometry in reco energy
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
+    geom_true : `~gammapy.maps.WcsGeom`
+        Reference image geometry in true energy, used for exposure maps and PSF.
+         If none, the same as geom is assumed
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
     """
 
-    def __init__(self, geom, offset_max, exclusion_mask=None):
+    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
 
@@ -34,6 +38,7 @@ class MapMaker(object):
             raise ValueError("MapMaker only works with geom with an energy axis")
 
         self.geom = geom
+        self.geom_true = geom_true if geom_true else geom
         self.offset_max = Angle(offset_max)
         self.maps = {}
 
@@ -63,8 +68,10 @@ class MapMaker(object):
 
         # Initialise zero-filled maps
         for name in selection:
-            unit = "m2 s" if name == "exposure" else ""
-            self.maps[name] = Map.from_geom(self.geom, unit=unit)
+            if name == "exposure":
+                self.maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
+            else:
+                self.maps[name] = Map.from_geom(self.geom, unit="")
 
         for obs in obs_list:
             try:
@@ -82,6 +89,9 @@ class MapMaker(object):
         cutout_map = Map.from_geom(self.geom).cutout(
             position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
         )
+        cutout_map_etrue = Map.from_geom(self.geom_true).cutout(
+            position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
+        )
 
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
 
@@ -90,7 +100,13 @@ class MapMaker(object):
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
+        # Compute field of view mask on the cutout in true energy
+        coords_etrue = cutout_map_etrue.geom.get_coord()
+        offset_etrue = coords_etrue.skycoord.separation(obs.pointing_radec)
+        fov_mask_etrue = offset_etrue >= self.offset_max
+
         # Only if there is an exclusion mask, make a cutout
+        # Exclusion mask only on the background, so only in reco-energy
         exclusion_mask = self.maps.get("exclusion", None)
         if exclusion_mask is not None:
             exclusion_mask = exclusion_mask.cutout(
@@ -101,14 +117,19 @@ class MapMaker(object):
         maps_obs = MapMakerObs(
             obs=obs,
             geom=cutout_map.geom,
+            geom_true=cutout_map_etrue.geom,
             fov_mask=fov_mask,
+            fov_mask_etrue=fov_mask_etrue,
             exclusion_mask=exclusion_mask,
         ).run(selection)
 
         # Stack observation maps to total
         for name in selection:
             data = maps_obs[name].quantity.to(self.maps[name].unit).value
-            self.maps[name].fill_by_coord(coords, data)
+            if name == "exposure":
+                self.maps[name].fill_by_coord(coords_etrue, data)
+            else:
+                self.maps[name].fill_by_coord(coords, data)
 
     def make_images(self, spectrum=None):
         """Create 2D images by summing over the energy axis.
@@ -146,16 +167,29 @@ class MapMakerObs(object):
         Observation
     geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
+    geom_true : `~gammapy.maps.WcsGeom`
+        Reference image geometry in true energy, used for exposure maps and PSF.
+        If none, the same as geom is assumed
     fov_mask : `~numpy.ndarray`
         Mask to select pixels in field of view
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask (used by some background estimators)
     """
 
-    def __init__(self, obs, geom, fov_mask=None, exclusion_mask=None):
+    def __init__(
+        self,
+        obs,
+        geom,
+        geom_true=None,
+        fov_mask=None,
+        fov_mask_etrue=None,
+        exclusion_mask=None,
+    ):
         self.obs = obs
         self.geom = geom
+        self.geom_true = geom_true if geom_true else geom
         self.fov_mask = fov_mask
+        self.fov_mask_etrue = fov_mask_etrue
         self.exclusion_mask = exclusion_mask
         self.maps = {}
 
@@ -190,10 +224,10 @@ class MapMakerObs(object):
             pointing=self.obs.pointing_radec,
             livetime=self.obs.observation_live_time_duration,
             aeff=self.obs.aeff,
-            geom=self.geom,
+            geom=self.geom_true,
         )
-        if self.fov_mask is not None:
-            exposure.data[..., self.fov_mask] = 0
+        if self.fov_mask_etrue is not None:
+            exposure.data[..., self.fov_mask_etrue] = 0
         self.maps["exposure"] = exposure
 
     def _make_background(self):

@@ -5,7 +5,7 @@ from astropy.utils import lazyproperty
 import astropy.units as u
 from ..utils.fitting import Fit
 from ..stats import cash
-from ..maps import Map
+from ..maps import Map, MapAxis
 
 __all__ = ["MapFit", "MapEvaluator"]
 
@@ -118,6 +118,7 @@ class MapEvaluator(object):
 
     @lazyproperty
     def geom(self):
+        """This will give the energy axes in e_true"""
         return self.exposure.geom
 
     @lazyproperty
@@ -126,15 +127,15 @@ class MapEvaluator(object):
 
     @lazyproperty
     def energy_center(self):
-        """Energy axis bin centers (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.axes[0]
+        """True energy axis bin centers (`~astropy.units.Quantity`)"""
+        energy_axis = self.geom.get_axis_by_name("energy")
         energy = energy_axis.center * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_edges(self):
         """Energy axis bin edges (`~astropy.units.Quantity`)"""
-        energy_axis = self.geom.axes[0]
+        energy_axis = self.geom.get_axis_by_name("energy")
         energy = energy_axis.edges * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
 
@@ -208,22 +209,46 @@ class MapEvaluator(object):
         """Convolve npred cube with PSF"""
         return npred.convolve(self.psf)
 
-    def apply_edisp(self, data):
-        """Convolve map data with energy dispersion."""
-        data = np.rollaxis(data, 0, 3)
+    def apply_edisp(self, npred):
+        """Convolve map data with energy dispersion.
+
+        Parameters
+        ----------
+        npred : `~gammapy.maps.Map`
+            Predicted counts in true energy bins
+
+        Returns
+        ---------
+        npred_reco : `~gammapy.maps.Map`
+            Predicted counts in reco energy bins
+        """
+        loc = npred.geom.get_axis_index_by_name("energy")
+        data = np.rollaxis(npred.data, loc, len(npred.data))
         data = np.dot(data, self.edisp.pdf_matrix)
-        return np.rollaxis(data, 2, 0)
+        data = np.rollaxis(data, -1, loc)
+        e_reco_axis = MapAxis.from_edges(
+            self.edisp.e_reco.bins, unit=self.edisp.e_reco.unit
+        )
+        geom_ereco = self.exposure.geom.to_image().to_cube(axes=[e_reco_axis])
+        npred = Map.from_geom(geom_ereco, unit="")
+        npred.data = data
+        return npred
 
     def compute_npred(self):
-        """Evaluate model predicted counts.
+        """
+        Evaluate model predicted counts.
+
+        Returns
+        -------
+        npred.data : ~numpy.ndarray
+            array of the predicted counts in each bin (in reco energy)
         """
         flux = self.compute_flux()
         npred = self.apply_exposure(flux)
         if self.psf is not None:
             npred = self.apply_psf(npred)
-        # TODO: discuss and decide whether we need to make map objects in `apply_aeff` and `apply_psf`.
         if self.edisp is not None:
-            npred.data = self.apply_edisp(npred.data)
+            npred = self.apply_edisp(npred)
         if self.background:
             npred.data += self.background.data
         return npred.data

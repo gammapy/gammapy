@@ -1395,6 +1395,22 @@ class MapGeom(object):
         axes = {axis.name.upper(): axis for axis in self.axes}
         return axes[name.upper()]
 
+    def get_axis_index_by_name(self, name):
+        """Get an axis index by name (case in-sensitive).
+
+        Parameters
+        ----------
+        name : str
+           Axis name
+
+        Returns
+        -------
+        index : int
+            Axis index
+        """
+        names = [axis.name.upper() for axis in self.axes]
+        return names.index(name.upper())
+
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self.
         """

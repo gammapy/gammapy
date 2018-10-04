@@ -39,9 +39,15 @@ def geom():
 
 
 @pytest.fixture(scope="session")
-def exposure(geom):
-    m = Map.from_geom(geom)
-    m.quantity = np.ones((2, 4, 5)) * u.Quantity("100 m2 s")
+def geom_true():
+    axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit=u.TeV, name="energy")
+    return WcsGeom.create(skydir=(0, 0), npix=(5, 4), coordsys="GAL", axes=[axis])
+
+
+@pytest.fixture(scope="session")
+def exposure(geom_true):
+    m = Map.from_geom(geom_true)
+    m.quantity = np.ones(geom_true.data_shape) * u.Quantity("100 m2 s")
     m.data[1] *= 10
     return m
 
@@ -49,20 +55,21 @@ def exposure(geom):
 @pytest.fixture(scope="session")
 def background(geom):
     m = Map.from_geom(geom)
-    m.quantity = np.ones((2, 4, 5)) * 1e-7
+    m.quantity = np.ones(geom.data_shape) * 1e-7
     return m
 
 
 @pytest.fixture(scope="session")
-def edisp(geom):
-    e_true = geom.get_axis_by_name("energy").edges
-    return EnergyDispersion.from_diagonal_response(e_true=e_true)
+def edisp(geom, geom_true):
+    e_reco = geom.get_axis_by_name("energy").edges
+    e_true = geom_true.get_axis_by_name("energy").edges
+    return EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
 @pytest.fixture(scope="session")
-def psf(geom):
+def psf(geom_true):
     sigma = 0.5 * u.deg
-    return PSFKernel.from_gauss(geom, sigma)
+    return PSFKernel.from_gauss(geom_true, sigma)
 
 
 @pytest.fixture(scope="session")
@@ -244,42 +251,43 @@ class TestSkyDiffuseCubeMapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
         out = diffuse_evaluator.compute_dnde()
-        assert out.shape == (2, 4, 5)
+        assert out.shape == (3, 4, 5)
         out = out.to("cm-2 s-1 MeV-1 sr-1")
-        assert_allclose(out.value.sum(), 1680, rtol=1e-5)
+        assert_allclose(out.value.sum(), 2520., rtol=1e-5)
         assert_allclose(out.value[0, 0, 0], 42, rtol=1e-5)
 
     @staticmethod
     def test_compute_flux(diffuse_evaluator):
         out = diffuse_evaluator.compute_flux()
-        assert out.shape == (2, 4, 5)
+        assert out.shape == (3, 4, 5)
         out = out.to("cm-2 s-1")
         assert_allclose(out.value.sum(), 633263.444803, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 2878.196184, rtol=1e-5)
+        assert_allclose(out.value[0, 0, 0], 1164.578565, rtol=1e-5)
 
     @staticmethod
     def test_apply_psf(diffuse_evaluator):
         flux = diffuse_evaluator.compute_flux()
         npred = diffuse_evaluator.apply_exposure(flux)
         out = diffuse_evaluator.apply_psf(npred)
-        assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 4.004864e+12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.380614e+09, rtol=1e-5)
+        assert out.data.shape == (3, 4, 5)
+        assert_allclose(out.data.sum(), 1.106404e+12, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 5.586252e+08, rtol=1e-5)
 
     @staticmethod
     def test_apply_edisp(diffuse_evaluator):
         flux = diffuse_evaluator.compute_flux()
-        out = diffuse_evaluator.apply_edisp(flux.value)
-        assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 633263.444803, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 2878.196184, rtol=1e-5)
+        npred = diffuse_evaluator.apply_exposure(flux)
+        out = diffuse_evaluator.apply_edisp(npred)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 1.606345e+12, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.164579e+09, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 4.004864e+12, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 1.380614e+09, rtol=1e-5)
+        assert_allclose(out.sum(), 1.106403e+12, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 5.586252e+08, rtol=1e-5)
 
 
 @requires_dependency("scipy")
@@ -287,19 +295,19 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_energy_center(evaluator):
         val = evaluator.energy_center
-        assert val.shape == (2, 1, 1)
+        assert val.shape == (3, 1, 1)
         assert val.unit == "TeV"
 
     @staticmethod
     def test_energy_edges(evaluator):
         val = evaluator.energy_edges
-        assert val.shape == (3, 1, 1)
+        assert val.shape == (4, 1, 1)
         assert val.unit == "TeV"
 
     @staticmethod
     def test_energy_bin_width(evaluator):
         val = evaluator.energy_bin_width
-        assert val.shape == (2, 1, 1)
+        assert val.shape == (3, 1, 1)
         assert val.unit == "TeV"
 
     @staticmethod
@@ -315,51 +323,52 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_solid_angle(evaluator):
         val = evaluator.solid_angle
-        assert val.shape == (2, 4, 5)
+        assert val.shape == (3, 4, 5)
         assert val.unit == "sr"
 
     @staticmethod
     def test_bin_volume(evaluator):
         val = evaluator.bin_volume
-        assert val.shape == (2, 4, 5)
+        assert val.shape == (3, 4, 5)
         assert val.unit == "TeV sr"
 
     @staticmethod
     def test_compute_dnde(evaluator):
         out = evaluator.compute_dnde()
-        assert out.shape == (2, 4, 5)
+        assert out.shape == (3, 4, 5)
         assert out.unit == "cm-2 s-1 TeV-1 deg-2"
-        assert_allclose(out.value.sum(), 2.984368e-12, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 1.336901e-13, rtol=1e-5)
+        assert_allclose(out.value.sum(), 1.177907e-11, rtol=1e-5)
+        assert_allclose(out.value[0, 0, 0], 5.082551e-13, rtol=1e-5)
 
     @staticmethod
     def test_compute_flux(evaluator):
         out = evaluator.compute_flux()
-        assert out.shape == (2, 4, 5)
+        assert out.shape == (3, 4, 5)
         assert out.unit == "cm-2 s-1"
-        assert_allclose(out.value.sum(), 7.312833e-13, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 3.007569e-14, rtol=1e-5)
+        assert_allclose(out.value.sum(), 1.290431e-12, rtol=1e-5)
+        assert_allclose(out.value[0, 0, 0], 4.626436e-14, rtol=1e-5)
 
     @staticmethod
     def test_apply_psf(evaluator):
         flux = evaluator.compute_flux()
         npred = evaluator.apply_exposure(flux)
         out = evaluator.apply_psf(npred)
-        assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 9.144771e-07, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.563604e-08, rtol=1e-5)
+        assert out.data.shape == (3, 4, 5)
+        assert_allclose(out.data.sum(), 2.25133e-06, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 2.405235e-08, rtol=1e-5)
 
     @staticmethod
     def test_apply_edisp(evaluator):
         flux = evaluator.compute_flux()
-        out = evaluator.apply_edisp(flux.value)
-        assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 7.312833e-13, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 3.007569e-14, rtol=1e-5)
+        npred = evaluator.apply_exposure(flux)
+        out = evaluator.apply_edisp(npred)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 3.273326e-06, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 4.626436e-08, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator):
         out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 4.914477e-06, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 1.15636e-07, rtol=1e-5)
+        assert_allclose(out.sum(), 6.25133e-06, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 1.240524e-07, rtol=1e-5)

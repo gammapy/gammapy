@@ -38,6 +38,7 @@ def geom(ebounds):
         {
             # Default, normal test case
             "geom": geom(ebounds=[0.1, 1, 10]),
+            "geom_true": None,
             "counts": 34366,
             "exposure": 3.99815e+11,
             "exposure_image": 7.921993e+10,
@@ -46,24 +47,35 @@ def geom(ebounds):
         {
             # Test single energy bin
             "geom": geom(ebounds=[0.1, 10]),
+            "geom_true": None,
             "counts": 34366,
             "exposure": 1.16866e+11,
             "exposure_image": 1.16866e+11,
             "background": 1988492.8,
         },
         {
-            # Test single energy bin
+            # Test single energy bin with exclusion mask
             "geom": geom(ebounds=[0.1, 10]),
+            "geom_true": None,
             "exclusion_mask": Map.from_geom(geom(ebounds=[0.1, 10])),
             "counts": 34366,
             "exposure": 1.16866e+11,
             "exposure_image": 1.16866e+11,
             "background": 1988492.8,
         },
+        {
+            # Test for different e_true and e_reco bins
+            "geom": geom(ebounds=[0.1, 1, 10]),
+            "geom_true": geom(ebounds=[0.1, 0.5, 2.5, 10.0]),
+            "counts": 34366,
+            "exposure": 5.971096e+11,
+            "exposure_image": 6.492968e+10,
+            "background": 187528.89,
+        },
     ],
 )
 def test_map_maker(pars, obs_list):
-    maker = MapMaker(geom=pars["geom"], offset_max="2 deg")
+    maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg")
 
     maps = maker.run(obs_list)
 
