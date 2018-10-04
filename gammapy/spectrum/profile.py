@@ -60,14 +60,39 @@ class FluxPointProfiles(object):
         return cls(table=table)
 
     def get_profile(self, idx):
-        """Get 1D likelihood profile for a given energy bin."""
+        """Get 1D likelihood profile.
+
+        Parameters
+        ----------
+        idx : int
+            Profile energy bin index.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with columns "norm" and "dloglike".
+        """
         t = Table()
         t["norm"] = self.table["norm_scan"][idx]
         t["dloglike"] = self.table["dloglike_scan"][idx]
         return t
 
     def interp_profile(self, idx, norm):
-        """Interpolate likelihood profile for a given energy bin."""
+        """Interpolate likelihood profile.
+
+        Parameters
+        ----------
+        idx : int
+            Profile energy bin index.
+        norm : `~numpy.ndarray`
+            Norm values at which to interpolate
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with columns "norm" (the input)
+            and "dloglike" (the interpolated values).
+        """
         t = self.get_profile(idx)
         dloglike = np.interp(norm, t["norm"], t["dloglike"])
 
@@ -83,6 +108,7 @@ class FluxPointProfiles(object):
         ----------
         which : {'dnde', 'flux', 'eflux'}
             Which reference spectrum representation?
+            TODO: for now only dnde tested, not sure the others make sense
         """
         energy = self._energy_ref
         values = self.table["ref_" + which].quantity
@@ -91,9 +117,13 @@ class FluxPointProfiles(object):
     def plot_sed(self, ax=None, e2dnde_edges=None):
         """Plot likelihood SED profiles.
 
+        Parameters
+        ----------
         ax : `~matplotlib.axes.Axes`
             Axis object to plot on.
-
+        e2dnde_edges : `~astropy.units.Quantity`
+            Bin edges for the ``e2dnde`` y axis to use
+            for the likelihood profile plot.
         """
         import matplotlib.pyplot as plt
 
