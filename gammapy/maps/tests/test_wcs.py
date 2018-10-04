@@ -289,10 +289,10 @@ def test_check_width_bad_input():
     with pytest.raises(IndexError):
         _check_width(width=(10,))
 
+
 def test_get_axis_index_by_name():
-    e_axis = MapAxis.from_edges([1,5], name="energy")
+    e_axis = MapAxis.from_edges([1, 5], name="energy")
     geom = WcsGeom.create(width=5, binsz=1., axes=[e_axis])
-    assert_allclose(geom.get_axis_index_by_name("Energy"), 0)
+    assert geom.get_axis_index_by_name("Energy") == 0
     with pytest.raises(ValueError):
         geom.get_axis_index_by_name("time")
-

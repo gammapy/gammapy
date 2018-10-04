@@ -1396,18 +1396,17 @@ class MapGeom(object):
         return axes[name.upper()]
 
     def get_axis_index_by_name(self, name):
-        """Get an axis location by name (case in-sensitive).
+        """Get an axis index by name (case in-sensitive).
 
         Parameters
         ----------
         name : str
-           Name of the requested axis
+           Axis name
 
         Returns
         -------
         index : int
-            The number of the dimension of the specified axis in the map geom
-
+            Axis index
         """
         names = [axis.name.upper() for axis in self.axes]
         return names.index(name.upper())
@@ -1438,9 +1437,3 @@ class MapGeom(object):
             Copied map geometry.
         """
         return self._init_copy(**kwargs)
-
-
-
-
-
-

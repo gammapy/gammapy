@@ -176,7 +176,15 @@ class MapMakerObs(object):
         Exclusion mask (used by some background estimators)
     """
 
-    def __init__(self, obs, geom, geom_true=None, fov_mask=None, fov_mask_etrue=None, exclusion_mask=None):
+    def __init__(
+        self,
+        obs,
+        geom,
+        geom_true=None,
+        fov_mask=None,
+        fov_mask_etrue=None,
+        exclusion_mask=None,
+    ):
         self.obs = obs
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom
