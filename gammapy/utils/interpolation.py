@@ -16,27 +16,36 @@ class ScaledRegularGridInterpolator(object):
     values_scale : {'log', 'lin', 'sqrt'}
         Interpolation scaling applied to values. If the values vary over many magnitudes
         a 'log' scaling is recommended.
+    clip : bool
+        Clip values at zero before interpolation.
     **kwargs : dict
         Keyword arguments passed to `RegularGridInterpolator`.
     """
-
-    def __init__(self, points, values, values_scale="lin", **kwargs):
+    # TODO: add points scaling or axis scaling argument 
+    def __init__(self, points, values, values_scale="lin", extrapolate=True, **kwargs):
         from scipy.interpolate import RegularGridInterpolator
-        
+
         self.scale = interpolation_scale(values_scale)
         values_scaled = self.scale(values)
 
-        kwargs.setdefault("fill_value", self.scale.fill_value)
-
+        if extrapolate:
+            kwargs.setdefault("bounds_error", False)
+            kwargs.setdefault("fill_value", None)
+        
         self._interpolate = RegularGridInterpolator(
                                     points=points,
                                     values=values_scaled,
                                     **kwargs
                                     )
 
-    def __call__(self, points, method="linear", **kwargs):
+    def __call__(self, points, method="linear", clip=True, **kwargs):
         values = self._interpolate(points, method, **kwargs)
-        return self.scale.inverse(values)
+        values = self.scale.inverse(values)
+        
+        if clip:
+            np.clip(values, 0, np.inf, out=values)
+
+        return values
 
 
 def interpolation_scale(scale="lin"):
@@ -59,44 +68,29 @@ def interpolation_scale(scale="lin"):
 
 class LogScaling(object):
     """Logarithmic scaling"""
-    fill_value = -np.inf
-    def __call__(self, values, clip=True):
-        if clip:
-            tiny = np.finfo(values.dtype).tiny
-            values = values.copy()
-            values[values <= 0] = tiny
-
-        with np.errstate(divide="ignore"):
-            return np.log(values)
+    def __call__(self, values):
+        tiny = np.finfo(values.dtype).tiny
+        values = np.clip(values, tiny, np.inf)
+        return np.log(values)
     
-    def inverse(self, values, clip=True):
+    def inverse(self, values):
         return np.exp(values)
 
 
 class SqrtScaling(object):
     """Sqrt scaling"""
-    fill_value = 0
-    def __call__(self, values, clip=True):
-        if clip:
-            values = np.clip(values, 0, np.inf)
+    def __call__(self, values):
+        values = np.clip(values, 0, np.inf)
         return np.sqrt(values)
     
-    def inverse(self, values, clip=True):
-        values = np.power(values, 2)
-        if clip:
-            values = np.clip(values, 0, np.inf)
-        return values
+    def inverse(self, values):
+        return np.power(values, 2)
 
 
 class LinearScaling(object):
     """Linear scaling"""
-    fill_value = 0
-    def __call__(self, values, clip=True):
-        if clip:
-            values = np.clip(values, 0, np.inf)
+    def __call__(self, values):
         return values
     
-    def inverse(self, values, clip=True):
-        if clip:
-            values = np.clip(values, 0, np.inf)
+    def inverse(self, values):
         return values
