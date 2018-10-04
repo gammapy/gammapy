@@ -9,15 +9,13 @@ class ScaledRegularGridInterpolator(object):
 
     Parameters
     ----------
-    points : 
-
+    points : tuple
+        Tuple of points passed to `RegularGridInterpolator`.
     values :
-
+        Values passed to `RegularGridInterpolator`.
     values_scale : {'log', 'lin', 'sqrt'}
         Interpolation scaling applied to values. If the values vary over many magnitudes
         a 'log' scaling is recommended.
-    clip : bool
-        Clip values at zero before interpolation.
     **kwargs : dict
         Keyword arguments passed to `RegularGridInterpolator`.
     """
@@ -56,7 +54,7 @@ class ScaledRegularGridInterpolator(object):
 def interpolation_scale(scale="lin"):
     """Interpolation scaling.
     
-    Paramaters
+    Parameters
     ----------
     scale : {"lin", "log", "sqrt"}
         Choose interpolation scaling.
