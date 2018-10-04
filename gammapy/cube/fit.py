@@ -214,19 +214,22 @@ class MapEvaluator(object):
 
         Parameters
         ----------
-        npred: npred map in e_true
+        npred: `~gammapy.maps.Map`
+                predicted counts in true energy bins
 
         Returns
         ---------
-        npred_reco: npred map in e_reco
+        npred_reco: `~gammapy.maps.Map`
+                    predicted counts in reco energy bins
         """
 
         loc = npred.geom.get_axis_index_by_name("energy")
         data = np.rollaxis(npred.data, loc, len(npred.data))
         data = np.dot(data, self.edisp.pdf_matrix)
         data = np.rollaxis(data, -1, loc) #now dim is in ereco
-        #TODO: get the geometry from the exposure map and edisp
-        npred1 = Map.from_geom(self.background.geom, unit="")
+        e_reco_axis = MapAxis.from_edges(self.edisp.e_reco.bins, unit=self.edisp.e_reco.unit)
+        geom_ereco = self.exposure.geom.to_image().to_cube(axes=[e_reco_axis])
+        npred1 = Map.from_geom(geom_ereco, unit="")
         npred1.data = data
         return npred1
 
