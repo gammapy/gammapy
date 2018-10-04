@@ -28,20 +28,25 @@ OFF = [
     help="Tutorials environment?",
     show_default=True,
 )
-def cli_jupyter_run(ctx, tutor):
+@click.option(
+    "--kernel",
+    default="python3",
+    help="Kernel name",
+    show_default=True,
+)
+def cli_jupyter_run(ctx, tutor, kernel):
     """Execute Jupyter notebooks."""
 
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            execute_notebook(path)
+            execute_notebook(path, kernel)
 
 
-def execute_notebook(path, loglevel=20):
+def execute_notebook(path, kernel="python3", loglevel=20):
     """Execute a Jupyter notebook."""
 
-    kernel_name = "python3"
-    if sys.version_info[0] < 3:
-        kernel_name = "python2"
+    if sys.version_info[0] < 3 and kernel == "python3":
+        kernel = "python2"
 
     try:
         t = time.time()
@@ -53,7 +58,7 @@ def execute_notebook(path, loglevel=20):
             "--ExecutePreprocessor.kernel_name={} "
             "--to notebook "
             "--inplace "
-            "--execute '{}'".format(loglevel, kernel_name, path),
+            "--execute '{}'".format(loglevel, kernel, path),
             shell=True,
         )
         t = (time.time() - t) / 60
@@ -144,21 +149,27 @@ class BlackNotebook:
     help="Tutorials environment?",
     show_default=True,
 )
-def cli_jupyter_test(ctx, tutor):
+@click.option(
+    "--kernel",
+    default="python3",
+    help="Kernel name",
+    show_default=True,
+)
+def cli_jupyter_test(ctx, tutor, kernel):
     """Check if Jupyter notebooks are broken."""
 
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            notebook_test(path)
+            notebook_test(path, kernel)
 
 
-def notebook_test(path):
+def notebook_test(path, kernel="python3"):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
     passed = True
     log.info("   ... TESTING {}".format(str(path)))
-    execute_notebook(path, 30)
+    execute_notebook(path, kernel, 30)
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
     for cell in rawnb.cells:
