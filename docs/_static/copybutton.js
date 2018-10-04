@@ -60,4 +60,17 @@ $(document).ready(function() {
             button.data('hidden', 'false');
         }
     });
+
+    // add info note for past releases
+    var url = window.location.href
+    var note = '<div class="admonition note"><p class="first admonition-title">Note</p>'
+    note += '<p class="last">You are not reading the most up to date version of Gammapy documentation.<br/>Access the <a href="http://docs.gammapy.org/dev/">latest version.</a></p></div>'
+
+    if (url.includes("/dev/") == false) {
+        var divbody = document.querySelectorAll('[role="main"]');
+        var divnote = document.createElement("div");
+        divnote.innerHTML = note;
+        divbody[0].insertBefore(divnote, divbody[0].firstChild);
+    }
+
 });
