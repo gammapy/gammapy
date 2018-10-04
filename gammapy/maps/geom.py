@@ -12,6 +12,7 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from .utils import find_hdu, find_bands_hdu
+from ..utils.interpolation import interpolation_scale
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
@@ -264,56 +265,26 @@ def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis coordinates to pixel coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
-
-    if interp == "log":
-        fn = np.log
-    elif interp == "lin":
-
-        def fn(t):
-            return t
-
-    elif interp == "sqrt":
-        fn = np.sqrt
-    else:
-        raise ValueError("Invalid interp: {!r}".format(interp))
+    scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
-        fn(edges), np.arange(len(edges), dtype=float), fill_value="extrapolate"
+        scale(edges), np.arange(len(edges), dtype=float), fill_value="extrapolate"
     )
 
-    return interp_fn(fn(coord))
+    return interp_fn(scale(coord))
 
 
 def pix_to_coord(edges, pix, interp="lin"):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
-
-    if interp == "log":
-        fn0 = np.log
-        fn1 = np.exp
-    elif interp == "lin":
-
-        def fn0(t):
-            return t
-
-        def fn1(t):
-            return t
-
-    elif interp == "sqrt":
-        fn0 = np.sqrt
-
-        def fn1(t):
-            return np.power(t, 2)
-
-    else:
-        raise ValueError("Invalid interp: {!r}".format(interp))
+    scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
-        np.arange(len(edges), dtype=float), fn0(edges), fill_value="extrapolate"
+        np.arange(len(edges), dtype=float), scale(edges), fill_value="extrapolate"
     )
 
-    return fn1(interp_fn(pix))
+    return scale.inverse(interp_fn(pix))
 
 
 class MapAxis(object):
