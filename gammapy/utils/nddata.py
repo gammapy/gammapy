@@ -7,7 +7,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
 from .array import array_stats_str
-from .interpolate import ScaledRegularGridInterpolator
+from .interpolation import ScaledRegularGridInterpolator
 
 __all__ = ["NDDataArray", "DataAxis", "BinnedDataAxis", "sqrt_space"]
 
@@ -29,7 +29,7 @@ class NDDataArray(object):
         TODO
     """
 
-    default_interp_kwargs = dict(bounds_error=False)
+    default_interp_kwargs = dict(bounds_error=False, values_scale="lin")
     """Default interpolation kwargs used to initialize the
     `scipy.interpolate.RegularGridInterpolator`.  The interpolation behaviour
     of an individual axis ('log', 'linear') can be passed to the axis on
@@ -172,12 +172,7 @@ class NDDataArray(object):
 
         out = np.reshape(res, shapes).squeeze()
 
-        # Clip interpolated values to be non-negative
-        np.clip(out, 0, None, out=out)
-        # Attach units to the output
-        out = out * self.data.unit
-
-        return out
+        return out * self.data.unit
 
     def evaluate_at_coord(self, points, method="linear", **kwargs):
         """Evaluate NDData Array on set of points.
@@ -210,13 +205,7 @@ class NDDataArray(object):
             ]
         )
         res = self._regular_grid_interp(points, method=method, **kwargs)
-
-        # Clip interpolated values to be non-negative
-        np.clip(res, 0, None, out=res)
-        # Attach units to the output
-        res = res * self.data.unit
-
-        return res
+        return res * self.data.unit
 
     def _add_regular_grid_interp(self, interp_kwargs=None):
         """Add `~scipy.interpolate.RegularGridInterpolator`
