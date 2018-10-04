@@ -5,7 +5,7 @@ from astropy.utils import lazyproperty
 import astropy.units as u
 from ..utils.fitting import Fit
 from ..stats import cash
-from ..maps import Map
+from ..maps import Map, MapAxis
 
 __all__ = ["MapFit", "MapEvaluator"]
 
@@ -212,26 +212,31 @@ class MapEvaluator(object):
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.
 
+        Parameters
+        ----------
         npred: npred map in e_true
+
         Returns
-        -------
+        ---------
         npred_reco: npred map in e_reco
         """
 
-        loc = npred.geom.get_axes_dimension_by_name("energy")
-        data = np.moveaxis(npred.data, loc, -1)
+        loc = npred.geom.get_axis_index_by_name("energy")
+        data = np.rollaxis(npred.data, loc, len(npred.data))
         data = np.dot(data, self.edisp.pdf_matrix)
-        data1 = np.moveaxis(data, -1, loc) #now dim is in ereco
+        data = np.rollaxis(data, -1, loc) #now dim is in ereco
+        #TODO: get the geometry from the exposure map and edisp
         npred1 = Map.from_geom(self.background.geom, unit="")
-        npred1.data = data1
+        npred1.data = data
         return npred1
 
     def compute_npred(self):
         """
         Evaluate model predicted counts.
+
         Returns
         -------
-        npred.data : numpy array
+        npred.data : ~numpy.ndarray
             array of the predicted counts in each bin (in reco energy)
         """
         flux = self.compute_flux()
