@@ -78,6 +78,7 @@ class LogScale(object):
     """Logarithmic scaling"""
 
     def __call__(self, values):
+        values = np.asanyarray(values)
         tiny = np.finfo(values.dtype).tiny
         values = np.clip(values, tiny, np.inf)
         return np.log(values)
