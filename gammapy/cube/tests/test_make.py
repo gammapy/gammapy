@@ -41,7 +41,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 3.99815e+11,
             "exposure_image": 7.921993e+10,
-            "background": 187528.89,
+            "background": 187464.31,
         },
         {
             # Test single energy bin
@@ -49,7 +49,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 1.16866e+11,
             "exposure_image": 1.16866e+11,
-            "background": 1988492.8,
+            "background": 1987792.1,
         },
         {
             # Test single energy bin
@@ -58,7 +58,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 1.16866e+11,
             "exposure_image": 1.16866e+11,
-            "background": 1988492.8,
+            "background": 1987792.1,
         },
     ],
 )
