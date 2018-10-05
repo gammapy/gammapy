@@ -119,21 +119,21 @@ from `healpy` to `astropy_healpix`. Finish implementation of multi-resolution
 maps (low priority).
 
 
-Map Analysis (add responsible person)
--------------------------------------
+Map Analysis
+------------
 Unify and improve integration of background and exposure maps along the energy
 axes. Improve performance of the model evaluation by using bounding boxes and
 caching (low priority). Add support for healpix maps (low priority). Implement
 3D background model creation. Better expose classical image based background
 methods such as ring- and adaptive ring-backround. Implement pectral points
-estimation with 3D analysis.
+estimation with 3D analysis (Regis and Atreyee).
 
 
-Datasets (add responsible person)
----------------------------------
+Datasets
+--------
 Implement a `Dataset` or `Observation` container class, that bundles data and
 reduced IRFs and is used to evaluate the likelihood. Enable joint fit across
-multiple datasets. Enable joint Fermi-LAT / IACT analyses.
+multiple datasets. Enable joint Fermi-LAT / IACT analyses (Regis and Axel).
 
 
 Modeling (add responsible person)
@@ -144,13 +144,13 @@ existing YAML IO. Add missing models. Implement (hierachical) model parameter
 name handling and improve parameter user interface.
 
 
-Fitting (add responsible person)
---------------------------------
-Finish implemention of the unified fitting front end in `gammapy.utils.fitting`.
-Fully support of the `sherpa` fitting backend. Add further fitting backends,
-such as `scipy.optimize` or `emcee`. Implement fitting helper and diagnosis
-methods to compute likelihood contours. Improve interactive handling of the
-fitting front end. 
+Fitting
+-------
+Design and implement configuration and result handling. Finish implemention of
+the unified fitting front end in `gammapy.utils.fitting`. Fully support of the
+`sherpa` fitting backend. Add further fitting backends, such as `scipy.optimize`
+or `emcee`. Implement fitting helper and diagnosis methods to compute likelihood
+contours. Improve interactive handling of the fitting front end (Axel).
 
 
 Event Simulation (add responsible person)
