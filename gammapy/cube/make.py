@@ -233,7 +233,7 @@ class MapMakerObs(object):
     def _make_background(self):
         background = make_map_background_irf(
             pointing=self.obs.pointing_radec,
-            livetime=self.obs.observation_live_time_duration,
+            ontime=self.obs.observation_time_duration,
             bkg=self.obs.bkg,
             geom=self.geom,
         )
