@@ -6,11 +6,13 @@ from ..utils.energy import Energy
 __all__ = ["make_psf", "make_mean_psf", "make_mean_edisp"]
 
 
-def make_psf(self, position, energy=None, rad=None):
+def make_psf(obs, position, energy=None, rad=None):
     """Make energy-dependent PSF for a given source position.
 
     Parameters
     ----------
+    obs : `~gammapy.data.DataStoreObservation`
+        Observation for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF
     energy : `~astropy.units.Quantity`
@@ -25,27 +27,25 @@ def make_psf(self, position, energy=None, rad=None):
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Energy dependent psf table
     """
-    offset = position.separation(self.pointing_radec)
+    offset = position.separation(obs.pointing_radec)
 
     if energy is None:
-        energy = self.psf.to_energy_dependent_table_psf(theta=offset).energy
+        energy = obs.psf.to_energy_dependent_table_psf(theta=offset).energy
 
     if rad is None:
-        rad = self.psf.to_energy_dependent_table_psf(theta=offset).rad
+        rad = obs.psf.to_energy_dependent_table_psf(theta=offset).rad
 
-    if isinstance(self.psf, PSF3D):
+    if isinstance(obs.psf, PSF3D):
         # PSF3D is a table PSF, so we use the native RAD binning by default
         # TODO: should handle this via a uniform caller API
-        psf_value = self.psf.to_energy_dependent_table_psf(theta=offset).evaluate(
-            energy
-        )
+        psf_value = obs.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
     else:
-        psf_value = self.psf.to_energy_dependent_table_psf(
+        psf_value = obs.psf.to_energy_dependent_table_psf(
             theta=offset, rad=rad
         ).evaluate(energy)
 
-    arf = self.aeff.data.evaluate(offset=offset, energy=energy)
-    exposure = arf * self.observation_live_time_duration
+    arf = obs.aeff.data.evaluate(offset=offset, energy=energy)
+    exposure = arf * obs.observation_live_time_duration
 
     psf = EnergyDependentTablePSF(
         energy=energy, rad=rad, exposure=exposure, psf_value=psf_value
@@ -53,11 +53,13 @@ def make_psf(self, position, energy=None, rad=None):
     return psf
 
 
-def make_mean_psf(self, position, energy=None, rad=None):
+def make_mean_psf(obs_list, position, energy=None, rad=None):
     """Compute mean energy-dependent PSF.
 
     Parameters
     ----------
+    obs_list : `~gammapy.data.ObservationList`
+        List of observations for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF
     energy : `~astropy.units.Quantity`
@@ -74,7 +76,7 @@ def make_mean_psf(self, position, energy=None, rad=None):
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Mean PSF
     """
-    psf = self[0].make_psf(position, energy, rad)
+    psf = make_psf(obs_list[0], position, energy, rad)
 
     if rad is None:
         rad = psf.rad
@@ -84,8 +86,8 @@ def make_mean_psf(self, position, energy=None, rad=None):
     exposure = psf.exposure
     psf_value = psf.psf_value.T * psf.exposure
 
-    for obs in self[1:]:
-        psf = obs.make_psf(position, energy, rad)
+    for obs in obs_list[1:]:
+        psf = make_psf(obs, position, energy, rad)
         exposure += psf.exposure
         psf_value += psf.psf_value.T * psf.exposure
 
@@ -97,12 +99,12 @@ def make_mean_psf(self, position, energy=None, rad=None):
 
 
 def make_mean_edisp(
-        self,
-        position,
-        e_true,
-        e_reco,
-        low_reco_threshold=Energy(0.002, "TeV"),
-        high_reco_threshold=Energy(150, "TeV"),
+    obs_list,
+    position,
+    e_true,
+    e_reco,
+    low_reco_threshold=Energy(0.002, "TeV"),
+    high_reco_threshold=Energy(150, "TeV"),
 ):
     """Compute mean energy dispersion.
 
@@ -112,8 +114,10 @@ def make_mean_edisp(
 
     Parameters
     ----------
+    obs_list : `~gammapy.data.ObservationList`
+        List of observations for which to compute the EDISP
     position : `~astropy.coordinates.SkyCoord`
-        Position at which to compute the mean EDISP
+        Position at which to compute the EDISP
     e_true : `~gammapy.utils.energy.EnergyBounds`
         True energy axis
     e_reco : `~gammapy.utils.energy.EnergyBounds`
@@ -131,10 +135,10 @@ def make_mean_edisp(
     list_aeff = []
     list_edisp = []
     list_livetime = []
-    list_low_threshold = [low_reco_threshold] * len(self)
-    list_high_threshold = [high_reco_threshold] * len(self)
+    list_low_threshold = [low_reco_threshold] * len(obs_list)
+    list_high_threshold = [high_reco_threshold] * len(obs_list)
 
-    for obs in self:
+    for obs in obs_list:
         offset = position.separation(obs.pointing_radec)
         list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
         list_edisp.append(
