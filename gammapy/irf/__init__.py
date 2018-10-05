@@ -11,4 +11,5 @@ from .psf_gauss import *
 from .psf_king import *
 from .psf_check import *
 from .irf_stack import *
+from .irf_reduce import *
 from .io import *
