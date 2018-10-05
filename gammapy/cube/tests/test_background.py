@@ -54,7 +54,7 @@ def geom(map_type, ebounds):
 def test_make_map_background_irf(bkg_3d, pars):
     m = make_map_background_irf(
         pointing=SkyCoord(2, 1, unit="deg"),
-        livetime="42 s",
+        ontime="42 s",
         bkg=bkg_3d,
         geom=pars["geom"],
     )
