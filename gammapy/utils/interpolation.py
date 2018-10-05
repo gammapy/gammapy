@@ -76,11 +76,9 @@ def interpolation_scale(scale="lin"):
 
 class LogScale(object):
     """Logarithmic scaling"""
-
+    tiny = np.finfo(np.float32).tiny
     def __call__(self, values):
-        values = np.asanyarray(values)
-        tiny = np.finfo(values.dtype).tiny
-        values = np.clip(values, tiny, np.inf)
+        values = np.clip(values, self.tiny, np.inf)
         return np.log(values)
 
     def inverse(self, values):
