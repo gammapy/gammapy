@@ -223,7 +223,7 @@ class MapEvaluator(object):
             Predicted counts in reco energy bins
         """
         loc = npred.geom.get_axis_index_by_name("energy")
-        data = np.rollaxis(npred.data, loc, len(npred.data))
+        data = np.rollaxis(npred.data, loc, len(npred.data.shape))
         data = np.dot(data, self.edisp.pdf_matrix)
         data = np.rollaxis(data, -1, loc)
         e_reco_axis = MapAxis.from_edges(
