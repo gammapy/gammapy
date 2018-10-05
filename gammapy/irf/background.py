@@ -166,12 +166,11 @@ class Background3D(object):
         array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
         return array
 
-    def integrate_on_energy_range(
+    def evaluate_integrate(
         self,
         fov_lon,
         fov_lat,
-        energy_range,
-        n_integration_bins=1,
+        energy_reco,
         method="linear",
         **kwargs
     ):
@@ -181,10 +180,8 @@ class Background3D(object):
         ----------
         fov_lon, fov_lat : `~astropy.coordinates.Angle`
             FOV coordinates expecting in AltAz frame.
-        energy_range: `~astropy.units.Quantity`
-            Energy range
-        n_integration_bins : int
-            Number of bins in the energy range
+        energy_reco: `~astropy.units.Quantity`
+            Reconstructed energy edges.
         method : {'linear', 'nearest'}, optional
             Interpolation method
         kwargs : dict
@@ -193,30 +190,12 @@ class Background3D(object):
         Returns
         -------
         array : `~astropy.units.Quantity`
-            Returns 2D array with axes fov_lon, fov_lat
+            Returns 2D array with axes offset
         """
-        fov_lon = np.atleast_2d(fov_lon)
-        fov_lat = np.atleast_2d(fov_lat)
-        energy_edges = EnergyBounds.equal_log_spacing(
-            energy_range[0], energy_range[1], n_integration_bins
-        )
+        from ..spectrum.utils import _trapz_loglog
+        data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
+        return _trapz_loglog(data, energy_reco, axis=0, intervals=True)
 
-        # TODO: insert new axes, remove tile and use numpy broadcasting
-        energy_reco = np.tile(energy_edges, reps=fov_lon.shape + (1,))
-        fov_lon = np.tile(fov_lon, reps=energy_edges.shape + (1, 1))
-        fov_lon = np.rollaxis(fov_lon, 0, 3)
-        fov_lat = np.tile(fov_lat, reps=energy_edges.shape + (1, 1))
-        fov_lat = np.rollaxis(fov_lat, 0, 3)
-
-        bkg_evaluated = self.evaluate(
-            fov_lon=fov_lon,
-            fov_lat=fov_lat,
-            energy_reco=energy_reco,
-            method=method,
-            **kwargs
-        )
-        # TODO: use gammapy.spectrum.utils._trapz_loglog for better precision
-        return np.trapz(bkg_evaluated, energy_edges).decompose()
 
     def to_2d(self):
         """Convert to `Background2D`.
