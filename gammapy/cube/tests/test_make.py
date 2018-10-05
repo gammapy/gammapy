@@ -70,7 +70,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 5.971096e+11,
             "exposure_image": 6.492968e+10,
-            "background": 187528.89,
+            "background": 187464.31,
         },
     ],
 )
