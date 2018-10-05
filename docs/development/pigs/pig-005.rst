@@ -65,7 +65,9 @@ Use Cases
 The following use cases should be supported by Gammapy 1.0:
 
 * Fit 1D spectrum and 3D cube simultaneously
-* Further definitions defined by CTA (add link).
+* Further definitions defined by CTA (private link to slides_)
+
+.. _slides: https://forge.in2p3.fr/login?back_url=https%3A%2F%2Fforge.in2p3.fr%2Fprojects%2Fobserver-access-use-cases%2Fwiki%2FScience_Tools_Use-Cases).
 
 
 Projects
@@ -90,10 +92,16 @@ Improve the Gammapy development workflow. Improve developer documentation. Defin
 Github labels, projects and milestones to reflect the content of the roadmap (Axel).
 
 
-Data and Observation handling (add responsible person)
-------------------------------------------------------
+Documentation (team effort)
+---------------------------
+Improve documentation structure and content. Improve install instructions.
+Improve existing tutorial notebooks and add missing topics.
+
+
+Data and Observation handling
+-----------------------------
 Implement support for good time intervals (GTIs). Simplify DL3 data access and
-simpify creation of custom index files.
+simpify creation of custom index files (David).
 
 
 IRFs (add responsible person)
@@ -117,7 +125,8 @@ Unify and improve integration of background and exposure maps along the energy
 axes. Improve performance of the model evaluation by using bounding boxes and
 caching (low priority). Add support for healpix maps (low priority). Implement
 3D background model creation. Better expose classical image based background
-methods such as ring- and adaptive ring-backround.
+methods such as ring- and adaptive ring-backround. Implement pectral points
+estimation with 3D analysis.
 
 
 Datasets (add responsible person)
