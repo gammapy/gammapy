@@ -14,10 +14,10 @@ def bkg_3d():
     energy = [0.1, 10, 1000] * u.TeV
     fov_lon = [0, 1, 2, 3] * u.deg
     fov_lat = [0, 1, 2, 3] * u.deg
-    
+
     data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
     # Axis order is (energy, fov_lon, fov_lat)
-    #data.value[1, 0, 0] = 1
+    # data.value[1, 0, 0] = 1
     data.value[1, 1, 1] = 100
     return Background3D(
         energy_lo=energy[:-1],
@@ -128,7 +128,9 @@ def test_background_3d_integrate(bkg_3d):
         energy_range=[1, 100] * u.TeV,
     )
     assert rate.shape == (2, 2)
-    assert_allclose(rate.value, [[2.060327e+08, 99000000], [99000000., 99000000.]], rtol=1e-5)
+    assert_allclose(
+        rate.value, [[2.060327e+08, 99000000], [99000000., 99000000.]], rtol=1e-5
+    )
 
 
 @pytest.fixture(scope="session")

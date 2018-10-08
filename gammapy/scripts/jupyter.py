@@ -28,12 +28,7 @@ OFF = [
     help="Tutorials environment?",
     show_default=True,
 )
-@click.option(
-    "--kernel",
-    default="python3",
-    help="Kernel name",
-    show_default=True,
-)
+@click.option("--kernel", default="python3", help="Kernel name", show_default=True)
 def cli_jupyter_run(ctx, tutor, kernel):
     """Execute Jupyter notebooks."""
 
@@ -149,12 +144,7 @@ class BlackNotebook:
     help="Tutorials environment?",
     show_default=True,
 )
-@click.option(
-    "--kernel",
-    default="python3",
-    help="Kernel name",
-    show_default=True,
-)
+@click.option("--kernel", default="python3", help="Kernel name", show_default=True)
 def cli_jupyter_test(ctx, tutor, kernel):
     """Check if Jupyter notebooks are broken."""
 

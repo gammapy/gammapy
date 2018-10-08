@@ -265,6 +265,7 @@ def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis coordinates to pixel coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
+
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
@@ -278,6 +279,7 @@ def pix_to_coord(edges, pix, interp="lin"):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
     from scipy.interpolate import interp1d
+
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(

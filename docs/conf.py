@@ -200,6 +200,7 @@ def setup(app):
     app.add_javascript("copybutton.js")
     app.add_javascript("gammapy.js")
 
+
 # copybutton.js provides hide/show button for python prompts >>>
 # slightly modified to work on RTD theme from javascript file in easydev package
 # https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js

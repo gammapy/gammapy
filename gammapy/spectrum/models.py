@@ -1200,14 +1200,11 @@ class TableModel(SpectralModel):
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
-        
+
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(np.log(energy.value),),
-            values=values.value,
-            **interp_kwargs
+            points=(np.log(energy.value),), values=values.value, **interp_kwargs
         )
-        
-    
+
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
         """Read XSPEC table model

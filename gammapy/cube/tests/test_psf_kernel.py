@@ -61,4 +61,4 @@ def test_make_image():
     kernel = PSFKernel.from_gauss(geom, sigma)
     psf2D = kernel.make_image(exposures=exposures)
     assert_allclose(psf2D.psf_kernel_map.data.sum(), 1.0, rtol=1e-3)
-    assert_allclose(psf2D.data[10,14], 0.0038, rtol=1e-2)
+    assert_allclose(psf2D.data[10, 14], 0.0038, rtol=1e-2)
