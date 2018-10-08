@@ -1,16 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-from ...utils.testing import requires_dependency
 from ...irf import TablePSF
 from ...maps import MapAxis, WcsGeom
 from .. import PSFKernel
 
+pytest.importorskip("scipy")
 
-@requires_dependency("scipy")
+
 def test_table_psf_to_kernel_map():
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
@@ -30,7 +31,6 @@ def test_table_psf_to_kernel_map():
     assert_allclose(ind, geom.center_pix, atol=0.5)
 
 
-@requires_dependency("scipy")
 def test_psf_kernel_from_gauss_read_write(tmpdir):
     sigma = 0.5 * u.deg
     binsz = 0.1 * u.deg
