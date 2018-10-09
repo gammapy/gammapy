@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+import numpy as np
 import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
@@ -222,7 +223,9 @@ def test_models(spectrum):
 
     # check that an array evaluation works (otherwise e.g. plotting raises an error)
     e_array = [2, 10, 20] * u.TeV
+    e_array = e_array[:,np.newaxis,np.newaxis]
     val = model(e_array)
+    assert val.shape == e_array.shape
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
 
 

@@ -473,7 +473,7 @@ class ConstantModel(SpectralModel):
     @staticmethod
     def evaluate(energy, const):
         """Evaluate the model (static function)."""
-        return np.ones(len(np.atleast_1d(energy))) * const
+        return np.ones(np.atleast_1d(energy).shape) * const
 
 
 class CompoundSpectralModel(SpectralModel):
