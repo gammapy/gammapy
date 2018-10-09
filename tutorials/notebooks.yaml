@@ -53,7 +53,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_fitting_with_sherpa.ipynb
   requires: sherpa
   datasets:
-    - sherpaCTA
+    - cta-1dc
 - name: intro_maps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/intro_maps.ipynb
   datasets:
