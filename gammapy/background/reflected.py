@@ -330,7 +330,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             method="Reflected Regions",
         )
 
-    def plot(self, fig=None, ax=None, cmap=None, idx=None, leg=False):
+    def plot(self, fig=None, ax=None, cmap=None, idx=None, add_legend=False):
         """Standard debug plot.
 
         Parameters
@@ -339,7 +339,7 @@ class ReflectedRegionsBackgroundEstimator(object):
             Color map to use
         idx : int, optional
             Observations to include in the plot, default: all
-        leg : boolean, optional
+        add_legend : boolean, optional
             Enable/disable legend in the plot, defaul: False
         """
         import matplotlib.pyplot as plt
@@ -385,7 +385,7 @@ class ReflectedRegionsBackgroundEstimator(object):
                 linewidths=3,
             )
 
-        if leg:
+        if add_legend:
             ax.legend(handles=handles)
 
         return fig, ax, cbar
