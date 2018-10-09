@@ -1285,6 +1285,7 @@ class TableModel(SpectralModel):
         """Evaluate the model (static function)."""
         x = np.log(energy.to(self.energy.unit).value)
         vals = self._evaluate(x, clip=True)
+        vals = np.reshape(vals, x.shape)
         return u.Quantity(norm.value * vals, self.values.unit, copy=False)
 
 

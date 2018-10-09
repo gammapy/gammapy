@@ -48,7 +48,6 @@ class ScaledRegularGridInterpolator(object):
             values = self._interpolate([points], method, **kwargs)
         else:
             values = self._interpolate(points, method, **kwargs)
-            values = np.reshape(values,points.shape)
 
         values = self.scale.inverse(values)
 
