@@ -110,3 +110,5 @@ class TestReflectedRegionBackgroundEstimator:
             self.bg_maker.plot()
             self.bg_maker.plot(idx=1)
             self.bg_maker.plot(idx=[0, 1])
+            self.bg_maker.plot(add_legend=True)
+
