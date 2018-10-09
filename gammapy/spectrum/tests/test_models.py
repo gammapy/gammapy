@@ -40,7 +40,7 @@ TEST_MODELS = [
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
         ),
-        val_at_2TeV=u.Quantity(4 * 2. ** (-2.3), "cm-2 s-1 TeV-1"),
+        val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(2.9227116204223784, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(6.650836884969039, "TeV cm-2 s-1"),
     ),
@@ -63,7 +63,7 @@ TEST_MODELS = [
             emin=1 * u.TeV,
             emax=10 * u.TeV,
         ),
-        val_at_2TeV=u.Quantity(4 * 2. ** (-2.3), "cm-2 s-1 TeV-1"),
+        val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(2.9227116204223784, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(6.650836884969039, "TeV cm-2 s-1"),
     ),
@@ -171,7 +171,7 @@ TEST_MODELS.append(
 TEST_MODELS.append(
     dict(
         name="compound5",
-        model=TEST_MODELS[0]["model"] - TEST_MODELS[0]["model"] / 2.,
+        model=TEST_MODELS[0]["model"] - TEST_MODELS[0]["model"] / 2.0,
         val_at_2TeV=0.5 * TEST_MODELS[0]["val_at_2TeV"],
         integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 0.5,
         eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 0.5,
@@ -185,7 +185,7 @@ try:
             name="table_model",
             model=table_model(),
             # Values took from power law expectation
-            val_at_2TeV=u.Quantity(4 * 2. ** (-2.3), "cm-2 s-1 TeV-1"),
+            val_at_2TeV=u.Quantity(4 * 2.0 ** (-2.3), "cm-2 s-1 TeV-1"),
             integral_1_10TeV=u.Quantity(2.9227116204223784, "cm-2 s-1"),
             eflux_1_10TeV=u.Quantity(6.650836884969039, "TeV cm-2 s-1"),
         )
@@ -211,7 +211,7 @@ def test_models(spectrum):
     )
 
     if "e_peak" in spectrum:
-        assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1E-2)
+        assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
     # inverse for TableModel is not implemented
     if not (isinstance(model, TableModel) or isinstance(model, ConstantModel)):
@@ -223,7 +223,7 @@ def test_models(spectrum):
 
     # check that an array evaluation works (otherwise e.g. plotting raises an error)
     e_array = [2, 10, 20] * u.TeV
-    e_array = e_array[:,np.newaxis,np.newaxis]
+    e_array = e_array[:, np.newaxis, np.newaxis]
     val = model(e_array)
     assert val.shape == e_array.shape
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
@@ -292,8 +292,8 @@ def test_pwl_index_2_error():
     assert_quantity_allclose(flux_err, 9e-14 * u.Unit("cm-2 s-1"))
 
     eflux, eflux_err = pwl.energy_flux_error(1 * u.TeV, 10 * u.TeV)
-    assert_quantity_allclose(eflux, 2.302585E-12 * u.Unit("TeV cm-2 s-1"))
-    assert_quantity_allclose(eflux_err, 0.2302585E-12 * u.Unit("TeV cm-2 s-1"))
+    assert_quantity_allclose(eflux, 2.302585e-12 * u.Unit("TeV cm-2 s-1"))
+    assert_quantity_allclose(eflux_err, 0.2302585e-12 * u.Unit("TeV cm-2 s-1"))
 
 
 @requires_data("gammapy-extra")
