@@ -473,7 +473,7 @@ class ConstantModel(SpectralModel):
     @staticmethod
     def evaluate(energy, const):
         """Evaluate the model (static function)."""
-        return np.ones(len(np.atleast_1d(energy))) * const
+        return np.ones(np.atleast_1d(energy).shape) * const
 
 
 class CompoundSpectralModel(SpectralModel):
@@ -552,7 +552,7 @@ class PowerLaw(SpectralModel):
     """
 
     def __init__(
-        self, index=2., amplitude=1E-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+        self, index=2.0, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
     ):
         self.parameters = Parameters(
             [
@@ -708,7 +708,7 @@ class PowerLaw(SpectralModel):
         """
         p = self.parameters
         base = value / p["amplitude"].quantity
-        return p["reference"].quantity * np.power(base, -1. / p["index"].value)
+        return p["reference"].quantity * np.power(base, -1.0 / p["index"].value)
 
 
 class PowerLaw2(SpectralModel):
@@ -748,7 +748,7 @@ class PowerLaw2(SpectralModel):
 
     def __init__(
         self,
-        amplitude=1E-12 * u.Unit("cm-2 s-1"),
+        amplitude=1e-12 * u.Unit("cm-2 s-1"),
         index=2,
         emin=0.1 * u.TeV,
         emax=100 * u.TeV,
@@ -842,7 +842,7 @@ class PowerLaw2(SpectralModel):
             "emin"
         ].quantity.to("TeV").value ** (-index + 1)
         term = (bottom / top) * (value / p["amplitude"].quantity).to("1 / TeV")
-        return np.power(term.value, -1. / index) * u.TeV
+        return np.power(term.value, -1.0 / index) * u.TeV
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):
@@ -880,7 +880,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     def __init__(
         self,
         index=1.5,
-        amplitude=1E-12 * u.Unit("cm-2 s-1 TeV-1"),
+        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1 * u.TeV,
         lambda_=0.1 / u.TeV,
     ):
@@ -964,7 +964,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     def __init__(
         self,
         index=1.5,
-        amplitude=1E-12 * u.Unit("cm-2 s-1 TeV-1"),
+        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1 * u.TeV,
         ecut=10 * u.TeV,
     ):
@@ -1031,7 +1031,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         self,
         index_1=1.5,
         index_2=2,
-        amplitude=1E-12 * u.Unit("cm-2 s-1 TeV-1"),
+        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
         reference=1 * u.TeV,
         ecut=10 * u.TeV,
     ):
@@ -1105,7 +1105,7 @@ class LogParabola(SpectralModel):
 
     def __init__(
         self,
-        amplitude=1E-12 * u.Unit("cm-2 s-1 TeV-1"),
+        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
         reference=10 * u.TeV,
         alpha=2,
         beta=1,
@@ -1282,6 +1282,7 @@ class TableModel(SpectralModel):
         """Evaluate the model (static function)."""
         x = np.log(energy.to(self.energy.unit).value)
         vals = self._evaluate(x, clip=True)
+        vals = np.reshape(vals, x.shape)
         return u.Quantity(norm.value * vals, self.values.unit, copy=False)
 
 
