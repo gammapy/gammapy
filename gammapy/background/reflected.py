@@ -340,7 +340,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         idx : int, optional
             Observations to include in the plot, default: all
         add_legend : boolean, optional
-            Enable/disable legend in the plot, defaul: False
+            Enable/disable legend in the plot, default: False
         """
         import matplotlib.pyplot as plt
 
