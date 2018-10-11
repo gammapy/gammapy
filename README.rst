@@ -5,7 +5,7 @@ A Python Package for Gamma-ray Astronomy.
 
 * Webpage: https://gammapy.org
 * Code: https://github.com/gammapy/gammapy
-* Documentation: http://docs.gammapy.org/
+* Documentation: https://docs.gammapy.org/
 * License: BSD-3
 
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat

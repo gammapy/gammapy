@@ -236,7 +236,7 @@ webpage at https://gammapy.org/ usually updates within less than a minute.
 docs.gammapy.org
 ----------------
 
-http://docs.gammapy.org/ contains most of the documentation for Gammapy,
+https://docs.gammapy.org/ contains most of the documentation for Gammapy,
 including information about Gammapy, the changelog, tutorials, ...
 
 TODO: describe how to update.

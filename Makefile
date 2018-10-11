@@ -36,7 +36,7 @@ help:
 	@echo ' More info:'
 	@echo ''
 	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
-	@echo ' * Gammapy docs: http://docs.gammapy.org/'
+	@echo ' * Gammapy docs: https://docs.gammapy.org/'
 	@echo ''
 	@echo ' Environment:'
 	@echo ''

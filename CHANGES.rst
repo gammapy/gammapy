@@ -248,7 +248,7 @@ Installation:
 Documentation:
 
 - We have created a separate project webpage at https://gammapy.org .
-  The http://docs.gammapy.org page is not just for the Gammapy documentation.
+  The https://docs.gammapy.org page is not just for the Gammapy documentation.
 - A lot of new tutorials were added in the form of Jupyter notebooks. To make the content of the
   notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
   in the Sphinx-based documentation (the one you are looking at) at :ref:`tutorials`.
@@ -292,7 +292,7 @@ Command line interface:
 Organisation:
 
 - A webpage at https://gammapy.org/ was set up, separate from the Gammapy
-  documentation page http://docs.gammapy.org/ .
+  documentation page https://docs.gammapy.org/ .
 - The Gammapy project and team organisation was set up with clear roles and
   responsibilities, in a way to help the Gammapy project grow, and to support
   astronomers and projects like CTA using Gammapy better. This is described at

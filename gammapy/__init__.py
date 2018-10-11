@@ -4,7 +4,7 @@ Gammapy: A Python package for gamma-ray astronomy
 =================================================
 
 * Code: https://github.com/gammapy/gammapy
-* Docs: http://docs.gammapy.org/
+* Docs: https://docs.gammapy.org/
 
 The top-level `gammapy` namespace is almost empty,
 it only contains this:
