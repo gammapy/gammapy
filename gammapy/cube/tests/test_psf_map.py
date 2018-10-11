@@ -12,12 +12,12 @@ from ...utils.testing import requires_dependency
 
 
 def fake_psf3d(sigma=0.15 * u.deg):
-    offsets = np.array((0., 1., 2., 3.)) * u.deg
+    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
     energy = np.logspace(-1, 1, 5) * u.TeV
     energy_lo = energy[:-1]
     energy_hi = energy[1:]
     energy = np.sqrt(energy_lo * energy_hi)
-    rad = np.linspace(0, 1., 101) * u.deg
+    rad = np.linspace(0, 1.0, 101) * u.deg
     rad_lo = rad[:-1]
     rad_hi = rad[1:]
 
@@ -36,8 +36,8 @@ def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit="TeV", name="energy")
-    rad_axis = MapAxis(nodes=np.linspace(0., 1., 51), unit="deg", name="theta")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="theta")
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
@@ -56,8 +56,8 @@ def test_psfmap(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2., 10.], unit="TeV", name="energy")
-    rad_axis = MapAxis(nodes=np.linspace(0., 0.6, 50), unit="deg", name="theta")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta")
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
@@ -81,7 +81,7 @@ def test_psfmap(tmpdir):
     )
 
     # create PSFKernel
-    kern_geom = WcsGeom.create(binsz=0.02, width=5., axes=[energy_axis])
+    kern_geom = WcsGeom.create(binsz=0.02, width=5.0, axes=[energy_axis])
     psfkernel = psfmap.get_psf_kernel(
         SkyCoord(1, 1, unit="deg"), kern_geom, max_radius=1 * u.deg
     )
@@ -100,7 +100,7 @@ def test_containment_radius_map(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy")
-    psf_theta_axis = MapAxis(nodes=np.linspace(0., 0.6, 30), unit="deg", name="theta")
+    psf_theta_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 30), unit="deg", name="theta")
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.5, width=(4, 3), axes=[psf_theta_axis, energy_axis]
     )

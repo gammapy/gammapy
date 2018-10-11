@@ -304,7 +304,7 @@ def select_sky_box(table, lon_lim, lat_lim, frame="icrs", inverted=False):
     # SkyCoord automatically wraps lon angles at 360 deg, so in case
     # the lon range is wrapped at 180 deg, lon angles must be wrapped
     # also at 180 deg for the comparison to work
-    if any(l < Angle(0., "deg") for l in lon_lim):
+    if any(l < Angle(0.0, "deg") for l in lon_lim):
         lon = lon.wrap_at(Angle(180, "deg"))
 
     lon_mask = (lon_lim[0] <= lon) & (lon < lon_lim[1])

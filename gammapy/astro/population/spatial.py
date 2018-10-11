@@ -89,7 +89,7 @@ class CaseBattacharya1998(Fittable1DModel):
     beta = Parameter()
     evolved = True
 
-    def __init__(self, amplitude=1., alpha=2, beta=3.53, **kwargs):
+    def __init__(self, amplitude=1.0, alpha=2, beta=3.53, **kwargs):
         super(CaseBattacharya1998, self).__init__(
             amplitude=amplitude, alpha=alpha, beta=beta, **kwargs
         )
@@ -229,7 +229,7 @@ class FaucherKaspi2006(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, r_0, sigma):
         """Evaluate model."""
-        term1 = 1. / np.sqrt(2 * np.pi * sigma)
+        term1 = 1.0 / np.sqrt(2 * np.pi * sigma)
         term2 = np.exp(-(r - r_0) ** 2 / (2 * sigma ** 2))
         return amplitude * term1 * term2
 
@@ -509,7 +509,7 @@ class ValleeSpiral(LogSpiral):
     def __init__(self):
         self.r_0 = self.r_0 * np.ones(4)
         self.theta_0 = self.theta_0 + Quantity([0, 90, 180, 270], "deg")
-        self.k = Quantity(1. / np.tan(np.radians(self.p.value)) * np.ones(4), "rad")
+        self.k = Quantity(1.0 / np.tan(np.radians(self.p.value)) * np.ones(4), "rad")
 
         # Compute start and end point of the bar
         x_0, y_0 = self.xy_position(radius=self.bar_radius, spiralarm_index=0)

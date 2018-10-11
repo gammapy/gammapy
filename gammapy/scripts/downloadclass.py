@@ -206,7 +206,7 @@ class DownloadProcess(object):
         self.bar += 1
         barLength, status = 50, ""
         progress = self.bar / len(self.listfiles)
-        if progress >= 1.:
+        if progress >= 1.0:
             progress, status = 1, "\r\n"
         block = int(round(barLength * progress))
         text = "\rDownloading files [{}] {:.0f}% {}".format(

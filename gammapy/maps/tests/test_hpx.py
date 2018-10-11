@@ -17,9 +17,9 @@ hpx_allsky_test_geoms = [
     # 2D All-sky
     (8, False, "GAL", None, None),
     # 3D All-sky
-    (8, False, "GAL", None, [MapAxis(np.logspace(0., 3., 4))]),
+    (8, False, "GAL", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
     # 3D All-sky w/ variable pixel size
-    ([2, 4, 8], False, "GAL", None, [MapAxis(np.logspace(0., 3., 4))]),
+    ([2, 4, 8], False, "GAL", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
     # 4D All-sky
     (
         8,
@@ -27,8 +27,8 @@ hpx_allsky_test_geoms = [
         "GAL",
         None,
         [
-            MapAxis(np.logspace(0., 3., 3), name="axis0"),
-            MapAxis(np.logspace(0., 2., 4), name="axis1"),
+            MapAxis(np.logspace(0.0, 3.0, 3), name="axis0"),
+            MapAxis(np.logspace(0.0, 2.0, 4), name="axis1"),
         ],
     ),
 ]
@@ -37,14 +37,14 @@ hpx_partialsky_test_geoms = [
     # 2D Partial-sky
     (8, False, "GAL", "DISK(110.,75.,10.)", None),
     # 3D Partial-sky
-    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0., 3., 4))]),
+    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
     # 3D Partial-sky w/ variable pixel size
     (
         [8, 16, 32],
         False,
         "GAL",
         "DISK(110.,75.,10.)",
-        [MapAxis(np.logspace(0., 3., 4))],
+        [MapAxis(np.logspace(0.0, 3.0, 4))],
     ),
     # 4D Partial-sky w/ variable pixel size
     (
@@ -53,8 +53,8 @@ hpx_partialsky_test_geoms = [
         "GAL",
         "DISK(110.,75.,10.)",
         [
-            MapAxis(np.logspace(0., 3., 3), name="axis0"),
-            MapAxis(np.logspace(0., 2., 4), name="axis1"),
+            MapAxis(np.logspace(0.0, 3.0, 3), name="axis0"),
+            MapAxis(np.logspace(0.0, 2.0, 4), name="axis1"),
         ],
     ),
 ]
@@ -156,8 +156,8 @@ def test_get_subpixels(nside_superpix, nside_subpix, nest):
 
 
 def test_hpx_global_to_local():
-    ax0 = np.linspace(0., 1., 3)
-    ax1 = np.linspace(0., 1., 3)
+    ax0 = np.linspace(0.0, 1.0, 3)
+    ax1 = np.linspace(0.0, 1.0, 3)
 
     # 2D All-sky
     hpx = HpxGeom(16, False, "GAL")
@@ -282,7 +282,7 @@ def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
     import healpy as hp
 
     geom = HpxGeom(nside, nested, coordsys, region=region, axes=axes)
-    lon = np.array([112.5, 135., 105.])
+    lon = np.array([112.5, 135.0, 105.0])
     lat = np.array([75.3, 75.3, 74.6])
     coords = make_test_coords(geom, lon, lat)
     zidx = tuple([ax.coord_to_idx(t) for t, ax in zip(coords[2:], geom.axes)])
@@ -313,12 +313,12 @@ def test_hpxgeom_coord_to_idx(nside, nested, coordsys, region, axes):
 
 
 def test_hpxgeom_coord_to_pix():
-    lon = np.array([110.25, 114., 105.])
+    lon = np.array([110.25, 114.0, 105.0])
     lat = np.array([75.3, 75.3, 74.6])
     z0 = np.array([0.5, 1.5, 2.5])
     z1 = np.array([3.5, 4.5, 5.5])
-    ax0 = np.linspace(0., 3., 4)
-    ax1 = np.linspace(3., 6., 4)
+    ax0 = np.linspace(0.0, 3.0, 4)
+    ax1 = np.linspace(3.0, 6.0, 4)
 
     pix64 = np.array([784, 785, 864])
 
@@ -380,39 +380,39 @@ def test_hpx_get_hpxregion_size():
 
 def test_hpxgeom_get_hpxregion_dir():
     refdir = get_hpxregion_dir("DISK(110.,75.,2.)", "GAL")
-    assert_allclose(refdir.l.deg, 110.)
-    assert_allclose(refdir.b.deg, 75.)
+    assert_allclose(refdir.l.deg, 110.0)
+    assert_allclose(refdir.b.deg, 75.0)
 
     refdir = get_hpxregion_dir(None, "GAL")
-    assert_allclose(refdir.l.deg, 0.)
-    assert_allclose(refdir.b.deg, 0.)
+    assert_allclose(refdir.l.deg, 0.0)
+    assert_allclose(refdir.b.deg, 0.0)
 
 
 def test_hpxgeom_make_wcs():
-    ax0 = np.linspace(0., 3., 4)
+    ax0 = np.linspace(0.0, 3.0, 4)
 
     hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)")
     wcs = hpx.make_wcs()
-    assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
+    assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
     hpx = HpxGeom(64, False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
     wcs = hpx.make_wcs()
-    assert_allclose(wcs.wcs.wcs.crval, np.array([110., 75.]))
+    assert_allclose(wcs.wcs.wcs.crval, np.array([110.0, 75.0]))
 
 
 def test_hpxgeom_get_coord():
-    ax0 = np.linspace(0., 3., 4)
+    ax0 = np.linspace(0.0, 3.0, 4)
 
     # 2D all-sky
     hpx = HpxGeom(16, False, "GAL")
     c = hpx.get_coord()
-    assert_allclose(c[0][:3], np.array([45., 135., 225.]))
+    assert_allclose(c[0][:3], np.array([45.0, 135.0, 225.0]))
     assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
 
     # 3D all-sky
     hpx = HpxGeom(16, False, "GAL", axes=[ax0])
     c = hpx.get_coord()
-    assert_allclose(c[0][0, :3], np.array([45., 135., 225.]))
+    assert_allclose(c[0][0, :3], np.array([45.0, 135.0, 225.0]))
     assert_allclose(c[1][0, :3], np.array([87.075819, 87.075819, 87.075819]))
     assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
 
@@ -432,7 +432,7 @@ def test_hpxgeom_get_coord():
     # 3D partial-sky w/ variable bin size
     hpx = HpxGeom([16, 32, 64], False, "GAL", region="DISK(110.,75.,2.)", axes=[ax0])
     c = hpx.get_coord(flat=True)
-    assert_allclose(c[0][:3], np.array([117., 103.5, 112.5]))
+    assert_allclose(c[0][:3], np.array([117.0, 103.5, 112.5]))
     assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
     assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
 
@@ -455,7 +455,7 @@ def test_hpxgeom_contains(nside, nested, coordsys, region, axes):
 
 
 def test_make_hpx_to_wcs_mapping():
-    ax0 = np.linspace(0., 1., 3)
+    ax0 = np.linspace(0.0, 1.0, 3)
     hpx = HpxGeom(16, False, "GAL", region="DISK(110.,75.,2.)")
     # FIXME construct explicit WCS projection here
     wcs = hpx.make_wcs()
@@ -512,7 +512,7 @@ def test_make_hpx_to_wcs_mapping():
                 0.09090909,
                 0.09090909,
                 0.09090909,
-                1.,
+                1.0,
                 0.11111111,
                 0.11111111,
                 0.09090909,
@@ -537,7 +537,7 @@ def test_make_hpx_to_wcs_mapping():
                 0.125,
                 0.16666667,
                 0.16666667,
-                1.,
+                1.0,
                 0.125,
                 0.125,
                 0.125,

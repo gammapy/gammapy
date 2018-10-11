@@ -204,12 +204,12 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         y_unit = y.unit
         y = y.value
     except AttributeError:
-        y_unit = 1.
+        y_unit = 1.0
     try:
         x_unit = x.unit
         x = x.value
     except AttributeError:
-        x_unit = 1.
+        x_unit = 1.0
 
     y = np.asanyarray(y)
     x = np.asanyarray(x)
@@ -244,14 +244,14 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         # if local powerlaw index is -1, use \int 1/x = log(x); otherwise use normal
         # powerlaw integration
         trapzs = np.where(
-            np.abs(b + 1.) > 1e-10,
+            np.abs(b + 1.0) > 1e-10,
             (y[slice1] * (x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1]))
             / (b + 1),
             x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]),
         )
 
-    tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
-    trapzs[tozero] = 0.
+    tozero = (y[slice1] == 0.0) + (y[slice2] == 0.0) + (x[slice1] == x[slice2])
+    trapzs[tozero] = 0.0
 
     if intervals:
         return trapzs * x_unit * y_unit

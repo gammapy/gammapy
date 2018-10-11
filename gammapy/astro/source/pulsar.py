@@ -122,7 +122,7 @@ class Pulsar(SimplePulsar):
         self.P_dot_0 = (Quantity(10 ** logB, "gauss") / B_CONST) ** 2 / P_0
         self.tau_0 = P_0 / (2 * self.P_dot_0)
         self.n = float(n)
-        self.beta = (n + 1.) / (n - 1.)
+        self.beta = (n + 1.0) / (n - 1.0)
         self.morphology = morphology
         if age is not None:
             validate_physical_type("age", age, "time")

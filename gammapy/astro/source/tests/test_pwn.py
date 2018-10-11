@@ -13,7 +13,7 @@ pwn = PWN()
 @requires_dependency("scipy")
 def test_PWN_radius():
     """Test SNR luminosity"""
-    r = [0, 1.334e+14, 2.114e+15, 3.350e+16, 5.310e+17, 6.927e+17, 6.927e+17]
+    r = [0, 1.334e14, 2.114e15, 3.350e16, 5.310e17, 6.927e17, 6.927e17]
     assert_allclose(pwn.radius(t).value, r, rtol=1e-3)
 
 

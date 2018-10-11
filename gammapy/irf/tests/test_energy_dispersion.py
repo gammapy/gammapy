@@ -108,9 +108,9 @@ class TestEnergyDispersion2D:
         self.edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
 
         # Make a test case
-        e_true = np.logspace(-1., 2., 51) * u.TeV
-        migra = np.linspace(0., 4., 1001)
-        offset = np.linspace(0., 2.5, 5) * u.deg
+        e_true = np.logspace(-1.0, 2.0, 51) * u.TeV
+        migra = np.linspace(0.0, 4.0, 1001)
+        offset = np.linspace(0.0, 2.5, 5) * u.deg
         sigma = 0.15 / (e_true[:-1] / (1 * u.TeV)).value ** 0.3
         bias = 1e-3 * (e_true[:-1] - 1 * u.TeV).value
         self.edisp2 = EnergyDispersion2D.from_gauss(e_true, migra, bias, sigma, offset)

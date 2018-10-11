@@ -58,8 +58,8 @@ def test_compatibility():
     """
     # Fermi power-law parameters
     e_fermi = 1296.2734
-    f_fermi = 3.791907E-12
-    f_err_fermi = 5.6907235E-13
+    f_fermi = 3.791907e-12
+    f_err_fermi = 5.6907235e-13
     g_fermi = 2.3759267
     g_err_fermi = 0.08453985
     par_fermi = (e_fermi, f_fermi, f_err_fermi, g_fermi, g_err_fermi)

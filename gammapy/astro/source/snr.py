@@ -102,8 +102,8 @@ class SNR(object):
 
         """
         # proportional constant for the free expansion phase
-        term_1 = (self.e_sn / Quantity(1e51, "erg")) ** (1. / 2)
-        term_2 = (self.m_ejecta / const.M_sun) ** (-1. / 2)
+        term_1 = (self.e_sn / Quantity(1e51, "erg")) ** (1.0 / 2)
+        term_2 = (self.m_ejecta / const.M_sun) ** (-1.0 / 2)
         return Quantity(0.01, "pc/yr") * term_1 * term_2 * t
 
     def _radius_sedov_taylor(self, t):
@@ -116,7 +116,7 @@ class SNR(object):
 
         """
         R_FE = self._radius_free_expansion(self.sedov_taylor_begin)
-        return R_FE * (t / self.sedov_taylor_begin) ** (2. / 5)
+        return R_FE * (t / self.sedov_taylor_begin) ** (2.0 / 5)
 
     def radius_inner(self, t, fraction=0.0914):
         """Inner radius  at age t  of the SNR shell.
@@ -173,7 +173,7 @@ class SNR(object):
         L = np.select(
             [t <= self.sedov_taylor_begin, t <= self.sedov_taylor_end], [0, L]
         )
-        return Quantity(1.0768E34, "s-1") * L
+        return Quantity(1.0768e34, "s-1") * L
 
     @lazyproperty
     def sedov_taylor_begin(self):
@@ -193,9 +193,9 @@ class SNR(object):
             \\left(\\frac{\\rho_{ISM}}{10^{-24}g/cm^3}\\right)^{-1/3}
 
         """
-        term1 = (self.e_sn / Quantity(1e51, "erg")) ** (-1. / 2)
-        term2 = (self.m_ejecta / const.M_sun) ** (5. / 6)
-        term3 = (self.rho_ISM / (Quantity(1, "cm-3") * const.m_p)) ** (-1. / 3)
+        term1 = (self.e_sn / Quantity(1e51, "erg")) ** (-1.0 / 2)
+        term2 = (self.m_ejecta / const.M_sun) ** (5.0 / 6)
+        term3 = (self.rho_ISM / (Quantity(1, "cm-3") * const.m_p)) ** (-1.0 / 3)
         return Quantity(200, "yr") * term1 * term2 * term3
 
     @lazyproperty
@@ -216,8 +216,8 @@ class SNR(object):
 
         """
         term1 = 3 * const.m_p.cgs / (100 * const.k_B.cgs * self.t_stop)
-        term2 = (self.e_sn / self.rho_ISM) ** (2. / 5)
-        return ((term1 * term2) ** (5. / 6)).to("yr")
+        term2 = (self.e_sn / self.rho_ISM) ** (2.0 / 5)
+        return ((term1 * term2) ** (5.0 / 6)).to("yr")
 
 
 class SNRTrueloveMcKee(SNR):
@@ -230,11 +230,11 @@ class SNRTrueloveMcKee(SNR):
         super(SNRTrueloveMcKee, self).__init__(*args, **kwargs)
 
         # Characteristic dimensions
-        self.r_c = self.m_ejecta ** (1. / 3) * self.rho_ISM ** (-1. / 3)
+        self.r_c = self.m_ejecta ** (1.0 / 3) * self.rho_ISM ** (-1.0 / 3)
         self.t_c = (
-            self.e_sn ** (-1. / 2)
-            * self.m_ejecta ** (5. / 6)
-            * self.rho_ISM ** (-1. / 3)
+            self.e_sn ** (-1.0 / 2)
+            * self.m_ejecta ** (5.0 / 6)
+            * self.rho_ISM ** (-1.0 / 3)
         )
 
     def radius(self, t=None):
@@ -292,7 +292,7 @@ class SNRTrueloveMcKee(SNR):
             Time after birth of the SNR.
 
         """
-        return 1.12 * self.r_c * (t / self.t_c) ** (2. / 3)
+        return 1.12 * self.r_c * (t / self.t_c) ** (2.0 / 3)
 
     def _radius_sedov_taylor(self, t):
         """Shock radius  at age t during Sedov Taylor phase.
@@ -302,9 +302,9 @@ class SNRTrueloveMcKee(SNR):
         t : `~astropy.units.Quantity`
             Time after birth of the SNR.
         """
-        term1 = self._radius_free_expansion(self.sedov_taylor_begin) ** (5. / 2)
-        term2 = (2.026 * (self.e_sn / self.rho_ISM)) ** (1. / 2)
-        return (term1 + term2 * (t - self.sedov_taylor_begin)) ** (2. / 5)
+        term1 = self._radius_free_expansion(self.sedov_taylor_begin) ** (5.0 / 2)
+        term2 = (2.026 * (self.e_sn / self.rho_ISM)) ** (1.0 / 2)
+        return (term1 + term2 * (t - self.sedov_taylor_begin)) ** (2.0 / 5)
 
     @lazyproperty
     def sedov_taylor_begin(self):

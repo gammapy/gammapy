@@ -238,7 +238,7 @@ class TestFermi2FHLObject:
 
         actual = flux_points.table["flux_ul"]
         desired = [np.nan, np.nan, 1.294092e-11] * u.Unit("cm-2 s-1")
-        assert_quantity_allclose(actual, desired, rtol=1E-3)
+        assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
 @requires_data("gammapy-extra")

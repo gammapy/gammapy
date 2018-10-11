@@ -203,7 +203,7 @@ class SpectrumSimulation(object):
             energy_lo=self.e_reco.lower_bounds,
             energy_hi=self.e_reco.upper_bounds,
             data=off_counts,
-            backscal=1. / self.alpha,
+            backscal=1.0 / self.alpha,
             is_bkg=True,
             meta=self._get_meta(),
         )

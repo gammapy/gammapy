@@ -140,7 +140,7 @@ def test_wstat_corner_cases():
     alpha = 0.5
 
     actual = stats.wstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
-    desired = -2 * (mu_sig * (1. / alpha) + n_on * np.log(alpha / (1 + alpha)))
+    desired = -2 * (mu_sig * (1.0 / alpha) + n_on * np.log(alpha / (1 + alpha)))
     assert_allclose(actual, desired)
 
     actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)

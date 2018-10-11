@@ -31,7 +31,7 @@ class TestSpectrumSimulation:
             amplitude=3 * 1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,
         )
-        self.alpha = 1. / 3
+        self.alpha = 1.0 / 3
 
         # Minimal setup
         self.sim = SpectrumSimulation(

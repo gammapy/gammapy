@@ -296,8 +296,8 @@ def test_map_reproject_wcs_to_hpx():
     m = WcsNDMap(geom_wcs, data=data)
 
     m_r = m.reproject(geom_hpx)
-    actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1., 3.16227766, 10.]})
-    assert_allclose(actual, [65., 186., 307.], rtol=1e-3)
+    actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
+    assert_allclose(actual, [65.0, 186.0, 307.0], rtol=1e-3)
 
 
 @requires_dependency("reproject")
@@ -314,5 +314,5 @@ def test_map_reproject_hpx_to_wcs():
     m = HpxNDMap(geom_hpx, data=data)
 
     m_r = m.reproject(geom_wcs)
-    actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1., 3.16227766, 10.]})
+    actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)

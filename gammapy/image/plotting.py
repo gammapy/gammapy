@@ -59,7 +59,7 @@ class MapPanelPlotter(object):
         left, bottom = p["xlim"][0].wrap_at("180d"), p["ylim"][0]
 
         width_all = np.abs(p["xlim"].wrap_at("180d").diff())
-        xoverlap = ((p["npanels"] * width) - width_all) / (p["npanels"] - 1.)
+        xoverlap = ((p["npanels"] * width) - width_all) / (p["npanels"] - 1.0)
         if xoverlap < 0:
             raise ValueError(
                 "No overlap between panels. Please reduce figure "
@@ -177,7 +177,7 @@ def colormap_hess(transition=0.5, width=0.1):
     else:
         blue = red - width
 
-    yellow = 2. / 3. * (1 - red) + red
+    yellow = 2.0 / 3.0 * (1 - red) + red
 
     black, white = 0, 1
 
@@ -187,7 +187,7 @@ def colormap_hess(transition=0.5, width=0.1):
         (black, "k"),
         (blue, (0, 0, 0.8)),
         (red, "r"),
-        (yellow, (1., 1., 0)),
+        (yellow, (1.0, 1.0, 0)),
         (white, "w"),
     ]
     cmap = LinearSegmentedColormap.from_list(name="hess", colors=colors)

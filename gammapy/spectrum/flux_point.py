@@ -690,7 +690,7 @@ class FluxPointEstimator(object):
                 par.frozen = True
         return model
 
-    def compute_dnde_err(self, sigma=1.):
+    def compute_dnde_err(self, sigma=1.0):
         """
         Compute assymetric errors for a flux point.
 

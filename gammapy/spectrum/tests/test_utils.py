@@ -43,10 +43,10 @@ def test_integrate_spectrum_uncertainties():
     """
     from uncertainties import unumpy
 
-    e1 = 1.
-    e2 = 10.
+    e1 = 1.0
+    e2 = 10.0
     einf = 1e10
-    e = 1.
+    e = 1.0
     g = unumpy.uarray(2.3, 0.2)
     I = unumpy.uarray(1e-12, 1e-13)
 
@@ -136,7 +136,7 @@ def get_test_cases():
             dict(
                 model=TableModel(
                     energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
-                    values=[4., 3., 1., 0.1] * u.Unit("TeV-1"),
+                    values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
                 ),
                 npred=0.5545130625383198,
                 e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,

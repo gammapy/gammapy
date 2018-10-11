@@ -121,7 +121,7 @@ def test_mapcoords_create():
 
     # 2D Tuple w/ SkyCoord
     lon, lat = np.array([0.0, 1.0]), np.array([2.0, 3.0])
-    energy = np.array([100., 1000.])
+    energy = np.array([100.0, 1000.0])
     skycoord_cel = SkyCoord(lon, lat, unit="deg", frame="icrs")
     skycoord_gal = SkyCoord(lon, lat, unit="deg", frame="galactic")
     coords = MapCoord.create((skycoord_cel,))
@@ -186,7 +186,7 @@ def test_mapcoords_create():
 
 def test_mapcoords_to_coordsys():
     lon, lat = np.array([0.0, 1.0]), np.array([2.0, 3.0])
-    energy = np.array([100., 1000.])
+    energy = np.array([100.0, 1000.0])
     skycoord_cel = SkyCoord(lon, lat, unit="deg", frame="icrs")
     skycoord_gal = SkyCoord(lon, lat, unit="deg", frame="galactic")
 

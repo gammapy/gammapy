@@ -19,7 +19,7 @@ def mask():
     """Example mask for testing."""
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
-    geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.)
+    geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
     mask = geom.region_mask([exclusion_region], inside=False)
     return WcsNDMap(geom, data=mask)
 
@@ -111,4 +111,3 @@ class TestReflectedRegionBackgroundEstimator:
             self.bg_maker.plot(idx=1)
             self.bg_maker.plot(idx=[0, 1])
             self.bg_maker.plot(add_legend=True)
-

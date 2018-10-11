@@ -43,7 +43,7 @@ magic_lp = {
 magic_ecpl = {
     "amplitude": 3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
     "index": 2.21,
-    "lambda_": 1 / (6. * u.TeV),
+    "lambda_": 1 / (6.0 * u.TeV),
     "reference": 1 * u.TeV,
 }
 

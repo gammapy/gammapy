@@ -292,7 +292,7 @@ class ObservationSummary(object):
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
         ax.set_ylabel("$\gamma$ rate ({})".format(self.gamma_rate.unit))
-        ax.axis([0, len(self.gamma_rate), 0., np.amax(self.gamma_rate.value) * 1.2])
+        ax.axis([0, len(self.gamma_rate), 0.0, np.amax(self.gamma_rate.value) * 1.2])
         ax.set_title("$\gamma$ rates")
         return ax
 
@@ -321,7 +321,7 @@ class ObservationSummary(object):
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
         ax.set_ylabel("Background rate ({})".format(self.bg_rate.unit))
-        ax.axis([0, len(self.bg_rate), 0., np.amax(self.bg_rate.value) * 1.2])
+        ax.axis([0, len(self.bg_rate), 0.0, np.amax(self.bg_rate.value) * 1.2])
         ax.set_title("Background rates")
         return ax
 

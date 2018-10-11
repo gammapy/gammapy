@@ -253,7 +253,7 @@ class TestSkyDiffuseCubeMapEvaluator:
         out = diffuse_evaluator.compute_dnde()
         assert out.shape == (3, 4, 5)
         out = out.to("cm-2 s-1 MeV-1 sr-1")
-        assert_allclose(out.value.sum(), 2520., rtol=1e-5)
+        assert_allclose(out.value.sum(), 2520.0, rtol=1e-5)
         assert_allclose(out.value[0, 0, 0], 42, rtol=1e-5)
 
     @staticmethod
@@ -270,8 +270,8 @@ class TestSkyDiffuseCubeMapEvaluator:
         npred = diffuse_evaluator.apply_exposure(flux)
         out = diffuse_evaluator.apply_psf(npred)
         assert out.data.shape == (3, 4, 5)
-        assert_allclose(out.data.sum(), 1.106404e+12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586252e+08, rtol=1e-5)
+        assert_allclose(out.data.sum(), 1.106404e12, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 5.586252e08, rtol=1e-5)
 
     @staticmethod
     def test_apply_edisp(diffuse_evaluator):
@@ -279,15 +279,15 @@ class TestSkyDiffuseCubeMapEvaluator:
         npred = diffuse_evaluator.apply_exposure(flux)
         out = diffuse_evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 1.606345e+12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.164579e+09, rtol=1e-5)
+        assert_allclose(out.data.sum(), 1.606345e12, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.164579e09, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 1.106403e+12, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 5.586252e+08, rtol=1e-5)
+        assert_allclose(out.sum(), 1.106403e12, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 5.586252e08, rtol=1e-5)
 
 
 @requires_dependency("scipy")

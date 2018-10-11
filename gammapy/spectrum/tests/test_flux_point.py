@@ -36,10 +36,10 @@ class LWTestModel(SpectralModel):
         return 1e4 * np.exp(-6 * x)
 
     def integral(self, xmin, xmax, **kwargs):
-        return -1. / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
+        return -1.0 / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
 
     def inverse(self, y):
-        return -1. / 6 * np.log(y * 1e-4)
+        return -1.0 / 6 * np.log(y * 1e-4)
 
 
 class XSqrTestModel(SpectralModel):
@@ -50,7 +50,7 @@ class XSqrTestModel(SpectralModel):
         return x ** 2
 
     def integral(self, xmin, xmax, **kwargs):
-        return 1. / 3 * (xmax ** 3 - xmin ** 2)
+        return 1.0 / 3 * (xmax ** 3 - xmin ** 2)
 
     def inverse(self, y):
         return np.sqrt(y)
@@ -368,7 +368,7 @@ class TestFluxPointFit:
 
         # Right now sherpa also fits the reference energy
         amplitude = result.model(1 * u.TeV).to("cm-2 s-1 TeV-1")
-        assert_allclose(amplitude.value, 2.1616E-13, rtol=1e-3)
+        assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
 
     @requires_dependency("iminuit")
     def test_likelihood_profile(self, sed_model, sed_flux_points):

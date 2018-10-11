@@ -64,7 +64,7 @@ radial_models_1D = {
     Exponential: {
         "parameters": [1, 0.05],
         "x_values": [0, 0.25, 0.5],
-        "y_values": [1.00000000e+00, 6.73794700e-03, 4.53999298e-05],
+        "y_values": [1.00000000e00, 6.73794700e-03, 4.53999298e-05],
         "x_lim": [ZMIN.value, ZMAX.value],
         "integral": 1,
     },
@@ -85,6 +85,6 @@ class TestMorphologyModels(Fittable1DModelTester):
         cls.fit_error = 10
         cls.x = 5.3
         cls.y = 6.7
-        cls.x1 = np.arange(1, 10, .1)
-        cls.y1 = np.arange(1, 10, .1)
+        cls.x1 = np.arange(1, 10, 0.1)
+        cls.y1 = np.arange(1, 10, 0.1)
         cls.y2, cls.x2 = np.mgrid[:10, :8]

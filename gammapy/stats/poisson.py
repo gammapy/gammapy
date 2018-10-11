@@ -447,39 +447,39 @@ def excess_ul_helene(excess, excess_error, significance):
     from math import sqrt
     from scipy.special import erf
 
-    if excess >= 0.:
+    if excess >= 0.0:
         zeta = excess / excess_error
-        value = zeta / sqrt(2.)
-        integral = (1. + erf(value)) / 2.
-        integral2 = 1. - conf_level1 * integral
+        value = zeta / sqrt(2.0)
+        integral = (1.0 + erf(value)) / 2.0
+        integral2 = 1.0 - conf_level1 * integral
         value_old = value
         value_new = value_old + 0.01
         if integral > integral2:
-            value_new = 0.
-        integral = (1. + erf(value_new)) / 2.
+            value_new = 0.0
+        integral = (1.0 + erf(value_new)) / 2.0
     else:
         zeta = -excess / excess_error
-        value = zeta / sqrt(2.)
-        integral = 1 - (1. + erf(value)) / 2.
-        integral2 = 1. - conf_level1 * integral
+        value = zeta / sqrt(2.0)
+        integral = 1 - (1.0 + erf(value)) / 2.0
+        integral2 = 1.0 - conf_level1 * integral
         value_old = value
         value_new = value_old + 0.01
-        integral = (1. + erf(value_new)) / 2.
+        integral = (1.0 + erf(value_new)) / 2.0
 
     # The 1st Loop is for Speed & 2nd For Precision
     while integral < integral2:
         value_old = value_new
         value_new = value_new + 0.01
-        integral = (1. + erf(value_new)) / 2.
+        integral = (1.0 + erf(value_new)) / 2.0
     value_new = value_old + 0.0000001
-    integral = (1. + erf(value_new)) / 2.
+    integral = (1.0 + erf(value_new)) / 2.0
 
     while integral < integral2:
         value_new = value_new + 0.0000001
-        integral = (1. + erf(value_new)) / 2.
-    value_new = value_new * sqrt(2.)
+        integral = (1.0 + erf(value_new)) / 2.0
+    value_new = value_new * sqrt(2.0)
 
-    if excess >= 0.:
+    if excess >= 0.0:
         conf_limit = (value_new + zeta) * excess_error
     else:
         conf_limit = (value_new - zeta) * excess_error

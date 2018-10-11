@@ -256,7 +256,7 @@ class PSFKernel(object):
         # Create a new geom according to given input
         geom = _make_kernel_geom(geom, max_radius)
 
-        rad = Angle(np.linspace(0., max_radius.deg, 200), "deg")
+        rad = Angle(np.linspace(0.0, max_radius.deg, 200), "deg")
 
         table_psf = TablePSF.from_shape(shape="gauss", width=sigma, rad=rad)
 

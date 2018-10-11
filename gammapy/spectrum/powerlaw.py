@@ -140,8 +140,8 @@ def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
     e2 : array_like
         Energy band maximum
     """
-    g1 = 1. - g
-    g2 = 2. - g
+    g1 = 1.0 - g
+    g2 = 2.0 - g
     factor = g1 / g2 * (e1 ** g2 - e2 ** g2) / e ** g1
     return I * factor
 

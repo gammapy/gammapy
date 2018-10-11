@@ -163,7 +163,7 @@ class EnergyDispersion(object):
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        migra = np.linspace(1. / 3, 3, 200)
+        migra = np.linspace(1.0 / 3, 3, 200)
         # A dummy offset axis (need length 2 for interpolation to work)
         offset = Quantity([0, 1, 2], "deg")
 

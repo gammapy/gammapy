@@ -20,12 +20,12 @@ from ..wcsnd import WcsNDMap
 pytest.importorskip("scipy")
 pytest.importorskip("reproject")
 
-axes1 = [MapAxis(np.logspace(0., 3., 3), interp="log", name="spam")]
+axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="spam")]
 axes2 = [
-    MapAxis(np.logspace(0., 3., 3), interp="log"),
-    MapAxis(np.logspace(1., 3., 4), interp="lin"),
+    MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
+    MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
 ]
-skydir = SkyCoord(110., 75.0, unit="deg", frame="icrs")
+skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
 wcs_allsky_test_geoms = [
     (None, 10.0, "GAL", "AIT", skydir, None),
@@ -97,7 +97,7 @@ def test_wcsndmap_read_write(tmpdir, npix, binsz, coordsys, proj, skydir, axes):
 def test_wcsndmap_read_write_fgst(tmpdir):
     filename = str(tmpdir / "map.fits")
 
-    axis = MapAxis.from_bounds(100., 1000., 4, name="energy", unit="MeV")
+    axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
     geom = WcsGeom.create(npix=10, binsz=1.0, proj="AIT", coordsys="GAL", axes=[axis])
 
     # Test Counts Cube
@@ -205,7 +205,7 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
 
 
 def test_set_get_by_coord_quantities():
-    ax = MapAxis(np.logspace(0., 3., 3), interp="log", name="energy", unit="TeV")
+    ax = MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy", unit="TeV")
     geom = WcsGeom.create(binsz=0.1, npix=(3, 4), axes=[ax])
     m = WcsNDMap(geom)
     coords_dict = {"lon": 0, "lat": 0, "energy": 1000 * u.GeV}
@@ -260,7 +260,7 @@ def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
         np.concatenate((coords[1], coords[1])),
     )
     m0.coadd(m1)
-    assert_allclose(np.nansum(m0.data), np.nansum(m1.data), rtol=1E-4)
+    assert_allclose(np.nansum(m0.data), np.nansum(m1.data), rtol=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -281,7 +281,7 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
 
 
 def test_interp_by_coord_quantities():
-    ax = MapAxis(np.logspace(0., 3., 3), interp="log", name="energy", unit="TeV")
+    ax = MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy", unit="TeV")
     geom = WcsGeom.create(binsz=0.1, npix=(3, 3), axes=[ax])
     m = WcsNDMap(geom)
     coords_dict = {"lon": 0, "lat": 0, "energy": 1000 * u.GeV}
@@ -452,8 +452,8 @@ def test_coadd_unit():
 @pytest.mark.parametrize("kernel", ["gauss", "box", "disk"])
 def test_smooth(kernel):
     axes = [
-        MapAxis(np.logspace(0., 3., 3), interp="log"),
-        MapAxis(np.logspace(1., 3., 4), interp="lin"),
+        MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
+        MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
     geom = WcsGeom.create(npix=(10, 10), binsz=1, proj="CAR", coordsys="GAL", axes=axes)
     m = WcsNDMap(geom, data=np.ones(geom.data_shape), unit="m2")
@@ -481,13 +481,13 @@ def test_make_cutout(mode):
 @requires_dependency("scipy")
 def test_convolve_vs_smooth():
     axes = [
-        MapAxis(np.logspace(0., 3., 3), interp="log"),
-        MapAxis(np.logspace(1., 3., 4), interp="lin"),
+        MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
+        MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
     ]
 
     binsz = 0.05 * u.deg
     m = WcsNDMap.create(binsz=binsz, width=1.05 * u.deg, axes=axes)
-    m.data[:, :, 10, 10] = 1.
+    m.data[:, :, 10, 10] = 1.0
 
     desired = m.smooth(kernel="gauss", width=0.5 * u.deg, mode="constant")
     gauss = Gaussian2DKernel(10).array
@@ -498,7 +498,9 @@ def test_convolve_vs_smooth():
 @requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_convolve_nd():
-    energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit="TeV", name="energy")
+    energy_axis = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy"
+    )
     geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
     m = Map.from_geom(geom)
     m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])

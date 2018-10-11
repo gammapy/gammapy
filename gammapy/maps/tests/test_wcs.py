@@ -11,12 +11,12 @@ from ..geom import MapAxis
 
 pytest.importorskip("scipy")
 
-axes1 = [MapAxis(np.logspace(0., 3., 3), interp="log", name="energy")]
+axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
-    MapAxis(np.logspace(0., 3., 3), interp="log", name="energy"),
-    MapAxis(np.logspace(1., 3., 4), interp="lin"),
+    MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy"),
+    MapAxis(np.logspace(1.0, 3.0, 4), interp="lin"),
 ]
-skydir = SkyCoord(110., 75.0, unit="deg", frame="icrs")
+skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
 
 wcs_allsky_test_geoms = [
     (None, 10.0, "GAL", "AIT", skydir, None),
@@ -281,7 +281,7 @@ def test_check_width(width, out):
     assert isinstance(width[1], float)
     assert width == out
 
-    geom = WcsGeom.create(width=width, binsz=1.)
+    geom = WcsGeom.create(width=width, binsz=1.0)
     assert tuple(geom.npix) == out
 
 
@@ -292,7 +292,7 @@ def test_check_width_bad_input():
 
 def test_get_axis_index_by_name():
     e_axis = MapAxis.from_edges([1, 5], name="energy")
-    geom = WcsGeom.create(width=5, binsz=1., axes=[e_axis])
+    geom = WcsGeom.create(width=5, binsz=1.0, axes=[e_axis])
     assert geom.get_axis_index_by_name("Energy") == 0
     with pytest.raises(ValueError):
         geom.get_axis_index_by_name("time")

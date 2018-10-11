@@ -120,7 +120,7 @@ class TestEffectiveAreaTable:
     def test_from_parametrization():
         # Log center of this is 100 GeV
         energy = [80, 125] * u.GeV
-        area_ref = 1.65469579e+07 * u.cm ** 2
+        area_ref = 1.65469579e07 * u.cm ** 2
 
         area = EffectiveAreaTable.from_parametrization(energy, "HESS")
 
@@ -129,7 +129,7 @@ class TestEffectiveAreaTable:
 
         # Log center of this is 0.1, 2 TeV
         energy = [0.08, 0.125, 32] * u.TeV
-        area_ref = [1.65469579e+07, 1.46451957e+09] * u.cm * u.cm
+        area_ref = [1.65469579e07, 1.46451957e09] * u.cm * u.cm
 
         area = EffectiveAreaTable.from_parametrization(energy, "HESS")
         assert_allclose(area.data.data, area_ref)

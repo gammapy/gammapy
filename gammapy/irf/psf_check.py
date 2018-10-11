@@ -206,7 +206,7 @@ class PSF3DChecker(object):
                     # check if conainmant radius is reached
                     if sum >= fraction:
                         # convert radius to degrees
-                        r = rad * 180. / np.pi
+                        r = rad * 180.0 / np.pi
                         break
 
                 # store containment radius in array

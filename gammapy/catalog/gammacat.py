@@ -316,7 +316,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             errs["amplitude"] = data["spec_ecpl_norm_err"]
             pars["index"] = data["spec_ecpl_index"] * u.Unit("")
             errs["index"] = data["spec_ecpl_index_err"] * u.Unit("")
-            pars["lambda_"] = 1. / data["spec_ecpl_e_cut"]
+            pars["lambda_"] = 1.0 / data["spec_ecpl_e_cut"]
             errs["lambda_"] = data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2
             pars["reference"] = data["spec_ecpl_e_ref"]
         else:

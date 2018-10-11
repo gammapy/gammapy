@@ -56,7 +56,14 @@ class SensitivityEstimator(object):
     """
 
     def __init__(
-        self, irf, livetime, slope=2., alpha=0.2, sigma=5., gamma_min=10., bkg_sys=0.05
+        self,
+        irf,
+        livetime,
+        slope=2.0,
+        alpha=0.2,
+        sigma=5.0,
+        gamma_min=10.0,
+        bkg_sys=0.05,
     ):
         self.irf = irf
         self.livetime = u.Quantity(livetime).to("s")

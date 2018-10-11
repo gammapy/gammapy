@@ -11,14 +11,14 @@ pytest.importorskip("healpy")
 
 hpx_test_geoms = [
     (8, False, "GAL", None, None),
-    (8, False, "GAL", None, [MapAxis(np.logspace(0., 3., 4))]),
-    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0., 3., 4))]),
+    (8, False, "GAL", None, [MapAxis(np.logspace(0.0, 3.0, 4))]),
+    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
     (
         [8, 16, 32],
         False,
         "GAL",
         "DISK(110.,75.,10.)",
-        [MapAxis(np.logspace(0., 3., 4))],
+        [MapAxis(np.logspace(0.0, 3.0, 4))],
     ),
     (
         8,
@@ -26,8 +26,8 @@ hpx_test_geoms = [
         "GAL",
         "DISK(110.,75.,10.)",
         [
-            MapAxis(np.logspace(0., 3., 4), name="axis0"),
-            MapAxis(np.logspace(0., 2., 3), name="axis1"),
+            MapAxis(np.logspace(0.0, 3.0, 4), name="axis0"),
+            MapAxis(np.logspace(0.0, 2.0, 3), name="axis1"),
         ],
     ),
 ]

@@ -79,10 +79,10 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state="random-see
     random_state = get_random_state(random_state)
 
     if lon_range is None:
-        lon_range = Angle([0., 360.], "deg")
+        lon_range = Angle([0.0, 360.0], "deg")
 
     if lat_range is None:
-        lat_range = Angle([-90., 90.], "deg")
+        lat_range = Angle([-90.0, 90.0], "deg")
 
     # Sample random longitude
     u = random_state.uniform(size=size)
@@ -170,7 +170,7 @@ def sample_sphere_distance(
     #     a = 1 / (r_max ^ 3 - r_min ^ 3)
     #     b = -a * r_min ** 3
 
-    a = 1. / (distance_max ** 3 - distance_min ** 3)
+    a = 1.0 / (distance_max ** 3 - distance_min ** 3)
     b = -a * distance_min ** 3
 
     # Now for inverse transform sampling we need to use the inverse of
@@ -178,6 +178,6 @@ def sample_sphere_distance(
     # which is
     #     r = [(u - b)/ a] ^ (1 / 3)
     u = random_state.uniform(size=size)
-    distance = ((u - b) / a) ** (1. / 3)
+    distance = ((u - b) / a) ** (1.0 / 3)
 
     return distance

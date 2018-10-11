@@ -675,7 +675,7 @@ class MapCoord(object):
     @property
     def theta(self):
         """Theta co-latitude angle in radians"""
-        return np.pi / 2. - np.radians(self.lat)
+        return np.pi / 2.0 - np.radians(self.lat)
 
     @property
     def phi(self):

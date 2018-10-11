@@ -217,7 +217,7 @@ class SpectrumExtraction(object):
 
         log.info("Apply containment correction")
         # First need psf
-        angles = np.linspace(0., 1.5, 150) * u.deg
+        angles = np.linspace(0.0, 1.5, 150) * u.deg
         offset = self._on_vector.offset
         if isinstance(obs.psf, PSF3D):
             psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
@@ -228,7 +228,7 @@ class SpectrumExtraction(object):
         containment = []
         for index, energy in enumerate(center_energies):
             try:
-                cont_ = psf.integral(energy, 0. * u.deg, bkg.on_region.radius)
+                cont_ = psf.integral(energy, 0.0 * u.deg, bkg.on_region.radius)
             except:
                 msg = "Containment correction failed for bin {}, energy {}."
                 log.warning(msg.format(index, energy))

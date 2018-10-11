@@ -153,7 +153,7 @@ def assert_time_allclose(actual, desired):
     assert actual.format == desired.format
 
 
-def assert_quantity_allclose(actual, desired, rtol=1.e-7, atol=None, **kwargs):
+def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
     # TODO: change this later to explicitly check units are the same!
     # assert actual.unit == desired.unit
     args = _unquantify_allclose_arguments(actual, desired, rtol, atol)

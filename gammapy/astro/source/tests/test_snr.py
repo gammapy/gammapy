@@ -12,31 +12,31 @@ snr_mckee = SNRTrueloveMcKee()
 
 def test_SNR_luminosity_tev():
     """Test SNR luminosity"""
-    reference = [0, 0, 0, 0, 1.076e+33, 1.076e+33]
+    reference = [0, 0, 0, 0, 1.076e33, 1.076e33]
     assert_allclose(snr.luminosity_tev(t).value, reference, rtol=1e-3)
 
 
 def test_SNR_radius():
     """Test SNR radius"""
-    reference = [0, 3.085e+16, 3.085e+17, 3.085e+18, 1.174e+19, 2.950e+19]
+    reference = [0, 3.085e16, 3.085e17, 3.085e18, 1.174e19, 2.950e19]
     assert_allclose(snr.radius(t).value, reference, rtol=1e-3)
 
 
 def test_SNR_radius_inner():
     """Test SNR radius"""
     reference = (1 - 0.0914) * np.array(
-        [0, 3.085e+16, 3.085e+17, 3.085e+18, 1.174e+19, 2.950e+19]
+        [0, 3.085e16, 3.085e17, 3.085e18, 1.174e19, 2.950e19]
     )
     assert_allclose(snr.radius_inner(t).value, reference, rtol=1e-3)
 
 
 def test_SNRTrueloveMcKee_luminosity_tev():
     """Test SNR Truelov McKee luminosity"""
-    reference = [0, 0, 0, 0, 1.076e+33, 1.076e+33]
+    reference = [0, 0, 0, 0, 1.076e33, 1.076e33]
     assert_allclose(snr_mckee.luminosity_tev(t).value, reference, rtol=1e-3)
 
 
 def test_SNRTrueloveMcKee_radius():
     """Test SNR RTruelove McKee radius"""
-    reference = [0, 1.953e+17, 9.066e+17, 4.208e+18, 1.579e+19, 4.117e+19]
+    reference = [0, 1.953e17, 9.066e17, 4.208e18, 1.579e19, 4.117e19]
     assert_allclose(snr_mckee.radius(t).value, reference, rtol=1e-3)

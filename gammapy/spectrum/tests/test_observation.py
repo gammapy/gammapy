@@ -211,11 +211,11 @@ class TestSpectrumObservationStacker:
     def test_thresholds(self):
         energy = self.obs_stacker.stacked_obs.lo_threshold
         assert energy.unit == "keV"
-        assert_allclose(energy.value, 8.799e+08, rtol=1e-3)
+        assert_allclose(energy.value, 8.799e08, rtol=1e-3)
 
         energy = self.obs_stacker.stacked_obs.hi_threshold
         assert energy.unit == "keV"
-        assert_allclose(energy.value, 4.641e+10, rtol=1e-3)
+        assert_allclose(energy.value, 4.641e10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
@@ -240,9 +240,9 @@ class TestSpectrumObservationStacker:
         obs_list = make_observation_list()
         obs_stacker = SpectrumObservationStacker(obs_list)
         obs_stacker.run()
-        assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.)
+        assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.0)
         # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
-        assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.)
+        assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
 
 
 @requires_dependency("scipy")
@@ -258,7 +258,7 @@ class TestSpectrumObservationList:
 
         val = obs.aeff.data.evaluate(energy="1.1 TeV")
         assert val.unit == "cm2"
-        assert_allclose(val.value, 1.3466e+09, rtol=1e-3)
+        assert_allclose(val.value, 1.3466e09, rtol=1e-3)
 
         val = obs.edisp.data.evaluate(e_true="1.1 TeV", e_reco="1.3 TeV")
         assert val.unit == ""

@@ -369,8 +369,8 @@ class EnergyDependentMultiGaussPSF(object):
     def info(
         self,
         fractions=[0.68, 0.95],
-        energies=Quantity([1., 10.], "TeV"),
-        thetas=Quantity([0.], "deg"),
+        energies=Quantity([1.0, 10.0], "TeV"),
+        thetas=Quantity([0.0], "deg"),
     ):
         """
         Print PSF summary info.

@@ -178,7 +178,7 @@ class SkyDisk(SkySpatialModel):
         sep = sep.to("rad").value
         r_0 = r_0.to("rad").value
 
-        norm = 1. / (2 * np.pi * (1 - np.cos(r_0)))
+        norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
         val = np.where(sep <= r_0, norm, 0)
 
         return val * u.Unit("sr-1")

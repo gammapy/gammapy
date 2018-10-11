@@ -22,7 +22,7 @@ def gaussian_image():
     binsz = 0.02
     sigma = 0.2
     geom = WcsGeom.create(npix=(201, 201), binsz=binsz, coordsys="GAL")
-    gauss = Gaussian2D(1. / (2 * np.pi * (sigma / binsz) ** 2), 0, 0, sigma, sigma)
+    gauss = Gaussian2D(1.0 / (2 * np.pi * (sigma / binsz) ** 2), 0, 0, sigma, sigma)
     coord = geom.get_coord().skycoord
     l = coord.data.lon.wrap_at("180d")
     b = coord.data.lat

@@ -134,4 +134,4 @@ class TestBinnedDataAxis:
 def test_sqrt_space():
     values = sqrt_space(0, 2, 5)
 
-    assert_allclose(values, [0., 1., 1.41421356, 1.73205081, 2.])
+    assert_allclose(values, [0.0, 1.0, 1.41421356, 1.73205081, 2.0])

@@ -129,7 +129,7 @@ def test_background_3d_integrate(bkg_3d):
     )
     assert rate.shape == (2, 2)
     assert_allclose(
-        rate.value, [[2.060327e+08, 99000000], [99000000., 99000000.]], rtol=1e-5
+        rate.value, [[2.060327e08, 99000000], [99000000.0, 99000000.0]], rtol=1e-5
     )
 
 
@@ -218,7 +218,7 @@ def test_background_2d_integrate(bkg_2d):
     rate = bkg_2d.integrate_on_energy_range(
         fov_lon=[1, 0.5] * u.deg, fov_lat=0 * u.deg, energy_range=[1, 100] * u.TeV
     )
-    assert_allclose(rate.value[0], [1.485e+08, 9.900e+07])
+    assert_allclose(rate.value[0], [1.485e08, 9.900e07])
 
     rate = bkg_2d.integrate_on_energy_range(
         fov_lon=[[1, 0.5], [1, 0.5]] * u.deg,
@@ -226,4 +226,4 @@ def test_background_2d_integrate(bkg_2d):
         energy_range=[1, 100] * u.TeV,
     )
     assert rate.shape == (2, 2)
-    assert_allclose(rate.value, [[1.485e+08, 9.900e+07], [1.485e+08, 9.900e+07]])
+    assert_allclose(rate.value, [[1.485e08, 9.900e07], [1.485e08, 9.900e07]])

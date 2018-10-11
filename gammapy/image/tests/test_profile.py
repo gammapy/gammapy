@@ -67,7 +67,7 @@ class TestImageProfileEstimator(object):
         p = ImageProfileEstimator(axis="radial", method="sum", center=center)
         profile = p.run(checkerboard_image)
 
-        desired = [4., 8., 20., 12., 12.] * u.Unit("cm-2 s-1")
+        desired = [4.0, 8.0, 20.0, 12.0, 12.0] * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
     def test_lat_profile_mean(self, checkerboard_image):

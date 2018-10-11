@@ -91,11 +91,11 @@ def make_test_observation_table(
     obs_table["OBS_ID"] = obs_id
 
     # obs time: 30 min
-    ontime = Quantity(30. * np.ones_like(obs_id), "minute").to("second")
+    ontime = Quantity(30.0 * np.ones_like(obs_id), "minute").to("second")
     obs_table["ONTIME"] = ontime
 
     # livetime: 25 min
-    time_live = Quantity(25. * np.ones_like(obs_id), "minute").to("second")
+    time_live = Quantity(25.0 * np.ones_like(obs_id), "minute").to("second")
     obs_table["LIVETIME"] = time_live
 
     # start time
@@ -112,14 +112,14 @@ def make_test_observation_table(
     time_start = Time(time_start, format="mjd", scale="utc")
 
     # check if time interval selected is more than 1 day
-    if (dateend - datestart).jd > 1.:
+    if (dateend - datestart).jd > 1.0:
         # keep only the integer part (i.e. the day, not the fraction of the day)
         time_start_f, time_start_i = np.modf(time_start.mjd)
         time_start = Time(time_start_i, format="mjd", scale="utc")
 
         # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
         # time for the last run to finish
-        night_start = Quantity(22., "hour")
+        night_start = Quantity(22.0, "hour")
         night_duration = Quantity(5.5, "hour")
         hour_start = random_state.uniform(
             night_start.value, night_start.value + night_duration.value, len(obs_id)
@@ -176,11 +176,11 @@ def make_test_observation_table(
     alt = Angle(obs_table["ALT"])
     if use_abs_time:
         obstime = Time(obs_table["TSTART"])
-        obstime += TimeDelta(obs_table["ONTIME"]) / 2.
+        obstime += TimeDelta(obs_table["ONTIME"]) / 2.0
     else:
         obstime = time_ref_from_dict(obs_table.meta)
         obstime += TimeDelta(obs_table["TSTART"])
-        obstime += TimeDelta(obs_table["ONTIME"]) / 2.
+        obstime += TimeDelta(obs_table["ONTIME"]) / 2.0
     location = observatory_locations[observatory_name]
     altaz_frame = AltAz(obstime=obstime, location=location)
     alt_az_coord = SkyCoord(az, alt, frame=altaz_frame)
@@ -227,7 +227,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
 
     do_wrapping = False
     # not needed in the case of sky_circle
-    if type == "sky_box" and any(l < Angle(0., "deg") for l in lon_range_eff):
+    if type == "sky_box" and any(l < Angle(0.0, "deg") for l in lon_range_eff):
         do_wrapping = True
 
     # test on the selection
@@ -309,7 +309,7 @@ def test_select_parameter_box():
 
     # test box selection in alt
     variable = "ALT"
-    value_range = Angle([60., 70.], "deg")
+    value_range = Angle([60.0, 70.0], "deg")
     selection = dict(type="par_box", variable=variable, value_range=value_range)
     selected_obs_table = obs_table.select_observations(selection)
     assert (value_range[0] < Angle(selected_obs_table[variable])).all()
@@ -344,31 +344,31 @@ def test_select_sky_regions():
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
 
     # test sky box selection in gal coordinates
-    lon_range = Angle([-100., 50.], "deg")
-    lat_range = Angle([-25., 25.], "deg")
+    lon_range = Angle([-100.0, 50.0], "deg")
+    lat_range = Angle([-25.0, 25.0], "deg")
     frame = "galactic"
-    border = Angle(2., "deg")
+    border = Angle(2.0, "deg")
     selection = dict(
         type="sky_box", frame=frame, lon=lon_range, lat=lat_range, border=border
     )
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky box selection in radec coordinates
-    lon_range = Angle([150., 300.], "deg")
-    lat_range = Angle([-50., 0.], "deg")
+    lon_range = Angle([150.0, 300.0], "deg")
+    lat_range = Angle([-50.0, 0.0], "deg")
     frame = "icrs"
-    border = Angle(2., "deg")
+    border = Angle(2.0, "deg")
     selection = dict(
         type="sky_box", frame=frame, lon=lon_range, lat=lat_range, border=border
     )
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in gal coordinates
-    lon_cen = Angle(0., "deg")
-    lat_cen = Angle(0., "deg")
-    radius = Angle(50., "deg")
+    lon_cen = Angle(0.0, "deg")
+    lat_cen = Angle(0.0, "deg")
+    radius = Angle(50.0, "deg")
     frame = "galactic"
-    border = Angle(2., "deg")
+    border = Angle(2.0, "deg")
     selection = dict(
         type="sky_circle",
         frame=frame,
@@ -380,11 +380,11 @@ def test_select_sky_regions():
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in radec coordinates
-    lon_cen = Angle(130., "deg")
-    lat_cen = Angle(-40., "deg")
-    radius = Angle(50., "deg")
+    lon_cen = Angle(130.0, "deg")
+    lat_cen = Angle(-40.0, "deg")
+    radius = Angle(50.0, "deg")
     frame = "icrs"
-    border = Angle(2., "deg")
+    border = Angle(2.0, "deg")
     selection = dict(
         type="sky_circle",
         frame=frame,

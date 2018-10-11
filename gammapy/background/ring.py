@@ -438,4 +438,4 @@ def ring_alpha(theta, r_in, r_out):
     r_out : float
         Outer ring radius
     """
-    return 1. / ring_area_factor(theta, r_in, r_out)
+    return 1.0 / ring_area_factor(theta, r_in, r_out)

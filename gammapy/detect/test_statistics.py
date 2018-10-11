@@ -617,7 +617,7 @@ def _compute_flux_err_covar(x, counts, background, model):
     """
     with np.errstate(invalid="ignore", divide="ignore"):
         stat = (model ** 2 * counts) / (background + x * FLUX_FACTOR * model) ** 2
-        return np.sqrt(1. / stat.sum())
+        return np.sqrt(1.0 / stat.sum())
 
 
 def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigma):
@@ -631,7 +631,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigm
 
     args = (counts, background, model)
 
-    amplitude_max = amplitude + 1E4
+    amplitude_max = amplitude + 1e4
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:

@@ -104,7 +104,7 @@ def test_add_snr_parameters():
     assert_allclose(table["E_SN"], 1e51)
     assert_allclose(table["r_out"], [1, 3.80730787743])
     assert_allclose(table["r_in"], [0.9086, 3.45931993743])
-    assert_allclose(table["L_SNR"], [0, 1.0768e+33])
+    assert_allclose(table["L_SNR"], [0, 1.0768e33])
 
 
 def test_add_pulsar_parameters():
@@ -133,8 +133,8 @@ def test_add_pulsar_parameters():
     assert_allclose(table["P1_birth"], [4.55105983192e-14, 9.24116423053e-13])
     assert_allclose(table["CharAge"], [2.32368825638e-22, 5.6826197937e-21])
     assert_allclose(table["Tau0"], [112189.64476, 6654.19039158])
-    assert_allclose(table["L_PSR"], [5.37834069771e+34, 8.25708734631e+35])
-    assert_allclose(table["L0_PSR"], [5.36876555682e+34, 6.24049160082e+35])
+    assert_allclose(table["L_PSR"], [5.37834069771e34, 8.25708734631e35])
+    assert_allclose(table["L0_PSR"], [5.36876555682e34, 6.24049160082e35])
     assert_allclose(table["logB"], [12.5883058913, 13.2824912596])
 
 
@@ -149,7 +149,7 @@ def test_add_pwn_parameters():
 
     d = table[0]
     assert_allclose(d["r_out_PWN"], 0.5892196771927385, atol=1e-3)
-    assert_allclose(d["L_PWN"], 7.057857699785925e+45)
+    assert_allclose(d["L_PWN"], 7.057857699785925e45)
 
 
 @requires_dependency("scipy")

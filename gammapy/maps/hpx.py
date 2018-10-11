@@ -277,7 +277,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]), np.arange(npix[1])))
     pix_crds = pix_crds.swapaxes(0, 1).reshape((-1, 2))
     sky_crds = wcs.wcs.wcs_pix2world(pix_crds, 0)
-    sky_crds *= np.radians(1.)
+    sky_crds *= np.radians(1.0)
     sky_crds[0:, 1] = (np.pi / 2) - sky_crds[0:, 1]
 
     mask = ~np.any(np.isnan(sky_crds), axis=1)
@@ -300,7 +300,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
     for i, t in enumerate(ipix):
         count = np.unique(t, return_counts=True)
         idx = np.searchsorted(count[0], t)
-        mult_val[i, ...] = 1. / count[1][idx]
+        mult_val[i, ...] = 1.0 / count[1][idx]
 
     if hpx.nside.size == 1:
         ipix = np.squeeze(ipix, axis=0)
@@ -349,7 +349,7 @@ def get_hpxregion_dir(region, coordsys):
     frame = coordsys_to_frame(coordsys)
 
     if region is None:
-        return SkyCoord(0., 0., frame=frame, unit="deg")
+        return SkyCoord(0.0, 0.0, frame=frame, unit="deg")
 
     tokens = parse_hpxregion(region)
     if tokens[0] in ["DISK", "DISK_INC"]:
@@ -380,7 +380,7 @@ def get_hpxregion_size(region):
         return float(tokens[3])
     elif tokens[0] == "HPX_PIXEL":
         pix_size = get_pix_size_from_nside(int(tokens[2]))
-        return 2. * pix_size
+        return 2.0 * pix_size
     else:
         raise ValueError("Invalid region type: {!r}".format(tokens[0]))
 
@@ -612,7 +612,7 @@ class HpxGeom(MapGeom):
         lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
         self._center_coord = tuple(
             [lon, lat]
-            + [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.) for ax in self.axes]
+            + [ax.pix_to_coord((float(ax.nbin) - 1.0) / 2.0) for ax in self.axes]
         )
         self._center_pix = self.coord_to_pix(self._center_coord)
 
@@ -828,7 +828,7 @@ class HpxGeom(MapGeom):
             m = ipix == -1
             ipix[m] = 0
             theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
-            coords = [np.degrees(phi), np.degrees(np.pi / 2. - theta)]
+            coords = [np.degrees(phi), np.degrees(np.pi / 2.0 - theta)]
             coords = tuple(coords + vals)
             if np.any(m):
                 for c in coords:
@@ -836,7 +836,7 @@ class HpxGeom(MapGeom):
         else:
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest)
-            coords = (np.degrees(phi), np.degrees(np.pi / 2. - theta))
+            coords = (np.degrees(phi), np.degrees(np.pi / 2.0 - theta))
 
         return coords
 
@@ -1271,7 +1271,7 @@ class HpxGeom(MapGeom):
             raise ValueError("Invalid type for skydir: {!r}".format(type(skydir)))
 
         if region is None and width is not None:
-            region = "DISK({:f},{:f},{:f})".format(lon, lat, width / 2.)
+            region = "DISK({:f},{:f},{:f})".format(lon, lat, width / 2.0)
 
         return cls(
             nside, nest=nest, coordsys=coordsys, region=region, axes=axes, conv=conv
@@ -1528,7 +1528,7 @@ class HpxGeom(MapGeom):
         import healpy as hp
 
         if self.region is None:
-            return 180.
+            return 180.0
         if self.region == "explicit":
             idx = unravel_hpx_index(self._ipix, self._maxpix)
             nside = self._get_nside(idx)
@@ -1579,8 +1579,8 @@ class HpxGeom(MapGeom):
         if width_pix is not None and int(width / binsz) > width_pix:
             binsz = width / width_pix
 
-        if width > 90.:
-            width = min(360., width), min(180.0, width)
+        if width > 90.0:
+            width = min(360.0, width), min(180.0, width)
 
         if drop_axes:
             axes = None

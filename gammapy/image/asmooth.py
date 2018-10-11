@@ -197,8 +197,8 @@ class ASmooth(object):
     def make_scales(n_scales, factor=np.sqrt(2), kernel=Gaussian2DKernel):
         """Create list of Gaussian widths."""
         if kernel == Gaussian2DKernel:
-            sigma_0 = 1. / np.sqrt(9 * np.pi)
+            sigma_0 = 1.0 / np.sqrt(9 * np.pi)
         elif kernel == Tophat2DKernel:
-            sigma_0 = 1. / np.sqrt(np.pi)
+            sigma_0 = 1.0 / np.sqrt(np.pi)
 
         return sigma_0 * factor ** np.arange(n_scales)

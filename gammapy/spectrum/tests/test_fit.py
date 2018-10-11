@@ -46,7 +46,7 @@ class TestFit:
         npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
 
         bkg_counts = random_state.poisson(npred_bkg)
-        off_counts = random_state.poisson(npred_bkg * 1. / self.alpha)
+        off_counts = random_state.poisson(npred_bkg * 1.0 / self.alpha)
         self.bkg = PHACountsSpectrum(
             energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
         )
@@ -54,7 +54,7 @@ class TestFit:
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=off_counts,
-            backscal=1. / self.alpha,
+            backscal=1.0 / self.alpha,
         )
 
     def test_cash(self):
@@ -135,7 +135,7 @@ class TestFit:
         assert_allclose(fit.true_fit_range[0][0].value, 0.21544347, rtol=1e-5)
         assert_allclose(fit.true_fit_range[0][-1].value, 0.54117, rtol=1e-5)
 
-        fit.fit_range = [0.11659144 + 1.e-5, 1. - 1.e-5] * u.TeV
+        fit.fit_range = [0.11659144 + 1.0e-5, 1.0 - 1.0e-5] * u.TeV
         assert np.sum(fit._bins_in_fit_range[0]) == 14
 
         # Check different fit ranges for different observations

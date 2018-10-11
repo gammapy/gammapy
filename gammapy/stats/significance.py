@@ -96,7 +96,7 @@ def _s_to_p_direct(significance, one_sided=True):
     from scipy.special import erf
 
     temp = erf(significance / np.sqrt(2))
-    probability = np.where(one_sided, (temp + 1) / 2., temp)
+    probability = np.where(one_sided, (temp + 1) / 2.0, temp)
     return 1 - probability  # We want p to be the tail probability
 
 

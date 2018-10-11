@@ -117,7 +117,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     @staticmethod
     def evaluate(v, amplitude, v_0):
         """One dimensional Paczynski 1990 velocity model function."""
-        return amplitude * 4. / (np.pi * v_0 * (1 + (v / v_0) ** 2) ** 2)
+        return amplitude * 4.0 / (np.pi * v_0 * (1 + (v / v_0) ** 2) ** 2)
 
 
 """Velocity distributions (dict mapping names to classes)."""

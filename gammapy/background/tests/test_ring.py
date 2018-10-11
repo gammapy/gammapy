@@ -14,19 +14,19 @@ def images():
     fov = 2.5 * u.deg
 
     m_ref = WcsNDMap.create(binsz=0.05, npix=201, dtype=float)
-    m_ref.data += 1.
+    m_ref.data += 1.0
     coords = m_ref.geom.get_coord().skycoord
     center = m_ref.geom.center_skydir
     mask = coords.separation(center) < fov
 
     images = dict()
-    images["counts"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 2.)
+    images["counts"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 2.0)
     images["counts"].data *= mask
 
-    images["exposure_on"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.)
+    images["exposure_on"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
     images["exposure_on"].data *= mask
 
-    exclusion = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.)
+    exclusion = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
     exclusion.data[90:110, 90:110] = 0
     images["exclusion"] = exclusion
     return images
@@ -40,14 +40,14 @@ def test_ring_background_estimator(images):
 
     in_fov = images["exposure_on"].data > 0
 
-    assert_allclose(result["background"].data[in_fov], 2.)
+    assert_allclose(result["background"].data[in_fov], 2.0)
     assert_allclose(result["alpha"].data[in_fov].mean(), 0.003488538457592745)
     assert_allclose(result["exposure_off"].data[in_fov].mean(), 305.1268970794541)
     assert_allclose(result["off"].data[in_fov].mean(), 610.2537941589082)
 
-    assert_allclose(result["off"].data[~in_fov], 0.)
-    assert_allclose(result["exposure_off"].data[~in_fov], 0.)
-    assert_allclose(result["alpha"].data[~in_fov], 0.)
+    assert_allclose(result["off"].data[~in_fov], 0.0)
+    assert_allclose(result["exposure_off"].data[~in_fov], 0.0)
+    assert_allclose(result["alpha"].data[~in_fov], 0.0)
 
 
 @requires_dependency("scipy")
@@ -55,7 +55,7 @@ class TestAdaptiveRingBackgroundEstimator:
     def setup(self):
         self.images = {}
         self.images["counts"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
-        self.images["counts"].data += 1.
+        self.images["counts"].data += 1.0
         self.images["exposure_on"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
         self.images["exposure_on"].data += 1e10
         exclusion = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)

@@ -35,8 +35,8 @@ def plot_source_spectra(name):
     )
 
     ax = plt.gca()
-    ax.set_ylim(1.e-12, 7.e-11)
-    ax.set_xlim(1.e-4, 2.)
+    ax.set_ylim(1.0e-12, 7.0e-11)
+    ax.set_xlim(1.0e-4, 2.0)
     ax.set_xlabel("Energy (TeV)")
     ax.set_ylabel("E^2 dN/dE (erg cm-2 s-1])")
     plt.legend(loc=0)

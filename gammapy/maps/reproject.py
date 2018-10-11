@@ -43,7 +43,7 @@ def reproject_car_to_hpx(input_data, coord_system_out, nside, order=1, nested=Fa
 
     theta, phi = hp.pix2ang(nside, np.arange(npix), nested)
     lon_out = np.degrees(phi)
-    lat_out = 90. - np.degrees(theta)
+    lat_out = 90.0 - np.degrees(theta)
 
     # Convert between celestial coordinates
     coord_system_out = parse_coord_system(coord_system_out)

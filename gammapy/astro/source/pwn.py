@@ -56,7 +56,7 @@ class PWN(object):
         Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
         """
         term1 = (self.snr.e_sn ** 3 * self.pulsar.L_0 ** 2) / (self.snr.m_ejecta ** 5)
-        return (1.44 * term1 ** (1. / 10) * t ** (6. / 5)).cgs
+        return (1.44 * term1 ** (1.0 / 10) * t ** (6.0 / 5)).cgs
 
     @lazyproperty
     def _collision_time(self):
@@ -134,7 +134,7 @@ class PWN(object):
             raise ValueError("Need time variable or age attribute.")
 
         energy = self.pulsar.energy_integrated(t)
-        volume = 4. / 3 * np.pi * self.radius(t) ** 3
+        volume = 4.0 / 3 * np.pi * self.radius(t) ** 3
         return np.sqrt(2 * const.mu0 * self.eta_B * energy / volume)
 
     def luminosity_tev(self, t=None, fraction=0.1):

@@ -105,9 +105,9 @@ def _make_image_header(
     nxpix = int(nxpix)
     nypix = int(nypix)
     if not xrefpix:
-        xrefpix = (nxpix + 1) / 2.
+        xrefpix = (nxpix + 1) / 2.0
     if not yrefpix:
-        yrefpix = (nypix + 1) / 2.
+        yrefpix = (nypix + 1) / 2.0
 
     if coordsys == "CEL":
         ctype1, ctype2 = "RA---", "DEC--"
@@ -187,7 +187,7 @@ class WcsGeom(MapGeom):
 
         # By convention CRPIX is indexed from 1
         if crpix is None:
-            crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.)
+            crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.0)
 
         self._crpix = crpix
 
@@ -217,7 +217,7 @@ class WcsGeom(MapGeom):
     @property
     def is_allsky(self):
         """Flag for all-sky maps."""
-        if np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.)):
+        if np.all(np.isclose(self._npix[0] * self._cdelt[0], 360.0)):
             return True
         else:
             return False
@@ -287,7 +287,7 @@ class WcsGeom(MapGeom):
         -------
         pix : tuple
         """
-        return tuple((np.array(self.data_shape) - 1.) / 2)[::-1]
+        return tuple((np.array(self.data_shape) - 1.0) / 2)[::-1]
 
     @property
     def center_skydir(self):
@@ -402,7 +402,7 @@ class WcsGeom(MapGeom):
 
         # If both npix and width are None then create an all-sky geometry
         if npix is None and width is None:
-            width = (360., 180.)
+            width = (360.0, 180.0)
 
         if npix is None:
             width = cast_to_shape(width, shape, float)
@@ -771,8 +771,8 @@ class WcsGeom(MapGeom):
             WcsGeom.to_image().solid_angle()
         """
         coord = self.get_coord(mode="edges")
-        lon = coord.lon * np.pi / 180.
-        lat = coord.lat * np.pi / 180.
+        lon = coord.lon * np.pi / 180.0
+        lat = coord.lat * np.pi / 180.0
 
         # Compute solid angle using the approximation that it's
         # the product between angular separation of pixel corners.
@@ -884,7 +884,7 @@ class WcsGeom(MapGeom):
 
 
 def create_wcs(
-    skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1., axes=None
+    skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
 ):
     """Create a WCS object.
 
@@ -1075,10 +1075,10 @@ def wcs_to_axes(w, npix):
     npix = npix[::-1]
 
     cdelt0 = np.abs(w.wcs.cdelt[0])
-    x = np.linspace(-(npix[0]) / 2., (npix[0]) / 2., npix[0] + 1) * cdelt0
+    x = np.linspace(-(npix[0]) / 2.0, (npix[0]) / 2.0, npix[0] + 1) * cdelt0
 
     cdelt1 = np.abs(w.wcs.cdelt[1])
-    y = np.linspace(-(npix[1]) / 2., (npix[1]) / 2., npix[1] + 1) * cdelt1
+    y = np.linspace(-(npix[1]) / 2.0, (npix[1]) / 2.0, npix[1] + 1) * cdelt1
 
     cdelt2 = np.log10((w.wcs.cdelt[2] + w.wcs.crval[2]) / w.wcs.crval[2])
     z = np.linspace(0, npix[2], npix[2] + 1) * cdelt2

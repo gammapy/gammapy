@@ -77,8 +77,8 @@ def plot_2d_example():
     # In reality this could e.g. be read from a FITS file.
     shape = (100, 200)
     y, x = np.indices(shape)
-    sigma = 10.
-    brightness_map = 1 + 3. * np.exp(
+    sigma = 10.0
+    brightness_map = 1 + 3.0 * np.exp(
         -((x - 50) ** 2 + (y - 50) ** 2) / (2 * sigma ** 2)
     )
     # Generate random positions from this distribution

@@ -22,7 +22,7 @@ class TestCWT:
         self.kernels = CWTKernels(n_scale=2, min_scale=3.0, step_scale=2.6, old=False)
         self.data = dict(image=image, background=background)
         self.cwt = CWT(
-            kernels=self.kernels, significance_threshold=2., keep_history=True
+            kernels=self.kernels, significance_threshold=2.0, keep_history=True
         )
 
     def test_execute_iteration(self):
@@ -149,7 +149,7 @@ class TestCWTKernels:
         assert_allclose(info_dict["Kernels approx max"], 0.000386976177431)
 
     def test_cwt_kernels_new(self):
-        assert_allclose(self.kernels_new.scales, [3., 7.8])
+        assert_allclose(self.kernels_new.scales, [3.0, 7.8])
         assert_allclose(self.kernels_new.kern_approx.sum(), 0.99988318386)
         assert_allclose(self.kernels_new.kern_approx.max(), 0.000386976177431)
         assert_allclose(self.kernels_new.kern_base[0].sum(), 3.01663209714e-05)
@@ -158,7 +158,7 @@ class TestCWTKernels:
         assert_allclose(self.kernels_new.kern_base[1].max(), 1.88182106053e-06)
 
     def test_cwt_kernels_old(self):
-        assert_allclose(self.kernels_old.scales, [3., 7.8])
+        assert_allclose(self.kernels_old.scales, [3.0, 7.8])
         assert_allclose(self.kernels_old.kern_approx.sum(), 0.99988318386)
         assert_allclose(self.kernels_old.kern_approx.max(), 0.000386976177431)
         assert_allclose(self.kernels_old.kern_base[0].sum(), 0.000207093150419)
@@ -189,7 +189,7 @@ class TestCWTData:
         self.kernels = CWTKernels(n_scale=2, min_scale=3.0, step_scale=2.6, old=False)
         self.data = dict(image=image, background=background)
         self.cwt = CWT(
-            kernels=self.kernels, significance_threshold=2., keep_history=True
+            kernels=self.kernels, significance_threshold=2.0, keep_history=True
         )
         self.cwt_data = CWTData(
             counts=image, background=background, n_scale=self.kernels.n_scale
@@ -209,7 +209,7 @@ class TestCWTData:
 
         maximal = images["maximal"].data
         assert_allclose(maximal[100, 100], 0.0401320295446)
-        assert_allclose(maximal[10, 10], 0.)
+        assert_allclose(maximal[10, 10], 0.0)
 
         support_2d = images["support_2d"].data
         assert_allclose(support_2d.sum(), 2996)

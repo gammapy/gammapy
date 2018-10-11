@@ -18,7 +18,7 @@ from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
 
 @pytest.fixture(scope="session")
 def geom():
-    axis = MapAxis.from_edges(np.logspace(-1., 1., 3), name="energy", unit=u.TeV)
+    axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV)
     return WcsGeom.create(
         skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
     )
@@ -26,7 +26,7 @@ def geom():
 
 @pytest.fixture(scope="session")
 def geom_etrue():
-    axis = MapAxis.from_edges(np.logspace(-1., 1., 4), name="energy", unit=u.TeV)
+    axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV)
     return WcsGeom.create(
         skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
     )

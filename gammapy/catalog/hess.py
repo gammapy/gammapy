@@ -394,7 +394,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         # Use Gaussian analytical error propagation,
         # tested against the uncertainties package
         err = err / val ** 2
-        val = 1. / val
+        val = 1.0 / val
 
         ss += "{:<20s} : {:.2f} +/- {:.2f} TeV\n".format("ECPL E_cut", val, err)
 

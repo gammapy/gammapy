@@ -28,7 +28,7 @@ class TestObservationSummaryTable:
     def test_offset(self):
         offset = self.table_summary.offset
         assert len(offset) == 4
-        assert_allclose(offset.degree.mean(), 1., rtol=0.01)
+        assert_allclose(offset.degree.mean(), 1.0, rtol=0.01)
         assert_allclose(offset.degree.std(), 0.5, rtol=0.01)
 
     @requires_dependency("matplotlib")

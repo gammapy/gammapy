@@ -44,7 +44,7 @@ def get_resampled_wcs(wcs, factor, downsampled):
     wcs = wcs.deepcopy()
 
     if not downsampled:
-        factor = 1. / factor
+        factor = 1.0 / factor
 
     wcs.wcs.cdelt *= factor
     wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
@@ -101,11 +101,11 @@ def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):
 
     # set small values (compared to delta (i.e. step)) to 0
     for i in np.arange(len(bin_edges_x)):
-        if np.abs(bin_edges_x[i] / delta_x) < 1.e-10:
-            bin_edges_x[i] = Angle(0., unit_x)
+        if np.abs(bin_edges_x[i] / delta_x) < 1.0e-10:
+            bin_edges_x[i] = Angle(0.0, unit_x)
     for i in np.arange(len(bin_edges_y)):
-        if np.abs(bin_edges_y[i] / delta_y) < 1.e-10:
-            bin_edges_y[i] = Angle(0., unit_y)
+        if np.abs(bin_edges_y[i] / delta_y) < 1.0e-10:
+            bin_edges_y[i] = Angle(0.0, unit_y)
 
     return bin_edges_x, bin_edges_y
 

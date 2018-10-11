@@ -161,7 +161,7 @@ class ReflectedRegionsFinder(object):
         maskmap = WcsNDMap.create(
             skydir=center, binsz=binsz, npix=npix, coordsys="GAL", proj="TAN"
         )
-        maskmap.data += 1.
+        maskmap.data += 1.0
         return maskmap
 
     def setup(self):

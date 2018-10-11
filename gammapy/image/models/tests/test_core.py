@@ -80,7 +80,7 @@ def test_sky_diffuse_map():
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)
-    model_map.data += 1.
+    model_map.data += 1.0
     model = SkyDiffuseMap(model_map)
 
     # define data map with a different spatial binning

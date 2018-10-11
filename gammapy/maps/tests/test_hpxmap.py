@@ -19,7 +19,7 @@ pytest.importorskip("scipy")
 pytest.importorskip("healpy")
 pytest.importorskip("numpy", "1.12.0")
 
-axes1 = [MapAxis(np.logspace(0., 3., 3), interp="log")]
+axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log")]
 
 hpx_test_allsky_geoms = [
     (8, False, "GAL", None, None),
@@ -29,15 +29,15 @@ hpx_test_allsky_geoms = [
 
 hpx_test_partialsky_geoms = [
     ([4, 8], False, "GAL", "DISK(110.,75.,30.)", axes1),
-    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0., 3., 4))]),
+    (8, False, "GAL", "DISK(110.,75.,10.)", [MapAxis(np.logspace(0.0, 3.0, 4))]),
     (
         8,
         False,
         "GAL",
         "DISK(110.,75.,10.)",
         [
-            MapAxis(np.logspace(0., 3., 4), name="axis0"),
-            MapAxis(np.logspace(0., 2., 3), name="axis1"),
+            MapAxis(np.logspace(0.0, 3.0, 4), name="axis0"),
+            MapAxis(np.logspace(0.0, 2.0, 3), name="axis1"),
         ],
     ),
 ]
@@ -130,7 +130,7 @@ def test_hpxmap_read_write(tmpdir, nside, nested, coordsys, region, axes, sparse
 def test_hpxmap_read_write_fgst(tmpdir):
     filename = str(tmpdir / "map.fits")
 
-    axis = MapAxis.from_bounds(100., 1000., 4, name="energy", unit="MeV")
+    axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
 
     # Test Counts Cube
     m = create_map(8, False, "GAL", None, [axis], False)
@@ -205,7 +205,7 @@ def test_hpxmap_interp_by_coord(nside, nested, coordsys, region, axes):
 
 
 def test_hpxmap_interp_by_coord_quantities():
-    ax = MapAxis(np.logspace(0., 3., 3), interp="log", name="energy", unit="TeV")
+    ax = MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy", unit="TeV")
     geom = HpxGeom(nside=1, axes=[ax])
     m = HpxNDMap(geom=geom)
 

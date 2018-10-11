@@ -162,7 +162,7 @@ def test_period(pars):
 
     fap = fap_astropy(
         periodogram["power"],
-        1. / periodogram["periods"],
+        1.0 / periodogram["periods"],
         test_data["t"],
         test_data["y"],
         test_data["dy"],

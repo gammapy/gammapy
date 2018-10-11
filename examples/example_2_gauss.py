@@ -41,7 +41,7 @@ sky_model_2 = SkyModel(spatial_model=spatial_model_2, spectral_model=spectral_mo
 compound_model = sky_model_1 + sky_model_2
 
 # Define map geometry
-axis = MapAxis.from_edges(np.logspace(-1., 1., 10), unit="TeV")
+axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 10), unit="TeV")
 geom = WcsGeom.create(
     skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
 )

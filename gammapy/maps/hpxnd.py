@@ -566,25 +566,25 @@ class HpxNDMap(HpxMap):
         data = []
 
         def get_angle(x, t):
-            return 180. - (180. - x + t) % 360.
+            return 180.0 - (180.0 - x + t) % 360.0
 
         for i, (x, y) in enumerate(zip(phi, theta)):
 
-            lon, lat = np.degrees(x), np.degrees(np.pi / 2. - y)
+            lon, lat = np.degrees(x), np.degrees(np.pi / 2.0 - y)
             # Add a small ofset to avoid vertices wrapping to the
             # other size of the projection
             if get_angle(np.median(lon), wcs_lonlat[0]) > 0:
-                idx = wcs.coord_to_pix((lon - 1E-4, lat))
+                idx = wcs.coord_to_pix((lon - 1e-4, lat))
             else:
-                idx = wcs.coord_to_pix((lon + 1E-4, lat))
+                idx = wcs.coord_to_pix((lon + 1e-4, lat))
 
             dist = np.max(np.abs(idx[0][0] - idx[0]))
 
             # Split pixels that wrap around the edges of the projection
             if dist > wcs.npix[0] / 1.5:
-                lon, lat = np.degrees(x), np.degrees(np.pi / 2. - y)
-                lon0 = lon - 1E-4
-                lon1 = lon + 1E-4
+                lon, lat = np.degrees(x), np.degrees(np.pi / 2.0 - y)
+                lon0 = lon - 1e-4
+                lon1 = lon + 1e-4
                 pix0 = wcs.coord_to_pix((lon0, lat))
                 pix1 = wcs.coord_to_pix((lon1, lat))
 

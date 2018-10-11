@@ -40,7 +40,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
         # log-linear dependency of sigma with energy
         # m and b are choosen such, that at 100 TeV
         # we have sigma and at 0.1 TeV we have sigma/2
-        m = -sigma / 6.
+        m = -sigma / 6.0
         b = sigma + m
         return (2 * b + m * np.log10(energy)) * (0.3 / 4 * theta ** 2 + 1)
 
@@ -109,7 +109,7 @@ class TestEnergyDependentMultiGaussPSF:
         assert_allclose(desired, actual.degree, rtol=0.03)
 
     def test_to_psf3d(self, psf):
-        rads = np.linspace(0., 1.0, 301) * u.deg
+        rads = np.linspace(0.0, 1.0, 301) * u.deg
         psf_3d = psf.to_psf3d(rads)
         assert psf_3d.rad_lo.shape == (300,)
         assert psf_3d.rad_lo.unit == "deg"
@@ -202,7 +202,7 @@ class TestHESS:
         m = hess.to_MultiGauss2D()
         assert_almost_equal(m.integral, 1)
         for containment, theta in vals:
-            actual = m.containment_radius(containment / 100.)
+            actual = m.containment_radius(containment / 100.0)
             assert_almost_equal(actual, theta, decimal=2)
 
 

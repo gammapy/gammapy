@@ -145,7 +145,10 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
 @pytest.mark.parametrize(
     "time_format, output",
     [
-        ("mjd", (np.array([55198., 55201]), (np.array([1., 2.]), np.array([1., 5.])))),
+        (
+            "mjd",
+            (np.array([55198.0, 55201]), (np.array([1.0, 2.0]), np.array([1.0, 5.0]))),
+        ),
         (
             "iso",
             (

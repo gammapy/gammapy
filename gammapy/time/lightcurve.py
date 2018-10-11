@@ -767,8 +767,8 @@ class LightCurveEstimator(object):
         """
         tmin, tmax = time_interval[0], time_interval[1]
         livetime = 0
-        alpha_mean = 0.
-        alpha_mean_backup = 0.
+        alpha_mean = 0.0
+        alpha_mean_backup = 0.0
         measured_excess = 0
         predicted_excess = 0
         n_on = 0
@@ -811,7 +811,7 @@ class LightCurveEstimator(object):
                 livetime_to_add = 0 * u.s
 
             # Take into account dead time
-            livetime_to_add *= 1. - obs.observation_dead_time_fraction
+            livetime_to_add *= 1.0 - obs.observation_dead_time_fraction
 
             # Compute excess
             obs_measured_excess = n_on_obs - spec.alpha * n_off_obs
@@ -854,11 +854,11 @@ class LightCurveEstimator(object):
         if useinterval:
             int_flux = spectral_model.integral(energy_range[0], energy_range[1])
 
-            if n_off > 0.:
+            if n_off > 0.0:
                 alpha_mean /= n_off
-            if livetime > 0.:
+            if livetime > 0.0:
                 alpha_mean_backup /= livetime
-            if alpha_mean == 0.:  # use backup if necessary
+            if alpha_mean == 0.0:  # use backup if necessary
                 alpha_mean = alpha_mean_backup
 
             flux = measured_excess / predicted_excess.value

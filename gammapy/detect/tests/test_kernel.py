@@ -48,7 +48,7 @@ def test_run_iteration(kbe, images):
     idx = [(4, 3), (4, 4), (4, 5), (3, 4), (5, 4)]
     i, j = zip(*idx)
     assert_allclose(mask[i, j], 0)
-    assert_allclose((1. - mask).sum(), 11)
+    assert_allclose((1.0 - mask).sum(), 11)
 
     # Check background, should be 42 uniformly
     assert_allclose(background, 42 * np.ones((10, 10)))

@@ -58,7 +58,7 @@ def test_Pulsar_peridod_dot():
 
 def test_Pulsar_luminosity_spindown():
     """Test pulsar spin down luminosity"""
-    reference = [3.85531469e+31, 3.85536174e+31, 3.86006820e+31, 4.34521233e+31]
+    reference = [3.85531469e31, 3.85536174e31, 3.86006820e31, 4.34521233e31]
     assert_allclose(pulsar.luminosity_spindown(time).value, reference)
 
 
