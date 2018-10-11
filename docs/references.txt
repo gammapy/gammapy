@@ -88,7 +88,7 @@
 .. _Gammapy mailing list: https://groups.google.com/forum/#!forum/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
 .. _Gammapy documentation: http://docs.gammapy.org/
-.. _Gammapy contact: http://gammapy.org/contact.html
+.. _Gammapy contact: https://gammapy.org/contact.html
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
 .. _Gammapy page on PyPI: https://pypi.org/project/gammapy
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors

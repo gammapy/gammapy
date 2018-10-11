@@ -62,7 +62,7 @@ def song(karaoke=False):
     import webbrowser
     import sys
 
-    webbrowser.open("http://gammapy.org/gammapy_song.mp3")
+    webbrowser.open("https://gammapy.org/gammapy_song.mp3")
 
     if karaoke:
         lyrics = (

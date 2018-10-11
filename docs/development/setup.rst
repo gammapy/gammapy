@@ -225,13 +225,13 @@ In addition we have Binder set up to allow users to try Gammapy in the browser.
 gammapy.org
 -----------
 
-http://gammapy.org/ is a small landing page for the Gammapy project. The page
+https://gammapy.org/ is a small landing page for the Gammapy project. The page
 shown there a static webpage served via Github pages.
 
 To update it, edit the HTML and CSS files this repo:
 https://github.com/gammapy/gammapy-webpage and then make a pull request against
 the default branch for that repo, called ``gh-pages``. Once it's merged, the
-webpage at http://gammapy.org/ usually updates within less than a minute.
+webpage at https://gammapy.org/ usually updates within less than a minute.
 
 docs.gammapy.org
 ----------------

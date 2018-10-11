@@ -54,7 +54,7 @@ exit:
 
       Gammapy is a Python package for gamma-ray astronomy.
 
-      For further information, see http://gammapy.org/
+      For further information, see https://gammapy.org/
 
     Options:
       --log-level [debug|info|warning|error]

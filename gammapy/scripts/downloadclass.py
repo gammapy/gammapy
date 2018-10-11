@@ -11,7 +11,7 @@ from .. import version
 
 log = logging.getLogger(__name__)
 
-BASE_URL = "http://gammapy.org/download"
+BASE_URL = "https://gammapy.org/download"
 YAML_URL = (
     "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
 )

@@ -25,11 +25,11 @@ If you use conda or pip, you can upgrade to this latest stable version using:
 
 To learn more about Gammapy:
 
-* http://gammapy.org/ (project information, contacts, news)
+* https://gammapy.org/ (project information, contacts, news)
 * http://docs.gammapy.org/stable/ (documentation)
 * http://docs.gammapy.org/stable/tutorials.html (tutorials; best place to get started)
 
 If you have any questions or issues, please see let us know!
-( see http://gammapy.org/contact.html )
+( see https://gammapy.org/contact.html )
 
 Christoph for the Gammapy team

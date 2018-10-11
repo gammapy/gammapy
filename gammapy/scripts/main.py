@@ -48,7 +48,7 @@ def cli(log_level, ignore_warnings):
     Use ``--help`` to see available sub-commands, as well as the available
     arguments and options for each sub-command.
 
-    For further information, see http://gammapy.org/ and http://docs.gammapy.org/
+    For further information, see https://gammapy.org/ and http://docs.gammapy.org/
 
     \b
     Examples

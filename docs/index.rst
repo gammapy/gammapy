@@ -9,7 +9,7 @@
 Gammapy is a community-developed, open-source Python package for gamma-ray
 astronomy. It is a prototype for the `CTA`_ science tools. This page
 (http://docs.gammapy.org ) contains the Gammapy documentation. The Gammapy
-webpage ( http://gammapy.org ) contains information about Gammapy, including
+webpage ( https://gammapy.org ) contains information about Gammapy, including
 news and contact information if you have any questions, want to report and issue
 or request a feature, or need help with anything Gammapy-related.
 
@@ -75,8 +75,8 @@ development takes place on the `Gammapy GitHub page`_.
 
     development/index
 
-.. _Gammapy project and team: http://gammapy.org/team.html
-.. _Gammapy contact and communication channels: http://gammapy.org/contact.html
+.. _Gammapy project and team: https://gammapy.org/team.html
+.. _Gammapy contact and communication channels: https://gammapy.org/contact.html
 
 References and Changelog
 ------------------------

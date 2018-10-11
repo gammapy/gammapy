@@ -46,7 +46,7 @@ environment:
 
 .. code-block:: bash
 
-    curl -O http://gammapy.org/download/install/gammapy-0.8-environment.yml
+    curl -O https://gammapy.org/download/install/gammapy-0.8-environment.yml
     conda env create -f gammapy-0.8-environment.yml
     conda activate gammapy-0.8
 

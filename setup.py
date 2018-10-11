@@ -32,7 +32,7 @@ DESCRIPTION = metadata.get('description', 'Astropy affiliated package')
 AUTHOR = metadata.get('author', '')
 AUTHOR_EMAIL = metadata.get('author_email', '')
 LICENSE = metadata.get('license', 'unknown')
-URL = metadata.get('url', 'http://gammapy.org')
+URL = metadata.get('url', 'https://gammapy.org')
 
 # Get the long description from the package's docstring
 # __import__(PACKAGENAME)

@@ -3,7 +3,7 @@ Gammapy
 
 A Python Package for Gamma-ray Astronomy.
 
-* Webpage: http://gammapy.org
+* Webpage: https://gammapy.org
 * Code: https://github.com/gammapy/gammapy
 * Documentation: http://docs.gammapy.org/
 * License: BSD-3

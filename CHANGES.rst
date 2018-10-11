@@ -247,7 +247,7 @@ Installation:
 
 Documentation:
 
-- We have created a separate project webpage at http://gammapy.org .
+- We have created a separate project webpage at https://gammapy.org .
   The http://docs.gammapy.org page is not just for the Gammapy documentation.
 - A lot of new tutorials were added in the form of Jupyter notebooks. To make the content of the
   notebooks easier to navigate and search, a rendered static version of the notebooks was integrated
@@ -256,7 +256,7 @@ Documentation:
   service. There is a "launch in binder" link at the top of each tutorial in the docs,
   see e.g. here: `CTA data analysis with Gammapy <notebooks/cta_data_analysis.html>`__
 - A page was created to collect the information for CTA members how to get started with Gammapy
-  and with contact / support channels: http://gammapy.org/cta.html
+  and with contact / support channels: https://gammapy.org/cta.html
 
 Gammapy Python package:
 
@@ -291,12 +291,12 @@ Command line interface:
 
 Organisation:
 
-- A webpage at http://gammapy.org/ was set up, separate from the Gammapy
+- A webpage at https://gammapy.org/ was set up, separate from the Gammapy
   documentation page http://docs.gammapy.org/ .
 - The Gammapy project and team organisation was set up with clear roles and
   responsibilities, in a way to help the Gammapy project grow, and to support
   astronomers and projects like CTA using Gammapy better. This is described at
-  http://gammapy.org/team.html .
+  https://gammapy.org/team.html .
 - To improve the quality of Gammapy, we have set up a proposal-driven process
   for major improvements for Gammapy, described in :ref:`pig-001`. We are now
   starting to use this to design a better low-level analysis code (`PIG 2`_) and
