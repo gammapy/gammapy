@@ -45,17 +45,19 @@ def execute_notebook(path, kernel="python3", loglevel=20):
 
     try:
         t = time.time()
-        subprocess.call(
-            "jupyter nbconvert "
-            "--allow-errors "
-            "--log-level={} "
-            "--ExecutePreprocessor.timeout=None "
-            "--ExecutePreprocessor.kernel_name={} "
-            "--to notebook "
-            "--inplace "
-            "--execute '{}'".format(loglevel, kernel, path),
-            shell=True,
-        )
+        cmd = [
+            sys.executable, "-m", "jupyter", "nbconvert",
+            "--allow-errors",
+            "--log-level={}".format(loglevel),
+            "--ExecutePreprocessor.timeout=None",
+            "--ExecutePreprocessor.kernel_name={}".format(kernel),
+            "--to",
+            "notebook",
+            "--inplace",
+            "--execute",
+            "{}".format(path)
+        ]
+        subprocess.call(cmd)
         t = (time.time() - t) / 60
         log.info("   ... Executing duration: {:.2f} mn".format(t))
     except Exception as ex:
