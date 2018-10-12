@@ -87,8 +87,12 @@ def build_notebooks(args):
         sys.exit()
 
     # strip and blackformat
-    subprocess.call("gammapy jupyter --src temp black", shell=True)
-    subprocess.call("gammapy jupyter --src temp strip", shell=True)
+    subprocess.call(
+        [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "black"]
+    )
+    subprocess.call(
+        [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "strip"]
+    )
 
     # test /run
     passed = True
@@ -105,7 +109,15 @@ def build_notebooks(args):
         copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignoreall)
         for path in path_static_nbs.glob("*.ipynb"):
             subprocess.call(
-                "jupyter nbconvert --to script '{}'".format(str(path)), shell=True
+                [
+                    sys.executable,
+                    "-m",
+                    "jupyter",
+                    "nbconvert",
+                    "--to",
+                    "script",
+                    "{}".format(str(path)),
+                ]
             )
         copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
     else:
@@ -113,7 +125,15 @@ def build_notebooks(args):
         pathdest = path_static_nbs / notebookname
         copyfile(str(pathsrc), str(pathdest))
         subprocess.call(
-            "jupyter nbconvert --to script '{}'".format(str(pathdest)), shell=True
+            [
+                sys.executable,
+                "-m",
+                "jupyter",
+                "nbconvert",
+                "--to",
+                "script",
+                "{}".format(str(pathdest)),
+            ]
         )
         pathdest = path_filled_nbs / notebookname
         copyfile(str(pathsrc), str(pathdest))
