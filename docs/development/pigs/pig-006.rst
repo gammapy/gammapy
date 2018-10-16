@@ -14,12 +14,9 @@ Abstract
 ========
 
 In this PIG we want to outline an improvement of the CTA observation handling in Gammapy.
-The current handling has some limitations and misses some key features, like selecting a given time interval and
-performing an analysis on it.
-We also want to start relying more on GTIs instead  
-Since specifics of the final data format of CTA are still unclear, this PIG does not aim for a final implementation of
-CTA observation handling, nor the handling of all types of data from various instruments foreseen for Gammapy in the
-future.
+The current handling has some limitations and misses some key features, like selecting a given time interval and performing an analysis on it.
+We also want to start using GTI to compute the observation time, instead of relying on header information.
+Since specifics of the final data format of CTA are still unclear, this PIG does not aim for a final implementation of CTA observation handling, nor the handling of all types of data from various instruments foreseen for Gammapy in the future.
 It focuses on trying to resolve current limitations when analyzing IACT data.
 This PIG emerged at the Coding Spring in Madrid 2018.
 
@@ -75,6 +72,7 @@ Limitations
 
 * Users should be able to run an analysis (1D and 3D) on a given time interval, independent of the time intervals of the single observations.
 * We should support event selections before starting the analysis steps (event phase, event type, ...) and possibly allow for custom selections, e.g. `MC_ID` in the current CTA 1DC.
+  For now we aim only for a time and phase filtering of events, a filtering on event type, for example, is more complex and is left for a future PIG.
 * We want to support more formats for the *observation library* (like ctools XML format)
 * We want to support observations (especially event lists) stored in memory
 
