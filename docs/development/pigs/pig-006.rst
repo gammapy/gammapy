@@ -33,13 +33,15 @@ For now we will use following definitions to go forward in Gammapy:
 - **GTI (good time interval)**:
    - time intervals for which the instrument was on
    - the sum over these time intervals equals the *on time*
+   - a GTI table will be required for each observation
 
 
 - **Observation**:
    - has a unique identifier, the *obs_id*
    - contains 1 event list, 1 GTI table and 1 corresponding set of IRFs (aeff, edisp, psf)
-   - has 1 dead-time fraction (`DEADC`)
-   - the live time of the observation is obtained as `ONTIME * (1 - DEADC)`
+   - a GTI table is more convenient than a `START` and `STOP` time, it is more flexible and allows to cut out time intervals in between
+   - has 1 dead-time fraction (`DEADC`), the live time of the observation is obtained as `ONTIME * (1 - DEADC)`
+   - however, in the future `DEADC` is probably going to be `absorbed into the IRFS <https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/62#issuecomment-428221596>`_, then we should switch from *live time* to *on time* when calculating the exposure
  
 
 * **Observation library**:
@@ -71,18 +73,27 @@ Limitations
 2. Objectives
 =============
 
-* We want to support more formats for the *observation library* (like ctools XML format), and make it easy to include future formats which are yet to be decided.
 * Users should be able to run an analysis (1D and 3D) on a given time interval, independent of the time intervals of the single observations.
-* We should support event selections before starting the analysis steps (selecting event type, event phase, ...) and possible allow for custom selections, e.g. `MC_ID` in the current CTA 1DC.
+* We should support event selections before starting the analysis steps (event phase, event type, ...) and possibly allow for custom selections, e.g. `MC_ID` in the current CTA 1DC.
+* We want to support more formats for the *observation library* (like ctools XML format)
+* We want to support observations (especially event lists) stored in memory
 
-Use cases
----------
+Use cases / scenarios
+---------------------
 
+1. Scenario: 1D/3D analysis for a user specified time interval
+    | **Given** a user specified time interval
+    | **When** performing a 1D/3D analysis of the corresponding observations
+    | **Then** get results only for the specified time interval
+
+2. Scenario: 1D/3D analysis for a user specified pulsar phase interval
+    | **Given** a user specified pulsar phase interval
+    | **When** performing a 1D/3D analysis of the corresponding observations
+    | **Then** get results only for the specified phase interval
+
+- Make GPS survey maps for CTA (process 10 GB of events data and 3000 runs, testing the memory usage)
+- Create an observation *from scratch* and write it to disk with Index files
 - Read in an observation from an *observation library* given in ctool's XML format
-- Create an observation *from scratch* and write it to disk with an *observation library* of various formats.
-- Do a 1D or 3D analysis for part of a run (say 1 minute)
-- Do a 1D or 3D analysis for multiple runs (say 1 night or week)
-- Make GPS survey maps for CTA (process 10 GB of events data and 3000 runs)
 
 3. What others have
 ===================
@@ -90,8 +101,9 @@ Use cases
 With *Fermi-LAT*, you always have `gtselect` and `gtmktime` at the start to `prepare your data <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/data_preparation.html>`_).
 Following analysis steps partly rely on "data sub space" DSS header keys for processing, which are stored in the output fits files of the `gtselect` and `gtmktime` step.
 
-In *ctools*, every analysis starts with an "observation definition file" and also by `running ctselect <http://cta.irap.omp.eu/ctools/users/tutorials/1dc/first_select_obs.html>`_.
-(as far as i understand their code, for the time selection it only allows for selecting or skipping GTI intervals given with the event list)
+In *ctools*, every analysis starts with an "observation definition file" in XML format.
+One can then `select observations <http://cta.irap.omp.eu/ctools/users/tutorials/1dc/first_select_obs.html>`_ with `csobsselect`, creating a new observation definition file.
+A selection based on events is achieved `by running <http://cta.irap.omp.eu/ctools/users/reference_manual/ctselect.html#ctselectctselect>`_ `ctselect`.
 
 4. Proposal
 ===========
@@ -107,7 +119,7 @@ In addition an `Observation` object will also hold an `ObservationFilter` object
 The filtering is applied *on-the-fly* when accessing the observation data.
 In this way we avoid storing the modified observation data in memory, which is important for the last use case specified above.
 
-The different **data store** classes are:
+The different **data store** classes are (this still needs to be discussed in more detail):
 
 - `DataStoreIndex`: This is basically just a renaming of the current `DataStore`
 - `DataStoreXML`: This class is able to read XML files as used for *ctools* (maybe this class can be combined with the `DataStoreIndex`)
@@ -124,14 +136,39 @@ The attributes and methods of the classes are not fully worked out and are merel
 Implementation road map
 -----------------------
 
-In a first step we want to focus on implementing the `Observations`, `Observation` and `ObservationFilter` classes.
-They should be able to work together with the current `DataStore` class after some minor changes to it.
-For the `Observation` class, the current `DataStoreObservation` can be a prototype.
+We will outline the road map in form of scenarios that we want to achieve along the way and that can be implemented ideally with a few PRs.
 
-In a second step we want to generalize the *data store* classes and implement the `DataStoreXML` and `DataStoreInMemory` classes.
+We split the implementation in two big steps:
+
+* first we want to focus on implementing the `Observations`, `Observation` and `ObservationFilter` classes
+* the second step is the work on the `DataStore` classes
+
+**Scenarios**:
+
+1. Scenario: Run a 1D/3D analysis wth the `Observations` class
+    | **Given** a basic version of the `Observations` class
+    | **When** passed on to the analysis classes
+    | **Then** should behave the same as the current `ObservationList` class
+
+    | **PRs**: ObservationList -> Observations, initialize with a list of `DataStoreObservation`; implement __iter__, __getitem__, __setitem__; adapt notebooks
+
+2. Scenario: Add an empty filter to an `Observation`
+    | **Given** a basic version of the `Observation` and `ObservationFilter` class
+    | **When** accessing `.events`, `.gti` of the `Observation`
+    | **Then** automatically apply the empty filter on the fly
+
+    | **PRs**: `DataStoreObservation` -> `Observation`; create `ObservationFilter` class; add an `ObservationFilter` to each `Observation`; develop basic API
+
+3. Scenario: filter an `Observation` by time
+    | **Given** a user specified time interval
+    | **When** we give the time interval to an `Observation`
+    | **Then** return a new `Observation` with the according time filter
+
+    | **PRs**: Introduce time filters for events and gtis; ...
+
+4. ...
 
 Proposed class diagram
 ----------------------
 
 .. image:: https://github.com/dcfidalgo/gammapy/blob/pig-006/docs/development/pigs/pig6_class_diagram.png
-
