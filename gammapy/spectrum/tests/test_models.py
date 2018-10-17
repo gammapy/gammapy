@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
@@ -304,3 +305,13 @@ def test_fermi_isotropic():
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
     )
+
+def test_finite_values():
+    pars=dict()
+    pars["amplitude"] = 1e-12 * u.Unit("TeV-1 cm-2 s-1")
+    pars["reference"] = 1 * u.Unit("TeV")
+    pars["index"] = 200 * u.Unit("")
+    pwl = PowerLaw(**pars)
+
+    res = pwl(0.001*u.TeV)
+    assert_allclose(np.isinf(res), False)
