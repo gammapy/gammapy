@@ -566,7 +566,7 @@ class PowerLaw(SpectralModel):
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
         """Evaluate the model (static function)."""
-        return amplitude*np.power(energy / reference, -index)
+        return amplitude * np.power(energy / reference, -index)
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate power law analytically.
