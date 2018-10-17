@@ -61,7 +61,7 @@ class SpectralModel(object):
         for par in self.parameters.parameters:
             kwargs[par.name] = par.quantity
 
-        return self.evaluate(energy, **kwargs)
+        return np.nan_to_num(self.evaluate(energy, **kwargs), copy=False)
 
     def __mul__(self, model):
         if not isinstance(model, SpectralModel):

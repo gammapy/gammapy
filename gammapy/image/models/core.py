@@ -49,7 +49,7 @@ class SkySpatialModel(object):
         for par in self.parameters.parameters:
             kwargs[par.name] = par.quantity
 
-        return self.evaluate(lon, lat, **kwargs)
+        return np.nan_to_num(self.evaluate(lon, lat, **kwargs),copy=False)
 
     def copy(self):
         """A deep copy."""
