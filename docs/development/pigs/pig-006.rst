@@ -17,7 +17,7 @@ In this PIG we want to outline an improvement of the CTA observation handling in
 The current handling has some limitations and misses some key features, like selecting a given time interval and performing an analysis on it.
 We also want to start using GTI to compute the observation time, instead of relying on header information.
 Since specifics of the final data format of CTA are still unclear, this PIG does not aim for a final implementation of CTA observation handling, nor the handling of all types of data from various instruments foreseen for Gammapy in the future.
-It focuses on trying to resolve current limitations when analyzing IACT data.
+Instead it focuses on trying to resolve current limitations when analyzing IACT data, namely an analysis of time or phase selected observations, as well as an analysis of an observation stored solely in memory or given in ctool's XML format (see the `third section <3. What others have>`_).
 This PIG emerged at the Coding Spring in Madrid 2018.
 
 Some terminology
