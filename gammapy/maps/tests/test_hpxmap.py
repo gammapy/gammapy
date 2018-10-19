@@ -13,7 +13,7 @@ from ..hpx import HpxGeom
 from ..hpxmap import HpxMap
 from ..hpxnd import HpxNDMap
 from ..hpxsparse import HpxSparseMap
-from ...utils.testing import mpl_plot_check, requires_dependency
+from ...utils.testing import mpl_plot_check, requires_dependency, assert_quantity_allclose
 
 pytest.importorskip("scipy")
 pytest.importorskip("healpy")
@@ -382,3 +382,26 @@ def test_plot_poly():
     m = HpxNDMap.create(binsz=10)
     with mpl_plot_check():
         m.plot(method="poly")
+
+def test_hpxmap_addition_subtraction():
+    map1 = HpxMap.create(nside=8, unit='cm2')
+    map2 = HpxMap.create(nside=8, unit='m2')
+
+    map1 += 1*u.cm**2
+    map2 += 1*u.cm**2
+    assert_allclose(map2.data, 1e-4)
+    map3 = map1 - map2
+    assert_quantity_allclose(map3.quantity, 0*u.cm**2)
+
+def test_hpxmap_multiplication_division():
+    map1 = HpxMap.create(nside=8, unit='cm2')
+    map2 = HpxMap.create(nside=8, unit='s')
+    map3 = HpxMap.create(nside=8, unit='')
+
+    map1 += 1*u.m**2
+    map2 += 1000 * u.s
+    expo = map1 * map2
+    assert_quantity_allclose(expo.quantity, 1e7*u.cm**2*u.s)
+    map3.data += 1.0
+    flux = map3 / expo
+    assert_quantity_allclose(flux.quantity, 1e-7*u.cm**-2*u.s**-1)

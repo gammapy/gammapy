@@ -544,7 +544,7 @@ def test_plot_allsky():
     with mpl_plot_check():
         m.plot()
 
-def map_addition_subtraction():
+def test_wcsmap_addition_subtraction():
     map1 = WcsNDMap.create(skydir=(0, 0), unit='cm2', binsz=0.1, npix=(10, 10))
     map2 = WcsNDMap.create(skydir=(0, 0), unit='m2', binsz=0.1, npix=(10, 10))
 
@@ -554,7 +554,7 @@ def map_addition_subtraction():
     map3 = map1 - map2
     assert_quantity_allclose(map3.quantity, 0*u.cm**2)
 
-def map_multiplication_division():
+def test_wcsmap_multiplication_division():
     map1 = WcsNDMap.create(skydir=(0, 0), unit='cm2', binsz=0.1, npix=(10, 10))
     map2 = WcsNDMap.create(skydir=(0, 0), unit='s', binsz=0.1, npix=(10, 10))
     map3 = WcsNDMap.create(skydir=(0, 0), unit='', binsz=0.1, npix=(10, 10))
@@ -563,7 +563,7 @@ def map_multiplication_division():
     map2 += 1000 * u.s
     expo = map1 * map2
     assert_quantity_allclose(expo.quantity, 1e7*u.cm**2*u.s)
-    flux.data += 1.0
+    map3.data += 1.0
     flux = map3 / expo
-    assert_allclose(flux.data, 1e-7)
-    assert flux.unit == Unit('cm-2 s-1')
+    assert_quantity_allclose(flux.quantity, 1e-7*u.cm**-2*u.s**-1)
+    
