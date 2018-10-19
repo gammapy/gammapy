@@ -1025,7 +1025,6 @@ rendering of the plot, which can rasie errore as well. Here is a short example:
     from gammapy.utils.testing import mpl_plot_check
 
     def test_plot():
-        import matplotlib.pyplot as plt
         with mpl_plot_check():
             plt.plot([1., 2., 3., 4., 5.])
 
