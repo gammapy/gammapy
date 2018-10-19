@@ -600,6 +600,14 @@ class MapAxis(object):
         """Copy `MapAxis` object"""
         return copy.deepcopy(self)
 
+    def _check_compatibility(self, other):
+        """Check if two axes objects are compatible with each other"""
+        from ..utils.testing import assert_quantity_allclose
+        try:
+            assert_quantity_allclose(self.edges*self.unit, other.edges*other.unit)
+        except:
+            raise ValueError("Inconsistent MapAxis")
+
 
 class MapCoord(object):
     """Represents a sequence of n-dimensional map coordinates.

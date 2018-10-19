@@ -886,8 +886,8 @@ class WcsGeom(MapGeom):
         # check overall shape and axes compatibility
         if self.data_shape != other.data_shape:
             raise ValueError("MapGeom data shapes differ")
-#        for axis, otheraxis in zip(self.axes, other.axes):
-#            axis._check_compatibility(otheraxis)
+        for axis, otheraxis in zip(self.axes, other.axes):
+            axis._check_compatibility(otheraxis)
 
         # check WCS consistency
         if self.wcs.wcs.compare(other.wcs.wcs) is False:
