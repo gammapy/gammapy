@@ -316,3 +316,21 @@ def test_map_reproject_hpx_to_wcs():
     m_r = m.reproject(geom_wcs)
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
+
+def test_mapaxis_compatibility():
+    axis1 = MapAxis(nodes=(1, 2, 3, 4), unit='TeV', node_type='center')
+    axis2 = MapAxis(nodes=(1, 2, 3, 4), unit='TeV', node_type='edges')
+    axis3 = MapAxis(nodes=(1, 2, 3, 4), unit='GeV', node_type='center')
+    axis4 = MapAxis(nodes=(1, 2, 3, 4), unit='cm', node_type='center')
+    axis5 = MapAxis(nodes=(1, 2, 3, 4), unit='TeV', node_type='center', interp='log')
+    axis6 = MapAxis(nodes=(0.5, 1.5, 2.5, 3.5, 4.5), unit='TeV', node_type='edges')
+
+    with pytest.raises(ValueError):
+        axis1._check_compatibility(axis2)
+    with pytest.raises(ValueError):
+        axis1._check_compatibility(axis3)
+    with pytest.raises(ValueError):
+        axis1._check_compatibility(axis4)
+    with pytest.raises(ValueError):
+        axis1._check_compatibility(axis5)
+    axis1._check_compatibility(axis6)

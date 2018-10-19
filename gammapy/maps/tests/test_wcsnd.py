@@ -566,4 +566,3 @@ def test_wcsmap_multiplication_division():
     map3.data += 1.0
     flux = map3 / expo
     assert_quantity_allclose(flux.quantity, 1e-7*u.cm**-2*u.s**-1)
-    
