@@ -1330,6 +1330,11 @@ class MapGeom(object):
         """Solid angle (`~astropy.units.Quantity` in ``sr``)."""
         pass
 
+    @abc.abstractmethod
+    def _check_compatibility(self, other):
+        """Check compatibility of two geoms"""
+        pass
+
     def _fill_header_from_axes(self, header):
         for idx, ax in enumerate(self.axes, start=1):
             key = "AXCOLS%i" % idx
