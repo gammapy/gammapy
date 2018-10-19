@@ -882,6 +882,16 @@ class WcsGeom(MapGeom):
         )
         return str_
 
+    def _check_compatibility(self, other):
+        # check overall shape and axes compatibility
+        if self.data_shape != other.data_shape:
+            raise ValueError("MapGeom data shapes differ")
+#        for axis, otheraxis in zip(self.axes, other.axes):
+#            axis._check_compatibility(otheraxis)
+
+        # check WCS consistency
+        if self.wcs.wcs.compare(other.wcs.wcs):
+            raise ValueError("MapGeom WCS differ")
 
 def create_wcs(
     skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
