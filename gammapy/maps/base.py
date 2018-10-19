@@ -1072,3 +1072,17 @@ class Map(object):
             out.data *= Quantity(other).value
             out.unit = out.unit * Quantity(other).unit
         return out
+
+    def __truediv__(self, other):
+        """ Divide two maps with compatible geometries together. Adapt unit accordingly.
+        """
+        out = self.copy()
+        if isinstance(other, Map):
+            # check consistency
+            # self.geom._check_compatibility(other.geom)
+            out.data /= other.data
+            out.unit = out.unit/other.unit
+        else:
+            out.data /= Quantity(other).value
+            out.unit = out.unit / Quantity(other).unit
+        return out
