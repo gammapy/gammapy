@@ -112,13 +112,10 @@ def test_parameters_set_parameter_factors(pars):
     assert_allclose(pars["ham"].scale, 1)
 
 
-def _test_parameters_set_covariance_factors(pars):
+def test_parameters_set_covariance_factors(pars):
     cov_factor = [[3, 4], [7, 8]]
     pars.set_covariance_factors(cov_factor)
-
-    assert isinstance(pars.covariance, np.ndarray)
-    cov_value = [[0, 0], [0, 0]]
-    assert_allclose(pars.covariance, cov_value)
+    assert_allclose(pars.covariance, cov_factor)
 
 
 def test_parameters_scale():
