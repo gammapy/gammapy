@@ -304,13 +304,26 @@ test_axis2 = [MapAxis(nodes=(1,2,3,4), unit='TeV', node_type='center'),
 
 
 compatibility_test_geoms = [
-    (10, 0.1, "GAL", "CAR", skydir, test_axis1),
-    (10, 0.1, "GAL", "CAR", skydir, test_axis2),
-    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1),
+    (10, 0.1, "GAL", "CAR", skydir, test_axis1, True),
+    (10, 0.1, "GAL", "TAN", skydir, test_axis1, False),
+    (8, 0.1, "GAL", "CAR", skydir, test_axis1, False),
+    (10, 0.1, "GAL", "CAR", skydir, test_axis2, False),
+    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1, True)
 ]
 
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"), compatibility_test_geoms
 )
-def test_geom_compatibility(npix, binsz, coordsys, proj, skydir, axes):
-    
+def test_geom_compatibility(npix, binsz, coordsys, proj, skypos, axes, result):
+    geom0 = WcsGeom.create(
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", coordsys="GAL", axes=axes
+    )
+    geom1 = WcsGeom.create(
+        skydir=skypos, npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+    )
+
+    if result is False:
+        with pytest.raises(ValueError):
+            geom._check_compatibility(geom1)
+    else:
+        geom._check_compatibility(geom1)
