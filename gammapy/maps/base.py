@@ -1040,7 +1040,7 @@ class Map(object):
         out = self.copy()
         if isinstance(other, Map):
             # check consistency
-            #self.geom._check_compatibility(other.geom)
+            self.geom._check_compatibility(other.geom)
             out.data += other.quantity.to(self.unit).value
         else:
             out.data += Quantity(other).to(self.unit).value
@@ -1052,7 +1052,7 @@ class Map(object):
         out = self.copy()
         if isinstance(other, Map):
             # check consistency
-            # self.geom._check_compatibility(other.geom)
+            self.geom._check_compatibility(other.geom)
             out.data -= other.quantity.to(self.unit).value
         else:
             out.data -= Quantity(other).to(self.unit).value
@@ -1065,7 +1065,7 @@ class Map(object):
         out = self.copy()
         if isinstance(other, Map):
             # check consistency
-            # self.geom._check_compatibility(other.geom)
+            self.geom._check_compatibility(other.geom)
             out.data *= other.data
             out.unit = out.unit*other.unit
         else:
@@ -1079,7 +1079,7 @@ class Map(object):
         out = self.copy()
         if isinstance(other, Map):
             # check consistency
-            # self.geom._check_compatibility(other.geom)
+            self.geom._check_compatibility(other.geom)
             out.data /= other.data
             out.unit = out.unit/other.unit
         else:

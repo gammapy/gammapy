@@ -890,7 +890,7 @@ class WcsGeom(MapGeom):
 #            axis._check_compatibility(otheraxis)
 
         # check WCS consistency
-        if self.wcs.wcs.compare(other.wcs.wcs):
+        if self.wcs.wcs.compare(other.wcs.wcs) is False:
             raise ValueError("MapGeom WCS differ")
 
 def create_wcs(
