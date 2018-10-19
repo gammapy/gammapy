@@ -296,3 +296,21 @@ def test_get_axis_index_by_name():
     assert geom.get_axis_index_by_name("Energy") == 0
     with pytest.raises(ValueError):
         geom.get_axis_index_by_name("time")
+
+
+test_axis1 = [MapAxis(nodes=(1,2,3,4), unit='TeV', node_type='center')]
+test_axis2 = [MapAxis(nodes=(1,2,3,4), unit='TeV', node_type='center'),
+              MapAxis(nodes=(1,2,3), unit='TeV', node_type='center')]
+
+
+compatibility_test_geoms = [
+    (10, 0.1, "GAL", "CAR", skydir, test_axis1),
+    (10, 0.1, "GAL", "CAR", skydir, test_axis2),
+    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1),
+]
+
+@pytest.mark.parametrize(
+    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_geom_compatibility(npix, binsz, coordsys, proj, skydir, axes):
+    
