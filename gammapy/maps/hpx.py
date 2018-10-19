@@ -1750,7 +1750,7 @@ class HpxGeom(MapGeom):
             raise ValueError("HpxGeom differ")
         if self.center_coord != other.center_coord:
             raise ValueError("HpxGeom differ")
-        if self.sparse or other.sparse:
+        if self._sparse or other._sparse:
             raise ValueError("sparse geometries not supported")
         if self.is_allsky and other.is_allsky is False:
             raise ValueError("Non allsky HpxGeom not supported")

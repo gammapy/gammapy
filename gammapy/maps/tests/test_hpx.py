@@ -733,3 +733,26 @@ def test_geom_repr():
     geom = HpxGeom(nside=8)
     assert geom.__class__.__name__ in repr(geom)
     assert "nside" in repr(geom)
+
+hpx_compatibility_test_geoms = [
+    (16, False, "GAL", None, True),
+    (16, True, "GAL", None, False),
+    (8, False, "GAL", None, False),
+    (16, False, "CEL", None, False),
+    (16, False, "GAL", "DISK(110.,75.,10.)", False)
+]
+
+@pytest.mark.parametrize(
+    ("nside", "nested", "coordsys", "region", "result"), hpx_compatibility_test_geoms
+)
+
+def test_geom_compatibility(nside, nested, coordsys, region, result):
+    geom0 = HpxGeom(16, False, "GAL", region=None)
+    geom1 = HpxGeom(nside, nested, coordsys, region=region)
+
+    if result is False:
+        with pytest.raises(ValueError):
+            geom0._check_compatibility(geom1)
+    else:
+        geom0._check_compatibility(geom1)
+
