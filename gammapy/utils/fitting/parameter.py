@@ -67,7 +67,7 @@ class Parameter(object):
 
     @factor.setter
     def factor(self, val):
-        self._factor = check_type(val, "number")
+        self._factor = float(val)
 
     @property
     def scale(self):
@@ -76,7 +76,7 @@ class Parameter(object):
 
     @scale.setter
     def scale(self, val):
-        self._scale = check_type(val, "number")
+        self._scale = float(val)
 
     @property
     def unit(self):
@@ -173,7 +173,7 @@ class Parameter(object):
             value = self.value
             if value != 0:
                 power = int(np.log10(np.absolute(value)))
-                scale = 10 ** power
+                scale = float(10 ** power)
                 self.factor = value / scale
                 self.scale = scale
         elif method == "factor1":
