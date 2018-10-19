@@ -67,7 +67,7 @@ class Parameter(object):
 
     @factor.setter
     def factor(self, val):
-        self._factor = check_type(val, "number")
+        self._factor = float(val)
 
     @property
     def scale(self):
@@ -76,7 +76,7 @@ class Parameter(object):
 
     @scale.setter
     def scale(self, val):
-        self._scale = check_type(val, "number")
+        self._scale = float(val)
 
     @property
     def unit(self):
@@ -173,7 +173,7 @@ class Parameter(object):
             value = self.value
             if value != 0:
                 power = int(np.log10(np.absolute(value)))
-                scale = 10 ** power
+                scale = float(10 ** power)
                 self.factor = value / scale
                 self.scale = scale
         elif method == "factor1":
@@ -392,14 +392,17 @@ class Parameters(object):
         for factor, parameter in zip(factors, self.parameters):
             parameter.factor = factor
 
+    @property
+    def _scale_matrix(self):
+        scales = [par.scale for par in self.parameters]
+        return np.outer(scales, scales)
+
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
 
         Used in the optimiser interface.
         """
-        scales = np.array([par.scale for par in self.parameters])
-        scale_matrix = scales[:, np.newaxis] * scales
-        self.covariance = scale_matrix * matrix
+        self.covariance = self._scale_matrix * matrix
 
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.

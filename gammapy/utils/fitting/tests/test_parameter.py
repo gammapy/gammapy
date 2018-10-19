@@ -11,8 +11,11 @@ def test_parameter_init():
     par = Parameter("spam", 42, "deg")
     assert par.name == "spam"
     assert par.factor == 42
+    assert isinstance(par.factor, float)
     assert par.scale == 1
+    assert isinstance(par.scale, float)
     assert par.value == 42
+    assert isinstance(par.value, float)
     assert par.unit == "deg"
     assert par.min is np.nan
     assert par.max is np.nan
@@ -25,12 +28,6 @@ def test_parameter_init():
 
     with pytest.raises(TypeError):
         Parameter(1, 2)
-
-    p = Parameter("spam", 42)
-    with pytest.raises(TypeError):
-        p.factor = "99"
-    with pytest.raises(TypeError):
-        p.scale = "99"
 
 
 def test_parameter_value():
@@ -66,6 +63,15 @@ def test_parameter_to_dict():
     par = Parameter("spam", 42, "deg")
     d = par.to_dict()
     assert isinstance(d["unit"], six.string_types)
+
+
+def test_parameter_large():
+    # Test case for Parameter with very large value
+    # Regression test for https://github.com/gammapy/gammapy/issues/1883
+    par = Parameter("a", 9e35)
+    par.autoscale()
+    assert_allclose(par.scale, 1e35)
+    assert isinstance(par.scale, float)
 
 
 @pytest.fixture()
@@ -106,13 +112,10 @@ def test_parameters_set_parameter_factors(pars):
     assert_allclose(pars["ham"].scale, 1)
 
 
-def _test_parameters_set_covariance_factors(pars):
+def test_parameters_set_covariance_factors(pars):
     cov_factor = [[3, 4], [7, 8]]
     pars.set_covariance_factors(cov_factor)
-
-    assert isinstance(pars.covariance, np.ndarray)
-    cov_value = [[0, 0], [0, 0]]
-    assert_allclose(pars.covariance, cov_value)
+    assert_allclose(pars.covariance, cov_factor)
 
 
 def test_parameters_scale():
