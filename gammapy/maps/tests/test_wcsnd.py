@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.convolution import Gaussian2DKernel
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
+from ...utils.testing import requires_dependency, requires_data, mpl_plot_check, assert_quantity_allclose
 from ...cube import PSFKernel
 from ...irf import EnergyDependentMultiGaussPSF
 from ..utils import fill_poisson
@@ -543,3 +543,27 @@ def test_plot_allsky():
     m = WcsNDMap.create(binsz=10 * u.deg)
     with mpl_plot_check():
         m.plot()
+
+def map_addition_subtraction():
+    map1 = WcsNDMap.create(skydir=(0, 0), unit='cm2', binsz=0.1, npix=(10, 10))
+    map2 = WcsNDMap.create(skydir=(0, 0), unit='m2', binsz=0.1, npix=(10, 10))
+
+    map1 += 1*u.cm**2
+    map2 += 1*u.cm**2
+    assert_allclose(map2.data, 1e-4)
+    map3 = map1 - map2
+    assert_quantity_allclose(map3.quantity, 0*u.cm**2)
+
+def map_multiplication_division():
+    map1 = WcsNDMap.create(skydir=(0, 0), unit='cm2', binsz=0.1, npix=(10, 10))
+    map2 = WcsNDMap.create(skydir=(0, 0), unit='s', binsz=0.1, npix=(10, 10))
+    map3 = WcsNDMap.create(skydir=(0, 0), unit='', binsz=0.1, npix=(10, 10))
+
+    map1 += 1*u.m**2
+    map2 += 1000 * u.s
+    expo = map1 * map2
+    assert_quantity_allclose(expo.quantity, 1e7*u.cm**2*u.s)
+    flux.data += 1.0
+    flux = map3 / expo
+    assert_allclose(flux.data, 1e-7)
+    assert flux.unit == Unit('cm-2 s-1')
