@@ -882,15 +882,23 @@ class WcsGeom(MapGeom):
         )
         return str_
 
-    def _check_compatibility(self, other):
-        # check overall shape and axes compatibility
-        if self.data_shape != other.data_shape:
-            raise ValueError("MapGeom data shapes differ")
-        for axis, otheraxis in zip(self.axes, other.axes):
-            axis._check_compatibility(otheraxis)
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            # check overall shape and axes compatibility
+            if self.data_shape != other.data_shape:
+                return False
+            result = True
+            for axis, otheraxis in zip(self.axes, other.axes):
+                result &= axis == otheraxis
+            # check WCS consistency
+            return result and self.wcs.wcs.compare(other.wcs.wcs)
+        return NotImplemented
 
-        # check WCS consistency
-        if self.wcs.wcs.compare(other.wcs.wcs) is False:
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def _check_compatibility(self, other):
+        if self != other:
             raise ValueError("MapGeom WCS differ")
 
 def create_wcs(
