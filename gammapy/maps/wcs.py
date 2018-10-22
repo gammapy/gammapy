@@ -887,6 +887,7 @@ class WcsGeom(MapGeom):
             # check overall shape and axes compatibility
             if self.data_shape != other.data_shape:
                 return False
+
             result = True
             for axis, otheraxis in zip(self.axes, other.axes):
                 result &= axis == otheraxis

@@ -1746,11 +1746,13 @@ class HpxGeom(MapGeom):
             result = True
             for axis, otheraxis in zip(self.axes, other.axes):
                 result &= axis == otheraxis
+            print(result)
             return (
                 result
-                and self.nside != other.nside
-                and self.coordsys != other.coordsys
-                and self.order != other.order
+                and self.nside == other.nside
+                and self.coordsys == other.coordsys
+                and self.order == other.order
+                and self.nest == other.nest
             )
 
         return NotImplemented
