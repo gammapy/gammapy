@@ -333,4 +333,5 @@ def test_mapaxis_compatibility():
         axis1._check_compatibility(axis4)
     with pytest.raises(ValueError):
         axis1._check_compatibility(axis5)
-    axis1._check_compatibility(axis6)
+    with pytest.raises(ValueError):
+        axis1._check_compatibility(axis6)

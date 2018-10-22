@@ -13,6 +13,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from .utils import find_hdu, find_bands_hdu
 from ..utils.interpolation import interpolation_scale
+from ..utils.testing import assert_quantity_allclose
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
@@ -356,11 +357,13 @@ class MapAxis(object):
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
+            # This should replace by astropy.units.allclose
+            other_quantity = other.edges * other.unit
+            other_values = other_quantity.to(self.unit).value
             return (
-                np.allclose(self._nodes, other._nodes)
+                np.allclose(self.edges, other_values)
                 and self._node_type == other._node_type
                 and self._interp == other._interp
-                and self._unit == other._unit
             )
         return NotImplemented
 
@@ -602,10 +605,7 @@ class MapAxis(object):
 
     def _check_compatibility(self, other):
         """Check if two axes objects are compatible with each other"""
-        from ..utils.testing import assert_quantity_allclose
-        try:
-            assert_quantity_allclose(self.edges*self.unit, other.edges*other.unit)
-        except:
+        if self != other:
             raise ValueError("Inconsistent MapAxis")
 
 
