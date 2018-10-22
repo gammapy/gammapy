@@ -1732,28 +1732,58 @@ class HpxGeom(MapGeom):
         str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
         return str_
 
-    def _check_compatibility(self, other):
-        # check overall shape and axes compatibility
-        if self.data_shape != other.data_shape:
-            raise ValueError("MapGeom data shapes differ")
-        for axis, otheraxis in zip(self.axes, other.axes):
-            axis._check_compatibility(otheraxis)
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            if self._sparse or other._sparse:
+                raise ValueError("sparse geometries not supported")
+            if self.is_allsky and other.is_allsky is False:
+                raise ValueError("Non allsky HpxGeom not supported")
 
-        # check healpix geometry consistency
-        if self.nside != other.nside:
+            # check overall shape and axes compatibility
+            if self.data_shape != other.data_shape:
+                return False
+
+            result = True
+            for axis, otheraxis in zip(self.axes, other.axes):
+                result &= axis == otheraxis
+            return (
+                result
+                and self.nside != other.nside
+                and self.coordsys != other.coordsys
+                and self.order != other.order
+            )
+
+        return NotImplemented
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def _check_compatibility(self, other):
+        if self != other:
             raise ValueError("HpxGeom differ")
-        if self.coordsys != other.coordsys:
-            raise ValueError("HpxGeom differ")
-        if self.order != other.order:
-            raise ValueError("HpxGeom differ")
-        if self.center_pix != other.center_pix:
-            raise ValueError("HpxGeom differ")
-        if self.center_coord != other.center_coord:
-            raise ValueError("HpxGeom differ")
-        if self._sparse or other._sparse:
-            raise ValueError("sparse geometries not supported")
-        if self.is_allsky and other.is_allsky is False:
-            raise ValueError("Non allsky HpxGeom not supported")
+
+    # def _check_compatibility(self, other):
+    #     # check overall shape and axes compatibility
+    #     if self.data_shape != other.data_shape:
+    #         raise ValueError("MapGeom data shapes differ")
+    #     for axis, otheraxis in zip(self.axes, other.axes):
+    #         axis._check_compatibility(otheraxis)
+    #
+    #     # check healpix geometry consistency
+    #     if self.nside != other.nside:
+    #         raise ValueError("HpxGeom differ")
+    #     if self.coordsys != other.coordsys:
+    #         raise ValueError("HpxGeom differ")
+    #     if self.order != other.order:
+    #         raise ValueError("HpxGeom differ")
+    #     if self.center_pix != other.center_pix:
+    #         raise ValueError("HpxGeom differ")
+    #     if self.center_coord != other.center_coord:
+    #         raise ValueError("HpxGeom differ")
+    #     if self._sparse or other._sparse:
+    #         raise ValueError("sparse geometries not supported")
+    #     if self.is_allsky and other.is_allsky is False:
+    #         raise ValueError("Non allsky HpxGeom not supported")
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.

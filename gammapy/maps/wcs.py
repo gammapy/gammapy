@@ -899,7 +899,7 @@ class WcsGeom(MapGeom):
 
     def _check_compatibility(self, other):
         if self != other:
-            raise ValueError("MapGeom WCS differ")
+            raise ValueError("WcsGeom differ")
 
 def create_wcs(
     skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
