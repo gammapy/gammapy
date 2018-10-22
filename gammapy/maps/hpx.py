@@ -1764,29 +1764,6 @@ class HpxGeom(MapGeom):
         if self != other:
             raise ValueError("HpxGeom differ")
 
-    # def _check_compatibility(self, other):
-    #     # check overall shape and axes compatibility
-    #     if self.data_shape != other.data_shape:
-    #         raise ValueError("MapGeom data shapes differ")
-    #     for axis, otheraxis in zip(self.axes, other.axes):
-    #         axis._check_compatibility(otheraxis)
-    #
-    #     # check healpix geometry consistency
-    #     if self.nside != other.nside:
-    #         raise ValueError("HpxGeom differ")
-    #     if self.coordsys != other.coordsys:
-    #         raise ValueError("HpxGeom differ")
-    #     if self.order != other.order:
-    #         raise ValueError("HpxGeom differ")
-    #     if self.center_pix != other.center_pix:
-    #         raise ValueError("HpxGeom differ")
-    #     if self.center_coord != other.center_coord:
-    #         raise ValueError("HpxGeom differ")
-    #     if self._sparse or other._sparse:
-    #         raise ValueError("sparse geometries not supported")
-    #     if self.is_allsky and other.is_allsky is False:
-    #         raise ValueError("Non allsky HpxGeom not supported")
-
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.
 
