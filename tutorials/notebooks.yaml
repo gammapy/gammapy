@@ -6,6 +6,7 @@
   requires: iminuit
   datasets:
     - cta-1dc
+    - fermi_3fhl
 - name: astro_dark_matter
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astro_dark_matter.ipynb
   datasets:
