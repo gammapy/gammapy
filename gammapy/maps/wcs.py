@@ -892,7 +892,7 @@ class WcsGeom(MapGeom):
             for axis, otheraxis in zip(self.axes, other.axes):
                 result &= axis == otheraxis
             # check WCS consistency
-            return result and self.wcs.wcs.compare(other.wcs.wcs)
+            return result and self.wcs.wcs.compare(other.wcs.wcs, tolerance=1e-6)
         return NotImplemented
 
     def __ne__(self, other):

@@ -544,6 +544,25 @@ def test_plot_allsky():
     with mpl_plot_check():
         m.plot()
 
+
+def test_equal_after_serialization(tmpdir):
+    #    energy_axis = MapAxis.from_edges(np.logspace(-2., 2, 5), unit='TeV', name='energy')
+    energy_axis = MapAxis(nodes=np.logspace(-2., 2, 5), unit='TeV', name='energy', node_type='center', interp='log')
+
+    # parameters are intentionnaly chosen to test rounding effects during serialization
+    geom = WcsGeom.create(skydir=(1 / 3, 1 / 3), binsz=1 / 9, npix=10, axes=[energy_axis])
+    m = Map.from_geom(geom,unit='m2')
+
+    filename = str(tmpdir /'test_serialization_equality.fits')
+    m.write(filename)
+    m_serialized = Map.read(filename)
+
+    print(m.geom.axes[0].center)
+    print(m_serialized.geom.axes[0].center)
+    assert m.geom.axes[0] == m_serialized.geom.axes[0]
+
+    assert m.geom == m_serialized.geom
+
 # def test_wcsmap_addition_subtraction():
 #     map1 = WcsNDMap.create(skydir=(0, 0), unit='cm2', binsz=0.1, npix=(10, 10))
 #     map2 = WcsNDMap.create(skydir=(0, 0), unit='m2', binsz=0.1, npix=(10, 10))

@@ -361,7 +361,7 @@ class MapAxis(object):
             other_quantity = other.edges * other.unit
             other_values = other_quantity.to(self.unit).value
             return (
-                np.allclose(self.edges, other_values)
+                np.allclose(self.edges, other_values, atol=1e-6, rtol=1e-6)
                 and self._node_type == other._node_type
                 and self._interp == other._interp
             )
