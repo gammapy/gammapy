@@ -314,7 +314,7 @@ compatibility_test_geoms = [
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"), compatibility_test_geoms
 )
-def test_geom_compatibility(npix, binsz, coordsys, proj, skypos, axes, result):
+def test_geom_check_equal(npix, binsz, coordsys, proj, skypos, axes, result):
     geom0 = WcsGeom.create(
         skydir=skydir, npix=10, binsz=0.1, proj="CAR", coordsys="GAL", axes=test_axis1
     )
@@ -324,6 +324,6 @@ def test_geom_compatibility(npix, binsz, coordsys, proj, skypos, axes, result):
 
     if result is False:
         with pytest.raises(ValueError):
-            geom0._check_compatibility(geom1)
+            geom0.check_equal(geom1)
     else:
-        geom0._check_compatibility(geom1)
+        geom0.check_equal(geom1)

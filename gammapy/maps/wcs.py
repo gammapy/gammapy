@@ -898,7 +898,20 @@ class WcsGeom(MapGeom):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def _check_compatibility(self, other):
+    def check_equal(self, other):
+        """Check the compatibility of two geoms.
+
+        Parameters
+        ----------
+        other : `~gammapy.maps.WcsGeom
+            the WcsGeom to compare to
+
+        Returns
+        -------
+        is_equal : bool
+            True if other is equal to self
+        """
+
         if self != other:
             raise ValueError("WcsGeom differ")
 

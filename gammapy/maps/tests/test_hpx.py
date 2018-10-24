@@ -746,13 +746,13 @@ hpx_compatibility_test_geoms = [
     ("nside", "nested", "coordsys", "region", "result"), hpx_compatibility_test_geoms
 )
 
-def test_geom_compatibility(nside, nested, coordsys, region, result):
+def test_hpxgeom_check_equal(nside, nested, coordsys, region, result):
     geom0 = HpxGeom(16, False, "GAL", region=None)
     geom1 = HpxGeom(nside, nested, coordsys, region=region)
 
     if result is False:
         with pytest.raises(ValueError):
-            geom0._check_compatibility(geom1)
+            geom0.check_equal(geom1)
     else:
-        geom0._check_compatibility(geom1)
+        geom0.check_equal(geom1)
 

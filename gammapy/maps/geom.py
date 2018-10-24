@@ -1339,8 +1339,19 @@ class MapGeom(object):
         pass
 
     @abc.abstractmethod
-    def _check_compatibility(self, other):
-        """Check compatibility of two geoms"""
+    def check_equal(self, other):
+        """Check the compatibility of two geoms.
+
+        Parameters
+        ----------
+        other : `~gammapy.maps.MapGeom
+            the MapGeom to compare to
+
+        Returns
+        -------
+        is_equal : bool
+            True if other is equal to self
+        """
         pass
 
     def _fill_header_from_axes(self, header):
