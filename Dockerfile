@@ -36,7 +36,7 @@ RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
 
 # setting ownerships
 USER root
-RUN chown -R ${NB_UID} ${HOME}
+RUN chown -R gammapy:gammapy ${HOME}
 
 # start JupyterLab server in tutorials dir
 USER ${NB_USER}
