@@ -8,7 +8,7 @@
     - cta-1dc
     - fermi_3fhl
   images:
-    - DC1_3d.png
+    - DC1_3d
 - name: astro_dark_matter
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astro_dark_matter.ipynb
   datasets:
