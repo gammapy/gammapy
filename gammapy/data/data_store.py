@@ -7,7 +7,7 @@ from ..utils.testing import Checker
 from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTableChecker
-from .observations import DataStoreObservation, ObservationList, ObservationChecker
+from .observations import DataStoreObservation, Observations, ObservationChecker
 
 __all__ = ["DataStore"]
 
@@ -184,7 +184,7 @@ class DataStore(object):
         return DataStoreObservation(obs_id=int(obs_id), data_store=self)
 
     def obs_list(self, obs_id, skip_missing=False):
-        """Generate a `~gammapy.data.ObservationList`.
+        """Generate a `~gammapy.data.Observations`.
 
         Parameters
         ----------
@@ -195,10 +195,10 @@ class DataStore(object):
 
         Returns
         -------
-        obs : `~gammapy.data.ObservationList`
-            List of `~gammapy.data.DataStoreObservation`
+        obs_list : `~gammapy.data.Observations`
+            Container holding a list of `~gammapy.data.DataStoreObservation`
         """
-        obslist = ObservationList()
+        obs_list = []
         for _ in obs_id:
             try:
                 obs = self.obs(_)
@@ -209,8 +209,8 @@ class DataStore(object):
                 else:
                     raise err
             else:
-                obslist.append(obs)
-        return obslist
+                obs_list.append(obs)
+        return Observations(obs_list)
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.

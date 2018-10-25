@@ -15,7 +15,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
 
-__all__ = ["ObservationCTA", "DataStoreObservation", "ObservationList"]
+__all__ = ["ObservationCTA", "DataStoreObservation", "Observations"]
 
 log = logging.getLogger(__name__)
 
@@ -359,11 +359,22 @@ class DataStoreObservation(object):
         return checker.run(checks=checks)
 
 
-class ObservationList(UserList):
-    """List of `~gammapy.data.DataStoreObservation`.
+class Observations(object):
+    """Container class that holds a list of observations.
 
-    Could be extended to hold a more generic class of observations.
+    Parameters:
+    ----------
+    obs_list : list
+        A list of `~gammapy.data.DataStoreObservation`
     """
+    def __init__(self, obs_list=None):
+        self.obs_list = obs_list or []
+
+    def __getitem__(self, key):
+        return self.obs_list[key]
+
+    def __len__(self):
+        return len(self.obs_list)
 
     def __str__(self):
         s = self.__class__.__name__ + "\n"

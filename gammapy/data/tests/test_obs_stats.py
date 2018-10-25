@@ -5,7 +5,7 @@ import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
-from ...data import DataStore, ObservationList, ObservationStats
+from ...data import DataStore, Observations, ObservationStats
 from ...utils.testing import requires_data, requires_dependency
 from ...background import ReflectedRegionsBackgroundEstimator
 
@@ -14,7 +14,7 @@ from ...background import ReflectedRegionsBackgroundEstimator
 def obs_list():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
     run_list = [23523, 23526]
-    return ObservationList([data_store.obs(_) for _ in run_list])
+    return Observations([data_store.obs(_) for _ in run_list])
 
 
 @pytest.fixture(scope="session")

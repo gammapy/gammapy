@@ -38,7 +38,7 @@ class SpectrumAnalysisIACT(object):
 
     Parameters
     ----------
-    observations : `~gammapy.data.ObservationList`
+    observations : `~gammapy.data.Observations`
         Observations to analyse
     config : dict
         Config dict
