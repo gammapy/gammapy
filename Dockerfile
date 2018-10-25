@@ -27,16 +27,16 @@ RUN adduser --disabled-password \
     --uid ${NB_UID} \
     ${NB_USER}
 
-# setting ownerships
-USER root
-RUN chown -R ${NB_UID} ${HOME}
-
 # download tutorials and datasets
 RUN gammapy download notebooks --out=${HOME}/gammapy-tutorials --release=0.8
 RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
 
 # RUN git clone https://github.com/gammapy/gammapy-cat.git ${HOME}/gammapy-cat
 # RUN git clone https://github.com/gammapy/gammapy-fermi-lat-data.git ${HOME}/gammapy-fermi-lat-data
+
+# setting ownerships
+USER root
+RUN chown -R ${NB_UID} ${HOME}
 
 # start JupyterLab server in tutorials dir
 USER ${NB_USER}
