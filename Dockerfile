@@ -32,15 +32,18 @@ USER root
 RUN chown -R ${NB_UID} ${HOME}
 
 # download tutorials and datasets
-RUN gammapy download tutorials --out=${HOME}/gammapy-tutorials --release=0.8
-RUN git clone https://github.com/gammapy/gammapy-cat.git ${HOME}/gammapy-cat
-RUN git clone https://github.com/gammapy/gammapy-fermi-lat-data.git ${HOME}/gammapy-fermi-lat-data
+RUN gammapy download notebooks --out=${HOME}/gammapy-tutorials --release=0.8
+RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
+
+# RUN git clone https://github.com/gammapy/gammapy-cat.git ${HOME}/gammapy-cat
+# RUN git clone https://github.com/gammapy/gammapy-fermi-lat-data.git ${HOME}/gammapy-fermi-lat-data
 
 # start JupyterLab server in tutorials dir
 USER ${NB_USER}
 WORKDIR ${HOME}/gammapy-tutorials/notebooks-0.8
 
 # env vars used in tutorials
-ENV GAMMAPY_DATA ${HOME}/gammapy-tutorials/datasets
-ENV GAMMAPY_CAT ${HOME}/gammapy-cat
-ENV GAMMAPY_FERMI_LAT_DATA ${HOME}/gammapy-fermi-lat-data
+ENV GAMMAPY_DATA ${HOME}/gammapy-extra/datasets
+
+# ENV GAMMAPY_CAT ${HOME}/gammapy-cat
+# ENV GAMMAPY_FERMI_LAT_DATA ${HOME}/gammapy-fermi-lat-data
