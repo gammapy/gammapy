@@ -8,12 +8,10 @@ MAINTAINER Gammapy developers <gammapy@googlegroups.com>
 RUN apt-get update && apt-get install -y build-essential
 RUN pip install --upgrade pip
 
-# install good version of notebook for Binder
-# RUN pip install --no-cache-dir notebook==5.*
-
-# install dependencies - including the dev version of Gammapy
+# install dependencies - including the stable version of Gammapy
 COPY binder.py tmp/
 RUN curl -o tmp/environment.yml https://gammapy.org/download/install/gammapy-0.8-environment.yml
+
 WORKDIR tmp/
 RUN conda update conda
 RUN conda install -q -y pyyaml
@@ -29,18 +27,20 @@ RUN adduser --disabled-password \
     --uid ${NB_UID} \
     ${NB_USER}
 
-# copy repo in /home/gammapy
-# COPY . ${HOME}
-
 # setting ownerships
 USER root
 RUN chown -R ${NB_UID} ${HOME}
-RUN gammapy download notebooks --out=${HOME}/gammapy-tutorials  --release=0.8
-RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
+
+# download tutorials and datasets
+RUN gammapy download tutorials --out=${HOME}/gammapy-tutorials --release=0.8
+RUN git clone https://github.com/gammapy/gammapy-cat.git ${HOME}/gammapy-cat
+RUN git clone https://github.com/gammapy/gammapy-fermi-lat-data.git ${HOME}/gammapy-fermi-lat-data
 
 # start JupyterLab server in tutorials dir
 USER ${NB_USER}
 WORKDIR ${HOME}/gammapy-tutorials/notebooks-0.8
 
 # env vars used in tutorials
-ENV GAMMAPY_DATA ${HOME}/gammapy-extra/datasets
+ENV GAMMAPY_DATA ${HOME}/gammapy-tutorials/datasets
+ENV GAMMAPY_CAT ${HOME}/gammapy-cat
+ENV GAMMAPY_FERMI_LAT_DATA ${HOME}/gammapy-fermi-lat-data
