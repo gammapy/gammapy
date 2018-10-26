@@ -355,6 +355,7 @@ class MapAxis(object):
         self._nbin = nbin
 
     def __eq__(self, other):
+        """Test axis equality. Absolute and relative tolerances of 1e-6 are used"""
         if not isinstance(other, self.__class__):
             return NotImplemented
 
