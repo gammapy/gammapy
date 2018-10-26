@@ -319,12 +319,8 @@ def test_map_reproject_hpx_to_wcs():
 
 
 map_arithmetics_args = [
-    (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), None),
-    (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), map_axes[:1]),
     (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), map_axes),
     (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), None),
-    (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), map_axes[:1]),
-    (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), map_axes),
 ]
 
 @pytest.mark.parametrize(
@@ -336,29 +332,39 @@ def test_map_arithmetics(binsz, width, map_type, skydir, axes):
         binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="m2")
 
     m1 += 1 * u.cm**2
-    assert_quantity_allclose(m1.quantity, 1e-4 * u.m**2)
+    assert m1.unit == u.Unit('m2')
+    assert_allclose(m1.data, 1e-4)
 
     m2 = Map.create(
         binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="m2")
     m2.data += 1.0
     m3 = m1 + m2
-    assert_quantity_allclose(m3.quantity, 1.0001 * u.m**2)
+    assert m3.unit == u.Unit('m2')
+    assert_allclose(m3.data, 1.0001)
 
     # substract
     m3 -=  1 * u.cm**2
-    assert_quantity_allclose(m3.quantity, 1 * u.m**2)
+    assert m3.unit == u.Unit('m2')
+    assert_allclose(m3.data, 1.0)
 
     # multiplication
     m4 = Map.create(
         binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="hour")
     m4.data += 1.0
     m5 = m3 * m4
+    assert m5.unit == u.Unit('m2h')
     assert_quantity_allclose(m5.quantity, 3600 * u.m**2 * u.s)
 
     # division
     m5 /= 3.6 * u.s
-    assert_quantity_allclose(m5.quantity, 1e3 * u.m**2)
+    assert_quantity_allclose(m5.quantity, 1000 * u.m**2)
 
     # check unit consistency
     with pytest.raises(u.UnitConversionError):
         m5 += 1*u.W
+
+    m1.data *= 0.
+    m1.unit = ''
+    m1 += 4
+    assert m1.unit == u.Unit('')
+    assert_allclose(m1.data, 4)
