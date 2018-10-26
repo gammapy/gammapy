@@ -733,3 +733,27 @@ def test_geom_repr():
     geom = HpxGeom(nside=8)
     assert geom.__class__.__name__ in repr(geom)
     assert "nside" in repr(geom)
+
+hpx_equality_test_geoms = [
+    (16, False, "GAL", None, True),
+    (16, True, "GAL", None, False),
+    (8, False, "GAL", None, False),
+    (16, False, "CEL", None, False)
+]
+
+@pytest.mark.parametrize(
+    ("nside", "nested", "coordsys", "region", "result"), hpx_equality_test_geoms
+)
+
+def test_hpxgeom_equal(nside, nested, coordsys, region, result):
+    geom0 = HpxGeom(16, False, "GAL", region=None)
+    geom1 = HpxGeom(nside, nested, coordsys, region=region)
+
+    assert (geom0 == geom1) is result
+
+def test_hpxgeom_equal_raise_error():
+    geom0 = HpxGeom(16, False, "GAL", region=None)
+    geom1 = HpxGeom(16, False, "GAL", "DISK(110.,75.,10.)")
+    with pytest.raises(ValueError):
+        geom0 == geom1
+        
