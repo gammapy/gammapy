@@ -280,7 +280,7 @@ class ReflectedRegionsBackgroundEstimator(object):
     ----------
     on_region : `~regions.CircleSkyRegion`
         Target region
-    obs_list : `~gammapy.data.ObservationList`
+    obs_list : `~gammapy.data.Observations`
         Observations to process
     kwargs : dict
         Forwarded to `gammapy.background.ReflectedRegionsFinder`

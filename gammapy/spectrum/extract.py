@@ -31,7 +31,7 @@ class SpectrumExtraction(object):
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.ObservationList`
+    obs_list : `~gammapy.data.Observations`
         Observations to process
     bkg_estimate : `~gammapy.background.BackgroundEstimate`
         Background estimate, e.g. of

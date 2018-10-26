@@ -6,7 +6,7 @@ import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
 from astropy.time import Time
-from ...data import DataStore, ObservationList, EventList, GTI, ObservationCTA
+from ...data import DataStore, Observations, EventList, GTI, ObservationCTA
 from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, PSF3D
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.testing import (

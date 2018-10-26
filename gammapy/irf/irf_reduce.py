@@ -58,8 +58,8 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.ObservationList`
-        List of observations for which to compute the PSF
+    obs_list : `~gammapy.data.Observations`
+        Observations for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF
     energy : `~astropy.units.Quantity`
@@ -114,8 +114,8 @@ def make_mean_edisp(
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.ObservationList`
-        List of observations for which to compute the EDISP
+    obs_list : `~gammapy.data.Observations`
+        Observations for which to compute the EDISP
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the EDISP
     e_true : `~gammapy.utils.energy.EnergyBounds`

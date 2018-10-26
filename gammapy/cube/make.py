@@ -53,8 +53,8 @@ class MapMaker(object):
 
         Parameters
         --------------
-        obs_list : `~gammapy.data.ObservationList`
-            List of observations
+        obs_list : `~gammapy.data.Observations`
+            Observations to process
         selection : list
             List of str, selecting which maps to make.
             Available: 'counts', 'exposure', 'background'

@@ -24,7 +24,7 @@ class PhaseBackgroundEstimator(object):
     ----------
     on_region : `~regions.CircleSkyRegion`
         Target region in the sky
-    obs_list : `~gammapy.data.ObservationList`
+    obs_list : `~gammapy.data.Observations`
         Observations to process
     on_phase : `tuple` or list of tuples
         on-phase defined by the two edges of each interval (edges are excluded)
