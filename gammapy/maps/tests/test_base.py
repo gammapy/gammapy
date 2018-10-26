@@ -7,7 +7,7 @@ from numpy.testing import assert_equal, assert_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.units import Unit, Quantity
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, assert_quantity_allclose
 from ..base import Map
 from ..geom import MapAxis
 from ..wcs import WcsGeom
@@ -316,3 +316,36 @@ def test_map_reproject_hpx_to_wcs():
     m_r = m.reproject(geom_wcs)
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
+
+
+map_arithmetics_args = [
+    (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), None),
+    (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), map_axes[:1]),
+    (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), map_axes),
+    (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), None),
+    (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), map_axes[:1]),
+    (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), map_axes),
+]
+
+@pytest.mark.parametrize(
+    ("binsz", "width", "map_type", "skydir", "axes"), map_arithmetics_args
+)
+def test_map_arithmetics(binsz, width, map_type, skydir, axes):
+
+    m1 = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="m2")
+
+    m1 += 1 * u.cm**2
+    assert_quantity_allclose(m1.quantity, 1e-4 * u.m**2)
+
+    m2 = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="m2")
+    m2.data += 1.0
+    m3 = m1 + m2
+    assert_quantity_allclose(m3.quantity, 1.0001 * u.m**2)
+
+    # substract
+    m3 -=  1 * u.cm**2
+    assert_quantity_allclose(m3.quantity, 1 * u.m**2)
+
+    # multiplication

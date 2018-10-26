@@ -1036,13 +1036,14 @@ class Map(object):
     def _arithmetics(self, operator, other, copy):
         """ Perform arithmetics on maps after checking geometry consistency"""
         if isinstance(other, Map):
-            # TODO: check consitency
+            # TODO: check consistency
             q = other.quantity
         else:
-            q = Quantity(other, copy=False)
+            q = u.Quantity(other, copy=False)
 
         out = self.copy() if copy else self
         out.quantity = operator(out.quantity, q)
+        return out
 
     def __add__(self, other):
         return self._arithmetics(np.add, other, copy=True)
