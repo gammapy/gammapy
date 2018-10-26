@@ -6,11 +6,9 @@ from collections import OrderedDict
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from ..extern.six.moves import UserList  # pylint:disable=import-error
-from ..irf import EnergyDependentTablePSF, PSF3D, IRFStacker
+from astropy.time import Time
 from .event_list import EventListChecker
 from ..utils.testing import Checker
-from ..utils.energy import Energy
 from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
@@ -367,14 +365,15 @@ class Observations(object):
     obs_list : list
         A list of `~gammapy.data.DataStoreObservation`
     """
+
     def __init__(self, obs_list=None):
-        self.obs_list = obs_list or []
+        self._obs_list = obs_list or []
 
     def __getitem__(self, key):
-        return self.obs_list[key]
+        return self._obs_list[key]
 
     def __len__(self):
-        return len(self.obs_list)
+        return len(self._obs_list)
 
     def __str__(self):
         s = self.__class__.__name__ + "\n"
