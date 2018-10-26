@@ -349,3 +349,16 @@ def test_map_arithmetics(binsz, width, map_type, skydir, axes):
     assert_quantity_allclose(m3.quantity, 1 * u.m**2)
 
     # multiplication
+    m4 = Map.create(
+        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="hour")
+    m4.data += 1.0
+    m5 = m3 * m4
+    assert_quantity_allclose(m5.quantity, 3600 * u.m**2 * u.s)
+
+    # division
+    m5 /= 3.6 * u.s
+    assert_quantity_allclose(m5.quantity, 1e3 * u.m**2)
+
+    # check unit consistency
+    with pytest.raises(u.UnitConversionError):
+        m5 += 1*u.W
