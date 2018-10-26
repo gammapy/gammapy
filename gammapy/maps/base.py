@@ -111,11 +111,11 @@ class Map(object):
     @property
     def quantity(self):
         """Map data times unit (`~astropy.units.Quantity`)"""
-        return self.data * self.unit
+        return u.Quantity(self.data, self.unit, copy=False)
 
     @quantity.setter
     def quantity(self, val):
-        val = u.Quantity(val)
+        val = u.Quantity(val, copy=False)
         self.data = val.value
         self.unit = val.unit
 
