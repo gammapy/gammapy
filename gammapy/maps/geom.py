@@ -355,19 +355,17 @@ class MapAxis(object):
         self._nbin = nbin
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return (
-                np.allclose(self._nodes, other._nodes)
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        # TODO: implement an allclose method for MapAxis and call it here
+        other_quantity = other.edges * other.unit
+        other_values = other_quantity.to(self.unit).value
+        return (
+                np.allclose(self.edges, other_values, atol=1e-6, rtol=1e-6)
                 and self._node_type == other._node_type
                 and self._interp == other._interp
-                and self._unit == other._unit
-            )
-        return NotImplemented
-
-    def __ne__(self, other):
-        if isinstance(other, self.__class__):
-            return not self.__eq__(other)
-        return NotImplemented
+        )
 
     @property
     def name(self):
