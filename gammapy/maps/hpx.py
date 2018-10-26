@@ -1732,6 +1732,31 @@ class HpxGeom(MapGeom):
         str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
         return str_
 
+    def __eq__(self, other):
+        """Test equality between two `~gammapy.maps.HpxGeom`"""
+        if not isinstance(other, self.__class__):
+            raise TypeError('Cannot compare HpxGeom with {}'.format(other.__class__))
+
+        if self._sparse or other._sparse:
+            raise ValueError("sparse geometries not supported")
+        if self.is_allsky and other.is_allsky is False:
+            raise ValueError("Non allsky HpxGeom not supported")
+
+        # check overall shape and axes compatibility
+        if self.data_shape != other.data_shape:
+            return False
+
+        result = True
+        for axis, otheraxis in zip(self.axes, other.axes):
+            result &= axis == otheraxis
+
+        return (
+               result
+                and self.nside == other.nside
+                and self.coordsys == other.coordsys
+                and self.order == other.order
+                and self.nest == other.nest
+            )
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.
