@@ -115,7 +115,7 @@ class MapMaker(object):
 
         # Make maps for this observation
         maps_obs = MapMakerObs(
-            obs=obs,
+            observation=obs,
             geom=cutout_map.geom,
             geom_true=cutout_map_etrue.geom,
             fov_mask=fov_mask,
@@ -163,7 +163,7 @@ class MapMakerObs(object):
 
     Parameters
     ----------
-    obs : `~gammapy.data.DataStoreObservation`
+    observation : `~gammapy.data.DataStoreObservation`
         Observation
     geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
@@ -178,14 +178,14 @@ class MapMakerObs(object):
 
     def __init__(
         self,
-        obs,
+        observation,
         geom,
         geom_true=None,
         fov_mask=None,
         fov_mask_etrue=None,
         exclusion_mask=None,
     ):
-        self.obs = obs
+        self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom
         self.fov_mask = fov_mask
@@ -214,16 +214,16 @@ class MapMakerObs(object):
 
     def _make_counts(self):
         counts = Map.from_geom(self.geom)
-        fill_map_counts(counts, self.obs.events)
+        fill_map_counts(counts, self.observation.events)
         if self.fov_mask is not None:
             counts.data[..., self.fov_mask] = 0
         self.maps["counts"] = counts
 
     def _make_exposure(self):
         exposure = make_map_exposure_true_energy(
-            pointing=self.obs.pointing_radec,
-            livetime=self.obs.observation_live_time_duration,
-            aeff=self.obs.aeff,
+            pointing=self.observation.pointing_radec,
+            livetime=self.observation.observation_live_time_duration,
+            aeff=self.observation.aeff,
             geom=self.geom_true,
         )
         if self.fov_mask_etrue is not None:
@@ -232,9 +232,9 @@ class MapMakerObs(object):
 
     def _make_background(self):
         background = make_map_background_irf(
-            pointing=self.obs.pointing_radec,
-            ontime=self.obs.observation_time_duration,
-            bkg=self.obs.bkg,
+            pointing=self.observation.pointing_radec,
+            ontime=self.observation.observation_time_duration,
+            bkg=self.observation.bkg,
             geom=self.geom,
         )
         if self.fov_mask is not None:

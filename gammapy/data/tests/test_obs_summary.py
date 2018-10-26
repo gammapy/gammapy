@@ -60,14 +60,14 @@ class TestObservationSummary:
 
         obs_stats_list = []
         for obs_id in obs_ids:
-            obs = datastore.obs(obs_id)
+            obs = datastore.observation(obs_id)
             bkg = ReflectedRegionsBackgroundEstimator(
                 on_region=on_region, obs_list=[obs]
             )
             bkg.run()
             bg_estimate = bkg.result[0]
 
-            obs_stats = ObservationStats.from_obs(obs, bg_estimate)
+            obs_stats = ObservationStats.from_observation(obs, bg_estimate)
             obs_stats_list.append(obs_stats)
 
         cls.obs_summary = ObservationSummary(obs_stats_list)

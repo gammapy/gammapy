@@ -322,7 +322,7 @@ class DataStoreObservation(object):
 
         Returns
         -------
-        obs : `~gammapy.data.ObservationCTA`
+        observation : `~gammapy.data.ObservationCTA`
             Observation
         """
         # maps the ObservationCTA class attributes to the DataStoreObservation properties
@@ -397,17 +397,17 @@ class ObservationChecker(Checker):
         "psf": "check_psf",
     }
 
-    def __init__(self, obs):
-        self.obs = obs
+    def __init__(self, observation):
+        self.observation = observation
 
     def _record(self, level="info", msg=None):
-        return {"level": level, "obs_id": self.obs.obs_id, "msg": msg}
+        return {"level": level, "obs_id": self.observation.obs_id, "msg": msg}
 
     def check_events(self):
         yield self._record(level="debug", msg="Starting events check")
 
         try:
-            events = self.obs.load("events")
+            events = self.observation.load("events")
         except Exception:
             yield self._record(level="warning", msg="Loading events failed")
             return
@@ -420,7 +420,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting gti check")
 
         try:
-            gti = self.obs.load("gti")
+            gti = self.observation.load("gti")
         except Exception:
             yield self._record(level="warning", msg="Loading GTI failed")
             return
@@ -472,7 +472,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting aeff check")
 
         try:
-            aeff = self.obs.load("aeff")
+            aeff = self.observation.load("aeff")
         except Exception:
             yield self._record(level="warning", msg="Loading aeff failed")
             return
@@ -497,7 +497,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting edisp check")
 
         try:
-            edisp = self.obs.load("edisp")
+            edisp = self.observation.load("edisp")
         except Exception:
             yield self._record(level="warning", msg="Loading edisp failed")
             return
@@ -510,7 +510,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting psf check")
 
         try:
-            psf = self.obs.load("psf")
+            psf = self.observation.load("psf")
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return

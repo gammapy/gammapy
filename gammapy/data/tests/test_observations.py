@@ -26,7 +26,7 @@ def data_store():
 @requires_data("gammapy-extra")
 def test_data_store_observation(data_store):
     """Test DataStoreObservation class"""
-    obs = data_store.obs(23523)
+    obs = data_store.observation(23523)
 
     assert_time_allclose(obs.tstart, Time(53343.92234, scale="tt", format="mjd"))
     assert_time_allclose(obs.tstop, Time(53343.941866, scale="tt", format="mjd"))
@@ -44,7 +44,7 @@ def test_data_store_observation(data_store):
 @requires_data("gammapy-extra")
 def test_data_store_observation_to_observation_cta(data_store):
     """Test the DataStoreObservation.to_observation_cta conversion method"""
-    obs = data_store.obs(23523).to_observation_cta()
+    obs = data_store.observation(23523).to_observation_cta()
 
     assert type(obs) == ObservationCTA
     assert type(obs.obs_id) == int
@@ -62,7 +62,7 @@ def test_data_store_observation_to_observation_cta(data_store):
 class TestObservationChecker:
     def setup(self):
         data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps")
-        self.observation = data_store.obs(111140)
+        self.observation = data_store.observation(111140)
 
     def test_check_all(self):
         records = list(self.observation.check())

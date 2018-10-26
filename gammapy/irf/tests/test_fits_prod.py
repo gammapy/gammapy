@@ -51,7 +51,7 @@ class FitsProductionTester:
         self.ref_offset = 0.25 * u.deg
         self.ref_rad = np.arange(0, 2, 0.1) * u.deg
         self.ref_migra = 0.95
-        self.obs = self.ds.obs(prod["test_obs"])
+        self.observation = self.ds.observation(prod["test_obs"])
 
     def test_all(self):
         self.test_aeff()
@@ -59,14 +59,14 @@ class FitsProductionTester:
         self.test_edisp()
 
     def test_aeff(self):
-        aeff = self.obs.load(hdu_type="aeff", hdu_class="aeff_2d")
+        aeff = self.observation.load(hdu_type="aeff", hdu_class="aeff_2d")
         actual = aeff.data.evaluate(energy=self.ref_energy, offset=self.ref_offset)
         desired = self.ref_dict["aeff_ref"]
         assert actual.unit == "m2"
         assert_allclose(actual.value, desired, rtol=1e-3)
 
     def test_edisp(self):
-        edisp = self.obs.load(hdu_type="edisp", hdu_class="edisp_2d")
+        edisp = self.observation.load(hdu_type="edisp", hdu_class="edisp_2d")
         actual = edisp.data.evaluate(
             e_true=self.ref_energy, offset=self.ref_offset, migra=self.ref_migra
         )
@@ -75,7 +75,7 @@ class FitsProductionTester:
         assert_allclose(actual.value, desired, rtol=1e-3)
 
     def test_psf(self):
-        psf = self.obs.load(hdu_type="psf", hdu_class=self.ref_dict["psf_type"])
+        psf = self.observation.load(hdu_type="psf", hdu_class=self.ref_dict["psf_type"])
         table_psf = psf.to_energy_dependent_table_psf(
             rad=self.ref_rad, theta=self.ref_offset
         )

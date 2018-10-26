@@ -71,12 +71,12 @@ class ObservationStats(Stats):
         self.bg_rate = bg_rate
 
     @classmethod
-    def from_obs(cls, obs, bg_estimate):
+    def from_observation(cls, observation, bg_estimate):
         """Create from `~gammapy.data.DataStoreObservation`.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             IACT data store observation
         bg_estimate : `~gammapy.background.BackgroundEstimate`
             Background estimate
@@ -86,8 +86,8 @@ class ObservationStats(Stats):
         a_on = bg_estimate.a_on
         a_off = bg_estimate.a_off
 
-        obs_id = obs.obs_id
-        livetime = obs.observation_live_time_duration
+        obs_id = observation.obs_id
+        livetime = observation.observation_live_time_duration
         alpha = 0
         if a_off > 0:
             alpha = a_on / a_off

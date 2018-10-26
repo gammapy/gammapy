@@ -360,7 +360,7 @@ class LightCurveEstimator(object):
 
     def __init__(self, spec_extract):
         self.obs_list = spec_extract.obs_list
-        self.obs_spec = spec_extract.observations
+        self.obs_spec = spec_extract.spectrum_observations
         self.off_evt_list = self._get_off_evt_list(spec_extract)
         self.on_evt_list = self._get_on_evt_list(spec_extract)
 

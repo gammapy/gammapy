@@ -64,7 +64,7 @@ class TestSpectrumExtraction:
         )
 
         extraction.run()
-        obs = extraction.observations[0]
+        obs = extraction.spectrum_observations[0]
         aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
         edisp_actual = obs.edisp.data.evaluate(e_true=5 * u.TeV, e_reco=5.2 * u.TeV)
 
@@ -88,7 +88,7 @@ class TestSpectrumExtraction:
             obs_list=obs_list, bkg_estimate=bkg_estimate, max_alpha=0.2
         )
         extraction.run()
-        assert len(extraction.observations) == 0
+        assert len(extraction.spectrum_observations) == 0
 
     def test_run(self, tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
@@ -96,14 +96,14 @@ class TestSpectrumExtraction:
         extraction.write(outdir=tmpdir, overwrite=True)
         testobs = SpectrumObservation.read(tmpdir / "ogip_data" / "pha_obs23523.fits")
         assert_quantity_allclose(
-            testobs.aeff.data.data, extraction.observations[0].aeff.data.data
+            testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.on_vector.data.data, extraction.observations[0].on_vector.data.data
+            testobs.on_vector.data.data, extraction.spectrum_observations[0].on_vector.data.data
         )
         assert_quantity_allclose(
             testobs.on_vector.energy.nodes,
-            extraction.observations[0].on_vector.energy.nodes,
+            extraction.spectrum_observations[0].on_vector.energy.nodes,
         )
 
     @requires_dependency("sherpa")
@@ -117,11 +117,11 @@ class TestSpectrumExtraction:
         arf = sau.get_arf()
 
         actual = arf._arf._specresp
-        desired = extraction.observations[0].aeff.data.data.value
+        desired = extraction.spectrum_observations[0].aeff.data.data.value
         assert_allclose(actual, desired)
 
     def test_compute_energy_threshold(self, extraction):
         extraction.run()
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
-        actual = extraction.observations[0].lo_threshold
+        actual = extraction.spectrum_observations[0].lo_threshold
         assert_quantity_allclose(actual, 0.879923 * u.TeV, rtol=1e-3)

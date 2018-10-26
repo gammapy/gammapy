@@ -40,7 +40,7 @@ to load IACT data. E.g. an alternative way to load the events for observation ID
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
-    >>> events = data_store.obs(23523).events
+    >>> events = data_store.observation(23523).events
 
 Using `gammapy.data`
 ====================

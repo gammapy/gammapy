@@ -71,7 +71,7 @@ def data_store():
 )
 def test_make_psf(pars, data_store):
     psf = make_psf(
-        data_store.obs(23523),
+        data_store.observation(23523),
         position=SkyCoord(83.63, 22.01, unit="deg"),
         energy=pars["energy"],
         rad=pars["rad"],
@@ -98,8 +98,8 @@ def test_make_psf(pars, data_store):
 @requires_data("gammapy-extra")
 def test_make_mean_psf(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
-    obs1 = data_store.obs(23523)
-    obs2 = data_store.obs(23526)
+    obs1 = data_store.observation(23523)
+    obs2 = data_store.observation(23526)
     energy = EnergyBounds.equal_log_spacing(1, 10, 100, "TeV")
     energy_band = Energy([energy[0].value, energy[-1].value], energy.unit)
 
@@ -123,8 +123,8 @@ def test_make_mean_psf(data_store):
 def test_make_mean_edisp(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 
-    obs1 = data_store.obs(23523)
-    obs2 = data_store.obs(23592)
+    obs1 = data_store.observation(23523)
+    obs2 = data_store.observation(23592)
     obs_list = Observations([obs1, obs2])
 
     e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")

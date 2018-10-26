@@ -269,7 +269,7 @@ def check_all_table_psf(data_store):
     obs_ids = data_store.obs_table["OBS_ID"].data
 
     for obs_id in obs_ids[:10]:
-        obs = data_store.obs(obs_id=obs_id)
+        obs = data_store.observation(obs_id=obs_id)
         psf = obs.load(hdu_class="psf_table")
         checker = PSF3DChecker(psf=psf, **config)
         checker.check_all()
