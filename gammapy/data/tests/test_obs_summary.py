@@ -62,7 +62,7 @@ class TestObservationSummary:
         for obs_id in obs_ids:
             obs = datastore.observation(obs_id)
             bkg = ReflectedRegionsBackgroundEstimator(
-                on_region=on_region, obs_list=[obs]
+                on_region=on_region, observations=[obs]
             )
             bkg.run()
             bg_estimate = bkg.result[0]

@@ -359,7 +359,7 @@ class LightCurveEstimator(object):
     """
 
     def __init__(self, spec_extract):
-        self.obs_list = spec_extract.obs_list
+        self.observations = spec_extract.observations
         self.obs_spec = spec_extract.spectrum_observations
         self.off_evt_list = self._get_off_evt_list(spec_extract)
         self.on_evt_list = self._get_on_evt_list(spec_extract)
@@ -412,7 +412,7 @@ class LightCurveEstimator(object):
         time_end = Time(0, format="mjd")
         time_step = time_step / (24 * 3600)
 
-        for obs in spectrum_extraction.obs_list:
+        for obs in spectrum_extraction.observations:
             time_events = obs.events.time
             if time_start > time_events.min():
                 time_start = time_events.min()
@@ -604,7 +604,7 @@ class LightCurveEstimator(object):
                 time_holder.append([time.tt.mjd, "break"])
 
         # recovers the starting and ending time of each observations and useful properties
-        for obs in spectrum_extraction.obs_list:
+        for obs in spectrum_extraction.observations:
             time_holder.append([obs.events.observation_time_start.tt.mjd, "start"])
             time_holder.append([obs.events.observation_time_end.tt.mjd, "end"])
             obs_properties.append(
@@ -617,7 +617,7 @@ class LightCurveEstimator(object):
         obs_properties = Table(rows=obs_properties)
 
         # prepare the on and off photon list as in the flux point computation -> should be updated accordingly
-        for t_index, obs in enumerate(self.obs_list):
+        for t_index, obs in enumerate(self.observations):
             on, off = self._create_and_filter_onofflists(
                 t_index=t_index, energy_range=energy_range
             )
@@ -776,7 +776,7 @@ class LightCurveEstimator(object):
         useinterval = False
 
         # Loop on observations
-        for t_index, obs in enumerate(self.obs_list):
+        for t_index, obs in enumerate(self.observations):
 
             # discard observations not matching the time interval
             obs_start = obs.events.observation_time_start

@@ -107,8 +107,8 @@ def test_make_mean_psf(data_store):
     psf2 = make_psf(obs2, position=position, energy=energy, rad=None)
     psf1_int = psf1.table_psf_in_energy_band(energy_band, spectral_index=2.3)
     psf2_int = psf2.table_psf_in_energy_band(energy_band, spectral_index=2.3)
-    obs_list = Observations([obs1, obs2])
-    psf_tot = make_mean_psf(obs_list, position=position, energy=energy)
+    observations = Observations([obs1, obs2])
+    psf_tot = make_mean_psf(observations, position=position, energy=energy)
     psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectral_index=2.3)
 
     # Check that the mean PSF is consistent with the individual PSFs
@@ -125,18 +125,18 @@ def test_make_mean_edisp(data_store):
 
     obs1 = data_store.observation(23523)
     obs2 = data_store.observation(23592)
-    obs_list = Observations([obs1, obs2])
+    observations = Observations([obs1, obs2])
 
     e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")
     e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
-    rmf = make_mean_edisp(obs_list, position=position, e_true=e_true, e_reco=e_reco)
+    rmf = make_mean_edisp(observations, position=position, e_true=e_true, e_reco=e_reco)
 
     assert len(rmf.e_true.nodes) == 80
     assert len(rmf.e_reco.nodes) == 15
     assert_quantity_allclose(rmf.data.data[53, 8], 0.056, atol=2e-2)
 
     rmf2 = make_mean_edisp(
-        obs_list,
+        observations,
         position=position,
         e_true=e_true,
         e_reco=e_reco,

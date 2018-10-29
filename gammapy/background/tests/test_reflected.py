@@ -34,18 +34,18 @@ def on_region():
 
 
 @pytest.fixture
-def obs_list():
+def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
     obs_ids = [23523, 23526]
-    return datastore.obs_list(obs_ids)
+    return datastore.observations(obs_ids)
 
 
 @pytest.fixture
 def bkg_estimator():
     """Example background estimator for testing."""
     return ReflectedRegionsBackgroundEstimator(
-        obs_list=obs_list(), on_region=on_region(), exclusion_mask=mask()
+        observations=observations(), on_region=on_region(), exclusion_mask=mask()
     )
 
 

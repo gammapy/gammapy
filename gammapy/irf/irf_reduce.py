@@ -53,12 +53,12 @@ def make_psf(observation, position, energy=None, rad=None):
     return psf
 
 
-def make_mean_psf(obs_list, position, energy=None, rad=None):
+def make_mean_psf(observations, position, energy=None, rad=None):
     """Compute mean energy-dependent PSF.
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF
@@ -76,7 +76,7 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Mean PSF
     """
-    psf = make_psf(obs_list[0], position, energy, rad)
+    psf = make_psf(observations[0], position, energy, rad)
 
     if rad is None:
         rad = psf.rad
@@ -86,7 +86,7 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
     exposure = psf.exposure
     psf_value = psf.psf_value.T * psf.exposure
 
-    for obs in obs_list[1:]:
+    for obs in observations[1:]:
         psf = make_psf(obs, position, energy, rad)
         exposure += psf.exposure
         psf_value += psf.psf_value.T * psf.exposure
@@ -99,7 +99,7 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
 
 
 def make_mean_edisp(
-    obs_list,
+    observations,
     position,
     e_true,
     e_reco,
@@ -114,7 +114,7 @@ def make_mean_edisp(
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations for which to compute the EDISP
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the EDISP
@@ -135,10 +135,10 @@ def make_mean_edisp(
     list_aeff = []
     list_edisp = []
     list_livetime = []
-    list_low_threshold = [low_reco_threshold] * len(obs_list)
-    list_high_threshold = [high_reco_threshold] * len(obs_list)
+    list_low_threshold = [low_reco_threshold] * len(observations)
+    list_high_threshold = [high_reco_threshold] * len(observations)
 
-    for obs in obs_list:
+    for obs in observations:
         offset = position.separation(obs.pointing_radec)
         list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
         list_edisp.append(

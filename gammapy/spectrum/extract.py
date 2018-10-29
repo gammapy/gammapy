@@ -31,7 +31,7 @@ class SpectrumExtraction(object):
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations to process
     bkg_estimate : `~gammapy.background.BackgroundEstimate`
         Background estimate, e.g. of
@@ -57,7 +57,7 @@ class SpectrumExtraction(object):
 
     def __init__(
         self,
-        obs_list,
+        observations,
         bkg_estimate,
         e_reco=None,
         e_true=None,
@@ -66,7 +66,7 @@ class SpectrumExtraction(object):
         use_recommended_erange=True,
     ):
 
-        self.obs_list = obs_list
+        self.observations = observations
         self.bkg_estimate = bkg_estimate
         self.e_reco = e_reco if e_reco is not None else self.DEFAULT_RECO_ENERGY
         self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
@@ -85,7 +85,7 @@ class SpectrumExtraction(object):
         """Run all steps.
         """
         log.info("Running {}".format(self))
-        for obs, bkg in zip(self.obs_list, self.bkg_estimate):
+        for obs, bkg in zip(self.observations, self.bkg_estimate):
             if not self._alpha_ok(bkg):
                 continue
             self.spectrum_observations.append(self.process(obs, bkg))

@@ -46,14 +46,14 @@ class MapMaker(object):
         if exclusion_mask is not None:
             self.maps["exclusion"] = exclusion_mask
 
-    def run(self, obs_list, selection=None):
+    def run(self, observations, selection=None):
         """
         Run MapMaker for a list of observations to create
         stacked counts, exposure and background maps
 
         Parameters
         --------------
-        obs_list : `~gammapy.data.Observations`
+        observations : `~gammapy.data.Observations`
             Observations to process
         selection : list
             List of str, selecting which maps to make.
@@ -73,7 +73,7 @@ class MapMaker(object):
             else:
                 self.maps[name] = Map.from_geom(self.geom, unit="")
 
-        for obs in obs_list:
+        for obs in observations:
             try:
                 self._process_obs(obs, selection)
             except NoOverlapError:

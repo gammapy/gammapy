@@ -63,12 +63,12 @@ class SpectrumAnalysisIACT(object):
     def run_extraction(self):
         """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
-            obs_list=self.observations, **self.config["background"]
+            observations=self.observations, **self.config["background"]
         )
         self.background_estimator.run()
 
         self.extraction = SpectrumExtraction(
-            obs_list=self.observations,
+            observations=self.observations,
             bkg_estimate=self.background_estimator.result,
             **self.config["extraction"]
         )

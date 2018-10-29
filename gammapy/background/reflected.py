@@ -280,15 +280,15 @@ class ReflectedRegionsBackgroundEstimator(object):
     ----------
     on_region : `~regions.CircleSkyRegion`
         Target region
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations to process
     kwargs : dict
         Forwarded to `gammapy.background.ReflectedRegionsFinder`
     """
 
-    def __init__(self, on_region, obs_list, **kwargs):
+    def __init__(self, on_region, observations, **kwargs):
         self.on_region = on_region
-        self.obs_list = obs_list
+        self.observations = observations
         self.finder = ReflectedRegionsFinder(region=on_region, center=None, **kwargs)
 
         self.result = None
@@ -296,7 +296,7 @@ class ReflectedRegionsBackgroundEstimator(object):
     def __str__(self):
         s = self.__class__.__name__
         s += "\n{}".format(self.on_region)
-        s += "\n{}".format(self.obs_list)
+        s += "\n{}".format(self.observations)
         s += "\n{}".format(self.finder)
         return s
 
@@ -304,7 +304,7 @@ class ReflectedRegionsBackgroundEstimator(object):
         """Run all steps."""
         log.debug("Computing reflected regions")
         result = []
-        for obs in self.obs_list:
+        for obs in self.observations:
             temp = self.process(obs=obs)
             result.append(temp)
 
@@ -351,15 +351,15 @@ class ReflectedRegionsBackgroundEstimator(object):
         ax.add_patch(on_patch)
 
         result = self.result
-        obs_list = self.obs_list
+        obs_list = list(self.observations)
         if idx is not None:
-            obs_list = np.asarray(obs_list)[idx]
+            obs_list = np.asarray(self.observations)[idx]
             obs_list = np.atleast_1d(obs_list)
             result = np.asarray(self.result)[idx]
             result = np.atleast_1d(result)
 
         cmap = cmap or plt.get_cmap("viridis")
-        colors = cmap(np.linspace(0, 1, len(self.obs_list)))
+        colors = cmap(np.linspace(0, 1, len(self.observations)))
 
         handles = []
         for idx_ in np.arange(len(obs_list)):
