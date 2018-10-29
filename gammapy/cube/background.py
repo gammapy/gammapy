@@ -30,8 +30,8 @@ def make_map_background_irf(pointing, ontime, bkg, geom, integrate=True):
     background : `~gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reco energy
     """
-    energy_axis = geom.axes[0]
-    ebounds = energy_axis.edges * energy_axis.unit
+    energy_axis = geom.get_axis_by_name("energy")
+
 
     # Compute FOV coordinates; at the moment assume symmetric background model
     # TODO: implement FOV coordinates properly
@@ -39,14 +39,19 @@ def make_map_background_irf(pointing, ontime, bkg, geom, integrate=True):
     fov_lon = map_coord.skycoord.separation(pointing)
     fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
 
-    if integrate:
-        energy_reco = map_coord[energy_axis.name] * energy_axis.unit
+    if not integrate:
+        energies = energy_axis.center * energy_axis.unit
+        fov_lon, fov_lat, energy_reco = np.broadcast_arrays(
+            fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis],
+            subok=True)
+
         data = bkg.evaluate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
         d_energy = np.diff(energy_axis.edges) * energy_axis.unit
         bkg_de = data * d_energy[:, np.newaxis, np.newaxis]
     else:
+        energies = energy_axis.edges * energy_axis.unit
         fov_lon, fov_lat, energy_reco = np.broadcast_arrays(
-            fov_lon, fov_lat, ebounds[:, np.newaxis, np.newaxis],
+            fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis],
             subok=True)
         bkg_de = bkg.evaluate_integrate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
 
