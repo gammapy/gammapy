@@ -8,7 +8,7 @@ from ..maps import WcsNDMap
 __all__ = ["make_map_background_irf"]
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom, n_integration_bins=1):
+def make_map_background_irf(pointing, ontime, bkg, geom, integrate=True):
     """Compute background map from background IRFs.
 
     Parameters
@@ -22,8 +22,8 @@ def make_map_background_irf(pointing, ontime, bkg, geom, n_integration_bins=1):
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
-    n_integration_bins : int
-        Number of bins per energy bin in integration
+    integrate : bool
+        Whether to integrate the background model over the energy axes.
 
     Returns
     -------
@@ -39,7 +39,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, n_integration_bins=1):
     fov_lon = map_coord.skycoord.separation(pointing)
     fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
 
-    if False:
+    if integrate:
         energy_reco = map_coord[energy_axis.name] * energy_axis.unit
         data = bkg.evaluate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
         d_energy = np.diff(energy_axis.edges) * energy_axis.unit
@@ -49,7 +49,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, n_integration_bins=1):
             fov_lon, fov_lat, ebounds[:, np.newaxis, np.newaxis],
             subok=True)
         bkg_de = bkg.evaluate_integrate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
-        
+
     d_omega = geom.solid_angle()
     data = (bkg_de * d_omega * ontime).to("").value
 
