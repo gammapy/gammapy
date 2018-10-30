@@ -20,7 +20,7 @@ def on_region():
 def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps")
-    return datastore.observations([111630])
+    return datastore.get_observations([111630])
 
 
 @pytest.fixture(scope="session")

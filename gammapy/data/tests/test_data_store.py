@@ -81,16 +81,16 @@ def test_datastore_pa():
 
 
 @requires_data("gammapy-extra")
-def test_datastore_obslist(data_store):
+def test_datastore_get_observations(data_store):
     """Test loading data and IRF files via the DataStore"""
-    obslist = data_store.observations([23523, 23592])
-    assert obslist[0].obs_id == 23523
+    observations = data_store.get_observations([23523, 23592])
+    assert observations[0].obs_id == 23523
 
     with pytest.raises(ValueError):
-        data_store.observations([11111, 23592])
+        data_store.get_observations([11111, 23592])
 
-    obslist = data_store.observations([11111, 23523], skip_missing=True)
-    assert obslist[0].obs_id == 23523
+    observations = data_store.get_observations([11111, 23523], skip_missing=True)
+    assert observations[0].obs_id == 23523
 
 
 @requires_data("gammapy-extra")

@@ -38,7 +38,7 @@ def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
     obs_ids = [23523, 23526]
-    return datastore.observations(obs_ids)
+    return datastore.get_observations(obs_ids)
 
 
 @pytest.fixture

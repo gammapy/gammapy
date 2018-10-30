@@ -176,7 +176,7 @@ def test_lightcurve_plot_time(lc, time_format, output):
 def spec_extraction():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
     obs_ids = [23523, 23526]
-    observations = data_store.observations(obs_ids)
+    observations = data_store.get_observations(obs_ids)
 
     target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
     on_region_radius = Angle("0.11 deg")

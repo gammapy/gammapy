@@ -183,7 +183,7 @@ class DataStore(object):
         """
         return DataStoreObservation(obs_id=int(obs_id), data_store=self)
 
-    def observations(self, obs_id, skip_missing=False):
+    def get_observations(self, obs_id, skip_missing=False):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters

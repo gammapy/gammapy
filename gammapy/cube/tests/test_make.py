@@ -16,7 +16,7 @@ pytest.importorskip("scipy")
 def observations():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/")
     obs_id = [110380, 111140]
-    return data_store.observations(obs_id)
+    return data_store.get_observations(obs_id)
 
 
 def geom(ebounds):
