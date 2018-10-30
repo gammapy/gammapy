@@ -42,7 +42,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 3.99815e11,
             "exposure_image": 7.921993e10,
-            "background": 191290.11,
+            "background": 27984.78,
         },
         {
             # Test single energy bin
@@ -51,7 +51,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 1.16866e11,
             "exposure_image": 1.16866e11,
-            "background": 2028359.4,
+            "background": 30418.951,
         },
         {
             # Test single energy bin with exclusion mask
@@ -61,7 +61,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 1.16866e11,
             "exposure_image": 1.16866e11,
-            "background": 2028359.4,
+            "background": 30418.951,
         },
         {
             # Test for different e_true and e_reco bins
@@ -70,7 +70,7 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 5.971096e11,
             "exposure_image": 6.492968e10,
-            "background": 191290.11,
+            "background": 27984.78,
         },
     ],
 )
