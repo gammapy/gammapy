@@ -14,7 +14,7 @@ from ...background import ReflectedRegionsBackgroundEstimator
 def observations():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
     run_list = [23523, 23526]
-    return Observations([data_store.observation(_) for _ in run_list])
+    return Observations([data_store.obs(_) for _ in run_list])
 
 
 @pytest.fixture(scope="session")

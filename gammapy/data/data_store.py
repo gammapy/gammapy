@@ -168,7 +168,7 @@ class DataStore(object):
         else:
             return s
 
-    def observation(self, obs_id):
+    def obs(self, obs_id):
         """Access a given `~gammapy.data.DataStoreObservation`.
 
         Parameters
@@ -201,7 +201,7 @@ class DataStore(object):
         obs_list = []
         for _ in obs_id:
             try:
-                obs = self.observation(_)
+                obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
                     log.warning("Skipping missing obs_id: {!r}".format(_))
@@ -336,6 +336,6 @@ class DataStoreChecker(Checker):
     def check_observations(self):
         """Perform some sanity checks for all observations."""
         for obs_id in self.data_store.obs_table["OBS_ID"]:
-            obs = self.data_store.observation(obs_id)
+            obs = self.data_store.obs(obs_id)
             for record in ObservationChecker(obs).run():
                 yield record

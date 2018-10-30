@@ -181,7 +181,7 @@ As an example, here's how you can create `gammapy.data.DataStore` and
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
-    >>> events = data_store.observation(obs_id=23523).events
+    >>> events = data_store.obs(obs_id=23523).events
     >>> print(events)
     EventList info:
     - Number of events: 7613
@@ -208,7 +208,7 @@ Try it and put the following code into a file called ``example.py``:
     """Example Python script using Gammapy"""
     from gammapy.data import DataStore
     data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1/')
-    events = data_store.observation(obs_id=23523).events
+    events = data_store.obs(obs_id=23523).events
     print(events.energy.mean())
 
 You can run it with Python:

@@ -51,7 +51,7 @@ class FitsProductionTester:
         self.ref_offset = 0.25 * u.deg
         self.ref_rad = np.arange(0, 2, 0.1) * u.deg
         self.ref_migra = 0.95
-        self.observation = self.ds.observation(prod["test_obs"])
+        self.observation = self.ds.obs(prod["test_obs"])
 
     def test_all(self):
         self.test_aeff()
