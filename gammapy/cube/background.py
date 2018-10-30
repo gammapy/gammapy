@@ -8,7 +8,7 @@ from ..maps import WcsNDMap
 __all__ = ["make_map_background_irf"]
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom, integrate=True):
+def make_map_background_irf(pointing, ontime, bkg, geom):
     """Compute background map from background IRFs.
 
     Parameters
@@ -22,38 +22,26 @@ def make_map_background_irf(pointing, ontime, bkg, geom, integrate=True):
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
-    integrate : bool
-        Whether to integrate the background model over the energy axes.
 
     Returns
     -------
     background : `~gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reco energy
     """
-    energy_axis = geom.get_axis_by_name("energy")
-
-
     # Compute FOV coordinates; at the moment assume symmetric background model
     # TODO: implement FOV coordinates properly
     map_coord = geom.to_image().get_coord()
     fov_lon = map_coord.skycoord.separation(pointing)
     fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
 
-    if not integrate:
-        energies = energy_axis.center * energy_axis.unit
-        fov_lon, fov_lat, energy_reco = np.broadcast_arrays(
-            fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis],
-            subok=True)
+    energy_axis = geom.get_axis_by_name("energy")
+    energies = energy_axis.edges * energy_axis.unit
 
-        data = bkg.evaluate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
-        d_energy = np.diff(energy_axis.edges) * energy_axis.unit
-        bkg_de = data * d_energy[:, np.newaxis, np.newaxis]
-    else:
-        energies = energy_axis.edges * energy_axis.unit
-        fov_lon, fov_lat, energy_reco = np.broadcast_arrays(
-            fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis],
-            subok=True)
-        bkg_de = bkg.evaluate_integrate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
+    fov_lon, fov_lat, energy_reco = np.broadcast_arrays(
+        fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis],
+        subok=True)
+
+    bkg_de = bkg.evaluate_integrate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
 
     d_omega = geom.solid_angle()
     data = (bkg_de * d_omega * ontime).to("").value
