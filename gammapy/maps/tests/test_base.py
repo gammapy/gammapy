@@ -7,7 +7,7 @@ from numpy.testing import assert_equal, assert_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.units import Unit, Quantity
-from ...utils.testing import requires_dependency, assert_quantity_allclose
+from ...utils.testing import requires_dependency
 from ..base import Map
 from ..geom import MapAxis
 from ..wcs import WcsGeom
