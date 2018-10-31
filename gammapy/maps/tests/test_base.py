@@ -318,46 +318,57 @@ def test_map_reproject_hpx_to_wcs():
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
 
 
-map_arithmetics_args = [
-    (0.1, 10.0, "wcs", SkyCoord(0.0, 30.0, unit="deg"), map_axes),
-    (0.1, 10.0, "hpx", SkyCoord(0.0, 30.0, unit="deg"), None),
+map_arithmetics_args = [("wcs"),
+                        ("hpx"),
 ]
 
 @pytest.mark.parametrize(
-    ("binsz", "width", "map_type", "skydir", "axes"), map_arithmetics_args
+    ("map_type"), map_arithmetics_args
 )
-def test_map_arithmetics(binsz, width, map_type, skydir, axes):
+def test_map_arithmetics(map_type):
 
     m1 = Map.create(
-        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="m2")
+        binsz=0.1, width=1.0, map_type=map_type, skydir=(0,0), unit="m2")
 
+    m2 = Map.create(
+        binsz=0.1, width=1.0, map_type=map_type, skydir=(0,0), unit="m2")
+    m2.data += 1.0
+
+    # addition
     m1 += 1 * u.cm**2
     assert m1.unit == u.Unit('m2')
     assert_allclose(m1.data, 1e-4)
 
-    m2 = Map.create(
-        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="m2")
-    m2.data += 1.0
     m3 = m1 + m2
     assert m3.unit == u.Unit('m2')
     assert_allclose(m3.data, 1.0001)
 
-    # substract
+    # substraction
     m3 -=  1 * u.cm**2
     assert m3.unit == u.Unit('m2')
     assert_allclose(m3.data, 1.0)
 
-    # multiplication
+    m3 = m2 - m1
+    assert m3.unit == u.Unit('m2')
+    assert_allclose(m3.data, 0.9999)
+
     m4 = Map.create(
-        binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit="hour")
+        binsz=0.1, width=1.0, map_type=map_type, skydir=(0,0), unit="s")
     m4.data += 1.0
-    m5 = m3 * m4
-    assert m5.unit == u.Unit('m2h')
-    assert_quantity_allclose(m5.quantity, 3600 * u.m**2 * u.s)
+
+    # multiplication
+    m1 *= 1e4
+    assert m1.unit == u.Unit('m2')
+    assert_allclose(m1.data, 1)
+
+    m5 = m2 * m4
+    assert m5.unit == u.Unit('m2s')
+    assert_allclose(m5.data, 1)
 
     # division
-    m5 /= 3.6 * u.s
-    assert_quantity_allclose(m5.quantity, 1000 * u.m**2)
+    m5 /= 10 * u.s
+    assert m5.unit == u.Unit('m2')
+    assert_allclose(m5.data, 0.1)
 
     # check unit consistency
     with pytest.raises(u.UnitConversionError):
