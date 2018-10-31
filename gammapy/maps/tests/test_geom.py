@@ -227,21 +227,20 @@ def test_mapcoord_repr():
     assert "MapCoord" in repr(coord)
 
 mapaxis_geoms_node_type_unit = [
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "edges", ""),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "edges", ""),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "edges", "TeV"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "sqrt", "edges", ""),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "center", "s"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "center", "s"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "sqrt", "center", "s"),
+    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "edges", "s", "TEST", True),
+    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "edges", "s", "test", False),
+    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "edges", "TeV", "TEST", False),
+    (np.array([0.25, 0.75, 1.0, 2.0]), "sqrt", "edges", "s", "test", False),
+    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "center", "s", "test", False),
+    (np.array([0.25, 0.75, 1.0, 2.0])+1e-9, "lin", "edges", "s", "test", True),
+    (np.array([0.25, 0.75, 1.0, 2.0]) + 1e-3, "lin", "edges", "s", "test", False),
 ]
 
-@pytest.mark.parametrize(("nodes", "interp", "node_type", "unit"), mapaxis_geoms_node_type_unit)
-def test_mapaxis_equal(nodes, interp, node_type, unit):
-    axis1 = MapAxis(nodes, name="test", unit=unit, interp=interp, node_type=node_type)
+@pytest.mark.parametrize(("nodes", "interp", "node_type", "unit", "name", "result"), mapaxis_geoms_node_type_unit)
+def test_mapaxis_equal(nodes, interp, node_type, unit, name, result):
+    axis1 = MapAxis(np.array([0.25, 0.75, 1.0, 2.0]), name="test", unit="s", interp="lin", node_type="edges")
 
-    axis2 = MapAxis(nodes+1e-7, name="test", unit=unit, interp=interp, node_type=node_type)
-    assert axis1 == axis2
+    axis2 = MapAxis(nodes, name=name, unit=unit, interp=interp, node_type=node_type)
 
-    axis3 = MapAxis(nodes+1e-3, name="test", unit=unit, interp=interp, node_type=node_type)
-    assert axis1 != axis3
+    assert (axis1 == axis2) is result
+    assert (axis1 != axis2) is not result
