@@ -1735,24 +1735,23 @@ class HpxGeom(MapGeom):
     def __eq__(self, other):
         """Test equality between two `~gammapy.maps.HpxGeom`"""
         if not isinstance(other, self.__class__):
-            raise TypeError('Cannot compare HpxGeom with {}'.format(other.__class__))
+            return NotImplemented
 
         if self._sparse or other._sparse:
-            raise ValueError("sparse geometries not supported")
+            return NotImplemented
         if self.is_allsky and other.is_allsky is False:
-            raise ValueError("Non allsky HpxGeom not supported")
+            return NotImplemented
 
         # check overall shape and axes compatibility
         if self.data_shape != other.data_shape:
             return False
 
-        result = True
         for axis, otheraxis in zip(self.axes, other.axes):
-            result &= axis == otheraxis
+            if axis != otheraxis:
+                return False
 
         return (
-               result
-                and self.nside == other.nside
+                self.nside == other.nside
                 and self.coordsys == other.coordsys
                 and self.order == other.order
                 and self.nest == other.nest

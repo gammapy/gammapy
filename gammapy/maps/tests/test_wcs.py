@@ -326,6 +326,4 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
     )
 
     assert (geom0 == geom1) is result
-
-    with pytest.raises(TypeError):
-        geom0 == geom0.wcs.wcs
+    assert (geom0 != geom1) is not result

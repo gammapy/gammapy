@@ -883,19 +883,19 @@ class WcsGeom(MapGeom):
         return str_
 
     def __eq__(self, other):
-        """Test equality between two `~gammapy.maps.WcsGeom`. Espect tolerance of 1e-6 for `~astropy.wcs.WCS` objects"""
         if not isinstance(other, self.__class__):
-            raise TypeError('Cannot compare WcsGeom with {}'.format(other.__class__))
+            return NotImplemented
 
         # check overall shape and axes compatibility
         if self.data_shape != other.data_shape:
             return False
 
-        result = True
         for axis, otheraxis in zip(self.axes, other.axes):
-            result &= axis == otheraxis
-        # check WCS consistency
-        return result and self.wcs.wcs.compare(other.wcs.wcs, tolerance=1e-6)
+            if axis != otheraxis:
+                return False
+
+        # check WCS consistency with a priori tolerance of 1e-6
+        return self.wcs.wcs.compare(other.wcs.wcs, tolerance=1e-6)
 
 def create_wcs(
     skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None

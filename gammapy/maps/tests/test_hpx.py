@@ -750,10 +750,5 @@ def test_hpxgeom_equal(nside, nested, coordsys, region, result):
     geom1 = HpxGeom(nside, nested, coordsys, region=region)
 
     assert (geom0 == geom1) is result
+    assert (geom0 != geom1) is not result
 
-def test_hpxgeom_equal_raise_error():
-    geom0 = HpxGeom(16, False, "GAL", region=None)
-    geom1 = HpxGeom(16, False, "GAL", "DISK(110.,75.,10.)")
-    with pytest.raises(ValueError):
-        geom0 == geom1
-        
