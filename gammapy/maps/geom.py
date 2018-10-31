@@ -362,13 +362,13 @@ class MapAxis(object):
         # TODO: implement an allclose method for MapAxis and call it here
         if self.edges.shape != other.edges.shape:
             return False
-        
+
         return (
-                np.allclose(self.edges, other.edges, atol=1e-6, rtol=1e-6)
-                and self.unit == other.unit
-                and self._node_type == other._node_type
-                and self._interp == other._interp
-                and self.name.upper() == other.name.upper()
+            np.allclose(self.edges, other.edges, atol=1e-6, rtol=1e-6)
+            and self.unit == other.unit
+            and self._node_type == other._node_type
+            and self._interp == other._interp
+            and self.name.upper() == other.name.upper()
         )
 
     @property

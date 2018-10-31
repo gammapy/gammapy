@@ -226,19 +226,26 @@ def test_mapcoord_repr():
     coord = MapCoord({"lon": 0, "lat": 0, "energy": 5})
     assert "MapCoord" in repr(coord)
 
+
+nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
+
 mapaxis_geoms_node_type_unit = [
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "edges", "s", "TEST", True),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "edges", "s", "test", False),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "edges", "TeV", "TEST", False),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "sqrt", "edges", "s", "test", False),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "center", "s", "test", False),
-    (np.array([0.25, 0.75, 1.0, 2.0])+1e-9, "lin", "edges", "s", "test", True),
-    (np.array([0.25, 0.75, 1.0, 2.0]) + 1e-3, "lin", "edges", "s", "test", False),
+    (nodes_array, "lin", "edges", "s", "TEST", True),
+    (nodes_array, "log", "edges", "s", "test", False),
+    (nodes_array, "lin", "edges", "TeV", "TEST", False),
+    (nodes_array, "sqrt", "edges", "s", "test", False),
+    (nodes_array, "lin", "center", "s", "test", False),
+    (nodes_array + 1e-9, "lin", "edges", "s", "test", True),
+    (nodes_array + 1e-3, "lin", "edges", "s", "test", False),
 ]
 
-@pytest.mark.parametrize(("nodes", "interp", "node_type", "unit", "name", "result"), mapaxis_geoms_node_type_unit)
+
+@pytest.mark.parametrize(
+    ("nodes", "interp", "node_type", "unit", "name", "result"),
+    mapaxis_geoms_node_type_unit,
+)
 def test_mapaxis_equal(nodes, interp, node_type, unit, name, result):
-    axis1 = MapAxis(np.array([0.25, 0.75, 1.0, 2.0]), name="test", unit="s", interp="lin", node_type="edges")
+    axis1 = MapAxis(nodes_array, name="test", unit="s", interp="lin", node_type="edges")
 
     axis2 = MapAxis(nodes, name=name, unit=unit, interp=interp, node_type=node_type)
 
