@@ -734,21 +734,21 @@ def test_geom_repr():
     assert geom.__class__.__name__ in repr(geom)
     assert "nside" in repr(geom)
 
+
 hpx_equality_test_geoms = [
     (16, False, "GAL", None, True),
     (16, True, "GAL", None, False),
     (8, False, "GAL", None, False),
-    (16, False, "CEL", None, False)
+    (16, False, "CEL", None, False),
 ]
+
 
 @pytest.mark.parametrize(
     ("nside", "nested", "coordsys", "region", "result"), hpx_equality_test_geoms
 )
-
 def test_hpxgeom_equal(nside, nested, coordsys, region, result):
     geom0 = HpxGeom(16, False, "GAL", region=None)
     geom1 = HpxGeom(nside, nested, coordsys, region=region)
 
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
-

@@ -1751,11 +1751,12 @@ class HpxGeom(MapGeom):
                 return False
 
         return (
-                self.nside == other.nside
-                and self.coordsys == other.coordsys
-                and self.order == other.order
-                and self.nest == other.nest
-            )
+            self.nside == other.nside
+            and self.coordsys == other.coordsys
+            and self.order == other.order
+            and self.nest == other.nest
+        )
+
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.

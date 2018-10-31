@@ -297,12 +297,15 @@ def test_get_axis_index_by_name():
     with pytest.raises(ValueError):
         geom.get_axis_index_by_name("time")
 
-test_axis1 = [MapAxis(nodes=(1,2,3,4), unit='TeV', node_type='center')]
-test_axis2 = [MapAxis(nodes=(1,2,3,4), unit='TeV', node_type='center'),
-              MapAxis(nodes=(1,2,3), unit='TeV', node_type='center')]
 
-skydir2 = SkyCoord(110.0, 75.0+1e-8, unit="deg", frame="icrs")
-skydir3 = SkyCoord(110.0, 75.0+1e-3, unit="deg", frame="icrs")
+test_axis1 = [MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center")]
+test_axis2 = [
+    MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center"),
+    MapAxis(nodes=(1, 2, 3), unit="TeV", node_type="center"),
+]
+
+skydir2 = SkyCoord(110.0, 75.0 + 1e-8, unit="deg", frame="icrs")
+skydir3 = SkyCoord(110.0, 75.0 + 1e-3, unit="deg", frame="icrs")
 
 compatibility_test_geoms = [
     (10, 0.1, "GAL", "CAR", skydir, test_axis1, True),
@@ -311,11 +314,13 @@ compatibility_test_geoms = [
     (10, 0.1, "GAL", "TAN", skydir, test_axis1, False),
     (8, 0.1, "GAL", "CAR", skydir, test_axis1, False),
     (10, 0.1, "GAL", "CAR", skydir, test_axis2, False),
-    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1, True)
+    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1, True),
 ]
 
+
 @pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"), compatibility_test_geoms
+    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"),
+    compatibility_test_geoms,
 )
 def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
     geom0 = WcsGeom.create(
