@@ -494,8 +494,8 @@ class SpectrumObservation(object):
             show_energy=(self.hi_threshold, self.lo_threshold),
         )
         ax1.set_xlim(
-            0.7 * self.lo_threshold.to(energy_unit).value,
-            1.3 * self.hi_threshold.to(energy_unit).value,
+            0.7 * self.lo_threshold.to_value(energy_unit),
+            1.3 * self.hi_threshold.to_value(energy_unit),
         )
         ax1.legend(numpoints=1)
 
@@ -503,8 +503,8 @@ class SpectrumObservation(object):
         e_unit = self.aeff.energy.unit
         self.aeff.plot(ax=ax2, show_energy=(self.hi_threshold, self.lo_threshold))
         ax2.set_xlim(
-            0.7 * self.lo_threshold.to(e_unit).value,
-            1.3 * self.hi_threshold.to(e_unit).value,
+            0.7 * self.lo_threshold.to_value(e_unit),
+            1.3 * self.hi_threshold.to_value(e_unit),
         )
 
         ax3.axis("off")
@@ -579,7 +579,7 @@ class SpectrumObservationList(UserList):
     @property
     def total_livetime(self):
         """Summed livetime"""
-        livetimes = [o.livetime.to("s").value for o in self]
+        livetimes = [o.livetime.to_value("s") for o in self]
         return Quantity(np.sum(livetimes), "s")
 
     @property
@@ -610,8 +610,8 @@ class SpectrumObservationList(UserList):
             Maximum or minimum range
         """
         unit = "TeV"
-        lo = [obs.lo_threshold.to(unit).value for obs in self]
-        hi = [obs.hi_threshold.to(unit).value for obs in self]
+        lo = [obs.lo_threshold.to_value(unit) for obs in self]
+        hi = [obs.hi_threshold.to_value(unit) for obs in self]
 
         if method == "inclusive":
             return Quantity([min(lo), max(hi)], unit)

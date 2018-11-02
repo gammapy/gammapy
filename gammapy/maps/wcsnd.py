@@ -217,7 +217,7 @@ class WcsNDMap(WcsMap):
 
         if weights is not None:
             if isinstance(weights, u.Quantity):
-                weights = weights.to(self.unit).value
+                weights = weights.to_value(self.unit)
             weights = weights[msk]
 
         idx = np.ravel_multi_index(idx, self.data.T.shape)

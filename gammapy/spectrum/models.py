@@ -592,8 +592,8 @@ class PowerLaw(SpectralModel):
             prefactor = pars["amplitude"].quantity * pars["reference"].quantity.to(
                 e_unit
             )
-            upper = np.log(emax.to(e_unit).value)
-            lower = np.log(emin.value)
+            upper = np.log(emax.to_value(e_unit))
+            lower = np.log(emin.to_value(e_unit))
         else:
             val = -1 * pars["index"].value + 1
             prefactor = pars["amplitude"].quantity * pars["reference"].quantity / val
@@ -1283,7 +1283,7 @@ class TableModel(SpectralModel):
 
     def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
-        x = np.log(energy.to(self.energy.unit).value)
+        x = np.log(energy.to_value(self.energy.unit))
         vals = self._evaluate(x, clip=True)
         vals = np.reshape(vals, x.shape)
         return u.Quantity(norm.value * vals, self.values.unit, copy=False)

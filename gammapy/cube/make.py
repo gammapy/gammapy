@@ -125,7 +125,7 @@ class MapMaker(object):
 
         # Stack observation maps to total
         for name in selection:
-            data = maps_obs[name].quantity.to(self.maps[name].unit).value
+            data = maps_obs[name].quantity.to_value(self.maps[name].unit)
             if name == "exposure":
                 self.maps[name].fill_by_coord(coords_etrue, data)
             else:

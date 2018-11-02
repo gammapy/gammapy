@@ -275,7 +275,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += "{:<40s} : {:.3} s (Mission elapsed time)\n".format(
                 "Time peak", d["Time_Peak"]
             )
-            peak_interval = d["Peak_Interval"].to("day").value
+            peak_interval = d["Peak_Interval"].to_value("day")
             ss += "{:<40s} : {:.3} day\n".format("Peak interval", peak_interval)
         else:
             ss += "\nNo peak measured for this source.\n"

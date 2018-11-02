@@ -107,18 +107,18 @@ class AdaptiveRingBackgroundEstimator(object):
         """
         p = self.parameters
 
-        scale = image.geom.pixel_scales[0].to("deg")
-        r_in = p["r_in"].to("deg") / scale
-        r_out_max = p["r_out_max"].to("deg") / scale
-        width = p["width"].to("deg") / scale
-        stepsize = p["stepsize"].to("deg") / scale
+        scale = image.geom.pixel_scales[0]
+        r_in = (p["r_in"] / scale).to_value("")
+        r_out_max = (p["r_out_max"] / scale).to_value("")
+        width = (p["width"] / scale).to_value("")
+        stepsize = (p["stepsize"] / scale).to_value("")
 
         if p["method"] == "fixed_width":
-            r_ins = np.arange(r_in.value, (r_out_max - width).value, stepsize.value)
-            widths = [width.value]
+            r_ins = np.arange(r_in, (r_out_max - width), stepsize)
+            widths = [width]
         elif p["method"] == "fixed_r_in":
-            widths = np.arange(width.value, (r_out_max - r_in).value, stepsize.value)
-            r_ins = [r_in.value]
+            widths = np.arange(width, (r_out_max - r_in), stepsize)
+            r_ins = [r_in]
         else:
             raise ValueError("Invalid method: {}".format(p["method"]))
 

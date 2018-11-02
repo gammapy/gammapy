@@ -19,8 +19,8 @@ def test_sky_point_source():
     model = SkyPointSource(lon_0="2.5 deg", lat_0="2.5 deg")
     lat, lon = np.mgrid[0:6, 0:6] * u.deg
     val = model(lon, lat)
-    assert val.unit == "sr-1"
-    assert_allclose(val.sum().value, 3282.80635)
+    assert val.unit == "deg-2"
+    assert_allclose(val.sum().value, 1)
 
 
 def test_sky_gaussian():

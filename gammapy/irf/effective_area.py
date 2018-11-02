@@ -110,7 +110,7 @@ class EffectiveAreaTable(object):
         )
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
-            ener_val = u.Quantity(show_energy).to(self.energy.unit).value
+            ener_val = u.Quantity(show_energy).to_value(self.energy.unit)
             ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles="dashed")
         ax.set_xscale("log")
         ax.set_xlabel("Energy [{}]".format(self.energy.unit))
@@ -152,7 +152,7 @@ class EffectiveAreaTable(object):
             ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
-        xx = energy.log_centers.to("MeV").value
+        xx = energy.log_centers.to_value("MeV")
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
@@ -310,9 +310,9 @@ class EffectiveAreaTable(object):
         table = self.to_table()
         return DataARF(
             name=name,
-            energ_lo=table["ENERG_LO"].quantity.to("keV").value,
-            energ_hi=table["ENERG_HI"].quantity.to("keV").value,
-            specresp=table["SPECRESP"].quantity.to("cm2").value,
+            energ_lo=table["ENERG_LO"].quantity.to_value("keV"),
+            energ_hi=table["ENERG_HI"].quantity.to_value("keV"),
+            specresp=table["SPECRESP"].quantity.to_value("cm2"),
         )
 
 
@@ -518,7 +518,7 @@ class EffectiveAreaTable2D(object):
             energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy").unit
 
         if offset is None:
-            off_lo, off_hi = self.data.axis("offset").nodes[[0, -1]].to("deg").value
+            off_lo, off_hi = self.data.axis("offset").nodes[[0, -1]].to_value("deg")
             offset = np.linspace(off_lo, off_hi, 100) * u.deg
 
         for ee in energy:

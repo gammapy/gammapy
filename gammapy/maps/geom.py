@@ -529,7 +529,7 @@ class MapAxis(object):
         pix : `~numpy.ndarray`
             Array of pixel coordinate values.
         """
-        coord = u.Quantity(coord, self.unit).value
+        coord = u.Quantity(coord, self.unit, copy=False).value
         pix = coord_to_pix(self._nodes, coord, interp=self._interp)
         return np.array(pix + self._pix_offset, ndmin=1)
 
@@ -550,7 +550,7 @@ class MapAxis(object):
         idx : `~numpy.ndarray`
             Array of bin indices.
         """
-        coord = u.Quantity(coord, self.unit).value
+        coord = u.Quantity(coord, self.unit, copy=False).value
         return coord_to_idx(self.edges, coord, clip)
 
     def slice(self, idx):

@@ -374,7 +374,7 @@ class HpxNDMap(HpxMap):
         idx_local = [t[msk] for t in idx_local]
         if weights is not None:
             if isinstance(weights, Quantity):
-                weights = weights.to(self.unit).value
+                weights = weights.to_value(self.unit)
             weights = weights[msk]
 
         idx_local = np.ravel_multi_index(idx_local, self.data.T.shape)

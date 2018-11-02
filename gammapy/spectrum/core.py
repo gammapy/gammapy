@@ -167,14 +167,14 @@ class CountsSpectrum(object):
 
         ax = plt.gca() if ax is None else ax
         counts = self.data.data.value
-        x = self.energy.nodes.to(energy_unit).value
-        bounds = self.energy.bins.to(energy_unit).value
+        x = self.energy.nodes.to_value(energy_unit)
+        bounds = self.energy.bins.to_value(energy_unit)
         xerr = [x - bounds[:-1], bounds[1:] - x]
         yerr = np.sqrt(counts) if show_poisson_errors else 0
         kwargs.setdefault("fmt", "")
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs)
         if show_energy is not None:
-            ener_val = u.Quantity(show_energy).to(energy_unit).value
+            ener_val = u.Quantity(show_energy).to_value(energy_unit)
             ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value), linestyles="dashed")
         ax.set_xlabel("Energy [{}]".format(energy_unit))
         ax.set_ylabel("Counts")
@@ -202,11 +202,11 @@ class CountsSpectrum(object):
         kwargs.setdefault("lw", 2)
         kwargs.setdefault("histtype", "step")
         weights = self.data.data.value
-        bins = self.energy.bins.to(energy_unit).value
-        x = self.energy.nodes.to(energy_unit).value
+        bins = self.energy.bins.to_value(energy_unit)
+        x = self.energy.nodes.to_value(energy_unit)
         ax.hist(x, bins=bins, weights=weights, **kwargs)
         if show_energy is not None:
-            ener_val = u.Quantity(show_energy).to(energy_unit).value
+            ener_val = u.Quantity(show_energy).to_value(energy_unit)
             ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value), linestyles="dashed")
         ax.set_xlabel("Energy [{}]".format(energy_unit))
         ax.set_ylabel("Counts")
@@ -453,9 +453,9 @@ class PHACountsSpectrum(CountsSpectrum):
         meta["poisserr"] = True
         meta["hduclas3"] = "COUNT"
         meta["hduclas4"] = "TYPE:1"
-        meta["lo_thres"] = self.lo_threshold.to("TeV").value
-        meta["hi_thres"] = self.hi_threshold.to("TeV").value
-        meta["exposure"] = self.livetime.to("s").value
+        meta["lo_thres"] = self.lo_threshold.to_value("TeV")
+        meta["hi_thres"] = self.hi_threshold.to_value("TeV")
+        meta["exposure"] = self.livetime.to_value("s")
         meta["obs_id"] = self.obs_id
 
         if not self.is_bkg:
@@ -539,7 +539,7 @@ class PHACountsSpectrum(CountsSpectrum):
             channel=(table["CHANNEL"].data + 1).astype(SherpaFloat),
             counts=table["COUNTS"].data.astype(SherpaFloat),
             quality=table["QUALITY"].data,
-            exposure=self.livetime.to("s").value,
+            exposure=self.livetime.to_value("s"),
             backscal=backscal,
             areascal=self.areascal,
             syserror=None,

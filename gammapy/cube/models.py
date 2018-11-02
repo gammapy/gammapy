@@ -339,8 +339,8 @@ class SkyDiffuseCube(SkyModelBase):
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
         coord = {
-            "lon": lon.to("deg").value,
-            "lat": lat.to("deg").value,
+            "lon": lon.to_value("deg"),
+            "lat": lat.to_value("deg"),
             "energy": energy,
         }
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)

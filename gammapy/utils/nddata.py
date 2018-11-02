@@ -147,7 +147,7 @@ class NDDataArray(object):
             # Extract values for each axis, default: nodes
             temp = Quantity(kwargs.pop(axis.name, axis.nodes))
             # Transform to correct unit
-            temp = temp.to(axis.unit).value
+            temp = temp.to_value(axis.unit)
             # Transform to match interpolation behaviour of axis
             values.append(np.atleast_1d(axis._interp_values(temp)))
 
@@ -200,7 +200,7 @@ class NDDataArray(object):
 
         points = tuple(
             [
-                axis._interp_values(points[axis.name].to(axis.unit).value)
+                axis._interp_values(points[axis.name].to_value(axis.unit))
                 for axis in self.axes
             ]
         )
@@ -405,7 +405,7 @@ class BinnedDataAxis(DataAxis):
     def bins(self):
         """Bin edges"""
         unit = self.lo.unit
-        val = np.append(self.lo.value, self.hi.to(unit).value[-1])
+        val = np.append(self.lo.value, self.hi.to_value(unit)[-1])
         return val * unit
 
     @property

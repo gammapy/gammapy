@@ -202,9 +202,8 @@ class MapEvaluator(object):
 
         For now just divide flux cube by exposure
         """
-        npred = Map.from_geom(self.geom, unit="")
-        npred.data = (flux * self.exposure.quantity).to("").value
-        return npred
+        npred = (flux * self.exposure.quantity).to_value("")
+        return self.exposure.copy(data=npred)
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""

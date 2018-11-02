@@ -207,7 +207,7 @@ class ObservationSummary(object):
         ax.set_xlabel("Livetime ({})".format(u.h))
         ax.set_ylabel("Significance ($\sigma$)")
 
-        xmax = np.amax(self.livetime.to(u.h).value) * 1.2
+        xmax = np.amax(self.livetime.to_value("h")) * 1.2
         ymax = np.amax(self.sigma) * 1.2
         ax.axis([0, xmax, 0, ymax])
         ax.set_title("Significance evolution")
@@ -234,7 +234,7 @@ class ObservationSummary(object):
         ax.set_xlabel("Livetime ({})".format(u.h))
         ax.set_ylabel("Excess")
 
-        xmax = np.amax(self.livetime.to(u.h).value) * 1.2
+        xmax = np.amax(self.livetime.to_value("h")) * 1.2
         ymax = np.amax(self.excess) * 1.2
         ax.axis([0, xmax, 0, ymax])
         ax.set_title("Excess evolution")
@@ -261,7 +261,7 @@ class ObservationSummary(object):
         ax.set_xlabel("Livetime ({})".format(u.h))
         ax.set_ylabel("Background")
 
-        xmax = np.amax(self.livetime.to(u.h).value) * 1.2
+        xmax = np.amax(self.livetime.to_value("h")) * 1.2
         ymax = np.amax(self.background) * 1.2
         ax.axis([0, xmax, 0, ymax])
         ax.set_title("Background evolution")

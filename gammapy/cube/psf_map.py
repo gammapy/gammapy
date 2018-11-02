@@ -51,7 +51,7 @@ def make_psf_map(psf, pointing, geom, max_offset):
 
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(geom, unit="sr-1")
-    psfmap.data[:, :, valid[0], valid[1]] += psf_values.to(psfmap.unit).value
+    psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
 
     return PSFMap(psfmap)
 

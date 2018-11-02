@@ -155,11 +155,11 @@ class ReflectedRegionsFinder(object):
             Rotation point
         """
         log.debug("No exclusion mask provided, creating an emtpy one")
-        min_size = region.center.separation(center)
         binsz = 0.02
-        npix = int((3 * min_size / binsz).value)
+        width = 3 * region.center.separation(center)
+
         maskmap = WcsNDMap.create(
-            skydir=center, binsz=binsz, npix=npix, coordsys="GAL", proj="TAN"
+            skydir=center, binsz=binsz, width=width, coordsys="GAL", proj="TAN"
         )
         maskmap.data += 1.0
         return maskmap

@@ -92,8 +92,7 @@ class SkyPointSource(SkySpatialModel):
 
         lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0) / np.abs(grad_lon)
         lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0) / np.abs(grad_lat)
-        val = lon_val * lat_val
-        return val.to("sr-1")
+        return lon_val * lat_val
 
 
 class SkyGaussian(SkySpatialModel):
@@ -297,7 +296,7 @@ class SkyDiffuseMap(SkySpatialModel):
     def normalize(self):
         """Normalize the diffuse map model so that it integrates to unity."""
         data = self.map.data / self.map.data.sum()
-        data /= self.map.geom.solid_angle().to("sr").value
+        data /= self.map.geom.solid_angle().to_value("sr")
         self.map = self.map.copy(data=data, unit="sr-1")
 
     @classmethod
@@ -322,6 +321,6 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
-        coord = {"lon": lon.to("deg").value, "lat": lat.to("deg").value}
+        coord = {"lon": lon.to_value("deg"), "lat": lat.to_value("deg")}
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(norm.value * val, self.map.unit, copy=False)
