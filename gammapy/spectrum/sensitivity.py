@@ -97,8 +97,8 @@ class SensitivityEstimator(object):
 
         model = PowerLaw(
             index=self.slope,
-            amplitude=1 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
+            amplitude="1 cm-2 s-1 TeV-1",
+            reference="1 TeV",
         )
 
         # TODO: simplify the following computation
@@ -107,11 +107,9 @@ class SensitivityEstimator(object):
         )
         predictor.run()
         counts = predictor.npred.data.data.value
-        phi_0 = excess_counts / counts * u.Unit("cm-2 s-1 TeV-1")
-        # TODO: should use model.__call__ here
-        dnde_model = model.evaluate(
-            energy=energy, index=self.slope, amplitude=1, reference=1 * u.TeV
-        )
+        phi_0 = excess_counts / counts
+
+        dnde_model = model(energy=energy)
         diff_flux = (phi_0 * dnde_model * energy ** 2).to("erg / (cm2 s)")
 
         # TODO: take self.bkg_sys into account

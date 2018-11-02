@@ -268,12 +268,11 @@ class FluxPoints(object):
 
         Examples
         --------
-        >>> from astropy import units as u
         >>> from gammapy.spectrum import FluxPoints
         >>> from gammapy.spectrum.models import PowerLaw
         >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
-        >>> model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+        >>> model = PowerLaw(index=2.2)
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
         """
         # TODO: implement other directions. Refactor!
@@ -281,11 +280,7 @@ class FluxPoints(object):
             raise NotImplementedError
 
         if model is None:
-            model = PowerLaw(
-                index=2 * u.Unit(""),
-                amplitude=1 * u.Unit("cm-2 s-1 TeV-1"),
-                reference=1 * u.TeV,
-            )
+            model = PowerLaw()
 
         input_table = self.table.copy()
 
@@ -648,7 +643,7 @@ class FluxPointEstimator(object):
 
     def run(self):
         """Run the flux point estimator
-        
+
         Returns
         -------
         flux_points : `FluxPoints`
@@ -799,11 +794,7 @@ class FluxPointFit(Fit):
         filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)
 
-        model = PowerLaw(
-            index=2. * u.Unit(''),
-            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            reference=1. * u.TeV,
-        )
+        model = PowerLaw()
 
         fitter = FluxPointFit(model, flux_points)
         result = fitter.run()

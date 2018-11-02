@@ -435,19 +435,21 @@ class SpectralModel(object):
             Energies at which the model has the given ``value``.
         """
         from scipy.optimize import brentq
+        eunit = "TeV"
 
         energies = []
         for val in np.atleast_1d(value):
 
             def f(x):
                 # scale by 1e12 to achieve better precision
-                y = self(x * u.TeV).to(value.unit).value
+                energy = u.Quantity(x, eunit)
+                y = self(energy).to_value(value.unit)
                 return 1e12 * (y - val.value)
 
-            energy = brentq(f, emin.to("TeV").value, emax.to("TeV").value)
+            energy = brentq(f, emin.to_value(eunit), emax.to_value(eunit))
             energies.append(energy)
 
-        return energies * u.TeV
+        return u.Quantity(energies, eunit, copy=False)
 
     def copy(self):
         """A deep copy."""
@@ -836,13 +838,14 @@ class PowerLaw2(SpectralModel):
             Function value of the spectral model.
         """
         p = self.parameters
-        index = p["index"].value
+        amplitude, index, emin, emax = (p["amplitude"].quantity, p["index"].value,
+                                        p["emin"].quantity, p["emax"].quantity)
+
+        # to get the energies dimensionless we use a modified formula
         top = -index + 1
-        bottom = p["emax"].quantity.to("TeV").value ** (-index + 1) - p[
-            "emin"
-        ].quantity.to("TeV").value ** (-index + 1)
-        term = (bottom / top) * (value / p["amplitude"].quantity).to("1 / TeV")
-        return np.power(term.value, -1.0 / index) * u.TeV
+        bottom = emax - emin * (emin / emax) ** (-index)
+        term = (bottom / top) * (value / amplitude)
+        return np.power(term.to_value(""), -1.0 / index) * emax
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):
@@ -1256,7 +1259,7 @@ class TableModel(SpectralModel):
         # Get spectrum values (no interpolation, take closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
-        values = table_spectra[idx][1] * u.Unit("")  # no dimension
+        values = u.Quantity(table_spectra[idx][1], "", copy=False)  # no dimension
 
         kwargs.setdefault("values_scale", "lin")
         return cls(energy=energy, values=values, **kwargs)
@@ -1378,21 +1381,16 @@ class Absorption(object):
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
-        energy_lo = table_energy["ENERG_LO"] * u.keV  # unit not stored in file
-        energy_hi = table_energy["ENERG_HI"] * u.keV  # unit not stored in file
-
-        # Energies are in keV
-        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(
-            lower=energy_lo, upper=energy_hi, unit=u.keV
-        )
+        energy_lo = u.Quantity(table_energy["ENERG_LO"], "keV", copy=False) # unit not stored in file
+        energy_hi = u.Quantity(table_energy["ENERG_HI"], "keV", copy=False)  # unit not stored in file
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data
 
         return cls(
-            energy_lo=energy_bounds.lower_bounds,
-            energy_hi=energy_bounds.upper_bounds,
+            energy_lo=energy_lo,
+            energy_hi=energy_hi,
             param_lo=param_lo,
             param_hi=param_hi,
             data=data,
