@@ -371,6 +371,9 @@ class MapAxis(object):
             and self.name.upper() == other.name.upper()
         )
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @property
     def name(self):
         """Name of the axis."""
