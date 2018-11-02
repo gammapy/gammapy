@@ -498,7 +498,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        width : `~astropy.units.Quantity` or float
+        width : `~astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
@@ -519,8 +519,9 @@ class WcsNDMap(WcsMap):
         """
         from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 
-        if isinstance(width, u.Quantity):
-            width = (width.to("deg") / self.geom.pixel_scales.mean()).value
+        if isinstance(width, (u.Quantity, str)):
+            width = u.Quantity(width) / self.geom.pixel_scales.mean()
+            width = width.to_value("")
 
         smoothed_data = np.empty_like(self.data)
 

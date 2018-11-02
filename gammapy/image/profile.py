@@ -254,7 +254,7 @@ class ImageProfile(object):
     def __init__(self, table):
         self.table = table
 
-    def smooth(self, kernel="box", radius=0.1 * u.deg, **kwargs):
+    def smooth(self, kernel="box", radius="0.1 deg", **kwargs):
         """
         Smooth profile with error propagation.
 
@@ -279,7 +279,7 @@ class ImageProfile(object):
         ----------
         kernel : {'gauss', 'box'}
             Kernel shape
-        radius : `~astropy.units.Quantity` or float
+        radius : `~astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it
             is interpreted as smoothing width in pixels. If an (angular) quantity
             is given it is converted to pixels using `xref[1] - x_ref[0]`.
@@ -299,6 +299,7 @@ class ImageProfile(object):
         table = self.table.copy()
         profile = table["profile"]
 
+        radius = u.Quantity(radius)
         radius = np.abs(radius / np.diff(self.x_ref))[0]
         width = 2 * radius.value + 1
 
