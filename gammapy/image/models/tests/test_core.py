@@ -28,8 +28,8 @@ def test_sky_gaussian():
     lon = [1, 359] * u.deg
     lat = 46 * u.deg
     val = model(lon, lat)
-    assert val.unit == "sr-1"
-    assert_allclose(val.value, [316.8970202, 118.6505303])
+    assert val.unit == "deg-2"
+    assert_allclose(val.to_value("sr-1"), [316.8970202, 118.6505303])
 
 
 def test_sky_disk():
@@ -48,9 +48,9 @@ def test_sky_shell():
     lon = [1, 2, 4] * u.deg
     lat = 45 * u.deg
     val = model(lon, lat)
-    assert val.unit == "sr-1"
+    assert val.unit == "deg-2"
     desired = [55.979449, 57.831651, 94.919895]
-    assert_allclose(val.value, desired)
+    assert_allclose(val.to_value("sr-1"), desired)
 
 
 def test_sky_diffuse_constant():
