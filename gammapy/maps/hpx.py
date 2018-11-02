@@ -1757,6 +1757,9 @@ class HpxGeom(MapGeom):
             and self.nest == other.nest
         )
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class HpxToWcsMapping(object):
     """Stores the indices need to convert from HEALPIX to WCS.

@@ -897,6 +897,8 @@ class WcsGeom(MapGeom):
         # check WCS consistency with a priori tolerance of 1e-6
         return self.wcs.wcs.compare(other.wcs.wcs, tolerance=1e-6)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 def create_wcs(
     skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
