@@ -88,11 +88,11 @@ class Background3D(object):
         """Read from `~astropy.table.Table`."""
         # Spec says key should be "BKG", but there are files around
         # (e.g. CTA 1DC) that use "BGD". For now we support both
-        if "BKG" in table.colnames:
-            bkg_name = "BKG"
-        elif "BGD" in table.colnames:
-            bkg_name = "BGD"
-        else:
+        bkg_name = None
+        for aname in table.colnames:
+            if aname.upper() == "BKG" or aname.upper() == "BGD":
+                bkg_name = aname
+        if bkg_name is None:
             raise ValueError('Invalid column names. Need "BKG" or "BGD".')
 
         # Currently some files (e.g. CTA 1DC) contain unit in the FITS file
