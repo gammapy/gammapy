@@ -295,15 +295,15 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             model_class = PowerLaw
             pars["amplitude"] = data["spec_pl_norm"]
             errs["amplitude"] = data["spec_pl_norm_err"]
-            pars["index"] = data["spec_pl_index"] * u.Unit("")
-            errs["index"] = data["spec_pl_index_err"] * u.Unit("")
+            pars["index"] = data["spec_pl_index"]
+            errs["index"] = data["spec_pl_index_err"]
             pars["reference"] = data["spec_pl_e_ref"]
         elif spec_type == "pl2":
             model_class = PowerLaw2
             pars["amplitude"] = data["spec_pl2_flux"]
             errs["amplitude"] = data["spec_pl2_flux_err"]
-            pars["index"] = data["spec_pl2_index"] * u.Unit("")
-            errs["index"] = data["spec_pl2_index_err"] * u.Unit("")
+            pars["index"] = data["spec_pl2_index"]
+            errs["index"] = data["spec_pl2_index_err"]
             pars["emin"] = data["spec_pl2_e_min"]
             e_max = data["spec_pl2_e_max"]
             DEFAULT_E_MAX = u.Quantity(1e5, "TeV")
@@ -314,8 +314,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             model_class = ExponentialCutoffPowerLaw
             pars["amplitude"] = data["spec_ecpl_norm"]
             errs["amplitude"] = data["spec_ecpl_norm_err"]
-            pars["index"] = data["spec_ecpl_index"] * u.Unit("")
-            errs["index"] = data["spec_ecpl_index_err"] * u.Unit("")
+            pars["index"] = data["spec_ecpl_index"]
+            errs["index"] = data["spec_ecpl_index_err"]
             pars["lambda_"] = 1.0 / data["spec_ecpl_e_cut"]
             errs["lambda_"] = data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2
             pars["reference"] = data["spec_ecpl_e_ref"]
