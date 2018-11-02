@@ -316,3 +316,60 @@ def test_map_reproject_hpx_to_wcs():
     m_r = m.reproject(geom_wcs)
     actual = m_r.get_by_coord({"lon": 0, "lat": 0, "energy": [1.0, 3.16227766, 10.0]})
     assert_allclose(actual, [287.5, 1055.5, 1823.5], rtol=1e-3)
+
+
+map_arithmetics_args = [("wcs"), ("hpx")]
+
+
+@pytest.mark.parametrize(("map_type"), map_arithmetics_args)
+def test_map_arithmetics(map_type):
+
+    m1 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="m2")
+
+    m2 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="m2")
+    m2.data += 1.0
+
+    # addition
+    m1 += 1 * u.cm ** 2
+    assert m1.unit == u.Unit("m2")
+    assert_allclose(m1.data, 1e-4)
+
+    m3 = m1 + m2
+    assert m3.unit == u.Unit("m2")
+    assert_allclose(m3.data, 1.0001)
+
+    # substraction
+    m3 -= 1 * u.cm ** 2
+    assert m3.unit == u.Unit("m2")
+    assert_allclose(m3.data, 1.0)
+
+    m3 = m2 - m1
+    assert m3.unit == u.Unit("m2")
+    assert_allclose(m3.data, 0.9999)
+
+    m4 = Map.create(binsz=0.1, width=1.0, map_type=map_type, skydir=(0, 0), unit="s")
+    m4.data += 1.0
+
+    # multiplication
+    m1 *= 1e4
+    assert m1.unit == u.Unit("m2")
+    assert_allclose(m1.data, 1)
+
+    m5 = m2 * m4
+    assert m5.unit == u.Unit("m2s")
+    assert_allclose(m5.data, 1)
+
+    # division
+    m5 /= 10 * u.s
+    assert m5.unit == u.Unit("m2")
+    assert_allclose(m5.data, 0.1)
+
+    # check unit consistency
+    with pytest.raises(u.UnitConversionError):
+        m5 += 1 * u.W
+
+    m1.data *= 0.0
+    m1.unit = ""
+    m1 += 4
+    assert m1.unit == u.Unit("")
+    assert_allclose(m1.data, 4)

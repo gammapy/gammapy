@@ -1032,3 +1032,39 @@ class Map(object):
         str_ += "\tunit  : {!r} \n".format(str(self.unit))
         str_ += "\tdtype : {} \n".format(self.data.dtype)
         return str_
+
+    def _arithmetics(self, operator, other, copy):
+        """ Perform arithmetics on maps after checking geometry consistency"""
+        if isinstance(other, Map):
+            # TODO: check consistency
+            q = other.quantity
+        else:
+            q = u.Quantity(other, copy=False)
+
+        out = self.copy() if copy else self
+        out.quantity = operator(out.quantity, q)
+        return out
+
+    def __add__(self, other):
+        return self._arithmetics(np.add, other, copy=True)
+
+    def __iadd__(self, other):
+        return self._arithmetics(np.add, other, copy=False)
+
+    def __sub__(self, other):
+        return self._arithmetics(np.subtract, other, copy=True)
+
+    def __isub__(self, other):
+        return self._arithmetics(np.subtract, other, copy=False)
+
+    def __mul__(self, other):
+        return self._arithmetics(np.multiply, other, copy=True)
+
+    def __imul__(self, other):
+        return self._arithmetics(np.multiply, other, copy=False)
+
+    def __truediv__(self, other):
+        return self._arithmetics(np.true_divide, other, copy=True)
+
+    def __itruediv__(self, other):
+        return self._arithmetics(np.true_divide, other, copy=False)
