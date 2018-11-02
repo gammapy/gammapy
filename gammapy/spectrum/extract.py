@@ -31,7 +31,7 @@ class SpectrumExtraction(object):
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations to process
     bkg_estimate : `~gammapy.background.BackgroundEstimate`
         Background estimate, e.g. of
@@ -57,7 +57,7 @@ class SpectrumExtraction(object):
 
     def __init__(
         self,
-        obs_list,
+        observations,
         bkg_estimate,
         e_reco=None,
         e_true=None,
@@ -66,14 +66,14 @@ class SpectrumExtraction(object):
         use_recommended_erange=True,
     ):
 
-        self.obs_list = obs_list
+        self.observations = observations
         self.bkg_estimate = bkg_estimate
         self.e_reco = e_reco if e_reco is not None else self.DEFAULT_RECO_ENERGY
         self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
         self.use_recommended_erange = use_recommended_erange
-        self.observations = SpectrumObservationList()
+        self.spectrum_observations = SpectrumObservationList()
 
         self.containment = None
         self._on_vector = None
@@ -85,12 +85,12 @@ class SpectrumExtraction(object):
         """Run all steps.
         """
         log.info("Running {}".format(self))
-        for obs, bkg in zip(self.obs_list, self.bkg_estimate):
-            if not self._alpha_ok(obs, bkg):
+        for obs, bkg in zip(self.observations, self.bkg_estimate):
+            if not self._alpha_ok(bkg):
                 continue
-            self.observations.append(self.process(obs, bkg))
+            self.spectrum_observations.append(self.process(obs, bkg))
 
-    def _alpha_ok(self, obs, bkg):
+    def _alpha_ok(self, bkg):
         """Check if observation fulfills alpha criterion"""
         condition = bkg.a_off == 0 or bkg.a_on / bkg.a_off > self.max_alpha
         if condition:
@@ -100,12 +100,12 @@ class SpectrumExtraction(object):
         else:
             return True
 
-    def process(self, obs, bkg):
+    def process(self, observation, bkg):
         """Process one observation.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
@@ -115,13 +115,13 @@ class SpectrumExtraction(object):
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
             Spectrum observation
         """
-        log.info("Process observation\n {}".format(obs))
-        self.make_empty_vectors(obs, bkg)
+        log.info("Process observation\n {}".format(observation))
+        self.make_empty_vectors(observation, bkg)
         self.extract_counts(bkg)
-        self.extract_irfs(obs)
+        self.extract_irfs(observation)
 
         if self.containment_correction:
-            self.apply_containment_correction(obs, bkg)
+            self.apply_containment_correction(observation, bkg)
         else:
             self.containment = np.ones(self._aeff.energy.nbins)
 
@@ -134,28 +134,28 @@ class SpectrumExtraction(object):
 
         if self.use_recommended_erange:
             try:
-                spectrum_observation.hi_threshold = obs.aeff.high_threshold
-                spectrum_observation.lo_threshold = obs.aeff.low_threshold
+                spectrum_observation.hi_threshold = observation.aeff.high_threshold
+                spectrum_observation.lo_threshold = observation.aeff.low_threshold
             except KeyError:
-                log.warning("No thresholds defined for obs {}".format(obs))
+                log.warning("No thresholds defined for obs {}".format(observation))
 
         return spectrum_observation
 
-    def make_empty_vectors(self, obs, bkg):
+    def make_empty_vectors(self, observation, bkg):
         """Create empty vectors.
 
         This method copies over all meta info and sets up the energy binning.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
         log.info("Update observation meta info")
 
-        offset = obs.pointing_radec.separation(bkg.on_region.center)
+        offset = observation.pointing_radec.separation(bkg.on_region.center)
         log.info("Offset : {}\n".format(offset))
 
         self._on_vector = PHACountsSpectrum(
@@ -163,8 +163,8 @@ class SpectrumExtraction(object):
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
             offset=offset,
-            livetime=obs.observation_live_time_duration,
-            obs_id=obs.obs_id,
+            livetime=observation.observation_live_time_duration,
+            obs_id=observation.obs_id,
         )
 
         self._off_vector = self._on_vector.copy()
@@ -183,27 +183,27 @@ class SpectrumExtraction(object):
         self._on_vector.fill(bkg.on_events)
         self._off_vector.fill(bkg.off_events)
 
-    def extract_irfs(self, obs):
+    def extract_irfs(self, observation):
         """Extract IRFs.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation
         """
         log.info("Extract IRFs")
         offset = self._on_vector.offset
-        self._aeff = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
-        self._edisp = obs.edisp.to_energy_dispersion(
+        self._aeff = observation.aeff.to_effective_area_table(offset, energy=self.e_true)
+        self._edisp = observation.edisp.to_energy_dispersion(
             offset, e_reco=self.e_reco, e_true=self.e_true
         )
 
-    def apply_containment_correction(self, obs, bkg):
+    def apply_containment_correction(self, observation, bkg):
         """Apply PSF containment correction.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             observation
         bkg : `~gammapy.background.BackgroundEstimate`
             background esimate
@@ -219,10 +219,10 @@ class SpectrumExtraction(object):
         # First need psf
         angles = np.linspace(0.0, 1.5, 150) * u.deg
         offset = self._on_vector.offset
-        if isinstance(obs.psf, PSF3D):
-            psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
+        if isinstance(observation.psf, PSF3D):
+            psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
         else:
-            psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
+            psf = observation.psf.to_energy_dependent_table_psf(offset, angles)
 
         center_energies = self._aeff.energy.nodes
         containment = []
@@ -246,7 +246,7 @@ class SpectrumExtraction(object):
         documentation about the options.
         """
 
-        for obs in self.observations:
+        for obs in self.spectrum_observations:
             obs.compute_energy_threshold(**kwargs)
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
@@ -266,7 +266,7 @@ class SpectrumExtraction(object):
         outdir = make_path(outdir)
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.observations.write(
+        self.spectrum_observations.write(
             outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
         )
 

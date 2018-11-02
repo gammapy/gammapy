@@ -13,10 +13,10 @@ pytest.importorskip("scipy")
 
 
 @pytest.fixture(scope="session")
-def obs_list():
+def observations():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/")
     obs_id = [110380, 111140]
-    return data_store.obs_list(obs_id)
+    return data_store.get_observations(obs_id)
 
 
 def geom(ebounds):
@@ -74,10 +74,10 @@ def geom(ebounds):
         },
     ],
 )
-def test_map_maker(pars, obs_list):
+def test_map_maker(pars, observations):
     maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg")
 
-    maps = maker.run(obs_list)
+    maps = maker.run(observations)
 
     counts = maps["counts"]
     assert counts.unit == ""

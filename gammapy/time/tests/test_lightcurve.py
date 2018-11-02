@@ -176,21 +176,21 @@ def test_lightcurve_plot_time(lc, time_format, output):
 def spec_extraction():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
     obs_ids = [23523, 23526]
-    obs_list = data_store.obs_list(obs_ids)
+    observations = data_store.get_observations(obs_ids)
 
     target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
     on_region_radius = Angle("0.11 deg")
     on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
 
     bkg_estimator = ReflectedRegionsBackgroundEstimator(
-        on_region=on_region, obs_list=obs_list
+        on_region=on_region, observations=observations
     )
     bkg_estimator.run()
 
     e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit="TeV")  # fine binning
     e_true = EnergyBounds.equal_log_spacing(0.05, 100, 200, unit="TeV")
     extraction = SpectrumExtraction(
-        obs_list=obs_list,
+        observations=observations,
         bkg_estimate=bkg_estimator.result,
         containment_correction=False,
         e_reco=e_reco,
@@ -209,7 +209,7 @@ def test_lightcurve_estimator():
 
     # param
     intervals = []
-    for obs in spec_extract.obs_list:
+    for obs in spec_extract.observations:
         intervals.append([obs.events.time[0], obs.events.time[-1]])
 
     model = PowerLaw(

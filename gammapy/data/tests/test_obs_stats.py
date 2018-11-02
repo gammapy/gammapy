@@ -11,7 +11,7 @@ from ...background import ReflectedRegionsBackgroundEstimator
 
 
 @pytest.fixture(scope="session")
-def obs_list():
+def observations():
     data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
     run_list = [23523, 23526]
     return Observations([data_store.obs(_) for _ in run_list])
@@ -25,20 +25,20 @@ def on_region():
 
 
 @pytest.fixture(scope="session")
-def stats(on_region, obs_list):
-    obs = obs_list[0]
-    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, obs_list=obs)
+def stats(on_region, observations):
+    obs = observations[0]
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, observations=obs)
     bg = bge.process(obs)
-    return ObservationStats.from_obs(obs, bg)
+    return ObservationStats.from_observation(obs, bg)
 
 
 @pytest.fixture(scope="session")
-def stats_stacked(on_region, obs_list):
-    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, obs_list=obs_list)
+def stats_stacked(on_region, observations):
+    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, observations=observations)
     bge.run()
 
     return ObservationStats.stack(
-        [ObservationStats.from_obs(obs, bg) for obs, bg in zip(obs_list, bge.result)]
+        [ObservationStats.from_observation(obs, bg) for obs, bg in zip(observations, bge.result)]
     )
 
 

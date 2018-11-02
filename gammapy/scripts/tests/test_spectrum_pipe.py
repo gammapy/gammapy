@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
-from ...background.tests.test_reflected import obs_list, on_region
+from ...background.tests.test_reflected import observations, on_region
 from ...spectrum.models import PowerLaw
 from ..spectrum_pipe import SpectrumAnalysisIACT
 
@@ -31,7 +31,7 @@ def test_spectrum_analysis_iact(tmpdir):
     config = get_config()
     config["outdir"] = tmpdir
 
-    analysis = SpectrumAnalysisIACT(observations=obs_list(), config=config)
+    analysis = SpectrumAnalysisIACT(observations=observations(), config=config)
     analysis.run()
     flux_points = analysis.flux_points
 

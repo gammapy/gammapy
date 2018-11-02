@@ -17,17 +17,17 @@ def on_region():
 
 
 @pytest.fixture
-def obs_list():
+def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps")
-    return datastore.obs_list([111630])
+    return datastore.get_observations([111630])
 
 
 @pytest.fixture(scope="session")
 def phase_bkg_estimator():
     """Example background estimator for testing."""
     return PhaseBackgroundEstimator(
-        obs_list=obs_list(),
+        observations=observations(),
         on_region=on_region(),
         on_phase=(0.5, 0.6),
         off_phase=(0.7, 1),
@@ -46,8 +46,8 @@ def test_run(phase_bkg_estimator):
 
 
 @requires_data("gammapy-extra")
-def test_filter_events(obs_list, on_region):
-    all_events = obs_list[0].events.select_circular_region(on_region)
+def test_filter_events(observations, on_region):
+    all_events = observations[0].events.select_circular_region(on_region)
     ev1 = PhaseBackgroundEstimator.filter_events(all_events, (0, 0.3))
     assert isinstance(ev1, EventList)
     ev2 = PhaseBackgroundEstimator.filter_events(all_events, (0.3, 1))
@@ -66,5 +66,5 @@ def test_check_phase_intervals(pars):
 
 
 @requires_data("gammapy-extra")
-def test_process(phase_bkg_estimator, obs_list):
-    assert isinstance(phase_bkg_estimator.process(obs_list[0]), BackgroundEstimate)
+def test_process(phase_bkg_estimator, observations):
+    assert isinstance(phase_bkg_estimator.process(observations[0]), BackgroundEstimate)

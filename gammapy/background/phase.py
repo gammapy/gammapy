@@ -24,7 +24,7 @@ class PhaseBackgroundEstimator(object):
     ----------
     on_region : `~regions.CircleSkyRegion`
         Target region in the sky
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations to process
     on_phase : `tuple` or list of tuples
         on-phase defined by the two edges of each interval (edges are excluded)
@@ -32,9 +32,9 @@ class PhaseBackgroundEstimator(object):
         off-phase defined by the two edges of each interval (edges are excluded)
     """
 
-    def __init__(self, on_region, on_phase, off_phase, obs_list):
+    def __init__(self, on_region, on_phase, off_phase, observations):
         self.on_region = on_region
-        self.obs_list = obs_list
+        self.observations = observations
         self.on_phase = np.atleast_2d(on_phase)
         self.off_phase = np.atleast_2d(off_phase)
         self.result = None
@@ -44,13 +44,13 @@ class PhaseBackgroundEstimator(object):
         s += "\n{}".format(self.on_region)
         s += "\n{}".format(self.on_phase)
         s += "\n{}".format(self.off_phase)
-        s += "\n{}".format(self.obs_list)
+        s += "\n{}".format(self.observations)
         return s
 
     def run(self):
         """Run all steps."""
         result = []
-        for obs in self.obs_list:
+        for obs in self.observations:
             temp = self.process(obs=obs)
             result.append(temp)
 

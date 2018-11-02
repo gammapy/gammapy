@@ -6,12 +6,12 @@ from ..utils.energy import Energy
 __all__ = ["make_psf", "make_mean_psf", "make_mean_edisp"]
 
 
-def make_psf(obs, position, energy=None, rad=None):
+def make_psf(observation, position, energy=None, rad=None):
     """Make energy-dependent PSF for a given source position.
 
     Parameters
     ----------
-    obs : `~gammapy.data.DataStoreObservation`
+    observation : `~gammapy.data.DataStoreObservation`
         Observation for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF
@@ -27,25 +27,25 @@ def make_psf(obs, position, energy=None, rad=None):
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Energy dependent psf table
     """
-    offset = position.separation(obs.pointing_radec)
+    offset = position.separation(observation.pointing_radec)
 
     if energy is None:
-        energy = obs.psf.to_energy_dependent_table_psf(theta=offset).energy
+        energy = observation.psf.to_energy_dependent_table_psf(theta=offset).energy
 
     if rad is None:
-        rad = obs.psf.to_energy_dependent_table_psf(theta=offset).rad
+        rad = observation.psf.to_energy_dependent_table_psf(theta=offset).rad
 
-    if isinstance(obs.psf, PSF3D):
+    if isinstance(observation.psf, PSF3D):
         # PSF3D is a table PSF, so we use the native RAD binning by default
         # TODO: should handle this via a uniform caller API
-        psf_value = obs.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
+        psf_value = observation.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
     else:
-        psf_value = obs.psf.to_energy_dependent_table_psf(
+        psf_value = observation.psf.to_energy_dependent_table_psf(
             theta=offset, rad=rad
         ).evaluate(energy)
 
-    arf = obs.aeff.data.evaluate(offset=offset, energy=energy)
-    exposure = arf * obs.observation_live_time_duration
+    arf = observation.aeff.data.evaluate(offset=offset, energy=energy)
+    exposure = arf * observation.observation_live_time_duration
 
     psf = EnergyDependentTablePSF(
         energy=energy, rad=rad, exposure=exposure, psf_value=psf_value
@@ -53,12 +53,12 @@ def make_psf(obs, position, energy=None, rad=None):
     return psf
 
 
-def make_mean_psf(obs_list, position, energy=None, rad=None):
+def make_mean_psf(observations, position, energy=None, rad=None):
     """Compute mean energy-dependent PSF.
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations for which to compute the PSF
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the PSF
@@ -76,7 +76,7 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Mean PSF
     """
-    psf = make_psf(obs_list[0], position, energy, rad)
+    psf = make_psf(observations[0], position, energy, rad)
 
     if rad is None:
         rad = psf.rad
@@ -86,7 +86,7 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
     exposure = psf.exposure
     psf_value = psf.psf_value.T * psf.exposure
 
-    for obs in obs_list[1:]:
+    for obs in observations[1:]:
         psf = make_psf(obs, position, energy, rad)
         exposure += psf.exposure
         psf_value += psf.psf_value.T * psf.exposure
@@ -99,7 +99,7 @@ def make_mean_psf(obs_list, position, energy=None, rad=None):
 
 
 def make_mean_edisp(
-    obs_list,
+    observations,
     position,
     e_true,
     e_reco,
@@ -114,7 +114,7 @@ def make_mean_edisp(
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         Observations for which to compute the EDISP
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the EDISP
@@ -135,10 +135,10 @@ def make_mean_edisp(
     list_aeff = []
     list_edisp = []
     list_livetime = []
-    list_low_threshold = [low_reco_threshold] * len(obs_list)
-    list_high_threshold = [high_reco_threshold] * len(obs_list)
+    list_low_threshold = [low_reco_threshold] * len(observations)
+    list_high_threshold = [high_reco_threshold] * len(observations)
 
-    for obs in obs_list:
+    for obs in observations:
         offset = position.separation(obs.pointing_radec)
         list_aeff.append(obs.aeff.to_effective_area_table(offset, energy=e_true))
         list_edisp.append(

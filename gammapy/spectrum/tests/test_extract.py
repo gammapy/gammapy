@@ -7,7 +7,7 @@ import astropy.units as u
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumExtraction, SpectrumObservation
-from ...background.tests.test_reflected import bkg_estimator, obs_list
+from ...background.tests.test_reflected import bkg_estimator, observations
 
 
 @pytest.fixture(scope="session")
@@ -25,7 +25,7 @@ def extraction():
     e_true = np.logspace(-1, 1.9, 70) * u.TeV
 
     return SpectrumExtraction(
-        bkg_estimate=bkg_estimate(), obs_list=obs_list(), e_true=e_true
+        bkg_estimate=bkg_estimate(), observations=observations(), e_true=e_true
     )
 
 
@@ -57,14 +57,14 @@ class TestSpectrumExtraction:
             ),
         ],
     )
-    def test_extract(self, pars, results, obs_list, bkg_estimate):
+    def test_extract(self, pars, results, observations, bkg_estimate):
         """Test quantitative output for various configs"""
         extraction = SpectrumExtraction(
-            obs_list=obs_list, bkg_estimate=bkg_estimate, **pars
+            observations=observations, bkg_estimate=bkg_estimate, **pars
         )
 
         extraction.run()
-        obs = extraction.observations[0]
+        obs = extraction.spectrum_observations[0]
         aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
         edisp_actual = obs.edisp.data.evaluate(e_true=5 * u.TeV, e_reco=5.2 * u.TeV)
 
@@ -81,14 +81,14 @@ class TestSpectrumExtraction:
         assert_allclose(sigma_actual, results["sigma"], atol=1e-2)
         assert_allclose(containment_actual, results["containment"], rtol=1e-3)
 
-    def test_alpha(self, obs_list, bkg_estimate):
+    def test_alpha(self, observations, bkg_estimate):
         bkg_estimate[0].a_off = 0
         bkg_estimate[1].a_off = 2
         extraction = SpectrumExtraction(
-            obs_list=obs_list, bkg_estimate=bkg_estimate, max_alpha=0.2
+            observations=observations, bkg_estimate=bkg_estimate, max_alpha=0.2
         )
         extraction.run()
-        assert len(extraction.observations) == 0
+        assert len(extraction.spectrum_observations) == 0
 
     def test_run(self, tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
@@ -96,14 +96,14 @@ class TestSpectrumExtraction:
         extraction.write(outdir=tmpdir, overwrite=True)
         testobs = SpectrumObservation.read(tmpdir / "ogip_data" / "pha_obs23523.fits")
         assert_quantity_allclose(
-            testobs.aeff.data.data, extraction.observations[0].aeff.data.data
+            testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.on_vector.data.data, extraction.observations[0].on_vector.data.data
+            testobs.on_vector.data.data, extraction.spectrum_observations[0].on_vector.data.data
         )
         assert_quantity_allclose(
             testobs.on_vector.energy.nodes,
-            extraction.observations[0].on_vector.energy.nodes,
+            extraction.spectrum_observations[0].on_vector.energy.nodes,
         )
 
     @requires_dependency("sherpa")
@@ -117,11 +117,11 @@ class TestSpectrumExtraction:
         arf = sau.get_arf()
 
         actual = arf._arf._specresp
-        desired = extraction.observations[0].aeff.data.data.value
+        desired = extraction.spectrum_observations[0].aeff.data.data.value
         assert_allclose(actual, desired)
 
     def test_compute_energy_threshold(self, extraction):
         extraction.run()
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
-        actual = extraction.observations[0].lo_threshold
+        actual = extraction.spectrum_observations[0].lo_threshold
         assert_quantity_allclose(actual, 0.879923 * u.TeV, rtol=1e-3)

@@ -63,12 +63,12 @@ class SpectrumAnalysisIACT(object):
     def run_extraction(self):
         """Run all steps for the spectrum extraction."""
         self.background_estimator = ReflectedRegionsBackgroundEstimator(
-            obs_list=self.observations, **self.config["background"]
+            observations=self.observations, **self.config["background"]
         )
         self.background_estimator.run()
 
         self.extraction = SpectrumExtraction(
-            obs_list=self.observations,
+            observations=self.observations,
             bkg_estimate=self.background_estimator.result,
             **self.config["extraction"]
         )
@@ -78,7 +78,7 @@ class SpectrumAnalysisIACT(object):
     def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
         self.fit = SpectrumFit(
-            obs_list=self.extraction.observations, **self.config["fit"]
+            obs_list=self.extraction.spectrum_observations, **self.config["fit"]
         )
         self.fit.run(optimize_opts=optimize_opts)
         modelname = self.fit.result[0].model.__class__.__name__
@@ -88,14 +88,14 @@ class SpectrumAnalysisIACT(object):
         self.fit.result[0].to_yaml(filename=filename)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
-        stacked_obs = self.extraction.observations.stack()
+        stacked_obs = self.extraction.spectrum_observations.stack()
         self.egm = SpectrumEnergyGroupMaker(stacked_obs)
         self.egm.compute_groups_fixed(self.config["fp_binning"])
 
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-            obs=self.extraction.observations,
+            obs=self.extraction.spectrum_observations,
         )
         self.flux_points = self.flux_point_estimator.run()
 
