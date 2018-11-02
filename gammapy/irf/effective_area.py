@@ -159,8 +159,7 @@ class EffectiveAreaTable(object):
         g3 = -pars[instrument][2]
 
         value = g1 * xx ** (-g2) * np.exp(g3 / xx)
-
-        data = value * u.cm ** 2
+        data = u.Quantity(value, "cm2",  copy=False)
 
         return cls(
             energy_lo=energy.lower_bounds, energy_hi=energy.upper_bounds, data=data
