@@ -439,16 +439,15 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def energy_range(self):
         """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
-        e = u.Quantity(
-            [self.data["Energy_Range_Spec_Min"], self.data["Energy_Range_Spec_Max"]]
-        )
-        # Some EXTERN sources have no energy range information.
-        # In those cases, we put a default
-        use_default = np.isnan(e)
-        e_default = [0.2, 50] * u.TeV
-        e[use_default] = e_default[use_default]
+        emin, emax = self.data["Energy_Range_Spec_Min"], self.data["Energy_Range_Spec_Max"]
 
-        return e
+        if np.isnan(emin):
+            emin = u.Quantity(0.2, "TeV")
+
+        if np.isnan(emax):
+            emax = u.Quantity(50, "TeV")
+
+        return u.Quantity([emin, emax], "TeV")
 
     @property
     def spectral_model_type(self):
