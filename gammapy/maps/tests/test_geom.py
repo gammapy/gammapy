@@ -225,3 +225,29 @@ def test_mapaxis_repr():
 def test_mapcoord_repr():
     coord = MapCoord({"lon": 0, "lat": 0, "energy": 5})
     assert "MapCoord" in repr(coord)
+
+
+nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
+
+mapaxis_geoms_node_type_unit = [
+    (nodes_array, "lin", "edges", "s", "TEST", True),
+    (nodes_array, "log", "edges", "s", "test", False),
+    (nodes_array, "lin", "edges", "TeV", "TEST", False),
+    (nodes_array, "sqrt", "edges", "s", "test", False),
+    (nodes_array, "lin", "center", "s", "test", False),
+    (nodes_array + 1e-9, "lin", "edges", "s", "test", True),
+    (nodes_array + 1e-3, "lin", "edges", "s", "test", False),
+]
+
+
+@pytest.mark.parametrize(
+    ("nodes", "interp", "node_type", "unit", "name", "result"),
+    mapaxis_geoms_node_type_unit,
+)
+def test_mapaxis_equal(nodes, interp, node_type, unit, name, result):
+    axis1 = MapAxis(nodes_array, name="test", unit="s", interp="lin", node_type="edges")
+
+    axis2 = MapAxis(nodes, name=name, unit=unit, interp=interp, node_type=node_type)
+
+    assert (axis1 == axis2) is result
+    assert (axis1 != axis2) is not result

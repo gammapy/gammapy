@@ -355,19 +355,24 @@ class MapAxis(object):
         self._nbin = nbin
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return (
-                np.allclose(self._nodes, other._nodes)
-                and self._node_type == other._node_type
-                and self._interp == other._interp
-                and self._unit == other._unit
-            )
-        return NotImplemented
+        """Test axis equality. Absolute and relative tolerances of 1e-6 are used"""
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        # TODO: implement an allclose method for MapAxis and call it here
+        if self.edges.shape != other.edges.shape:
+            return False
+
+        return (
+            np.allclose(self.edges, other.edges, atol=1e-6, rtol=1e-6)
+            and self.unit == other.unit
+            and self._node_type == other._node_type
+            and self._interp == other._interp
+            and self.name.upper() == other.name.upper()
+        )
 
     def __ne__(self, other):
-        if isinstance(other, self.__class__):
-            return not self.__eq__(other)
-        return NotImplemented
+        return not self.__eq__(other)
 
     @property
     def name(self):
