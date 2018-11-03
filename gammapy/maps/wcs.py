@@ -882,6 +882,23 @@ class WcsGeom(MapGeom):
         )
         return str_
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        # check overall shape and axes compatibility
+        if self.data_shape != other.data_shape:
+            return False
+
+        for axis, otheraxis in zip(self.axes, other.axes):
+            if axis != otheraxis:
+                return False
+
+        # check WCS consistency with a priori tolerance of 1e-6
+        return self.wcs.wcs.compare(other.wcs.wcs, tolerance=1e-6)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 def create_wcs(
     skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None

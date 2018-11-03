@@ -296,3 +296,39 @@ def test_get_axis_index_by_name():
     assert geom.get_axis_index_by_name("Energy") == 0
     with pytest.raises(ValueError):
         geom.get_axis_index_by_name("time")
+
+
+test_axis1 = [MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center")]
+test_axis2 = [
+    MapAxis(nodes=(1, 2, 3, 4), unit="TeV", node_type="center"),
+    MapAxis(nodes=(1, 2, 3), unit="TeV", node_type="center"),
+]
+
+skydir2 = SkyCoord(110.0, 75.0 + 1e-8, unit="deg", frame="icrs")
+skydir3 = SkyCoord(110.0, 75.0 + 1e-3, unit="deg", frame="icrs")
+
+compatibility_test_geoms = [
+    (10, 0.1, "GAL", "CAR", skydir, test_axis1, True),
+    (10, 0.1, "GAL", "CAR", skydir2, test_axis1, True),
+    (10, 0.1, "GAL", "CAR", skydir3, test_axis1, False),
+    (10, 0.1, "GAL", "TAN", skydir, test_axis1, False),
+    (8, 0.1, "GAL", "CAR", skydir, test_axis1, False),
+    (10, 0.1, "GAL", "CAR", skydir, test_axis2, False),
+    (10, 0.1, "GAL", "CAR", skydir.galactic, test_axis1, True),
+]
+
+
+@pytest.mark.parametrize(
+    ("npix", "binsz", "coordsys", "proj", "skypos", "axes", "result"),
+    compatibility_test_geoms,
+)
+def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
+    geom0 = WcsGeom.create(
+        skydir=skydir, npix=10, binsz=0.1, proj="CAR", coordsys="GAL", axes=test_axis1
+    )
+    geom1 = WcsGeom.create(
+        skydir=skypos, npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
+    )
+
+    assert (geom0 == geom1) is result
+    assert (geom0 != geom1) is not result
