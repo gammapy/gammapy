@@ -195,7 +195,7 @@ class MapEvaluator(object):
         dnde = self.compute_dnde()
         volume = self.bin_volume
         flux = dnde * volume
-        return flux.to("cm-2 s-1")
+        return flux
 
     def apply_exposure(self, flux):
         """Compute npred cube
