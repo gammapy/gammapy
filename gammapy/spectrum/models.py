@@ -554,7 +554,7 @@ class PowerLaw(SpectralModel):
     """
 
     def __init__(
-        self, index=2.0, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+        self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"
     ):
         self.parameters = Parameters(
             [
@@ -750,10 +750,10 @@ class PowerLaw2(SpectralModel):
 
     def __init__(
         self,
-        amplitude=1e-12 * u.Unit("cm-2 s-1"),
+        amplitude="1e-12 cm-2 s-1",
         index=2,
-        emin=0.1 * u.TeV,
-        emax=100 * u.TeV,
+        emin="0.1 TeV",
+        emax="100 TeV",
     ):
         self.parameters = Parameters(
             [
@@ -883,9 +883,9 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     def __init__(
         self,
         index=1.5,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1 * u.TeV,
-        lambda_=0.1 / u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        lambda_="0.1 TeV-1",
     ):
         self.parameters = Parameters(
             [
@@ -967,9 +967,9 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     def __init__(
         self,
         index=1.5,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1 * u.TeV,
-        ecut=10 * u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        ecut="10 TeV",
     ):
         self.parameters = Parameters(
             [
@@ -1034,18 +1034,17 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         self,
         index_1=1.5,
         index_2=2,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1 * u.TeV,
-        ecut=10 * u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        ecut="10 TeV",
     ):
-        # TODO: order or parameters is different from argument list / docstring. Make uniform!
         self.parameters = Parameters(
             [
+                Parameter("index_1", index_1),
+                Parameter("index_2", index_2),
                 Parameter("amplitude", amplitude),
                 Parameter("reference", reference, frozen=True),
                 Parameter("ecut", ecut),
-                Parameter("index_1", index_1),
-                Parameter("index_2", index_2),
             ]
         )
 
@@ -1108,8 +1107,8 @@ class LogParabola(SpectralModel):
 
     def __init__(
         self,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=10 * u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="10 TeV",
         alpha=2,
         beta=1,
     ):
@@ -1131,9 +1130,6 @@ class LogParabola(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
         """Evaluate the model (static function)."""
-        # TODO: can this comment be removed?
-        # cast dimensionless values as np.array, because of bug in Astropy < v1.2
-        # https://github.com/astropy/astropy/issues/4764
         try:
             xx = (energy / reference).to("")
             exponent = -alpha - beta * np.log(xx)
