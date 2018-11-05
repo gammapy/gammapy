@@ -442,7 +442,7 @@ class SpectralModel(object):
 
             def f(x):
                 # scale by 1e12 to achieve better precision
-                energy = u.Quantity(x, eunit)
+                energy = u.Quantity(x, eunit, copy=False)
                 y = self(energy).to_value(value.unit)
                 return 1e12 * (y - val.value)
 
