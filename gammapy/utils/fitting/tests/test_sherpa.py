@@ -2,8 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from numpy.testing import assert_allclose
-from ...testing import requires_dependency
 from .. import Parameter, Parameters, optimize_sherpa
+
+pytest.importorskip("sherpa")
 
 
 def fcn(parameters):
@@ -17,7 +18,6 @@ def fcn(parameters):
 # method='gridsearch' would require very low tolerance asserts, not added for now
 
 
-@requires_dependency("sherpa")
 @pytest.mark.parametrize("method", ["moncar", "simplex"])
 def test_sherpa(method):
     pars = Parameters([Parameter("x", 2.2), Parameter("y", 3.4), Parameter("z", 4.5)])

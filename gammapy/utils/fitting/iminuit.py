@@ -102,8 +102,8 @@ def make_minuit_par_kwargs(parameters):
         par = parameters[idx]
         kwargs[parname_] = par.factor
 
-        min_ = None if np.isnan(par.min) else par.min
-        max_ = None if np.isnan(par.max) else par.max
+        min_ = None if np.isnan(par.factor_min) else par.factor_min
+        max_ = None if np.isnan(par.factor_max) else par.factor_max
         kwargs["limit_{}".format(parname_)] = (min_, max_)
 
         kwargs["error_{}".format(parname_)] = 1
