@@ -128,9 +128,11 @@ class TestFermi3FGLObject:
 
         assert len(flux_points.table) == 5
         assert "flux_ul" in flux_points.table.colnames
+        assert flux_points.sed_type == "flux"
 
-        desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06, 1.308784e-08]
-        assert_allclose(flux_points.table["dnde"].data, desired, rtol=1e-5)
+        desired = [1.645888e-06, 5.445407e-07, 1.255338e-07, 2.545524e-08,
+                   2.263189e-09]
+        assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-5)
 
     def test_flux_points_ul(self):
         source = self.cat["3FGL J0000.2-3738"]
@@ -301,8 +303,9 @@ class TestFermi3FHLObject:
         assert len(flux_points.table) == 5
         assert "flux_ul" in flux_points.table.colnames
 
-        desired = [5.124e-07, 7.370e-08, 9.044e-09, 7.681e-10, 4.307e-11]
-        assert_allclose(flux_points.table["dnde"].data, desired, rtol=1e-3)
+        desired = [5.169889e-09, 2.245024e-09, 9.243175e-10, 2.758956e-10,
+                   6.684021e-11]
+        assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-3)
 
     @pytest.mark.parametrize(
         "name", ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]
