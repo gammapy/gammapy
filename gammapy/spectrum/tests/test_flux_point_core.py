@@ -5,12 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 import astropy.units as u
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-    assert_quantity_allclose,
-    mpl_plot_check,
-)
 from ..models import PowerLaw
 from ..flux_point import FluxPoints
 
