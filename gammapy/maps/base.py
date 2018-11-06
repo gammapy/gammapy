@@ -1039,7 +1039,7 @@ class Map(object):
             if self.geom == other.geom:
                 q = other.quantity
             else:
-                raise ValueError("Map Arithemtics: Inconsistent geometries.")
+                raise ValueError("Map Arithmetics: Inconsistent geometries.")
         else:
             q = u.Quantity(other, copy=False)
 

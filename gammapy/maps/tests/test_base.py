@@ -376,15 +376,13 @@ def test_map_arithmetics(map_type):
 
 
 def test_arithmetics_inconsistent_geom():
-    m_wcs = Map.create(binsz=0.1, width=1.0, map_type="wcs", skydir=(0, 0), unit="m2")
-    m_wcs_incorrect = Map.create(
-        binsz=0.1, width=2.0, map_type="wcs", skydir=(0, 0), unit="m2"
-    )
+    m_wcs = Map.create(binsz=0.1, width=1.0)
+    m_wcs_incorrect = Map.create(binsz=0.1, width=2.0)
 
     with pytest.raises(ValueError):
         m_wcs += m_wcs_incorrect
 
-    m_hpx = Map.create(binsz=0.1, width=1.0, map_type="hpx", skydir=(0, 0), unit="m2")
+    m_hpx = Map.create(binsz=0.1, width=1.0, map_type="hpx")
     with pytest.raises(ValueError):
         m_wcs += m_hpx
 
