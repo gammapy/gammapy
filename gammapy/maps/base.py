@@ -1036,8 +1036,10 @@ class Map(object):
     def _arithmetics(self, operator, other, copy):
         """ Perform arithmetics on maps after checking geometry consistency"""
         if isinstance(other, Map):
-            # TODO: check consistency
-            q = other.quantity
+            if self.geom == other.geom:
+                q = other.quantity
+            else:
+                raise ValueError("Map Arithemtics: Inconsistent geometries.")
         else:
             q = u.Quantity(other, copy=False)
 
