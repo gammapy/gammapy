@@ -191,8 +191,11 @@ class Parameter(object):
         Available methods:
 
         * ``scale10`` sets ``scale`` to power of 10,
-          so that factor is in the range 1 to 10
+          so that abs(factor) is in the range 1 to 10
         * ``factor1`` sets ``factor, scale = 1, value``
+
+        In both cases the sign of value is stored in ``factor``,
+        i.e. the ``scale`` is always positive.
 
         Parameters
         ----------
@@ -202,8 +205,8 @@ class Parameter(object):
         if method == "scale10":
             value = self.value
             if value != 0:
-                power = int(np.log10(np.absolute(value)))
-                scale = 10.0 ** power
+                exponent = np.floor(np.log10(np.abs(value)))
+                scale = np.power(10.0, exponent)
                 self.factor = value / scale
                 self.scale = scale
         elif method == "factor1":
