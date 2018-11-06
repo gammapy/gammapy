@@ -193,7 +193,9 @@ class SpectrumExtraction(object):
         """
         log.info("Extract IRFs")
         offset = self._on_vector.offset
-        self._aeff = observation.aeff.to_effective_area_table(offset, energy=self.e_true)
+        self._aeff = observation.aeff.to_effective_area_table(
+            offset, energy=self.e_true
+        )
         self._edisp = observation.edisp.to_energy_dispersion(
             offset, e_reco=self.e_reco, e_true=self.e_true
         )

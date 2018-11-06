@@ -96,9 +96,7 @@ class SensitivityEstimator(object):
         excess_counts[is_gamma_limited] = self.gamma_min
 
         model = PowerLaw(
-            index=self.slope,
-            amplitude="1 cm-2 s-1 TeV-1",
-            reference="1 TeV",
+            index=self.slope, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
         )
 
         # TODO: simplify the following computation

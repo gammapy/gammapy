@@ -38,7 +38,9 @@ def make_psf(observation, position, energy=None, rad=None):
     if isinstance(observation.psf, PSF3D):
         # PSF3D is a table PSF, so we use the native RAD binning by default
         # TODO: should handle this via a uniform caller API
-        psf_value = observation.psf.to_energy_dependent_table_psf(theta=offset).evaluate(energy)
+        psf_value = observation.psf.to_energy_dependent_table_psf(
+            theta=offset
+        ).evaluate(energy)
     else:
         psf_value = observation.psf.to_energy_dependent_table_psf(
             theta=offset, rad=rad

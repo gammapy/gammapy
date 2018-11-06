@@ -99,7 +99,8 @@ class TestSpectrumExtraction:
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.on_vector.data.data, extraction.spectrum_observations[0].on_vector.data.data
+            testobs.on_vector.data.data,
+            extraction.spectrum_observations[0].on_vector.data.data,
         )
         assert_quantity_allclose(
             testobs.on_vector.energy.nodes,

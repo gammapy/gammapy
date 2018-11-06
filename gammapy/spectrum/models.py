@@ -435,6 +435,7 @@ class SpectralModel(object):
             Energies at which the model has the given ``value``.
         """
         from scipy.optimize import brentq
+
         eunit = "TeV"
 
         energies = []
@@ -553,9 +554,7 @@ class PowerLaw(SpectralModel):
 
     """
 
-    def __init__(
-        self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"
-    ):
+    def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
         self.parameters = Parameters(
             [
                 Parameter("index", index),
@@ -749,11 +748,7 @@ class PowerLaw2(SpectralModel):
     """
 
     def __init__(
-        self,
-        amplitude="1e-12 cm-2 s-1",
-        index=2,
-        emin="0.1 TeV",
-        emax="100 TeV",
+        self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
     ):
         self.parameters = Parameters(
             [
@@ -838,8 +833,12 @@ class PowerLaw2(SpectralModel):
             Function value of the spectral model.
         """
         p = self.parameters
-        amplitude, index, emin, emax = (p["amplitude"].quantity, p["index"].value,
-                                        p["emin"].quantity, p["emax"].quantity)
+        amplitude, index, emin, emax = (
+            p["amplitude"].quantity,
+            p["index"].value,
+            p["emin"].quantity,
+            p["emax"].quantity,
+        )
 
         # to get the energies dimensionless we use a modified formula
         top = -index + 1
@@ -1106,11 +1105,7 @@ class LogParabola(SpectralModel):
     """
 
     def __init__(
-        self,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="10 TeV",
-        alpha=2,
-        beta=1,
+        self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
     ):
         self.parameters = Parameters(
             [
@@ -1377,8 +1372,12 @@ class Absorption(object):
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
-        energy_lo = u.Quantity(table_energy["ENERG_LO"], "keV", copy=False) # unit not stored in file
-        energy_hi = u.Quantity(table_energy["ENERG_HI"], "keV", copy=False)  # unit not stored in file
+        energy_lo = u.Quantity(
+            table_energy["ENERG_LO"], "keV", copy=False
+        )  # unit not stored in file
+        energy_hi = u.Quantity(
+            table_energy["ENERG_HI"], "keV", copy=False
+        )  # unit not stored in file
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")

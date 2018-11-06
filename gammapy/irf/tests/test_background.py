@@ -109,7 +109,9 @@ def test_background_3d_integrate(bkg_3d):
     # fov_lon=1.5 deg, fov_lat=1.5 deg, energy=100 TeV
 
     rate = bkg_3d.evaluate_integrate(
-        fov_lon=[1.5, 1.5] * u.deg, fov_lat=[1.5, 1.5] * u.deg, energy_reco=[100, 100 + 2e-6] * u.TeV
+        fov_lon=[1.5, 1.5] * u.deg,
+        fov_lat=[1.5, 1.5] * u.deg,
+        energy_reco=[100, 100 + 2e-6] * u.TeV,
     )
     assert rate.shape == (1,)
 
@@ -128,9 +130,7 @@ def test_background_3d_integrate(bkg_3d):
         energy_reco=[[1, 1], [100, 100]] * u.TeV,
     )
     assert rate.shape == (1, 2)
-    assert_allclose(
-        rate.to("s-1 sr-1").value, [[99000000.0, 99000000.0]], rtol=1e-5
-    )
+    assert_allclose(rate.to("s-1 sr-1").value, [[99000000.0, 99000000.0]], rtol=1e-5)
 
 
 @pytest.fixture(scope="session")

@@ -151,8 +151,7 @@ class MapEvaluator(object):
         Returns ``lon, lat`` tuple of `~astropy.units.Quantity`.
         """
         lon, lat = self.geom_image.get_coord()
-        return (u.Quantity(lon, "deg", copy=False),
-                u.Quantity(lat, "deg", copy=False))
+        return (u.Quantity(lon, "deg", copy=False), u.Quantity(lat, "deg", copy=False))
 
     @lazyproperty
     def lon(self):

@@ -38,10 +38,12 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     energies = energy_axis.edges * energy_axis.unit
 
     fov_lon, fov_lat, energy_reco = np.broadcast_arrays(
-        fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis],
-        subok=True)
+        fov_lon, fov_lat, energies[:, np.newaxis, np.newaxis], subok=True
+    )
 
-    bkg_de = bkg.evaluate_integrate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
+    bkg_de = bkg.evaluate_integrate(
+        fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco
+    )
 
     d_omega = geom.solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")

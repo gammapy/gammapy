@@ -34,11 +34,16 @@ def stats(on_region, observations):
 
 @pytest.fixture(scope="session")
 def stats_stacked(on_region, observations):
-    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, observations=observations)
+    bge = ReflectedRegionsBackgroundEstimator(
+        on_region=on_region, observations=observations
+    )
     bge.run()
 
     return ObservationStats.stack(
-        [ObservationStats.from_observation(obs, bg) for obs, bg in zip(observations, bge.result)]
+        [
+            ObservationStats.from_observation(obs, bg)
+            for obs, bg in zip(observations, bge.result)
+        ]
     )
 
 

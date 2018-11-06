@@ -46,7 +46,10 @@ def execute_notebook(path, kernel="python3", loglevel=20):
     try:
         t = time.time()
         cmd = [
-            sys.executable, "-m", "jupyter", "nbconvert",
+            sys.executable,
+            "-m",
+            "jupyter",
+            "nbconvert",
             "--allow-errors",
             "--log-level={}".format(loglevel),
             "--ExecutePreprocessor.timeout=None",
@@ -55,7 +58,7 @@ def execute_notebook(path, kernel="python3", loglevel=20):
             "notebook",
             "--inplace",
             "--execute",
-            "{}".format(path)
+            "{}".format(path),
         ]
         subprocess.call(cmd)
         t = (time.time() - t) / 60

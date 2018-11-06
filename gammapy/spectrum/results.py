@@ -116,7 +116,7 @@ class SpectrumFitResult(object):
         model = models.SpectralModel.from_dict(modeldict)
         try:
             erange = val["fit_range"]
-            energy_range = u.Quantity([erange["min"], erange["max"]],  erange["unit"])
+            energy_range = u.Quantity([erange["min"], erange["max"]], erange["unit"])
         except KeyError:
             energy_range = None
 

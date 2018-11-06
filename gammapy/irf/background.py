@@ -167,12 +167,7 @@ class Background3D(object):
         return array
 
     def evaluate_integrate(
-        self,
-        fov_lon,
-        fov_lat,
-        energy_reco,
-        method="linear",
-        **kwargs
+        self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs
     ):
         """Evaluate at given FOV position and energy edges by integrating over the energy
         axes.
@@ -192,9 +187,9 @@ class Background3D(object):
             Returns 2D array with axes offset
         """
         from ..spectrum.utils import _trapz_loglog
+
         data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
         return _trapz_loglog(data, energy_reco, axis=0, intervals=True)
-
 
     def to_2d(self):
         """Convert to `Background2D`.
@@ -344,13 +339,7 @@ class Background2D(object):
         points = dict(offset=offset, energy=energy_reco)
         return self.data.evaluate_at_coord(points=points, method=method, **kwargs)
 
-    def evaluate_integrate(
-        self,
-        fov_lon,
-        fov_lat,
-        energy_reco,
-        method="linear",
-    ):
+    def evaluate_integrate(self, fov_lon, fov_lat, energy_reco, method="linear"):
         """Evaluate at given FOV position and energy, by integrating over the energy range.
 
         Parameters
@@ -368,6 +357,7 @@ class Background2D(object):
             Returns 2D array with axes offset
         """
         from ..spectrum.utils import _trapz_loglog
+
         data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
         return _trapz_loglog(data, energy_reco, axis=0, intervals=True)
 
