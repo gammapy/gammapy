@@ -16,21 +16,8 @@ __all__ = ["CTAIrf", "BgRateTable", "Psf68Table", "SensitivityTable", "CTAPerf"]
 class CTAIrf(object):
     """CTA instrument response function container.
 
-    Class handling CTA instrument response function.
-
-    For now we use the production 2 of the CTA IRF
-    (https://portal.cta-observatory.org/Pages/CTA-Performance.aspx)
-    adapted from the ctools
-    (http://cta.irap.omp.eu/ctools/user_manual/getting_started/response.html).
-
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
-    Waiting for a new public production of the CTA IRF,
-    we'll fix the missing pieces.
-
-    This class is similar to `~gammapy.data.DataStoreObservation`,
-    but only contains IRFs (no event data or livetime info).
-    TODO: maybe re-factor code somehow to avoid code duplication.
 
     Parameters
     ----------
@@ -42,20 +29,20 @@ class CTAIrf(object):
         Point spread function
     bkg : `~gammapy.irf.Background3D`
         Background rate
-    ref_sensi : `~gammapy.irf.SensitivityTable`
-        Reference Sensitivity
     """
 
-    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None, ref_sensi=None):
+    def __init__(self, aeff=None, edisp=None, psf=None, bkg=None):
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
         self.bkg = bkg
-        self.ref_sensi = ref_sensi
 
     @classmethod
     def read(cls, filename):
-        """Read from a FITS file.
+        """Read from a single FITS file.
+
+        Expected extensions are:
+        "EFFECTIVE AREA", "BACKGROUND", "ENERGY DISPERSION" and "POINT SPREAD FUNCTION"
 
         Parameters
         ----------
@@ -69,11 +56,6 @@ class CTAIrf(object):
         bkg = Background3D.read(filename, hdu="BACKGROUND")
         edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-
-        if "SENSITIVITY" in hdu_list:
-            sensi = SensitivityTable.read(filename, hdu="SENSITIVITY")
-        else:
-            sensi = None
 
         return cls(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf, ref_sensi=sensi)
 
