@@ -30,11 +30,15 @@ def test_parameter_init():
         Parameter(1, 2)
 
 
-def test_parameter_value():
-    par = Parameter("spam", 42, "deg", 10)
+def test_parameter_scale():
+    # Basic check how scale is used for value, min, max
+    par = Parameter("spam", 42, "deg", 10, 400, 500)
 
-    value = par.value
-    assert value == 420
+    assert par.value == 420
+    assert par.min == 400
+    assert_allclose(par.factor_min, 40)
+    assert par.max == 500
+    assert_allclose(par.factor_max, 50)
 
     par.value = 70
     assert par.scale == 10

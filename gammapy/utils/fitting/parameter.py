@@ -15,6 +15,20 @@ class Parameter(object):
     """
     Class representing model parameters.
 
+    Note that the parameter value has been split into
+    a factor and scale like this::
+
+        value = factor x scale
+
+    Users should interact with the ``value``, ``quantity``
+    or ``min`` and ``max`` properties and consider the fact
+    that there is a ``factor``` and ``scale`` an implementation detail.
+
+    That was introduced for numerical stability in parameter and error
+    estimation methods, only in the Gammapy optimiser interface do we
+    interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
+    i.e. the optimiser "sees" the well-scaled problem.
+
     Parameters
     ----------
     name : str
@@ -97,6 +111,14 @@ class Parameter(object):
         self._min = float(val)
 
     @property
+    def factor_min(self):
+        """Factor min (float).
+
+        This ``factor_min = min / scale`` is for the optimizer interface.
+        """
+        return self.min / self.scale
+
+    @property
     def max(self):
         """Maximum (float)."""
         return self._max
@@ -104,6 +126,14 @@ class Parameter(object):
     @max.setter
     def max(self, val):
         self._max = float(val)
+
+    @property
+    def factor_max(self):
+        """Factor max (float).
+
+        This ``factor_max = max / scale`` is for the optimizer interface.
+        """
+        return self.max / self.scale
 
     @property
     def frozen(self):
