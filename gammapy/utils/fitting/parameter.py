@@ -348,7 +348,7 @@ class Parameters(object):
             error = errors.get(par.name, 0)
             error = u.Quantity(error, par.unit).value
             diag.append(error)
-        self.covariance = np.diag(diag) ** 2
+        self.covariance = np.diag(np.power(diag, 2))
 
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
@@ -387,7 +387,7 @@ class Parameters(object):
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 
-        Used in the optimiser interface.
+        Used in the optimizer interface.
         """
         for factor, parameter in zip(factors, self.parameters):
             parameter.factor = factor
@@ -400,7 +400,7 @@ class Parameters(object):
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
 
-        Used in the optimiser interface.
+        Used in the optimizer interface.
         """
         self.covariance = self._scale_matrix * matrix
 

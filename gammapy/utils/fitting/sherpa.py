@@ -4,7 +4,7 @@ import numpy as np
 __all__ = ["optimize_sherpa"]
 
 
-def get_sherpa_optimiser(name):
+def get_sherpa_optimizer(name):
     from sherpa.optmethods import LevMar, NelderMead, MonCar, GridSearch
 
     return {
@@ -53,7 +53,7 @@ def optimize_sherpa(parameters, function, **kwargs):
         Tuple containing the best fit factors, some info and the optimizer instance.
     """
     method = kwargs.pop("method", "simplex")
-    optimizer = get_sherpa_optimiser(method)
+    optimizer = get_sherpa_optimizer(method)
     optimizer.config.update(kwargs)
 
     pars = [par.value for par in parameters.parameters]

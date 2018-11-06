@@ -14,7 +14,7 @@ def fcn(parameters):
 
 
 # TODO: levmar doesn't work yet; needs array of statval as return in likelihood
-# optimiser='gridsearch' would require very low tolerance asserts, not added for now
+# method='gridsearch' would require very low tolerance asserts, not added for now
 
 
 @requires_dependency("sherpa")
@@ -22,7 +22,7 @@ def fcn(parameters):
 def test_sherpa(method):
     pars = Parameters([Parameter("x", 2.2), Parameter("y", 3.4), Parameter("z", 4.5)])
 
-    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars, method=method)
+    factors, info, optimizer = optimize_sherpa(function=fcn, parameters=pars, method=method)
 
     assert info["success"]
     assert info["nfev"] > 10
