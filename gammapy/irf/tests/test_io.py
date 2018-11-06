@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
-from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
-from ...utils.testing import assert_quantity_allclose
+from numpy.testing import assert_allclose
+from ...utils.testing import requires_data
 from ..io import CTAIrf, CTAPerf
 
 
@@ -10,7 +10,7 @@ from ..io import CTAIrf, CTAPerf
 def test_cta_irf():
     """Test that CTA IRFs can be loaded and evaluated."""
 
-    filename = "$GAMMAPY_EXTRA/datasets/cta/perf_prod2/South_5h/irf_file.fits.gz"
+    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     irf = CTAIrf.read(filename)
 
     energy = Quantity(1, "TeV")
@@ -19,27 +19,17 @@ def test_cta_irf():
     migra = 1
 
     val = irf.aeff.data.evaluate(energy=energy, offset=offset)
-    assert_quantity_allclose(val, Quantity(235929.697018741, "m^2"))
+    assert_allclose(val.value, 545269.4675532734)
+    assert val.unit == "m2"
 
     val = irf.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
-    assert_quantity_allclose(val, 0.13111834249544874)
+    assert_allclose(val.value, 3183.688224335546)
+    assert val.unit == ""
 
-    # TODO: clean up these PSF classes, e.g. to return quantities.
-    # Also: add an `evaluate(energy, offset, theta)` to the loaded PSF class.
-    # psf = irf.psf.to_energy_dependent_table_psf(offset=offset)
     psf = irf.psf.psf_at_energy_and_theta(energy=energy, theta=offset)
     val = psf(rad)
-    assert_quantity_allclose(val, 5.423486126591272)
+    assert_allclose(val, 4.868832183085153)
 
-    # TODO: Background cube class doesn't have a working evaluate yet
-    # val = irf.bkg.evaluate(energy=energy, x=offset, y=Quantity(0, 'deg'))
-    # assert_quantity_allclose(val, Quantity(247996.974414962, 'm^2'))
-
-
-@requires_dependency("matplotlib")
-@requires_data("gammapy-extra")
-def test_point_like_perf():
-    filename = "$GAMMAPY_EXTRA/datasets/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz"
-    cta_perf = CTAPerf.read(filename)
-    with mpl_plot_check():
-        cta_perf.peek()
+    val = irf.bkg.data.evaluate(energy=energy, fov_lon=offset, fov_lat=Quantity(0, 'deg'))
+    assert_allclose(val.value, 9.400071082017065e-05)
+    assert val.unit == "1 / (MeV s sr)"

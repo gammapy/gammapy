@@ -50,7 +50,6 @@ class CTAIrf(object):
             File containing the IRFs
         """
         filename = str(make_path(filename))
-        hdu_list = fits.open(filename)
 
         aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
         bkg = Background3D.read(filename, hdu="BACKGROUND")
