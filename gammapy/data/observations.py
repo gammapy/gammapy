@@ -360,7 +360,7 @@ class DataStoreObservation(object):
 class Observations(object):
     """Container class that holds a list of observations.
 
-    Parameters:
+    Parameters
     ----------
     obs_list : list
         A list of `~gammapy.data.DataStoreObservation`
