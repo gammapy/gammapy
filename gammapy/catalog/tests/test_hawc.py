@@ -47,9 +47,9 @@ class TestSourceCatalogObject2HWC:
 
         e_min, e_max = [1, 10] * u.TeV
         flux, flux_err = spectral_models[0].integral_error(e_min, e_max)
-        assert flux.unit == u.Unit("cm-2 s-1")
+        assert flux.unit == "cm-2 s-1"
         assert_allclose(flux.value, 1.2966462620662674e-12)
-        assert flux_err.unit == u.Unit("cm-2 s-1")
+        assert flux_err.unit == "cm-2 s-1"
         assert_allclose(flux_err.value, 1.671177271712936e-14)
 
     @requires_dependency("uncertainties")
@@ -63,7 +63,7 @@ class TestSourceCatalogObject2HWC:
 
         e_min, e_max = [1, 10] * u.TeV
         flux, flux_err = spectral_models[1].integral_error(e_min, e_max)
-        assert flux.unit == u.Unit("cm-2 s-1")
+        assert flux.unit == "cm-2 s-1"
         assert_allclose(flux.value, 3.3381204455973463e-13)
-        assert flux_err.unit == u.Unit("cm-2 s-1")
+        assert flux_err.unit == "cm-2 s-1"
         assert_allclose(flux_err.value, 4.697084075095061e-14)

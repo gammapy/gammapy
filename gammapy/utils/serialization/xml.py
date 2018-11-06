@@ -340,7 +340,7 @@ def parameters_to_xml(parameters, which):
 
         xml += indent
         free = int(not par.frozen)
-        value = par.quantity.to(unit).value
+        value = par.quantity.to_value(unit)
         xml += val.format(free, par.max, par.min, xml_par, value)
         xml += "\n"
 

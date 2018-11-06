@@ -126,7 +126,7 @@ class Parameter(object):
     @property
     def quantity(self):
         """Value times unit (`~astropy.units.Quantity`)."""
-        return self.value * u.Unit(self.unit)
+        return self.value * self.unit
 
     @quantity.setter
     def quantity(self, val):

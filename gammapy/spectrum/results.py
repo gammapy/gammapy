@@ -116,7 +116,7 @@ class SpectrumFitResult(object):
         model = models.SpectralModel.from_dict(modeldict)
         try:
             erange = val["fit_range"]
-            energy_range = (erange["min"], erange["max"]) * u.Unit(erange["unit"])
+            energy_range = u.Quantity([erange["min"], erange["max"]],  erange["unit"])
         except KeyError:
             energy_range = None
 
@@ -241,13 +241,13 @@ class SpectrumFitResult(object):
         self.obs.excess_vector.plot(ax=ax, label="excess", fmt=".", energy_unit="TeV")
 
         ax.axvline(
-            self.fit_range.to("TeV").value[0],
+            self.fit_range.to_value("TeV")[0],
             color="black",
             linestyle="dashed",
             label="fit range",
         )
 
-        ax.axvline(self.fit_range.to("TeV").value[1], color="black", linestyle="dashed")
+        ax.axvline(self.fit_range.to_value("TeV")[1], color="black", linestyle="dashed")
 
         ax.legend(numpoints=1)
         ax.set_title("")
@@ -303,8 +303,8 @@ class SpectrumResult(object):
             points_err = np.sqrt(points_err[0] * points_err[1])
 
         model_val = self.model(e_ref)
-        residuals = ((points - model_val) / model_val).to("").value
-        residuals_err = (points_err / model_val).to("").value
+        residuals = ((points - model_val) / model_val).to_value("")
+        residuals_err = (points_err / model_val).to_value("")
 
         # Remove residuals for upper_limits
         residuals[self.points.is_ul] = np.nan
@@ -396,7 +396,7 @@ class SpectrumResult(object):
 
         y, y_err = self.flux_point_residuals
         x = self.points.e_ref
-        x = x.to(energy_unit).value
+        x = x.to_value(energy_unit)
         ax.errorbar(x, y, yerr=y_err, **kwargs)
 
         ax.axhline(0, color="black")

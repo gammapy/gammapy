@@ -784,7 +784,7 @@ class WcsGeom(MapGeom):
         dx = angular_separation(*(ylo_xlo + ylo_xhi))
         dy = angular_separation(*(ylo_xlo + yhi_xlo))
 
-        return u.Quantity(dx * dy, "sr")
+        return u.Quantity(dx * dy, "sr", copy=False)
 
     def separation(self, center):
         """Compute sky separation wrt a given center.

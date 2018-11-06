@@ -44,8 +44,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     bkg_de = bkg.evaluate_integrate(fov_lon=fov_lon, fov_lat=fov_lat, energy_reco=energy_reco)
 
     d_omega = geom.solid_angle()
-    data = (bkg_de * d_omega * ontime).to("").value
-
+    data = (bkg_de * d_omega * ontime).to_value("")
     return WcsNDMap(geom, data=data)
 
 

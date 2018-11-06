@@ -200,13 +200,13 @@ def make_base_catalog_galactic(
         vel_dis = velocity_distributions[vel_dis]
 
     # Draw random values for the age
-    age = random_state.uniform(0, max_age.to("yr").value, n_sources)
+    age = random_state.uniform(0, max_age.to_value("yr"), n_sources)
     age = Quantity(age, "yr")
 
     # Draw r and z values from the given distribution
     r = draw(
-        RMIN.to("kpc").value,
-        RMAX.to("kpc").value,
+        RMIN.to_value("kpc"),
+        RMAX.to_value("kpc"),
         n_sources,
         pdf(rad_dis()),
         random_state=random_state,
@@ -214,8 +214,8 @@ def make_base_catalog_galactic(
     r = Quantity(r, "kpc")
 
     z = draw(
-        ZMIN.to("kpc").value,
-        ZMAX.to("kpc").value,
+        ZMIN.to_value("kpc"),
+        ZMAX.to_value("kpc"),
         n_sources,
         Exponential(),
         random_state=random_state,
@@ -234,8 +234,8 @@ def make_base_catalog_galactic(
 
     # Draw values from velocity distribution
     v = draw(
-        VMIN.to("km/s").value,
-        VMAX.to("km/s").value,
+        VMIN.to_value("km/s"),
+        VMAX.to_value("km/s"),
         n_sources,
         vel_dis(),
         random_state=random_state,
@@ -398,8 +398,8 @@ def add_pwn_parameters(table):
         pulsar = Pulsar(P0_birth, logB)
         snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
         pwn = PWN(pulsar, snr)
-        r_out_pwn = pwn.radius(age).to("pc").value
-        L_PWN = pwn.luminosity_tev(age).to("erg").value
+        r_out_pwn = pwn.radius(age).to_value("pc")
+        L_PWN = pwn.luminosity_tev(age).to_value("erg")
         results.append(dict(r_out_pwn=r_out_pwn, L_PWN=L_PWN))
 
     # Add columns to table

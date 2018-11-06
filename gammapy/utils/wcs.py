@@ -154,13 +154,13 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     delta_y = (range_y[1] - range_y[0]) / nbins_y
     wcs.wcs.ctype = [name_x, name_y]
     wcs.wcs.cunit = [unit_x, unit_y]
-    wcs.wcs.cdelt = [delta_x.to(unit_x).value, delta_y.to(unit_y).value]
+    wcs.wcs.cdelt = [delta_x.to_value(unit_x), delta_y.to_value(unit_y)]
     # ref as lower left corner (start of (X, Y) bin coordinates)
     # coordinate start at pix = 0.5
     wcs.wcs.crpix = [0.5, 0.5]
     wcs.wcs.crval = [
-        (bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5) * delta_x).to(unit_x).value,
-        (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5) * delta_y).to(unit_y).value,
+        (bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5) * delta_x).to_value(unit_x),
+        (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5) * delta_y).to_value(unit_y),
     ]
 
     return wcs

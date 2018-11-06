@@ -435,19 +435,21 @@ class SpectralModel(object):
             Energies at which the model has the given ``value``.
         """
         from scipy.optimize import brentq
+        eunit = "TeV"
 
         energies = []
         for val in np.atleast_1d(value):
 
             def f(x):
                 # scale by 1e12 to achieve better precision
-                y = self(x * u.TeV).to(value.unit).value
+                energy = u.Quantity(x, eunit, copy=False)
+                y = self(energy).to_value(value.unit)
                 return 1e12 * (y - val.value)
 
-            energy = brentq(f, emin.to("TeV").value, emax.to("TeV").value)
+            energy = brentq(f, emin.to_value(eunit), emax.to_value(eunit))
             energies.append(energy)
 
-        return energies * u.TeV
+        return u.Quantity(energies, eunit, copy=False)
 
     def copy(self):
         """A deep copy."""
@@ -552,7 +554,7 @@ class PowerLaw(SpectralModel):
     """
 
     def __init__(
-        self, index=2.0, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+        self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"
     ):
         self.parameters = Parameters(
             [
@@ -590,8 +592,8 @@ class PowerLaw(SpectralModel):
             prefactor = pars["amplitude"].quantity * pars["reference"].quantity.to(
                 e_unit
             )
-            upper = np.log(emax.to(e_unit).value)
-            lower = np.log(emin.value)
+            upper = np.log(emax.to_value(e_unit))
+            lower = np.log(emin.to_value(e_unit))
         else:
             val = -1 * pars["index"].value + 1
             prefactor = pars["amplitude"].quantity * pars["reference"].quantity / val
@@ -748,10 +750,10 @@ class PowerLaw2(SpectralModel):
 
     def __init__(
         self,
-        amplitude=1e-12 * u.Unit("cm-2 s-1"),
+        amplitude="1e-12 cm-2 s-1",
         index=2,
-        emin=0.1 * u.TeV,
-        emax=100 * u.TeV,
+        emin="0.1 TeV",
+        emax="100 TeV",
     ):
         self.parameters = Parameters(
             [
@@ -836,13 +838,14 @@ class PowerLaw2(SpectralModel):
             Function value of the spectral model.
         """
         p = self.parameters
-        index = p["index"].value
+        amplitude, index, emin, emax = (p["amplitude"].quantity, p["index"].value,
+                                        p["emin"].quantity, p["emax"].quantity)
+
+        # to get the energies dimensionless we use a modified formula
         top = -index + 1
-        bottom = p["emax"].quantity.to("TeV").value ** (-index + 1) - p[
-            "emin"
-        ].quantity.to("TeV").value ** (-index + 1)
-        term = (bottom / top) * (value / p["amplitude"].quantity).to("1 / TeV")
-        return np.power(term.value, -1.0 / index) * u.TeV
+        bottom = emax - emin * (emin / emax) ** (-index)
+        term = (bottom / top) * (value / amplitude)
+        return np.power(term.to_value(""), -1.0 / index) * emax
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):
@@ -880,9 +883,9 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     def __init__(
         self,
         index=1.5,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1 * u.TeV,
-        lambda_=0.1 / u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        lambda_="0.1 TeV-1",
     ):
         self.parameters = Parameters(
             [
@@ -964,9 +967,9 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     def __init__(
         self,
         index=1.5,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1 * u.TeV,
-        ecut=10 * u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        ecut="10 TeV",
     ):
         self.parameters = Parameters(
             [
@@ -1031,18 +1034,17 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         self,
         index_1=1.5,
         index_2=2,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=1 * u.TeV,
-        ecut=10 * u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        ecut="10 TeV",
     ):
-        # TODO: order or parameters is different from argument list / docstring. Make uniform!
         self.parameters = Parameters(
             [
+                Parameter("index_1", index_1),
+                Parameter("index_2", index_2),
                 Parameter("amplitude", amplitude),
                 Parameter("reference", reference, frozen=True),
                 Parameter("ecut", ecut),
-                Parameter("index_1", index_1),
-                Parameter("index_2", index_2),
             ]
         )
 
@@ -1105,8 +1107,8 @@ class LogParabola(SpectralModel):
 
     def __init__(
         self,
-        amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-        reference=10 * u.TeV,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="10 TeV",
         alpha=2,
         beta=1,
     ):
@@ -1128,9 +1130,6 @@ class LogParabola(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
         """Evaluate the model (static function)."""
-        # TODO: can this comment be removed?
-        # cast dimensionless values as np.array, because of bug in Astropy < v1.2
-        # https://github.com/astropy/astropy/issues/4764
         try:
             xx = (energy / reference).to("")
             exponent = -alpha - beta * np.log(xx)
@@ -1256,7 +1255,7 @@ class TableModel(SpectralModel):
         # Get spectrum values (no interpolation, take closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
-        values = table_spectra[idx][1] * u.Unit("")  # no dimension
+        values = u.Quantity(table_spectra[idx][1], "", copy=False)  # no dimension
 
         kwargs.setdefault("values_scale", "lin")
         return cls(energy=energy, values=values, **kwargs)
@@ -1280,7 +1279,7 @@ class TableModel(SpectralModel):
 
     def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
-        x = np.log(energy.to(self.energy.unit).value)
+        x = np.log(energy.to_value(self.energy.unit))
         vals = self._evaluate(x, clip=True)
         vals = np.reshape(vals, x.shape)
         return u.Quantity(norm.value * vals, self.values.unit, copy=False)
@@ -1378,21 +1377,16 @@ class Absorption(object):
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
-        energy_lo = table_energy["ENERG_LO"] * u.keV  # unit not stored in file
-        energy_hi = table_energy["ENERG_HI"] * u.keV  # unit not stored in file
-
-        # Energies are in keV
-        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(
-            lower=energy_lo, upper=energy_hi, unit=u.keV
-        )
+        energy_lo = u.Quantity(table_energy["ENERG_LO"], "keV", copy=False) # unit not stored in file
+        energy_hi = u.Quantity(table_energy["ENERG_HI"], "keV", copy=False)  # unit not stored in file
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data
 
         return cls(
-            energy_lo=energy_bounds.lower_bounds,
-            energy_hi=energy_bounds.upper_bounds,
+            energy_lo=energy_lo,
+            energy_hi=energy_hi,
             param_lo=param_lo,
             param_hi=param_hi,
             data=data,

@@ -439,16 +439,15 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def energy_range(self):
         """Spectral model energy range (`~astropy.units.Quantity` with length 2)."""
-        e = u.Quantity(
-            [self.data["Energy_Range_Spec_Min"], self.data["Energy_Range_Spec_Max"]]
-        )
-        # Some EXTERN sources have no energy range information.
-        # In those cases, we put a default
-        use_default = np.isnan(e)
-        e_default = [0.2, 50] * u.TeV
-        e[use_default] = e_default[use_default]
+        emin, emax = self.data["Energy_Range_Spec_Min"], self.data["Energy_Range_Spec_Max"]
 
-        return e
+        if np.isnan(emin):
+            emin = u.Quantity(0.2, "TeV")
+
+        if np.isnan(emax):
+            emax = u.Quantity(50, "TeV")
+
+        return u.Quantity([emin, emax], "TeV")
 
     @property
     def spectral_model_type(self):
@@ -487,14 +486,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             pars["amplitude"] = data["Flux_Spec_PL_Diff_Pivot"]
             pars["reference"] = data["Energy_Spec_PL_Pivot"]
             errs["amplitude"] = data["Flux_Spec_PL_Diff_Pivot_Err"]
-            errs["index"] = data["Index_Spec_PL_Err"] * u.dimensionless_unscaled
+            errs["index"] = data["Index_Spec_PL_Err"]
             model = PowerLaw(**pars)
         elif spec_type == "ecpl":
             pars["index"] = data["Index_Spec_ECPL"]
             pars["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot"]
             pars["reference"] = data["Energy_Spec_ECPL_Pivot"]
             pars["lambda_"] = data["Lambda_Spec_ECPL"]
-            errs["index"] = data["Index_Spec_ECPL_Err"] * u.dimensionless_unscaled
+            errs["index"] = data["Index_Spec_ECPL_Err"]
             errs["amplitude"] = data["Flux_Spec_ECPL_Diff_Pivot_Err"]
             errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
             model = ExponentialCutoffPowerLaw(**pars)

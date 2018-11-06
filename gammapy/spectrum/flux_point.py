@@ -268,12 +268,11 @@ class FluxPoints(object):
 
         Examples
         --------
-        >>> from astropy import units as u
         >>> from gammapy.spectrum import FluxPoints
         >>> from gammapy.spectrum.models import PowerLaw
         >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
-        >>> model = PowerLaw(2.2 * u.Unit(''), 1e-12 * u.Unit('cm-2 s-1 TeV-1'), 1 * u.TeV)
+        >>> model = PowerLaw(index=2.2)
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
         """
         # TODO: implement other directions. Refactor!
@@ -281,11 +280,7 @@ class FluxPoints(object):
             raise NotImplementedError
 
         if model is None:
-            model = PowerLaw(
-                index=2 * u.Unit(""),
-                amplitude=1 * u.Unit("cm-2 s-1 TeV-1"),
-                reference=1 * u.TeV,
-            )
+            model = PowerLaw()
 
         input_table = self.table.copy()
 
@@ -544,13 +539,13 @@ class FluxPoints(object):
         if y_err_all:
             y_errn = (y_err_all[0] * np.power(x, energy_power)).to(y_unit)
             y_errp = (y_err_all[1] * np.power(x, energy_power)).to(y_unit)
-            y_err = (y_errn[~is_ul].to(y_unit).value, y_errp[~is_ul].to(y_unit).value)
+            y_err = (y_errn[~is_ul].to_value(y_unit), y_errp[~is_ul].to_value(y_unit))
 
         if x_err_all:
             x_errn, x_errp = x_err_all
             x_err = (
-                x_errn[~is_ul].to(energy_unit).value,
-                x_errp[~is_ul].to(energy_unit).value,
+                x_errn[~is_ul].to_value(energy_unit),
+                x_errp[~is_ul].to_value(energy_unit),
             )
 
         # set flux points plotting defaults
@@ -565,8 +560,8 @@ class FluxPoints(object):
             if x_err_all:
                 x_errn, x_errp = x_err_all
                 x_err = (
-                    x_errn[is_ul].to(energy_unit).value,
-                    x_errp[is_ul].to(energy_unit).value,
+                    x_errn[is_ul].to_value(energy_unit),
+                    x_errp[is_ul].to_value(energy_unit),
                 )
 
             y_ul = self.table[sed_type + "_ul"].quantity
@@ -648,7 +643,7 @@ class FluxPointEstimator(object):
 
     def run(self):
         """Run the flux point estimator
-        
+
         Returns
         -------
         flux_points : `FluxPoints`
@@ -752,7 +747,7 @@ class FluxPointEstimator(object):
             self.obs[index].on_vector.quality = quality
 
         # Set reference and remove min amplitude
-        model.parameters["reference"].value = energy_ref.to("TeV").value
+        model.parameters["reference"].value = energy_ref.to_value("TeV")
 
         self._fit = SpectrumFit(self.obs, model)
         result = self.fit.run()
@@ -799,11 +794,7 @@ class FluxPointFit(Fit):
         filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)
 
-        model = PowerLaw(
-            index=2. * u.Unit(''),
-            amplitude=1e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            reference=1. * u.TeV,
-        )
+        model = PowerLaw()
 
         fitter = FluxPointFit(model, flux_points)
         result = fitter.run()
@@ -828,7 +819,7 @@ class FluxPointFit(Fit):
         model = self._model(self.data.e_ref)
         data = self.data.table["dnde"].quantity
         sigma = self.data.table["dnde_err"].quantity
-        return ((data - model) / sigma).to("").value ** 2
+        return ((data - model) / sigma).to_value("") ** 2
 
     @property
     def _stat_chi2_assym(self):
@@ -840,8 +831,8 @@ class FluxPointFit(Fit):
         data_errp = self.data.table["dnde_errp"].quantity
         data_errn = self.data.table["dnde_errn"].quantity
 
-        val_n = ((data - model) / data_errn).to("").value ** 2
-        val_p = ((data - model) / data_errp).to("").value ** 2
+        val_n = ((data - model) / data_errn).to_value("") ** 2
+        val_p = ((data - model) / data_errp).to_value("") ** 2
         return np.where(model > data, val_p, val_n)
 
     @property

@@ -45,8 +45,8 @@ class CountsPredictor(object):
                                             sigma=0.3, bias=0)
 
         model = models.PowerLaw(index=2.3,
-                                amplitude=2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1'),
-                                reference=1*u.TeV)
+                                amplitude="2.5e-12 cm-2 s-1 TeV-1"),
+                                reference="1 TeV")
 
         livetime = 1 * u.h
 
@@ -150,7 +150,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     if isinstance(xmin, Quantity):
         unit = xmin.unit
         xmin = xmin.value
-        xmax = xmax.to(unit).value
+        xmax = xmax.to_value(unit)
         is_quantity = True
 
     if np.isscalar(xmin):

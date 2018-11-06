@@ -342,11 +342,10 @@ class TestSkyModelMapEvaluator:
 
     @staticmethod
     def test_compute_flux(evaluator):
-        out = evaluator.compute_flux()
+        out = evaluator.compute_flux().to_value("cm-2 s-1")
         assert out.shape == (3, 4, 5)
-        assert out.unit == "cm-2 s-1"
-        assert_allclose(out.value.sum(), 1.290431e-12, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 4.626436e-14, rtol=1e-5)
+        assert_allclose(out.sum(), 1.290431e-12, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 4.626436e-14, rtol=1e-5)
 
     @staticmethod
     def test_apply_psf(evaluator):

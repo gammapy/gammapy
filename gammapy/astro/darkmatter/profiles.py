@@ -37,7 +37,7 @@ class DMProfile(object):
 
     def scale_to_local_density(self):
         """Scale to local density."""
-        scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to("").value
+        scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to_value("")
         self.parameters["rho_s"].value *= scale
 
     def _eval_squared(self, radius):

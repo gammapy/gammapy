@@ -20,9 +20,9 @@ def test_table_standardise_units():
 
     table = table_standardise_units_copy(table)
 
-    assert table["a"].unit == u.Unit("cm-2 s-1")
-    assert table["b"].unit == u.Unit("cm-2 s-1")
-    assert table["c"].unit == u.Unit("cm-2 s-1")
+    assert table["a"].unit == "cm-2 s-1"
+    assert table["b"].unit == "cm-2 s-1"
+    assert table["c"].unit == "cm-2 s-1"
     assert table["d"].unit is None
 
 

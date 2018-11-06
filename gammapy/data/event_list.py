@@ -800,11 +800,11 @@ class EventListChecker(Checker):
 
     def check_times(self):
         dt = (self.event_list.time - self.event_list.observation_time_start).sec
-        if dt.min() < self.accuracy["time"].to("s").value:
+        if dt.min() < self.accuracy["time"].to_value("s"):
             yield self._record(level="error", msg="Event times before obs start time")
 
         dt = (self.event_list.time - self.event_list.observation_time_end).sec
-        if dt.max() > self.accuracy["time"].to("s").value:
+        if dt.max() > self.accuracy["time"].to_value("s"):
             yield self._record(level="error", msg="Event times after the obs end time")
 
         if np.min(np.diff(dt)) <= 0:

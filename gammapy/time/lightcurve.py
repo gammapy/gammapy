@@ -8,6 +8,7 @@ from astropy.time import Time
 from ..spectrum.utils import CountsPredictor
 from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
+from ..utils.table import table_from_row_data
 from ..stats.poisson import significance_on_off
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
@@ -720,26 +721,11 @@ class LightCurveEstimator(object):
             if useinterval:
                 rows.append(row)
 
-        return self._make_lc_from_row_data(rows)
+        table = table_from_row_data(rows)
 
-    @staticmethod
-    def _make_lc_from_row_data(rows):
-        table = Table()
-        table["time_min"] = [_["time_min"].value for _ in rows]
-        table["time_max"] = [_["time_max"].value for _ in rows]
-
-        table["flux"] = [_["flux"].value for _ in rows] * u.Unit("1 / (s cm2)")
-        table["flux_err"] = [_["flux_err"].value for _ in rows] * u.Unit("1 / (s cm2)")
-        table["flux_ul"] = [_["flux_ul"].value for _ in rows] * u.Unit("1 / (s cm2)")
-        table["is_ul"] = [_["is_ul"] for _ in rows]
-
-        table["livetime"] = [_["livetime"].value for _ in rows] * u.s
-        table["n_on"] = [_["n_on"] for _ in rows]
-        table["n_off"] = [_["n_off"] for _ in rows]
-        table["alpha"] = [_["alpha"] for _ in rows]
-        table["measured_excess"] = [_["measured_excess"] for _ in rows]
-        table["expected_excess"] = [_["expected_excess"] for _ in rows]
-
+        # TODO: check why stripping of the units here is needed
+        table["time_min"] = table["time_min"].data
+        table["time_max"] = table["time_max"].data
         return LightCurve(table)
 
     def compute_flux_point(
@@ -808,7 +794,7 @@ class LightCurveEstimator(object):
                 # obs included in interval
                 livetime_to_add = (obs_stop - obs_start).to("s")
             else:
-                livetime_to_add = 0 * u.s
+                livetime_to_add = u.Quantity(0, "s")
 
             # Take into account dead time
             livetime_to_add *= 1.0 - obs.observation_dead_time_fraction
@@ -878,22 +864,23 @@ class LightCurveEstimator(object):
             )
             flux_ul *= int_flux / predicted_excess.value
         else:
-            flux = 0
-            flux_err = 0
-            flux_ul = -1
+            flux = u.Quantity(0, "cm-2 s-1")
+            flux_err = u.Quantity(0, "cm-2 s-1")
+            flux_ul = u.Quantity(-1, "cm-2 s-1")
 
         # Store measurements in a dict and return that
         return (
             useinterval,
             OrderedDict(
                 [
-                    ("time_min", Time(tmin, format="mjd")),
-                    ("time_max", Time(tmax, format="mjd")),
-                    ("flux", flux * u.Unit("1 / (s cm2)")),
-                    ("flux_err", flux_err * u.Unit("1 / (s cm2)")),
-                    ("flux_ul", flux_ul * u.Unit("1 / (s cm2)")),
+                    # TODO: check why time is stored without units
+                    ("time_min", Time(tmin, format="mjd").value),
+                    ("time_max", Time(tmax, format="mjd").value),
+                    ("flux", flux),
+                    ("flux_err", flux_err),
+                    ("flux_ul", flux_ul),
                     ("is_ul", is_ul),
-                    ("livetime", livetime * u.s),
+                    ("livetime", livetime),
                     ("alpha", alpha_mean),
                     ("n_on", n_on),
                     ("n_off", n_off),

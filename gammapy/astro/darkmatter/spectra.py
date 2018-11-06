@@ -80,7 +80,7 @@ class PrimaryFlux(object):
     @mDM.setter
     def mDM(self, mDM):
         mDM_vals = self.table["mDM"].data
-        mDM_ = Quantity(mDM).to("GeV").value
+        mDM_ = Quantity(mDM).to_value("GeV")
         interp_idx = np.argmin(np.abs(mDM_vals - mDM_))
         self._mDM = Quantity(mDM_vals[interp_idx], "GeV")
 

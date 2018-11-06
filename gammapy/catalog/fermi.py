@@ -275,7 +275,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ss += "{:<40s} : {:.3} s (Mission elapsed time)\n".format(
                 "Time peak", d["Time_Peak"]
             )
-            peak_interval = d["Peak_Interval"].to("day").value
+            peak_interval = d["Peak_Interval"].to_value("day")
             ss += "{:<40s} : {:.3} day\n".format("Peak interval", peak_interval)
         else:
             ss += "\nNo peak measured for this source.\n"
@@ -295,29 +295,29 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         pars["reference"] = self.data["Pivot_Energy"]
 
         if spec_type == "PowerLaw":
-            pars["index"] = self.data["Spectral_Index"] * u.dimensionless_unscaled
-            errs["index"] = self.data["Unc_Spectral_Index"] * u.dimensionless_unscaled
+            pars["index"] = self.data["Spectral_Index"]
+            errs["index"] = self.data["Unc_Spectral_Index"]
             model = PowerLaw(**pars)
         elif spec_type == "PLExpCutoff":
-            pars["index"] = self.data["Spectral_Index"] * u.dimensionless_unscaled
+            pars["index"] = self.data["Spectral_Index"]
             pars["ecut"] = self.data["Cutoff"]
-            errs["index"] = self.data["Unc_Spectral_Index"] * u.dimensionless_unscaled
+            errs["index"] = self.data["Unc_Spectral_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"]
             model = ExponentialCutoffPowerLaw3FGL(**pars)
         elif spec_type == "LogParabola":
-            pars["alpha"] = self.data["Spectral_Index"] * u.dimensionless_unscaled
-            pars["beta"] = self.data["beta"] * u.dimensionless_unscaled
-            errs["alpha"] = self.data["Unc_Spectral_Index"] * u.dimensionless_unscaled
-            errs["beta"] = self.data["Unc_beta"] * u.dimensionless_unscaled
+            pars["alpha"] = self.data["Spectral_Index"]
+            pars["beta"] = self.data["beta"]
+            errs["alpha"] = self.data["Unc_Spectral_Index"]
+            errs["beta"] = self.data["Unc_beta"]
             model = LogParabola(**pars)
         elif spec_type == "PLSuperExpCutoff":
             # TODO: why convert to GeV here? Remove?
             pars["reference"] = pars["reference"].to("GeV")
-            pars["index_1"] = self.data["Spectral_Index"] * u.dimensionless_unscaled
-            pars["index_2"] = self.data["Exp_Index"] * u.dimensionless_unscaled
+            pars["index_1"] = self.data["Spectral_Index"]
+            pars["index_2"] = self.data["Exp_Index"]
             pars["ecut"] = self.data["Cutoff"].to("GeV")
-            errs["index_1"] = self.data["Unc_Spectral_Index"] * u.dimensionless_unscaled
-            errs["index_2"] = self.data["Unc_Exp_Index"] * u.dimensionless_unscaled
+            errs["index_1"] = self.data["Unc_Spectral_Index"]
+            errs["index_2"] = self.data["Unc_Exp_Index"]
             errs["ecut"] = self.data["Unc_Cutoff"].to("GeV")
             model = PLSuperExpCutoff3FGL(**pars)
         else:
@@ -553,9 +553,9 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux"]
         pars["emin"], pars["emax"] = self.energy_range
-        pars["index"] = self.data["Spectral_Index"] * u.dimensionless_unscaled
+        pars["index"] = self.data["Spectral_Index"]
         errs["amplitude"] = self.data["Unc_Flux"]
-        errs["index"] = self.data["Unc_Spectral_Index"] * u.dimensionless_unscaled
+        errs["index"] = self.data["Unc_Spectral_Index"]
         model = PowerLaw2(**pars)
         model.parameters.set_parameter_errors(errs)
         return model
@@ -630,10 +630,10 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux50"]
         pars["emin"], pars["emax"] = self.energy_range
-        pars["index"] = self.data["Spectral_Index"] * u.dimensionless_unscaled
+        pars["index"] = self.data["Spectral_Index"]
 
         errs["amplitude"] = self.data["Unc_Flux50"]
-        errs["index"] = self.data["Unc_Spectral_Index"] * u.dimensionless_unscaled
+        errs["index"] = self.data["Unc_Spectral_Index"]
 
         model = PowerLaw2(**pars)
         model.parameters.set_parameter_errors(errs)
@@ -850,14 +850,14 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         pars["reference"] = d["Pivot_Energy"]
 
         if spec_type == "PowerLaw":
-            pars["index"] = d["PowerLaw_Index"] * u.dimensionless_unscaled
-            errs["index"] = d["Unc_PowerLaw_Index"] * u.dimensionless_unscaled
+            pars["index"] = d["PowerLaw_Index"]
+            errs["index"] = d["Unc_PowerLaw_Index"]
             model = PowerLaw(**pars)
         elif spec_type == "LogParabola":
-            pars["alpha"] = d["Spectral_Index"] * u.dimensionless_unscaled
-            pars["beta"] = d["beta"] * u.dimensionless_unscaled
-            errs["alpha"] = d["Unc_Spectral_Index"] * u.dimensionless_unscaled
-            errs["beta"] = d["Unc_beta"] * u.dimensionless_unscaled
+            pars["alpha"] = d["Spectral_Index"]
+            pars["beta"] = d["beta"]
+            errs["alpha"] = d["Unc_Spectral_Index"]
+            errs["beta"] = d["Unc_beta"]
             model = LogParabola(**pars)
         else:
             raise ValueError("Invalid spec_type: {!r}".format(spec_type))

@@ -151,7 +151,8 @@ class MapEvaluator(object):
         Returns ``lon, lat`` tuple of `~astropy.units.Quantity`.
         """
         lon, lat = self.geom_image.get_coord()
-        return lon * u.deg, lat * u.deg
+        return (u.Quantity(lon, "deg", copy=False),
+                u.Quantity(lat, "deg", copy=False))
 
     @lazyproperty
     def lon(self):
@@ -194,16 +195,15 @@ class MapEvaluator(object):
         dnde = self.compute_dnde()
         volume = self.bin_volume
         flux = dnde * volume
-        return flux.to("cm-2 s-1")
+        return flux
 
     def apply_exposure(self, flux):
         """Compute npred cube
 
         For now just divide flux cube by exposure
         """
-        npred = Map.from_geom(self.geom, unit="")
-        npred.data = (flux * self.exposure.quantity).to("").value
-        return npred
+        npred = (flux * self.exposure.quantity).to_value("")
+        return self.exposure.copy(data=npred)
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""

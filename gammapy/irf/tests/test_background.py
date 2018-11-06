@@ -49,7 +49,7 @@ def test_background_3d_basics(bkg_3d):
 
     data = bkg_3d.data.data
     assert data.shape == (2, 3, 3)
-    assert data.unit == u.Unit("s-1 MeV-1 sr-1")
+    assert data.unit == "s-1 MeV-1 sr-1"
 
 
 def test_background_3d_read_write(tmpdir, bkg_3d):

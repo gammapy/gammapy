@@ -516,15 +516,15 @@ class EnergyDispersion(object):
 
         return DataRMF(
             name=name,
-            energ_lo=table["ENERG_LO"].quantity.to("keV").value.astype(SherpaFloat),
-            energ_hi=table["ENERG_HI"].quantity.to("keV").value.astype(SherpaFloat),
+            energ_lo=table["ENERG_LO"].quantity.to_value("keV").astype(SherpaFloat),
+            energ_hi=table["ENERG_HI"].quantity.to_value("keV").astype(SherpaFloat),
             matrix=matrix,
             n_grp=n_grp,
             n_chan=n_chan,
             f_chan=f_chan,
             detchans=self.e_reco.nbins,
-            e_min=self.e_reco.lo.to("keV").value,
-            e_max=self.e_reco.hi.to("keV").value,
+            e_min=self.e_reco.lo.to_value("keV"),
+            e_max=self.e_reco.hi.to_value("keV"),
             offset=0,
         )
 
@@ -562,7 +562,7 @@ class EnergyDispersion(object):
         caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
         if show_energy is not None:
-            ener_val = Quantity(show_energy).to(self.reco_energy.unit).value
+            ener_val = show_energy.to_value(self.reco_energy.unit)
             ax.hlines(ener_val, 0, 200200, linestyles="dashed")
 
         if add_cbar:
@@ -591,7 +591,7 @@ class EnergyDispersion(object):
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.e_true.nodes.to("TeV").value
+        x = self.e_true.nodes.to_value("TeV")
         y = self.get_bias(self.e_true.nodes)
 
         ax.plot(x, y, **kwargs)
@@ -727,7 +727,7 @@ class EnergyDispersion2D(object):
 
         e_true = EnergyBounds(e_true)
         # erf does not work with Quantities
-        true = e_true.log_centers.to("TeV").value
+        true = e_true.log_centers.to_value("TeV")
 
         true2d, migra2d = np.meshgrid(true, migra)
 

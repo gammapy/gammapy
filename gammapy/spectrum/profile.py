@@ -144,7 +144,7 @@ class FluxPointProfiles(object):
         for idx in range(self._n_bins):
             e2dnde = np.sqrt(e2dnde_edges[:-1] * e2dnde_edges[1:])
             e2dnde_ref = self.table["ref_eflux"].quantity[idx]
-            norm = (e2dnde / e2dnde_ref).to("").value
+            norm = (e2dnde / e2dnde_ref).to_value("")
             z[idx] = self.interp_profile(idx, norm)["dloglike"]
 
         ax.pcolormesh(x, y, z.T)

@@ -92,8 +92,7 @@ class SkyPointSource(SkySpatialModel):
 
         lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0) / np.abs(grad_lon)
         lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0) / np.abs(grad_lat)
-        val = lon_val * lat_val
-        return val.to("sr-1")
+        return lon_val * lat_val
 
 
 class SkyGaussian(SkySpatialModel):
@@ -129,14 +128,9 @@ class SkyGaussian(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, sigma):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        sep = sep.to("rad").value
-        sigma = sigma.to("rad").value
-
         norm = 1 / (2 * np.pi * sigma ** 2)
         exponent = -0.5 * (sep / sigma) ** 2
-        val = norm * np.exp(exponent)
-
-        return val * u.Unit("sr-1")
+        return norm * np.exp(exponent)
 
 
 class SkyDisk(SkySpatialModel):
@@ -175,13 +169,10 @@ class SkyDisk(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, r_0):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        sep = sep.to("rad").value
-        r_0 = r_0.to("rad").value
 
+        # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
         norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
-        val = np.where(sep <= r_0, norm, 0)
-
-        return val * u.Unit("sr-1")
+        return u.Quantity(norm.value * (sep <= r_0), "sr-1", copy=False)
 
 
 class SkyShell(SkySpatialModel):
@@ -229,18 +220,19 @@ class SkyShell(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        sep = sep.to("rad").value
-        r_i = radius.to("rad").value
-        r_o = (radius + width).to("rad").value
+        radius_out = radius + width
 
-        norm = 3 / (2 * np.pi * (r_o ** 3 - r_i ** 3))
+        norm = 3 / (2 * np.pi * (radius_out ** 3 - radius ** 3))
 
         with np.errstate(invalid="ignore"):
-            val_out = np.sqrt(r_o ** 2 - sep ** 2)
-            val_in = val_out - np.sqrt(r_i ** 2 - sep ** 2)
-            val = np.select([sep < r_i, sep < r_o], [val_in, val_out])
+            # np.where and np.select do not work with quantities, so we use the
+            # workaround with indexing
+            value = np.sqrt(radius_out ** 2 - sep ** 2)
+            mask = [sep < radius]
+            value[mask] = (value - np.sqrt(radius ** 2 - sep ** 2))[mask]
+            value[sep > radius_out] = 0
 
-        return norm * val * u.Unit("sr-1")
+        return norm * value
 
 
 class SkyDiffuseConstant(SkySpatialModel):
@@ -304,7 +296,7 @@ class SkyDiffuseMap(SkySpatialModel):
     def normalize(self):
         """Normalize the diffuse map model so that it integrates to unity."""
         data = self.map.data / self.map.data.sum()
-        data /= self.map.geom.solid_angle().to("sr").value
+        data /= self.map.geom.solid_angle().to_value("sr")
         self.map = self.map.copy(data=data, unit="sr-1")
 
     @classmethod
@@ -329,6 +321,6 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
-        coord = {"lon": lon.to("deg").value, "lat": lat.to("deg").value}
+        coord = {"lon": lon.to_value("deg"), "lat": lat.to_value("deg")}
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(norm.value * val, self.map.unit, copy=False)
