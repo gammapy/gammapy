@@ -57,7 +57,7 @@ class CTAIrf(object):
         edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
-        return cls(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf, ref_sensi=sensi)
+        return cls(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf)
 
 
 class BgRateTable(object):
