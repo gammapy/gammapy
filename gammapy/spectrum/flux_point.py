@@ -82,7 +82,8 @@ class FluxPoints(object):
 
     An instance of `FluxPoints` can also be created by passing an instance of
     `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
-    and `'dnde'`:
+    and `'dnde'`. The corresponding `sed_type` has to be defined in the meta data
+    of the table:
 
     .. code:: python
 
@@ -282,7 +283,7 @@ class FluxPoints(object):
         for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
             try:
                 data = table["e2dnde" + suffix].quantity
-                table["dnde" + suffix] =  (e_ref ** -2 * data).to(DEFAULT_UNIT["dnde"])
+                table["dnde" + suffix] =  (data / e_ref ** 2).to(DEFAULT_UNIT["dnde"])
             except KeyError:
                 continue
 
@@ -345,8 +346,10 @@ class FluxPoints(object):
 
         elif self.sed_type == "dnde" and sed_type == "e2dnde":
             table = self._dnde_to_e2dnde(self.e_ref, table)
+
         elif self.sed_type == "e2dnde" and sed_type == "dnde":
             table = self._e2dnde_to_dnde(self.e_ref, table)
+
         else:
             raise NotImplementedError
 
@@ -410,9 +413,6 @@ class FluxPoints(object):
     @staticmethod
     def _validate_table(table):
         """Validate input table."""
-        # TODO: do we really want to error out on tables that don't have `SED_TYPE` in meta?
-        # If yes, then this needs to be documented in the docstring,
-        # and the workaround pointed out (to add the meta key before creating FluxPoints).
         sed_type = table.meta["SED_TYPE"]
         required = set(REQUIRED_COLUMNS[sed_type])
 
@@ -429,11 +429,8 @@ class FluxPoints(object):
         except IndexError:
             return u.Unit("TeV")
 
-    def get_energy_err(self, sed_type=None):
+    def _plot_get_energy_err(self):
         """Compute energy error for given sed type"""
-        # TODO: sed_type is not used
-        if sed_type is None:
-            sed_type = self.sed_type
         try:
             e_min = self.table["e_min"].quantity
             e_max = self.table["e_max"].quantity
@@ -443,10 +440,8 @@ class FluxPoints(object):
             x_err = None
         return x_err
 
-    def get_flux_err(self, sed_type=None):
+    def _plot_get_flux_err(self, sed_type=None):
         """Compute flux error for given sed type"""
-        if sed_type is None:
-            sed_type = self.sed_type
         try:
             # asymmetric error
             y_errn = self.table[sed_type + "_errn"].quantity
@@ -515,7 +510,6 @@ class FluxPoints(object):
     def plot(
         self,
         ax=None,
-        sed_type=None,
         energy_unit="TeV",
         flux_unit=None,
         energy_power=0,
@@ -527,8 +521,6 @@ class FluxPoints(object):
         ----------
         ax : `~matplotlib.axes.Axes`
             Axis object to plot on.
-        sed_type : ['dnde', 'flux', 'eflux']
-            Which sed type to plot.
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -548,7 +540,7 @@ class FluxPoints(object):
         if ax is None:
             ax = plt.gca()
 
-        sed_type = sed_type or self.sed_type
+        sed_type = self.sed_type
         y_unit = u.Unit(flux_unit or DEFAULT_UNIT[sed_type])
 
         y = self.table[sed_type].quantity.to(y_unit)
@@ -556,8 +548,8 @@ class FluxPoints(object):
 
         # get errors and ul
         is_ul = self.is_ul
-        x_err_all = self.get_energy_err(sed_type)
-        y_err_all = self.get_flux_err(sed_type)
+        x_err_all = self._plot_get_energy_err()
+        y_err_all = self._plot_get_flux_err(sed_type)
 
         # handle energy power
         e_unit = self._get_y_energy_unit(y_unit)
