@@ -374,29 +374,33 @@ def test_map_arithmetics(map_type):
     assert m1.unit == u.Unit("")
     assert_allclose(m1.data, 4)
 
+
 def test_arithmetics_inconsistent_geom():
-    m_wcs = Map.create(binsz=0.1, width=1.0, map_type='wcs', skydir=(0, 0), unit="m2")
-    m_wcs_incorrect = Map.create(binsz=0.1, width=2.0, map_type='wcs', skydir=(0, 0), unit="m2")
+    m_wcs = Map.create(binsz=0.1, width=1.0, map_type="wcs", skydir=(0, 0), unit="m2")
+    m_wcs_incorrect = Map.create(
+        binsz=0.1, width=2.0, map_type="wcs", skydir=(0, 0), unit="m2"
+    )
 
     with pytest.raises(ValueError):
         m_wcs += m_wcs_incorrect
 
-    m_hpx = Map.create(binsz=0.1, width=1.0, map_type='hpx', skydir=(0, 0), unit="m2")
+    m_hpx = Map.create(binsz=0.1, width=1.0, map_type="hpx", skydir=(0, 0), unit="m2")
     with pytest.raises(ValueError):
         m_wcs += m_hpx
 
+
 # TODO: correct serialization for lin axis for energy
-#map_serialization_args = [("log"), ("lin")]
+# map_serialization_args = [("log"), ("lin")]
 
 map_serialization_args = [("log")]
 
-@pytest.mark.parametrize(("interp"), map_serialization_args)
 
+@pytest.mark.parametrize(("interp"), map_serialization_args)
 def test_arithmetics_after_serialization(tmpdir, interp):
     axis = MapAxis.from_bounds(
         1.0, 10.0, 3, interp=interp, name="energy", node_type="center"
     )
-    m_wcs = Map.create(binsz=0.1, width=1.0, map_type='wcs', skydir=(0, 0), axes=[axis])
+    m_wcs = Map.create(binsz=0.1, width=1.0, map_type="wcs", skydir=(0, 0), axes=[axis])
     m_wcs += 1
 
     filename = str(tmpdir / "map.fits")
@@ -405,4 +409,4 @@ def test_arithmetics_after_serialization(tmpdir, interp):
 
     m_wcs += m_wcs_serialized
 
-    assert_allclose(m_wcs.data, 2.)
+    assert_allclose(m_wcs.data, 2.0)
