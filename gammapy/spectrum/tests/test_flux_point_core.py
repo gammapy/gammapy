@@ -10,39 +10,40 @@ from ..flux_point import FluxPoints
 
 
 @pytest.fixture(scope="session")
-def flux_points_dnde():
-    e_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
-    pwl = PowerLaw()
+def model():
+    return PowerLaw()
 
+
+@pytest.fixture(scope="session")
+def flux_points_dnde(model):
+    e_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
     table = Table()
     table.meta["SED_TYPE"] = "dnde"
     table["e_ref"] = e_ref
-    table["dnde"] = pwl(e_ref)
+    table["dnde"] = model(e_ref)
     return FluxPoints(table)
 
 
 @pytest.fixture(scope="session")
-def flux_points_e2dnde():
+def flux_points_e2dnde(model):
     e_ref = [np.sqrt(10), np.sqrt(10 * 100)] * u.TeV
-    pwl = PowerLaw()
-
     table = Table()
     table.meta["SED_TYPE"] = "e2dnde"
     table["e_ref"] = e_ref
-    table["e2dnde"] = (pwl(e_ref) * e_ref ** 2).to("erg cm-2 s-1")
+    table["e2dnde"] = (model(e_ref) * e_ref ** 2).to("erg cm-2 s-1")
     return FluxPoints(table)
 
 
 @pytest.fixture(scope="session")
-def flux_points_flux():
+def flux_points_flux(model):
     e_min = [1, 10] * u.TeV
     e_max = [10, 100] * u.TeV
-    pwl = PowerLaw()
+
     table = Table()
     table.meta["SED_TYPE"] = "flux"
     table["e_min"] = e_min
     table["e_max"] = e_max
-    table["flux"] = pwl.integral(e_min, e_max)
+    table["flux"] = model.integral(e_min, e_max)
     return FluxPoints(table)
 
 
