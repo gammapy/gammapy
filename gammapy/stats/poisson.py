@@ -611,7 +611,7 @@ def _excess_matching_significance_lima(mu_bkg, significance):
         if n_on >= 0:
             return _significance_lima(n_on, mu_bkg) - significance
         else:
-            # This high value is to tell the optimiser to stay n_on >= 0
+            # This high value is to tell the optimizer to stay n_on >= 0
             return 1e10
 
     excess_guess = _excess_matching_significance_simple(mu_bkg, significance)
@@ -636,7 +636,7 @@ def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
         if n_on >= 0:
             return _significance_lima_on_off(n_on, n_off, alpha) - significance
         else:
-            # This high value is to tell the optimiser to stay n_on >= 0
+            # This high value is to tell the optimizer to stay n_on >= 0
             return 1e10
 
     excess_guess = _excess_matching_significance_on_off_simple(

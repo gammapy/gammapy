@@ -30,11 +30,15 @@ def test_parameter_init():
         Parameter(1, 2)
 
 
-def test_parameter_value():
-    par = Parameter("spam", 42, "deg", 10)
+def test_parameter_scale():
+    # Basic check how scale is used for value, min, max
+    par = Parameter("spam", 42, "deg", 10, 400, 500)
 
-    value = par.value
-    assert value == 420
+    assert par.value == 420
+    assert par.min == 400
+    assert_allclose(par.factor_min, 40)
+    assert par.max == 500
+    assert_allclose(par.factor_max, 50)
 
     par.value = 70
     assert par.scale == 10
@@ -65,12 +69,27 @@ def test_parameter_to_dict():
     assert isinstance(d["unit"], six.string_types)
 
 
-def test_parameter_large():
-    # Test case for Parameter with very large value
-    # Regression test for https://github.com/gammapy/gammapy/issues/1883
-    par = Parameter("a", 9e35)
+@pytest.mark.parametrize(
+    "method,value,factor,scale",
+    [
+        # Check method="scale10" in detail
+        ("scale10", 2e-10, 2, 1e-10),
+        ("scale10", 2e10, 2, 1e10),
+        ("scale10", -2e-10, -2, 1e-10),
+        ("scale10", -2e10, -2, 1e10),
+        # Check that results are OK for very large numbers
+        # Regression test for https://github.com/gammapy/gammapy/issues/1883
+        ("scale10", 9e35, 9, 1e35),
+        # Checks for the simpler method="factor1"
+        ("factor1", 2e10, 2, 1e10),
+        ("factor1", -2e10, -2, 1e10),
+    ],
+)
+def test_parameter_autoscale(method, value, factor, scale):
+    par = Parameter("", value)
     par.autoscale()
-    assert_allclose(par.scale, 1e35)
+    assert_allclose(par.factor, factor)
+    assert_allclose(par.scale, scale)
     assert isinstance(par.scale, float)
 
 
@@ -118,39 +137,8 @@ def test_parameters_set_covariance_factors(pars):
     assert_allclose(pars.covariance, cov_factor)
 
 
-def test_parameters_scale():
-    pars = Parameters(
-        [
-            Parameter("", factor=10, scale=5),
-            Parameter("", factor=10, scale=50),
-            Parameter("", factor=100, scale=5),
-            Parameter("", factor=-10, scale=1),
-            Parameter("", factor=0, scale=1),
-        ]
-    )
-
-    pars.autoscale()  # default: 'scale10'
-
-    assert_allclose(pars[0].factor, 5)
+def test_parameters_autoscale():
+    pars = Parameters([Parameter("", 20)])
+    pars.autoscale()
+    assert_allclose(pars[0].factor, 2)
     assert_allclose(pars[0].scale, 10)
-    assert_allclose(pars[1].factor, 5)
-    assert_allclose(pars[1].scale, 100)
-    assert_allclose(pars[2].factor, 5)
-    assert_allclose(pars[2].scale, 100)
-    assert_allclose(pars[3].factor, -1)
-    assert_allclose(pars[3].scale, 10)
-    assert_allclose(pars[4].factor, 0)
-    assert_allclose(pars[4].scale, 1)
-
-    pars.autoscale("factor1")
-
-    assert_allclose(pars[0].factor, 1)
-    assert_allclose(pars[0].scale, 50)
-    assert_allclose(pars[1].factor, 1)
-    assert_allclose(pars[1].scale, 500)
-    assert_allclose(pars[2].factor, 1)
-    assert_allclose(pars[2].scale, 500)
-    assert_allclose(pars[3].factor, 1)
-    assert_allclose(pars[3].scale, -10)
-    assert_allclose(pars[4].factor, 1)
-    assert_allclose(pars[4].scale, 0)

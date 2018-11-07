@@ -15,6 +15,20 @@ class Parameter(object):
     """
     Class representing model parameters.
 
+    Note that the parameter value has been split into
+    a factor and scale like this::
+
+        value = factor x scale
+
+    Users should interact with the ``value``, ``quantity``
+    or ``min`` and ``max`` properties and consider the fact
+    that there is a ``factor``` and ``scale`` an implementation detail.
+
+    That was introduced for numerical stability in parameter and error
+    estimation methods, only in the Gammapy optimiser interface do we
+    interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
+    i.e. the optimiser "sees" the well-scaled problem.
+
     Parameters
     ----------
     name : str
@@ -97,6 +111,14 @@ class Parameter(object):
         self._min = float(val)
 
     @property
+    def factor_min(self):
+        """Factor min (float).
+
+        This ``factor_min = min / scale`` is for the optimizer interface.
+        """
+        return self.min / self.scale
+
+    @property
     def max(self):
         """Maximum (float)."""
         return self._max
@@ -104,6 +126,14 @@ class Parameter(object):
     @max.setter
     def max(self, val):
         self._max = float(val)
+
+    @property
+    def factor_max(self):
+        """Factor max (float).
+
+        This ``factor_max = max / scale`` is for the optimizer interface.
+        """
+        return self.max / self.scale
 
     @property
     def frozen(self):
@@ -161,8 +191,11 @@ class Parameter(object):
         Available methods:
 
         * ``scale10`` sets ``scale`` to power of 10,
-          so that factor is in the range 1 to 10
+          so that abs(factor) is in the range 1 to 10
         * ``factor1`` sets ``factor, scale = 1, value``
+
+        In both cases the sign of value is stored in ``factor``,
+        i.e. the ``scale`` is always positive.
 
         Parameters
         ----------
@@ -172,8 +205,8 @@ class Parameter(object):
         if method == "scale10":
             value = self.value
             if value != 0:
-                power = int(np.log10(np.absolute(value)))
-                scale = 10.0 ** power
+                exponent = np.floor(np.log10(np.abs(value)))
+                scale = np.power(10.0, exponent)
                 self.factor = value / scale
                 self.scale = scale
         elif method == "factor1":
@@ -348,7 +381,7 @@ class Parameters(object):
             error = errors.get(par.name, 0)
             error = u.Quantity(error, par.unit).value
             diag.append(error)
-        self.covariance = np.diag(diag) ** 2
+        self.covariance = np.diag(np.power(diag, 2))
 
     # TODO: this is a temporary solution until we have a better way
     # to handle covariance matrices via a class
@@ -387,7 +420,7 @@ class Parameters(object):
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 
-        Used in the optimiser interface.
+        Used in the optimizer interface.
         """
         for factor, parameter in zip(factors, self.parameters):
             parameter.factor = factor
@@ -400,7 +433,7 @@ class Parameters(object):
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
 
-        Used in the optimiser interface.
+        Used in the optimizer interface.
         """
         self.covariance = self._scale_matrix * matrix
 
