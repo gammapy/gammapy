@@ -9,7 +9,7 @@ from .psf_gauss import EnergyDependentMultiGaussPSF
 __all__ = ["load_CTA_1DC_IRF"]
 
 
-def load_CTA_1DC_IRF(filename):
+def load_CTA_1DC_IRF(filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"):
     """load CTA instrument response function and return a dictionary container.
 
     The IRF format should be compliant with the one discussed
@@ -24,7 +24,7 @@ def load_CTA_1DC_IRF(filename):
     Parameters
     ----------
     filename : str
-        the input filename
+        the input filename. Default is "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 
     Returns
     -------
