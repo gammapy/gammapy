@@ -141,6 +141,19 @@ class FluxPoints(object):
         fmt = '{}(sed_type="{}", n_points={})'
         return fmt.format(self.__class__.__name__, self.sed_type, len(self.table))
 
+    @property
+    def table_formatted(self):
+        """Return formatted version of the flux points table. Used for pretty printing"""
+        table = self.table.copy()
+
+        for column in table.colnames:
+            if column.startswith(("dnde", "eflux", "flux", "e2dnde")):
+                table[column].format = ".3e"
+            elif column in ("e_min", "e_max", "e_ref", "sqrt_TS"):
+                table[column].format = ".3f"
+
+        return table
+
     @classmethod
     def read(cls, filename, **kwargs):
         """Read flux points.
@@ -251,7 +264,6 @@ class FluxPoints(object):
         table["dnde"] = dnde
 
         if "flux_err" in table.colnames:
-            # TODO: implement better error handling, e.g. MC based method
             table["dnde_err"] = dnde * table["flux_err"].quantity / flux
 
         if "flux_errn" in table.colnames:

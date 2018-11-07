@@ -272,7 +272,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += "{:<25s} : {}\n\n".format("Number of upper limits", d["sed_n_ul"])
 
         try:
-            lines = self._flux_points_table_formatted.pformat(
+            lines = self.flux_points.table_formatted.pformat(
                 max_width=-1, max_lines=-1
             )
             ss += "\n".join(lines)
@@ -381,16 +381,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         m["source_id"] = d["source_id"]
         m["common_name"] = d["common_name"]
         m["reference_id"] = d["reference_id"]
-
-    @property
-    def _flux_points_table_formatted(self):
-        """Returns formatted version of self.flux_points.table"""
-        table = self.flux_points.table.copy()
-        table["e_ref"].format = ".3f"
-        flux_cols = ["dnde", "dnde_errn", "dnde_errp", "dnde_err"]
-        for _ in set(table.colnames) & set(flux_cols):
-            table[_].format = ".3e"
-        return table
 
     @property
     def flux_points(self):

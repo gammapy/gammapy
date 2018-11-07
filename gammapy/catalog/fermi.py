@@ -44,21 +44,6 @@ def compute_flux_points_ul(quantity, quantity_errp):
     return 2 * quantity_errp + quantity
 
 
-def format_flux_points_table(table):
-    """Returns formatted version of a flux points table"""
-    table = table.copy()
-
-    for column in table.colnames:
-        if column in ["sqrt_TS", "e_ref", "e_min", "e_max"]:
-            table[column].format = ".1f"
-        elif column == "is_ul":
-            continue
-        else:
-            table[column].format = ".3"
-
-    return table
-
-
 class SourceCatalogObject3FGL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FGL catalog.
 
@@ -261,9 +246,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
-        lines = format_flux_points_table(self.flux_points.table).pformat(max_width=-1, max_lines=-1)
+        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
-
         return ss + "\n"
 
     def _info_lightcurve(self):
@@ -790,7 +774,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
-        lines = format_flux_points_table(self.flux_points.table).pformat(max_width=-1, max_lines=-1)
+        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss + "\n"
 

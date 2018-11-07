@@ -406,21 +406,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = "\n*** Flux points info ***\n\n"
         ss += "Number of flux points: {}\n".format(d["N_Flux_Points"])
         ss += "Flux points table: \n\n"
-
-        flux_points = self.flux_points.table.copy()
-
-        energy_cols = ["e_ref", "e_min", "e_max"]
-        flux_cols = ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]
-        cols = energy_cols + flux_cols + ["is_ul"]
-        flux_points = flux_points[cols]
-
-        for _ in energy_cols:
-            flux_points[_].format = ".3f"
-
-        for _ in flux_cols:
-            flux_points[_].format = ".3e"
-
-        lines = flux_points.pformat(max_width=-1, max_lines=-1)
+        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss + "\n"
 
