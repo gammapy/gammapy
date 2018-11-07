@@ -246,9 +246,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
-        lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
-
         return ss + "\n"
 
     def _info_lightcurve(self):
@@ -373,28 +372,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return self.data["Extended_Source_Name"].strip() == ""
 
     @property
-    def _flux_points_table_formatted(self):
-        """Returns formatted version of self.flux_points.table"""
-        table = self.flux_points.table.copy()
-        flux_cols = [
-            "flux",
-            "flux_errn",
-            "flux_errp",
-            "e2dnde",
-            "e2dnde_errn",
-            "e2dnde_errp",
-            "flux_ul",
-            "e2dnde_ul",
-            "dnde",
-        ]
-        table["sqrt_TS"].format = ".1f"
-        table["e_ref"].format = ".1f"
-        for _ in flux_cols:
-            table[_].format = ".3"
-
-        return table
-
-    @property
     def flux_points(self):
         """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
@@ -430,8 +407,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         # Square root of test statistic
         table["sqrt_TS"] = [self.data["Sqrt_TS" + _] for _ in self._ebounds_suffix]
-
-        table["dnde"] = (nuFnu * e_ref ** -2).to("TeV-1 cm-2 s-1")
         return FluxPoints(table)
 
     def _get_flux_values(self, prefix, unit="cm-2 s-1"):
@@ -540,12 +515,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         table["flux_ul"] = np.nan * flux_err.unit
         flux_ul = compute_flux_points_ul(table["flux"], table["flux_errp"])
         table["flux_ul"][is_ul] = flux_ul[is_ul]
-
-        flux_points = FluxPoints(table)
-
-        # TODO: change this and leave it up to the caller to convert to dnde
-        # See https://github.com/gammapy/gammapy/issues/1034
-        return flux_points.to_sed_type("dnde", model=self.spectral_model)
+        return FluxPoints(table)
 
     @property
     def spectral_model(self):
@@ -617,12 +587,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         table["flux_ul"] = np.nan * flux_err.unit
         flux_ul = compute_flux_points_ul(table["flux"], table["flux_errp"])
         table["flux_ul"][is_ul] = flux_ul[is_ul]
-
-        flux_points = FluxPoints(table)
-
-        # TODO: change this and leave it up to the caller to convert to dnde
-        # See https://github.com/gammapy/gammapy/issues/1034
-        return flux_points.to_sed_type("dnde", model=self.spectral_model)
+        return FluxPoints(table)
 
     @property
     def spectral_model(self):
@@ -809,7 +774,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     def _info_spectral_points(self):
         """Print spectral points."""
         ss = "\n*** Spectral points ***\n\n"
-        lines = self._flux_points_table_formatted.pformat(max_width=-1, max_lines=-1)
+        lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
         ss += "\n".join(lines)
         return ss + "\n"
 
@@ -866,28 +831,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         return model
 
     @property
-    def _flux_points_table_formatted(self):
-        """Returns formatted version of self.flux_points.table"""
-        table = self.flux_points.table.copy()
-        flux_cols = [
-            "flux",
-            "flux_errn",
-            "flux_errp",
-            "e2dnde",
-            "e2dnde_errn",
-            "e2dnde_errp",
-            "flux_ul",
-            "e2dnde_ul",
-            "dnde",
-        ]
-        table["sqrt_ts"].format = ".1f"
-        table["e_ref"].format = ".1f"
-        for _ in flux_cols:
-            table[_].format = ".3"
-
-        return table
-
-    @property
     def flux_points(self):
         """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
@@ -923,11 +866,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
         # Square root of test statistic
         table["sqrt_ts"] = self.data["Sqrt_TS_Band"]
-
-        # TODO: remove this computation here.
-        # # Instead provide a method on the FluxPoints class like `to_dnde()` or something.
-        table["dnde"] = (e2dnde * e_ref ** -2).to("cm-2 s-1 TeV-1")
-
         return FluxPoints(table)
 
     @property

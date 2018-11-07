@@ -296,11 +296,12 @@ class SpectrumResult(object):
         """
         e_ref = self.points.table["e_ref"].quantity
         points = self.points.table["dnde"].quantity
-        points_err = self.points.get_flux_err()
-
-        # Deal with asymmetric errors
-        if isinstance(points_err, tuple):
-            points_err = np.sqrt(points_err[0] * points_err[1])
+        try:
+            points_err = self.points.table["dnde_err"].quantity
+        except KeyError:
+            points_errp = self.points.table["dnde_errp"].quantity
+            points_errn = self.points.table["dnde_errp"].quantity
+            points_err = np.sqrt(points_errp * points_errn)
 
         model_val = self.model(e_ref)
         residuals = ((points - model_val) / model_val).to_value("")

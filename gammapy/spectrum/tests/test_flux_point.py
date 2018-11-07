@@ -295,36 +295,15 @@ class TestFluxPoints:
 
 
 @requires_data("gammapy-extra")
-def test_compute_flux_points_dnde():
-    """
-    Test compute_flux_points_dnde on reference spectra.
-    """
-    path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/"
-    flux_points = FluxPoints.read(path + "flux_points.fits")
-    desired_fp = FluxPoints.read(path + "diff_flux_points.fits")
-
-    # TODO: verify index=2.2, but it seems to give reasonable values
-    model = PowerLaw(2.2 * u.Unit(""), 1e-12 * u.Unit("cm-2 s-1 TeV-1"), 1 * u.TeV)
-    actual_fp = flux_points.to_sed_type("dnde", model=model, method="log_center")
-
-    for column in ["dnde", "dnde_err", "dnde_ul"]:
-        actual = actual_fp.table[column].quantity
-        desired = desired_fp.table[column].quantity
-        assert_quantity_allclose(actual, desired, rtol=1e-12)
-
-
-@requires_data("gammapy-extra")
 def test_compute_flux_points_dnde_fermi():
     """
     Test compute_flux_points_dnde on fermi source.
     """
     fermi_3fgl = SourceCatalog3FGL()
     source = fermi_3fgl["3FGL J0835.3-4510"]
-
     flux_points = source.flux_points.to_sed_type(
         "dnde", model=source.spectral_model, method="log_center", pwl_approx=True
     )
-
     for column in ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]:
         actual = flux_points.table["e2" + column].quantity
         desired = flux_points.table[column].quantity * flux_points.e_ref ** 2

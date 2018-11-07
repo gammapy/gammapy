@@ -45,7 +45,7 @@ class CountsPredictor(object):
                                             sigma=0.3, bias=0)
 
         model = models.PowerLaw(index=2.3,
-                                amplitude="2.5e-12 cm-2 s-1 TeV-1"),
+                                amplitude="2.5e-12 cm-2 s-1 TeV-1",
                                 reference="1 TeV")
 
         livetime = 1 * u.h
