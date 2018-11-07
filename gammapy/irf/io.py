@@ -1,16 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.io import fits
-from astropy.table import Table
 from ..utils.scripts import make_path
-from ..utils.nddata import NDDataArray, BinnedDataAxis
-from ..utils.energy import EnergyBounds
-from .effective_area import EffectiveAreaTable2D, EffectiveAreaTable
+from .effective_area import EffectiveAreaTable2D
 from .background import Background3D
 from .energy_dispersion import EnergyDispersion2D
 from .psf_gauss import EnergyDependentMultiGaussPSF
 
 __all__ = ["load_CTA_1DC_IRF"]
+
 
 def load_CTA_1DC_IRF(filename):
     """load CTA instrument response function and return a dictionary container.
@@ -42,5 +39,3 @@ def load_CTA_1DC_IRF(filename):
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     return dict(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf)
-
-
