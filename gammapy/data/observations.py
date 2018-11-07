@@ -248,7 +248,10 @@ class DataStoreObservation(object):
 
         The wall time, including dead-time.
         """
-        return Quantity(self.obs_info["ONTIME"], "second")
+        try:
+            return self.gti.time_sum
+        except IndexError:  # HDU index file does not contain the GTI table
+            return Quantity(self.obs_info["ONTIME"], "second")
 
     @lazyproperty
     def observation_live_time_duration(self):
@@ -259,7 +262,10 @@ class DataStoreObservation(object):
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.obs_info["LIVETIME"], "second")
+        try:
+            return self.gti.time_sum * (1 - self.observation_dead_time_fraction)
+        except IndexError:  # HDU index file does not contain the GTI table
+            return Quantity(self.obs_info["LIVETIME"], "second")
 
     @lazyproperty
     def observation_dead_time_fraction(self):
