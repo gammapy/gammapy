@@ -56,9 +56,9 @@ def optimize_sherpa(parameters, function, **kwargs):
     optimizer = get_sherpa_optimizer(method)
     optimizer.config.update(kwargs)
 
-    pars = [par.value for par in parameters.parameters]
-    parmins = [par.min for par in parameters.parameters]
-    parmaxes = [par.max for par in parameters.parameters]
+    pars = [par.factor for par in parameters.parameters]
+    parmins = [par.factor_min for par in parameters.parameters]
+    parmaxes = [par.factor_max for par in parameters.parameters]
 
     statfunc = SherpaFunction(function, parameters)
 
