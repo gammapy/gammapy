@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.table import Table
-from ..utils.time import time_ref_from_dict
+from ..utils.time import time_ref_from_dict, time_relative_to_ref
 from ..utils.scripts import make_path
 
 __all__ = ["GTI"]
@@ -102,3 +102,18 @@ class GTI(object):
         met_ref = time_ref_from_dict(self.table.meta)
         met = Quantity(self.table["STOP"].astype("float64"), "second")
         return met_ref + met
+
+    def select_time(self, time_interval):
+        """Select and crop GTIs in time interval.
+
+        Parameters
+        ----------
+        time_interval : `astropy.time.Time`
+            Start and stop time for the selection.
+
+        Returns
+        -------
+        gti : `GTI`
+            Copy of the GTI table with selection applied.
+        """
+        raise NotImplementedError
