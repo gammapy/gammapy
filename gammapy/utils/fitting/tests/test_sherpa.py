@@ -34,6 +34,7 @@ def test_sherpa(method, pars):
     )
 
     assert info["success"]
+    assert_allclose(fcn(pars), 0, atol=1e-5)
 
     # Check the result in parameters is OK
     assert_allclose(pars["x"].value, 2, rtol=1e-5)
