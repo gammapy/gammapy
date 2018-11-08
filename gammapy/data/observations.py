@@ -5,13 +5,13 @@ import numpy as np
 from collections import OrderedDict
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
-from astropy.utils import lazyproperty
 from astropy.time import Time
 from .event_list import EventListChecker
 from ..utils.testing import Checker
 from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
+from .filters import ObservationFilter
 
 __all__ = ["ObservationCTA", "DataStoreObservation", "Observations"]
 
@@ -126,9 +126,11 @@ class DataStoreObservation(object):
         Observation ID
     data_store : `~gammapy.data.DataStore`
         Data store
+    obs_filter : `~gammapy.data.ObservationFilter`, optional
+        Filter for the observation
     """
 
-    def __init__(self, obs_id, data_store):
+    def __init__(self, obs_id, data_store, obs_filter=None):
         # Assert that `obs_id` is available
         if obs_id not in data_store.obs_table["OBS_ID"]:
             raise ValueError("OBS_ID = {} not in obs index table.".format(obs_id))
@@ -137,6 +139,7 @@ class DataStoreObservation(object):
 
         self.obs_id = obs_id
         self.data_store = data_store
+        self.obs_filter = obs_filter or ObservationFilter()
 
     def __str__(self):
         ss = "Info for OBS_ID = {}\n".format(self.obs_id)
@@ -192,20 +195,23 @@ class DataStoreObservation(object):
 
     @property
     def events(self):
-        """Load `gammapy.data.EventList` object."""
-        return self.load(hdu_type="events")
+        """Load `gammapy.data.EventList` object and apply the filter."""
+        events = self.load(hdu_type="events")
+        return self.obs_filter.filter_events(events)
 
     @property
     def gti(self):
         """Load `gammapy.data.GTI` object."""
         try:
-            return self.load(hdu_type="gti")
+            gti = self.load(hdu_type="gti")
         except IndexError:
             # For now we support data without GTI HDUs
             # TODO: if GTI becomes required, we should drop this case
             # CTA discussion in https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/20
             # Added in Gammapy in https://github.com/gammapy/gammapy/pull/1908
-            return self.data_store.obs_table.create_gti(obs_id=self.obs_id)
+            gti = self.data_store.obs_table.create_gti(obs_id=self.obs_id)
+
+        return self.obs_filter.filter_gti(gti)
 
     @property
     def aeff(self):
