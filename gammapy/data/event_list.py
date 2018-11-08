@@ -379,22 +379,31 @@ class EventListBase(object):
             mask = np.union1d(mask, temp)
         return mask
 
-    def select_custom(self, parameter, limits):
-        """Select events with respect to a custom parameter
+    def select_parameter(self, parameter, limits):
+        """Select events with respect to a specified parameter
 
         Parameters
         ----------
         parameter : str
             Parameter used for the selection. Must be present in `self.table`.
         limits : tuple
-            Min (inclusive) and max (exclusive) value for the parameter to be selected.
+            Min and max value for the parameter to be selected (min <= parameter < max).
 
         Returns
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
+
+        Examples
+        --------
+        >>> from gammapy.data import EventList
+        >>> event_list = EventList.read('events.fits')
+        >>> phase_region = (0.3, 0.5)
+        >>> event_list = event_list.select_parameter(parameter='PHASE', limits=phase_region)
         """
-        raise NotImplementedError
+        mask = limits[0] <= self.table[parameter]
+        mask &= self.table[parameter] < limits[1]
+        return self.select_row_subset(mask)
 
     def _default_plot_ebounds(self):
         energy = self.energy
