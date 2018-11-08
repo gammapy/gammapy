@@ -162,7 +162,7 @@ class Parameter(object):
     def quantity(self, val):
         val = u.Quantity(val)
         self.value = val.value
-        self.unit = str(val.unit)
+        self.unit = val.unit
 
     def __repr__(self):
         return (
@@ -302,7 +302,7 @@ class Parameters(object):
         else:
             t["error"] = [self.error(idx) for idx in range(len(self.parameters))]
 
-        t["unit"] = [p.unit for p in self.parameters]
+        t["unit"] = [p.unit.to_string('fits') for p in self.parameters]
         t["min"] = [p.min for p in self.parameters]
         t["max"] = [p.max for p in self.parameters]
 
