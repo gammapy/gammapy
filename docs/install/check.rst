@@ -34,3 +34,12 @@ If your issue is not adressed, please send an email to the mailing list.
       which python
       echo $PYTHONPATH
       python -c 'import astropy'
+
+
+Known issues
+------------
+
+- **Astropy =<3.1 and Matplotlib 3.0**: There is an incompatibility between
+WCSAxes and Matplotlib 3.0, which causes the inline plotting in notebooks to
+fail. The issue as well as a temporary workaround is decribed
+`here https://github.com/gammapy/gammapy/issues/1843#issuecomment-435909533`_.
