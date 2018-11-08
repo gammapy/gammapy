@@ -17,6 +17,7 @@ def sens():
     return sens
 
 
+@pytest.mark.xfail
 @requires_data("gammapy-extra")
 def test_cta_sensitivity_estimator(sens):
     table = sens.results_table
