@@ -10,7 +10,7 @@ from ....utils.testing import (
 from .. import PrimaryFlux
 
 
-@requires_dependency("scipy")
+
 @requires_data("gammapy-extra")
 def test_primary_flux():
     with pytest.raises(ValueError):

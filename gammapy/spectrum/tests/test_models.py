@@ -239,7 +239,7 @@ def test_table_model_from_file():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
+
 def test_absorption():
     # absorption values for given redshift
     redshift = 0.117
@@ -297,7 +297,7 @@ def test_pwl_index_2_error():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
+
 def test_fermi_isotropic():
     filename = "$GAMMAPY_EXTRA/datasets/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
     model = TableModel.read_fermi_isotropic_model(filename)

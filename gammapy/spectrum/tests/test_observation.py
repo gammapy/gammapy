@@ -17,7 +17,7 @@ from .. import (
 )
 
 
-@requires_dependency("scipy")
+
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 def test_spectrum_observation_1():
@@ -35,7 +35,7 @@ def test_spectrum_observation_1():
     tester.test_all()
 
 
-@requires_dependency("scipy")
+
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 def test_spectrum_observation_2():
@@ -64,7 +64,7 @@ def test_spectrum_observation_2():
     tester.test_all()
 
 
-@requires_dependency("scipy")
+
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 def test_spectrum_observation_3():
@@ -87,7 +87,7 @@ def test_spectrum_observation_3():
     tester.test_all()
 
 
-@requires_dependency("scipy")
+
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 def make_observation_list():
@@ -186,7 +186,7 @@ def _read_hess_obs():
     return SpectrumObservationList([obs1, obs2])
 
 
-@requires_dependency("scipy")
+
 @requires_data("gammapy-extra")
 class TestSpectrumObservationStacker:
     def setup(self):
@@ -245,7 +245,7 @@ class TestSpectrumObservationStacker:
         assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
 
 
-@requires_dependency("scipy")
+
 @requires_data("gammapy-extra")
 class TestSpectrumObservationList:
     def setup(self):

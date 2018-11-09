@@ -54,7 +54,7 @@ def spectrum_result(flux_points):
     return SpectrumResult(model=model, points=flux_points)
 
 
-@requires_dependency("scipy")
+
 @requires_data("gammapy-extra")
 class TestSpectrumFitResult:
     @requires_dependency("uncertainties")
@@ -76,7 +76,7 @@ class TestSpectrumFitResult:
             fit_result.plot()
 
 
-@requires_dependency("scipy")
+
 @requires_data("gammapy-extra")
 class TestSpectrumResult:
     def test_basic(self, spectrum_result):

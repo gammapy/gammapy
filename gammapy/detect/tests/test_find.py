@@ -7,7 +7,7 @@ from ...maps import Map
 from ..find import find_peaks
 
 
-@requires_dependency("scipy")
+
 class TestFindPeaks:
     def test_simple(self):
         """Test a simple example"""

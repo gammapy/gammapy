@@ -6,7 +6,7 @@ from ..psf_3d import PSF3D
 from ..psf_check import PSF3DChecker
 
 
-@requires_dependency("scipy")
+
 @requires_data("gammapy-extra")
 class TestPSF3DChecker:
     def setup(self):

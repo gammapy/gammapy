@@ -56,7 +56,7 @@ def test_measure_containment(gaussian_image):
     assert_quantity_allclose(frac, ref, rtol=0.01)
 
 
-@requires_dependency("scipy")
+
 def test_measure_containment_radius(gaussian_image):
     """Test measure_containment_radius function"""
     position = SkyCoord(0, 0, frame="galactic", unit="deg")

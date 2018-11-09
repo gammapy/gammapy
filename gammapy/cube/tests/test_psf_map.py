@@ -31,7 +31,7 @@ def fake_psf3d(sigma=0.15 * u.deg):
     return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
 
 
-@requires_dependency("scipy")
+
 def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
@@ -51,7 +51,7 @@ def test_make_psf_map():
     assert psfmap.data.shape == (4, 50, 25, 25)
 
 
-@requires_dependency("scipy")
+
 def test_psfmap(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
 
@@ -95,7 +95,7 @@ def test_psfmap(tmpdir):
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
 
 
-@requires_dependency("scipy")
+
 def test_containment_radius_map(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit="deg")

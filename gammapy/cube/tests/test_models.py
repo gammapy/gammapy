@@ -202,7 +202,7 @@ class TestCompoundSkyModel:
         assert_allclose(q.value, 3.536776513153229e-13)
 
 
-@requires_dependency("scipy")
+
 class TestSkyDiffuseCube:
     @staticmethod
     def test_evaluate_scalar(diffuse_model):
@@ -246,7 +246,7 @@ class TestSkyDiffuseCube:
         assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
 
 
-@requires_dependency("scipy")
+
 class TestSkyDiffuseCubeMapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
@@ -290,7 +290,7 @@ class TestSkyDiffuseCubeMapEvaluator:
         assert_allclose(out[0, 0, 0], 5.586252e08, rtol=1e-5)
 
 
-@requires_dependency("scipy")
+
 class TestSkyModelMapEvaluator:
     @staticmethod
     def test_energy_center(evaluator):

@@ -289,7 +289,7 @@ class TestSourceCatalogObjectHGPSComponent:
         assert "SkyModel" in str(model)
 
 
-@requires_dependency("scipy")
+
 class TestSourceCatalogLargeScaleHGPS:
     def setup(self):
         table = Table()

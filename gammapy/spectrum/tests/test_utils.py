@@ -144,7 +144,7 @@ def get_test_cases():
         ]
 
 
-@requires_dependency("scipy")
+
 @pytest.mark.parametrize("case", get_test_cases())
 def test_counts_predictor(case):
     desired = case.pop("npred")

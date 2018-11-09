@@ -48,7 +48,7 @@ def test_xml_errors():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
+
 def test_complex():
     filename = "$GAMMAPY_EXTRA/test_datasets/models/examples.xml"
     sourcelib = SkyModels.read(filename)
@@ -117,7 +117,7 @@ def test_complex():
 
 @pytest.mark.xfail(reason="Need to improve XML read")
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
+
 @pytest.mark.parametrize(
     "filename",
     [

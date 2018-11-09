@@ -32,7 +32,7 @@ def images():
     return images
 
 
-@requires_dependency("scipy")
+
 def test_ring_background_estimator(images):
     ring = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
 
@@ -50,7 +50,7 @@ def test_ring_background_estimator(images):
     assert_allclose(result["alpha"].data[~in_fov], 0.0)
 
 
-@requires_dependency("scipy")
+
 class TestAdaptiveRingBackgroundEstimator:
     def setup(self):
         self.images = {}

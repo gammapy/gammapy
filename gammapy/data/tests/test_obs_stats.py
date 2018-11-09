@@ -48,7 +48,7 @@ def stats_stacked(on_region, observations):
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
+
 class TestObservationStats(object):
     def test_str(self, stats):
         text = str(stats)

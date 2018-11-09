@@ -10,7 +10,7 @@ from ...utils.energy import EnergyBounds
 from .. import CountsSpectrum, PHACountsSpectrum
 
 
-@requires_dependency("scipy")
+
 class TestCountsSpectrum:
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3]
@@ -72,7 +72,7 @@ class TestCountsSpectrum:
         assert (actual == desired).all()
 
 
-@requires_dependency("scipy")
+
 class TestPHACountsSpectrum:
     def setup(self):
         counts = [1, 2, 5, 6, 1, 7, 23, 2]

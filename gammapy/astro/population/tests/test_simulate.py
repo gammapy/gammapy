@@ -138,7 +138,7 @@ def test_add_pulsar_parameters():
     assert_allclose(table["logB"], [12.5883058913, 13.2824912596])
 
 
-@requires_dependency("scipy")
+
 def test_add_pwn_parameters():
     table = make_base_catalog_galactic(n_sources=10, random_state=0)
     # To compute PWN parameters we need PSR and SNR parameters first
@@ -152,7 +152,7 @@ def test_add_pwn_parameters():
     assert_allclose(d["L_PWN"], 7.057857699785925e45)
 
 
-@requires_dependency("scipy")
+
 def test_chain_all():
     """
     Test that running the simulation functions in chain works

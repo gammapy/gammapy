@@ -117,7 +117,7 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     return fap
 
 
-@requires_dependency("scipy")
+
 @pytest.mark.parametrize(
     "pars",
     [
