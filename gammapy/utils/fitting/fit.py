@@ -186,7 +186,7 @@ class Fit(object):
             parameters.covariance = None
         return model
 
-    def run(self, steps="all", optimize_opts=None, profile_opts=None):
+    def run(self, steps="all", optimize_opts=None):
         """
         Run all fitting steps.
 
@@ -196,8 +196,6 @@ class Fit(object):
             Which fitting steps to run.
         optimize_opts : dict
             Options passed to `Fit.optimize`.
-        profile_opts : dict
-            Options passed to `Fit.likelihood_profiles`.
 
         Returns
         -------
@@ -215,13 +213,6 @@ class Fit(object):
         if "errors" in steps:
             result["model"] = self._estimate_errors(result["model"])
 
-        if "profiles" in steps:
-            if profile_opts == None:
-                profile_opts = {}
-            result["likelihood_profiles"] = self.likelihood_profiles(
-                result["model"], **profile_opts
-            )
-
         return FitResult(**result)
 
 
@@ -237,7 +228,6 @@ class FitResult(object):
         message,
         backend,
         method,
-        likelihood_profiles=None,
     ):
         self._model = model
         self._success = success
@@ -246,7 +236,6 @@ class FitResult(object):
         self._message = message
         self._backend = backend
         self._method = method
-        self._likelihood_profiles = likelihood_profiles
 
     @property
     def model(self):
@@ -293,35 +282,3 @@ class FitResult(object):
         str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
         str_ += "\tmessage    : {}\n".format(self.message)
         return str_
-
-    @property
-    def likelihood_profiles(self):
-        """Likelihood profiles for paramaters."""
-        return self._likelihood_profiles
-
-    def plot_likelihood_profile(self, parameter, ax=None, **kwargs):
-        """Plot likelihood profile for a given parameter.
-
-        Parameters
-        ----------
-        parameter : str
-            Parameter to plot profile for.
-
-        Returns
-        -------
-        ax : `matplotlib.pyplot.Axes`
-            Axes object.
-        """
-        import matplotlib.pyplot as plt
-
-        if ax is None:
-            ax = plt.gca()
-
-        ts_diff = self.likelihood_profiles[parameter]["likelihood"] - self.total_stat
-        values = self.likelihood_profiles[parameter]["values"]
-
-        ax.plot(values, ts_diff, **kwargs)
-        unit = self.model.parameters[parameter].unit
-        ax.set_xlabel(parameter + "[unit]".format(unit=unit))
-        ax.set_ylabel("TS difference")
-        return ax
