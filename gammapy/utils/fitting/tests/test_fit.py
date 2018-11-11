@@ -2,9 +2,9 @@
 """Unit tests for the Fit class"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-import copy
 from numpy.testing import assert_allclose
 from ..parameter import Parameter, Parameters
+from ..model import Model
 from ..fit import Fit
 
 pytest.importorskip("iminuit")
@@ -14,16 +14,13 @@ class MyData(object):
     """Dummy data class."""
 
 
-class MyModel(object):
+class MyModel(Model):
     """Dummy model class."""
 
     def __init__(self):
         self.parameters = Parameters(
             [Parameter("x", 2), Parameter("y", 3e2), Parameter("z", 4e-2)]
         )
-
-    def copy(self):
-        return copy.deepcopy(self)
 
 
 class MyFit(Fit):

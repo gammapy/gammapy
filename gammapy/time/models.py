@@ -6,12 +6,12 @@ from astropy import units as u
 from astropy.table import Table
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from ..utils.fitting import Parameter, Parameters
+from ..utils.fitting import Parameter, Parameters, Model
 
 __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 
 
-class PhaseCurveTableModel(object):
+class PhaseCurveTableModel(Model):
     """Temporal phase curve model.
 
     Phase for a given time is computed as
@@ -120,7 +120,7 @@ class PhaseCurveTableModel(object):
         return np.interp(x=phase, xp=xp, fp=fp, period=1)
 
 
-class LightCurveTableModel(object):
+class LightCurveTableModel(Model):
     """Temporal light curve model.
 
     The lightcurve is given as a table with columns ``time`` and ``norm``.
