@@ -27,7 +27,8 @@ jobs:
 
   - script: |
       pip install pytest
-      pytest tests --junitxml=junit/test-results.xml gammapy
+      pip install -e .
+      pytest gammapy --junitxml=junit/test-results.xml
     displayName: 'pytest'
 
   - task: PublishTestResults@2
