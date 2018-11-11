@@ -29,6 +29,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      pip install -e .
       pytest gammapy --junitxml=junit/test-results.xml
     displayName: 'pytest'
 
