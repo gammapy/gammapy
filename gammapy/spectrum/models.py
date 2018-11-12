@@ -2,7 +2,6 @@
 """Spectral models for Gammapy."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-import copy
 import operator
 import astropy.units as u
 from astropy.table import Table
@@ -10,7 +9,7 @@ from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
 from ..utils.scripts import make_path
-from ..utils.fitting import Parameter, Parameters
+from ..utils.fitting import Parameter, Parameters, Model
 from ..utils.interpolation import ScaledRegularGridInterpolator
 
 __all__ = [
@@ -29,7 +28,7 @@ __all__ = [
 ]
 
 
-class SpectralModel(object):
+class SpectralModel(Model):
     """Spectral model base class.
 
     Derived classes should store their parameters as
@@ -37,10 +36,6 @@ class SpectralModel(object):
     See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
-
-    def __repr__(self):
-        fmt = "{}()"
-        return fmt.format(self.__class__.__name__)
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -451,10 +446,6 @@ class SpectralModel(object):
             energies.append(energy)
 
         return u.Quantity(energies, eunit, copy=False)
-
-    def copy(self):
-        """A deep copy."""
-        return copy.deepcopy(self)
 
 
 class ConstantModel(SpectralModel):

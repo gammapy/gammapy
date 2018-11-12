@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import astropy.units as u
 import operator
-from ..utils.fitting import Parameters, Parameter
+from ..utils.fitting import Parameters, Parameter, Model
 from ..utils.scripts import make_path
 from ..maps import Map
 
@@ -17,12 +17,8 @@ __all__ = [
 ]
 
 
-class SkyModelBase(object):
+class SkyModelBase(Model):
     """Sky model base class"""
-
-    def copy(self):
-        """A deep copy"""
-        return copy.deepcopy(self)
 
     def __add__(self, skymodel):
         return CompoundSkyModel(self, skymodel, operator.add)

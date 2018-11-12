@@ -1,14 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
-import abc
 import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude
-from ...extern import six
-from ...utils.fitting import Parameter, Parameters
+from ...utils.fitting import Parameter, Parameters, Model
 from ...maps import Map
 
 __all__ = [
@@ -25,10 +22,8 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class SkySpatialModel(object):
-    """SkySpatial model base class.
-    """
+class SkySpatialModel(Model):
+    """Sky spatial model base class."""
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -50,10 +45,6 @@ class SkySpatialModel(object):
             kwargs[par.name] = par.quantity
 
         return self.evaluate(lon, lat, **kwargs)
-
-    def copy(self):
-        """A deep copy."""
-        return copy.deepcopy(self)
 
 
 class SkyPointSource(SkySpatialModel):
