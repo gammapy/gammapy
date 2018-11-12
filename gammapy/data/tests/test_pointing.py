@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_data, requires_dependency
+from astropy.time import Time
+from ...utils.testing import requires_data, requires_dependency, assert_time_allclose
 from ..pointing import PointingInfo
 
 
@@ -23,7 +24,8 @@ class TestPointingInfo:
         assert_allclose(height.value, 1834.999999999783)
 
     def test_time_ref(self):
-        assert self.pointing_info.time_ref.fits == "2001-01-01T00:01:04.184(TT)"
+        expected = Time(51910.00074287037, format="mjd", scale="tt")
+        assert_time_allclose(self.pointing_info.time_ref, expected)
 
     def test_table(self):
         assert len(self.pointing_info.table) == 100
@@ -31,7 +33,8 @@ class TestPointingInfo:
     def test_time(self):
         time = self.pointing_info.time
         assert len(time) == 100
-        assert time.fits[0] == "2004-01-21T19:50:02.184(TT)"
+        expected = Time(53025.826414166666, format="mjd", scale="tt")
+        assert_time_allclose(time[0], expected)
 
     def test_duration(self):
         duration = self.pointing_info.duration

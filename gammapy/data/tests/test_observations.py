@@ -28,8 +28,8 @@ def test_data_store_observation(data_store):
     """Test DataStoreObservation class"""
     obs = data_store.obs(23523)
 
-    assert_time_allclose(obs.tstart, Time(53343.92234, scale="tt", format="mjd"))
-    assert_time_allclose(obs.tstop, Time(53343.941866, scale="tt", format="mjd"))
+    assert_time_allclose(obs.tstart, Time(53343.92234009259, scale="tt", format="mjd"))
+    assert_time_allclose(obs.tstop, Time(53343.94186555556, scale="tt", format="mjd"))
 
     c = SkyCoord(83.63333129882812, 21.51444435119629, unit="deg")
     assert_skycoord_allclose(obs.pointing_radec, c)

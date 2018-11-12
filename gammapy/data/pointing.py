@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from astropy.version import version as astropy_version
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from astropy.table import Table
@@ -139,6 +140,12 @@ class PointingInfo(object):
         z_new = interp1d(t, xyz.z)(t_new)
         xyz_new = CartesianRepresentation(x_new, y_new, z_new)
         altaz_frame = AltAz(obstime=time, location=self.location)
-        return SkyCoord(
-            xyz_new, frame=altaz_frame, representation="unitspherical", unit="deg"
-        )
+
+        # FIXME: an API change in Astropy in 3.1 broke this
+        # See https://github.com/gammapy/gammapy/pull/1906
+        if astropy_version >= "3.1":
+            kwargs = {"representation_type": "unitspherical"}
+        else:
+            kwargs = {"representation": "unitspherical"}
+
+        return SkyCoord(xyz_new, frame=altaz_frame, unit="deg", **kwargs)
