@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spectral models for Gammapy."""
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 import operator
 import astropy.units as u
 from astropy.table import Table
+from scipy.optimize import brentq
+
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from .utils import integrate_spectrum
@@ -429,8 +432,6 @@ class SpectralModel(Model):
         energy : `~astropy.units.Quantity`
             Energies at which the model has the given ``value``.
         """
-        from scipy.optimize import brentq
-
         eunit = "TeV"
 
         energies = []

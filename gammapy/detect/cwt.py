@@ -2,10 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import logging
+
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
+from scipy.signal import fftconvolve
+from scipy.ndimage import label
+
 from ..maps import WcsNDMap, MapAxis, WcsGeom
 
 __all__ = ["CWT", "CWTData", "CWTKernels"]
@@ -122,8 +126,6 @@ class CWT(object):
         data : `~gammapy.detect.CWTData`
             Images for transform.
         """
-        from scipy.signal import fftconvolve
-
         total_background = data._model + data._background + data._approx
         excess = data._counts - total_background
         log.debug("Excess sum: {0:.4f}".format(excess.sum()))
@@ -175,8 +177,6 @@ class CWT(object):
         data : `~gammapy.detect.CWTData`
             Images after transform.
         """
-        from scipy.ndimage import label
-
         log.debug("Computing significance")
         significance = data._transform_3d / data._error
 

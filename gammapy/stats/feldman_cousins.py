@@ -3,6 +3,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
+from scipy.stats import norm, poisson, rankdata
+
 
 __all__ = [
     "fc_find_acceptance_interval_gauss",
@@ -42,9 +44,8 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     (x_min, x_max) : tuple of floats
         Acceptance interval
     """
-    from scipy import stats
 
-    dist = stats.norm(loc=mu, scale=sigma)
+    dist = norm(loc=mu, scale=sigma)
 
     x_bin_width = x_bins[1] - x_bins[0]
 
@@ -63,7 +64,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
         else:
             # Implementing the boundary condition at zero
             mu_best = max(0, x)
-            prob_mu_best = stats.norm.pdf(x, loc=mu_best, scale=sigma)
+            prob_mu_best = norm.pdf(x, loc=mu_best, scale=sigma)
             # probMuBest should never be zero. Check it just in case.
             if prob_mu_best == 0.0:
                 r.append(0.0)
@@ -79,7 +80,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
             "desired confidence level for this mu!"
         )
 
-    rank = stats.rankdata(-r, method="dense")
+    rank = rankdata(-r, method="dense")
 
     index_array = np.arange(x_bins.size)
 
@@ -125,9 +126,7 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     (x_min, x_max) : tuple of floats
         Acceptance interval
     """
-    from scipy import stats
-
-    dist = stats.poisson(mu=mu + background)
+    dist = poisson(mu=mu + background)
 
     x_bin_width = x_bins[1] - x_bins[0]
 
@@ -138,7 +137,7 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
         p.append(dist.pmf(x))
         # Implementing the boundary condition at zero
         muBest = max(0, x - background)
-        probMuBest = stats.poisson.pmf(x, mu=muBest + background)
+        probMuBest = poisson.pmf(x, mu=muBest + background)
         # probMuBest should never be zero. Check it just in case.
         if probMuBest == 0.0:
             r.append(0.0)
@@ -154,7 +153,7 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
             "desired confidence level for this mu!"
         )
 
-    rank = stats.rankdata(-r, method="dense")
+    rank = rankdata(-r, method="dense")
 
     index_array = np.arange(x_bins.size)
 

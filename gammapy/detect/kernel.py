@@ -1,9 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Tophat2DKernel, CustomKernel
+from scipy.ndimage import binary_erosion
+from scipy.ndimage.morphology import binary_fill_holes
+
 from ..maps import Map
 from .lima import compute_lima_image
 
@@ -166,8 +170,6 @@ class KernelBackgroundEstimator(object):
         return images["significance"]
 
     def _estimate_exclusion(self, counts, significance):
-        from scipy.ndimage import binary_erosion
-
         radius = self.parameters["mask_dilation_radius"].deg
         scale = counts.geom.pixel_scales.mean().deg
         mask_dilation_radius_pix = radius / scale
@@ -197,8 +199,6 @@ class KernelBackgroundEstimator(object):
 
         Criterion: exclusion masks unchanged in subsequent iterations.
         """
-        from scipy.ndimage.morphology import binary_fill_holes
-
         mask = result["exclusion"].data == result_previous["exclusion"].data
 
         # Because of pixel to pixel noise, the masks can still differ.

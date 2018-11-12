@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 from astropy.utils import lazyproperty
 from astropy import units as u
 from astropy.table import Table
+from scipy.interpolate import InterpolatedUnivariateSpline
+
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fitting import Parameter, Parameters, Model
@@ -190,11 +193,8 @@ class LightCurveTableModel(Model):
 
     @lazyproperty
     def _interpolator(self):
-        from scipy.interpolate import InterpolatedUnivariateSpline
-
         x = self.table["TIME"].data
         y = self.table["NORM"].data
-
         return InterpolatedUnivariateSpline(x, y, k=1)
 
     @lazyproperty

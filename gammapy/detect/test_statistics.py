@@ -6,8 +6,11 @@ import contextlib
 import warnings
 from functools import partial
 from multiprocessing import Pool
+
 import numpy as np
 from astropy.convolution import CustomKernel, Kernel2D
+from scipy.optimize import newton, brentq
+
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 from ._test_statistics_cython import (
     _cash_cython,
@@ -545,8 +548,6 @@ def _root_amplitude(counts, background, model, flux, rtol=RTOL):
     niter : int
         Number of function evaluations needed for the fit.
     """
-    from scipy.optimize import newton
-
     args = (counts, background, model)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -583,8 +584,6 @@ def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
     niter : int
         Number of function evaluations needed for the fit.
     """
-    from scipy.optimize import brentq
-
     # Compute amplitude bounds and assert counts > 0
     bounds = _amplitude_bounds_cython(counts, background, model)
     amplitude_min, amplitude_max, amplitude_min_total = bounds
@@ -624,8 +623,6 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigm
     """
     Compute amplitude errors using likelihood profile method.
     """
-    from scipy.optimize import brentq
-
     def ts_diff(x, counts, background, model):
         return (c_1 + error_sigma ** 2) - f_cash(x, counts, background, model)
 

@@ -1,10 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+<<<<<<< HEAD
 from astropy.version import version as astropy_version
+=======
+
+>>>>>>> Remove delayed scipy imports
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.coordinates import SkyCoord, AltAz, CartesianRepresentation
+from scipy.interpolate import interp1d
+
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fits import earth_location_from_dict
@@ -130,8 +136,6 @@ class PointingInfo(object):
 
     def altaz_interpolate(self, time):
         """Interpolate pointing for a given time."""
-        from scipy.interpolate import interp1d
-
         t_new = time.mjd
         t = self.time.mjd
         xyz = self.altaz.cartesian

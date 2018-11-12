@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import OrderedDict
 import numpy as np
 
+from scipy.optimize import least_squares
+
 __all__ = ["robust_periodogram"]
 
 
@@ -116,8 +118,6 @@ def _robust_regression(time, flux, flux_err, periods, loss, scale):
     """
     Periodogram peaks for a given loss function and scale.
     """
-    from scipy.optimize import least_squares
-
     beta0 = np.array([0, 1, 0])
     mu = np.median(flux)
     x = np.ones([len(time), len(beta0)])

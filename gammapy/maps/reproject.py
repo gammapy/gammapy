@@ -2,6 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
+from scipy.ndimage import map_coordinates
+
 
 __all__ = ["reproject_car_to_hpx", "reproject_car_to_wcs"]
 
@@ -33,7 +35,6 @@ def _get_input_pix_celestial(wcs_in, wcs_out, shape_out):
 
 def reproject_car_to_hpx(input_data, coord_system_out, nside, order=1, nested=False):
     import healpy as hp
-    from scipy.ndimage import map_coordinates
     from reproject.wcs_utils import convert_world_coordinates
     from reproject.healpix.utils import parse_coord_system
 
@@ -72,8 +73,6 @@ def reproject_car_to_wcs(input_data, wcs_out, shape_out, order=1):
     ensure that the interpolation of the CAR projection is correctly
     wrapped in longitude.
     """
-    from scipy.ndimage import map_coordinates
-
     slice_in, wcs_in = input_data
 
     array_new = np.zeros(shape_out)

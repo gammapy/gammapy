@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models."""
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import astropy.constants as const
+from scipy.optimize import fsolve
+
 from ...extern.validator import validate_physical_type
 from ..source import Pulsar, SNRTrueloveMcKee
 
@@ -67,8 +70,6 @@ class PWN(object):
         t_coll : `~astropy.units.Quantity`
             Time of collision.
         """
-        from scipy.optimize import fsolve
-
         def time_coll(t):
             t = Quantity(t, "yr")
             r_pwn = self._radius_free_expansion(t).to_value("cm")

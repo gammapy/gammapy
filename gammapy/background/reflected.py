@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+
 import numpy as np
 from astropy.coordinates import Angle
+from scipy.ndimage import distance_transform_edt
 from regions import PixCoord, CirclePixelRegion
+
 from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 
@@ -39,8 +42,6 @@ def _compute_distance_image(mask_map):
     distance : `~gammapy.maps.WcsNDMap`
         Map of distance to nearest exclusion region.
     """
-    from scipy.ndimage import distance_transform_edt
-
     max_value = 1e10
 
     if np.all(mask_map.data == 1):
