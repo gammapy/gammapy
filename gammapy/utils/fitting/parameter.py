@@ -417,6 +417,18 @@ class Parameters(object):
         err = u.Quantity(err, self[idx].unit).value
         self.covariance[idx, idx] = err ** 2
 
+    @property
+    def correlation(self):
+        r"""Correlation matrix (`numpy.ndarray`).
+
+        Correlation :math:`C` is related to covariance :math:`\Sigma` via:
+
+        .. math::
+            C_{ij} = \frac{ \Sigma_{ij} }{ \sqrt{\Sigma_{ii} \Sigma_{jj}} }
+        """
+        err = np.sqrt(np.diag(self.covariance))
+        return self.covariance / np.outer(err, err)
+
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 

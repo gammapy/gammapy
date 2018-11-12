@@ -103,6 +103,7 @@ def test_parameters_basics(pars):
     pars.set_parameter_errors({"ham": "10000 GeV"})
     pars.set_error(0, 0.1)
     assert_allclose(pars.covariance, [[1e-2, 0], [0, 100]])
+    assert_allclose(pars.correlation, [[1, 0], [0, 1]])
     assert_allclose(pars.error("spam"), 0.1)
     assert_allclose(pars.error(1), 10)
 
