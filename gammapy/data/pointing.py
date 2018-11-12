@@ -1,10 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-<<<<<<< HEAD
 from astropy.version import version as astropy_version
-=======
-
->>>>>>> Remove delayed scipy imports
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from astropy.table import Table
