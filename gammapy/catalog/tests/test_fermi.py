@@ -4,7 +4,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from ...utils.testing import assert_quantity_allclose
+from astropy.time import Time
+from ...utils.testing import assert_quantity_allclose, assert_time_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...spectrum.models import (
     PowerLaw,
@@ -154,8 +155,11 @@ class TestFermi3FGLObject:
             "flux_errn",
         ]
 
-        assert lc.time_min[0].fits == "2008-08-02T00:33:19.000(UTC)"
-        assert lc.time_max[0].fits == "2008-09-01T10:31:04.625(UTC)"
+        expected = Time(54680.02313657408, format='mjd', scale='utc')
+        assert_time_allclose(lc.time_min[0], expected)
+
+        expected = Time(54710.43824797454, format='mjd', scale='utc')
+        assert_time_allclose(lc.time_max[0], expected)
 
         assert table["flux"].unit == "cm-2 s-1"
         assert_allclose(table["flux"][0], 2.384e-06, rtol=1e-3)

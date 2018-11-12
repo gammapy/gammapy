@@ -144,13 +144,17 @@ def assert_skycoord_allclose(actual, desired):
     assert_allclose(actual.data.lat.value, desired.data.lat.value)
 
 
-def assert_time_allclose(actual, desired):
-    """Assert that two `astropy.time.Time` objects are almost the same."""
+def assert_time_allclose(actual, desired, atol=1e-3):
+    """Assert that two `astropy.time.Time` objects are almost the same.
+
+    atol is absolute tolerance in seconds.
+    """
     assert isinstance(actual, Time)
     assert isinstance(desired, Time)
-    assert_allclose(actual.value, desired.value)
     assert actual.scale == desired.scale
     assert actual.format == desired.format
+    dt = actual - desired
+    assert_allclose(dt.sec, 0, rtol=0, atol=atol)
 
 
 def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
