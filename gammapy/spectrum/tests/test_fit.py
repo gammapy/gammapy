@@ -164,21 +164,6 @@ class TestFit:
         actual = values[np.argmin(profile["likelihood"])]
         assert_allclose(actual, true_idx, rtol=0.01)
 
-    @requires_dependency("matplotlib")
-    def test_plot(self):
-        obs = SpectrumObservation(on_vector=self.src)
-        fit = SpectrumFit(
-            obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
-        )
-
-        profile_opts = {"parameters": ["index"]}
-        result = fit.run(
-            steps=["optimize", "errors", "profiles"], profile_opts=profile_opts
-        )
-
-        with mpl_plot_check():
-            result.plot_likelihood_profile("index")
-
 
 @requires_dependency("sherpa")
 @requires_dependency("scipy")
