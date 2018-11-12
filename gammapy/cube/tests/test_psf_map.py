@@ -8,7 +8,6 @@ from astropy.coordinates import SkyCoord
 from ...irf import PSF3D
 from ...maps import MapAxis, WcsGeom
 from ...cube import PSFMap, make_psf_map
-from ...utils.testing import requires_dependency
 
 
 def fake_psf3d(sigma=0.15 * u.deg):

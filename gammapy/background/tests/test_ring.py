@@ -4,7 +4,6 @@ import pytest
 from numpy.testing import assert_allclose
 import numpy as np
 from astropy import units as u
-from ...utils.testing import requires_dependency
 from ...maps import WcsNDMap
 from ...background import RingBackgroundEstimator, AdaptiveRingBackgroundEstimator
 

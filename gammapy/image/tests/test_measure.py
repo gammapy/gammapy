@@ -5,7 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.modeling.models import Gaussian2D
 from astropy.coordinates import SkyCoord
-from ...utils.testing import assert_quantity_allclose, requires_dependency
+from ...utils.testing import assert_quantity_allclose
 from ...maps import WcsGeom, WcsNDMap
 from ...image import (
     measure_containment_radius,

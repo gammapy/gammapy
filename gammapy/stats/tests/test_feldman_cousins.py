@@ -6,7 +6,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy import stats
 
-from ...utils.testing import requires_dependency
 from ...stats import (
     fc_find_acceptance_interval_gauss,
     fc_find_acceptance_interval_poisson,

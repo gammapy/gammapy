@@ -86,7 +86,7 @@ def get_test_cases():
     e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
 
     try:
-        import scipy
+        pass
     except ImportError:
         return []
     else:

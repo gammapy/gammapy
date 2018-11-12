@@ -1,21 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
 import pytest
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
 from astropy.time import Time
-from ...data import DataStore, Observations, EventList, GTI, ObservationCTA
+from ...data import DataStore, EventList, GTI, ObservationCTA
 from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, PSF3D
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ...utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
     assert_skycoord_allclose,
 )
-from ...utils.energy import Energy
-from ...utils.energy import EnergyBounds
 
 
 @pytest.fixture(scope="session")

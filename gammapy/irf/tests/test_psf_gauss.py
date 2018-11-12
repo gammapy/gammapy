@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose, assert_almost_equal
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy import units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ..psf_gauss import EnergyDependentMultiGaussPSF
 from ..psf_gauss import multi_gauss_psf_kernel, HESSMultiGaussPSF
 

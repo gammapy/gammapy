@@ -5,7 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.stats import LombScargle
 from ..period import robust_periodogram
-from ...utils.testing import requires_dependency
 
 pytest.importorskip("astropy", "3.0")
 

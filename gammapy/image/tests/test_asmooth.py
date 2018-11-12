@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ...utils.scripts import make_path
 from ...maps import Map
 from ..asmooth import ASmooth

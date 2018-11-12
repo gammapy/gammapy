@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
+from ...utils.testing import requires_data, requires_dependency
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable
 from ...spectrum import (

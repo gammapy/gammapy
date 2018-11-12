@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ..background import Background3D, Background2D
 
 

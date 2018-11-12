@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from ...data import DataStore
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 
 # TODO: clean up these FITS production tests
 # There is some duplication with `gammapy/data/tests/test_data_store.py`

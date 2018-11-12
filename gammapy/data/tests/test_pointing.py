@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.time import Time
-from ...utils.testing import requires_data, requires_dependency, assert_time_allclose
+from ...utils.testing import requires_data, assert_time_allclose
 from ..pointing import PointingInfo
 
 
