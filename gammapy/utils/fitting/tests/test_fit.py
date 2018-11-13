@@ -33,7 +33,7 @@ class MyFit(Fit):
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     fit = MyFit()
-    result = fit.run(optimize_opts={"backend": backend})
+    result = fit.optimize(backend=backend)
     pars = result.model.parameters
 
     assert result.success is True
@@ -47,7 +47,9 @@ def test_optimize(backend):
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_covar(backend):
     fit = MyFit()
-    result = fit.run(optimize_opts={"backend": backend})
+    result = fit.run(
+        optimize_opts={"backend": backend}, covar_opts={"backend": backend}
+    )
     pars = result.model.parameters
 
     assert_allclose(pars.error("x"), 1, rtol=1e-7)

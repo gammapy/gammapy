@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from .likelihood import Likelihood
 
-__all__ = ["optimize_scipy"]
+__all__ = ["optimize_scipy", "covar_scipy"]
 
 
 def optimize_scipy(parameters, function, **kwargs):
@@ -20,3 +21,8 @@ def optimize_scipy(parameters, function, **kwargs):
     optimizer = None
 
     return factors, info, optimizer
+
+
+# TODO: implement, e.g. with numdifftools.Hessian
+def covar_scipy(parameters, function):
+    raise NotImplementedError
