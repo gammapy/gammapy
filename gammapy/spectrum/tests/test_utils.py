@@ -84,64 +84,58 @@ def test_integrate_spectrum_ecpl():
 def get_test_cases():
     e_true = Quantity(np.logspace(-1, 2, 120), "TeV")
     e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
-
-    try:
-        pass
-    except ImportError:
-        return []
-    else:
-        return [
-            dict(
-                model=PowerLaw(
-                    index=2,
-                    reference=Quantity(1, "TeV"),
-                    amplitude=Quantity(1e2, "TeV-1"),
-                ),
-                e_true=e_true,
-                npred=999,
+    return [
+        dict(
+            model=PowerLaw(
+                index=2,
+                reference=Quantity(1, "TeV"),
+                amplitude=Quantity(1e2, "TeV-1"),
             ),
-            dict(
-                model=PowerLaw(
-                    index=2,
-                    reference=Quantity(1, "TeV"),
-                    amplitude=Quantity(1e-11, "TeV-1 cm-2 s-1"),
-                ),
-                aeff=EffectiveAreaTable.from_parametrization(e_true),
-                livetime=Quantity(10, "h"),
-                npred=1448.059605038253,
+            e_true=e_true,
+            npred=999,
+        ),
+        dict(
+            model=PowerLaw(
+                index=2,
+                reference=Quantity(1, "TeV"),
+                amplitude=Quantity(1e-11, "TeV-1 cm-2 s-1"),
             ),
-            dict(
-                model=PowerLaw(
-                    index=2,
-                    reference=Quantity(1, "GeV"),
-                    amplitude=Quantity(1e-11, "GeV-1 cm-2 s-1"),
-                ),
-                aeff=EffectiveAreaTable.from_parametrization(e_true),
-                livetime=Quantity(30, "h"),
-                npred=4.344178815114759,
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            livetime=Quantity(10, "h"),
+            npred=1448.059605038253,
+        ),
+        dict(
+            model=PowerLaw(
+                index=2,
+                reference=Quantity(1, "GeV"),
+                amplitude=Quantity(1e-11, "GeV-1 cm-2 s-1"),
             ),
-            dict(
-                model=PowerLaw(
-                    index=2,
-                    reference=Quantity(1, "TeV"),
-                    amplitude=Quantity(1e-11, "TeV-1 cm-2 s-1"),
-                ),
-                aeff=EffectiveAreaTable.from_parametrization(e_true),
-                edisp=EnergyDispersion.from_gauss(
-                    e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
-                ),
-                livetime=Quantity(10, "h"),
-                npred=1437.4542016322125,
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            livetime=Quantity(30, "h"),
+            npred=4.344178815114759,
+        ),
+        dict(
+            model=PowerLaw(
+                index=2,
+                reference=Quantity(1, "TeV"),
+                amplitude=Quantity(1e-11, "TeV-1 cm-2 s-1"),
             ),
-            dict(
-                model=TableModel(
-                    energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
-                    values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
-                ),
-                npred=0.5545130625383198,
-                e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            edisp=EnergyDispersion.from_gauss(
+                e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
             ),
-        ]
+            livetime=Quantity(10, "h"),
+            npred=1437.4542016322125,
+        ),
+        dict(
+            model=TableModel(
+                energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+                values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
+            ),
+            npred=0.5545130625383198,
+            e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+        ),
+    ]
 
 
 
