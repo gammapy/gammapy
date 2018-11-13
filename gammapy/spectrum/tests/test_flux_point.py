@@ -329,9 +329,9 @@ class TestFluxPointFit:
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, sed_model, sed_flux_points):
-        optimize_opts = {"backend": "sherpa", "method": "simplex"}
-        fitter = FluxPointFit(sed_model, sed_flux_points)
-        result = fitter.run(optimize_opts=optimize_opts, steps=["optimize"])
+        # TODO: add covar or error estimation here?
+        fit = FluxPointFit(sed_model, sed_flux_points)
+        result = fit.optimize(backend='sherpa', method='simplex')
         self.assert_result(result)
 
     @staticmethod

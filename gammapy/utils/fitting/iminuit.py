@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit"]
+__all__ = ["optimize_iminuit", "covar_iminuit"]
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +58,10 @@ def optimize_iminuit(parameters, function, **kwargs):
     }
     optimizer = minuit
     return factors, info, optimizer
+
+
+def covar_iminuit(minuit):
+    return _get_covar(minuit)
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95

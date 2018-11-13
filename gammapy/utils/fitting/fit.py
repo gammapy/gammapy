@@ -1,15 +1,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import abc
-
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
-
 from ...extern import six
-from .iminuit import optimize_iminuit, _get_covar
+from .iminuit import optimize_iminuit, covar_iminuit
 from .sherpa import optimize_sherpa
-from .scipy import optimize_scipy
-
+from .scipy import optimize_scipy, covar_scipy
 
 __all__ = ["Fit"]
 
@@ -20,16 +17,38 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-@six.add_metaclass(FitMeta)
-class Fit(object):
-    """Abstract Fit base class.
-    """
-
-    _optimize_funcs = {
+class BackendRegistry(object):
+    optimize = {
         "minuit": optimize_iminuit,
         "sherpa": optimize_sherpa,
         "scipy": optimize_scipy,
     }
+
+    covar = {
+        "minuit": covar_iminuit,
+        # "scipy": covar_scipy,
+    }
+
+    @classmethod
+    def get(cls, task, name):
+        if task == "optimize":
+            if name in cls.optimize:
+                return cls.optimize[name]
+            else:
+                raise ValueError("Backend {!r} does not support optimize.".format(name))
+        elif task == "covar":
+            if name in cls.covar:
+                return cls.covar[name]
+            else:
+                raise ValueError("Backend {!r} does not support covar.".format(name))
+        else:
+            raise ValueError("Invalid task: {!r}".format(task))
+
+
+@six.add_metaclass(FitMeta)
+class Fit(object):
+    """Abstract Fit base class.
+    """
 
     @abc.abstractmethod
     def total_stat(self, parameters):
@@ -120,7 +139,7 @@ class Fit(object):
         return np.sign(amplitude) * np.sqrt(ts)
 
     def optimize(self, backend="minuit", **kwargs):
-        """Run the optimization
+        """Run the optimization.
 
         Parameters
         ----------
@@ -144,22 +163,24 @@ class Fit(object):
 
         Returns
         -------
-        fit_result : `dict`
-            Optimize info dict with the best fit model and additional information.
+        fit_result : `FitResult`
+            Results
         """
         parameters = self._model.parameters
 
         if parameters.apply_autoscale:
             parameters.autoscale()
 
-        optimize = self._optimize_funcs[backend]
+        optimize_backend = BackendRegistry.get("optimize", backend)
         # TODO: change this calling interface!
         # probably should pass a likelihood, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
-        factors, info, optimizer = optimize(
+        factors, info, optimizer = optimize_backend(
             parameters=parameters, function=self.total_stat, **kwargs
         )
 
+        # TODO: Change to a stateless interface for minuit also, or if we must support
+        # stateful backends, put a proper, backend-agnostic solution for this.
         # As preliminary solution would like to provide a possibility that the user
         # can access the Minuit object, because it features a lot useful functionality
         if backend == "minuit":
@@ -168,7 +189,7 @@ class Fit(object):
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
 
-        return dict(
+        return FitResult(
             model=self._model.copy(),
             total_stat=self.total_stat(self._model.parameters),
             backend=backend,
@@ -176,52 +197,93 @@ class Fit(object):
             **info
         )
 
-    # TODO: this is a preliminary solution to restore the old behaviour, that's
-    # why the method is hidden.
-    def _estimate_errors(self, model):
-        """Run the error estimation"""
-        parameters = model.parameters
+    def covar(self, backend="minuit"):
+        """Estimate the covariance matrix.
 
-        if hasattr(self, "minuit"):
-            covar = _get_covar(self.minuit)
-            parameters.set_covariance_factors(covar)
-            self._model.parameters.set_covariance_factors(covar)
+        Assumes that the model parameters are already optimised.
+
+        Returns
+        -------
+        result : `CovarResult`
+            Results
+        """
+        covar_backend = BackendRegistry.get("covar", backend)
+        parameters = self._model.parameters
+
+        # TODO: wrap MINUIT in a stateless backend
+        if backend == "minuit":
+            if hasattr(self, "minuit"):
+                covariance_factors = covar_backend(self.minuit)
+            else:
+                raise RuntimeError("To use covar with minuit, you must first optimize.")
         else:
-            log.warning(
-                "No covariance matrix found. Error estimation currently"
-                " only works with iminuit backend."
-            )
-            parameters.covariance = None
-        return model
+            function = self.total_stat
+            covariance_factors = covar_backend(parameters, function)
 
-    def run(self, steps="all", optimize_opts=None):
+        parameters.set_covariance_factors(covariance_factors)
+
+        # TODO: decide what to return, and fill the info correctly!
+        return CovarResult(model=self._model.copy(), success=True, nfev=0)
+
+    def run(self, optimize_opts=None, covar_opts=None):
         """
         Run all fitting steps.
 
         Parameters
         ----------
-        steps : {"all", "optimize", "errors", "profiles"}
-            Which fitting steps to run.
         optimize_opts : dict
             Options passed to `Fit.optimize`.
+        covar_opts : dict
+            Options passed to `Fit.covar`.
 
         Returns
         -------
         fit_result : `FitResult`
-            Fit result object with the best fit model and additional information.
+            Results
         """
-        if steps == "all":
-            steps = ["optimize", "errors"]
+        if optimize_opts is None:
+            optimize_opts = {}
+        optimize_result = self.optimize(**optimize_opts)
 
-        if "optimize" in steps:
-            if optimize_opts == None:
-                optimize_opts = {}
-            result = self.optimize(**optimize_opts)
+        if covar_opts is None:
+            covar_opts = {}
 
-        if "errors" in steps:
-            result["model"] = self._estimate_errors(result["model"])
+        covar_opts.setdefault("backend", "minuit")
+        if covar_opts["backend"] in BackendRegistry.covar:
+            covar_result = self.covar(**covar_opts)
+            # TODO: not sure how best to report the results
+            # back or how to form the FitResult object.
+            optimize_result._model = covar_result.model
+            optimize_result._success = optimize_result.success and covar_result.success
+            optimize_result._nfev += covar_result.nfev
+        else:
+            log.warning("No covar estimate - not supported by this backend.")
 
-        return FitResult(**result)
+        return optimize_result
+
+
+class CovarResult(object):
+    """Covar result object."""
+
+    def __init__(self, model, success, nfev):
+        self._model = model
+        self._success = success
+        self._nfev = nfev
+
+    @property
+    def model(self):
+        """Best fit model."""
+        return self._model
+
+    @property
+    def success(self):
+        """Fit success status flag."""
+        return self._success
+
+    @property
+    def nfev(self):
+        """Number of function evaluations."""
+        return self._nfev
 
 
 class FitResult(object):
@@ -248,7 +310,7 @@ class FitResult(object):
 
     @property
     def nfev(self):
-        """Number of function evaluations until convergence or stop."""
+        """Number of function evaluations."""
         return self._nfev
 
     @property
