@@ -1,11 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
 from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
+from scipy.ndimage import gaussian_filter, uniform_filter, convolve
+from scipy.signal import fftconvolve
+from scipy.interpolate import RegularGridInterpolator, griddata
+from scipy.ndimage import map_coordinates
+
 from ..extern.skimage import block_reduce
 from ..utils.units import unit_from_fits_image_hdu
 from .geom import pix_tuple_to_idx
@@ -13,6 +19,7 @@ from .wcs import _check_width
 from .utils import interp_to_order
 from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
+
 
 __all__ = ["WcsNDMap"]
 
@@ -160,8 +167,6 @@ class WcsNDMap(WcsMap):
         except KeyError:
             raise ValueError("Invalid interpolation order: {!r}".format(order))
 
-        from scipy.interpolate import RegularGridInterpolator
-
         grid_pix = [np.arange(n, dtype=float) for n in self.data.shape[::-1]]
 
         if np.any(np.isfinite(self.data)):
@@ -176,8 +181,6 @@ class WcsNDMap(WcsMap):
         return fn(tuple(pix))
 
     def _interp_by_pix_map_coordinates(self, pix, order=1):
-        from scipy.ndimage import map_coordinates
-
         pix = tuple(
             [
                 np.array(x, ndmin=1)
@@ -194,8 +197,6 @@ class WcsNDMap(WcsMap):
         method = method_lookup.get(order, None)
         if method is None:
             raise ValueError("Invalid interp: {!r}".format(interp))
-
-        from scipy.interpolate import griddata
 
         grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
@@ -367,8 +368,6 @@ class WcsNDMap(WcsMap):
         return map_out
 
     def upsample(self, factor, order=0, preserve_counts=True):
-        from scipy.ndimage import map_coordinates
-
         geom = self.geom.upsample(factor)
         idx = geom.get_idx()
         pix = (
@@ -517,8 +516,6 @@ class WcsNDMap(WcsMap):
         image : `WcsNDMap`
             Smoothed image (a copy, the original object is unchanged).
         """
-        from scipy.ndimage import gaussian_filter, uniform_filter, convolve
-
         if isinstance(width, (u.Quantity, str)):
             width = u.Quantity(width) / self.geom.pixel_scales.mean()
             width = width.to_value("")
@@ -563,8 +560,6 @@ class WcsNDMap(WcsMap):
         map : `WcsNDMap`
             Convolved map.
         """
-        from scipy.signal import fftconvolve
-        from scipy.ndimage import convolve
         from ..cube.psf_kernel import PSFKernel
 
         conv_function = fftconvolve if use_fft else convolve

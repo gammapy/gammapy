@@ -6,7 +6,6 @@ from ...utils.testing import assert_quantity_allclose
 from ..io import CTAIrf, CTAPerf
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_cta_irf():
     """Test that CTA IRFs can be loaded and evaluated."""

@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
+from scipy.interpolate import UnivariateSpline, RegularGridInterpolator
+
 from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
@@ -308,8 +311,6 @@ class TablePSF(object):
         * `_cdf_spline` is used to compute integral and for normalisation.
         * `_ppf_spline` is used to compute containment radii.
         """
-        from scipy.interpolate import UnivariateSpline
-
         # Compute spline and normalize.
         x, y = self._rad.value, self._dp_domega.value
         self._dp_domega_spline = UnivariateSpline(x, y, **spline_kwargs)
@@ -480,8 +481,6 @@ class EnergyDependentTablePSF(object):
         """
         if interp_kwargs is None:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
-
-        from scipy.interpolate import RegularGridInterpolator
 
         if energy is None:
             energy = self.energy

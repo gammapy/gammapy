@@ -1,5 +1,12 @@
 .. _gammapy_0p8_release:
 
+0.9 (2018-11-19)
+----------------
+
+- Add Scipy as core dependency
+- Require Astropy > 2.0
+
+
 0.8 (2018-09-23)
 ----------------
 

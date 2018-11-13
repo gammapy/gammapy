@@ -2,10 +2,15 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.convolution import Gaussian1DKernel, Box1DKernel
+from scipy.ndimage import gaussian_filter, uniform_filter, convolve
+from scipy import ndimage
+
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 
@@ -136,8 +141,6 @@ class ImageProfileEstimator(object):
         """
         Estimate image profile.
         """
-        from scipy import ndimage
-
         p = self.parameters
         labels = self._label_image(image, mask)
 
@@ -292,10 +295,6 @@ class ImageProfile(object):
         profile : `ImageProfile`
             Smoothed image profile.
         """
-        from scipy.ndimage.filters import uniform_filter, gaussian_filter
-        from scipy.ndimage import convolve
-        from astropy.convolution import Gaussian1DKernel, Box1DKernel
-
         table = self.table.copy()
         profile = table["profile"]
 

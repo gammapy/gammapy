@@ -2,12 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ...detect import CWT, CWTKernels, CWTData
 from ...maps import Map
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 class TestCWT:
     """Test CWT algorithm."""
@@ -129,7 +128,6 @@ class TestCWT:
         assert_allclose(transform_2d.sum(), 9.91731463861)
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 class TestCWTKernels:
     """Test CWTKernels"""
@@ -172,7 +170,6 @@ class TestCWTKernels:
         assert_equal(len(t), 13)
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 class TestCWTData:
     """

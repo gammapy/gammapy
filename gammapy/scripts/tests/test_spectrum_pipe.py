@@ -25,7 +25,6 @@ def get_config():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
 @requires_dependency("sherpa")
 def test_spectrum_analysis_iact(tmpdir):
     config = get_config()

@@ -5,14 +5,17 @@ import copy
 import inspect
 import re
 from collections import OrderedDict
+
 import numpy as np
-from ..extern import six
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from scipy.interpolate import interp1d
+
 from .utils import find_hdu, find_bands_hdu
 from ..utils.interpolation import interpolation_scale
+from ..extern import six
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
@@ -264,8 +267,6 @@ def bin_to_val(edges, bins):
 def coord_to_pix(edges, coord, interp="lin"):
     """Convert axis coordinates to pixel coordinates using the chosen
     interpolation scheme."""
-    from scipy.interpolate import interp1d
-
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
@@ -278,8 +279,6 @@ def coord_to_pix(edges, coord, interp="lin"):
 def pix_to_coord(edges, pix, interp="lin"):
     """Convert pixel coordinates to grid coordinates using the chosen
     interpolation scheme."""
-    from scipy.interpolate import interp1d
-
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(

@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
 from ...data import DataStore, Observations, ObservationStats
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ...background import ReflectedRegionsBackgroundEstimator
 
 
@@ -48,7 +48,6 @@ def stats_stacked(on_region, observations):
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
 class TestObservationStats(object):
     def test_str(self, stats):
         text = str(stats)

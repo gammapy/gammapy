@@ -448,7 +448,6 @@ def test_coadd_unit():
     assert_allclose(m1.data, 1.0001)
 
 
-@requires_dependency("scipy")
 @pytest.mark.parametrize("kernel", ["gauss", "box", "disk"])
 def test_smooth(kernel):
     axes = [
@@ -478,7 +477,6 @@ def test_make_cutout(mode):
     assert_allclose(cutout.geom.width, [[2.0], [3.0]])
 
 
-@requires_dependency("scipy")
 def test_convolve_vs_smooth():
     axes = [
         MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
@@ -495,7 +493,6 @@ def test_convolve_vs_smooth():
     assert_allclose(actual.data, desired.data, rtol=1e-3)
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_convolve_nd():
     energy_axis = MapAxis.from_edges(
@@ -519,7 +516,6 @@ def test_convolve_nd():
     assert_allclose(mc.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
 
 
-@requires_dependency("scipy")
 def test_convolve_pixel_scale_error():
     m = WcsNDMap.create(binsz=0.05 * u.deg, width=5 * u.deg)
     kgeom = WcsGeom.create(binsz=0.04 * u.deg, width=0.5 * u.deg)

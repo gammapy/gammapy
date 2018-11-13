@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import pytest
-from ...utils.testing import requires_dependency
+from scipy import stats
+
 from ...stats import (
     fc_find_acceptance_interval_gauss,
     fc_find_acceptance_interval_poisson,
@@ -16,7 +18,6 @@ from ...stats import (
 )
 
 
-@requires_dependency("scipy")
 def test_acceptance_interval_gauss():
     sigma = 1
     n_sigma = 10
@@ -45,7 +46,6 @@ def test_acceptance_interval_gauss():
         fc_find_acceptance_interval_gauss(0, 1, x_bins, cl)
 
 
-@requires_dependency("scipy")
 def test_acceptance_interval_poisson():
     background = 0.5
     n_bins_x = 100
@@ -68,10 +68,7 @@ def test_acceptance_interval_poisson():
         fc_find_acceptance_interval_poisson(0, 7, x_bins[0:10], cl)
 
 
-@requires_dependency("scipy")
 def test_numerical_confidence_interval_pdfs():
-    from scipy import stats
-
     background = 3.0
     step_width_mu = 0.005
     mu_min = 0
@@ -117,10 +114,7 @@ def test_numerical_confidence_interval_pdfs():
     assert_allclose(average_upper_limit, 4.42, atol=0.1)
 
 
-@requires_dependency("scipy")
 def test_numerical_confidence_interval_values():
-    from scipy import stats
-
     sigma = 1
     n_sigma = 10
     n_bins_x = 100

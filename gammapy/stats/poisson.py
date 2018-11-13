@@ -6,8 +6,14 @@ Poisson significance computations for these two cases.
 * background estimated from ``n_off`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from .significance import significance_to_probability_normal
+
 import numpy as np
+from scipy.stats import norm, poisson
+from scipy.special import erf
+from scipy.optimize import fsolve
+
+from .significance import significance_to_probability_normal
+
 
 __all__ = [
     "background",
@@ -273,8 +279,6 @@ def _significance_direct(n_on, mu_bkg):
     >>> stats.poisson._significance_direct(0, 0.1)
     1.309617799458493
     """
-    from scipy.stats import norm, poisson
-
     # Compute tail probability to see n_on or more counts
     probability = poisson.sf(n_on, mu_bkg)
 
@@ -402,14 +406,11 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     * TODO: check coverage with MC simulation
     * TODO: implement in Cython and vectorize n_on (accept numpy  array n_on as input)
     """
-    from math import factorial as fac
-    from scipy.stats import norm
-
     # Compute tail probability to see n_on or more counts
     probability = 1
     for n in range(0, n_on):
         term_1 = alpha ** n / (1 + alpha) ** (n_off + n + 1)
-        term_2 = fac(n_off + n) / (fac(n) * fac(n_off))
+        term_2 = np.math.factorial(n_off + n) / (fac(n) * fac(n_off))
         probability -= term_1 * term_2
 
     # Convert probability to a significance
@@ -444,12 +445,9 @@ def excess_ul_helene(excess, excess_error, significance):
     if excess_error <= 0:
         raise ValueError("Non-positive excess_error: {}".format(excess_error))
 
-    from math import sqrt
-    from scipy.special import erf
-
     if excess >= 0.0:
         zeta = excess / excess_error
-        value = zeta / sqrt(2.0)
+        value = zeta / np.sqrt(2.0)
         integral = (1.0 + erf(value)) / 2.0
         integral2 = 1.0 - conf_level1 * integral
         value_old = value
@@ -459,7 +457,7 @@ def excess_ul_helene(excess, excess_error, significance):
         integral = (1.0 + erf(value_new)) / 2.0
     else:
         zeta = -excess / excess_error
-        value = zeta / sqrt(2.0)
+        value = zeta / np.sqrt(2.0)
         integral = 1 - (1.0 + erf(value)) / 2.0
         integral2 = 1.0 - conf_level1 * integral
         value_old = value
@@ -477,7 +475,7 @@ def excess_ul_helene(excess, excess_error, significance):
     while integral < integral2:
         value_new = value_new + 0.0000001
         integral = (1.0 + erf(value_new)) / 2.0
-    value_new = value_new * sqrt(2.0)
+    value_new = value_new * np.sqrt(2.0)
 
     if excess >= 0.0:
         conf_limit = (value_new + zeta) * excess_error
@@ -599,8 +597,6 @@ def _excess_matching_significance_on_off_simple(n_off, alpha, significance):
 # it can be analytically inverted because the n_on appears inside and outside the log
 # So probably root finding is still needed here.
 def _excess_matching_significance_lima(mu_bkg, significance):
-    from scipy.optimize import fsolve
-
     # Significance not well-defined for n_on < 0
     # Return Nan if given significance can't be reached
     s0 = _significance_lima(n_on=1e-5, mu_bkg=mu_bkg)
@@ -624,8 +620,6 @@ def _excess_matching_significance_lima(mu_bkg, significance):
 
 
 def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
-    from scipy.optimize import fsolve
-
     # Significance not well-defined for n_on < 0
     # Return Nan if given significance can't be reached
     s0 = _significance_lima_on_off(n_on=1e-5, n_off=n_off, alpha=alpha)

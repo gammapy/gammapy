@@ -4,7 +4,6 @@ from ..model import Model
 
 
 class MyModel(Model):
-
     def __init__(self):
         self.parameters = Parameters(
             [Parameter("x", 2), Parameter("y", 3e2), Parameter("z", 4e-2)]

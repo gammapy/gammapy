@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.time import Time
-from ...utils.testing import requires_data, requires_dependency, assert_time_allclose
+from ...utils.testing import requires_data, assert_time_allclose
 from ..pointing import PointingInfo
 
 
@@ -58,7 +58,6 @@ class TestPointingInfo:
         assert_allclose(pos.alt.deg, 41.37921408774436)
         assert pos.name == "altaz"
 
-    @requires_dependency("scipy")
     def test_altaz_interpolate(self):
         time = self.pointing_info.time[0]
         pos = self.pointing_info.altaz_interpolate(time)

@@ -4,7 +4,6 @@ import pytest
 from numpy.testing import assert_allclose
 import numpy as np
 from astropy import units as u
-from ...utils.testing import requires_dependency
 from ...maps import WcsNDMap
 from ...background import RingBackgroundEstimator, AdaptiveRingBackgroundEstimator
 
@@ -32,7 +31,6 @@ def images():
     return images
 
 
-@requires_dependency("scipy")
 def test_ring_background_estimator(images):
     ring = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
 
@@ -50,7 +48,6 @@ def test_ring_background_estimator(images):
     assert_allclose(result["alpha"].data[~in_fov], 0.0)
 
 
-@requires_dependency("scipy")
 class TestAdaptiveRingBackgroundEstimator:
     def setup(self):
         self.images = {}

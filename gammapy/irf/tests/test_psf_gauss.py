@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose, assert_almost_equal
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy import units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ..psf_gauss import EnergyDependentMultiGaussPSF
 from ..psf_gauss import multi_gauss_psf_kernel, HESSMultiGaussPSF
 
@@ -65,7 +65,6 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     )
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 class TestEnergyDependentMultiGaussPSF:
     @pytest.fixture(scope="session")
@@ -127,7 +126,6 @@ class TestEnergyDependentMultiGaussPSF:
         assert_allclose(np.squeeze(desired), actual, rtol=0.01)
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_psf_cta_1dc():
     filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
@@ -146,7 +144,6 @@ def test_psf_cta_1dc():
     assert_allclose(psf.containment_radius(0.68).deg, 0.053728, atol=1e-4)
 
 
-@requires_dependency("scipy")
 class TestHESS:
     @staticmethod
     def test_dpdtheta2():

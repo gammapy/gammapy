@@ -5,7 +5,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.stats import LombScargle
 from ..period import robust_periodogram
-from ...utils.testing import requires_dependency
 
 pytest.importorskip("astropy", "3.0")
 
@@ -117,7 +116,6 @@ def fap_astropy(power, freq, t, y, dy, method=dict(baluev=0)):
     return fap
 
 
-@requires_dependency("scipy")
 @pytest.mark.parametrize(
     "pars",
     [

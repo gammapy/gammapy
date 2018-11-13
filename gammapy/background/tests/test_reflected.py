@@ -49,7 +49,6 @@ def bkg_estimator():
     )
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_find_reflected_regions(mask, on_region):
     pointing = SkyCoord(83.2, 22.5, unit="deg")
@@ -86,7 +85,6 @@ def test_find_reflected_regions(mask, on_region):
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
 class TestReflectedRegionBackgroundEstimator:
     def setup(self):
         self.bg_maker = bkg_estimator()

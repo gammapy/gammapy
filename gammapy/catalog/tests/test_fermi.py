@@ -131,8 +131,7 @@ class TestFermi3FGLObject:
         assert "flux_ul" in flux_points.table.colnames
         assert flux_points.sed_type == "flux"
 
-        desired = [1.645888e-06, 5.445407e-07, 1.255338e-07, 2.545524e-08,
-                   2.263189e-09]
+        desired = [1.645888e-06, 5.445407e-07, 1.255338e-07, 2.545524e-08, 2.263189e-09]
         assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-5)
 
     def test_flux_points_ul(self):
@@ -155,10 +154,10 @@ class TestFermi3FGLObject:
             "flux_errn",
         ]
 
-        expected = Time(54680.02313657408, format='mjd', scale='utc')
+        expected = Time(54680.02313657408, format="mjd", scale="utc")
         assert_time_allclose(lc.time_min[0], expected)
 
-        expected = Time(54710.43824797454, format='mjd', scale='utc')
+        expected = Time(54710.43824797454, format="mjd", scale="utc")
         assert_time_allclose(lc.time_max[0], expected)
 
         assert table["flux"].unit == "cm-2 s-1"
@@ -307,8 +306,7 @@ class TestFermi3FHLObject:
         assert len(flux_points.table) == 5
         assert "flux_ul" in flux_points.table.colnames
 
-        desired = [5.169889e-09, 2.245024e-09, 9.243175e-10, 2.758956e-10,
-                   6.684021e-11]
+        desired = [5.169889e-09, 2.245024e-09, 9.243175e-10, 2.758956e-10, 6.684021e-11]
         assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-3)
 
     @pytest.mark.parametrize(

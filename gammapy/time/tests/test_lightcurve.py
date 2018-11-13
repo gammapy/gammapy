@@ -114,7 +114,6 @@ def test_lightcurve_fvar(lc):
     assert_allclose(fvar_err, 0.07905694150420949, rtol=1e-2)
 
 
-@requires_dependency("scipy")
 def test_lightcurve_chisq(lc):
     chi2, pval = lc.compute_chisq()
     assert_quantity_allclose(chi2, 1.0000000000000001e-11)
@@ -202,7 +201,6 @@ def spec_extraction():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
 def test_lightcurve_estimator():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)
@@ -251,7 +249,6 @@ def test_lightcurve_estimator():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
 def test_lightcurve_interval_maker():
     spec_extract = spec_extraction()
 
@@ -264,7 +261,6 @@ def test_lightcurve_interval_maker():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("scipy")
 def test_lightcurve_adaptative_interval_maker():
     spec_extract = spec_extraction()
     lc_estimator = LightCurveEstimator(spec_extract)

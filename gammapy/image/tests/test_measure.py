@@ -5,7 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.modeling.models import Gaussian2D
 from astropy.coordinates import SkyCoord
-from ...utils.testing import assert_quantity_allclose, requires_dependency
+from ...utils.testing import assert_quantity_allclose
 from ...maps import WcsGeom, WcsNDMap
 from ...image import (
     measure_containment_radius,
@@ -56,7 +56,6 @@ def test_measure_containment(gaussian_image):
     assert_quantity_allclose(frac, ref, rtol=0.01)
 
 
-@requires_dependency("scipy")
 def test_measure_containment_radius(gaussian_image):
     """Test measure_containment_radius function"""
     position = SkyCoord(0, 0, frame="galactic", unit="deg")

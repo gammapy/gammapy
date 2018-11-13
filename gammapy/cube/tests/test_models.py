@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
@@ -202,7 +202,6 @@ class TestCompoundSkyModel:
         assert_allclose(q.value, 3.536776513153229e-13)
 
 
-@requires_dependency("scipy")
 class TestSkyDiffuseCube:
     @staticmethod
     def test_evaluate_scalar(diffuse_model):
@@ -246,7 +245,6 @@ class TestSkyDiffuseCube:
         assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
 
 
-@requires_dependency("scipy")
 class TestSkyDiffuseCubeMapEvaluator:
     @staticmethod
     def test_compute_dnde(diffuse_evaluator):
@@ -290,7 +288,6 @@ class TestSkyDiffuseCubeMapEvaluator:
         assert_allclose(out[0, 0, 0], 5.586252e08, rtol=1e-5)
 
 
-@requires_dependency("scipy")
 class TestSkyModelMapEvaluator:
     @staticmethod
     def test_energy_center(evaluator):

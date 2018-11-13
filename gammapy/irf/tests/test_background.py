@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_data
 from ..background import Background3D, Background2D
 
 
@@ -30,7 +30,6 @@ def bkg_3d():
     )
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_background_3d_basics(bkg_3d):
     assert "NDDataArray summary info" in str(bkg_3d.data)
@@ -75,7 +74,6 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
-@requires_dependency("scipy")
 def test_background_3d_evaluate(bkg_3d):
     # Evaluate at nodes where we put a non-zero value
     res = bkg_3d.evaluate(
@@ -103,7 +101,6 @@ def test_background_3d_evaluate(bkg_3d):
     assert res.shape == (2, 2)
 
 
-@requires_dependency("scipy")
 def test_background_3d_integrate(bkg_3d):
     # Example has bkg rate = 4 s-1 MeV-1 sr-1 at this node:
     # fov_lon=1.5 deg, fov_lat=1.5 deg, energy=100 TeV
@@ -150,7 +147,6 @@ def bkg_2d():
     )
 
 
-@requires_dependency("scipy")
 def test_background_2d_evaluate(bkg_2d):
     # TODO: the test cases here can probably be improved a bit
     # There's some redundancy, and no case exactly at a node in energy
@@ -202,7 +198,6 @@ def test_background_2d_read_write(tmpdir, bkg_2d):
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
-@requires_dependency("scipy")
 def test_background_2d_integrate(bkg_2d):
     # TODO: change test case to something better (with known answer)
     # e.g. constant spectrum or power-law.

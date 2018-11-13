@@ -4,8 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from multiprocessing import Pool
 from functools import partial
+
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
+from scipy.signal import fftconvolve
+from scipy.ndimage.filters import gaussian_filter
+
 
 __all__ = ["scale_cube"]
 
@@ -13,9 +17,6 @@ log = logging.getLogger(__name__)
 
 
 def _fftconvolve_wrap(kernel, data):
-    from scipy.signal import fftconvolve
-    from scipy.ndimage.filters import gaussian_filter
-
     # wrap gaussian filter as a special case, because the gain in
     # performance is factor ~100
     if isinstance(kernel, Gaussian2DKernel):

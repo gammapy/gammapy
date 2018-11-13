@@ -88,7 +88,6 @@ def test_e_ref_lafferty():
     assert_allclose(actual, desired, atol=1e-3)
 
 
-@requires_dependency("scipy")
 def test_dnde_from_flux():
     """Tests y-value normalization adjustment method.
     """
@@ -114,7 +113,6 @@ def test_dnde_from_flux():
     assert_allclose(actual, desired, rtol=1e-6)
 
 
-@requires_dependency("scipy")
 @pytest.mark.parametrize("method", ["table", "lafferty", "log_center"])
 def test_compute_flux_points_dnde_exp(method):
     """
@@ -179,7 +177,6 @@ def seg():
 @requires_data("gammapy-extra")
 @requires_dependency("sherpa")
 @requires_dependency("matplotlib")
-@requires_dependency("scipy")
 class TestFluxPointEstimator:
     def setup(self):
         self.fpe = FluxPointEstimator(obs=obs(), model=model(), groups=seg())

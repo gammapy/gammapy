@@ -1,11 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
+
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
+from scipy.special import erf
+
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -723,8 +726,6 @@ class EnergyDispersion2D(object):
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        from scipy.special import erf
-
         e_true = EnergyBounds(e_true)
         # erf does not work with Quantities
         true = e_true.log_centers.to_value("TeV")

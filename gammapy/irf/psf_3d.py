@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 from astropy.table import Table
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+from scipy.interpolate import RegularGridInterpolator
+
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 from ..utils.scripts import make_path
@@ -202,8 +205,6 @@ class PSF3D(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        from scipy.interpolate import RegularGridInterpolator
-
         if not interp_kwargs:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
 

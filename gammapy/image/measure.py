@@ -1,7 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 from astropy.units import Quantity
+from scipy.optimize import brentq
+
 
 __all__ = [
     "measure_containment_fraction",
@@ -87,8 +90,6 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
     containment_radius :
         Containment radius (pix)
     """
-    from scipy.optimize import brentq
-
     data = image.quantity
     coords = image.geom.get_coord()
     separation = coords.skycoord.separation(position)

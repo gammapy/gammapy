@@ -4,13 +4,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ...utils.scripts import make_path
 from ...maps import Map
 from ..asmooth import ASmooth
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_asmooth():
     filename = make_path("$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz")

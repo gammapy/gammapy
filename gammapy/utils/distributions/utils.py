@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
+from scipy.integrate import quad
 
 from ...utils.random import get_random_state
 from ...utils.distributions import GeneralRandom
@@ -11,7 +12,6 @@ __all__ = ["normalize", "density", "draw", "pdf"]
 def normalize(func, x_min, x_max):
     """Normalize a 1D function over a given range.
     """
-    from scipy.integrate import quad
 
     def f(x):
         return func(x) / quad(func, x_min, x_max)[0]

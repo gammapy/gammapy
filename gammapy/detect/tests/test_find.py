@@ -2,12 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency
 from ...maps import Map
 from ..find import find_peaks
 
 
-@requires_dependency("scipy")
 class TestFindPeaks:
     def test_simple(self):
         """Test a simple example"""

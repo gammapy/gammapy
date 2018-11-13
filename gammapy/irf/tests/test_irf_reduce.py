@@ -6,7 +6,7 @@ import pytest
 from astropy.coordinates import Angle, SkyCoord
 from ..irf_reduce import make_psf, make_mean_psf, make_mean_edisp
 from ...data import DataStore, Observations
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import Energy
 from ...utils.energy import EnergyBounds
@@ -17,7 +17,6 @@ def data_store():
     return DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 @pytest.mark.parametrize(
     "pars",
@@ -94,7 +93,6 @@ def test_make_psf(pars, data_store):
     assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_make_mean_psf(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
@@ -118,7 +116,6 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf_tot_int.containment_radius(0.68).deg, 0.117803, rtol=1e-3)
 
 
-@requires_dependency("scipy")
 @requires_data("gammapy-extra")
 def test_make_mean_edisp(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")

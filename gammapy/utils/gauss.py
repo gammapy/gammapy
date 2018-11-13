@@ -2,6 +2,8 @@
 """Multi-Gaussian distribution utitities (Gammapy internal)."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from scipy.optimize import brentq
+
 
 __doctest_requires__ = {("gaussian_sum_moments"): ["uncertainties"]}
 
@@ -292,7 +294,6 @@ class MultiGauss2D(object):
                 "containment_fraction = {} not possible for integral = {}"
                 "".format(containment_fraction, self.integral)
             )
-        from scipy.optimize import brentq
 
         def f(theta):
             # positive if theta too large

@@ -97,7 +97,6 @@ def counts(sky_model, exposure, background, psf, edisp):
     return WcsNDMap(background.geom, npred)
 
 
-@requires_dependency("scipy")
 @requires_dependency("iminuit")
 @requires_data("gammapy-extra")
 def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):

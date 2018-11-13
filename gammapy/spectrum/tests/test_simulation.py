@@ -2,14 +2,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency
 from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EffectiveAreaTable
 from .. import SpectrumExtraction, SpectrumSimulation
 from ..models import PowerLaw
 
 
-@requires_dependency("scipy")
 class TestSpectrumSimulation:
     def setup(self):
         e_true = SpectrumExtraction.DEFAULT_TRUE_ENERGY

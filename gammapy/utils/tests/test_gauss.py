@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
 from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
+from scipy.integrate import quad, dblquad
 from ..testing import requires_dependency
 from ...maps import WcsNDMap
 from ...image import measure_image_moments
@@ -12,7 +13,6 @@ from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 BINSZ = 0.02
 
 
-@requires_dependency("scipy")
 class TestGauss2DPDF:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
@@ -21,8 +21,6 @@ class TestGauss2DPDF:
         self.gs = [Gauss2DPDF(0.1), Gauss2DPDF(1), Gauss2DPDF(1)]
 
     def test_call(self):
-        from scipy.integrate import dblquad
-
         # Check that value at origin matches the one given here:
         # http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
         for g in self.gs:
@@ -37,8 +35,6 @@ class TestGauss2DPDF:
             assert_almost_equal(integral, 1, decimal=5)
 
     def test_dpdtheta2(self):
-        from scipy.integrate import quad
-
         for g in self.gs:
             theta2_max = (7 * g.sigma) ** 2
             integral = quad(g.dpdtheta2, 0, theta2_max)[0]
@@ -63,22 +59,17 @@ class TestGauss2DPDF:
         assert_equal(g.sigma, 5)
 
 
-@requires_dependency("scipy")
 class TestMultiGauss2D:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
 
     def test_call(self):
-        from scipy.integrate import dblquad
-
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         xy_max = 5 * m.max_sigma  # integration range
         integral = dblquad(m, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max)[0]
         assert_almost_equal(integral, 7, decimal=5)
 
     def test_dpdtheta2(self):
-        from scipy.integrate import quad
-
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         theta2_max = (7 * m.max_sigma) ** 2
         integral = quad(m.dpdtheta2, 0, theta2_max)[0]
