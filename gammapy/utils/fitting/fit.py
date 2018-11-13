@@ -8,6 +8,7 @@ from astropy.utils.misc import InheritDocstrings
 from ...extern import six
 from .iminuit import optimize_iminuit, _get_covar
 from .sherpa import optimize_sherpa
+from .scipy import optimize_scipy
 
 
 __all__ = ["Fit"]
@@ -24,7 +25,7 @@ class Fit(object):
     """Abstract Fit base class.
     """
 
-    _optimize_funcs = {"minuit": optimize_iminuit, "sherpa": optimize_sherpa}
+    _optimize_funcs = {"minuit": optimize_iminuit, "sherpa": optimize_sherpa, "scipy": optimize_scipy}
 
     @abc.abstractmethod
     def total_stat(self, parameters):
@@ -148,6 +149,9 @@ class Fit(object):
             parameters.autoscale()
 
         optimize = self._optimize_funcs[backend]
+        # TODO: change this calling interface!
+        # probably should pass a likelihood, which has a model, which has parameters
+        # and return something simpler, not a tuple of three things
         factors, info, optimizer = optimize(
             parameters=parameters, function=self.total_stat, **kwargs
         )

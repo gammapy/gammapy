@@ -17,7 +17,7 @@ def get_sherpa_optimizer(name):
 
 
 class SherpaLikelihood(Likelihood):
-    """Likelihood function interface the way Sherpa likes it."""
+    """Likelihood function interface for Sherpa."""
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
         return self.function(self.parameters), 0
@@ -55,6 +55,8 @@ def optimize_sherpa(parameters, function, **kwargs):
             statfunc=statfunc.fcn, pars=pars, parmins=parmins, parmaxes=parmaxes
         )
 
+    factors = result[1]
     info = {"success": result[0], "message": result[3], "nfev": result[4]["nfev"]}
+    optimizer = optimizer
 
-    return result[1], info, optimizer
+    return factors, info, optimizer

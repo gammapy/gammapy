@@ -28,6 +28,6 @@ class Likelihood(object):
         self.function = function
         self.parameters = parameters
 
-    def fcn(self, *factors):
+    def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
         return self.function(self.parameters)
