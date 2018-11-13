@@ -983,14 +983,16 @@ class EnergyDispersion2D(object):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            offset = Angle([1], "deg")
+            offset = Angle(1, "deg")
 
         e_true = self.data.axis("e_true").bins
         migra = self.data.axis("migra").bins
 
         x = e_true.value
         y = migra.value
-        z = self.data.evaluate(offset=offset, e_true=e_true, migra=migra).value
+        z = self.data.evaluate(offset=offset,
+                               e_true=e_true.reshape(1, -1, 1),
+                               migra=migra.reshape(1, 1, -1)).value[0]
 
         caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 

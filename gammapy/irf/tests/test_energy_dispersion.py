@@ -132,10 +132,12 @@ class TestEnergyDispersion2D:
 
         # Check output shape
         energy = [1, 2] * u.TeV
-        migra = [0.98, 0.97, 0.7]
-        offset = [0.1, 0.2] * u.deg
-        actual = self.edisp.data.evaluate(e_true=energy, migra=migra, offset=offset)
-        assert_allclose(actual.shape, (2, 3, 2))
+        migra = np.array([0.98, 0.97, 0.7])
+        offset = [0.1, 0.2, 0.3, 0.4] * u.deg
+        actual = self.edisp.data.evaluate(e_true=energy.reshape(-1, 1, 1),
+                                          migra=migra.reshape(1, -1, 1),
+                                          offset=offset.reshape(1, 1, -1))
+        assert_allclose(actual.shape, (2, 3, 4))
 
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
