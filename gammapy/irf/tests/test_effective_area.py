@@ -57,7 +57,7 @@ class TestEffectiveAreaTable2D:
         offset = 1.2 * u.deg
         actual = aeff.to_effective_area_table(offset=offset).data.data
         desired = aeff.data.evaluate(offset=offset)
-        assert_equal(actual.value, desired.value)
+        assert_equal(actual.value, desired.value.squeeze())
 
     @staticmethod
     @requires_dependency("matplotlib")

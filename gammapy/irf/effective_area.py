@@ -544,7 +544,7 @@ class EffectiveAreaTable2D(object):
 
         offset = self.data.axis("offset").bins
         energy = self.data.axis("energy").bins
-        aeff = self.data.evaluate(offset=offset, energy=energy)
+        aeff = self.data.evaluate(offset=offset, energy=energy[:, np.newaxis])
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
 

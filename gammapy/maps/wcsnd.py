@@ -9,11 +9,12 @@ from astropy.nddata import Cutout2D
 from astropy.convolution import Tophat2DKernel
 from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 from scipy.signal import fftconvolve
-from scipy.interpolate import RegularGridInterpolator, griddata
+from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
 
 from ..extern.skimage import block_reduce
 from ..utils.units import unit_from_fits_image_hdu
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from .geom import pix_tuple_to_idx
 from .wcs import _check_width
 from .utils import interp_to_order
@@ -175,10 +176,10 @@ class WcsNDMap(WcsMap):
         else:
             data = self.data.T
 
-        fn = RegularGridInterpolator(
+        fn = ScaledRegularGridInterpolator(
             grid_pix, data, fill_value=fill_value, bounds_error=False, method=method
         )
-        return fn(tuple(pix))
+        return fn(tuple(pix), clip=False)
 
     def _interp_by_pix_map_coordinates(self, pix, order=1):
         pix = tuple(

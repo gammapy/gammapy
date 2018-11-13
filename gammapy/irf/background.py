@@ -162,9 +162,9 @@ class Background3D(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        points = dict(fov_lon=fov_lon, fov_lat=fov_lat, energy=energy_reco)
-        array = self.data.evaluate_at_coord(points=points, method=method, **kwargs)
-        return array
+        values = self.data.evaluate(fov_lon=fov_lon, fov_lat=fov_lat,
+                                    energy=energy_reco, method=method, **kwargs)
+        return values
 
     def evaluate_integrate(
         self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs
@@ -336,8 +336,7 @@ class Background2D(object):
             Interpolated values, axis order is the same as for the NDData array
         """
         offset = np.sqrt(fov_lon ** 2 + fov_lat ** 2)
-        points = dict(offset=offset, energy=energy_reco)
-        return self.data.evaluate_at_coord(points=points, method=method, **kwargs)
+        return self.data.evaluate(offset=offset, energy=energy_reco, method=method, **kwargs)
 
     def evaluate_integrate(self, fov_lon, fov_lat, energy_reco, method="linear"):
         """Evaluate at given FOV position and energy, by integrating over the energy range.

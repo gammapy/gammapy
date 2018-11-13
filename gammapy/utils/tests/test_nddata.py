@@ -66,7 +66,7 @@ class TestNDDataArray:
     def test_evaluate_shape_1d(self, nddata_1d):
         # Scalar input
         out = nddata_1d.evaluate(x=1.5)
-        assert out.shape == ()
+        assert out.shape == (1,)
 
         # Array input
         out = nddata_1d.evaluate(x=[0, 1.5])
@@ -82,28 +82,30 @@ class TestNDDataArray:
         assert out.shape == (2,)
 
         # Case 2: axis1 = array, axis2 = array
-        out = nddata_2d.evaluate(energy=[1, 1, 1] * u.TeV, offset=[0, 0] * u.deg)
+        offset, energy = [0, 0] * u.deg, [1, 1, 1] * u.TeV
+        out = nddata_2d.evaluate(energy=energy[:, np.newaxis], offset=offset)
         assert out.shape == (3, 2)
 
         # Case 3: axis1 array, axis2 = 2Darray
+        offset, energy = [0, 0] * u.deg, np.zeros((12, 3)) * u.TeV
         out = nddata_2d.evaluate(
-            energy=np.zeros((12, 3)) * u.TeV, offset=[0, 0] * u.deg
+            energy=energy[:, :, np.newaxis], offset=offset
         )
         assert out.shape == (12, 3, 2)
 
     @pytest.mark.parametrize("shape", [(2,), (3, 2), (4, 2, 3)])
-    def test_evaluate_at_coord_2d(self, nddata_2d, shape):
+    def test_evaluate_2d_shape(self, nddata_2d, shape):
         points = dict(
             energy=np.ones(shape) * 1 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg
         )
-        out = nddata_2d.evaluate_at_coord(points=points)
+        out = nddata_2d.evaluate(**points)
         assert out.shape == shape
         assert_allclose(out.value, 1)
 
         points = dict(
             energy=np.ones(shape) * 100 * u.TeV, offset=np.ones(shape) * 0.3 * u.deg
         )
-        out = nddata_2d.evaluate_at_coord(points=points)
+        out = nddata_2d.evaluate(**points)
         assert_allclose(out.value, 5)
 
     def test_evaluate_1d_linear(self, nddata_1d):

@@ -10,11 +10,11 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
-from scipy.interpolate import UnivariateSpline
 
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..spectrum import FluxPoints
 from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
@@ -734,32 +734,29 @@ class SourceCatalogLargeScaleHGPS(object):
     table : `~astropy.table.Table`
         Table of Gaussian parameters.
         ``x``, ``amplitude``, ``mean``, ``stddev``.
-    spline_kwargs : dict
-        Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
+    interp_kwargs : dict
+        Keyword arguments passed to `ScaledRegularGridInterpolator`
     """
 
-    def __init__(self, table, spline_kwargs=None):
-        if spline_kwargs is None:
-            spline_kwargs = dict(k=1, s=0)
+    def __init__(self, table, interp_kwargs=None):
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("values_scale", "lin")
 
         self.table = table
         glon = Angle(self.table["GLON"]).wrap_at("180d")
 
-        splines, units = {}, {}
+        interps = {}
 
         for column in table.colnames:
-            y = self.table[column].quantity
-            spline = UnivariateSpline(glon.degree, y.value, **spline_kwargs)
-            splines[column] = spline
-            units[column] = y.unit
+            values = self.table[column].quantity
+            interp = ScaledRegularGridInterpolator((glon.degree,), values, **interp_kwargs)
+            interps[column] = interp
 
-        self._splines = splines
-        self._units = units
+        self._interp = interps
 
     def _interpolate_parameter(self, parname, glon):
         glon = glon.wrap_at("180d")
-        y = self._splines[parname](glon.degree)
-        return y * self._units[parname]
+        return self._interp[parname]((np.asanyarray(glon.degree),), clip=False)
 
     def peak_brightness(self, glon):
         """Peak brightness at a given longitude.
