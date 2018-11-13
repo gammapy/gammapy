@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
+from .likelihood import Likelihood
 
 __all__ = ["optimize_iminuit"]
 
@@ -24,7 +25,7 @@ def optimize_iminuit(parameters, function, **kwargs):
 
     Returns
     -------
-    result : (factors, info, optmizer)
+    result : (factors, info, optimizer)
         Tuple containing the best fit factors, some info and the optimizer instance.
     """
     from iminuit import Minuit
@@ -36,7 +37,7 @@ def optimize_iminuit(parameters, function, **kwargs):
     kwargs.update(make_minuit_par_kwargs(parameters))
 
     parnames = _make_parnames(parameters)
-    minuit_func = MinuitFunction(function, parameters)
+    minuit_func = Likelihood(function, parameters)
 
     minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **kwargs)
     minuit.migrad()
@@ -69,26 +70,6 @@ def _make_parnames(parameters):
         "par_{:03d}_{}".format(idx, par.name)
         for idx, par in enumerate(parameters.parameters)
     ]
-
-
-class MinuitFunction(object):
-    """Wrapper for iminuit
-
-    Parameters
-    ----------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameters with starting values
-    function : callable
-        Likelihood function
-    """
-
-    def __init__(self, function, parameters):
-        self.function = function
-        self.parameters = parameters
-
-    def fcn(self, *factors):
-        self.parameters.set_parameter_factors(factors)
-        return self.function(self.parameters)
 
 
 def make_minuit_par_kwargs(parameters):

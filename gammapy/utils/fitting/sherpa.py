@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from .likelihood import Likelihood
 
 __all__ = ["optimize_sherpa"]
 
@@ -15,21 +16,8 @@ def get_sherpa_optimizer(name):
     }[name]()
 
 
-class SherpaFunction(object):
-    """Wrapper for Sherpa
-
-    Parameters
-    ----------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameters with starting values
-    function : callable
-        Likelihood function
-    """
-
-    def __init__(self, function, parameters):
-        self.function = function
-        self.parameters = parameters
-
+class SherpaLikelihood(Likelihood):
+    """Likelihood function interface the way Sherpa likes it."""
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
         return self.function(self.parameters), 0
@@ -60,7 +48,7 @@ def optimize_sherpa(parameters, function, **kwargs):
     parmins = [par.factor_min for par in parameters.parameters]
     parmaxes = [par.factor_max for par in parameters.parameters]
 
-    statfunc = SherpaFunction(function, parameters)
+    statfunc = SherpaLikelihood(function, parameters)
 
     with np.errstate(invalid="ignore"):
         result = optimizer.fit(
