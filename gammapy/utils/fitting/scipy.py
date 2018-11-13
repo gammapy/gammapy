@@ -12,7 +12,7 @@ def optimize_scipy(parameters, function, **kwargs):
     likelihood = Likelihood(function, parameters)
 
     # TODO: understand options for this optimiser
-    tol = kwargs.pop('tol', 1e-2)
+    tol = kwargs.pop("tol", 1e-2)
     result = minimize(likelihood.fcn, pars, tol=tol, **kwargs)
 
     factors = result.x

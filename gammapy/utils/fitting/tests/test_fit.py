@@ -58,4 +58,5 @@ def test_covar(backend):
     assert_allclose(pars.correlation[0, 2], 0, atol=1e-7)
     assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
 
+
 # TODO: add confidence interval (conf in Sherpa, minos in MINUIT)

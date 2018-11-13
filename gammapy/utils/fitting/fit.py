@@ -25,7 +25,11 @@ class Fit(object):
     """Abstract Fit base class.
     """
 
-    _optimize_funcs = {"minuit": optimize_iminuit, "sherpa": optimize_sherpa, "scipy": optimize_scipy}
+    _optimize_funcs = {
+        "minuit": optimize_iminuit,
+        "sherpa": optimize_sherpa,
+        "scipy": optimize_scipy,
+    }
 
     @abc.abstractmethod
     def total_stat(self, parameters):

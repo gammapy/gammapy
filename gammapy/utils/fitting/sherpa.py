@@ -18,6 +18,7 @@ def get_sherpa_optimizer(name):
 
 class SherpaLikelihood(Likelihood):
     """Likelihood function interface for Sherpa."""
+
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
         return self.function(self.parameters), 0

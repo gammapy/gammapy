@@ -8,6 +8,7 @@ from .test_period import simulate_test_data, fap_astropy
 
 pytest.importorskip("astropy", "3.0")
 
+
 @requires_dependency("matplotlib")
 def test_plot_periodogram():
     pars = dict(
