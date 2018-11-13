@@ -1267,9 +1267,8 @@ class TableModel(SpectralModel):
     def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
         x = np.log(energy.to_value(self.energy.unit))
-        vals = self._evaluate(x, clip=True)
-        vals = np.reshape(vals, x.shape)
-        return u.Quantity(norm.value * vals, self.values.unit, copy=False)
+        values = self._evaluate((x,), clip=True)
+        return u.Quantity(norm.value * values, self.values.unit, copy=False)
 
 
 class Absorption(object):

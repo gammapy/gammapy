@@ -162,17 +162,17 @@ class NDDataArray(object):
             shapes = values[0].shape
 
         # Flatten in order to support 2D array input
-        values = [_.flatten() for _ in values]
+        values = [_.flat for _ in values]
         points = list(itertools.product(*values))
 
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        res = self._regular_grid_interp(points, method=method, **kwargs)
-
+        res = self._regular_grid_interp._interpolate(points, method=method, **kwargs)
+        res = np.clip(res, 0, np.inf)
         out = np.reshape(res, shapes).squeeze()
+        return Quantity(out, self.data.unit, copy=False)
 
-        return out * self.data.unit
 
     def evaluate_at_coord(self, points, method="linear", **kwargs):
         """Evaluate NDData Array on set of points.
@@ -204,8 +204,7 @@ class NDDataArray(object):
                 for axis in self.axes
             ]
         )
-        res = self._regular_grid_interp(points, method=method, **kwargs)
-        return res * self.data.unit
+        return self._regular_grid_interp(points, method=method, **kwargs)
 
     def _add_regular_grid_interp(self, interp_kwargs=None):
         """Add `~scipy.interpolate.RegularGridInterpolator`

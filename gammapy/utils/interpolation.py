@@ -68,12 +68,13 @@ class ScaledRegularGridInterpolator(object):
         values = self.scale.inverse(values.reshape(points[0].shape))
 
         if clip:
-            np.clip(values, 0, np.inf, out=values)
+            values = np.clip(values, 0, np.inf)
 
         if self._values_unit:
             return u.Quantity(values, self._values_unit, copy=False)
         else:
             return values
+
 
 
 def interpolation_scale(scale="lin"):
