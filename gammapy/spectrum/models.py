@@ -1188,7 +1188,7 @@ class TableModel(SpectralModel):
         interp_kwargs.setdefault("values_scale", "log")
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(np.log(energy.value),), values=values.value, **interp_kwargs
+            points=(np.log(energy.value),), values=values, **interp_kwargs
         )
 
     @classmethod
@@ -1268,7 +1268,7 @@ class TableModel(SpectralModel):
         """Evaluate the model (static function)."""
         x = np.log(energy.to_value(self.energy.unit))
         values = self._evaluate((x,), clip=True)
-        return u.Quantity(norm.value * values, self.values.unit, copy=False)
+        return norm * values
 
 
 class Absorption(object):
