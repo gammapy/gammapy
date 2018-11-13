@@ -2,6 +2,7 @@
 """Interpolation utilities"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy import units as u
 from scipy.interpolate import RegularGridInterpolator
 
 
@@ -29,6 +30,13 @@ class ScaledRegularGridInterpolator(object):
 
     # TODO: add points scaling or axis scaling argument
     def __init__(self, points, values, values_scale="lin", extrapolate=True, **kwargs):
+
+        if isinstance(values, u.Quantity):
+            self._values_unit = values.unit
+            values = values.value
+        else:
+            self._values_unit = None
+
         self.scale = interpolation_scale(values_scale)
         values_scaled = self.scale(values)
 
@@ -41,18 +49,31 @@ class ScaledRegularGridInterpolator(object):
         )
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
-        # the regular grid interpolator does not work with scalars, so we
-        # use this workaround
-        if np.isscalar(points):
-            values = self._interpolate([points], method, **kwargs)
-        else:
-            values = self._interpolate(points, method, **kwargs)
+        """Interpolate data points.
 
-        values = self.scale.inverse(values)
+        Parameters
+        ----------
+        points : tuple of `np.ndarray`
+            Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
+            broadcasted internally.
+        method : {"linear", "nearest"}
+            Linear or nearest neighbour interpolation.
+        clip : bool
+            Clip values at zero after interpolation.
+        """
+        points = np.broadcast_arrays(*points)
+        points_interp = np.stack([_.flat for _ in points]).T
+
+        values = self._interpolate(points_interp, method, **kwargs)
+        values = self.scale.inverse(values.reshape(points[0].shape))
 
         if clip:
             np.clip(values, 0, np.inf, out=values)
-        return values
+
+        if self._values_unit:
+            return u.Quantity(values, self._values_unit, copy=False)
+        else:
+            return values
 
 
 def interpolation_scale(scale="lin"):
