@@ -272,9 +272,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         ss += "{:<25s} : {}\n\n".format("Number of upper limits", d["sed_n_ul"])
 
         try:
-            lines = self.flux_points.table_formatted.pformat(
-                max_width=-1, max_lines=-1
-            )
+            lines = self.flux_points.table_formatted.pformat(max_width=-1, max_lines=-1)
             ss += "\n".join(lines)
         except NoDataAvailableError:
             ss += "\nNo spectral points available for this source."

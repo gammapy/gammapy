@@ -289,7 +289,6 @@ class TestSourceCatalogObjectHGPSComponent:
         assert "SkyModel" in str(model)
 
 
-
 class TestSourceCatalogLargeScaleHGPS:
     def setup(self):
         table = Table()

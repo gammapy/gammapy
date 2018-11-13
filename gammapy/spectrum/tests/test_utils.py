@@ -87,9 +87,7 @@ def get_test_cases():
     return [
         dict(
             model=PowerLaw(
-                index=2,
-                reference=Quantity(1, "TeV"),
-                amplitude=Quantity(1e2, "TeV-1"),
+                index=2, reference=Quantity(1, "TeV"), amplitude=Quantity(1e2, "TeV-1")
             ),
             e_true=e_true,
             npred=999,
@@ -136,7 +134,6 @@ def get_test_cases():
             e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
         ),
     ]
-
 
 
 @pytest.mark.parametrize("case", get_test_cases())

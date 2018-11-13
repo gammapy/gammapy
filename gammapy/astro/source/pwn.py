@@ -70,6 +70,7 @@ class PWN(object):
         t_coll : `~astropy.units.Quantity`
             Time of collision.
         """
+
         def time_coll(t):
             t = Quantity(t, "yr")
             r_pwn = self._radius_free_expansion(t).to_value("cm")

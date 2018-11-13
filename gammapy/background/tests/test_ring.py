@@ -31,7 +31,6 @@ def images():
     return images
 
 
-
 def test_ring_background_estimator(images):
     ring = RingBackgroundEstimator(0.35 * u.deg, 0.3 * u.deg)
 
@@ -47,7 +46,6 @@ def test_ring_background_estimator(images):
     assert_allclose(result["off"].data[~in_fov], 0.0)
     assert_allclose(result["exposure_off"].data[~in_fov], 0.0)
     assert_allclose(result["alpha"].data[~in_fov], 0.0)
-
 
 
 class TestAdaptiveRingBackgroundEstimator:

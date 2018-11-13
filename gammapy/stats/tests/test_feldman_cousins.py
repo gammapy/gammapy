@@ -18,7 +18,6 @@ from ...stats import (
 )
 
 
-
 def test_acceptance_interval_gauss():
     sigma = 1
     n_sigma = 10
@@ -47,7 +46,6 @@ def test_acceptance_interval_gauss():
         fc_find_acceptance_interval_gauss(0, 1, x_bins, cl)
 
 
-
 def test_acceptance_interval_poisson():
     background = 0.5
     n_bins_x = 100
@@ -68,7 +66,6 @@ def test_acceptance_interval_poisson():
     # Pass too few x_bins to reach confidence level.
     with pytest.raises(ValueError):
         fc_find_acceptance_interval_poisson(0, 7, x_bins[0:10], cl)
-
 
 
 def test_numerical_confidence_interval_pdfs():
@@ -115,7 +112,6 @@ def test_numerical_confidence_interval_pdfs():
     # A higher accuracy would require a higher mu_max, which would increase
     # the computation time.
     assert_allclose(average_upper_limit, 4.42, atol=0.1)
-
 
 
 def test_numerical_confidence_interval_values():

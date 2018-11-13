@@ -62,7 +62,6 @@ def test_Pulsar_luminosity_spindown():
     assert_allclose(pulsar.luminosity_spindown(time).value, reference)
 
 
-
 def test_Pulsar_energy_integrated():
     """Test against numerical integration"""
     energies = []

@@ -9,7 +9,6 @@ from ...stats import (
 )
 
 
-
 def test_significance_to_probability_normal():
     significance = 5
     p = significance_to_probability_normal(significance)
@@ -17,7 +16,6 @@ def test_significance_to_probability_normal():
 
     s = probability_to_significance_normal(p)
     assert_allclose(s, significance)
-
 
 
 def test_significance_to_probability_normal_limit():

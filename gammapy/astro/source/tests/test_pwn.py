@@ -10,12 +10,10 @@ t = Quantity([0, 1, 10, 100, 1000, 10000, 100000], "yr")
 pwn = PWN()
 
 
-
 def test_PWN_radius():
     """Test SNR luminosity"""
     r = [0, 1.334e14, 2.114e15, 3.350e16, 5.310e17, 6.927e17, 6.927e17]
     assert_allclose(pwn.radius(t).value, r, rtol=1e-3)
-
 
 
 def test_magnetic_field():

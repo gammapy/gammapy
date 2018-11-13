@@ -58,7 +58,6 @@ class TestPointingInfo:
         assert_allclose(pos.alt.deg, 41.37921408774436)
         assert pos.name == "altaz"
 
-
     def test_altaz_interpolate(self):
         time = self.pointing_info.time[0]
         pos = self.pointing_info.altaz_interpolate(time)

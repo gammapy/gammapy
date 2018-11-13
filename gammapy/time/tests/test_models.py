@@ -49,12 +49,10 @@ def test_light_curve_str(light_curve):
     assert "LightCurveTableModel" in ss
 
 
-
 @requires_data("gammapy-extra")
 def test_light_curve_evaluate_norm_at_time(light_curve):
     val = light_curve.evaluate_norm_at_time(46300)
     assert_allclose(val, 0.021192223042749835)
-
 
 
 @requires_data("gammapy-extra")

@@ -15,8 +15,8 @@ def test_gti_hess():
     assert "GTI" in str(gti)
     assert len(gti.table) == 1
 
-    assert gti.time_delta[0].unit == 's'
-    assert_allclose(gti.time_delta[0].value,  1568.00000)
+    assert gti.time_delta[0].unit == "s"
+    assert_allclose(gti.time_delta[0].value, 1568.00000)
     assert_allclose(gti.time_sum.value, 1568.00000)
 
     expected = Time(53292.00592592593, format="mjd", scale="tt")
@@ -33,8 +33,8 @@ def test_gti_fermi():
     assert "GTI" in str(gti)
     assert len(gti.table) == 36589
 
-    assert gti.time_delta[0].unit == 's'
-    assert_allclose(gti.time_delta[0].value,  352.49307)
+    assert gti.time_delta[0].unit == "s"
+    assert_allclose(gti.time_delta[0].value, 352.49307)
     assert_allclose(gti.time_sum.value, 171273490.97510)
 
     expected = Time(54682.659499814814, format="mjd", scale="tt")

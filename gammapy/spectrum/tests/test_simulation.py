@@ -8,7 +8,6 @@ from .. import SpectrumExtraction, SpectrumSimulation
 from ..models import PowerLaw
 
 
-
 class TestSpectrumSimulation:
     def setup(self):
         e_true = SpectrumExtraction.DEFAULT_TRUE_ENERGY

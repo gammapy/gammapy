@@ -54,7 +54,6 @@ def spectrum_result(flux_points):
     return SpectrumResult(model=model, points=flux_points)
 
 
-
 @requires_data("gammapy-extra")
 class TestSpectrumFitResult:
     @requires_dependency("uncertainties")
@@ -74,7 +73,6 @@ class TestSpectrumFitResult:
     def test_plot(self, fit_result):
         with mpl_plot_check():
             fit_result.plot()
-
 
 
 @requires_data("gammapy-extra")

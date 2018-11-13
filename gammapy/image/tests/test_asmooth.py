@@ -10,7 +10,6 @@ from ...maps import Map
 from ..asmooth import ASmooth
 
 
-
 @requires_data("gammapy-extra")
 def test_asmooth():
     filename = make_path("$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz")

@@ -219,16 +219,7 @@ class Fit(object):
 class FitResult(object):
     """Fit result object."""
 
-    def __init__(
-        self,
-        model,
-        success,
-        nfev,
-        total_stat,
-        message,
-        backend,
-        method,
-    ):
+    def __init__(self, model, success, nfev, total_stat, message, backend, method):
         self._model = model
         self._success = success
         self._nfev = nfev

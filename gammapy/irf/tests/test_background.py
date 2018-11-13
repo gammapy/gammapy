@@ -30,7 +30,6 @@ def bkg_3d():
     )
 
 
-
 @requires_data("gammapy-extra")
 def test_background_3d_basics(bkg_3d):
     assert "NDDataArray summary info" in str(bkg_3d.data)
@@ -75,7 +74,6 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
     assert data.unit == "s-1 MeV-1 sr-1"
 
 
-
 def test_background_3d_evaluate(bkg_3d):
     # Evaluate at nodes where we put a non-zero value
     res = bkg_3d.evaluate(
@@ -101,7 +99,6 @@ def test_background_3d_evaluate(bkg_3d):
     )
     assert_allclose(res.value, [[1, 1], [3.162278, 1]], rtol=1e-5)
     assert res.shape == (2, 2)
-
 
 
 def test_background_3d_integrate(bkg_3d):
@@ -148,7 +145,6 @@ def bkg_2d():
         offset_hi=offset[1:],
         data=data,
     )
-
 
 
 def test_background_2d_evaluate(bkg_2d):
@@ -200,7 +196,6 @@ def test_background_2d_read_write(tmpdir, bkg_2d):
     data = bkg_2d_2.data.data
     assert data.shape == (2, 3)
     assert data.unit == "s-1 MeV-1 sr-1"
-
 
 
 def test_background_2d_integrate(bkg_2d):

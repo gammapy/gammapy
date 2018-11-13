@@ -284,7 +284,9 @@ class FluxPoints(object):
         for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
             try:
                 data = table["dnde" + suffix].quantity
-                table["e2dnde" + suffix] =  (e_ref ** 2 * data).to(DEFAULT_UNIT["e2dnde"])
+                table["e2dnde" + suffix] = (e_ref ** 2 * data).to(
+                    DEFAULT_UNIT["e2dnde"]
+                )
             except KeyError:
                 continue
 
@@ -295,7 +297,7 @@ class FluxPoints(object):
         for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
             try:
                 data = table["e2dnde" + suffix].quantity
-                table["dnde" + suffix] =  (data / e_ref ** 2).to(DEFAULT_UNIT["dnde"])
+                table["dnde" + suffix] = (data / e_ref ** 2).to(DEFAULT_UNIT["dnde"])
             except KeyError:
                 continue
 
@@ -520,12 +522,7 @@ class FluxPoints(object):
         return self.table["e_max"].quantity
 
     def plot(
-        self,
-        ax=None,
-        energy_unit="TeV",
-        flux_unit=None,
-        energy_power=0,
-        **kwargs
+        self, ax=None, energy_unit="TeV", flux_unit=None, energy_power=0, **kwargs
     ):
         """Plot flux points.
 

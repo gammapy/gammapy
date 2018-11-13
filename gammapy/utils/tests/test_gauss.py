@@ -13,7 +13,6 @@ from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 BINSZ = 0.02
 
 
-
 class TestGauss2DPDF:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
@@ -58,7 +57,6 @@ class TestGauss2DPDF:
     def test_gauss_convolve(self):
         g = Gauss2DPDF(sigma=3).gauss_convolve(sigma=4)
         assert_equal(g.sigma, 5)
-
 
 
 class TestMultiGauss2D:

@@ -29,7 +29,6 @@ class TestFluxPointProfiles:
         assert t.colnames == ["norm", "dloglike"]
         assert_allclose(t["dloglike"], [2124.5451, 2128.8706, 2124.5451], rtol=1e-3)
 
-
     def test_get_reference_spectrum(self):
         s = self.profiles.get_reference_spectrum()
         assert len(s.energy) == 24

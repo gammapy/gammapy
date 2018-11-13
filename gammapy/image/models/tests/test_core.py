@@ -62,7 +62,6 @@ def test_sky_diffuse_constant():
     assert_allclose(val.value, 42)
 
 
-
 @requires_data("gammapy-extra")
 def test_sky_diffuse_map():
     filename = "$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
@@ -73,7 +72,6 @@ def test_sky_diffuse_map():
     assert val.unit == "sr-1"
     desired = [3269.178107, 0]
     assert_allclose(val.value, desired)
-
 
 
 @requires_data("gammapy-extra")

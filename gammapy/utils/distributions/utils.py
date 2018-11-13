@@ -12,6 +12,7 @@ __all__ = ["normalize", "density", "draw", "pdf"]
 def normalize(func, x_min, x_max):
     """Normalize a 1D function over a given range.
     """
+
     def f(x):
         return func(x) / quad(func, x_min, x_max)[0]
 

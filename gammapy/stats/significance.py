@@ -118,6 +118,7 @@ def significance_to_probability_normal_limit(significance, guess=1e-100):
     See p_to_s_limit docstring
     Note: s^2 = u - log(u) can't be solved analytically.
     """
+
     def f(probability):
         if probability > 0:
             return probability_to_significance_normal_limit(probability) - significance

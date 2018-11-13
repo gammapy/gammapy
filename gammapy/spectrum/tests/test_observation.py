@@ -17,7 +17,6 @@ from .. import (
 )
 
 
-
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 def test_spectrum_observation_1():
@@ -33,7 +32,6 @@ def test_spectrum_observation_1():
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
-
 
 
 @requires_dependency("sherpa")
@@ -64,7 +62,6 @@ def test_spectrum_observation_2():
     tester.test_all()
 
 
-
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 def test_spectrum_observation_3():
@@ -85,7 +82,6 @@ def test_spectrum_observation_3():
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
-
 
 
 @requires_dependency("sherpa")
@@ -186,7 +182,6 @@ def _read_hess_obs():
     return SpectrumObservationList([obs1, obs2])
 
 
-
 @requires_data("gammapy-extra")
 class TestSpectrumObservationStacker:
     def setup(self):
@@ -243,7 +238,6 @@ class TestSpectrumObservationStacker:
         assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.0)
         # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
         assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
-
 
 
 @requires_data("gammapy-extra")

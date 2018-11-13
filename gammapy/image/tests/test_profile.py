@@ -46,7 +46,6 @@ def cosine_profile():
     return ImageProfile(table)
 
 
-
 class TestImageProfileEstimator(object):
     def test_lat_profile_sum(self, checkerboard_image):
         p = ImageProfileEstimator(axis="lat", method="sum")
@@ -115,7 +114,6 @@ class TestImageProfile(object):
 
     def test_profile_x_edges(self, cosine_profile):
         assert_quantity_allclose(cosine_profile.x_ref.sum(), 0 * u.deg)
-
 
     @pytest.mark.parametrize("kernel", ["gauss", "box"])
     def test_smooth(self, cosine_profile, kernel):

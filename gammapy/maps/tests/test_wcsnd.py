@@ -448,7 +448,6 @@ def test_coadd_unit():
     assert_allclose(m1.data, 1.0001)
 
 
-
 @pytest.mark.parametrize("kernel", ["gauss", "box", "disk"])
 def test_smooth(kernel):
     axes = [
@@ -478,7 +477,6 @@ def test_make_cutout(mode):
     assert_allclose(cutout.geom.width, [[2.0], [3.0]])
 
 
-
 def test_convolve_vs_smooth():
     axes = [
         MapAxis(np.logspace(0.0, 3.0, 3), interp="log"),
@@ -493,7 +491,6 @@ def test_convolve_vs_smooth():
     gauss = Gaussian2DKernel(10).array
     actual = m.convolve(kernel=gauss)
     assert_allclose(actual.data, desired.data, rtol=1e-3)
-
 
 
 @requires_data("gammapy-extra")
@@ -517,7 +514,6 @@ def test_convolve_nd():
     mc = m.convolve(psf_kernel)
 
     assert_allclose(mc.data.sum(axis=(1, 2)), [0, 1, 1], atol=1e-5)
-
 
 
 def test_convolve_pixel_scale_error():

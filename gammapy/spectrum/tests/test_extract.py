@@ -29,7 +29,6 @@ def extraction():
     )
 
 
-
 @requires_data("gammapy-extra")
 class TestSpectrumExtraction:
     @pytest.mark.parametrize(

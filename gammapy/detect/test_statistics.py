@@ -623,6 +623,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigm
     """
     Compute amplitude errors using likelihood profile method.
     """
+
     def ts_diff(x, counts, background, model):
         return (c_1 + error_sigma ** 2) - f_cash(x, counts, background, model)
 

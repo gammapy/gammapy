@@ -65,7 +65,6 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     )
 
 
-
 @requires_data("gammapy-extra")
 class TestEnergyDependentMultiGaussPSF:
     @pytest.fixture(scope="session")
@@ -127,7 +126,6 @@ class TestEnergyDependentMultiGaussPSF:
         assert_allclose(np.squeeze(desired), actual, rtol=0.01)
 
 
-
 @requires_data("gammapy-extra")
 def test_psf_cta_1dc():
     filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
@@ -144,7 +142,6 @@ def test_psf_cta_1dc():
     psf = psf_irf.to_energy_dependent_table_psf("2 deg")
     psf = psf.table_psf_at_energy("1 TeV")
     assert_allclose(psf.containment_radius(0.68).deg, 0.053728, atol=1e-4)
-
 
 
 class TestHESS:

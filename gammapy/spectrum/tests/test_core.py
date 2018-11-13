@@ -10,7 +10,6 @@ from ...utils.energy import EnergyBounds
 from .. import CountsSpectrum, PHACountsSpectrum
 
 
-
 class TestCountsSpectrum:
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3]
@@ -70,7 +69,6 @@ class TestCountsSpectrum:
         actual = rebinned_spec.data.evaluate(energy=[2, 3, 5] * u.TeV)
         desired = [0, 7, 20]
         assert (actual == desired).all()
-
 
 
 class TestPHACountsSpectrum:

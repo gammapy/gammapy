@@ -30,7 +30,6 @@ def fake_psf3d(sigma=0.15 * u.deg):
     return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
 
 
-
 def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
 
@@ -48,7 +47,6 @@ def test_make_psf_map():
     assert psfmap.psf_map.geom.axes[1] == energy_axis
     assert psfmap.psf_map.unit == Unit("sr-1")
     assert psfmap.data.shape == (4, 50, 25, 25)
-
 
 
 def test_psfmap(tmpdir):
@@ -92,7 +90,6 @@ def test_psfmap(tmpdir):
     new_psfmap = PSFMap.read(filename)
 
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
-
 
 
 def test_containment_radius_map(tmpdir):

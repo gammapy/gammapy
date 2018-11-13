@@ -6,7 +6,6 @@ from ...maps import Map
 from ..find import find_peaks
 
 
-
 class TestFindPeaks:
     def test_simple(self):
         """Test a simple example"""

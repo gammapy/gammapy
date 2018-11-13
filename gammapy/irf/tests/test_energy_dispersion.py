@@ -10,7 +10,6 @@ from ...utils.energy import EnergyBounds
 from ...irf import EnergyDispersion, EnergyDispersion2D
 
 
-
 class TestEnergyDispersion:
     def setup(self):
         self.e_true = np.logspace(0, 1, 101) * u.TeV
@@ -94,7 +93,6 @@ class TestEnergyDispersion:
     def test_peek(self):
         with mpl_plot_check():
             self.edisp.peek()
-
 
 
 @requires_data("gammapy-extra")

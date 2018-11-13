@@ -43,7 +43,6 @@ class TestObservationSummaryTable:
 
 
 @requires_data("gammapy-extra")
-
 class TestObservationSummary:
     """
     Test observation summary.

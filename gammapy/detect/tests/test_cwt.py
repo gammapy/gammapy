@@ -7,7 +7,6 @@ from ...detect import CWT, CWTKernels, CWTData
 from ...maps import Map
 
 
-
 @requires_data("gammapy-extra")
 class TestCWT:
     """Test CWT algorithm."""
@@ -129,7 +128,6 @@ class TestCWT:
         assert_allclose(transform_2d.sum(), 9.91731463861)
 
 
-
 @requires_data("gammapy-extra")
 class TestCWTKernels:
     """Test CWTKernels"""
@@ -170,7 +168,6 @@ class TestCWTKernels:
         t = self.kernels_new.info_table
         assert_equal(t.colnames, ["Name", "Source"])
         assert_equal(len(t), 13)
-
 
 
 @requires_data("gammapy-extra")
