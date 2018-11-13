@@ -10,10 +10,6 @@ from ..fit import Fit
 pytest.importorskip("iminuit")
 
 
-class MyData(object):
-    """Dummy data class."""
-
-
 class MyModel(Model):
     """Dummy model class."""
 
@@ -24,9 +20,8 @@ class MyModel(Model):
 
 
 class MyFit(Fit):
-    def __init__(self, model, data):
-        self._model = model
-        self.data = data
+    def __init__(self):
+        self._model = MyModel()
 
     def total_stat(self, parameters):
         # self._model.parameters = parameters
@@ -35,13 +30,10 @@ class MyFit(Fit):
         return (x - x_opt) ** 2 + (y - y_opt) ** 2 + (z - z_opt) ** 2
 
 
-# TODO: parametrize the test, re-use it for the range of backends
-# and optimiser / error estimator configurations we want to support
-def test():
-    data = MyData()
-    model = MyModel()
-    fit = MyFit(model, data)
-    result = fit.run(optimize_opts={"backend": "minuit"})
+@pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
+def test_optimize(backend):
+    fit = MyFit()
+    result = fit.run(optimize_opts={"backend": backend})
     pars = result.model.parameters
 
     assert result.success is True
@@ -51,11 +43,19 @@ def test():
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
 
+
+@pytest.mark.parametrize("backend", ["minuit"])
+def test_covar(backend):
+    fit = MyFit()
+    result = fit.run(optimize_opts={"backend": backend})
+    pars = result.model.parameters
+
     assert_allclose(pars.error("x"), 1, rtol=1e-7)
     assert_allclose(pars.error("y"), 1, rtol=1e-7)
     assert_allclose(pars.error("z"), 1, rtol=1e-7)
 
-    # TODO: Add asserts once correlation method is added in the Parameters class.
-    # assert_allclose(pars.correlation("b1", "b2"), -0.455547, rtol=1e-7)
-    # assert_allclose(pars.correlation("b1", "b3"), -0.838906, rtol=1e-7)
-    # assert_allclose(pars.correlation("b2", "b3"), 0.821333, rtol=1e-7)
+    assert_allclose(pars.correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(pars.correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
+
+# TODO: add confidence interval (conf in Sherpa, minos in MINUIT)

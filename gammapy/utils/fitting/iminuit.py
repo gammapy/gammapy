@@ -4,10 +4,19 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
+from .likelihood import Likelihood
 
 __all__ = ["optimize_iminuit"]
 
 log = logging.getLogger(__name__)
+
+
+class MinuitLikelihood(Likelihood):
+    """Likelihood function interface for iminuit."""
+
+    def fcn(self, *factors):
+        self.parameters.set_parameter_factors(factors)
+        return self.function(self.parameters)
 
 
 def optimize_iminuit(parameters, function, **kwargs):
@@ -24,7 +33,7 @@ def optimize_iminuit(parameters, function, **kwargs):
 
     Returns
     -------
-    result : (factors, info, optmizer)
+    result : (factors, info, optimizer)
         Tuple containing the best fit factors, some info and the optimizer instance.
     """
     from iminuit import Minuit
@@ -36,17 +45,19 @@ def optimize_iminuit(parameters, function, **kwargs):
     kwargs.update(make_minuit_par_kwargs(parameters))
 
     parnames = _make_parnames(parameters)
-    minuit_func = MinuitFunction(function, parameters)
+    minuit_func = MinuitLikelihood(function, parameters)
 
     minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **kwargs)
     minuit.migrad()
 
+    factors = minuit.args
     info = {
         "success": minuit.migrad_ok(),
         "nfev": minuit.get_num_call_fcn(),
         "message": _get_message(minuit),
     }
-    return minuit.args, info, minuit
+    optimizer = minuit
+    return factors, info, optimizer
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
@@ -69,26 +80,6 @@ def _make_parnames(parameters):
         "par_{:03d}_{}".format(idx, par.name)
         for idx, par in enumerate(parameters.parameters)
     ]
-
-
-class MinuitFunction(object):
-    """Wrapper for iminuit
-
-    Parameters
-    ----------
-    parameters : `~gammapy.utils.modeling.Parameters`
-        Parameters with starting values
-    function : callable
-        Likelihood function
-    """
-
-    def __init__(self, function, parameters):
-        self.function = function
-        self.parameters = parameters
-
-    def fcn(self, *factors):
-        self.parameters.set_parameter_factors(factors)
-        return self.function(self.parameters)
 
 
 def make_minuit_par_kwargs(parameters):
