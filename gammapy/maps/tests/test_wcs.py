@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
 from ..wcs import WcsGeom, _check_width
 from ..geom import MapAxis
+from ..base import Map
 
 pytest.importorskip("scipy")
 
@@ -334,11 +335,13 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
     assert (geom0 != geom1) is not result
 
 @pytest.mark.parametrize("node_type", ["edges", "center"])
-@pytest.mark.parametrize("interp", ["log", "linear", "sqrt"])
-def test_read_write():
-    energy_axis = MapAxis(nodes=np.logspace(-2., 2, 5), unit='TeV', name='energy', node_type='edges', interp='log')
-    time_axis = MapAxis(nodes=np.linspace(0.0, 1000.0, 4), unit='s', name='time', node_type='edges', interp='lin')
-    random_axis = MapAxis(nodes=np.linspace(0.1, 100.0, 3), unit='', name='something', node_type='center', interp='lin')
-    geom = WcsGeom.create(skydir=(0, 0), binsz=1, npix=10, axes=[energy_axis, time_axis, random_axis])
+@pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
+def test_read_write(node_type, interp):
+    energy_axis = MapAxis(nodes=np.logspace(-2., 2, 5), unit='TeV', name='energy', node_type=node_type, interp=interp)
+    time_axis = MapAxis(nodes=np.linspace(0.0, 1000.0, 4), unit='s', name='time', node_type=node_type, interp=interp)
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, npix=10, axes=[energy_axis, time_axis])
     m = Map.from_geom(geom, unit='m2')
     m.write('test.fits', overwrite=True)
+
+    m2 = Map.read('test.fits')
+    assert (m2.geom == m.geom)

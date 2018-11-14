@@ -120,7 +120,9 @@ def find_and_read_bands(hdu, header=None):
             name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
             name = cols[0]
-
+        intp = "INTERP%i" % (i+1)
+        if intp in header:
+            interp = header[intp]
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
             unit = header.get("CUNIT%i" % (3 + i), "")
@@ -1346,6 +1348,10 @@ class MapGeom(object):
                 header[key] = name
             else:
                 raise ValueError("Invalid node type {!r}".format(ax.node_type))
+
+            key_interp = "INTERP%i" % idx
+            header[key_interp]=ax._interp
+
 
     @property
     def is_image(self):
