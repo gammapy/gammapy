@@ -8,11 +8,7 @@ from astropy.time import Time
 from ...data import DataStore, EventList, GTI, ObservationCTA
 from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, PSF3D
 from ...utils.testing import requires_data
-from ...utils.testing import (
-    assert_quantity_allclose,
-    assert_time_allclose,
-    assert_skycoord_allclose,
-)
+from ...utils.testing import assert_time_allclose, assert_skycoord_allclose
 
 
 @pytest.fixture(scope="session")
@@ -39,21 +35,23 @@ def test_data_store_observation(data_store):
 
 
 @requires_data("gammapy-extra")
-def test_create_missing_gti():
-    """Test the DataStoreObservation._create_missing_gti() method.
+def test_missing_gti(data_store):
+    """This tests the case when a GTI table is missing in the HDU index file.
 
-    For the 'hess-dl3-dr1' data set, the GTI tables contain only the 'TSTART' and 'TSTOP' from the 'event list' and
-    'obs index' header. The `DataStoreObservation._create_missing_gti()` method creates a GTI table on-the-fly using
-    exactly those values.
+    For backward compatibility we create a GTI table on-the-fly by means of the Obs Index file
+    TODO: This method can be removed once GTI tables are explicitly required in Gammapy.
     """
-    ds = data_store()
-    obs_time_1 = ds.obs(20136).observation_time_duration
+    obs = data_store.obs(20136)
+    hdu_bkp = data_store.hdu_table.copy()
+    # remove the row with the GTI file location for obs_id 20136
+    data_store.hdu_table.remove_row(1)
 
-    ds = data_store()  # DataStore saves some lazyproperties when accessing a hdu location -> we create a new one
-    ds.hdu_table.remove_row(1)  # Remove reference to GTI table -> GTI table will be created on-the-fly
-    obs_time_2 = ds.obs(20136).observation_time_duration
+    try:
+        gti = obs.gti
+    finally:
+        data_store.hdu_table = hdu_bkp
 
-    assert obs_time_1 == obs_time_2
+    assert type(gti) == GTI
 
 
 @requires_data("gammapy-extra")

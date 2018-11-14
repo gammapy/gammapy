@@ -7,9 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from astropy.time import Time
-from astropy.table import Table
 from .event_list import EventListChecker
-from .gti import GTI
 from ..utils.testing import Checker
 from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
@@ -203,7 +201,7 @@ class DataStoreObservation(object):
         try:
             return self.load(hdu_type="gti")
         except IndexError:  # HDU index file does not contain the GTI table. We catch this for backward compatibility.
-            return self._create_missing_gti()
+            return self.data_store.obs_table.create_gti(obs_id=self.obs_id)
 
     @property
     def aeff(self):
@@ -360,32 +358,6 @@ class DataStoreObservation(object):
         """
         checker = ObservationChecker(self)
         return checker.run(checks=checks)
-
-    def _create_missing_gti(self):
-        """Returns a GTI table containing TSTART and TSTOP from the obs table meta data.
-
-        This method can be removed once GTI tables are explicitly required in Gammapy.
-        """
-        header = OrderedDict(
-            EXTNAME="GTI",
-            HDUCLASS="GADF",
-            HDUDOC="https://github.com/open-gamma-ray-astro/gamma-astro-data-formats",
-            HDUVERS="0.2",
-            HDUCLAS1="GTI",
-            MJDREFI=self.data_store.obs_table.meta["MJDREFI"],
-            MJDREFF=self.data_store.obs_table.meta["MJDREFF"],
-            TIMEUNIT=self.data_store.obs_table.meta.get("TIMEUNIT", "s"),
-            TIMESYS=self.data_store.obs_table.meta["TIMESYS"],
-            TIMEREF=self.data_store.obs_table.meta.get("TIMEREF", "LOCAL"),
-        )
-
-        start = self.obs_info["TSTART"].astype("float64")
-        stop = self.obs_info["TSTOP"].astype("float64")
-        gti_table = Table(
-            [[start.value], [stop.value]], names=("START", "STOP"), meta=header
-        )
-
-        return GTI(gti_table)
 
 
 class Observations(object):
