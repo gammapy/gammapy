@@ -3,10 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.units import Quantity
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_data
-from ..io import CTAIrf, CTAPerf
-from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
-from ...utils.testing import assert_quantity_allclose
-from ..io import load_CTA_1DC_IRF
+from ..io import load_cta_irfs
 
 
 @requires_data("gammapy-extra")
@@ -16,7 +13,7 @@ def test_cta_irf():
     filename = (
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
-    irf = load_CTA_1DC_IRF(filename)
+    irf = load_cta_irfs(filename)
 
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")

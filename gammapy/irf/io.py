@@ -6,10 +6,10 @@ from .background import Background3D
 from .energy_dispersion import EnergyDispersion2D
 from .psf_gauss import EnergyDependentMultiGaussPSF
 
-__all__ = ["load_CTA_1DC_IRF"]
+__all__ = ["load_cta_irfs"]
 
 
-def load_CTA_1DC_IRF(filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"):
+def load_cta_irfs(filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"):
     """load CTA instrument response function and return a dictionary container.
 
     The IRF format should be compliant with the one discussed
