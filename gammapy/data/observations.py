@@ -200,7 +200,11 @@ class DataStoreObservation(object):
         """Load `gammapy.data.GTI` object."""
         try:
             return self.load(hdu_type="gti")
-        except IndexError:  # HDU index file does not contain the GTI table. We catch this for backward compatibility.
+        except IndexError:
+            # For now we support data without GTI HDUs
+            # TODO: if GTI becomes required, we should drop this case
+            # CTA discussion in https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/20
+            # Added in Gammapy in https://github.com/gammapy/gammapy/pull/1908
             return self.data_store.obs_table.create_gti(obs_id=self.obs_id)
 
     @property

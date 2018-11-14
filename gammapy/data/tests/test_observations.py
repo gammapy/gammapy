@@ -35,26 +35,6 @@ def test_data_store_observation(data_store):
 
 
 @requires_data("gammapy-extra")
-def test_missing_gti(data_store):
-    """This tests the case when a GTI table is missing in the HDU index file.
-
-    For backward compatibility we create a GTI table on-the-fly by means of the Obs Index file
-    TODO: This method can be removed once GTI tables are explicitly required in Gammapy.
-    """
-    obs = data_store.obs(20136)
-    hdu_bkp = data_store.hdu_table.copy()
-    # remove the row with the GTI file location for obs_id 20136
-    data_store.hdu_table.remove_row(1)
-
-    try:
-        gti = obs.gti
-    finally:
-        data_store.hdu_table = hdu_bkp
-
-    assert type(gti) == GTI
-
-
-@requires_data("gammapy-extra")
 def test_data_store_observation_to_observation_cta(data_store):
     """Test the DataStoreObservation.to_observation_cta conversion method"""
     obs = data_store.obs(23523).to_observation_cta()

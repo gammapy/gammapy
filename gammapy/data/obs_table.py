@@ -367,7 +367,7 @@ class ObservationTable(Table):
         gti : `~gammapy.data.GTI`
             GTI table containing one row (TSTART and TSTOP of the observation with `obs_id`)
         """
-        header = OrderedDict(
+        meta = OrderedDict(
             EXTNAME="GTI",
             HDUCLASS="GADF",
             HDUDOC="https://github.com/open-gamma-ray-astro/gamma-astro-data-formats",
@@ -380,12 +380,13 @@ class ObservationTable(Table):
             TIMEREF=self.meta.get("TIMEREF", "LOCAL"),
         )
 
-        idx = self.get_obs_idx(obs_id)[0]
-        start = self["TSTART"][idx].astype("float64")
-        stop = self["TSTOP"][idx].astype("float64")
-        gti_table = Table([[start], [stop]], names=("START", "STOP"), meta=header)
+        obs = self.select_obs_id(obs_id)
 
-        return GTI(gti_table)
+        gti = Table(meta=meta)
+        gti['START'] = obs["TSTART"].quantity.to('s')
+        gti['STOP'] = obs["TSTOP"].quantity.to('s')
+
+        return GTI(gti)
 
 
 class ObservationTableChecker(Checker):
