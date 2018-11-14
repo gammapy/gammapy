@@ -18,3 +18,4 @@ from .obs_table import *
 from .obs_summary import *
 from .obs_stats import *
 from .observations import *
+from .filters import *

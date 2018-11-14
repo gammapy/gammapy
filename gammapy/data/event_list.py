@@ -268,6 +268,16 @@ class EventListBase(object):
 
     def select_time(self, time_interval):
         """Select events in time interval.
+
+        Parameters
+        ----------
+        time_interval : `astropy.time.Time`
+            Start time (inclusive) and stop time (exclusive) for the selection.
+
+        Returns
+        -------
+        events : `EventList`
+            Copy of event list with selection applied.
         """
         time = self.time
         mask = time_interval[0] <= time
@@ -368,6 +378,23 @@ class EventListBase(object):
             temp = np.where(separation < reg.radius)[0]
             mask = np.union1d(mask, temp)
         return mask
+
+    def select_custom(self, parameter, limits):
+        """Select events with respect to a custom parameter
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter used for the selection. Must be present in `self.table`.
+        limits : tuple
+            Min (inclusive) and max (exclusive) value for the parameter to be selected.
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        raise NotImplementedError
 
     def _default_plot_ebounds(self):
         energy = self.energy
