@@ -69,8 +69,6 @@ def make_axes_cols(axes, axis_names=None):
 
         if name == "ENERGY":
             colnames = ["ENERGY", "E_MIN", "E_MAX"]
-        elif name == "TIME":
-            colnames = ["TIME", "T_MIN", "T_MAX"]
         else:
             s = "AXIS%i" % i if name == "" else name
             colnames = [s, s + "_MIN", s + "_MAX"]

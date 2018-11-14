@@ -332,3 +332,13 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
 
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
+
+@pytest.mark.parametrize("node_type", ["edges", "center"])
+@pytest.mark.parametrize("interp", ["log", "linear", "sqrt"])
+def test_read_write():
+    energy_axis = MapAxis(nodes=np.logspace(-2., 2, 5), unit='TeV', name='energy', node_type='edges', interp='log')
+    time_axis = MapAxis(nodes=np.linspace(0.0, 1000.0, 4), unit='s', name='time', node_type='edges', interp='lin')
+    random_axis = MapAxis(nodes=np.linspace(0.1, 100.0, 3), unit='', name='something', node_type='center', interp='lin')
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, npix=10, axes=[energy_axis, time_axis, random_axis])
+    m = Map.from_geom(geom, unit='m2')
+    m.write('test.fits', overwrite=True)
