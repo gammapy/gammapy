@@ -25,7 +25,7 @@ class ObservationFilter(object):
 
     Examples
     --------
-    >>> from gammapy.data import ObservationFilter, DataStore
+    >>> from gammapy.data import ObservationFilter, DataStore, DataStoreObservation
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
@@ -34,14 +34,14 @@ class ObservationFilter(object):
     >>>
     >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
     >>>
-    >>> my_obs = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps").obs(111630)
-    >>> my_obs.obs_filter = my_obs_filter
+    >>> ds = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
+    >>> my_obs = DataStoreObservation(obs_id=111630, data_store=ds, obs_filter=my_obs_filter)
     """
 
     EVENT_FILTER_TYPES = dict(
-        box_region='select_sky_box',
-        circular_region='select_circular_region',
-        custom='select_custom',
+        box_region="select_sky_box",
+        circular_region="select_circular_region",
+        custom="select_custom",
     )
 
     def __init__(self, time_filter=None, event_filters=None):
@@ -64,8 +64,8 @@ class ObservationFilter(object):
         filtered_events = self._filter_by_time(events)
 
         for f in self.event_filters:
-            method_str = self.EVENT_FILTER_TYPES[f['type']]
-            filtered_events = getattr(filtered_events, method_str)(**f['opts'])
+            method_str = self.EVENT_FILTER_TYPES[f["type"]]
+            filtered_events = getattr(filtered_events, method_str)(**f["opts"])
 
         return filtered_events
 

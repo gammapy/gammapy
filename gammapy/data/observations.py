@@ -201,7 +201,7 @@ class DataStoreObservation(object):
 
     @property
     def gti(self):
-        """Load `gammapy.data.GTI` object."""
+        """Load `gammapy.data.GTI` object and apply the filter."""
         try:
             gti = self.load(hdu_type="gti")
         except IndexError:

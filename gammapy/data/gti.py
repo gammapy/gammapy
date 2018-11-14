@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.table import Table
-from ..utils.time import time_ref_from_dict, time_relative_to_ref
+from ..utils.time import time_ref_from_dict
 from ..utils.scripts import make_path
 
 __all__ = ["GTI"]
