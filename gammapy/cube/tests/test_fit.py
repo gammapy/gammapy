@@ -16,23 +16,21 @@ from ..models import SkyModel
 from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
 
 
-@pytest.fixture(scope="session")
-def geom():
-    axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV)
+
+def geom(ebounds):
+    axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV)
     return WcsGeom.create(
         skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
     )
 
 
-@pytest.fixture(scope="session")
-def geom_etrue():
-    axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 4), name="energy", unit=u.TeV)
+def geom_etrue(ebounds_true):
+    axis = MapAxis.from_edges(ebounds_true, name="energy", unit=u.TeV)
     return WcsGeom.create(
         skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
     )
 
 
-@pytest.fixture(scope="session")
 def exposure(geom_etrue):
     filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
@@ -46,21 +44,18 @@ def exposure(geom_etrue):
     return exposure_map
 
 
-@pytest.fixture(scope="session")
 def background(geom):
     m = Map.from_geom(geom)
     m.quantity = np.ones(m.data.shape) * 1e-5
     return m
 
 
-@pytest.fixture(scope="session")
 def edisp(geom, geom_etrue):
     e_true = geom_etrue.get_axis_by_name("energy").edges
     e_reco = geom.get_axis_by_name("energy").edges
     return EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
-@pytest.fixture(scope="session")
 def psf(geom_etrue):
     filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
@@ -79,7 +74,6 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-@pytest.fixture
 def mask(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
@@ -88,7 +82,6 @@ def mask(geom, sky_model):
     return WcsNDMap(geom=geom, data=data)
 
 
-@pytest.fixture
 def counts(sky_model, exposure, background, psf, edisp):
     evaluator = MapEvaluator(
         model=sky_model, exposure=exposure, background=background, psf=psf, edisp=edisp
@@ -99,7 +92,19 @@ def counts(sky_model, exposure, background, psf, edisp):
 
 @requires_dependency("iminuit")
 @requires_data("gammapy-extra")
-def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
+def test_cube_fit(sky_model):
+    ebounds = np.logspace(-1.0, 1.0, 3)
+    ebounds_true = np.logspace(-1.0, 1.0, 4)
+    geom_r = geom(ebounds)
+    geom_t = geom_etrue(ebounds_true)
+
+    background_map = background(geom_r)
+    psf_map = psf(geom_t)
+    edisp_map = edisp(geom_r, geom_t)
+    exposure_map = exposure(geom_t)
+    counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
+    mask_map = mask(geom_r, sky_model)
+
     sky_model.parameters["lon_0"].value = 0.5
     sky_model.parameters["lat_0"].value = 0.5
     sky_model.parameters["index"].value = 2
@@ -107,12 +112,12 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
 
     fit = MapFit(
         model=sky_model,
-        counts=counts,
-        exposure=exposure,
-        background=background,
-        mask=mask,
-        psf=psf,
-        edisp=edisp,
+        counts=counts_map,
+        exposure=exposure_map,
+        background=background_map,
+        mask=mask_map,
+        psf=psf_map,
+        edisp=edisp_map,
     )
     result = fit.run()
 
@@ -133,6 +138,56 @@ def test_cube_fit(sky_model, counts, exposure, psf, background, mask, edisp):
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars.error("amplitude"), 4.03049e-13, rtol=1e-2)
+
+    assert result.model.spectral_model.parameters.covariance is not None
+    assert result.model.spatial_model.parameters.covariance is not None
+
+def test_cube_fit_onebin(sky_model):
+    ebounds = np.logspace(-1.0, 1.0, 2)
+    geom_r = geom(ebounds)
+
+    background_map = background(geom_r)
+    psf_map = psf(geom_r)
+    edisp_map = edisp(geom_r, geom_r)
+    exposure_map = exposure(geom_r)
+    counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
+    mask_map = mask(geom_r, sky_model)
+
+    sky_model.parameters["lon_0"].value = 0.5
+    sky_model.parameters["lat_0"].value = 0.5
+    sky_model.parameters["amplitude"].value = 2e-11
+    sky_model.parameters["index"].value = 3
+    sky_model.parameters["index"].frozen = True
+    sky_model.parameters["sigma"].value = 0.3
+
+    fit = MapFit(
+        model=sky_model,
+        counts=counts_map,
+        exposure=exposure_map,
+        background=background_map,
+        mask=mask_map,
+        psf=psf_map,
+        edisp=edisp_map,
+    )
+    result = fit.run()
+
+    assert sky_model is not fit._model
+    assert sky_model is not result.model
+    assert result.success
+    assert "minuit" in repr(result)
+
+    stat_expected = 697.068035
+    assert_allclose(result.total_stat, stat_expected, rtol=1e-1)
+
+    pars = result.model.parameters
+    assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-1)
+    assert_allclose(pars.error("lon_0"), 0.02, rtol=1e-1)
+
+    assert_allclose(pars["sigma"].value, 0.2, rtol=1e-1)
+    assert_allclose(pars.error("sigma"), 0.011, rtol=1e-1)
+
+    assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-1)
+    assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-1)
 
     assert result.model.spectral_model.parameters.covariance is not None
     assert result.model.spatial_model.parameters.covariance is not None
