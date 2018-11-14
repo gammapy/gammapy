@@ -121,8 +121,9 @@ def find_and_read_bands(hdu, header=None):
         else:
             name = cols[0]
         intp = "INTERP%i" % (i+1)
-        if intp in header:
-            interp = header[intp]
+        if header is not None:
+            if intp in header:
+                interp = header[intp]
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
             unit = header.get("CUNIT%i" % (3 + i), "")
