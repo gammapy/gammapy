@@ -198,7 +198,14 @@ class DataStoreObservation(object):
     @property
     def gti(self):
         """Load `gammapy.data.GTI` object."""
-        return self.load(hdu_type="gti")
+        try:
+            return self.load(hdu_type="gti")
+        except IndexError:
+            # For now we support data without GTI HDUs
+            # TODO: if GTI becomes required, we should drop this case
+            # CTA discussion in https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/issues/20
+            # Added in Gammapy in https://github.com/gammapy/gammapy/pull/1908
+            return self.data_store.obs_table.create_gti(obs_id=self.obs_id)
 
     @property
     def aeff(self):
@@ -220,13 +227,13 @@ class DataStoreObservation(object):
         """Load background object."""
         return self.load(hdu_type="bkg")
 
-    @lazyproperty
+    @property
     def obs_info(self):
         """Observation information (`~collections.OrderedDict`)."""
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         return table_row_to_dict(row)
 
-    @lazyproperty
+    @property
     def tstart(self):
         """Observation start time (`~astropy.time.Time`)."""
         met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
@@ -234,7 +241,7 @@ class DataStoreObservation(object):
         time = met_ref + met
         return time
 
-    @lazyproperty
+    @property
     def tstop(self):
         """Observation stop time (`~astropy.time.Time`)."""
         met_ref = time_ref_from_dict(self.data_store.obs_table.meta)
@@ -242,15 +249,15 @@ class DataStoreObservation(object):
         time = met_ref + met
         return time
 
-    @lazyproperty
+    @property
     def observation_time_duration(self):
         """Observation time duration in seconds (`~astropy.units.Quantity`).
 
         The wall time, including dead-time.
         """
-        return Quantity(self.obs_info["ONTIME"], "second")
+        return self.gti.time_sum
 
-    @lazyproperty
+    @property
     def observation_live_time_duration(self):
         """Live-time duration in seconds (`~astropy.units.Quantity`).
 
@@ -259,9 +266,9 @@ class DataStoreObservation(object):
         Computed as ``t_live = t_observation * (1 - f_dead)``
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.obs_info["LIVETIME"], "second")
+        return self.gti.time_sum * (1 - self.observation_dead_time_fraction)
 
-    @lazyproperty
+    @property
     def observation_dead_time_fraction(self):
         """Dead-time fraction (float).
 
@@ -277,35 +284,35 @@ class DataStoreObservation(object):
         """
         return 1 - self.obs_info["DEADC"]
 
-    @lazyproperty
+    @property
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         lon, lat = self.obs_info["RA_PNT"], self.obs_info["DEC_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
-    @lazyproperty
+    @property
     def pointing_altaz(self):
         """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         alt, az = self.obs_info["ALT_PNT"], self.obs_info["AZ_PNT"]
         return SkyCoord(az, alt, unit="deg", frame="altaz")
 
-    @lazyproperty
+    @property
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
         return Quantity(self.obs_info["ZEN_PNT"], unit="deg")
 
-    @lazyproperty
+    @property
     def target_radec(self):
         """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         lon, lat = self.obs_info["RA_OBJ"], self.obs_info["DEC_OBJ"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
-    @lazyproperty
+    @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)."""
         return earth_location_from_dict(self.obs_info)
 
-    @lazyproperty
+    @property
     def muoneff(self):
         """Observation muon efficiency."""
         return self.obs_info["MUONEFF"]

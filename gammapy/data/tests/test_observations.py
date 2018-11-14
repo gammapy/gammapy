@@ -8,11 +8,7 @@ from astropy.time import Time
 from ...data import DataStore, EventList, GTI, ObservationCTA
 from ...irf import EffectiveAreaTable2D, EnergyDispersion2D, PSF3D
 from ...utils.testing import requires_data
-from ...utils.testing import (
-    assert_quantity_allclose,
-    assert_time_allclose,
-    assert_skycoord_allclose,
-)
+from ...utils.testing import assert_time_allclose, assert_skycoord_allclose
 
 
 @pytest.fixture(scope="session")

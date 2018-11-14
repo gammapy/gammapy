@@ -4,7 +4,12 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord, AltAz
 from astropy.time import Time, TimeDelta
-from ...utils.testing import requires_data
+from ...data import GTI
+from ...utils.testing import (
+    requires_data,
+    assert_time_allclose,
+    assert_quantity_allclose,
+)
 from ...utils.time import time_ref_from_dict, time_relative_to_ref
 from ...utils.random import sample_sphere, get_random_state
 from ...catalog import skycoord_from_table
@@ -78,6 +83,9 @@ def make_test_observation_table(
     obs_table.meta["OBSERVATORY_NAME"] = observatory_name
     obs_table.meta["MJDREFI"] = dateref_mjd_int
     obs_table.meta["MJDREFF"] = dateref_mjd_fra
+    obs_table.meta["TIMESYS"] = "TT"
+    obs_table.meta["TIMEUNIT"] = "s"
+    obs_table.meta["TIMEREF"] = "LOCAL"
     if use_abs_time:
         # show the observation times in UTC
         obs_table.meta["TIME_FORMAT"] = "absolute"
@@ -394,6 +402,30 @@ def test_select_sky_regions():
         border=border,
     )
     common_sky_region_select_test_routines(obs_table, selection)
+
+
+def test_create_gti():
+    """Test the `~gammapy.data.ObservationTable.create_gti()` method.
+    """
+    date_start = Time("2012-01-01T00:30:00")
+    date_end = Time("2012-01-01T02:30:00")
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(
+        n_obs=1, date_range=(date_start, date_end), random_state=random_state
+    )
+
+    gti = obs_table.create_gti(obs_id=1)
+
+    met_ref = time_ref_from_dict(obs_table.meta)
+    time_start = met_ref + Quantity(obs_table[0]["TSTART"].astype("float64"), "second")
+    time_stop = met_ref + Quantity(obs_table[0]["TSTOP"].astype("float64"), "second")
+
+    assert type(gti) == GTI
+    assert_time_allclose(gti.time_start, time_start)
+    assert_time_allclose(gti.time_stop, time_stop)
+    assert_quantity_allclose(
+        gti.time_sum, Quantity(obs_table[0]["ONTIME"].astype("float64"), "second")
+    )
 
 
 @requires_data("gammapy-extra")
