@@ -4,7 +4,6 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.utils.testing import requires_data
-from ...irf.io import CTAPerf
 from ..sensitivity import SensitivityEstimator
 
 
