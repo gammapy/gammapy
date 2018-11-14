@@ -90,6 +90,14 @@ def counts(sky_model, exposure, background, psf, edisp):
     return WcsNDMap(background.geom, npred)
 
 
+def sky_model_fit(sky_model):
+    sky_model.parameters["lon_0"].value = 0.5
+    sky_model.parameters["lat_0"].value = 0.5
+    sky_model.parameters["amplitude"].value = 2e-11
+    sky_model.parameters["index"].value = 2
+    return sky_model
+
+
 @requires_dependency("iminuit")
 @requires_data("gammapy-extra")
 def test_cube_fit(sky_model):
@@ -105,13 +113,11 @@ def test_cube_fit(sky_model):
     counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
-    sky_model.parameters["lon_0"].value = 0.5
-    sky_model.parameters["lat_0"].value = 0.5
-    sky_model.parameters["index"].value = 2
-    sky_model.parameters["sigma"].frozen = True
+    model_fit = sky_model_fit(sky_model)
+    model_fit.parameters["sigma"].frozen = True
 
     fit = MapFit(
-        model=sky_model,
+        model=model_fit,
         counts=counts_map,
         exposure=exposure_map,
         background=background_map,
@@ -153,15 +159,14 @@ def test_cube_fit_onebin(sky_model):
     counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
-    sky_model.parameters["lon_0"].value = 0.5
-    sky_model.parameters["lat_0"].value = 0.5
-    sky_model.parameters["amplitude"].value = 2e-11
-    sky_model.parameters["index"].value = 3
-    sky_model.parameters["index"].frozen = True
-    sky_model.parameters["sigma"].value = 0.3
+    model_fit = sky_model_fit(sky_model)
+    model_fit.parameters["index"].value = 3.0
+    model_fit.parameters["index"].frozen = True
+    model_fit.parameters["sigma"].value = 0.3
+
 
     fit = MapFit(
-        model=sky_model,
+        model=model_fit,
         counts=counts_map,
         exposure=exposure_map,
         background=background_map,
@@ -171,10 +176,7 @@ def test_cube_fit_onebin(sky_model):
     )
     result = fit.run()
 
-    assert sky_model is not fit._model
-    assert sky_model is not result.model
     assert result.success
-    assert "minuit" in repr(result)
 
     stat_expected = 697.068035
     assert_allclose(result.total_stat, stat_expected, rtol=1e-1)
