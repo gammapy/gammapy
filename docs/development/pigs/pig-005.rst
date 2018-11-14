@@ -3,7 +3,7 @@
 .. _pig-005:
 
 ***************************
-PIG 5 - Gammapy 1.0 Roadmap 
+PIG 5 - Gammapy 1.0 Roadmap
 ***************************
 
 * Author: Axel Donath (editor), Régis Terrier & Christoph Deil
@@ -18,7 +18,7 @@ This PIG describes the required short- and medium-term **development work up to
 the Gammapy 1.0** release. The anticipated time scale for this development effort
 is **9 - 12 months** and will be concluded by the Gammapy 1.0 release in fall 2019.
 The question of **API design and sub-module structure for Gammapy 1.0 will be
-addressed in a separate PIG**. 
+addressed in a separate PIG**.
 
 The content of this document was decided based upon user feedback from the first
 CTA data challenge (DC1), experience from analysing existing datasets as well as
@@ -57,18 +57,18 @@ we could start **monthly Gammapy user calls**, for regular user support and feed
 (to be discussed).
 
 We plan to hold **Gammapy workshops and tutorials** at upcoming science and
-collaboration meetings (to be disccused). 
+collaboration meetings (to be disccused).
 
 
 Use Cases
 =========
 The following use cases should be supported by Gammapy 1.0:
 
-* Fit 1D spectrum and 3D cube simultaneously
-* Further definitions defined by CTA (private link to slides_)
+* Current definitions defined by CTA (private link to slides_)
+* Further requirements defined at the SUSS workshop Dec. 2018 (private link to indico_)
 
 .. _slides: https://forge.in2p3.fr/login?back_url=https%3A%2F%2Fforge.in2p3.fr%2Fprojects%2Fobserver-access-use-cases%2Fwiki%2FScience_Tools_Use-Cases).
-
+.. _indico: https://indico.cta-observatory.org/event/2070/
 
 Projects
 ========
@@ -81,19 +81,19 @@ one person works on the implementation while the other is available for discussi
 and code review. We have defined the following projects:
 
 
-Maintenance and Code Quality (team effort)
-------------------------------------------
+Maintenance and Code Quality
+----------------------------
 Continue the clean up process of Gammapy. Improve code, test coverage and test
 quality in general. Change to a more uniform code style for tests. Reduce runtime
 of tests. Implement required bugfixes. Maintenance is as important as adding new
 features, but will be mostly taken over by experienced developers.
 
 Improve the Gammapy development workflow. Improve developer documentation. Define
-Github labels, projects and milestones to reflect the content of the roadmap (Axel).
+Github labels, projects and milestones to reflect the content of the roadmap.
 
 
-Documentation (team effort)
----------------------------
+Documentation
+-------------
 Improve documentation structure and content. Improve install instructions.
 Improve existing tutorial notebooks and add missing topics.
 
@@ -101,45 +101,45 @@ Improve existing tutorial notebooks and add missing topics.
 Data and Observation handling
 -----------------------------
 Implement support for good time intervals (GTIs). Simplify DL3 data access and
-simpify creation of custom index files (David).
+simpify creation of custom index files. Implement support for event types.
 
 
-IRFs (add responsible person)
------------------------------
+IRFs
+----
 Clean up and partly redesign the `gammapy.irf` sub-package. Implement IRF coordinate
 handling, unify axis handling with `gammapy.maps`. Evaluate the use of maps to store
 IRFs. Work on the IRF interface and data formats in close collaboration with
-`ctapipe`.
+`ctapipe`. Implement support for event types.
 
 
-Maps (add responsible person)
------------------------------
+Maps
+----
 Unify coordinate and unit handling in `gammapy.maps`. Migrate the healpix code
 from `healpy` to `astropy_healpix`. Finish implementation of multi-resolution
 maps (low priority).
 
 
-Map Analysis
-------------
+Map Analysis / Data Reduction
+-----------------------------
 Unify and improve integration of background and exposure maps along the energy
 axes. Improve performance of the model evaluation by using bounding boxes and
 caching (low priority). Add support for healpix maps (low priority). Implement
 3D background model creation. Better expose classical image based background
-methods such as ring- and adaptive ring-backround. Implement pectral points
-estimation with 3D analysis (Regis and Atreyee).
+methods such as ring- and adaptive ring-backround. Implement spectral points
+estimation with 3D analysis.
 
 
 Datasets
 --------
 Implement a `Dataset` or `Observation` container class, that bundles data and
 reduced IRFs and is used to evaluate the likelihood. Enable joint fit across
-multiple datasets. Enable joint Fermi-LAT / IACT analyses (Regis and Axel).
+multiple datasets. Enable joint Fermi-LAT / IACT analyses.
 
 
-Modeling (add responsible person)
--------------------------------
+Modeling
+--------
 Unify quantity support for model evaluation. Implement coordinate frame handling
-for spatial models. Implement full support of the XML IO as well as improve the
+for spatial models. Implement full support of the XML I/O as well as improve the
 existing YAML IO. Add missing models. Implement (hierachical) model parameter
 name handling and improve parameter user interface.
 
@@ -150,23 +150,23 @@ Design and implement configuration and result handling. Finish implemention of
 the unified fitting front end in `gammapy.utils.fitting`. Fully support of the
 `sherpa` fitting backend. Add further fitting backends, such as `scipy.optimize`
 or `emcee`. Implement fitting helper and diagnosis methods to compute likelihood
-contours. Improve interactive handling of the fitting front end (Axel).
+contours. Improve interactive handling of the fitting front end.
 
 
-Event Simulation (add responsible person)
------------------------------------------
+Event Simulation
+----------------
 Implement event sampler, required for Gammapy to participate and simulate part of
 CTA DC2 data.
 
 
-Timing Analysis (add responsible person)
-----------------------------------------
+Timing Analysis
+---------------
 Rewrite the current lightcurve estimation . Improve the existing `Lightcurve` class.
 Implement 3D analysis based lightcurve estimation.
 
 
-High-level interface (add responsible persons)
-----------------------------------------------
+High-level interface
+--------------------
 Implement a config-file based high level analysis interface (e.g. as used in `fermipy`)
 and command line tool. It gives access to limited, pre-scripted standard analysis
 workflows. Alternatively the high level analysis interface could generate pre-filled
@@ -178,9 +178,9 @@ Papers
 As a reference for the current work as well as giving credit to current and past
 contributors, we plan to release a short Gammapy paper before the end of 2018.
 Based on Gammapy 0.9 we will introduce the idea of building the CTA ST based
-on Python, Numpy and Astropy to the community (Christoph).
+on Python, Numpy and Astropy to the community.
 
-There will be a HESS validation paper (led by Lars Mohrmann). We will support 
+There will be a HESS validation paper. We will support
 the paper with implementing required bugfixes and features on short time scales.
 Authors of other papers please also get in contact with the Gammapy team and let
 us know about required developments.
