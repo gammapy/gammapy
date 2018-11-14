@@ -16,30 +16,33 @@ class ObservationFilter(object):
         Start and stop time of the selected time interval. For now we only support a single time interval.
     event_filters : list of dict
         An event filter dictionary needs two keys:
-        'type' : str, one of the event filter types specified in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
-        'opts' : dict, it is passed on to the method of the `~gammapy.data.EventListBase` class
-                 that corresponds to the filter type (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
+
+        - **type** : str, one of the keys in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
+        - **opts** : dict, it is passed on to the method of the `~gammapy.data.EventListBase` class that corresponds to
+          the filter type (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
+
         The filtered event list will be an intersection of all filters. A union of filters is not supported yet.
 
     Examples
     --------
-    >>> from gammapy.data import ObservationFilter
+    >>> from gammapy.data import ObservationFilter, DataStore
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
-    >>> time_span = Time(['2021-01-01T00:00:00', '2021-01-01T00:20:00'])
-    >>> region_filter = {'type': 'box_region', 'opts': dict(lon_lim=Angle([150, 300], 'deg'),
-    >>>                                                     lat_lim=Angle([-50, 0], 'deg'))}
+    >>> time_filter = Time(['2021-03-27T20:10:00', '2021-03-27T20:20:00'])
     >>> phase_filter = {'type': 'custom', 'opts': dict(parameter='PHASE', limits=(0.2, 0.8))}
     >>>
-    >>> my_obs_filter = ObservationFilter(time_filter=time_span, event_filters=[region_filter, phase_filter])
+    >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
+    >>>
+    >>> my_obs = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps").obs(111630)
+    >>> my_obs.obs_filter = my_obs_filter
     """
 
-    EVENT_FILTER_TYPES = {
-        'box_region': 'select_sky_box',
-        'circular region': 'select_circular_region',
-        'custom': 'select_custom',
-    }
+    EVENT_FILTER_TYPES = dict(
+        box_region='select_sky_box',
+        circular_region='select_circular_region',
+        custom='select_custom',
+    )
 
     def __init__(self, time_filter=None, event_filters=None):
         self.time_filter = time_filter
