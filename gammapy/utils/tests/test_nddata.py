@@ -88,9 +88,7 @@ class TestNDDataArray:
 
         # Case 3: axis1 array, axis2 = 2Darray
         offset, energy = [0, 0] * u.deg, np.zeros((12, 3)) * u.TeV
-        out = nddata_2d.evaluate(
-            energy=energy[:, :, np.newaxis], offset=offset
-        )
+        out = nddata_2d.evaluate(energy=energy[:, :, np.newaxis], offset=offset)
         assert out.shape == (12, 3, 2)
 
     @pytest.mark.parametrize("shape", [(2,), (3, 2), (4, 2, 3)])

@@ -749,7 +749,9 @@ class SourceCatalogLargeScaleHGPS(object):
 
         for column in table.colnames:
             values = self.table[column].quantity
-            interp = ScaledRegularGridInterpolator((glon.degree,), values, **interp_kwargs)
+            interp = ScaledRegularGridInterpolator(
+                (glon.degree,), values, **interp_kwargs
+            )
             interps[column] = interp
 
         self._interp = interps

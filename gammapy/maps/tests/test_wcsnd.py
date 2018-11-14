@@ -281,7 +281,13 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
 
 
 def test_interp_by_coord_quantities():
-    ax = MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy", unit="TeV", node_type="center")
+    ax = MapAxis(
+        np.logspace(0.0, 3.0, 3),
+        interp="log",
+        name="energy",
+        unit="TeV",
+        node_type="center",
+    )
     geom = WcsGeom.create(binsz=0.1, npix=(3, 3), axes=[ax])
     m = WcsNDMap(geom)
     coords_dict = {"lon": 0, "lat": 0, "energy": 1000 * u.GeV}
@@ -289,7 +295,7 @@ def test_interp_by_coord_quantities():
     m.set_by_coord(coords_dict, 42)
 
     coords_dict["energy"] = 1 * u.TeV
-    assert_allclose(42., m.interp_by_coord(coords_dict, interp="nearest"))
+    assert_allclose(42.0, m.interp_by_coord(coords_dict, interp="nearest"))
 
 
 def test_wcsndmap_interp_by_coord_fill_value():

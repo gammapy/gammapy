@@ -76,7 +76,6 @@ class ScaledRegularGridInterpolator(object):
             return values
 
 
-
 def interpolation_scale(scale="lin"):
     """Interpolation scaling.
 

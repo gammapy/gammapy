@@ -147,7 +147,7 @@ class NDDataArray(object):
             # Extract values for each axis, default: nodes
             shape = np.ones(len(self.axes), dtype=int)
             shape[idx] = -1
-            default =  axis.nodes.reshape(shape)
+            default = axis.nodes.reshape(shape)
             temp = Quantity(kwargs.pop(axis.name, default))
             # Transform to correct unit
             temp = temp.to_value(axis.unit)

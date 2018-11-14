@@ -331,7 +331,7 @@ class TestFluxPointFit:
     def test_fit_pwl_sherpa(self, sed_model, sed_flux_points):
         # TODO: add covar or error estimation here?
         fit = FluxPointFit(sed_model, sed_flux_points)
-        result = fit.optimize(backend='sherpa', method='simplex')
+        result = fit.optimize(backend="sherpa", method="simplex")
         self.assert_result(result)
 
     @staticmethod

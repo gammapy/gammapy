@@ -383,8 +383,8 @@ class ObservationTable(Table):
         obs = self.select_obs_id(obs_id)
 
         gti = Table(meta=meta)
-        gti['START'] = obs["TSTART"].quantity.to('s')
-        gti['STOP'] = obs["TSTOP"].quantity.to('s')
+        gti["START"] = obs["TSTART"].quantity.to("s")
+        gti["STOP"] = obs["TSTOP"].quantity.to("s")
 
         return GTI(gti)
 

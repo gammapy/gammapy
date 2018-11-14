@@ -990,9 +990,11 @@ class EnergyDispersion2D(object):
 
         x = e_true.value
         y = migra.value
-        z = self.data.evaluate(offset=offset,
-                               e_true=e_true.reshape(1, -1, 1),
-                               migra=migra.reshape(1, 1, -1)).value[0]
+        z = self.data.evaluate(
+            offset=offset,
+            e_true=e_true.reshape(1, -1, 1),
+            migra=migra.reshape(1, 1, -1),
+        ).value[0]
 
         caxes = ax.pcolormesh(x, y, z.T, **kwargs)
 
