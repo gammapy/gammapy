@@ -9,7 +9,6 @@ from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.fitting import Fit
-from ..stats.fit_statistics import chi2
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
@@ -24,9 +23,8 @@ REQUIRED_COLUMNS = OrderedDict(
         ("e2dnde", ["e_ref", "e2dnde"]),
         ("flux", ["e_min", "e_max", "flux"]),
         ("eflux", ["e_min", "e_max", "eflux"]),
-
-        #TODO: extend reuired columns
-        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm"])
+        # TODO: extend required columns
+        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm"]),
     ]
 )
 
@@ -106,7 +104,7 @@ class FluxPoints(object):
         flux_points.plot()
 
     If you have flux points in a different data format, the format can be changed
-    by renamimg the table columns and adding meta data:
+    by renaming the table columns and adding meta data:
 
     .. code:: python
 
@@ -152,7 +150,9 @@ class FluxPoints(object):
         for column in table.colnames:
             if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
                 table[column].format = ".3e"
-            elif column.startswith(("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "loglike")):
+            elif column.startswith(
+                ("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "loglike")
+            ):
                 table[column].format = ".3f"
 
         return table
@@ -370,7 +370,9 @@ class FluxPoints(object):
         elif self.sed_type == "likelihood" and sed_type in ["dnde", "flux", "eflux"]:
             for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
                 try:
-                    table[sed_type + suffix] = table["ref_" + sed_type] * table["norm" + suffix]
+                    table[sed_type + suffix] = (
+                        table["ref_" + sed_type] * table["norm" + suffix]
+                    )
                 except KeyError:
                     continue
         else:
@@ -654,7 +656,7 @@ class FluxPointEstimator(object):
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     sigma : int
-        Sigma to use for assymetric error computation.
+        Sigma to use for asymmetric error computation.
     sigma_ul : int
         Sigma to use for upper limit computation
     """
@@ -702,12 +704,14 @@ class FluxPointEstimator(object):
         e_min, e_max = energy_group.energy_min, energy_group.energy_max
         e_ref = np.sqrt(e_min * e_max)
 
-        result = OrderedDict([
+        result = OrderedDict(
+            [
                 ("e_ref", e_ref),
                 ("e_min", e_min),
                 ("e_max", e_max),
-                ("ref_dnde", self.model(e_ref))
-            ])
+                ("ref_dnde", self.model(e_ref)),
+            ]
+        )
 
         quality_orig = self._set_quality(energy_group)
 
@@ -727,10 +731,7 @@ class FluxPointEstimator(object):
             norm_errp, norm_errn = result["upper"], -result["lower"]
         except RuntimeError:
             norm_errn, norm_errp = np.nan, np.nan
-        return {
-            "norm_errp": norm_errp,
-            "norm_errn": norm_errn,
-        }
+        return {"norm_errp": norm_errp, "norm_errn": norm_errn}
 
     def compute_norm_err(self):
         """Compute covariance errors for a flux point.
@@ -760,7 +761,7 @@ class FluxPointEstimator(object):
         return {"norm_ul": norm_ul}
 
     def compute_ts(self):
-        """Compute the sqrt(TS) of a model against the null hypthesis, that
+        """Compute the sqrt(TS) of a model against the null hypothesis, that
         the amplitude of the model is zero.
         """
         parameters = self.model.parameters
@@ -775,7 +776,7 @@ class FluxPointEstimator(object):
 
         # compute sqrt TS
         ts = np.abs(loglike_null - loglike)
-        sqrt_ts =  np.sign(norm_best_fit) * np.sqrt(ts)
+        sqrt_ts = np.sign(norm_best_fit) * np.sqrt(ts)
         return {"sqrt_ts": sqrt_ts, "ts": ts, "loglike": loglike}
 
     def compute_norm(self):
@@ -789,11 +790,11 @@ class FluxPointEstimator(object):
         if result.success:
             norm = result.model.parameters["norm"].value
         else:
-            log.warn("Fit failed for flux point setting NaN")
+            log.warning("Fit failed for flux point setting NaN")
             norm = np.nan
         return {"norm": norm}
 
-    # TODO: clean up this helper funstion and maybe move it to SpectrumObservations
+    # TODO: clean up this helper function and maybe move it to SpectrumObservations
     def _set_quality(self, energy_group):
         quality_orig = []
 
@@ -846,7 +847,8 @@ class FluxPointFit(Fit):
 
         fitter = FluxPointFit(model, flux_points)
         result = fitter.run()
-        print(result['best_fit_model'])
+        print(result)
+        print(result.model)
     """
 
     def __init__(self, model, data, stat="chi2"):

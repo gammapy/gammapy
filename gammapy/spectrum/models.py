@@ -1272,21 +1272,18 @@ class TableModel(SpectralModel):
 
 
 class ScaleModel(SpectralModel):
-    """
-    Wrapper model to scale another spectral model at a given reference energy.
+    """Wrapper to scale another spectral model by a norm factor.
 
     Parameters
     ----------
     model : `SpectralModel`
         Spectral model to wrap.
     norm : float
-        Scale to apply at the reference energy.
-
+        Multiplicative norm factor for the model value.
     """
+
     def __init__(self, model, norm=1):
-        self.parameters = Parameters([
-            Parameter("norm", norm, unit=""),
-            ])
+        self.parameters = Parameters([Parameter("norm", norm, unit="")])
         self.model = model
 
     def evaluate(self, energy, norm):
