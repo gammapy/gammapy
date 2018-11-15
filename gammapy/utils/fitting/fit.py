@@ -105,7 +105,7 @@ class Fit(object):
             log.warning("No covar estimate - not supported by this backend.")
             return optimize_result
 
-        covar_result = self.covar(**covar_opts)
+        covar_result = self.covariance(**covar_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._model = covar_result.model
@@ -173,7 +173,7 @@ class Fit(object):
             **info
         )
 
-    def covar(self, backend="minuit"):
+    def covariance(self, backend="minuit"):
         """Estimate the covariance matrix.
 
         Assumes that the model parameters are already optimised.
