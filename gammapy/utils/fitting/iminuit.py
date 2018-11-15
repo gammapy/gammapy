@@ -64,7 +64,7 @@ def covar_iminuit(minuit):
     return _get_covar(minuit)
 
 
-def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall):
+def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     # TODO: this is ugly - design something better for translating to MINUIT parameter names.
     # Maybe a wrapper class MinuitParameters?
     idx = parameters._get_idx(parameter)

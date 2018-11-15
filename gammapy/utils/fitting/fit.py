@@ -67,6 +67,15 @@ class Fit(object):
         """Total likelihood given the current model parameters"""
         pass
 
+    # TODO: probably we should change the `Fit` class to be coupled
+    # to a likelihood object, not a model object
+    # To facilitate this evolution, we centralise the coupling
+    # in this property in a single place,
+    # and only use `parameters` from `Fit`, not `model`.
+    @property
+    def _parameters(self):
+        return self._model.parameters
+
     def run(self, optimize_opts=None, covar_opts=None):
         """
         Run all fitting steps.
@@ -91,15 +100,17 @@ class Fit(object):
             covar_opts = {}
 
         covar_opts.setdefault("backend", "minuit")
-        if covar_opts["backend"] in registry.register["covar"]:
-            covar_result = self.covar(**covar_opts)
-            # TODO: not sure how best to report the results
-            # back or how to form the FitResult object.
-            optimize_result._model = covar_result.model
-            optimize_result._success = optimize_result.success and covar_result.success
-            optimize_result._nfev += covar_result.nfev
-        else:
+
+        if covar_opts["backend"] not in registry.register["covar"]:
             log.warning("No covar estimate - not supported by this backend.")
+            return optimize_result
+
+        covar_result = self.covar(**covar_opts)
+        # TODO: not sure how best to report the results
+        # back or how to form the FitResult object.
+        optimize_result._model = covar_result.model
+        optimize_result._success = optimize_result.success and covar_result.success
+        optimize_result._nfev += covar_result.nfev
 
         return optimize_result
 
@@ -108,8 +119,8 @@ class Fit(object):
 
         Parameters
         ----------
-        backend : {"minuit", "sherpa"}
-            Which fitting backend to use.
+        backend : str
+            Which backend to use (see ``gammapy.utils.fitting.registry``)
         **kwargs : dict
             Keyword arguments passed to the optimizer. For the `"minuit"` backend
             see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
@@ -131,7 +142,7 @@ class Fit(object):
         fit_result : `FitResult`
             Results
         """
-        parameters = self._model.parameters
+        parameters = self._parameters
 
         if parameters.apply_autoscale:
             parameters.autoscale()
@@ -167,13 +178,18 @@ class Fit(object):
 
         Assumes that the model parameters are already optimised.
 
+        Parameters
+        ----------
+        backend : str
+            Which backend to use (see ``gammapy.utils.fitting.registry``)
+
         Returns
         -------
         result : `CovarResult`
             Results
         """
         compute = registry.get("covar", backend)
-        parameters = self._model.parameters
+        parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
         if backend == "minuit":
@@ -190,23 +206,33 @@ class Fit(object):
         # TODO: decide what to return, and fill the info correctly!
         return CovarResult(model=self._model.copy(), success=True, nfev=0)
 
-    def confidence(self, parameter, backend="minuit", sigma=1, maxcall=0):
+    def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
+
+        Extra ``kwargs`` are passed to the backend.
+        E.g. `iminuit.Minuit.minos` supports a ``maxcall`` option.
+
+        Parameters
+        ----------
+        backend : str
+            Which backend to use (see ``gammapy.utils.fitting.registry``)
+        parameter : `~gammapy.utils.fitting.Parameter`
+            Parameter of interest
+        sigma : float
+            Number of standard deviations for the confidence level
 
         Returns
         -------
         result : dict
-            Results
+            Dictionary with keys "upper", 'lower", "is_valid" and "nfev".
         """
         compute = registry.get("confidence", backend)
-        parameters = self._model.parameters
+        parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
         if backend == "minuit":
             if hasattr(self, "minuit"):
-                result = compute(
-                    self.minuit, parameters, parameter, sigma, maxcall
-                )
+                result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
                 # TODO: decide about result format
                 return result
             else:
@@ -221,8 +247,8 @@ class Fit(object):
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
             Model to compute the likelihood profile for.
-        parameter : str
-            Parameter to calculate profile for
+        parameter : `~gammapy.utils.fitting.Parameter`
+            Parameter of interest
         values : `~astropy.units.Quantity` (optional)
             Parameter values to evaluate the likelihood for.
         bounds : int or tuple of float
@@ -236,9 +262,11 @@ class Fit(object):
 
         Returns
         -------
-        likelihood_profile : dict
-            Dict of parameter values and likelihood values.
+        results : dict
+            Dictionary with keys "values" and "likelihood".
         """
+        # TODO: change the API to be consistent with the other methods.
+        # Don't pass in a model. Instead make a `parameters` copy on enter here.
         self._model = model.copy()
 
         likelihood = []
@@ -254,8 +282,8 @@ class Fit(object):
             values = np.linspace(parmin, parmax, nvalues)
 
         for value in values:
-            self._model.parameters[parameter].value = value
-            stat = self.total_stat(self._model.parameters)
+            self._parameters[parameter].value = value
+            stat = self.total_stat(self._parameters)
             likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
