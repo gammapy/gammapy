@@ -61,4 +61,11 @@ def test_covar(backend):
     assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
 
 
-# TODO: add confidence interval (conf in Sherpa, minos in MINUIT)
+@pytest.mark.parametrize("backend", ["minuit"])
+def test_confidence(backend):
+    fit = MyFit()
+    fit.optimize(backend=backend)
+    result = fit.confidence("x")
+    assert result["is_valid"] is True
+    assert_allclose(result["lower"], -1)
+    assert_allclose(result["upper"], +1)

@@ -269,13 +269,20 @@ class Parameters(object):
         return ss
 
     def _get_idx(self, val):
-        """Convert parameter name or index to index"""
+        """Get position index for a given parameter.
+
+        The input can be a parameter object, parameter name (str)
+        or if a parameter index (int) is passed in, it is simply returned.
+        """
+        if isinstance(val, Parameter):
+            for idx, par in enumerate(self.parameters):
+                if val is par:
+                    return idx
         if isinstance(val, six.string_types):
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
                     return idx
-            raise IndexError("Parameter {} not found for : {}".format(val, self))
-
+            raise IndexError("Parameter {!r} not found.".format(val, self))
         else:
             return val
 
