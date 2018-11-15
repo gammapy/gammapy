@@ -34,10 +34,10 @@ def cli_jupyter_run(ctx, tutor, kernel):
 
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
-            execute_notebook(path, kernel)
+            notebook_test(path, kernel)
 
 
-def execute_notebook(path, kernel="python3", loglevel=20):
+def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
 
     if sys.version_info[0] < 3 and kernel == "python3":
@@ -163,8 +163,8 @@ def notebook_test(path, kernel="python3"):
     import nbformat
 
     passed = True
-    log.info("   ... TESTING {}".format(str(path)))
-    execute_notebook(path, kernel, 30)
+    log.info("   ... EXECUTING {}".format(str(path)))
+    execute_notebook(path, kernel)
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
     for cell in rawnb.cells:
