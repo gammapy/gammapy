@@ -240,7 +240,7 @@ class Fit(object):
         else:
             raise NotImplementedError()
 
-    def likelihood_profile(self, model, parameter, values=None, bounds=2, nvalues=11):
+    def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile.
 
         The method used is to vary one parameter, keeping all others fixed.
@@ -250,8 +250,6 @@ class Fit(object):
 
         Parameters
         ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Model to compute the likelihood profile for.
         parameter : `~gammapy.utils.fitting.Parameter`
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
@@ -270,25 +268,23 @@ class Fit(object):
         results : dict
             Dictionary with keys "values" and "likelihood".
         """
-        # TODO: change the API to be consistent with the other methods.
-        # Don't pass in a model. Instead make a `parameters` copy on enter here.
-        self._model = model.copy()
-
-        likelihood = []
+        idx = self._parameters._get_idx(parameter)
+        parameters = self._parameters.copy()
 
         if values is None:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
-                parerr = model.parameters.error(parameter)
-                parval = model.parameters[parameter].value
+                parerr = parameters.error(idx)
+                parval = parameters[idx].value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
 
             values = np.linspace(parmin, parmax, nvalues)
 
+        likelihood = []
         for value in values:
-            self._parameters[parameter].value = value
-            stat = self.total_stat(self._parameters)
+            parameters[idx].value = value
+            stat = self.total_stat(parameters)
             likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}

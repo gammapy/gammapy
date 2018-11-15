@@ -79,6 +79,6 @@ def test_confidence(backend):
 def test_likelihood_profile():
     fit = MyFit()
     fit.run()
-    result = fit.likelihood_profile(fit._model, "x", nvalues=3)
+    result = fit.likelihood_profile("x", nvalues=3)
     assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
