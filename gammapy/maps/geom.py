@@ -5,6 +5,8 @@ import copy
 import inspect
 import re
 from collections import OrderedDict
+import logging
+log = logging.getLogger(__name__)
 
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
@@ -120,10 +122,12 @@ def find_and_read_bands(hdu, header=None):
             name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
             name = cols[0]
-        intp = "INTERP%i" % (i+1)
-        if header is not None:
-            if intp in header:
-                interp = header[intp]
+        interp_key = "INTERP%i" % (i+1)
+        if header is not None and interp_key in header:
+            if header[interp_key] in ["sqrt", "log", "lin"]:
+                interp = header[interp_key]
+            else:
+                log.warning("UNKNOWN INTERP KEYWORD IN HEADER. USING DEFAULT!")
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
             unit = header.get("CUNIT%i" % (3 + i), "")

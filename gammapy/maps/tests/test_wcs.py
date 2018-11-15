@@ -334,14 +334,30 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
 
+
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
-def test_read_write(node_type, interp):
-    energy_axis = MapAxis(nodes=np.logspace(-2., 2, 5), unit='TeV', name='energy', node_type=node_type, interp=interp)
-    time_axis = MapAxis(nodes=np.linspace(0.0, 1000.0, 4), unit='s', name='time', node_type=node_type, interp=interp)
-    geom = WcsGeom.create(skydir=(0, 0), binsz=1, npix=10, axes=[energy_axis, time_axis])
-    m = Map.from_geom(geom, unit='m2')
-    m.write('test.fits', overwrite=True)
+def test_read_write(tmpdir, node_type, interp):
+    e_ax = MapAxis(
+        nodes=np.logspace(-2., 2, 5),
+        unit="TeV",
+        name="energy",
+        node_type=node_type,
+        interp=interp,
+    )
+    t_ax = MapAxis(
+        nodes=np.linspace(0.0, 1000.0, 4),
+        unit="s",
+        name="time",
+        node_type=node_type,
+        interp=interp,
+    )
+    m = Map.create(binsz=1, npix=10, axes=[e_ax, t_ax], unit="m2")
+    fil = str(tmpdir / "geom_test.fits")
+    m.write(fil, overwrite=True)
+    m2 = Map.read(fil)
 
-    m2 = Map.read('test.fits')
-    assert (m2.geom == m.geom)
+    assert m2.geom == m.geom
+
+    assert m2.make_hdu().header["INTERP1"] == interp
+    assert m2.make_hdu().header["INTERP2"] == interp
