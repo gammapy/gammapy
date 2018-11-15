@@ -1271,6 +1271,28 @@ class TableModel(SpectralModel):
         return norm * values
 
 
+class ScaleModel(SpectralModel):
+    """
+    Wrapper model to scale another spectral model at a given reference energy.
+
+    Parameters
+    ----------
+    model : `SpectralModel`
+        Spectral model to wrap.
+    norm : float
+        Scale to apply at the reference energy.
+
+    """
+    def __init__(self, model, norm=1):
+        self.parameters = Parameters([
+            Parameter("norm", norm, unit=""),
+            ])
+        self.model = model
+
+    def evaluate(self, energy, norm):
+        return norm * self.model(energy)
+
+
 class Absorption(object):
     """Gamma-ray absorption models.
 
