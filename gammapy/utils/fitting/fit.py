@@ -5,7 +5,7 @@ import numpy as np
 from astropy.utils.misc import InheritDocstrings
 from ...extern import six
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit
-from .sherpa import optimize_sherpa
+from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
 
 __all__ = ["Fit"]
@@ -36,6 +36,7 @@ class Registry(object):
         },
         "covariance": {
             "minuit": covariance_iminuit,
+            "sherpa": covariance_sherpa,
             "scipy": covariance_scipy,
         },
         "confidence": {"minuit": confidence_iminuit},
@@ -243,6 +244,9 @@ class Fit(object):
         """Compute likelihood profile.
 
         The method used is to vary one parameter, keeping all others fixed.
+        So this is taking a "slice" or "scan" of the likelihood.
+
+        See also: `Fit.minos_profile`.
 
         Parameters
         ----------
@@ -292,11 +296,49 @@ class Fit(object):
     def minos_profile(self):
         """Compute MINOS profile.
 
-        The method used is to vary one parameter, then re-optimise all other free parameters.
+        The method used is to vary one parameter,
+        then re-optimise all other free parameters
+        and to take the likelihood at that point.
+
+        See also: `Fit.likelihood_profile`
 
         Calls ``iminuit.Minuit.mnprofile``
+        TODO: what does Sherpa do?
+        TODO: find a better name.
+        """
+        raise NotImplementedError
 
-        TODO: available in Sherpa as well?
+    def likelihood_contour(self):
+        """Compute likelihood contour.
+
+        The method used is to vary two parameters, keeping all others fixed.
+        So this is taking a "slice" or "scan" of the likelihood.
+
+        See also: `Fit.minos_contour`
+
+        Parameters
+        ----------
+        TODO
+
+        Returns
+        -------
+        TODO
+        """
+        raise NotImplementedError
+
+    def minos_contour(self):
+        """Compute MINOS contour.
+
+        This is a contouring algorithm for a 2D function
+        which is not simply the likelihood function.
+        That 2D function is given at each point (par_1, par_2)
+        by re-optimising all other free parameters,
+        and taking the likelihood at that point.
+
+        Very compute-intensive and slow.
+
+        Calls ``iminuit.Minuit.mncontour``
+        TODO: what does Sherpa do?
         TODO: find a better name.
         """
         raise NotImplementedError
