@@ -200,14 +200,14 @@ class TestFluxPointEstimator:
         actual = flux_points.table["dnde_err"][0]
         assert_allclose(actual, 2.9128e-11, rtol=1e-2)
 
-        actual = flux_points.table["dnde_ul"][0]
-        assert_allclose(actual, 2.994e-10, rtol=1e-2)
-
         actual = flux_points.table["dnde_errn"][0]
         assert_allclose(actual, 2.804949e-11, rtol=1e-2)
 
         actual = flux_points.table["dnde_errp"][0]
         assert_allclose(actual, 3.023831e-11, rtol=1e-2)
+
+        actual = flux_points.table["dnde_ul"][0]
+        assert_allclose(actual, 3.132841e-10, rtol=1e-2)
 
         actual = flux_points.table["sqrt_ts"][0]
         assert_allclose(actual, 13.66, rtol=1e-2)
@@ -215,7 +215,7 @@ class TestFluxPointEstimator:
     def test_spectrum_result(self):
         # TODO: Don't run this again
         flux_points = self.fpe.run()
-        result = SpectrumResult(model=self.fpe.model, points=flux_points)
+        result = SpectrumResult(model=self.fpe.model.model, points=flux_points)
 
         actual = result.flux_point_residuals[0][0]
         assert_allclose(actual, -0.058407, rtol=1e-2)

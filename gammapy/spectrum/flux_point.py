@@ -10,7 +10,7 @@ from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.fitting import Fit
 from ..stats.fit_statistics import chi2
-from .models import PowerLaw
+from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
 
@@ -24,6 +24,9 @@ REQUIRED_COLUMNS = OrderedDict(
         ("e2dnde", ["e_ref", "e2dnde"]),
         ("flux", ["e_min", "e_max", "flux"]),
         ("eflux", ["e_min", "e_max", "eflux"]),
+
+        #TODO: extend reuired columns
+        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm"])
     ]
 )
 
@@ -147,9 +150,9 @@ class FluxPoints(object):
         table = self.table.copy()
 
         for column in table.colnames:
-            if column.startswith(("dnde", "eflux", "flux", "e2dnde")):
+            if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
                 table[column].format = ".3e"
-            elif column in ("e_min", "e_max", "e_ref", "sqrt_TS"):
+            elif column.startswith(("e_min", "e_max", "e_ref", "sqrt_ts", "norm", "ts", "loglike")):
                 table[column].format = ".3f"
 
         return table
@@ -364,6 +367,12 @@ class FluxPoints(object):
         elif self.sed_type == "e2dnde" and sed_type == "dnde":
             table = self._e2dnde_to_dnde(self.e_ref, table)
 
+        elif self.sed_type == "likelihood" and sed_type in ["dnde", "flux", "eflux"]:
+            for suffix in ["", "_ul", "_err", "_errp", "_errn"]:
+                try:
+                    table[sed_type + suffix] = table["ref_" + sed_type] * table["norm" + suffix]
+                except KeyError:
+                    continue
         else:
             raise NotImplementedError
 
@@ -644,16 +653,21 @@ class FluxPointEstimator(object):
         Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+    sigma : int
+        Sigma to use for assymetric error computation.
+    sigma_ul : int
+        Sigma to use for upper limit computation
     """
 
-    def __init__(self, obs, groups, model):
+    def __init__(self, obs, groups, model, sigma=1, sigma_ul=2):
         if isinstance(obs, SpectrumObservation):
             obs = SpectrumObservationList([obs])
-        self._obs = SpectrumObservationList(obs)
+        self.obs = SpectrumObservationList(obs)
 
         self.groups = groups
-        self.model = model
-        self._fit = None
+        self.model = ScaleModel(model)
+        self.sigma = sigma
+        self.sigma_ul = sigma_ul
 
     def __str__(self):
         s = "{}:\n".format(self.__class__.__name__)
@@ -661,16 +675,6 @@ class FluxPointEstimator(object):
         s += str(self.groups) + "\n"
         s += str(self.model) + "\n"
         return s
-
-    @property
-    def fit(self):
-        """Instance of `~gammapy.spectrum.SpectrumFit`"""
-        return self._fit
-
-    @property
-    def obs(self):
-        """Observations participating in the fit"""
-        return self._obs
 
     def run(self):
         """Run the flux point estimator
@@ -689,55 +693,56 @@ class FluxPointEstimator(object):
             row = self.compute_flux_point(group)
             rows.append(row)
 
-        meta = OrderedDict([("method", "TODO"), ("SED_TYPE", "dnde")])
+        meta = OrderedDict([("method", "TODO"), ("SED_TYPE", "likelihood")])
         table = table_from_row_data(rows=rows, meta=meta)
-        return FluxPoints(table)
+        return FluxPoints(table).to_sed_type("dnde")
 
     def compute_flux_point(self, energy_group):
-        log.debug("Computing flux point for energy group:\n{}".format(energy_group))
-
-        model = self._get_spectral_model(self.model)
-
         # Put at log center of the bin
-        energy_ref = np.sqrt(energy_group.energy_min * energy_group.energy_max)
+        e_min, e_max = energy_group.energy_min, energy_group.energy_max
+        e_ref = np.sqrt(e_min * e_max)
 
-        result = self.compute_dnde(
-            model=model, energy_group=energy_group, energy_ref=energy_ref
-        )
-        result.update(self.compute_dnde_err())
-        result.update(self.compute_dnde_ul())
+        result = OrderedDict([
+                ("e_ref", e_ref),
+                ("e_min", e_min),
+                ("e_max", e_max),
+                ("ref_dnde", self.model(e_ref))
+            ])
+
+        quality_orig = self._set_quality(energy_group)
+
+        result.update(self.compute_norm())
+        result.update(self.compute_norm_err())
+        result.update(self.compute_norm_errn_errp())
+        result.update(self.compute_norm_ul())
+        result.update(self.compute_ts())
+        self._restore_quality(quality_orig)
         return result
 
-    @staticmethod
-    def _get_spectral_model(global_model):
-        model = global_model.copy()
-        for par in model.parameters.parameters:
-            if par.name != "amplitude":
-                par.frozen = True
-        return model
-
-    def compute_dnde_err(self, sigma=1.0):
+    def compute_norm_errn_errp(self):
+        """Compute assymetric errors for a flux point.
         """
-        Compute assymetric errors for a flux point.
-
-        Returns
-        -------
-        dnde_ul : `~astropy.units.Quantity`
-            Flux point upper limit.
-        """
-        amplitude = self._best_fit_model.parameters["amplitude"]
         try:
-            result = self.fit.minuit.minos(var="par_001_amplitude", sigma=sigma)
-            errp = result["par_001_amplitude"].upper * amplitude.scale
-            errn = -result["par_001_amplitude"].lower * amplitude.scale
+            result = self.fit.confidence(parameter="norm", sigma=self.sigma)
+            norm_errp, norm_errn = result["upper"], -result["lower"]
         except RuntimeError:
-            errp, errn = np.nan, np.nan
+            norm_errn, norm_errp = np.nan, np.nan
         return {
-            "dnde_errp": u.Quantity(errp, amplitude.unit),
-            "dnde_errn": u.Quantity(errn, amplitude.unit),
+            "norm_errp": norm_errp,
+            "norm_errn": norm_errn,
         }
 
-    def compute_dnde_ul(self, sigma=2):
+    def compute_norm_err(self):
+        """Compute covariance errors for a flux point.
+        """
+        try:
+            result = self.fit.covariance()
+            norm_err = result.model.parameters.error("norm")
+        except RuntimeError:
+            norm_err = np.nan
+        return {"norm_err": norm_err}
+
+    def compute_norm_ul(self):
         """
         Compute upper limit for a flux point.
 
@@ -746,20 +751,50 @@ class FluxPointEstimator(object):
         dnde_ul : `~astropy.units.Quantity`
             Flux point upper limit.
         """
-        amplitude = self._best_fit_model.parameters["amplitude"]
+        norm = self.model.parameters["norm"].value
         try:
-            result = self.fit.minuit.minos(var="par_001_amplitude", sigma=sigma)
-            ul = result["par_001_amplitude"].upper * amplitude.scale + amplitude.value
+            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
+            norm_ul = result["upper"] + norm
         except RuntimeError:
-            ul = np.nan
-        return {"dnde_ul": u.Quantity(ul, amplitude.unit)}
+            norm_ul = np.nan
+        return {"norm_ul": norm_ul}
 
-    def compute_dnde(self, model, energy_group, energy_ref, sqrt_ts_threshold=2):
+    def compute_ts(self):
+        """Compute the sqrt(TS) of a model against the null hypthesis, that
+        the amplitude of the model is zero.
+        """
+        parameters = self.model.parameters
+
+        loglike = self.fit.total_stat(parameters)
+        norm_best_fit = parameters["norm"].value
+
+        # store best fit amplitude, set amplitude of fit model to zero
+        parameters["norm"].value = 0
+        loglike_null = self.fit.total_stat(parameters)
+        parameters["norm"].value = 1
+
+        # compute sqrt TS
+        ts = np.abs(loglike_null - loglike)
+        sqrt_ts =  np.sign(norm_best_fit) * np.sqrt(ts)
+        return {"sqrt_ts": sqrt_ts, "ts": ts, "loglike": loglike}
+
+    def compute_norm(self):
+        """Fit norm of the flux point.
+        """
         from .fit import SpectrumFit
 
-        energy_min = energy_group.energy_min
-        energy_max = energy_group.energy_max
+        self.fit = SpectrumFit(self.obs, self.model)
+        result = self.fit.optimize()
 
+        if result.success:
+            norm = result.model.parameters["norm"].value
+        else:
+            log.warn("Fit failed for flux point setting NaN")
+            norm = np.nan
+        return {"norm": norm}
+
+    # TODO: clean up this helper funstion and maybe move it to SpectrumObservations
+    def _set_quality(self, energy_group):
         quality_orig = []
 
         for index in range(len(self.obs)):
@@ -777,29 +812,11 @@ class FluxPointEstimator(object):
                     quality[bin] = 1
             self.obs[index].on_vector.quality = quality
 
-        # Set reference and remove min amplitude
-        model.parameters["reference"].value = energy_ref.to_value("TeV")
+        return quality_orig
 
-        self._fit = SpectrumFit(self.obs, model)
-        result = self.fit.run()
-
+    def _restore_quality(self, quality_orig):
         for index in range(len(quality_orig)):
             self.obs[index].on_vector.quality = quality_orig[index]
-
-        self._best_fit_model = result.model
-        dnde, dnde_err = result.model.evaluate_error(energy_ref)
-        sqrt_ts = self.fit.sqrt_ts(result.model.parameters)
-        return OrderedDict(
-            [
-                ("e_ref", energy_ref),
-                ("e_min", energy_min),
-                ("e_max", energy_max),
-                ("dnde", dnde.to(DEFAULT_UNIT["dnde"])),
-                ("dnde_err", dnde_err.to(DEFAULT_UNIT["dnde"])),
-                ("is_ul", sqrt_ts < sqrt_ts_threshold),
-                ("sqrt_ts", sqrt_ts),
-            ]
-        )
 
 
 class FluxPointFit(Fit):
