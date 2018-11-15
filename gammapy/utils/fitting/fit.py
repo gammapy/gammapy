@@ -4,7 +4,7 @@ import abc
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
 from ...extern import six
-from .iminuit import optimize_iminuit, covar_iminuit
+from .iminuit import optimize_iminuit, covar_iminuit, confidence_iminuit
 from .sherpa import optimize_sherpa
 from .scipy import optimize_scipy, covar_scipy
 
@@ -17,32 +17,44 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-class BackendRegistry(object):
-    optimize = {
-        "minuit": optimize_iminuit,
-        "sherpa": optimize_sherpa,
-        "scipy": optimize_scipy,
-    }
+class Registry(object):
+    """Registry of available backends for given tasks.
 
-    covar = {
-        "minuit": covar_iminuit,
-        # "scipy": covar_scipy,
+    Gives users the power to extend from their scripts.
+    Used by `Fit` below.
+
+    Not sure if we should call it "backend" or "method" or something else.
+    Probably we will code up some methods, e.g. for profile analysis ourselves,
+    using scipy or even just Python / Numpy?
+    """
+
+    register = {
+        "optimize": {
+            "minuit": optimize_iminuit,
+            "sherpa": optimize_sherpa,
+            "scipy": optimize_scipy,
+        },
+        "covar": {
+            "minuit": covar_iminuit,
+            # "scipy": covar_scipy,
+        },
+        "confidence": {"minuit": confidence_iminuit},
     }
 
     @classmethod
-    def get(cls, task, name):
-        if task == "optimize":
-            if name in cls.optimize:
-                return cls.optimize[name]
-            else:
-                raise ValueError("Backend {!r} does not support optimize.".format(name))
-        elif task == "covar":
-            if name in cls.covar:
-                return cls.covar[name]
-            else:
-                raise ValueError("Backend {!r} does not support covar.".format(name))
-        else:
-            raise ValueError("Invalid task: {!r}".format(task))
+    def get(cls, task, backend):
+        if task not in cls.register:
+            raise ValueError("Unknown task {!r}".format(task))
+
+        task = cls.register[task]
+
+        if backend not in task:
+            raise ValueError("Unknown method {!r} for task {!r}".format(task, backend))
+
+        return task[backend]
+
+
+registry = Registry()
 
 
 @six.add_metaclass(FitMeta)
@@ -54,6 +66,153 @@ class Fit(object):
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         pass
+
+    def run(self, optimize_opts=None, covar_opts=None):
+        """
+        Run all fitting steps.
+
+        Parameters
+        ----------
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covar_opts : dict
+            Options passed to `Fit.covar`.
+
+        Returns
+        -------
+        fit_result : `FitResult`
+            Results
+        """
+        if optimize_opts is None:
+            optimize_opts = {}
+        optimize_result = self.optimize(**optimize_opts)
+
+        if covar_opts is None:
+            covar_opts = {}
+
+        covar_opts.setdefault("backend", "minuit")
+        if covar_opts["backend"] in registry.register["covar"]:
+            covar_result = self.covar(**covar_opts)
+            # TODO: not sure how best to report the results
+            # back or how to form the FitResult object.
+            optimize_result._model = covar_result.model
+            optimize_result._success = optimize_result.success and covar_result.success
+            optimize_result._nfev += covar_result.nfev
+        else:
+            log.warning("No covar estimate - not supported by this backend.")
+
+        return optimize_result
+
+    def optimize(self, backend="minuit", **kwargs):
+        """Run the optimization.
+
+        Parameters
+        ----------
+        backend : {"minuit", "sherpa"}
+            Which fitting backend to use.
+        **kwargs : dict
+            Keyword arguments passed to the optimizer. For the `"minuit"` backend
+            see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
+            for a detailed description of the available options. For the `"sherpa"`
+            backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
+            Those methods are described and compared in detail on
+            http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
+            options of the optimization methods are described on the following
+            pages in detail:
+
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
+                * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
+
+
+        Returns
+        -------
+        fit_result : `FitResult`
+            Results
+        """
+        parameters = self._model.parameters
+
+        if parameters.apply_autoscale:
+            parameters.autoscale()
+
+        compute = registry.get("optimize", backend)
+        # TODO: change this calling interface!
+        # probably should pass a likelihood, which has a model, which has parameters
+        # and return something simpler, not a tuple of three things
+        factors, info, optimizer = compute(
+            parameters=parameters, function=self.total_stat, **kwargs
+        )
+
+        # TODO: Change to a stateless interface for minuit also, or if we must support
+        # stateful backends, put a proper, backend-agnostic solution for this.
+        # As preliminary solution would like to provide a possibility that the user
+        # can access the Minuit object, because it features a lot useful functionality
+        if backend == "minuit":
+            self.minuit = optimizer
+
+        # Copy final results into the parameters object
+        parameters.set_parameter_factors(factors)
+
+        return FitResult(
+            model=self._model.copy(),
+            total_stat=self.total_stat(self._model.parameters),
+            backend=backend,
+            method=kwargs.get("method", backend),
+            **info
+        )
+
+    def covar(self, backend="minuit"):
+        """Estimate the covariance matrix.
+
+        Assumes that the model parameters are already optimised.
+
+        Returns
+        -------
+        result : `CovarResult`
+            Results
+        """
+        compute = registry.get("covar", backend)
+        parameters = self._model.parameters
+
+        # TODO: wrap MINUIT in a stateless backend
+        if backend == "minuit":
+            if hasattr(self, "minuit"):
+                covariance_factors = compute(self.minuit)
+            else:
+                raise RuntimeError("To use minuit, you must first optimize.")
+        else:
+            function = self.total_stat
+            covariance_factors = compute(parameters, function)
+
+        parameters.set_covariance_factors(covariance_factors)
+
+        # TODO: decide what to return, and fill the info correctly!
+        return CovarResult(model=self._model.copy(), success=True, nfev=0)
+
+    def confidence(self, parameter, backend="minuit", sigma=1, maxcall=0):
+        """Estimate confidence interval.
+
+        Returns
+        -------
+        result : dict
+            Results
+        """
+        compute = registry.get("confidence", backend)
+        parameters = self._model.parameters
+
+        # TODO: wrap MINUIT in a stateless backend
+        if backend == "minuit":
+            if hasattr(self, "minuit"):
+                result = compute(
+                    self.minuit, parameters, parameter, sigma, maxcall
+                )
+                # TODO: decide about result format
+                return result
+            else:
+                raise RuntimeError("To use minuit, you must first optimize.")
+        else:
+            raise NotImplementedError()
 
     def likelihood_profiles(self, model, parameters="all"):
         """Compute likelihood profiles for multiple parameters.
@@ -137,129 +296,6 @@ class Fit(object):
         # compute sqrt TS
         ts = np.abs(stat_null - stat_best_fit)
         return np.sign(amplitude) * np.sqrt(ts)
-
-    def optimize(self, backend="minuit", **kwargs):
-        """Run the optimization.
-
-        Parameters
-        ----------
-        backend : {"minuit", "sherpa"}
-            Which fitting backend to use.
-        **kwargs : dict
-            Keyword arguments passed to the optimizer. For the `"minuit"` backend
-            see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
-            for a detailed description of the available options. For the `"sherpa"`
-            backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
-            Those methods are described and compared in detail on
-            http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
-            options of the optimization methods are described on the following
-            pages in detail:
-
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/neldermead.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
-                * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
-
-
-        Returns
-        -------
-        fit_result : `FitResult`
-            Results
-        """
-        parameters = self._model.parameters
-
-        if parameters.apply_autoscale:
-            parameters.autoscale()
-
-        optimize_backend = BackendRegistry.get("optimize", backend)
-        # TODO: change this calling interface!
-        # probably should pass a likelihood, which has a model, which has parameters
-        # and return something simpler, not a tuple of three things
-        factors, info, optimizer = optimize_backend(
-            parameters=parameters, function=self.total_stat, **kwargs
-        )
-
-        # TODO: Change to a stateless interface for minuit also, or if we must support
-        # stateful backends, put a proper, backend-agnostic solution for this.
-        # As preliminary solution would like to provide a possibility that the user
-        # can access the Minuit object, because it features a lot useful functionality
-        if backend == "minuit":
-            self.minuit = optimizer
-
-        # Copy final results into the parameters object
-        parameters.set_parameter_factors(factors)
-
-        return FitResult(
-            model=self._model.copy(),
-            total_stat=self.total_stat(self._model.parameters),
-            backend=backend,
-            method=kwargs.get("method", backend),
-            **info
-        )
-
-    def covar(self, backend="minuit"):
-        """Estimate the covariance matrix.
-
-        Assumes that the model parameters are already optimised.
-
-        Returns
-        -------
-        result : `CovarResult`
-            Results
-        """
-        covar_backend = BackendRegistry.get("covar", backend)
-        parameters = self._model.parameters
-
-        # TODO: wrap MINUIT in a stateless backend
-        if backend == "minuit":
-            if hasattr(self, "minuit"):
-                covariance_factors = covar_backend(self.minuit)
-            else:
-                raise RuntimeError("To use covar with minuit, you must first optimize.")
-        else:
-            function = self.total_stat
-            covariance_factors = covar_backend(parameters, function)
-
-        parameters.set_covariance_factors(covariance_factors)
-
-        # TODO: decide what to return, and fill the info correctly!
-        return CovarResult(model=self._model.copy(), success=True, nfev=0)
-
-    def run(self, optimize_opts=None, covar_opts=None):
-        """
-        Run all fitting steps.
-
-        Parameters
-        ----------
-        optimize_opts : dict
-            Options passed to `Fit.optimize`.
-        covar_opts : dict
-            Options passed to `Fit.covar`.
-
-        Returns
-        -------
-        fit_result : `FitResult`
-            Results
-        """
-        if optimize_opts is None:
-            optimize_opts = {}
-        optimize_result = self.optimize(**optimize_opts)
-
-        if covar_opts is None:
-            covar_opts = {}
-
-        covar_opts.setdefault("backend", "minuit")
-        if covar_opts["backend"] in BackendRegistry.covar:
-            covar_result = self.covar(**covar_opts)
-            # TODO: not sure how best to report the results
-            # back or how to form the FitResult object.
-            optimize_result._model = covar_result.model
-            optimize_result._success = optimize_result.success and covar_result.success
-            optimize_result._nfev += covar_result.nfev
-        else:
-            log.warning("No covar estimate - not supported by this backend.")
-
-        return optimize_result
 
 
 class CovarResult(object):

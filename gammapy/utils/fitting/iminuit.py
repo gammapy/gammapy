@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit", "covar_iminuit"]
+__all__ = ["optimize_iminuit", "covar_iminuit", "confidence_iminuit"]
 
 log = logging.getLogger(__name__)
 
@@ -44,10 +44,9 @@ def optimize_iminuit(parameters, function, **kwargs):
     kwargs.setdefault("print_level", 0)
     kwargs.update(make_minuit_par_kwargs(parameters))
 
-    parnames = _make_parnames(parameters)
     minuit_func = MinuitLikelihood(function, parameters)
 
-    minuit = Minuit(minuit_func.fcn, forced_parameters=parnames, **kwargs)
+    minuit = Minuit(minuit_func.fcn, **kwargs)
     minuit.migrad()
 
     factors = minuit.args
@@ -61,7 +60,23 @@ def optimize_iminuit(parameters, function, **kwargs):
 
 
 def covar_iminuit(minuit):
+    # TODO: add minuit.hesse() call once we have better tests
     return _get_covar(minuit)
+
+
+def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall):
+    # TODO: this is ugly - design something better for translating to MINUIT parameter names.
+    # Maybe a wrapper class MinuitParameters?
+    idx = parameters._get_idx(parameter)
+    var = _make_parname(idx, parameters[idx])
+    result = minuit.minos(var=var, sigma=sigma, maxcall=maxcall)
+    info = result[var]
+    return {
+        "is_valid": info["is_valid"],
+        "lower": info["lower"],
+        "upper": info["upper"],
+        "nfev": info["nfcn"],
+    }
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95
@@ -79,11 +94,11 @@ def _get_message(m):
 
 
 def _make_parnames(parameters):
-    """Create list with unambigious parameter names"""
-    return [
-        "par_{:03d}_{}".format(idx, par.name)
-        for idx, par in enumerate(parameters.parameters)
-    ]
+    return [_make_parname(idx, par) for idx, par in enumerate(parameters)]
+
+
+def _make_parname(idx, par):
+    return "par_{:03d}_{}".format(idx, par.name)
 
 
 def make_minuit_par_kwargs(parameters):
@@ -91,20 +106,18 @@ def make_minuit_par_kwargs(parameters):
 
     See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
     """
-    kwargs = {}
-    parnames = _make_parnames(parameters)
-    for idx, parname_ in enumerate(parnames):
-        par = parameters[idx]
-        kwargs[parname_] = par.factor
+    names = _make_parnames(parameters)
+    kwargs = {"forced_parameters": names}
+
+    for name, par in zip(names, parameters):
+        kwargs[name] = par.factor
 
         min_ = None if np.isnan(par.factor_min) else par.factor_min
         max_ = None if np.isnan(par.factor_max) else par.factor_max
-        kwargs["limit_{}".format(parname_)] = (min_, max_)
+        kwargs["limit_{}".format(name)] = (min_, max_)
 
-        kwargs["error_{}".format(parname_)] = 1
-
-        if par.frozen:
-            kwargs["fix_{}".format(parname_)] = True
+        kwargs["error_{}".format(name)] = 1
+        kwargs["fix_{}".format(name)] = par.frozen
 
     return kwargs
 
