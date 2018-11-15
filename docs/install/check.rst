@@ -39,7 +39,7 @@ If your issue is not addressed, please send an email to the mailing list.
 Known issues
 ------------
 
-- **Astropy =<3.1 and Matplotlib 3.0**
+- **Astropy <3.0.5 and Matplotlib 3.0**
 
 There is an incompatibility between WCSAxes and Matplotlib 3.0, which causes
 the inline plotting in notebooks to fail. The issue as well as a temporary workaround is
