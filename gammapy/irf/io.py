@@ -9,27 +9,39 @@ from .psf_gauss import EnergyDependentMultiGaussPSF
 __all__ = ["load_cta_irfs"]
 
 
-def load_cta_irfs(filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"):
+def load_cta_irfs(filename):
     """load CTA instrument response function and return a dictionary container.
 
     The IRF format should be compliant with the one discussed
     at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
 
-    The various IRFs are accessible with the following keys
-    'aeff' is a `~gammapy.irf.EffectiveAreaTable2D`
-    'edisp'  is a `~gammapy.irf.EnergyDispersion2D`
-    'psf' is a `~gammapy.irf.EnergyDependentMultiGaussPSF`
-    'bkg' is a  `~gammapy.irf.Background3D`
+    The various IRFs are accessible with the following keys:
+
+    - 'aeff' is a `~gammapy.irf.EffectiveAreaTable2D`
+    - 'edisp'  is a `~gammapy.irf.EnergyDispersion2D`
+    - 'psf' is a `~gammapy.irf.EnergyDependentMultiGaussPSF`
+    - 'bkg' is a  `~gammapy.irf.Background3D`
 
     Parameters
     ----------
     filename : str
-        the input filename. Default is "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+        the input filename. Default is
 
     Returns
     -------
     cta_irf : dict
         the IRF dictionary
+
+    Examples
+    --------
+    Access the CTA 1DC IRFs stored in the gammapy datasets
+
+    .. code:: python
+
+        from gammapy.irf import load_cta_irfs
+        cta_irf = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
+        print(cta_irf['aeff'])
+
     """
     filename = str(make_path(filename))
 
