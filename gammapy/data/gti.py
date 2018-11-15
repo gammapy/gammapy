@@ -118,17 +118,17 @@ class GTI(object):
         """
         # get GTIs that fall within the time_interval
         mask = self.time_start >= time_interval[1]
-        mask &= self.time_stop <= time_interval[0]
+        mask |= self.time_stop <= time_interval[0]
         gti_within = self.table[~mask]
 
         # crop the GTIs
         start_met = time_relative_to_ref(time_interval[0], self.table.meta)
         idx = gti_within['START'] < start_met
-        gti_within['START'][idx] = start_met
+        gti_within['START'][idx] = start_met.value
 
         stop_met = time_relative_to_ref(time_interval[1], self.table.meta)
         idx = gti_within['STOP'] > stop_met
-        gti_within['STOP'][idx] = stop_met
+        gti_within['STOP'][idx] = stop_met.value
 
         return self.__class__(gti_within)
 

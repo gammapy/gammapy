@@ -1,8 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...data.event_list import EventList, EventListLAT
+from ...data.event_list import EventListBase, EventList, EventListLAT
+
+
+@requires_data("gammapy-extra")
+class TestEventListBase:
+    def setup(self):
+        filename = "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        self.events = EventListBase.read(filename)
+
+    @pytest.mark.parametrize(
+        "parameter, limits",
+        [("TIME", (101962604.0, 101964280.0)), ("ENERGY", (0.8, 5.0))],
+    )
+    def test_select_parameter(self, parameter, limits):
+        selected_events = self.events.select_parameter(parameter, limits)
+        assert all(
+            (selected_events.table[parameter] >= limits[0])
+            & (selected_events.table[parameter] < limits[1])
+        )
 
 
 @requires_data("gammapy-extra")
