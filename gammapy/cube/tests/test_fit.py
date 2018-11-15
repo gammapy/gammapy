@@ -16,7 +16,6 @@ from ..models import SkyModel
 from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
 
 
-
 def geom(ebounds):
     axis = MapAxis.from_edges(ebounds, name="energy", unit=u.TeV)
     return WcsGeom.create(
@@ -74,6 +73,15 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
+@pytest.fixture
+def sky_model_fit(sky_model):
+    spatial_model = SkyGaussian(lon_0="0.5 deg", lat_0="0.5 deg", sigma="0.2 deg")
+    spectral_model = PowerLaw(
+        index=2, amplitude="2e-11 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+
 def mask(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
@@ -90,17 +98,9 @@ def counts(sky_model, exposure, background, psf, edisp):
     return WcsNDMap(background.geom, npred)
 
 
-def sky_model_fit(sky_model):
-    sky_model.parameters["lon_0"].value = 0.5
-    sky_model.parameters["lat_0"].value = 0.5
-    sky_model.parameters["amplitude"].value = 2e-11
-    sky_model.parameters["index"].value = 2
-    return sky_model
-
-
 @requires_dependency("iminuit")
 @requires_data("gammapy-extra")
-def test_cube_fit(sky_model):
+def test_cube_fit(sky_model, sky_model_fit):
     ebounds = np.logspace(-1.0, 1.0, 3)
     ebounds_true = np.logspace(-1.0, 1.0, 4)
     geom_r = geom(ebounds)
@@ -113,11 +113,10 @@ def test_cube_fit(sky_model):
     counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
-    model_fit = sky_model_fit(sky_model)
-    model_fit.parameters["sigma"].frozen = True
+    sky_model_fit.parameters["sigma"].frozen = True
 
     fit = MapFit(
-        model=model_fit,
+        model=sky_model_fit,
         counts=counts_map,
         exposure=exposure_map,
         background=background_map,
@@ -145,10 +144,17 @@ def test_cube_fit(sky_model):
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars.error("amplitude"), 4.03049e-13, rtol=1e-2)
 
-    assert result.model.spectral_model.parameters.covariance is not None
-    assert result.model.spatial_model.parameters.covariance is not None
+    # asserts on sub-covariance
+    pars_spatial = result.model.spatial_model.parameters
+    assert_allclose(pars_spatial.error("lon_0"), 0.004177, rtol=1e-2)
 
-def test_cube_fit_onebin(sky_model):
+    pars_spectral = result.model.spectral_model.parameters
+    assert_allclose(pars_spectral.error("index"), 0.033947, rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+@requires_data("gammapy-extra")
+def test_cube_fit_onebin(sky_model, sky_model_fit):
     ebounds = np.logspace(-1.0, 1.0, 2)
     geom_r = geom(ebounds)
 
@@ -159,14 +165,12 @@ def test_cube_fit_onebin(sky_model):
     counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
-    model_fit = sky_model_fit(sky_model)
-    model_fit.parameters["index"].value = 3.0
-    model_fit.parameters["index"].frozen = True
-    model_fit.parameters["sigma"].value = 0.3
-
+    sky_model_fit.parameters["index"].value = 3.0
+    sky_model_fit.parameters["index"].frozen = True
+    sky_model_fit.parameters["sigma"].value = 0.3
 
     fit = MapFit(
-        model=model_fit,
+        model=sky_model_fit,
         counts=counts_map,
         exposure=exposure_map,
         background=background_map,
@@ -190,6 +194,3 @@ def test_cube_fit_onebin(sky_model):
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-1)
     assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-1)
-
-    assert result.model.spectral_model.parameters.covariance is not None
-    assert result.model.spatial_model.parameters.covariance is not None
