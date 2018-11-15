@@ -60,6 +60,7 @@ def test_optimize(backend):
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
 
+
 # TODO: add some extra covariance tests, in addition to run
 # Probably mainly if error message is OK if optimize didn't run first.
 # def test_covariance():
@@ -73,3 +74,11 @@ def test_confidence(backend):
     assert result["is_valid"] is True
     assert_allclose(result["lower"], -1)
     assert_allclose(result["upper"], +1)
+
+
+def test_likelihood_profile():
+    fit = MyFit()
+    fit.run()
+    result = fit.likelihood_profile(fit._model, "x", nvalues=3)
+    assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
