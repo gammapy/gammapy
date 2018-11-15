@@ -237,7 +237,7 @@ class Parameters(object):
         self.covariance = covariance
         self.apply_autoscale = apply_autoscale
 
-    def _init_covar(self):
+    def _init_covariance(self):
         if self.covariance is None:
             shape = (len(self.parameters), len(self.parameters))
             self.covariance = np.zeros(shape)
@@ -265,7 +265,7 @@ class Parameters(object):
         ss = self.__class__.__name__
         for par in self.parameters:
             ss += "\n{}".format(par)
-        ss += "\n\nCovariance: \n{}".format(self.covariance)
+        ss += "\n\ncovariance: \n{}".format(self.covariance)
         return ss
 
     def _get_idx(self, val):
@@ -418,7 +418,7 @@ class Parameters(object):
         err : float or Quantity
             Parameter error
         """
-        self._init_covar()
+        self._init_covariance()
 
         idx = self._get_idx(parname)
         err = u.Quantity(err, self[idx].unit).value

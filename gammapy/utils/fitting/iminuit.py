@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit", "covar_iminuit", "confidence_iminuit"]
+__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit"]
 
 log = logging.getLogger(__name__)
 
@@ -59,9 +59,9 @@ def optimize_iminuit(parameters, function, **kwargs):
     return factors, info, optimizer
 
 
-def covar_iminuit(minuit):
+def covariance_iminuit(minuit):
     # TODO: add minuit.hesse() call once we have better tests
-    return _get_covar(minuit)
+    return _get_covariance(minuit)
 
 
 def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
@@ -122,8 +122,8 @@ def make_minuit_par_kwargs(parameters):
     return kwargs
 
 
-def _get_covar(minuit):
-    """Get full covar matrix as Numpy array.
+def _get_covariance(minuit):
+    """Get full covariance matrix as Numpy array.
 
     This was added as `minuit.np_covariance` in `iminuit` in v1.3,
     but we still want to support v1.2
