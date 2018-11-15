@@ -214,25 +214,6 @@ class Fit(object):
         else:
             raise NotImplementedError()
 
-    def likelihood_profiles(self, model, parameters="all"):
-        """Compute likelihood profiles for multiple parameters.
-
-        Parameters
-        ----------
-        model : `~gammapy.spectrum.models.SpectralModel` or `~gammapy.cube.models.SkyModel`
-            Model to compute the likelihood profile for.
-        parameters : list of str or "all"
-            For which parameters to compute likelihood profiles.
-        """
-        profiles = {}
-
-        if parameters == "all":
-            parameters = [par.name for par in model.paramaters]
-
-        for parname in parameters:
-            profiles[parname] = self.likelihood_profile(model, parname)
-        return profiles
-
     def likelihood_profile(self, model, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile for a single parameter of the model.
 
@@ -279,6 +260,7 @@ class Fit(object):
 
         return {"values": values, "likelihood": np.array(likelihood)}
 
+    # TODO: delete once Axel removes the caller in FluxPointEstimator
     def sqrt_ts(self, parameters):
         """Compute the sqrt(TS) of a model against the null hypthesis, that
         the amplitude of the model is zero.
