@@ -215,7 +215,7 @@ class TestFluxPointEstimator:
     def test_spectrum_result(self):
         # TODO: Don't run this again
         flux_points = self.fpe.run()
-        result = SpectrumResult(model=self.fpe.model, points=flux_points)
+        result = SpectrumResult(model=self.fpe.model.model, points=flux_points)
 
         actual = result.flux_point_residuals[0][0]
         assert_allclose(actual, -0.058407, rtol=1e-2)
