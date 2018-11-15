@@ -5,6 +5,9 @@ import copy
 import inspect
 import re
 from collections import OrderedDict
+import logging
+
+log = logging.getLogger(__name__)
 
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
@@ -69,8 +72,6 @@ def make_axes_cols(axes, axis_names=None):
 
         if name == "ENERGY":
             colnames = ["ENERGY", "E_MIN", "E_MAX"]
-        elif name == "TIME":
-            colnames = ["TIME", "T_MIN", "T_MAX"]
         else:
             s = "AXIS%i" % i if name == "" else name
             colnames = [s, s + "_MIN", s + "_MAX"]
@@ -122,6 +123,18 @@ def find_and_read_bands(hdu, header=None):
             name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
             name = cols[0]
+
+        interp_header_key = "INTERP%i" % (i + 1)
+        if header is not None and interp_header_key in header:
+            interp_header_val = header[interp_header_key]
+            if interp_header_val in ["sqrt", "log", "lin"]:
+                interp = interp_header_val
+            else:
+                log.warning(
+                    "Invalid map axis interp: {!r}. Using default: {!r}".format(
+                        interp_header_val, interp
+                    )
+                )
 
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
@@ -1348,6 +1361,9 @@ class MapGeom(object):
                 header[key] = name
             else:
                 raise ValueError("Invalid node type {!r}".format(ax.node_type))
+
+            key_interp = "INTERP%i" % idx
+            header[key_interp] = ax._interp
 
     @property
     def is_image(self):

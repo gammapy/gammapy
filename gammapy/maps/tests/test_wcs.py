@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
 from ..wcs import WcsGeom, _check_width
 from ..geom import MapAxis
+from ..base import Map
 
 pytest.importorskip("scipy")
 
@@ -332,3 +333,24 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
 
     assert (geom0 == geom1) is result
     assert (geom0 != geom1) is not result
+
+
+@pytest.mark.parametrize("node_type", ["edges", "center"])
+@pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
+def test_read_write(tmpdir, node_type, interp):
+    # Regression test for MapAxis interp and node_type FITS serialisation
+    # https://github.com/gammapy/gammapy/issues/1887
+    e_ax = MapAxis([1, 2], interp, "energy", node_type, "TeV")
+    t_ax = MapAxis([3, 4], interp, "time", node_type, "s")
+    m = Map.create(binsz=1, npix=10, axes=[e_ax, t_ax], unit="m2")
+
+    # Check what Gammapy writes in the FITS header
+    header = m.make_hdu().header
+    assert header["INTERP1"] == interp
+    assert header["INTERP2"] == interp
+
+    # Check that all MapAxis properties are preserved on FITS I/O
+    filename = str(tmpdir / "geom_test.fits")
+    m.write(filename, overwrite=True)
+    m2 = Map.read(filename)
+    assert m2.geom == m.geom
