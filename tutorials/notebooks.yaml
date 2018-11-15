@@ -1,5 +1,6 @@
 # This is a list of available notebooks.
 # It's used for automatic testing and downloading of datesets tutorials.
+# Dataset ebl declared in first_steps notebook is used in some Sphinx docs examples.
 # Let's keep it alphabetical.
 - name: analysis_3d
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_3d.ipynb
@@ -50,6 +51,7 @@
     - fermi_2fhl
     - images
     - catalogs
+    - ebl
 - name: hgps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
 - name: image_fitting_with_sherpa
