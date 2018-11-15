@@ -23,6 +23,7 @@ started, we recommend you follow the installation and setup instructions in
 :ref:`getting-started` and then learn Gammapy via the Jupyter :ref:`tutorials`.
 
 .. toctree::
+    :caption: Getting Started
     :maxdepth: 1
 
     getting-started
@@ -41,6 +42,7 @@ about each sub-package. Those pages also contain very detailed reference
 documentation for every function and class in Gammapy.
 
 .. toctree::
+    :caption: User Guide
     :maxdepth: 1
 
     data/index
@@ -71,6 +73,7 @@ as well as information about `Gammapy contact and communication channels`_. Most
 development takes place on the `Gammapy GitHub page`_.
 
 .. toctree::
+    :caption: Developer Documentation
     :maxdepth: 1
 
     development/index
@@ -81,6 +84,7 @@ development takes place on the `Gammapy GitHub page`_.
 References and Changelog
 ------------------------
 .. toctree::
+    :caption: References and Changelog
     :maxdepth: 1
 
     references

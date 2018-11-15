@@ -21,7 +21,7 @@ Common issues
 -------------
 
 If you have an issue with Gammapy installation or usage, please check this list.
-If your issue is not adressed, please send an email to the mailing list.
+If your issue is not addressed, please send an email to the mailing list.
 
 - Q: I get an error mentioning something (e.g. Astropy) isn't available,
   but I did install it.
@@ -39,8 +39,8 @@ If your issue is not adressed, please send an email to the mailing list.
 Known issues
 ------------
 
-- **Astropy <3.0.5 and Matplotlib 3.0**: There is an incompatibility between
-WCSAxes and Matplotlib 3.0, which causes the inline plotting in notebooks to
-fail. The issue as well as a temporary workaround is decribed
-`here https://github.com/gammapy/gammapy/issues/1843#issuecomment-435909533`_.
-The issue has been fixed since Astropy 3.0.5.
+- **Astropy =<3.1 and Matplotlib 3.0**
+
+There is an incompatibility between WCSAxes and Matplotlib 3.0, which causes
+the inline plotting in notebooks to fail. The issue as well as a temporary workaround is
+described `here <https://github.com/gammapy/gammapy/issues/1843#issuecomment-435909533>`__.
