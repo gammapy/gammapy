@@ -6,6 +6,7 @@ import inspect
 import re
 from collections import OrderedDict
 import logging
+
 log = logging.getLogger(__name__)
 
 import numpy as np
@@ -122,12 +123,19 @@ def find_and_read_bands(hdu, header=None):
             name = re.search("(.+)_MIN", cols[0]).group(1)
         else:
             name = cols[0]
-        interp_key = "INTERP%i" % (i+1)
-        if header is not None and interp_key in header:
-            if header[interp_key] in ["sqrt", "log", "lin"]:
-                interp = header[interp_key]
+
+        interp_header_key = "INTERP%i" % (i + 1)
+        if header is not None and interp_header_key in header:
+            interp_header_val = header[interp_header_key]
+            if interp_header_val in ["sqrt", "log", "lin"]:
+                interp = interp_header_val
             else:
-                log.warning("UNKNOWN INTERP KEYWORD IN HEADER. USING DEFAULT!")
+                log.warning(
+                    "Invalid map axis interp: {!r}. Using default: {!r}".format(
+                        interp_header_val, interp
+                    )
+                )
+
         unit = hdu.data.columns[cols[0]].unit
         if unit is None and header is not None:
             unit = header.get("CUNIT%i" % (3 + i), "")
@@ -1355,8 +1363,7 @@ class MapGeom(object):
                 raise ValueError("Invalid node type {!r}".format(ax.node_type))
 
             key_interp = "INTERP%i" % idx
-            header[key_interp]=ax._interp
-
+            header[key_interp] = ax._interp
 
     @property
     def is_image(self):

@@ -338,26 +338,19 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
 def test_read_write(tmpdir, node_type, interp):
-    e_ax = MapAxis(
-        nodes=np.logspace(-2., 2, 5),
-        unit="TeV",
-        name="energy",
-        node_type=node_type,
-        interp=interp,
-    )
-    t_ax = MapAxis(
-        nodes=np.linspace(0.0, 1000.0, 4),
-        unit="s",
-        name="time",
-        node_type=node_type,
-        interp=interp,
-    )
+    # Regression test for MapAxis interp and node_type FITS serialisation
+    # https://github.com/gammapy/gammapy/issues/1887
+    e_ax = MapAxis([1, 2], interp, "energy", node_type, "TeV")
+    t_ax = MapAxis([3, 4], interp, "time", node_type, "s")
     m = Map.create(binsz=1, npix=10, axes=[e_ax, t_ax], unit="m2")
-    fil = str(tmpdir / "geom_test.fits")
-    m.write(fil, overwrite=True)
-    m2 = Map.read(fil)
 
+    # Check what Gammapy writes in the FITS header
+    header = m.make_hdu().header
+    assert header["INTERP1"] == interp
+    assert header["INTERP2"] == interp
+
+    # Check that all MapAxis properties are preserved on FITS I/O
+    filename = str(tmpdir / "geom_test.fits")
+    m.write(filename, overwrite=True)
+    m2 = Map.read(filename)
     assert m2.geom == m.geom
-
-    assert m2.make_hdu().header["INTERP1"] == interp
-    assert m2.make_hdu().header["INTERP2"] == interp
