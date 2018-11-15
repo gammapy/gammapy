@@ -274,17 +274,20 @@ class Parameters(object):
         The input can be a parameter object, parameter name (str)
         or if a parameter index (int) is passed in, it is simply returned.
         """
-        if isinstance(val, Parameter):
+        if isinstance(val, six.integer_types):
+            return val
+        elif isinstance(val, Parameter):
             for idx, par in enumerate(self.parameters):
                 if val is par:
                     return idx
-        if isinstance(val, six.string_types):
+            raise IndexError("No parameter: {!r}".format(val))
+        elif isinstance(val, six.string_types):
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
                     return idx
-            raise IndexError("Parameter {!r} not found.".format(val, self))
+            raise IndexError("No parameter: {!r}".format(val))
         else:
-            return val
+            raise TypeError("Invalid type: {!r}".format(type(val)))
 
     def __getitem__(self, name):
         """Access parameter by name or index"""

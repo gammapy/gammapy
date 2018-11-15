@@ -108,6 +108,24 @@ def test_parameters_basics(pars):
     assert_allclose(pars.error(1), 10)
 
 
+def test_parameters_getitem(pars):
+    assert pars[1].name == "ham"
+    assert pars["ham"].name == "ham"
+    assert pars[pars[1]].name == "ham"
+
+    with pytest.raises(TypeError):
+        pars[42.3]
+
+    with pytest.raises(IndexError):
+        pars[3]
+
+    with pytest.raises(IndexError):
+        pars["lamb"]
+
+    with pytest.raises(IndexError):
+        pars[Parameter("bam!", 99)]
+
+
 def test_parameters_to_table(pars):
     pars.set_error("ham", 1e-10 / 3)
     table = pars.to_table()
