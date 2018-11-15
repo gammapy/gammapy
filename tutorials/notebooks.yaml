@@ -43,6 +43,7 @@
     - catalogs
 - name: fermi_lat
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/fermi_lat.ipynb
+  requires: GAMMAPY_FERMI_LAT_DATA
   datasets:
     - fermi_3fhl
 - name: first_steps
@@ -56,7 +57,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
 - name: image_fitting_with_sherpa
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_fitting_with_sherpa.ipynb
-  requires: sherpa
+  requires: sherpa fixed-version-sherpa
   datasets:
     - cta-1dc
 - name: intro_maps
@@ -75,7 +76,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/nddata_demo.ipynb
 - name: sed_fitting_gammacat_fermi
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting_gammacat_fermi.ipynb
-  requires: iminuit
+  requires: iminuit GAMMA_CAT
   datasets:
     - catalogs
 - name: simulate_3d
@@ -99,7 +100,7 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_models.ipynb
 - name: spectrum_pipe
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_pipe.ipynb
-  requires: iminuit
+  requires: iminuit GAMMA_CAT
   datasets:
     - hess-dl3-dr1
 - name: spectrum_simulation
