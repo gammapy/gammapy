@@ -76,12 +76,7 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
         info = result[var]
     except RuntimeError as error:
         message, success = str(error), False
-        info = {
-            "is_valid": False,
-            "lower": np.nan,
-            "upper": np.nan,
-            "nfcn": 0
-        }
+        info = {"is_valid": False, "lower": np.nan, "upper": np.nan, "nfcn": 0}
     return {
         "success": success,
         "message": message,

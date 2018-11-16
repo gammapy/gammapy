@@ -49,8 +49,11 @@ class FluxPointProfiles(object):
 
     @property
     def _default_e2dnde_edges(self):
-        e = self.table["ref_eflux"]
-        return np.logspace(np.log10(e.min()), np.log10(e.max()), 100) * e.unit
+        e = self.table["ref_e2dnde"].quantity
+        return (
+            np.logspace(np.log10(0.1 * e.value.min()), np.log10(e.value.max()), 500)
+            * e.unit
+        )
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -93,8 +96,15 @@ class FluxPointProfiles(object):
             Table with columns "norm" (the input)
             and "dloglike" (the interpolated values).
         """
+        from ..utils.interpolation import ScaledRegularGridInterpolator
+
         t = self.get_profile(idx)
-        dloglike = np.interp(norm, t["norm"], t["dloglike"])
+
+        interp = ScaledRegularGridInterpolator(
+            points=(t["norm"],), values=t["dloglike"], values_scale="sqrt"
+        )
+
+        dloglike = interp((norm,))
 
         t2 = Table()
         t2["norm"] = norm
@@ -114,7 +124,7 @@ class FluxPointProfiles(object):
         values = self.table["ref_" + which].quantity
         return TableModel(energy, values)
 
-    def plot_sed(self, ax=None, e2dnde_edges=None):
+    def plot_sed(self, ax=None, e2dnde_edges=None, add_cbar=True, **kwargs):
         """Plot likelihood SED profiles.
 
         Parameters
@@ -143,14 +153,26 @@ class FluxPointProfiles(object):
         z = np.empty((self._n_bins, len(y) - 1))
         for idx in range(self._n_bins):
             e2dnde = np.sqrt(e2dnde_edges[:-1] * e2dnde_edges[1:])
-            e2dnde_ref = self.table["ref_eflux"].quantity[idx]
+            e2dnde_ref = self.table["ref_e2dnde"].quantity[idx]
             norm = (e2dnde / e2dnde_ref).to_value("")
             z[idx] = self.interp_profile(idx, norm)["dloglike"]
 
-        ax.pcolormesh(x, y, z.T)
+        kwargs.setdefault("vmax", 0)
+        kwargs.setdefault("vmin", -4)
+        kwargs.setdefault("zorder", 0)
+        kwargs.setdefault("cmap", "Blues")
+        kwargs.setdefault("linewidths", 0)
+
+        # clipped values are set to NaN so that they appear white on the plot
+        z[-z < kwargs["vmin"]] = np.nan
+        caxes = ax.pcolormesh(x, y, -z.T, **kwargs)
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
         ax.set_xlabel("Energy ({})".format(self._energy_ref.unit))
         ax.set_ylabel("E^2 dN/dE ({})".format(y_unit))
+
+        if add_cbar:
+            label = "delta log-likelihood"
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
