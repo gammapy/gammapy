@@ -663,7 +663,7 @@ class FluxPoints(object):
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         e2dnde : `~astropy.units.Quantity`
-            Bin edges for the flux axis to use for the likelihood profile plot.
+            Values for the flux axis to use for the likelihood profile plot.
         add_cbar : bool
             Whether to add a colorbar to the plot.
         kwargs : dict
@@ -746,9 +746,11 @@ class FluxPointEstimator(object):
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     norm_min : float
-        Minimum value for the norm used for the fit.
+        Minimum value for the norm used for the fit. Modify this value, if the fit
+        does not converge or the error / ul estimation fails.
     norm_max : float
-        Maximum value for the norm used for the fit.
+        Maximum value for the norm used for the fit. Modify this value, if the fit
+        does not converge or the error / ul estimation fails.
     norm_n_values : int
         Number of norm values used for the likelihood profile.
     sigma : int
