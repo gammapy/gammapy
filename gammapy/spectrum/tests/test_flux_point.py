@@ -329,7 +329,7 @@ class TestFluxPointFit:
 
     @requires_dependency("sherpa")
     def test_fit_pwl_sherpa(self, sed_model, sed_flux_points):
-        # TODO: add covar or error estimation here?
+        # TODO: add test for covariance or error estimation here?
         fit = FluxPointFit(sed_model, sed_flux_points)
         result = fit.optimize(backend="sherpa", method="simplex")
         self.assert_result(result)
@@ -349,12 +349,10 @@ class TestFluxPointFit:
     @requires_dependency("iminuit")
     def test_likelihood_profile(self, sed_model, sed_flux_points):
         optimize_opts = {"backend": "minuit"}
-        fitter = FluxPointFit(sed_model, sed_flux_points)
-        result = fitter.run(optimize_opts=optimize_opts)
+        fit = FluxPointFit(sed_model, sed_flux_points)
+        result = fit.run(optimize_opts=optimize_opts)
 
-        profile = fitter.likelihood_profile(
-            model=result.model, parameter="amplitude", nvalues=3, bounds=1
-        )
+        profile = fit.likelihood_profile("amplitude", nvalues=3, bounds=1)
 
         ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
@@ -363,9 +361,7 @@ class TestFluxPointFit:
         err = result.model.parameters.error("amplitude")
         values = np.array([value - err, value, value + err])
 
-        profile = fitter.likelihood_profile(
-            model=result.model, parameter="amplitude", values=values
-        )
+        profile = fit.likelihood_profile("amplitude", values=values)
 
         ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)

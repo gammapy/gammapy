@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from .likelihood import Likelihood
 
-__all__ = ["optimize_sherpa"]
+__all__ = ["optimize_sherpa", "covariance_sherpa"]
 
 
 def get_sherpa_optimizer(name):
@@ -61,3 +61,7 @@ def optimize_sherpa(parameters, function, **kwargs):
     optimizer = optimizer
 
     return factors, info, optimizer
+
+
+def covariance_sherpa():
+    raise NotImplementedError

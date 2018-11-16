@@ -49,8 +49,8 @@ class SpectralModel(Model):
 
         if self.parameters.covariance is not None:
             ss += "\n\nCovariance: \n\n\t"
-            covar = self.parameters.covariance_to_table()
-            ss += "\n\t".join(covar.pformat())
+            covariance = self.parameters.covariance_to_table()
+            ss += "\n\t".join(covariance.pformat())
         return ss
 
     def __call__(self, energy):

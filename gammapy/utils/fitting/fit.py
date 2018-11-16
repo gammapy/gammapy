@@ -4,9 +4,9 @@ import abc
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
 from ...extern import six
-from .iminuit import optimize_iminuit, covar_iminuit, confidence_iminuit
-from .sherpa import optimize_sherpa
-from .scipy import optimize_scipy, covar_scipy
+from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit
+from .sherpa import optimize_sherpa, covariance_sherpa
+from .scipy import optimize_scipy, covariance_scipy
 
 __all__ = ["Fit"]
 
@@ -34,9 +34,10 @@ class Registry(object):
             "sherpa": optimize_sherpa,
             "scipy": optimize_scipy,
         },
-        "covar": {
-            "minuit": covar_iminuit,
-            # "scipy": covar_scipy,
+        "covariance": {
+            "minuit": covariance_iminuit,
+            "sherpa": covariance_sherpa,
+            "scipy": covariance_scipy,
         },
         "confidence": {"minuit": confidence_iminuit},
     }
@@ -76,7 +77,7 @@ class Fit(object):
     def _parameters(self):
         return self._model.parameters
 
-    def run(self, optimize_opts=None, covar_opts=None):
+    def run(self, optimize_opts=None, covariance_opts=None):
         """
         Run all fitting steps.
 
@@ -84,8 +85,8 @@ class Fit(object):
         ----------
         optimize_opts : dict
             Options passed to `Fit.optimize`.
-        covar_opts : dict
-            Options passed to `Fit.covar`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -96,21 +97,21 @@ class Fit(object):
             optimize_opts = {}
         optimize_result = self.optimize(**optimize_opts)
 
-        if covar_opts is None:
-            covar_opts = {}
+        if covariance_opts is None:
+            covariance_opts = {}
 
-        covar_opts.setdefault("backend", "minuit")
+        covariance_opts.setdefault("backend", "minuit")
 
-        if covar_opts["backend"] not in registry.register["covar"]:
-            log.warning("No covar estimate - not supported by this backend.")
+        if covariance_opts["backend"] not in registry.register["covariance"]:
+            log.warning("No covariance estimate - not supported by this backend.")
             return optimize_result
 
-        covar_result = self.covariance(**covar_opts)
+        covariance_result = self.covariance(**covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
-        optimize_result._model = covar_result.model
-        optimize_result._success = optimize_result.success and covar_result.success
-        optimize_result._nfev += covar_result.nfev
+        optimize_result._model = covariance_result.model
+        optimize_result._success = optimize_result.success and covariance_result.success
+        optimize_result._nfev += covariance_result.nfev
 
         return optimize_result
 
@@ -135,7 +136,6 @@ class Fit(object):
                 * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
                 * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
                 * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
-
 
         Returns
         -------
@@ -185,10 +185,10 @@ class Fit(object):
 
         Returns
         -------
-        result : `CovarResult`
+        result : `CovarianceResult`
             Results
         """
-        compute = registry.get("covar", backend)
+        compute = registry.get("covariance", backend)
         parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
@@ -204,7 +204,7 @@ class Fit(object):
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarResult(model=self._model.copy(), success=True, nfev=0)
+        return CovarianceResult(model=self._model.copy(), success=True, nfev=0)
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
@@ -240,13 +240,16 @@ class Fit(object):
         else:
             raise NotImplementedError()
 
-    def likelihood_profile(self, model, parameter, values=None, bounds=2, nvalues=11):
-        """Compute likelihood profile for a single parameter of the model.
+    def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
+        """Compute likelihood profile.
+
+        The method used is to vary one parameter, keeping all others fixed.
+        So this is taking a "slice" or "scan" of the likelihood.
+
+        See also: `Fit.minos_profile`.
 
         Parameters
         ----------
-        model : `~gammapy.spectrum.models.SpectralModel`
-            Model to compute the likelihood profile for.
         parameter : `~gammapy.utils.fitting.Parameter`
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
@@ -265,32 +268,80 @@ class Fit(object):
         results : dict
             Dictionary with keys "values" and "likelihood".
         """
-        # TODO: change the API to be consistent with the other methods.
-        # Don't pass in a model. Instead make a `parameters` copy on enter here.
-        self._model = model.copy()
-
-        likelihood = []
+        idx = self._parameters._get_idx(parameter)
+        parameters = self._parameters.copy()
 
         if values is None:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
-                parerr = model.parameters.error(parameter)
-                parval = model.parameters[parameter].value
+                parerr = parameters.error(idx)
+                parval = parameters[idx].value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
 
             values = np.linspace(parmin, parmax, nvalues)
 
+        likelihood = []
         for value in values:
-            self._parameters[parameter].value = value
-            stat = self.total_stat(self._parameters)
+            parameters[idx].value = value
+            stat = self.total_stat(parameters)
             likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
 
+    def minos_profile(self):
+        """Compute MINOS profile.
 
-class CovarResult(object):
-    """Covar result object."""
+        The method used is to vary one parameter,
+        then re-optimise all other free parameters
+        and to take the likelihood at that point.
+
+        See also: `Fit.likelihood_profile`
+
+        Calls ``iminuit.Minuit.mnprofile``
+        TODO: what does Sherpa do?
+        TODO: find a better name.
+        """
+        raise NotImplementedError
+
+    def likelihood_contour(self):
+        """Compute likelihood contour.
+
+        The method used is to vary two parameters, keeping all others fixed.
+        So this is taking a "slice" or "scan" of the likelihood.
+
+        See also: `Fit.minos_contour`
+
+        Parameters
+        ----------
+        TODO
+
+        Returns
+        -------
+        TODO
+        """
+        raise NotImplementedError
+
+    def minos_contour(self):
+        """Compute MINOS contour.
+
+        This is a contouring algorithm for a 2D function
+        which is not simply the likelihood function.
+        That 2D function is given at each point (par_1, par_2)
+        by re-optimising all other free parameters,
+        and taking the likelihood at that point.
+
+        Very compute-intensive and slow.
+
+        Calls ``iminuit.Minuit.mncontour``
+        TODO: what does Sherpa do?
+        TODO: find a better name.
+        """
+        raise NotImplementedError
+
+
+class CovarianceResult(object):
+    """Covariance result object."""
 
     def __init__(self, model, success, nfev):
         self._model = model

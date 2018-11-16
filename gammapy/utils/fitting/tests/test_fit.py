@@ -30,6 +30,23 @@ class MyFit(Fit):
         return (x - x_opt) ** 2 + (y - y_opt) ** 2 + (z - z_opt) ** 2
 
 
+@pytest.mark.parametrize("backend", ["minuit"])
+def test_run(backend):
+    fit = MyFit()
+    result = fit.run(
+        optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
+    )
+    pars = result.model.parameters
+
+    assert_allclose(pars.error("x"), 1, rtol=1e-7)
+    assert_allclose(pars.error("y"), 1, rtol=1e-7)
+    assert_allclose(pars.error("z"), 1, rtol=1e-7)
+
+    assert_allclose(pars.correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(pars.correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
+
+
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     fit = MyFit()
@@ -44,21 +61,9 @@ def test_optimize(backend):
     assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
 
 
-@pytest.mark.parametrize("backend", ["minuit"])
-def test_covar(backend):
-    fit = MyFit()
-    result = fit.run(
-        optimize_opts={"backend": backend}, covar_opts={"backend": backend}
-    )
-    pars = result.model.parameters
-
-    assert_allclose(pars.error("x"), 1, rtol=1e-7)
-    assert_allclose(pars.error("y"), 1, rtol=1e-7)
-    assert_allclose(pars.error("z"), 1, rtol=1e-7)
-
-    assert_allclose(pars.correlation[0, 1], 0, atol=1e-7)
-    assert_allclose(pars.correlation[0, 2], 0, atol=1e-7)
-    assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
+# TODO: add some extra covariance tests, in addition to run
+# Probably mainly if error message is OK if optimize didn't run first.
+# def test_covariance():
 
 
 @pytest.mark.parametrize("backend", ["minuit"])
@@ -69,3 +74,11 @@ def test_confidence(backend):
     assert result["is_valid"] is True
     assert_allclose(result["lower"], -1)
     assert_allclose(result["upper"], +1)
+
+
+def test_likelihood_profile():
+    fit = MyFit()
+    fit.run()
+    result = fit.likelihood_profile("x", nvalues=3)
+    assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)

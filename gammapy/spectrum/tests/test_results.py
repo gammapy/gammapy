@@ -19,8 +19,8 @@ def fit_result():
         index=2.1, amplitude=1e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
     )
     npred = obs.predicted_counts(best_fit_model).data.data.value
-    covar = np.diag([0.1 ** 2, 1e-12 ** 2, 0])
-    best_fit_model.parameters.covariance = covar
+    covariance = np.diag([0.1 ** 2, 1e-12 ** 2, 0])
+    best_fit_model.parameters.covariance = covariance
     fit_range = [0.1, 50] * u.TeV
     return SpectrumFitResult(
         model=best_fit_model,

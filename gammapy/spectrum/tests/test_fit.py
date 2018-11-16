@@ -158,9 +158,7 @@ class TestFit:
         result = fit.run()
         true_idx = result.model.parameters["index"].value
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
-        profile = fit.likelihood_profile(
-            model=result.model, parameter="index", values=values
-        )
+        profile = fit.likelihood_profile("index", values=values)
         actual = values[np.argmin(profile["likelihood"])]
         assert_allclose(actual, true_idx, rtol=0.01)
 
