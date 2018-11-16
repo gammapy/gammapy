@@ -726,21 +726,15 @@ class FluxPointEstimator(object):
     def compute_norm_errn_errp(self):
         """Compute assymetric errors for a flux point.
         """
-        try:
-            result = self.fit.confidence(parameter="norm", sigma=self.sigma)
-            norm_errp, norm_errn = result["upper"], -result["lower"]
-        except RuntimeError:
-            norm_errn, norm_errp = np.nan, np.nan
+        result = self.fit.confidence(parameter="norm", sigma=self.sigma)
+        norm_errp, norm_errn = result["upper"], -result["lower"]
         return {"norm_errp": norm_errp, "norm_errn": norm_errn}
 
     def compute_norm_err(self):
         """Compute covariance errors for a flux point.
         """
-        try:
-            result = self.fit.covariance()
-            norm_err = result.model.parameters.error("norm")
-        except RuntimeError:
-            norm_err = np.nan
+        result = self.fit.covariance()
+        norm_err = result.model.parameters.error("norm")
         return {"norm_err": norm_err}
 
     def compute_norm_ul(self):
@@ -753,12 +747,8 @@ class FluxPointEstimator(object):
             Flux point upper limit.
         """
         norm = self.model.parameters["norm"].value
-        try:
-            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
-            norm_ul = result["upper"] + norm
-        except RuntimeError:
-            norm_ul = np.nan
-        return {"norm_ul": norm_ul}
+        result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
+        return {"norm_ul": result["upper"] + norm}
 
     def compute_ts(self):
         """Compute the sqrt(TS) of a model against the null hypothesis, that
@@ -790,7 +780,9 @@ class FluxPointEstimator(object):
         if result.success:
             norm = result.model.parameters["norm"].value
         else:
-            log.warning("Fit failed for flux point setting NaN")
+            emin, emax = self.fit.true_fit_range[0]
+            log.warning("Fit failed for flux point between {emin:.3f} and {emax:.3f},"
+                        " setting NaN.".format(emin=emin, emax=emax))
             norm = np.nan
         return {"norm": norm}
 

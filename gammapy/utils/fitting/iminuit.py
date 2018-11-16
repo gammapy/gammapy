@@ -69,9 +69,22 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     # Maybe a wrapper class MinuitParameters?
     idx = parameters._get_idx(parameter)
     var = _make_parname(idx, parameters[idx])
-    result = minuit.minos(var=var, sigma=sigma, maxcall=maxcall)
-    info = result[var]
+
+    message, success = "Minos terminated successfully.", True
+    try:
+        result = minuit.minos(var=var, sigma=sigma, maxcall=maxcall)
+        info = result[var]
+    except RuntimeError as error:
+        message, success = str(error), False
+        info = {
+            "is_valid": False,
+            "lower": np.nan,
+            "upper": np.nan,
+            "nfcn": 0
+        }
     return {
+        "success": success,
+        "message": message,
         "is_valid": info["is_valid"],
         "lower": info["lower"],
         "upper": info["upper"],
