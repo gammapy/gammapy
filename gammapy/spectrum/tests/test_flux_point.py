@@ -186,7 +186,7 @@ class TestFluxPointEstimator:
 
     def test_energy_range(self):
         group = self.fpe.groups[1]
-        point = self.fpe.compute_flux_point(group)
+        point = self.fpe.estimate_flux_point(group)
         fit_range = self.fpe.fit.true_fit_range[0]
         assert_quantity_allclose(fit_range[0], group.energy_min)
         assert_quantity_allclose(fit_range[1], group.energy_max)
@@ -207,7 +207,7 @@ class TestFluxPointEstimator:
         assert_allclose(actual, 3.023831e-11, rtol=1e-2)
 
         actual = flux_points.table["dnde_ul"][0]
-        assert_allclose(actual, 3.132841e-10, rtol=1e-2)
+        assert_allclose(actual, 2.98694e-10, rtol=1e-2)
 
         actual = flux_points.table["sqrt_ts"][0]
         assert_allclose(actual, 13.66, rtol=1e-2)
