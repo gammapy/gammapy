@@ -366,6 +366,7 @@ def test_wcsndmap_reproject(npix, binsz, coordsys, proj, skydir, axes):
     # TODO : Reproject to a different spatial geometry
 
 
+@requires_dependency("healpy")
 def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", coordsys="CEL")
     m = WcsNDMap(geom)
