@@ -9,6 +9,7 @@ from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.fitting import Fit
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 from . import SpectrumObservationList, SpectrumObservation
@@ -45,6 +46,18 @@ DEFAULT_UNIT = OrderedDict(
         ("eflux", u.Unit("erg cm-2 s-1")),
     ]
 )
+
+
+def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
+    """Helper function to interpolate likelihood profiles"""
+    # likelihood profiles are typically of parabolic shape, so we use a
+    # sqrt scaling of the values and perform linear interpolation on the scaled
+    # values
+    sign = np.sign(np.gradient(dloglike_scan))
+    interp = ScaledRegularGridInterpolator(
+        points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
+    )
+    return interp((norm,))
 
 
 class FluxPoints(object):
@@ -507,6 +520,19 @@ class FluxPoints(object):
             return np.sqrt(self.e_min * self.e_max)
 
     @property
+    def e_edges(self):
+        """Edges of the energy bin.
+
+        Returns
+        -------
+        e_edges : `~astropy.units.Quantity`
+            Energy edges.
+        """
+        e_edges = list(self.e_min)
+        e_edges += [self.e_max[-1]]
+        return u.Quantity(e_edges, self.e_min.unit, copy=False)
+
+    @property
     def e_min(self):
         """Lower bound of energy bin.
 
@@ -630,21 +656,94 @@ class FluxPoints(object):
         ax.set_ylabel("{} ({})".format(self.sed_type, y_unit))
         return ax
 
+    def plot_likelihood(
+        self, ax=None, energy_unit="TeV", add_cbar=True, y_values=None, y_unit=None, **kwargs
+    ):
+        """Plot likelihood SED profiles as a density plot..
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`
+            Axis object to plot on.
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        y_values : `astropy.units.Quantity`
+            Array of y-values to use for the likelihood profile evaluation.
+        y_unit : str or `astropy.units.Unit`
+            Unit to use for the y-axis.
+        add_cbar : bool
+            Whether to add a colorbar to the plot.
+        kwargs : dict
+            Keyword arguments passed to :func:`matplotlib.pyplot.pcolormesh`
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axis object
+        """
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            ax = plt.gca()
+
+        y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
+
+        if y_values is None:
+            ref_values = self.table["ref_" + self.sed_type].quantity
+            y_values = np.logspace(
+                np.log10(ref_values.value.min()) - 1, np.log10(ref_values.value.max()) + 1, 500
+            )
+            y_values = u.Quantity(y_values, y_unit, copy=False)
+
+        x = self.e_edges.to(energy_unit)
+
+        # Compute likelihood "image" one energy bin at a time
+        # by interpolating e2dnde at the log bin centers
+        z = np.empty((len(self.table), len(y_values)))
+        for idx in range(len(self.table)):
+            y_ref = self.table["ref_" + self.sed_type].quantity[idx]
+            norm = (y_values / y_ref).to_value("")
+            norm_scan = self.table[idx]["norm_scan"]
+            dloglike_scan = self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
+            z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
+
+        kwargs.setdefault("vmax", 0)
+        kwargs.setdefault("vmin", -4)
+        kwargs.setdefault("zorder", 0)
+        kwargs.setdefault("cmap", "Blues")
+        kwargs.setdefault("linewidths", 0)
+
+        # clipped values are set to NaN so that they appear white on the plot
+        z[-z < kwargs["vmin"]] = np.nan
+        caxes = ax.pcolormesh(x, y_values, -z.T, **kwargs)
+        ax.set_xscale("log", nonposx="clip")
+        ax.set_yscale("log", nonposy="clip")
+        ax.set_xlabel("Energy ({})".format(energy_unit))
+        ax.set_ylabel("{} ({})".format(self.sed_type, y_values.unit))
+
+        if add_cbar:
+            label = "delta log-likelihood"
+            ax.figure.colorbar(caxes, ax=ax, label=label)
+
+        return ax
+
 
 class FluxPointEstimator(object):
     """Flux point estimator.
 
-    Computes flux points for a given spectrum observation dataset
-    (a 1-dim on/off observation), energy binning and spectral model.
+    Estimates flux points for a given spectrum observation dataset, energy groups
+    and spectral model.
 
-    A spectral model shape is assumed, all parameters except the norm are fixed
-    A 1D amplitude fit is done, to find the amplitude so that npred equals excess.
+    To estimate the flux point the amplitude of the reference spectral model is
+    fitted within the energy range defined by the energy group. This is done for
+    each group independently. The amplitude is re-normalized using the "norm" parameter,
+    which specifies the deviation of the flux from the reference model in this
+    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
+    for details.
 
-    This is done for each group independently.
-
-    The method is used for example in this FERMI-LAT catalog paper
+    The method is also described in the FERMI-LAT catalog paper
     https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
-    or the HESS GPS paper
+    or the HESS Galactic Plane Survey paper
     https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
 
     Parameters
@@ -655,21 +754,48 @@ class FluxPointEstimator(object):
         Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+    norm_min : float
+        Minimum value for the norm used for the fit. Modify this value, if the fit
+        does not converge or the error / ul estimation fails.
+    norm_max : float
+        Maximum value for the norm used for the fit. Modify this value, if the fit
+        does not converge or the error / ul estimation fails.
+    norm_n_values : int
+        Number of norm values used for the likelihood profile.
     sigma : int
         Sigma to use for asymmetric error computation.
     sigma_ul : int
-        Sigma to use for upper limit computation
+        Sigma to use for upper limit computation.
     """
 
-    def __init__(self, obs, groups, model, sigma=1, sigma_ul=2):
+    def __init__(
+        self,
+        obs,
+        groups,
+        model,
+        norm_min=0.2,
+        norm_max=5,
+        norm_n_values=11,
+        sigma=1,
+        sigma_ul=2,
+    ):
         if isinstance(obs, SpectrumObservation):
             obs = SpectrumObservationList([obs])
         self.obs = SpectrumObservationList(obs)
 
         self.groups = groups
         self.model = ScaleModel(model)
+        self.model.parameters["norm"].min = norm_min
+        self.model.parameters["norm"].max = norm_max
+        self.norm_n_values = norm_n_values
+        self.norm_min = norm_min
+        self.norm_max = norm_max
         self.sigma = sigma
         self.sigma_ul = sigma_ul
+
+    @property
+    def ref_model(self):
+        return self.model.model
 
     def __str__(self):
         s = "{}:\n".format(self.__class__.__name__)
@@ -678,13 +804,16 @@ class FluxPointEstimator(object):
         s += str(self.model) + "\n"
         return s
 
-    def run(self):
-        """Run the flux point estimator
+    def run(self, steps="all"):
+        """Run the flux point estimator for all energy groups.
 
         Returns
         -------
         flux_points : `FluxPoints`
-            Estmated flux points.
+            Estimated flux points.
+        steps : list of str
+            Which steps to execute. See `estimate_flux_point` for details
+            and available options.
         """
         rows = []
         for group in self.groups:
@@ -692,16 +821,38 @@ class FluxPointEstimator(object):
                 log.debug("Skipping energy group:\n{}".format(group))
                 continue
 
-            row = self.compute_flux_point(group)
+            row = self.estimate_flux_point(group, steps=steps)
             rows.append(row)
 
-        meta = OrderedDict([("method", "TODO"), ("SED_TYPE", "likelihood")])
+        meta = OrderedDict([("SED_TYPE", "likelihood")])
         table = table_from_row_data(rows=rows, meta=meta)
         return FluxPoints(table).to_sed_type("dnde")
 
-    def compute_flux_point(self, energy_group):
+    def estimate_flux_point(self, e_group, steps="all"):
+        """Estimate flux point for a single energy group.
+
+        Parameters
+        ----------
+        e_group : `SpectrumEnergyGroup`
+            Energy group to compute the flux point for.
+        steps : list of str
+            Which steps to execute. Available options are:
+
+                * "err": estimate symmetric error.
+                * "errn-errp": estimate asymmetric errors.
+                * "ul": estimate upper limits.
+                * "ts": estimate ts and sqrt(ts) values.
+                * "norm-scan": estimate likelihood profiles.
+
+            By default all steps are executed.
+
+        Returns
+        -------
+        result : dict
+            Dict with results for the flux point.
+        """
         # Put at log center of the bin
-        e_min, e_max = energy_group.energy_min, energy_group.energy_max
+        e_min, e_max = e_group.energy_min, e_group.energy_max
         e_ref = np.sqrt(e_min * e_max)
 
         result = OrderedDict(
@@ -709,50 +860,80 @@ class FluxPointEstimator(object):
                 ("e_ref", e_ref),
                 ("e_min", e_min),
                 ("e_max", e_max),
-                ("ref_dnde", self.model(e_ref)),
+                ("ref_dnde", self.ref_model(e_ref)),
+                ("ref_flux", self.ref_model.integral(e_min, e_max)),
+                ("ref_eflux", self.ref_model.energy_flux(e_min, e_max)),
+                ("ref_e2dnde", self.ref_model(e_ref) * e_ref ** 2),
             ]
         )
 
-        quality_orig = self._set_quality(energy_group)
+        quality_orig = self._set_quality(e_group)
+        result.update(self.estimate_norm())
 
-        result.update(self.compute_norm())
-        result.update(self.compute_norm_err())
-        result.update(self.compute_norm_errn_errp())
-        result.update(self.compute_norm_ul())
-        result.update(self.compute_ts())
+        if steps == "all":
+            steps = ["err", "errp-errn", "ul", "ts", "norm-scan"]
+
+        if "err" in steps:
+            result.update(self.estimate_norm_err())
+
+        if "errp-errn" in steps:
+            result.update(self.estimate_norm_errn_errp())
+
+        if "ul" in steps:
+            result.update(self.estimate_norm_ul())
+
+        if "ts" in steps:
+            result.update(self.estimate_norm_ts())
+
+        if "norm-scan" in steps:
+            result.update(self.estimate_norm_scan(result))
+
         self._restore_quality(quality_orig)
         return result
 
-    def compute_norm_errn_errp(self):
-        """Compute assymetric errors for a flux point.
+    def estimate_norm_errn_errp(self):
+        """Estimate asymmetric errors for a flux point.
+
+        Returns
+        -------
+        result : dict
+            Dict with asymmetric errors for the flux point norm.
         """
         result = self.fit.confidence(parameter="norm", sigma=self.sigma)
         norm_errp, norm_errn = result["upper"], -result["lower"]
         return {"norm_errp": norm_errp, "norm_errn": norm_errn}
 
-    def compute_norm_err(self):
-        """Compute covariance errors for a flux point.
+    def estimate_norm_err(self):
+        """Estimate covariance errors for a flux point.
+
+        Returns
+        -------
+        result : dict
+            Dict with symmetric error for the flux point norm.
         """
         result = self.fit.covariance()
         norm_err = result.model.parameters.error("norm")
         return {"norm_err": norm_err}
 
-    def compute_norm_ul(self):
-        """
-        Compute upper limit for a flux point.
+    def estimate_norm_ul(self):
+        """Estimate upper limit for a flux point.
 
         Returns
         -------
-        dnde_ul : `~astropy.units.Quantity`
-            Flux point upper limit.
+        result : dict
+            Dict with upper limit for the flux point norm.
         """
         norm = self.model.parameters["norm"].value
         result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
         return {"norm_ul": result["upper"] + norm}
 
-    def compute_ts(self):
-        """Compute the sqrt(TS) of a model against the null hypothesis, that
-        the amplitude of the model is zero.
+    def estimate_norm_ts(self):
+        """Estimate ts and sqrt(ts) for the flux point.
+
+        Returns
+        -------
+        result : dict
+            Dict with ts and srtq_ts for the flux point.
         """
         parameters = self.model.parameters
 
@@ -762,15 +943,35 @@ class FluxPointEstimator(object):
         # store best fit amplitude, set amplitude of fit model to zero
         parameters["norm"].value = 0
         loglike_null = self.fit.total_stat(parameters)
-        parameters["norm"].value = 1
+        parameters["norm"].value = 1.
 
         # compute sqrt TS
         ts = np.abs(loglike_null - loglike)
         sqrt_ts = np.sign(norm_best_fit) * np.sqrt(ts)
-        return {"sqrt_ts": sqrt_ts, "ts": ts, "loglike": loglike}
+        return {"sqrt_ts": sqrt_ts, "ts": ts}
 
-    def compute_norm(self):
+    def estimate_norm_scan(self, flux_point):
+        """Estimate likelihood profile for the norm parameter
+
+        Returns
+        -------
+        result : dict
+            Dict with norm_scan and dloglike_scan for the flux point.
+        """
+        norm = self.model.parameters["norm"]
+        values = np.logspace(np.log10(norm.min), np.log10(norm.max), self.norm_n_values)
+        result = self.fit.likelihood_profile("norm", values=values)
+        dloglike_scan = result["likelihood"]
+
+        return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
+
+    def estimate_norm(self):
         """Fit norm of the flux point.
+
+        Returns
+        -------
+        result : dict
+            Dict with "norm" and "loglike" for the flux point.
         """
         from .fit import SpectrumFit
 
@@ -779,12 +980,16 @@ class FluxPointEstimator(object):
 
         if result.success:
             norm = result.model.parameters["norm"].value
+            self.model.parameters["norm"].value = norm
         else:
             emin, emax = self.fit.true_fit_range[0]
-            log.warning("Fit failed for flux point between {emin:.3f} and {emax:.3f},"
-                        " setting NaN.".format(emin=emin, emax=emax))
+            log.warning(
+                "Fit failed for flux point between {emin:.3f} and {emax:.3f},"
+                " setting NaN.".format(emin=emin, emax=emax)
+            )
             norm = np.nan
-        return {"norm": norm}
+
+        return {"norm": norm, "loglike": result.total_stat}
 
     # TODO: clean up this helper function and maybe move it to SpectrumObservations
     def _set_quality(self, energy_group):

@@ -111,8 +111,8 @@ class SqrtScale(object):
     """Sqrt scaling"""
 
     def __call__(self, values):
-        values = np.clip(values, 0, np.inf)
-        return np.sqrt(values)
+        sign = np.sign(values)
+        return sign * np.sqrt(sign * values)
 
     def inverse(self, values):
         return np.power(values, 2)
