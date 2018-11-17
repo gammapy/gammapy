@@ -656,7 +656,7 @@ class FluxPoints(object):
         return ax
 
     def plot_likelihood(
-        self, ax=None, energy_unit="TeV", e2dnde=None, add_cbar=True, **kwargs
+        self, ax=None, energy_unit="TeV", add_cbar=True, y_values=None, y_unit=None, **kwargs
     ):
         """Plot likelihood SED profiles.
 
@@ -666,8 +666,10 @@ class FluxPoints(object):
             Axis object to plot on.
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
-        e2dnde : `~astropy.units.Quantity`
-            Values for the flux axis to use for the likelihood profile plot.
+        y_values : `astropy.units.Quantity`
+            Array of y-values to use for the likelihood profile evaluation.
+        y_unit : str or `astropy.units.Unit`
+            Unit to use for the y-axis.
         add_cbar : bool
             Whether to add a colorbar to the plot.
         kwargs : dict
@@ -683,23 +685,25 @@ class FluxPoints(object):
         if ax is None:
             ax = plt.gca()
 
-        if e2dnde is None:
-            values = self.table["ref_e2dnde"].quantity
+        y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
+
+        if y_values is None:
+            ref_values = self.table["ref_" + self.sed_type].quantity
             y_values = np.logspace(
-                np.log10(values.value.min()) - 1, np.log10(values.value.max()) + 1, 1000
+                np.log10(ref_values.value.min()) - 1, np.log10(ref_values.value.max()) + 1, 500
             )
-            e2dnde = u.Quantity(y_values, values.unit, copy=False)
+            y_values = u.Quantity(y_values, y_unit, copy=False)
 
         x = self.e_edges.to(energy_unit)
 
         # Compute likelihood "image" one energy bin at a time
         # by interpolating e2dnde at the log bin centers
-        z = np.empty((len(self.table), len(e2dnde)))
+        z = np.empty((len(self.table), len(y_values)))
         for idx in range(len(self.table)):
-            e2dnde_ref = self.table["ref_e2dnde"].quantity[idx]
-            norm = (e2dnde / e2dnde_ref).to_value("")
+            y_ref = self.table["ref_" + self.sed_type].quantity[idx]
+            norm = (y_values / y_ref).to_value("")
             norm_scan = self.table[idx]["norm_scan"]
-            dloglike_scan = self.table[idx]["dloglike_scan"]
+            dloglike_scan = self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
             z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
 
         kwargs.setdefault("vmax", 0)
@@ -710,11 +714,11 @@ class FluxPoints(object):
 
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
-        caxes = ax.pcolormesh(x, e2dnde, -z.T, **kwargs)
+        caxes = ax.pcolormesh(x, y_values, -z.T, **kwargs)
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
         ax.set_xlabel("Energy ({})".format(energy_unit))
-        ax.set_ylabel("e2dnde ({})".format(e2dnde.unit))
+        ax.set_ylabel("{} ({})".format(self.sed_type, y_values.unit))
 
         if add_cbar:
             label = "delta log-likelihood"
@@ -956,7 +960,7 @@ class FluxPointEstimator(object):
         norm = self.model.parameters["norm"]
         values = np.logspace(np.log10(norm.min), np.log10(norm.max), self.norm_n_values)
         result = self.fit.likelihood_profile("norm", values=values)
-        dloglike_scan = result["likelihood"] - flux_point["loglike"]
+        dloglike_scan = result["likelihood"]
 
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
