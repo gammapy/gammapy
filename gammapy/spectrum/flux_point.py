@@ -51,7 +51,8 @@ DEFAULT_UNIT = OrderedDict(
 def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
     """Helper function to interpolate likelihood profiles"""
     # likelihood profiles are typically of parabolic shape, so we use a
-    # sqrt scaling of the values amd linear interpolation
+    # sqrt scaling of the values and perform linear interpolation on the scaled
+    # values
     sign = np.sign(np.gradient(dloglike_scan))
     interp = ScaledRegularGridInterpolator(
         points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
@@ -658,7 +659,7 @@ class FluxPoints(object):
     def plot_likelihood(
         self, ax=None, energy_unit="TeV", add_cbar=True, y_values=None, y_unit=None, **kwargs
     ):
-        """Plot likelihood SED profiles.
+        """Plot likelihood SED profiles as a density plot..
 
         Parameters
         ----------

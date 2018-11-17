@@ -8,7 +8,6 @@ from .cosmic_ray import *
 from .crab import *
 from .energy_group import *
 from .flux_point import *
-from .profile import *
 from .utils import *
 from .extract import *
 from .simulation import *

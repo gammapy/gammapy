@@ -175,13 +175,13 @@ def seg():
 
 
 @requires_data("gammapy-extra")
-@requires_dependency("sherpa")
 @requires_dependency("matplotlib")
 class TestFluxPointEstimator:
     def setup(self):
-        self.fpe = FluxPointEstimator(obs=obs(), model=model(), groups=seg())
+        self.fpe = FluxPointEstimator(obs=obs(), model=model(), groups=seg(), norm_n_values=3)
+        self.flux_points = self.fpe.run()
 
-    def test_basic(self):
+    def test_str(self):
         assert "FluxPointEstimator" in str(self.fpe)
 
     def test_energy_range(self):
@@ -192,7 +192,7 @@ class TestFluxPointEstimator:
         assert_quantity_allclose(fit_range[1], group.energy_max)
 
     def test_values(self):
-        flux_points = self.fpe.run()
+        flux_points = self.flux_points
 
         actual = flux_points.table["dnde"][0]
         assert_allclose(actual, 2.361e-10, rtol=1e-2)
@@ -212,9 +212,18 @@ class TestFluxPointEstimator:
         actual = flux_points.table["sqrt_ts"][0]
         assert_allclose(actual, 13.66, rtol=1e-2)
 
+        actual = flux_points.table["norm"][0]
+        assert_allclose(actual, 0.941443, rtol=1e-5)
+
+        actual = flux_points.table["norm_scan"][0]
+        assert_allclose(actual, [0.2, 1, 5], rtol=1e-5)
+
+        actual = flux_points.table["dloglike_scan"][0]
+        assert_allclose(actual, [90.650449, 9.826327, 392.489161], rtol=1e-5)
+
+
     def test_spectrum_result(self):
-        # TODO: Don't run this again
-        flux_points = self.fpe.run()
+        flux_points = self.flux_points
         result = SpectrumResult(model=self.fpe.model.model, points=flux_points)
 
         actual = result.flux_point_residuals[0][0]
@@ -225,6 +234,10 @@ class TestFluxPointEstimator:
 
         with mpl_plot_check():
             result.plot(energy_range=[1, 10] * u.TeV)
+
+    def test_plot_likelihood(self):
+        with mpl_plot_check():
+            self.flux_points.plot_likelihood()
 
 
 @pytest.fixture(params=FLUX_POINTS_FILES, scope="session")
