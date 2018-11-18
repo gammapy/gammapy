@@ -40,19 +40,6 @@ class SpectralModel(Model):
     `~gammapy.spectrum.models.PowerLaw`.
     """
 
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += "\n\nParameters: \n\n\t"
-
-        table = self.parameters.to_table()
-        ss += "\n\t".join(table.pformat())
-
-        if self.parameters.covariance is not None:
-            ss += "\n\nCovariance: \n\n\t"
-            covariance = self.parameters.covariance_to_table()
-            ss += "\n\t".join(covariance.pformat())
-        return ss
-
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
         kwargs = dict()

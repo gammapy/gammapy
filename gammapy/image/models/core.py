@@ -25,19 +25,6 @@ log = logging.getLogger(__name__)
 class SkySpatialModel(Model):
     """Sky spatial model base class."""
 
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += "\n\nParameters: \n\n\t"
-
-        table = self.parameters.to_table()
-        ss += "\n\t".join(table.pformat())
-
-        if self.parameters.covariance is not None:
-            ss += "\n\nCovariance: \n\n\t"
-            covariance = self.parameters.covariance_to_table()
-            ss += "\n\t".join(covariance.pformat())
-        return ss
-
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = dict()
