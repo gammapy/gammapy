@@ -315,6 +315,7 @@ class Parameters(object):
         t["unit"] = [p.unit.to_string("fits") for p in self.parameters]
         t["min"] = [p.min for p in self.parameters]
         t["max"] = [p.max for p in self.parameters]
+        t["frozen"] = [p.frozen for p in self.parameters]
 
         for name in ["value", "error", "min", "max"]:
             t[name].format = ".3e"

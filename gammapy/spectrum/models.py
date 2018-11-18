@@ -538,7 +538,7 @@ class PowerLaw(SpectralModel):
             [
                 Parameter("index", index),
                 Parameter("amplitude", amplitude),
-                Parameter("reference", reference, min=0, frozen=True),
+                Parameter("reference", reference, frozen=True),
             ]
         )
 
@@ -1166,7 +1166,7 @@ class TableModel(SpectralModel):
     def __init__(
         self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
     ):
-        self.parameters = Parameters([Parameter("norm", norm, min=0, unit="")])
+        self.parameters = Parameters([Parameter("norm", norm, unit="")])
         self.energy = energy
         self.values = values
         self.meta = dict() if meta is None else meta
