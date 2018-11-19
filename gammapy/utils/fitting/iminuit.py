@@ -65,14 +65,11 @@ def covariance_iminuit(minuit):
     message, success = "Hesse terminated successfully.", True
     try:
         covariance_factors = _get_covariance(minuit)
-    except  :
+    except:
         N = len(minuit.args)
         covariance_factors = np.nan * np.ones((N, N))
         message, success = "Hesse failed", False
-    return covariance_factors, {
-        "success": success,
-        "message": message,
-    }
+    return covariance_factors, {"success": success, "message": message}
 
 
 def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):

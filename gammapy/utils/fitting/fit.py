@@ -204,7 +204,9 @@ class Fit(object):
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(model=self._model.copy(), success=info["success"], nfev=0)
+        return CovarianceResult(
+            model=self._model.copy(), success=info["success"], nfev=0
+        )
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.

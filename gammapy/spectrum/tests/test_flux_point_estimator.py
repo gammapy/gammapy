@@ -9,9 +9,7 @@ from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator
 from ...irf import EffectiveAreaTable
-from ...utils.testing import (
-    assert_quantity_allclose,
-)
+from ...utils.testing import assert_quantity_allclose
 
 
 # TODO: use pregenerate data instead

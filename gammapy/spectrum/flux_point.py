@@ -25,7 +25,18 @@ REQUIRED_COLUMNS = OrderedDict(
         ("flux", ["e_min", "e_max", "flux"]),
         ("eflux", ["e_min", "e_max", "eflux"]),
         # TODO: extend required columns
-        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm", "norm_scan", "dloglike_scan"]),
+        (
+            "likelihood",
+            [
+                "e_min",
+                "e_max",
+                "e_ref",
+                "ref_dnde",
+                "norm",
+                "norm_scan",
+                "dloglike_scan",
+            ],
+        ),
     ]
 )
 
@@ -656,7 +667,13 @@ class FluxPoints(object):
         return ax
 
     def plot_likelihood(
-        self, ax=None, energy_unit="TeV", add_cbar=True, y_values=None, y_unit=None, **kwargs
+        self,
+        ax=None,
+        energy_unit="TeV",
+        add_cbar=True,
+        y_values=None,
+        y_unit=None,
+        **kwargs
     ):
         """Plot likelihood SED profiles as a density plot..
 
@@ -691,7 +708,9 @@ class FluxPoints(object):
         if y_values is None:
             ref_values = self.table["ref_" + self.sed_type].quantity
             y_values = np.logspace(
-                np.log10(ref_values.value.min()) - 1, np.log10(ref_values.value.max()) + 1, 500
+                np.log10(ref_values.value.min()) - 1,
+                np.log10(ref_values.value.max()) + 1,
+                500,
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
 
@@ -704,7 +723,9 @@ class FluxPoints(object):
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
             norm_scan = self.table[idx]["norm_scan"]
-            dloglike_scan = self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
+            dloglike_scan = (
+                self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
+            )
             z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
 
         kwargs.setdefault("vmax", 0)
@@ -788,7 +809,9 @@ class FluxPointEstimator(object):
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
         if norm_values is None:
-            norm_values = np.logspace(np.log10(norm_min), np.log10(norm_max), norm_n_values)
+            norm_values = np.logspace(
+                np.log10(norm_min), np.log10(norm_max), norm_n_values
+            )
         self.norm_values = norm_values
         self.sigma = sigma
         self.sigma_ul = sigma_ul
