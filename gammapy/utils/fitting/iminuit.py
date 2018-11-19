@@ -61,7 +61,15 @@ def optimize_iminuit(parameters, function, **kwargs):
 
 def covariance_iminuit(minuit):
     # TODO: add minuit.hesse() call once we have better tests
-    return _get_covariance(minuit)
+
+    message, success = "Hesse terminated successfully.", True
+    try:
+        covariance_factors = _get_covariance(minuit)
+    except TypeError:
+        N = len(minuit.args)
+        covariance_factors = np.nan * np.ones((N, N))
+        message, success = "Hesse failed", False
+    return covariance_factors, {"success": success, "message": message}
 
 
 def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):

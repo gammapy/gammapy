@@ -185,12 +185,6 @@ class SkyModel(SkyModelBase):
             self.__class__.__name__, self.spatial_model, self.spectral_model
         )
 
-    def __str__(self):
-        ss = "{}\n\n".format(self.__class__.__name__)
-        ss += "spatial_model = {}\n\n".format(self.spatial_model)
-        ss += "spectral_model = {}\n".format(self.spectral_model)
-        return ss
-
     def evaluate(self, lon, lat, energy):
         """Evaluate the model at given points.
 

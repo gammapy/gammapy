@@ -25,7 +25,18 @@ REQUIRED_COLUMNS = OrderedDict(
         ("flux", ["e_min", "e_max", "flux"]),
         ("eflux", ["e_min", "e_max", "eflux"]),
         # TODO: extend required columns
-        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm"]),
+        (
+            "likelihood",
+            [
+                "e_min",
+                "e_max",
+                "e_ref",
+                "ref_dnde",
+                "norm",
+                "norm_scan",
+                "dloglike_scan",
+            ],
+        ),
     ]
 )
 
@@ -149,7 +160,7 @@ class FluxPoints(object):
         self.table = table_standardise_units_copy(table)
         # validate that the table is a valid representation
         # of the given flux point sed type
-        self._validate_table(self.table)
+        self._validate_table(self.table, table.meta["SED_TYPE"])
 
     def __repr__(self):
         fmt = '{}(sed_type="{}", n_points={})'
@@ -449,9 +460,8 @@ class FluxPoints(object):
                 return sed_type
 
     @staticmethod
-    def _validate_table(table):
+    def _validate_table(table, sed_type):
         """Validate input table."""
-        sed_type = table.meta["SED_TYPE"]
         required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
@@ -637,7 +647,7 @@ class FluxPoints(object):
 
             y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
 
-            kwargs.setdefault("c", ebar[0].get_color())
+            kwargs.setdefault("color", ebar[0].get_color())
 
             # pop label keyword to avoid that it appears twice in the legend
             kwargs.pop("label", None)
@@ -657,7 +667,13 @@ class FluxPoints(object):
         return ax
 
     def plot_likelihood(
-        self, ax=None, energy_unit="TeV", add_cbar=True, y_values=None, y_unit=None, **kwargs
+        self,
+        ax=None,
+        energy_unit="TeV",
+        add_cbar=True,
+        y_values=None,
+        y_unit=None,
+        **kwargs
     ):
         """Plot likelihood SED profiles as a density plot..
 
@@ -686,12 +702,15 @@ class FluxPoints(object):
         if ax is None:
             ax = plt.gca()
 
+        self._validate_table(self.table, "likelihood")
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
 
         if y_values is None:
             ref_values = self.table["ref_" + self.sed_type].quantity
             y_values = np.logspace(
-                np.log10(ref_values.value.min()) - 1, np.log10(ref_values.value.max()) + 1, 500
+                np.log10(ref_values.value.min()) - 1,
+                np.log10(ref_values.value.max()) + 1,
+                500,
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
 
@@ -704,7 +723,9 @@ class FluxPoints(object):
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
             norm_scan = self.table[idx]["norm_scan"]
-            dloglike_scan = self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
+            dloglike_scan = (
+                self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
+            )
             z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
 
         kwargs.setdefault("vmax", 0)
@@ -755,13 +776,13 @@ class FluxPointEstimator(object):
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     norm_min : float
-        Minimum value for the norm used for the fit. Modify this value, if the fit
-        does not converge or the error / ul estimation fails.
+        Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
-        Maximum value for the norm used for the fit. Modify this value, if the fit
-        does not converge or the error / ul estimation fails.
+        Maximum value for the norm used for the likelihood profile evaluation.
     norm_n_values : int
         Number of norm values used for the likelihood profile.
+    norm_values : `numpy.ndarray`
+        Array of norm values to be used for the likelihood profile.
     sigma : int
         Sigma to use for asymmetric error computation.
     sigma_ul : int
@@ -776,6 +797,7 @@ class FluxPointEstimator(object):
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
+        norm_values=None,
         sigma=1,
         sigma_ul=2,
     ):
@@ -785,11 +807,12 @@ class FluxPointEstimator(object):
 
         self.groups = groups
         self.model = ScaleModel(model)
-        self.model.parameters["norm"].min = norm_min
-        self.model.parameters["norm"].max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_min = norm_min
-        self.norm_max = norm_max
+        self.model.parameters["norm"].min = 0
+        if norm_values is None:
+            norm_values = np.logspace(
+                np.log10(norm_min), np.log10(norm_max), norm_n_values
+            )
+        self.norm_values = norm_values
         self.sigma = sigma
         self.sigma_ul = sigma_ul
 
@@ -958,11 +981,9 @@ class FluxPointEstimator(object):
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        norm = self.model.parameters["norm"]
-        values = np.logspace(np.log10(norm.min), np.log10(norm.max), self.norm_n_values)
-        result = self.fit.likelihood_profile("norm", values=values)
+        # norm = self.model.parameters["norm"]
+        result = self.fit.likelihood_profile("norm", values=self.norm_values)
         dloglike_scan = result["likelihood"]
-
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
     def estimate_norm(self):

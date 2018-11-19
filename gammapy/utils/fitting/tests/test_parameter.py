@@ -130,7 +130,7 @@ def test_parameters_to_table(pars):
     pars.set_error("ham", 1e-10 / 3)
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 6
+    assert len(table.columns) == 7
 
 
 def test_parameters_covariance_to_table(pars):

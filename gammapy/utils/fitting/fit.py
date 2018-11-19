@@ -194,17 +194,19 @@ class Fit(object):
         # TODO: wrap MINUIT in a stateless backend
         if backend == "minuit":
             if hasattr(self, "minuit"):
-                covariance_factors = compute(self.minuit)
+                covariance_factors, info = compute(self.minuit)
             else:
                 raise RuntimeError("To use minuit, you must first optimize.")
         else:
             function = self.total_stat
-            covariance_factors = compute(parameters, function)
+            covariance_factors, info = compute(parameters, function)
 
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(model=self._model.copy(), success=True, nfev=0)
+        return CovarianceResult(
+            model=self._model.copy(), success=info["success"], nfev=0
+        )
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
