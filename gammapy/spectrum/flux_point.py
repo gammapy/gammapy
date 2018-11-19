@@ -25,7 +25,7 @@ REQUIRED_COLUMNS = OrderedDict(
         ("flux", ["e_min", "e_max", "flux"]),
         ("eflux", ["e_min", "e_max", "eflux"]),
         # TODO: extend required columns
-        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm"]),
+        ("likelihood", ["e_min", "e_max", "e_ref", "ref_dnde", "norm", "norm_scan", "dloglike_scan"]),
     ]
 )
 
@@ -149,7 +149,7 @@ class FluxPoints(object):
         self.table = table_standardise_units_copy(table)
         # validate that the table is a valid representation
         # of the given flux point sed type
-        self._validate_table(self.table)
+        self._validate_table(self.table, table.meta["SED_TYPE"])
 
     def __repr__(self):
         fmt = '{}(sed_type="{}", n_points={})'
@@ -449,9 +449,8 @@ class FluxPoints(object):
                 return sed_type
 
     @staticmethod
-    def _validate_table(table):
+    def _validate_table(table, sed_type):
         """Validate input table."""
-        sed_type = table.meta["SED_TYPE"]
         required = set(REQUIRED_COLUMNS[sed_type])
 
         if not required.issubset(table.colnames):
@@ -686,6 +685,7 @@ class FluxPoints(object):
         if ax is None:
             ax = plt.gca()
 
+        self._validate_table(self.table, "likelihood")
         y_unit = u.Unit(y_unit or DEFAULT_UNIT[self.sed_type])
 
         if y_values is None:
