@@ -755,13 +755,13 @@ class FluxPointEstimator(object):
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     norm_min : float
-        Minimum value for the norm used for the fit. Modify this value, if the fit
-        does not converge or the error / ul estimation fails.
+        Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
-        Maximum value for the norm used for the fit. Modify this value, if the fit
-        does not converge or the error / ul estimation fails.
+        Maximum value for the norm used for the likelihood profile evaluation.
     norm_n_values : int
         Number of norm values used for the likelihood profile.
+    norm_values : `numpy.ndarray`
+        Array of norm values to be used for the likelihood profile.
     sigma : int
         Sigma to use for asymmetric error computation.
     sigma_ul : int
@@ -776,6 +776,7 @@ class FluxPointEstimator(object):
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
+        norm_values=None,
         sigma=1,
         sigma_ul=2,
     ):
@@ -785,11 +786,10 @@ class FluxPointEstimator(object):
 
         self.groups = groups
         self.model = ScaleModel(model)
-        self.model.parameters["norm"].min = norm_min
-        self.model.parameters["norm"].max = norm_max
-        self.norm_n_values = norm_n_values
-        self.norm_min = norm_min
-        self.norm_max = norm_max
+        self.model.parameters["norm"].min = 0
+        if norm_values is None:
+            norm_values = np.logspace(np.log10(norm_min), np.log10(norm_max), norm_n_values)
+        self.norm_values = norm_values
         self.sigma = sigma
         self.sigma_ul = sigma_ul
 
@@ -958,11 +958,9 @@ class FluxPointEstimator(object):
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        norm = self.model.parameters["norm"]
-        values = np.logspace(np.log10(norm.min), np.log10(norm.max), self.norm_n_values)
-        result = self.fit.likelihood_profile("norm", values=values)
+        # norm = self.model.parameters["norm"]
+        result = self.fit.likelihood_profile("norm", values=self.norm_values)
         dloglike_scan = result["likelihood"]
-
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
     def estimate_norm(self):
