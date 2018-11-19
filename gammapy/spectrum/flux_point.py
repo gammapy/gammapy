@@ -637,7 +637,7 @@ class FluxPoints(object):
 
             y_err = (0.5 * y_ul[is_ul].value, np.zeros_like(y_ul[is_ul].value))
 
-            kwargs.setdefault("c", ebar[0].get_color())
+            kwargs.setdefault("color", ebar[0].get_color())
 
             # pop label keyword to avoid that it appears twice in the legend
             kwargs.pop("label", None)
