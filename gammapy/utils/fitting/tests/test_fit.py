@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from ..parameter import Parameter, Parameters
 from ..model import Model
 from ..fit import Fit
+from ...testing import requires_dependency
 
 pytest.importorskip("iminuit")
 
@@ -47,6 +48,7 @@ def test_run(backend):
     assert_allclose(pars.correlation[1, 2], 0, atol=1e-7)
 
 
+@requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
     fit = MyFit()

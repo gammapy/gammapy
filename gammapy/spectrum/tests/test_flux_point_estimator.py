@@ -9,7 +9,7 @@ from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator
 from ...irf import EffectiveAreaTable
-from ...utils.testing import assert_quantity_allclose
+from ...utils.testing import assert_quantity_allclose, requires_dependency
 
 
 # TODO: use pregenerate data instead
@@ -63,6 +63,7 @@ class TestFluxPointEstimator:
         assert_quantity_allclose(fit_range[0], group.energy_min)
         assert_quantity_allclose(fit_range[1], group.energy_max)
 
+    @requires_dependency("iminuit")
     def test_run_pwl(self, fpe_pwl):
         fp = fpe_pwl.run()
         actual = fp.table["norm"].data
@@ -89,6 +90,7 @@ class TestFluxPointEstimator:
         actual = fp.table["dloglike_scan"][0]
         assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-5)
 
+    @requires_dependency("iminuit")
     def test_run_ecpl(self, fpe_ecpl):
         fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.groups[1])
         assert_allclose(fp["norm"], 1, rtol=1e-1)
