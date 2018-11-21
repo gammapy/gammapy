@@ -56,6 +56,7 @@ class TestFluxPointEstimator:
     def test_str(self, fpe_pwl):
         assert "FluxPointEstimator" in str(fpe_pwl)
 
+    @requires_dependency("iminuit")
     def test_energy_range(self, fpe_pwl):
         group = fpe_pwl.groups[1]
         fpe_pwl.estimate_flux_point(group)
