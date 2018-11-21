@@ -4,7 +4,6 @@ include CHANGES.rst
 include environment-dev.yml
 include gammapy/tests/coveragerc
 
-include ez_setup.py
 include ah_bootstrap.py
 include setup.cfg
 
