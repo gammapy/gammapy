@@ -166,7 +166,7 @@ class Fit(object):
         parameters.set_parameter_factors(factors)
 
         return FitResult(
-            model=self._model.copy(),
+            model=self._model,
             total_stat=self.total_stat(self._model.parameters),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -204,9 +204,7 @@ class Fit(object):
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(
-            model=self._model.copy(), success=info["success"], nfev=0
-        )
+        return CovarianceResult(model=self._model, success=info["success"], nfev=0)
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
@@ -230,17 +228,29 @@ class Fit(object):
         """
         compute = registry.get("confidence", backend)
         parameters = self._parameters
+        parameter = parameters[parameter]
+
+        # Save state modified here
+        state = {"value": parameter.value}
 
         # TODO: wrap MINUIT in a stateless backend
         if backend == "minuit":
             if hasattr(self, "minuit"):
+                # This is ugly. We will access parameters and make a copy
+                # from the backend, to avoid modifying the state
                 result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
-                # TODO: decide about result format
-                return result
             else:
                 raise RuntimeError("To use minuit, you must first optimize.")
         else:
             raise NotImplementedError()
+
+        # Restore state that was modified here
+        # TODO: make this more robust.
+        # Either restore in a finally block, or avoid the state change somehow
+        parameter.value = state["value"]
+
+        # TODO: decide about result format
+        return result
 
     def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile.
@@ -270,24 +280,30 @@ class Fit(object):
         results : dict
             Dictionary with keys "values" and "likelihood".
         """
-        idx = self._parameters._get_idx(parameter)
-        parameters = self._parameters.copy()
+        parameters = self._parameters
+        parameter = parameters[parameter]
+
+        # Save state modified here
+        state = {"value": parameter.value}
 
         if values is None:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
-                parerr = parameters.error(idx)
-                parval = parameters[idx].value
+                parerr = parameters.error(parameter)
+                parval = parameter.value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
 
             values = np.linspace(parmin, parmax, nvalues)
 
         likelihood = []
         for value in values:
-            parameters[idx].value = value
+            parameter.value = value
             stat = self.total_stat(parameters)
             likelihood.append(stat)
+
+        # Restore state that was modified here
+        parameter.value = state["value"]
 
         return {"values": values, "likelihood": np.array(likelihood)}
 

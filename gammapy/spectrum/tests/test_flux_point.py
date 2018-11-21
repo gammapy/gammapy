@@ -261,9 +261,9 @@ class TestFluxPointFit:
         result = fitter.run(optimize_opts=optimize_opts)
         self.assert_result(result)
 
-        assert sed_model is not fitter._model
-        assert fitter._model is not result.model
-        assert sed_model is not result.model
+        assert sed_model is fitter._model
+        assert fitter._model is result.model
+        assert sed_model is result.model
 
     @requires_dependency("sherpa")
     @pytest.mark.skip(reason="Sherpa backend does not support fixing parameters yet.")

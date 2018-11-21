@@ -39,7 +39,11 @@ def test_run(backend):
     )
     pars = result.model.parameters
 
-    assert fit._model is not result.model
+    assert fit._model is result.model
+
+    assert_allclose(pars["x"].value, 2, rtol=1e-3)
+    assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-2, rtol=1e-3)
 
     assert_allclose(pars.error("x"), 1, rtol=1e-7)
     assert_allclose(pars.error("y"), 1, rtol=1e-7)
@@ -57,6 +61,7 @@ def test_optimize(backend):
     result = fit.optimize(backend=backend)
     pars = result.model.parameters
 
+    assert fit._model is result.model
     assert result.success is True
     assert_allclose(result.total_stat, 0)
 
@@ -74,10 +79,15 @@ def test_optimize(backend):
 def test_confidence(backend):
     fit = MyFit()
     fit.optimize(backend=backend)
+    print(fit._parameters)
     result = fit.confidence("x")
+    print(fit._parameters)
     assert result["is_valid"] is True
     assert_allclose(result["lower"], -1)
     assert_allclose(result["upper"], +1)
+
+    # Check that original value state wasn't changed
+    assert_allclose(fit._model.parameters["x"].value, 2)
 
 
 def test_likelihood_profile():
@@ -86,3 +96,6 @@ def test_likelihood_profile():
     result = fit.likelihood_profile("x", nvalues=3)
     assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
+
+    # Check that original value state wasn't changed
+    assert_allclose(fit._model.parameters["x"].value, 2)

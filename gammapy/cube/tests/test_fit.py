@@ -117,9 +117,9 @@ def test_map_fit(sky_model):
     )
     result = fit.run()
 
-    assert sky_model is not fit._model
-    assert fit._model is not result.model
-    assert sky_model is not result.model
+    assert sky_model is fit._model
+    assert fit._model is result.model
+    assert sky_model is result.model
 
     assert result.success
     assert "minuit" in repr(result)

@@ -194,9 +194,9 @@ class TestSpectralFit:
         result = self.fit.result[0]
         pars = result.model.parameters
 
-        assert self.pwl is not self.fit._model
-        assert self.fit._model is not result.model
-        assert self.pwl is not result.model
+        assert self.pwl is self.fit._model
+        assert self.fit._model is result.model
+        assert self.pwl is result.model
 
         assert_allclose(result.statval, 41.755949, rtol=1e-4)
         assert_allclose(pars["index"].value, 2.7912, rtol=1e-3)

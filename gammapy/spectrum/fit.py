@@ -4,7 +4,6 @@ import logging
 import copy
 import numpy as np
 import astropy.units as u
-from ..utils.scripts import make_path
 from ..utils.fitting import Fit
 from .. import stats
 from .utils import CountsPredictor
@@ -43,7 +42,7 @@ class SpectrumFit(Fit):
         self, obs_list, model, stat="wstat", forward_folded=True, fit_range=None
     ):
         self.obs_list = obs_list
-        self._model = model.copy()
+        self._model = model
         self.stat = stat
         self.forward_folded = forward_folded
         self.fit_range = fit_range
@@ -301,7 +300,6 @@ class SpectrumFit(Fit):
         from . import SpectrumFitResult
 
         # run again with best fit parameters
-        model = self._model.copy()
 
         statname = self.stat
 
@@ -314,7 +312,7 @@ class SpectrumFit(Fit):
 
             results.append(
                 SpectrumFitResult(
-                    model=model,
+                    model=self._model,
                     fit_range=fit_range,
                     statname=statname,
                     statval=statval,
