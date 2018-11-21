@@ -261,10 +261,14 @@ class TestFluxPointFit:
         result = fitter.run(optimize_opts=optimize_opts)
         self.assert_result(result)
 
+        assert sed_model is not fitter._model
+        assert fitter._model is not result.model
+        assert sed_model is not result.model
+
     @requires_dependency("sherpa")
     @pytest.mark.skip(reason="Sherpa backend does not support fixing parameters yet.")
     def test_fit_pwl_sherpa(self, sed_model, sed_flux_points):
-        # TODO: add test for covariance or error estimation here?
+        # TODO: add test for covariance or error estimation here
         fit = FluxPointFit(sed_model, sed_flux_points)
         result = fit.optimize(backend="sherpa", method="simplex")
         self.assert_result(result)

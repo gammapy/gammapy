@@ -39,6 +39,8 @@ def test_run(backend):
     )
     pars = result.model.parameters
 
+    assert fit._model is not result.model
+
     assert_allclose(pars.error("x"), 1, rtol=1e-7)
     assert_allclose(pars.error("y"), 1, rtol=1e-7)
     assert_allclose(pars.error("z"), 1, rtol=1e-7)

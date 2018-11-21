@@ -192,8 +192,13 @@ class TestSpectralFit:
     def test_basic_results(self):
         self.fit.run()
         result = self.fit.result[0]
-        assert_allclose(result.statval, 41.755949, rtol=1e-4)
         pars = result.model.parameters
+
+        assert self.pwl is not self.fit._model
+        assert self.fit._model is not result.model
+        assert self.pwl is not result.model
+
+        assert_allclose(result.statval, 41.755949, rtol=1e-4)
         assert_allclose(pars["index"].value, 2.7912, rtol=1e-3)
         assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.029e-11, rtol=1e-3)
