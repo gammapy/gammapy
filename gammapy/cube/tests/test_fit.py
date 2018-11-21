@@ -73,15 +73,6 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-@pytest.fixture
-def sky_model_fit(sky_model):
-    spatial_model = SkyGaussian(lon_0="0.5 deg", lat_0="0.5 deg", sigma="0.2 deg")
-    spectral_model = PowerLaw(
-        index=2, amplitude="2e-11 cm-2 s-1 TeV-1", reference="1 TeV"
-    )
-    return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
-
-
 def mask(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
@@ -100,7 +91,7 @@ def counts(sky_model, exposure, background, psf, edisp):
 
 @requires_dependency("iminuit")
 @requires_data("gammapy-extra")
-def test_cube_fit(sky_model, sky_model_fit):
+def test_map_fit(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 3)
     ebounds_true = np.logspace(-1.0, 1.0, 4)
     geom_r = geom(ebounds)
@@ -113,10 +104,10 @@ def test_cube_fit(sky_model, sky_model_fit):
     counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
-    sky_model_fit.parameters["sigma"].frozen = True
+    sky_model.parameters["sigma"].frozen = True
 
     fit = MapFit(
-        model=sky_model_fit,
+        model=sky_model,
         counts=counts_map,
         exposure=exposure_map,
         background=background_map,
@@ -131,8 +122,9 @@ def test_cube_fit(sky_model, sky_model_fit):
     assert result.success
     assert "minuit" in repr(result)
 
-    stat_expected = 5417.350078
-    assert_allclose(result.total_stat, stat_expected, rtol=1e-2)
+    npred = fit.evaluator.compute_npred().sum()
+    assert_allclose(npred, 2455.230889, rtol=1e-3)
+    assert_allclose(result.total_stat, 5417.350078, rtol=1e-3)
 
     pars = result.model.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -154,7 +146,7 @@ def test_cube_fit(sky_model, sky_model_fit):
 
 @requires_dependency("iminuit")
 @requires_data("gammapy-extra")
-def test_cube_fit_onebin(sky_model, sky_model_fit):
+def test_map_fit_one_energy_bin(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 2)
     geom_r = geom(ebounds)
 
@@ -165,12 +157,13 @@ def test_cube_fit_onebin(sky_model, sky_model_fit):
     counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
-    sky_model_fit.parameters["index"].value = 3.0
-    sky_model_fit.parameters["index"].frozen = True
-    sky_model_fit.parameters["sigma"].value = 0.3
+    sky_model.parameters["index"].value = 3.0
+    sky_model.parameters["index"].frozen = True
+    # Move a bit away from the best-fit point, to make sure the optimiser runs
+    sky_model.parameters["sigma"].value = 0.21
 
     fit = MapFit(
-        model=sky_model_fit,
+        model=sky_model,
         counts=counts_map,
         exposure=exposure_map,
         background=background_map,
@@ -182,15 +175,16 @@ def test_cube_fit_onebin(sky_model, sky_model_fit):
 
     assert result.success
 
-    stat_expected = 697.068035
-    assert_allclose(result.total_stat, stat_expected, rtol=1e-1)
+    npred = fit.evaluator.compute_npred().sum()
+    assert_allclose(npred, 87.1108, rtol=1e-3)
+    assert_allclose(result.total_stat, 697.068035, rtol=1e-3)
 
     pars = result.model.parameters
-    assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-1)
-    assert_allclose(pars.error("lon_0"), 0.02, rtol=1e-1)
+    assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.021715, rtol=1e-2)
 
-    assert_allclose(pars["sigma"].value, 0.2, rtol=1e-1)
-    assert_allclose(pars.error("sigma"), 0.011, rtol=1e-1)
+    assert_allclose(pars["sigma"].value, 0.2, rtol=1e-2)
+    assert_allclose(pars.error("sigma"), 0.011, rtol=1e-2)
 
-    assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-1)
-    assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-1)
+    assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-2)
