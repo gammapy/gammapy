@@ -168,7 +168,7 @@ def parse_notebooks(folder, url_docs, git_commit):
         else:
             repl = r"..\/..\/\1html\2"
         txt = re.sub(
-            pattern=url_docs + "(.*?)html(\)|#)",
+            pattern=url_docs + r"(.*?)html(\)|#)",
             repl=repl,
             string=txt,
             flags=re.M | re.I,
