@@ -205,7 +205,7 @@ class ObservationSummary(object):
         ax.plot(self.livetime.to(u.h), self.sigma, "o", **kwargs)
 
         ax.set_xlabel("Livetime ({})".format(u.h))
-        ax.set_ylabel("Significance ($\sigma$)")
+        ax.set_ylabel("Significance")
 
         xmax = np.amax(self.livetime.to_value("h")) * 1.2
         ymax = np.amax(self.sigma) * 1.2
@@ -287,13 +287,13 @@ class ObservationSummary(object):
         xtick_vals, xtick_labels = self._get_xtick_info()
 
         ax.plot(xtick_vals, self.gamma_rate, "o", **kwargs)
-        ax.set_xlabel("Observation Ids")
+        ax.set_xlabel("Observation ID")
 
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
-        ax.set_ylabel("$\gamma$ rate ({})".format(self.gamma_rate.unit))
+        ax.set_ylabel("Excess rate ({})".format(self.gamma_rate.unit))
         ax.axis([0, len(self.gamma_rate), 0.0, np.amax(self.gamma_rate.value) * 1.2])
-        ax.set_title("$\gamma$ rates")
+        ax.set_title("Excess rates")
         return ax
 
     def plot_background_rate(self, ax=None, **kwargs):

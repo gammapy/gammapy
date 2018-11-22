@@ -33,7 +33,7 @@ def compute_binning(data, n_bins, method="equal width", eps=1e-10):
     eps : float
         added to range so that the max data point is inside the
         last bin. If eps=0 it falls on the right edge of the last
-        data point and thus would be not cointained.
+        data point and thus would be not contained.
 
     Returns
     -------
@@ -50,7 +50,7 @@ def compute_binning(data, n_bins, method="equal width", eps=1e-10):
         quantiles = list(np.linspace(0, 100, n_bins + 1))
         bin_edges = np.percentile(data, quantiles)
     else:
-        raise ValueError("Invalid option: method = {}".format(method))
+        raise ValueError("Invalid method: {!r}".format(method))
 
     bin_edges[-1] += eps
     return bin_edges
@@ -59,8 +59,7 @@ def compute_binning(data, n_bins, method="equal width", eps=1e-10):
 # TODO: implement measuring profile along arbitrary directions
 # TODO: think better about error handling. e.g. MC based methods
 class ImageProfileEstimator(object):
-    """
-    Estimate profile from image.
+    """Estimate profile from image.
 
     Parameters
     ----------
@@ -97,11 +96,9 @@ class ImageProfileEstimator(object):
         smoothed = profile.smooth(kernel='gauss')
         smoothed.peek()
         plt.show()
-
     """
 
     def __init__(self, x_edges=None, method="sum", axis="lon", center=None):
-
         self._x_edges = x_edges
 
         if method not in ["sum", "mean"]:
@@ -116,9 +113,6 @@ class ImageProfileEstimator(object):
         self.parameters = OrderedDict(method=method, axis=axis, center=center)
 
     def _get_x_edges(self, image):
-        """
-        Get x_ref coordinate array.
-        """
         if self._x_edges is not None:
             return self._x_edges
 
@@ -135,12 +129,10 @@ class ImageProfileEstimator(object):
             corners = [0, 0, -1, -1], [0, -1, 0, -1]
             rad_max = coordinates[corners].separation(p["center"]).max()
             x_edges = Angle(np.arange(0, rad_max.deg, rad_step.deg), unit="deg")
+
         return x_edges
 
     def _estimate_profile(self, image, image_err, mask):
-        """
-        Estimate image profile.
-        """
         p = self.parameters
         labels = self._label_image(image, mask)
 
@@ -169,9 +161,6 @@ class ImageProfileEstimator(object):
         return profile, profile_err
 
     def _label_image(self, image, mask=None):
-        """
-        Compute label image.
-        """
         p = self.parameters
 
         coordinates = image.geom.get_coord().skycoord
@@ -196,8 +185,7 @@ class ImageProfileEstimator(object):
         return image.copy(data=data)
 
     def run(self, image, image_err=None, mask=None):
-        """
-        Run image profile estimator.
+        """Run image profile estimator.
 
         Parameters
         ----------
@@ -231,12 +219,12 @@ class ImageProfileEstimator(object):
             result["profile_err"] = profile_err * image.unit
 
         result.meta["PROFILE_TYPE"] = p["axis"]
+
         return ImageProfile(result)
 
 
 class ImageProfile(object):
-    """
-    Image profile class.
+    """Image profile class.
 
     The image profile data is stored in `~astropy.table.Table` object, with the
     following columns:
@@ -251,21 +239,18 @@ class ImageProfile(object):
     ----------
     table : `~astropy.table.Table`
         Table instance with the columns specified as above.
-
     """
 
     def __init__(self, table):
         self.table = table
 
     def smooth(self, kernel="box", radius="0.1 deg", **kwargs):
-        """
-        Smooth profile with error propagation.
+        r"""Smooth profile with error propagation.
 
         Smoothing is described by a convolution:
 
         .. math::
-
-                x_j = \sum_i x_{(j - i)} h_i
+            x_j = \sum_i x_{(j - i)} h_i
 
         Where :math:`h_i` are the coefficients of the convolution kernel.
 
@@ -274,9 +259,7 @@ class ImageProfile(object):
         :math:`x_{(j - i)}`:
 
         .. math::
-
-                \Delta x_j = \sqrt{\sum_i \Delta x^{2}_{(j - i)} h^{2}_i}
-
+            \Delta x_j = \sqrt{\sum_i \Delta x^{2}_{(j - i)} h^{2}_i}
 
         Parameters
         ----------
@@ -331,8 +314,7 @@ class ImageProfile(object):
         return self.__class__(table)
 
     def plot(self, ax=None, **kwargs):
-        """
-        Plot image profile.
+        """Plot image profile.
 
         Parameters
         ----------
@@ -360,8 +342,7 @@ class ImageProfile(object):
         return ax
 
     def plot_err(self, ax=None, **kwargs):
-        """
-        Plot image profile error as band.
+        """Plot image profile error as band.
 
         Parameters
         ----------
@@ -395,45 +376,34 @@ class ImageProfile(object):
 
     @property
     def x_ref(self):
-        """
-        Reference x coordinates.
-        """
+        """Reference x coordinates."""
         return self.table["x_ref"].quantity
 
     @property
     def x_min(self):
-        """
-        Min. x coordinates.
-        """
+        """Min. x coordinates."""
         return self.table["x_min"].quantity
 
     @property
     def x_max(self):
-        """
-        Max. x coordinates.
-        """
+        """Max. x coordinates."""
         return self.table["x_max"].quantity
 
     @property
     def profile(self):
-        """
-        Image profile quantity.
-        """
+        """Image profile quantity."""
         return self.table["profile"].quantity
 
     @property
     def profile_err(self):
-        """
-        Image profile error quantity.
-        """
+        """Image profile error quantity."""
         try:
             return self.table["profile_err"].quantity
         except KeyError:
             return None
 
     def peek(self, figsize=(8, 4.5), **kwargs):
-        """
-        Show image profile and error.
+        """Show image profile and error.
 
         Parameters
         ----------
@@ -452,14 +422,12 @@ class ImageProfile(object):
         ax = self.plot(ax, **kwargs)
 
         if "profile_err" in self.table.colnames:
-            opts = {}
-            opts["color"] = kwargs.get("c")
-            ax = self.plot_err(ax, **opts)
+            ax = self.plot_err(ax, color=kwargs.get("c"))
+
         return ax
 
     def normalize(self, mode="peak"):
-        """
-        Normalize profile to peak value or integral.
+        """Normalize profile to peak value or integral.
 
         Parameters
         ----------
@@ -479,9 +447,7 @@ class ImageProfile(object):
         elif mode == "integral":
             norm = np.nansum(profile)
         else:
-            raise ValueError(
-                "Not a valid normalization mode. Choose either" " 'peak' or 'integral'"
-            )
+            raise ValueError("Invalide normalization mode: {!r}".format(mode))
 
         table["profile"] /= norm
 

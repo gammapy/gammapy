@@ -572,8 +572,8 @@ class EnergyDispersion(object):
             label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel("$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
-        ax.set_ylabel("$E_\mathrm{{Reco}}$ [{unit}]".format(unit=e_reco.unit))
+        ax.set_xlabel(r"$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
+        ax.set_ylabel(r"$E_\mathrm{{Reco}}$ [{unit}]".format(unit=e_reco.unit))
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(x.min(), x.max())
@@ -598,7 +598,7 @@ class EnergyDispersion(object):
         y = self.get_bias(self.e_true.nodes)
 
         ax.plot(x, y, **kwargs)
-        ax.set_xlabel("$E_\mathrm{{True}}$ [TeV]")
+        ax.set_xlabel(r"$E_\mathrm{{True}}$ [TeV]")
         ax.set_ylabel(r"($E_\mathrm{{True}} - E_\mathrm{{Reco}} / E_\mathrm{{True}}$)")
         ax.set_xscale("log")
         return ax
@@ -649,8 +649,7 @@ class EnergyDispersion2D(object):
     for a given field of view offset and energy binning:
 
     >>> energy = EnergyBounds.equal_log_spacing(0.1,20,60, 'TeV')
-    >>> offset = '1.2 deg'
-    >>> edisp = edisp2d.to_energy_dispersion(offset=offset, e_reco=energy, e_true=energy)
+    >>> edisp = edisp2d.to_energy_dispersion(offset='1.2 deg', e_reco=energy, e_true=energy)
     >>> print(edisp)
     EnergyDispersion
     NDDataArray summary info
@@ -773,9 +772,9 @@ class EnergyDispersion2D(object):
         m_lo = table["MIGRA_LO"].quantity[0]
         m_hi = table["MIGRA_HI"].quantity[0]
 
-        matrix = (
-            table["MATRIX"].quantity[0].transpose()
-        )  ## TODO Why does this need to be transposed?
+        # TODO Why does this need to be transposed?
+        matrix = table["MATRIX"].quantity[0].transpose()
+
         return cls(
             e_true_lo=e_lo,
             e_true_hi=e_hi,
@@ -949,7 +948,7 @@ class EnergyDispersion2D(object):
                 label = "offset = {0:.1f}\nenergy = {1:.1f}".format(off, ener)
                 ax.plot(migra, disp, label=label, **kwargs)
 
-        ax.set_xlabel("$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
+        ax.set_xlabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_ylabel("Probability density")
         ax.legend(loc="upper left")
 
@@ -1002,8 +1001,8 @@ class EnergyDispersion2D(object):
             label = "Probability density (A.U.)"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel("$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
-        ax.set_ylabel("$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
+        ax.set_xlabel(r"$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
+        ax.set_ylabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
         ax.set_xscale("log")

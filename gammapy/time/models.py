@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
 from astropy.utils import lazyproperty
 from astropy import units as u
 from astropy.table import Table
 from scipy.interpolate import InterpolatedUnivariateSpline
-
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fitting import Parameter, Parameters, Model
@@ -15,12 +13,11 @@ __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 
 
 class PhaseCurveTableModel(Model):
-    """Temporal phase curve model.
+    r"""Temporal phase curve model.
 
-    Phase for a given time is computed as
+    Phase for a given time is computed as:
 
     .. math::
-
         \phi(t) = \phi_0 + f_0(t-t_0) + (1/2)f_1(t-t_0)^2 + (1/6)f_2(t-t_0)^3
 
     Strictly periodic sources such as gamma-ray binaries have ``f1=0`` and ``f2=0``.
@@ -43,7 +40,6 @@ class PhaseCurveTableModel(Model):
     f0, f1, f2 : float
         Derivatives of the function phi with time of order 1, 2, 3
         in units of ``s^-1, s^-2 & s^-3``, respectively.
-
 
     Examples
     --------

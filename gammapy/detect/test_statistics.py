@@ -215,18 +215,17 @@ class TSMapEstimator(object):
 
     @staticmethod
     def sqrt_ts(map_ts):
-        """Compute sqrt(TS) map.
+        r"""Compute sqrt(TS) map.
 
         Compute sqrt(TS) as defined by:
 
         .. math::
-
-            \sqrt{TS} = \\left \\{
-                        \\begin{array}{ll}
-                        -\sqrt{-TS} & : \\textnormal{if} \\ TS < 0 \\\\
-                       \\ \\ \sqrt{TS} & : \\textnormal{else}
-                     \\end{array}
-                   \\right.
+            \sqrt{TS} = \left \{
+            \begin{array}{ll}
+              -\sqrt{-TS} & : \textnormal{if} \ TS < 0 \\
+              \sqrt{TS} & : \textnormal{else}
+            \end{array}
+            \right.
 
         Parameters
         ----------

@@ -193,11 +193,11 @@ class YusifovKucuk2004B(Fittable1DModel):
 
 
 class FaucherKaspi2006(Fittable1DModel):
-    """Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
+    r"""Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
 
     .. math ::
-        f(r) = A \\frac{1}{\\sqrt{2 \pi} \sigma} \\exp
-        \\left(- \\frac{(r - r_0)^2}{2 \sigma ^ 2}\\right)
+        f(r) = A \frac{1}{\sqrt{2 \pi} \sigma} \exp
+        \left(- \frac{(r - r_0)^2}{2 \sigma ^ 2}\right)
 
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F (Appendix B)
 

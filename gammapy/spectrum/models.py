@@ -1,19 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spectral models for Gammapy."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-import numpy as np
 import operator
+import numpy as np
+from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
-from scipy.optimize import brentq
-
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
-from .utils import integrate_spectrum
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameter, Parameters, Model
 from ..utils.interpolation import ScaledRegularGridInterpolator
+from .utils import integrate_spectrum
 
 __all__ = [
     "SpectralModel",
@@ -117,11 +115,10 @@ class SpectralModel(Model):
         return self._parse_uarray(uarray) * unit
 
     def integral(self, emin, emax, **kwargs):
-        """Integrate spectral model numerically.
+        r"""Integrate spectral model numerically.
 
         .. math::
-
-            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
+            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} \phi(E) dE
 
         If array input for ``emin`` and ``emax`` is given you have to set
         ``intervals=True`` if you want the integral in each energy bin.
@@ -162,11 +159,10 @@ class SpectralModel(Model):
         return self._parse_uarray(uarray) * unit
 
     def energy_flux(self, emin, emax, **kwargs):
-        """Compute energy flux in given energy range.
+        r"""Compute energy flux in given energy range.
 
         .. math::
-
-            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE
+            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} E \phi(E) dE
 
         Parameters
         ----------
@@ -182,11 +178,10 @@ class SpectralModel(Model):
         return integrate_spectrum(f, emin, emax, **kwargs)
 
     def energy_flux_error(self, emin, emax, **kwargs):
-        """Compute energy flux in given energy range with error propagation.
+        r"""Compute energy flux in given energy range with error propagation.
 
         .. math::
-
-            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE
+            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} E \phi(E) dE
 
         Parameters
         ----------
@@ -245,9 +240,9 @@ class SpectralModel(Model):
         By default a log-log scaling of the axes is used, if you want to change
         the y axis scaling to linear you can use:
 
-        .. code:
+        .. code-block::
 
-            from gammapy.spectrum.models import PowerLaw
+            from gammapy.spectrum.models import ExponentialCutoffPowerLaw
             from astropy import units as u
 
             pwl = ExponentialCutoffPowerLaw()
@@ -1278,7 +1273,7 @@ class ScaleModel(SpectralModel):
 
 
 class Absorption(object):
-    """Gamma-ray absorption models.
+    r"""Gamma-ray absorption models.
 
     Parameters
     ----------
