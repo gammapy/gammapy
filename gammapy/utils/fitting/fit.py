@@ -192,14 +192,15 @@ class Fit(object):
         parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
-        if backend == "minuit":
-            if hasattr(self, "minuit"):
-                covariance_factors, info = compute(self.minuit)
+        with parameters.restore_values:
+            if backend == "minuit":
+                if hasattr(self, "minuit"):
+                    covariance_factors, info = compute(self.minuit)
+                else:
+                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                raise RuntimeError("To use minuit, you must first optimize.")
-        else:
-            function = self.total_stat
-            covariance_factors, info = compute(parameters, function)
+                function = self.total_stat
+                covariance_factors, info = compute(parameters, function)
 
         parameters.set_covariance_factors(covariance_factors)
 
@@ -230,24 +231,17 @@ class Fit(object):
         parameters = self._parameters
         parameter = parameters[parameter]
 
-        # Save state modified here
-        state = {"value": parameter.value}
-
         # TODO: wrap MINUIT in a stateless backend
-        if backend == "minuit":
-            if hasattr(self, "minuit"):
-                # This is ugly. We will access parameters and make a copy
-                # from the backend, to avoid modifying the state
-                result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
+        with parameters.restore_values:
+            if backend == "minuit":
+                if hasattr(self, "minuit"):
+                    # This is ugly. We will access parameters and make a copy
+                    # from the backend, to avoid modifying the state
+                    result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
+                else:
+                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                raise RuntimeError("To use minuit, you must first optimize.")
-        else:
-            raise NotImplementedError()
-
-        # Restore state that was modified here
-        # TODO: make this more robust.
-        # Either restore in a finally block, or avoid the state change somehow
-        parameter.value = state["value"]
+                raise NotImplementedError()
 
         # TODO: decide about result format
         return result
@@ -283,9 +277,6 @@ class Fit(object):
         parameters = self._parameters
         parameter = parameters[parameter]
 
-        # Save state modified here
-        state = {"value": parameter.value}
-
         if values is None:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
@@ -297,13 +288,11 @@ class Fit(object):
             values = np.linspace(parmin, parmax, nvalues)
 
         likelihood = []
-        for value in values:
-            parameter.value = value
-            stat = self.total_stat(parameters)
-            likelihood.append(stat)
-
-        # Restore state that was modified here
-        parameter.value = state["value"]
+        with parameters.restore_values:
+            for value in values:
+                parameter.value = value
+                stat = self.total_stat(parameters)
+                likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
 

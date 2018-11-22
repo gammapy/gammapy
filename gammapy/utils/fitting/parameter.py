@@ -472,3 +472,35 @@ class Parameters(object):
         """
         for par in self.parameters:
             par.autoscale(method)
+
+    @property
+    def restore_values(self):
+        """Context manager to modify the values of a `Parameters` objects
+        and restore its initial values afterwards.
+
+        Examples
+        --------
+        .. code:: python
+
+            from gammapy.spectrum import PowerLaw
+
+            pwl = PowerLaw(index=2)
+            with pwl.parameters.restore_values:
+                pwl.parameters["index"].value = 3
+
+            print(pwl.parameters["index"].value)
+        """
+        return restore_parameters_values(self)
+
+
+class restore_parameters_values:
+    def __init__(self, parameters):
+        self.parameters = parameters
+        self.values = [_.value for _ in parameters]
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        for value, par in zip(self.values, self.parameters):
+            par.value = value
