@@ -30,7 +30,7 @@ class SkyModelBase(Model):
         return self.evaluate(lon, lat, energy)
 
 
-class SkyModels(object):
+class SkyModels(Model):
     """Collection of `~gammapy.cube.models.SkyModel`
 
     Parameters
