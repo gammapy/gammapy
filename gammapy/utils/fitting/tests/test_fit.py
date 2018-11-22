@@ -79,9 +79,7 @@ def test_optimize(backend):
 def test_confidence(backend):
     fit = MyFit()
     fit.optimize(backend=backend)
-    print(fit._parameters)
     result = fit.confidence("x")
-    print(fit._parameters)
     assert result["is_valid"] is True
     assert_allclose(result["lower"], -1)
     assert_allclose(result["upper"], +1)
