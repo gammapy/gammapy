@@ -966,7 +966,7 @@ class FluxPointEstimator(object):
         # store best fit amplitude, set amplitude of fit model to zero
         parameters["norm"].value = 0
         loglike_null = self.fit.total_stat(parameters)
-        parameters["norm"].value = 1.
+        parameters["norm"].value = 1.0
 
         # compute sqrt TS
         ts = np.abs(loglike_null - loglike)
