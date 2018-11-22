@@ -81,9 +81,9 @@ will find that they are highly complex, and full of workarounds for old versions
 of Python, setuptools, Sphinx etc. Note that this is not code that we develop
 and maintain in Gammapy. Gammapy was started from
 https://github.com/astropy/package-template and there are besides the
-``astropy_helpers`` folder a number of files (like ``ah_bootstrap.py``, but also
-``ez_setup.py`` or ``gamampy/_astropy_init.py``) that are needed, but should be
-ignored. The Astropy team has set up a bot that from time to time makes pull
+``astropy_helpers`` folder a few files (``ah_bootstrap.py``, ``setup.py``
+``setup.cfg`` and ``gammapy/_astropy_init.py``) that are needed, but rarely
+need to be looked at or updated. The Astropy team has set up a bot that from time to time makes pull
 requests to update the affiliated packages (including Gammapy) as new versions
 of ``astropy_helpers`` and the extra files are released.
 
