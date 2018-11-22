@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from . import PSF3D, EnergyDependentTablePSF, IRFStacker
 from ..utils.energy import Energy
+from . import PSF3D, EnergyDependentTablePSF, IRFStacker
 
 __all__ = ["make_psf", "make_mean_psf", "make_mean_edisp"]
 

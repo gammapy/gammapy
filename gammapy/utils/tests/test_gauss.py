@@ -2,15 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
+from scipy.integrate import quad, dblquad
 from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
-from scipy.integrate import quad, dblquad
 from ..testing import requires_dependency
 from ...maps import WcsNDMap
 from ...image import measure_image_moments
 from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
-
-BINSZ = 0.02
 
 
 class TestGauss2DPDF:
@@ -118,6 +116,8 @@ class TestMultiGauss2D:
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
     """
+    binsz = 0.02
+
     # We define three components with different flux, position and size in pixel coordinates
     F_1, F_2, F_3 = 100, 200, 300
     sigma_1, sigma_2, sigma_3 = 15, 10, 5
@@ -137,7 +137,7 @@ def test_gaussian_sum_moments():
     F_2_image = discretize_model(f_2, (0, 201), (0, 201))
     F_3_image = discretize_model(f_3, (0, 201), (0, 201))
 
-    image = WcsNDMap.create(npix=(201, 201), binsz=0.02)
+    image = WcsNDMap.create(npix=(201, 201), binsz=binsz)
     image.data = F_1_image + F_2_image + F_3_image
     moments_num = measure_image_moments(image)
 
@@ -147,7 +147,7 @@ def test_gaussian_sum_moments():
     # Compute analytical values
     cov_matrix = np.zeros((12, 12))
     F = [F_1, F_2, F_3]
-    sigma = np.array([sigma_1, sigma_2, sigma_3]) * BINSZ
+    sigma = np.array([sigma_1, sigma_2, sigma_3]) * binsz
     x, y = image.geom.wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], 0)
     x = np.where(x > 180, x - 360, x)
 

@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
@@ -11,7 +10,6 @@ from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 from scipy.signal import fftconvolve
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
-
 from ..extern.skimage import block_reduce
 from ..utils.units import unit_from_fits_image_hdu
 from ..utils.interpolation import ScaledRegularGridInterpolator

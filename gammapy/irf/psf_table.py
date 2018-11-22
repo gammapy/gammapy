@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
 import numpy as np
+from scipy.interpolate import UnivariateSpline, RegularGridInterpolator
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from scipy.interpolate import UnivariateSpline, RegularGridInterpolator
-
 from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 import copy
+import numpy as np
 from ...extern import six
 from astropy import units as u
 from astropy.table import Table

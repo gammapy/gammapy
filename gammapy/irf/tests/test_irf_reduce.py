@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-import pytest
 from astropy.coordinates import Angle, SkyCoord
 from ..irf_reduce import make_psf, make_mean_psf, make_mean_edisp
 from ...data import DataStore, Observations
-from ...utils.testing import requires_data
-from ...utils.testing import assert_quantity_allclose
-from ...utils.energy import Energy
-from ...utils.energy import EnergyBounds
+from ...utils.testing import requires_data, assert_quantity_allclose
+from ...utils.energy import Energy, EnergyBounds
 
 
 @pytest.fixture(scope="session")

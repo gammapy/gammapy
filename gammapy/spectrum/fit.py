@@ -7,7 +7,7 @@ import astropy.units as u
 from ..utils.fitting import Fit
 from .. import stats
 from .utils import CountsPredictor
-from . import SpectrumObservationList, SpectrumObservation
+from .observation import SpectrumObservationList, SpectrumObservation
 
 __all__ = ["SpectrumFit"]
 

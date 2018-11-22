@@ -4,10 +4,10 @@ import logging
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
-from . import PHACountsSpectrum
-from . import SpectrumObservation, SpectrumObservationList
 from ..utils.scripts import make_path
 from ..irf import PSF3D
+from .core import PHACountsSpectrum
+from .observation import SpectrumObservation, SpectrumObservationList
 
 __all__ = ["SpectrumExtraction"]
 

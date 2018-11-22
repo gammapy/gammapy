@@ -6,11 +6,9 @@ import contextlib
 import warnings
 from functools import partial
 from multiprocessing import Pool
-
 import numpy as np
-from astropy.convolution import CustomKernel, Kernel2D
 from scipy.optimize import newton, brentq
-
+from astropy.convolution import CustomKernel, Kernel2D
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 from ._test_statistics_cython import (
     _cash_cython,

@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+from ...utils.testing import mpl_plot_check, requires_dependency
 from ..utils import fill_poisson
 from ..geom import MapAxis, coordsys_to_frame
 from ..base import Map
@@ -13,7 +14,6 @@ from ..hpx import HpxGeom
 from ..hpxmap import HpxMap
 from ..hpxnd import HpxNDMap
 from ..hpxsparse import HpxSparseMap
-from ...utils.testing import mpl_plot_check, requires_dependency
 
 pytest.importorskip("scipy")
 pytest.importorskip("healpy")

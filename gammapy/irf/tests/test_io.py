@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.units import Quantity
 from numpy.testing import assert_allclose
+from astropy.units import Quantity
 from ...utils.testing import requires_data
 from ..io import load_cta_irfs
 
@@ -9,11 +9,9 @@ from ..io import load_cta_irfs
 @requires_data("gammapy-extra")
 def test_cta_irf():
     """Test that CTA IRFs can be loaded and evaluated."""
-
-    filename = (
+    irf = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
-    irf = load_cta_irfs(filename)
 
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")

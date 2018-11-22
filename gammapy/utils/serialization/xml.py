@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Model classes to generate XML.
+"""Model classes to generate XML.
 
 For XML model format definitions, see here:
 

@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 import copy
-import astropy.units as u
 import operator
+import numpy as np
+import astropy.units as u
 from ..utils.fitting import Parameters, Parameter, Model
 from ..utils.scripts import make_path
 from ..maps import Map

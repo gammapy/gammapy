@@ -2,9 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.table import Table, Column
 import astropy.units as u
-from gammapy.stats import excess_matching_significance_on_off
-from gammapy.spectrum.models import PowerLaw
-from gammapy.spectrum.utils import CountsPredictor
+from ..stats import excess_matching_significance_on_off
+from .models import PowerLaw
+from .utils import CountsPredictor
 
 __all__ = ["SensitivityEstimator"]
 
@@ -33,7 +33,6 @@ class SensitivityEstimator(object):
 
     Examples
     --------
-
     Compute and plot a sensitivity curve for CTA::
 
         from gammapy.irf import CTAPerf

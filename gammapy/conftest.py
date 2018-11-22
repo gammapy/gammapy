@@ -1,11 +1,8 @@
 # this contains imports plugins that configure py.test for astropy tests.
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
-from astropy.tests.pytest_plugins import *
 import os
-
-# This is to figure out the affiliated package version, rather than
-# using Astropy's
+from astropy.tests.pytest_plugins import *
 from . import version
 
 packagename = os.path.basename(os.path.dirname(__file__))

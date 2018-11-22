@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from .background_estimate import BackgroundEstimate
-from gammapy.data import EventList
 import numpy as np
+from ..data import EventList
+from .background_estimate import BackgroundEstimate
 
 __all__ = ["PhaseBackgroundEstimator"]
 

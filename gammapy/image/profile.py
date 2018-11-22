@@ -2,13 +2,11 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-
 import numpy as np
 from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian1DKernel, Box1DKernel
-from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 from scipy import ndimage
 
 
@@ -286,7 +284,7 @@ class ImageProfile(object):
         width = 2 * radius.value + 1
 
         if kernel == "box":
-            smoothed = uniform_filter(profile.astype("float"), width, **kwargs)
+            smoothed = ndimage.uniform_filter(profile.astype("float"), width, **kwargs)
             # renormalize data
             if table["profile"].unit.is_equivalent("count"):
                 smoothed *= int(width)
@@ -295,15 +293,15 @@ class ImageProfile(object):
                 profile_err = table["profile_err"]
                 # use gaussian error propagation
                 box = Box1DKernel(width)
-                err_sum = convolve(profile_err ** 2, box.array ** 2)
+                err_sum = ndimage.convolve(profile_err ** 2, box.array ** 2)
                 smoothed_err = np.sqrt(err_sum)
         elif kernel == "gauss":
-            smoothed = gaussian_filter(profile.astype("float"), width, **kwargs)
+            smoothed = ndimage.gaussian_filter(profile.astype("float"), width, **kwargs)
             # use gaussian error propagation
             if "profile_err" in table.colnames:
                 profile_err = table["profile_err"]
                 gauss = Gaussian1DKernel(width)
-                err_sum = convolve(profile_err ** 2, gauss.array ** 2)
+                err_sum = ndimage.convolve(profile_err ** 2, gauss.array ** 2)
                 smoothed_err = np.sqrt(err_sum)
         else:
             raise ValueError("Not valid kernel choose either 'box' or 'gauss'")

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-"""
-Process tutorials notebooks for publication in documentation.
-"""
+"""Process tutorials notebooks for publication in documentation."""
 import logging
 import os
 import subprocess
@@ -11,8 +8,6 @@ from shutil import copyfile, copytree, rmtree
 from gammapy.extern.pathlib import Path
 from gammapy.scripts.jupyter import notebook_test
 from distutils.util import strtobool
-
-logging.basicConfig(level=logging.INFO)
 
 
 def ignorefiles(d, files):
@@ -32,7 +27,6 @@ def ignoreall(d, files):
 
 
 def setup_sphinx_params(args):
-
     flagnotebooks = "True"
     setupfilename = "setup.cfg"
     if not args.nbs:
@@ -148,8 +142,8 @@ def build_notebooks(args):
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
 
-    # check params passed
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook or folder to process")
     parser.add_argument("--release", help="Release tag for Binder links")

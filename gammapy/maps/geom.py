@@ -6,21 +6,19 @@ import inspect
 import re
 from collections import OrderedDict
 import logging
-
-log = logging.getLogger(__name__)
-
 import numpy as np
+from scipy.interpolate import interp1d
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from scipy.interpolate import interp1d
-
-from .utils import find_hdu, find_bands_hdu
-from ..utils.interpolation import interpolation_scale
 from ..extern import six
+from ..utils.interpolation import interpolation_scale
+from .utils import find_hdu, find_bands_hdu
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
+
+log = logging.getLogger(__name__)
 
 
 def make_axes(axes_in, conv):

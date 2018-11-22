@@ -1,16 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""HESS Galactic plane survey (HGPS) catalog.
-"""
+"""HESS Galactic plane survey (HGPS) catalog."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 from collections import OrderedDict
-
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
-
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict

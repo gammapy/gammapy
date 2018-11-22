@@ -2,7 +2,6 @@
 """Helper functions to work with distributions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from scipy.integrate import quad
-
 from ...utils.random import get_random_state
 from ...utils.distributions import GeneralRandom
 

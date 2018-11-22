@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+from ..utils.scripts import make_path
 from ..spectrum import (
     SpectrumEnergyGroupMaker,
     FluxPointEstimator,
@@ -9,7 +10,6 @@ from ..spectrum import (
     SpectrumResult,
 )
 from ..background import ReflectedRegionsBackgroundEstimator
-from ..utils.scripts import make_path
 
 __all__ = ["SpectrumAnalysisIACT"]
 

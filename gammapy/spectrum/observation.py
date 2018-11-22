@@ -9,8 +9,7 @@ from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..utils.table import table_from_row_data
 from ..data import ObservationStats
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..irf import IRFStacker
+from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum, PHACountsSpectrumList
 from .utils import CountsPredictor
 

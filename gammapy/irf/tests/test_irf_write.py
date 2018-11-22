@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from numpy.testing import assert_equal
 import astropy.units as u
 from astropy.io import fits
-from numpy.testing import assert_equal
 from ..effective_area import EffectiveAreaTable2D
 from ..energy_dispersion import EnergyDispersion2D
 from ..background import Background3D

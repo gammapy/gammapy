@@ -12,7 +12,7 @@ from ..utils.fitting import Fit
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
-from . import SpectrumObservationList, SpectrumObservation
+from .observation import SpectrumObservationList, SpectrumObservation
 
 __all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointFit"]
 

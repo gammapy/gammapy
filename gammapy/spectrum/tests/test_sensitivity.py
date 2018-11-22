@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.utils.testing import requires_data
+from ...utils.testing import requires_data
 from ..sensitivity import SensitivityEstimator
 
 

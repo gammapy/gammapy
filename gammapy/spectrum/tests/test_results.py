@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 import astropy.units as u
-import pytest
 from astropy.table import Table
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check

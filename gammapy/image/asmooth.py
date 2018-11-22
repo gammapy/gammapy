@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Implementation of adaptive smoothing algorithms.
-"""
+"""Implementation of adaptive smoothing algorithms."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle

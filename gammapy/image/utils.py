@@ -4,11 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from multiprocessing import Pool
 from functools import partial
-
 import numpy as np
-from astropy.convolution import Gaussian2DKernel
 from scipy.signal import fftconvolve
 from scipy.ndimage.filters import gaussian_filter
+from astropy.convolution import Gaussian2DKernel
 
 
 __all__ = ["scale_cube"]

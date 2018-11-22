@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
 import numpy as np
-from astropy.coordinates import Angle
 from scipy.ndimage import distance_transform_edt
+from astropy.coordinates import Angle
 from regions import PixCoord, CirclePixelRegion
-
 from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 

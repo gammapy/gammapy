@@ -16,8 +16,8 @@ implements higher-level algorithms.
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from copy import deepcopy
-import numpy as np
 import logging
+import numpy as np
 from ..extern.six.moves import UserList  # pylint:disable=import-error
 from astropy.units import Quantity
 from astropy.table import Table

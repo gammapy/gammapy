@@ -1,16 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ...utils.testing import run_cli
-from ..main import cli
-from ...extern.pathlib import Path
-from ...utils.testing import requires_dependency
 import pytest
+from ...extern.pathlib import Path
+from ...utils.testing import requires_dependency, run_cli
+from ..main import cli
 
 
 @pytest.fixture(scope="session")
 def files_dir(tmpdir_factory):
-    filesdir = tmpdir_factory.mktemp("tmpdwn")
-    return filesdir
+    return tmpdir_factory.mktemp("tmpdwn")
 
 
 def test_cli_download_help():
@@ -27,8 +25,8 @@ def test_cli_download_datasets(files_dir):
     args = ["download", "datasets", option_src, option_out]
     run_cli(cli, args)
 
-    filepath = Path(str(files_dir)) / dataset
-    assert filepath.exists()
+    path = Path(str(files_dir)) / dataset
+    assert path.exists()
 
 
 @requires_dependency("yaml")
@@ -47,5 +45,6 @@ def test_cli_download_notebooks(files_dir):
 
     envfilepath = Path(str(files_dir)) / envfilename
     nbfilepath = Path(str(files_dir)) / dirnbsname / nbfilename
+
     assert envfilepath.exists()
     assert nbfilepath.exists()

@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-from astropy.units import Quantity
 from scipy.optimize import brentq
+from astropy.units import Quantity
 
 
 __all__ = [

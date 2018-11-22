@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 import logging
 import sys
-import multiprocessing as mp
+import multiprocessing
 from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 from ..extern.pathlib import Path
 from .. import version
@@ -112,7 +112,7 @@ class DownloadProcess(object):
     def run(self):
         log.info("Content will be downloaded in {}".format(self.localfold))
 
-        pool = mp.Pool(5)
+        pool = multiprocessing.Pool(5)
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.localfold / self.listfiles[rec]["path"]

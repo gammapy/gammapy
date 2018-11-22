@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 from copy import deepcopy
 from collections import OrderedDict
 import numpy as np
-import logging
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u

@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
 import numpy as np
-from astropy.coordinates import Angle
-from astropy.convolution import Tophat2DKernel, CustomKernel
 from scipy.ndimage import binary_erosion
 from scipy.ndimage.morphology import binary_fill_holes
-
+from astropy.coordinates import Angle
+from astropy.convolution import Tophat2DKernel, CustomKernel
 from ..maps import Map
 from .lima import compute_lima_image
 

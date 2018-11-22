@@ -3,10 +3,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import os
+from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
-from numpy.testing import assert_allclose
 
 __all__ = [
     "requires_dependency",

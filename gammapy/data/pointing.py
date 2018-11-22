@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from scipy.interpolate import interp1d
 from astropy.version import version as astropy_version
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.coordinates import SkyCoord, AltAz, CartesianRepresentation
-from scipy.interpolate import interp1d
-
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fits import earth_location_from_dict

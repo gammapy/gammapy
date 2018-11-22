@@ -2,8 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import warnings
 import logging
-import click
 import sys
+import click
 from .. import version
 from ..extern.pathlib import Path
 

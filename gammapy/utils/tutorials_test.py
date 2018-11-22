@@ -1,16 +1,11 @@
-#!/usr/bin/env python
-"""
-Test if IPython notebooks work.
-"""
+"""Test if Jupyter notebooks work."""
 import os
 import sys
 import logging
 from pkg_resources import working_set
-from gammapy.extern.pathlib import Path
-from gammapy.scripts.jupyter import notebook_test
 import yaml
-
-logging.basicConfig(level=logging.INFO)
+from ..extern.pathlib import Path
+from ..scripts.jupyter import notebook_test
 
 
 def get_notebooks():
@@ -29,12 +24,13 @@ def requirement_missing(notebook):
         for package in notebook["requires"].split():
             try:
                 working_set.require(package)
-            except Exception as ex:
+            except Exception:
                 return True
     return False
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
 
     if "GAMMAPY_DATA" not in os.environ:
         logging.info("GAMMAPY_DATA environment variable not set.")

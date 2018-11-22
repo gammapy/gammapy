@@ -26,7 +26,6 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
     lat_t : array_like
         Sky latitude coordinate, in degrees
     """
-
     # compute cartesian coordinates
     x = np.cos(np.deg2rad(lat)) * np.cos(np.deg2rad(lon))
     y = np.cos(np.deg2rad(lat)) * np.sin(np.deg2rad(lon))
@@ -86,7 +85,6 @@ def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
     lat_t : array_like
         Field-of-view latitude coordinate, in degrees
     """
-
     lon_ = -lon
 
     # compute cartesian coordinates

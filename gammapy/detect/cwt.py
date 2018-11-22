@@ -2,14 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import logging
-
 import numpy as np
+from scipy.signal import fftconvolve
+from scipy.ndimage import label
 from astropy.io import fits
 from astropy.table import Table
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
-from scipy.signal import fftconvolve
-from scipy.ndimage import label
-
 from ..maps import WcsNDMap, MapAxis, WcsGeom
 
 __all__ = ["CWT", "CWTData", "CWTKernels"]

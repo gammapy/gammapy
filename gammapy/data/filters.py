@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class ObservationFilter(object):
-    """Holds and applies filters to observation data
+    """Holds and applies filters to observation data.
 
     Parameters
     ----------

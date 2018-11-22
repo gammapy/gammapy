@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Gammacat open TeV source catalog.
+"""Gammacat open TeV source catalog.
 
 https://github.com/gammapy/gamma-cat
 """

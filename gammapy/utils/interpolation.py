@@ -2,8 +2,8 @@
 """Interpolation utilities"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy import units as u
 from scipy.interpolate import RegularGridInterpolator
+from astropy import units as u
 
 
 __all__ = ["ScaledRegularGridInterpolator", "interpolation_scale"]

@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
+from scipy.ndimage import maximum_filter
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from scipy.ndimage import maximum_filter
-
 from ..maps import WcsNDMap
 
 __all__ = ["find_peaks"]

@@ -16,10 +16,8 @@ Here's some good resources with working examples:
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import nbformat
 import os
 import re
-from ..extern.pathlib import Path
 from distutils.util import strtobool
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
@@ -27,6 +25,8 @@ from docutils.parsers.rst import roles
 from docutils import nodes
 from sphinx.util import logging
 from nbformat.v4 import new_markdown_cell
+import nbformat
+from ..extern.pathlib import Path
 
 try:
     gammapy_extra_path = Path(os.environ["GAMMAPY_EXTRA"])

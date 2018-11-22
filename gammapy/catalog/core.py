@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Source catalog and object base classes.
-"""
+"""Source catalog and object base classes."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 from copy import deepcopy
 import numpy as np
-from ..extern import six
 from astropy.utils import lazyproperty
+from ..extern import six
 from ..utils.array import _is_int
 from ..utils.table import table_row_to_dict
 from .utils import skycoord_from_table

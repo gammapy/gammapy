@@ -4,8 +4,8 @@ import abc
 import copy
 import inspect
 import json
-import numpy as np
 from collections import OrderedDict
+import numpy as np
 from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits

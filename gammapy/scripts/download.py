@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Command line tool to download datasets and notebooks"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import click
 import logging
+import click
 from .downloadclass import DownloadProcess
 
 log = logging.getLogger(__name__)

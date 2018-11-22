@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Example and test datasets.
-"""
+"""Example and test datasets."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import warnings
 from astropy.units import Quantity, UnitsWarning

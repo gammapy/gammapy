@@ -1,10 +1,10 @@
-"""This script is executed from Dockerfile configuration file
+"""Install code on Binder.
+
+This script is executed from Dockerfile configuration file
 It installs software dependencies declared in environment.yml
 in the docker container built for the Binder service.
 """
-
 import yaml
-import sys
 import conda.cli
 from pip._internal import main as pip_main
 

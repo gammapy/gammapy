@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Data and observation handling.
-"""
+"""Data and observation handling."""
 
 
 class InvalidDataError(Exception):

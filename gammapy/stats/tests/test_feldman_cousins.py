@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from scipy import stats
-
+import scipy.stats
 from ...stats import (
     fc_find_acceptance_interval_gauss,
     fc_find_acceptance_interval_poisson,
@@ -79,7 +77,7 @@ def test_numerical_confidence_interval_pdfs():
     x_bins = np.arange(0, n_bins_x)
     mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-    matrix = [stats.poisson(mu + background).pmf(x_bins) for mu in mu_bins]
+    matrix = [scipy.stats.poisson(mu + background).pmf(x_bins) for mu in mu_bins]
 
     acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
@@ -127,7 +125,7 @@ def test_numerical_confidence_interval_values():
     mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
     distribution_dict = dict(
-        (mu, [stats.norm.rvs(loc=mu, scale=sigma, size=5000)]) for mu in mu_bins
+        (mu, [scipy.stats.norm.rvs(loc=mu, scale=sigma, size=5000)]) for mu in mu_bins
     )
 
     acceptance_intervals = fc_construct_acceptance_intervals(
