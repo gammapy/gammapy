@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility functions and classes for n-dimensional data and axes.
-"""
+"""Utility functions and classes for n-dimensional data and axes."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import itertools
 from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity

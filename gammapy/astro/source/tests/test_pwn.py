@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 import numpy as np
 from astropy.units import Quantity
-from ....utils.testing import requires_dependency
 from ...source import PWN
 
 t = Quantity([0, 1, 10, 100, 1000, 10000, 100000], "yr")

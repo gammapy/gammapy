@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.table import Table
 import astropy.units as u
-from ....utils.testing import requires_dependency
 from ...population import (
     make_base_catalog_galactic,
     make_catalog_random_positions_cube,

@@ -237,7 +237,9 @@ class Fit(object):
                 if hasattr(self, "minuit"):
                     # This is ugly. We will access parameters and make a copy
                     # from the backend, to avoid modifying the state
-                    result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
+                    result = compute(
+                        self.minuit, parameters, parameter, sigma, **kwargs
+                    )
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:

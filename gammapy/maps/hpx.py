@@ -9,7 +9,6 @@ from ..extern import six
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
-from ..utils.scripts import make_path
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat

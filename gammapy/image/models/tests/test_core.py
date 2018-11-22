@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from ....maps import Map
-from ....utils.testing import requires_dependency, requires_data
+from ....utils.testing import requires_data
 from ..core import (
     SkyPointSource,
     SkyGaussian,

@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle
-from astropy.units import Quantity
 from ..maps import WcsNDMap
 
 __all__ = ["make_map_background_irf"]

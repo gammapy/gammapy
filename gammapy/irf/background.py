@@ -7,7 +7,6 @@ from astropy.io import fits
 import astropy.units as u
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
-from ..utils.energy import EnergyBounds
 
 __all__ = ["Background3D", "Background2D"]
 
