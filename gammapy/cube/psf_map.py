@@ -67,15 +67,14 @@ class PSFMap(object):
 
     Examples
     --------
-
-    .. code:: python
+    ::
 
         import numpy as np
+        from astropy import units as u
+        from astropy.coordinates import SkyCoord
         from gammapy.maps import Map, WcsGeom, MapAxis
         from gammapy.irf import EnergyDependentMultiGaussPSF
         from gammapy.cube import make_psf_map, PSFMap
-        from astropy import units as u
-        from astropy.coordinates import SkyCoord
 
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
@@ -103,7 +102,6 @@ class PSFMap(object):
 
         # Write map to disk
         psf_map.write('psf_map.fits')
-
     """
 
     def __init__(self, psf_map):

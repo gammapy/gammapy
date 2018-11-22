@@ -475,14 +475,16 @@ class Parameters(object):
 
     @property
     def restore_values(self):
-        """Context manager to modify the values of a `Parameters` objects
-        and restore its initial values afterwards.
+        """Context manager to restore values.
+
+        A copy of the values is made on enter,
+        and those values are restored on exit.
 
         Examples
         --------
-        .. code:: python
+        ::
 
-            from gammapy.spectrum import PowerLaw
+            from gammapy.spectrum.models import PowerLaw
 
             pwl = PowerLaw(index=2)
             with pwl.parameters.restore_values:

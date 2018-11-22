@@ -27,9 +27,7 @@ def requires_dependency(name):
 
     Examples
     --------
-
     ::
-
         from gammapy.utils.testing import requires_dependency
 
         @requires_dependency('scipy')

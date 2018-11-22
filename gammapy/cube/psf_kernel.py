@@ -127,8 +127,7 @@ class PSFKernel(object):
 
     Examples
     --------
-
-    .. code:: python
+    ::
 
         import numpy as np
         from gammapy.maps import Map, WcsGeom, MapAxis

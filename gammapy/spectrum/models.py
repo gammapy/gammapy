@@ -238,9 +238,7 @@ class SpectralModel(Model):
         kwargs are forwarded to `matplotlib.pyplot.plot`
 
         By default a log-log scaling of the axes is used, if you want to change
-        the y axis scaling to linear you can use:
-
-        .. code-block::
+        the y axis scaling to linear you can use::
 
             from gammapy.spectrum.models import ExponentialCutoffPowerLaw
             from astropy import units as u
@@ -248,7 +246,6 @@ class SpectralModel(Model):
             pwl = ExponentialCutoffPowerLaw()
             ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
             ax.set_yscale('linear')
-
 
         Parameters
         ----------
@@ -500,7 +497,6 @@ class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
 
     .. math::
-
         \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
 
     Parameters
@@ -512,12 +508,9 @@ class PowerLaw(SpectralModel):
     reference : `~astropy.units.Quantity`
         :math:`E_0`
 
-
     Examples
     --------
-    This is how to plot the default `PowerLaw` model:
-
-    .. code:: python
+    This is how to plot the default `PowerLaw` model::
 
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw
@@ -525,7 +518,6 @@ class PowerLaw(SpectralModel):
         pwl = PowerLaw()
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
-
     """
 
     def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
@@ -546,7 +538,6 @@ class PowerLaw(SpectralModel):
         r"""Integrate power law analytically.
 
         .. math::
-
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE = \left.
             \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
             \right \vert _{E_{min}}^{E_{max}}
@@ -613,7 +604,6 @@ class PowerLaw(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-
             G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
             \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
             \right \vert _{E_{min}}^{E_{max}}
@@ -692,7 +682,6 @@ class PowerLaw2(SpectralModel):
     See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 
     .. math::
-
         \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
          - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
 
@@ -709,9 +698,7 @@ class PowerLaw2(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PowerLaw2` model:
-
-    .. code:: python
+    This is how to plot the default `PowerLaw2` model::
 
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw2
@@ -746,7 +733,6 @@ class PowerLaw2(SpectralModel):
         r"""Integrate power law analytically.
 
         .. math::
-
             F(E_{min}, E_{max}) = F_0 \cdot \frac{E_{max}^{\Gamma + 1} \
                                 - E_{min}^{\Gamma + 1}}{E_{0, max}^{\Gamma + 1} \
                                 - E_{0, min}^{\Gamma + 1}}
@@ -825,7 +811,6 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
 
     .. math::
-
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(-\lambda E)
 
     Parameters
@@ -841,9 +826,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `ExponentialCutoffPowerLaw` model:
-
-    .. code:: python
+    This is how to plot the default `ExponentialCutoffPowerLaw` model::
 
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw
@@ -888,9 +871,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
-
             E_{Peak} = (2 - \Gamma) / \lambda
-
         """
         p = self.parameters
         reference = p["reference"].quantity
@@ -908,7 +889,6 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     Note that the parametrization is different from `ExponentialCutoffPowerLaw`:
 
     .. math::
-
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
                   \exp \left( \frac{E_0 - E}{E_{C}} \right)
 
@@ -925,9 +905,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model:
-
-    .. code:: python
+    This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model::
 
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
@@ -970,7 +948,6 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 3FGL.
 
     .. math::
-
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
                   \exp \left( \left(\frac{E_0}{E_{C}} \right)^{\Gamma_2} -
                               \left(\frac{E}{E_{C}} \right)^{\Gamma_2}
@@ -991,9 +968,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `PLSuperExpCutoff3FGL` model:
-
-    .. code:: python
+    This is how to plot the default `PLSuperExpCutoff3FGL` model::
 
         from astropy import units as u
         from gammapy.spectrum.models import PLSuperExpCutoff3FGL
@@ -1038,7 +1013,6 @@ class LogParabola(SpectralModel):
     r"""Spectral log parabola model.
 
     .. math::
-
         \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {
           - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
         }
@@ -1066,9 +1040,7 @@ class LogParabola(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `LogParabola` model:
-
-    .. code:: python
+    This is how to plot the default `LogParabola` model::
 
         from astropy import units as u
         from gammapy.spectrum.models import LogParabola
@@ -1111,14 +1083,12 @@ class LogParabola(SpectralModel):
 
     @property
     def e_peak(self):
-        r"""Spectral energy distribution peak energy (`~astropy.utils.Quantity`).
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
 
         This is the peak in E^2 x dN/dE and is given by:
 
         .. math::
-
             E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
-
         """
         p = self.parameters
         reference = p["reference"].quantity

@@ -73,9 +73,7 @@ class ImageProfileEstimator(object):
     Examples
     --------
     This example shows how to compute a counts profile for the Fermi galactic
-    center region:
-
-    .. code:: python
+    center region::
 
         import matplotlib.pyplot as plt
         from gammapy.image import ImageProfileEstimator

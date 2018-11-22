@@ -5,9 +5,9 @@ import subprocess
 import argparse
 import sys
 from shutil import copyfile, copytree, rmtree
-from gammapy.extern.pathlib import Path
-from gammapy.scripts.jupyter import notebook_test
 from distutils.util import strtobool
+from ..extern.pathlib import Path
+from ..scripts.jupyter import notebook_test
 
 
 def ignorefiles(d, files):
@@ -48,7 +48,6 @@ def setup_sphinx_params(args):
 
 
 def build_notebooks(args):
-
     if "GAMMAPY_DATA" not in os.environ:
         logging.info("GAMMAPY_DATA environment variable not set.")
         logging.info("Running notebook tests requires this environment variable.")
