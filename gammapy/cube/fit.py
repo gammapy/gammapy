@@ -41,8 +41,7 @@ class MapFit(Fit):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        # Create a copy of the input model that is owned and modified by MapFit
-        self._model = model.copy()
+        self._model = model
         self.counts = counts
         self.exposure = exposure
         self.background = background

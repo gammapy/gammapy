@@ -1045,7 +1045,7 @@ class FluxPointFit(Fit):
     Parameters
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
-        Spectral model (with fit start parameters)
+        Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
 
@@ -1070,7 +1070,7 @@ class FluxPointFit(Fit):
     """
 
     def __init__(self, model, data, stat="chi2"):
-        self._model = model.copy()
+        self._model = model
         self.data = data
 
         if stat in ["chi2", "chi2assym"]:

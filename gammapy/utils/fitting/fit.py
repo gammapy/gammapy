@@ -166,7 +166,7 @@ class Fit(object):
         parameters.set_parameter_factors(factors)
 
         return FitResult(
-            model=self._model.copy(),
+            model=self._model,
             total_stat=self.total_stat(self._model.parameters),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -192,21 +192,20 @@ class Fit(object):
         parameters = self._parameters
 
         # TODO: wrap MINUIT in a stateless backend
-        if backend == "minuit":
-            if hasattr(self, "minuit"):
-                covariance_factors, info = compute(self.minuit)
+        with parameters.restore_values:
+            if backend == "minuit":
+                if hasattr(self, "minuit"):
+                    covariance_factors, info = compute(self.minuit)
+                else:
+                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                raise RuntimeError("To use minuit, you must first optimize.")
-        else:
-            function = self.total_stat
-            covariance_factors, info = compute(parameters, function)
+                function = self.total_stat
+                covariance_factors, info = compute(parameters, function)
 
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(
-            model=self._model.copy(), success=info["success"], nfev=0
-        )
+        return CovarianceResult(model=self._model, success=info["success"], nfev=0)
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
@@ -230,17 +229,22 @@ class Fit(object):
         """
         compute = registry.get("confidence", backend)
         parameters = self._parameters
+        parameter = parameters[parameter]
 
         # TODO: wrap MINUIT in a stateless backend
-        if backend == "minuit":
-            if hasattr(self, "minuit"):
-                result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
-                # TODO: decide about result format
-                return result
+        with parameters.restore_values:
+            if backend == "minuit":
+                if hasattr(self, "minuit"):
+                    # This is ugly. We will access parameters and make a copy
+                    # from the backend, to avoid modifying the state
+                    result = compute(self.minuit, parameters, parameter, sigma, **kwargs)
+                else:
+                    raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                raise RuntimeError("To use minuit, you must first optimize.")
-        else:
-            raise NotImplementedError()
+                raise NotImplementedError()
+
+        # TODO: decide about result format
+        return result
 
     def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile.
@@ -270,24 +274,25 @@ class Fit(object):
         results : dict
             Dictionary with keys "values" and "likelihood".
         """
-        idx = self._parameters._get_idx(parameter)
-        parameters = self._parameters.copy()
+        parameters = self._parameters
+        parameter = parameters[parameter]
 
         if values is None:
             if isinstance(bounds, tuple):
                 parmin, parmax = bounds
             else:
-                parerr = parameters.error(idx)
-                parval = parameters[idx].value
+                parerr = parameters.error(parameter)
+                parval = parameter.value
                 parmin, parmax = parval - bounds * parerr, parval + bounds * parerr
 
             values = np.linspace(parmin, parmax, nvalues)
 
         likelihood = []
-        for value in values:
-            parameters[idx].value = value
-            stat = self.total_stat(parameters)
-            likelihood.append(stat)
+        with parameters.restore_values:
+            for value in values:
+                parameter.value = value
+                stat = self.total_stat(parameters)
+                likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
 
