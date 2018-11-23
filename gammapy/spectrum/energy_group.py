@@ -15,7 +15,7 @@ implements higher-level algorithms.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-from copy import deepcopy
+import copy
 import logging
 import numpy as np
 from ..extern.six.moves import UserList  # pylint:disable=import-error
@@ -122,7 +122,7 @@ class SpectrumEnergyGroups(UserList):
 
     def copy(self):
         """Deep copy"""
-        return deepcopy(self)
+        return copy.deepcopy(self)
 
     @classmethod
     def from_total_table(cls, table):

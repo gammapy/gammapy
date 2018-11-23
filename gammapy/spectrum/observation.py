@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import numpy as np
-from copy import deepcopy
 from astropy.units import Quantity
 from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..extern.pathlib import Path
@@ -546,7 +546,7 @@ class SpectrumObservation(object):
 
     def copy(self):
         """A deep copy."""
-        return deepcopy(self)
+        return copy.deepcopy(self)
 
 
 class SpectrumObservationList(UserList):

@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from copy import deepcopy
+import copy
 import logging
 import numpy as np
 from ..stats import significance, significance_on_off
@@ -33,7 +33,7 @@ def compute_lima_image(counts, background, kernel):
     gammapy.stats.significance
     """
     # Kernel is modified later make a copy here
-    kernel = deepcopy(kernel)
+    kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")
 
     counts_conv = counts.convolve(kernel.array).data
@@ -76,7 +76,7 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     gammapy.stats.significance_on_off
     """
     # Kernel is modified later make a copy here
-    kernel = deepcopy(kernel)
+    kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")
 
     n_on_conv = n_on.convolve(kernel.array).data

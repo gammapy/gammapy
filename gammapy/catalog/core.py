@@ -2,7 +2,7 @@
 """Source catalog and object base classes."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
-from copy import deepcopy
+import copy
 import numpy as np
 from astropy.utils import lazyproperty
 from ..extern import six
@@ -242,4 +242,4 @@ class SourceCatalog(object):
 
     def copy(self):
         """Copy catalog"""
-        return deepcopy(self)
+        return copy.deepcopy(self)

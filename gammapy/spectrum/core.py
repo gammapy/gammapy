@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from copy import deepcopy
+import copy
 from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
@@ -223,7 +223,7 @@ class CountsSpectrum(object):
 
     def copy(self):
         """A deep copy of self."""
-        return deepcopy(self)
+        return copy.deepcopy(self)
 
     def rebin(self, parameter):
         """Rebin.
