@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
-from astropy import log
 from ..extern import six
 
 __all__ = ["Energy", "EnergyBounds"]
+
+log = logging.getLogger(__name__)
 
 
 class Energy(Quantity):
