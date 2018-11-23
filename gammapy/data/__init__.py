@@ -1,11 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Data and observation handling."""
-
-
-class InvalidDataError(Exception):
-    """Invalid data found."""
-
-
 from .pointing import *
 from .data_store import *
 from .event_list import *
