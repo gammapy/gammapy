@@ -593,6 +593,23 @@ class MapAxis(object):
             unit=self._unit,
         )
 
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis objected.
+        """
+        nodes = [self._nodes[0], self._nodes[-1]]
+        return MapAxis(
+            nodes,
+            interp=self._interp,
+            name=self._name,
+            node_type=self._node_type,
+            unit=self._unit,
+        )
+
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
