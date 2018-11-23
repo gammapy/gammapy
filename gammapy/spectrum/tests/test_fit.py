@@ -18,7 +18,7 @@ from ...spectrum import (
 
 @requires_dependency("sherpa")
 class TestFit:
-    """Test fitter on counts spectra without any IRFs"""
+    """Test fit on counts spectra without any IRFs"""
 
     def setup(self):
         self.nbins = 30
@@ -166,7 +166,7 @@ class TestFit:
 @requires_dependency("sherpa")
 @requires_data("gammapy-extra")
 class TestSpectralFit:
-    """Test fitter in astrophysical scenario"""
+    """Test fit in astrophysical scenario"""
 
     def setup(self):
         path = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/"

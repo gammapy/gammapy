@@ -257,12 +257,12 @@ class TestFluxPointFit:
     @requires_dependency("iminuit")
     def test_fit_pwl_minuit(self, sed_model, sed_flux_points):
         optimize_opts = {"backend": "minuit"}
-        fitter = FluxPointFit(sed_model, sed_flux_points)
-        result = fitter.run(optimize_opts=optimize_opts)
+        fit = FluxPointFit(sed_model, sed_flux_points)
+        result = fit.run(optimize_opts=optimize_opts)
         self.assert_result(result)
 
-        assert sed_model is fitter._model
-        assert fitter._model is result.model
+        assert sed_model is fit._model
+        assert fit._model is result.model
         assert sed_model is result.model
 
     @requires_dependency("sherpa")

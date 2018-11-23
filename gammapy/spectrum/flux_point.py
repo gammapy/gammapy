@@ -1058,8 +1058,8 @@ class FluxPointFit(Fit):
 
         model = PowerLaw()
 
-        fitter = FluxPointFit(model, flux_points)
-        result = fitter.run()
+        fit = FluxPointFit(model, flux_points)
+        result = fit.run()
         print(result)
         print(result.model)
     """
