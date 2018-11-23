@@ -15,9 +15,8 @@ from ..wcsnd import WcsNDMap
 from ..hpx import HpxGeom
 from ..hpxnd import HpxNDMap
 
-pytest.importorskip("scipy")
-pytest.importorskip("healpy")
 pytest.importorskip("numpy", "1.12.0")
+pytest.importorskip("healpy")
 
 map_axes = [
     MapAxis.from_bounds(1.0, 10.0, 3, interp="log", name="energy"),

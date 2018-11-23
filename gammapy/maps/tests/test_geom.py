@@ -8,8 +8,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis, MapCoord
 
-pytest.importorskip("scipy")
-
 mapaxis_geoms = [
     (np.array([0.25, 0.75, 1.0, 2.0]), "lin"),
     (np.array([0.25, 0.75, 1.0, 2.0]), "log"),

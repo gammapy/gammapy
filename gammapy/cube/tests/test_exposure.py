@@ -9,7 +9,6 @@ from ...irf import EffectiveAreaTable2D
 from ..exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from ...spectrum.models import ConstantModel
 
-pytest.importorskip("scipy")
 pytest.importorskip("healpy")
 
 

@@ -9,8 +9,6 @@ from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
 from ...irf import TablePSF, EnergyDependentTablePSF
 
-pytest.importorskip("scipy")
-
 
 class TestTablePSF:
     @staticmethod

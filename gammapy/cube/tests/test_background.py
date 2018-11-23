@@ -8,7 +8,6 @@ from ...maps import WcsGeom, HpxGeom, MapAxis
 from ...irf import Background3D
 from ..background import make_map_background_irf
 
-pytest.importorskip("scipy")
 pytest.importorskip("healpy")
 
 

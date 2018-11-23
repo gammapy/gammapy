@@ -10,8 +10,6 @@ from ..wcs import WcsGeom, _check_width
 from ..geom import MapAxis
 from ..base import Map
 
-pytest.importorskip("scipy")
-
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
     MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy"),

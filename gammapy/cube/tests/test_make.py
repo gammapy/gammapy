@@ -9,8 +9,6 @@ from ...data import DataStore
 from ...maps import WcsGeom, MapAxis, Map
 from ..make import MapMaker
 
-pytest.importorskip("scipy")
-
 
 @pytest.fixture(scope="session")
 def observations():

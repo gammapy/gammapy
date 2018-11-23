@@ -4,8 +4,6 @@ import pytest
 from ...utils.testing import requires_data
 from ...data import DataStore
 
-pytest.importorskip("scipy")
-
 
 @pytest.fixture(scope="session")
 def data_store():

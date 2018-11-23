@@ -15,9 +15,8 @@ from ..hpxmap import HpxMap
 from ..hpxnd import HpxNDMap
 from ..hpxsparse import HpxSparseMap
 
-pytest.importorskip("scipy")
-pytest.importorskip("healpy")
 pytest.importorskip("numpy", "1.12.0")
+pytest.importorskip("healpy")
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log")]
 

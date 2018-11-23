@@ -9,8 +9,6 @@ from ...irf import TablePSF
 from ...maps import MapAxis, WcsGeom
 from .. import PSFKernel
 
-pytest.importorskip("scipy")
-
 
 def test_table_psf_to_kernel_map():
     sigma = 0.5 * u.deg

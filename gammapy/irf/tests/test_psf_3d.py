@@ -6,8 +6,6 @@ from astropy import units as u
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...irf import PSF3D
 
-pytest.importorskip("scipy")
-
 
 @pytest.fixture(scope="session")
 def psf_3d():

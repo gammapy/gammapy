@@ -9,9 +9,8 @@ from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order
 from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
 from ..hpx import get_hpxregion_dir, get_hpxregion_size, get_subpixels, get_superpixels
 
-pytest.importorskip("scipy")
-pytest.importorskip("healpy")
 pytest.importorskip("numpy", "1.13.0")
+pytest.importorskip("healpy")
 
 hpx_allsky_test_geoms = [
     # 2D All-sky

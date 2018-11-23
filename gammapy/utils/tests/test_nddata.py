@@ -6,8 +6,6 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
 
-pytest.importorskip("scipy")
-
 
 @pytest.fixture(scope="session")
 def axis_x():

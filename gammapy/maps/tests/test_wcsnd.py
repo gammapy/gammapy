@@ -17,7 +17,6 @@ from ..wcs import WcsGeom
 from ..hpx import HpxGeom
 from ..wcsnd import WcsNDMap
 
-pytest.importorskip("scipy")
 pytest.importorskip("reproject")
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="spam")]

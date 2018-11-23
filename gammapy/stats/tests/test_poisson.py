@@ -15,8 +15,6 @@ from ..poisson import (
     excess_ul_helene,
 )
 
-pytest.importorskip("scipy")
-
 
 def test_background():
     assert_allclose(background(n_off=4, alpha=0.1), 0.4)

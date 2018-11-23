@@ -10,8 +10,6 @@ from ...maps import MapAxis, HpxGeom, Map, WcsNDMap
 from ...data import EventList
 from ..counts import fill_map_counts
 
-pytest.importorskip("scipy")
-
 
 @pytest.fixture()
 def events():

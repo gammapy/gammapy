@@ -7,8 +7,6 @@ from ...utils.testing import requires_data
 from ...maps import Map
 from ..kernel import KernelBackgroundEstimator
 
-pytest.importorskip("scipy")
-
 
 @pytest.fixture(scope="session")
 def images():
