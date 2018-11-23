@@ -43,8 +43,5 @@ def test_cli_download_notebooks(files_dir):
     args = ["download", "notebooks", option_src, option_out, option_release]
     run_cli(cli, args)
 
-    envfilepath = Path(str(files_dir)) / envfilename
-    nbfilepath = Path(str(files_dir)) / dirnbsname / nbfilename
-
-    assert envfilepath.exists()
-    assert nbfilepath.exists()
+    assert (files_dir / envfilename).exists()
+    assert (files_dir / dirnbsname / nbfilename).exists()
