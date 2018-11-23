@@ -10,6 +10,7 @@ import sys
 import time
 
 log = logging.getLogger(__name__)
+
 OFF = [
     "CTADATA",
     "GAMMA_CAT",
@@ -107,7 +108,6 @@ class BlackNotebook:
     MAGIC_TAG = "###-MAGIC TAG-"
 
     def __init__(self, rawnb):
-
         self.rawnb = rawnb
 
     def blackformat(self):
@@ -124,7 +124,7 @@ class BlackNotebook:
                     if has_semicolon:
                         fmt += ";"
                 except Exception as ex:
-                    logging.info(ex)
+                    log.info(ex)
                 fmt = fmt.replace(self.MAGIC_TAG, "")
             cell["source"] = fmt
 
@@ -210,15 +210,15 @@ class environment:
             for item in self.envs:
                 if item in os.environ:
                     del os.environ[item]
-                    logging.info("Unsetting {} environment variable.".format(item))
+                    log.info("Unsetting {} environment variable.".format(item))
             abspath = self.ctx.obj["pathsrc"].absolute()
             datapath = abspath.parent / "datasets"
             if abspath.is_file():
                 datapath = abspath.parent.parent / "datasets"
             os.environ["GAMMAPY_DATA"] = str(datapath)
-            logging.info("Setting GAMMAPY_DATA={}".format(os.environ["GAMMAPY_DATA"]))
+            log.info("Setting GAMMAPY_DATA={}".format(os.environ["GAMMAPY_DATA"]))
 
     def __exit__(self, type, value, traceback):
         if self.tutor:
             os.environ = self.old
-            logging.info("Environment variables recovered.")
+            log.info("Environment variables recovered.")

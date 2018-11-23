@@ -7,6 +7,8 @@ import yaml
 from ..extern.pathlib import Path
 from ..scripts.jupyter import notebook_test
 
+log = logging.getLogger(__name__)
+
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
@@ -33,9 +35,9 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     if "GAMMAPY_DATA" not in os.environ:
-        logging.info("GAMMAPY_DATA environment variable not set.")
-        logging.info("Running notebook tests requires this environment variable.")
-        logging.info("Exiting now.")
+        log.info("GAMMAPY_DATA environment variable not set.")
+        log.info("Running notebook tests requires this environment variable.")
+        log.info("Exiting now.")
         sys.exit()
 
     passed = True
@@ -44,7 +46,7 @@ def main():
 
     for notebook in yamlfile:
         if requirement_missing(notebook):
-            logging.info(
+            log.info(
                 "Skipping notebook {} because requirement is missing.".format(
                     notebook["name"]
                 )

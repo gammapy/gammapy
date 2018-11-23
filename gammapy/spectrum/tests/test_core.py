@@ -4,7 +4,11 @@ import pytest
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
-from ...utils.testing import requires_dependency, mpl_plot_check, assert_quantity_allclose
+from ...utils.testing import (
+    requires_dependency,
+    mpl_plot_check,
+    assert_quantity_allclose,
+)
 from ...utils.energy import EnergyBounds
 from .. import CountsSpectrum, PHACountsSpectrum
 

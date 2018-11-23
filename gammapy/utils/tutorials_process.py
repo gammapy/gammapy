@@ -9,6 +9,8 @@ from distutils.util import strtobool
 from ..extern.pathlib import Path
 from ..scripts.jupyter import notebook_test
 
+log = logging.getLogger(__name__)
+
 
 def ignorefiles(d, files):
     return [
@@ -49,9 +51,9 @@ def setup_sphinx_params(args):
 
 def build_notebooks(args):
     if "GAMMAPY_DATA" not in os.environ:
-        logging.info("GAMMAPY_DATA environment variable not set.")
-        logging.info("Running notebook tests requires this environment variable.")
-        logging.info("Exiting now.")
+        log.info("GAMMAPY_DATA environment variable not set.")
+        log.info("Running notebook tests requires this environment variable.")
+        log.info("Exiting now.")
         sys.exit()
 
     # prepare folder structure
@@ -76,7 +78,7 @@ def build_notebooks(args):
         pathdest = path_temp / notebookname
         copyfile(str(pathsrc), str(pathdest))
     else:
-        logging.info("Notebook file does not exist.")
+        log.info("Notebook file does not exist.")
         sys.exit()
 
     # strip and blackformat
@@ -132,8 +134,8 @@ def build_notebooks(args):
         copyfile(str(pathsrc), str(pathdest))
 
     # else:
-    #    logging.info("Tests have not passed.")
-    #    logging.info("Tutorials not ready for documentation building process.")
+    #    log.info("Tests have not passed.")
+    #    log.info("Tutorials not ready for documentation building process.")
     #    rmtree(str(path_static_nbs), ignore_errors=True)
 
     # tear down
@@ -159,7 +161,7 @@ def main():
     try:
         args.nbs = strtobool(args.nbs)
     except Exception as ex:
-        logging.error(ex)
+        log.error(ex)
         sys.exit()
     # if not args.release.startswith("v") and args.release != "master":
     #    args.release = "v" + args.release
