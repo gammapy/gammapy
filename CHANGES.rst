@@ -1,11 +1,110 @@
-.. _gammapy_0p8_release:
+.. _gammapy_0p9_release:
 
-0.9 (2018-11-19)
+0.9 (2018-11-26)
 ----------------
 
-- Add Scipy as core dependency
-- Require Astropy > 2.0
+Summary
++++++++
 
+- Released on November 26, 2018 (`Gammapy 0.9 on PyPI <https://pypi.org/project/gammapy/0.9>`__)
+- 9 contributors (3 new)
+- 2 months of work
+- 82 pull requests (not all listed below)
+
+**What's new?**
+
+Gammapy v0.9 comes just two months after v0.8. This is following the `Gammapy
+1.0 roadmap`_, Gammapy will from now on have bi-monthly releases, as we work
+towards the Gammapy 1.0 release in fall 2019.
+
+Gammapy v0.9 is contains many fixes, and a few new features. Big new features
+like observation event and time filters, background model classes, as well as
+support for fitting joint datasets will come in spring 2019.
+
+The ``FluxPointEstimator`` has been rewritten, and the option to compute
+spectral likelihood profiles has been added. The background and diffuse model
+interpolation in energy has been improved to be more accurate. The
+``gammapy.utils.fitting`` backend is under heavy development, most of the
+functionality of MINUIT (covariance, confidence intervals, profiles, contours)
+can now be obtained from any ``Fit`` class (spectral or map analysis). Maps now
+support arithmetic operators, so that you can e.g. write ``residual = counts -
+model`` if ``counts`` and ``model`` are maps containing observed and model
+counts.
+
+Gammapy v0.9 now requires Astropy 2.0 or later, and Scipy was changed from
+status of optional to required dependency, since currently it is required for
+most analysis tasks (e.g. using interpolation when evaluating instrument
+responses). Please also note that we have a `plan to drop Python 2.7 support`_
+in Gammapy v0.11 in March 2019. If you have any questions or concerns about
+moving your scripts and notebooks to Python 3, or need Python 2 support with
+later Gammapy releases in 2019, please let us know!
+
+.. _Gammapy 1.0 roadmap: https://github.com/gammapy/gammapy/pull/1841
+.. _plan to drop Python 2.7 support: https://github.com/gammapy/gammapy/pull/1278
+
+**Contributors:**
+
+- Atreyee Sinha
+- Axel Donath
+- Christoph Deil
+- Daniel Morcuende (new)
+- David Fidalgo
+- Ignacio Minaya (new)
+- José Enrique Ruiz
+- José Luis Contreras (new)
+- Régis Terrier
+
+Pull requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.9 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
+
+- [#1937] No copy of input and result model in fit (Christoph Deil)
+- [#1934] Improve FluxPointEstimator test and docs (Axel Donath)
+- [#1933] Add likelihood profiles to FluxPointEstimator (Axel Donath)
+- [#1930] Add sections in documentation navigation bar (José Enrique Ruiz)
+- [#1929] Rewrite FluxpointEstimator (Axel Donath)
+- [#1927] Improve Fit class, add confidence method (Christoph Deil)
+- [#1926] Fix MapAxis interpolation FITS serialisation (Atreyee Sinha)
+- [#1922] Add Fit.covar method (Christoph Deil)
+- [#1921] Use and improve ScaledRegularGridInterpolator (Axel Donath)
+- [#1919] Add Scipy as core dependency (Axel Donath)
+- [#1918] Add parameters correlation matrix property (Christoph Deil)
+- [#1912] Add ObservationFilter class (David Fidalgo)
+- [#1909] Clean up irf/io.py and add load_cta_irf function (Régis Terrier)
+- [#1908] Take observation time from GTI table (David Fidalgo)
+- [#1904] Fix parameter limit handling in fitting (Christoph Deil)
+- [#1903] Improve flux points class (Axel Donath)
+- [#1898] Review and unify quantity handling (Axel Donath)
+- [#1895] Rename obs_list to observations (David Fidalgo)
+- [#1894] Improve Background3D energy axis integration (Axel Donath)
+- [#1893] Add MapGeom equality operator (Régis Terrier)
+- [#1891] Add arithmetic operators for maps (Régis Terrier)
+- [#1890] Change map quantity to view instead of copy (Régis Terrier)
+- [#1888] Change ObservationList class to Observations (David Fidalgo)
+- [#1884] Improve analysis3d tutorial notebook (Ignacio Minaya)
+- [#1883] Fix fit parameter bug for very large numbers (Christoph Deil)
+- [#1871] Fix TableModel and ConstantModel output dimension (Régis Terrier)
+- [#1862] Move make_psf, make_mean_psf and make_mean_edisp (David Fidalgo)
+- [#1861] Change from live to on time in background computation (Christoph Deil)
+- [#1859] Fix in MapFit energy dispersion apply (Régis Terrier)
+- [#1857] Modify image_fitting_with_sherpa to use DC1 runs (Atreyee Sinha)
+- [#1855] Add ScaledRegularGridInterpolator (Axel Donath)
+- [#1854] Add FluxPointProfiles class (Christoph Deil)
+- [#1846] Allow different true and reco energy in map analysis (Atreyee Sinha)
+- [#1845] Improve first steps with Gammapy tutorial (Daniel Morcuende)
+- [#1837] Add method to compute energy-weighted 2D PSF kernel (Atreyee Sinha)
+- [#1836] Fix gammapy download for Python 2 (José Enrique Ruiz)
+- [#1807] Change map smooth widths to match Astropy (Atreyee Sinha)
+- [#1849] Improve gammapy.stats documentation page (José Luis Contreras)
+- [#1766] Add gammapy jupyter CLI for developers (José Enrique Ruiz)
+- [#1763] Improve gammapy download (José Enrique Ruiz)
+- [#1710] Clean up TableModel implementation (Axel Donath)
+- [#1419] PIG 4 - Setup for tutorial notebooks and data (José Enrique Ruiz and Christoph Deil)
+
+.. _gammapy_0p8_release:
 
 0.8 (2018-09-23)
 ----------------
@@ -204,6 +303,7 @@ See the complete `Gammapy 0.8 merged pull requests list on Github <https://githu
 - [#1374] Add units to gammapy.maps (Régis Terrier)
 - [#1373] Improve 3D analysis code using gammapy.maps (Christoph Deil)
 - [#1372] Add 3D analysis functions using gammapy.maps (Régis Terrier)
+- [#1369] Add gammapy download command (José Enrique Ruiz)
 - [#1367] Add first draft of LightCurve model class (Christoph Deil)
 - [#1362] Fix map sum_over_axes (Christoph Deil)
 - [#1360] Sphinx RTD responsive theme for documentation (José Enrique Ruiz)
