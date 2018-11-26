@@ -5,7 +5,7 @@ import abc
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
 from ...extern import six
-from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit
+from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
 
@@ -40,7 +40,11 @@ class Registry(object):
             "sherpa": covariance_sherpa,
             "scipy": covariance_scipy,
         },
-        "confidence": {"minuit": confidence_iminuit},
+        "confidence": {
+            "minuit": confidence_iminuit,
+            # "sherpa": confidence_sherpa,
+            # "scipy": confidence_scipy,
+        },
     }
 
     @classmethod
@@ -334,22 +338,33 @@ class Fit(object):
         """
         raise NotImplementedError
 
-    def minos_contour(self):
+    def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
 
         This is a contouring algorithm for a 2D function
         which is not simply the likelihood function.
-        That 2D function is given at each point (par_1, par_2)
+        That 2D function is given at each point ``(par_1, par_2)``
         by re-optimising all other free parameters,
         and taking the likelihood at that point.
 
         Very compute-intensive and slow.
 
         Calls ``iminuit.Minuit.mncontour``
-        TODO: what does Sherpa do?
-        TODO: find a better name.
         """
-        raise NotImplementedError
+        parameters = self._parameters
+        x = parameters[x]
+        y = parameters[y]
+
+        with parameters.restore_values:
+            result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
+
+        return {
+            "is_valid": result["x_info"]["is_valid"] and result["y_info"]["is_valid"],
+            "x": result["x"] * x.scale,
+            "y": result["y"] * y.scale,
+            "x_info": result["x_info"],
+            "y_info": result["y_info"],
+        }
 
 
 class CovarianceResult(object):

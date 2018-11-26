@@ -97,3 +97,23 @@ def test_likelihood_profile():
 
     # Check that original value state wasn't changed
     assert_allclose(fit._model.parameters["x"].value, 2)
+
+
+def test_minos_contour():
+    fit = MyFit()
+    fit.optimize(backend="minuit")
+    result = fit.minos_contour("x", "y")
+
+    assert result["is_valid"] is True
+
+    x = result["x"]
+    assert_allclose(len(x), 10)
+    assert_allclose(x[0], 1, rtol=1e-5)
+    assert_allclose(x[-1], 1.499963, rtol=1e-5)
+    y = result["y"]
+    assert_allclose(len(y), 10)
+    assert_allclose(y[0], 300, rtol=1e-5)
+    assert_allclose(y[-1], 300.866004, rtol=1e-5)
+
+    # Check that original value state wasn't changed
+    assert_allclose(fit._model.parameters["x"].value, 2)
