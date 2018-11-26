@@ -396,7 +396,7 @@ class Map(object):
         )
 
     @abc.abstractmethod
-    def sum_over_axes(self):
+    def sum_over_axes(self, keepdims=False):
         """Reduce to a 2D image by summing over non-spatial dimensions."""
         pass
 

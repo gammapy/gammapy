@@ -231,10 +231,27 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
-    def sum_over_axes(self):
+    def sum_over_axes(self, keepdims=False):
+        """To sum map values over all non-spatial axes.
+
+        Parameters
+        ----------
+        keepdims : bool, optional
+            If this is set to true, the axes which are summed over are left in
+            the map with a single bin
+
+        Returns
+        -------
+        map_out : WcsNDMap
+            Map with non-spatial axes summed over
+        """
         axis = tuple(range(self.data.ndim - 2))
-        data = np.nansum(self.data, axis=axis)
+        data = np.nansum(self.data, axis=axis, keepdims=keepdims)
         geom = self.geom.to_image()
+        if keepdims:
+            for ax in self.geom.axes:
+                geom = geom.to_cube([ax.squash()])
+
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 

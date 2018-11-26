@@ -251,3 +251,12 @@ def test_mapaxis_equal(nodes, interp, node_type, unit, name, result):
 
     assert (axis1 == axis2) is result
     assert (axis1 != axis2) is not result
+
+
+def test_squash():
+    axis = MapAxis(
+        nodes=[0, 10, 10], unit="TeV", name="energy", node_type="edges", interp="lin"
+    )
+    ax_sq = axis.squash()
+
+    assert_allclose(ax_sq.nbin, 1)

@@ -601,12 +601,13 @@ class MapAxis(object):
         axis : `~MapAxis`
             Sliced axis objected.
         """
-        nodes = [self._nodes[0], self._nodes[-1]]
-        return MapAxis(
-            nodes,
+
+        return MapAxis.from_bounds(
+            lo_bnd=self.edges[0],
+            hi_bnd=self.edges[-1],
+            nbin=1,
             interp=self._interp,
             name=self._name,
-            node_type=self._node_type,
             unit=self._unit,
         )
 
