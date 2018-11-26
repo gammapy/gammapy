@@ -246,7 +246,9 @@ class Fit(object):
             else:
                 raise NotImplementedError()
 
-        # TODO: decide about result format
+        result["lower"] = parameter.scale * result["lower"]
+        result["upper"] = parameter.scale * result["upper"]
+
         return result
 
     def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
