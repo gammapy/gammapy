@@ -230,7 +230,7 @@ class Fit(object):
         Returns
         -------
         result : dict
-            Dictionary with keys "upper", 'lower", "is_valid" and "nfev".
+            Dictionary with keys "upper", 'lower", "success" and "nfev".
         """
         compute = registry.get("confidence", backend)
         parameters = self._parameters
@@ -250,10 +250,15 @@ class Fit(object):
             else:
                 raise NotImplementedError()
 
-        result["lower"] = parameter.scale * result["lower"]
-        result["upper"] = parameter.scale * result["upper"]
+        lower = parameter.scale * result["lower"]
+        upper = parameter.scale * result["upper"]
 
-        return result
+        return {
+            "lower": lower,
+            "upper": upper,
+            "success": result["success"],
+            "nfev": result["nfev"],
+        }
 
     def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile.
@@ -315,8 +320,6 @@ class Fit(object):
         See also: `Fit.likelihood_profile`
 
         Calls ``iminuit.Minuit.mnprofile``
-        TODO: what does Sherpa do?
-        TODO: find a better name.
         """
         raise NotImplementedError
 
@@ -341,6 +344,8 @@ class Fit(object):
     def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
 
+        Calls ``iminuit.Minuit.mncontour``.
+
         This is a contouring algorithm for a 2D function
         which is not simply the likelihood function.
         That 2D function is given at each point ``(par_1, par_2)``
@@ -349,7 +354,22 @@ class Fit(object):
 
         Very compute-intensive and slow.
 
-        Calls ``iminuit.Minuit.mncontour``
+        Parameters
+        ----------
+        x, y : `~gammapy.utils.fitting.Parameter`
+            Parameters of interest
+        numpoints : int
+            Number of contour points
+        sigma : float
+            Number of standard deviations for the confidence level
+
+        Returns
+        -------
+        result : dict
+            Dictionary with keys "x", "y" (Numpy arrays with contour points)
+            and a boolean flag "success".
+            The result objects from ``mncontour`` are in the additional
+            keys "x_info" and "y_info".
         """
         parameters = self._parameters
         x = parameters[x]
@@ -358,10 +378,13 @@ class Fit(object):
         with parameters.restore_values:
             result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
 
+        x = result["x"] * x.scale
+        y = result["y"] * y.scale
+
         return {
-            "is_valid": result["x_info"]["is_valid"] and result["y_info"]["is_valid"],
-            "x": result["x"] * x.scale,
-            "y": result["y"] * y.scale,
+            "x": x,
+            "y": y,
+            "success": result["success"],
             "x_info": result["x_info"],
             "y_info": result["y_info"],
         }

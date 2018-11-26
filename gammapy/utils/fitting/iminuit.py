@@ -88,7 +88,6 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     return {
         "success": success,
         "message": message,
-        "is_valid": info["is_valid"],
         "lower": info["lower"],
         "upper": info["upper"],
         "nfev": info["nfcn"],
@@ -105,7 +104,15 @@ def mncontour(minuit, parameters, x, y, numpoints, sigma):
     x_info, y_info, contour = minuit.mncontour(x, y, numpoints, sigma)
     contour = np.array(contour)
 
-    return {"x": contour[:, 0], "y": contour[:, 1], "x_info": x_info, "y_info": y_info}
+    success = x_info["is_valid"] and y_info["is_valid"]
+
+    return {
+        "success": success,
+        "x": contour[:, 0],
+        "y": contour[:, 1],
+        "x_info": x_info,
+        "y_info": y_info,
+    }
 
 
 # this code is copied from https://github.com/iminuit/iminuit/blob/master/iminuit/_minimize.py#L95

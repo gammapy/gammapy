@@ -39,6 +39,7 @@ def test_run(backend):
     )
     pars = result.model.parameters
 
+    assert result.success is True
     assert fit._model is result.model
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
@@ -80,7 +81,8 @@ def test_confidence(backend):
     fit = MyFit()
     fit.optimize(backend=backend)
     result = fit.confidence("x")
-    assert result["is_valid"] is True
+
+    assert result["success"] is True
     assert_allclose(result["lower"], -1)
     assert_allclose(result["upper"], +1)
 
@@ -92,6 +94,7 @@ def test_likelihood_profile():
     fit = MyFit()
     fit.run()
     result = fit.likelihood_profile("x", nvalues=3)
+
     assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
 
@@ -104,7 +107,7 @@ def test_minos_contour():
     fit.optimize(backend="minuit")
     result = fit.minos_contour("x", "y")
 
-    assert result["is_valid"] is True
+    assert result["success"] is True
 
     x = result["x"]
     assert_allclose(len(x), 10)
