@@ -5,7 +5,7 @@ import abc
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
 from ...extern import six
-from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit
+from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
 
@@ -40,7 +40,11 @@ class Registry(object):
             "sherpa": covariance_sherpa,
             "scipy": covariance_scipy,
         },
-        "confidence": {"minuit": confidence_iminuit},
+        "confidence": {
+            "minuit": confidence_iminuit,
+            # "sherpa": confidence_sherpa,
+            # "scipy": confidence_scipy,
+        },
     }
 
     @classmethod
@@ -226,7 +230,7 @@ class Fit(object):
         Returns
         -------
         result : dict
-            Dictionary with keys "upper", 'lower", "is_valid" and "nfev".
+            Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
         compute = registry.get("confidence", backend)
         parameters = self._parameters
@@ -246,8 +250,15 @@ class Fit(object):
             else:
                 raise NotImplementedError()
 
-        # TODO: decide about result format
-        return result
+        errp = parameter.scale * result["errp"]
+        errn = parameter.scale * result["errn"]
+
+        return {
+            "errp": errp,
+            "errn": errn,
+            "success": result["success"],
+            "nfev": result["nfev"],
+        }
 
     def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
         """Compute likelihood profile.
@@ -309,8 +320,6 @@ class Fit(object):
         See also: `Fit.likelihood_profile`
 
         Calls ``iminuit.Minuit.mnprofile``
-        TODO: what does Sherpa do?
-        TODO: find a better name.
         """
         raise NotImplementedError
 
@@ -332,22 +341,53 @@ class Fit(object):
         """
         raise NotImplementedError
 
-    def minos_contour(self):
+    def minos_contour(self, x, y, numpoints=10, sigma=1.0):
         """Compute MINOS contour.
+
+        Calls ``iminuit.Minuit.mncontour``.
 
         This is a contouring algorithm for a 2D function
         which is not simply the likelihood function.
-        That 2D function is given at each point (par_1, par_2)
+        That 2D function is given at each point ``(par_1, par_2)``
         by re-optimising all other free parameters,
         and taking the likelihood at that point.
 
         Very compute-intensive and slow.
 
-        Calls ``iminuit.Minuit.mncontour``
-        TODO: what does Sherpa do?
-        TODO: find a better name.
+        Parameters
+        ----------
+        x, y : `~gammapy.utils.fitting.Parameter`
+            Parameters of interest
+        numpoints : int
+            Number of contour points
+        sigma : float
+            Number of standard deviations for the confidence level
+
+        Returns
+        -------
+        result : dict
+            Dictionary with keys "x", "y" (Numpy arrays with contour points)
+            and a boolean flag "success".
+            The result objects from ``mncontour`` are in the additional
+            keys "x_info" and "y_info".
         """
-        raise NotImplementedError
+        parameters = self._parameters
+        x = parameters[x]
+        y = parameters[y]
+
+        with parameters.restore_values:
+            result = mncontour(self.minuit, parameters, x, y, numpoints, sigma)
+
+        x = result["x"] * x.scale
+        y = result["y"] * y.scale
+
+        return {
+            "x": x,
+            "y": y,
+            "success": result["success"],
+            "x_info": result["x_info"],
+            "y_info": result["y_info"],
+        }
 
 
 class CovarianceResult(object):

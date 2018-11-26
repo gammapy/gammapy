@@ -918,8 +918,7 @@ class FluxPointEstimator(object):
             Dict with asymmetric errors for the flux point norm.
         """
         result = self.fit.confidence(parameter="norm", sigma=self.sigma)
-        norm_errp, norm_errn = result["upper"], -result["lower"]
-        return {"norm_errp": norm_errp, "norm_errn": norm_errn}
+        return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
 
     def estimate_norm_err(self):
         """Estimate covariance errors for a flux point.
@@ -943,7 +942,7 @@ class FluxPointEstimator(object):
         """
         norm = self.model.parameters["norm"].value
         result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
-        return {"norm_ul": result["upper"] + norm}
+        return {"norm_ul": result["errp"] + norm}
 
     def estimate_norm_ts(self):
         """Estimate ts and sqrt(ts) for the flux point.

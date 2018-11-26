@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from .likelihood import Likelihood
 
-__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit"]
+__all__ = ["optimize_iminuit", "covariance_iminuit", "confidence_iminuit", "mncontour"]
 
 log = logging.getLogger(__name__)
 
@@ -88,10 +88,30 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     return {
         "success": success,
         "message": message,
-        "is_valid": info["is_valid"],
-        "lower": info["lower"],
-        "upper": info["upper"],
+        "errp": info["upper"],
+        "errn": -info["lower"],
         "nfev": info["nfcn"],
+    }
+
+
+def mncontour(minuit, parameters, x, y, numpoints, sigma):
+    idx = parameters._get_idx(x)
+    x = _make_parname(idx, parameters[idx])
+
+    idx = parameters._get_idx(y)
+    y = _make_parname(idx, parameters[idx])
+
+    x_info, y_info, contour = minuit.mncontour(x, y, numpoints, sigma)
+    contour = np.array(contour)
+
+    success = x_info["is_valid"] and y_info["is_valid"]
+
+    return {
+        "success": success,
+        "x": contour[:, 0],
+        "y": contour[:, 1],
+        "x_info": x_info,
+        "y_info": y_info,
     }
 
 
