@@ -88,8 +88,8 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     return {
         "success": success,
         "message": message,
-        "lower": info["lower"],
-        "upper": info["upper"],
+        "errp": info["upper"],
+        "errn": -info["lower"],
         "nfev": info["nfcn"],
     }
 

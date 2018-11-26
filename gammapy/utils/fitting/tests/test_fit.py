@@ -83,8 +83,8 @@ def test_confidence(backend):
     result = fit.confidence("x")
 
     assert result["success"] is True
-    assert_allclose(result["lower"], -1)
-    assert_allclose(result["upper"], +1)
+    assert_allclose(result["errp"], 1)
+    assert_allclose(result["errn"], 1)
 
     # Check that original value state wasn't changed
     assert_allclose(fit._model.parameters["x"].value, 2)

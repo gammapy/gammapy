@@ -230,7 +230,7 @@ class Fit(object):
         Returns
         -------
         result : dict
-            Dictionary with keys "upper", 'lower", "success" and "nfev".
+            Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
         compute = registry.get("confidence", backend)
         parameters = self._parameters
@@ -250,12 +250,12 @@ class Fit(object):
             else:
                 raise NotImplementedError()
 
-        lower = parameter.scale * result["lower"]
-        upper = parameter.scale * result["upper"]
+        errp = parameter.scale * result["errp"]
+        errn = parameter.scale * result["errn"]
 
         return {
-            "lower": lower,
-            "upper": upper,
+            "errp": errp,
+            "errn": errn,
             "success": result["success"],
             "nfev": result["nfev"],
         }
