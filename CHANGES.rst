@@ -17,7 +17,7 @@ Gammapy v0.9 comes just two months after v0.8. This is following the `Gammapy
 1.0 roadmap`_, Gammapy will from now on have bi-monthly releases, as we work
 towards the Gammapy 1.0 release in fall 2019.
 
-Gammapy v0.9 is contains many fixes, and a few new features. Big new features
+Gammapy v0.9 contains many fixes, and a few new features. Big new features
 like observation event and time filters, background model classes, as well as
 support for fitting joint datasets will come in spring 2019.
 
