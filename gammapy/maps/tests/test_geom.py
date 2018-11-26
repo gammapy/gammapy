@@ -255,8 +255,11 @@ def test_mapaxis_equal(nodes, interp, node_type, unit, name, result):
 
 def test_squash():
     axis = MapAxis(
-        nodes=[0, 10, 10], unit="TeV", name="energy", node_type="edges", interp="lin"
+        nodes=[0, 1, 2, 3], unit="TeV", name="energy", node_type="edges", interp="lin"
     )
     ax_sq = axis.squash()
 
     assert_allclose(ax_sq.nbin, 1)
+    assert_allclose(axis.edges[0], ax_sq.edges[0])
+    assert_allclose(axis.edges[-1], ax_sq.edges[1])
+    assert_allclose(ax_sq.center, 1.5)

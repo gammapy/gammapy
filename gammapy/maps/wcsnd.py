@@ -246,12 +246,11 @@ class WcsNDMap(WcsMap):
             Map with non-spatial axes summed over
         """
         axis = tuple(range(self.data.ndim - 2))
-        data = np.nansum(self.data, axis=axis, keepdims=keepdims)
         geom = self.geom.to_image()
         if keepdims:
             for ax in self.geom.axes:
                 geom = geom.to_cube([ax.squash()])
-
+        data = np.nansum(self.data, axis=axis, keepdims=keepdims)
         # TODO: summing over the axis can change the unit, handle this correctly
         return self._init_copy(geom=geom, data=data)
 

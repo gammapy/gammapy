@@ -576,7 +576,7 @@ class MapAxis(object):
         Returns
         -------
         axis : `~MapAxis`
-            Sliced axis objected.
+            Sliced axis object.
         """
         center = self.center[idx]
         idx = self.coord_to_idx(center)
@@ -599,7 +599,7 @@ class MapAxis(object):
         Returns
         -------
         axis : `~MapAxis`
-            Sliced axis objected.
+            Sliced axis object.
         """
 
         return MapAxis.from_bounds(
