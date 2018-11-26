@@ -122,6 +122,8 @@ setup(
       plotting=[
           'matplotlib>=2.1',
       ],
+      test=['pytest-astropy',
+      ],
     ),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
