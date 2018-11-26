@@ -20,14 +20,10 @@ class TestSpectrumSimulation:
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
 
         self.source_model = PowerLaw(
-            index=2.3 * u.Unit(""),
-            amplitude=2.5 * 1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
+            index=2.3, amplitude="2.5e-12 cm-2 s-1 TeV-1", reference="1 TeV"
         )
         self.background_model = PowerLaw(
-            index=3 * u.Unit(""),
-            amplitude=3 * 1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-            reference=1 * u.TeV,
+            index=3, amplitude="3e-12 cm-2 s-1 TeV-1", reference="1 TeV"
         )
         self.alpha = 1.0 / 3
 
@@ -39,7 +35,6 @@ class TestSpectrumSimulation:
     def test_without_background(self):
         self.sim.simulate_obs(seed=23, obs_id=23)
         assert self.sim.obs.on_vector.total_counts == 160
-        # print(np.sum(self.sim.npred_source.data.value))
 
     def test_with_background(self):
         self.sim.background_model = self.background_model
@@ -71,12 +66,9 @@ class TestSpectrumSimulation:
 
     def test_without_aeff(self):
         e_true = EnergyBounds.equal_log_spacing(1, 10, 5, u.TeV)
-        rate_model = self.source_model.copy()
-        par = rate_model.parameters["amplitude"]
-        par.unit = "TeV-1 s-1"
-        par.value = 1
+        self.source_model.parameters["amplitude"].quantity = "1 TeV-1 s-1"
         sim = SpectrumSimulation(
-            source_model=rate_model, livetime=4 * u.h, e_true=e_true
+            source_model=self.source_model, livetime=4 * u.h, e_true=e_true
         )
         sim.simulate_obs(seed=23, obs_id=23)
         assert sim.obs.on_vector.total_counts == 10509
