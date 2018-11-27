@@ -574,7 +574,7 @@ class MapAxis(object):
         Returns
         -------
         axis : `~MapAxis`
-            Sliced axis objected.
+            Sliced axis object.
         """
         center = self.center[idx]
         idx = self.coord_to_idx(center)
@@ -588,6 +588,25 @@ class MapAxis(object):
             interp=self._interp,
             name=self._name,
             node_type=self._node_type,
+            unit=self._unit,
+        )
+
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        Returns
+        -------
+        axis : `~MapAxis`
+            Sliced axis object.
+        """
+        #TODO: Decide on handling node_type=center
+        #See https://github.com/gammapy/gammapy/issues/1952
+        return MapAxis.from_bounds(
+            lo_bnd=self.edges[0],
+            hi_bnd=self.edges[-1],
+            nbin=1,
+            interp=self._interp,
+            name=self._name,
             unit=self._unit,
         )
 

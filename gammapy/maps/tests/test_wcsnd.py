@@ -326,14 +326,15 @@ def test_wcsndmap_iter(npix, binsz, coordsys, proj, skydir, axes):
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes):
+@pytest.mark.parametrize("keepdims", [True, False])
+def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepdims):
     geom = WcsGeom.create(
         npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
     m.fill_by_coord(coords, coords[0])
-    msum = m.sum_over_axes()
+    msum = m.sum_over_axes(keepdims=keepdims)
 
     if m.geom.is_regular:
         assert_allclose(np.nansum(m.data), np.nansum(msum.data))

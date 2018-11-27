@@ -130,8 +130,8 @@ class MapMaker(object):
             else:
                 self.maps[name].fill_by_coord(coords, data)
 
-    def make_images(self, spectrum=None):
-        """Create 2D images by summing over the energy axis.
+    def make_images(self, spectrum=None, keepdims=False):
+        """Create images by summing over the energy axis.
 
         Exposure is weighted with an assumed spectrum,
         resulting in a weighted mean exposure image.
@@ -142,17 +142,20 @@ class MapMaker(object):
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
 
+        keepdims : bool, optional
+            If this is set to True, the energy axes is kept with a single bin.
+            If False, the energy axes is removed
+
         Returns
         -------
         images : dict of `~gammapy.maps.Map`
-            2D images
         """
         images = {}
         for name, map in self.maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
 
-            images[name] = map.sum_over_axes()
+            images[name] = map.sum_over_axes(keepdims=keepdims)
 
         return images
 
