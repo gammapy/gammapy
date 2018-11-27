@@ -74,7 +74,8 @@ def geom(ebounds):
         },
     ],
 )
-def test_map_maker(pars, observations):
+@pytest.mark.parametrize("keepdims", [True, False])
+def test_map_maker(pars, observations, keepdims):
     maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg")
 
     maps = maker.run(observations)
@@ -91,7 +92,7 @@ def test_map_maker(pars, observations):
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
-    images = maker.make_images()
+    images = maker.make_images(keepdims=keepdims)
 
     counts = images["counts"]
     assert counts.unit == ""
