@@ -1,15 +1,15 @@
 .. _gammapy_0p9_release:
 
-0.9 (2018-11-26)
+0.9 (2018-11-29)
 ----------------
 
 Summary
 +++++++
 
-- Released on November 26, 2018 (`Gammapy 0.9 on PyPI <https://pypi.org/project/gammapy/0.9>`__)
+- Released on November 29, 2018 (`Gammapy 0.9 on PyPI <https://pypi.org/project/gammapy/0.9>`__)
 - 9 contributors (3 new)
 - 2 months of work
-- 82 pull requests (not all listed below)
+- 88 pull requests (not all listed below)
 
 **What's new?**
 
@@ -46,6 +46,7 @@ later Gammapy releases in 2019, please let us know!
 
 - Atreyee Sinha
 - Axel Donath
+- Brigitta Sipocz
 - Christoph Deil
 - Daniel Morcuende (new)
 - David Fidalgo
@@ -61,6 +62,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.9 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.9+is%3Aclosed>`__.
 
+- [#1949] Add fit minos_contour method (Christoph Deil)
 - [#1937] No copy of input and result model in fit (Christoph Deil)
 - [#1934] Improve FluxPointEstimator test and docs (Axel Donath)
 - [#1933] Add likelihood profiles to FluxPointEstimator (Axel Donath)

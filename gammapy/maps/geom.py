@@ -599,8 +599,8 @@ class MapAxis(object):
         axis : `~MapAxis`
             Sliced axis object.
         """
-        #TODO: Decide on handling node_type=center
-        #See https://github.com/gammapy/gammapy/issues/1952
+        # TODO: Decide on handling node_type=center
+        # See https://github.com/gammapy/gammapy/issues/1952
         return MapAxis.from_bounds(
             lo_bnd=self.edges[0],
             hi_bnd=self.edges[-1],
