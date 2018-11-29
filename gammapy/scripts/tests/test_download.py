@@ -17,6 +17,7 @@ def test_cli_download_help():
 
 
 @requires_dependency("yaml")
+@pytest.mark.remote_data
 def test_cli_download_datasets(files_dir):
     dataset = "ebl"
     option_out = "--out=" + str(files_dir)
@@ -30,6 +31,7 @@ def test_cli_download_datasets(files_dir):
 
 
 @requires_dependency("yaml")
+@pytest.mark.remote_data
 def test_cli_download_notebooks(files_dir):
     release = "0.8"
     notebook = "first_steps"
