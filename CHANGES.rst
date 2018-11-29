@@ -1,3 +1,22 @@
+.. _gammapy_0p10_release:
+
+0.10 (unreleased)
+-----------------
+
+Summary
++++++++
+
+- The Gammapy v0.10 release is planned for v0.10
+
+Pull requests
++++++++++++++
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.10 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.10+is%3Aclosed>`__.
+
+- tbd
+
 .. _gammapy_0p9_release:
 
 0.9 (2018-11-29)
