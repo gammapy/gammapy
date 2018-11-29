@@ -123,15 +123,13 @@ def run_cli(cli, args, exit_code=0):
 
 
 def assert_wcs_allclose(wcs1, wcs2):
-    """Assert all-close for `~astropy.wcs.WCS`
-
-    """
+    """Assert all-close for `astropy.wcs.WCS` objects."""
     # TODO: implement properly
     assert_allclose(wcs1.wcs.cdelt, wcs2.wcs.cdelt)
 
 
 def assert_skycoord_allclose(actual, desired):
-    """Assert all-close for `~astropy.coordinates.SkyCoord`.
+    """Assert all-close for `astropy.coordinates.SkyCoord` objects.
 
     - Frames can be different, aren't checked at the moment.
     """
@@ -142,7 +140,7 @@ def assert_skycoord_allclose(actual, desired):
 
 
 def assert_time_allclose(actual, desired, atol=1e-3):
-    """Assert that two `astropy.time.Time` objects are almost the same.
+    """Assert all-close for `astropy.time.Time` objects.
 
     atol is absolute tolerance in seconds.
     """
@@ -155,6 +153,14 @@ def assert_time_allclose(actual, desired, atol=1e-3):
 
 
 def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
+    """Assert all-close for `astropy.units.Quantity` objects.
+
+    Requires that ``unit`` is identical, not just that quantities
+    are allclose taking different units into account.
+
+    We prefer this kind of assert for testing, since units
+    should only change on purpose, so this tests more behaviour.
+    """
     # TODO: change this later to explicitly check units are the same!
     # assert actual.unit == desired.unit
     args = _unquantify_allclose_arguments(actual, desired, rtol, atol)
