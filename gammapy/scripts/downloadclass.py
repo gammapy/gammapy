@@ -59,6 +59,7 @@ class DownloadProcess(object):
                 self.localfold = self.localfold / nbfolder
             if self.getenvfile:
                 try:
+                    log.info("Download: {}".format(url_env))
                     urlopen(url_env)
                     get_file((url_env, filepath_env))
                 except Exception as ex:
@@ -67,10 +68,10 @@ class DownloadProcess(object):
 
     def files(self):
         self.parse_yaml()
-        filename_dat = "gammapy-data-index.json"
-        url_dat = BASE_URL + "/data/" + filename_dat
-        jsontext = urlopen(url_dat).read().decode("utf-8")
-        jsondata = json.loads(jsontext)
+        url = BASE_URL + "/data/gammapy-data-index.json"
+        log.info("Download: {}".format(url))
+        txt = urlopen(url).read().decode("utf-8")
+        datasets = json.loads(txt)
 
         if self.option == "notebooks" or self.modetutor:
             if self.src != "":
@@ -92,7 +93,7 @@ class DownloadProcess(object):
             search = ""
             if self.option == "datasets" and not self.modetutor:
                 search = self.src
-                datafound.update(self.parse_datafiles(search, jsondata))
+                datafound.update(self.parse_datafiles(search, datasets))
 
             if not search:
                 if self.modetutor:
@@ -101,7 +102,7 @@ class DownloadProcess(object):
                         if "datasets" in record:
                             if record["datasets"] != "":
                                 for ds in record["datasets"]:
-                                    datafound.update(self.parse_datafiles(ds, jsondata))
+                                    datafound.update(self.parse_datafiles(ds, datasets))
 
             if not datafound:
                 log.info("Dataset {} not found".format(self.src))
@@ -150,13 +151,14 @@ class DownloadProcess(object):
 
         if version.release:
             filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
-            url_nbs = BASE_URL + "/tutorials/" + filename_nbs
+            url = BASE_URL + "/tutorials/" + filename_nbs
         else:
-            url_nbs = YAML_URL
+            url = YAML_URL
 
-        r = urlopen(url_nbs)
-        yamltext = r.read().decode("utf-8")
-        for nb in yaml.safe_load(yamltext):
+        log.info("Download: {}".format(url))
+        txt = urlopen(url).read().decode("utf-8")
+
+        for nb in yaml.safe_load(txt):
             path = nb["name"] + ".ipynb"
             label = "nb: " + nb["name"]
             self.listfiles[label] = {}
@@ -190,9 +192,9 @@ class DownloadProcess(object):
                         imagefiles[label]["path"] = path
         return imagefiles
 
-    def parse_datafiles(self, df, jsondata):
+    def parse_datafiles(self, df, datasets):
         datafiles = {}
-        for dataset in jsondata:
+        for dataset in datasets:
             if df == dataset["name"] or df == "":
                 if dataset["files"]:
                     for ds in dataset["files"]:
