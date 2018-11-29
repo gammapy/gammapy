@@ -41,9 +41,8 @@
   datasets:
     - fermi_survey
     - catalogs
-- name: fermi_lat
+- name: fermi_lat GAMMAPY_FERMI_LAT_DATA
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/fermi_lat.ipynb
-  requires: GAMMAPY_FERMI_LAT_DATA
   datasets:
     - fermi_3fhl
 - name: first_steps
@@ -79,6 +78,7 @@
   requires: iminuit GAMMA_CAT
   datasets:
     - catalogs
+    - gamma-cat
 - name: simulate_3d
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/simulate_3d.ipynb
   requires: iminuit
@@ -98,11 +98,12 @@
     - joint-crab
 - name: spectrum_models
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_models.ipynb
-- name: spectrum_pipe
+- name: spectrum_pipe GAMMA_CAT
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_pipe.ipynb
-  requires: iminuit GAMMA_CAT
+  requires: iminuit
   datasets:
     - hess-dl3-dr1
+    - gamma-cat
 - name: spectrum_simulation
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
   datasets:
