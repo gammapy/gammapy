@@ -28,6 +28,7 @@ def requires_dependency(name):
     Examples
     --------
     ::
+
         from gammapy.utils.testing import requires_dependency
 
         @requires_dependency('scipy')
@@ -53,8 +54,7 @@ def requires_dependency(name):
 
 
 def has_data(name):
-    """Is a certain set of data available?
-    """
+    """Is a certain set of data available?"""
     if name == "gammapy-extra":
         from ..datasets import gammapy_extra
 
@@ -72,7 +72,6 @@ def requires_data(name):
 
     Examples
     --------
-
     ::
 
         from gammapy.utils.testing import requires_data
