@@ -29,8 +29,9 @@ RUN adduser --disabled-password \
 
 # download tutorials and datasets
 RUN gammapy download notebooks --out=${HOME}/gammapy-tutorials --release=0.9
-RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
+RUN gammapy download datasets --out=${HOME}/gammapy-datasets
 
+# RUN git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra
 # RUN git clone https://github.com/gammapy/gammapy-cat.git ${HOME}/gammapy-cat
 # RUN git clone https://github.com/gammapy/gammapy-fermi-lat-data.git ${HOME}/gammapy-fermi-lat-data
 
@@ -43,7 +44,7 @@ USER ${NB_USER}
 WORKDIR ${HOME}/gammapy-tutorials/notebooks-0.9
 
 # env vars used in tutorials
-ENV GAMMAPY_DATA ${HOME}/gammapy-extra/datasets
+ENV GAMMAPY_DATA ${HOME}/${HOME}/gammapy-datasets
 
 # ENV GAMMAPY_CAT ${HOME}/gammapy-cat
 # ENV GAMMAPY_FERMI_LAT_DATA ${HOME}/gammapy-fermi-lat-data
