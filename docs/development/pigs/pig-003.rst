@@ -19,7 +19,7 @@ We propose to drop Python 2.7 support in Gammapy v0.11 in March 2019.
 All earlier Gammapy versions, up to Gammapy v0.10, support Python 2.7 and of
 course will remain available indefinitely.
 
-Use surveys in 2018 have shown that most Gammapy users are already on Python 3.
+User surveys in 2018 have shown that most Gammapy users are already on Python 3.
 Gammapy v0.8 shipped with a recommended conda environment based on Python 3.6
 that works on Linux, Mac and Windows and can be installed by anyone, also on
 older machines.
