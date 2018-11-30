@@ -61,6 +61,7 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
    Links are at https://github.com/gammapy/gammapy#status-shields
 #. Check that the changelog is complete, by going through the list of Github issues for the
    release milestone.
+#. Update MyBinder Dockerfile changing the Gammapy release number in three different lines. 
 
 Make release
 ------------
