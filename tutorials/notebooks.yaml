@@ -79,6 +79,7 @@
   requires: iminuit GAMMA_CAT
   datasets:
     - catalogs
+    - gamma-cat
 - name: simulate_3d
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/simulate_3d.ipynb
   requires: iminuit
@@ -103,6 +104,7 @@
   requires: iminuit GAMMA_CAT
   datasets:
     - hess-dl3-dr1
+    - gamma-cat
 - name: spectrum_simulation
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
   datasets:
