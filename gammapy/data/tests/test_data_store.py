@@ -58,27 +58,6 @@ def test_datastore_from_file():
 
 
 @requires_data("gammapy-extra")
-def test_datastore_pa():
-    """Test HESS ParisAnalysis data access."""
-    data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-crab4-pa")
-
-    obs = data_store.obs(obs_id=23523)
-    filename = str(obs.location(hdu_type="bkg").path(abs_path=False))
-    assert filename == "background/bgmodel_alt7_az0.fits.gz"
-
-    assert (
-        str(type(obs.aeff))
-        == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
-    )
-    assert (
-        str(type(obs.edisp))
-        == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
-    )
-    assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_king.PSFKing'>"
-    assert str(type(obs.bkg)) == "<class 'gammapy.irf.background.Background3D'>"
-
-
-@requires_data("gammapy-extra")
 def test_datastore_get_observations(data_store):
     """Test loading data and IRF files via the DataStore"""
     observations = data_store.get_observations([23523, 23592])
