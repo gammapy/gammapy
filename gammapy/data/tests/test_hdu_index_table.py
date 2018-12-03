@@ -108,25 +108,3 @@ def test_hdu_index_table_hd_hap():
         hdu_index.hdu_location(obs_id=23523, hdu_class="invalid")
     msg = "Invalid hdu_class: invalid. Valid values are: ['events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table', 'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d']"
     assert exc.value.args[0] == msg
-
-
-@requires_data("gammapy-extra")
-def test_hdu_index_table_pa():
-    """Test HESS ParisAnalysis data access."""
-    hdu_index = HDUIndexTable.read(
-        "$GAMMAPY_EXTRA/datasets/hess-crab4-pa/hdu-index.fits.gz"
-    )
-
-    # A few valid queries
-
-    location = hdu_index.hdu_location(obs_id=23523, hdu_type="psf")
-    assert (
-        str(location.path(abs_path=False))
-        == "run23400-23599/run23523/psf_king_23523.fits.gz"
-    )
-
-    location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_king")
-    assert (
-        str(location.path(abs_path=False))
-        == "run23400-23599/run23523/psf_king_23523.fits.gz"
-    )

@@ -14,15 +14,6 @@ from ...utils.testing import requires_data
 # The goal would be to not accidentally break support for old files
 productions = [
     dict(
-        prod="pa-release1",
-        datastore="$GAMMAPY_EXTRA/datasets/hess-crab4-pa",
-        test_obs=23523,
-        aeff_ref=207835.9,
-        psf_type="psf_king",
-        psf_ref=51.004,
-        edisp_ref=2.783,
-    ),
-    dict(
         prod="hap-hd-prod2",
         datastore="$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2",
         test_obs=23523,
