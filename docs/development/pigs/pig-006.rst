@@ -148,7 +148,7 @@ We split the implementation in two big steps:
     | **When** passed on to the analysis classes
     | **Then** should behave the same as the current `ObservationList` class
 
-    | **PRs**: ObservationList -> Observations, initialize with a list of `DataStoreObservation`; implement __iter__, __getitem__, __setitem__; adapt notebooks
+    | **PRs**: ObservationList -> Observations, initialize with a list of `DataStoreObservation`; implement __len__, __getitem__; adapt notebooks
 
 2. Scenario: Add an empty filter to an `Observation`
     | **Given** a basic version of the `Observation` and `ObservationFilter` class
@@ -162,9 +162,23 @@ We split the implementation in two big steps:
     | **When** we give the time interval to an `Observation`
     | **Then** return a new `Observation` with the according time filter
 
-    | **PRs**: Introduce time filters for events and gtis; ...
+    | **PRs**: Introduce time filters for events and gtis; Add `select_time` method to the Observation class
 
-4. ...
+4. Scenario: filter an `Observation` by pulsar phase
+    | **Given** a user specified phase interval
+    | **When** we give the phase interval to an `Observation`
+    | **Then** return a new `Observation` with the according phase filter
+
+    | **PRs**: Add `select_phase` method to the Observation class
+    
+5. Scenario: filter `Observations` by time
+    | **Given** a user specified time interval
+    | **When** we give the time interval to the `Observations`
+    | **Then** return a new `Observations` holding the selected `Observation` objects with the respective time filter
+
+    | **PRs**: Add `select_time` method to the `Observations` class;
+    
+6. ...
 
 Proposed class diagram
 ----------------------
