@@ -41,7 +41,7 @@ class ObservationFilter(object):
     EVENT_FILTER_TYPES = dict(
         box_region="select_sky_box",
         circular_region="select_circular_region",
-        custom="select_custom",
+        custom="select_parameter",
     )
 
     def __init__(self, time_filter=None, event_filters=None):
