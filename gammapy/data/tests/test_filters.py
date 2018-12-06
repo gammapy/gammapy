@@ -74,7 +74,5 @@ def test_filter_gti(observation):
     gti = observation.gti
     filtered_gti = obs_filter.filter_gti(gti)
 
-    assert all(
-        (filtered_gti.time_start >= time_filter[0])
-        & (filtered_gti.time_stop <= time_filter[1])
-    )
+    assert all(filtered_gti.time_start >= time_filter[0])
+    assert all(filtered_gti.time_stop <= time_filter[1])
