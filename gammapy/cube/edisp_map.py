@@ -94,7 +94,7 @@ class EDispMap(object):
         """Write the Map object containing the EDisp Library map."""
         self._edisp_map.write(*args, **kwargs)
 
-    def get_energy_dispersion(self, position):
+    def get_energy_dispersion(self, position, e_reco, migra_step=5e-3):
         """ Returns EnergyDispersion at a given position
 
         Parameters
@@ -106,29 +106,56 @@ class EDispMap(object):
         -------
         psf_table : `~gammapy.irf.EnergyDependentTablePSF`
             the table PSF
+        e_reco : `~astropy.units.Quantity`
+            Reconstruced energy axis binning
+        migra_step : float
+            Integration step in migration
         """
         if position.size != 1:
             raise ValueError(
-                "EnergyDependentTablePSF can be extracted at one single position only."
+                "EnergyDispersion can be extracted at one single position only."
             )
 
         # axes ordering fixed. Could be changed.
         pix_ener = np.arange(self.geom.axes[1].nbin)
-        pix_rad = np.arange(self.geom.axes[0].nbin)
+
+        # Define a vector of migration with mig_step step
+        mrec_min = self.geom.axes[0].edges[0]
+        mrec_max = self.geom.axis[0].edges[-1]
+        mig_array = np.arange(mrec_min, mrec_max, migra_step)
+        pix_migra = (mig_array - mrec_min)/mrec_max * self.geom.axis[0].nbin
 
         # Convert position to pixels
         pix_lon, pix_lat = self.edisp_map.geom.to_image().coord_to_pix(position)
 
         # Build the pixels tuple
-        pix = np.meshgrid(pix_lon, pix_lat, pix_rad, pix_ener)
+        pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
 
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
-        psf_values = np.squeeze(
+        edisp_values = np.squeeze(
             self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)
         )
 
-        energies = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
-        rad = self.edisp_map.geom.axes[0].center * self.edisp_map.geom.axes[0].unit
+        e_true = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
+
+        # We now perform integration over migra
+        # The code is adapted from `~gammapy.EnergyDispersion2D.get_response`
+
+        # migration value of e_reco bounds
+        migra_e_reco = e_reco / e_true
+
+        # Compute normalized cumulative sum to prepare integration
+        tmp = np.nan_to_num(np.cumsum(edisp_values))
+
+        # Determine positions (bin indices) of e_reco bounds in migration array
+        pos_mig = np.digitize(migra_e_reco, mig_array) - 1
+        # We ensure that no negative values are found
+        pos_mig = np.maximum(pos_mig, 0)
+
+        # We compute the difference between 2 successive bounds in e_reco
+        # to get integral over reco energy bin
+        integral = np.diff(tmp[pos_mig])
+
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(energy=energies, rad=rad, psf_value=psf_values.T)
