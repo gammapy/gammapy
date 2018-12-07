@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 import pytest
 from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
@@ -74,5 +75,9 @@ def test_filter_gti(observation):
     gti = observation.gti
     filtered_gti = obs_filter.filter_gti(gti)
 
-    assert all(filtered_gti.time_start >= time_filter[0])
-    assert all(filtered_gti.time_stop <= time_filter[1])
+    # small workaround to test for greater/less than or equal to
+    abs_diff = np.abs((filtered_gti.time_start - time_filter[0]).sec)  # absolute differences in seconds
+    assert all((filtered_gti.time_start > time_filter[0]) | (abs_diff < 0.001))
+
+    abs_diff = np.abs((filtered_gti.time_stop - time_filter[1]).sec)  # absolute differences in seconds
+    assert all((filtered_gti.time_stop < time_filter[1]) | (abs_diff < 0.001))
