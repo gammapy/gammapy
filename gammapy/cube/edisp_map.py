@@ -136,26 +136,39 @@ class EDispMap(object):
             self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)
         )
 
-        e_true = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
+        e_trues = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
 
-        # We now perform integration over migra
-        # The code is adapted from `~gammapy.EnergyDispersion2D.get_response`
+        data = []
 
-        # migration value of e_reco bounds
-        migra_e_reco = e_reco / e_true
+        for e_true in e_trues:
+            # We now perform integration over migra
+            # The code is adapted from `~gammapy.EnergyDispersion2D.get_response`
 
-        # Compute normalized cumulative sum to prepare integration
-        tmp = np.nan_to_num(np.cumsum(edisp_values))
+            # migration value of e_reco bounds
+            migra_e_reco = e_reco / e_true
 
-        # Determine positions (bin indices) of e_reco bounds in migration array
-        pos_mig = np.digitize(migra_e_reco, mig_array) - 1
-        # We ensure that no negative values are found
-        pos_mig = np.maximum(pos_mig, 0)
+            # Compute normalized cumulative sum to prepare integration
+            tmp = np.nan_to_num(np.cumsum(edisp_values))
 
-        # We compute the difference between 2 successive bounds in e_reco
-        # to get integral over reco energy bin
-        integral = np.diff(tmp[pos_mig])
+            # Determine positions (bin indices) of e_reco bounds in migration array
+            pos_mig = np.digitize(migra_e_reco, mig_array) - 1
+            # We ensure that no negative values are found
+            pos_mig = np.maximum(pos_mig, 0)
 
+            # We compute the difference between 2 successive bounds in e_reco
+            # to get integral over reco energy bin
+            integral = np.diff(tmp[pos_mig])
 
-        # Beware. Need to revert rad and energies to follow the TablePSF scheme.
-        return EnergyDependentTablePSF(energy=energies, rad=rad, psf_value=psf_values.T)
+            data.append(vec)
+
+        data = np.asarray(data)
+        e_lo, e_hi = e_trues[:-1], e_trues[1:]
+        ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
+
+        return EnergyDispersion(
+            e_true_lo=e_lo,
+            e_true_hi=e_hi,
+            e_reco_lo=ereco_lo,
+            e_reco_hi=ereco_hi,
+            data=data,
+        )
