@@ -8,6 +8,52 @@ from ..maps import Map
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
+def make_edisp_map(edisp, pointing, geom, max_offset):
+    """Make a edisp map for a single observation
+
+    Expected axes : migra and true energy in this specific order
+    The name of the migra MapAxis is expected to be 'migra'
+
+    Parameters
+    ----------
+    psf : `~gammapy.irf.EnergyDispersion2D`
+        the 2D Energy Dispersion IRF
+    pointing : `~astropy.coordinates.SkyCoord`
+        the pointing direction
+    geom : `~gammapy.maps.MapGeom`
+        the map geom to be used. It provides the target geometry.
+        rad and true energy axes should be given in this specific order.
+    max_offset : `~astropy.coordinates.Angle`
+        maximum offset w.r.t. fov center
+
+    Returns
+    -------
+    edispmap : `~gammapy.cube.EDispMap`
+        the resulting EDisp map
+    """
+    energy_axis = geom.get_axis_by_name("energy")
+    energy = energy_axis.center * energy_axis.unit
+
+    migra_axis = geom.get_axis_by_name("migra")
+    migra = Angle(migra_axis.center, unit=migra_axis.unit)
+
+    # Compute separations with pointing position
+    separations = pointing.separation(geom.to_image().get_coord().skycoord)
+    valid = np.where(separations < max_offset)
+
+    # Compute PSF values
+    edisp_values = edisp.evaluate(offset=separations[valid], energy=energy, migra=migra)
+
+    # Re-order axes to be consistent with expected geometry
+    edisp_values = np.transpose(edisp_values, axes=(2, 0, 1))
+
+    # Create Map and fill relevant entries
+    edispmap = Map.from_geom(geom, unit="sr-1")
+    edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
+
+    return EDispMap(edispmap)
+
+
 class EDispMap(object):
     """Class containing the Map of Energy Dispersions and allowing to interact with it.
 
