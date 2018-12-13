@@ -12,6 +12,9 @@ from ...cube import EDispMap, make_edisp_map
 
 def test_make_edisp_map():
 
+    etrue = [0.2, 0.7, 1.5, 2.0, 10.0]*u.TeV
+    migra = np.linspace(0.0, 3.0, 51)
+
     edisp2d = EnergyDispersion2D.from_gauss(e_true, migra, 0.0, 0.1, offset)
 
     pointing = SkyCoord(0, 0, unit="deg")
@@ -31,7 +34,7 @@ def test_make_edisp_map():
 
 
 
-def test_edisp_map(tmpdir):
-    migra = np.linspace(0.,3.0,100.)
-    edisp2d = EnergyDispersion2D.from_gauss(e_true, migra, 0.0, 0.1, offset)
+#def test_edisp_map(tmpdir):
+#    migra = np.linspace(0.,3.0,100.)
+#    edisp2d = EnergyDispersion2D.from_gauss(e_true, migra, 0.0, 0.1, offset)
 
