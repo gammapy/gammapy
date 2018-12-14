@@ -47,20 +47,27 @@ def test_gti_fermi():
 
 @requires_data("gammapy-extra")
 @pytest.mark.parametrize(
-    "time_interval",
+    "time_interval, expected_length, expected_times",
     [
-        Time(["2008-08-04T16:21:00", "2008-08-04T19:10:00"], format="isot", scale="tt"),
-        Time([54682.68125, 54682.79861111], format="mjd", scale="tt"),
+        (Time(["2008-08-04T16:21:00", "2008-08-04T19:10:00"], format="isot", scale="tt"), 2,
+         Time(["2008-08-04T16:21:00", "2008-08-04T19:10:00"], format="isot", scale="tt")),
+        (Time([54682.68125, 54682.79861111], format="mjd", scale="tt"), 2,
+         Time([54682.68125, 54682.79861111], format="mjd", scale="tt")),
+        (Time([10., 100000.], format='mjd', scale='tt'), 36589,
+         Time([54682.659499814814, 57053.993550740735], format='mjd', scale='tt')),
+        (Time([10., 20.], format='mjd', scale='tt'), 0, None),
     ],
 )
-def test_select_time(time_interval):
+def test_select_time(time_interval, expected_length, expected_times):
     filename = "$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz"
     gti = GTI.read(filename)
+    print(gti.time_start[0], gti.time_stop[-1], len(gti.table))
 
     gti_selected = gti.select_time(time_interval)
 
-    assert len(gti_selected.table) == 2
+    assert len(gti_selected.table) == expected_length
 
-    time_interval.format = "mjd"
-    assert_time_allclose(gti_selected.time_start[0], time_interval[0])
-    assert_time_allclose(gti_selected.time_stop[-1], time_interval[1])
+    if expected_length != 0:
+        expected_times.format = "mjd"
+        assert_time_allclose(gti_selected.time_start[0], expected_times[0])
+        assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])

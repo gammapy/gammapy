@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.time import time_ref_from_dict, time_relative_to_ref
@@ -117,18 +118,15 @@ class GTI(object):
             Copy of the GTI table with selection applied.
         """
         # get GTIs that fall within the time_interval
-        mask = self.time_start >= time_interval[1]
-        mask |= self.time_stop <= time_interval[0]
-        gti_within = self.table[~mask]
+        mask = self.time_start < time_interval[1]
+        mask &= self.time_stop > time_interval[0]
+        gti_within = self.table[mask]
 
         # crop the GTIs
         start_met = time_relative_to_ref(time_interval[0], self.table.meta)
-        idx = gti_within['START'] < start_met
-        gti_within['START'][idx] = start_met.value
-
         stop_met = time_relative_to_ref(time_interval[1], self.table.meta)
-        idx = gti_within['STOP'] > stop_met
-        gti_within['STOP'][idx] = stop_met.value
+        np.clip(gti_within['START'], start_met.value, stop_met.value, out=gti_within['START'])
+        np.clip(gti_within['STOP'], start_met.value, stop_met.value, out=gti_within['STOP'])
 
         return self.__class__(gti_within)
 

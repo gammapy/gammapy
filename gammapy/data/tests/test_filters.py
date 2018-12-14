@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 import pytest
+import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
+from astropy.units import Quantity
 from astropy import units as u
 from regions import CircleSkyRegion
-from ...data import DataStore, ObservationFilter, EventListBase
-from ...utils.testing import requires_data
+from ...data import DataStore, ObservationFilter, EventListBase, GTI
+from ...utils.testing import requires_data, assert_time_allclose
 
 
 def test_event_filter_types():
@@ -38,7 +39,7 @@ def test_empty_observation_filter(observation):
 def test_filter_events(observation):
     custom_filter = {
         "type": "custom",
-        "opts": {"parameter": "ENERGY", "limits": (0.8, 10.0)},
+        "opts": {"parameter": "ENERGY", "band": Quantity([0.8*u.TeV, 10.0*u.TeV])},
     }
 
     target_position = SkyCoord(ra=229.2, dec=-58.3, unit="deg", frame="icrs")
@@ -55,29 +56,27 @@ def test_filter_events(observation):
     events = observation.events
     filtered_events = obs_filter.filter_events(events)
 
-    assert all(
+    assert np.all(
         (filtered_events.energy >= 0.8 * u.TeV)
         & (filtered_events.energy < 10.0 * u.TeV)
     )
-    assert all(
+    assert np.all(
         (filtered_events.time >= time_filter[0])
         & (filtered_events.time < time_filter[1])
     )
-    assert all(region.center.separation(filtered_events.radec) < region_radius)
+    assert np.all(region.center.separation(filtered_events.radec) < region_radius)
 
 
 @requires_data("gammapy-extra")
 def test_filter_gti(observation):
-    time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
+    time_filter = Time([53090.125, 53090.130], format="mjd", scale="tt")
 
     obs_filter = ObservationFilter(time_filter=time_filter)
 
     gti = observation.gti
     filtered_gti = obs_filter.filter_gti(gti)
 
-    # small workaround to test for greater/less than or equal to
-    abs_diff = np.abs((filtered_gti.time_start - time_filter[0]).sec)  # absolute differences in seconds
-    assert all((filtered_gti.time_start > time_filter[0]) | (abs_diff < 0.001))
+    assert type(filtered_gti) == GTI
+    assert_time_allclose(filtered_gti.time_start, time_filter[0])
+    assert_time_allclose(filtered_gti.time_stop, time_filter[1])
 
-    abs_diff = np.abs((filtered_gti.time_stop - time_filter[1]).sec)  # absolute differences in seconds
-    assert all((filtered_gti.time_stop < time_filter[1]) | (abs_diff < 0.001))

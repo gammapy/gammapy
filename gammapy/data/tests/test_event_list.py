@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+import numpy as np
+from astropy import units as u
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...data.event_list import EventListBase, EventList, EventListLAT
@@ -13,14 +15,14 @@ class TestEventListBase:
         self.events = EventListBase.read(filename)
 
     @pytest.mark.parametrize(
-        "parameter, limits",
-        [("TIME", (101962604.0, 101964280.0)), ("ENERGY", (0.8, 5.0))],
+        "parameter, band",
+        [("ENERGY", (0.8*u.TeV, 5.0*u.TeV))],
     )
-    def test_select_parameter(self, parameter, limits):
-        selected_events = self.events.select_parameter(parameter, limits)
-        assert all(
-            (selected_events.table[parameter] >= limits[0])
-            & (selected_events.table[parameter] < limits[1])
+    def test_select_parameter(self, parameter, band):
+        selected_events = self.events.select_parameter(parameter, band)
+        assert np.all(
+            (selected_events.table[parameter].quantity >= band[0])
+            & (selected_events.table[parameter].quantity < band[1])
         )
 
 

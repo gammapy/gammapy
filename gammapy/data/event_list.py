@@ -379,15 +379,16 @@ class EventListBase(object):
             mask = np.union1d(mask, temp)
         return mask
 
-    def select_parameter(self, parameter, limits):
+    def select_parameter(self, parameter, band):
         """Select events with respect to a specified parameter
 
         Parameters
         ----------
         parameter : str
             Parameter used for the selection. Must be present in `self.table`.
-        limits : tuple
+        band : tuple or `astropy.units.Quantity`
             Min and max value for the parameter to be selected (min <= parameter < max).
+            If parameter is not dimensionless you have to provide a Quantity.
 
         Returns
         -------
@@ -399,10 +400,10 @@ class EventListBase(object):
         >>> from gammapy.data import EventList
         >>> event_list = EventList.read('events.fits')
         >>> phase_region = (0.3, 0.5)
-        >>> event_list = event_list.select_parameter(parameter='PHASE', limits=phase_region)
+        >>> event_list = event_list.select_parameter(parameter='PHASE', band=phase_region)
         """
-        mask = limits[0] <= self.table[parameter]
-        mask &= self.table[parameter] < limits[1]
+        mask = band[0] <= self.table[parameter].quantity
+        mask &= self.table[parameter].quantity < band[1]
         return self.select_row_subset(mask)
 
     def _default_plot_ebounds(self):
