@@ -76,7 +76,7 @@ def test_filter_gti(observation):
     gti = observation.gti
     filtered_gti = obs_filter.filter_gti(gti)
 
-    assert type(filtered_gti) == GTI
+    assert isinstance(filtered_gti, GTI)
     assert_time_allclose(filtered_gti.time_start, time_filter[0])
     assert_time_allclose(filtered_gti.time_stop, time_filter[1])
 
