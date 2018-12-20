@@ -1,8 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
+import numpy as np
+from astropy import units as u
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...data.event_list import EventList, EventListLAT
+from ...data.event_list import EventListBase, EventList, EventListLAT
+
+
+@requires_data("gammapy-extra")
+class TestEventListBase:
+    def setup(self):
+        filename = "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        self.events = EventListBase.read(filename)
+
+    @pytest.mark.parametrize(
+        "parameter, band",
+        [("ENERGY", (0.8*u.TeV, 5.0*u.TeV))],
+    )
+    def test_select_parameter(self, parameter, band):
+        selected_events = self.events.select_parameter(parameter, band)
+        assert np.all(
+            (selected_events.table[parameter].quantity >= band[0])
+            & (selected_events.table[parameter].quantity < band[1])
+        )
 
 
 @requires_data("gammapy-extra")
