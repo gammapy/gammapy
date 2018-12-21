@@ -15,8 +15,7 @@ class TestEventListBase:
         self.events = EventListBase.read(filename)
 
     @pytest.mark.parametrize(
-        "parameter, band",
-        [("ENERGY", (0.8*u.TeV, 5.0*u.TeV))],
+        "parameter, band", [("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))]
     )
     def test_select_parameter(self, parameter, band):
         selected_events = self.events.select_parameter(parameter, band)
