@@ -233,15 +233,14 @@ class DataStoreObservation(object):
         """Select a time interval of the observation.
 
         Parameter
-        =========
+        ---------
         time_interval : `astropy.time.Time`
             Start and stop time of the selected time interval. For now we only support a single time interval.
 
         Returns
-        =======
+        -------
         new_obs : `~gammapy.data.DataStoreObservation`
             A new observation instance of the specified time interval
-
         """
         new_obs_filter = self.obs_filter.copy()
         new_obs_filter.time_filter = time_interval
@@ -286,20 +285,19 @@ class Observations(object):
         """Select a time interval of the observations.
 
         Parameter
-        =========
+        ---------
         time_interval : `astropy.time.Time`
             Start and stop time of the selected time interval. For now we only support a single time interval.
 
         Returns
-        =======
+        -------
         new_observations : `~gammapy.data.Observations`
             A new observations instance of the specified time interval
-
         """
         new_obs_list = []
         for obs in self:
             new_obs = obs.select_time(time_interval)
-            if len(new_obs.events.table) > 0:
+            if len(new_obs.gti.table) > 0:
                 new_obs_list.append(new_obs)
 
         return self.__class__(new_obs_list)

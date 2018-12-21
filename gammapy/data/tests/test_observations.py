@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from ...data import DataStore
@@ -76,6 +77,49 @@ def test_observation_select_time(data_store, time_interval, expected_times):
     else:
         assert len(new_obs.events.table) == 0
         assert len(new_obs.gti.table) == 0
+
+
+@requires_data("gammapy-extra")
+@pytest.mark.parametrize(
+    "time_interval, expected_times, expected_nr_of_obs",
+    [
+        (
+            Time([53090.130, 53090.140], format="mjd", scale="tt"),
+            Time([53090.130, 53090.140], format="mjd", scale="tt"),
+            1,
+        ),
+        (
+            Time([53090.130, 53091.110], format="mjd", scale="tt"),
+            Time([53090.130, 53091.110], format="mjd", scale="tt"),
+            3,
+        ),
+        (
+            Time([10.0, 53111.0230], format="mjd", scale="tt"),
+            Time([53090.1234512, 53111.0230], format="mjd", scale="tt"),
+            8,
+        ),
+        (Time([10.0, 20.0], format="mjd", scale="tt"), None, 0),
+    ],
+)
+def test_observations_select_time(
+    data_store, time_interval, expected_times, expected_nr_of_obs
+):
+    obs_ids = data_store.obs_table["OBS_ID"][:8]
+    obss = data_store.get_observations(obs_ids)
+
+    new_obss = obss.select_time(time_interval)
+
+    assert len(new_obss) == expected_nr_of_obs
+
+    if expected_nr_of_obs > 0:
+        assert new_obss[0].events.time[0] >= expected_times[0]
+        assert new_obss[-1].events.time[-1] < expected_times[1]
+        assert_time_allclose(
+            new_obss[0].gti.time_start[0], expected_times[0], atol=0.01
+        )
+        assert_time_allclose(
+            new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
+        )
 
 
 @requires_data("gammapy-extra")
