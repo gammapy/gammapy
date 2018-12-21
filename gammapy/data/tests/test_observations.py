@@ -32,6 +32,36 @@ def test_data_store_observation(data_store):
 
 
 @requires_data("gammapy-extra")
+@pytest.mark.parametrize(
+    "time_interval, expected_times",
+    [
+        (Time(["2004-12-04T22:10:00", "2004-12-04T22:30:00"], format="isot", scale="tt"),
+         Time(["2004-12-04T22:10:00", "2004-12-04T22:30:00"], format="isot", scale="tt")),
+        (Time([53343.930, 53343.940], format="mjd", scale="tt"),
+         Time([53343.930, 53343.940], format="mjd", scale="tt")),
+        (Time([10., 100000.], format='mjd', scale='tt'),
+         Time([53343.92234009, 53343.94186563], format='mjd', scale='tt')),
+        (Time([10., 20.], format='mjd', scale='tt'), None),
+    ],
+)
+def test_observation_select_time(data_store, time_interval, expected_times):
+    obs = data_store.obs(23523)
+    print(obs.events.time[-1])
+    print(obs.gti.time_stop[-1])
+
+    new_obs = obs.select_time(time_interval)
+
+    if expected_times:
+        expected_times.format = 'mjd'
+        assert np.all((new_obs.events.time >= expected_times[0]) & (new_obs.events.time < expected_times[1]))
+        assert_time_allclose(new_obs.gti.time_start[0], expected_times[0], atol=0.01)
+        assert_time_allclose(new_obs.gti.time_stop[-1], expected_times[1], atol=0.01)
+    else:
+        assert len(new_obs.events.table) == 0
+        assert len(new_obs.gti.table) == 0
+
+
+@requires_data("gammapy-extra")
 class TestObservationChecker:
     def setup(self):
         data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps")

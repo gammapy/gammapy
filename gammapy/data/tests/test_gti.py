@@ -61,7 +61,6 @@ def test_gti_fermi():
 def test_select_time(time_interval, expected_length, expected_times):
     filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
     gti = GTI.read(filename)
-    print(gti.time_start[0], gti.time_stop[-1], len(gti.table))
 
     gti_selected = gti.select_time(time_interval)
 
