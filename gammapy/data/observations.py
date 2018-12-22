@@ -228,7 +228,6 @@ class DataStoreObservation(object):
         """Quick-look plots in a few panels."""
         raise NotImplementedError
 
-
     def select_time(self, time_interval):
         """Select a time interval of the observation.
 
@@ -245,7 +244,9 @@ class DataStoreObservation(object):
         new_obs_filter = self.obs_filter.copy()
         new_obs_filter.time_filter = time_interval
 
-        return self.__class__(obs_id=self.obs_id, data_store=self.data_store, obs_filter=new_obs_filter)
+        return self.__class__(
+            obs_id=self.obs_id, data_store=self.data_store, obs_filter=new_obs_filter
+        )
 
     def check(self, checks="all"):
         """Run checks.
