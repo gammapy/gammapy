@@ -29,6 +29,7 @@ def test_sky_gaussian():
     lat = 46 * u.deg
     val = model(lon, lat)
     assert val.unit == "deg-2"
+    assert model.parameters["sigma"].min == 0
     assert_allclose(val.to_value("sr-1"), [316.8970202, 118.6505303])
 
 

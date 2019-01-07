@@ -98,7 +98,7 @@ class SkyGaussian(SkySpatialModel):
             [
                 Parameter("lon_0", Longitude(lon_0)),
                 Parameter("lat_0", Latitude(lat_0)),
-                Parameter("sigma", Angle(sigma)),
+                Parameter("sigma", Angle(sigma), min=0),
             ]
         )
 
