@@ -36,7 +36,9 @@ def compute_lima_image(counts, background, kernel):
     kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")
 
-    counts_conv = counts.convolve(kernel.array).data
+    # fft convolution adds numerical noise, to ensure integer results we call
+    # np.rint
+    counts_conv = np.rint(counts.convolve(kernel.array).data)
     background_conv = background.convolve(kernel.array).data
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method="lima")
@@ -79,7 +81,9 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     kernel = copy.deepcopy(kernel)
     kernel.normalize("peak")
 
-    n_on_conv = n_on.convolve(kernel.array).data
+    # fft convolution adds numerical noise, to ensure integer results we call
+    # np.rint
+    n_on_conv = np.rint(n_on.convolve(kernel.array).data)
     a_on_conv = a_on.convolve(kernel.array).data
     alpha_conv = a_on_conv / a_off.data
 
