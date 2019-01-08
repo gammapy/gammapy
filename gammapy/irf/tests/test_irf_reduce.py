@@ -49,9 +49,8 @@ def data_store():
             "rad_shape": (1000,),
             "psf_rad": 0.000524,
             "psf_exposure": 3.14711e12,
-            # TODO: should this be psf_value_shape == (32, 1000) ?
-            "psf_value_shape": (32, 144),
-            "psf_value": 4369.96391,
+            "psf_value_shape": (32, 1000),
+            "psf_value": 25888.5047,
         },
         {
             "energy": EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
@@ -61,8 +60,8 @@ def data_store():
             "rad_shape": (1000,),
             "psf_rad": 0.000524,
             "psf_exposure": 4.688142e12,
-            "psf_value_shape": (101, 144),
-            "psf_value": 3726.58798,
+            "psf_value_shape": (101, 1000),
+            "psf_value": 22723.879272,
         },
     ],
 )
