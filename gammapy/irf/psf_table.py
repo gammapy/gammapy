@@ -2,10 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from scipy.interpolate import UnivariateSpline, RegularGridInterpolator
+from scipy.interpolate import UnivariateSpline
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
@@ -362,10 +363,11 @@ class EnergyDependentTablePSF(object):
         Exposure (1-dim)
     psf_value : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
+    interp_kwargs : dict
+        Interpolation keyword arguments pass to `SCaledRegularGridInterpolator`.
     """
 
-    def __init__(self, energy, rad, exposure=None, psf_value=None):
-
+    def __init__(self, energy, rad, exposure=None, psf_value=None, interp_kwargs=None):
         self.energy = Quantity(energy).to("GeV")
         self.rad = Quantity(rad).to("radian")
         if exposure is None:
@@ -380,6 +382,13 @@ class EnergyDependentTablePSF(object):
 
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
+
+        interp_kwargs = interp_kwargs or {}
+        points = (self.energy.value, self.rad.value)
+
+        self._interpolate = ScaledRegularGridInterpolator(
+            points=points, values=self.psf_value, **interp_kwargs
+        )
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"
@@ -460,60 +469,49 @@ class EnergyDependentTablePSF(object):
         """
         self.to_fits().writeto(*args, **kwargs)
 
-    def evaluate(self, energy=None, rad=None, interp_kwargs=None):
+    def evaluate(self, energy=None, rad=None, method="linear"):
         """Evaluate the PSF at a given energy and offset
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-            energy value
+            Energy value
         rad : `~astropy.coordinates.Angle`
             Offset wrt source position
-        interp_kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+        method : {"linear", "nearest"}
+            Linear or nearest neighbour interpolation.
 
         Returns
         -------
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        if interp_kwargs is None:
-            interp_kwargs = dict(bounds_error=False, fill_value=None)
-
         if energy is None:
             energy = self.energy
+
         if rad is None:
             rad = self.rad
-        energy = Energy(energy).to("TeV")
-        rad = Angle(rad).to("deg")
-        energy_bin = self.energy.to("TeV")
-        rad_bin = self.rad.to("deg")
-        points = (energy_bin, rad_bin)
-        interpolator = RegularGridInterpolator(
-            points, self.psf_value.value, **interp_kwargs
-        )
-        energy_grid, rad_grid = np.meshgrid(energy.value, rad.value, indexing="ij")
-        shape = energy_grid.shape
-        pix_coords = np.column_stack([energy_grid.flat, rad_grid.flat])
-        data_interp = interpolator(pix_coords)
-        return Quantity(data_interp.reshape(shape), self.psf_value.unit)
 
-    def table_psf_at_energy(self, energy, interp_kwargs=None, **kwargs):
+        energy = np.atleast_1d(Quantity(energy, "GeV").value)[:, np.newaxis]
+        rad = np.atleast_1d(Quantity(rad, "rad").value)
+        return self._interpolate((energy, rad), clip=True, method=method)
+
+    def table_psf_at_energy(self, energy, method="linear", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        interp_kwargs : dict
-            Option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+        method : {"linear", "nearest"}
+            Linear or nearest neighbour interpolation.
 
         Returns
         -------
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
+        psf_value = self.evaluate(energy=energy, method=method)[0, :]
         return TablePSF(self.rad, psf_value, **kwargs)
 
     def table_psf_in_energy_band(
