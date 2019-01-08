@@ -514,9 +514,7 @@ class EnergyDependentTablePSF(object):
         psf_value = self.evaluate(energy=energy, method=method)[0, :]
         return TablePSF(self.rad, psf_value, **kwargs)
 
-    def table_psf_in_energy_band(
-        self, energy_band, spectral_index=2, spectrum=None, **kwargs
-    ):
+    def table_psf_in_energy_band(self, energy_band, spectrum=None, n_bins=11, **kwargs):
         """Average PSF in a given energy band.
 
         Expected counts in sub energy bands given the given exposure
@@ -526,58 +524,34 @@ class EnergyDependentTablePSF(object):
         ----------
         energy_band : `~astropy.units.Quantity`
             Energy band
-        spectral_index : float
-            Power law spectral index (used if spectrum=None).
-        spectrum : callable
-            Spectrum (callable with energy as parameter).
+        spectrum : `SpectralModel`
+            Spectral model used for weighting the PSF. Default is a power law
+            with index=2.
+        n_bins : int
+            Number of energy points in the energy band, used to compute the
+            weigthed PSF.
 
         Returns
         -------
         psf : `TablePSF`
             Table PSF
         """
+        from ..spectrum.models import PowerLaw, TableModel
+
         if spectrum is None:
-            # This is a false positive error from pylint
-            # See https://github.com/PyCQA/pylint/issues/2410#issuecomment-415026690
-            def spectrum(energy):  # pylint:disable=function-redefined
-                return (energy / energy_band[0]) ** (-spectral_index)
+            spectrum = PowerLaw()
 
-        # TODO: warn if `energy_band` is outside available data.
-        energy_idx_min, energy_idx_max = self._energy_index(energy_band)
+        exposure = TableModel(self.energy, self.exposure)
 
-        # TODO: improve this, probably by evaluating the PSF (i.e. interpolating in energy) onto a new energy grid
-        # This is a bit of a hack, but makes sure that a PSF is given, by forcing at least one slice:
-        if energy_idx_max - energy_idx_min < 2:
-            # log.warning('Dubious case of PSF energy binning')
-            # Note that below always range stop of `energy_idx_max - 1` is used!
-            # That's why we put +2 here to make sure we have at least one bin.
-            energy_idx_max = max(energy_idx_min + 2, energy_idx_max)
-            # Make sure we don't step out of the energy array (doesn't help much)
-            energy_idx_max = min(energy_idx_max, len(self.energy))
+        e_min, e_max = energy_band
+        energy = Energy.equal_log_spacing(emin=e_min, emax=e_max, nbins=n_bins)
 
-        # TODO: extract this into a utility function `npred_weighted_mean()`
+        weights = (spectrum * exposure)(energy)
+        weights /= weights.sum()
 
-        # Compute weights for energy bins
-        weights = np.zeros_like(self.energy.value, dtype=np.float64)
-        for idx in range(energy_idx_min, energy_idx_max - 1):
-            energy_min = self.energy[idx]
-            energy_max = self.energy[idx + 1]
-            exposure = self.exposure[idx]
-            flux = spectrum(energy_min)
-            weights[idx] = (exposure * flux * (energy_max - energy_min)).value
-
-        # Normalize weights to sum to 1
-        weights = weights / weights.sum()
-
-        # Compute weighted PSF value array
-        total_psf_value = np.zeros_like(self._get_1d_psf_values(0), dtype=np.float64)
-        for idx in range(energy_idx_min, energy_idx_max - 1):
-            psf_value = self._get_1d_psf_values(idx)
-            total_psf_value += weights[idx] * psf_value
-
-        # TODO: add version that returns `total_psf_value` without
-        # making a `TablePSF`.
-        return TablePSF(self.rad, total_psf_value, **kwargs)
+        psf_value = self.evaluate(energy=energy)
+        psf_value_weighted = (weights[:, np.newaxis] * psf_value)
+        return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
 
     def containment_radius(self, energies, fraction, interp_kwargs=None):
         """Containment radius.

@@ -8,6 +8,7 @@ from ..irf_reduce import make_psf, make_mean_psf, make_mean_edisp
 from ...data import DataStore, Observations
 from ...utils.testing import requires_data, assert_quantity_allclose
 from ...utils.energy import Energy, EnergyBounds
+from ...spectrum.models import PowerLaw
 
 
 @pytest.fixture(scope="session")
@@ -100,17 +101,19 @@ def test_make_mean_psf(data_store):
 
     psf1 = make_psf(obs1, position=position, energy=energy, rad=None)
     psf2 = make_psf(obs2, position=position, energy=energy, rad=None)
-    psf1_int = psf1.table_psf_in_energy_band(energy_band, spectral_index=2.3)
-    psf2_int = psf2.table_psf_in_energy_band(energy_band, spectral_index=2.3)
+
+    spectrum = PowerLaw(index=2.3)
+    psf1_int = psf1.table_psf_in_energy_band(energy_band, spectrum=spectrum)
+    psf2_int = psf2.table_psf_in_energy_band(energy_band, spectrum=spectrum)
     observations = Observations([obs1, obs2])
     psf_tot = make_mean_psf(observations, position=position, energy=energy)
-    psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectral_index=2.3)
+    psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectrum=spectrum)
 
     # Check that the mean PSF is consistent with the individual PSFs
     # (in this case the R68 of the mean PSF is in between the R68 of the individual PSFs)
-    assert_allclose(psf1_int.containment_radius(0.68).deg, 0.12307, rtol=1e-3)
-    assert_allclose(psf2_int.containment_radius(0.68).deg, 0.11231, rtol=1e-3)
-    assert_allclose(psf_tot_int.containment_radius(0.68).deg, 0.117803, rtol=1e-3)
+    assert_allclose(psf1_int.containment_radius(0.68).deg, 0.122769, rtol=1e-3)
+    assert_allclose(psf2_int.containment_radius(0.68).deg, 0.111322, rtol=1e-3)
+    assert_allclose(psf_tot_int.containment_radius(0.68).deg, 0.117134, rtol=1e-3)
 
 
 @requires_data("gammapy-extra")
