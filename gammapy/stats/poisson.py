@@ -11,7 +11,6 @@ from scipy.special import erf
 from scipy.optimize import fsolve
 from .significance import significance_to_probability_normal
 
-
 __all__ = [
     "background",
     "background_error",
@@ -31,7 +30,6 @@ def background(n_off, alpha):
     r"""Estimate background in the on-region from an off-region observation.
 
     .. math::
-
         \mu_{background} = \alpha \times n_{off}
 
     Parameters
@@ -64,7 +62,6 @@ def background_error(n_off, alpha):
     in the on region from an off-region observation.
 
     .. math::
-
           \Delta\mu_{bkg} = \alpha \times \sqrt{n_{off}}
 
     Parameters
@@ -96,7 +93,6 @@ def excess(n_on, n_off, alpha):
     r"""Estimate excess in the on region for an on-off observation.
 
     .. math::
-
           \mu_{excess} = n_{on} - \alpha \times n_{off}
 
     Parameters
@@ -131,7 +127,6 @@ def excess_error(n_on, n_off, alpha):
     r"""Estimate error on excess for an on-off measurement.
 
     .. math::
-
         \Delta\mu_{excess} = \sqrt{n_{on} + \alpha ^ 2 \times n_{off}}
 
     TODO: Implement better error and limit estimates (Li & Ma, Rolke)!
@@ -165,27 +160,24 @@ def excess_error(n_on, n_off, alpha):
     return np.sqrt(variance)
 
 
-# TODO: rename this function to something more explicit.
-# It currently has the same name as the `gammapy/stats/significance.py`
-# and shadows in in `gammapy/stats/__init.py`
-# Maybe `significance_poisson`?
 def significance(n_on, mu_bkg, method="lima", n_on_min=1):
     r"""Compute significance for an observed number of counts and known background.
 
-    The simple significance estimate :math:`S_{simple}` is given by
+    The default ``method="lima"`` gives the significance estimate corresponding
+    to equation (17) from the Li & Ma paper [1]_ in the limiting of known background
+    :math:`\mu_{bkg} = \alpha \times n_{off}` with :math:`\alpha \to 0`.
 
-    .. math ::
+    It is given by the following formula:
 
+    .. math::
+        S_{lima} = \left[
+          2 n_{on} \log \left( \frac{n_{on}}{\mu_{bkg}} \right) - n_{on} + \mu_{bkg}
+        \right] ^ {1/2}
+
+    For ``method="simple"``, the significance estimate is given by:
+
+    .. math::
         S_{simple} = (n_{on} - \mu_{bkg}) / \sqrt{\mu_{bkg}}
-
-    The Li & Ma significance estimate corresponds to the Li & Ma formula (17)
-    in the limiting case of known background :math:`\mu_{bkg} = \alpha \times n_{off}`
-    with :math:`\alpha \to 0`.
-    The following formula for :math:`S_{lima}` was obtained with Mathematica:
-
-    .. math ::
-
-        S_{lima} = \left[ 2 n_{on} \log \left( \frac{n_{on}}{\mu_{bkg}} \right) - n_{on} + \mu_{bkg} \right] ^ {1/2}
 
 
     Parameters
@@ -194,15 +186,15 @@ def significance(n_on, mu_bkg, method="lima", n_on_min=1):
         Observed number of counts
     mu_bkg : array_like
         Known background level
-    method : str
-        Select method: 'lima' or 'simple'
+    method : {"lima", "simple"}
+        Method for significance estimation
     n_on_min : float
         Minimum ``n_on`` (return ``NaN`` for smaller values)
 
     Returns
     -------
-    significance : `numpy.ndarray`
-        Significance according to the method chosen.
+    significance : `~numpy.ndarray`
+        Significance estimate
 
     References
     ----------
@@ -215,14 +207,10 @@ def significance(n_on, mu_bkg, method="lima", n_on_min=1):
 
     Examples
     --------
-    >>> significance(n_on=11, mu_bkg=9, method='lima')
-    0.64401498442763649
-    >>> significance(n_on=11, mu_bkg=9, method='simple')
-    0.66666666666666663
-    >>> significance(n_on=7, mu_bkg=9, method='lima')
-    -0.69397262486881672
-    >>> significance(n_on=7, mu_bkg=9, method='simple')
-    -0.66666666666666663
+    >>> significance(n_on=10, mu_bkg=2, method='lima')
+    4.0235256
+    >>> significance(n_on=10, mu_bkg=2, method='simple')
+    5.65685425
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
     mu_bkg = np.asanyarray(mu_bkg, dtype=np.float64)
@@ -248,6 +236,7 @@ def significance(n_on, mu_bkg, method="lima", n_on_min=1):
 
 def _significance_simple(n_on, mu_bkg):
     # TODO: check this formula against ???
+    # Is this the limit from the on/off case for alpha -> 0?
     excess = n_on - mu_bkg
     bkg_err = np.sqrt(mu_bkg)
     return excess / bkg_err
@@ -259,38 +248,22 @@ def _significance_lima(n_on, mu_bkg):
     return sign * val
 
 
-def _significance_direct(n_on, mu_bkg):
-    """Compute significance directly via Poisson probability.
-
-    Use this method for small ``n_on < 10``.
-    In this case the Li & Ma formula isn't correct any more.
-
-    TODO: add large unit test coverage (where is it numerically precise enough)?
-    TODO: check coverage with MC simulation
-
-    I'm getting a positive significance for zero observed counts and small mu_bkg.
-    That doesn't make too much sense ...
-
-    >>> stats.poisson._significance_direct(0, 2)
-    -1.1015196284987503
-    >>> stats.poisson._significance_direct(0, 0.1)
-    1.309617799458493
-    """
-    # Compute tail probability to see n_on or more counts
-    probability = poisson.sf(n_on, mu_bkg)
-
-    # Convert probability to a significance
-    significance = norm.isf(probability)
-
-    return significance
-
-
-def significance_on_off(
-    n_on, n_off, alpha, method="lima", neglect_background_uncertainty=False
-):
+def significance_on_off(n_on, n_off, alpha, method="lima"):
     r"""Compute significance of an on-off observation.
 
-    TODO: describe available methods.
+    The default ``method="lima"`` gives the significance estimate corresponding
+    to equation (17) from the Li & Ma paper [1]_.
+
+    For ``method="simple"``, the significance estimate is given by Equation (5)
+    from the Li & Ma paper [1]_. It is somewhat biased, but has the advantage
+    of being analytically invertible, which is useful for sensitivity computations.
+
+    .. math::
+        S_{simple} = \mu_{excess} / \Delta\mu_{excess}
+
+        \mu_{excess} = n_{on} - \alpha n_{off}
+
+        \Delta\mu_{excess} = \sqrt{n_{on} + \alpha ^ 2 n_{off}}
 
     Parameters
     ----------
@@ -300,13 +273,13 @@ def significance_on_off(
         Observed number of counts in the off region
     alpha : array_like
         On / off region exposure ratio for background events
-    method : {'lima', 'simple', 'direct'}
-        Select method
+    method : {"lima", "simple"}
+        Method for significance estimation
 
     Returns
     -------
-    significance : array
-        Significance according to the method chosen.
+    significance : `~numpy.ndarray`
+        Significance estimate
 
     References
     ----------
@@ -323,8 +296,6 @@ def significance_on_off(
     3.6850322319420274
     >>> significance_on_off(n_on=10, n_off=20, alpha=0.1, method='simple')
     2.5048971643405982
-    >>> significance_on_off(n_on=10, n_off=20, alpha=0.1, method='direct')
-    3.5281644971409953
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
     n_off = np.asanyarray(n_off, dtype=np.float64)
@@ -332,48 +303,17 @@ def significance_on_off(
 
     with np.errstate(invalid="ignore", divide="ignore"):
         if method == "simple":
-            if neglect_background_uncertainty:
-                mu_bkg = background(n_off, alpha)
-                return _significance_simple(n_on, mu_bkg)
-            else:
-                return _significance_simple_on_off(n_on, n_off, alpha)
+            return _significance_simple_on_off(n_on, n_off, alpha)
         elif method == "lima":
-            if neglect_background_uncertainty:
-                mu_bkg = background(n_off, alpha)
-                return _significance_lima(n_on, mu_bkg)
-            else:
-                return _significance_lima_on_off(n_on, n_off, alpha)
+            return _significance_lima_on_off(n_on, n_off, alpha)
         elif method == "direct":
-            if neglect_background_uncertainty:
-                mu_bkg = background(n_off, alpha)
-                return _significance_direct(n_on, mu_bkg)
-            else:
-                return _significance_direct_on_off(n_on, n_off, alpha)
+            return _significance_direct_on_off(n_on, n_off, alpha)
         else:
             raise ValueError("Invalid method: {}".format(method))
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):
-    r"""Compute significance with a simple, somewhat biased formula.
-
-    .. math::
-
-        S = \mu_{excess} / \Delta\mu_{excess}
-
-        where
-
-        \mu_{excess} = n_{on} - \alpha \times n_{off}
-
-        \Delta\mu_{excess} = \sqrt{n_{on} + \alpha ^ 2 \times n_{off}}
-
-    Notes
-    -----
-    This function implements formula (5) of Li & Ma.
-    Li & Ma show that it is somewhat biased,
-    but it does have the advantage of being analytically invertible,
-    i.e. there is an analytical formula for the inverse,
-    which is often used in practice as part of sensitivity computation.
-    """
+    """Compute significance with the simple Equation (5) from Li & Ma."""
     excess_ = excess(n_on, n_off, alpha)
     excess_error_ = excess_error(n_on, n_off, alpha)
 
@@ -392,28 +332,45 @@ def _significance_lima_on_off(n_on, n_off, alpha):
     return sign * val
 
 
+def _significance_direct(n_on, mu_bkg):
+    """Compute significance directly via Poisson probability.
+
+    Reference: TODO (is this ever used?)
+    """
+    # Compute tail probability to see n_on or more counts
+    # Note that we're using ``k = n_on - 1`` to get the probability
+    # for n_on included or more, because `poisson.sf(k)` returns the
+    # probability for more than k, with k excluded
+    # For `n_on = 0` this returns `
+    probability = poisson.sf(n_on - 1, mu_bkg)
+
+    # Convert probability to a significance
+    return norm.isf(probability)
+
+
 def _significance_direct_on_off(n_on, n_off, alpha):
     """Compute significance directly via Poisson probability.
 
-    Use this method for small n_on < 10.
-    In this case the Li & Ma formula isn't correct any more.
+    Reference: http://adsabs.harvard.edu/abs/1993NIMPA.328..570A
 
-    * TODO: add reference
-    * TODO: add large unit test coverage (where is it numerically precise enough)?
-    * TODO: check coverage with MC simulation
-    * TODO: implement in Cython and vectorize n_on (accept numpy  array n_on as input)
+    You can use this method for small n_on < 10.
+    In this case the Li & Ma formula isn't correct any more.
     """
+    f = np.math.factorial
+
+    # Not vectorised, only works for scalar, integer inputs
+    n_on = int(n_on)
+    n_off = int(n_off)
+
     # Compute tail probability to see n_on or more counts
     probability = 1
     for n in range(0, n_on):
         term_1 = alpha ** n / (1 + alpha) ** (n_off + n + 1)
-        term_2 = np.math.factorial(n_off + n) / (fac(n) * fac(n_off))
+        term_2 = f(n_off + n) / (f(n) * f(n_off))
         probability -= term_1 * term_2
 
     # Convert probability to a significance
-    significance = norm.isf(probability)
-
-    return significance
+    return norm.isf(probability)
 
 
 def excess_ul_helene(excess, excess_error, significance):
