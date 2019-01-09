@@ -82,10 +82,20 @@ def diffuse_evaluator(diffuse_model, exposure, background, psf, edisp):
     return MapEvaluator(diffuse_model, exposure, background, psf=psf, edisp=edisp)
 
 
+@pytest.fixture(scope="session")
+def sky_models(sky_model):
+    return SkyModels([sky_model, sky_model])
+
+
+@pytest.fixture(scope="session")
+def compound_model(sky_model):
+    return sky_model + sky_model
+
+
 def test_background_model(background):
     bkg1 = BackgroundModel(background, norm=2.0).evaluate()
     assert_allclose(bkg1[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
-    assert_allclose(bkg1.sum(), background.data.sum()*2.0, rtol=1e-3)
+    assert_allclose(bkg1.sum(), background.data.sum() * 2.0, rtol=1e-3)
 
     bkg2 = BackgroundModel(background, norm=2.0, tilt=0.2, reference="1000 GeV").evaluate()
     assert_allclose(bkg2[0][0][0], 2.254e-07, rtol=1e-3)
@@ -93,11 +103,8 @@ def test_background_model(background):
 
 
 class TestSkyModels:
-    def setup(self):
-        self.sky_models = SkyModels([sky_model(), sky_model()])
-
-    def test_to_compound_model(self):
-        sky_models = self.sky_models
+    @staticmethod
+    def test_to_compound_model(sky_models):
         model = sky_models.to_compound_model()
         assert isinstance(model, CompoundSkyModel)
         pars = model.parameters.parameters
@@ -105,8 +112,8 @@ class TestSkyModels:
         assert pars[0].name == "lon_0"
         assert pars[-1].name == "reference"
 
-    def test_parameters(self):
-        sky_models = self.sky_models
+    @staticmethod
+    def test_parameters(sky_models):
         parnames = ["lon_0", "lat_0", "sigma", "index", "amplitude", "reference"] * 2
         assert sky_models.parameters.names == parnames
 
@@ -115,13 +122,8 @@ class TestSkyModels:
         p2 = sky_models.skymodels[0].parameters["lon_0"]
         assert p1 is p2
 
-        # Check that parameter assignment works
-        assert sky_models.parameters.parameters[-1].value == 1
-        sky_models.parameters = sky_models.parameters.copy()
-        assert sky_models.parameters.parameters[-1].value == 1
-
-    def test_evaluate(self):
-        sky_models = self.sky_models
+    @staticmethod
+    def test_evaluate(sky_models):
         lon = 3 * u.deg * np.ones(shape=(3, 4))
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
@@ -178,11 +180,6 @@ class TestSkyModel:
 
 
 class TestCompoundSkyModel:
-    @staticmethod
-    @pytest.fixture()
-    def compound_model(sky_model):
-        return sky_model + sky_model
-
     @staticmethod
     def test_parameters(compound_model):
         parnames = ["lon_0", "lat_0", "sigma", "index", "amplitude", "reference"] * 2

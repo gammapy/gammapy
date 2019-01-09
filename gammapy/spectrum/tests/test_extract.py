@@ -2,30 +2,65 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
+import copy
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates import SkyCoord, Angle
+from regions import CircleSkyRegion
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumExtraction, SpectrumObservation
-from ...background.tests.test_reflected import bkg_estimator, observations
+from ...background import ReflectedRegionsBackgroundEstimator
+from ...maps import WcsGeom, WcsNDMap
+from ...data import DataStore
 
 
 @pytest.fixture(scope="session")
-def bkg_estimate():
+def exclusion_mask():
+    """Example mask for testing."""
+    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+    exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
+    geom = WcsGeom.create(skydir=pos, binsz=0.02, width=10.0)
+    mask = geom.region_mask([exclusion_region], inside=False)
+    return WcsNDMap(geom, data=mask)
+
+
+@pytest.fixture(scope="session")
+def on_region():
+    """Example on_region for testing."""
+    pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+    radius = Angle(0.11, "deg")
+    region = CircleSkyRegion(pos, radius)
+    return region
+
+
+@pytest.fixture(scope="session")
+def observations():
+    """Example observation list for testing."""
+    datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
+    obs_ids = [23523, 23526]
+    return datastore.get_observations(obs_ids)
+
+
+@pytest.fixture(scope="session")
+def bkg_estimate(observations, on_region, exclusion_mask):
     """An example background estimate"""
-    est = bkg_estimator()
+    est = ReflectedRegionsBackgroundEstimator(
+        observations=observations, on_region=on_region, exclusion_mask=exclusion_mask,
+        min_distance_input="0.2 deg"
+    )
     est.run()
     return est.result
 
 
 @pytest.fixture(scope="session")
-def extraction():
+def extraction(bkg_estimate, observations):
     """An example SpectrumExtraction for tests."""
     # Restrict true energy range covered by HAP exporter
     e_true = np.logspace(-1, 1.9, 70) * u.TeV
 
     return SpectrumExtraction(
-        bkg_estimate=bkg_estimate(), observations=observations(), e_true=e_true
+        bkg_estimate=bkg_estimate, observations=observations, e_true=e_true
     )
 
 
@@ -38,7 +73,7 @@ class TestSpectrumExtraction:
                 dict(containment_correction=False),
                 dict(
                     n_on=192,
-                    sigma=20.971149,
+                    sigma=20.941125,
                     aeff=580254.9 * u.m ** 2,
                     edisp=0.236176,
                     containment=1,
@@ -48,7 +83,7 @@ class TestSpectrumExtraction:
                 dict(containment_correction=True),
                 dict(
                     n_on=192,
-                    sigma=20.971149,
+                    sigma=20.941125,
                     aeff=373237.8 * u.m ** 2,
                     edisp=0.236176,
                     containment=0.661611,
@@ -80,7 +115,11 @@ class TestSpectrumExtraction:
         assert_allclose(sigma_actual, results["sigma"], atol=1e-2)
         assert_allclose(containment_actual, results["containment"], rtol=1e-3)
 
-    def test_alpha(self, observations, bkg_estimate):
+    @staticmethod
+    def test_alpha(observations, bkg_estimate):
+        bkg_estimate = copy.deepcopy(bkg_estimate)
+
+        # TODO: don't modify fixtures in tests!
         bkg_estimate[0].a_off = 0
         bkg_estimate[1].a_off = 2
         extraction = SpectrumExtraction(
@@ -89,7 +128,8 @@ class TestSpectrumExtraction:
         extraction.run()
         assert len(extraction.spectrum_observations) == 0
 
-    def test_run(self, tmpdir, extraction):
+    @staticmethod
+    def test_run(tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
         extraction.run()
         extraction.write(outdir=tmpdir, overwrite=True)
@@ -124,4 +164,4 @@ class TestSpectrumExtraction:
         extraction.run()
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
         actual = extraction.spectrum_observations[0].lo_threshold
-        assert_quantity_allclose(actual, 0.879923 * u.TeV, rtol=1e-3)
+        assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)

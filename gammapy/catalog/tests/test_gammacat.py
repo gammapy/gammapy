@@ -79,12 +79,12 @@ class TestSourceCatalogGammaCat:
         for name in names:
             assert str(gammacat[name]) == str(gammacat["W28"])
 
-    def test_sort_table(self):
+    def test_sort_table(self, gammacat):
         name = "HESS J1848-018"
         sort_keys = ["ra", "dec", "reference_id"]
         for sort_key in sort_keys:
             # this test modifies the catalog, so we make a copy
-            cat = gammacat()
+            cat = gammacat.copy()
             cat.table.sort(sort_key)
             assert cat[name].name == name
 

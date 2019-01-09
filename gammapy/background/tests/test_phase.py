@@ -8,7 +8,7 @@ from ...data import DataStore, EventList
 from .. import BackgroundEstimate, PhaseBackgroundEstimator
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def on_region():
     """Example on_region for testing."""
     pos = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
@@ -16,7 +16,7 @@ def on_region():
     return CircleSkyRegion(pos, radius)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps")
@@ -24,11 +24,11 @@ def observations():
 
 
 @pytest.fixture(scope="session")
-def phase_bkg_estimator():
+def phase_bkg_estimator(on_region, observations):
     """Example background estimator for testing."""
     return PhaseBackgroundEstimator(
-        observations=observations(),
-        on_region=on_region(),
+        observations=observations,
+        on_region=on_region,
         on_phase=(0.5, 0.6),
         off_phase=(0.7, 1),
     )
