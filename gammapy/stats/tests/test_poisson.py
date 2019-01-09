@@ -39,32 +39,52 @@ def test_excess_error():
 def test_excess_ul_helene():
     # The reference values here are from the HESS software
     # TODO: change to reference values from the Helene paper
-    assert_allclose(
-        excess_ul_helene(excess=50, excess_error=40, significance=3),
-        171.353908,
-        rtol=1e-3,
-    )
-    assert_allclose(
-        excess_ul_helene(excess=10, excess_error=6, significance=2),
-        22.123334,
-        rtol=1e-3,
-    )
-    assert_allclose(
-        excess_ul_helene(excess=-23, excess_error=8, significance=3),
-        13.372179,
-        rtol=1e-3,
-    )
+    excess = excess_ul_helene(excess=50, excess_error=40, significance=3)
+    assert_allclose(excess, 171.353908, rtol=1e-3)
+
+    excess = excess_ul_helene(excess=10, excess_error=6, significance=2)
+    assert_allclose(excess, 22.123334, rtol=1e-3)
+
+    excess = excess_ul_helene(excess=-23, excess_error=8, significance=3)
+    assert_allclose(excess, 13.372179, rtol=1e-3)
 
     # Check in the very high, Gaussian signal limit, where you have
     # 10000 photons with Poisson noise and no background.
-    assert_allclose(
-        excess_ul_helene(excess=10000, excess_error=100, significance=1),
-        10100,
-        atol=0.1,
-    )
+    excess = excess_ul_helene(excess=10000, excess_error=100, significance=1)
+    assert_allclose(excess, 10100, atol=0.1)
 
 
-def test_significance():
+TEST_CASES = [
+    dict(n_on=10, mu_bkg=2, method="lima", s=4.023526),
+    dict(n_on=10, mu_bkg=2, method="simple", s=5.656854),
+    dict(n_on=10, mu_bkg=2, method="direct", s=3.90817445),
+]
+
+
+@pytest.mark.parametrize("p", TEST_CASES)
+def test_significance(p):
+    s = significance(p["n_on"], p["mu_bkg"], p["method"])
+    assert_allclose(s, p["s"], atol=1e-5)
+
+
+TEST_CASES_ON_OFF = [
+    dict(n_on=10, n_off=20, alpha=0.1, method="lima", s=3.6850322025333071),
+    dict(n_on=10, n_off=20, alpha=0.1, method="simple", s=2.5048971643405982),
+    dict(n_on=10, n_off=20, alpha=0.1, method="direct", s=3.5281644971409953),
+    dict(n_on=4, n_off=9, alpha=0.5, method="lima", s=-0.19744427645023557),
+    dict(n_on=4, n_off=9, alpha=0.5, method="simple", s=-0.2),
+    dict(n_on=10, n_off=20, alpha=0.1, method="lima", s=3.6850322025333071),
+    dict(n_on=2, n_off=200, alpha=0.1, method="lima", s=-5.027429),
+]
+
+
+@pytest.mark.parametrize("p", TEST_CASES_ON_OFF)
+def test_significance_on_off(p):
+    s = significance_on_off(p["n_on"], p["n_off"], p["alpha"], p["method"])
+    assert_allclose(s, p["s"], atol=1e-5)
+
+
+def test_significance_on_off_against_known_background():
     # Check that the Li & Ma limit formula is correct
     # With small alpha and high counts, the significance
     # and significance_on_off should be very close
@@ -74,22 +94,6 @@ def test_significance():
         n_on=1300, n_off=1100 / 1.0e-8, alpha=1e-8, method="lima"
     )
     assert_allclose(actual, 5.8600864348078519)
-
-
-TEST_CASES = [
-    dict(n_on=10, n_off=20, alpha=0.1, method="lima", s=3.6850322025333071),
-    dict(n_on=4, n_off=9, alpha=0.5, method="lima", s=-0.19744427645023557),
-    dict(n_on=10, n_off=20, alpha=0.1, method="simple", s=2.5048971643405982),
-    dict(n_on=4, n_off=9, alpha=0.5, method="simple", s=-0.2),
-    dict(n_on=10, n_off=20, alpha=0.1, method="lima", s=3.6850322025333071),
-    dict(n_on=2, n_off=200, alpha=0.1, method="lima", s=-5.027429),
-]
-
-
-@pytest.mark.parametrize("p", TEST_CASES)
-def test_significance_on_off(p):
-    s = significance_on_off(p["n_on"], p["n_off"], p["alpha"], p["method"])
-    assert_allclose(s, p["s"], atol=1e-5)
 
 
 # TODO: tests should be improved to also cover edge cases,
@@ -152,8 +156,11 @@ def test_excess_matching_significance_on_off():
     assert_allclose(excess, [[9.82966, 12.038423], [9.82966, 12.038423]], atol=1e-3)
 
 
-@pytest.mark.parametrize("p", TEST_CASES)
+@pytest.mark.parametrize("p", TEST_CASES_ON_OFF)
 def test_excess_matching_significance_on_off_roundtrip(p):
+    if p["method"] == "direct":
+        pytest.skip()
+
     s = significance_on_off(p["n_on"], p["n_off"], p["alpha"], p["method"])
     excess = excess_matching_significance_on_off(p["n_off"], p["alpha"], s, p["method"])
     n_on = excess + background(p["n_off"], p["alpha"])
