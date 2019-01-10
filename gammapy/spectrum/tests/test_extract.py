@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 import numpy as np
-import copy
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
@@ -34,7 +33,7 @@ def on_region():
     return region
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
@@ -42,7 +41,7 @@ def observations():
     return datastore.get_observations(obs_ids)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def bkg_estimate(observations, on_region, exclusion_mask):
     """An example background estimate"""
     est = ReflectedRegionsBackgroundEstimator(
@@ -53,7 +52,7 @@ def bkg_estimate(observations, on_region, exclusion_mask):
     return est.result
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def extraction(bkg_estimate, observations):
     """An example SpectrumExtraction for tests."""
     # Restrict true energy range covered by HAP exporter
@@ -117,9 +116,6 @@ class TestSpectrumExtraction:
 
     @staticmethod
     def test_alpha(observations, bkg_estimate):
-        bkg_estimate = copy.deepcopy(bkg_estimate)
-
-        # TODO: don't modify fixtures in tests!
         bkg_estimate[0].a_off = 0
         bkg_estimate[1].a_off = 2
         extraction = SpectrumExtraction(

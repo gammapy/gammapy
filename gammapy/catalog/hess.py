@@ -632,10 +632,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     def __init__(self, filename=None, hdu="HGPS_SOURCES"):
         if not filename:
-            filename = (
-                Path(os.environ["HGPS_ANALYSIS"])
-                / "data/catalogs/HGPS3/release/HGPS_v0.4.fits"
-            )
+            filename = "$GAMMAPY_EXTRA/datasets/catalogs/hgps_catalog_v1.fits.gz"
 
         filename = str(make_path(filename))
         table = Table.read(filename, hdu=hdu)
