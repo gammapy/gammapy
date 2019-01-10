@@ -8,7 +8,7 @@ from ...utils.testing import requires_data
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
-from ...cube.models import SkyDiffuseCube
+from ...cube.models import SkyDiffuseCube, BackgroundModel
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..fit import MapEvaluator
@@ -80,6 +80,16 @@ def evaluator(sky_model, exposure, background, psf, edisp):
 @pytest.fixture(scope="session")
 def diffuse_evaluator(diffuse_model, exposure, background, psf, edisp):
     return MapEvaluator(diffuse_model, exposure, background, psf=psf, edisp=edisp)
+
+
+def test_background_model(background):
+    bkg1 = BackgroundModel(background, norm=2.0).evaluate()
+    assert_allclose(bkg1[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
+    assert_allclose(bkg1.sum(), background.data.sum()*2.0, rtol=1e-3)
+
+    bkg2 = BackgroundModel(background, norm=2.0, tilt=0.2, reference="1000 GeV").evaluate()
+    assert_allclose(bkg2[0][0][0], 2.254e-07, rtol=1e-3)
+    assert_allclose(bkg2.sum(), 7.352e-06, rtol=1e-3)
 
 
 class TestSkyModels:
