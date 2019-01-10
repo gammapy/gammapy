@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import operator
 import numpy as np
+from astropy.utils.decorators import lazyproperty
 import astropy.units as u
 from ..utils.fitting import Parameters, Parameter, Model
 from ..utils.scripts import make_path
@@ -354,7 +355,7 @@ class BackgroundModel(Model):
         Background normalisation
     tilt : float
         Additional tilt in the spectrum
-    reference : `Quantity`
+    reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
     """
     def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
@@ -370,11 +371,11 @@ class BackgroundModel(Model):
             Parameter("reference", reference, frozen=True),
         ])
 
-
+    @lazyproperty
     def energy_center(self):
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.map.geom.get_axis_by_name("energy")
-        energy = energy_axis.center
+        energy = energy_axis.center * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
 
 
@@ -382,7 +383,8 @@ class BackgroundModel(Model):
         """Evaluate background model"""
         norm = self.parameters["norm"].value
         tilt = self.parameters["tilt"].value
-        reference = self.parameters["reference"].value
-        tilt_factor = np.power(self.energy_center()/reference, -tilt)
+        reference = self.parameters["reference"].quantity
+        tilt_factor = np.power((self.energy_center/reference).to(""), -tilt)
+        print(tilt_factor)
         return u.Quantity(norm * self.map.data * tilt_factor, self.map.unit, copy=False)
 

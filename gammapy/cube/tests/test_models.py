@@ -82,12 +82,12 @@ def diffuse_evaluator(diffuse_model, exposure, background, psf, edisp):
     return MapEvaluator(diffuse_model, exposure, background, psf=psf, edisp=edisp)
 
 
-def test_BackgroundModel(background):
+def test_background_model(background):
     bkg1 = BackgroundModel(background, norm=2.0).evaluate()
     assert_allclose(bkg1[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
     assert_allclose(bkg1.sum(), background.data.sum()*2.0, rtol=1e-3)
 
-    bkg2 = BackgroundModel(background, norm=2.0, tilt=0.2).evaluate()
+    bkg2 = BackgroundModel(background, norm=2.0, tilt=0.2, reference="1000 GeV").evaluate()
     assert_allclose(bkg2[0][0][0], 2.254e-07, rtol=1e-3)
     assert_allclose(bkg2.sum(), 7.352e-06, rtol=1e-3)
 
