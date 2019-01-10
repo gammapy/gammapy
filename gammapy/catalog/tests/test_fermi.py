@@ -23,24 +23,28 @@ from .. import (
 SOURCES_3FGL = [
     dict(
         idx=0,
+        name="3FGL J0000.1+6545",
         spec_type=PowerLaw,
         dnde=u.Quantity(1.4351261e-9, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.1356270e-10, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=4,
+        name="3FGL J0001.4+2120",
         spec_type=LogParabola,
         dnde=u.Quantity(8.3828599e-10, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.6713238e-10, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=55,
+        name="3FGL J0023.4+0923",
         spec_type=ExponentialCutoffPowerLaw3FGL,
         dnde=u.Quantity(1.8666925e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.2068837e-10, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=960,
+        name="3FGL J0835.3-4510",
         spec_type=PLSuperExpCutoff3FGL,
         dnde=u.Quantity(1.6547128794756733e-06, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.6621504e-11, "cm-2 s-1 MeV-1"),
@@ -50,12 +54,14 @@ SOURCES_3FGL = [
 SOURCES_3FHL = [
     dict(
         idx=352,
+        name="3FHL J0534.5+2201",
         spec_type=PowerLaw,
         dnde=u.Quantity(6.3848912826152664e-12, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.679593524691324e-13, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=1442,
+        name="3FHL J2158.8-3013",
         spec_type=LogParabola,
         dnde=u.Quantity(2.056998292908196e-12, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(4.219030630302381e-13, "cm-2 s-1 GeV-1"),

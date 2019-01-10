@@ -201,13 +201,12 @@ def spec_extraction():
 
 
 @requires_data("gammapy-extra")
-def test_lightcurve_estimator():
-    spec_extract = spec_extraction()
-    lc_estimator = LightCurveEstimator(spec_extract)
+def test_lightcurve_estimator(spec_extraction):
+    lc_estimator = LightCurveEstimator(spec_extraction)
 
     # param
     intervals = []
-    for obs in spec_extract.observations:
+    for obs in spec_extraction.observations:
         intervals.append([obs.events.time[0], obs.events.time[-1]])
 
     model = PowerLaw(
@@ -249,10 +248,8 @@ def test_lightcurve_estimator():
 
 
 @requires_data("gammapy-extra")
-def test_lightcurve_interval_maker():
-    spec_extract = spec_extraction()
-
-    table = LightCurveEstimator.make_time_intervals_fixes(500, spec_extract)
+def test_lightcurve_interval_maker(spec_extraction):
+    table = LightCurveEstimator.make_time_intervals_fixes(500, spec_extraction)
     intervals = list(zip(table["t_start"], table["t_stop"]))
 
     assert len(intervals) == 9
@@ -261,9 +258,8 @@ def test_lightcurve_interval_maker():
 
 
 @requires_data("gammapy-extra")
-def test_lightcurve_adaptative_interval_maker():
-    spec_extract = spec_extraction()
-    lc_estimator = LightCurveEstimator(spec_extract)
+def test_lightcurve_adaptative_interval_maker(spec_extraction):
+    lc_estimator = LightCurveEstimator(spec_extraction)
     separator = [
         Time((53343.94050200008 + 53343.952979345195) / 2, scale="tt", format="mjd")
     ]
@@ -271,7 +267,7 @@ def test_lightcurve_adaptative_interval_maker():
         significance=3,
         significance_method="lima",
         energy_range=[0.2, 100] * u.TeV,
-        spectrum_extraction=spec_extract,
+        spectrum_extraction=spec_extraction,
         separators=separator,
     )
     assert_allclose(table["significance"] >= 3, True)

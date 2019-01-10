@@ -14,8 +14,8 @@ from ...data import DataStore
 from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
 
 
-@pytest.fixture
-def mask():
+@pytest.fixture(scope="session")
+def exclusion_mask():
     """Example mask for testing."""
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     exclusion_region = CircleSkyRegion(pos, Angle(0.3, "deg"))
@@ -24,7 +24,7 @@ def mask():
     return WcsNDMap(geom, data=mask)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def on_region():
     """Example on_region for testing."""
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
@@ -33,7 +33,7 @@ def on_region():
     return region
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def observations():
     """Example observation list for testing."""
     datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
@@ -41,22 +41,23 @@ def observations():
     return datastore.get_observations(obs_ids)
 
 
-@pytest.fixture
-def bkg_estimator():
+@pytest.fixture(scope="session")
+def bkg_estimator(observations, exclusion_mask, on_region):
     """Example background estimator for testing."""
     return ReflectedRegionsBackgroundEstimator(
-        observations=observations(), on_region=on_region(), exclusion_mask=mask()
+        observations=observations, on_region=on_region, exclusion_mask=exclusion_mask,
+        min_distance_input="0.2 deg"
     )
 
 
 @requires_data("gammapy-extra")
-def test_find_reflected_regions(mask, on_region):
+def test_find_reflected_regions(exclusion_mask, on_region):
     pointing = SkyCoord(83.2, 22.5, unit="deg")
     fregions = ReflectedRegionsFinder(
         center=pointing,
         region=on_region,
-        exclusion_mask=mask,
-        min_distance_input=Angle("0 deg"),
+        exclusion_mask=exclusion_mask,
+        min_distance_input="0 deg",
     )
     fregions.run()
     regions = fregions.reflected_regions
@@ -70,7 +71,7 @@ def test_find_reflected_regions(mask, on_region):
     assert len(regions) == 16
 
     # Test with too small exclusion
-    small_mask = mask.cutout(pointing, Angle("0.2 deg"))
+    small_mask = exclusion_mask.cutout(pointing, Angle("0.2 deg"))
     fregions.exclusion_mask = small_mask
     fregions.run()
     regions = fregions.reflected_regions
@@ -86,26 +87,16 @@ def test_find_reflected_regions(mask, on_region):
 
 @requires_data("gammapy-extra")
 class TestReflectedRegionBackgroundEstimator:
-    def setup(self):
-        self.bg_maker = bkg_estimator()
+    def test_basic(self, bkg_estimator):
+        assert "ReflectedRegionsBackgroundEstimator" in str(bkg_estimator)
 
-    def test_basic(self):
-        assert "ReflectedRegionsBackgroundEstimator" in str(self.bg_maker)
-
-    def test_run(self):
-        self.bg_maker.finder.min_distance = Angle("0.2 deg")
-        self.bg_maker.run()
-        assert len(self.bg_maker.result[1].off_region) == 11
-        assert "Reflected" in str(self.bg_maker.result[1])
+    def test_run(self, bkg_estimator):
+        bkg_estimator.run()
+        assert len(bkg_estimator.result[1].off_region) == 11
+        assert "Reflected" in str(bkg_estimator.result[1])
 
     @requires_dependency("matplotlib")
-    def test_plot(self):
-        # The following line can be removed once we drop support for regions 0.2
-        # See https://github.com/gammapy/gammapy/issues/1758
-        pytest.importorskip("regions", minversion="0.3")
-        self.bg_maker.run()
+    def test_plot(self, bkg_estimator):
         with mpl_plot_check():
-            self.bg_maker.plot()
-            self.bg_maker.plot(idx=1)
-            self.bg_maker.plot(idx=[0, 1])
-            self.bg_maker.plot(add_legend=True)
+            bkg_estimator.plot(idx=1, add_legend=True)
+            bkg_estimator.plot(idx=[0, 1])
