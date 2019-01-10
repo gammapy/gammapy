@@ -385,6 +385,5 @@ class BackgroundModel(Model):
         tilt = self.parameters["tilt"].value
         reference = self.parameters["reference"].quantity
         tilt_factor = np.power((self.energy_center/reference).to(""), -tilt)
-        print(tilt_factor)
         return u.Quantity(norm * self.map.data * tilt_factor, self.map.unit, copy=False)
 
