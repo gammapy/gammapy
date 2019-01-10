@@ -82,7 +82,7 @@ def test_psfmap(tmpdir):
     psfkernel = psfmap.get_psf_kernel(
         SkyCoord(1, 1, unit="deg"), kern_geom, max_radius=1 * u.deg
     )
-    assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0)
+    assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
 
     # test read/write
     filename = str(tmpdir / "psfmap.fits")

@@ -2,10 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from scipy.interpolate import UnivariateSpline, RegularGridInterpolator
+from scipy.interpolate import UnivariateSpline
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
@@ -362,10 +363,11 @@ class EnergyDependentTablePSF(object):
         Exposure (1-dim)
     psf_value : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
+    interp_kwargs : dict
+        Interpolation keyword arguments pass to `SCaledRegularGridInterpolator`.
     """
 
-    def __init__(self, energy, rad, exposure=None, psf_value=None):
-
+    def __init__(self, energy, rad, exposure=None, psf_value=None, interp_kwargs=None):
         self.energy = Quantity(energy).to("GeV")
         self.rad = Quantity(rad).to("radian")
         if exposure is None:
@@ -380,6 +382,13 @@ class EnergyDependentTablePSF(object):
 
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
+
+        interp_kwargs = interp_kwargs or {}
+        points = (self.energy.value, self.rad.value)
+
+        self._interpolate = ScaledRegularGridInterpolator(
+            points=points, values=self.psf_value, **interp_kwargs
+        )
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"
@@ -460,65 +469,52 @@ class EnergyDependentTablePSF(object):
         """
         self.to_fits().writeto(*args, **kwargs)
 
-    def evaluate(self, energy=None, rad=None, interp_kwargs=None):
+    def evaluate(self, energy=None, rad=None, method="linear"):
         """Evaluate the PSF at a given energy and offset
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-            energy value
+            Energy value
         rad : `~astropy.coordinates.Angle`
             Offset wrt source position
-        interp_kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+        method : {"linear", "nearest"}
+            Linear or nearest neighbour interpolation.
 
         Returns
         -------
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        if interp_kwargs is None:
-            interp_kwargs = dict(bounds_error=False, fill_value=None)
-
         if energy is None:
             energy = self.energy
+
         if rad is None:
             rad = self.rad
-        energy = Energy(energy).to("TeV")
-        rad = Angle(rad).to("deg")
-        energy_bin = self.energy.to("TeV")
-        rad_bin = self.rad.to("deg")
-        points = (energy_bin, rad_bin)
-        interpolator = RegularGridInterpolator(
-            points, self.psf_value.value, **interp_kwargs
-        )
-        energy_grid, rad_grid = np.meshgrid(energy.value, rad.value, indexing="ij")
-        shape = energy_grid.shape
-        pix_coords = np.column_stack([energy_grid.flat, rad_grid.flat])
-        data_interp = interpolator(pix_coords)
-        return Quantity(data_interp.reshape(shape), self.psf_value.unit)
 
-    def table_psf_at_energy(self, energy, interp_kwargs=None, **kwargs):
+        energy = np.atleast_1d(Quantity(energy, "GeV").value)[:, np.newaxis]
+        rad = np.atleast_1d(Quantity(rad, "rad").value)
+        return self._interpolate((energy, rad), clip=True, method=method)
+
+    def table_psf_at_energy(self, energy, method="linear", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        interp_kwargs : dict
-            Option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+        method : {"linear", "nearest"}
+            Linear or nearest neighbour interpolation.
 
         Returns
         -------
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
+        psf_value = self.evaluate(energy=energy, method=method)[0, :]
         return TablePSF(self.rad, psf_value, **kwargs)
 
-    def table_psf_in_energy_band(
-        self, energy_band, spectral_index=2, spectrum=None, **kwargs
-    ):
+    def table_psf_in_energy_band(self, energy_band, spectrum=None, n_bins=11, **kwargs):
         """Average PSF in a given energy band.
 
         Expected counts in sub energy bands given the given exposure
@@ -528,58 +524,34 @@ class EnergyDependentTablePSF(object):
         ----------
         energy_band : `~astropy.units.Quantity`
             Energy band
-        spectral_index : float
-            Power law spectral index (used if spectrum=None).
-        spectrum : callable
-            Spectrum (callable with energy as parameter).
+        spectrum : `SpectralModel`
+            Spectral model used for weighting the PSF. Default is a power law
+            with index=2.
+        n_bins : int
+            Number of energy points in the energy band, used to compute the
+            weigthed PSF.
 
         Returns
         -------
         psf : `TablePSF`
             Table PSF
         """
+        from ..spectrum.models import PowerLaw, TableModel
+
         if spectrum is None:
-            # This is a false positive error from pylint
-            # See https://github.com/PyCQA/pylint/issues/2410#issuecomment-415026690
-            def spectrum(energy):  # pylint:disable=function-redefined
-                return (energy / energy_band[0]) ** (-spectral_index)
+            spectrum = PowerLaw()
 
-        # TODO: warn if `energy_band` is outside available data.
-        energy_idx_min, energy_idx_max = self._energy_index(energy_band)
+        exposure = TableModel(self.energy, self.exposure)
 
-        # TODO: improve this, probably by evaluating the PSF (i.e. interpolating in energy) onto a new energy grid
-        # This is a bit of a hack, but makes sure that a PSF is given, by forcing at least one slice:
-        if energy_idx_max - energy_idx_min < 2:
-            # log.warning('Dubious case of PSF energy binning')
-            # Note that below always range stop of `energy_idx_max - 1` is used!
-            # That's why we put +2 here to make sure we have at least one bin.
-            energy_idx_max = max(energy_idx_min + 2, energy_idx_max)
-            # Make sure we don't step out of the energy array (doesn't help much)
-            energy_idx_max = min(energy_idx_max, len(self.energy))
+        e_min, e_max = energy_band
+        energy = Energy.equal_log_spacing(emin=e_min, emax=e_max, nbins=n_bins)
 
-        # TODO: extract this into a utility function `npred_weighted_mean()`
+        weights = (spectrum * exposure)(energy)
+        weights /= weights.sum()
 
-        # Compute weights for energy bins
-        weights = np.zeros_like(self.energy.value, dtype=np.float64)
-        for idx in range(energy_idx_min, energy_idx_max - 1):
-            energy_min = self.energy[idx]
-            energy_max = self.energy[idx + 1]
-            exposure = self.exposure[idx]
-            flux = spectrum(energy_min)
-            weights[idx] = (exposure * flux * (energy_max - energy_min)).value
-
-        # Normalize weights to sum to 1
-        weights = weights / weights.sum()
-
-        # Compute weighted PSF value array
-        total_psf_value = np.zeros_like(self._get_1d_psf_values(0), dtype=np.float64)
-        for idx in range(energy_idx_min, energy_idx_max - 1):
-            psf_value = self._get_1d_psf_values(idx)
-            total_psf_value += weights[idx] * psf_value
-
-        # TODO: add version that returns `total_psf_value` without
-        # making a `TablePSF`.
-        return TablePSF(self.rad, total_psf_value, **kwargs)
+        psf_value = self.evaluate(energy=energy)
+        psf_value_weighted = (weights[:, np.newaxis] * psf_value)
+        return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
 
     def containment_radius(self, energies, fraction, interp_kwargs=None):
         """Containment radius.

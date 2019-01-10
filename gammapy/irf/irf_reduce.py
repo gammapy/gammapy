@@ -35,16 +35,9 @@ def make_psf(observation, position, energy=None, rad=None):
     if rad is None:
         rad = observation.psf.to_energy_dependent_table_psf(theta=offset).rad
 
-    if isinstance(observation.psf, PSF3D):
-        # PSF3D is a table PSF, so we use the native RAD binning by default
-        # TODO: should handle this via a uniform caller API
-        psf_value = observation.psf.to_energy_dependent_table_psf(
-            theta=offset
-        ).evaluate(energy)
-    else:
-        psf_value = observation.psf.to_energy_dependent_table_psf(
-            theta=offset, rad=rad
-        ).evaluate(energy)
+    psf_value = observation.psf.to_energy_dependent_table_psf(
+        theta=offset, rad=rad
+    ).evaluate(energy)
 
     arf = observation.aeff.data.evaluate(offset=offset, energy=energy)
     exposure = arf * observation.observation_live_time_duration
