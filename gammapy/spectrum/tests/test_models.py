@@ -229,6 +229,12 @@ def test_models(spectrum):
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
 
 
+def test_model_unit():
+    pwl = PowerLaw()
+    value = pwl(500 * u.MeV)
+    assert value.unit == "cm-2 s-1 TeV-1"
+
+
 @requires_dependency("matplotlib")
 @requires_data("gammapy-extra")
 def test_table_model_from_file():

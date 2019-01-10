@@ -42,7 +42,10 @@ class SpectralModel(Model):
         """Call evaluate method of derived classes"""
         kwargs = dict()
         for par in self.parameters.parameters:
-            kwargs[par.name] = par.quantity
+            quantity = par.quantity
+            if par.name in ["reference", "emin", "emax", "ecut"]:
+                quantity = quantity.to(energy.unit)
+            kwargs[par.name] = quantity
 
         return self.evaluate(energy, **kwargs)
 
