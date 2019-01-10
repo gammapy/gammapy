@@ -93,9 +93,11 @@ def test_BackgroundModel(background):
 
 
 class TestSkyModels:
+    def setup(self):
+        self.sky_models = SkyModels([sky_model(), sky_model()])
 
-    def test_to_compound_model(self, sky_model):
-        sky_models = SkyModels([sky_model, sky_model])
+    def test_to_compound_model(self):
+        sky_models = self.sky_models
         model = sky_models.to_compound_model()
         assert isinstance(model, CompoundSkyModel)
         pars = model.parameters.parameters
@@ -103,8 +105,8 @@ class TestSkyModels:
         assert pars[0].name == "lon_0"
         assert pars[-1].name == "reference"
 
-    def test_parameters(self, sky_model):
-        sky_models = SkyModels([sky_model, sky_model])
+    def test_parameters(self):
+        sky_models = self.sky_models
         parnames = ["lon_0", "lat_0", "sigma", "index", "amplitude", "reference"] * 2
         assert sky_models.parameters.names == parnames
 
@@ -118,8 +120,8 @@ class TestSkyModels:
         sky_models.parameters = sky_models.parameters.copy()
         assert sky_models.parameters.parameters[-1].value == 1
 
-    def test_evaluate(self, sky_model):
-        sky_models = SkyModels([sky_model, sky_model])
+    def test_evaluate(self):
+        sky_models = self.sky_models
         lon = 3 * u.deg * np.ones(shape=(3, 4))
         lat = 4 * u.deg * np.ones(shape=(3, 4))
         energy = [1, 1, 1, 1, 1] * u.TeV
@@ -145,11 +147,11 @@ class TestSkyModel:
         # Check that model parameters are references to the spatial and spectral parts
         p1 = sky_model.parameters["lon_0"]
         p2 = sky_model.spatial_model.parameters["lon_0"]
-        #assert p1 is p2
+        assert p1 is p2
 
         p1 = sky_model.parameters["amplitude"]
         p2 = sky_model.spectral_model.parameters["amplitude"]
-        #assert p1 is p2
+        assert p1 is p2
 
     @staticmethod
     def test_evaluate_scalar(sky_model):
