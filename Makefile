@@ -52,7 +52,9 @@ help:
 	@echo '     python -m gammapy info'
 
 clean:
-	rm -rf build dist docs/_build docs/api temp/ docs/notebooks docs/_static/notebooks htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache tutorials/.ipynb_checkpoints
+	rm -rf build dist docs/_build docs/api temp/ docs/notebooks docs/_static/notebooks \
+	  htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache .pytest_cache \
+	  tutorials/.ipynb_checkpoints
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
