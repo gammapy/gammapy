@@ -59,7 +59,6 @@ def optimize_sherpa(parameters, function, **kwargs):
 
     factors = result[1]
     info = {"success": result[0], "message": result[3], "nfev": result[4]["nfev"]}
-    optimizer = optimizer
 
     return factors, info, optimizer
 

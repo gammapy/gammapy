@@ -55,6 +55,7 @@ def optimize_iminuit(parameters, function, **kwargs):
         "message": _get_message(minuit),
     }
     optimizer = minuit
+
     return factors, info, optimizer
 
 
