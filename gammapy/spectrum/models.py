@@ -43,7 +43,7 @@ class SpectralModel(Model):
         kwargs = dict()
         for par in self.parameters.parameters:
             quantity = par.quantity
-            if par.name in ["reference", "emin", "emax", "ecut"]:
+            if quantity.unit.physical_type == "energy":
                 quantity = quantity.to(energy.unit)
             kwargs[par.name] = quantity
 
