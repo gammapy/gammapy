@@ -44,6 +44,10 @@ class TestSourceCatalogHGPS:
         c = cat.gaussian_component(83)
         assert c.name == "HGPSC 084"
 
+    @staticmethod
+    def test_large_scale_component(cat):
+        assert isinstance(cat.large_scale_component, SourceCatalogLargeScaleHGPS)
+
 
 @requires_data("gammapy-extra")
 class TestSourceCatalogObjectHGPS:

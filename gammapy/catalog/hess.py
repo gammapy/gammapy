@@ -671,10 +671,8 @@ class SourceCatalogHGPS(SourceCatalog):
 
     @property
     def large_scale_component(self):
-        """Large scale component model (`~gammapy.catalog.SourceCatalogLargeScaleHGPS`).
-        """
-        table = self.table_large_scale_component
-        return SourceCatalogLargeScaleHGPS(table, spline_kwargs=dict(k=3, s=0, ext=0))
+        """Large scale component model (`~gammapy.catalog.SourceCatalogLargeScaleHGPS`)."""
+        return SourceCatalogLargeScaleHGPS(self.table_large_scale_component)
 
     def _make_source_object(self, index):
         """Make `SourceCatalogObject` for given row index"""
