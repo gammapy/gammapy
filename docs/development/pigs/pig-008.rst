@@ -1,0 +1,365 @@
+.. include:: ../../references.txt
+
+.. _pig-008:
+
+****************
+PIG 8 - Datasets
+****************
+
+* Author: Axel Donath (editor), Christoph Deil, Regis Terrier & Atreyee
+* Created: Jan 4th, 2018
+* Accepted:
+* Status:
+* Discussion:
+
+
+Introduction
+============
+An essential feature of Gammapy for modeling gamma-ray data will be the possibility
+of joint-likelihood analyses. This includes the joint-likelhood fitting of a model
+across multiple observations, joint-likelihood fitting of IACT and Fermi-LAT
+data, combined analysis of gamma-ray data with flux points or a combined spectral
+and cube analysis. Joint-likelihood also allows for combining different event types
+in a single analysis and timing analyses. For this reason we propose to introduce
+the abstraction layer of `Dataset` in Gammapy. A dataset bundles the reduced data
+with a parameteric model and fit statistics function. It evaluates the model and
+log-likelihood and passes it on to the fit object. Datasets can be combined by
+adding their log-likelihood values and concatenating their model parameters.
+
+
+Proposal
+========
+We propose to introduce the following classes to implement the dataset handling
+in Gammapy:
+
+
+`MapDataset`
+------------
+To enable the standard combined spectral and spatial analysis we propose to
+introduce a `MapDataset` class. A `MapDataset` bundles the counts data, source model,
+IRFs, background model, corresponding to a given event selection.
+
+It is supposed to work as following:
+
+.. code ::
+
+    from gammapy.cube import MapDataset
+
+    model = SourceModel.read("model.yaml")
+    background = BackgroundModel.read("stacked/background.fits")
+
+    counts = Map.read("stacked/counts.fits")
+    exposure = Map.read("stacked/exposure.fits")
+    edisp = Map.read("stacked/edisp.fits")
+    psf = Map.read("stacked/psf.fits")
+
+    dataset = MapDataset(
+        counts=counts,
+        exposure=exposure,
+        edisp=edisp,
+        psf=psf,
+        mask=mask,
+        model=model,
+        background=background_model,
+        likelihood="cash"
+        )
+
+    fit = Fit(dataset)
+    fit.optimize()
+
+The edisp and psf maps can be defined on a coarse spatial geometry. The counts,
+exposure and background map are supposed to be on the same spatial geometry,
+chosen by the user for the analysis.
+
+The `MapDataset` implements at least the following methods:
+
+.. code::
+
+    dataset = MapDataset()
+
+    # the map dataset might require some precomputations
+    dataset.setup()?
+
+    dataset.npred()
+    dataset.likelihood_per_bin()
+    dataset.likelihood(mask)
+
+The `.setup()` method creates cutouts of the exposure map for the individual
+model components, assigns the correspoding IRFs to the model component and
+bundles all into `SourceIRFModel` or `ModelEvaluator()`. The list of model
+evaluators is cached on the `MapDataset` and used later to efficiently compute
+the predicted number of counts.
+
+The `mask` argument to the `.likelihood` method allows to set a global fitting
+mask, when mutiple `MapDataset` or fitted jointly.
+
+For on-off based analyses a `MapOnOffDataset` class could be introduced later.
+
+`SpectrumDataset`
+-----------------
+
+For spectral analysis we propose to introduce a `SpectrumDataset`:
+
+.. code ::
+
+    from gammapy.spectrum import SpectrumDataset
+
+    model = SpectralModel()
+    background_model = SpectralBackgroundModel.read()
+    edisp = EnergyDispersion.read()
+
+    counts = Spectrum.read()
+    exposure = Spectrum.read()
+    mask = Spectrum.read()
+
+    dataset = SpectrumDataset(
+        counts=counts,
+        exposure=exposure,
+        model=model,
+        background_model=background_model,
+        mask=mask,
+        edisp=edisp,
+        likelihood="cash"
+        )
+
+    dataset.npred()
+    dataset.likelihoop_per_bin()
+    dataset.likelihood(mask)
+
+The `SpectrumDatasets` with a parametric background model will be introduced first.
+The existing `SpectrumObservation` can be refactored later in a `SpectrumOnOffDataset`
+or `PHASpectrumDatasets`.
+
+
+`FluxPointDataset`
+------------------
+
+For modeling of flux points we propose to introduce a `FluxPointDataset`:
+
+.. code::
+
+    from gammapy.spectrum import FluxPointsDataset
+
+    flux_points = FluxPoints.read("flux_points.ecsv")
+    model = PowerLaw()
+    dataset = FluxPointsDataset(
+        flux_points=flux_points,
+        model=model,
+        likelihood="chi2"
+        )
+
+    fit = Fit(dataset)
+    fit.optimize()
+
+The `FluxPointDataset` should define at least the following methods:
+
+.. code::
+
+    dataset = FluxPointDataset()
+
+    dataset.likelihood_per_bin()
+    dataset.likelihood(mask)
+
+    # predicted flux form the spectral model
+    dataset.flux_pred()
+
+The `FluxPoint` class also supports the `likelihood` format, which has to be implemented
+in a special way in the `FluxPointDataset`. The `likelihood` format stores the
+likelihood of the flux point, depending on energy and amplitude. Given a predicted
+flux by the spectral model the likelihood can be directly interpolated. This could
+be supported by a specific option `FluxPointDataset(likelihood="template")` or similar.
+
+
+`Datasets`
+----------
+
+To combined multiple datasets in a joint-likelihood analysis we propose to introduce
+a `Datasets` class. It's repsonsibility is to add up the log-likelihood values of
+the individual datasets and join per dataset parameter lists. The `Datasets` class
+also represents the main interface to the `Fit` class.
+
+The following example shows how a joint-likelihood analysis of mutiple observations
+is supposed to work:
+
+.. code ::
+
+    from gammapy.utils.fitting import Datatsets
+
+    model = SourceModel.read()
+
+    map_datasets = []
+
+    for obs_id in [123, 124, ...]:
+        bkg_model = BackgroundModel.read("obs-{}/background.fits".format(obs_id))
+        dataset = MapDataset(model=model, background=bkg_model)
+        map_datasets.append(dataset)
+
+    datasets = Datasets(map_datasets)
+
+    datasets.likelihood(mask)
+
+    fit = Fit(datasets)
+
+    # or maybe simpler
+
+    fit = Fit(map_datasets)
+    fit.optimize()
+
+
+
+The linking of parameters of the spectral model is natively achieved, as the same
+instance of the spectral model is passed to two different datasets, while the
+background model is created for every dataset separately.
+
+A joined spectral fit across multiple observations:
+
+.. code ::
+
+    model = SpectralModel()
+
+    spectrum_dataset_1 = SpectrumDataset(model, )
+    spectrum_dataset_2 = SpectrumDataset(model, )
+
+    datasets = Datasets([spectrum_dataset_1, spectrum_dataset_2])
+
+    fit = Fit(datasets)
+    fit.optimize()
+
+
+Combined spectral / flux points analysis:
+
+.. code ::
+
+    model = SpectralModel()
+
+    spectrum_dataset = SpectrumDataset(model=model)
+
+    flux_points = FluxPoints.read()
+    flux_point_dataset = FluxPointDataset(flux_points=flux_points, model=model, likelihood="chi2")
+
+    datasets = Datasets([flux_point_dataset, spectrum_dataset])
+
+    fit = Fit(datasets)
+    fit.optimize()
+
+
+Dataset serialization
+---------------------
+
+For convenience all dataset classes should support serialization, implemented
+via `.read()` and `.write()` methods. As the dataset as to orchestrate the
+serialization of mutiple objects, such as model, maps, flux-points etc. the best
+option is likely to introduce the serialization with a YAML based index file:
+
+.. code ::
+
+    dataset = MapDataset.read("dataset.yaml") # lazy loading?
+    dataset.write("dataset.yaml")
+
+Where the index file points to the various files needed for initialization of the
+dataset. Here is an example:
+
+.. code::
+
+    dataset:
+        type: map-dataset
+        maps:
+            counts: "obs-123/counts.fits"
+            exposure: "obs-123/exposure.fits"
+            edisp: "obs-123/edisp.fits"
+            psf: "obs-123/psf.fits"
+        model: "model.yaml"
+        background-model: "obs-123/background.fits"
+        likelihood: "cash"
+
+The `Datasets` object could be serialized equivalently as a list of datasets:
+
+
+.. code::
+
+    - dataset:
+        type: spectrum-dataset
+        maps:
+            counts: "obs-123/counts.fits"
+            exposure: "obs-123/exposure.fits"
+            edisp: "obs-123/edisp.fits"
+        model: "model.yaml"
+        background-model: "obs-123/background.fits"
+        likelihood: "wstat"
+
+    - dataset:
+        type: spectrum-dataset
+        maps:
+            counts: "obs-124/counts.fits"
+            exposure: "obs-124/exposure.fits"
+            edisp: "obs-124/edisp.fits"
+        model: "model.yaml"
+        background-model: "obs-124/background.fits"
+        likelihood: "wstat"
+
+    - dataset:
+        type: flux-point-dataset
+        flux-points : "fermipy-flux-points.fits"
+        model: "spectral-model.yaml"
+        likelihood: "template"
+
+
+Lazy loading of Datasets
+------------------------
+For the use-case of inspecting individual datasets (e.g. MapDataset per observation)
+it could be advantegeous to implement a lazy-loading or generator interface for
+`Datasets.read()`. Such that the individual datasets are only read from disk on
+requests and are not loaded in memory when calling `.read()`.
+
+
+Simulation of Datasets
+----------------------
+
+TBD
+
+
+List of Pull Requests
+=====================
+
+This is a proposal for a list of pull requests implementing the proposed changes,
+ordered by priority:
+
+1. Refactor the current `FluxPointFit` into a `FluxPointsDataset` class
+and make it work with the current `Fit` class. Ensure that the `Fit` class
+supports the old inheritance scheme as well as the new dataset on init.
+Update tests and tutorials. (**v0.11**)
+
+2. Implement the `Datasets` class in `gammapy.utils.fitting.datasets`, add tests
+using multiple `FluxPointsDataset`. Change the `Fit` interafce to take a `Datasets`
+object or list of `FluxPointsDataset` on input. (**v0.11**)
+
+3. Refactor the current `MapFit` into the `MapDataset` class. Only support a
+fixed energy dispersion and psf first. Use the current `MapEvaluator` for model
+evaluation, but split out the background evaluation. Update test and tutorials (**v0.11**)
+
+5. Add support for energy disperion and psf maps to `MapDataset`(**v0.11**)
+
+6. Add tutorial for joint-likelhood fitting of multiple observations (**v0.11**).
+
+7. Implement a `SpectrumDataset` class (**v0.12**).
+
+8. Implement `MapDataset.setup()` method (**v0.12**)
+
+9. Add tutorial for joint-likelihood fitting of IACT and Fermi-LAT data (**v0.12**).
+
+10. Implement dataset serialization (**v0.12**).
+
+
+Alternatives
+============
+
+Collaborate with 3ML.
+
+
+Decision
+========
+
+
+
+.. _gammapy: https://github.com/gammapy/gammapy
+.. _gammapy-web: https://github.com/gammapy/gammapy-webpage
