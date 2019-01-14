@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
+from ...extern.pathlib import Path
 from ...utils.scripts import make_path
 from ...utils.testing import requires_data
 from ..hdu_index_table import HDUIndexTable
@@ -65,21 +66,21 @@ def test_hdu_index_table_hd_hap():
     # See https://github.com/gammapy/gammapy/issues/1775
     assert hdu.filebytes() == 224640
 
-    assert (
-        str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    assert location.path(abs_path=False) == Path(
+        "data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
     path1 = str(location.path(abs_path=True))
     path2 = str(location.path(abs_path=False))
     assert path1.endswith(path2)
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_class="psf_table")
-    assert (
-        str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    assert location.path(abs_path=False) == Path(
+        "data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
 
     location = hdu_index.hdu_location(obs_id=23523, hdu_type="psf")
-    assert (
-        str(location.path(abs_path=False)) == "data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    assert location.path(abs_path=False) == Path(
+        "data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
 
     # A few invalid queries
