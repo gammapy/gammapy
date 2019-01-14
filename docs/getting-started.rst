@@ -50,6 +50,12 @@ environment:
     conda env create -f gammapy-0.9-environment.yml
     conda activate gammapy-0.9
 
+On Windows, comment out the lines for ``sherpa`` and ``healpy`` in the
+environment YAML file. These are optional dependencies that we are currently
+using that aren't supported on Windows. You will be able to do most analyses
+with Gammapy, but you will not be able to work with HEALPix data or fit
+with Sherpa (the default fitting backend currently is Minuit).
+
 Congratulations! You are all set to start using Gammapy!
 
 .. note::
@@ -77,6 +83,14 @@ size to download is about 100 MB.
 You might want to put the definition of the ``$GAMMAPY_DATA`` environment
 variable in your shell profile setup file that is executed when you open a new
 terminal (for example ``$HOME/.bash_profile``).
+
+If you are not using the ``bash`` shell, handling of shell environment variables
+might be different, e.g. in some shells the command to use is ``set`` or something
+else instead of ``export``, and also the profile setup file will be different.
+
+On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
+"Environment Variables" settings dialog, as explained e.g.
+`here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__
 
 The datasets are curated and stable, the notebooks are still under development
 just like Gammapy itself, and thus stored in a sub-folder that contains the
