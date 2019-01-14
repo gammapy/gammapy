@@ -27,10 +27,6 @@ Status shields
     :target: https://travis-ci.org/gammapy/gammapy
     :alt: Test Status Travis-CI
 
-* .. image:: https://ci.appveyor.com/api/projects/status/duo8wgufg35b7cga?svg=true
-    :target: https://ci.appveyor.com/project/cdeil/gammapy/branch/master
-    :alt: Test Status Appveyor
-
 * .. image:: https://img.shields.io/coveralls/gammapy/gammapy.svg
     :target: https://coveralls.io/r/gammapy/gammapy
     :alt: Code Coverage
