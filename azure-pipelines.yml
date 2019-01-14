@@ -35,7 +35,7 @@ jobs:
   - script: |
       python -m pip install --upgrade pip
       pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy
-      pip install matplotlib reproject iminuit naima
+      pip install matplotlib reproject iminuit naima uncertainties
     displayName: 'Install dependencies'
 
   - script: |
@@ -56,8 +56,8 @@ jobs:
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
 
-- job: 'Publish'
-  dependsOn: 'Test'
+# TODO: set this up using conda and our environment.yml
+- job: 'Dev Docs'
   pool:
     vmImage: 'Ubuntu 16.04'
 
@@ -66,6 +66,3 @@ jobs:
     inputs:
       versionSpec: '3.x'
       architecture: 'x64'
-
-  - script: python setup.py sdist
-    displayName: 'Build sdist'
