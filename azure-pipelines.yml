@@ -1,5 +1,9 @@
 # This is the configuration file for Gammapy on Azure Pipelines
 
+variables:
+  GAMMAPY_EXTRA: $(Agent.HomeDirectory)/gammapy-extra
+
+
 jobs:
 
 - job: 'Test'
@@ -12,7 +16,10 @@ jobs:
       Python35:
         imageName: 'ubuntu-16.04'
         python.version: '3.5'
-      Windows:
+      Windows35:
+        imageName: 'vs2017-win2016'
+        python.version: '3.5'
+      Windows37:
         imageName: 'vs2017-win2016'
         python.version: '3.7'
 
@@ -31,9 +38,15 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      git clone https://github.com/gammapy/gammapy-extra.git $(GAMMAPY_EXTRA)
+    displayName: 'Get test data'
+
+  - script: |
       pip install -e .
+      echo $(GAMMAPY_EXTRA)
+      python -m gammapy info
       pytest gammapy --junitxml=junit/test-results.xml
-    displayName: 'pytest'
+    displayName: 'Run pytest'
 
   - task: PublishTestResults@2
     inputs:
