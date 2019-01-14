@@ -30,7 +30,6 @@ and in the document written summarizing the SUSS workshop Dec. 2018 (private lin
 .. _slides: https://forge.in2p3.fr/login?back_url=https%3A%2F%2Fforge.in2p3.fr%2Fprojects%2Fobserver-access-use-cases%2Fwiki%2FScience_Tools_Use-Cases).
 .. _indico: https://indico.cta-observatory.org/event/2070/
 
-
 Releases
 ========
 Up to the Gammapy 1.0 release we will pursue a **shorter release cycle**, with
@@ -185,7 +184,7 @@ and implemented by lead or contributing developers, that take responsibility for
 one or multiple of the projects described above. Each of those project PIGs should
 define a list of proposed pull requests, with preliminary milestones (version number
 as listed above) assigned. For each development project we will create a GitHub
-project and list the proposed pull requests as issues under the project. Responsibilities, 
+project and list the proposed pull requests as issues under the project. Responsibilities,
 updated milestones and discussion on implementation details are discussed in thoses
 issues. The general progress of the development work can be tracked using the
 GitHub project board.
