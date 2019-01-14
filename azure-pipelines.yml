@@ -1,20 +1,23 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+# This is the configuration file for Gammapy on Azure Pipelines
 
 jobs:
 
 - job: 'Test'
-  pool:
-    vmImage: 'Ubuntu 16.04'
+
   strategy:
     matrix:
       Python27:
+        imageName: 'ubuntu-16.04'
         python.version: '2.7'
       Python35:
+        imageName: 'ubuntu-16.04'
         python.version: '3.5'
-    maxParallel: 4
+      Windows:
+        imageName: 'vs2017-win2016'
+        python.version: '3.7'
+
+  pool:
+    vmImage: $(imageName)
 
   steps:
   - task: UsePythonVersion@0
