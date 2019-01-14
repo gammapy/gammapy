@@ -137,8 +137,8 @@ where, could move all content to notebooks) or automated tests. The idea for the
 Gammapy developers. Like for ``examples``, it's mostly outdated cruft and should
 probably be cleaned out.
 
-The files ``.travis.yml``, ``appveyor.yml``, ``readthedocs.yml`` and
-``environment-rtd.yml`` are the configuration files for the continuous
+The files ``azure-pipelines.yml``, ``.travis.yml``, ``appveyor.yml`` and
+``lgtm.yml`` are the configuration files for the continuous
 integration (CI) and documentation build / hosting cloud services we use. They
 are described in sections further down on this page.
 
@@ -264,16 +264,10 @@ install Gammapy dependencies listed in the environment YAML file placed in the
 Continuous integration
 ======================
 
-* Windows CI: https://ci.appveyor.com/project/cdeil/gammapy/branch/master
-* Mac and Linux CI: https://travis-ci.org/gammapy/gammapy
+We are running various builds on the following two CI platforms:
 
-We also have a Jenkins server set up at MPIK (at
-https://www.mpi-hd.mpg.de/gamma-jenkins ) that is running on Ubuntu. We could
-use it to e.g. run more extensive CI builds such as e.g. making nightly or
-weekly test releases and running an extensive set of "science verification"
-tests that might involve larger datasets or be slow. It could also be used for
-performance tests, to check for regressions in CPU or memory usage. If anyone is
-interested in setting this up for Gammapy, please get in touch.
+* https://dev.azure.com/gammapy/gammapy
+* https://travis-ci.org/gammapy/gammapy
 
 Code quality
 ============
