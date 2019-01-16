@@ -89,7 +89,7 @@ def make_link_node(rawtext, app, refuri, notebook, options):
     # base = 'https://github.com/gammapy/gammapy/tree/master/notebooks/'
     # base = 'https://nbviewer.jupyter.org/github/gammapy/gammapy/blob/master/notebooks/'
 
-    relpath = refuri.split(str(Path("/gammapy/docs")))[1]
+    relpath = refuri.split(str(Path("/docs")))[1]
     foldersplit = relpath.split(os.sep)
     base = ((".." + os.sep) * (len(foldersplit) - 2)) + "notebooks" + os.sep
     full_name = notebook + ".html"
@@ -121,9 +121,9 @@ def parse_notebooks(folder, url_docs, git_commit):
     """
 
     DOWNLOAD_CELL = """
-<script type="text/javascript" src="../_static/linksdl.js"></script>
-<div class='alert alert-info'>
-**This is a fixed-text formatted version of a Jupyter notebook.**
+<div class="alert alert-info">
+
+**This is a fixed-text formatted version of a Jupyter notebook**
 
 - Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy/{git_commit}?urlpath=lab/tree/{nb_filename})
 - You can contribute with your own notebooks in this
