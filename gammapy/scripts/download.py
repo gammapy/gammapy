@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
-from .downloadclass import DownloadProcess
+from .downloadclasses import ComputePlan, ParallelDownload
 
 log = logging.getLogger(__name__)
 
@@ -19,11 +19,13 @@ log = logging.getLogger(__name__)
 @click.option("--release", default="", help="Gammapy release environment.")
 def cli_download_notebooks(src, out, release):
     """Download notebooks"""
-    downloadproc = DownloadProcess(src, out, release, "notebooks", False)
 
-    downloadproc.setup()
-    downloadproc.files()
-    downloadproc.run()
+    plan = ComputePlan(src, out, release, "notebooks")
+    outfolder = plan.getlocalfolder()
+    fl = plan.getfilelist()
+    down = ParallelDownload(fl, outfolder, release, "nbs")
+    down.run()
+    down.show_info()
 
 
 @click.command(name="datasets")
@@ -36,13 +38,13 @@ def cli_download_notebooks(src, out, release):
 )
 def cli_download_datasets(src, out):
     """Download datasets"""
-    downloadproc = DownloadProcess(src, out, "", "datasets", False)
 
-    downloadproc.setup()
-    downloadproc.files()
-    downloadproc.run()
-
-    downloadproc.show_info()
+    plan = ComputePlan(src, out, "", "datasets")
+    outfolder = plan.getlocalfolder()
+    fl = plan.getfilelist()
+    down = ParallelDownload(fl, outfolder, '', "datasets")
+    down.run()
+    down.show_info()
 
 
 @click.command(name="tutorials")
@@ -56,14 +58,16 @@ def cli_download_datasets(src, out):
 @click.option("--release", default="", help="Gammapy release environment.")
 def cli_download_tutorials(src, out, release):
     """Download tutorial notebooks and datasets"""
-    downnotebooks = DownloadProcess(src, out, release, "notebooks", True)
-    downnotebooks.setup()
-    downnotebooks.files()
-    downnotebooks.run()
 
-    downdatasets = DownloadProcess(src, out, release, "datasets", True)
-    downdatasets.setup()
-    downdatasets.files()
-    downdatasets.run()
+    plan = ComputePlan(src, out, release, "notebooks", modetutorials=True)
+    outfolder = plan.getlocalfolder()
+    fl = plan.getfilelist()
+    down = ParallelDownload(fl, outfolder, release, "notebooks")
+    down.run()
 
-    downnotebooks.show_info()
+    plan = ComputePlan(src, out, release, "datasets", modetutorials=True)
+    outfolder = plan.getlocalfolder()
+    fl = plan.getfilelist()
+    down = ParallelDownload(fl, outfolder, release, "all")
+    down.run()
+    down.show_info()
