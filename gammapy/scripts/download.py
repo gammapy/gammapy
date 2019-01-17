@@ -42,7 +42,7 @@ def cli_download_datasets(src, out):
     plan = ComputePlan(src, out, "", "datasets")
     outfolder = plan.getlocalfolder()
     fl = plan.getfilelist()
-    down = ParallelDownload(fl, outfolder, '', "datasets")
+    down = ParallelDownload(fl, outfolder, "", "datasets")
     down.run()
     down.show_info()
 

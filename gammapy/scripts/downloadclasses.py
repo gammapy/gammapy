@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Download class for gammapy download CLI."""
 from __future__ import absolute_import, division, print_function, unicode_literals
+import hashlib
 import json
 import logging
 import sys
@@ -17,13 +18,30 @@ DEV_NBS_YAML_URL = (
 )
 
 
+def hashmd5(path):
+    md5_hash = hashlib.md5()
+    with open(path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            md5_hash.update(byte_block)
+    md5 = md5_hash.hexdigest()
+    return md5
+
+
 def get_file(ftuple):
-    url, filepath = ftuple
-    try:
-        urlretrieve(url, filepath)
-    except Exception as ex:
-        log.error(filepath + " could not be copied.")
-        log.error(ex)
+    url, filepath, md5server = ftuple
+
+    retrieve = True
+    if md5server and Path(filepath).exists():
+        md5local = hashmd5(filepath)
+        if md5local == md5server:
+            retrieve = False
+
+    if retrieve:
+        try:
+            urlretrieve(url, filepath)
+        except Exception as ex:
+            log.error(filepath + " could not be copied.")
+            log.error(ex)
 
 
 def parse_datafiles(datasearch, datasetslist):
@@ -36,6 +54,7 @@ def parse_datafiles(datasearch, datasetslist):
                     datafiles[label] = {}
                     datafiles[label]["url"] = ds["url"]
                     datafiles[label]["path"] = ds["path"]
+                    datafiles[label]["hashmd5"] = ds["hashmd5"]
     return datafiles
 
 
@@ -88,7 +107,7 @@ class ComputePlan(object):
                     urlopen(url_file_env)
                     ifolder = Path(filepath_env).parent
                     ifolder.mkdir(parents=True, exist_ok=True)
-                    get_file((url_file_env, filepath_env))
+                    get_file((url_file_env, filepath_env, ""))
                 except Exception as ex:
                     log.error(ex)
                     exit()
@@ -182,9 +201,12 @@ class ParallelDownload(object):
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
+            md5 = ""
+            if "hashmd5" in self.listfiles[rec]:
+                md5 = self.listfiles[rec]["hashmd5"]
             ifolder = Path(path).parent
             ifolder.mkdir(parents=True, exist_ok=True)
-            ftuple = (url, str(path))
+            ftuple = (url, str(path), md5)
             pool.apply_async(get_file, args=(ftuple,), callback=self.progressbar)
         pool.close()
         pool.join()
