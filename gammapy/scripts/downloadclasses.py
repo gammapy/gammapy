@@ -19,9 +19,6 @@ DEV_NBS_YAML_URL = (
 
 def get_file(ftuple):
     url, filepath = ftuple
-    ifolder = Path(filepath).parent
-    ifolder.mkdir(parents=True, exist_ok=True)
-
     try:
         urlretrieve(url, filepath)
     except Exception as ex:
@@ -89,6 +86,8 @@ class ComputePlan(object):
                 try:
                     log.info("Downloading {}".format(url_file_env))
                     urlopen(url_file_env)
+                    ifolder = Path(filepath_env).parent
+                    ifolder.mkdir(parents=True, exist_ok=True)
                     get_file((url_file_env, filepath_env))
                 except Exception as ex:
                     log.error(ex)
@@ -183,6 +182,8 @@ class ParallelDownload(object):
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
+            ifolder = Path(path).parent
+            ifolder.mkdir(parents=True, exist_ok=True)
             ftuple = (url, str(path))
             pool.apply_async(get_file, args=(ftuple,), callback=self.progressbar)
         pool.close()
