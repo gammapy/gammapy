@@ -198,19 +198,19 @@ class TestSpectralFit:
         assert self.fit._model is result.model
         assert self.pwl is result.model
 
-        assert_allclose(result.statval, 41.755949, rtol=1e-4)
-        assert_allclose(pars["index"].value, 2.7912, rtol=1e-3)
+        assert_allclose(result.statval, 38.343, rtol=1e-3)
+        assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
         assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
-        assert_allclose(pars["amplitude"].value, 5.029e-11, rtol=1e-3)
-        assert_allclose(result.npred[60], 0.198193, rtol=1e-3)
+        assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
+        assert_allclose(result.npred[60], 0.6102, rtol=1e-3)
         self.fit.result[0].to_table()
 
     def test_basic_errors(self):
         self.fit.run()
         result = self.fit.result[0]
         pars = result.model.parameters
-        assert_allclose(pars.error("index"), 0.1456, rtol=1e-3)
-        assert_allclose(pars.error("amplitude"), 6.251e-12, rtol=1e-3)
+        assert_allclose(pars.error("index"), 0.1496, rtol=1e-3)
+        assert_allclose(pars.error("amplitude"), 6.423e-12, rtol=1e-3)
         self.fit.result[0].to_table()
 
     def test_compound(self):
@@ -219,10 +219,10 @@ class TestSpectralFit:
         fit.run()
         result = fit.result[0]
         pars = result.model.parameters
-        assert_allclose(pars["index"].value, 2.7912, rtol=1e-3)
+        assert_allclose(pars["index"].value, 2.8166, rtol=1e-3)
         p = pars["amplitude"]
         assert p.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(p.value, 5.011927e-12, rtol=1e-3)
+        assert_allclose(p.value, 5.0714e-12, rtol=1e-3)
 
     def test_npred(self):
         self.fit.run()
@@ -278,7 +278,7 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list=obs, model=self.pwl)
         fit.run()
         assert_allclose(
-            fit.result[0].model.parameters["index"].value, 2.7709, atol=0.02
+            fit.result[0].model.parameters["index"].value, 2.7961, atol=0.02
         )
 
     def test_ecpl_fit(self):
@@ -286,17 +286,17 @@ class TestSpectralFit:
         fit.run()
         actual = fit.result[0].model.parameters["lambda_"].quantity
         assert actual.unit == "TeV-1"
-        assert_allclose(actual.value, 0.098456, rtol=1e-2)
+        assert_allclose(actual.value, 0.145215, rtol=1e-2)
 
     def test_joint_fit(self):
         fit = SpectrumFit(self.obs_list, self.pwl)
         fit.run()
         actual = fit.result[0].model.parameters["index"].value
-        assert_allclose(actual, 2.7611, rtol=1e-3)
+        assert_allclose(actual, 2.7806, rtol=1e-3)
 
         actual = fit.result[0].model.parameters["amplitude"].quantity
         assert actual.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(actual.value, 5.118e-11, rtol=1e-3)
+        assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
@@ -304,9 +304,9 @@ class TestSpectralFit:
         fit = SpectrumFit(obs_list, self.pwl)
         fit.run()
         pars = fit.result[0].model.parameters
-        assert_allclose(pars["index"].value, 2.7592, rtol=1e-3)
+        assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
-        assert_allclose(pars["amplitude"].value, 5.115e-11, rtol=1e-3)
+        assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
 
     def test_run(self, tmpdir):
         fit = SpectrumFit(self.obs_list, self.pwl)
@@ -345,5 +345,5 @@ class TestSpectralFit:
         model.gamma = 2
         sau.set_model(model * 1e-20)
         sau.fit()
-        assert_allclose(model.pars[0].val, 2.719, rtol=1e-3)
-        assert_allclose(model.pars[2].val, 4.601, rtol=1e-3)
+        assert_allclose(model.pars[0].val, 2.732, rtol=1e-3)
+        assert_allclose(model.pars[2].val, 4.647, rtol=1e-3)

@@ -26,9 +26,9 @@ def test_spectrum_observation_1():
     pars = dict(
         total_on=189,
         livetime=1581.73681640625 * u.second,
-        npred=109.133693,
+        npred=109.014552,
         excess=169.916667,
-        excess_safe_range=117.25,
+        excess_safe_range=116.33,
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
@@ -144,7 +144,7 @@ class SpectrumObservationTester:
             index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
         npred = self.obs.predicted_counts(model=pwl)
-        assert_allclose(npred.total_counts.value, self.vals["npred"])
+        assert_allclose(npred.total_counts.value, self.vals["npred"], rtol=1e-3)
 
     def test_stats_table(self):
         table = self.obs.stats_table()
@@ -161,7 +161,7 @@ class SpectrumObservationTester:
         stats = self.obs.total_stats_safe_range
         assert_quantity_allclose(stats.energy_min, self.obs.lo_threshold)
         assert_quantity_allclose(stats.energy_max, self.obs.hi_threshold)
-        assert_allclose(stats.excess, self.vals["excess_safe_range"], atol=1e-3)
+        assert_allclose(stats.excess, self.vals["excess_safe_range"], rtol=1e-3)
 
     @requires_dependency("sherpa")
     def test_to_sherpa(self):
@@ -206,11 +206,11 @@ class TestSpectrumObservationStacker:
     def test_thresholds(self):
         energy = self.obs_stacker.stacked_obs.lo_threshold
         assert energy.unit == "keV"
-        assert_allclose(energy.value, 8.799e08, rtol=1e-3)
+        assert_allclose(energy.value, 8.912509e+08, rtol=1e-3)
 
         energy = self.obs_stacker.stacked_obs.hi_threshold
         assert energy.unit == "keV"
-        assert_allclose(energy.value, 4.641e10, rtol=1e-3)
+        assert_allclose(energy.value, 4.466836e+10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
@@ -252,11 +252,11 @@ class TestSpectrumObservationList:
 
         val = obs.aeff.data.evaluate(energy="1.1 TeV")
         assert val.unit == "cm2"
-        assert_allclose(val.value, 1.3466e09, rtol=1e-3)
+        assert_allclose(val.value, 1.34389e+09, rtol=1e-3)
 
         val = obs.edisp.data.evaluate(e_true="1.1 TeV", e_reco="1.3 TeV")
         assert val.unit == ""
-        assert_allclose(val.value, 0.06406, rtol=1e-3)
+        assert_allclose(val.value, 0.075221, rtol=1e-3)
 
     def test_write(self, tmpdir):
         self.obs_list.write(outdir=str(tmpdir), pha_typeII=False)
@@ -272,9 +272,9 @@ class TestSpectrumObservationList:
     def test_range(self):
         energy = self.obs_list.safe_range("inclusive")
         assert energy.unit == "TeV"
-        assert_allclose(energy.value, [0.8799, 100], rtol=1e-3)
+        assert_allclose(energy.value, [0.891251, 100], rtol=1e-3)
 
         # TODO: this is not a great test case, should pick two
         # observations where "exclusive" and "inclusive" ranges differ.
         energy = self.obs_list.safe_range("exclusive")
-        assert_allclose(energy.value, [0.8799, 100], rtol=1e-3)
+        assert_allclose(energy.value, [0.891251, 100], rtol=1e-3)
