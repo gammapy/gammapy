@@ -16,6 +16,9 @@ BASE_URL = "https://gammapy.org/download"
 DEV_NBS_YAML_URL = (
     "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
 )
+DEV_SCRIPTS_YAML_URL = (
+    "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
+)
 
 
 def hashmd5(path):
@@ -87,33 +90,41 @@ class ComputePlan(object):
         self.option = option
         self.modetutorials = modetutorials
         self.listfiles = {}
+        log.info("Looking for {}...".format(self.option))
 
     def getlocalfolder(self):
         if self.version == "":
             self.version = version.version
 
+        if self.option == "notebooks":
+            namefolder = "notebooks-" + self.version
+            self.outfolder = self.outfolder / namefolder
+
+        if self.option == "scripts":
+            namefolder = "scripts-" + self.version
+            self.outfolder = self.outfolder / namefolder
+
         if self.option == "datasets" and self.modetutorials:
             self.outfolder = self.outfolder / "datasets"
 
-        if self.option == "notebooks":
-            nbfolder = "notebooks-" + self.version
-            self.outfolder = self.outfolder / nbfolder
-            if self.release:
-                filename_env = "gammapy-" + self.version + "-environment.yml"
-                url_file_env = BASE_URL + "/install/" + filename_env
-                filepath_env = str(self.outfolder.parent / filename_env)
-                try:
-                    log.info("Downloading {}".format(url_file_env))
-                    urlopen(url_file_env)
-                    ifolder = Path(filepath_env).parent
-                    ifolder.mkdir(parents=True, exist_ok=True)
-                    get_file((url_file_env, filepath_env, ""))
-                except Exception as ex:
-                    log.error(ex)
-                    exit()
         return self.outfolder
 
+    def getenvironment(self):
+        filename_env = "gammapy-" + self.version + "-environment.yml"
+        url_file_env = BASE_URL + "/install/" + filename_env
+        filepath_env = str(self.outfolder.parent / filename_env)
+        try:
+            log.info("Downloading {}".format(url_file_env))
+            urlopen(url_file_env)
+            ifolder = Path(filepath_env).parent
+            ifolder.mkdir(parents=True, exist_ok=True)
+            get_file((url_file_env, filepath_env, ""))
+        except Exception as ex:
+            log.error(ex)
+            exit()
+
     def getfilelist(self):
+        found = False
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
             if self.src != "":
@@ -122,12 +133,27 @@ class ComputePlan(object):
                     record = self.listfiles[keyrec]
                     self.listfiles = {}
                     self.listfiles[keyrec] = record
-                else:
-                    log.info("Notebook {} not found".format(self.src))
-                    sys.exit()
+                    found = True
 
             imagefiles = parse_imagefiles(self.listfiles)
             self.listfiles.update(imagefiles)
+
+        if self.option == "scripts" or self.modetutorials:
+            self.parse_scripts_yaml()
+            if self.src != "":
+                keyrec = "sc: " + self.src
+                if keyrec in self.listfiles:
+                    record = self.listfiles[keyrec]
+                    self.listfiles = {}
+                    self.listfiles[keyrec] = record
+                    found = True
+
+        if self.src != "" and not found:
+            if self.option == "notebooks":
+                log.warning("Notebook {} not found".format(self.src))
+            if self.option == "scripts":
+                log.warning("Script {} not found".format(self.src))
+            return []
 
         if self.option == "datasets":
             datafound = {}
@@ -182,6 +208,30 @@ class ComputePlan(object):
                 if nb["images"]:
                     for im in nb["images"]:
                         self.listfiles[label]["images"].append(im)
+
+    def parse_scripts_yaml(self):
+        import yaml
+
+        if version.release:
+            filename_nbs = "gammapy-" + self.version + "-scripts.yml"
+            url = BASE_URL + "/tutorials/" + filename_nbs
+        else:
+            url = DEV_SCRIPTS_YAML_URL
+
+        log.info("Reading {}".format(url))
+        txt = urlopen(url).read().decode("utf-8")
+
+        for sc in yaml.safe_load(txt):
+            path = sc["name"] + ".py"
+            label = "sc: " + sc["name"]
+            self.listfiles[label] = {}
+            self.listfiles[label]["url"] = sc["url"]
+            self.listfiles[label]["path"] = path
+            self.listfiles[label]["datasets"] = []
+            if "datasets" in sc:
+                if sc["datasets"]:
+                    for ds in sc["datasets"]:
+                        self.listfiles[label]["datasets"].append(ds)
 
 
 class ParallelDownload(object):

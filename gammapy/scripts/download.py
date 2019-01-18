@@ -22,11 +22,35 @@ def cli_download_notebooks(src, out, release):
 
     plan = ComputePlan(src, out, release, "notebooks")
     outfolder = plan.getlocalfolder()
+    if release:
+        plan.getenvironment()
     fl = plan.getfilelist()
-    down = ParallelDownload(fl, outfolder, release, "nbs")
-    down.run()
-    down.show_info()
+    if fl:
+        down = ParallelDownload(fl, outfolder, release, "notebooks")
+        down.run()
+        down.show_info()
 
+@click.command(name="scripts")
+@click.option("--src", default="", help="Specific script to download.")
+@click.option(
+    "--out",
+    default="gammapy-scripts",
+    help="Path where the versioned python scripts will be copied.",
+    show_default=True,
+)
+@click.option("--release", default="", help="Gammapy release environment.")
+def cli_download_scripts(src, out, release):
+    """Download scripts"""
+
+    plan = ComputePlan(src, out, release, "scripts")
+    outfolder = plan.getlocalfolder()
+    if release:
+        plan.getenvironment()
+    fl = plan.getfilelist()
+    if fl:
+        down = ParallelDownload(fl, outfolder, release, "scripts")
+        down.run()
+        down.show_info()
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
@@ -42,9 +66,10 @@ def cli_download_datasets(src, out):
     plan = ComputePlan(src, out, "", "datasets")
     outfolder = plan.getlocalfolder()
     fl = plan.getfilelist()
-    down = ParallelDownload(fl, outfolder, "", "datasets")
-    down.run()
-    down.show_info()
+    if fl:
+        down = ParallelDownload(fl, outfolder, "", "datasets")
+        down.run()
+        down.show_info()
 
 
 @click.command(name="tutorials")
@@ -59,15 +84,26 @@ def cli_download_datasets(src, out):
 def cli_download_tutorials(src, out, release):
     """Download tutorial notebooks and datasets"""
 
-    plan = ComputePlan(src, out, release, "notebooks", modetutorials=True)
+    plan = ComputePlan(src, out, release, "notebooks")
+    outfolder = plan.getlocalfolder()
+    if release:
+        plan.getenvironment()
+    fl = plan.getfilelist()
+    if fl:
+        down = ParallelDownload(fl, outfolder, release, "notebooks")
+        down.run()
+
+    plan = ComputePlan(src, out, release, "scripts")
     outfolder = plan.getlocalfolder()
     fl = plan.getfilelist()
-    down = ParallelDownload(fl, outfolder, release, "notebooks")
-    down.run()
+    if fl:
+        down = ParallelDownload(fl, outfolder, release, "scripts")
+        down.run()
 
     plan = ComputePlan(src, out, release, "datasets", modetutorials=True)
     outfolder = plan.getlocalfolder()
     fl = plan.getfilelist()
-    down = ParallelDownload(fl, outfolder, release, "all")
-    down.run()
-    down.show_info()
+    if fl:
+        down = ParallelDownload(fl, outfolder, release, "all")
+        down.run()
+        down.show_info()
