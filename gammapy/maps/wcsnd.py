@@ -535,9 +535,10 @@ class WcsNDMap(WcsMap):
             width = u.Quantity(width) / self.geom.pixel_scales.mean()
             width = width.to_value("")
 
-        smoothed_data = np.empty_like(self.data)
+        smoothed_data = np.empty(self.data.shape, dtype=float)
 
         for img, idx in self.iter_by_image():
+            img = img.astype(float)
             if kernel == "gauss":
                 data = gaussian_filter(img, width, **kwargs)
             elif kernel == "disk":
