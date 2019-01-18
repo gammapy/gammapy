@@ -47,8 +47,8 @@ env:
         - ASTROPY_USE_SYSTEM_PYTEST=1
 
     matrix:
-        - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
+        - PYTHON_VERSION=3.5 SETUP_CMD='egg_info' FETCH_GAMMAPY_DATA=false
+        - PYTHON_VERSION=2.7 SETUP_CMD='egg_info' FETCH_GAMMAPY_DATA=false
 
 matrix:
 
