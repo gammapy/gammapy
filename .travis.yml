@@ -184,8 +184,8 @@ script:
 
     - if $FETCH_GAMMAPY_DATA; then
           export GAMMAPY_DATA=${HOME}/gammapy-data;
-          pip install .
-          gammapy download datasets --out=$GAMMAPY_DATA
+          pip install .;
+          gammapy download datasets --out=$GAMMAPY_DATA;
       fi
 
     - $MAIN_CMD $SETUP_CMD
