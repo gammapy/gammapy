@@ -71,12 +71,9 @@ matrix:
           env: PYTHON_VERSION=3.7 SETUP_CMD='test -V --coverage'
 
         # Run tests without optional dependencies
-        # TODO: remove pyyaml here again as soon as this is resolved
-        # https://github.com/astropy/astropy/issues/7783
-        # in a stable Astropy release that gets picked up by the CI build
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click regions pyyaml'
+               CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES='pytest-astropy'
 
         # Run tests without GAMMAPY_EXTRA available
