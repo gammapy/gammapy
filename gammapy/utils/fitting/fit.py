@@ -8,6 +8,7 @@ from ...extern import six
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
+from .parameter import Parameters
 
 __all__ = ["Fit"]
 
@@ -80,7 +81,10 @@ class Fit(object):
     # and only use `parameters` from `Fit`, not `model`.
     @property
     def _parameters(self):
-        return self._model.parameters
+        if self._back_model:
+            return Parameters(self._model.parameters.parameters + self._back_model.parameters.parameters)
+        else:
+            return self._model.parameters
 
     def run(self, optimize_opts=None, covariance_opts=None):
         """
@@ -172,7 +176,7 @@ class Fit(object):
 
         return FitResult(
             model=self._model,
-            total_stat=self.total_stat(self._model.parameters),
+            total_stat=self.total_stat(self._parameters),
             backend=backend,
             method=kwargs.get("method", backend),
             **info

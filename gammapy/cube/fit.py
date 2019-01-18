@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
-from ..utils.fitting import Fit
+from ..utils.fitting import Fit, Parameters
 from ..stats import cash
 from ..maps import Map, MapAxis
 
@@ -36,12 +36,14 @@ class MapFit(Fit):
     """
 
     def __init__(
-        self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None
+        self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None,
+            back_model=None
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self._model = model
+        self._back_model = back_model
         self.counts = counts
         self.exposure = exposure
         self.background = background
@@ -55,6 +57,7 @@ class MapFit(Fit):
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
+            back_model=self._back_model
         )
 
     @property
@@ -66,6 +69,9 @@ class MapFit(Fit):
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         self._model.parameters = parameters
+        if self._back_model:
+            self._model.parameters = Parameters(parameters.parameters[:-2])
+            self._back_model.parameters = Parameters(parameters.parameters[-2:])
         if self.mask:
             stat = self.stat[self.mask.data]
         else:
@@ -104,12 +110,16 @@ class MapEvaluator(object):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    back_model: `~gammapy.cube.models.BackgroundModel`
+        the model used for background
     """
 
     def __init__(
-        self, model=None, exposure=None, background=None, psf=None, edisp=None
+        self, model=None, exposure=None, background=None, psf=None, edisp=None,
+            back_model=None
     ):
         self.model = model
+        self.back_model = back_model
         self.exposure = exposure
         self.background = background
         self.psf = psf
@@ -232,6 +242,7 @@ class MapEvaluator(object):
         npred.data = data
         return npred
 
+
     def compute_npred(self):
         """
         Evaluate model predicted counts.
@@ -248,5 +259,9 @@ class MapEvaluator(object):
         if self.edisp is not None:
             npred = self.apply_edisp(npred)
         if self.background:
-            npred.data += self.background.data
+            if self.back_model:
+                npred.data += self.back_model.evaluate()
+            else:
+                npred.data += self.background.data
         return npred.data
+

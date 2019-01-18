@@ -26,3 +26,4 @@ class Model(object):
             covariance = self.parameters.covariance_to_table()
             ss += "\n\t".join(covariance.pformat())
         return ss
+
