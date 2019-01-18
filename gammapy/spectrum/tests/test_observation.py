@@ -21,7 +21,7 @@ from .. import (
 @requires_data("gammapy-extra")
 def test_spectrum_observation_1():
     """Obs read from file"""
-    filename = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/pha_obs23523.fits"
+    filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     obs = SpectrumObservation.read(filename)
     pars = dict(
         total_on=189,
@@ -176,7 +176,7 @@ class SpectrumObservationTester:
 
 
 def _read_hess_obs():
-    path = "$GAMMAPY_EXTRA/datasets/joint-crab/spectra/hess/"
+    path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
     obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
     obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
     return SpectrumObservationList([obs1, obs2])

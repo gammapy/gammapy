@@ -10,7 +10,7 @@ Spectral Fitting
 
 In the following you will see how to fit spectral data in OGIP format. The
 format is described at :ref:`gadf:ogip`. An example dataset is available in the
-``gammapy-extra`` repo. For a description of the available fit statstics see
+``$GAMMAPY_DATA`` repo. For a description of the available fit statstics see
 :ref:`fit-statistics`.
 
 Getting Started
@@ -92,12 +92,13 @@ example dataset used above. It makes use of the Sherpa `datastack module
 
 .. code-block:: python
 
-    from gammapy.datasets import gammapy_extra
     from sherpa.astro import datastack
     from sherpa.models import PowLaw1D
+    from gammapy.extern.pathlib import Path
+    import os
 
-    pha1 = gammapy_extra.filename('datasets/joint-crab/spectra/hess//pha_obs23592.fits')
-    pha2 = gammapy_extra.filename('datasets/joint-crab/spectra/hess//pha_obs23523.fits')
+    pha1 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23592.fits")
+    pha2 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23523.fits")
     phalist = ','.join([pha1, pha2])
 
     ds = datastack.DataStack()
@@ -125,15 +126,15 @@ This should give the following output
     Datasets              = 1, 2
     Method                = levmar
     Statistic             = wstat
-    Initial fit statistic = 218.385
-    Final fit statistic   = 103.596 at function evaluation 19
-    Data points           = 82
-    Degrees of freedom    = 80
-    Probability [Q-value] = 0.0392206
-    Reduced statistic     = 1.29494
-    Change in statistic   = 114.79
-    powlaw1d.default.gamma   2.11641
-    powlaw1d.default.ampl   2.08095
+    Initial fit statistic = 250.031
+    Final fit statistic   = 63.0023 at function evaluation 25
+    Data points           = 74
+    Degrees of freedom    = 72
+    Probability [Q-value] = 0.766494
+    Reduced statistic     = 0.875031
+    Change in statistic   = 187.029
+       powlaw1d.default.gamma   2.76099      +/- 0.118197
+       powlaw1d.default.ampl   5.11739      +/- 0.491756
     Datasets              = 1, 2
     Confidence Method     = covariance
     Iterative Fit Method  = None
@@ -142,7 +143,7 @@ This should give the following output
     covariance 1-sigma (68.2689%) bounds:
        Param            Best-Fit  Lower Bound  Upper Bound
        -----            --------  -----------  -----------
-       powlaw1d.default.gamma      2.11641   -0.0543186    0.0543186
-       powlaw1d.default.ampl      2.08095    -0.130691     0.130691
+       powlaw1d.default.gamma      2.76099    -0.109432     0.109432
+       powlaw1d.default.ampl      5.11739    -0.484906     0.484906
 
 
