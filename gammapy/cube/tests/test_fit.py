@@ -12,7 +12,7 @@ from ...irf.energy_dispersion import EnergyDispersion
 from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
-from ..models import SkyModel
+from ..models import SkyModel, BackgroundModel
 from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
 
 
@@ -190,3 +190,36 @@ def test_map_fit_one_energy_bin(sky_model):
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
     assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-2)
+
+
+@requires_dependency("iminuit")
+@requires_data("gammapy-extra")
+def test_map_fit_bkg(sky_model):
+    ebounds = np.logspace(-1.0, 1.0, 3)
+    ebounds_true = np.logspace(-1.0, 1.0, 4)
+    geom_r = geom(ebounds)
+    geom_t = geom_etrue(ebounds_true)
+
+    background_map = background(geom_r)
+    psf_map = psf(geom_t)
+    edisp_map = edisp(geom_r, geom_t)
+    exposure_map = exposure(geom_t)
+    counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
+    mask_map = mask(geom_r, sky_model)
+
+    sky_model.parameters["sigma"].frozen = True
+
+    background_model = BackgroundModel(background_map, norm=0.5)
+
+    fit = MapFit(
+        model=sky_model,
+        counts=counts_map,
+        exposure=exposure_map,
+        mask=mask_map,
+        psf=psf_map,
+        edisp=edisp_map,
+        back_model=background_model
+    )
+    result = fit.run()
+    assert_allclose(background_model.parameters["norm"].value, 0.98307, rtol=1e-5)
+    assert_allclose(result.total_stat, 5417.350046)

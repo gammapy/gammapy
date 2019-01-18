@@ -43,7 +43,6 @@ class MapFit(Fit):
             raise ValueError("mask data must have dtype bool")
 
         self._model = model
-        self._back_model = back_model
         self.counts = counts
         self.exposure = exposure
         self.background = background
@@ -57,7 +56,7 @@ class MapFit(Fit):
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
-            back_model=self._back_model
+            back_model=back_model
         )
 
     @property
@@ -68,10 +67,6 @@ class MapFit(Fit):
 
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
-        self._model.parameters = parameters
-        if self._back_model:
-            self._model.parameters = Parameters(parameters.parameters[:-2])
-            self._back_model.parameters = Parameters(parameters.parameters[-2:])
         if self.mask:
             stat = self.stat[self.mask.data]
         else:
@@ -119,11 +114,13 @@ class MapEvaluator(object):
             back_model=None
     ):
         self.model = model
-        self.back_model = back_model
+        self.background_model = back_model
         self.exposure = exposure
         self.background = background
         self.psf = psf
         self.edisp = edisp
+        self.parameters = Parameters(self.model.parameters.parameters +
+                                     self.background_model.parameters.parameters)
 
     @lazyproperty
     def geom(self):
@@ -242,7 +239,6 @@ class MapEvaluator(object):
         npred.data = data
         return npred
 
-
     def compute_npred(self):
         """
         Evaluate model predicted counts.
@@ -258,10 +254,10 @@ class MapEvaluator(object):
             npred = self.apply_psf(npred)
         if self.edisp is not None:
             npred = self.apply_edisp(npred)
-        if self.background:
-            if self.back_model:
-                npred.data += self.back_model.evaluate()
-            else:
+
+        if self.background_model:
+            npred.data += self.background_model.evaluate().value
+        else:
+            if self.background:
                 npred.data += self.background.data
         return npred.data
-

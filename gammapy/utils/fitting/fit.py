@@ -81,10 +81,11 @@ class Fit(object):
     # and only use `parameters` from `Fit`, not `model`.
     @property
     def _parameters(self):
-        if self._back_model:
-            return Parameters(self._model.parameters.parameters + self._back_model.parameters.parameters)
-        else:
-            return self._model.parameters
+        try:
+            parameters = self.evaluator.parameters
+        except AttributeError:
+            parameters = self._model.parameters
+        return parameters
 
     def run(self, optimize_opts=None, covariance_opts=None):
         """
