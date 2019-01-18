@@ -260,7 +260,6 @@ class SpectrumFit(Fit):
         parameters : `~gammapy.utils.fitting.Parameters`
             Model parameters
         """
-        self._model.parameters = parameters
         self.predict_counts()
         self.calc_statval()
         total_stat = np.sum([np.sum(v) for v in self.statval], dtype=np.float64)
