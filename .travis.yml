@@ -158,15 +158,6 @@ install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
 
-    - if $FETCH_GAMMAPY_EXTRA; then
-          git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra;
-          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
-      fi
-
-    - if $FETCH_GAMMAPY_DATA; then
-          export GAMMAPY_DATA=${HOME}/gammapy-extra/datasets;
-      fi
-
     # From https://conda.io/docs/bdist_conda.html
     # bdist_conda must be installed into a root conda environment,
     # as it imports conda and conda_build. It is included as part of the conda build package.
@@ -186,6 +177,17 @@ install:
       fi
 
 script:
+    - if $FETCH_GAMMAPY_EXTRA; then
+          git clone https://github.com/gammapy/gammapy-extra.git ${HOME}/gammapy-extra;
+          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
+      fi
+
+    - if $FETCH_GAMMAPY_DATA; then
+          export GAMMAPY_DATA=${HOME}/gammapy-data;
+          pip install .
+          gammapy download datasets --out=$GAMMAPY_DATA
+      fi
+
     - $MAIN_CMD $SETUP_CMD
 
     - if $TEST_FERMIPY; then
