@@ -265,7 +265,7 @@ class ParallelDownload(object):
     def show_info(self):
         print("")
         if self.opt == "datasets":
-            GAMMAPY_DATA = Path.cwd() / self.outfolder / "datasets"
+            GAMMAPY_DATA = Path.cwd() / self.outfolder
         if self.opt == "all":
             GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
         if self.opt == "datasets" or self.opt == "all":
