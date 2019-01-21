@@ -722,10 +722,10 @@ class EventListLAT(EventListBase):
 
     Examples
     --------
-    To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
+    To load an example Fermi-LAT event list:
 
     >>> from gammapy.data import EventListLAT
-    >>> filename = '$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz'
+    >>> filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
     >>> events = EventListLAT.read(filename)
     """
 

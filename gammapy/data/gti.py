@@ -40,15 +40,15 @@ class GTI(object):
 
     Load GTIs for a Fermi-LAT event list:
 
-    >>> gti = GTI.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz')
+    >>> gti = GTI.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
     >>> print(gti)
     GTI info:
-    - Number of GTIs: 36589
-    - Duration: 171273490.97510204 s
-    - Start: 54682.659499814814 MET
-    - Start: 2008-08-04T15:49:40.784(TT)
-    - Stop: 57053.99355074074 MET
-    - Stop: 2015-01-31T23:50:42.784(TT)
+    - Number of GTIs: 39042
+    - Duration: 183139597.9032163 s
+    - Start: 54682.65603794185 MET
+    - Start: 2008-08-04T15:44:41.678(TT)
+    - Stop: 57236.96833546296 MET
+    - Stop: 2015-08-02T23:14:24.184(TT)
     """
 
     def __init__(self, table):
