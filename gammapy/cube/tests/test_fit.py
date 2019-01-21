@@ -85,7 +85,7 @@ def counts(sky_model, exposure, background, psf, edisp):
     evaluator = MapEvaluator(
         model=sky_model, exposure=exposure, background=background, psf=psf, edisp=edisp
     )
-    npred = evaluator.compute_npred
+    npred = evaluator.compute_npred()
     return WcsNDMap(background.geom, npred)
 
 
@@ -124,24 +124,19 @@ def test_map_fit(sky_model):
     assert result.success
     assert "minuit" in repr(result)
 
-    npred = fit.evaluator.compute_npred.sum()
+    npred = fit.evaluator.compute_npred().sum()
     assert_allclose(npred, 2455.230889, rtol=1e-3)
     assert_allclose(result.total_stat, 5417.350078, rtol=1e-3)
 
-    covariance = fit.evaluator.parameters.covariance_to_table()
-    err_amp = np.sqrt(covariance[4][5])
-    err_lon_0 = np.sqrt(covariance[0][1])
-    err_ind = np.sqrt(covariance[3][4])
-
-    pars = result.model.parameters
+    pars = fit.evaluator.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(err_lon_0, 0.004177, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.004177, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(err_ind, 0.033947, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.033947, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(err_amp, 4.03049e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 4.03049e-13, rtol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -175,24 +170,20 @@ def test_map_fit_one_energy_bin(sky_model):
 
     assert result.success
 
-    covariance = fit.evaluator.parameters.covariance_to_table()
-
-    npred = fit.evaluator.compute_npred.sum()
+    npred = fit.evaluator.compute_npred().sum()
     assert_allclose(npred, 87.1108, rtol=1e-3)
     assert_allclose(result.total_stat, 697.068035, rtol=1e-3)
 
-    pars = result.model.parameters
-    err_lon_0 = np.sqrt(covariance[0][1])
+    pars = fit.evaluator.parameters
+
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(err_lon_0, 0.021715, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.021715, rtol=1e-2)
 
-    err_sigma = np.sqrt(covariance[2][3])
     assert_allclose(pars["sigma"].value, 0.2, rtol=1e-2)
-    assert_allclose(err_sigma, 0.011, rtol=1e-2)
+    assert_allclose(pars.error("sigma"), 0.011, rtol=1e-2)
 
-    err_amp = np.sqrt(covariance[4][5])
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(err_amp, 1.07049e-12, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -222,7 +213,7 @@ def test_map_fit_bkg(sky_model):
         mask=mask_map,
         psf=psf_map,
         edisp=edisp_map,
-        back_model=background_model,
+        background_model=background_model,
     )
     result = fit.run()
     assert_allclose(background_model.parameters["norm"].value, 0.98307, rtol=1e-5)

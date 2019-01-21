@@ -291,7 +291,7 @@ class TestSkyDiffuseCubeMapEvaluator:
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
-        out = diffuse_evaluator.compute_npred
+        out = diffuse_evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 1.106403e12, rtol=1e-5)
         assert_allclose(out[0, 0, 0], 5.586252e08, rtol=1e-5)
@@ -373,7 +373,7 @@ class TestSkyModelMapEvaluator:
 
     @staticmethod
     def test_compute_npred(evaluator):
-        out = evaluator.compute_npred
+        out = evaluator.compute_npred()
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 6.25133e-06, rtol=1e-5)
         assert_allclose(out[0, 0, 0], 1.240524e-07, rtol=1e-5)

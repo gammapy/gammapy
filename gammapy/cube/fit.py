@@ -44,7 +44,7 @@ class MapFit(Fit):
         mask=None,
         psf=None,
         edisp=None,
-        back_model=None,
+        background_model=None,
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -63,13 +63,13 @@ class MapFit(Fit):
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
-            back_model=back_model,
+            background_model=background_model,
         )
 
     @property
     def stat(self):
         """Likelihood per bin given the current model parameters"""
-        npred = self.evaluator.compute_npred
+        npred = self.evaluator.compute_npred()
         return cash(n_on=self.counts.data, mu_on=npred)
 
     def total_stat(self, parameters):
@@ -123,15 +123,15 @@ class MapEvaluator(object):
         background=None,
         psf=None,
         edisp=None,
-        back_model=None,
+        background_model=None,
     ):
         self.model = model
-        self.background_model = back_model
+        self.background_model = background_model
         self.exposure = exposure
         self.background = background
         self.psf = psf
         self.edisp = edisp
-        if back_model:
+        if background_model:
             self.parameters = Parameters(
                 self.model.parameters.parameters
                 + self.background_model.parameters.parameters
@@ -256,7 +256,6 @@ class MapEvaluator(object):
         npred.data = data
         return npred
 
-    @property
     def compute_npred(self):
         """
         Evaluate model predicted counts.
