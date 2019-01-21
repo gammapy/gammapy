@@ -94,7 +94,7 @@ def cli_download():
     $ gammapy download datasets
     $ gammapy download tutorials --release 0.8
     $ gammapy download notebooks --src first_steps
-    $ gammapy download datasets --src fermi_3fhl --out localfolder/
+    $ gammapy download datasets --src fermi-3fhl-gc --out localfolder/
     """
 
 

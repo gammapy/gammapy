@@ -397,7 +397,7 @@ of the original map will be copied over to the projected map.
 
     from gammapy.maps import WcsNDMap, HpxGeom
 
-    m = WcsNDMap.read('$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits')
+    m = WcsNDMap.read('$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz')
     geom = HpxGeom.create(nside=8, coordsys='GAL')
     # Convert LAT standard IEM to HPX (nside=8)
     m_proj = m.reproject(geom)
@@ -562,7 +562,7 @@ using the `~Map.cutout` method:
     from astropy import units as u
     from astropy.coordinates import SkyCoord
 
-    m = WcsNDMap.read('$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits')
+    m = WcsNDMap.read('$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz')
     position = SkyCoord(0, 0, frame="galactic", unit="deg")
     m_cutout = m.cutout(position=position, width=(5 * u.deg, 2 * u.deg))
     m_cutout.write('cutout.fits', conv='fgst-template')
