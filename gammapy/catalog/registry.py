@@ -29,10 +29,9 @@ class SourceCatalogRegistry(object):
 
         import os
 
-        if "HGPS_ANALYSIS" in os.environ:
-            from .hess import SourceCatalogHGPS
+        from .hess import SourceCatalogHGPS
 
-            source_catalogs.register("hgps", SourceCatalogHGPS)
+        source_catalogs.register("hgps", SourceCatalogHGPS)
 
         if "GAMMA_CAT" in os.environ:
             from .gammacat import SourceCatalogGammaCat

@@ -1,19 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HESS Galactic plane survey (HGPS) catalog."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
-from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..spectrum import FluxPoints
-from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
+from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from ..image.models import SkyPointSource, SkyGaussian, SkyShell
 from ..cube.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
@@ -88,21 +86,6 @@ class SourceCatalogObjectHGPSComponent(object):
             dict(lon_0=d["GLON_Err"], lat_0=d["GLAT_Err"], sigma=d["Size_Err"])
         )
         return model
-
-    @property
-    def spectral_model(self):
-        """Component spectral model (`gammapy.spectrum.models.PowerLaw2`)."""
-        d = self.data
-        model = PowerLaw2(
-            amplitude=d["Flux_Map"], index=2.3, emin="1 TeV", emax="1e5 TeV"
-        )
-        model.parameters.set_parameter_errors(dict(amplitude=d["Flux_Map_Err"]))
-        return model
-
-    @property
-    def sky_model(self):
-        """Component sky model (`gammapy.cube.models.SkyModel`)."""
-        return SkyModel(self.spatial_model, self.spectral_model)
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
@@ -518,8 +501,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         - ``Gaussian``: `~gammapy.image.models.SkyGaussian`
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
         - ``Shell``: `~gammapy.image.models.SkyShell`
-
-        TODO: add parameter errors
         """
         d = self.data
         glon = d["GLON"]
@@ -535,7 +516,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             raise ValueError("For Gaussian or Multi-Gaussian models, use sky_model()!")
         elif spatial_type == "shell":
             # HGPS contains no information on shell width
-            # Here we assuma a 5% shell width for all shells.
+            # Here we assume a 5% shell width for all shells.
             r_out = d["Size"]
             radius = 0.95 * r_out
             width = r_out - radius
@@ -545,18 +526,34 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         return model
 
-    @property
-    def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+    def sky_model(self, which="best"):
+        """Source sky model.
+
+        Parameters
+        ----------
+        which : {'best', 'pl', 'ecpl'}
+            Which spectral model
+
+        Returns
+        -------
+        sky_model : `~gammapy.cube.models.SkyModel`
+            Sky model of the catalog object.
+        """
         if self.spatial_model_type in {"2-gaussian", "3-gaussian"}:
-            models = [c.sky_model for c in self.components]
+            models = []
+
+            spectral_model = self.spectral_model(which=which)
+            for component in self.components:
+                weight = component.data["Flux_Map"] / self.data["Flux_Map"]
+                spectral_model_comp = spectral_model.copy()
+                # weight amplitude of the component
+                spectral_model_comp.parameters["amplitude"].value *= weight
+                models.append(SkyModel(component.spatial_model, spectral_model_comp))
+
             return SkyModels(models)
         else:
             spatial_model = self.spatial_model
-            # TODO: there are two spectral models
-            # Here we only expose the default
-            # Change sky_model into a method and re-expose option to select spectral model?
-            spectral_model = self.spectral_model()
+            spectral_model = self.spectral_model(which=which)
             return SkyModel(spatial_model, spectral_model)
 
     @property

@@ -67,7 +67,7 @@ class TestSourceCatalogObjectHGPS:
             source.spectral_model()
             source.spatial_model_type
             source.is_pointlike
-            source.sky_model
+            source.sky_model()
             source.flux_points
 
     @staticmethod
@@ -174,7 +174,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_point(cat):
-        model = cat["HESS J1826-148"].sky_model
+        model = cat["HESS J1826-148"].sky_model()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 9.815771242691063e-13)
         assert_allclose(p["lon_0"].value, 16.882482528686523)
@@ -182,54 +182,55 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_gaussian(cat):
-        model = cat["HESS J1119-614"].sky_model
+        model = cat["HESS J1119-614"].sky_model()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 7.959899015960725e-13)
         assert_allclose(p["lon_0"].value, 292.1280822753906)
         assert_allclose(p["lat_0"].value, -0.5332353711128235)
         assert_allclose(p["sigma"].value, 0.09785966575145721)
 
-        # TODO: bring back the bounding box in the new model classes
-        # bbox = model.bounding_box
-        # assert_allclose(bbox, [[-1.07146, 0.00499], [-68.41014, -67.33368]], atol=0.001)
-
     @staticmethod
     def test_sky_model_gaussian2(cat):
-        model = cat["HESS J1843-033"].sky_model
+        model = cat["HESS J1843-033"].sky_model()
 
         p = model.skymodels[0].parameters
-        assert_allclose(p["amplitude"].value, 1.343344814726255e-12)
+        assert_allclose(p["amplitude"].value, 4.259815e-13, rtol=1e-5)
         assert_allclose(p["lon_0"].value, 29.047216415405273)
         assert_allclose(p["lat_0"].value, 0.24389676749706268)
         assert_allclose(p["sigma"].value, 0.12499100714921951)
 
         p = model.skymodels[1].parameters
-        assert_allclose(p["amplitude"].value, 1.5390372353277226e-12)
+        assert_allclose(p["amplitude"].value, 4.880365e-13, rtol=1e-5)
         assert_allclose(p["lon_0"].value, 28.77037811279297)
         assert_allclose(p["lat_0"].value, -0.0727819949388504)
         assert_allclose(p["sigma"].value, 0.2294706553220749)
 
-        # TODO: bounding boxes need to be re-added to the new model classes
-        # bbox = model.bounding_box
-        # assert_allclose(bbox, [[-1.33487, 1.18930], [27.50829, 30.03246]], atol=0.001)
-
     @staticmethod
     def test_sky_model_gaussian3(cat):
-        model = cat["HESS J1825-137"].sky_model
-        assert_allclose(
-            model.skymodels[0].parameters["amplitude"].value, 5.022436459778401e-12
-        )
-        assert_allclose(
-            model.skymodels[1].parameters["amplitude"].value, 1.1829840926291801e-11
-        )
-        assert_allclose(
-            model.skymodels[2].parameters["amplitude"].value, 1.5557788347539403e-12
-        )
+        model = cat["HESS J1825-137"].sky_model()
+
+        p = model.skymodels[0].parameters
+        assert_allclose(p["amplitude"].value, 1.8952104218765842e-11)
+        assert_allclose(p["lon_0"].value, 16.988601684570312)
+        assert_allclose(p["lat_0"].value, -0.4913068115711212)
+        assert_allclose(p["sigma"].value, 0.47650089859962463)
+
+        p = model.skymodels[1].parameters
+        assert_allclose(p["amplitude"].value, 4.4639763971527836e-11)
+        assert_allclose(p["lon_0"].value, 17.71169090270996)
+        assert_allclose(p["lat_0"].value, -0.6598004102706909)
+        assert_allclose(p["sigma"].value, 0.3910967707633972)
+
+        p = model.skymodels[2].parameters
+        assert_allclose(p["amplitude"].value, 5.870712920658374e-12)
+        assert_allclose(p["lon_0"].value, 17.840524673461914)
+        assert_allclose(p["lat_0"].value, -0.7057178020477295)
+        assert_allclose(p["sigma"].value, 0.10932201147079468)
 
     @staticmethod
     def test_sky_model_gaussian_extern(cat):
         # special test for the only extern source with a gaussian morphology
-        model = cat["HESS J1801-233"].sky_model
+        model = cat["HESS J1801-233"].sky_model()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 7.499999970031479e-13)
         assert_allclose(p["lon_0"].value, 6.656888961791992)
@@ -238,7 +239,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_sky_model_shell(cat):
-        model = cat["Vela Junior"].sky_model
+        model = cat["Vela Junior"].sky_model()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 3.2163001428830995e-11)
         assert_allclose(p["lon_0"].value, 266.2873840332031)
@@ -279,18 +280,6 @@ class TestSourceCatalogObjectHGPSComponent:
         assert_allclose(p.error("lat_0"), 0.06880396604537964)
         assert_allclose(p["sigma"].value, 0.2294706553220749)
         assert_allclose(p.error("sigma"), 0.04618723690509796)
-
-    @staticmethod
-    def test_spectral_model(component):
-        model = component.spectral_model
-        p = model.parameters
-        assert_allclose(p["amplitude"].value, 1.5390372353277226e-12)
-        assert_allclose(p.error("amplitude"), 4.721826770727466e-13)
-
-    @staticmethod
-    def test_sky_model(component):
-        model = component.sky_model
-        assert "SkyModel" in str(model)
 
 
 class TestSourceCatalogLargeScaleHGPS:
