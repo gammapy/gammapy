@@ -19,7 +19,9 @@ DEV_NBS_YAML_URL = (
 DEV_SCRIPTS_YAML_URL = (
     "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
 )
-
+DEV_DATA_JSON_URL = (
+    "https://raw.githubusercontent.com/gammapy/gammapy-webpage/gh-pages/download/data/gammapy-data-index.json"
+)
 
 def hashmd5(path):
     md5_hash = hashlib.md5()
@@ -57,7 +59,8 @@ def parse_datafiles(datasearch, datasetslist):
                     datafiles[label] = {}
                     datafiles[label]["url"] = ds["url"]
                     datafiles[label]["path"] = ds["path"]
-                    datafiles[label]["hashmd5"] = ds["hashmd5"]
+                    if "hashmd5" in ds:
+                        datafiles[label]["hashmd5"] = ds["hashmd5"]
     return datafiles
 
 
@@ -93,19 +96,29 @@ class ComputePlan(object):
         log.info("Looking for {}...".format(self.option))
 
     def getlocalfolder(self):
-        if self.version == "":
+        namefolder = ""
+
+        if self.release == "":
             self.version = version.version
 
         if self.option == "notebooks":
             namefolder = "notebooks-" + self.version
-            self.outfolder = self.outfolder / namefolder
 
         if self.option == "scripts":
             namefolder = "scripts-" + self.version
-            self.outfolder = self.outfolder / namefolder
 
-        if self.option == "datasets" and self.modetutorials:
-            self.outfolder = self.outfolder / "datasets"
+        if self.option == "datasets":
+            if self.modetutorials:
+                if self.release:
+                    namefolder = "datasets-" + self.version
+                else:
+                    namefolder = "datasets"
+            else:
+                if self.release:
+                    self.outfolder = Path("gammapy-datasets-" + self.version)
+
+        if namefolder:
+            self.outfolder = self.outfolder / namefolder
 
         return self.outfolder
 
@@ -158,7 +171,12 @@ class ComputePlan(object):
         if self.option == "datasets":
             datafound = {}
 
-            url = BASE_URL + "/data/gammapy-data-index.json"
+            if self.release:
+                filename_datasets = "gammapy-" + self.version + "-data-index.json"
+                url = BASE_URL + "/data/" + filename_datasets
+            else:
+                url = DEV_DATA_JSON_URL
+
             log.info("Reading {}".format(url))
             txt = urlopen(url).read().decode("utf-8")
             datasets = json.loads(txt)
@@ -183,7 +201,7 @@ class ComputePlan(object):
     def parse_notebooks_yaml(self):
         import yaml
 
-        if version.release:
+        if self.release:
             filename_nbs = "gammapy-" + self.version + "-tutorials.yml"
             url = BASE_URL + "/tutorials/" + filename_nbs
         else:
@@ -212,9 +230,9 @@ class ComputePlan(object):
     def parse_scripts_yaml(self):
         import yaml
 
-        if version.release:
-            filename_nbs = "gammapy-" + self.version + "-scripts.yml"
-            url = BASE_URL + "/tutorials/" + filename_nbs
+        if self.release:
+            filename_scripts = "gammapy-" + self.version + "-scripts.yml"
+            url = BASE_URL + "/tutorials/" + filename_scripts
         else:
             url = DEV_SCRIPTS_YAML_URL
 
@@ -272,7 +290,7 @@ class ParallelDownload(object):
             print("*** You might want to declare GAMMAPY_DATA env variable")
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
             print("")
-        if self.release:
+        if self.release and self.opt != "datasets":
             print(
                 "*** Enter the following commands below to get started with this version of Gammapy"
             )

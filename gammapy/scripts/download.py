@@ -54,20 +54,21 @@ def cli_download_scripts(src, out, release):
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
+@click.option("--release", default="", help="Gammapy release environment.")
 @click.option(
     "--out",
     default="gammapy-datasets",
     help="Path where datasets will be copied.",
     show_default=True,
 )
-def cli_download_datasets(src, out):
+def cli_download_datasets(src, out, release):
     """Download datasets"""
 
-    plan = ComputePlan(src, out, "", "datasets")
+    plan = ComputePlan(src, out, release, "datasets")
     outfolder = plan.getlocalfolder()
     fl = plan.getfilelist()
     if fl:
-        down = ParallelDownload(fl, outfolder, "", "datasets")
+        down = ParallelDownload(fl, outfolder, release, "datasets")
         down.run()
         down.show_info()
 
