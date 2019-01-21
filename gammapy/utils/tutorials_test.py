@@ -3,7 +3,6 @@ import os
 import sys
 import logging
 from pkg_resources import working_set
-import yaml
 from ..extern.pathlib import Path
 from ..scripts.jupyter import notebook_test
 
@@ -12,10 +11,10 @@ log = logging.getLogger(__name__)
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
-    filename = str(Path("tutorials") / "notebooks.yaml")
-    with open(filename) as fh:
-        notebooks = yaml.safe_load(fh)
-    return notebooks
+    import yaml
+    path = Path("tutorials") / "notebooks.yaml"
+    with path.open() as fh:
+        return yaml.safe_load(fh)
 
 
 def requirement_missing(notebook):
@@ -41,10 +40,8 @@ def main():
         sys.exit()
 
     passed = True
-    yamlfile = get_notebooks()
-    dirnbs = Path("tutorials")
 
-    for notebook in yamlfile:
+    for notebook in get_notebooks():
         if requirement_missing(notebook):
             log.info(
                 "Skipping notebook {} because requirement is missing.".format(
@@ -54,7 +51,7 @@ def main():
             continue
 
         filename = notebook["name"] + ".ipynb"
-        path = dirnbs / filename
+        path = Path("tutorials") / filename
 
         if not notebook_test(path):
             passed = False
