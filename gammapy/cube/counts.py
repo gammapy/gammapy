@@ -41,8 +41,8 @@ def fill_map_counts(counts_map, events):
         from gammapy.maps import Map
         from gammapy.data import EventList
         from gammapy.cube import fill_map_counts
-        events = EventList.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz')
-        reference_map = Map.read('$GAMMAPY_DATA/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+        events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
+        reference_map = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
         counts = Map.from_geom(reference_map.geom)
         fill_map_counts(counts, events)
         counts.smooth(3).plot()

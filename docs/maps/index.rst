@@ -521,8 +521,8 @@ further tweak/customize the image.
     import matplotlib.pyplot as plt
     from gammapy.maps import Map
 
-    m = Map.read("$GAMMAPY_DATA/fermi_2fhl/fermi_2fhl_gc.fits.gz")
-    m.plot(cmap='magma', add_cbar=True)
+    m = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
+    m.smooth("0.1 deg").plot(cmap="inferno", add_cbar=True, stretch="sqrt")
     plt.show()
 
 
@@ -541,10 +541,10 @@ This example shows how to fill a counts cube from an FT1 file:
 
 
     energy_axis = MapAxis.from_bounds(10., 2E3, 12, interp='log', name='energy', unit='GeV')
-    m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(45.0,30.0),
-                        coordsys='CEL', axes=[energy_axis])
+    m = WcsNDMap.create(binsz=0.1, width=10.0, skydir=(0, 0),
+                        coordsys='GAL', axes=[energy_axis])
 
-    events = EventList.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz')
+    events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
 
     m.fill_by_coord({'skycoord': events.radec, 'energy': events.energy})
     m.write('ccube.fits', conv='fgst-ccube')
