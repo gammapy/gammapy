@@ -36,8 +36,15 @@ class MapFit(Fit):
     """
 
     def __init__(
-        self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None,
-            back_model=None
+        self,
+        model,
+        counts,
+        exposure,
+        background=None,
+        mask=None,
+        psf=None,
+        edisp=None,
+        back_model=None,
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -56,13 +63,13 @@ class MapFit(Fit):
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
-            back_model=back_model
+            back_model=back_model,
         )
 
     @property
     def stat(self):
         """Likelihood per bin given the current model parameters"""
-        npred = self.evaluator.compute_npred()
+        npred = self.evaluator.compute_npred
         return cash(n_on=self.counts.data, mu_on=npred)
 
     def total_stat(self, parameters):
@@ -110,8 +117,13 @@ class MapEvaluator(object):
     """
 
     def __init__(
-        self, model=None, exposure=None, background=None, psf=None, edisp=None,
-            back_model=None
+        self,
+        model=None,
+        exposure=None,
+        background=None,
+        psf=None,
+        edisp=None,
+        back_model=None,
     ):
         self.model = model
         self.background_model = back_model
@@ -119,8 +131,13 @@ class MapEvaluator(object):
         self.background = background
         self.psf = psf
         self.edisp = edisp
-        self.parameters = Parameters(self.model.parameters.parameters +
-                                     self.background_model.parameters.parameters)
+        if back_model:
+            self.parameters = Parameters(
+                self.model.parameters.parameters
+                + self.background_model.parameters.parameters
+            )
+        else:
+            self.parameters = Parameters(self.model.parameters.parameters)
 
     @lazyproperty
     def geom(self):
@@ -239,6 +256,7 @@ class MapEvaluator(object):
         npred.data = data
         return npred
 
+    @property
     def compute_npred(self):
         """
         Evaluate model predicted counts.
@@ -254,7 +272,6 @@ class MapEvaluator(object):
             npred = self.apply_psf(npred)
         if self.edisp is not None:
             npred = self.apply_edisp(npred)
-
         if self.background_model:
             npred.data += self.background_model.evaluate().value
         else:

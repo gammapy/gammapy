@@ -97,7 +97,9 @@ def test_background_model(background):
     assert_allclose(bkg1[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
     assert_allclose(bkg1.sum(), background.data.sum() * 2.0, rtol=1e-3)
 
-    bkg2 = BackgroundModel(background, norm=2.0, tilt=0.2, reference="1000 GeV").evaluate()
+    bkg2 = BackgroundModel(
+        background, norm=2.0, tilt=0.2, reference="1000 GeV"
+    ).evaluate()
     assert_allclose(bkg2[0][0][0], 2.254e-07, rtol=1e-3)
     assert_allclose(bkg2.sum(), 7.352e-06, rtol=1e-3)
 
@@ -289,7 +291,7 @@ class TestSkyDiffuseCubeMapEvaluator:
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
-        out = diffuse_evaluator.compute_npred()
+        out = diffuse_evaluator.compute_npred
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 1.106403e12, rtol=1e-5)
         assert_allclose(out[0, 0, 0], 5.586252e08, rtol=1e-5)
@@ -371,7 +373,7 @@ class TestSkyModelMapEvaluator:
 
     @staticmethod
     def test_compute_npred(evaluator):
-        out = evaluator.compute_npred()
+        out = evaluator.compute_npred
         assert out.shape == (2, 4, 5)
         assert_allclose(out.sum(), 6.25133e-06, rtol=1e-5)
         assert_allclose(out[0, 0, 0], 1.240524e-07, rtol=1e-5)
