@@ -181,6 +181,7 @@ script:
 
     - if $FETCH_GAMMAPY_DATA; then
           export GAMMAPY_DATA=${HOME}/gammapy-data;
+          pip install pyyaml;
           pip install .;
           gammapy download datasets --out=$GAMMAPY_DATA;
       fi
