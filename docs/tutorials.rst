@@ -42,6 +42,7 @@ Notebooks
    notebooks/spectrum_simulation.ipynb
    notebooks/spectrum_simulation_cta.ipynb
    notebooks/astropy_introduction.ipynb
+   notebooks/image_analysis.ipynb
 
 
 For a quick introduction to Gammapy, go here:
@@ -67,7 +68,9 @@ To get started with H.E.S.S. data analysis see here:
 2-dimensional sky image analysis:
 
 - `Source detection with Gammapy <notebooks/detect_ts.html>`__ (Fermi-LAT data example) | *detect_ts.ipynb*
+- `CTA 2D source fitting with Gammapy <notebooks/image_analysis.html>`__ (DC 1 example) | *image_analysis.ipynb*
 - `CTA 2D source fitting with Sherpa <notebooks/image_fitting_with_sherpa.html>`__ | *image_fitting_with_sherpa.ipynb*
+
 
 1-dimensional spectral analysis:
 

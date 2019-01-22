@@ -55,6 +55,10 @@
     - ebl
 - name: hgps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
+- name: image_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_analysis.ipynb
+  datasets:
+    - cta-1dc
 - name: image_fitting_with_sherpa
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/image_fitting_with_sherpa.ipynb
   requires: sherpa fixed-version-sherpa
