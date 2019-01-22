@@ -33,6 +33,9 @@ class MapFit(Fit):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    background_model: `~gammapy.cube.models.BackgroundModel`
+        Background model to use for the fit. Can be specified instead of
+        `background` to fit the background as well.
     """
 
     def __init__(
@@ -107,13 +110,14 @@ class MapEvaluator(object):
     exposure : `~gammapy.maps.Map`
         Exposure map
     background : `~gammapy.maps.Map`
-        background map
+        Background map
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    back_model: `~gammapy.cube.models.BackgroundModel`
-        the model used for background
+    background_model: `~gammapy.cube.models.BackgroundModel`
+        Background model to use for the evaluation. Can be specified
+        instead of `background`.
     """
 
     def __init__(
