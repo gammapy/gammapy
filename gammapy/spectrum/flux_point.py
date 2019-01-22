@@ -1106,5 +1106,4 @@ class FluxPointFit(Fit):
 
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
-        self._model.parameters = parameters
         return np.nansum(self.stat, dtype=np.float64)

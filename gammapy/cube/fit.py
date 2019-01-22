@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
-from ..utils.fitting import Fit
+from ..utils.fitting import Fit, Parameters
 from ..stats import cash
 from ..maps import Map, MapAxis
 
@@ -33,10 +33,21 @@ class MapFit(Fit):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    background_model: `~gammapy.cube.models.BackgroundModel`
+        Background model to use for the fit. Can be specified instead of
+        `background` to fit the background as well.
     """
 
     def __init__(
-        self, model, counts, exposure, background=None, mask=None, psf=None, edisp=None
+        self,
+        model,
+        counts,
+        exposure,
+        background=None,
+        mask=None,
+        psf=None,
+        edisp=None,
+        background_model=None,
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -55,6 +66,7 @@ class MapFit(Fit):
             background=self.background,
             psf=self.psf,
             edisp=self.edisp,
+            background_model=background_model,
         )
 
     @property
@@ -65,7 +77,6 @@ class MapFit(Fit):
 
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
-        self._model.parameters = parameters
         if self.mask:
             stat = self.stat[self.mask.data]
         else:
@@ -99,21 +110,38 @@ class MapEvaluator(object):
     exposure : `~gammapy.maps.Map`
         Exposure map
     background : `~gammapy.maps.Map`
-        background map
+        Background map
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    background_model: `~gammapy.cube.models.BackgroundModel`
+        Background model to use for the evaluation. Can be specified
+        instead of `background`.
     """
 
     def __init__(
-        self, model=None, exposure=None, background=None, psf=None, edisp=None
+        self,
+        model=None,
+        exposure=None,
+        background=None,
+        psf=None,
+        edisp=None,
+        background_model=None,
     ):
         self.model = model
+        self.background_model = background_model
         self.exposure = exposure
         self.background = background
         self.psf = psf
         self.edisp = edisp
+        if background_model:
+            self.parameters = Parameters(
+                self.model.parameters.parameters
+                + self.background_model.parameters.parameters
+            )
+        else:
+            self.parameters = Parameters(self.model.parameters.parameters)
 
     @lazyproperty
     def geom(self):
@@ -247,6 +275,9 @@ class MapEvaluator(object):
             npred = self.apply_psf(npred)
         if self.edisp is not None:
             npred = self.apply_edisp(npred)
-        if self.background:
-            npred.data += self.background.data
+        if self.background_model:
+            npred.data += self.background_model.evaluate().value
+        else:
+            if self.background:
+                npred.data += self.background.data
         return npred.data

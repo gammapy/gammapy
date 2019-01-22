@@ -15,7 +15,7 @@ __all__ = [
     "SkyModel",
     "CompoundSkyModel",
     "SkyDiffuseCube",
-    "BackgroundModel"
+    "BackgroundModel",
 ]
 
 
@@ -358,6 +358,7 @@ class BackgroundModel(Model):
     reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
     """
+
     def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
 
         axis = background.geom.get_axis_by_name("energy")
@@ -365,11 +366,13 @@ class BackgroundModel(Model):
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = background
-        self.parameters = Parameters([
-            Parameter("norm", norm, unit=""),
-            Parameter("tilt", tilt, unit="", frozen=True),
-            Parameter("reference", reference, frozen=True),
-        ])
+        self.parameters = Parameters(
+            [
+                Parameter("norm", norm, unit=""),
+                Parameter("tilt", tilt, unit="", frozen=True),
+                Parameter("reference", reference, frozen=True),
+            ]
+        )
 
     @lazyproperty
     def energy_center(self):
@@ -378,12 +381,10 @@ class BackgroundModel(Model):
         energy = energy_axis.center * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
 
-
     def evaluate(self):
         """Evaluate background model"""
         norm = self.parameters["norm"].value
         tilt = self.parameters["tilt"].value
         reference = self.parameters["reference"].quantity
-        tilt_factor = np.power((self.energy_center/reference).to(""), -tilt)
+        tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
         return u.Quantity(norm * self.map.data * tilt_factor, self.map.unit, copy=False)
-
