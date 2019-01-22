@@ -61,7 +61,6 @@ class TestSpectrumFitResult:
         assert "PowerLaw" in str(fit_result)
         assert "index" in fit_result.to_table().colnames
 
-    @requires_dependency("yaml")
     def test_io(self, tmpdir, fit_result):
         filename = tmpdir / "test.yaml"
         fit_result.to_yaml(filename)

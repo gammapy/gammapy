@@ -160,7 +160,6 @@ def flux_points_likelihood():
     return FluxPoints.read(path).to_sed_type("dnde")
 
 
-@requires_dependency("yaml")
 @requires_data("gammapy-extra")
 class TestFluxPoints:
     def test_info(self, flux_points):

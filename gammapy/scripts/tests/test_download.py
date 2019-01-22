@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
 from ...extern.pathlib import Path
-from ...utils.testing import requires_dependency, run_cli
+from ...utils.testing import run_cli
 from ..main import cli
 
 
@@ -16,7 +16,6 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
-@requires_dependency("yaml")
 @pytest.mark.remote_data
 def test_cli_download_datasets(files_dir):
     dataset = "ebl"
@@ -30,7 +29,6 @@ def test_cli_download_datasets(files_dir):
     assert path.exists()
 
 
-@requires_dependency("yaml")
 @pytest.mark.remote_data
 def test_cli_download_notebooks(files_dir):
     release = "0.8"

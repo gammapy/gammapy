@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import pytest
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data
 from ..registry import SourceCatalogRegistry
 from ..gammacat import SourceCatalogGammaCat
 from .test_core import make_test_catalog
@@ -15,8 +15,6 @@ def source_catalogs():
     return cats
 
 
-# 2HWC catalog is in ECSV format, which requires yaml to read the header
-@requires_dependency("yaml")
 @requires_data("gammapy-extra")
 def test_info_table(source_catalogs):
     table = source_catalogs.info_table
