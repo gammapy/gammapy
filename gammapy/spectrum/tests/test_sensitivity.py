@@ -5,6 +5,9 @@ from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from ...utils.testing import requires_data
+from gammapy.utils.testing import requires_data
+from gammapy.utils.nddata import NDDataArray
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion
 from ..sensitivity import SensitivityEstimator
 
 
