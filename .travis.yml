@@ -126,7 +126,6 @@ matrix:
         # Test with other numpy versions
         - os: linux
           env: PYTHON_VERSION=3.6 NUMPY_VERSION=dev SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=prerelease SETUP_CMD='test -V'
         - os: linux
