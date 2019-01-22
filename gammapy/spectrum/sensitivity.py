@@ -20,7 +20,7 @@ class SensitivityEstimator(object):
         1D effective area
     rmf : `~gammapy.irf.EnergyDispersion`
         energy dispersion table
-    bkg : `~gammapy.utils.NDDataArray`
+    bkg : `~gammapy.spectrum.CountsSpectrum`
         the background array
     livetime : `~astropy.units.Quantity`
         Livetime (object with the units of time), e.g. 5*u.h
@@ -93,7 +93,7 @@ class SensitivityEstimator(object):
         # then integrate bkg model and gamma over those energy bins.
         energy = self.rmf.e_reco.log_center()
 
-        bkg_counts = (self.bkg.data * self.livetime).value
+        bkg_counts = (self.bkg.data.data * self.livetime).value
 
         excess_counts = excess_matching_significance_on_off(
             n_off=bkg_counts / self.alpha, alpha=self.alpha, significance=self.sigma

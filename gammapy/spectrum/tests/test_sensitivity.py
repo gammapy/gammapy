@@ -5,9 +5,8 @@ from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
 from ...utils.testing import requires_data
-from gammapy.utils.testing import requires_data
-from gammapy.utils.nddata import NDDataArray
-from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from ...irf import EffectiveAreaTable, EnergyDispersion
+from ..core import CountsSpectrum
 from ..sensitivity import SensitivityEstimator
 
 
@@ -25,7 +24,7 @@ def sens():
 
     bkg_array = np.ones(4)/u.s
     bkg_array[-1] = 1e-3/u.s
-    bkg = NDDataArray([rmf.data.axis("e_reco")], data=bkg_array)
+    bkg = CountsSpectrum(energy_lo=ereco[:-1], energy_hi=ereco[1:], data=bkg_array)
 
     sens = SensitivityEstimator(arf=arf, rmf=rmf, bkg=bkg, livetime=1 * u.h, slope=2, gamma_min=20, alpha=0.2)
     sens.run()
