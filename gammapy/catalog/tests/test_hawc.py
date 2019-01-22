@@ -6,9 +6,6 @@ import astropy.units as u
 from ...utils.testing import requires_data, requires_dependency
 from ..hawc import SourceCatalog2HWC
 
-# 2HWC catalog is in ECSV format, which requires yaml to read the header
-pytest.importorskip("yaml")
-
 
 @pytest.fixture(scope="session")
 def hawc_2hwc():

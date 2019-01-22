@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import yaml
 import numpy as np
 from astropy.table import Table, Column
 import astropy.units as u
@@ -84,8 +85,6 @@ class SpectrumFitResult(object):
         mode : str
             Write mode
         """
-        import yaml
-
         d = self.to_dict()
         val = yaml.safe_dump(d, default_flow_style=False)
 

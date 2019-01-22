@@ -108,11 +108,11 @@ setup(
       'astropy>=2.0',
       'scipy>=0.15',
       'regions>=0.3',
+      'pyyaml',
       'click',
     ],
     extras_require=dict(
       analysis=[
-          'pyyaml',
           'reproject',
           'uncertainties>=2.4',
           'naima',

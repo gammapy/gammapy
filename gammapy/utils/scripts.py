@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import logging
+import yaml
 from os.path import expandvars
 from ..extern.pathlib import Path
 
@@ -51,8 +52,6 @@ def read_yaml(filename, logger=None):
     filename : `~gammapy.extern.pathlib.Path`, str
         File to read
     """
-    import yaml
-
     filename = make_path(filename)
     if logger is not None:
         logger.info("Reading {}".format(filename))
@@ -72,8 +71,6 @@ def write_yaml(dictionary, filename, logger=None):
     filename : str, `~gammapy.exter.pathlib.Path`
         file to write
     """
-    import yaml
-
     filename = make_path(filename)
     filename.parent.mkdir(exist_ok=True)
     if logger is not None:

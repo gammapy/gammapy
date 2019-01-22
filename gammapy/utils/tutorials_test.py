@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 from pkg_resources import working_set
+import yaml
 from ..extern.pathlib import Path
 from ..scripts.jupyter import notebook_test
 
@@ -11,7 +12,6 @@ log = logging.getLogger(__name__)
 
 def get_notebooks():
     """Read `notebooks.yaml` info."""
-    import yaml
     path = Path("tutorials") / "notebooks.yaml"
     with path.open() as fh:
         return yaml.safe_load(fh)
