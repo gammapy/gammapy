@@ -21,6 +21,8 @@ addons:
       - texlive-latex-extra
       - dvipng
       - gfortran
+      # gcc added to fix the Numpy dev build: https://github.com/gammapy/gammapy/pull/1997#issuecomment-456793025
+      - gcc
 
 env:
     global:
@@ -125,7 +127,7 @@ matrix:
 
         # Test with other numpy versions
         - os: linux
-          env: PYTHON_VERSION=3.6 NUMPY_VERSION=dev SETUP_CMD='test -V' NPY_DISTUTILS_APPEND_FLAGS=1
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=dev SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=prerelease SETUP_CMD='test -V'
         - os: linux
