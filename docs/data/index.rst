@@ -30,7 +30,7 @@ To load Fermi-LAT event lists, use the `~gammapy.data.EventListLAT` class:
 .. code-block:: python
 
     >>> from gammapy.data import EventListLAT
-    >>> filename = '$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz'
+    >>> filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
     >>> events = EventListLAT.read(filename)
 
 The other main class in `gammapy.data` is the `~gammapy.data.DataStore`, which makes it easy

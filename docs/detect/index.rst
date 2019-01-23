@@ -33,7 +33,7 @@ example Fermi dataset.
 
 The `gammapy.detect` module includes a high performance
 `~gammapy.detect.TSMapEstimator` class to compute test statistics (TS) images
-for gamma-ray survey data. The implementation is based on the method described
+for gamma-ray data. The implementation is based on the method described
 in [Stewart2009]_.
 
 Assuming a certain source morphology, which can be defined by any
@@ -49,23 +49,30 @@ amplitude. This approach is described in detail in Appendix A of [Stewart2009]_.
 To further improve the performance, Pythons's `multiprocessing` facility is
 used.
 
-The following example shows how to compute a TS image for Fermi-LAT survey data:
+The following example shows how to compute a TS image for Fermi-LAT 3FHL galactic
+center data:
 
 .. code-block:: python
 
     from astropy.convolution import Gaussian2DKernel
     from gammapy.detect import TSMapEstimator
     from gammapy.maps import Map
+    from gammapy.cube import PSFKernel
 
-    filename = '$GAMMAPY_DATA/fermi_survey/all.fits.gz'
-    maps = {}
-    maps['counts'] = Map.read(filename, hdu='counts')
-    maps['exposure'] = Map.read(filename, hdu='exposure')
-    maps['background'] = Map.read(filename, hdu='background')
+    counts =  Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
+    background = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background.fits.gz")
+    exposure = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-exposure.fits.gz")
 
-    kernel = Gaussian2DKernel(5)
+    maps = {
+        "counts": counts,
+        "background": background,
+        "exposure": exposure,
+    }
+
+    kernel = PSFKernel.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-psf.fits.gz")
+
     ts_estimator = TSMapEstimator()
-    result = ts_estimator.run(maps, kernel)
+    result = ts_estimator.run(maps, kernel.data)
 
 The function returns an dictionary, that bundles all resulting maps. E.g. here's
 how to find the largest TS value:
@@ -88,9 +95,10 @@ dataset as above, the corresponding images can be computed using the
     from astropy.convolution import Tophat2DKernel
     from gammapy.maps import Map
     from gammapy.detect import compute_lima_image
-    filename = '$GAMMAPY_DATA/fermi_survey/all.fits.gz'
-    counts = Map.read(filename, hdu='COUNTS')
-    background = Map.read(filename, hdu='BACKGROUND')
+
+    counts =  Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
+    background = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-background.fits.gz")
+
     kernel = Tophat2DKernel(5)
     result = compute_lima_image(counts, background, kernel)
 

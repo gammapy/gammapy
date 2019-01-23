@@ -67,14 +67,14 @@ case, not variable):
 
 See ``examples/example_exptest.py`` for a longer example.
 
-TODO: apply this to the 2FHL events and check which sources are variable as a nice example.
+TODO: apply this to the 3FHL events and check which sources are variable as a nice example.
 
 .. code-block:: python
 
     from gammapy.data import EventList
     from gammapy.time import exptest
-    events = EventList.read('$GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz ', hdu='EVENTS')
-    # TODO: cone select events for 2FHL catalog sources, compute mr for each and print 10 most variable sources
+    events = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz")
+    # TODO: cone select events for 3FHL catalog sources, compute mr for each and print 10 most variable sources
 
 Other codes
 ===========

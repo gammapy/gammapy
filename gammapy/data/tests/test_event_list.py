@@ -97,11 +97,12 @@ class TestEventListHESS:
 @requires_data("gammapy-extra")
 class TestEventListFermi:
     def setup(self):
-        filename = "$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz"
+        filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
         self.events = EventListLAT.read(filename)
 
     def test_basics(self):
         assert "EventList" in str(self.events)
+        assert len(self.events.table) == 32843
 
     @requires_dependency("matplotlib")
     def test_plot_image(self):

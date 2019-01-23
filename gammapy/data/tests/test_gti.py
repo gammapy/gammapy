@@ -29,16 +29,16 @@ def test_gti_hess():
 
 @requires_data("gammapy-extra")
 def test_gti_fermi():
-    filename = "$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz"
+    filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
     gti = GTI.read(filename)
     assert "GTI" in str(gti)
-    assert len(gti.table) == 36589
+    assert len(gti.table) == 39042
 
     assert gti.time_delta[0].unit == "s"
-    assert_allclose(gti.time_delta[0].value, 352.49307)
-    assert_allclose(gti.time_sum.value, 171273490.97510)
+    assert_allclose(gti.time_delta[0].value, 651.598893)
+    assert_allclose(gti.time_sum.value, 1.831396e+08)
 
-    expected = Time(54682.659499814814, format="mjd", scale="tt")
+    expected = Time(54682.65603794185, format="mjd", scale="tt")
     assert_time_allclose(gti.time_start[0], expected)
 
     expected = Time(54682.66357959571, format="mjd", scale="tt")
@@ -53,13 +53,13 @@ def test_gti_fermi():
          Time(["2008-08-04T16:21:00", "2008-08-04T19:10:00"], format="isot", scale="tt")),
         (Time([54682.68125, 54682.79861111], format="mjd", scale="tt"), 2,
          Time([54682.68125, 54682.79861111], format="mjd", scale="tt")),
-        (Time([10., 100000.], format='mjd', scale='tt'), 36589,
-         Time([54682.659499814814, 57053.993550740735], format='mjd', scale='tt')),
+        (Time([10., 100000.], format='mjd', scale='tt'), 39042,
+         Time([54682.65603794185, 57236.96833546296], format='mjd', scale='tt')),
         (Time([10., 20.], format='mjd', scale='tt'), 0, None),
     ],
 )
 def test_select_time(time_interval, expected_length, expected_times):
-    filename = "$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz"
+    filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
     gti = GTI.read(filename)
     print(gti.time_start[0], gti.time_stop[-1], len(gti.table))
 

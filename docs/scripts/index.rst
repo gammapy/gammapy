@@ -194,30 +194,31 @@ the counts image we're creating.
       -h, --help   Show this message and exit.
 
     $ gammapy image bin \
-        $GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz \
-        $GAMMAPY_DATA/fermi_survey/all.fits.gz \
+        $GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz \
+        $GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz \
         out.fits
     INFO:gammapy.scripts.image_bin:Executing cli_image_bin
-    INFO:gammapy.scripts.image_bin:Reading /Users/deil/code/gammapy-extra/datasets/fermi_2fhl/2fhl_events.fits.gz
-    INFO:gammapy.scripts.image_bin:Reading /Users/deil/code/gammapy-extra/datasets/fermi_survey/all.fits.gz
+    INFO:gammapy.scripts.image_bin:Reading /home/gammapy-data/datasets/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz
+    INFO:gammapy.scripts.image_bin:Reading /home/gammapy-data/datasets/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz
     INFO:gammapy.scripts.image_bin:Writing out.fits
 
 If you have the FTOOLS_ installed or other tools that can work with the files
 that Gammapy supports, you can of course use them together::
 
-    $ ftlist $GAMMAPY_DATA/fermi_2fhl/2fhl_events.fits.gz H
+    $ ftlist $GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz H
 
             Name               Type       Dimensions
             ----               ----       ----------
     HDU 1   Primary Array      Null Array
-    HDU 2   EVENTS             BinTable    23 cols x 60978 rows
-    HDU 3   GTI                BinTable     2 cols x 36589 rows
+    HDU 2   EVENTS             BinTable    23 cols x 32843 rows
+    HDU 3   GTI                BinTable     2 cols x 39042 rows
+
 
     $ ftlist out.fits H
 
             Name               Type       Dimensions
             ----               ----       ----------
-    HDU 1   COUNTS             Image      Real8(2001x101)
+    HDU 1   Primary Array      Image      Real4(400x200)
 
     $ ds9 out.fits
 

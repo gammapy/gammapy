@@ -303,7 +303,7 @@ def test_pwl_index_2_error():
 
 @requires_data("gammapy-extra")
 def test_fermi_isotropic():
-    filename = "$GAMMAPY_EXTRA/datasets/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
+    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
     model = TableModel.read_fermi_isotropic_model(filename)
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
