@@ -26,7 +26,7 @@ def sens():
     bkg_array[-1] = 1e-3/u.s
     bkg = CountsSpectrum(energy_lo=ereco[:-1], energy_hi=ereco[1:], data=bkg_array)
 
-    sens = SensitivityEstimator(arf=arf, rmf=rmf, bkg=bkg, livetime=1 * u.h, slope=2, gamma_min=20, alpha=0.2)
+    sens = SensitivityEstimator(arf=arf, rmf=rmf, bkg=bkg, livetime=1 * u.h, index=2, gamma_min=20, alpha=0.2)
     sens.run()
     return sens
 

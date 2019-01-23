@@ -24,7 +24,7 @@ class SensitivityEstimator(object):
         the background array
     livetime : `~astropy.units.Quantity`
         Livetime (object with the units of time), e.g. 5*u.h
-    slope : float, optional
+    index : float, optional
         Index of the spectral shape (Power-law), should be positive (>0)
     alpha : float, optional
         On/OFF normalisation
