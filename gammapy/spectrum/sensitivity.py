@@ -37,7 +37,7 @@ class SensitivityEstimator(object):
 
     Examples
     --------
-    Compute and plot a sensitivity curve for CTA::
+    Compute a sensitivity curve for CTA::
 
         from gammapy.spectrum import SensitivityEstimator
 
@@ -63,7 +63,7 @@ class SensitivityEstimator(object):
         rmf,
         bkg,
         livetime,
-        slope=2.0,
+        index=2.0,
         alpha=0.2,
         sigma=5.0,
         gamma_min=10.0,
@@ -73,7 +73,7 @@ class SensitivityEstimator(object):
         self.rmf = rmf
         self.bkg = bkg
         self.livetime = u.Quantity(livetime).to("s")
-        self.slope = slope
+        self.index = index
         self.alpha = alpha
         self.sigma = sigma
         self.gamma_min = gamma_min
@@ -102,7 +102,7 @@ class SensitivityEstimator(object):
         excess_counts[is_gamma_limited] = self.gamma_min
 
         model = PowerLaw(
-            index=self.slope, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
+            index=self.index, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
         )
 
         # TODO: simplify the following computation
@@ -160,3 +160,4 @@ class SensitivityEstimator(object):
             ]
         )
         self._results_table = table
+        return table
