@@ -35,23 +35,10 @@ class SensitivityEstimator(object):
     bkg_sys : float, optional
         Fraction of Background systematics relative to the number of ON counts
 
-    Examples
-    --------
-    Compute a sensitivity curve for CTA::
-
-        from gammapy.spectrum import SensitivityEstimator
-
-        filename = '$GAMMAPY_DATA/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
-        irf = CTAPerf.read(filename)
-        sensitivity_estimator = SensitivityEstimator(irf=irf, livetime='5h')
-        sensitivity_estimator.run()
-        print(sensitivity_estimator.results_table)
-
-    Further examples in :gp-extra-notebook:`cta_sensitivity` .
+    An example can be found in :gp-extra-notebook:`cta_sensitivity` .
 
     Notes
     -----
-    For the moment, only the differential point-like sensitivity is computed at a fixed offset.
     This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
     events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent larger than the
     number of background events in the ON region.
