@@ -80,7 +80,7 @@ class SensitivityEstimator(object):
         # then integrate bkg model and gamma over those energy bins.
         energy = self.rmf.e_reco.log_center()
 
-        bkg_counts = (self.bkg.data.data * self.livetime).value
+        bkg_counts = (self.bkg.data.data.to('1/s') * self.livetime).value
 
         excess_counts = excess_matching_significance_on_off(
             n_off=bkg_counts / self.alpha, alpha=self.alpha, significance=self.sigma
