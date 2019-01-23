@@ -40,7 +40,7 @@ help:
 	@echo ''
 	@echo ' Environment:'
 	@echo ''
-	@echo '     GAMMAPY_EXTRA = $(GAMMAPY_EXTRA)'
+	@echo '     GAMMAPY_DATA = $(GAMMAPY_DATA)'
 	@echo ''
 	@echo ' To get more info about your Gammapy installation and setup run this command'
 	@echo ''
