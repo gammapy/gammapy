@@ -339,6 +339,8 @@ class TSMapEstimator(object):
             log.info("Using {} jobs to compute TS map.".format(p["n_jobs"]))
             results = pool.map(wrap, positions)
 
+        pool.join()
+
         # Set TS values at given positions
         j, i = zip(*positions)
         for name in ["ts", "flux", "niter"]:
