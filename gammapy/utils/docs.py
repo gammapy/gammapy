@@ -29,22 +29,22 @@ import nbformat
 from ..extern.pathlib import Path
 
 try:
-    gammapy_extra_path = Path(os.environ["GAMMAPY_EXTRA"])
-    HAS_GP_EXTRA = True
+    gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])
+    HAS_GP_DATA = True
 except KeyError:
-    HAS_GP_EXTRA = False
+    HAS_GP_DATA = False
 
 log = logging.getLogger("__name__")
 
 
-class ExtraImage(Image):
-    """Directive to add optional images from gammapy-extra"""
+class DocsImage(Image):
+    """Directive to add optional images from gammapy-data"""
 
     def run(self):
         filename = self.arguments[0]
 
-        if HAS_GP_EXTRA:
-            path = gammapy_extra_path / "figures" / filename
+        if HAS_GP_DATA:
+            path = gammapy_data_path / "figures" / filename
             if not path.is_file():
                 msg = "Error in {} directive: File not found: {}".format(
                     self.name, path
@@ -56,16 +56,16 @@ class ExtraImage(Image):
             self.arguments[0] = "/" + path.absolute().as_posix()
         else:
             self.warning(
-                "GAMMAPY_EXTRA not available. "
+                "GAMMAPY_DATA not available. "
                 "Missing image: name: {!r} filename: {!r}".format(self.name, filename)
             )
             self.options["alt"] = self.arguments[1]
 
-        return super(ExtraImage, self).run()
+        return super(DocsImage, self).run()
 
 
 def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
-    """Link to a notebook on gammapy-extra"""
+    """Link to a notebook"""
 
     # check if file exists in local notebooks folder
     nbfolder = Path("notebooks")
@@ -100,16 +100,16 @@ def make_link_node(rawtext, app, refuri, notebook, options):
 
 
 def gammapy_sphinx_ext_activate():
-    if HAS_GP_EXTRA:
-        log.info("*** Found GAMMAPY_EXTRA = {}".format(gammapy_extra_path))
+    if HAS_GP_DATA:
+        log.info("*** Found GAMMAPY_DATA = {}".format(gammapy_data_path))
         log.info("*** Nice!")
     else:
-        log.info("*** gammapy-extra *not* found.")
-        log.info("*** Set the GAMMAPY_EXTRA environment variable!")
+        log.info("*** gammapy-data *not* found.")
+        log.info("*** Set the GAMMAPY_DATA environment variable!")
         log.info("*** Docs build will be incomplete.")
 
     # Register our directives and roles with Sphinx
-    register_directive("gp-extra-image", ExtraImage)
+    register_directive("gp-extra-image", DocsImage)
     roles.register_local_role("gp-extra-notebook", notebook_role)
 
 

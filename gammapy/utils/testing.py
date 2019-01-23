@@ -56,9 +56,9 @@ def requires_dependency(name):
 def has_data(name):
     """Is a certain set of data available?"""
     if name == "gammapy-extra":
-        from ..datasets import gammapy_extra
-
-        return gammapy_extra.is_available
+        return "GAMMAPY_EXTRA" in os.environ
+    elif name == "gammapy-data":
+        return "GAMMAPY_DATA" in os.environ
     elif name == "gamma-cat":
         return "GAMMA_CAT" in os.environ
     elif name == "fermi-lat":
@@ -75,11 +75,11 @@ def requires_data(name):
     ::
 
         from gammapy.utils.testing import requires_data
-        from gammapy.datasets import gammapy_extra
+        from gammapy.datasets import data
 
-        @requires_data('gammapy-extra')
+        @requires_data('gammapy-data')
         def test_using_data_files():
-            filename = gammapy_extra.filename('...')
+            filename = gammapy_data.filename('...')
             ...
     """
     import pytest
