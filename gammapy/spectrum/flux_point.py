@@ -99,7 +99,7 @@ class FluxPoints(object):
     flux points given in one of the formats documented above::
 
         from gammapy.spectrum import FluxPoints
-        filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         flux_points = FluxPoints.read(filename)
         flux_points.plot()
 
@@ -131,7 +131,7 @@ class FluxPoints(object):
         from astropy.table import Table
         from gammapy.spectrum import FluxPoints
 
-        table = Table.read('$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points_ctb_37b.txt',
+        table = Table.read('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt',
                            format='ascii.csv', delimiter=' ', comment='#')
         table.meta['SED_TYPE'] = 'dnde'
         table.rename_column('Differential_Flux', 'dnde')
@@ -262,7 +262,7 @@ class FluxPoints(object):
         --------
 
         >>> from gammapy.spectrum import FluxPoints
-        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> print(flux_points)
         FluxPoints(sed_type="flux", n_points=24)
@@ -359,7 +359,7 @@ class FluxPoints(object):
         --------
         >>> from gammapy.spectrum import FluxPoints
         >>> from gammapy.spectrum.models import PowerLaw
-        >>> filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/flux_points.fits'
+        >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> model = PowerLaw(index=2.2)
         >>> flux_points_dnde = flux_points.to_sed_type('dnde', model=model)
@@ -1052,7 +1052,7 @@ class FluxPointFit(Fit):
         from gammapy.spectrum import FluxPoints, FluxPointFit
         from gammapy.spectrum.models import PowerLaw
 
-        filename = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits'
+        filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)
 
         model = PowerLaw()

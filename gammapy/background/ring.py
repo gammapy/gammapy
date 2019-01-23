@@ -41,7 +41,7 @@ class AdaptiveRingBackgroundEstimator(object):
         from gammapy.maps import Map
         from gammapy.background import AdaptiveRingBackgroundEstimator
 
-        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+        filename = '$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz'
         images = {
             'counts': Map.read(filename, hdu='counts'),
             'exposure_on': Map.read(filename, hdu='exposure'),
@@ -273,7 +273,7 @@ class RingBackgroundEstimator(object):
         from gammapy.maps import Map
         from gammapy.background import RingBackgroundEstimator
 
-        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
+        filename = '$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz'
         images = {
             'counts': Map.read(filename, hdu='counts'),
             'exposure_on': Map.read(filename, hdu='exposure'),

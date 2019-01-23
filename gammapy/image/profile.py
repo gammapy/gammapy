@@ -81,7 +81,7 @@ class ImageProfileEstimator(object):
         from astropy import units as u
 
         # load example data
-        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/fermi_counts.fits.gz'
+        filename = '$GAMMAPY_DATA/tests/unbundled/fermi/fermi_counts.fits.gz'
         fermi_cts = Map.read(filename)
 
         # set up profile estimator and run

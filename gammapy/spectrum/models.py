@@ -1363,7 +1363,7 @@ class Absorption(object):
         Parameters
         ----------
         name : {'franceschini', 'dominguez', 'finke'}
-            name of one of the available model in gammapy-extra
+            name of one of the available model in gammapy-data
 
         References
         ----------

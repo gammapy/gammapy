@@ -633,7 +633,7 @@ class EnergyDispersion2D(object):
 
     >>> from gammapy.irf import EnergyDispersion2D
     >>> from gammapy.utils.energy import EnergyBounds
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
+    >>> filename = '$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
     >>> edisp2d = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
     >>> print(edisp2d)
     EnergyDispersion2D

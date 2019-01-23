@@ -46,7 +46,7 @@ class SkyModels(Model):
     Read from an XML file::
 
         from gammapy.cube import SkyModels
-        filename = '$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml'
+        filename = '$GAMMAPY_DATA/tests/models/fermi_model.xml'
         sourcelib = SkyModels.read(filename)
     """
 
