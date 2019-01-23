@@ -5,7 +5,7 @@ import warnings
 from astropy.units import Quantity, UnitsWarning
 from astropy.io import fits
 from astropy.table import Table
-from .core import gammapy_extra
+from .core import gammapy_data
 
 __all__ = [
     "load_poisson_stats_image",
@@ -34,7 +34,7 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
     data : numpy array or dict of arrays or filenames
         Depending on the ``extra_info`` and ``return_filenames`` options.
     """
-    path = gammapy_extra.dir / "test_datasets/unbundled/poisson_stats_image"
+    path = gammapy_data.dir / "tests/unbundled/poisson_stats_image"
 
     if extra_info:
         out = dict()
@@ -77,8 +77,8 @@ def load_tev_spectrum(source_name):
         Energy spectrum as a table (one flux point per row).
     """
     if source_name == "crab":
-        filename = gammapy_extra.filename(
-            "test_datasets/unbundled/tev_spectra/crab_hess_spec.txt"
+        filename = gammapy_data.filename(
+            "tests/unbundled/tev_spectra/crab_hess_spec.txt"
         )
     else:
         raise ValueError("Data not available for source: {!r}".format(source_name))
@@ -129,8 +129,8 @@ def load_crab_flux_points(component="both"):
     Aleksic et al. Astron. Astrophys. 540 2012
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
     """
-    filename = gammapy_extra.filename(
-        "test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz"
+    filename = gammapy_data.filename(
+        "tests/unbundled/tev_spectra/crab_mwl.fits.gz"
     )
 
     with warnings.catch_warnings():
@@ -166,7 +166,7 @@ def load_diffuse_gamma_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
-    dir = gammapy_extra.dir / "test_datasets/unbundled/tev_spectra"
+    dir = gammapy_data.dir / "tests/unbundled/tev_spectra"
 
     if reference == "Fermi":
         filename = str(dir / "diffuse_isotropic_gamma_spectrum_fermi.txt")
@@ -210,7 +210,7 @@ def load_electron_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
-    dir = gammapy_extra.dir / "test_datasets/unbundled/tev_spectra"
+    dir = gammapy_data.dir / "tests/unbundled/tev_spectra"
 
     if reference == "HESS":
         filename = str(dir / "electron_spectrum_hess.txt")
