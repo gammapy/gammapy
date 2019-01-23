@@ -64,7 +64,7 @@ class DocsImage(Image):
         return super(DocsImage, self).run()
 
 
-def notebook_role(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
+def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
     """Link to a notebook"""
 
     # check if file exists in local notebooks folder
@@ -109,8 +109,8 @@ def gammapy_sphinx_ext_activate():
         log.info("*** Docs build will be incomplete.")
 
     # Register our directives and roles with Sphinx
-    register_directive("gp-extra-image", DocsImage)
-    roles.register_local_role("gp-extra-notebook", notebook_role)
+    register_directive("gp-image", DocsImage)
+    roles.register_local_role("gp-notebook", LinkNotebook)
 
 
 def parse_notebooks(folder, url_docs, git_commit):

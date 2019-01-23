@@ -27,7 +27,7 @@ class SpectrumExtraction(object):
 
     For more info see :ref:`spectral_fitting`.
 
-    For a usage example see :gp-extra-notebook:`spectrum_analysis`
+    For a usage example see :gp-notebook:`spectrum_analysis`
 
     Parameters
     ----------

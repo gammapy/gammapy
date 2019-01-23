@@ -583,7 +583,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     One source is represented by `SourceCatalogObjectHGPS`.
 
-    An extensive tutorial is available here: :gp-extra-notebook:`hgps`
+    An extensive tutorial is available here: :gp-notebook:`hgps`
 
     Examples
     --------
@@ -616,7 +616,7 @@ class SourceCatalogHGPS(SourceCatalog):
     >>> source.components
     >>> cat.gaussian_component(83)
 
-    More examples here: :gp-extra-notebook:`hgps`
+    More examples here: :gp-notebook:`hgps`
     """
 
     name = "hgps"

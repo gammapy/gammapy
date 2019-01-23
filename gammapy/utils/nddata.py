@@ -13,7 +13,7 @@ __all__ = ["NDDataArray", "DataAxis", "BinnedDataAxis", "sqrt_space"]
 class NDDataArray(object):
     """ND Data Array Base class
 
-    for usage examples see :gp-extra-notebook:`nddata_demo`
+    for usage examples see :gp-notebook:`nddata_demo`
 
     Parameters
     ----------

@@ -273,7 +273,7 @@ class ReflectedRegionsBackgroundEstimator(object):
     `~gammapy.background.BackgroundEstimate` by placing reflected regions given
     a target region and an observation.
 
-    For a usage example see :gp-extra-notebook:`spectrum_analysis`
+    For a usage example see :gp-notebook:`spectrum_analysis`
 
     Parameters
     ----------
