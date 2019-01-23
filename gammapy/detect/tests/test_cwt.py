@@ -7,13 +7,13 @@ from ...detect import CWT, CWTKernels, CWTData
 from ...maps import Map
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestCWT:
     """Test CWT algorithm."""
 
     def setup(self):
         filename = (
-            "$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz"
+            "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/counts.fits.gz"
         )
         image = Map.read(filename)
         background = image.copy(data=np.ones(image.data.shape, dtype=float))
@@ -128,7 +128,7 @@ class TestCWT:
         assert_allclose(transform_2d.sum(), 9.91731463861)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestCWTKernels:
     """Test CWTKernels"""
 
@@ -170,7 +170,7 @@ class TestCWTKernels:
         assert_equal(len(t), 13)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestCWTData:
     """
     Test CWTData class.
@@ -178,7 +178,7 @@ class TestCWTData:
 
     def setup(self):
         filename = (
-            "$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/counts.fits.gz"
+            "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/counts.fits.gz"
         )
         image = Map.read(filename)
         background = image.copy(data=np.ones(image.data.shape, dtype=float))

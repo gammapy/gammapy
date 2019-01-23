@@ -11,10 +11,10 @@ from ...utils.testing import assert_time_allclose, assert_skycoord_allclose
 
 @pytest.fixture(scope="session")
 def data_store():
-    return DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+    return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_data_store_observation(data_store):
     """Test DataStoreObservation class"""
     obs = data_store.obs(23523)
@@ -125,7 +125,7 @@ def test_observations_select_time(
 @requires_data("gammapy-extra")
 class TestObservationChecker:
     def setup(self):
-        data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps")
+        data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
         self.observation = data_store.obs(111140)
 
     def test_check_all(self):

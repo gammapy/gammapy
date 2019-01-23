@@ -18,7 +18,7 @@ from .. import (
 
 
 @requires_dependency("sherpa")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_spectrum_observation_1():
     """Obs read from file"""
     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
@@ -35,7 +35,7 @@ def test_spectrum_observation_1():
 
 
 @requires_dependency("sherpa")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_spectrum_observation_2():
     """Simulated obs without background"""
     energy = np.logspace(-2, 2, 100) * u.TeV
@@ -63,7 +63,7 @@ def test_spectrum_observation_2():
 
 
 @requires_dependency("sherpa")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_spectrum_observation_3():
     """obs without edisp"""
     energy = np.logspace(-1, 1, 20) * u.TeV
@@ -85,7 +85,7 @@ def test_spectrum_observation_3():
 
 
 @requires_dependency("sherpa")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def make_observation_list():
     """obs with dummy IRF"""
     nbin = 3
@@ -182,7 +182,7 @@ def _read_hess_obs():
     return SpectrumObservationList([obs1, obs2])
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestSpectrumObservationStacker:
     def setup(self):
         self.obs_list = _read_hess_obs()
@@ -240,7 +240,7 @@ class TestSpectrumObservationStacker:
         assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestSpectrumObservationList:
     def setup(self):
         self.obs_list = _read_hess_obs()

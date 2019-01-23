@@ -10,18 +10,19 @@ from .test_core import make_test_catalog
 @pytest.fixture()
 def source_catalogs():
     cats = SourceCatalogRegistry.builtins()
-    filename = "$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz"
+    filename = "$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz"
     cats.register("gamma-cat", SourceCatalogGammaCat, (filename,))
     return cats
 
 
-@requires_data("gammapy-extra")
+# 2HWC catalog is in ECSV format, which requires yaml to read the header
+@requires_data("gammapy-data")
 def test_info_table(source_catalogs):
     table = source_catalogs.info_table
     assert table.colnames == ["name", "description", "sources"]
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_getitem(source_catalogs):
     cat = source_catalogs["2fhl"]
     assert cat.name == "2fhl"

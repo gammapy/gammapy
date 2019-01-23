@@ -6,7 +6,7 @@ from ...utils.testing import requires_data
 from ..io import load_cta_irfs
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_cta_irf():
     """Test that CTA IRFs can be loaded and evaluated."""
     irf = load_cta_irfs(

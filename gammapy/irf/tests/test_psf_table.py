@@ -71,10 +71,10 @@ class TestTablePSF:
         assert_allclose(actual, desired)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEnergyDependentTablePSF:
     def setup(self):
-        filename = "$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits"
+        filename = "$GAMMAPY_DATA/tests/unbundled/fermi/psf.fits"
         self.psf = EnergyDependentTablePSF.read(filename)
 
     def test(self):

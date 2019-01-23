@@ -46,15 +46,15 @@ def test_hdu_index_table(hdu_index_table):
     assert hdu_index_table.summary().startswith("HDU index table")
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_hdu_index_table_hd_hap():
     """Test HESS HAP-HD data access."""
     hdu_index = HDUIndexTable.read(
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz"
+        "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz"
     )
 
     assert "BASE_DIR" in hdu_index.meta
-    assert hdu_index.base_dir == make_path("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
+    assert hdu_index.base_dir == make_path("$GAMMAPY_DATA/hess-dl3-dr1")
 
     # A few valid queries
 

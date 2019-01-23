@@ -47,9 +47,9 @@ def test_xml_errors():
     # TODO: Think about a more elaborate XML validation scheme
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_complex():
-    filename = "$GAMMAPY_EXTRA/test_datasets/models/examples.xml"
+    filename = "$GAMMAPY_DATA/tests/models/examples.xml"
     sourcelib = SkyModels.read(filename)
 
     assert len(sourcelib.skymodels) == 7
@@ -115,12 +115,12 @@ def test_complex():
 
 
 @pytest.mark.xfail(reason="Need to improve XML read")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 @pytest.mark.parametrize(
     "filename",
     [
-        "$GAMMAPY_EXTRA/test_datasets/models/fermi_model.xml",
-        "$GAMMAPY_EXTRA/test_datasets/models/shell.xml",
+        "$GAMMAPY_DATA/tests/models/fermi_model.xml",
+        "$GAMMAPY_DATA/tests/models/shell.xml",
     ],
 )
 def test_models(filename, tmpdir):
@@ -137,9 +137,9 @@ def test_models(filename, tmpdir):
 
 
 @pytest.mark.xfail(reason="Need to improve XML read")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_sky_models_old_xml_file():
-    filename = "$GAMMAPY_EXTRA/test_datasets/models/shell.xml"
+    filename = "$GAMMAPY_DATA/tests/models/shell.xml"
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 2
@@ -153,10 +153,10 @@ def test_sky_models_old_xml_file():
 
 
 @pytest.mark.xfail(reason="Need to improve XML read")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_sky_models_new_xml_file():
     filename = (
-        "$GAMMAPY_EXTRA/test_datasets/models/ctadc_skymodel_gps_sources_bright.xml"
+        "$GAMMAPY_DATA/tests/models/ctadc_skymodel_gps_sources_bright.xml"
     )
     sources = SkyModels.read(filename)
 

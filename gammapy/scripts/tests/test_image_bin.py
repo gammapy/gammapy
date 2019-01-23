@@ -6,12 +6,12 @@ from ...maps import Map
 from ..main import cli
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_bin_image_main(tmpdir):
     """Run ``gammapy-bin-image`` and compare result to ``ctskymap``.
     """
-    event_file = "$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_events_023523.fits.gz"
-    reference_file = "$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/ctskymap.fits.gz"
+    event_file = "$GAMMAPY_DATA/tests/irf/hess/pa/hess_events_023523.fits.gz"
+    reference_file = "$GAMMAPY_DATA/tests/irf/hess/pa/ctskymap.fits.gz"
     out_file = str(tmpdir / "gammapy_ctskymap.fits.gz")
 
     args = ["image", "bin", event_file, reference_file, out_file]

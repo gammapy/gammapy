@@ -8,10 +8,10 @@ from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...data.event_list import EventListBase, EventList, EventListLAT
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEventListBase:
     def setup(self):
-        filename = "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+        filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
         self.events = EventListBase.read(filename)
 
     @pytest.mark.parametrize(
@@ -25,10 +25,10 @@ class TestEventListBase:
         )
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEventListHESS:
     def setup(self):
-        filename = "$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
+        filename = "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
         self.events = EventList.read(filename)
 
     def test_basics(self):
@@ -93,7 +93,7 @@ class TestEventListHESS:
             self.events.peek()
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEventListFermi:
     def setup(self):
         filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
@@ -109,11 +109,11 @@ class TestEventListFermi:
             self.events.plot_image()
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEventListChecker:
     def setup(self):
         self.event_list = EventList.read(
-            "$GAMMAPY_EXTRA/datasets/cta-1dc/data/baseline/gps/gps_baseline_111140.fits"
+            "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_111140.fits"
         )
 
     def test_check_all(self):

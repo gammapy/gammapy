@@ -164,7 +164,7 @@ class TestFit:
 
 
 @requires_dependency("sherpa")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""
 

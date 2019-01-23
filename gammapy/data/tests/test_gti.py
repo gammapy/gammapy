@@ -7,10 +7,10 @@ from ...utils.testing import requires_data, assert_time_allclose
 from ...data import GTI
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_gti_hess():
     filename = (
-        "$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
+        "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
     )
     gti = GTI.read(filename)
     assert "GTI" in str(gti)
@@ -27,7 +27,7 @@ def test_gti_hess():
     assert_time_allclose(gti.time_stop[0], expected)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_gti_fermi():
     filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
     gti = GTI.read(filename)
@@ -45,7 +45,7 @@ def test_gti_fermi():
     assert_time_allclose(gti.time_stop[0], expected)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 @pytest.mark.parametrize(
     "time_interval, expected_length, expected_times",
     [

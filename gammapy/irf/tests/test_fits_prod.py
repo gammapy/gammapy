@@ -15,7 +15,7 @@ from ...utils.testing import requires_data
 productions = [
     dict(
         prod="hap-hd-prod2",
-        datastore="$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2",
+        datastore="$GAMMAPY_DATA/tests/hess-crab4-hd-hap-prod2",
         test_obs=23523,
         aeff_ref=267252.7,
         psf_type="psf_3gauss",
@@ -24,7 +24,7 @@ productions = [
     ),
     dict(
         prod="hess-dl3-dr1",
-        datastore="$GAMMAPY_EXTRA/datasets/hess-dl3-dr1",
+        datastore="$GAMMAPY_DATA/hess-dl3-dr1",
         test_obs=23523,
         aeff_ref=229490.7,
         psf_type="psf_table",
@@ -77,7 +77,7 @@ class FitsProductionTester:
 
 
 @pytest.mark.parametrize("prod", productions)
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_fits_prods(prod):
     tester = FitsProductionTester(prod)
     tester.test_all()

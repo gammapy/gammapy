@@ -13,7 +13,7 @@ pytest.importorskip("healpy")
 
 @pytest.fixture(scope="session")
 def bkg_3d():
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     return Background3D.read(filename, hdu="BACKGROUND")
 
 
@@ -27,7 +27,7 @@ def geom(map_type, ebounds):
         raise ValueError()
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 @pytest.mark.parametrize(
     "pars",
     [
