@@ -4,7 +4,7 @@ from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import WcsGeom
 from gammapy.cube import PSFKernel
 
-filename = "$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/psf.fits"
+filename = "$GAMMAPY_DATA/tests/unbundled/fermi/psf.fits"
 fermi_psf = EnergyDependentTablePSF.read(filename)
 
 psf = fermi_psf.table_psf_at_energy(energy="1 GeV")

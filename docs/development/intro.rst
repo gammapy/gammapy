@@ -142,7 +142,7 @@ commands to set up an environment for Gammapy development:
     git remote rename origin [your-user-name]
 
 It is also common to stick with the name ``origin`` for your repository and to
-use ``upstream`` for the respository you forked from. In any case, you can use
+use ``upstream`` for the repository you forked from. In any case, you can use
 ``$ git remote -v`` to list all your configured remotes.
 
 When developing gammapy you never want to work on the ``master`` branch, but
@@ -165,20 +165,8 @@ this step, some imports depending on Cython code will fail. This is described in
 more details here: :ref:`setup_cython`. If you want remove the generated files
 run ``make clean``.
 
-For the development it is also convenient to fork and set up the
-:ref:`dev_gammapy-extra`, as well as declaring some environment variables:
-
-.. code-block:: bash
-
-    # Fork the gammapy-extra repository on GitHub, https://github.com/gammapy/gammapy-extra
-    cd code
-    git clone https://github.com/[your-github-username]/gammapy-extra.git
-    export GAMMAPY_EXTRA=$PWD/gammapy-extra
-
-`$GAMMAPY_EXTRA`` is mainly used for testing purposes, on the contrary the datasets
-provided in ``gammapy.catalog`` and those used in the tutorial Jupyter notebooks
-should be in a different path declared in a `$GAMMAPY_DATA` environment variable.
-You can download these datasets with `gammapy download datasets` and then point
+For the development it is also convenient to have declared `$GAMMAPY_DATA` environment variable.
+You can download these Gammapy datasets with `gammapy download datasets` and then point
 your `$GAMMAPY_DATA` to the local path you have chosen.
 
 .. code-block:: bash

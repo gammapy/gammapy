@@ -38,9 +38,9 @@ Using `gammapy.image`
 
 :ref:`tutorials` that contain use of maps:
 
-* :gp-extra-notebook:`first_steps`
-* :gp-extra-notebook:`intro_maps`
-* :gp-extra-notebook:`analysis_3d`
+* :gp-notebook:`first_steps`
+* :gp-notebook:`intro_maps`
+* :gp-notebook:`analysis_3d`
 
 Documentation pages with more detailed information:
 

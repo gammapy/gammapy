@@ -761,7 +761,7 @@ Gammapy has a class for generic n-dimensional data arrays,
 should use this class. The goal is to reuse code for interpolation
 and have an coherent I/O interface, mainly in `~gammapy.irf`.
 
-A usage example can be found in :gp-extra-notebook:`nddata_demo`.
+A usage example can be found in :gp-notebook:`nddata_demo`.
 
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator.
@@ -908,21 +908,21 @@ so many getters and setters. We could start using descriptors.
 
 TODO: make a decision on this and describe the issue / solution here.
 
-Link to a notebook in gammapy-extra from the docs
+Link to a notebook from the docs
 -------------------------------------------------
 
-Jupyter notebooks stored in ``gammpy-extra`` are copied to the ``notebooks`` folder
-during the process of Sphinx building documentation. They are converted to HTML files
-using `nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides
-a source parser for .ipynb files. From docstrings and high-level docs in Gammapy you
-can link to these *fixed-text* formatted versions using the ``gp-extra-notebook``
-Sphinx role providing **only the filename**.
+Jupyter notebooks stored in the ``tutorials`` folder and are copied to the ``notebooks`` folder
+during the process of Sphinx building documentation. They are converted to HTML files using
+`nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides a source parser
+for .ipynb files. From docstrings and high-level docs in Gammapy you can link to these
+*fixed-text* formatted versions using the ``gp-notebook`` Sphinx role providing
+**only the filename**.
 
-Example: :gp-extra-notebook:`analysis_3d`
+Example: :gp-notebook:`analysis_3d`
 
 Sphinx directive to generate that link::
 
-      :gp-extra-notebook:`analysis_3d`
+      :gp-notebook:`analysis_3d`
 
 More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
 
@@ -938,15 +938,15 @@ Sphinx directive to generate that link::
 Include images from gammapy-extra into the docs
 -----------------------------------------------
 
-Similar to the ``gp-extra-notebook`` role, Gammapy has a ``gp-extra-image`` directive.
+Similar to the ``gp-notebook`` role, Gammapy has a ``gp-image`` directive.
 
-To include an image from ``gammapy-extra/figures/``, use the ``gp-extra-image`` directive
+To include an image from ``gammapy-extra/figures/``, use the ``gp-image`` directive
 instead of the usual Sphinx ``image`` directive like this:
 
 
 .. code-block:: rst
 
-    .. gp-extra-image:: detect/fermi_ts_image.png
+    .. gp-image:: detect/fermi_ts_image.png
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__

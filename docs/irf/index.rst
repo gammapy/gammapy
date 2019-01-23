@@ -28,7 +28,7 @@ Most (at some point maybe all) classes in `gammapy.irf` have an
 Getting Started
 ===============
 
-See :gp-extra-notebook:`cta_1dc_introduction` for an example how to access IACT
+See :gp-notebook:`cta_1dc_introduction` for an example how to access IACT
 IRFs.
 
 Effective area

@@ -161,15 +161,15 @@ steps:
 gammapy-extra repository
 ========================
 
-For Gammapy we have a second repository for example data files, Jupyter
-notebooks and a few other things:
+For Gammapy we have a second repository for most of the example data files and
+a few other things:
 
     https://github.com/gammapy/gammapy-extra
 
 Example data
 ------------
 
-The ``datasets`` and ``test_dataset`` folders contain example datasets that are
+The ``datasets`` and ``datasets/tests`` folders contain example datasets that are
 used by the Gammapy documentation and tests. Note that here is a lot of old
 cruft, because Gammapy was developed since 2013 in parallel with the development
 of data formats for gamma-ray astronomy (see below).
