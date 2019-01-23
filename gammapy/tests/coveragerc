@@ -1,5 +1,6 @@
 [run]
 source = gammapy
+concurrency = multiprocessing
 omit =
    *tests*
    *setup_package*
