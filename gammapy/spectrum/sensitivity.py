@@ -16,11 +16,15 @@ class SensitivityEstimator(object):
 
     Parameters
     ----------
-    irf : `~gammapy.scripts.CTAPerf`
-        IRF object
+    arf : `~gammapy.irf.EffectiveAreaTable`
+        1D effective area
+    rmf : `~gammapy.irf.EnergyDispersion`
+        energy dispersion table
+    bkg : `~gammapy.spectrum.CountsSpectrum`
+        the background array
     livetime : `~astropy.units.Quantity`
         Livetime (object with the units of time), e.g. 5*u.h
-    slope : float, optional
+    index : float, optional
         Index of the spectral shape (Power-law), should be positive (>0)
     alpha : float, optional
         On/OFF normalisation
@@ -31,24 +35,10 @@ class SensitivityEstimator(object):
     bkg_sys : float, optional
         Fraction of Background systematics relative to the number of ON counts
 
-    Examples
-    --------
-    Compute and plot a sensitivity curve for CTA::
-
-        from gammapy.irf import CTAPerf
-        from gammapy.spectrum import SensitivityEstimator
-
-        filename = '$GAMMAPY_DATA/cta/perf_prod2/point_like_non_smoothed/South_5h.fits.gz'
-        irf = CTAPerf.read(filename)
-        sensitivity_estimator = SensitivityEstimator(irf=irf, livetime='5h')
-        sensitivity_estimator.run()
-        print(sensitivity_estimator.results_table)
-
-    Further examples in :gp-extra-notebook:`cta_sensitivity` .
+    An example can be found in :gp-extra-notebook:`cta_sensitivity` .
 
     Notes
     -----
-    For the moment, only the differential point-like sensitivity is computed at a fixed offset.
     This class allows to determine for each reconstructed energy bin the flux associated to the number of gamma-ray
     events for which the significance is ``sigma``, and being larger than ``gamma_min`` and ``bkg_sys`` percent larger than the
     number of background events in the ON region.
@@ -56,17 +46,21 @@ class SensitivityEstimator(object):
 
     def __init__(
         self,
-        irf,
+        arf,
+        rmf,
+        bkg,
         livetime,
-        slope=2.0,
+        index=2.0,
         alpha=0.2,
         sigma=5.0,
         gamma_min=10.0,
         bkg_sys=0.05,
     ):
-        self.irf = irf
+        self.arf = arf
+        self.rmf = rmf
+        self.bkg = bkg
         self.livetime = u.Quantity(livetime).to("s")
-        self.slope = slope
+        self.index = index
         self.alpha = alpha
         self.sigma = sigma
         self.gamma_min = gamma_min
@@ -84,9 +78,9 @@ class SensitivityEstimator(object):
 
         # TODO: let the user decide on energy binning
         # then integrate bkg model and gamma over those energy bins.
-        energy = self.irf.bkg.energy.log_center()
+        energy = self.rmf.e_reco.log_center()
 
-        bkg_counts = (self.irf.bkg.data.data * self.livetime).value
+        bkg_counts = (self.bkg.data.data.to('1/s') * self.livetime).value
 
         excess_counts = excess_matching_significance_on_off(
             n_off=bkg_counts / self.alpha, alpha=self.alpha, significance=self.sigma
@@ -95,12 +89,12 @@ class SensitivityEstimator(object):
         excess_counts[is_gamma_limited] = self.gamma_min
 
         model = PowerLaw(
-            index=self.slope, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
+            index=self.index, amplitude="1 cm-2 s-1 TeV-1", reference="1 TeV"
         )
 
         # TODO: simplify the following computation
         predictor = CountsPredictor(
-            model, aeff=self.irf.aeff, edisp=self.irf.rmf, livetime=self.livetime
+            model, aeff=self.arf, edisp=self.rmf, livetime=self.livetime
         )
         predictor.run()
         counts = predictor.npred.data.data.value
@@ -153,3 +147,4 @@ class SensitivityEstimator(object):
             ]
         )
         self._results_table = table
+        return table
