@@ -21,9 +21,6 @@ class TestObservationSummaryTable:
         target_pos = SkyCoord(83.633083, 22.0145, unit="deg")
         cls.table_summary = ObservationTableSummary(obs_table, target_pos)
 
-    # FIXME: remove this xfail once the Astropy issue is fixed
-    # See https://github.com/astropy/astropy/issues/8368
-    @pytest.mark.xfail
     def test_str(self):
         text = str(self.table_summary)
         assert "Observation summary" in text
