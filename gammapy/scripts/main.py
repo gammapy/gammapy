@@ -73,19 +73,24 @@ def cli_image():
 
 @cli.group("download", short_help="Download datasets and notebooks")
 def cli_download():
-    """Download notebooks, scripts anda datasets.
+    """Download notebooks, scripts and datasets.
 
+    \b
     Download notebooks published as tutorials, example python scripts and the
     related datasets needed to execute them. It is also possible to download
     individual notebooks, scrtipts or datasets.
-    The option `tutorials` will download versioned folders for the notebooks
+    \b
+    - The option `tutorials` will download versioned folders for the notebooks
     and python scripts into a `gammapy-tutorials` folder created at the current
     working directory, as well as the datasets needed to reproduce them.
-    The option `notebooks` will download the notebook files used in the tutorials
+    \b
+    - The option `notebooks` will download the notebook files used in the tutorials
     into a `gammapy-notebooks` folder created at the current working directory.
-    The option `scripts` will download a collection of example python scripts
+    \b
+    - The option `scripts` will download a collection of example python scripts
     into a `gammapy-scripts` folder created at the current working directory.
-    The option `datasets` will download the datasets used by Gammapy into a
+    \b
+    - The option `datasets` will download the datasets used by Gammapy into a
     `gammapy-datasets` folder created at the current working directory.
 
     \b
