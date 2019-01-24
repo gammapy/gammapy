@@ -128,6 +128,7 @@ class ComputePlan(object):
 
     def getfilelist(self):
         found = False
+
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
             if self.src != "":
@@ -149,7 +150,7 @@ class ComputePlan(object):
                     self.listfiles[keyrec] = record
                     found = True
 
-        if self.src != "" and not found:
+        if self.option != "datasets" and self.src != "" and not found:
             if self.option == "notebooks":
                 log.warning("Notebook {} not found".format(self.src))
             if self.option == "scripts":

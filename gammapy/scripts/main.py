@@ -72,7 +72,8 @@ def cli_image():
 
 
 @cli.group("download", short_help="Download datasets and notebooks")
-def cli_download():
+@click.pass_context
+def cli_download(ctx):
     """Download notebooks, scripts and datasets.
 
     \b
