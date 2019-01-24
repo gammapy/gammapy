@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import sys
+import yaml
 import multiprocessing
 from ..extern.six.moves.urllib.request import urlretrieve, urlopen
 from ..extern.pathlib import Path
@@ -85,6 +86,20 @@ class ComputePlan(object):
         self.listfiles = {}
         log.info("Looking for {}...".format(self.option))
 
+    def getenvironment(self):
+        filename_env = "gammapy-" + self.version + "-environment.yml"
+        url_file_env = BASE_URL + "/install/" + filename_env
+        filepath_env = str(self.outfolder / filename_env)
+        try:
+            log.info("Downloading {}".format(url_file_env))
+            urlopen(url_file_env)
+            ifolder = Path(filepath_env).parent
+            ifolder.mkdir(parents=True, exist_ok=True)
+            get_file((url_file_env, filepath_env, ""))
+        except Exception as ex:
+            log.error(ex)
+            exit()
+
     def getlocalfolder(self):
         namefolder = ""
 
@@ -112,22 +127,7 @@ class ComputePlan(object):
 
         return self.outfolder
 
-    def getenvironment(self):
-        filename_env = "gammapy-" + self.version + "-environment.yml"
-        url_file_env = BASE_URL + "/install/" + filename_env
-        filepath_env = str(self.outfolder.parent / filename_env)
-        try:
-            log.info("Downloading {}".format(url_file_env))
-            urlopen(url_file_env)
-            ifolder = Path(filepath_env).parent
-            ifolder.mkdir(parents=True, exist_ok=True)
-            get_file((url_file_env, filepath_env, ""))
-        except Exception as ex:
-            log.error(ex)
-            exit()
-
     def getfilelist(self):
-        found = False
 
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
@@ -137,10 +137,13 @@ class ComputePlan(object):
                     record = self.listfiles[keyrec]
                     self.listfiles = {}
                     self.listfiles[keyrec] = record
-                    found = True
-            self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
+                    self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
+                else:
+                    self.listfiles = {}
+                    if not self.modetutorials:
+                        log.warning("Notebook {} not found".format(self.src))
 
-        if self.option == "scripts" or self.modetutorials:
+        if (self.option == "scripts" or self.modetutorials) and not self.listfiles:
             self.parse_scripts_yaml()
             if self.src != "":
                 keyrec = "sc: " + self.src
@@ -148,17 +151,15 @@ class ComputePlan(object):
                     record = self.listfiles[keyrec]
                     self.listfiles = {}
                     self.listfiles[keyrec] = record
-                    found = True
-
-        if self.option != "datasets" and self.src != "" and not found:
-            if self.option == "notebooks":
-                log.warning("Notebook {} not found".format(self.src))
-            if self.option == "scripts":
-                log.warning("Script {} not found".format(self.src))
-            return []
+                else:
+                    self.listfiles = {}
+                    if not self.modetutorials:
+                        log.warning("Script {} not found".format(self.src))
 
         if self.option == "datasets":
-            datafound = {}
+
+            if self.modetutorials and not self.listfiles:
+                sys.exit()
 
             if self.release:
                 filename_datasets = "gammapy-" + self.version + "-data-index.json"
@@ -169,9 +170,13 @@ class ComputePlan(object):
             log.info("Reading {}".format(url))
             txt = urlopen(url).read().decode("utf-8")
             datasets = json.loads(txt)
+            datafound = {}
 
             if not self.modetutorials:
                 datafound.update(dict(parse_datafiles(self.src, datasets)))
+                if self.src and not datafound:
+                    log.info("Dataset {} not found".format(self.src))
+                    sys.exit()
             else:
                 for item in self.listfiles:
                     record = self.listfiles[item]
@@ -179,16 +184,14 @@ class ComputePlan(object):
                         if record["datasets"] != "":
                             for ds in record["datasets"]:
                                 datafound.update(dict(parse_datafiles(ds, datasets)))
-
-            if not datafound:
-                log.info("Dataset {} not found".format(self.src))
-                sys.exit()
+                if not datafound:
+                    log.info("No datasets found".format(self.src))
+                    sys.exit()
             self.listfiles = datafound
 
         return self.listfiles
 
     def parse_notebooks_yaml(self):
-        import yaml
 
         if self.release:
             filename_nbs = "gammapy-" + self.version + "-tutorials.yml"
@@ -217,7 +220,6 @@ class ComputePlan(object):
                         self.listfiles[label]["images"].append(im)
 
     def parse_scripts_yaml(self):
-        import yaml
 
         if self.release:
             filename_scripts = "gammapy-" + self.version + "-scripts.yml"
@@ -244,15 +246,17 @@ class ComputePlan(object):
 class ParallelDownload(object):
     """Manages the process of downloading files"""
 
-    def __init__(self, listfiles, outfolder, release, opt):
+    def __init__(self, listfiles, outfolder, release, option, modetutorials):
         self.listfiles = listfiles
         self.outfolder = outfolder
         self.release = release
-        self.opt = opt
+        self.option = option
+        self.modetutorials = modetutorials
         self.bar = 0
 
     def run(self):
-        log.info("Content will be downloaded in {}".format(self.outfolder))
+        if self.listfiles:
+            log.info("Content will be downloaded in {}".format(self.outfolder))
 
         pool = multiprocessing.Pool(5)
         for rec in self.listfiles:
@@ -271,24 +275,23 @@ class ParallelDownload(object):
 
     def show_info(self):
         print("")
-        if self.opt == "datasets":
+        if self.option == "datasets":
             GAMMAPY_DATA = Path.cwd() / self.outfolder
-        if self.opt == "all":
-            GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
-        if self.opt == "datasets" or self.opt == "all":
+            if self.modetutorials:
+                GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
+                if self.release:
+                    print(
+                        "*** Enter the following commands below to get started with this version of Gammapy"
+                    )
+                    print("cd {}".format(self.outfolder.parent))
+                    condaname = "gammapy-" + self.release
+                    envfilename = condaname + "-environment.yml"
+                    print("conda env create -f {}".format(envfilename))
+                    print("conda activate {}".format(condaname))
+                    print("jupyter lab")
+                    print("")
             print("*** You might want to declare GAMMAPY_DATA env variable")
             print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
-            print("")
-        if self.release and self.opt != "datasets":
-            print(
-                "*** Enter the following commands below to get started with this version of Gammapy"
-            )
-            print("cd {}".format(self.outfolder.parent))
-            condaname = "gammapy-" + self.release
-            envfilename = condaname + "-environment.yml"
-            print("conda env create -f {}".format(envfilename))
-            print("conda activate {}".format(condaname))
-            print("jupyter lab")
             print("")
 
     def progressbar(self, args):
