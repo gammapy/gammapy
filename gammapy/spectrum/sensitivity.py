@@ -100,8 +100,8 @@ class SensitivityEstimator(object):
         counts = predictor.npred.data.data.value
         phi_0 = excess_counts / counts
 
-        dnde_model = model(energy=energy)
-        diff_flux = (phi_0 * dnde_model * energy ** 2).to("erg / (cm2 s)")
+        flux_model = model.integral(emin=self.rmf.e_reco.lo, emax=self.rmf.e_reco.hi)
+        diff_flux = (phi_0 * flux_model*energy).to("erg / (cm2 s)")
 
         # TODO: take self.bkg_sys into account
         # and add a criterion 'bkg sys'
