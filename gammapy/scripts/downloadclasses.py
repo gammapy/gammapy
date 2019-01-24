@@ -73,8 +73,8 @@ def parse_imagefiles(notebookslist):
                 for im in record["images"]:
                     label = "im: " + im
                     path = "images/" + im + ".png"
-                    url = str(Path(record["url"]).parent)
-                    url = url.replace(":/", "://")
+                    filename_img = record["url"][record["url"].rfind("/") :]
+                    url = record["url"].replace(filename_img, "")
                     url = url + "/" + path
                     imagefiles[label] = {}
                     imagefiles[label]["url"] = url
