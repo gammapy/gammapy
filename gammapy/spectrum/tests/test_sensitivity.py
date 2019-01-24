@@ -42,14 +42,14 @@ def test_cta_sensitivity_estimator(sens):
 
     row = table[0]
     assert_allclose(row["energy"], 1.33352, rtol=1e-3)
-    assert_allclose(row["e2dnde"], 3.40101e-11, rtol=1e-3)
+    assert_allclose(row["e2dnde"], 1.985e-11, rtol=1e-3)
     assert_allclose(row["excess"], 334.454, rtol=1e-3)
     assert_allclose(row["background"], 3600, rtol=1e-3)
     assert row["criterion"] == "significance"
 
     row = table[3]
     assert_allclose(row["energy"], 7.49894, rtol=1e-3)
-    assert_allclose(row["e2dnde"], 1.14367e-11, rtol=1e-3)
+    assert_allclose(row["e2dnde"], 6.6748e-12, rtol=1e-3)
     assert_allclose(row["excess"], 20, rtol=1e-3)
     assert_allclose(row["background"], 3.6, rtol=1e-3)
     assert row["criterion"] == "gamma"
