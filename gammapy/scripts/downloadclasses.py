@@ -19,9 +19,8 @@ DEV_NBS_YAML_URL = (
 DEV_SCRIPTS_YAML_URL = (
     "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
 )
-DEV_DATA_JSON_URL = (
-    "https://raw.githubusercontent.com/gammapy/gammapy-webpage/gh-pages/download/data/gammapy-data-index.json"
-)
+DEV_DATA_JSON_URL = "https://raw.githubusercontent.com/gammapy/gammapy-webpage/gh-pages/download/data/gammapy-data-index.json"
+
 
 def hashmd5(path):
     md5_hash = hashlib.md5()
@@ -61,7 +60,7 @@ def parse_datafiles(datasearch, datasetslist):
                     datafiles[label]["path"] = ds["path"]
                     if "hashmd5" in ds:
                         datafiles[label]["hashmd5"] = ds["hashmd5"]
-    return datafiles
+                    yield label, datafiles[label]
 
 
 def parse_imagefiles(notebookslist):
@@ -79,7 +78,7 @@ def parse_imagefiles(notebookslist):
                     imagefiles[label] = {}
                     imagefiles[label]["url"] = url
                     imagefiles[label]["path"] = path
-    return imagefiles
+                    yield label, imagefiles[label]
 
 
 class ComputePlan(object):
@@ -147,9 +146,7 @@ class ComputePlan(object):
                     self.listfiles = {}
                     self.listfiles[keyrec] = record
                     found = True
-
-            imagefiles = parse_imagefiles(self.listfiles)
-            self.listfiles.update(imagefiles)
+            self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
 
         if self.option == "scripts" or self.modetutorials:
             self.parse_scripts_yaml()
@@ -182,14 +179,14 @@ class ComputePlan(object):
             datasets = json.loads(txt)
 
             if not self.modetutorials:
-                datafound.update(parse_datafiles(self.src, datasets))
+                datafound.update(dict(parse_datafiles(self.src, datasets)))
             else:
                 for item in self.listfiles:
                     record = self.listfiles[item]
                     if "datasets" in record:
                         if record["datasets"] != "":
                             for ds in record["datasets"]:
-                                datafound.update(parse_datafiles(ds, datasets))
+                                datafound.update(dict(parse_datafiles(ds, datasets)))
 
             if not datafound:
                 log.info("Dataset {} not found".format(self.src))
