@@ -22,21 +22,12 @@ DEV_SCRIPTS_YAML_URL = (
 DEV_DATA_JSON_URL = "https://raw.githubusercontent.com/gammapy/gammapy-webpage/gh-pages/download/data/gammapy-data-index.json"
 
 
-def hashmd5(path):
-    md5_hash = hashlib.md5()
-    with open(path, "rb") as f:
-        for byte_block in iter(lambda: f.read(4096), b""):
-            md5_hash.update(byte_block)
-    md5 = md5_hash.hexdigest()
-    return md5
-
-
 def get_file(ftuple):
     url, filepath, md5server = ftuple
 
     retrieve = True
     if md5server and Path(filepath).exists():
-        md5local = hashmd5(filepath)
+        md5local = hashlib.md5(Path(filepath).read_bytes()).hexdigest()
         if md5local == md5server:
             retrieve = False
 
