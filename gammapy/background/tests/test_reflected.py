@@ -36,7 +36,7 @@ def on_region():
 @pytest.fixture(scope="session")
 def observations():
     """Example observation list for testing."""
-    datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
 
@@ -50,7 +50,7 @@ def bkg_estimator(observations, exclusion_mask, on_region):
     )
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_find_reflected_regions(exclusion_mask, on_region):
     pointing = SkyCoord(83.2, 22.5, unit="deg")
     fregions = ReflectedRegionsFinder(
@@ -85,7 +85,7 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     assert len(regions) == 5
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestReflectedRegionBackgroundEstimator:
     def test_basic(self, bkg_estimator):
         assert "ReflectedRegionsBackgroundEstimator" in str(bkg_estimator)

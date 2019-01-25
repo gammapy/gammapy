@@ -38,9 +38,7 @@ class NoDataAvailableError(LookupError):
 
 
 class GammaCatNotFoundError(OSError):
-    """The gammapy-cat repo is not available.
-
-    You have to set the GAMMA_CAT environment variable so that it's found.
+    """The gamma-cat repo is not available.
     """
 
     pass
@@ -457,7 +455,7 @@ class SourceCatalogGammaCat(SourceCatalog):
     description = "An open catalog of gamma-ray sources"
     source_object_class = SourceCatalogObjectGammaCat
 
-    def __init__(self, filename="$GAMMA_CAT/output/gammacat.fits.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz"):
         filename = str(make_path(filename))
         table = Table.read(filename, hdu=1)
         self.filename = filename
@@ -504,7 +502,7 @@ class GammaCatDataCollection(object):
         self.data_index = data_index
 
     @classmethod
-    def from_index_file(cls, filename="$GAMMA_CAT/output/gammacat-datasets.json"):
+    def from_index_file(cls, filename="$GAMMAPY_DATA/catalogs/gammacat/gammacat-datasets.json"):
         """Create from index file."""
         path = make_path(filename)
         # TODO: make a list of `GammaCatResource`, as well as a dict by ``resource_id`` for lookup!

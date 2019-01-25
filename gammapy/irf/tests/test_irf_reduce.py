@@ -13,10 +13,10 @@ from ...spectrum.models import PowerLaw
 
 @pytest.fixture(scope="session")
 def data_store():
-    return DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+    return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 @pytest.mark.parametrize(
     "pars",
     [
@@ -91,7 +91,7 @@ def test_make_psf(pars, data_store):
     assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_make_mean_psf(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
     obs1 = data_store.obs(23523)
@@ -116,7 +116,7 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf_tot_int.containment_radius(0.68).deg, 0.117134, rtol=1e-3)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_make_mean_edisp(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 

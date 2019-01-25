@@ -17,7 +17,7 @@ for gamma-ray astronomy.
 The functions have a naming pattern (following scikit-learn lead):
 
 * ``load_*`` functions load datasets that are distributed with Gammapy (bundled in the repo)
-* ``fetch_*`` functions fetch datasets from the web (either from ``gammapy-extra`` or other sites)
+* ``fetch_*`` functions fetch datasets from the web (either from ``gammapy-extra`` repository or other sites)
 * ``make_*`` functions create datasets programatically (sometimes involving a random number generator)
 
 .. note::
@@ -32,51 +32,19 @@ gammapy-extra
 =============
 
 To keep the Gammapy code repository at https://github.com/gammapy/gammapy small
-and clean, we are putting sample data files and IPython notebooks in an extra
-repository at https://github.com/gammapy/gammapy-extra/ .
-
-To get the repository, ``git clone`` it to a location of your choosing using a
-git protocol of your choosing (try HTTPS or see the `Github clone URL help
-article`_ if you're not sure which you want).
+and clean, we are putting sample data files in an extra repository at
+https://github.com/gammapy/gammapy-extra/ . These sample data files may be
+fetched with ``gammapy-download datasets`` and then point your `$GAMMAPY_DATA` to the local
+path you have chosen.
 
 .. code-block:: bash
 
-    git clone https://github.com/gammapy/gammapy-extra.git
-    git clone git@github.com:gammapy/gammapy-extra.git
+    # Download GAMMAPY_DATA
+    cd code
+    gammapy download datasets --out GAMMAPY_DATA
+    export GAMMAPY_DATA=$PWD/GAMMAPY_DATA
 
-If you don't have git, you can also fetch the latest version as a zip file:
-
-.. code-block:: bash
-
-    wget https://github.com/gammapy/gammapy-extra/archive/master.zip
-    unzip master.zip # will result in a `gammapy-extra-master` folder
-
-The Gammapy tests, docs generator, examples and tutorials will access files from
-the ``gammapy-extra`` repo using the `gammapy.datasets.gammapy_extra` object.
-
-For this to work, you have to set the ``GAMMAPY_EXTRA`` shell environment
-variable to point to that folder. We suggest you put this in you ``.bashrc`` or
-``.profile``
-
-.. code-block:: bash
-
-    export GAMMAPY_EXTRA=/path/on/your/machine/to/gammapy-extra
-
-After you've done this, open up a new terminal (or ``source .profile``) and
-check if ``gammapy-extra`` is found:
-
-.. code-block:: bash
-
-    # TODO: make this print some info about gammapy-extra (including a version!!!)
-    gammapy info
-
-Example usage:::
-
-    >>> from gammapy.datasets import gammapy_extra
-    >>> gammapy_extra.filename('logo/gammapy_banner.png')
-    '/Users/deil/code/gammapy-extra/logo/gammapy_banner.png'
-
-.. _gammapy-cat:
+.. _gamma-cat:
 
 Gamma-cat
 ===========
@@ -97,14 +65,7 @@ If you don't have git, you can also fetch the latest version as a zip file as we
     wget https://github.com/gammapy/gamma-cat/archive/master.zip unzip
     master.zip # will result in a `gamma-cat-master` folder
 
-The `~gammapy.catalog.SourceCatalogGammaCat` and
-`~gammapy.catalog.SourceCatalogObjectGammaCat` classes need to know where the
-gamma-cat repository is located on your machine. For this reason the
-``GAMMA_CAT`` shell environment variable has to be set using:
-
-.. code-block:: bash
-
-    export GAMMAPY_CAT=/path/on/your/machine/to/gamma-cat
+Gamma-cat is also shipped in the dataset collection provided by ```gammapy download datasets``
 
 Getting Started
 ===============

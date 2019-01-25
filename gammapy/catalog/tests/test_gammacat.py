@@ -56,12 +56,11 @@ SOURCES = [
 
 @pytest.fixture(scope="session")
 def gammacat():
-    filename = "$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz"
+    filename = "$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz"
     return SourceCatalogGammaCat(filename=filename)
 
 
-@requires_data("gammapy-extra")
-@requires_data("gamma-cat")
+@requires_data("gammapy-data")
 class TestSourceCatalogGammaCat:
     def test_source_table(self, gammacat):
         assert gammacat.name == "gamma-cat"
@@ -97,8 +96,7 @@ class TestSourceCatalogGammaCat:
         assert_allclose(source.spectral_model.parameters["index"].value, 2.2)
 
 
-@requires_data("gammapy-extra")
-@requires_data("gamma-cat")
+@requires_data("gammapy-data")
 class TestSourceCatalogObjectGammaCat:
     def test_data(self, gammacat):
         source = gammacat[0]

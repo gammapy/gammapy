@@ -11,11 +11,11 @@ from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...background import ReflectedRegionsBackgroundEstimator
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestObservationSummaryTable:
     @classmethod
     def setup_class(cls):
-        data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+        data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
         obs_table = data_store.obs_table
         obs_table = obs_table[obs_table["TARGET_NAME"] == "Crab"]
         target_pos = SkyCoord(83.633083, 22.0145, unit="deg")
@@ -42,7 +42,7 @@ class TestObservationSummaryTable:
             self.table_summary.plot_offset_distribution()
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestObservationSummary:
     """
     Test observation summary.
@@ -50,7 +50,7 @@ class TestObservationSummary:
 
     @classmethod
     def setup_class(cls):
-        datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+        datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
         obs_ids = [23523, 23526]
 
         on_region = CircleSkyRegion(

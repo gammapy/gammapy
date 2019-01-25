@@ -65,11 +65,11 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     )
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEnergyDependentMultiGaussPSF:
     @pytest.fixture(scope="session")
     def psf(self):
-        filename = "$GAMMAPY_EXTRA/test_datasets/unbundled/irfs/psf.fits"
+        filename = "$GAMMAPY_DATA/tests/unbundled/irfs/psf.fits"
         return EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     def test_info(self, psf):
@@ -125,9 +125,9 @@ class TestEnergyDependentMultiGaussPSF:
         assert_allclose(np.squeeze(desired), actual, rtol=0.01)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_psf_cta_1dc():
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     # Check that PSF is filled with 0 for energy / offset where no PSF info is given.

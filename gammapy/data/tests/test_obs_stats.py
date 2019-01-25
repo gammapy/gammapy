@@ -12,7 +12,7 @@ from ...background import ReflectedRegionsBackgroundEstimator
 
 @pytest.fixture(scope="session")
 def observations():
-    data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     run_list = [23523, 23526]
     return Observations([data_store.obs(_) for _ in run_list])
 
@@ -78,7 +78,7 @@ def stats_stacked_bad_on_region(bad_on_region, observations):
 
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestObservationStats(object):
     def test_str(self, stats):
         text = str(stats)

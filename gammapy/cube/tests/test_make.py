@@ -12,7 +12,7 @@ from ..make import MapMaker
 
 @pytest.fixture(scope="session")
 def observations():
-    data_store = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps/")
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     obs_id = [110380, 111140]
     return data_store.get_observations(obs_id)
 
@@ -29,7 +29,7 @@ def geom(ebounds):
     )
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 @pytest.mark.parametrize(
     "pars",
     [

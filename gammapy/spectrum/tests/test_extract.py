@@ -36,7 +36,7 @@ def on_region():
 @pytest.fixture
 def observations():
     """Example observation list for testing."""
-    datastore = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1")
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     obs_ids = [23523, 23526]
     return datastore.get_observations(obs_ids)
 
@@ -63,7 +63,7 @@ def extraction(bkg_estimate, observations):
     )
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestSpectrumExtraction:
     @pytest.mark.parametrize(
         "pars, results",

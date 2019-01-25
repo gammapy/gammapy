@@ -30,7 +30,7 @@ def bkg_3d():
     )
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_background_3d_basics(bkg_3d):
     assert "NDDataArray summary info" in str(bkg_3d.data)
 

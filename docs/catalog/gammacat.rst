@@ -19,16 +19,12 @@ Catalog
 
 The gamma-cat catalog is available here:
 
-* ``$GAMMA_CAT/output/gammacat.fits.gz``: latest version
-* ``$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz``:
-  a stable version copied to the ``gammapy-extra`` repo, used for the
-  ``gammapy.catalog.gammacat`` tests.
+* ``$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz``: latest version.
 
 To work with the gamma-cat catalog from Gammapy, pick a version and create a
 `~gammapy.catalog.SourceCatalogGammaCat`::
 
     from gammapy.catalog import SourceCatalogGammaCat
-    filename = '$GAMMA_CAT/output/gammacat.fits.gz'
     filename = '$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz'
     cat = SourceCatalogGammaCat(filename)
 
@@ -43,16 +39,12 @@ JSON index file summarising all available data and containing pointers to the ot
 
 It is available here:
 
-* ``$GAMMA_CAT/output/gammacat-datasets.json``: latest version
-* ``$GAMMAPY_DATA/catalogs/gammacat/gammacat-datasets.json``:
-  a stable version copied to the ``gammapy-extra`` repo, used for the
-  ``gammapy.catalog.gammacat`` tests.
+* ``$GAMMAPY_DATA/catalogs/gammacat/gammacat-datasets.json``: latest version
 
 To work with the gamma-cat data collection from Gammapy, pick a version and
 create a `~gammapy.catalog.GammaCatDataCollection` class::
 
     from gammapy.catalog import GammaCatDataCollection
-    filename = '$GAMMA_CAT/output/gammacat-datasets.json'
     filename = '$GAMMAPY_DATA/catalogs/gammacat/gammacat-datasets.json'
     gammacat = GammaCatDataCollection.from_index(filename)
 

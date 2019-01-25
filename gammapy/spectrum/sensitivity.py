@@ -35,7 +35,7 @@ class SensitivityEstimator(object):
     bkg_sys : float, optional
         Fraction of Background systematics relative to the number of ON counts
 
-    An example can be found in :gp-extra-notebook:`cta_sensitivity` .
+    An example can be found in :gp-notebook:`cta_sensitivity` .
 
     Notes
     -----

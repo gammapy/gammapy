@@ -6,11 +6,11 @@ from ...utils.testing import requires_data, assert_time_allclose
 from ..pointing import PointingInfo
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestPointingInfo:
     @classmethod
     def setup_class(cls):
-        filename = "$GAMMAPY_EXTRA/test_datasets/hess_event_list.fits"
+        filename = "$GAMMAPY_DATA/tests/hess_event_list.fits"
         cls.pointing_info = PointingInfo.read(filename)
 
     def test_str(self):

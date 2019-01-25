@@ -12,7 +12,6 @@ import time
 log = logging.getLogger(__name__)
 
 OFF = [
-    "CTADATA",
     "GAMMA_CAT",
     "GAMMAPY_DATA",
     "GAMMAPY_EXTRA",

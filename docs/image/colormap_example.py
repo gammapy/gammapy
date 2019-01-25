@@ -7,7 +7,7 @@ from astropy.visualization import LinearStretch
 from gammapy.image import colormap_hess, colormap_milagro
 from gammapy.maps import Map
 
-filename = "$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/expected_ts_0.000.fits.gz"
+filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/expected_ts_0.000.fits.gz"
 image = Map.read(filename, hdu="SQRT_TS")
 
 # Plot with the HESS and Milagro colormap

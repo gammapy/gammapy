@@ -12,7 +12,7 @@ from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 @pytest.fixture(scope="session")
 def aeff():
     filename = (
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
     return EffectiveAreaTable2D.read(filename, hdu="AEFF")
 
@@ -22,7 +22,7 @@ class TestEffectiveAreaTable2D:
     # TODO: split this out into separate tests, especially the plotting
     # Add I/O test
     @staticmethod
-    @requires_data("gammapy-extra")
+    @requires_data("gammapy-data")
     def test(aeff):
         assert aeff.data.axis("energy").nbins == 96
         assert aeff.data.axis("offset").nbins == 6
@@ -61,7 +61,7 @@ class TestEffectiveAreaTable2D:
 
     @staticmethod
     @requires_dependency("matplotlib")
-    @requires_data("gammapy-extra")
+    @requires_data("gammapy-data")
     def test_plot(aeff):
         with mpl_plot_check():
             aeff.plot()
@@ -76,7 +76,7 @@ class TestEffectiveAreaTable2D:
 class TestEffectiveAreaTable:
     @staticmethod
     @requires_dependency("matplotlib")
-    @requires_data("gammapy-extra")
+    @requires_data("gammapy-data")
     def test_EffectiveAreaTable(tmpdir, aeff):
         arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 

@@ -240,10 +240,10 @@ class TestSkyDiffuseCube:
         assert_allclose(q.value.mean(), 42)
 
     @staticmethod
-    @requires_data("gammapy-extra")
+    @requires_data("gammapy-data")
     def test_read():
         model = SkyDiffuseCube.read(
-            "$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits"
+            "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"
         )
         assert model.map.unit == "cm-2 s-1 MeV-1 sr-1"
 

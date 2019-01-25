@@ -26,7 +26,7 @@ class PointingInfo(object):
     Examples
     --------
     >>> from gammapy.data import PointingInfo
-    >>> pointing_info = PointingInfo.read('$GAMMAPY_EXTRA/test_datasets/hess_event_list.fits')
+    >>> pointing_info = PointingInfo.read('$GAMMAPY_DATA/tests/hess_event_list.fits')
     >>> print(pointing_info)
     """
 

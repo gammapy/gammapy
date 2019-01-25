@@ -25,7 +25,7 @@ advanced image analysis and source detection methods readily available.
 Computation of TS images
 ========================
 
-.. gp-extra-image:: detect/fermi_ts_image.png
+.. gp-image:: detect/fermi_ts_image.png
     :width: 100%
 
 Test statistics image computed using `~gammapy.detect.TSMapEstimator` for an
@@ -110,7 +110,7 @@ Using `gammapy.detect`
 
 :ref:`tutorials` that show examples using ``gammapy.detect``:
 
-* :gp-extra-notebook:`detect_ts`
+* :gp-notebook:`detect_ts`
 
 Reference/API
 =============

@@ -150,17 +150,17 @@ def test_compute_flux_points_dnde_exp(method):
 
 @pytest.fixture(params=FLUX_POINTS_FILES, scope="session")
 def flux_points(request):
-    path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/" + request.param
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/" + request.param
     return FluxPoints.read(path)
 
 
 @pytest.fixture(scope="session")
 def flux_points_likelihood():
-    path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/binlike.fits"
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits"
     return FluxPoints.read(path).to_sed_type("dnde")
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestFluxPoints:
     def test_info(self, flux_points):
         info = str(flux_points)
@@ -222,7 +222,7 @@ class TestFluxPoints:
             flux_points_likelihood.plot_likelihood()
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_compute_flux_points_dnde_fermi():
     """
     Test compute_flux_points_dnde on fermi source.
@@ -240,7 +240,7 @@ def test_compute_flux_points_dnde_fermi():
 
 @pytest.fixture(scope="session")
 def sed_flux_points():
-    path = "$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/diff_flux_points.fits"
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     fp = FluxPoints.read(path)
     fp.table["e_ref"] = fp.e_ref.to("TeV")
     return fp
@@ -251,7 +251,7 @@ def sed_model():
     return PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestFluxPointFit:
     @requires_dependency("iminuit")
     def test_fit_pwl_minuit(self, sed_model, sed_flux_points):

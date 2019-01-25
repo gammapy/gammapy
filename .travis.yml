@@ -37,7 +37,7 @@ env:
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
-        - FETCH_GAMMAPY_EXTRA=true
+        - FETCH_GAMMAPY_EXTRA=false
         - FETCH_GAMMAPY_DATA=true
         - PACKAGING_TEST=false
         - TEST_FERMIPY=false

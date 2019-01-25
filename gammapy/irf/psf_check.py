@@ -31,7 +31,7 @@ class PSF3DChecker(object):
     To check a PSF, load it, run the checker and look at the results dict::
 
         from gammapy.irf import PSF3D, PSF3DChecker
-        filename = '$GAMMAPY_EXTRA/datasets/hess-hap-hd-prod3/psf_table.fits.gz'
+        filename = '$GAMMAPY_DATA/tests/hess-hap-hd-prod3/psf_table.fits.gz'
         psf = PSF3D.read(filename)
         checker = PSF3DChecker(psf)
         print('config: ', checker.config)

@@ -13,7 +13,7 @@ from ..asmooth import ASmooth
 @pytest.fixture(scope="session")
 def input_maps():
     filename = (
-        "$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz"
+        "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
     )
     return {
         "counts": Map.read(filename, hdu="counts"),
@@ -21,7 +21,7 @@ def input_maps():
     }
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_asmooth(input_maps):
     kernel = Tophat2DKernel
     scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg

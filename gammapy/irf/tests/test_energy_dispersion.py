@@ -95,13 +95,13 @@ class TestEnergyDispersion:
             self.edisp.peek()
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp (see below)
         # At the moment only 1 test uses it (test_get_response)
         filename = (
-            "$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz"
+            "$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz"
         )
         self.edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
 

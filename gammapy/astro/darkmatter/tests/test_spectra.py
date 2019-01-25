@@ -6,7 +6,7 @@ from ....utils.testing import assert_quantity_allclose, requires_data
 from .. import PrimaryFlux
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_primary_flux():
     with pytest.raises(ValueError):
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)

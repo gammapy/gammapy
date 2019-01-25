@@ -63,9 +63,9 @@ def test_sky_diffuse_constant():
     assert_allclose(val.value, 42)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_sky_diffuse_map():
-    filename = "$GAMMAPY_EXTRA/datasets/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     model = SkyDiffuseMap.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
@@ -75,7 +75,7 @@ def test_sky_diffuse_map():
     assert_allclose(val.value, desired)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)

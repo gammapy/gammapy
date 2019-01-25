@@ -31,7 +31,7 @@ def geom_etrue(ebounds_true):
 
 
 def exposure(geom_etrue):
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     exposure_map = make_map_exposure_true_energy(
@@ -56,7 +56,7 @@ def edisp(geom, geom_etrue):
 
 
 def psf(geom_etrue):
-    filename = "$GAMMAPY_EXTRA/datasets/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
@@ -90,7 +90,7 @@ def counts(sky_model, exposure, background, psf, edisp):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_map_fit(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 3)
     ebounds_true = np.logspace(-1.0, 1.0, 4)
@@ -140,7 +140,7 @@ def test_map_fit(sky_model):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_map_fit_one_energy_bin(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 2)
     geom_r = geom(ebounds)
@@ -187,7 +187,7 @@ def test_map_fit_one_energy_bin(sky_model):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_map_fit_bkg(sky_model):
     # To test model background evaluation fitting
     ebounds = np.logspace(-1.0, 1.0, 3)

@@ -7,10 +7,10 @@ from ...data import DataStore
 
 @pytest.fixture(scope="session")
 def data_store():
-    return DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+    return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_datastore_hd_hap(data_store):
     """Test HESS HAP-HD data access."""
     obs = data_store.obs(obs_id=23523)
@@ -28,26 +28,26 @@ def test_datastore_hd_hap(data_store):
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_3d.PSF3D'>"
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_datastore_from_dir():
     """Test the `from_dir` method."""
     data_store_rel_path = DataStore.from_dir(
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/",
+        "$GAMMAPY_DATA/hess-dl3-dr1/",
         "hdu-index.fits.gz",
         "obs-index.fits.gz",
     )
 
     data_store_abs_path = DataStore.from_dir(
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/",
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/hdu-index.fits.gz",
-        "$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/obs-index.fits.gz",
+        "$GAMMAPY_DATA/hess-dl3-dr1/",
+        "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz",
+        "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz",
     )
 
     assert "Data store" in data_store_rel_path.info(show=False)
     assert "Data store" in data_store_abs_path.info(show=False)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_datastore_from_file():
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz"
     data_store = DataStore.from_file(filename)
@@ -57,7 +57,7 @@ def test_datastore_from_file():
     obs.bkg
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_datastore_get_observations(data_store):
     """Test loading data and IRF files via the DataStore"""
     observations = data_store.get_observations([23523, 23592])
@@ -70,7 +70,7 @@ def test_datastore_get_observations(data_store):
     assert observations[0].obs_id == 23523
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_datastore_subset(tmpdir, data_store):
     """Test creating a datastore as subset of another datastore"""
     selected_obs = data_store.obs_table.select_obs_id([23523, 23592])
@@ -97,11 +97,11 @@ def test_datastore_subset(tmpdir, data_store):
     assert len(substore.hdu_table) == 2
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 class TestDataStoreChecker:
     def setup(self):
         self.data_store = DataStore.from_dir(
-            "$GAMMAPY_EXTRA/datasets/cta-1dc/index/gps"
+            "$GAMMAPY_DATA/cta-1dc/index/gps"
         )
 
     def test_check_all(self):

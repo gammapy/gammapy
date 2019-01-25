@@ -48,7 +48,7 @@ class PhaseCurveTableModel(Model):
         from astropy.table import Table
         from gammapy.utils.scripts import make_path
         from gammapy.time.models import PhaseCurveTableModel
-        filename = make_path('$GAMMAPY_EXTRA/test_datasets/phasecurve_LSI_DC.fits')
+        filename = make_path('$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits')
         table = Table.read(str(filename))
         phase_curve = PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
 
@@ -144,7 +144,7 @@ class LightCurveTableModel(Model):
     Read an example light curve object:
 
     >>> from gammapy.time.models import LightCurveTableModel
-    >>> path = '$GAMMAPY_EXTRA/test_datasets/models/light_curve/lightcrv_PKSB1222+216.fits'
+    >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
     >>> light_curve = LightCurveTableModel.read(path)
 
     Show basic information about the lightcurve:

@@ -940,8 +940,8 @@ class Map(object):
 
             from gammapy.maps import Map
 
-            m = Map.read("$GAMMAPY_EXTRA/datasets/vela_region/gll_iem_v05_rev1_cutout.fits")
-            m.plot_interactive(cmap='gnuplot2')
+            m = Map.read("$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits")
+            m.plot_interactive(add_cbar=True, stretch="sqrt")
 
         If you would like to adjust the figure size you can use the ``rc_params`` argument::
 

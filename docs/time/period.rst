@@ -176,7 +176,7 @@ the X-ray binary LS 5039 is used, observed  in 2005 with H.E.S.S. at energies
 above :math:`0.1 \mathrm{TeV}` [4]_. The robust periodogram reveals the period
 of :math:`P = (3.907 \pm 0.001) \mathrm{d}` in agreement with [5]_ and [6]_.
 
-.. gp-extra-image:: time/example_robust_periodogram.png
+.. gp-image:: time/example_robust_periodogram.png
     :width: 100%
 
 The maximum FAP of the highest periodogram peak is estimated to
@@ -208,7 +208,7 @@ The periodogram has many spurious peaks, which are due to several factors:
    This is the periodogram of the observation window and can be computed
    by setting ``flux`` and ``flux err`` to one and running `astropy.stats.LombScargle`.
 
-   .. gp-extra-image:: time/example_spectral_window_function.png
+   .. gp-image:: time/example_spectral_window_function.png
        :width: 100%
 
    It shows a prominent peak around one day that arises from the nightly

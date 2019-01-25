@@ -18,11 +18,11 @@ def test_event_filter_types():
 
 @pytest.fixture(scope="session")
 def observation():
-    ds = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-dl3-dr1/")
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     return ds.obs(20136)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_empty_observation_filter(observation):
     empty_obs_filter = ObservationFilter()
 
@@ -35,7 +35,7 @@ def test_empty_observation_filter(observation):
     assert filtered_gti == gti
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_filter_events(observation):
     custom_filter = {
         "type": "custom",
@@ -67,7 +67,7 @@ def test_filter_events(observation):
     assert np.all(region.center.separation(filtered_events.radec) < region_radius)
 
 
-@requires_data("gammapy-extra")
+@requires_data("gammapy-data")
 def test_filter_gti(observation):
     time_filter = Time([53090.125, 53090.130], format="mjd", scale="tt")
 
