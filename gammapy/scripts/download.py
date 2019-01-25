@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
-from .downloadclass import DownloadProcess
+from .downloadclasses import ComputePlan, ParallelDownload
 
 log = logging.getLogger(__name__)
 
@@ -17,35 +17,66 @@ log = logging.getLogger(__name__)
     show_default=True,
 )
 @click.option("--release", default="", help="Gammapy release environment.")
-def cli_download_notebooks(src, out, release):
+@click.option("--modetutorials", default=False, hidden=True)
+def cli_download_notebooks(src, out, release, modetutorials):
     """Download notebooks"""
-    downloadproc = DownloadProcess(src, out, release, "notebooks", False)
 
-    downloadproc.setup()
-    downloadproc.files()
-    downloadproc.run()
+    plan = ComputePlan(src, out, release, "notebooks")
+    if release:
+        plan.getenvironment()
+    down = ParallelDownload(
+        plan.getfilelist(), plan.getlocalfolder(), release, "notebooks", modetutorials
+    )
+    down.run()
+    down.show_info()
+
+
+@click.command(name="scripts")
+@click.option("--src", default="", help="Specific script to download.")
+@click.option(
+    "--out",
+    default="gammapy-scripts",
+    help="Path where the versioned python scripts will be copied.",
+    show_default=True,
+)
+@click.option("--release", default="", help="Gammapy release environment.")
+@click.option("--modetutorials", default=False, hidden=True)
+def cli_download_scripts(src, out, release, modetutorials):
+    """Download scripts"""
+
+    plan = ComputePlan(src, out, release, "scripts")
+    if release:
+        plan.getenvironment()
+    down = ParallelDownload(
+        plan.getfilelist(), plan.getlocalfolder(), release, "scripts", modetutorials
+    )
+    down.run()
+    down.show_info()
 
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
+@click.option("--release", default="", help="Gammapy release environment.")
 @click.option(
     "--out",
     default="gammapy-datasets",
     help="Path where datasets will be copied.",
     show_default=True,
 )
-def cli_download_datasets(src, out):
+@click.option("--modetutorials", default=False, hidden=True)
+def cli_download_datasets(src, out, release, modetutorials):
     """Download datasets"""
-    downloadproc = DownloadProcess(src, out, "", "datasets", False)
 
-    downloadproc.setup()
-    downloadproc.files()
-    downloadproc.run()
-
-    downloadproc.show_info()
+    plan = ComputePlan(src, out, release, "datasets", modetutorials=modetutorials)
+    down = ParallelDownload(
+        plan.getfilelist(), plan.getlocalfolder(), release, "datasets", modetutorials
+    )
+    down.run()
+    down.show_info()
 
 
 @click.command(name="tutorials")
+@click.pass_context
 @click.option("--src", default="", help="Specific tutorial to download.")
 @click.option(
     "--out",
@@ -54,16 +85,10 @@ def cli_download_datasets(src, out):
     show_default=True,
 )
 @click.option("--release", default="", help="Gammapy release environment.")
-def cli_download_tutorials(src, out, release):
-    """Download tutorial notebooks and datasets"""
-    downnotebooks = DownloadProcess(src, out, release, "notebooks", True)
-    downnotebooks.setup()
-    downnotebooks.files()
-    downnotebooks.run()
+@click.option("--modetutorials", default=True, hidden=True)
+def cli_download_tutorials(ctx, src, out, release, modetutorials):
+    """Download notebooks, scripts and datasets"""
 
-    downdatasets = DownloadProcess(src, out, release, "datasets", True)
-    downdatasets.setup()
-    downdatasets.files()
-    downdatasets.run()
-
-    downnotebooks.show_info()
+    ctx.forward(cli_download_notebooks)
+    ctx.forward(cli_download_scripts)
+    ctx.forward(cli_download_datasets)
