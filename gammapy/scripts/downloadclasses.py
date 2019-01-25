@@ -115,12 +115,9 @@ class ComputePlan(object):
         if self.option == "datasets":
             if self.modetutorials:
                 if self.release:
-                    namefolder = "datasets-" + self.version
+                    namefolder = "datasets-" + self.release
                 else:
                     namefolder = "datasets"
-            else:
-                if self.release:
-                    self.outfolder = Path("gammapy-datasets-" + self.version)
 
         if namefolder:
             self.outfolder = self.outfolder / namefolder
@@ -137,11 +134,11 @@ class ComputePlan(object):
                     record = self.listfiles[keyrec]
                     self.listfiles = {}
                     self.listfiles[keyrec] = record
-                    self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
                 else:
                     self.listfiles = {}
                     if not self.modetutorials:
                         log.warning("Notebook {} not found".format(self.src))
+            self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
 
         if (self.option == "scripts" or self.modetutorials) and not self.listfiles:
             self.parse_scripts_yaml()
@@ -185,7 +182,7 @@ class ComputePlan(object):
                             for ds in record["datasets"]:
                                 datafound.update(dict(parse_datafiles(ds, datasets)))
                 if not datafound:
-                    log.info("No datasets found".format(self.src))
+                    log.info("No datasets found")
                     sys.exit()
             self.listfiles = datafound
 
@@ -280,6 +277,8 @@ class ParallelDownload(object):
             if self.modetutorials:
                 GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
                 if self.release:
+                    datafolder = "datasets-" + self.release
+                    GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / datafolder
                     print(
                         "*** Enter the following commands below to get started with this version of Gammapy"
                     )
