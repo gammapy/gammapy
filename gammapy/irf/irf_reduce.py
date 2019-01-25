@@ -137,3 +137,43 @@ def make_mean_edisp(
     irf_stack.stack_edisp()
 
     return irf_stack.stacked_edisp
+
+
+def apply_containment_fraction(aeff, psf, radius):
+    """ Estimate PSF containment inside a given radius and correct effective area for leaking flux.
+
+    Parameters
+    ----------
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        the input 1D effective area
+    psf : `~gammapy.irf.EnergyDependentPSFTable`
+        the input 1D PSF
+    radius : `~astropy.coordinates.Angle`
+        the maximum angle
+
+    Returns
+    -------
+    correct_aeff : `~gammapy.irf.EffectiveAreaTable`
+        the output corrected 1D effective area
+    """
+    center_energies = aeff.energy.nodes
+    containment = []
+    for index, energy in enumerate(center_energies):
+        try:
+            cont_ = psf.integral(energy, 0.0 * u.deg, radius)
+        except:
+            msg = "Containment correction failed for bin {}, energy {}."
+            log.warning(msg.format(index, energy))
+            cont_ = 1
+        finally:
+            containment.append(cont_)
+
+    containment = np.array(containment)
+
+    corrected_aeff = EffectiveAreaTable(
+        aeff.energy.lo,
+        aeff.energy.hi,
+        data=aeff.data.data * containment,
+        meta=aeff.meta,
+    )
+    return corrected_aeff
