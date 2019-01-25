@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import logging
 
 __all__ = ["ObservationFilter"]
@@ -94,3 +95,7 @@ class ObservationFilter(object):
             return data.select_time(self.time_filter)
         else:
             return data
+
+    def copy(self):
+        """Copy the `ObservationFilter` object."""
+        return copy.deepcopy(self)

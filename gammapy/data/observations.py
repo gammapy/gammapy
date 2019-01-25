@@ -228,6 +228,25 @@ class DataStoreObservation(object):
         """Quick-look plots in a few panels."""
         raise NotImplementedError
 
+    def select_time(self, time_interval):
+        """Select a time interval of the observation.
+
+        Parameter
+        ---------
+        time_interval : `astropy.time.Time`
+            Start and stop time of the selected time interval. For now we only support a single time interval.
+
+        Returns
+        -------
+        new_obs : `~gammapy.data.DataStoreObservation`
+            A new observation instance of the specified time interval
+        """
+        new_obs_filter = self.obs_filter.copy()
+        new_obs_filter.time_filter = time_interval
+
+        return self.__class__(
+            obs_id=self.obs_id, data_store=self.data_store, obs_filter=new_obs_filter
+        )
 
     def check(self, checks="all"):
         """Run checks.
@@ -262,6 +281,27 @@ class Observations(object):
         for obs in self:
             s += str(obs)
         return s
+
+    def select_time(self, time_interval):
+        """Select a time interval of the observations.
+
+        Parameter
+        ---------
+        time_interval : `astropy.time.Time`
+            Start and stop time of the selected time interval. For now we only support a single time interval.
+
+        Returns
+        -------
+        new_observations : `~gammapy.data.Observations`
+            A new observations instance of the specified time interval
+        """
+        new_obs_list = []
+        for obs in self:
+            new_obs = obs.select_time(time_interval)
+            if len(new_obs.gti.table) > 0:
+                new_obs_list.append(new_obs)
+
+        return self.__class__(new_obs_list)
 
 
 class ObservationChecker(Checker):
