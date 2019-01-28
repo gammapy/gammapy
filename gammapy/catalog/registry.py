@@ -27,8 +27,6 @@ class SourceCatalogRegistry(object):
         """
         source_catalogs = cls()
 
-        import os
-
         from .hess import SourceCatalogHGPS
 
         source_catalogs.register("hgps", SourceCatalogHGPS)
