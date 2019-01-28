@@ -41,22 +41,21 @@ def get_file(ftuple):
 
 
 def parse_datafiles(datasearch, datasetslist):
-    datafiles = {}
     for dataset in datasetslist:
         if datasearch == dataset["name"] or datasearch == "":
             if dataset["files"]:
                 for ds in dataset["files"]:
                     label = ds["path"]
-                    datafiles[label] = {}
-                    datafiles[label]["url"] = ds["url"]
-                    datafiles[label]["path"] = ds["path"]
+                    data = {
+                        "url": ds["url"],
+                        "path": ds["path"],
+                    }
                     if "hashmd5" in ds:
-                        datafiles[label]["hashmd5"] = ds["hashmd5"]
-                    yield label, datafiles[label]
+                        data["hashmd5"] = ds["hashmd5"]
+                    yield label, data
 
 
 def parse_imagefiles(notebookslist):
-    imagefiles = {}
     for item in notebookslist:
         record = notebookslist[item]
         if "images" in record:
@@ -67,10 +66,11 @@ def parse_imagefiles(notebookslist):
                     filename_img = record["url"][record["url"].rfind("/") :]
                     url = record["url"].replace(filename_img, "")
                     url = url + "/" + path
-                    imagefiles[label] = {}
-                    imagefiles[label]["url"] = url
-                    imagefiles[label]["path"] = path
-                    yield label, imagefiles[label]
+                    data = {
+                        "url": url,
+                        "path": path,
+                    }
+                    yield label, data
 
 
 class ComputePlan(object):
@@ -125,7 +125,6 @@ class ComputePlan(object):
         return self.outfolder
 
     def getfilelist(self):
-
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
             if self.src != "":
@@ -154,7 +153,6 @@ class ComputePlan(object):
                         log.warning("Script {} not found".format(self.src))
 
         if self.option == "datasets":
-
             if self.modetutorials and not self.listfiles:
                 sys.exit()
 
@@ -189,7 +187,6 @@ class ComputePlan(object):
         return self.listfiles
 
     def parse_notebooks_yaml(self):
-
         if self.release:
             filename_nbs = "gammapy-" + self.version + "-tutorials.yml"
             url = BASE_URL + "/tutorials/" + filename_nbs
@@ -217,7 +214,6 @@ class ComputePlan(object):
                         self.listfiles[label]["images"].append(im)
 
     def parse_scripts_yaml(self):
-
         if self.release:
             filename_scripts = "gammapy-" + self.version + "-scripts.yml"
             url = BASE_URL + "/tutorials/" + filename_scripts

@@ -13,7 +13,6 @@ def files_dir(tmpdir_factory):
 
 @pytest.fixture(scope="session")
 def config():
-
     return dict(
         release="0.8",
         dataset="cta-1dc",
@@ -31,7 +30,6 @@ def test_cli_download_help():
 
 @pytest.mark.remote_data
 def test_cli_download_datasets(files_dir, config):
-
     option_out = "--out={}".format(files_dir)
     option_src = "--src={}".format(config["dataset"])
     option_release = "--release={}".format(config["release"])
@@ -44,7 +42,6 @@ def test_cli_download_datasets(files_dir, config):
 
 @pytest.mark.remote_data
 def test_cli_download_notebooks(files_dir, config):
-
     option_out = "--out={}".format(files_dir)
     option_src = "--src={}".format(config["notebook"])
     option_release = "--release={}".format(config["release"])
@@ -60,7 +57,6 @@ def test_cli_download_notebooks(files_dir, config):
 
 @pytest.mark.remote_data
 def test_cli_download_scripts(files_dir, config):
-
     option_out = "--out={}".format(files_dir)
     option_src = "--src={}".format(config["script"])
     option_release = "--release={}".format(config["release"])
@@ -75,7 +71,6 @@ def test_cli_download_scripts(files_dir, config):
 
 @pytest.mark.remote_data
 def test_cli_download_tutorials(files_dir, config):
-
     option_out = "--out={}".format(files_dir)
     nboption_src = "--src={}".format(config["notebook"])
     scoption_src = "--src={}".format(config["notebook"])

@@ -20,7 +20,6 @@ log = logging.getLogger(__name__)
 @click.option("--modetutorials", default=False, hidden=True)
 def cli_download_notebooks(src, out, release, modetutorials):
     """Download notebooks"""
-
     plan = ComputePlan(src, out, release, "notebooks")
     if release:
         plan.getenvironment()
@@ -43,7 +42,6 @@ def cli_download_notebooks(src, out, release, modetutorials):
 @click.option("--modetutorials", default=False, hidden=True)
 def cli_download_scripts(src, out, release, modetutorials):
     """Download scripts"""
-
     plan = ComputePlan(src, out, release, "scripts")
     if release:
         plan.getenvironment()
@@ -66,7 +64,6 @@ def cli_download_scripts(src, out, release, modetutorials):
 @click.option("--modetutorials", default=False, hidden=True)
 def cli_download_datasets(src, out, release, modetutorials):
     """Download datasets"""
-
     plan = ComputePlan(src, out, release, "datasets", modetutorials=modetutorials)
     down = ParallelDownload(
         plan.getfilelist(), plan.getlocalfolder(), release, "datasets", modetutorials
@@ -88,7 +85,6 @@ def cli_download_datasets(src, out, release, modetutorials):
 @click.option("--modetutorials", default=True, hidden=True)
 def cli_download_tutorials(ctx, src, out, release, modetutorials):
     """Download notebooks, scripts and datasets"""
-
     ctx.forward(cli_download_notebooks)
     ctx.forward(cli_download_scripts)
     ctx.forward(cli_download_datasets)
