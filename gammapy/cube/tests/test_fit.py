@@ -220,5 +220,5 @@ def test_map_fit_bkg(sky_model):
         background_model=background_model,
     )
     result = fit.run()
-    assert_allclose(background_model.parameters["norm"].value, 0.98307, rtol=1e-5)
-    assert_allclose(result.total_stat, 5417.350046)
+    assert_allclose(background_model.parameters["norm"].value, 0.98307, rtol=1e-3)
+    assert_allclose(result.total_stat, 5417.350, atol=0.01)
