@@ -68,7 +68,9 @@ matrix:
 
         # The main build that's used for coverage measurement
         - os: linux
-          env: PYTHON_VERSION=3.7 SETUP_CMD='test -V --coverage'
+          # TODO: do we need html output? Or whould we set `--junitxml=somefile.xml`?
+          env: PYTHON_VERSION=3.7 COVERAGE_BUILD=true
+               MAIN_CMD='python -m pytest gammapy --cov=gammapy --cov-report=html'
 
         # Run tests without optional dependencies
         - os: linux
@@ -191,6 +193,6 @@ script:
       fi
 
 after_success:
-    - if [[ $SETUP_CMD == 'test -V --coverage' ]]; then
+    - if $COVERAGE_BUILD; then
           coveralls --rcfile='gammapy/tests/coveragerc';
       fi
