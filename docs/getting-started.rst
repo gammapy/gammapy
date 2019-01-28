@@ -41,14 +41,14 @@ Besides the software included in the Anaconda distribution, it gives you the
 create a dedicated environment for the latest stable Gammapy version and a known
 good set of Gammapy dependencies (e.g. Python, Numpy and Astropy).
 
-Once Anaconda has been installed, use the following commands to install and activate the ``gammapy-0.9`` conda
-environment:
+Once Anaconda has been installed, use the following commands to install and activate
+the ``gammapy-0.10`` conda environment:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.9-environment.yml
-    conda env create -f gammapy-0.9-environment.yml
-    conda activate gammapy-0.9
+    curl -O https://gammapy.org/download/install/gammapy-0.10-environment.yml
+    conda env create -f gammapy-0.10-environment.yml
+    conda activate gammapy-0.10
 
 On Windows, comment out the lines for ``sherpa`` and ``healpy`` in the
 environment YAML file. These are optional dependencies that we are currently
@@ -65,7 +65,7 @@ Congratulations! You are all set to start using Gammapy!
 
 .. code-block:: bash
 
-    conda activate gammapy-0.9
+    conda activate gammapy-0.10
 
 Download tutorials
 ------------------
