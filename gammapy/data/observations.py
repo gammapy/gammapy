@@ -231,10 +231,11 @@ class DataStoreObservation(object):
     def select_time(self, time_interval):
         """Select a time interval of the observation.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         time_interval : `astropy.time.Time`
-            Start and stop time of the selected time interval. For now we only support a single time interval.
+            Start and stop time of the selected time interval.
+            For now we only support a single time interval.
 
         Returns
         -------
@@ -285,10 +286,11 @@ class Observations(object):
     def select_time(self, time_interval):
         """Select a time interval of the observations.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         time_interval : `astropy.time.Time`
-            Start and stop time of the selected time interval. For now we only support a single time interval.
+            Start and stop time of the selected time interval.
+            For now we only support a single time interval.
 
         Returns
         -------
