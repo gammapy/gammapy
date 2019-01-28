@@ -100,9 +100,7 @@ class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp (see below)
         # At the moment only 1 test uses it (test_get_response)
-        filename = (
-            "$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz"
-        )
+        filename = "$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz"
         self.edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
 
         # Make a test case

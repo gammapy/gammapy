@@ -31,7 +31,9 @@ def geom_etrue(ebounds_true):
 
 
 def exposure(geom_etrue):
-    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
     aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
     exposure_map = make_map_exposure_true_energy(
@@ -56,7 +58,9 @@ def edisp(geom, geom_etrue):
 
 
 def psf(geom_etrue):
-    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)

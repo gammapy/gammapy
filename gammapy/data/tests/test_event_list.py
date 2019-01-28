@@ -28,7 +28,9 @@ class TestEventListBase:
 @requires_data("gammapy-data")
 class TestEventListHESS:
     def setup(self):
-        filename = "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
+        filename = (
+            "$GAMMAPY_DATA/tests/unbundled/hess/run_0023037_hard_eventlist.fits.gz"
+        )
         self.events = EventList.read(filename)
 
     def test_basics(self):

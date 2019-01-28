@@ -10,9 +10,7 @@ from ...detect import TSMapEstimator
 
 @pytest.fixture(scope="session")
 def input_maps():
-    filename = (
-        "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
-    )
+    filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
     return {
         "counts": Map.read(filename, hdu="counts"),
         "exposure": Map.read(filename, hdu="exposure"),

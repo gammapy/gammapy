@@ -5,7 +5,8 @@ import os
 from . import version
 
 from astropy.version import version as astropy_version
-if astropy_version < '3.0':
+
+if astropy_version < "3.0":
     # With older versions of Astropy, we actually need to import the pytest
     # plugins themselves in order to make them discoverable by pytest.
     from astropy.tests.pytest_plugins import *

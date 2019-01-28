@@ -125,9 +125,14 @@ class GTI(object):
         # crop the GTIs
         start_met = time_relative_to_ref(time_interval[0], self.table.meta)
         stop_met = time_relative_to_ref(time_interval[1], self.table.meta)
-        np.clip(gti_within['START'], start_met.value, stop_met.value, out=gti_within['START'])
-        np.clip(gti_within['STOP'], start_met.value, stop_met.value, out=gti_within['STOP'])
+        np.clip(
+            gti_within["START"],
+            start_met.value,
+            stop_met.value,
+            out=gti_within["START"],
+        )
+        np.clip(
+            gti_within["STOP"], start_met.value, stop_met.value, out=gti_within["STOP"]
+        )
 
         return self.__class__(gti_within)
-
-

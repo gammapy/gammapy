@@ -32,9 +32,7 @@ def test_datastore_hd_hap(data_store):
 def test_datastore_from_dir():
     """Test the `from_dir` method."""
     data_store_rel_path = DataStore.from_dir(
-        "$GAMMAPY_DATA/hess-dl3-dr1/",
-        "hdu-index.fits.gz",
-        "obs-index.fits.gz",
+        "$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "obs-index.fits.gz"
     )
 
     data_store_abs_path = DataStore.from_dir(
@@ -100,9 +98,7 @@ def test_datastore_subset(tmpdir, data_store):
 @requires_data("gammapy-data")
 class TestDataStoreChecker:
     def setup(self):
-        self.data_store = DataStore.from_dir(
-            "$GAMMAPY_DATA/cta-1dc/index/gps"
-        )
+        self.data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
     def test_check_all(self):
         records = list(self.data_store.check())

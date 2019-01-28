@@ -29,13 +29,7 @@ class ObservationStats(Stats):
     """
 
     def __init__(
-        self,
-        n_on=None,
-        n_off=None,
-        a_on=None,
-        a_off=None,
-        obs_id=None,
-        livetime=None,
+        self, n_on=None, n_off=None, a_on=None, a_off=None, obs_id=None, livetime=None
     ):
         super(ObservationStats, self).__init__(
             n_on=n_on, n_off=n_off, a_on=a_on, a_off=a_off
@@ -152,7 +146,7 @@ class ObservationStats(Stats):
         """
         return {
             "obs_id": self.obs_id,
-            "livetime": self.livetime.to('min'),
+            "livetime": self.livetime.to("min"),
             "n_on": self.n_on,
             "n_off": self.n_off,
             "a_on": self.a_on,
@@ -161,8 +155,8 @@ class ObservationStats(Stats):
             "background": self.background,
             "excess": self.excess,
             "sigma": self.sigma,
-            "gamma_rate": self.gamma_rate.to('1/min'),
-            "bg_rate": self.bg_rate.to('1/min'),
+            "gamma_rate": self.gamma_rate.to("1/min"),
+            "bg_rate": self.bg_rate.to("1/min"),
         }
 
     def __str__(self):
@@ -180,8 +174,8 @@ class ObservationStats(Stats):
         ss += "Excess: {:.2f}\n".format(self.excess)
         if self.background > 0:
             ss += "Excess / Background: {:.2f}\n".format(self.excess / self.background)
-        ss += "Gamma rate: {:.2f}\n".format(self.gamma_rate.to('1/min'))
-        ss += "Bkg rate: {:.2f}\n".format(self.bg_rate.to('1/min'))
+        ss += "Gamma rate: {:.2f}\n".format(self.gamma_rate.to("1/min"))
+        ss += "Bkg rate: {:.2f}\n".format(self.bg_rate.to("1/min"))
         ss += "Sigma: {:.2f}\n".format(self.sigma)
 
         return ss

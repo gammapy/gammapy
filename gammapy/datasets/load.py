@@ -129,9 +129,7 @@ def load_crab_flux_points(component="both"):
     Aleksic et al. Astron. Astrophys. 540 2012
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
     """
-    filename = gammapy_data.filename(
-        "tests/unbundled/tev_spectra/crab_mwl.fits.gz"
-    )
+    filename = gammapy_data.filename("tests/unbundled/tev_spectra/crab_mwl.fits.gz")
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", UnitsWarning)

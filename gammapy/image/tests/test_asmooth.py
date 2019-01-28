@@ -12,9 +12,7 @@ from ..asmooth import ASmooth
 
 @pytest.fixture(scope="session")
 def input_maps():
-    filename = (
-        "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
-    )
+    filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
     return {
         "counts": Map.read(filename, hdu="counts"),
         "background": Map.read(filename, hdu="background"),
@@ -31,7 +29,7 @@ def test_asmooth(input_maps):
 
     desired = {
         "counts": 6.454327,
-        "background": 1.,
+        "background": 1.0,
         "scale": 0.056419,
         "significance": 18.125747,
     }

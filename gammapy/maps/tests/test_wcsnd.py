@@ -510,7 +510,9 @@ def test_convolve_nd():
     m.fill_by_coord([[0.2, 0.4], [-0.1, 0.6], [0.5, 3.6]])
 
     # TODO : build EnergyDependentTablePSF programmatically rather than using CTA 1DC IRF
-    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta//1dc/bcf/South_z20_50h/irf_file.fits"
+    )
     psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
     table_psf = psf.to_energy_dependent_table_psf(theta=0.5 * u.deg)
 

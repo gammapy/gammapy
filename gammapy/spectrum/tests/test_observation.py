@@ -206,11 +206,11 @@ class TestSpectrumObservationStacker:
     def test_thresholds(self):
         energy = self.obs_stacker.stacked_obs.lo_threshold
         assert energy.unit == "keV"
-        assert_allclose(energy.value, 8.912509e+08, rtol=1e-3)
+        assert_allclose(energy.value, 8.912509e08, rtol=1e-3)
 
         energy = self.obs_stacker.stacked_obs.hi_threshold
         assert energy.unit == "keV"
-        assert_allclose(energy.value, 4.466836e+10, rtol=1e-3)
+        assert_allclose(energy.value, 4.466836e10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
@@ -252,7 +252,7 @@ class TestSpectrumObservationList:
 
         val = obs.aeff.data.evaluate(energy="1.1 TeV")
         assert val.unit == "cm2"
-        assert_allclose(val.value, 1.34389e+09, rtol=1e-3)
+        assert_allclose(val.value, 1.34389e09, rtol=1e-3)
 
         val = obs.edisp.data.evaluate(e_true="1.1 TeV", e_reco="1.3 TeV")
         assert val.unit == ""

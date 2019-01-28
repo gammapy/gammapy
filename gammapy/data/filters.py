@@ -40,8 +40,7 @@ class ObservationFilter(object):
     """
 
     EVENT_FILTER_TYPES = dict(
-        circular_region="select_circular_region",
-        custom="select_parameter",
+        circular_region="select_circular_region", custom="select_parameter"
     )
 
     def __init__(self, time_filter=None, event_filters=None):

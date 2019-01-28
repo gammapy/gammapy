@@ -155,9 +155,7 @@ def test_sky_models_old_xml_file():
 @pytest.mark.xfail(reason="Need to improve XML read")
 @requires_data("gammapy-data")
 def test_sky_models_new_xml_file():
-    filename = (
-        "$GAMMAPY_DATA/tests/models/ctadc_skymodel_gps_sources_bright.xml"
-    )
+    filename = "$GAMMAPY_DATA/tests/models/ctadc_skymodel_gps_sources_bright.xml"
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 47

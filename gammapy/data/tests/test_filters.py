@@ -39,7 +39,7 @@ def test_empty_observation_filter(observation):
 def test_filter_events(observation):
     custom_filter = {
         "type": "custom",
-        "opts": {"parameter": "ENERGY", "band": Quantity([0.8*u.TeV, 10.0*u.TeV])},
+        "opts": {"parameter": "ENERGY", "band": Quantity([0.8 * u.TeV, 10.0 * u.TeV])},
     }
 
     target_position = SkyCoord(ra=229.2, dec=-58.3, unit="deg", frame="icrs")
@@ -79,4 +79,3 @@ def test_filter_gti(observation):
     assert isinstance(filtered_gti, GTI)
     assert_time_allclose(filtered_gti.time_start, time_filter[0])
     assert_time_allclose(filtered_gti.time_stop, time_filter[1])
-

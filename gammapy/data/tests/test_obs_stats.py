@@ -77,7 +77,6 @@ def stats_stacked_bad_on_region(bad_on_region, observations):
     )
 
 
-
 @requires_data("gammapy-data")
 class TestObservationStats(object):
     def test_str(self, stats):

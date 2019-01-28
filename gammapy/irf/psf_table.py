@@ -550,7 +550,7 @@ class EnergyDependentTablePSF(object):
         weights /= weights.sum()
 
         psf_value = self.evaluate(energy=energy)
-        psf_value_weighted = (weights[:, np.newaxis] * psf_value)
+        psf_value_weighted = weights[:, np.newaxis] * psf_value
         return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
 
     def containment_radius(self, energies, fraction, interp_kwargs=None):

@@ -45,8 +45,10 @@ def observations():
 def bkg_estimate(observations, on_region, exclusion_mask):
     """An example background estimate"""
     est = ReflectedRegionsBackgroundEstimator(
-        observations=observations, on_region=on_region, exclusion_mask=exclusion_mask,
-        min_distance_input="0.2 deg"
+        observations=observations,
+        on_region=on_region,
+        exclusion_mask=exclusion_mask,
+        min_distance_input="0.2 deg",
     )
     est.run()
     return est.result

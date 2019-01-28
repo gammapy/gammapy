@@ -12,9 +12,7 @@ class TestCWT:
     """Test CWT algorithm."""
 
     def setup(self):
-        filename = (
-            "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/counts.fits.gz"
-        )
+        filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/counts.fits.gz"
         image = Map.read(filename)
         background = image.copy(data=np.ones(image.data.shape, dtype=float))
 
@@ -177,9 +175,7 @@ class TestCWTData:
     """
 
     def setup(self):
-        filename = (
-            "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/counts.fits.gz"
-        )
+        filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/counts.fits.gz"
         image = Map.read(filename)
         background = image.copy(data=np.ones(image.data.shape, dtype=float))
 

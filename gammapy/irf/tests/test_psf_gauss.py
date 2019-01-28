@@ -127,7 +127,9 @@ class TestEnergyDependentMultiGaussPSF:
 
 @requires_data("gammapy-data")
 def test_psf_cta_1dc():
-    filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
     psf_irf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
     # Check that PSF is filled with 0 for energy / offset where no PSF info is given.

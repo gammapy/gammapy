@@ -11,12 +11,7 @@ import time
 
 log = logging.getLogger(__name__)
 
-OFF = [
-    "GAMMA_CAT",
-    "GAMMAPY_DATA",
-    "GAMMAPY_EXTRA",
-    "GAMMAPY_FERMI_LAT_DATA",
-]
+OFF = ["GAMMA_CAT", "GAMMAPY_DATA", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
 
 
 @click.command(name="run")

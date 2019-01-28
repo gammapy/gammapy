@@ -45,8 +45,10 @@ def observations():
 def bkg_estimator(observations, exclusion_mask, on_region):
     """Example background estimator for testing."""
     return ReflectedRegionsBackgroundEstimator(
-        observations=observations, on_region=on_region, exclusion_mask=exclusion_mask,
-        min_distance_input="0.2 deg"
+        observations=observations,
+        on_region=on_region,
+        exclusion_mask=exclusion_mask,
+        min_distance_input="0.2 deg",
     )
 
 
