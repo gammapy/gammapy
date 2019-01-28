@@ -8,7 +8,6 @@ from ...extern import six
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
-from .parameter import Parameters
 
 __all__ = ["Fit"]
 
