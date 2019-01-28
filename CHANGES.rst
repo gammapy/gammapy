@@ -17,13 +17,13 @@ See the complete `Gammapy 0.11 merged pull requests list on Github <https://gith
 
 .. _gammapy_0p10_release:
 
-0.10 (2019-01-25)
+0.10 (2019-01-28)
 -----------------
 
 Summary
 +++++++
 
-- Released on Jan 25, 2019 (`Gammapy 0.10 on PyPI <https://pypi.org/project/gammapy/0.10>`__)
+- Released on Jan 28, 2019 (`Gammapy 0.10 on PyPI <https://pypi.org/project/gammapy/0.10>`__)
 - 7 contributors
 - 2 months of work
 - 30 pull requests (not all listed below)
