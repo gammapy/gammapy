@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 
 __all__ = ["fov_to_sky", "sky_to_fov"]
 
+
 def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
-    """Make a transformation from field-of-view coordinates to sky coordinates.
+    """Transform field-of-view coordinates to sky coordinates.
 
     Parameters
     ----------
@@ -21,7 +21,6 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
     lon_t, lat_t : `~astropy.units.Quantity`
         Transformed sky coordinate
     """
-
     # Create a frame that is centered on the pointing position
     center = SkyCoord(lon_pnt, lat_pnt)
     fov_frame = SkyOffsetFrame(origin=center)
@@ -38,7 +37,7 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
 
 
 def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
-    """Make a transformation from sky coordinates to field-of-view coordinates.
+    """Transform sky coordinates to field-of-view coordinates.
 
     Parameters
     ----------
@@ -53,7 +52,6 @@ def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
     lon_t, lat_t : `~astropy.units.Quantity`
         Transformed field-of-view coordinate
     """
-
     # Create a frame that is centered on the pointing position
     center = SkyCoord(lon_pnt, lat_pnt)
     fov_frame = SkyOffsetFrame(origin=center)
