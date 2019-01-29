@@ -24,7 +24,7 @@ class MapMaker(object):
         Maximum offset angle
     geom_true : `~gammapy.maps.WcsGeom`
         Reference image geometry in true energy, used for exposure maps and PSF.
-         If none, the same as geom is assumed
+        If none, the same as geom is assumed
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
     """
