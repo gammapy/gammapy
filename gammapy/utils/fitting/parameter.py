@@ -3,7 +3,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import numpy as np
-from ...extern import six
 from astropy import units as u
 from astropy.table import Table
 from ..array import check_type
@@ -55,7 +54,7 @@ class Parameter(object):
         self.name = name
         self.scale = scale
 
-        if isinstance(factor, u.Quantity) or isinstance(factor, six.string_types):
+        if isinstance(factor, u.Quantity) or isinstance(factor, str):
             self.quantity = factor
         else:
             self.factor = factor
@@ -274,14 +273,14 @@ class Parameters(object):
         The input can be a parameter object, parameter name (str)
         or if a parameter index (int) is passed in, it is simply returned.
         """
-        if isinstance(val, six.integer_types):
+        if isinstance(val, int):
             return val
         elif isinstance(val, Parameter):
             for idx, par in enumerate(self.parameters):
                 if val is par:
                     return idx
             raise IndexError("No parameter: {!r}".format(val))
-        elif isinstance(val, six.string_types):
+        elif isinstance(val, str):
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
                     return idx

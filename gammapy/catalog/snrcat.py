@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..extern import six
 from astropy.utils.data import download_file
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
@@ -138,7 +137,7 @@ def _fetch_catalog_snrcat_obs_table(cache):
 def _snrcat_fix_na(table):
     """Fix N/A entries in string columns in SNRcat."""
     for colname in table.colnames:
-        if isinstance(table[colname][0], six.text_type):
+        if isinstance(table[colname][0], str):
             mask1 = table[colname] == "N / A"
             mask2 = table[colname] == "N/A"
             table[colname].mask = mask1 | mask2

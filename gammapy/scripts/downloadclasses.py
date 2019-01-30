@@ -7,7 +7,7 @@ import logging
 import sys
 import yaml
 import multiprocessing
-from ..extern.six.moves.urllib.request import urlretrieve, urlopen
+from urllib.request import urlretrieve, urlopen
 from ..extern.pathlib import Path
 from .. import version
 

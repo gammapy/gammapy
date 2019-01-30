@@ -5,7 +5,6 @@ from collections import OrderedDict
 import copy
 import numpy as np
 from astropy.utils import lazyproperty
-from ..extern import six
 from ..utils.array import _is_int
 from ..utils.table import table_row_to_dict
 from .utils import skycoord_from_table
@@ -181,7 +180,7 @@ class SourceCatalog(object):
         At the moment this can raise KeyError, IndexError and ValueError
         for invalid keys. Should we always raise KeyError to simplify this?
         """
-        if isinstance(key, six.string_types):
+        if isinstance(key, str):
             index = self.row_index(key)
         elif _is_int(key):
             index = key

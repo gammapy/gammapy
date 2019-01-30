@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ....extern import six
 from .. import Parameter, Parameters
 
 
@@ -66,7 +65,7 @@ def test_parameter_repr():
 def test_parameter_to_dict():
     par = Parameter("spam", 42, "deg")
     d = par.to_dict()
-    assert isinstance(d["unit"], six.string_types)
+    assert isinstance(d["unit"], str)
 
 
 @pytest.mark.parametrize(

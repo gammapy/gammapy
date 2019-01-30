@@ -4,7 +4,6 @@ import logging
 import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
-from ..extern import six
 
 __all__ = ["Energy", "EnergyBounds"]
 
@@ -39,7 +38,7 @@ class Energy(Quantity):
         # Techniques to subclass Quantity taken from astropy.coordinates.Angle
         # see: http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 
-        if isinstance(energy, six.string_types):
+        if isinstance(energy, str):
             val, unit = energy.split()
             energy = float(val)
 

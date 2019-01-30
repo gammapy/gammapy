@@ -4,7 +4,6 @@ import logging
 import abc
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
-from ...extern import six
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
@@ -63,8 +62,7 @@ class Registry(object):
 registry = Registry()
 
 
-@six.add_metaclass(FitMeta)
-class Fit(object):
+class Fit(metaclass=FitMeta):
     """Abstract Fit base class.
     """
 

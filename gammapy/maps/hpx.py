@@ -8,7 +8,6 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
-from ..extern import six
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat
@@ -625,7 +624,7 @@ class HpxGeom(MapGeom):
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
 
-        if isinstance(region, six.string_types):
+        if isinstance(region, str):
             ipix = [
                 self.get_index_list(nside, self._nest, region)
                 for nside in self._nside.flat

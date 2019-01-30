@@ -2,7 +2,6 @@
 """Utility functions to deal with arrays and quantities."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..extern import six
 
 __all__ = [
     "array_stats_str",
@@ -123,10 +122,17 @@ def check_type(val, category):
 
 
 def _check_str(val):
-    if isinstance(val, six.string_types):
+    if isinstance(val, str):
         return val
     else:
         raise TypeError("Expected a string. Got: {!r}".format(val))
+
+
+def _check_bool(val):
+    if isinstance(val, bool):
+        return val
+    else:
+        raise TypeError("Expected a bool. Got: {!r}".format(val))
 
 
 def _check_number(val):
@@ -136,17 +142,8 @@ def _check_number(val):
 
 
 def _is_int(val):
-    int_types = six.integer_types + (np.integer,)
-    return isinstance(val, int_types)
+    return isinstance(val, (int, np.integer))
 
 
 def _is_float(val):
-    float_types = (float, np.floating)
-    return isinstance(val, float_types)
-
-
-def _check_bool(val):
-    if isinstance(val, bool):
-        return val
-    else:
-        raise TypeError("Expected a bool. Got: {!r}".format(val))
+    return isinstance(val, (float, np.floating))

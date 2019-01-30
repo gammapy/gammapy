@@ -14,11 +14,10 @@ information from SpectrumObservation (e.g. safe energy range or counts data) and
 implements higher-level algorithms.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
+from collections import OrderedDict, UserList
 import copy
 import logging
 import numpy as np
-from ..extern.six.moves import UserList  # pylint:disable=import-error
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack

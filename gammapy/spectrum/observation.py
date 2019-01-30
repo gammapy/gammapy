@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
+from collections import UserList
 import numpy as np
 from astropy.units import Quantity
-from ..extern.six.moves import UserList  # pylint:disable=import-error
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds

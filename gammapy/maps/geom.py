@@ -12,7 +12,6 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from ..extern import six
 from ..utils.interpolation import interpolation_scale
 from .utils import find_hdu, find_bands_hdu
 
@@ -674,7 +673,7 @@ class MapCoord(object):
         self._match_by_name = match_by_name
 
     def __getitem__(self, key):
-        if isinstance(key, six.string_types):
+        if isinstance(key, str):
             return self._data[key]
         else:
             return list(self._data.values())[key]
@@ -946,8 +945,7 @@ class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-@six.add_metaclass(MapGeomMeta)
-class MapGeom(object):
+class MapGeom(metaclass=MapGeomMeta):
     """Base class for WCS and HEALPix geometries."""
 
     @property
