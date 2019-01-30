@@ -45,10 +45,7 @@ def parse_datafiles(datasearch, datasetslist):
             if dataset["files"]:
                 for ds in dataset["files"]:
                     label = ds["path"]
-                    data = {
-                        "url": ds["url"],
-                        "path": ds["path"],
-                    }
+                    data = {"url": ds["url"], "path": ds["path"]}
                     if "hashmd5" in ds:
                         data["hashmd5"] = ds["hashmd5"]
                     yield label, data
@@ -65,10 +62,7 @@ def parse_imagefiles(notebookslist):
                     filename_img = record["url"][record["url"].rfind("/") :]
                     url = record["url"].replace(filename_img, "")
                     url = url + "/" + path
-                    data = {
-                        "url": url,
-                        "path": path,
-                    }
+                    data = {"url": url, "path": path}
                     yield label, data
 
 
