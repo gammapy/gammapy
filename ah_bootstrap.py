@@ -45,7 +45,7 @@ import re
 import subprocess as sp
 import sys
 
-__minimum_python_version__ = (2, 7)
+__minimum_python_version__ = (3, 5)
 
 if sys.version_info < __minimum_python_version__:
     print("ERROR: Python {} or later is required by astropy-helpers".format(
@@ -58,14 +58,7 @@ except ImportError:
     from configparser import ConfigParser, RawConfigParser
 
 
-if sys.version_info[0] < 3:
-    _str_types = (str, unicode)
-    _text_type = unicode
-    PY3 = False
-else:
-    _str_types = (str, bytes)
-    _text_type = str
-    PY3 = True
+_str_types = (str, bytes)
 
 
 # What follows are several import statements meant to deal with install-time
@@ -136,11 +129,7 @@ from distutils.debug import DEBUG
 # TODO: Maybe enable checking for a specific version of astropy_helpers?
 DIST_NAME = 'astropy-helpers'
 PACKAGE_NAME = 'astropy_helpers'
-
-if PY3:
-    UPPER_VERSION_EXCLUSIVE = None
-else:
-    UPPER_VERSION_EXCLUSIVE = '3'
+UPPER_VERSION_EXCLUSIVE = None
 
 # Defaults for other options
 DOWNLOAD_IF_NEEDED = True
@@ -172,7 +161,7 @@ class _Bootstrapper(object):
         if not (isinstance(path, _str_types) or path is False):
             raise TypeError('path must be a string or False')
 
-        if PY3 and not isinstance(path, _text_type):
+        if not isinstance(path, str):
             fs_encoding = sys.getfilesystemencoding()
             path = path.decode(fs_encoding)  # path to unicode
 
@@ -815,9 +804,9 @@ def run_cmd(cmd):
         stdio_encoding = 'latin1'
 
     # Unlikely to fail at this point but even then let's be flexible
-    if not isinstance(stdout, _text_type):
+    if not isinstance(stdout, str):
         stdout = stdout.decode(stdio_encoding, 'replace')
-    if not isinstance(stderr, _text_type):
+    if not isinstance(stderr, str):
         stderr = stderr.decode(stdio_encoding, 'replace')
 
     return (p.returncode, stdout, stderr)
