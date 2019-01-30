@@ -9,10 +9,6 @@ Alphabetical order:
 * ``appdirs.py`` is a copy from Github on 2016-01-08
   Origin: https://raw.githubusercontent.com/ActiveState/appdirs/master/appdirs.py
   See also: https://pypi.org/project/appdirs/
-* ``pathlib.py`` is a copy pathlib2 from github on 2015-10-20
-  Origin https://raw.githubusercontent.com/mcmtroffaes/pathlib2/develop/pathlib2.py
-  One line was patched: `import six` -> `from . import six`
-  See also: https://pypi.org/project/pathlib2/
 * ``validator.py`` for `~astropy.units.Quantity` validation helper functions.
   Origin: https://github.com/astrofrog/sedfitter/blob/master/sedfitter/utils/validator.py
 * ``xmltodict.py`` for easily converting XML from / to Python dicts
