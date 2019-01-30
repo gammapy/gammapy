@@ -9,7 +9,7 @@ from ...maps import MapAxis, WcsGeom
 from ...cube import PSFMap, make_psf_map, make_map_exposure_true_energy
 
 
-def fake_psf3d(sigma=0.15 * u.deg):
+def fake_psf3d(sigma=0.15 * u.deg, shape='gauss'):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
     energy = np.logspace(-1, 1, 5) * u.TeV
     energy_lo = energy[:-1]
@@ -22,9 +22,12 @@ def fake_psf3d(sigma=0.15 * u.deg):
     O, R, E = np.meshgrid(offsets, rad, energy)
 
     Rmid = 0.5 * (R[:-1] + R[1:])
-    gaus = np.exp(-0.5 * Rmid ** 2 / sigma ** 2)
+    if shape =='gauss':
+        val = np.exp(-0.5 * Rmid ** 2 / sigma ** 2)
+    else:
+        val = (Rmid<sigma)
     drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
-    psf_values = gaus / ((gaus * drad).sum(0)[0])
+    psf_values = val / ((val * drad).sum(0)[0])
 
     return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
 
@@ -33,7 +36,6 @@ def fake_aeff2d(area = 1e6 * u.m**2):
     energy = np.logspace(-1, 1, 5) * u.TeV
     energy_lo = energy[:-1]
     energy_hi = energy[1:]
-    energy = np.sqrt(energy_lo * energy_hi)
 
     aeff_values = np.ones((4,3))*area
 
@@ -128,12 +130,12 @@ def test_containment_radius_map(tmpdir):
 
 
 def test_psfmap_stacking():
-    psf = fake_psf3d(0.15 * u.deg)
+    psf = fake_psf3d(0.1 * u.deg, shape='flat')
     aeff2d = fake_aeff2d()
 
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 0.5, 50), unit="deg", name="theta")
 
     geom = WcsGeom.create(
        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
@@ -149,6 +151,17 @@ def test_psfmap_stacking():
     psfmap1 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map1)
     psfmap2 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map2)
 
-    psfmap = psfmap1.stack(psfmap2)
+    psfmap_stack = psfmap1.stack(psfmap2)
+    assert_allclose(psfmap_stack.data, psfmap1.data)
+    assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
+
+    psf3 = fake_psf3d(0.3 * u.deg, shape='flat')
+    psfmap3 = make_psf_map(psf3, pointing, geom, 3 * u.deg, exposure_map1)
+    psfmap_stack = psfmap1.stack(psfmap3)
+
+    assert_allclose(psfmap_stack.data[:,40,:,:], 0.)
+    assert_allclose(psfmap_stack.data[:,20,:,:], psfmap3.data[:,20,:,:]*0.5, rtol=1e-4)
+    assert_allclose(psfmap_stack.data[:,0,:,:], psfmap3.data[:,0,:,:]*5., rtol=1e-4)
+
 
 

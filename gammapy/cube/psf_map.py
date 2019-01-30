@@ -52,6 +52,7 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map = None):
     # Re-order axes to be consistent with expected geometry
     psf_values = np.transpose(psf_values, axes=(2, 0, 1))
 
+    # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
