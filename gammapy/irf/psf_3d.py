@@ -411,7 +411,7 @@ class PSF3D:
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = "Containment radius R{0:.0f} ({1})" "".format(
+            label = "Containment radius R{:.0f} ({})" "".format(
                 100 * fraction, containment.unit
             )
             ax.figure.colorbar(caxes, ax=ax, label=label)
@@ -424,7 +424,7 @@ class PSF3D:
         omin = self.offset.value.min()
         omax = self.offset.value.max()
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
-        label = "Safe energy threshold: {0:3.2f}".format(esafe)
+        label = "Safe energy threshold: {:3.2f}".format(esafe)
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 
     def peek(self, figsize=(15, 5)):

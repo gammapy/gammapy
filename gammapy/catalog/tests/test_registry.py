@@ -39,4 +39,4 @@ def test_register(source_catalogs):
 
 def test_source_catalogs(source_catalogs):
     """Test the global registry instance"""
-    assert set(["3fgl", "2fhl"]).issubset(source_catalogs.catalog_names)
+    assert {"3fgl", "2fhl"}.issubset(source_catalogs.catalog_names)

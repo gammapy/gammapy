@@ -142,15 +142,15 @@ def _ra_iau_format_scalar(ra, digits):
     ra_s = ra.hms[2]
 
     if digits == 2:  # format: HH
-        ra_str = "{0:02d}".format(ra_h)
+        ra_str = "{:02d}".format(ra_h)
     elif digits == 3:  # format: HHh
-        ra_str = "{0:03d}".format(int(10 * ra.hour))
+        ra_str = "{:03d}".format(int(10 * ra.hour))
     elif digits == 4:  # format: HHMM
-        ra_str = "{0:02d}{1:02d}".format(ra_h, ra_m)
+        ra_str = "{:02d}{:02d}".format(ra_h, ra_m)
     elif digits == 5:  # format : HHMM.m
-        ra_str = "{0:02d}{1:02d}.{2:01d}".format(ra_h, ra_m, int(ra_s / 6))
+        ra_str = "{:02d}{:02d}.{:01d}".format(ra_h, ra_m, int(ra_s / 6))
     elif digits == 6:  # format: HHMMSS
-        ra_str = "{0:02d}{1:02d}{2:02d}".format(ra_h, ra_m, int(ra_s))
+        ra_str = "{:02d}{:02d}{:02d}".format(ra_h, ra_m, int(ra_s))
     else:  # format: HHMMSS.s
         SS = int(ra_s)
         s_digits = digits - 6
@@ -245,13 +245,13 @@ def skycoord_from_table(table):
     except AttributeError:
         keys = table.keys()
 
-    if set(["RAJ2000", "DEJ2000"]).issubset(keys):
+    if {"RAJ2000", "DEJ2000"}.issubset(keys):
         lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
-    elif set(["RA", "DEC"]).issubset(keys):
+    elif {"RA", "DEC"}.issubset(keys):
         lon, lat, frame = "RA", "DEC", "icrs"
-    elif set(["GLON", "GLAT"]).issubset(keys):
+    elif {"GLON", "GLAT"}.issubset(keys):
         lon, lat, frame = "GLON", "GLAT", "galactic"
-    elif set(["glon", "glat"]).issubset(keys):
+    elif {"glon", "glat"}.issubset(keys):
         lon, lat, frame = "glon", "glat", "galactic"
     else:
         raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")

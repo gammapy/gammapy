@@ -225,7 +225,7 @@ class LightCurve:
 
         ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, uplims=is_ul, **kwargs)
         ax.set_xlabel("Time ({})".format(time_format.upper()))
-        ax.set_ylabel("Flux ({0:FITS})".format(u.Unit(flux_unit)))
+        ax.set_ylabel("Flux ({:FITS})".format(u.Unit(flux_unit)))
         if time_format == "iso":
             ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M:%S"))
             plt.setp(

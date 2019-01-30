@@ -89,7 +89,7 @@ class CaseBattacharya1998(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1.0, alpha=2, beta=3.53, **kwargs):
-        super(CaseBattacharya1998, self).__init__(
+        super().__init__(
             amplitude=amplitude, alpha=alpha, beta=beta, **kwargs
         )
 

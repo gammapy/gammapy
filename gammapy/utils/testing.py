@@ -174,7 +174,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         desired = desired.to(actual.unit)
     except u.UnitsError:
         raise u.UnitsError(
-            "Units for 'desired' ({0}) and 'actual' ({1}) "
+            "Units for 'desired' ({}) and 'actual' ({}) "
             "are not convertible".format(desired.unit, actual.unit)
         )
 
@@ -187,7 +187,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
             atol = atol.to(actual.unit)
         except u.UnitsError:
             raise u.UnitsError(
-                "Units for 'atol' ({0}) and 'actual' ({1}) "
+                "Units for 'atol' ({}) and 'actual' ({}) "
                 "are not convertible".format(atol.unit, actual.unit)
             )
 

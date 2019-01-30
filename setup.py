@@ -69,7 +69,7 @@ package_info['package_data'].setdefault(PACKAGENAME, [])
 # Define entry points for command-line scripts
 entry_points = {'console_scripts': []}
 for key, value in conf.items('entry_points'):
-    entry_points['console_scripts'].append('{0} = {1}'.format(key, value))
+    entry_points['console_scripts'].append('{} = {}'.format(key, value))
 
 # Note: usually the `affiliated_package/data` folder is used for data files.
 # In Gammapy we use `gammapy/data` as a sub-package.
