@@ -36,7 +36,7 @@ To check that Gammapy is installed, and which version you have:
 
 Macports supports several versions of Python, so you can choose the one you
 want. Parallel installation of multiple Python versions works well, but is only
-really useful for developers. So if you want Python 2.7 or Python 3.6, you would
+really useful for developers. So if you want Python 3.6, you would
 have to adapt the commands given in this section to use that version number
 instead. If you're not sure which version to use, at this time (January 2017) we
 recommend you choose Python 3.5 (because Python 3 is the future, and 3.6 was

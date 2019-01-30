@@ -75,6 +75,10 @@ Fermi ScienceTools
 
 The `Fermi ScienceTools`_ ships with it's own Python 2.7 interpreter.
 
+The last release of Gammapy to support Python 2.7 was Gammapy v0.10 from January 2019.
+pip should know about this and automatically install Gammapy v0.10,
+and not try to install a later version of Gammapy.
+
 If you want to use Astropy or Gammapy with that Python, you have to install it
 using that Python interpreter, other existing Python interpreters or installed
 packages can't be used (when they have C extensions, like Astropy does).

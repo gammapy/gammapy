@@ -32,10 +32,6 @@ def cli_jupyter_run(ctx, tutor, kernel):
 
 def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
-
-    if sys.version_info[0] < 3 and kernel == "python3":
-        kernel = "python2"
-
     try:
         t = time.time()
         cmd = [
