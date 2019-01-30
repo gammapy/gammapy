@@ -5,7 +5,7 @@ import astropy.units as u
 from ..utils.energy import Energy
 from . import PSF3D, EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
 
-__all__ = ["make_psf", "make_mean_psf", "make_mean_edisp"]
+__all__ = ["make_psf", "make_mean_psf", "make_mean_edisp", "apply_containment_fraction"]
 
 log = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
 from ..utils.scripts import make_path
-from ..irf import PSF3D
+from ..irf import PSF3D, apply_containment_fraction
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
 
@@ -209,7 +209,6 @@ class SpectrumExtraction:
         bkg : `~gammapy.background.BackgroundEstimate`
             background esimate
         """
-        # TODO: This should be split out into a separate class
         if not isinstance(bkg.on_region, CircleSkyRegion):
             raise TypeError(
                 "Incorrect region type for containment correction."
@@ -225,20 +224,11 @@ class SpectrumExtraction:
         else:
             psf = observation.psf.to_energy_dependent_table_psf(offset, angles)
 
-        center_energies = self._aeff.energy.nodes
-        containment = []
-        for index, energy in enumerate(center_energies):
-            try:
-                cont_ = psf.integral(energy, 0.0 * u.deg, bkg.on_region.radius)
-            except:
-                msg = "Containment correction failed for bin {}, energy {}."
-                log.warning(msg.format(index, energy))
-                cont_ = 1
-            finally:
-                containment.append(cont_)
+        new_aeff = apply_containment_fraction(self._aeff, psf, bkg.on_region.radius)
 
-        self.containment = np.array(containment)
-        self._aeff.data.data *= self.containment
+        # TODO: check whether keeping containment is necessary
+        self.containment = new_aeff.data.data.value / self._aeff.data.data.value
+        self._aeff = new_aeff
 
     def compute_energy_threshold(self, **kwargs):
         """Compute and set the safe energy threshold for all observations.
