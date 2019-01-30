@@ -130,7 +130,7 @@ Unify quantity support for model evaluation. Implement coordinate frame handling
 for spatial models. Implement full support of the XML I/O as well as improve the
 existing YAML IO. Add missing models. Implement (hierachical) model parameter
 name handling and improve parameter user interface. Add support for baysian priors
-for model parameters.
+on model parameters. Add support for handling tied parameters.
 
 
 Fitting
