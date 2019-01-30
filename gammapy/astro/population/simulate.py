@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate source catalogs."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table, Column
 from astropy.units import Quantity

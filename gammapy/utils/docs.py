@@ -15,7 +15,6 @@ Here's some good resources with working examples:
 - https://github.com/sphinx-doc/sphinx/blob/master/sphinx/directives/other.py
 - https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import re
 from pathlib import Path

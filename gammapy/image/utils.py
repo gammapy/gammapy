@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from multiprocessing import Pool
 from functools import partial

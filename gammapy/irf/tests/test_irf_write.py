@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_equal
 import astropy.units as u

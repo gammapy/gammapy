@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar velocity distribution models."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import contextlib
 import warnings

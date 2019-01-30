@@ -4,7 +4,6 @@
 * known background level ``mu_bkg``
 * background estimated from ``n_off`
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from scipy.stats import norm, poisson
 from scipy.special import erf

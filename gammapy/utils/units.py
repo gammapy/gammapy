@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Units and Quantity related helper functions"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import astropy.units as u
 

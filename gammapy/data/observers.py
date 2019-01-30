@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Location of gamma-ray observatories."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.coordinates import EarthLocation
 
 __all__ = ["observatory_locations"]

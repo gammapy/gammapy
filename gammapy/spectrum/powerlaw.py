@@ -11,7 +11,6 @@
 * We might want to completely remove this module and expose the functionality
   directly on the spectral model classes some day.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
 __all__ = [

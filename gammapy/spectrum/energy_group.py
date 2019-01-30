@@ -13,7 +13,6 @@ just have to do with the groups, whereas SpectrumEnergyGroupMaker also accesses
 information from SpectrumObservation (e.g. safe energy range or counts data) and
 implements higher-level algorithms.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict, UserList
 import copy
 import logging

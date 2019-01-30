@@ -191,7 +191,6 @@ For further information on Astropy, see the Astropy docs at
 We will have to see if / what we need here in `gammapy.utils.fits`
 as a stable and nice interface on top of what Astropy provides.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 from astropy.io import fits

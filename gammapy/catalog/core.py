@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import copy
 import numpy as np

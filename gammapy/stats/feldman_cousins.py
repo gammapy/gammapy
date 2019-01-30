@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Feldman Cousins algorithm to compute parameter confidence limits."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from scipy.stats import norm, poisson, rankdata
