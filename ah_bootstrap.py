@@ -45,27 +45,18 @@ import re
 import subprocess as sp
 import sys
 
-__minimum_python_version__ = (2, 7)
+__minimum_python_version__ = (3, 5)
 
 if sys.version_info < __minimum_python_version__:
     print("ERROR: Python {} or later is required by astropy-helpers".format(
         __minimum_python_version__))
     sys.exit(1)
 
-try:
-    from ConfigParser import ConfigParser, RawConfigParser
-except ImportError:
-    from configparser import ConfigParser, RawConfigParser
+from configparser import ConfigParser, RawConfigParser
 
 
-if sys.version_info[0] < 3:
-    _str_types = (str, unicode)
-    _text_type = unicode
-    PY3 = False
-else:
-    _str_types = (str, bytes)
-    _text_type = str
-    PY3 = True
+_str_types = (str, bytes)
+_text_type = str
 
 
 # What follows are several import statements meant to deal with install-time
@@ -89,17 +80,6 @@ except (ImportError, AssertionError):
 
 try:
     import typing   # noqa
-except ImportError:
-    pass
-
-
-# Note: The following import is required as a workaround to
-# https://github.com/astropy/astropy-helpers/issues/89; if we don't import this
-# module now, it will get cleaned up after `run_setup` is called, but that will
-# later cause the TemporaryDirectory class defined in it to stop working when
-# used later on by setuptools
-try:
-    import setuptools.py31compat   # noqa
 except ImportError:
     pass
 
@@ -137,11 +117,6 @@ from distutils.debug import DEBUG
 DIST_NAME = 'astropy-helpers'
 PACKAGE_NAME = 'astropy_helpers'
 
-if PY3:
-    UPPER_VERSION_EXCLUSIVE = None
-else:
-    UPPER_VERSION_EXCLUSIVE = '3'
-
 # Defaults for other options
 DOWNLOAD_IF_NEEDED = True
 INDEX_URL = 'https://pypi.python.org/simple'
@@ -172,7 +147,7 @@ class _Bootstrapper(object):
         if not (isinstance(path, _str_types) or path is False):
             raise TypeError('path must be a string or False')
 
-        if PY3 and not isinstance(path, _text_type):
+        if not isinstance(path, _text_type):
             fs_encoding = sys.getfilesystemencoding()
             path = path.decode(fs_encoding)  # path to unicode
 
@@ -509,10 +484,7 @@ class _Bootstrapper(object):
         if version:
             req = '{0}=={1}'.format(DIST_NAME, version)
         else:
-            if UPPER_VERSION_EXCLUSIVE is None:
-                req = DIST_NAME
-            else:
-                req = '{0}<{1}'.format(DIST_NAME, UPPER_VERSION_EXCLUSIVE)
+            req = DIST_NAME
 
         attrs = {'setup_requires': [req]}
 

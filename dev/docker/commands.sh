@@ -30,7 +30,6 @@ export PATH=/home/travis/miniconda/bin:$PATH
 conda update --yes conda
 sudo apt-get update
 if [[ $SETUP_CMD == build_docs* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
-if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then export TRAVIS_PYTHON_VERSION=2.7.8; fi
 conda create --yes -n test -c astropy-ci-extras python=$TRAVIS_PYTHON_VERSION
 source activate test
 export CONDA_INSTALL="conda install -c astropy-ci-extras --yes python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION"
