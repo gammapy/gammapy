@@ -141,6 +141,11 @@ class PSFMap:
         return self._psf_map.quantity
 
     @property
+    def exposure_map(self):
+        """the exposure map associated to the PSFMap."""
+        return self._exposure_map
+
+    @property
     def geom(self):
         """The PSFMap MapGeom object"""
         return self._psf_map.geom
@@ -253,3 +258,28 @@ class PSFMap:
             m.fill_by_coord(coord, containment_radius)
 
         return m
+
+    def stack(self, other):
+        """Stack PSFMap with another one.
+
+        This works only if the PSFMap to be stacked contain compatible exposure maps.
+
+        Parameters
+        ----------
+        other : `~gammapy.cube.PSFMap`
+            the psfmap to be stacked with this one.
+
+        Returns
+        -------
+        new : `~gammapy.cube.PSFMap`
+            the stacked psfmap
+        """
+        if self.exposure_map is None or other.exposure_map is None:
+            raise(ValueError, "Missing exposure map for PSFMap.stack")
+
+        total_exposure = self.exposure_map+other.exposure_map
+        stacked_psf_quantity = self.quantity * self.exposure_map.quantity[:,np.newaxis,:,:]
+        stacked_psf_quantity += other.quantity * other.exposure_map.quantity[:,np.newaxis,:,:]
+        stacked_psf_quantity /= total_exposure.quantity[:,np.newaxis,:,:]
+        stacked_psf = Map.from_geom(self.geom, data= stacked_psf_quantity.to('1/sr').value, unit='1/sr')
+        return PSFMap(stacked_psf, total_exposure)

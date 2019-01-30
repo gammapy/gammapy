@@ -125,3 +125,30 @@ def test_containment_radius_map(tmpdir):
     val = m.interp_by_coord(coord)
 
     assert_allclose(val, 0.227463, rtol=1e-3)
+
+
+def test_psfmap_stacking():
+    psf = fake_psf3d(0.15 * u.deg)
+    aeff2d = fake_aeff2d()
+
+    pointing = SkyCoord(0, 0, unit="deg")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    rad_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta")
+
+    geom = WcsGeom.create(
+       skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+    )
+
+    exposure_geom = WcsGeom.create(
+        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
+    )
+
+    exposure_map1 = make_map_exposure_true_energy(pointing, '1 h', aeff2d, exposure_geom)
+    exposure_map2 = make_map_exposure_true_energy(pointing, '2 h', aeff2d, exposure_geom)
+
+    psfmap1 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map1)
+    psfmap2 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map2)
+
+    psfmap = psfmap1.stack(psfmap2)
+
+
