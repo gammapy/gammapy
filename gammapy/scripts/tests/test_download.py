@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from pathlib import Path
 import pytest
-from ...extern.pathlib import Path
 from ...utils.testing import run_cli
 from ..main import cli
 

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import Angle
@@ -16,9 +15,9 @@ __all__ = [
 __doctest_requires__ = {("colormap_hess", "colormap_milagro"): ["matplotlib"]}
 
 
-class MapPanelPlotter(object):
+class MapPanelPlotter:
     """
-    Mape panel plotter class.
+    Map panel plotter class.
 
     Given a `~matplotlib.pyplot.Figure` object this class creates axes objects
     using `~matplotlib.gridspec.GridSpec` and plots a given sky map onto these.

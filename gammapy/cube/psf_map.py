@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
@@ -56,7 +55,7 @@ def make_psf_map(psf, pointing, geom, max_offset):
     return PSFMap(psfmap)
 
 
-class PSFMap(object):
+class PSFMap:
     """Class containing the Map of PSFs and allowing to interact with it.
 
     Parameters

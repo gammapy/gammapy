@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import namedtuple, OrderedDict
 import numpy as np
 from astropy.table import Table
@@ -27,7 +26,7 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             Filename
         """
         filename = make_path(filename)

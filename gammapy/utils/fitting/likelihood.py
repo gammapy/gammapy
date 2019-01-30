@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 __all__ = ["Likelihood"]
 
 
 # TODO: get rid of this wrapper class? Or use it in a better way?
-class Likelihood(object):
+class Likelihood:
     """Wrapper of the likelihood function used by the optimiser.
 
     This might become superfluous if we introduce a

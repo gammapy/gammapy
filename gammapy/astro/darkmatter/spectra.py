@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
@@ -11,7 +10,7 @@ from ...spectrum.models import TableModel
 __all__ = ["PrimaryFlux"]
 
 
-class PrimaryFlux(object):
+class PrimaryFlux:
     """DM-annihilation gamma-ray spectra.
 
     Based on the precomputed models by `Cirelli et al.

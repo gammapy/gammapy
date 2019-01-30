@@ -3,13 +3,11 @@
 
 https://github.com/gammapy/gamma-cat
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict, namedtuple
 import functools
 import logging
 import json
 import numpy as np
-from ..extern import six
 from astropy import units as u
 from astropy.table import Table
 from ..utils.scripts import make_path
@@ -488,7 +486,7 @@ class SourceCatalogGammaCat(SourceCatalog):
         return SkyModels(source_list)
 
 
-class GammaCatDataCollection(object):
+class GammaCatDataCollection:
     """Data store for gamma-cat.
 
     Gives access to all data from https://github.com/gammapy/gamma-cat .
@@ -517,7 +515,7 @@ class GammaCatDataCollection(object):
 
 
 @functools.total_ordering
-class GammaCatResource(object):
+class GammaCatResource:
     """Reference for a single resource in gamma-cat.
 
     This can be considered an implementation detail,
@@ -554,10 +552,10 @@ class GammaCatResource(object):
         self, source_id, reference_id, file_id=-1, type="none", location="none"
     ):
         self.source_id = int(source_id)
-        self.reference_id = six.text_type(reference_id)
+        self.reference_id = str(reference_id)
         self.file_id = int(file_id)
-        self.type = six.text_type(type)
-        self.location = six.text_type(location)
+        self.type = str(type)
+        self.location = str(location)
 
     @property
     def global_id(self):
@@ -613,7 +611,7 @@ class GammaCatResource(object):
         )
 
 
-class GammaCatResourceIndex(object):
+class GammaCatResourceIndex:
     """Resource index for gamma-cat.
 
     Parameters

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
@@ -13,7 +12,7 @@ __all__ = ["MapMaker", "MapMakerObs"]
 log = logging.getLogger(__name__)
 
 
-class MapMaker(object):
+class MapMaker:
     """Make maps from IACT observations.
 
     Parameters
@@ -160,7 +159,7 @@ class MapMaker(object):
         return images
 
 
-class MapMakerObs(object):
+class MapMakerObs:
     """Make maps for a single IACT observation.
 
     Parameters

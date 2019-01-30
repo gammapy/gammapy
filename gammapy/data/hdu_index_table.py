@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import numpy as np
 import logging
@@ -13,7 +12,7 @@ __all__ = ["HDULocation", "HDUIndexTable"]
 log = logging.getLogger(__name__)
 
 
-class HDULocation(object):
+class HDULocation:
     """HDU localisation, loading and Gammapy object mapper.
 
     This represents one row in `HDUIndexTable`.
@@ -143,7 +142,7 @@ class HDUIndexTable(Table):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             Filename
         """
         filename = make_path(filename)

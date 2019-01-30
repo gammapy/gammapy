@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of adaptive smoothing algorithms."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
@@ -15,7 +14,7 @@ def _significance_asmooth(counts, background):
     return (counts - background) / np.sqrt(counts + background)
 
 
-class ASmooth(object):
+class ASmooth:
     """Adaptively smooth counts image.
 
     Achieves a roughly constant significance of features across the whole image.

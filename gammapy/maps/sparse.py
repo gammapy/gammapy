@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ._sparse import find_in_array, merge_sparse_arrays
 
@@ -38,7 +37,7 @@ def slices_to_idxs(slices, shape, ndim):
     return idx
 
 
-class SparseArray(object):
+class SparseArray:
     """Sparse N-dimensional array object.
 
     This class implements a data structure for sparse n-dimensional

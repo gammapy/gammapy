@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.table import Table
 
 __all__ = ["source_catalogs", "SourceCatalogRegistry"]
 
 
-class SourceCatalogRegistry(object):
+class SourceCatalogRegistry:
     """Source catalog registry.
 
     Provides simple and efficient access to source catalogs

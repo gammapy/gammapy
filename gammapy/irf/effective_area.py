@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 import astropy.units as u
@@ -12,7 +11,7 @@ from ..utils.scripts import make_path
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
 
 
-class EffectiveAreaTable(object):
+class EffectiveAreaTable:
     """Effective area table.
 
     TODO: Document
@@ -316,7 +315,7 @@ class EffectiveAreaTable(object):
         )
 
 
-class EffectiveAreaTable2D(object):
+class EffectiveAreaTable2D:
     """2D effective area table.
 
     Data format specification: :ref:`gadf:aeff_2d`

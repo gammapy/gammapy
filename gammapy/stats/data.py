@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """On-off bin stats computations."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ..utils.random import get_random_state
 
 __all__ = ["Stats", "make_stats", "combine_stats", "compute_total_stats"]
 
 
-class Stats(object):
+class Stats:
     """Container for an on-off observation.
 
     Parameters

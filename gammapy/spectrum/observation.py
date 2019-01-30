@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
+from collections import UserList
+from pathlib import Path
 import numpy as np
 from astropy.units import Quantity
-from ..extern.six.moves import UserList  # pylint:disable=import-error
-from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
 from ..utils.table import table_from_row_data
@@ -46,7 +45,7 @@ class SpectrumStats(ObservationStats):
         return data
 
 
-class SpectrumObservation(object):
+class SpectrumObservation:
     """1D spectral analysis storage class.
 
     This container holds the ingredients for 1D region based spectral analysis.
@@ -428,7 +427,7 @@ class SpectrumObservation(object):
 
         Parameters
         ----------
-        outdir : `~gammapy.extern.pathlib.Path`
+        outdir : `pathlib.Path`
             output directory, default: pwd
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
@@ -636,7 +635,7 @@ class SpectrumObservationList(UserList):
 
         Parameters
         ----------
-        outdir : str, `~gammapy.extern.pathlib.Path`, optional
+        outdir : str, `pathlib.Path`, optional
             Output directory, default: pwd
         pha_typeII : bool, default: False
             Collect PHA datasets into one file
@@ -671,7 +670,7 @@ class SpectrumObservationList(UserList):
 
         Parameters
         ----------
-        directory : `~gammapy.extern.pathlib.Path`
+        directory : `pathlib.Path`
             Directory holding the observations
         pha_typeII : bool, default: False
             Read PHA typeII file
@@ -717,7 +716,7 @@ class SpectrumObservationList(UserList):
         return interact(show_obs, idx=(0, max_, 1))
 
 
-class SpectrumObservationStacker(object):
+class SpectrumObservationStacker:
     r"""Stack observations in a `~gammapy.spectrum.SpectrumObservationList`.
 
     The stacking of :math:`j` observations is implemented as follows.

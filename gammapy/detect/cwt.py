@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import copy
 import logging
 import numpy as np
@@ -40,7 +39,7 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
     return g1 - g2
 
 
-class CWT(object):
+class CWT:
     """Continuous wavelet transform.
 
     TODO: describe algorithm (modify the words below)
@@ -301,7 +300,7 @@ class CWT(object):
             )
 
 
-class CWTKernels(object):
+class CWTKernels:
     """Conduct arrays of kernels and scales for CWT algorithm.
 
     Parameters
@@ -425,7 +424,7 @@ class CWTKernels(object):
         return Table(rows=rows, names=["Name", "Source"])
 
 
-class CWTData(object):
+class CWTData:
     """Images for CWT algorithm.
 
     Contains also input counts and background.

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Ring background estimation."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
@@ -10,7 +9,7 @@ from ..image.utils import scale_cube
 __all__ = ["AdaptiveRingBackgroundEstimator", "RingBackgroundEstimator"]
 
 
-class AdaptiveRingBackgroundEstimator(object):
+class AdaptiveRingBackgroundEstimator:
     """Adaptive ring background algorithm.
 
     This algorithm extends the `RingBackgroundEstimator` method by adapting the
@@ -247,7 +246,7 @@ class AdaptiveRingBackgroundEstimator(object):
         }
 
 
-class RingBackgroundEstimator(object):
+class RingBackgroundEstimator:
     """Ring background method for cartesian coordinates.
 
     - Step 1: apply exclusion mask

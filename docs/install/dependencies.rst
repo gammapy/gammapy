@@ -22,14 +22,14 @@ dependencies.
 The required core dependencies of Gammapy are:
 
 * `Numpy`_ - the fundamental package for scientific computing with Python
+* `scipy library`_ for numerical methods
 * `Astropy`_ - the core package for Astronomy in Python
 * `regions`_ - Astropy regions package. Planned for inclusion in Astropy core as ``astropy.regions``.
 * `click`_ for making command line tools
+* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files)
 
 Optional dependencies of Gammapy:
 
-* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files)
-* `scipy library`_ for numerical methods
 * `reproject`_ for image reprojection
 * `iminuit`_ for fitting by optimization
 * `uncertainties`_ for linear error propagation

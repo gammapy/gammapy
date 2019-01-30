@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
 
 __all__ = ["JFactory", "compute_dm_flux"]
 
 
-class JFactory(object):
+class JFactory:
     """Compute J-Factor maps.
 
     All J-Factors are computed for annihilation. The assumed dark matter

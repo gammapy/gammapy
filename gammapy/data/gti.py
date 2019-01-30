@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
@@ -9,7 +8,7 @@ from ..utils.scripts import make_path
 __all__ = ["GTI"]
 
 
-class GTI(object):
+class GTI:
     """Good time intervals (GTI) `~astropy.table.Table`.
 
     Data format specification: :ref:`gadf:iact-gti`
@@ -60,7 +59,7 @@ class GTI(object):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             Filename
         """
         filename = make_path(filename)

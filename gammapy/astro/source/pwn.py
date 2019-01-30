@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
@@ -12,7 +11,7 @@ from ..source import Pulsar, SNRTrueloveMcKee
 __all__ = ["PWN"]
 
 
-class PWN(object):
+class PWN:
     """Simple pulsar wind nebula (PWN) evolution model.
 
     Parameters

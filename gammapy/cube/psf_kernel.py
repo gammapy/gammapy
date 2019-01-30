@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
@@ -113,7 +112,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     return kernel_map.downsample(factor, preserve_counts=True)
 
 
-class PSFKernel(object):
+class PSFKernel:
     """PSF kernel for `~gammapy.maps.Map`.
 
     This is a container class to store a PSF kernel

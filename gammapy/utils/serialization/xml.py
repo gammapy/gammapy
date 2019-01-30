@@ -6,7 +6,6 @@ For XML model format definitions, see here:
 * http://cta.irap.omp.eu/ctools/user_manual/getting_started/models.html#spectral-model-components
 * http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 import astropy.units as u

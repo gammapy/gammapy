@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 import astropy.units as u
@@ -14,7 +13,7 @@ __all__ = ["SpectrumExtraction"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumExtraction(object):
+class SpectrumExtraction:
     """Creating input data to 1D spectrum fitting.
 
     This class is responsible for extracting a
@@ -256,7 +255,7 @@ class SpectrumExtraction(object):
 
         Parameters
         ----------
-        outdir : `~gammapy.extern.pathlib.Path`
+        outdir : `pathlib.Path`
             Output folder
         ogipdir : str, optional
             Folder name for OGIP data, default: 'ogip_data'

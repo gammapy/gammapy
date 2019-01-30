@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HESS Galactic plane survey (HGPS) catalog."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 import astropy.units as u
@@ -33,7 +32,7 @@ FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
-class SourceCatalogObjectHGPSComponent(object):
+class SourceCatalogObjectHGPSComponent:
     """One Gaussian component from the HGPS catalog.
 
     See also
@@ -709,7 +708,7 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogObjectHGPSComponent(data=data)
 
 
-class SourceCatalogLargeScaleHGPS(object):
+class SourceCatalogLargeScaleHGPS:
     """Gaussian band model.
 
     This 2-dimensional model is Gaussian in ``y`` for a given ``x``,

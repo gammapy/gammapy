@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter profiles."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import numpy as np
 import astropy.units as u
-from ...extern import six
 from ...utils.fitting import Parameter, Parameters
 from ...spectrum.utils import integrate_spectrum
 
@@ -18,8 +16,7 @@ __all__ = [
 ]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class DMProfile(object):
+class DMProfile(abc.ABC):
     """DMProfile model base class."""
 
     LOCAL_DENSITY = 0.3 * u.GeV / (u.cm ** 3)

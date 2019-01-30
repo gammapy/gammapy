@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from astropy import units as u
@@ -9,7 +8,7 @@ from astropy import units as u
 __all__ = ["ScaledRegularGridInterpolator", "interpolation_scale"]
 
 
-class ScaledRegularGridInterpolator(object):
+class ScaledRegularGridInterpolator:
     """Thin wrapper around `scipy.interpolate.RegularGridInterpolator`.
 
     The values are scaled before the interpolation and back-scaled after the
@@ -94,7 +93,7 @@ def interpolation_scale(scale="lin"):
         raise ValueError("Not a valid value scaling mode.")
 
 
-class LogScale(object):
+class LogScale:
     """Logarithmic scaling"""
 
     tiny = np.finfo(np.float32).tiny
@@ -107,7 +106,7 @@ class LogScale(object):
         return np.exp(values)
 
 
-class SqrtScale(object):
+class SqrtScale:
     """Sqrt scaling"""
 
     def __call__(self, values):
@@ -118,7 +117,7 @@ class SqrtScale(object):
         return np.power(values, 2)
 
 
-class LinearScale(object):
+class LinearScale:
     """Linear scaling"""
 
     def __call__(self, values):

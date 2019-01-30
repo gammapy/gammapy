@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import warnings
 import logging
 import sys
+from pathlib import Path
 import click
 from .. import version
-from ..extern.pathlib import Path
 
 
 # We implement the --version following the example from here:

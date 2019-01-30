@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.table import Table, Column
 import astropy.units as u
 from ..stats import excess_matching_significance_on_off
@@ -9,7 +8,7 @@ from .utils import CountsPredictor
 __all__ = ["SensitivityEstimator"]
 
 
-class SensitivityEstimator(object):
+class SensitivityEstimator:
     """Estimate differential sensitivity.
 
     Uses a 1D spectral analysis and on / off measurement.

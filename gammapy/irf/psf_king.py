@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from astropy.table import Table
@@ -16,7 +15,7 @@ __all__ = ["PSFKing"]
 log = logging.getLogger(__name__)
 
 
-class PSFKing(object):
+class PSFKing:
     """King profile analytical PSF depending on energy and offset.
 
     This PSF parametrisation and FITS data format is described here: :ref:`gadf:psf_king`.

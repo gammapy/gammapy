@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 
 __all__ = ["CountsPredictor", "integrate_spectrum"]
 
 
-class CountsPredictor(object):
+class CountsPredictor:
     """Calculate number of predicted counts (``npred``).
 
     The true and reconstructed energy binning are inferred from the provided IRFs.

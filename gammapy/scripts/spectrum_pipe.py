@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from ..utils.scripts import make_path
 from ..spectrum import (
@@ -16,7 +15,7 @@ __all__ = ["SpectrumAnalysisIACT"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumAnalysisIACT(object):
+class SpectrumAnalysisIACT:
     """High-level analysis class to perform a full 1D IACT spectral analysis.
 
     Observation selection must have happened before.
@@ -25,7 +24,7 @@ class SpectrumAnalysisIACT(object):
 
     Config options:
 
-    * outdir : `~gammapy.extern.pathlib.Path`, str
+    * outdir : `pathlib.Path`, str
         Output folder, None means no output
     * background : dict
         Forwarded to `~gammapy.background.ReflectedRegionsBackgroundEstimator`

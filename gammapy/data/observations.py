@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from collections import OrderedDict
@@ -18,7 +17,7 @@ __all__ = ["DataStoreObservation", "Observations"]
 log = logging.getLogger(__name__)
 
 
-class DataStoreObservation(object):
+class DataStoreObservation:
     """IACT data store observation.
 
     Parameters
@@ -258,7 +257,7 @@ class DataStoreObservation(object):
         return checker.run(checks=checks)
 
 
-class Observations(object):
+class Observations:
     """Container class that holds a list of observations.
 
     Parameters

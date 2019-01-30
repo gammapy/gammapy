@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 import astropy.units as u
@@ -14,7 +13,7 @@ from ..stats.poisson import significance_on_off
 __all__ = ["LightCurve", "LightCurveEstimator"]
 
 
-class LightCurve(object):
+class LightCurve:
     """Lightcurve container.
 
     The lightcurve data is stored in ``table``.
@@ -348,7 +347,7 @@ class LightCurve(object):
         return x, (xn, xp)
 
 
-class LightCurveEstimator(object):
+class LightCurveEstimator:
     """Light curve estimator.
 
     For a usage example see :gp-notebook:`light_curve`.

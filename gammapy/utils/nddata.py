@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility functions and classes for n-dimensional data and axes."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
@@ -10,7 +9,7 @@ from .interpolation import ScaledRegularGridInterpolator
 __all__ = ["NDDataArray", "DataAxis", "BinnedDataAxis", "sqrt_space"]
 
 
-class NDDataArray(object):
+class NDDataArray:
     """ND Data Array Base class
 
     for usage examples see :gp-notebook:`nddata_demo`
@@ -194,7 +193,7 @@ class NDDataArray(object):
         )
 
 
-class DataAxis(object):
+class DataAxis:
     """Data axis to be used with NDDataArray
 
     Axis values are interpreted as nodes.

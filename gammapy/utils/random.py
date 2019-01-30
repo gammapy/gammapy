@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random sampling for some common distributions"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numbers
 import numpy as np
 from astropy.coordinates import Angle

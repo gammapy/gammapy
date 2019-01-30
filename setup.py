@@ -100,6 +100,7 @@ setup(
     name=PACKAGENAME,
     version=VERSION,
     description=DESCRIPTION,
+    python_requires='>=3.5',
     # Note: these are the versions we test.
     # Older versions could work, but are unsupported.
     # To find out if everything works run the Gammapy tests.
@@ -136,8 +137,6 @@ setup(
       'Operating System :: OS Independent',
       'Programming Language :: C',
       'Programming Language :: Cython',
-      'Programming Language :: Python :: 2',
-      'Programming Language :: Python :: 2.7',
       'Programming Language :: Python :: 3',
       'Programming Language :: Python :: 3.5',
       'Programming Language :: Python :: 3.6',

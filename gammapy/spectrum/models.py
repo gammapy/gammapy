@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spectral models for Gammapy."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import operator
 import numpy as np
 from scipy.optimize import brentq
@@ -1245,7 +1244,7 @@ class ScaleModel(SpectralModel):
         return norm * self.model(energy)
 
 
-class Absorption(object):
+class Absorption:
     r"""Gamma-ray absorption models.
 
     Parameters

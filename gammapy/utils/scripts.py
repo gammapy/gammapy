@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import logging
 import yaml
 from os.path import expandvars
-from ..extern.pathlib import Path
+from pathlib import Path
 
 __all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
 
@@ -49,7 +48,7 @@ def read_yaml(filename, logger=None):
 
     Parameters
     ----------
-    filename : `~gammapy.extern.pathlib.Path`, str
+    filename : `pathlib.Path`, str
         File to read
     """
     filename = make_path(filename)
@@ -84,7 +83,7 @@ def make_path(path):
 
     Parameters
     ----------
-    path : str, `~gammapy.extern.pathlib.Path`
+    path : str, `pathlib.Path`
         path to expand
     """
     # TODO: raise error or warning if environment variables that don't resolve are used

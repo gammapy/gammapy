@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import copy
 import inspect
@@ -12,7 +11,6 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from ..extern import six
 from ..utils.interpolation import interpolation_scale
 from .utils import find_hdu, find_bands_hdu
 
@@ -299,7 +297,7 @@ def pix_to_coord(edges, pix, interp="lin"):
     return scale.inverse(interp_fn(pix))
 
 
-class MapAxis(object):
+class MapAxis:
     """Class representing an axis of a map.
 
     Provides methods for
@@ -635,7 +633,7 @@ class MapAxis(object):
         return copy.deepcopy(self)
 
 
-class MapCoord(object):
+class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.
 
     Contains coordinates for 2 spatial dimensions and an arbitrary
@@ -674,7 +672,7 @@ class MapCoord(object):
         self._match_by_name = match_by_name
 
     def __getitem__(self, key):
-        if isinstance(key, six.string_types):
+        if isinstance(key, str):
             return self._data[key]
         else:
             return list(self._data.values())[key]
@@ -946,8 +944,7 @@ class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-@six.add_metaclass(MapGeomMeta)
-class MapGeom(object):
+class MapGeom(metaclass=MapGeomMeta):
     """Base class for WCS and HEALPix geometries."""
 
     @property

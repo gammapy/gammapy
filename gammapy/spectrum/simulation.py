@@ -1,5 +1,4 @@
 # Licensed under a 3 - clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import logging
 from ..utils.random import get_random_state
@@ -13,7 +12,7 @@ __all__ = ["SpectrumSimulation"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumSimulation(object):
+class SpectrumSimulation:
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
     For a usage example see :gp-notebook:`spectrum_simulation`

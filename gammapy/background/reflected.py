@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from scipy.ndimage import distance_transform_edt
@@ -64,7 +63,7 @@ def _compute_distance_image(mask_map):
     return mask_map.copy(data=distance)
 
 
-class ReflectedRegionsFinder(object):
+class ReflectedRegionsFinder:
     """Find reflected regions.
 
     This class is responsible for placing :ref:`region_reflected` for a given
@@ -266,7 +265,7 @@ class ReflectedRegionsFinder(object):
         return PixCoord(x=x, y=y)
 
 
-class ReflectedRegionsBackgroundEstimator(object):
+class ReflectedRegionsBackgroundEstimator:
     """Reflected Regions background estimator.
 
     This class is responsible for creating a

@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import abc
 import numpy as np
 from astropy.utils.misc import InheritDocstrings
-from ...extern import six
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
@@ -18,7 +16,7 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-class Registry(object):
+class Registry:
     """Registry of available backends for given tasks.
 
     Gives users the power to extend from their scripts.
@@ -63,8 +61,7 @@ class Registry(object):
 registry = Registry()
 
 
-@six.add_metaclass(FitMeta)
-class Fit(object):
+class Fit(metaclass=FitMeta):
     """Abstract Fit base class.
     """
 
@@ -394,7 +391,7 @@ class Fit(object):
         }
 
 
-class CovarianceResult(object):
+class CovarianceResult:
     """Covariance result object."""
 
     def __init__(self, model, success, nfev):
@@ -418,7 +415,7 @@ class CovarianceResult(object):
         return self._nfev
 
 
-class FitResult(object):
+class FitResult:
     """Fit result object."""
 
     def __init__(self, model, success, nfev, total_stat, message, backend, method):

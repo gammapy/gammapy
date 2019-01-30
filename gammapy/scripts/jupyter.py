@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Command line tool to perform actions on jupyter notebooks."""
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 import click
 import logging
 import os
@@ -34,10 +32,6 @@ def cli_jupyter_run(ctx, tutor, kernel):
 
 def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
-
-    if sys.version_info[0] < 3 and kernel == "python3":
-        kernel = "python2"
-
     try:
         t = time.time()
         cmd = [

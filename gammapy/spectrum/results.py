@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import yaml
 import numpy as np
 from astropy.table import Table, Column
@@ -11,7 +10,7 @@ from ..utils.energy import EnergyBounds
 __all__ = ["SpectrumFitResult", "SpectrumResult"]
 
 
-class SpectrumFitResult(object):
+class SpectrumFitResult:
     """Result of a `~gammapy.spectrum.SpectrumFit`.
 
     All fit results should be accessed via this class.
@@ -263,7 +262,7 @@ class SpectrumFitResult(object):
         ax.set_ylabel("ON (Predicted - Detected)")
 
 
-class SpectrumResult(object):
+class SpectrumResult:
     """Spectrum analysis results.
 
     Contains best fit model and flux points.

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from astropy.units import Quantity
@@ -10,7 +9,7 @@ __all__ = ["IRFStacker"]
 log = logging.getLogger(__name__)
 
 
-class IRFStacker(object):
+class IRFStacker:
     r"""
     Stack instrument response functions.
 

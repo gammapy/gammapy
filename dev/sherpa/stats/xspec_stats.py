@@ -6,7 +6,6 @@ https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
 Then I'll try to translate to the notation I use in gammapy.stats
 and get some test cases.
 """
-from __future__ import print_function, division
 import numpy as np
 from numpy import log, sqrt
 

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -8,7 +7,7 @@ from .obs_stats import ObservationStats
 __all__ = ["ObservationTableSummary", "ObservationSummary"]
 
 
-class ObservationTableSummary(object):
+class ObservationTableSummary:
     """Observation table summary.
 
     Class allowing to summarize informations contained in
@@ -119,7 +118,7 @@ class ObservationTableSummary(object):
         return ax
 
 
-class ObservationSummary(object):
+class ObservationSummary:
     """Summary of observations.
 
     For a list of observation stats, this class can make a

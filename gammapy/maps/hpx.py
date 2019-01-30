@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for dealing with HEALPix projections and mappings."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import re
 import copy
@@ -8,7 +7,6 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
-from ..extern import six
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat
@@ -25,7 +23,7 @@ HPX_ORDER_TO_PIXSIZE = np.array(
 )
 
 
-class HpxConv(object):
+class HpxConv:
     """Data structure to define how a HEALPIX map is stored to FITS."""
 
     def __init__(self, convname, **kwargs):
@@ -625,7 +623,7 @@ class HpxGeom(MapGeom):
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
 
-        if isinstance(region, six.string_types):
+        if isinstance(region, str):
             ipix = [
                 self.get_index_list(nside, self._nest, region)
                 for nside in self._nside.flat
@@ -1760,7 +1758,7 @@ class HpxGeom(MapGeom):
         return not self.__eq__(other)
 
 
-class HpxToWcsMapping(object):
+class HpxToWcsMapping:
     """Stores the indices need to convert from HEALPIX to WCS.
 
     Parameters

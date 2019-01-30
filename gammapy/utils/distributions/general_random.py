@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ...utils.random import get_random_state
 
 __all__ = ["GeneralRandom"]
 
 
-class GeneralRandom(object):
+class GeneralRandom:
     """Fast random number generation with an arbitrary pdf
     of a continuous variable x.
     Linear interpolation is applied between points pdf(x)

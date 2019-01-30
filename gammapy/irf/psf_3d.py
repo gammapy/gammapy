@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from astropy.table import Table
@@ -14,7 +13,7 @@ from .psf_table import TablePSF, EnergyDependentTablePSF
 __all__ = ["PSF3D"]
 
 
-class PSF3D(object):
+class PSF3D:
     """PSF with axes: energy, offset, rad.
 
     Data format specification: :ref:`gadf:psf_table`

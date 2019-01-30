@@ -10,9 +10,6 @@ jobs:
 
   strategy:
     matrix:
-      Python27:
-        imageName: 'ubuntu-16.04'
-        python.version: '2.7'
       Python35:
         imageName: 'ubuntu-16.04'
         python.version: '3.5'

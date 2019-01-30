@@ -51,22 +51,13 @@ For three or more things, using a Python ``dict`` instead should be preferred.
 
 .. _dev-python2and3:
 
-Python 2 and 3 support
+Python version support
 ----------------------
 
-In Gammapy we currently support Python 2.7, as well as Python 3.5 - 3.7.
-Code should be written in the common subset, using the bundled ``gammapy.extern.six``
-to help smooth over differences where needed.
+In Gammapy we currently support Python 3.5 or later.
 
-The following import should be at the top of every file in Gammapy, to allow
-us to write code that's closer to Python 3::
-
-    from __future__ import absolute_import, division, print_function, unicode_literals
-
-We do plan do drop legacy Python (Python 2.7) support when the Fermi ST and Fermi
-support Python 3.
-
-For further information, see PIG 3 in `GH 1278 <https://github.com/gammapy/gammapy/pull/1278>`__
+We plan to discuss later in 2019 whether to bump the version requirement to Python 3.6,
+to be able to take advantage of the new features introduced there.
 
 .. _dev-skip_tests:
 
@@ -471,11 +462,11 @@ merged a pull request (you can add ``[skip ci]`` on this commit).
 File and directory path handling
 --------------------------------
 
-In Gammapy use ``Path`` objects to handle file and directory paths.
+In Gammapy use `pathlib.Path` objects to handle file and directory paths.
 
 .. code-block:: python
 
-    from gammapy.extern.pathlib import Path
+    from pathlib import Path
 
     dir = Path('folder/subfolder')
     filename = dir / 'filename.fits'
@@ -491,13 +482,6 @@ One gotcha is that many functions (such as ``table.write`` in this example)
 expect ``str`` objects and refuse to work with ``Path`` objects, so you have
 to explicitly convert to ``str(path)``.
 
-Note that pathlib was added to the Python standard library in 3.4
-(see `here <https://docs.python.org/3/library/pathlib.html>`__),
-but since we support Python 2.7 and the Python devs keep improving the
-version in the standard library (by adding new methods and new options
-for existing methods), we decided to bundle the latest version
-(from `here <https://pypi.org/project/pathlib2/>`__) in
-``gammapy/extern/pathlib.py`` and that should always be used.
 
 Bundled gammapy.extern code
 ---------------------------
@@ -605,7 +589,7 @@ writing ``__repr__``, ``__str__`` and ``info`` methods on Gammapy classes.
 
 Let's use this as an example::
 
-    class Person(object):
+    class Person:
         def __init__(self, name='Anna', age=8):
             self.name = name
             self.age = age
@@ -679,7 +663,7 @@ If you need text representation that is configurable, i.e. tables arguments what
 to show, you should add a method called ``info``. To avoid code duplication, you
 should then call ``info`` from ``__str__``. Example::
 
-    class Person(object):
+    class Person:
         def __init__(self, name='Anna', age=8):
             self.name = name
             self.age = age

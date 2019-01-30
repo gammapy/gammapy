@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Supernova remnant (SNR) source models."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 import astropy.constants as const
@@ -10,7 +9,7 @@ from ...extern.validator import validate_physical_type
 __all__ = ["SNR", "SNRTrueloveMcKee"]
 
 
-class SNR(object):
+class SNR:
     """Simple supernova remnant (SNR) evolution model.
 
     The model is based on the Sedov-Taylor solution for strong explosions.

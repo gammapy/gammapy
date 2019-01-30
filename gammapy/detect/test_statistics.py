@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import contextlib
 import warnings
@@ -69,7 +68,7 @@ def f_cash(x, counts, background, model):
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
-class TSMapEstimator(object):
+class TSMapEstimator:
     """
     Compute TS map using different optimization methods.
 

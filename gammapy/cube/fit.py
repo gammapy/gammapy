@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
@@ -84,7 +83,7 @@ class MapFit(Fit):
         return np.sum(stat, dtype=np.float64)
 
 
-class MapEvaluator(object):
+class MapEvaluator:
     """Sky model evaluation on maps.
 
     This is a first attempt to compute flux as well as predicted counts maps.

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import subprocess
 from ..utils.scripts import make_path
@@ -14,7 +13,7 @@ __all__ = ["DataStore"]
 log = logging.getLogger(__name__)
 
 
-class DataStore(object):
+class DataStore:
     """IACT data store.
 
     The data selection and access happens using an observation

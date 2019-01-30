@@ -8,12 +8,27 @@ Summary
 
 - The Gammapy v0.11 release is planned for March 2019.
 
+**What's new?**
+
+Gammapy v0.11 drops support for Python 2.7, only Python 3.5 or newer is supported (see `PIG 3`_).
+If you have any questions or need help to install Python 3, or to update your
+scripts and notebooks to work in Python 3, please contact us any time on the
+Gammapy mailing list or Slack. We apologise for the disruption and are happy to
+help with this transition. Note that Gammapy v0.10 will remain available and is
+Python 2 compatible forever, so sticking with that version might be an option
+in some cases. pip and conda should handle this correctly, i.e. automatically
+pick the last compatible version (Gammapy v0.10) on Python 2, or if you try
+to force installation of a later version by explicitly giving a version number,
+emit an error and exit without installing or updating.
+
 Pull requests
 +++++++++++++
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.11 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
+
+- [#2012] Drop Python 2 support (Christoph Deil)
 
 .. _gammapy_0p10_release:
 

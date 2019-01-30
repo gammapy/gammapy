@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from astropy.modeling import Fittable1DModel, Parameter
@@ -310,7 +309,7 @@ class Exponential(Fittable1DModel):
         return amplitude * np.exp(-np.abs(z) / z_0)
 
 
-class LogSpiral(object):
+class LogSpiral:
     """Logarithmic spiral.
 
     Reference: http://en.wikipedia.org/wiki/Logarithmic_spiral

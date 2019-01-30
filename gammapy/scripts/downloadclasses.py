@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Download class for gammapy download CLI."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import hashlib
 import json
 import logging
 import sys
 import yaml
 import multiprocessing
-from ..extern.six.moves.urllib.request import urlretrieve, urlopen
-from ..extern.pathlib import Path
+from urllib.request import urlretrieve, urlopen
+from pathlib import Path
 from .. import version
 
 log = logging.getLogger(__name__)
@@ -73,7 +72,7 @@ def parse_imagefiles(notebookslist):
                     yield label, data
 
 
-class ComputePlan(object):
+class ComputePlan:
     """Generates the whole list of files to download"""
 
     def __init__(self, src, outfolder, version, option, modetutorials=False):
@@ -236,7 +235,7 @@ class ComputePlan(object):
                         self.listfiles[label]["datasets"].append(ds)
 
 
-class ParallelDownload(object):
+class ParallelDownload:
     """Manages the process of downloading files"""
 
     def __init__(self, listfiles, outfolder, release, option, modetutorials):

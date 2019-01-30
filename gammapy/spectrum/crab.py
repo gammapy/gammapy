@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import units as u
 from ..utils.fitting import Parameters
@@ -68,7 +67,7 @@ class MeyerCrabModel(SpectralModel):
         return flux / energy ** 2
 
 
-class CrabSpectrum(object):
+class CrabSpectrum:
     """Crab nebula spectral model.
 
     The Crab nebula is often used as a standard candle in gamma-ray astronomy.

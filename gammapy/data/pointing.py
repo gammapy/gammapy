@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from scipy.interpolate import interp1d
 from astropy.version import version as astropy_version
 from astropy.utils import lazyproperty
@@ -13,7 +12,7 @@ from ..utils.fits import earth_location_from_dict
 __all__ = ["PointingInfo"]
 
 
-class PointingInfo(object):
+class PointingInfo:
     """IACT array pointing info.
 
     Data format specification: :ref:`gadf:iact-pnt`

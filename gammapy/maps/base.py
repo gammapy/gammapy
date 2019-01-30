@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import abc
 import copy
 import inspect
@@ -11,7 +10,6 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from .geom import pix_tuple_to_idx, MapCoord
 from .utils import unpack_seq
-from ..extern import six
 from ..utils.scripts import make_path
 
 __all__ = ["Map"]
@@ -21,8 +19,7 @@ class MapMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-@six.add_metaclass(MapMeta)
-class Map(object):
+class Map(metaclass=MapMeta):
     """Abstract map class.
 
     This can represent WCS- or HEALPIX-based maps

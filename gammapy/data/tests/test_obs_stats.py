@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 import pytest
 from astropy.coordinates import SkyCoord
@@ -78,7 +77,7 @@ def stats_stacked_bad_on_region(bad_on_region, observations):
 
 
 @requires_data("gammapy-data")
-class TestObservationStats(object):
+class TestObservationStats:
     def test_str(self, stats):
         text = str(stats)
         assert "Observation summary report" in text

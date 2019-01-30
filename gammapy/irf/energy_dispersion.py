@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from collections import OrderedDict
 import numpy as np
 from scipy.special import erf
@@ -15,7 +14,7 @@ from ..utils.fits import energy_axis_to_ebounds
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 
 
-class EnergyDispersion(object):
+class EnergyDispersion:
     """Energy dispersion matrix.
 
     Data format specification: :ref:`gadf:ogip-rmf`
@@ -276,7 +275,7 @@ class EnergyDispersion(object):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             File to read
         hdu1 : str, optional
             HDU containing the energy dispersion matrix, default: MATRIX
@@ -611,7 +610,7 @@ class EnergyDispersion(object):
         plt.tight_layout()
 
 
-class EnergyDispersion2D(object):
+class EnergyDispersion2D:
     """Offset-dependent energy dispersion matrix.
 
     Data format specification: :ref:`gadf:edisp_2d`

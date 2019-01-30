@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from collections import namedtuple
 import numpy as np
@@ -19,7 +18,7 @@ __all__ = ["EventListBase", "EventList", "EventListLAT"]
 log = logging.getLogger(__name__)
 
 
-class EventListBase(object):
+class EventListBase:
     """Event list.
 
     This class represents the base for two different event lists:
@@ -73,7 +72,7 @@ class EventListBase(object):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             Filename
         """
         filename = make_path(filename)
