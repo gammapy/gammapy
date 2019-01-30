@@ -634,9 +634,7 @@ class SourceCatalogHGPS(SourceCatalog):
         table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ("Identified_Object",)
-        super().__init__(
-            table=table, source_name_alias=source_name_alias
-        )
+        super().__init__(table=table, source_name_alias=source_name_alias)
 
         self._table_components = Table.read(filename, hdu="HGPS_GAUSS_COMPONENTS")
         self._table_associations = Table.read(filename, hdu="HGPS_ASSOCIATIONS")

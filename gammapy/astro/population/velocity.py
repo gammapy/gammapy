@@ -36,9 +36,7 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     sigma = Parameter()
 
     def __init__(self, amplitude=1, sigma=265, **kwargs):
-        super().__init__(
-            amplitude=amplitude, sigma=sigma, **kwargs
-        )
+        super().__init__(amplitude=amplitude, sigma=sigma, **kwargs)
 
     @staticmethod
     def evaluate(v, amplitude, sigma):
@@ -109,9 +107,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     v_0 = Parameter()
 
     def __init__(self, amplitude=1, v_0=560, **kwargs):
-        super().__init__(
-            amplitude=amplitude, v_0=v_0, **kwargs
-        )
+        super().__init__(amplitude=amplitude, v_0=v_0, **kwargs)
 
     @staticmethod
     def evaluate(v, amplitude, v_0):

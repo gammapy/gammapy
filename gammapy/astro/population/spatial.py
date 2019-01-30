@@ -219,9 +219,7 @@ class FaucherKaspi2006(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_0=7.04, sigma=1.83, **kwargs):
-        super().__init__(
-            amplitude=amplitude, r_0=r_0, sigma=sigma, **kwargs
-        )
+        super().__init__(amplitude=amplitude, r_0=r_0, sigma=sigma, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, r_0, sigma):
