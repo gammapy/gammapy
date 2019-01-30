@@ -14,7 +14,7 @@ from ..utils.fits import energy_axis_to_ebounds
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 
 
-class EnergyDispersion(object):
+class EnergyDispersion:
     """Energy dispersion matrix.
 
     Data format specification: :ref:`gadf:ogip-rmf`
@@ -610,7 +610,7 @@ class EnergyDispersion(object):
         plt.tight_layout()
 
 
-class EnergyDispersion2D(object):
+class EnergyDispersion2D:
     """Offset-dependent energy dispersion matrix.
 
     Data format specification: :ref:`gadf:edisp_2d`

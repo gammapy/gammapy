@@ -39,7 +39,7 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
     return g1 - g2
 
 
-class CWT(object):
+class CWT:
     """Continuous wavelet transform.
 
     TODO: describe algorithm (modify the words below)
@@ -300,7 +300,7 @@ class CWT(object):
             )
 
 
-class CWTKernels(object):
+class CWTKernels:
     """Conduct arrays of kernels and scales for CWT algorithm.
 
     Parameters
@@ -424,7 +424,7 @@ class CWTKernels(object):
         return Table(rows=rows, names=["Name", "Source"])
 
 
-class CWTData(object):
+class CWTData:
     """Images for CWT algorithm.
 
     Contains also input counts and background.

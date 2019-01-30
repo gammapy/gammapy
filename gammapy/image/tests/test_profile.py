@@ -45,7 +45,7 @@ def cosine_profile():
     return ImageProfile(table)
 
 
-class TestImageProfileEstimator(object):
+class TestImageProfileEstimator:
     def test_lat_profile_sum(self, checkerboard_image):
         p = ImageProfileEstimator(axis="lat", method="sum")
         profile = p.run(checkerboard_image)
@@ -101,7 +101,7 @@ class TestImageProfileEstimator(object):
         assert_quantity_allclose(profile.profile, desired)
 
 
-class TestImageProfile(object):
+class TestImageProfile:
     def test_normalize(self, cosine_profile):
         normalized = cosine_profile.normalize(mode="integral")
         profile = normalized.profile

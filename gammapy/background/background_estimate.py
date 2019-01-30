@@ -5,7 +5,7 @@ from .ring import ring_area_factor
 __all__ = ["BackgroundEstimate", "ring_background_estimate"]
 
 
-class BackgroundEstimate(object):
+class BackgroundEstimate:
     """Container class for background estimate.
 
     This container holds the result from a region based background estimation

@@ -309,7 +309,7 @@ class Exponential(Fittable1DModel):
         return amplitude * np.exp(-np.abs(z) / z_0)
 
 
-class LogSpiral(object):
+class LogSpiral:
     """Logarithmic spiral.
 
     Reference: http://en.wikipedia.org/wiki/Logarithmic_spiral

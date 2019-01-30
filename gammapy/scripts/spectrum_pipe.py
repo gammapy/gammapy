@@ -15,7 +15,7 @@ __all__ = ["SpectrumAnalysisIACT"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumAnalysisIACT(object):
+class SpectrumAnalysisIACT:
     """High-level analysis class to perform a full 1D IACT spectral analysis.
 
     Observation selection must have happened before.

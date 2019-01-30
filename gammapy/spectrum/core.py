@@ -16,7 +16,7 @@ __all__ = ["CountsSpectrum", "PHACountsSpectrum", "PHACountsSpectrumList"]
 log = logging.getLogger("__name__")
 
 
-class CountsSpectrum(object):
+class CountsSpectrum:
     """Generic counts spectrum.
 
     Parameters

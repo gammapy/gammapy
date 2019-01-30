@@ -6,7 +6,7 @@ from .background_estimate import BackgroundEstimate
 __all__ = ["PhaseBackgroundEstimator"]
 
 
-class PhaseBackgroundEstimator(object):
+class PhaseBackgroundEstimator:
     """Background estimation with on and off phases.
 
     This class is responsible for creating a

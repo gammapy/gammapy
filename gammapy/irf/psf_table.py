@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 DEFAULT_PSF_SPLINE_KWARGS = dict(k=1, s=0)
 
 
-class TablePSF(object):
+class TablePSF:
     r"""Radially-symmetric table PSF.
 
     This PSF represents a :math:`PSF(r)=dP / d\Omega(r)`
@@ -347,7 +347,7 @@ class TablePSF(object):
         return rad
 
 
-class EnergyDependentTablePSF(object):
+class EnergyDependentTablePSF:
     """Energy-dependent radially-symmetric table PSF (``gtpsf`` format).
 
     TODO: add references and explanations.

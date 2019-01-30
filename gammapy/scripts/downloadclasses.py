@@ -72,7 +72,7 @@ def parse_imagefiles(notebookslist):
                     yield label, data
 
 
-class ComputePlan(object):
+class ComputePlan:
     """Generates the whole list of files to download"""
 
     def __init__(self, src, outfolder, version, option, modetutorials=False):
@@ -235,7 +235,7 @@ class ComputePlan(object):
                         self.listfiles[label]["datasets"].append(ds)
 
 
-class ParallelDownload(object):
+class ParallelDownload:
     """Manages the process of downloading files"""
 
     def __init__(self, listfiles, outfolder, release, option, modetutorials):

@@ -12,7 +12,7 @@ __all__ = ["HDULocation", "HDUIndexTable"]
 log = logging.getLogger(__name__)
 
 
-class HDULocation(object):
+class HDULocation:
     """HDU localisation, loading and Gammapy object mapper.
 
     This represents one row in `HDUIndexTable`.

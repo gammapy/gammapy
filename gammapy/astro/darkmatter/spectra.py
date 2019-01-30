@@ -10,7 +10,7 @@ from ...spectrum.models import TableModel
 __all__ = ["PrimaryFlux"]
 
 
-class PrimaryFlux(object):
+class PrimaryFlux:
     """DM-annihilation gamma-ray spectra.
 
     Based on the precomputed models by `Cirelli et al.

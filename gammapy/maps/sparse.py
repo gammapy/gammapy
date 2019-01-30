@@ -37,7 +37,7 @@ def slices_to_idxs(slices, shape, ndim):
     return idx
 
 
-class SparseArray(object):
+class SparseArray:
     """Sparse N-dimensional array object.
 
     This class implements a data structure for sparse n-dimensional

@@ -13,7 +13,7 @@ from .psf_table import TablePSF, EnergyDependentTablePSF
 __all__ = ["PSF3D"]
 
 
-class PSF3D(object):
+class PSF3D:
     """PSF with axes: energy, offset, rad.
 
     Data format specification: :ref:`gadf:psf_table`

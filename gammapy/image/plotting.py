@@ -15,9 +15,9 @@ __all__ = [
 __doctest_requires__ = {("colormap_hess", "colormap_milagro"): ["matplotlib"]}
 
 
-class MapPanelPlotter(object):
+class MapPanelPlotter:
     """
-    Mape panel plotter class.
+    Map panel plotter class.
 
     Given a `~matplotlib.pyplot.Figure` object this class creates axes objects
     using `~matplotlib.gridspec.GridSpec` and plots a given sky map onto these.

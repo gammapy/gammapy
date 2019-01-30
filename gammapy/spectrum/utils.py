@@ -5,7 +5,7 @@ from astropy.units import Quantity
 __all__ = ["CountsPredictor", "integrate_spectrum"]
 
 
-class CountsPredictor(object):
+class CountsPredictor:
     """Calculate number of predicted counts (``npred``).
 
     The true and reconstructed energy binning are inferred from the provided IRFs.

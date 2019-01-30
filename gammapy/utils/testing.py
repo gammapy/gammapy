@@ -213,7 +213,7 @@ def mpl_plot_check():
     import matplotlib.pyplot as plt
     from io import BytesIO
 
-    class MPLPlotCheck(object):
+    class MPLPlotCheck:
         def __enter__(self):
             plt.figure()
 
@@ -224,7 +224,7 @@ def mpl_plot_check():
     return MPLPlotCheck()
 
 
-class Checker(object):
+class Checker:
     """Base class for checker classes in Gammapy."""
 
     def run(self, checks="all"):

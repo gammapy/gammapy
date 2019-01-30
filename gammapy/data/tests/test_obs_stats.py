@@ -77,7 +77,7 @@ def stats_stacked_bad_on_region(bad_on_region, observations):
 
 
 @requires_data("gammapy-data")
-class TestObservationStats(object):
+class TestObservationStats:
     def test_str(self, stats):
         text = str(stats)
         assert "Observation summary report" in text

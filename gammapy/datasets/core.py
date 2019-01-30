@@ -65,7 +65,7 @@ def make_dataset(config):
     return ds
 
 
-class OneFileDataset(object):
+class OneFileDataset:
     """One file simple dataset."""
 
     def __init__(self, name, filename, url=None, description=None, tags=None):
@@ -93,7 +93,7 @@ class OneFileDataset(object):
         print("Available: {}".format(available), file=file)
 
 
-class Datasets(object):
+class Datasets:
     """Download and access for all built-in datasets.
 
     TODO: this isn't used much at the moment and not documented.
@@ -204,7 +204,7 @@ class GammapyDataNotFoundError(OSError):
     pass
 
 
-class _GammapyData(object):
+class _GammapyData:
     """Access files from gammapy-data.
 
     You have to set the `GAMMAPY_DATA` environment variable

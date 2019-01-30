@@ -13,7 +13,7 @@ __all__ = ["SpectrumExtraction"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumExtraction(object):
+class SpectrumExtraction:
     """Creating input data to 1D spectrum fitting.
 
     This class is responsible for extracting a

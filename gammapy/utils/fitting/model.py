@@ -4,7 +4,7 @@ import copy
 __all__ = ["Model"]
 
 
-class Model(object):
+class Model:
     """Model base class."""
 
     # TODO: expose model parameters as attributes

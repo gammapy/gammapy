@@ -17,7 +17,7 @@ __all__ = ["DataStoreObservation", "Observations"]
 log = logging.getLogger(__name__)
 
 
-class DataStoreObservation(object):
+class DataStoreObservation:
     """IACT data store observation.
 
     Parameters
@@ -257,7 +257,7 @@ class DataStoreObservation(object):
         return checker.run(checks=checks)
 
 
-class Observations(object):
+class Observations:
     """Container class that holds a list of observations.
 
     Parameters

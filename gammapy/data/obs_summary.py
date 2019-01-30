@@ -7,7 +7,7 @@ from .obs_stats import ObservationStats
 __all__ = ["ObservationTableSummary", "ObservationSummary"]
 
 
-class ObservationTableSummary(object):
+class ObservationTableSummary:
     """Observation table summary.
 
     Class allowing to summarize informations contained in
@@ -118,7 +118,7 @@ class ObservationTableSummary(object):
         return ax
 
 
-class ObservationSummary(object):
+class ObservationSummary:
     """Summary of observations.
 
     For a list of observation stats, this class can make a

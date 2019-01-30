@@ -9,7 +9,7 @@ from ...extern.validator import validate_physical_type
 __all__ = ["SNR", "SNRTrueloveMcKee"]
 
 
-class SNR(object):
+class SNR:
     """Simple supernova remnant (SNR) evolution model.
 
     The model is based on the Sedov-Taylor solution for strong explosions.

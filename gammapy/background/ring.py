@@ -9,7 +9,7 @@ from ..image.utils import scale_cube
 __all__ = ["AdaptiveRingBackgroundEstimator", "RingBackgroundEstimator"]
 
 
-class AdaptiveRingBackgroundEstimator(object):
+class AdaptiveRingBackgroundEstimator:
     """Adaptive ring background algorithm.
 
     This algorithm extends the `RingBackgroundEstimator` method by adapting the
@@ -246,7 +246,7 @@ class AdaptiveRingBackgroundEstimator(object):
         }
 
 
-class RingBackgroundEstimator(object):
+class RingBackgroundEstimator:
     """Ring background method for cartesian coordinates.
 
     - Step 1: apply exclusion mask

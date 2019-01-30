@@ -16,7 +16,7 @@ class FitMeta(InheritDocstrings, abc.ABCMeta):
     pass
 
 
-class Registry(object):
+class Registry:
     """Registry of available backends for given tasks.
 
     Gives users the power to extend from their scripts.
@@ -391,7 +391,7 @@ class Fit(metaclass=FitMeta):
         }
 
 
-class CovarianceResult(object):
+class CovarianceResult:
     """Covariance result object."""
 
     def __init__(self, model, success, nfev):
@@ -415,7 +415,7 @@ class CovarianceResult(object):
         return self._nfev
 
 
-class FitResult(object):
+class FitResult:
     """Fit result object."""
 
     def __init__(self, model, success, nfev, total_stat, message, backend, method):

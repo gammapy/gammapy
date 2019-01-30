@@ -45,7 +45,7 @@ class SpectrumStats(ObservationStats):
         return data
 
 
-class SpectrumObservation(object):
+class SpectrumObservation:
     """1D spectral analysis storage class.
 
     This container holds the ingredients for 1D region based spectral analysis.
@@ -716,7 +716,7 @@ class SpectrumObservationList(UserList):
         return interact(show_obs, idx=(0, max_, 1))
 
 
-class SpectrumObservationStacker(object):
+class SpectrumObservationStacker:
     r"""Stack observations in a `~gammapy.spectrum.SpectrumObservationList`.
 
     The stacking of :math:`j` observations is implemented as follows.

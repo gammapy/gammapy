@@ -12,7 +12,7 @@ from ..utils.fits import earth_location_from_dict
 __all__ = ["PointingInfo"]
 
 
-class PointingInfo(object):
+class PointingInfo:
     """IACT array pointing info.
 
     Data format specification: :ref:`gadf:iact-pnt`

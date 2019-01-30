@@ -70,7 +70,7 @@ def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
     return interp((norm,))
 
 
-class FluxPoints(object):
+class FluxPoints:
     """Flux points container.
 
     The supported formats are described here: :ref:`gadf:flux-points`
@@ -743,7 +743,7 @@ class FluxPoints(object):
         return ax
 
 
-class FluxPointEstimator(object):
+class FluxPointEstimator:
     """Flux point estimator.
 
     Estimates flux points for a given spectrum observation dataset, energy groups

@@ -13,7 +13,7 @@ __all__ = ["DataStore"]
 log = logging.getLogger(__name__)
 
 
-class DataStore(object):
+class DataStore:
     """IACT data store.
 
     The data selection and access happens using an observation

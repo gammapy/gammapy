@@ -589,7 +589,7 @@ writing ``__repr__``, ``__str__`` and ``info`` methods on Gammapy classes.
 
 Let's use this as an example::
 
-    class Person(object):
+    class Person:
         def __init__(self, name='Anna', age=8):
             self.name = name
             self.age = age
@@ -663,7 +663,7 @@ If you need text representation that is configurable, i.e. tables arguments what
 to show, you should add a method called ``info``. To avoid code duplication, you
 should then call ``info`` from ``__str__``. Example::
 
-    class Person(object):
+    class Person:
         def __init__(self, name='Anna', age=8):
             self.name = name
             self.age = age

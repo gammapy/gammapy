@@ -6,7 +6,7 @@ import astropy.units as u
 __all__ = ["JFactory", "compute_dm_flux"]
 
 
-class JFactory(object):
+class JFactory:
     """Compute J-Factor maps.
 
     All J-Factors are computed for annihilation. The assumed dark matter

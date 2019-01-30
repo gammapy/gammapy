@@ -4,7 +4,7 @@ from astropy.table import Table
 __all__ = ["source_catalogs", "SourceCatalogRegistry"]
 
 
-class SourceCatalogRegistry(object):
+class SourceCatalogRegistry:
     """Source catalog registry.
 
     Provides simple and efficient access to source catalogs

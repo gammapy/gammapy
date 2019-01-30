@@ -205,7 +205,7 @@ __all__ = ["SmartHDUList", "energy_axis_to_ebounds", "earth_location_from_dict"]
 
 # TODO: decide what to call this class.
 # Would `FITSFile` be better than `SmartHDUList`?
-class SmartHDUList(object):
+class SmartHDUList:
     """A FITS HDU list wrapper with some sugar.
 
     This is a thin wrapper around `~astropy.io.fits.HDUList`,

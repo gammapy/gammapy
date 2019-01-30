@@ -15,7 +15,7 @@ __all__ = ["PSFKing"]
 log = logging.getLogger(__name__)
 
 
-class PSFKing(object):
+class PSFKing:
     """King profile analytical PSF depending on energy and offset.
 
     This PSF parametrisation and FITS data format is described here: :ref:`gadf:psf_king`.

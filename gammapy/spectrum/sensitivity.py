@@ -8,7 +8,7 @@ from .utils import CountsPredictor
 __all__ = ["SensitivityEstimator"]
 
 
-class SensitivityEstimator(object):
+class SensitivityEstimator:
     """Estimate differential sensitivity.
 
     Uses a 1D spectral analysis and on / off measurement.

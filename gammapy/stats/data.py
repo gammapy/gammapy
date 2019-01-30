@@ -6,7 +6,7 @@ from ..utils.random import get_random_state
 __all__ = ["Stats", "make_stats", "combine_stats", "compute_total_stats"]
 
 
-class Stats(object):
+class Stats:
     """Container for an on-off observation.
 
     Parameters

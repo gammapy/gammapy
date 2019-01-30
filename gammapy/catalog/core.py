@@ -11,7 +11,7 @@ from .utils import skycoord_from_table
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
 
-class SourceCatalogObject(object):
+class SourceCatalogObject:
     """Source catalog object.
 
     This class can be used directly, but it's mostly used as a
@@ -74,7 +74,7 @@ class SourceCatalogObject(object):
         return skycoord_from_table(self.data)
 
 
-class SourceCatalog(object):
+class SourceCatalog:
     """Generic source catalog.
 
     This class can be used directly, but it's mostly used as a

@@ -16,7 +16,7 @@ B_CONST = Quantity(3.2e19, "gauss s^(-1/2)")
 """Pulsar default magnetic field constant"""
 
 
-class SimplePulsar(object):
+class SimplePulsar:
     """Magnetic dipole spin-down model for a pulsar.
 
     Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html

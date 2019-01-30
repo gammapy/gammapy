@@ -55,7 +55,7 @@ def compute_binning(data, n_bins, method="equal width", eps=1e-10):
 
 # TODO: implement measuring profile along arbitrary directions
 # TODO: think better about error handling. e.g. MC based methods
-class ImageProfileEstimator(object):
+class ImageProfileEstimator:
     """Estimate profile from image.
 
     Parameters
@@ -218,7 +218,7 @@ class ImageProfileEstimator(object):
         return ImageProfile(result)
 
 
-class ImageProfile(object):
+class ImageProfile:
     """Image profile class.
 
     The image profile data is stored in `~astropy.table.Table` object, with the

@@ -63,7 +63,7 @@ def _compute_distance_image(mask_map):
     return mask_map.copy(data=distance)
 
 
-class ReflectedRegionsFinder(object):
+class ReflectedRegionsFinder:
     """Find reflected regions.
 
     This class is responsible for placing :ref:`region_reflected` for a given
@@ -265,7 +265,7 @@ class ReflectedRegionsFinder(object):
         return PixCoord(x=x, y=y)
 
 
-class ReflectedRegionsBackgroundEstimator(object):
+class ReflectedRegionsBackgroundEstimator:
     """Reflected Regions background estimator.
 
     This class is responsible for creating a

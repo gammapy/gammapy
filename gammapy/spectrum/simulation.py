@@ -12,7 +12,7 @@ __all__ = ["SpectrumSimulation"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumSimulation(object):
+class SpectrumSimulation:
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
     For a usage example see :gp-notebook:`spectrum_simulation`

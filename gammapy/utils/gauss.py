@@ -7,7 +7,7 @@ from scipy.optimize import brentq
 __doctest_requires__ = {("gaussian_sum_moments"): ["uncertainties"]}
 
 
-class Gauss2DPDF(object):
+class Gauss2DPDF:
     """2D symmetric Gaussian PDF.
 
     Reference: http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
@@ -126,7 +126,7 @@ class Gauss2DPDF(object):
         return Gauss2DPDF(new_sigma)
 
 
-class MultiGauss2D(object):
+class MultiGauss2D:
     """Sum of multiple 2D Gaussians.
 
     Parameters

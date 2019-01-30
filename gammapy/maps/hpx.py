@@ -23,7 +23,7 @@ HPX_ORDER_TO_PIXSIZE = np.array(
 )
 
 
-class HpxConv(object):
+class HpxConv:
     """Data structure to define how a HEALPIX map is stored to FITS."""
 
     def __init__(self, convname, **kwargs):
@@ -1758,7 +1758,7 @@ class HpxGeom(MapGeom):
         return not self.__eq__(other)
 
 
-class HpxToWcsMapping(object):
+class HpxToWcsMapping:
     """Stores the indices need to convert from HEALPIX to WCS.
 
     Parameters

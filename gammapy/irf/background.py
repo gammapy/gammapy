@@ -10,7 +10,7 @@ from ..utils.scripts import make_path
 __all__ = ["Background3D", "Background2D"]
 
 
-class Background3D(object):
+class Background3D:
     """Background 3D.
 
     Data format specification: :ref:`gadf:bkg_3d`
@@ -212,7 +212,7 @@ class Background3D(object):
         )
 
 
-class Background2D(object):
+class Background2D:
     """Background 2D.
 
     Data format specification: :ref:`gadf:bkg_2d`

@@ -83,7 +83,7 @@ class MapFit(Fit):
         return np.sum(stat, dtype=np.float64)
 
 
-class MapEvaluator(object):
+class MapEvaluator:
     """Sky model evaluation on maps.
 
     This is a first attempt to compute flux as well as predicted counts maps.

@@ -1244,7 +1244,7 @@ class ScaleModel(SpectralModel):
         return norm * self.model(energy)
 
 
-class Absorption(object):
+class Absorption:
     r"""Gamma-ray absorption models.
 
     Parameters

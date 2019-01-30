@@ -11,7 +11,7 @@ from ..source import Pulsar, SNRTrueloveMcKee
 __all__ = ["PWN"]
 
 
-class PWN(object):
+class PWN:
     """Simple pulsar wind nebula (PWN) evolution model.
 
     Parameters

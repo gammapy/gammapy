@@ -5,7 +5,7 @@ from ...utils.random import get_random_state
 __all__ = ["GeneralRandom"]
 
 
-class GeneralRandom(object):
+class GeneralRandom:
     """Fast random number generation with an arbitrary pdf
     of a continuous variable x.
     Linear interpolation is applied between points pdf(x)

@@ -12,7 +12,7 @@ __all__ = ["MapMaker", "MapMakerObs"]
 log = logging.getLogger(__name__)
 
 
-class MapMaker(object):
+class MapMaker:
     """Make maps from IACT observations.
 
     Parameters
@@ -159,7 +159,7 @@ class MapMaker(object):
         return images
 
 
-class MapMakerObs(object):
+class MapMakerObs:
     """Make maps for a single IACT observation.
 
     Parameters

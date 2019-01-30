@@ -18,7 +18,7 @@ __all__ = ["EventListBase", "EventList", "EventListLAT"]
 log = logging.getLogger(__name__)
 
 
-class EventListBase(object):
+class EventListBase:
     """Event list.
 
     This class represents the base for two different event lists:

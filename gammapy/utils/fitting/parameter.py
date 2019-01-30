@@ -9,7 +9,7 @@ from ..array import check_type
 __all__ = ["Parameter", "Parameters"]
 
 
-class Parameter(object):
+class Parameter:
     """
     Class representing model parameters.
 
@@ -213,7 +213,7 @@ class Parameter(object):
             raise ValueError("Invalid method: {}".format(method))
 
 
-class Parameters(object):
+class Parameters:
     """List of `Parameter`.
 
     Holds covariance matrix

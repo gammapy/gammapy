@@ -9,7 +9,7 @@ from .interpolation import ScaledRegularGridInterpolator
 __all__ = ["NDDataArray", "DataAxis", "BinnedDataAxis", "sqrt_space"]
 
 
-class NDDataArray(object):
+class NDDataArray:
     """ND Data Array Base class
 
     for usage examples see :gp-notebook:`nddata_demo`
@@ -193,7 +193,7 @@ class NDDataArray(object):
         )
 
 
-class DataAxis(object):
+class DataAxis:
     """Data axis to be used with NDDataArray
 
     Axis values are interpreted as nodes.

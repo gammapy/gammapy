@@ -15,7 +15,7 @@ __all__ = ["KernelBackgroundEstimator"]
 
 # TODO: use `Map.copy` or `Map.copy` once available
 # instead of the awkward way with `Map.from_geom` and adjusting map data after.
-class KernelBackgroundEstimator(object):
+class KernelBackgroundEstimator:
     """Estimate background and exclusion mask iteratively.
 
     Starting from an initial background estimate and exclusion mask

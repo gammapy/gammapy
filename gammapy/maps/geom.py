@@ -297,7 +297,7 @@ def pix_to_coord(edges, pix, interp="lin"):
     return scale.inverse(interp_fn(pix))
 
 
-class MapAxis(object):
+class MapAxis:
     """Class representing an axis of a map.
 
     Provides methods for
@@ -633,7 +633,7 @@ class MapAxis(object):
         return copy.deepcopy(self)
 
 
-class MapCoord(object):
+class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.
 
     Contains coordinates for 2 spatial dimensions and an arbitrary

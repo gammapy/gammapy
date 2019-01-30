@@ -14,7 +14,7 @@ def _significance_asmooth(counts, background):
     return (counts - background) / np.sqrt(counts + background)
 
 
-class ASmooth(object):
+class ASmooth:
     """Adaptively smooth counts image.
 
     Achieves a roughly constant significance of features across the whole image.

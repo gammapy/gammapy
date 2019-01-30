@@ -6,7 +6,7 @@ from ...utils.random import get_random_state
 __all__ = ["GeneralRandomArray"]
 
 
-class GeneralRandomArray(object):
+class GeneralRandomArray:
     """Draw random indices from a discrete probability distribution
     given by a numpy array.
     The array dimension can be arbitrary.

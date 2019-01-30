@@ -27,7 +27,7 @@ __all__ = ["SpectrumEnergyGroup", "SpectrumEnergyGroups", "SpectrumEnergyGroupMa
 log = logging.getLogger(__name__)
 
 
-class SpectrumEnergyGroup(object):
+class SpectrumEnergyGroup:
     """Spectrum energy group.
 
     Represents a consecutive range of bin indices (both ends inclusive).
@@ -202,7 +202,7 @@ class SpectrumEnergyGroups(UserList):
         return Quantity(energy)
 
 
-class SpectrumEnergyGroupMaker(object):
+class SpectrumEnergyGroupMaker:
     """Energy bin groups for spectral analysis.
 
     This class contains both methods that run algorithms

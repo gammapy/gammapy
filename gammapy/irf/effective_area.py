@@ -11,7 +11,7 @@ from ..utils.scripts import make_path
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
 
 
-class EffectiveAreaTable(object):
+class EffectiveAreaTable:
     """Effective area table.
 
     TODO: Document
@@ -315,7 +315,7 @@ class EffectiveAreaTable(object):
         )
 
 
-class EffectiveAreaTable2D(object):
+class EffectiveAreaTable2D:
     """2D effective area table.
 
     Data format specification: :ref:`gadf:aeff_2d`

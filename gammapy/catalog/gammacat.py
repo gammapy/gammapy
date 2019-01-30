@@ -486,7 +486,7 @@ class SourceCatalogGammaCat(SourceCatalog):
         return SkyModels(source_list)
 
 
-class GammaCatDataCollection(object):
+class GammaCatDataCollection:
     """Data store for gamma-cat.
 
     Gives access to all data from https://github.com/gammapy/gamma-cat .
@@ -515,7 +515,7 @@ class GammaCatDataCollection(object):
 
 
 @functools.total_ordering
-class GammaCatResource(object):
+class GammaCatResource:
     """Reference for a single resource in gamma-cat.
 
     This can be considered an implementation detail,
@@ -611,7 +611,7 @@ class GammaCatResource(object):
         )
 
 
-class GammaCatResourceIndex(object):
+class GammaCatResourceIndex:
     """Resource index for gamma-cat.
 
     Parameters

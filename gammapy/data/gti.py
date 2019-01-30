@@ -8,7 +8,7 @@ from ..utils.scripts import make_path
 __all__ = ["GTI"]
 
 
-class GTI(object):
+class GTI:
     """Good time intervals (GTI) `~astropy.table.Table`.
 
     Data format specification: :ref:`gadf:iact-gti`

@@ -8,7 +8,7 @@ __all__ = []
 
 # TODO: change this checker to the structure of the other checkers
 # we have; see gammapy.utils.testing.Checker and examples in gammapy.data
-class PSF3DChecker(object):
+class PSF3DChecker:
     """Automated quality checks for `gammapy.irf.PSF3D`.
 
     At the moment used for HESS HAP HD.

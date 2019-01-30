@@ -55,7 +55,7 @@ def make_psf_map(psf, pointing, geom, max_offset):
     return PSFMap(psfmap)
 
 
-class PSFMap(object):
+class PSFMap:
     """Class containing the Map of PSFs and allowing to interact with it.
 
     Parameters

@@ -32,7 +32,7 @@ FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
-class SourceCatalogObjectHGPSComponent(object):
+class SourceCatalogObjectHGPSComponent:
     """One Gaussian component from the HGPS catalog.
 
     See also
@@ -708,7 +708,7 @@ class SourceCatalogHGPS(SourceCatalog):
         return SourceCatalogObjectHGPSComponent(data=data)
 
 
-class SourceCatalogLargeScaleHGPS(object):
+class SourceCatalogLargeScaleHGPS:
     """Gaussian band model.
 
     This 2-dimensional model is Gaussian in ``y`` for a given ``x``,

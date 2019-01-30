@@ -3,7 +3,7 @@ from sherpa_contrib.profiles import *
 from sherpa.astro.ui import *
 
 
-class wstat_2D(object):
+class wstat_2D:
     """ A tentative approach to deal with the wstat in sherpa
         to compute the proper statistics one needs to use 
         the signal and background datasets as well as the model 

@@ -112,7 +112,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     return kernel_map.downsample(factor, preserve_counts=True)
 
 
-class PSFKernel(object):
+class PSFKernel:
     """PSF kernel for `~gammapy.maps.Map`.
 
     This is a container class to store a PSF kernel

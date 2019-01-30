@@ -9,7 +9,7 @@ __all__ = ["IRFStacker"]
 log = logging.getLogger(__name__)
 
 
-class IRFStacker(object):
+class IRFStacker:
     r"""
     Stack instrument response functions.
 

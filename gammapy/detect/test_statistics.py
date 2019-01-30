@@ -68,7 +68,7 @@ def f_cash(x, counts, background, model):
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
-class TSMapEstimator(object):
+class TSMapEstimator:
     """
     Compute TS map using different optimization methods.
 

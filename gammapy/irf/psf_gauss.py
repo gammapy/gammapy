@@ -20,7 +20,7 @@ __all__ = ["EnergyDependentMultiGaussPSF"]
 log = logging.getLogger(__name__)
 
 
-class EnergyDependentMultiGaussPSF(object):
+class EnergyDependentMultiGaussPSF:
     """
     Triple Gauss analytical PSF depending on energy and theta.
 
@@ -495,7 +495,7 @@ class EnergyDependentMultiGaussPSF(object):
         )
 
 
-class HESSMultiGaussPSF(object):
+class HESSMultiGaussPSF:
     """Multi-Gauss PSF as represented in the HESS software.
 
     The 2D Gaussian is represented as a 1D exponential

@@ -67,7 +67,7 @@ class MeyerCrabModel(SpectralModel):
         return flux / energy ** 2
 
 
-class CrabSpectrum(object):
+class CrabSpectrum:
     """Crab nebula spectral model.
 
     The Crab nebula is often used as a standard candle in gamma-ray astronomy.
