@@ -13,7 +13,6 @@ Alphabetical order:
   Origin https://raw.githubusercontent.com/mcmtroffaes/pathlib2/develop/pathlib2.py
   One line was patched: `import six` -> `from . import six`
   See also: https://pypi.org/project/pathlib2/
-* ``six.py`` - Python 2/3 compatibility
 * ``validator.py`` for `~astropy.units.Quantity` validation helper functions.
   Origin: https://github.com/astrofrog/sedfitter/blob/master/sedfitter/utils/validator.py
 * ``xmltodict.py`` for easily converting XML from / to Python dicts

@@ -6,7 +6,7 @@ import ntpath
 import os
 import posixpath
 import re
-from . import six
+import six
 import sys
 from collections import Sequence
 from contextlib import contextmanager
