@@ -55,10 +55,6 @@ if sys.version_info < __minimum_python_version__:
 from configparser import ConfigParser, RawConfigParser
 
 
-_str_types = (str, bytes)
-_text_type = str
-
-
 # What follows are several import statements meant to deal with install-time
 # issues with either missing or misbehaving pacakges (including making sure
 # setuptools itself is installed):
@@ -144,10 +140,10 @@ class _Bootstrapper:
         if path is None:
             path = PACKAGE_NAME
 
-        if not (isinstance(path, _str_types) or path is False):
+        if not (isinstance(path, (str, bytes)) or path is False):
             raise TypeError('path must be a string or False')
 
-        if not isinstance(path, _text_type):
+        if not isinstance(path, str):
             fs_encoding = sys.getfilesystemencoding()
             path = path.decode(fs_encoding)  # path to unicode
 
@@ -787,9 +783,9 @@ def run_cmd(cmd):
         stdio_encoding = 'latin1'
 
     # Unlikely to fail at this point but even then let's be flexible
-    if not isinstance(stdout, _text_type):
+    if not isinstance(stdout, str):
         stdout = stdout.decode(stdio_encoding, 'replace')
-    if not isinstance(stderr, _text_type):
+    if not isinstance(stderr, str):
         stderr = stderr.decode(stdio_encoding, 'replace')
 
     return (p.returncode, stdout, stderr)
