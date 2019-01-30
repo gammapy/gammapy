@@ -2,6 +2,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
+import astropy.io.fits as fits
 from ..irf import EnergyDependentTablePSF
 from ..maps import Map
 from ..cube import PSFKernel
@@ -63,6 +64,8 @@ class PSFMap:
     psf_map : `~gammapy.maps.Map`
         the input PSF Map. Should be a Map with 2 non spatial axes.
         rad and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`
+        the associated exposure map. It should have a consistent `MapGeom`
 
     Examples
     --------
@@ -103,7 +106,7 @@ class PSFMap:
         psf_map.write('psf_map.fits')
     """
 
-    def __init__(self, psf_map):
+    def __init__(self, psf_map, exposure_map=None):
         if psf_map.geom.axes[1].name.upper() != "ENERGY":
             raise ValueError("Incorrect energy axis position in input Map")
 
@@ -111,6 +114,8 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self._psf_map = psf_map
+
+        self._exposure_map = exposure_map
 
     @property
     def psf_map(self):
@@ -135,12 +140,21 @@ class PSFMap:
     @classmethod
     def read(cls, filename, **kwargs):
         """Read a psf_map from file and create a PSFMap object"""
-        psfmap = Map.read(filename, **kwargs)
-        return cls(psfmap)
+        with fits.open(filename, memmap=False) as hdulist:
+            psfmap = Map.from_hdulist(hdulist, "PSFMAP", "BANDSPSF", "auto")
+            try:
+                expmap = Map.from_hdulist(hdulist, "EXPMAP", "BANDSEXP", "auto")
+            except:
+                expmap = None
+        return cls(psfmap, expmap)
 
-    def write(self, *args, **kwargs):
+    def write(self, filename, overwrite=False):
         """Write the Map object containing the PSF Library map."""
-        self._psf_map.write(*args, **kwargs)
+        hdulist = self._psf_map.to_hdulist(hdu="PSFMAP", hdu_bands="BANDSPSF")
+        if self._exposure_map is not None:
+            hdulist.append(self._exposure_map.to_hdulist(hdu="EXPMAP", hdu_bands="BANDSEXP"))
+
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def get_energy_dependent_table_psf(self, position):
         """ Returns EnergyDependentTable PSF at a given position
