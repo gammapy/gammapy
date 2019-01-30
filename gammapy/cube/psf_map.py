@@ -10,7 +10,7 @@ from ..cube import PSFKernel
 __all__ = ["make_psf_map", "PSFMap"]
 
 
-def make_psf_map(psf, pointing, geom, max_offset, exposure_map = None):
+def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -60,7 +60,10 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map = None):
     if exposure_map is not None:
         # First adapt geometry, keep only energy axis
         if exposure_map.geom != geom.to_image().to_cube([energy_axis]):
-            raise(ValueError,"Inconsistent geometries between PSFMap and its associated exposure")
+            raise (
+                ValueError,
+                "Inconsistent geometries between PSFMap and its associated exposure",
+            )
 
     return PSFMap(psfmap, exposure_map)
 
@@ -166,7 +169,9 @@ class PSFMap:
         """Write the Map object containing the PSF Library map."""
         hdulist = self._psf_map.to_hdulist(hdu="PSFMAP", hdu_bands="BANDSPSF")
         if self._exposure_map is not None:
-            new_hdulist = self._exposure_map.to_hdulist(hdu="EXPMAP", hdu_bands="BANDSEXP")
+            new_hdulist = self._exposure_map.to_hdulist(
+                hdu="EXPMAP", hdu_bands="BANDSEXP"
+            )
             hdulist.append(new_hdulist["EXPMAP"])
             hdulist.append(new_hdulist["BANDSEXP"])
 
@@ -276,11 +281,17 @@ class PSFMap:
             the stacked psfmap
         """
         if self.exposure_map is None or other.exposure_map is None:
-            raise(ValueError, "Missing exposure map for PSFMap.stack")
+            raise (ValueError, "Missing exposure map for PSFMap.stack")
 
-        total_exposure = self.exposure_map+other.exposure_map
-        stacked_psf_quantity = self.quantity * self.exposure_map.quantity[:,np.newaxis,:,:]
-        stacked_psf_quantity += other.quantity * other.exposure_map.quantity[:,np.newaxis,:,:]
-        stacked_psf_quantity /= total_exposure.quantity[:,np.newaxis,:,:]
-        stacked_psf = Map.from_geom(self.geom, data= stacked_psf_quantity.to('1/sr').value, unit='1/sr')
+        total_exposure = self.exposure_map + other.exposure_map
+        stacked_psf_quantity = (
+            self.quantity * self.exposure_map.quantity[:, np.newaxis, :, :]
+        )
+        stacked_psf_quantity += (
+            other.quantity * other.exposure_map.quantity[:, np.newaxis, :, :]
+        )
+        stacked_psf_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
+        stacked_psf = Map.from_geom(
+            self.geom, data=stacked_psf_quantity.to("1/sr").value, unit="1/sr"
+        )
         return PSFMap(stacked_psf, total_exposure)

@@ -9,7 +9,7 @@ from ...maps import MapAxis, WcsGeom
 from ...cube import PSFMap, make_psf_map, make_map_exposure_true_energy
 
 
-def fake_psf3d(sigma=0.15 * u.deg, shape='gauss'):
+def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
     energy = np.logspace(-1, 1, 5) * u.TeV
     energy_lo = energy[:-1]
@@ -22,25 +22,32 @@ def fake_psf3d(sigma=0.15 * u.deg, shape='gauss'):
     O, R, E = np.meshgrid(offsets, rad, energy)
 
     Rmid = 0.5 * (R[:-1] + R[1:])
-    if shape =='gauss':
+    if shape == "gauss":
         val = np.exp(-0.5 * Rmid ** 2 / sigma ** 2)
     else:
-        val = (Rmid<sigma)
+        val = Rmid < sigma
     drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
     psf_values = val / ((val * drad).sum(0)[0])
 
     return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
 
-def fake_aeff2d(area = 1e6 * u.m**2):
+
+def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
     energy = np.logspace(-1, 1, 5) * u.TeV
     energy_lo = energy[:-1]
     energy_hi = energy[1:]
 
-    aeff_values = np.ones((4,3))*area
+    aeff_values = np.ones((4, 3)) * area
 
-    return EffectiveAreaTable2D(energy_lo, energy_hi, offset_lo = offsets[:-1],
-                                    offset_hi=offsets[1:], data= aeff_values)
+    return EffectiveAreaTable2D(
+        energy_lo,
+        energy_hi,
+        offset_lo=offsets[:-1],
+        offset_hi=offsets[1:],
+        data=aeff_values,
+    )
+
 
 def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
@@ -77,8 +84,7 @@ def test_psfmap(tmpdir):
         skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
     )
 
-    exposure_map = make_map_exposure_true_energy(pointing, '1 h', aeff2d, exposure_geom)
-
+    exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
     psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map)
 
@@ -130,7 +136,7 @@ def test_containment_radius_map(tmpdir):
 
 
 def test_psfmap_stacking():
-    psf = fake_psf3d(0.1 * u.deg, shape='flat')
+    psf = fake_psf3d(0.1 * u.deg, shape="flat")
     aeff2d = fake_aeff2d()
 
     pointing = SkyCoord(0, 0, unit="deg")
@@ -138,15 +144,19 @@ def test_psfmap_stacking():
     rad_axis = MapAxis(nodes=np.linspace(0.0, 0.5, 50), unit="deg", name="theta")
 
     geom = WcsGeom.create(
-       skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
+        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
     exposure_geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
     )
 
-    exposure_map1 = make_map_exposure_true_energy(pointing, '1 h', aeff2d, exposure_geom)
-    exposure_map2 = make_map_exposure_true_energy(pointing, '2 h', aeff2d, exposure_geom)
+    exposure_map1 = make_map_exposure_true_energy(
+        pointing, "1 h", aeff2d, exposure_geom
+    )
+    exposure_map2 = make_map_exposure_true_energy(
+        pointing, "2 h", aeff2d, exposure_geom
+    )
 
     psfmap1 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map1)
     psfmap2 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map2)
@@ -155,13 +165,17 @@ def test_psfmap_stacking():
     assert_allclose(psfmap_stack.data, psfmap1.data)
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
-    psf3 = fake_psf3d(0.3 * u.deg, shape='flat')
+    psf3 = fake_psf3d(0.3 * u.deg, shape="flat")
     psfmap3 = make_psf_map(psf3, pointing, geom, 3 * u.deg, exposure_map1)
     psfmap_stack = psfmap1.stack(psfmap3)
 
-    assert_allclose(psfmap_stack.data[:,40,:,:], 0.)
-    assert_allclose(psfmap_stack.data[:,20,:,:], psfmap3.data[:,20,:,:]*0.5, rtol=1e-4)
-    assert_allclose(psfmap_stack.data[:,0,:,:], psfmap3.data[:,0,:,:]*5., rtol=1e-4)
+    assert_allclose(psfmap_stack.data[:, 40, :, :], 0.0)
+    assert_allclose(
+        psfmap_stack.data[:, 20, :, :], psfmap3.data[:, 20, :, :] * 0.5, rtol=1e-4
+    )
+    assert_allclose(
+        psfmap_stack.data[:, 0, :, :], psfmap3.data[:, 0, :, :] * 5.0, rtol=1e-4
+    )
 
 
-
+# TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations
