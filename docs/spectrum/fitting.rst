@@ -92,10 +92,10 @@ example dataset used above. It makes use of the Sherpa `datastack module
 
 .. code-block:: python
 
+    from pathlib import Path
+    import os
     from sherpa.astro import datastack
     from sherpa.models import PowLaw1D
-    from gammapy.extern.pathlib import Path
-    import os
 
     pha1 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23592.fits")
     pha2 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23523.fits")

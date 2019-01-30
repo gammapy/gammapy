@@ -8,7 +8,7 @@ import sys
 import yaml
 import multiprocessing
 from urllib.request import urlretrieve, urlopen
-from ..extern.pathlib import Path
+from pathlib import Path
 from .. import version
 
 log = logging.getLogger(__name__)

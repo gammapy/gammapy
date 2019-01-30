@@ -276,7 +276,7 @@ class EnergyDispersion(object):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             File to read
         hdu1 : str, optional
             HDU containing the energy dispersion matrix, default: MATRIX

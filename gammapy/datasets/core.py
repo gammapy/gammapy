@@ -5,9 +5,9 @@ import sys
 import os
 import shutil
 from collections import OrderedDict
+from pathlib import Path
 from astropy.table import Table
 import astropy.utils.data
-from ..extern.pathlib import Path
 
 __all__ = ["Datasets", "gammapy_data"]
 

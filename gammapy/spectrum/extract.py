@@ -256,7 +256,7 @@ class SpectrumExtraction(object):
 
         Parameters
         ----------
-        outdir : `~gammapy.extern.pathlib.Path`
+        outdir : `pathlib.Path`
             Output folder
         ogipdir : str, optional
             Folder name for OGIP data, default: 'ogip_data'

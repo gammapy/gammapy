@@ -4,9 +4,9 @@ import os
 import subprocess
 import argparse
 import sys
+from pathlib import Path
 from shutil import copyfile, copytree, rmtree
 from distutils.util import strtobool
-from ..extern.pathlib import Path
 from ..scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)

@@ -3,9 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import warnings
 import logging
 import sys
+from pathlib import Path
 import click
 from .. import version
-from ..extern.pathlib import Path
 
 
 # We implement the --version following the example from here:

@@ -25,7 +25,7 @@ class SpectrumAnalysisIACT(object):
 
     Config options:
 
-    * outdir : `~gammapy.extern.pathlib.Path`, str
+    * outdir : `pathlib.Path`, str
         Output folder, None means no output
     * background : dict
         Forwarded to `~gammapy.background.ReflectedRegionsBackgroundEstimator`

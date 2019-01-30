@@ -18,6 +18,7 @@ Here's some good resources with working examples:
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import re
+from pathlib import Path
 from distutils.util import strtobool
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives import register_directive
@@ -26,7 +27,6 @@ from docutils import nodes
 from sphinx.util import logging
 from nbformat.v4 import new_markdown_cell
 import nbformat
-from ..extern.pathlib import Path
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])

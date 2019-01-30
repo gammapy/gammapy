@@ -2,9 +2,9 @@
 import os
 import sys
 import logging
+from pathlib import Path
 from pkg_resources import working_set
 import yaml
-from ..extern.pathlib import Path
 from ..scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
