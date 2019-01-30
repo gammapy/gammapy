@@ -3,14 +3,14 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
 import astropy.io.fits as fits
-from ..irf import EnergyDependentTablePSF
+from ..irf import EnergyDependentTablePSF, EffectiveAreaTable2D
 from ..maps import Map
 from ..cube import PSFKernel
 
 __all__ = ["make_psf_map", "PSFMap"]
 
 
-def make_psf_map(psf, pointing, geom, max_offset):
+def make_psf_map(psf, pointing, geom, max_offset, exposure_map = None):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -27,6 +27,9 @@ def make_psf_map(psf, pointing, geom, max_offset):
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
         maximum offset w.r.t. fov center
+    aeff : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
 
     Returns
     -------
@@ -53,7 +56,12 @@ def make_psf_map(psf, pointing, geom, max_offset):
     psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
 
-    return PSFMap(psfmap)
+    if exposure_map is not None:
+        # First adapt geometry, keep only energy axis
+        if exposure_map.geom != geom.to_image().to_cube([energy_axis]):
+            raise(ValueError,"Inconsistent geometries between PSFMap and its associated exposure")
+
+    return PSFMap(psfmap, exposure_map)
 
 
 class PSFMap:
@@ -152,7 +160,9 @@ class PSFMap:
         """Write the Map object containing the PSF Library map."""
         hdulist = self._psf_map.to_hdulist(hdu="PSFMAP", hdu_bands="BANDSPSF")
         if self._exposure_map is not None:
-            hdulist.append(self._exposure_map.to_hdulist(hdu="EXPMAP", hdu_bands="BANDSEXP"))
+            new_hdulist = self._exposure_map.to_hdulist(hdu="EXPMAP", hdu_bands="BANDSEXP")
+            hdulist.append(new_hdulist["EXPMAP"])
+            hdulist.append(new_hdulist["BANDSEXP"])
 
         hdulist.writeto(filename, overwrite=overwrite)
 

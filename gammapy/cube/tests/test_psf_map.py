@@ -4,9 +4,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Unit
 from astropy.coordinates import SkyCoord
-from ...irf import PSF3D
+from ...irf import PSF3D, EffectiveAreaTable2D
 from ...maps import MapAxis, WcsGeom
-from ...cube import PSFMap, make_psf_map
+from ...cube import PSFMap, make_psf_map, make_map_exposure_true_energy
 
 
 def fake_psf3d(sigma=0.15 * u.deg):
@@ -28,6 +28,17 @@ def fake_psf3d(sigma=0.15 * u.deg):
 
     return PSF3D(energy_lo, energy_hi, offsets, rad_lo, rad_hi, psf_values)
 
+def fake_aeff2d(area = 1e6 * u.m**2):
+    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
+    energy = np.logspace(-1, 1, 5) * u.TeV
+    energy_lo = energy[:-1]
+    energy_hi = energy[1:]
+    energy = np.sqrt(energy_lo * energy_hi)
+
+    aeff_values = np.ones((4,3))*area
+
+    return EffectiveAreaTable2D(energy_lo, energy_hi, offset_lo = offsets[:-1],
+                                    offset_hi=offsets[1:], data= aeff_values)
 
 def test_make_psf_map():
     psf = fake_psf3d(0.3 * u.deg)
@@ -50,6 +61,7 @@ def test_make_psf_map():
 
 def test_psfmap(tmpdir):
     psf = fake_psf3d(0.15 * u.deg)
+    aeff2d = fake_aeff2d()
 
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
@@ -59,7 +71,14 @@ def test_psfmap(tmpdir):
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
     )
 
-    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
+    exposure_geom = WcsGeom.create(
+        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
+    )
+
+    exposure_map = make_map_exposure_true_energy(pointing, '1 h', aeff2d, exposure_geom)
+
+
+    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map)
 
     # Extract EnergyDependentTablePSF
     table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit="deg"))
