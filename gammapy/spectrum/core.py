@@ -304,7 +304,7 @@ class PHACountsSpectrum(CountsSpectrum):
         offset=None,
         meta=None,
     ):
-        super(PHACountsSpectrum, self).__init__(energy_lo, energy_hi, data)
+        super().__init__(energy_lo, energy_hi, data)
         if quality is None:
             quality = np.zeros(self.energy.nbins, dtype="i2")
         self._quality = quality
@@ -400,7 +400,7 @@ class PHACountsSpectrum(CountsSpectrum):
         See `~gammapy.spectrum.CountsSpectrum`.
         This function treats the quality vector correctly
         """
-        retval = super(PHACountsSpectrum, self).rebin(parameter)
+        retval = super().rebin(parameter)
         split_indices = np.arange(parameter, len(self.data.data), parameter)
         quality_grp = np.split(retval.quality, split_indices)
         quality_summed = np.sum(quality_grp, axis=1)
@@ -434,7 +434,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
-        table = super(PHACountsSpectrum, self).to_table()
+        table = super().to_table()
 
         table["QUALITY"] = self.quality
         table["BACKSCAL"] = self._backscal_array

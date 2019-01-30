@@ -39,7 +39,7 @@ class HpxNDMap(HpxMap):
         if data is None:
             data = self._make_default_data(geom, data_shape, dtype)
 
-        super(HpxNDMap, self).__init__(geom, data, meta, unit)
+        super().__init__(geom, data, meta, unit)
         self._wcs2d = None
         self._hpx2wcs = None
 

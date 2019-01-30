@@ -170,6 +170,6 @@ class SourceCatalog2HWC(SourceCatalog):
 
         source_name_key = "source_name"
 
-        super(SourceCatalog2HWC, self).__init__(
+        super().__init__(
             table=table, source_name_key=source_name_key
         )

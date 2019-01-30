@@ -974,7 +974,7 @@ class SourceCatalog3FGL(SourceCatalog):
             "ASSOC1",
             "ASSOC2",
         )
-        super(SourceCatalog3FGL, self).__init__(
+        super().__init__(
             table=table,
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,
@@ -1070,7 +1070,7 @@ class SourceCatalog1FHL(SourceCatalog):
 
         source_name_key = "Source_Name"
         source_name_alias = ("ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM")
-        super(SourceCatalog1FHL, self).__init__(
+        super().__init__(
             table=table,
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,
@@ -1102,7 +1102,7 @@ class SourceCatalog2FHL(SourceCatalog):
 
         source_name_key = "Source_Name"
         source_name_alias = ("ASSOC", "3FGL_Name", "1FHL_Name", "TeVCat_Name")
-        super(SourceCatalog2FHL, self).__init__(
+        super().__init__(
             table=table,
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,
@@ -1143,7 +1143,7 @@ class SourceCatalog3FHL(SourceCatalog):
 
         source_name_key = "Source_Name"
         source_name_alias = ("ASSOC1", "ASSOC2", "ASSOC_TEV", "ASSOC_GAM")
-        super(SourceCatalog3FHL, self).__init__(
+        super().__init__(
             table=table,
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,

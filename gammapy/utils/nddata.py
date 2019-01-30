@@ -339,7 +339,7 @@ class BinnedDataAxis(DataAxis):
     def __init__(self, lo, hi, **kwargs):
         self.lo = Quantity(lo)
         self.hi = Quantity(hi)
-        super(BinnedDataAxis, self).__init__(None, **kwargs)
+        super().__init__(None, **kwargs)
 
     @classmethod
     def logspace(cls, emin, emax, nbins, unit=None, **kwargs):
@@ -348,7 +348,7 @@ class BinnedDataAxis(DataAxis):
         return cls(vals[:-1], vals[1:], **kwargs)
 
     def __str__(self):
-        ss = super(BinnedDataAxis, self).__str__()
+        ss = super().__str__()
         ss += "\nLower bounds {}".format(self.lo)
         ss += "\nUpper bounds {}".format(self.hi)
 

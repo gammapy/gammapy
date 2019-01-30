@@ -30,16 +30,16 @@ class SpectrumStats(ObservationStats):
     def __init__(self, **kwargs):
         self.energy_min = kwargs.pop("energy_min", Quantity(0, "TeV"))
         self.energy_max = kwargs.pop("energy_max", Quantity(0, "TeV"))
-        super(SpectrumStats, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def __str__(self):
-        ss = super(SpectrumStats, self).__str__()
+        ss = super().__str__()
         ss += "energy range: {:.2f} - {:.2f}".format(self.energy_min, self.energy_max)
         return ss
 
     def to_dict(self):
         """TODO: document"""
-        data = super(SpectrumStats, self).to_dict()
+        data = super().to_dict()
         data["energy_min"] = self.energy_min
         data["energy_max"] = self.energy_max
         return data

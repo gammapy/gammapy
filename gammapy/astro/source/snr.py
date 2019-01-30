@@ -226,7 +226,7 @@ class SNRTrueloveMcKee(SNR):
     """
 
     def __init__(self, *args, **kwargs):
-        super(SNRTrueloveMcKee, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Characteristic dimensions
         self.r_c = self.m_ejecta ** (1.0 / 3) * self.rho_ISM ** (-1.0 / 3)

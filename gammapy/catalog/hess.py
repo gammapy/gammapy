@@ -634,7 +634,7 @@ class SourceCatalogHGPS(SourceCatalog):
         table = Table.read(filename, hdu=hdu)
 
         source_name_alias = ("Identified_Object",)
-        super(SourceCatalogHGPS, self).__init__(
+        super().__init__(
             table=table, source_name_alias=source_name_alias
         )
 
@@ -672,7 +672,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     def _make_source_object(self, index):
         """Make `SourceCatalogObject` for given row index"""
-        source = super(SourceCatalogHGPS, self)._make_source_object(index)
+        source = super()._make_source_object(index)
 
         if source.data["Components"] != "":
             self._attach_component_info(source)

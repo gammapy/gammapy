@@ -30,7 +30,7 @@ class ObservationStats(Stats):
     def __init__(
         self, n_on=None, n_off=None, a_on=None, a_off=None, obs_id=None, livetime=None
     ):
-        super(ObservationStats, self).__init__(
+        super().__init__(
             n_on=n_on, n_off=n_off, a_on=a_on, a_off=a_off
         )
 

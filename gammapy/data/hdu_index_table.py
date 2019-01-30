@@ -146,7 +146,7 @@ class HDUIndexTable(Table):
             Filename
         """
         filename = make_path(filename)
-        table = super(HDUIndexTable, cls).read(str(filename), **kwargs)
+        table = super().read(str(filename), **kwargs)
         table.meta["BASE_DIR"] = filename.parent.as_posix()
 
         return table

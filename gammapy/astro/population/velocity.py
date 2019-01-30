@@ -36,7 +36,7 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     sigma = Parameter()
 
     def __init__(self, amplitude=1, sigma=265, **kwargs):
-        super(FaucherKaspi2006VelocityMaxwellian, self).__init__(
+        super().__init__(
             amplitude=amplitude, sigma=sigma, **kwargs
         )
 
@@ -76,7 +76,7 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
     w = Parameter()
 
     def __init__(self, amplitude=1, sigma_1=160, sigma_2=780, w=0.9, **kwargs):
-        super(FaucherKaspi2006VelocityBimodal, self).__init__(
+        super().__init__(
             amplitude=amplitude, sigma_1=sigma_1, sigma_2=sigma_1, w=w, **kwargs
         )
 
@@ -109,7 +109,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     v_0 = Parameter()
 
     def __init__(self, amplitude=1, v_0=560, **kwargs):
-        super(Paczynski1990Velocity, self).__init__(
+        super().__init__(
             amplitude=amplitude, v_0=v_0, **kwargs
         )
 

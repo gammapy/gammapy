@@ -43,7 +43,7 @@ class Energy(Quantity):
 
         # This is a pylint error false positive
         # See https://github.com/PyCQA/pylint/issues/2335#issuecomment-415055075
-        self = super(Energy, cls).__new__(
+        self = super().__new__(
             cls,
             energy,
             unit,  # pylint:disable=redundant-keyword-arg
@@ -59,13 +59,13 @@ class Energy(Quantity):
         return self
 
     def __array_finalize__(self, obj):
-        super(Energy, self).__array_finalize__(obj)
+        super().__array_finalize__(obj)
 
     def __quantity_subclass__(self, unit):
         if unit.is_equivalent("eV"):
             return Energy, True
         else:
-            return super(Energy, self).__quantity_subclass__(unit)[0], False
+            return super().__quantity_subclass__(unit)[0], False
 
     @property
     def nbins(self):

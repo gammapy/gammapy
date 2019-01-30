@@ -51,7 +51,7 @@ class Paczynski1990(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_exp=4.5, **kwargs):
-        super(Paczynski1990, self).__init__(amplitude=amplitude, r_exp=r_exp, **kwargs)
+        super().__init__(amplitude=amplitude, r_exp=r_exp, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, r_exp):
@@ -137,9 +137,7 @@ class YusifovKucuk2004(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1, a=1.64, b=4.01, r_1=0.55, **kwargs):
-        super(YusifovKucuk2004, self).__init__(
-            amplitude=amplitude, a=a, b=b, r_1=r_1, **kwargs
-        )
+        super().__init__(amplitude=amplitude, a=a, b=b, r_1=r_1, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, a, b, r_1):
@@ -182,7 +180,7 @@ class YusifovKucuk2004B(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, a=4, b=6.8, **kwargs):
-        super(YusifovKucuk2004B, self).__init__(amplitude=amplitude, a=a, b=b, **kwargs)
+        super().__init__(amplitude=amplitude, a=a, b=b, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, a, b):
@@ -221,7 +219,7 @@ class FaucherKaspi2006(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, r_0=7.04, sigma=1.83, **kwargs):
-        super(FaucherKaspi2006, self).__init__(
+        super().__init__(
             amplitude=amplitude, r_0=r_0, sigma=sigma, **kwargs
         )
 
@@ -263,7 +261,7 @@ class Lorimer2006(Fittable1DModel):
     evolved = True
 
     def __init__(self, amplitude=1, B=1.9, C=5.0, **kwargs):
-        super(Lorimer2006, self).__init__(amplitude=amplitude, B=B, C=C, **kwargs)
+        super().__init__(amplitude=amplitude, B=B, C=C, **kwargs)
 
     @staticmethod
     def evaluate(r, amplitude, B, C):
@@ -301,7 +299,7 @@ class Exponential(Fittable1DModel):
     evolved = False
 
     def __init__(self, amplitude=1, z_0=0.05, **kwargs):
-        super(Exponential, self).__init__(amplitude=amplitude, z_0=z_0, **kwargs)
+        super().__init__(amplitude=amplitude, z_0=z_0, **kwargs)
 
     @staticmethod
     def evaluate(z, amplitude, z_0):

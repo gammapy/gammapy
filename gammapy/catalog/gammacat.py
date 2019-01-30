@@ -460,7 +460,7 @@ class SourceCatalogGammaCat(SourceCatalog):
 
         source_name_key = "common_name"
         source_name_alias = ("other_names", "gamma_names")
-        super(SourceCatalogGammaCat, self).__init__(
+        super().__init__(
             table=table,
             source_name_key=source_name_key,
             source_name_alias=source_name_alias,

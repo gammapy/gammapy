@@ -60,7 +60,7 @@ class DocsImage(Image):
             )
             self.options["alt"] = self.arguments[1]
 
-        return super(DocsImage, self).run()
+        return super().run()
 
 
 def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[]):

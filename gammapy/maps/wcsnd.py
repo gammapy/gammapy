@@ -54,7 +54,7 @@ class WcsNDMap(WcsMap):
         if data is None:
             data = self._make_default_data(geom, data_shape, dtype)
 
-        super(WcsNDMap, self).__init__(geom, data, meta, unit)
+        super().__init__(geom, data, meta, unit)
 
     @staticmethod
     def _make_default_data(geom, shape_np, dtype):

@@ -45,7 +45,7 @@ class SourceCatalogSNRcat(SourceCatalog):
         self.snr_table = _fetch_catalog_snrcat_snr_table(cache=cache)
         self.obs_table = _fetch_catalog_snrcat_obs_table(cache=cache)
 
-        super(SourceCatalogSNRcat, self).__init__(table=self.snr_table)
+        super().__init__(table=self.snr_table)
 
 
 def _fetch_catalog_snrcat_snr_table(cache):
