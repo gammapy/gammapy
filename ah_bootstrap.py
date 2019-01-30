@@ -45,14 +45,27 @@ import re
 import subprocess as sp
 import sys
 
-__minimum_python_version__ = (3, 5)
+__minimum_python_version__ = (2, 7)
 
 if sys.version_info < __minimum_python_version__:
     print("ERROR: Python {} or later is required by astropy-helpers".format(
         __minimum_python_version__))
     sys.exit(1)
 
-from configparser import ConfigParser, RawConfigParser
+try:
+    from ConfigParser import ConfigParser, RawConfigParser
+except ImportError:
+    from configparser import ConfigParser, RawConfigParser
+
+
+if sys.version_info[0] < 3:
+    _str_types = (str, unicode)
+    _text_type = unicode
+    PY3 = False
+else:
+    _str_types = (str, bytes)
+    _text_type = str
+    PY3 = True
 
 
 # What follows are several import statements meant to deal with install-time
@@ -76,6 +89,17 @@ except (ImportError, AssertionError):
 
 try:
     import typing   # noqa
+except ImportError:
+    pass
+
+
+# Note: The following import is required as a workaround to
+# https://github.com/astropy/astropy-helpers/issues/89; if we don't import this
+# module now, it will get cleaned up after `run_setup` is called, but that will
+# later cause the TemporaryDirectory class defined in it to stop working when
+# used later on by setuptools
+try:
+    import setuptools.py31compat   # noqa
 except ImportError:
     pass
 
@@ -113,6 +137,11 @@ from distutils.debug import DEBUG
 DIST_NAME = 'astropy-helpers'
 PACKAGE_NAME = 'astropy_helpers'
 
+if PY3:
+    UPPER_VERSION_EXCLUSIVE = None
+else:
+    UPPER_VERSION_EXCLUSIVE = '3'
+
 # Defaults for other options
 DOWNLOAD_IF_NEEDED = True
 INDEX_URL = 'https://pypi.python.org/simple'
@@ -128,7 +157,7 @@ CFG_OPTIONS = [
 ]
 
 
-class _Bootstrapper:
+class _Bootstrapper(object):
     """
     Bootstrapper implementation.  See ``use_astropy_helpers`` for parameter
     documentation.
@@ -140,10 +169,10 @@ class _Bootstrapper:
         if path is None:
             path = PACKAGE_NAME
 
-        if not (isinstance(path, (str, bytes)) or path is False):
+        if not (isinstance(path, _str_types) or path is False):
             raise TypeError('path must be a string or False')
 
-        if not isinstance(path, str):
+        if PY3 and not isinstance(path, _text_type):
             fs_encoding = sys.getfilesystemencoding()
             path = path.decode(fs_encoding)  # path to unicode
 
@@ -209,9 +238,9 @@ class _Bootstrapper:
                 raise
 
             log.error(
-                "Error reading setup.cfg: {!r}\n{} will not be "
+                "Error reading setup.cfg: {0!r}\n{1} will not be "
                 "automatically bootstrapped and package installation may fail."
-                "\n{}".format(e, PACKAGE_NAME, _err_help_msg))
+                "\n{2}".format(e, PACKAGE_NAME, _err_help_msg))
             return {}
 
         if not cfg.has_section('ah_bootstrap'):
@@ -288,7 +317,7 @@ class _Bootstrapper:
         self.is_submodule = self._check_submodule()
 
         for strategy in strategies:
-            method = getattr(self, 'get_{}_dist'.format(strategy))
+            method = getattr(self, 'get_{0}_dist'.format(strategy))
             dist = method()
             if dist is not None:
                 break
@@ -331,8 +360,8 @@ class _Bootstrapper:
         with.
         """
 
-        return {optname: getattr(self, optname)
-                    for optname, _ in CFG_OPTIONS if hasattr(self, optname)}
+        return dict((optname, getattr(self, optname))
+                    for optname, _ in CFG_OPTIONS if hasattr(self, optname))
 
     def get_local_directory_dist(self):
         """
@@ -343,7 +372,7 @@ class _Bootstrapper:
         if not os.path.isdir(self.path):
             return
 
-        log.info('Attempting to import astropy_helpers from {} {!r}'.format(
+        log.info('Attempting to import astropy_helpers from {0} {1!r}'.format(
                  'submodule' if self.is_submodule else 'directory',
                  self.path))
 
@@ -373,7 +402,7 @@ class _Bootstrapper:
             return
 
         log.info('Attempting to unpack and import astropy_helpers from '
-                 '{!r}'.format(self.path))
+                 '{0!r}'.format(self.path))
 
         try:
             dist = self._do_download(find_links=[self.path])
@@ -382,8 +411,8 @@ class _Bootstrapper:
                 raise
 
             log.warn(
-                'Failed to import {} from the specified archive {!r}: '
-                '{}'.format(PACKAGE_NAME, self.path, str(e)))
+                'Failed to import {0} from the specified archive {1!r}: '
+                '{2}'.format(PACKAGE_NAME, self.path, str(e)))
             dist = None
 
         if dist is not None and self.auto_upgrade:
@@ -397,11 +426,11 @@ class _Bootstrapper:
 
     def get_index_dist(self):
         if not self.download:
-            log.warn('Downloading {!r} disabled.'.format(DIST_NAME))
+            log.warn('Downloading {0!r} disabled.'.format(DIST_NAME))
             return None
 
         log.warn(
-            "Downloading {!r}; run setup.py with the --offline option to "
+            "Downloading {0!r}; run setup.py with the --offline option to "
             "force offline installation.".format(DIST_NAME))
 
         try:
@@ -410,8 +439,8 @@ class _Bootstrapper:
             if DEBUG:
                 raise
             log.warn(
-                'Failed to download and/or install {!r} from {!r}:\n'
-                '{}'.format(DIST_NAME, self.index_url, str(e)))
+                'Failed to download and/or install {0!r} from {1!r}:\n'
+                '{2}'.format(DIST_NAME, self.index_url, str(e)))
             dist = None
 
         # No need to run auto-upgrade here since we've already presumably
@@ -478,9 +507,12 @@ class _Bootstrapper:
                 return opts
 
         if version:
-            req = '{}=={}'.format(DIST_NAME, version)
+            req = '{0}=={1}'.format(DIST_NAME, version)
         else:
-            req = DIST_NAME
+            if UPPER_VERSION_EXCLUSIVE is None:
+                req = DIST_NAME
+            else:
+                req = '{0}<{1}'.format(DIST_NAME, UPPER_VERSION_EXCLUSIVE)
 
         attrs = {'setup_requires': [req]}
 
@@ -527,7 +559,7 @@ class _Bootstrapper:
         next_version = _next_version(dist.parsed_version)
 
         req = pkg_resources.Requirement.parse(
-            '{}>{},<{}'.format(DIST_NAME, dist.version, next_version))
+            '{0}>{1},<{2}'.format(DIST_NAME, dist.version, next_version))
 
         package_index = PackageIndex(index_url=self.index_url)
 
@@ -566,7 +598,7 @@ class _Bootstrapper:
         cmd = ['git', 'submodule', 'status', '--', self.path]
 
         try:
-            log.info('Running `{}`; use the --no-git option to disable git '
+            log.info('Running `{0}`; use the --no-git option to disable git '
                      'commands'.format(' '.join(cmd)))
             returncode, stdout, stderr = run_cmd(cmd)
         except _CommandNotFound:
@@ -593,7 +625,7 @@ class _Bootstrapper:
             if not stderr.strip().endswith(perl_warning):
                 # Some other unknown error condition occurred
                 log.warn('git submodule command failed '
-                         'unexpectedly:\n{}'.format(stderr))
+                         'unexpectedly:\n{0}'.format(stderr))
                 return False
 
         # Output of `git submodule status` is as follows:
@@ -613,7 +645,7 @@ class _Bootstrapper:
         # now
         _git_submodule_status_re = re.compile(
             '^(?P<status>[+-U ])(?P<commit>[0-9a-f]{40}) '
-            r'(?P<submodule>\S+)( .*)?$')
+            '(?P<submodule>\S+)( .*)?$')
 
         # The stdout should only contain one line--the status of the
         # requested submodule
@@ -624,8 +656,8 @@ class _Bootstrapper:
             return True
         else:
             log.warn(
-                'Unexpected output from `git submodule status`:\n{}\n'
-                'Will attempt import from {!r} regardless.'.format(
+                'Unexpected output from `git submodule status`:\n{0}\n'
+                'Will attempt import from {1!r} regardless.'.format(
                     stdout, self.path))
             return False
 
@@ -671,8 +703,8 @@ class _Bootstrapper:
         try:
             cfg.readfp(gitmodules_fileobj)
         except Exception as exc:
-            log.warn('Malformatted .gitmodules file: {}\n'
-                     '{} cannot be assumed to be a git submodule.'.format(
+            log.warn('Malformatted .gitmodules file: {0}\n'
+                     '{1} cannot be assumed to be a git submodule.'.format(
                          exc, self.path))
             return False
 
@@ -694,7 +726,7 @@ class _Bootstrapper:
         elif status == '-':
             if self.offline:
                 raise _AHBootstrapSystemExit(
-                    "Cannot initialize the {} submodule in --offline mode; "
+                    "Cannot initialize the {0} submodule in --offline mode; "
                     "this requires being able to clone the submodule from an "
                     "online repository.".format(submodule))
             cmd = ['update', '--init']
@@ -706,24 +738,24 @@ class _Bootstrapper:
                 cmd.append('--no-fetch')
         elif status == 'U':
             raise _AHBootstrapSystemExit(
-                'Error: Submodule {} contains unresolved merge conflicts.  '
+                'Error: Submodule {0} contains unresolved merge conflicts.  '
                 'Please complete or abandon any changes in the submodule so that '
                 'it is in a usable state, then try again.'.format(submodule))
         else:
-            log.warn('Unknown status {!r} for git submodule {!r}.  Will '
+            log.warn('Unknown status {0!r} for git submodule {1!r}.  Will '
                      'attempt to use the submodule as-is, but try to ensure '
                      'that the submodule is in a clean state and contains no '
-                     'conflicts or errors.\n{}'.format(status, submodule,
+                     'conflicts or errors.\n{2}'.format(status, submodule,
                                                         _err_help_msg))
             return
 
         err_msg = None
         cmd = ['git', 'submodule'] + cmd + ['--', submodule]
-        log.warn('{} {} submodule with: `{}`'.format(
+        log.warn('{0} {1} submodule with: `{2}`'.format(
             action, submodule, ' '.join(cmd)))
 
         try:
-            log.info('Running `{}`; use the --no-git option to disable git '
+            log.info('Running `{0}`; use the --no-git option to disable git '
                      'commands'.format(' '.join(cmd)))
             returncode, stdout, stderr = run_cmd(cmd)
         except OSError as e:
@@ -734,7 +766,7 @@ class _Bootstrapper:
 
         if err_msg is not None:
             log.warn('An unexpected error occurred updating the git submodule '
-                     '{!r}:\n{}\n{}'.format(submodule, err_msg,
+                     '{0!r}:\n{1}\n{2}'.format(submodule, err_msg,
                                                _err_help_msg))
 
 class _CommandNotFound(OSError):
@@ -763,12 +795,12 @@ def run_cmd(cmd):
             raise
 
         if e.errno == errno.ENOENT:
-            msg = 'Command not found: `{}`'.format(' '.join(cmd))
+            msg = 'Command not found: `{0}`'.format(' '.join(cmd))
             raise _CommandNotFound(msg, cmd)
         else:
             raise _AHBootstrapSystemExit(
                 'An unexpected error occurred when running the '
-                '`{}` command:\n{}'.format(' '.join(cmd), str(e)))
+                '`{0}` command:\n{1}'.format(' '.join(cmd), str(e)))
 
 
     # Can fail of the default locale is not configured properly.  See
@@ -783,9 +815,9 @@ def run_cmd(cmd):
         stdio_encoding = 'latin1'
 
     # Unlikely to fail at this point but even then let's be flexible
-    if not isinstance(stdout, str):
+    if not isinstance(stdout, _text_type):
         stdout = stdout.decode(stdio_encoding, 'replace')
-    if not isinstance(stderr, str):
+    if not isinstance(stderr, _text_type):
         stderr = stderr.decode(stdio_encoding, 'replace')
 
     return (p.returncode, stdout, stderr)
@@ -822,10 +854,10 @@ def _next_version(version):
 
     major, minor, micro = parts[:3]
 
-    return '{}.{}.{}'.format(major, minor + 1, 0)
+    return '{0}.{1}.{2}'.format(major, minor + 1, 0)
 
 
-class _DummyFile:
+class _DummyFile(object):
     """A noop writeable object."""
 
     errors = ''  # Required for Python 3.x
@@ -882,7 +914,7 @@ class _AHBootstrapSystemExit(SystemExit):
 
         msg += '\n' + _err_help_msg
 
-        super().__init__(msg, *args[1:])
+        super(_AHBootstrapSystemExit, self).__init__(msg, *args[1:])
 
 
 BOOTSTRAPPER = _Bootstrapper.main()
