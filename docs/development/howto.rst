@@ -51,22 +51,13 @@ For three or more things, using a Python ``dict`` instead should be preferred.
 
 .. _dev-python2and3:
 
-Python 2 and 3 support
+Python version support
 ----------------------
 
-In Gammapy we currently support Python 2.7, as well as Python 3.5 - 3.7.
-Code should be written in the common subset, using the bundled ``gammapy.extern.six``
-to help smooth over differences where needed.
+In Gammapy we currently support Python 3.5 or later.
 
-The following import should be at the top of every file in Gammapy, to allow
-us to write code that's closer to Python 3::
-
-    from __future__ import absolute_import, division, print_function, unicode_literals
-
-We do plan do drop legacy Python (Python 2.7) support when the Fermi ST and Fermi
-support Python 3.
-
-For further information, see PIG 3 in `GH 1278 <https://github.com/gammapy/gammapy/pull/1278>`__
+We plan to discuss later in 2019 whether to bump the version requirement to Python 3.6,
+to be able to take advantage of the new features introduced there.
 
 .. _dev-skip_tests:
 
