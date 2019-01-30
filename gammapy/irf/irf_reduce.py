@@ -9,6 +9,7 @@ __all__ = ["make_psf", "make_mean_psf", "make_mean_edisp", "apply_containment_fr
 
 log = logging.getLogger(__name__)
 
+
 def make_psf(observation, position, energy=None, rad=None):
     """Make energy-dependent PSF for a given source position.
 
