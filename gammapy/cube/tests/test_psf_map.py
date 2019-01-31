@@ -68,8 +68,8 @@ def test_make_psf_map():
     assert psfmap.data.shape == (4, 50, 25, 25)
 
 
-def test_psfmap(tmpdir):
-    psf = fake_psf3d(0.15 * u.deg)
+def build_test_psfmap(size, shape="gauss"):
+    psf = fake_psf3d(size, shape)
     aeff2d = fake_aeff2d()
 
     pointing = SkyCoord(0, 0, unit="deg")
@@ -86,8 +86,11 @@ def test_psfmap(tmpdir):
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
-    psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map)
+    return make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map)
 
+
+def test_psfmap_to_table_psf():
+    psfmap = build_test_psfmap(0.15 * u.deg)
     # Extract EnergyDependentTablePSF
     table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit="deg"))
 
@@ -103,12 +106,35 @@ def test_psfmap(tmpdir):
         rtol=1e-3,
     )
 
+
+def test_psfmap_to_table_psf():
+    psfmap = build_test_psfmap(0.15 * u.deg)
+
+    energy_axis = psfmap.geom.axes[1]
     # create PSFKernel
     kern_geom = WcsGeom.create(binsz=0.02, width=5.0, axes=[energy_axis])
     psfkernel = psfmap.get_psf_kernel(
         SkyCoord(1, 1, unit="deg"), kern_geom, max_radius=1 * u.deg
     )
     assert_allclose(psfkernel.psf_kernel_map.data.sum(axis=(1, 2)), 1.0, atol=1e-7)
+
+
+def test_psfmap_to_from_hdulist():
+    psfmap = build_test_psfmap(0.15 * u.deg)
+    hdulist = psfmap.to_hdulist(psf_hdu="PSF", psf_hdubands="BANDS")
+    assert "PSF" in hdulist
+    assert "BANDS" in hdulist
+    assert "EXPMAP" in hdulist
+    assert "BANDSEXP" in hdulist
+
+    new_psfmap = PSFMap.from_hdulist(hdulist, psf_hdu="PSF", psf_hdubands="BANDS")
+    assert_allclose(psfmap.psf_map.data, new_psfmap.psf_map.data)
+    assert new_psfmap.geom == psfmap.geom
+    assert new_psfmap.exposure_map.geom == psfmap.exposure_map.geom
+
+
+def test_psfmap_read_write(tmpdir):
+    psfmap = build_test_psfmap(0.15 * u.deg)
 
     # test read/write
     filename = str(tmpdir / "psfmap.fits")
@@ -136,37 +162,15 @@ def test_containment_radius_map(tmpdir):
 
 
 def test_psfmap_stacking():
-    psf = fake_psf3d(0.1 * u.deg, shape="flat")
-    aeff2d = fake_aeff2d()
-
-    pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 0.5, 50), unit="deg", name="theta")
-
-    geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
-    )
-
-    exposure_geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
-    )
-
-    exposure_map1 = make_map_exposure_true_energy(
-        pointing, "1 h", aeff2d, exposure_geom
-    )
-    exposure_map2 = make_map_exposure_true_energy(
-        pointing, "2 h", aeff2d, exposure_geom
-    )
-
-    psfmap1 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map1)
-    psfmap2 = make_psf_map(psf, pointing, geom, 3 * u.deg, exposure_map2)
+    psfmap1 = build_test_psfmap(0.1 * u.deg, shape="flat")
+    psfmap2 = build_test_psfmap(0.1 * u.deg, shape="flat")
+    psfmap2.exposure_map.quantity *= 2
 
     psfmap_stack = psfmap1.stack(psfmap2)
     assert_allclose(psfmap_stack.data, psfmap1.data)
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
-    psf3 = fake_psf3d(0.3 * u.deg, shape="flat")
-    psfmap3 = make_psf_map(psf3, pointing, geom, 3 * u.deg, exposure_map1)
+    psfmap3 = build_test_psfmap(0.3 * u.deg, shape="flat")
     psfmap_stack = psfmap1.stack(psfmap3)
 
     assert_allclose(psfmap_stack.data[:, 40, :, :], 0.0)
