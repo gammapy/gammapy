@@ -153,7 +153,7 @@ def apply_containment_fraction(aeff, psf, radius):
     ----------
     aeff : `~gammapy.irf.EffectiveAreaTable`
         the input 1D effective area
-    psf : `~gammapy.irf.EnergyDependentPSFTable`
+    psf : `~gammapy.irf.EnergyDependentTablePSF`
         the input 1D PSF
     radius : `~astropy.coordinates.Angle`
         the maximum angle
@@ -165,15 +165,15 @@ def apply_containment_fraction(aeff, psf, radius):
     """
     center_energies = aeff.energy.nodes
     containment = []
-    for index, energy in enumerate(center_energies):
+    for energy in center_energies:
         try:
             cont_ = psf.integral(energy, 0.0 * u.deg, radius)
         except:
             msg = "Containment correction failed for bin {}, energy {}."
             log.warning(msg.format(index, energy))
             cont_ = 1
-        finally:
-            containment.append(cont_)
+
+        containment.append(cont_)
 
     containment = np.array(containment)
     corrected_aeff = EffectiveAreaTable(
