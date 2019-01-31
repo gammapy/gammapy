@@ -2,8 +2,9 @@
 import logging
 import numpy as np
 from scipy.interpolate import UnivariateSpline
+from scipy.integrate import cumtrapz
 from astropy.io import fits
-from astropy.units import Quantity
+from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.gauss import Gauss2DPDF
@@ -59,7 +60,7 @@ class TablePSF:
     def __init__(self, rad, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
         self._rad = Angle(rad).to("radian")
-        self._dp_domega = Quantity(dp_domega).to("sr^-1")
+        self._dp_domega = u.Quantity(dp_domega).to("sr^-1")
 
         assert self._rad.ndim == self._dp_domega.ndim == 1
         assert self._rad.shape == self._dp_domega.shape
@@ -110,7 +111,7 @@ class TablePSF:
         else:
             raise ValueError("Invalid shape: {}".format(shape))
 
-        psf_value = Quantity(psf_value, "sr^-1")
+        psf_value = u.Quantity(psf_value, "sr^-1")
 
         return cls(rad, psf_value)
 
@@ -190,7 +191,7 @@ class TablePSF:
             raise ValueError(ss)
 
         y = np.clip(a=y, a_min=0, a_max=None)
-        return Quantity(y, unit).reshape(shape)
+        return u.Quantity(y, unit).reshape(shape)
 
     def integral(self, rad_min=None, rad_max=None):
         """Compute PSF integral, aka containment fraction.
@@ -252,7 +253,7 @@ class TablePSF:
         # Clip to small positive number to avoid divide by 0
         rad = np.clip(self._rad.radian, 1e-6, None)
 
-        rad = Quantity(rad, "radian")
+        rad = u.Quantity(rad, "radian")
         self._dp_domega = self._dp_dr / (2 * np.pi * rad)
         self._compute_splines(self._spline_kwargs)
 
@@ -367,17 +368,17 @@ class EnergyDependentTablePSF:
     """
 
     def __init__(self, energy, rad, exposure=None, psf_value=None, interp_kwargs=None):
-        self.energy = Quantity(energy).to("GeV")
-        self.rad = Quantity(rad).to("radian")
+        self.energy = u.Quantity(energy).to("GeV")
+        self.rad = u.Quantity(rad).to("radian")
         if exposure is None:
-            self.exposure = Quantity(np.ones(len(energy)), "cm^2 s")
+            self.exposure = u.Quantity(np.ones(len(energy)), "cm^2 s")
         else:
-            self.exposure = Quantity(exposure).to("cm^2 s")
+            self.exposure = u.Quantity(exposure).to("cm^2 s")
 
         if psf_value is None:
-            self.psf_value = Quantity(np.zeros(len(energy), len(rad)), "sr^-1")
+            self.psf_value = u.Quantity(np.zeros(len(energy), len(rad)), "sr^-1")
         else:
-            self.psf_value = Quantity(psf_value).to("sr^-1")
+            self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
@@ -402,7 +403,7 @@ class EnergyDependentTablePSF:
         ss += "\nContainment info:\n"
         # Print some example containment radii
         fractions = [0.68, 0.95]
-        energies = Quantity([10, 100], "GeV")
+        energies = u.Quantity([10, 100], "GeV")
         for fraction in fractions:
             rads = self.containment_radius(energies=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
@@ -421,9 +422,9 @@ class EnergyDependentTablePSF:
             HDU list with ``THETA`` and ``PSF`` extensions.
         """
         rad = Angle(hdu_list["THETA"].data["Theta"], "deg")
-        energy = Quantity(hdu_list["PSF"].data["Energy"], "MeV")
-        exposure = Quantity(hdu_list["PSF"].data["Exposure"], "cm^2 s")
-        psf_value = Quantity(hdu_list["PSF"].data["PSF"], "sr^-1")
+        energy = u.Quantity(hdu_list["PSF"].data["Energy"], "MeV")
+        exposure = u.Quantity(hdu_list["PSF"].data["Exposure"], "cm^2 s")
+        psf_value = u.Quantity(hdu_list["PSF"].data["PSF"], "sr^-1")
 
         return cls(energy, rad, exposure, psf_value)
 
@@ -491,8 +492,8 @@ class EnergyDependentTablePSF:
         if rad is None:
             rad = self.rad
 
-        energy = np.atleast_1d(Quantity(energy, "GeV").value)[:, np.newaxis]
-        rad = np.atleast_1d(Quantity(rad, "rad").value)
+        energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
+        rad = np.atleast_1d(u.Quantity(rad, "rad").value)
         return self._interpolate((energy, rad), clip=True, method=method)
 
     def table_psf_at_energy(self, energy, method="linear", **kwargs):
@@ -552,7 +553,7 @@ class EnergyDependentTablePSF:
         psf_value_weighted = weights[:, np.newaxis] * psf_value
         return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
 
-    def containment_radius(self, energies, fraction, interp_kwargs=None):
+    def containment_radius(self, energies, fraction):
         """Containment radius.
 
         Parameters
@@ -567,12 +568,15 @@ class EnergyDependentTablePSF:
         rad : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        # TODO: figure out if there's a more efficient implementation to support
-        # arrays of energy
-        energies = np.atleast_1d(energies)
-        psfs = [self.table_psf_at_energy(energy, interp_kwargs) for energy in energies]
-        rad = [psf.containment_radius(fraction) for psf in psfs]
-        return Quantity(rad)
+        rad = self.rad.to_value("deg")
+        psf_value = rad * self.evaluate(energy=energies).to_value("deg-2")
+        data = cumtrapz(y=psf_value, x=rad, axis=1)
+
+        with np.errstate(invalid="ignore"):
+            containment = data / data[:, -1][:, np.newaxis]
+
+        rad_idx = np.argmin(np.abs(containment - fraction), axis=-1)
+        return self.rad[rad_idx].to("deg")
 
     def integral(self, energy, rad_min, rad_max):
         """Containment fraction.
@@ -598,31 +602,34 @@ class EnergyDependentTablePSF:
         """Print basic info"""
         print(str(self))
 
-    def plot_psf_vs_rad(self, energies=[1e4, 1e5, 1e6]):
+    def plot_psf_vs_rad(self, energies=None, ax=None, **kwargs):
         """Plot PSF vs radius.
 
         Parameters
         ----------
-        TODO
+        energy : `~astropy.units.Quantity`
+            Energies where to plot the PSF.
+        **kwargs : dict
+            Keyword arguments pass to `~matplotlib.pyplot.plot`.
         """
         import matplotlib.pyplot as plt
 
-        plt.figure(figsize=(6, 4))
+        if energies is None:
+            energies = [100, 1000, 10000] * u.GeV
+
+        ax = plt.gca() if ax is None else ax
 
         for energy in energies:
-            energy_index = self._energy_index(energy)
-            psf = self.psf_value[energy_index, :]
-            label = "{} GeV".format(1e-3 * energy)
-            x = np.hstack([-self.rad[::-1], self.rad])
-            y = 1e-6 * np.hstack([psf[::-1], psf])
-            plt.plot(x, y, lw=2, label=label)
-        # plt.semilogy()
-        # plt.loglog()
+            psf_value = np.squeeze(self.evaluate(energy=energy))
+            label = "{:.0f}".format(energy)
+            ax.plot(self.rad.to_value("deg"), psf_value.to_value("sr-1"),
+                    label=label, **kwargs)
+
+        ax.set_yscale("log")
+        ax.set_xlabel("Offset (deg)")
+        ax.set_ylabel("PSF (1 / sr)")
         plt.legend()
-        plt.xlim(-0.2, 0.5)
-        plt.xlabel("Offset (deg)")
-        plt.ylabel("PSF (1e-6 sr^-1)")
-        plt.tight_layout()
+        return ax
 
     def plot_containment_vs_energy(
         self, ax=None, fractions=[0.63, 0.8, 0.95], **kwargs
@@ -656,48 +663,3 @@ class EnergyDependentTablePSF:
         plt.xlim(1e4 / 1.3, 1.3 * 1e6)
         plt.ylim(0, 1.5e11)
         plt.tight_layout()
-
-    def _energy_index(self, energy):
-        """Find energy array index.
-        """
-        # TODO: test with array input
-        return np.searchsorted(self.energy, energy)
-
-    def _get_1d_psf_values(self, energy_index):
-        """Get 1-dim PSF value array.
-
-        Parameters
-        ----------
-        energy_index : int
-            Energy index
-
-        Returns
-        -------
-        psf_values : `~astropy.units.Quantity`
-            PSF value array
-        """
-        psf_values = self.psf_value[energy_index, :].flatten().copy()
-        # When the PSF Table is not filled (with nan), the psf estimation at a given energy crashes
-        psf_values[np.isnan(psf_values)] = 0
-        return psf_values
-
-    def _get_1d_table_psf(self, energy_index, **kwargs):
-        """Get 1-dim TablePSF (cached).
-
-        Parameters
-        ----------
-        energy_index : int
-            Energy index
-
-        Returns
-        -------
-        table_psf : `TablePSF`
-            Table PSF
-        """
-        # TODO: support array_like `energy_index` here?
-        if self._table_psf_cache[energy_index] is None:
-            psf_value = self._get_1d_psf_values(energy_index)
-            table_psf = TablePSF(self.rad, psf_value, **kwargs)
-            self._table_psf_cache[energy_index] = table_psf
-
-        return self._table_psf_cache[energy_index]
