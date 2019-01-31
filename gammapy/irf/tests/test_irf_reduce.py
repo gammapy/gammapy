@@ -93,26 +93,12 @@ def test_make_psf(pars, data_store):
 @requires_data("gammapy-data")
 def test_make_mean_psf(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
-    obs1 = data_store.obs(23523)
-    obs2 = data_store.obs(23526)
-    energy = EnergyBounds.equal_log_spacing(1, 10, 100, "TeV")
-    energy_band = Energy([energy[0].value, energy[-1].value], energy.unit)
 
-    psf1 = make_psf(obs1, position=position, energy=energy, rad=None)
-    psf2 = make_psf(obs2, position=position, energy=energy, rad=None)
+    observations = data_store.get_observations([23523, 23526])
+    psf = make_mean_psf(observations, position=position)
 
-    spectrum = PowerLaw(index=2.3)
-    psf1_int = psf1.table_psf_in_energy_band(energy_band, spectrum=spectrum)
-    psf2_int = psf2.table_psf_in_energy_band(energy_band, spectrum=spectrum)
-    observations = Observations([obs1, obs2])
-    psf_tot = make_mean_psf(observations, position=position, energy=energy)
-    psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectrum=spectrum)
-
-    # Check that the mean PSF is consistent with the individual PSFs
-    # (in this case the R68 of the mean PSF is in between the R68 of the individual PSFs)
-    assert_allclose(psf1_int.containment_radius(0.68).deg, 0.122769, rtol=1e-3)
-    assert_allclose(psf2_int.containment_radius(0.68).deg, 0.111322, rtol=1e-3)
-    assert_allclose(psf_tot_int.containment_radius(0.68).deg, 0.117134, rtol=1e-3)
+    assert not np.isnan(psf.psf_value.value).any()
+    assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
 
 
 @requires_data("gammapy-data")
