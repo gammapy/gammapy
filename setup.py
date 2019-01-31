@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import os
+import sys
 
 import ah_bootstrap
 from setuptools import setup
 
 # A dirty hack to get around some early import/configurations ambiguities
-import builtins
+if sys.version_info[0] >= 3:
+    import builtins
+else:
+    import __builtin__ as builtins
 builtins._ASTROPY_SETUP_ = True
 
 from astropy_helpers.setup_helpers import (
@@ -15,7 +19,10 @@ from astropy_helpers.git_helpers import get_git_devstr
 from astropy_helpers.version_helpers import generate_version_py
 
 # Get some values from the setup.cfg
-from configparser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
 conf = ConfigParser()
 conf.read(['setup.cfg'])
 metadata = dict(conf.items('metadata'))
@@ -69,7 +76,7 @@ package_info['package_data'].setdefault(PACKAGENAME, [])
 # Define entry points for command-line scripts
 entry_points = {'console_scripts': []}
 for key, value in conf.items('entry_points'):
-    entry_points['console_scripts'].append('{} = {}'.format(key, value))
+    entry_points['console_scripts'].append('{0} = {1}'.format(key, value))
 
 # Note: usually the `affiliated_package/data` folder is used for data files.
 # In Gammapy we use `gammapy/data` as a sub-package.
