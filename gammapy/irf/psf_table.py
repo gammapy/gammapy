@@ -663,3 +663,23 @@ class EnergyDependentTablePSF:
         plt.xlim(1e4 / 1.3, 1.3 * 1e6)
         plt.ylim(0, 1.5e11)
         plt.tight_layout()
+
+    # TODO: make this public once the API is defined
+    def _stack(self, psf):
+        """Stack two EnergyDependentTablePSF objects.
+
+        Parameters
+        ----------
+        psf : `EnergyDependentTablePSF`
+            PSF to stack.
+        """
+        exposure = self.exposure + psf.exposure
+        psf_value = self.psf_value.T * self.exposure + psf.psf_value.T * psf.exposure
+
+        with np.errstate(invalid="ignore"):
+            # exposure can be zero
+            psf_value = np.nan_to_num(psf_value / exposure)
+
+        return self.__class__(
+            energy=self.energy, rad=self.rad, psf_value=psf_value.T, exposure=exposure
+                              )
