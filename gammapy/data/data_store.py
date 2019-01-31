@@ -287,9 +287,7 @@ class DataStoreChecker(Checker):
 
     def check_obs_table(self):
         """Checks for the observation index table."""
-        checker = ObservationTableChecker(self.data_store.obs_table)
-        for record in checker.run():
-            yield record
+        yield from ObservationTableChecker(self.data_store.obs_table).run()
 
     def check_hdu_table(self):
         """Checks for the HDU index table."""
@@ -336,5 +334,4 @@ class DataStoreChecker(Checker):
         """Perform some sanity checks for all observations."""
         for obs_id in self.data_store.obs_table["OBS_ID"]:
             obs = self.data_store.obs(obs_id)
-            for record in ObservationChecker(obs).run():
-                yield record
+            yield from ObservationChecker(obs).run()

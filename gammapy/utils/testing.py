@@ -236,5 +236,5 @@ class Checker:
             raise ValueError("Unknown checks: {!r}".format(unknown_checks))
 
         for check in checks:
-            for record in getattr(self, self.CHECKS[check])():
-                yield record
+            method = getattr(self, self.CHECKS[check])
+            yield from method()

@@ -334,8 +334,7 @@ class ObservationChecker(Checker):
             yield self._record(level="warning", msg="Loading events failed")
             return
 
-        for record in EventListChecker(events).run():
-            yield record
+        yield from EventListChecker(events).run()
 
     # TODO: split this out into a GTIChecker
     def check_gti(self):
