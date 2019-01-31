@@ -60,7 +60,9 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     if exposure_map is not None:
         # First adapt geometry, keep only energy axis
         if exposure_map.geom != geom.to_image().to_cube([energy_axis]):
-            raise ValueError("Inconsistent geometries between PSFMap and its associated exposure")
+            raise ValueError(
+                "Inconsistent geometries between PSFMap and its associated exposure"
+            )
 
     return PSFMap(psfmap, exposure_map)
 
@@ -278,7 +280,7 @@ class PSFMap:
             the stacked psfmap
         """
         if self.exposure_map is None or other.exposure_map is None:
-            raise (ValueError, "Missing exposure map for PSFMap.stack")
+            raise ValueError("Missing exposure map for PSFMap.stack")
 
         total_exposure = self.exposure_map + other.exposure_map
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
