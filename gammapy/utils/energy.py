@@ -251,7 +251,7 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
-        return super(EnergyBounds, cls).equal_log_spacing(emin, emax, nbins + 1, unit)
+        return super().equal_log_spacing(emin, emax, nbins + 1, unit)
 
     @classmethod
     def from_ebounds(cls, hdu):

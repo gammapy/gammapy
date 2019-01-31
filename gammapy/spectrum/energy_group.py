@@ -66,7 +66,7 @@ class SpectrumEnergyGroup:
 
     @classmethod
     def from_dict(cls, data):
-        data = dict((_, data[_]) for _ in cls.fields)
+        data = {_: data[_] for _ in cls.fields}
         return cls(**data)
 
     @property

@@ -29,7 +29,7 @@ def array_stats_str(x, label=""):
 
     ss = ""
     if label:
-        ss += "{0:15s}: ".format(label)
+        ss += "{:15s}: ".format(label)
 
     min = x.min()
     max = x.max()

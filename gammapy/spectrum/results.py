@@ -169,7 +169,7 @@ class SpectrumFitResult:
         s += "--------------- \n"
         s += "Model: {} \n".format(self.model)
         if self.statval is not None:
-            s += "\nStatistic: {0:.3f} ({1})".format(self.statval, self.statname)
+            s += "\nStatistic: {:.3f} ({})".format(self.statval, self.statname)
         if self.fit_range is not None:
             s += "\nFit Range: {}".format(self.fit_range)
         s += "\n"

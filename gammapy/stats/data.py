@@ -65,7 +65,7 @@ class Stats:
             self.background,
             self.excess,
         ]
-        return "\n".join(["%s = %s" % (k, v) for (k, v) in zip(keys, values)])
+        return "\n".join(["{} = {}".format(k, v) for (k, v) in zip(keys, values)])
 
 
 def make_stats(

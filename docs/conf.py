@@ -46,10 +46,7 @@ from gammapy.utils.docs import gammapy_sphinx_ext_activate
 from gammapy.utils.docs import gammapy_sphinx_notebooks
 
 # Get configuration information from setup.cfg
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
@@ -112,7 +109,7 @@ rst_epilog += """
 # This does not *have* to match the package name, but typically does
 project = setup_cfg["package_name"]
 author = setup_cfg["author"]
-copyright = "{0}, {1}".format(datetime.datetime.now().year, setup_cfg["author"])
+copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -179,7 +176,7 @@ html_theme = "sphinx_rtd_theme"
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "{0} v{1}".format(project, release)
+html_title = "{} v{}".format(project, release)
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
@@ -213,14 +210,14 @@ html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", project + ".tex", project + u" Documentation", author, "manual")
+    ("index", project + ".tex", project + " Documentation", author, "manual")
 ]
 
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", project.lower(), project + u" Documentation", [author], 1)]
+man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
 
 # -- Options for the edit_on_github extension ----------------------------------------
 

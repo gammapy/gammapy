@@ -311,7 +311,7 @@ class EnergyDependentMultiGaussPSF:
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = "Containment radius R{0:.0f} ({1})".format(
+            label = "Containment radius R{:.0f} ({})".format(
                 100 * fraction, containment.unit
             )
             ax.figure.colorbar(caxes, ax=ax, label=label)
@@ -324,7 +324,7 @@ class EnergyDependentMultiGaussPSF:
         omin = self.offset.value.min()
         omax = self.offset.value.max()
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
-        label = "Safe energy threshold: {0:3.2f}".format(esafe)
+        label = "Safe energy threshold: {:3.2f}".format(esafe)
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 
     def plot_containment_vs_energy(
@@ -397,8 +397,8 @@ class EnergyDependentMultiGaussPSF:
         ss += array_stats_str(self.theta.to("deg"), "Theta")
         ss += array_stats_str(self.energy_hi, "Energy hi")
         ss += array_stats_str(self.energy_lo, "Energy lo")
-        ss += "Safe energy threshold lo: {0:6.3f}\n".format(self.energy_thresh_lo)
-        ss += "Safe energy threshold hi: {0:6.3f}\n".format(self.energy_thresh_hi)
+        ss += "Safe energy threshold lo: {:6.3f}\n".format(self.energy_thresh_lo)
+        ss += "Safe energy threshold hi: {:6.3f}\n".format(self.energy_thresh_hi)
 
         for fraction in fractions:
             containment = self.containment_radius(energies, thetas, fraction)
@@ -406,8 +406,8 @@ class EnergyDependentMultiGaussPSF:
                 for j, theta in enumerate(thetas):
                     radius = containment[j, i]
                     ss += (
-                        "{0:2.0f}% containment radius at theta = {1} and "
-                        "E = {2:4.1f}: {3:5.8f}\n"
+                        "{:2.0f}% containment radius at theta = {} and "
+                        "E = {:4.1f}: {:5.8f}\n"
                         "".format(100 * fraction, theta, energy, radius)
                     )
         return ss

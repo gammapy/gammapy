@@ -942,7 +942,7 @@ class EnergyDispersion2D:
         for ener in e_true:
             for off in offset:
                 disp = self.data.evaluate(offset=off, e_true=ener, migra=migra)
-                label = "offset = {0:.1f}\nenergy = {1:.1f}".format(off, ener)
+                label = "offset = {:.1f}\nenergy = {:.1f}".format(off, ener)
                 ax.plot(migra, disp, label=label, **kwargs)
 
         ax.set_xlabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")

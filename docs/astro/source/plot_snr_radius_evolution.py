@@ -12,7 +12,7 @@ t = Quantity(np.logspace(0, 5, 100), "yr")
 for density in densities:
     for linestyle, snr_model in zip(linestyles, snr_models):
         snr = snr_model(n_ISM=density)
-        label = snr.__class__.__name__ + " (n_ISM = {0})".format(density.value)
+        label = snr.__class__.__name__ + " (n_ISM = {})".format(density.value)
         x = t.value
         y = snr.radius(t).to("pc").value
         plt.plot(x, y, label=label, linestyle=linestyle)

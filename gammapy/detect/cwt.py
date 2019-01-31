@@ -125,8 +125,8 @@ class CWT:
         """
         total_background = data._model + data._background + data._approx
         excess = data._counts - total_background
-        log.debug("Excess sum: {0:.4f}".format(excess.sum()))
-        log.debug("Excess max: {0:.4f}".format(excess.max()))
+        log.debug("Excess sum: {:.4f}".format(excess.sum()))
+        log.debug("Excess max: {:.4f}".format(excess.max()))
 
         log.debug("Computing transform and error")
         for idx_scale, kern in self.kernels.kern_base.items():
@@ -134,8 +134,8 @@ class CWT:
             data._error[idx_scale] = np.sqrt(
                 fftconvolve(total_background, kern ** 2, mode="same")
             )
-        log.debug("Error sum: {0:.4f}".format(data._error.sum()))
-        log.debug("Error max: {0:.4f}".format(data._error.max()))
+        log.debug("Error sum: {:.4f}".format(data._error.sum()))
+        log.debug("Error max: {:.4f}".format(data._error.max()))
 
         log.debug("Computing approx and approx_bkg")
         data._approx = fftconvolve(
@@ -146,8 +146,8 @@ class CWT:
         data._approx_bkg = fftconvolve(
             data._background, self.kernels.kern_approx, mode="same"
         )
-        log.debug("Approximate sum: {0:.4f}".format(data._approx.sum()))
-        log.debug("Approximate background sum: {0:.4f}".format(data._approx_bkg.sum()))
+        log.debug("Approximate sum: {:.4f}".format(data._approx.sum()))
+        log.debug("Approximate background sum: {:.4f}".format(data._approx_bkg.sum()))
 
     def _compute_support(self, data):
         """Compute the multiresolution support with hard sigma clipping.
@@ -253,9 +253,9 @@ class CWT:
         log.debug("Check the convergence")
         residual = data._counts - (data._model + data._approx)
         variance = residual.var()
-        log.info("Residual sum: {0:.4f}".format(residual.sum()))
-        log.info("Residual max: {0:.4f}".format(residual.max()))
-        log.info("Residual variance: {0:.4f}".format(residual.var()))
+        log.info("Residual sum: {:.4f}".format(residual.sum()))
+        log.info("Residual max: {:.4f}".format(residual.max()))
+        log.info("Residual variance: {:.4f}".format(residual.var()))
 
         if self.previous_variance is None:
             self.previous_variance = variance

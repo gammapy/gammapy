@@ -634,12 +634,12 @@ class GammaCatResourceIndex:
     @property
     def unique_source_ids(self):
         """Sorted list of unique source IDs (list of int)."""
-        return sorted(set([resource.source_id for resource in self.resources]))
+        return sorted({resource.source_id for resource in self.resources})
 
     @property
     def unique_reference_ids(self):
         """Sorted list of unique source IDs (list of str)."""
-        return sorted(set([resource.reference_id for resource in self.resources]))
+        return sorted({resource.reference_id for resource in self.resources})
 
     @property
     def global_ids(self):

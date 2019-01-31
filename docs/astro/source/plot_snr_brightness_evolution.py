@@ -10,7 +10,7 @@ t = Quantity(np.logspace(0, 5, 100), "yr")
 for density in densities:
     snr = SNR(n_ISM=density)
     F = snr.luminosity_tev(t) / (4 * np.pi * Quantity(1, "kpc") ** 2)
-    plt.plot(t.value, F.to("cm-2 s-1").value, label="n_ISM = {0}".format(density.value))
+    plt.plot(t.value, F.to("cm-2 s-1").value, label="n_ISM = {}".format(density.value))
     plt.vlines(snr.sedov_taylor_begin.to("yr").value, 1e-13, 1e-10, linestyle="--")
     plt.vlines(snr.sedov_taylor_end.to("yr").value, 1e-13, 1e-10, linestyle="--")
 
