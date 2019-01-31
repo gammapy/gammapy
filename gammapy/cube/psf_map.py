@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
 import astropy.io.fits as fits
-from ..irf import EnergyDependentTablePSF, EffectiveAreaTable2D
+from ..irf import EnergyDependentTablePSF
 from ..maps import Map
 from ..cube import PSFKernel
 
@@ -27,7 +27,7 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
         maximum offset w.r.t. fov center
-    aeff : `~gammapy.maps.Map`, optional
+    exposure_map : `~gammapy.maps.Map`, optional
         the associated exposure map.
         default is None
 
@@ -60,10 +60,7 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     if exposure_map is not None:
         # First adapt geometry, keep only energy axis
         if exposure_map.geom != geom.to_image().to_cube([energy_axis]):
-            raise (
-                ValueError,
-                "Inconsistent geometries between PSFMap and its associated exposure",
-            )
+            raise ValueError("Inconsistent geometries between PSFMap and its associated exposure")
 
     return PSFMap(psfmap, exposure_map)
 
@@ -159,16 +156,16 @@ class PSFMap:
         """Read a psf_map from file and create a PSFMap object"""
         with fits.open(filename, memmap=False) as hdulist:
             psfmap = Map.from_hdulist(hdulist, "PSFMAP", "BANDSPSF", "auto")
-            try:
+            if "EXPMAP" in hdulist:
                 expmap = Map.from_hdulist(hdulist, "EXPMAP", "BANDSEXP", "auto")
-            except:
+            else:
                 expmap = None
         return cls(psfmap, expmap)
 
     def write(self, filename, overwrite=False):
         """Write the Map object containing the PSF Library map."""
         hdulist = self._psf_map.to_hdulist(hdu="PSFMAP", hdu_bands="BANDSPSF")
-        if self._exposure_map is not None:
+        if self.exposure_map is not None:
             new_hdulist = self._exposure_map.to_hdulist(
                 hdu="EXPMAP", hdu_bands="BANDSEXP"
             )
@@ -284,12 +281,10 @@ class PSFMap:
             raise (ValueError, "Missing exposure map for PSFMap.stack")
 
         total_exposure = self.exposure_map + other.exposure_map
-        stacked_psf_quantity = (
-            self.quantity * self.exposure_map.quantity[:, np.newaxis, :, :]
-        )
-        stacked_psf_quantity += (
-            other.quantity * other.exposure_map.quantity[:, np.newaxis, :, :]
-        )
+        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity = self.quantity * exposure
+        other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity += other.quantity * other_exposure
         stacked_psf_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
         stacked_psf = Map.from_geom(
             self.geom, data=stacked_psf_quantity.to("1/sr").value, unit="1/sr"
