@@ -98,13 +98,13 @@ def test_psfmap_to_table_psf():
     # Check that containment radius is consistent between psf_table and psf3d
     assert_allclose(
         table_psf.containment_radius(1 * u.TeV, 0.9)[0],
-        psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.9),
+        psf.containment_radius(1 * u.TeV, theta=0 * u.deg, fraction=0.9),
         rtol=1e-3,
     )
     assert_allclose(
         table_psf.containment_radius(1 * u.TeV, 0.5)[0],
-        psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.5),
-        rtol=1e-3,
+        psf.containment_radius(1 * u.TeV, theta=0 * u.deg, fraction=0.5),
+        rtol=1e-2,
     )
 
 
@@ -158,7 +158,6 @@ def test_containment_radius_map(tmpdir):
     m = psfmap.containment_radius_map(2 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
-
     assert_allclose(val, 0.227463, rtol=1e-3)
 
 

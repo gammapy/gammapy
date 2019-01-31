@@ -51,12 +51,12 @@ def test_to_energy_dependent_table_psf(psf_3d):
 @requires_data("gammapy-data")
 def test_psf_3d_containment_radius(psf_3d):
     q = psf_3d.containment_radius(energy="1 TeV")
-    assert_allclose(q.value, 0.171445, rtol=1e-3)
+    assert_allclose(q.value, 0.171426, rtol=1e-3)
     assert q.isscalar
     assert q.unit == "deg"
 
     q = psf_3d.containment_radius(energy=[1, 3] * u.TeV)
-    assert_allclose(q.value, [0.171445, 0.157455], rtol=1e-3)
+    assert_allclose(q.value, [0.171552, 0.157318], rtol=1e-3)
     assert q.shape == (2,)
 
 

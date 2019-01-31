@@ -305,31 +305,15 @@ class PSF3D:
         radius : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        energy = Quantity(energy)
-        if energy.ndim == 0:
-            energy = Quantity([energy.value], energy.unit)
+        energy = np.atleast_1d(Quantity(energy))
+        theta = np.atleast_1d(Quantity(theta))
 
-        theta = Angle(theta)
-        if theta.ndim == 0:
-            theta = Quantity([theta.value], theta.unit)
+        radii = []
+        for t in theta:
+            psf = self.to_energy_dependent_table_psf(theta=t)
+            radii.append(psf.containment_radius(energy, fraction=fraction))
 
-        unit = None
-        radius = np.zeros((energy.size, theta.size))
-        for e in range(energy.size):
-            for t in range(theta.size):
-                try:
-                    psf = self.to_table_psf(energy[e], theta[t], interp_kwargs)
-                except:
-                    # This can raise an `error` from scipy UnivariateSpline:
-                    # error: (xb<=x[0]) failed for 2nd keyword xb: fpcurf0:xb=nan
-                    # Not sure what type exactly or how to catch it.
-                    radius[e, t] = np.nan
-                    continue
-                r = psf.containment_radius(fraction)
-                radius[e, t] = r.value
-                unit = r.unit
-
-        return Quantity(radius.squeeze(), unit)
+        return Quantity(radii).T.squeeze()
 
     def plot_containment_vs_energy(
         self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None
@@ -344,7 +328,7 @@ class PSF3D:
 
         for theta in thetas:
             for fraction in fractions:
-                radius = self.containment_radius(energy, theta, fraction).squeeze()
+                radius = self.containment_radius(energy, theta, fraction)
                 label = "{} deg, {:.1f}%".format(theta, 100 * fraction)
                 ax.plot(energy.value, radius.value, label=label)
 

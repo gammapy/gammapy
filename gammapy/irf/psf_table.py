@@ -568,15 +568,16 @@ class EnergyDependentTablePSF:
         rad : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        rad = self.rad.to_value("deg")
-        psf_value = rad * self.evaluate(energy=energies).to_value("deg-2")
-        data = cumtrapz(y=psf_value, x=rad, axis=1)
+        # oversample for better precision
+        rad = np.linspace(0 * u.deg, self.rad.max(), 10 * len(self.rad))
+
+        psf_value = self.evaluate(energy=energies, rad=rad).to_value("deg-2")
+        containment = cumtrapz(y=rad * psf_value, x=rad.to_value("deg"), axis=1)
 
         with np.errstate(invalid="ignore"):
-            containment = data / data[:, -1][:, np.newaxis]
+            containment /= containment[:, -1][:, np.newaxis]
 
-        rad_idx = np.argmin(np.abs(containment - fraction), axis=-1)
-        return self.rad[rad_idx].to("deg")
+        return rad[np.argmin(np.abs(containment - fraction), axis=1)].to("deg")
 
     def integral(self, energy, rad_min, rad_max):
         """Containment fraction.
@@ -664,9 +665,9 @@ class EnergyDependentTablePSF:
         plt.ylim(0, 1.5e11)
         plt.tight_layout()
 
-    # TODO: make this public once the API is defined
+    # TODO: make this public once the API for IRF stacking is defined
     def _stack(self, psf):
-        """Stack two EnergyDependentTablePSF objects.
+        """Stack two EnergyDependentTablePSF objects.s
 
         Parameters
         ----------
