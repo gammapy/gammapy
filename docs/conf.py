@@ -47,6 +47,7 @@ from gammapy.utils.docs import gammapy_sphinx_notebooks
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
+
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
