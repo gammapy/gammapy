@@ -574,8 +574,8 @@ class EnergyDependentTablePSF:
         psf_value = self.evaluate(energy=energies, rad=rad).to_value("deg-2")
         containment = cumtrapz(y=rad * psf_value, x=rad.to_value("deg"), axis=1)
 
-        with np.errstate(invalid="ignore"):
-            containment /= containment[:, -1][:, np.newaxis]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            containment /= containment[:, [-1]]
 
         return rad[np.argmin(np.abs(containment - fraction), axis=1)].to("deg")
 
