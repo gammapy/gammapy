@@ -60,9 +60,7 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     if exposure_map is not None:
         # First adapt geometry, keep only energy axis
         if exposure_map.geom != geom.to_image().to_cube([energy_axis]):
-            raise ValueError(
-                "Inconsistent geometries between PSFMap and its associated exposure"
-            )
+            raise ValueError("PSFMap and exposure_map have inconsistent geometries")
 
     return PSFMap(psfmap, exposure_map)
 
@@ -154,26 +152,78 @@ class PSFMap:
         return self._psf_map.geom
 
     @classmethod
+    def from_hdulist(
+        cls,
+        hdulist,
+        psf_hdu="PSFMAP",
+        psf_hdubands="BANDSPSF",
+        exposure_hdu="EXPMAP",
+        exposure_hdubands="BANDSEXP",
+    ):
+        """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        psf_hdu : str
+            Name or index of the HDU with the psf_map data.
+        psf_hdubands : str
+            Name or index of the HDU with the psf_map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure_map data.
+        exposure_hdubands : str
+            Name or index of the HDU with the exposure_map BANDS table.
+        """
+        psf_map = Map.from_hdulist(hdulist, psf_hdu, psf_hdubands, "auto")
+        if exposure_hdu in hdulist:
+            exposure_map = Map.from_hdulist(
+                hdulist, exposure_hdu, exposure_hdubands, "auto"
+            )
+        else:
+            exposure_map = None
+
+        return cls(psf_map, exposure_map)
+
+    @classmethod
     def read(cls, filename, **kwargs):
         """Read a psf_map from file and create a PSFMap object"""
         with fits.open(filename, memmap=False) as hdulist:
-            psfmap = Map.from_hdulist(hdulist, "PSFMAP", "BANDSPSF", "auto")
-            if "EXPMAP" in hdulist:
-                expmap = Map.from_hdulist(hdulist, "EXPMAP", "BANDSEXP", "auto")
-            else:
-                expmap = None
-        return cls(psfmap, expmap)
+            return cls.from_hdulist(hdulist, **kwargs)
 
-    def write(self, filename, overwrite=False):
-        """Write the Map object containing the PSF Library map."""
-        hdulist = self._psf_map.to_hdulist(hdu="PSFMAP", hdu_bands="BANDSPSF")
+    def to_hdulist(
+        self,
+        psf_hdu="PSFMAP",
+        psf_hdubands="BANDSPSF",
+        exposure_hdu="EXPMAP",
+        exposure_hdubands="BANDSEXP",
+    ):
+        """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        psf_hdu : str
+            Name or index of the HDU with the psf_map data.
+        psf_hdubands : str
+            Name or index of the HDU with the psf_map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure_map data.
+        exposure_hdubands : str
+            Name or index of the HDU with the exposure_map BANDS table.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+        """
+        hdulist = self.psf_map.to_hdulist(hdu=psf_hdu, hdu_bands=psf_hdubands)
         if self.exposure_map is not None:
-            new_hdulist = self._exposure_map.to_hdulist(
-                hdu="EXPMAP", hdu_bands="BANDSEXP"
+            new_hdulist = self.exposure_map.to_hdulist(
+                hdu=exposure_hdu, hdu_bands=exposure_hdubands
             )
-            hdulist.append(new_hdulist["EXPMAP"])
-            hdulist.append(new_hdulist["BANDSEXP"])
+            hdulist.extend(new_hdulist[1:])
+        return hdulist
 
+    def write(self, filename, overwrite=False, **kwargs):
+        """Write to fits"""
+        hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
     def get_energy_dependent_table_psf(self, position):
