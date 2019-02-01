@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
 import logging
-import contextlib
 import warnings
 from functools import partial
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from scipy.optimize import newton, brentq
 from astropy.convolution import CustomKernel, Kernel2D
@@ -334,11 +333,9 @@ class TSMapEstimator:
         x, y = np.where(mask.data)
         positions = list(zip(x, y))
 
-        with contextlib.closing(Pool(processes=p["n_jobs"])) as pool:
+        with ProcessPoolExecutor(max_workers=p["n_jobs"]) as executor:
             log.info("Using {} jobs to compute TS map.".format(p["n_jobs"]))
-            results = pool.map(wrap, positions)
-
-        pool.join()
+            results = list(executor.map(wrap, positions))
 
         # Set TS values at given positions
         j, i = zip(*positions)
