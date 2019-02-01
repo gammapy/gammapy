@@ -91,6 +91,7 @@ def build_test_psfmap(size, shape="gauss"):
 
 def test_psfmap_to_table_psf():
     psfmap = build_test_psfmap(0.15 * u.deg)
+    psf = fake_psf3d(0.15 * u.deg)
     # Extract EnergyDependentTablePSF
     table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit="deg"))
 
@@ -107,7 +108,7 @@ def test_psfmap_to_table_psf():
     )
 
 
-def test_psfmap_to_table_psf():
+def test_psfmap_to_psf_kernel():
     psfmap = build_test_psfmap(0.15 * u.deg)
 
     energy_axis = psfmap.geom.axes[1]
