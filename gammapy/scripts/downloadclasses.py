@@ -85,9 +85,7 @@ class ComputePlan:
         filepath_env = str(self.outfolder / filename_env)
         try:
             log.info("Downloading {}".format(url_file_env))
-            urlopen(url_file_env)
-            ifolder = Path(filepath_env).parent
-            ifolder.mkdir(parents=True, exist_ok=True)
+            Path(filepath_env).parent.mkdir(parents=True, exist_ok=True)
             get_file((url_file_env, filepath_env, ""))
         except Exception as ex:
             log.error(ex)
