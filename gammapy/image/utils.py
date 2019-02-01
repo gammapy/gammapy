@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
 import logging
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import numpy as np
 from scipy.signal import fftconvolve
@@ -49,10 +49,9 @@ def scale_cube(data, kernels, parallel=True):
     wrap = partial(_fftconvolve_wrap, data=data)
 
     if parallel:
-        pool = Pool()
-        result = pool.map(wrap, kernels)
-        pool.close()
-        pool.join()
+        with ProcessPoolExecutor() as executor:
+            result = executor.map(wrap, kernels)
     else:
         result = map(wrap, kernels)
+
     return np.dstack(result)
