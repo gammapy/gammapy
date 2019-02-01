@@ -364,7 +364,7 @@ class EnergyDependentTablePSF:
     psf_value : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
     interp_kwargs : dict
-        Interpolation keyword arguments pass to `SCaledRegularGridInterpolator`.
+        Interpolation keyword arguments pass to `ScaledRegularGridInterpolator`.
     """
 
     def __init__(self, energy, rad, exposure=None, psf_value=None, interp_kwargs=None):
@@ -380,14 +380,13 @@ class EnergyDependentTablePSF:
         else:
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
-        # Cache for TablePSF at each energy ... only computed when needed
-        self._table_psf_cache = [None] * len(self.energy)
+        self._interpolate = self._setup_interpolator(self.psf_value, interp_kwargs)
 
+    def _setup_interpolator(self, values, interp_kwargs=None):
         interp_kwargs = interp_kwargs or {}
         points = (self.energy.value, self.rad.value)
-
-        self._interpolate = ScaledRegularGridInterpolator(
-            points=points, values=self.psf_value, **interp_kwargs
+        return ScaledRegularGridInterpolator(
+            points=points, values=values, **interp_kwargs
         )
 
     def __str__(self):
@@ -553,31 +552,32 @@ class EnergyDependentTablePSF:
         psf_value_weighted = weights[:, np.newaxis] * psf_value
         return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
 
-    def containment_radius(self, energies, fraction):
+    def containment_radius(self, energy, fraction=0.68, precision="0.005 deg"):
         """Containment radius.
 
         Parameters
         ----------
-        energies : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`
             Energy
         fraction : float
-            Containment fraction in %
+            Containment fraction.
+        precision : `~astropy.units.Quantity`
+            Precision with which to compute the containment radius.
 
         Returns
         -------
         rad : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        # oversample for better precision
-        rad = np.linspace(0 * u.deg, self.rad.max(), 10 * len(self.rad))
+        precision = u.Quantity(precision)
+        n_rad = int((self.rad.max() / precision).to_value(""))
+        rad_max = np.arange(n_rad) * precision
 
-        psf_value = self.evaluate(energy=energies, rad=rad).to_value("deg-2")
-        containment = cumtrapz(y=rad * psf_value, x=rad.to_value("deg"), axis=1)
+        containment = self.integral(energy=energy, rad_min=0 * u.deg, rad_max=rad_max)
 
-        with np.errstate(divide="ignore", invalid="ignore"):
-            containment /= containment[:, [-1]]
-
-        return rad[np.argmin(np.abs(containment - fraction), axis=1)].to("deg")
+        # find nearest containment value
+        fraction_idx = np.argmin(np.abs(containment - fraction), axis=1)
+        return rad_max[fraction_idx].to("deg")
 
     def integral(self, energy, rad_min, rad_max):
         """Containment fraction.
@@ -594,10 +594,23 @@ class EnergyDependentTablePSF:
         fraction : array_like
             Containment fraction (in range 0 .. 1)
         """
-        # TODO: useless at the moment ... support array inputs or remove!
+        x = self.rad.to_value("deg")
+        y = (self.rad * self.psf_value).to_value("deg-1")
+        integral = cumtrapz(y=y, x=x, axis=1, initial=0)
 
-        psf = self.table_psf_at_energy(energy)
-        return psf.integral(rad_min, rad_max)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            integral /= integral[:, [-1]]
+
+        interp_integral = self._setup_interpolator(integral)
+
+        energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
+        rad_min = np.atleast_1d(u.Quantity(rad_min, "rad").value)
+        rad_max = np.atleast_1d(u.Quantity(rad_max, "rad").value)
+
+        rad_min = np.clip(rad_min, self.rad.value.min(), np.inf)
+        rad_max = np.clip(rad_max, 0, self.rad.value.max())
+
+        return interp_integral((energy, rad_max)) - interp_integral((energy, rad_min))
 
     def info(self):
         """Print basic info"""
@@ -640,12 +653,10 @@ class EnergyDependentTablePSF:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = Energy.equal_log_spacing(self.energy.min(), self.energy.max(), 10)
-
         for fraction in fractions:
-            rad = self.containment_radius(energy, fraction)
+            rad = self.containment_radius(self.energy, fraction)
             label = "{:.1f}% Containment".format(100 * fraction)
-            ax.plot(energy.value, rad.value, label=label, **kwargs)
+            ax.plot(self.energy.value, rad.value, label=label, **kwargs)
 
         ax.semilogx()
         ax.legend(loc="best")
