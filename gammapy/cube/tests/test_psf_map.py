@@ -68,7 +68,7 @@ def test_make_psf_map():
     assert psfmap.data.shape == (4, 50, 25, 25)
 
 
-def build_test_psfmap(size, shape="gauss"):
+def make_test_psfmap(size, shape="gauss"):
     psf = fake_psf3d(size, shape)
     aeff2d = fake_aeff2d()
 
@@ -90,7 +90,7 @@ def build_test_psfmap(size, shape="gauss"):
 
 
 def test_psfmap_to_table_psf():
-    psfmap = build_test_psfmap(0.15 * u.deg)
+    psfmap = make_test_psfmap(0.15 * u.deg)
     psf = fake_psf3d(0.15 * u.deg)
     # Extract EnergyDependentTablePSF
     table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit="deg"))
@@ -109,7 +109,7 @@ def test_psfmap_to_table_psf():
 
 
 def test_psfmap_to_psf_kernel():
-    psfmap = build_test_psfmap(0.15 * u.deg)
+    psfmap = make_test_psfmap(0.15 * u.deg)
 
     energy_axis = psfmap.geom.axes[1]
     # create PSFKernel
@@ -121,7 +121,7 @@ def test_psfmap_to_psf_kernel():
 
 
 def test_psfmap_to_from_hdulist():
-    psfmap = build_test_psfmap(0.15 * u.deg)
+    psfmap = make_test_psfmap(0.15 * u.deg)
     hdulist = psfmap.to_hdulist(psf_hdu="PSF", psf_hdubands="BANDS")
     assert "PSF" in hdulist
     assert "BANDS" in hdulist
@@ -135,7 +135,7 @@ def test_psfmap_to_from_hdulist():
 
 
 def test_psfmap_read_write(tmpdir):
-    psfmap = build_test_psfmap(0.15 * u.deg)
+    psfmap = make_test_psfmap(0.15 * u.deg)
 
     # test read/write
     filename = str(tmpdir / "psfmap.fits")
@@ -163,24 +163,20 @@ def test_containment_radius_map(tmpdir):
 
 
 def test_psfmap_stacking():
-    psfmap1 = build_test_psfmap(0.1 * u.deg, shape="flat")
-    psfmap2 = build_test_psfmap(0.1 * u.deg, shape="flat")
+    psfmap1 = make_test_psfmap(0.1 * u.deg, shape="flat")
+    psfmap2 = make_test_psfmap(0.1 * u.deg, shape="flat")
     psfmap2.exposure_map.quantity *= 2
 
     psfmap_stack = psfmap1.stack(psfmap2)
     assert_allclose(psfmap_stack.data, psfmap1.data)
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
-    psfmap3 = build_test_psfmap(0.3 * u.deg, shape="flat")
+    psfmap3 = make_test_psfmap(0.3 * u.deg, shape="flat")
     psfmap_stack = psfmap1.stack(psfmap3)
 
-    assert_allclose(psfmap_stack.data[:, 40, :, :], 0.0)
-    assert_allclose(
-        psfmap_stack.data[:, 20, :, :], psfmap3.data[:, 20, :, :] * 0.5, rtol=1e-4
-    )
-    assert_allclose(
-        psfmap_stack.data[:, 0, :, :], psfmap3.data[:, 0, :, :] * 5.0, rtol=1e-4
-    )
+    assert_allclose(psfmap_stack.data[0, 40, 20, 20], 0.0)
+    assert_allclose(psfmap_stack.data[0, 20, 20, 20], 5805.28955078125)
+    assert_allclose(psfmap_stack.data[0, 0, 20, 20], 58052.78955078125)
 
 
 # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations

@@ -57,11 +57,6 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
 
-    if exposure_map is not None:
-        # First adapt geometry, keep only energy axis
-        if exposure_map.geom != geom.to_image().to_cube([energy_axis]):
-            raise ValueError("PSFMap and exposure_map have inconsistent geometries")
-
     return PSFMap(psfmap, exposure_map)
 
 
@@ -123,6 +118,12 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self._psf_map = psf_map
+
+        if exposure_map is not None:
+            # First adapt geometry, keep only energy axis
+            expected_geom = psf_map.geom.to_image().to_cube([psf_map.geom.axes[1]])
+            if exposure_map.geom != expected_geom:
+                raise ValueError("PSFMap and exposure_map have inconsistent geometries")
 
         self._exposure_map = exposure_map
 
@@ -317,7 +318,8 @@ class PSFMap:
     def stack(self, other):
         """Stack PSFMap with another one.
 
-        This works only if the PSFMap to be stacked contain compatible exposure maps.
+        The current PSFMap is unchanged and a new one is created and returned.
+        For the moment, this works only if the PSFMap to be stacked contain compatible exposure maps.
 
         Parameters
         ----------
