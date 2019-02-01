@@ -8,7 +8,7 @@ from ..maps import Map
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
-def make_edisp_map(edisp, pointing, geom, max_offset):
+def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map = None):
     """Make a edisp map for a single observation
 
     Expected axes : migra and true energy in this specific order
@@ -25,6 +25,9 @@ def make_edisp_map(edisp, pointing, geom, max_offset):
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
         maximum offset w.r.t. fov center
+    exposure_map : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
 
     Returns
     -------
@@ -51,7 +54,7 @@ def make_edisp_map(edisp, pointing, geom, max_offset):
     edispmap = Map.from_geom(geom, unit="sr-1")
     edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
 
-    return EDispMap(edispmap)
+    return EDispMap(edispmap, exposure_map)
 
 
 class EDispMap(object):
@@ -101,7 +104,7 @@ class EDispMap(object):
         edisp_map.write('edisp_map.fits')
     """
 
-    def __init__(self, edisp_map):
+    def __init__(self, edisp_map, exposure_map):
         if edisp_map.geom.axes[1].name.upper() != "ENERGY":
             raise ValueError("Incorrect energy axis position in input Map")
 
@@ -109,6 +112,15 @@ class EDispMap(object):
             raise ValueError("Incorrect migra axis position in input Map")
 
         self._edisp_map = edisp_map
+
+        if exposure_map is not None:
+            # First adapt geometry, keep only energy axis
+            expected_geom = edisp_map.geom.to_image().to_cube([edisp_map.geom.axes[1]])
+            if exposure_map.geom != expected_geom:
+                raise ValueError("EDispMap and exposure_map have inconsistent geometries")
+
+        self._exposure_map = exposure_map
+
 
     @property
     def edisp_map(self):
@@ -126,19 +138,90 @@ class EDispMap(object):
         return self._edisp_map.quantity
 
     @property
+    def exposure_map(self):
+        """the exposure map associated to the PSFMap."""
+        return self._exposure_map
+
+    @property
     def geom(self):
         """The EDispMap MapGeom object"""
         return self._edisp_map.geom
 
     @classmethod
-    def read(cls, filename, **kwargs):
-        """Read a edisp_map from file and create a EDispMap object"""
-        edmap = Map.read(filename, **kwargs)
-        return cls(edmap)
+    def from_hdulist(
+        cls,
+        hdulist,
+        edisp_hdu="EDISPMAP",
+        edisp_hdubands="BANDSEDISP",
+        exposure_hdu="EXPMAP",
+        exposure_hdubands="BANDSEXP",
+    ):
+        """Convert to `~astropy.io.fits.HDUList`.
 
-    def write(self, *args, **kwargs):
-        """Write the Map object containing the EDisp Library map."""
-        self._edisp_map.write(*args, **kwargs)
+        Parameters
+        ----------
+        edisp_hdu : str
+            Name or index of the HDU with the edisp_map data.
+        edisp_hdubands : str
+            Name or index of the HDU with the edisp_map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure_map data.
+        exposure_hdubands : str
+            Name or index of the HDU with the exposure_map BANDS table.
+        """
+        edisp_map = Map.from_hdulist(hdulist, edisp_hdu, edisp_hdubands, "auto")
+        if exposure_hdu in hdulist:
+            exposure_map = Map.from_hdulist(
+                hdulist, exposure_hdu, exposure_hdubands, "auto"
+            )
+        else:
+            exposure_map = None
+
+        return cls(edisp_map, exposure_map)
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read an edisp_map from file and create an EDispMap object"""
+        with fits.open(filename, memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, **kwargs)
+
+    def to_hdulist(
+        self,
+        edisp_hdu="EDISPMAP",
+        edisp_hdubands="BANDSEDISP",
+        exposure_hdu="EXPMAP",
+        exposure_hdubands="BANDSEXP",
+    ):
+        """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        edisp_hdu : str
+            Name or index of the HDU with the edisp_map data.
+        edisp_hdubands : str
+            Name or index of the HDU with the edisp_map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure_map data.
+        exposure_hdubands : str
+            Name or index of the HDU with the exposure_map BANDS table.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+        """
+        hdulist = self.edisp_map.to_hdulist(hdu=edisp_hdu, hdu_bands=edisp_hdubands)
+        if self.exposure_map is not None:
+            new_hdulist = self.exposure_map.to_hdulist(
+                hdu=exposure_hdu, hdu_bands=exposure_hdubands
+            )
+            hdulist.extend(new_hdulist[1:])
+        return hdulist
+
+    def write(self, filename, overwrite=False, **kwargs):
+        """Write to fits"""
+        hdulist = self.to_hdulist(**kwargs)
+        hdulist.writeto(filename, overwrite=overwrite)
+
 
     def get_energy_dispersion(self, position, e_reco, migra_step=5e-3):
         """ Returns EnergyDispersion at a given position
@@ -218,3 +301,31 @@ class EDispMap(object):
             e_reco_hi=ereco_hi,
             data=data,
         )
+
+    def stack(self, other):
+        """Stack EdispMap with another one.
+
+        The current EdispMap is unchanged and a new one is created and returned.
+        For the moment, this works only if the EDispMap to be stacked contain compatible exposure maps.
+
+        Parameters
+        ----------
+        other : `~gammapy.cube.EDispMap`
+            the edispmap to be stacked with this one.
+
+        Returns
+        -------
+        new : `~gammapy.cube.EDispMap`
+            the stacked edispmap
+        """
+        if self.exposure_map is None or other.exposure_map is None:
+            raise ValueError("Missing exposure map for EdispMap.stack")
+
+        total_exposure = self.exposure_map + other.exposure_map
+        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_edisp_quantity = self.quantity * exposure
+        other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_edisp_quantity += other.quantity * other_exposure
+        stacked_edisp_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
+        stacked_edisp = Map.from_geom(self.geom, data=stacked_edisp_quantity.to("").value, unit="")
+        return EDispMap(stacked_edisp, total_exposure)
