@@ -2,6 +2,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
+import astropy.io.fits as fits
 from ..irf import EnergyDependentTablePSF
 from ..maps import Map
 from ..cube import PSFKernel
@@ -9,7 +10,7 @@ from ..cube import PSFKernel
 __all__ = ["make_psf_map", "PSFMap"]
 
 
-def make_psf_map(psf, pointing, geom, max_offset):
+def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     """Make a psf map for a single observation
 
     Expected axes : rad and true energy in this specific order
@@ -26,6 +27,9 @@ def make_psf_map(psf, pointing, geom, max_offset):
         rad and true energy axes should be given in this specific order.
     max_offset : `~astropy.coordinates.Angle`
         maximum offset w.r.t. fov center
+    exposure_map : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
 
     Returns
     -------
@@ -48,11 +52,12 @@ def make_psf_map(psf, pointing, geom, max_offset):
     # Re-order axes to be consistent with expected geometry
     psf_values = np.transpose(psf_values, axes=(2, 0, 1))
 
+    # TODO: this probably does not ensure that probability is properly normalized in the PSFMap
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
 
-    return PSFMap(psfmap)
+    return PSFMap(psfmap, exposure_map)
 
 
 class PSFMap:
@@ -63,6 +68,8 @@ class PSFMap:
     psf_map : `~gammapy.maps.Map`
         the input PSF Map. Should be a Map with 2 non spatial axes.
         rad and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`
+        the associated exposure map. It should have a consistent `MapGeom`
 
     Examples
     --------
@@ -103,7 +110,7 @@ class PSFMap:
         psf_map.write('psf_map.fits')
     """
 
-    def __init__(self, psf_map):
+    def __init__(self, psf_map, exposure_map=None):
         if psf_map.geom.axes[1].name.upper() != "ENERGY":
             raise ValueError("Incorrect energy axis position in input Map")
 
@@ -111,6 +118,14 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self._psf_map = psf_map
+
+        if exposure_map is not None:
+            # First adapt geometry, keep only energy axis
+            expected_geom = psf_map.geom.to_image().to_cube([psf_map.geom.axes[1]])
+            if exposure_map.geom != expected_geom:
+                raise ValueError("PSFMap and exposure_map have inconsistent geometries")
+
+        self._exposure_map = exposure_map
 
     @property
     def psf_map(self):
@@ -128,19 +143,89 @@ class PSFMap:
         return self._psf_map.quantity
 
     @property
+    def exposure_map(self):
+        """the exposure map associated to the PSFMap."""
+        return self._exposure_map
+
+    @property
     def geom(self):
         """The PSFMap MapGeom object"""
         return self._psf_map.geom
 
     @classmethod
+    def from_hdulist(
+        cls,
+        hdulist,
+        psf_hdu="PSFMAP",
+        psf_hdubands="BANDSPSF",
+        exposure_hdu="EXPMAP",
+        exposure_hdubands="BANDSEXP",
+    ):
+        """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        psf_hdu : str
+            Name or index of the HDU with the psf_map data.
+        psf_hdubands : str
+            Name or index of the HDU with the psf_map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure_map data.
+        exposure_hdubands : str
+            Name or index of the HDU with the exposure_map BANDS table.
+        """
+        psf_map = Map.from_hdulist(hdulist, psf_hdu, psf_hdubands, "auto")
+        if exposure_hdu in hdulist:
+            exposure_map = Map.from_hdulist(
+                hdulist, exposure_hdu, exposure_hdubands, "auto"
+            )
+        else:
+            exposure_map = None
+
+        return cls(psf_map, exposure_map)
+
+    @classmethod
     def read(cls, filename, **kwargs):
         """Read a psf_map from file and create a PSFMap object"""
-        psfmap = Map.read(filename, **kwargs)
-        return cls(psfmap)
+        with fits.open(filename, memmap=False) as hdulist:
+            return cls.from_hdulist(hdulist, **kwargs)
 
-    def write(self, *args, **kwargs):
-        """Write the Map object containing the PSF Library map."""
-        self._psf_map.write(*args, **kwargs)
+    def to_hdulist(
+        self,
+        psf_hdu="PSFMAP",
+        psf_hdubands="BANDSPSF",
+        exposure_hdu="EXPMAP",
+        exposure_hdubands="BANDSEXP",
+    ):
+        """Convert to `~astropy.io.fits.HDUList`.
+
+        Parameters
+        ----------
+        psf_hdu : str
+            Name or index of the HDU with the psf_map data.
+        psf_hdubands : str
+            Name or index of the HDU with the psf_map BANDS table.
+        exposure_hdu : str
+            Name or index of the HDU with the exposure_map data.
+        exposure_hdubands : str
+            Name or index of the HDU with the exposure_map BANDS table.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+        """
+        hdulist = self.psf_map.to_hdulist(hdu=psf_hdu, hdu_bands=psf_hdubands)
+        if self.exposure_map is not None:
+            new_hdulist = self.exposure_map.to_hdulist(
+                hdu=exposure_hdu, hdu_bands=exposure_hdubands
+            )
+            hdulist.extend(new_hdulist[1:])
+        return hdulist
+
+    def write(self, filename, overwrite=False, **kwargs):
+        """Write to fits"""
+        hdulist = self.to_hdulist(**kwargs)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def get_energy_dependent_table_psf(self, position):
         """ Returns EnergyDependentTable PSF at a given position
@@ -229,3 +314,33 @@ class PSFMap:
             m.fill_by_coord(coord, containment_radius)
 
         return m
+
+    def stack(self, other):
+        """Stack PSFMap with another one.
+
+        The current PSFMap is unchanged and a new one is created and returned.
+        For the moment, this works only if the PSFMap to be stacked contain compatible exposure maps.
+
+        Parameters
+        ----------
+        other : `~gammapy.cube.PSFMap`
+            the psfmap to be stacked with this one.
+
+        Returns
+        -------
+        new : `~gammapy.cube.PSFMap`
+            the stacked psfmap
+        """
+        if self.exposure_map is None or other.exposure_map is None:
+            raise ValueError("Missing exposure map for PSFMap.stack")
+
+        total_exposure = self.exposure_map + other.exposure_map
+        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity = self.quantity * exposure
+        other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity += other.quantity * other_exposure
+        stacked_psf_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
+        stacked_psf = Map.from_geom(
+            self.geom, data=stacked_psf_quantity.to("1/sr").value, unit="1/sr"
+        )
+        return PSFMap(stacked_psf, total_exposure)
