@@ -13,7 +13,7 @@ from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 from .observation import SpectrumObservationList, SpectrumObservation
 
-__all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointFit"]
+__all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointsDataset"]
 
 log = logging.getLogger(__name__)
 
@@ -1031,7 +1031,7 @@ class FluxPointEstimator:
             self.obs[index].on_vector.quality = quality_orig[index]
 
 
-class FluxPointFit(Fit):
+class FluxPointsDataset:
     """
     Fit a set of flux points with a parametric model.
 
@@ -1041,6 +1041,10 @@ class FluxPointFit(Fit):
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
+    mask : `numpy.ndarray`
+        Mask to apply to the likelihood.
+    likelihood : {"chi2", "chi2assym"}
+        Likelihood function to use for the fit.
 
     Examples
     --------
@@ -1048,7 +1052,8 @@ class FluxPointFit(Fit):
     Load flux points from file and fit with a power-law model::
 
         from astropy import units as u
-        from gammapy.spectrum import FluxPoints, FluxPointFit
+        from gammapy.spectrum import FluxPoints, FluxPointsDataset
+        form gammapy.utils.fitting import Fit
         from gammapy.spectrum.models import PowerLaw
 
         filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
@@ -1056,53 +1061,65 @@ class FluxPointFit(Fit):
 
         model = PowerLaw()
 
-        fit = FluxPointFit(model, flux_points)
+        dataset = FluxPointsDataset(model, flux_points)
+        fit = Fit(dataset)
         result = fit.run()
         print(result)
         print(result.model)
     """
 
-    def __init__(self, model, data, stat="chi2"):
-        self._model = model
+    def __init__(self, model, data, mask=None, likelihood="chi2"):
+        self.model = model
         self.data = data
+        self.mask = mask
+        self.parameters = model.parameters
 
-        if stat in ["chi2", "chi2assym"]:
-            self._stat = stat
+        if likelihood in ["chi2", "chi2assym"]:
+            self._likelihood = likelihood
         else:
             raise ValueError(
-                "'{stat}' is not a valid fit statistic, please choose"
+                "'{likelihood}' is not a valid fit statistic, please choose"
                 " either 'chi2' or 'chi2assym'"
             )
 
-    @property
-    def _stat_chi2(self):
-        """Likelihood per bin given the current model parameters"""
-        model = self._model(self.data.e_ref)
-        data = self.data.table["dnde"].quantity
-        sigma = self.data.table["dnde_err"].quantity
+    @staticmethod
+    def _likelihood_chi2(data, model, sigma):
         return ((data - model) / sigma).to_value("") ** 2
 
-    @property
-    def _stat_chi2_assym(self):
+    @staticmethod
+    def _likelihood_chi2_assym(data, model, sigma_n, sigma_p):
         """
         Assymetric chi2 statistics for a list of flux points and model.
         """
-        model = self._model(self.data.e_ref)
-        data = self.data.table["dnde"].quantity.to(model.unit)
-        data_errp = self.data.table["dnde_errp"].quantity
-        data_errn = self.data.table["dnde_errn"].quantity
+        sigma = np.where(model > data, sigma_n, sigma_p)
+        return self._likelihood_chi2(data, model, sigma)
 
-        val_n = ((data - model) / data_errn).to_value("") ** 2
-        val_p = ((data - model) / data_errp).to_value("") ** 2
-        return np.where(model > data, val_p, val_n)
+    def flux_pred(self):
+        """Compute predicted flux.
+        """
+        return self.model(self.data.e_ref)
 
-    @property
-    def stat(self):
-        if self._stat == "chi2":
-            return self._stat_chi2
+    def likelihood_per_bin(self):
+        """Likelihood per bin given the current model parameters"""
+        model = self.flux_pred()
+        data = self.data.table["dnde"].quantity
+
+        if self._likelihood == "chi2":
+            sigma = self.data.table["dnde_err"].quantity
+            return self._likelihood_chi2(data, model, sigma)
+        elif self._likelihood == "chi2assym":
+            sigma_n = self.data.table["dnde_errn"].quantity
+            sigma_p = self.data.table["dnde_errp"].quantity
+            return self._likelihood_chi2_assym(data, model, sigma_n, sigma_p)
         else:
-            return self._stat_chi2_assym
+            # TODO: add likelihood profiles
+            pass
 
-    def total_stat(self, parameters):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters"""
-        return np.nansum(self.stat, dtype=np.float64)
+        # update parameters
+        if self.mask:
+            stat = self.likelihood_per_bin()[self.mask]
+        else:
+            stat = self.likelihood_per_bin()
+        return np.nansum(stat, dtype=np.float64)
