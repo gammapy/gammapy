@@ -75,7 +75,7 @@ def make_mean_psf(observations, position, energy=None, rad=None):
         if idx == 0:
             stacked_psf = psf
         else:
-            stacked_psf = stacked_psf._stack(psf)
+            stacked_psf = stacked_psf.stack(psf)
     return stacked_psf
 
 

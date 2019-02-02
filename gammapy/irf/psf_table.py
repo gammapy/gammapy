@@ -573,20 +573,20 @@ class EnergyDependentTablePSF:
         n_rad = int((self.rad.max() / precision).to_value(""))
         rad_max = np.arange(n_rad) * precision
 
-        containment = self.integral(energy=energy, rad_min=0 * u.deg, rad_max=rad_max)
+        containment = self.containment(energy=energy, rad_max=rad_max)
 
         # find nearest containment value
         fraction_idx = np.argmin(np.abs(containment - fraction), axis=1)
         return rad_max[fraction_idx].to("deg")
 
-    def integral(self, energy, rad_min, rad_max):
-        """Containment fraction.
+    def containment(self, energy, rad_max):
+        """Compite containment of the PSF.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        rad_min, rad_max : `~astropy.coordinates.Angle`
+        rad_max : `~astropy.coordinates.Angle`
             Offset
 
         Returns
@@ -596,21 +596,16 @@ class EnergyDependentTablePSF:
         """
         x = self.rad.to_value("deg")
         y = (self.rad * self.psf_value).to_value("deg-1")
-        integral = cumtrapz(y=y, x=x, axis=1, initial=0)
+        integral = cumtrapz(y=y, x=x, axis=1)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             integral /= integral[:, [-1]]
 
-        interp_integral = self._setup_interpolator(integral)
+        interp_integral = self._setup_interpolator(integral, interp_kwargs={"fill_value": 1})
 
         energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
-        rad_min = np.atleast_1d(u.Quantity(rad_min, "rad").value)
         rad_max = np.atleast_1d(u.Quantity(rad_max, "rad").value)
-
-        rad_min = np.clip(rad_min, self.rad.value.min(), np.inf)
-        rad_max = np.clip(rad_max, 0, self.rad.value.max())
-
-        return interp_integral((energy, rad_max)) - interp_integral((energy, rad_min))
+        return interp_integral((energy, rad_max))
 
     def info(self):
         """Print basic info"""
@@ -676,14 +671,20 @@ class EnergyDependentTablePSF:
         plt.ylim(0, 1.5e11)
         plt.tight_layout()
 
-    # TODO: make this public once the API for IRF stacking is defined
-    def _stack(self, psf):
+    def stack(self, psf):
         """Stack two EnergyDependentTablePSF objects.s
 
         Parameters
         ----------
         psf : `EnergyDependentTablePSF`
             PSF to stack.
+
+        
+        Returns
+        -------
+        stacked_psf : `EnergyDependentTablePSF`
+            Stacked PSF.
+
         """
         exposure = self.exposure + psf.exposure
         psf_value = self.psf_value.T * self.exposure + psf.psf_value.T * psf.exposure
