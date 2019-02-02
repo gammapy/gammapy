@@ -19,20 +19,21 @@ class MyModel(Model):
         )
 
 
-class MyFit(Fit):
+class MyDataset:
     def __init__(self):
-        self._model = MyModel()
+        self.model = MyModel()
+        self.parameters = self.model.parameters
 
-    def total_stat(self, parameters):
+    def likelihood(self, parameters):
         # self._model.parameters = parameters
-        x, y, z = [p.value for p in parameters]
+        x, y, z = [p.value for p in self.model.parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
         return (x - x_opt) ** 2 + (y - y_opt) ** 2 + (z - z_opt) ** 2
 
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
-    fit = MyFit()
+    fit = Fit(MyDataset())
     result = fit.run(
         optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
     )
@@ -57,7 +58,7 @@ def test_run(backend):
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
-    fit = MyFit()
+    fit = Fit(MyDataset())
     result = fit.optimize(backend=backend)
     pars = result.model.parameters
 
@@ -77,7 +78,7 @@ def test_optimize(backend):
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
-    fit = MyFit()
+    fit = Fit(MyDataset())
     fit.optimize(backend=backend)
     result = fit.confidence("x")
 
@@ -90,7 +91,7 @@ def test_confidence(backend):
 
 
 def test_likelihood_profile():
-    fit = MyFit()
+    fit = Fit(MyDataset())
     fit.run()
     result = fit.likelihood_profile("x", nvalues=3)
 
@@ -102,7 +103,7 @@ def test_likelihood_profile():
 
 
 def test_minos_contour():
-    fit = MyFit()
+    fit = Fit(MyDataset())
     fit.optimize(backend="minuit")
     result = fit.minos_contour("x", "y")
 
