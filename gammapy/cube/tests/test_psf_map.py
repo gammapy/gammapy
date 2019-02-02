@@ -74,7 +74,9 @@ def make_test_psfmap(size, shape="gauss"):
 
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
-    rad_axis = MapAxis(nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta")
+    rad_axis = MapAxis.from_nodes(
+        nodes=np.linspace(0.0, 0.6, 50), unit="deg", name="theta"
+    )
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[rad_axis, energy_axis]
@@ -93,18 +95,18 @@ def test_psfmap_to_table_psf():
     psfmap = make_test_psfmap(0.15 * u.deg)
     psf = fake_psf3d(0.15 * u.deg)
     # Extract EnergyDependentTablePSF
-    table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(1, 1, unit="deg"))
+    table_psf = psfmap.get_energy_dependent_table_psf(SkyCoord(0, 0, unit="deg"))
 
     # Check that containment radius is consistent between psf_table and psf3d
     assert_allclose(
         table_psf.containment_radius(1 * u.TeV, 0.9)[0],
-        psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.9),
-        rtol=1e-3,
+        psf.containment_radius(1 * u.TeV, theta=0 * u.deg, fraction=0.9),
+        rtol=1e-2,
     )
     assert_allclose(
         table_psf.containment_radius(1 * u.TeV, 0.5)[0],
-        psf.containment_radius(1 * u.TeV, 0 * u.deg, 0.5),
-        rtol=1e-3,
+        psf.containment_radius(1 * u.TeV, theta=0 * u.deg, fraction=0.5),
+        rtol=1e-2,
     )
 
 
@@ -155,11 +157,10 @@ def test_containment_radius_map(tmpdir):
     )
 
     psfmap = make_psf_map(psf, pointing, geom, 3 * u.deg)
-    m = psfmap.containment_radius_map(2 * u.TeV)
+    m = psfmap.containment_radius_map(1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
-
-    assert_allclose(val, 0.227463, rtol=1e-3)
+    assert_allclose(val, 0.216275, rtol=1e-3)
 
 
 def test_psfmap_stacking():

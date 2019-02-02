@@ -119,11 +119,13 @@ class TestEnergyDependentTablePSF:
         with mpl_plot_check():
             psf_1GeV.plot_psf_vs_rad()
 
-    # TODO: fix this test (move the code from examples/plot_irfs.py here)
-    @pytest.mark.xfail
     @requires_dependency("matplotlib")
     def test_plot2(self):
         # psf.plot_containment('fermi_psf_containment.pdf')
         # psf.plot_exposure('fermi_psf_exposure.pdf')
         with mpl_plot_check():
             self.psf.plot_psf_vs_rad()
+
+    def test_repr(self):
+        info = str(self.psf)
+        assert "Containment" in info

@@ -70,26 +70,13 @@ def make_mean_psf(observations, position, energy=None, rad=None):
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Mean PSF
     """
-    psf = make_psf(observations[0], position, energy, rad)
-
-    if rad is None:
-        rad = psf.rad
-    if energy is None:
-        energy = psf.energy
-
-    exposure = psf.exposure
-    psf_value = psf.psf_value.T * psf.exposure
-
-    for obs in observations[1:]:
-        psf = make_psf(obs, position, energy, rad)
-        exposure += psf.exposure
-        psf_value += psf.psf_value.T * psf.exposure
-
-    psf_value /= exposure
-    psf_tot = EnergyDependentTablePSF(
-        energy=energy, rad=rad, exposure=exposure, psf_value=psf_value.T
-    )
-    return psf_tot
+    for idx, observation in enumerate(observations):
+        psf = make_psf(observation, position, energy, rad)
+        if idx == 0:
+            stacked_psf = psf
+        else:
+            stacked_psf = stacked_psf.stack(psf)
+    return stacked_psf
 
 
 def make_mean_edisp(
