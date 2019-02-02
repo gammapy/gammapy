@@ -94,34 +94,36 @@ class TestEnergyDependentMultiGaussPSF:
         energy = 1 * u.TeV
         theta = 0 * u.deg
 
-        table_psf = psf.to_energy_dependent_table_psf(theta)
-        table_psf_at_energy = table_psf.table_psf_at_energy(energy, method="nearest")
+        rad = np.linspace(0, 1, 100) * u.deg
+        table_psf = psf.to_energy_dependent_table_psf(theta, rad=rad)
+
         psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
 
-        containment = np.linspace(0, 0.95, 10)
+        containment = [0.68, 0.8, 0.9]
         desired = [psf_at_energy.containment_radius(_) for _ in containment]
+
+        table_psf_at_energy = table_psf.table_psf_at_energy(energy, method="nearest")
         actual = table_psf_at_energy.containment_radius(containment)
 
-        # TODO: try to improve precision, so that rtol can be lowered
-        assert_allclose(desired, actual.degree, rtol=0.03)
+        assert_allclose(desired, actual.degree, rtol=1e-2)
 
     def test_to_psf3d(self, psf):
-        rads = np.linspace(0.0, 1.0, 301) * u.deg
+        rads = np.linspace(0.0, 1.0, 101) * u.deg
         psf_3d = psf.to_psf3d(rads)
-        assert psf_3d.rad_lo.shape == (300,)
+        assert psf_3d.rad_lo.shape == (100,)
         assert psf_3d.rad_lo.unit == "deg"
 
         theta = 0.5 * u.deg
         energy = 0.5 * u.TeV
 
-        containment = np.linspace(0.1, 0.95, 10)
+        containment = [0.68, 0.8, 0.9]
         desired = np.array(
             [psf.containment_radius(energy, theta, _).value for _ in containment]
         )
         actual = np.array(
             [psf_3d.containment_radius(energy, theta, _).value for _ in containment]
         )
-        assert_allclose(np.squeeze(desired), actual, rtol=0.01)
+        assert_allclose(np.squeeze(desired), actual, atol=0.005)
 
 
 @requires_data("gammapy-data")

@@ -382,6 +382,13 @@ class EnergyDependentTablePSF:
 
         self._interpolate = self._setup_interpolator(self.psf_value, interp_kwargs)
 
+    @property
+    def _rad_axis(self):
+        from ..maps import MapAxis
+
+        rad_axis = MapAxis.from_nodes(self.rad.to_value("deg"), unit="deg")
+        return rad_axis
+
     def _setup_interpolator(self, values, interp_kwargs=None):
         interp_kwargs = interp_kwargs or {}
         points = (self.energy.value, self.rad.value)
@@ -552,7 +559,7 @@ class EnergyDependentTablePSF:
         psf_value_weighted = weights[:, np.newaxis] * psf_value
         return TablePSF(self.rad, psf_value_weighted.sum(axis=0), **kwargs)
 
-    def containment_radius(self, energy, fraction=0.68, precision="0.005 deg"):
+    def containment_radius(self, energy, fraction=0.68):
         """Containment radius.
 
         Parameters
@@ -561,18 +568,14 @@ class EnergyDependentTablePSF:
             Energy
         fraction : float
             Containment fraction.
-        precision : `~astropy.units.Quantity`
-            Precision with which to compute the containment radius.
 
         Returns
         -------
         rad : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        precision = u.Quantity(precision)
-        n_rad = int((self.rad.max() / precision).to_value(""))
-        rad_max = np.arange(n_rad) * precision
-
+        # oversamle for better precision
+        rad_max = np.linspace(0 * u.deg, self.rad.max(), 10 * len(self.rad))
         containment = self.containment(energy=energy, rad_max=rad_max)
 
         # find nearest containment value
@@ -580,28 +583,30 @@ class EnergyDependentTablePSF:
         return rad_max[fraction_idx].to("deg")
 
     def containment(self, energy, rad_max):
-        """Compite containment of the PSF.
+        """Compute containment of the PSF.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
         rad_max : `~astropy.coordinates.Angle`
-            Offset
+            Maximum offset angle.
 
         Returns
         -------
         fraction : array_like
             Containment fraction (in range 0 .. 1)
         """
-        x = self.rad.to_value("deg")
+        dx = np.diff(self._rad_axis.edges)
         y = (self.rad * self.psf_value).to_value("deg-1")
-        integral = cumtrapz(y=y, x=x, axis=1)
+        integral = (y * dx).cumsum(axis=1)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             integral /= integral[:, [-1]]
 
-        interp_integral = self._setup_interpolator(integral, interp_kwargs={"fill_value": 1})
+        interp_integral = self._setup_interpolator(
+            integral, interp_kwargs={"fill_value": 1}
+        )
 
         energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
         rad_max = np.atleast_1d(u.Quantity(rad_max, "rad").value)
@@ -631,8 +636,12 @@ class EnergyDependentTablePSF:
         for energy in energies:
             psf_value = np.squeeze(self.evaluate(energy=energy))
             label = "{:.0f}".format(energy)
-            ax.plot(self.rad.to_value("deg"), psf_value.to_value("sr-1"),
-                    label=label, **kwargs)
+            ax.plot(
+                self.rad.to_value("deg"),
+                psf_value.to_value("sr-1"),
+                label=label,
+                **kwargs
+            )
 
         ax.set_yscale("log")
         ax.set_xlabel("Offset (deg)")
@@ -641,7 +650,7 @@ class EnergyDependentTablePSF:
         return ax
 
     def plot_containment_vs_energy(
-        self, ax=None, fractions=[0.63, 0.8, 0.95], **kwargs
+        self, ax=None, fractions=[0.68, 0.8, 0.95], **kwargs
     ):
         """Plot containment versus energy."""
         import matplotlib.pyplot as plt
@@ -695,4 +704,4 @@ class EnergyDependentTablePSF:
 
         return self.__class__(
             energy=self.energy, rad=self.rad, psf_value=psf_value.T, exposure=exposure
-                              )
+        )
