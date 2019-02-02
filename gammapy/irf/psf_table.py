@@ -2,7 +2,6 @@
 import logging
 import numpy as np
 from scipy.interpolate import UnivariateSpline
-from scipy.integrate import cumtrapz
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -688,7 +687,6 @@ class EnergyDependentTablePSF:
         psf : `EnergyDependentTablePSF`
             PSF to stack.
 
-        
         Returns
         -------
         stacked_psf : `EnergyDependentTablePSF`
