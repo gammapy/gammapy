@@ -125,3 +125,7 @@ class TestEnergyDependentTablePSF:
         # psf.plot_exposure('fermi_psf_exposure.pdf')
         with mpl_plot_check():
             self.psf.plot_psf_vs_rad()
+
+    def test_repr(self):
+        info = str(self.psf)
+        assert "Containment" in info

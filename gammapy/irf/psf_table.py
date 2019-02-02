@@ -401,16 +401,12 @@ class EnergyDependentTablePSF:
         ss += "\nAxis info:\n"
         ss += "  " + array_stats_str(self.rad.to("deg"), "rad")
         ss += "  " + array_stats_str(self.energy, "energy")
-        # ss += '  ' + array_stats_str(self.exposure, 'exposure')
-
-        # ss += 'integral = {}\n'.format(self.integral())
-
         ss += "\nContainment info:\n"
         # Print some example containment radii
         fractions = [0.68, 0.95]
         energies = u.Quantity([10, 100], "GeV")
         for fraction in fractions:
-            rads = self.containment_radius(energies=energies, fraction=fraction)
+            rads = self.containment_radius(energy=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
                 ss += "  " + "{}% containment radius at {:3.0f}: {:.2f}\n".format(
                     100 * fraction, energy, rad
