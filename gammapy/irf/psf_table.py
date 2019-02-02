@@ -570,7 +570,7 @@ class EnergyDependentTablePSF:
             Containment radius in deg
         """
         # oversamle for better precision
-        rad_max = np.linspace(0 * u.deg, self.rad.max(), 10 * len(self.rad))
+        rad_max = np.linspace(0, self.rad[-1].to_value("deg"), 10 * len(self.rad)) * u.deg
         containment = self.containment(energy=energy, rad_max=rad_max)
 
         # find nearest containment value
