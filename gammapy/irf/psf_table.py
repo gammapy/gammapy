@@ -4,6 +4,8 @@ import numpy as np
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
+from astropy.utils import lazyproperty
+from scipy.integrate import cumtrapz
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
@@ -33,25 +35,25 @@ class TablePSF:
         self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         self._interp_kwargs = interp_kwargs or {}
-        self._setup_interpolators()
 
-    @property
-    def _rad_axis(self):
-        from ..maps import MapAxis
-        return MapAxis.from_nodes(self.rad.to_value("deg"), unit="deg")
- 
-    def _setup_interpolators(self):
-        self._interpolate = ScaledRegularGridInterpolator(
-            points=(self.rad.to_value("rad"),), values=self.psf_value, 
-            **self._interp_kwargs)
+    @lazyproperty
+    def _interpolate(self):
+        points = (self.rad.value,)
+        return ScaledRegularGridInterpolator(
+            points=points, values=self.psf_value, **self._interp_kwargs
+        )
 
-        drad = np.diff(self._rad_axis.edges) * u.deg
-        integral = (2 * np.pi * self.rad * self.psf_value * drad).cumsum()
+    @lazyproperty
+    def _interpolate_containment(self):
+        if self.rad[0] > 0:
+            rad = self.rad.insert(0, 0)
+        else:
+            rad = self.rad
 
-        self._interpolate_integral = ScaledRegularGridInterpolator(
-            points=(self.rad.to_value("rad"),), values=integral.to_value(""), fill_value=1,
-            )
+        rad_drad = 2 * np.pi * rad * self.evaluate(rad)
+        values = cumtrapz(rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0)
 
+        return ScaledRegularGridInterpolator(points=(rad,), values=values, fill_value=1)
 
     @classmethod
     def from_shape(cls, shape, width, rad):
@@ -104,12 +106,9 @@ class TablePSF:
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += "containment radius {} deg for {}%\n".format(
-                radius.deg, containment
-            )
+            ss += "containment radius {} deg for {}%\n".format(radius.deg, containment)
 
         return ss
-
 
     def evaluate(self, rad):
         r"""Evaluate PSF.
@@ -133,7 +132,6 @@ class TablePSF:
         """
         rad = np.atleast_1d(u.Quantity(rad, "rad").value)
         return self._interpolate((rad,))
-        
 
     def containment(self, rad_max):
         """Compute PSF containment fraction.
@@ -149,7 +147,7 @@ class TablePSF:
             PSF integral
         """
         rad = np.atleast_1d(u.Quantity(rad_max, "rad").value)
-        return self._interpolate_integral((rad,))
+        return self._interpolate_containment((rad,))
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -164,7 +162,7 @@ class TablePSF:
         rad : `~astropy.coordinates.Angle`
             Containment radius angle
         """
-        rad_max = Angle(np.linspace(0, self.rad[-1].to_value("deg"), 10 * len(self.rad)), "deg")
+        rad_max = Angle(np.linspace(0, self.rad[-1].value, 10 * len(self.rad)), "rad")
         containment = self.containment(rad_max=rad_max)
 
         fraction = np.atleast_1d(fraction)
@@ -179,7 +177,7 @@ class TablePSF:
         and then divides the :math:`dP / dr` array.
         """
         integral = self.containment(self.rad[-1])
-        self.psf_value /= integral 
+        self.psf_value /= integral
 
     def broaden(self, factor, normalize=True):
         r"""Broaden PSF by scaling the offset array.
@@ -204,7 +202,7 @@ class TablePSF:
         if normalize:
             self.normalize()
 
-    def plot_psf_vs_rad(self, ax=None,  **kwargs):
+    def plot_psf_vs_rad(self, ax=None, **kwargs):
         """Plot PSF vs radius.
 
         Parameters
@@ -222,7 +220,6 @@ class TablePSF:
         ax.set_yscale("log")
         ax.set_xlabel("Radius (deg)")
         ax.set_ylabel("PSF (sr-1)")
-
 
 
 class EnergyDependentTablePSF:
@@ -257,21 +254,32 @@ class EnergyDependentTablePSF:
         else:
             self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
-        self._interpolate = self._setup_interpolator(self.psf_value, interp_kwargs)
+        self._interp_kwargs = interp_kwargs or {}
 
-    @property
-    def _rad_axis(self):
-        from ..maps import MapAxis
-
-        rad_axis = MapAxis.from_nodes(self.rad.to_value("deg"), unit="deg")
-        return rad_axis
-
-    def _setup_interpolator(self, values, interp_kwargs=None):
-        interp_kwargs = interp_kwargs or {}
+    @lazyproperty
+    def _interpolate(self):
         points = (self.energy.value, self.rad.value)
         return ScaledRegularGridInterpolator(
-            points=points, values=values, **interp_kwargs
+            points=points, values=self.psf_value, **self._interp_kwargs
         )
+
+    @lazyproperty
+    def _interpolate_containment(self):
+        if self.rad[0] > 0:
+            rad = self.rad.insert(0, 0)
+        else:
+            rad = self.rad
+
+        rad_drad = 2 * np.pi * rad * self.evaluate(energy=self.energy, rad=rad)
+        values = cumtrapz(
+            rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
+        )
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            values /= values[:, [-1]]
+
+        points = (self.energy.value, rad)
+        return ScaledRegularGridInterpolator(points=points, values=values, fill_value=1)
 
     def __str__(self):
         ss = "EnergyDependentTablePSF\n"
@@ -447,8 +455,8 @@ class EnergyDependentTablePSF:
         rad : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        # oversamle for better precision
-        rad_max = np.linspace(0, self.rad[-1].to_value("deg"), 10 * len(self.rad)) * u.deg
+        # upsamle for better precision
+        rad_max = Angle(np.linspace(0, self.rad[-1].value, 10 * len(self.rad)), "rad")
         containment = self.containment(energy=energy, rad_max=rad_max)
 
         # find nearest containment value
@@ -470,20 +478,9 @@ class EnergyDependentTablePSF:
         fraction : array_like
             Containment fraction (in range 0 .. 1)
         """
-        dx = np.diff(self._rad_axis.edges)
-        y = (self.rad * self.psf_value).to_value("deg-1")
-        integral = (y * dx).cumsum(axis=1)
-
-        with np.errstate(divide="ignore", invalid="ignore"):
-            integral /= integral[:, [-1]]
-
-        interp_integral = self._setup_interpolator(
-            integral, interp_kwargs={"fill_value": 1}
-        )
-
         energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
         rad_max = np.atleast_1d(u.Quantity(rad_max, "rad").value)
-        return interp_integral((energy, rad_max))
+        return self._interpolate_containment((energy, rad_max))
 
     def info(self):
         """Print basic info"""

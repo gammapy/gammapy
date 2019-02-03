@@ -14,18 +14,18 @@ class TestTablePSF:
     def test_gauss():
         # Make an example PSF for testing
         width = Angle(0.3, "deg")
-        
+
         # containment radius for 80% containment
         radius = width * np.sqrt(2 * np.log(5))
-        
+
         rad = Angle(np.linspace(0, 2.3, 1000), "deg")
         psf = TablePSF.from_shape(shape="gauss", width=width, rad=rad)
-        
-        assert_allclose(psf.containment(radius), 0.8, rtol=1e-2)
+
+        assert_allclose(psf.containment(radius), 0.8, rtol=1e-4)
 
         desired = radius.to_value("deg")
         actual = psf.containment_radius(0.8).to_value("deg")
-        assert_allclose(actual, desired, rtol=1e-2)
+        assert_allclose(actual, desired, rtol=1e-4)
 
     @staticmethod
     def test_disk():
@@ -33,34 +33,15 @@ class TestTablePSF:
         rad = Angle(np.linspace(0, 2.3, 1000), "deg")
         psf = TablePSF.from_shape(shape="disk", width=width, rad=rad)
 
-        psf_value = psf.evaluate(rad)
-        psf_value = (2 * np.pi * rad * psf_value).to("radian^-1")
-        integral = np.sum(np.diff(rad.radian) * psf_value[:-1])
+        # test containment
+        radius = Angle(1, "deg")
+        actual = psf.containment(radius)
+        desired = (radius / width).to_value("") ** 2
+        assert_allclose(actual, desired, rtol=1e-4)
 
-        assert_allclose(integral.value, 1, rtol=1e-3)
-        assert_allclose(psf.containment(Angle(2, "deg")), 1, rtol=1e-3)
-
-
-    # TODO: is this useful in addition to the previous tests?
-    @staticmethod
-    def test_more():
-        # Make an example PSF for testing
-        width = Angle(0.3, "deg")
-        rad = Angle(np.linspace(0, 2.3, 1000), "deg")
-        psf = TablePSF.from_shape(shape="gauss", width=width, rad=rad)
-
-        # Test inputs
-        rad = Angle([0.1, 0.3], "deg")
-
-        actual = psf.evaluate(rad=rad)
-        desired = u.Quantity([5491.52067694, 3521.07804604], "sr^-1")
-        assert_quantity_allclose(actual, desired)
-
-        rad_min = Angle([0.0, 0.1, 0.3], "deg")
-        rad_max = Angle([0.1, 0.3, 2.0], "deg")
-        actual = psf.containment(rad_max) - psf.containment(rad_min)
-        desired = [0.055256, 0.340536, 0.604203]
-        assert_allclose(actual, desired, rtol=1e-5)
+        # test containment radius
+        actual = psf.containment_radius(0.25).deg
+        assert_allclose(actual, radius.deg, rtol=1e-4)
 
 
 @requires_data("gammapy-data")
@@ -89,7 +70,7 @@ class TestEnergyDependentTablePSF:
         psf1 = self.psf.table_psf_at_energy(energy)
         containment = np.linspace(0, 0.95, 3)
         actual = psf1.containment_radius(containment).to_value("deg")
-        desired =  [0., 0.188798, 1.026798]
+        desired = [0.0, 0.195423, 1.036735]
         assert_allclose(actual, desired, rtol=1e-5)
         # TODO: test average_psf
         # psf2 = psf.psf_in_energy_band(energy_band, spectrum)
