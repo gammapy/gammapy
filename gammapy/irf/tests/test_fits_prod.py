@@ -18,7 +18,7 @@ productions = [
         test_obs=23523,
         aeff_ref=267252.7,
         psf_type="psf_3gauss",
-        psf_ref=106.310,
+        psf_ref=63.360562,
         edisp_ref=2.059,
     ),
     dict(
