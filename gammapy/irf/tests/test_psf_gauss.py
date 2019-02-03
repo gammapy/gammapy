@@ -94,7 +94,7 @@ class TestEnergyDependentMultiGaussPSF:
         energy = 1 * u.TeV
         theta = 0 * u.deg
 
-        rad = np.linspace(0, 1, 100) * u.deg
+        rad = np.linspace(0, 2, 300) * u.deg
         table_psf = psf.to_energy_dependent_table_psf(theta, rad=rad)
 
         psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
@@ -102,7 +102,7 @@ class TestEnergyDependentMultiGaussPSF:
         containment = [0.68, 0.8, 0.9]
         desired = [psf_at_energy.containment_radius(_) for _ in containment]
 
-        table_psf_at_energy = table_psf.table_psf_at_energy(energy, method="nearest")
+        table_psf_at_energy = table_psf.table_psf_at_energy(energy)
         actual = table_psf_at_energy.containment_radius(containment)
 
         assert_allclose(desired, actual.degree, rtol=1e-2)
@@ -143,7 +143,7 @@ def test_psf_cta_1dc():
     # Check that evaluation works for an energy / offset where an energy is available
     psf = psf_irf.to_energy_dependent_table_psf("2 deg")
     psf = psf.table_psf_at_energy("1 TeV")
-    assert_allclose(psf.containment_radius(0.68).deg, 0.053728, atol=1e-4)
+    assert_allclose(psf.containment_radius(0.68).deg, 0.051345, atol=1e-4)
 
 
 class TestHESS:

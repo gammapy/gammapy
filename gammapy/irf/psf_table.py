@@ -2,10 +2,6 @@
 import logging
 import numpy as np
 from astropy.io import fits
-<<<<<<< HEAD
-=======
-from astropy.units import Quantity
->>>>>>> Clean up TablePSF
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -26,15 +22,15 @@ class TablePSF:
     ----------
     rad : `~astropy.units.Quantity` with angle units
         Offset wrt source position
-    dp_domega : `~astropy.units.Quantity` with sr^-1 units
+    psf_value : `~astropy.units.Quantity` with sr^-1 units
         PSF value array
     interp_kwargs : dict
         Keyword arguments passed to `ScaledRegularGridInterpolator`
     """
 
-    def __init__(self, rad, dp_domega, interp_kwargs=None):
+    def __init__(self, rad, psf_value, interp_kwargs=None):
         self.rad = Angle(rad).to("rad")
-        self.psf_value = u.Quantity(dp_domega).to("sr^-1")
+        self.psf_value = u.Quantity(psf_value).to("sr^-1")
 
         self._interp_kwargs = interp_kwargs or {}
         self._setup_interpolators()
@@ -168,7 +164,7 @@ class TablePSF:
         rad : `~astropy.coordinates.Angle`
             Containment radius angle
         """
-        rad_max = np.linspace(0, self.rad[-1].to_value("deg"), 10 * len(self.rad)) * u.deg
+        rad_max = Angle(np.linspace(0, self.rad[-1].to_value("deg"), 10 * len(self.rad)), "deg")
         containment = self.containment(rad_max=rad_max)
 
         fraction = np.atleast_1d(fraction)
