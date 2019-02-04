@@ -1,0 +1,44 @@
+.. include:: ../../references.txt
+
+.. _pig-009:
+
+***********************
+PIG 9 - Event simulator
+***********************
+
+* Author: Fabio Pintore, Andrea Giuliani, Axel Donath
+* Created: Feb 04, 2019 
+* Accepted: 
+* Status: 
+* Discussion:  
+
+Abstract
+========
+
+- create event simulator 
+- required by the CTA Science Tools
+- needed to simulate the DC2
+
+
+Proposal
+========
+
+- the design follows the ASTRIsim
+- expected source counts cube for a given spectrum and morphology, prior the application of the IRF
+(- the counts-cube can be associated to a light-curve)
+- expected background counts cube evaluated from the IRF
+- the energy dispersion is applied to the source counts
+- the PSF is applied to the source counts
+- source and background events are stacked together 
+- write them all into an event list file (.fits)
+
+
+Alternatives
+============
+
+
+
+Decision
+========
+
+
