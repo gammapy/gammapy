@@ -164,22 +164,13 @@ def apply_containment_fraction(aeff, psf, radius):
         the output corrected 1D effective area
     """
     center_energies = aeff.energy.nodes
-    containment = []
-    for energy in center_energies:
-        try:
-            cont_ = psf.integral(energy, 0.0 * u.deg, radius)
-        except:
-            msg = "Containment correction failed for bin {}, energy {}."
-            log.warning(msg.format(index, energy))
-            cont_ = 1
 
-        containment.append(cont_)
+    containment = psf.containment(center_energies, radius)
 
-    containment = np.array(containment)
     corrected_aeff = EffectiveAreaTable(
         aeff.energy.lo,
         aeff.energy.hi,
-        data=aeff.data.data * containment,
+        data=aeff.data.data * np.squeeze(containment),
         meta=aeff.meta,
     )
     return corrected_aeff

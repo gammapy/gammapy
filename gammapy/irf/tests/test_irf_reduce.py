@@ -163,6 +163,6 @@ def test_apply_containment_fraction():
     )
 
     new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))
-    print(new_aeff)
+
     assert_allclose(new_aeff.data.data.value, 1.0)
     assert new_aeff.data.data.unit == "m2"
