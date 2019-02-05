@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from collections import OrderedDict
+from collections import OrderedDict, UserList
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
 from astropy.time import Time
@@ -257,30 +257,13 @@ class DataStoreObservation:
         return checker.run(checks=checks)
 
 
-class Observations:
-    """Container class that holds a list of observations.
-
-    Parameters
-    ----------
-    obs_list : list
-        A list of `~gammapy.data.DataStoreObservation`
-    """
-
-    def __init__(self, obs_list=None):
-        self._obs_list = obs_list or []
-
-    def __getitem__(self, key):
-        return self._obs_list[key]
-
-    def __len__(self):
-        return len(self._obs_list)
+class Observations(UserList):
+    """Container class that holds a list of observations."""
 
     def __str__(self):
-        s = self.__class__.__name__ + "\n"
-        s += "Number of observations: {}\n".format(len(self))
-        for obs in self:
-            s += str(obs)
-        return s
+        ss = self.__class__.__name__
+        ss += "\nNumber of observations: {}".format(len(self))
+        return ss
 
     def select_time(self, time_interval):
         """Select a time interval of the observations.
