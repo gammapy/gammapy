@@ -1091,8 +1091,10 @@ class FluxPointsDataset:
         """
         Assymetric chi2 statistics for a list of flux points and model.
         """
-        sigma = np.where(model > data, sigma_n, sigma_p)
-        return self._likelihood_chi2(data, model, sigma)
+        is_p = (model > data)
+        sigma = sigma_n
+        sigma[is_p] = sigma_p[is_p]
+        return FluxPointsDataset._likelihood_chi2(data, model, sigma)
 
     def flux_pred(self):
         """Compute predicted flux.

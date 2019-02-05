@@ -275,7 +275,8 @@ class TestFluxPointFit:
         assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
 
     @requires_dependency("iminuit")
-    def test_likelihood_profile(self, fit):
+    @staticmethod
+    def test_likelihood_profile(fit):
         optimize_opts = {"backend": "minuit"}
 
         result = fit.run(optimize_opts=optimize_opts)
