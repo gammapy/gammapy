@@ -74,7 +74,7 @@ We create a method called 'sample_events' that randomizes the map of predicted s
 
 
 - How does it relate with the MapDataset?
-
+- to discuss: introduce the time of each event. In this moment, we just provide a counts-cube for all the components, but this does not allow us to associate the events to different light-curves. --> solution: create counts-cube for each component, apply the light-curve, and then stack all the components...
 
 The approach we propose works well only if the resolution in energy and spatial coordinates is very fine, in particular smaller than the IRF energy and PSF resolution. The choice of the map resolution is left to the user.
 
