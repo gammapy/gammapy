@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.io import fits
 from astropy import units as u
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from scipy.integrate import cumtrapz
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -274,9 +274,6 @@ class EnergyDependentTablePSF:
         values = cumtrapz(
             rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
         )
-
-        with np.errstate(divide="ignore", invalid="ignore"):
-            values /= values[:, [-1]]
 
         points = (self.energy.value, rad)
         return ScaledRegularGridInterpolator(points=points, values=values, fill_value=1)

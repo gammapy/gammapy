@@ -56,7 +56,7 @@ def test_psf_3d_containment_radius(psf_3d):
     assert q.unit == "deg"
 
     q = psf_3d.containment_radius(energy=[1, 3] * u.TeV)
-    assert_allclose(q.value, [0.171702, 0.157779], rtol=1e-2)
+    assert_allclose(q.value, [0.172447, 0.159405], rtol=1e-2)
     assert q.shape == (2,)
 
 
