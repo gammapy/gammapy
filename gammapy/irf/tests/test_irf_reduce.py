@@ -155,8 +155,8 @@ def test_apply_containment_fraction():
     rad = Angle(np.linspace(0, 0.5, nrad), "deg")
     psf_table = TablePSF.from_shape(shape="disk", width="0.2 deg", rad=rad)
     psf_values = (
-        np.resize(psf_table._dp_domega.value, (n_edges_energy, nrad))
-        * psf_table._dp_domega.unit
+        np.resize(psf_table.psf_value.value, (n_edges_energy, nrad))
+        * psf_table.psf_value.unit
     )
     edep_psf_table = EnergyDependentTablePSF(
         aeff.energy.nodes, rad, psf_value=psf_values
@@ -164,5 +164,5 @@ def test_apply_containment_fraction():
 
     new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))
 
-    assert_allclose(new_aeff.data.data.value, 1.0)
+    assert_allclose(new_aeff.data.data.value, 1.0, rtol=5e-4)
     assert new_aeff.data.data.unit == "m2"
