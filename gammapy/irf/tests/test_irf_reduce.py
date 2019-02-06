@@ -3,7 +3,15 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import Angle, SkyCoord
-from ..irf_reduce import make_psf, make_mean_psf, make_mean_edisp
+import astropy.units as u
+from ..irf_reduce import (
+    make_psf,
+    make_mean_psf,
+    make_mean_edisp,
+    apply_containment_fraction,
+)
+from ..effective_area import EffectiveAreaTable
+from ..psf_table import EnergyDependentTablePSF, TablePSF
 from ...data import DataStore, Observations
 from ...utils.testing import requires_data, assert_quantity_allclose
 from ...utils.energy import Energy, EnergyBounds
@@ -135,3 +143,26 @@ def test_make_mean_edisp(data_store):
     i = np.where(rmf.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     i2 = np.where(rmf2.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
     assert_equal(i, i2)
+
+
+def test_apply_containment_fraction():
+    n_edges_energy = 5
+    energy = EnergyBounds.equal_log_spacing(0.1, 10.0, nbins=n_edges_energy, unit="TeV")
+    area = np.ones(n_edges_energy) * 4 * u.m ** 2
+    aeff = EffectiveAreaTable(energy.lower_bounds, energy.upper_bounds, data=area)
+
+    nrad = 100
+    rad = Angle(np.linspace(0, 0.5, nrad), "deg")
+    psf_table = TablePSF.from_shape(shape="disk", width="0.2 deg", rad=rad)
+    psf_values = (
+        np.resize(psf_table.psf_value.value, (n_edges_energy, nrad))
+        * psf_table.psf_value.unit
+    )
+    edep_psf_table = EnergyDependentTablePSF(
+        aeff.energy.nodes, rad, psf_value=psf_values
+    )
+
+    new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))
+
+    assert_allclose(new_aeff.data.data.value, 1.0, rtol=5e-4)
+    assert new_aeff.data.data.unit == "m2"

@@ -1,8 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
+import numpy as np
+import astropy.units as u
 from ..utils.energy import Energy
-from . import EnergyDependentTablePSF, IRFStacker
+from . import PSF3D, EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
 
-__all__ = ["make_psf", "make_mean_psf", "make_mean_edisp"]
+__all__ = ["make_psf", "make_mean_psf", "make_mean_edisp", "apply_containment_fraction"]
+
+log = logging.getLogger(__name__)
 
 
 def make_psf(observation, position, energy=None, rad=None):
@@ -137,3 +142,35 @@ def make_mean_edisp(
     irf_stack.stack_edisp()
 
     return irf_stack.stacked_edisp
+
+
+def apply_containment_fraction(aeff, psf, radius):
+    """ Estimate PSF containment inside a given radius and correct effective area for leaking flux.
+
+    The PSF and effective area must have the same binning in energy.
+
+    Parameters
+    ----------
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        the input 1D effective area
+    psf : `~gammapy.irf.EnergyDependentTablePSF`
+        the input 1D PSF
+    radius : `~astropy.coordinates.Angle`
+        the maximum angle
+
+    Returns
+    -------
+    correct_aeff : `~gammapy.irf.EffectiveAreaTable`
+        the output corrected 1D effective area
+    """
+    center_energies = aeff.energy.nodes
+
+    containment = psf.containment(center_energies, radius)
+
+    corrected_aeff = EffectiveAreaTable(
+        aeff.energy.lo,
+        aeff.energy.hi,
+        data=aeff.data.data * np.squeeze(containment),
+        meta=aeff.meta,
+    )
+    return corrected_aeff
