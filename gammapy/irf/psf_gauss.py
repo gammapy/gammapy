@@ -12,12 +12,14 @@ from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
 from ..utils.scripts import make_path
 from ..utils.gauss import MultiGauss2D
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from .psf_3d import PSF3D
 from . import EnergyDependentTablePSF
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
 
 log = logging.getLogger(__name__)
+
 
 
 class EnergyDependentMultiGaussPSF:
@@ -97,6 +99,19 @@ class EnergyDependentMultiGaussPSF:
         self.norms = norms
         self.energy_thresh_lo = energy_thresh_lo.to("TeV")
         self.energy_thresh_hi = energy_thresh_hi.to("TeV")
+
+        self._interp_norms = self._setup_interpolators(self.norms)
+        self._interp_sigmas = self._setup_interpolators(self.sigmas)
+
+    def _setup_interpolators(self, values_list):
+        interps = []
+        for values in values_list:
+            interp = ScaledRegularGridInterpolator(
+                points=(self.theta.value, self.energy.value),
+                values=values
+                )
+            interps.append(interp)
+        return interps
 
     @classmethod
     def read(cls, filename, hdu="PSF_2D_GAUSS"):
@@ -222,23 +237,16 @@ class EnergyDependentMultiGaussPSF:
         psf : `~gammapy.morphology.MultiGauss2D`
             Multigauss PSF object.
         """
-        energy = Energy(energy)
-        theta = Angle(theta)
-
-        # Find nearest energy value
-        i = np.argmin(np.abs(self.energy - energy))
-        j = np.argmin(np.abs(self.theta - theta))
-
-        # TODO: Use some kind of interpolation to get PSF
-        # parameters for every energy and theta
-
-        # Select correct gauss parameters for given energy and theta
-        sigmas = [_[j][i] for _ in self.sigmas]
-        norms = [_[j][i] for _ in self.norms]
+        energy = Energy(energy).to_value(self.energy.unit)
+        theta = Quantity(theta).to_value(self.theta.unit)
 
         pars = {}
-        pars["scale"], pars["A_2"], pars["A_3"] = norms
-        pars["sigma_1"], pars["sigma_2"], pars["sigma_3"] = sigmas
+        for name, interp_norm in zip(["scale", "A_2", "A_3"], self._interp_norms):
+            pars[name] = interp_norm((theta, energy))
+
+        for idx, interp_sigma in enumerate(self._interp_sigmas):
+            pars["sigma_{}".format(idx + 1)] = interp_sigma((theta, energy))
+
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
 

@@ -160,7 +160,7 @@ def test_containment_radius_map(tmpdir):
     m = psfmap.containment_radius_map(1 * u.TeV)
     coord = SkyCoord(0.3, 0, unit="deg")
     val = m.interp_by_coord(coord)
-    assert_allclose(val, 0.216275, rtol=1e-3)
+    assert_allclose(val, 0.226477, rtol=1e-3)
 
 
 def test_psfmap_stacking():

@@ -129,7 +129,7 @@ def test_map_fit(sky_model):
 
     npred = fit.evaluator.compute_npred().sum()
     assert_allclose(npred, 2455.230889, rtol=1e-3)
-    assert_allclose(result.total_stat, 5417.350078, rtol=1e-3)
+    assert_allclose(result.total_stat, 5424.791272, rtol=1e-3)
 
     pars = fit.evaluator.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -220,4 +220,4 @@ def test_map_fit_bkg(sky_model):
     )
     result = fit.run()
     assert_allclose(background_model.parameters["norm"].value, 0.98307, rtol=1e-3)
-    assert_allclose(result.total_stat, 5417.350, atol=0.01)
+    assert_allclose(result.total_stat, 5424.79128, atol=0.01)
