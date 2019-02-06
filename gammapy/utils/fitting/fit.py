@@ -61,26 +61,32 @@ class Registry:
 registry = Registry()
 
 
-class Fit(metaclass=FitMeta):
+class Fit:
     """Abstract Fit base class.
     """
+
+    def __init__(self, datasets):
+        self.datasets = datasets
+
+        # TODO: remove once datasets are fully supported
+        self.total_stat = datasets.likelihood
+        self._model = datasets.model
 
     @abc.abstractmethod
     def total_stat(self, parameters):
         """Total likelihood given the current model parameters"""
         pass
 
-    # TODO: probably we should change the `Fit` class to be coupled
-    # to a likelihood object, not a model object
-    # To facilitate this evolution, we centralise the coupling
-    # in this property in a single place,
-    # and only use `parameters` from `Fit`, not `model`.
     @property
     def _parameters(self):
-        try:
+        # TODO: This is a temporary solution to support datasets as
+        # well as the old inhertiance scheme, remove soon.
+        if self.__class__.__name__ == "MapFit":
             parameters = self.evaluator.parameters
-        except AttributeError:
+        elif self.__class__.__name__ == "SpectrumFit":
             parameters = self._model.parameters
+        else:
+            parameters = self.datasets.parameters
         return parameters
 
     def run(self, optimize_opts=None, covariance_opts=None):

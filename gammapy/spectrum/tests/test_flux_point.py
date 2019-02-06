@@ -11,9 +11,9 @@ from ...utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
 )
-from ...utils.fitting import Parameters
+from ...utils.fitting import Parameters, Fit
 from ..models import PowerLaw, SpectralModel
-from ..flux_point import FluxPoints, FluxPointFit
+from ..flux_point import FluxPoints, FluxPointsDataset
 
 
 FLUX_POINTS_FILES = [
@@ -238,36 +238,27 @@ def test_compute_flux_points_dnde_fermi():
 
 
 @pytest.fixture(scope="session")
-def sed_flux_points():
+def fit():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
-    fp = FluxPoints.read(path)
-    fp.table["e_ref"] = fp.e_ref.to("TeV")
-    return fp
+    data = FluxPoints.read(path)
+    data.table["e_ref"] = data.e_ref.to("TeV")
 
-
-@pytest.fixture(scope="session")
-def sed_model():
-    return PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
+    model = PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
+    dataset = FluxPointsDataset(model, data)
+    return Fit(dataset)
 
 
 @requires_data("gammapy-data")
 class TestFluxPointFit:
     @requires_dependency("iminuit")
-    def test_fit_pwl_minuit(self, sed_model, sed_flux_points):
+    def test_fit_pwl_minuit(self, fit):
         optimize_opts = {"backend": "minuit"}
-        fit = FluxPointFit(sed_model, sed_flux_points)
         result = fit.run(optimize_opts=optimize_opts)
         self.assert_result(result)
 
-        assert sed_model is fit._model
-        assert fit._model is result.model
-        assert sed_model is result.model
-
     @requires_dependency("sherpa")
     @pytest.mark.skip(reason="Sherpa backend does not support fixing parameters yet.")
-    def test_fit_pwl_sherpa(self, sed_model, sed_flux_points):
-        # TODO: add test for covariance or error estimation here
-        fit = FluxPointFit(sed_model, sed_flux_points)
+    def test_fit_pwl_sherpa(self, fit):
         result = fit.optimize(backend="sherpa", method="simplex")
         self.assert_result(result)
 
@@ -284,9 +275,10 @@ class TestFluxPointFit:
         assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
 
     @requires_dependency("iminuit")
-    def test_likelihood_profile(self, sed_model, sed_flux_points):
+    @staticmethod
+    def test_likelihood_profile(fit):
         optimize_opts = {"backend": "minuit"}
-        fit = FluxPointFit(sed_model, sed_flux_points)
+
         result = fit.run(optimize_opts=optimize_opts)
 
         profile = fit.likelihood_profile("amplitude", nvalues=3, bounds=1)
