@@ -32,6 +32,10 @@
     - cta-1dc
   images:
     - cta-1dc
+- name: cta_sensitivity
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_sensitivity.ipynb
+  datasets:
+    - cta-1dc
 - name: cwt
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cwt.ipynb
   datasets:
