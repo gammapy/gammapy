@@ -11,6 +11,7 @@ __all__ = [
     "SkySpatialModel",
     "SkyPointSource",
     "SkyGaussian",
+    "SkyElongatedGaussian",
     "SkyDisk",
     "SkyShell",
     "SkyDiffuseConstant",
@@ -109,6 +110,73 @@ class SkyGaussian(SkySpatialModel):
         exponent = -0.5 * (sep / sigma) ** 2
         return norm * np.exp(exponent)
 
+class SkyElongatedGaussian(SkySpatialModel):
+    r"""Two-dimensional elongated Gaussian model.
+
+    .. math::
+
+             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}} e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}  -b\left(\text{lon} - \text{lon}_{0}\right)
+            \left(\text{lat} - \text{lat}\right)  -c\left(\text{lat} - \text{lat}_{0}\right)^{2}}       
+
+    Using the following definitions:
+
+            a = \left(\frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
+            \frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
+
+            b = \left(\frac{\sin{\left (2 \theta \right )}}{2 \sigma_{\text{lon}}^{2}} -
+            \frac{\sin{\left (2 \theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
+
+            c = \left(\frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
+            \frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
+
+    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the 68% containment semi-axes of the gaussian before rotation, and :math:`\theta` is the rotation angle.
+
+    Parameters
+    ----------
+    lon_0 : `~astropy.coordinates.Longitude`
+        :math:`lon_0`
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`lat_0`
+    sigma_lon : `~astropy.coordinates.Angle`
+        :math:`\sigma_{\text{lon}}`
+    sigma_lat : `~astropy.coordinates.Angle`
+        :math:`\sigma_{\text{lat}}`
+    theta : `~astropy.coordinates.Angle`
+        :math:`\theta}`
+    """
+    
+
+    def __init__(self, lon_0, lat_0, sigma_lon, sigma_lat, theta):
+        self.parameters = Parameters(
+            [
+                Parameter("lon_0", Longitude(lon_0)),
+                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("sigma_lon", Angle(sigma_lon), min=0),
+                Parameter("sigma_lat", Angle(sigma_lat), min=0),
+                Parameter("theta", Angle(theta)),
+            ]
+        )
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, sigma_lon, sigma_lat, theta):
+        """Evaluate the model (static function)."""
+
+        lon_sep = angular_separation(lon, lat, lon_0, lat)
+        lat_sep = angular_separation(lon, lat, lon, lat_0)
+      
+        norm = 1 / (2 * np.pi * sigma_lon * sigma_lat)
+        cost2 = np.cos(theta) ** 2
+        sint2 = np.sin(theta) ** 2
+        sin2t = np.sin(2. * theta)
+
+        a = 0.5 * ((cost2 / sigma_lon ** 2) + (sint2 / sigma_lat ** 2))
+        b = 0.5 * ((sin2t / sigma_lon ** 2) - (sin2t / sigma_lat ** 2))
+        c = 0.5 * ((sint2 / sigma_lon ** 2) + (cost2 / sigma_lat ** 2))
+
+        return norm * np.exp(-((a * lon_sep ** 2) + (b * lon_sep * lat_sep) +
+                                    (c * lat_sep ** 2)))
+
+        
 
 class SkyDisk(SkySpatialModel):
     r"""Constant radial disk model.
