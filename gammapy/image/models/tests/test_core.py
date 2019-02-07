@@ -34,18 +34,16 @@ def test_sky_gaussian():
 
 
 def test_sky_elongated_gaussian():
-    model = SkyElongatedGaussian(lon_0="1 deg", lat_0="45 deg", sigma_lon="1 deg", sigma_lat="1 deg", theta="0 deg")
-    lon = [1, 359] * u.deg
-    lat = 46 * u.deg
+    model = SkyElongatedGaussian(lon_0="1 deg", lat_0="1 deg", sigma_lon="1 deg", sigma_lat="0.5 deg", theta="0.2 rad")
+    lon = [1, 0.5, 359] * u.deg
+    lat = 0.5 * u.deg
     val = model(lon, lat)
     assert val.unit == "deg-2"
     assert model.parameters["sigma_lon"].min == 0
     assert model.parameters["sigma_lat"].min == 0
-    assert_allclose(val.to_value("sr-1"), [316.8970202, 118.6505303],rtol=0.02)
-    model = SkyElongatedGaussian(lon_0="5 deg", lat_0="5 deg", sigma_lon="1 deg", sigma_lat="1 deg", theta="0 deg")
-    lat, lon = np.mgrid[0:11, 0:11] * u.deg
-    val = model(lon, lat)
-    assert_allclose(val.sum().value, 1,rtol=0.005)
+    desired = [643.24463319, 647.26508367, 123.20327128]
+    assert_allclose(val.to_value("sr-1"), desired)
+
 
 def test_sky_disk():
     model = SkyDisk(lon_0="1 deg", lat_0="45 deg", r_0="2 deg")
