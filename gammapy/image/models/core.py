@@ -110,6 +110,7 @@ class SkyGaussian(SkySpatialModel):
         exponent = -0.5 * (sep / sigma) ** 2
         return norm * np.exp(exponent)
 
+
 class SkyElongatedGaussian(SkySpatialModel):
     r"""Two-dimensional elongated Gaussian model (defined on the plane).
 
@@ -144,7 +145,6 @@ class SkyElongatedGaussian(SkySpatialModel):
     theta : `~astropy.coordinates.Angle`
         :math:`\theta}`
     """
-    
 
     def __init__(self, lon_0, lat_0, sigma_lon, sigma_lat, theta):
         self.parameters = Parameters(
@@ -160,28 +160,36 @@ class SkyElongatedGaussian(SkySpatialModel):
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, sigma_lon, sigma_lat, theta):
         """Evaluate the model (static function)."""
-        
-        dlon1=np.abs(lon-lon_0)
-        dlon2=360.*u.deg-np.abs(lon-lon_0)
-        lon_sep=Angle(np.where(dlon1<=dlon2,dlon1,dlon2)*u.deg)
 
-        dlat1=np.abs(lat-lat_0)
-        dlat2=np.abs(lat)+np.abs(lat_0)
-        dlat3=180.*u.deg-(np.abs(lat)+np.abs(lat_0))
-        lat_sep=Angle(np.where(np.logical_and(dlat1<=dlat2,dlat1<=dlat3),dlat1,np.where(dlat2<=dlat3,dlat2,dlat3))*u.deg)
+        dlon1 = np.abs(lon - lon_0)
+        dlon2 = 360.0 * u.deg - np.abs(lon - lon_0)
+        lon_sep = Angle(np.where(dlon1 <= dlon2, dlon1, dlon2) * u.deg)
+
+        dlat1 = np.abs(lat - lat_0)
+        dlat2 = np.abs(lat) + np.abs(lat_0)
+        dlat3 = 180.0 * u.deg - (np.abs(lat) + np.abs(lat_0))
+        lat_sep = Angle(
+            np.where(
+                np.logical_and(dlat1 <= dlat2, dlat1 <= dlat3),
+                dlat1,
+                np.where(dlat2 <= dlat3, dlat2, dlat3),
+            )
+            * u.deg
+        )
 
         norm = 1 / (2 * np.pi * sigma_lon * sigma_lat)
         cost2 = np.cos(theta) ** 2
         sint2 = np.sin(theta) ** 2
-        sin2t = np.sin(2. * theta)
+        sin2t = np.sin(2.0 * theta)
 
         a = 0.5 * ((cost2 / sigma_lon ** 2) + (sint2 / sigma_lat ** 2))
         b = 0.5 * ((sin2t / sigma_lon ** 2) - (sin2t / sigma_lat ** 2))
         c = 0.5 * ((sint2 / sigma_lon ** 2) + (cost2 / sigma_lat ** 2))
 
-        return norm * np.exp(-((a * lon_sep ** 2) + (b * lon_sep * lat_sep) + (c * lat_sep ** 2)))
+        return norm * np.exp(
+            -((a * lon_sep ** 2) + (b * lon_sep * lat_sep) + (c * lat_sep ** 2))
+        )
 
-        
 
 class SkyDisk(SkySpatialModel):
     r"""Constant radial disk model.

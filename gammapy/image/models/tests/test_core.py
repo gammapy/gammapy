@@ -34,7 +34,13 @@ def test_sky_gaussian():
 
 
 def test_sky_elongated_gaussian():
-    model = SkyElongatedGaussian(lon_0="1 deg", lat_0="1 deg", sigma_lon="1 deg", sigma_lat="0.5 deg", theta="0.2 rad")
+    model = SkyElongatedGaussian(
+        lon_0="1 deg",
+        lat_0="1 deg",
+        sigma_lon="1 deg",
+        sigma_lat="0.5 deg",
+        theta="0.2 rad",
+    )
     lon = [1, 0.5, 359] * u.deg
     lat = 0.5 * u.deg
     val = model(lon, lat)
