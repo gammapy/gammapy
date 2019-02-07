@@ -6,7 +6,7 @@
 PIG 8 - Datasets
 ****************
 
-* Author: Axel Donath (editor), Christoph Deil, Regis Terrier & Atreyee
+* Author: Axel Donath (editor), Christoph Deil, Regis Terrier & Atreyee Sinha
 * Created: Jan 4th, 2018
 * Accepted:
 * Status:
@@ -86,14 +86,45 @@ The `MapDataset` implements at least the following methods:
 
 The `.setup()` method creates cutouts of the exposure map for the individual
 model components, assigns the correspoding IRFs to the model component and
-bundles all into `SourceIRFModel` or `ModelEvaluator()`. The list of model
+bundles all into `SourceIRFModel` or `ModelEvaluator()` classes. The list of model
 evaluators is cached on the `MapDataset` and used later to efficiently compute
 the predicted number of counts.
 
 The `mask` argument to the `.likelihood` method allows to set a global fitting
-mask, when mutiple `MapDataset` or fitted jointly.
+mask, when mutiple `MapDataset` are fitted jointly.
 
-For on-off based analyses a `MapOnOffDataset` class could be introduced later.
+
+`MapDatasetOnOff`
+----------------
+For on-off based analyses a `MapDatasetOnOff` class could be introduced.
+
+.. code ::
+
+    from gammapy.cube import MapDatasetOnOff
+
+    model = SourceModel.read("model.yaml")
+
+    counts_on = Map.read("stacked/counts_on.fits")
+    counts_off = Map.read("stacked/counts_off.fits")
+    alpha = Map.read("stacked/alpha.fits")
+
+    edisp = Map.read("stacked/edisp.fits")
+    psf = Map.read("stacked/psf.fits")
+
+    dataset_onoff = MapDatasetOnOff(
+        counts_on=counts_on,
+        counts_off=counts_off,
+        alpha=alpha,
+        edisp=edisp,
+        psf=psf,
+        mask=mask,
+        model=model,
+        likelihood="wstat"
+        )
+
+    fit = Fit(dataset)
+    fit.optimize()
+
 
 `SpectrumDataset`
 -----------------
@@ -196,6 +227,9 @@ is supposed to work:
 
     datasets = Datasets(map_datasets)
 
+    # check whether all contained datasets are of the same type
+    datasets.is_all_same_type
+
     datasets.likelihood(mask)
 
     fit = Fit(datasets)
@@ -242,6 +276,18 @@ Combined spectral / flux points analysis:
     fit = Fit(datasets)
     fit.optimize()
 
+Parallel evaluation of datasets
+-------------------------------
+
+For efficient joint-likelihood fits of multiple observations, parallel processing
+should be used. The obvious entry point is to evaluate one dataset per process and
+join the likelihoods at the end. The current handling of model references
+(the same model instance is passed to different datasets to achieve a generic
+parameter linking by updating the model parameters in place), set's a limitation
+on the parallel evaluation, because Python objects can't easily be shared between
+multiple processes. We are aware of this issue, but propose to solve it later,
+because it does not affect the proposed API for datasets.
+
 
 Dataset serialization
 ---------------------
@@ -263,17 +309,17 @@ dataset. Here is an example:
 
     dataset:
         type: map-dataset
-        maps:
-            counts: "obs-123/counts.fits"
-            exposure: "obs-123/exposure.fits"
-            edisp: "obs-123/edisp.fits"
-            psf: "obs-123/psf.fits"
+        counts: "obs-123/counts.fits"
+        exposure: "obs-123/exposure.fits"
+        edisp: "obs-123/edisp.fits"
+        psf: "obs-123/psf.fits"
         model: "model.yaml"
         background-model: "obs-123/background.fits"
-        likelihood: "cash"
+
+Addtionally one could introduce a single FITS file serializiaton for quickly writing /
+reading datasets to disk.
 
 The `Datasets` object could be serialized equivalently as a list of datasets:
-
 
 .. code::
 
@@ -309,13 +355,30 @@ Lazy loading of Datasets
 For the use-case of inspecting individual datasets (e.g. MapDataset per observation)
 it could be advantegeous to implement a lazy-loading or generator interface for
 `Datasets.read()`. Such that the individual datasets are only read from disk on
-requests and are not loaded in memory when calling `.read()`.
+requests and are not loaded in memory when calling `.read()`. We propose to handle
+this with a generic lazy-loading mechanism for `Map` objects, where the data is loaded
+on access of the `.data` attribute.
 
 
-Simulation of Datasets
-----------------------
+Simulation of `MapDataset`
+--------------------------
+The `MapDataset` class will be the central class for map based analyses. In many
+cases it's useful to simulate counts from a predicted number of counts model. Two
+approaches are possible: simulating a counts map by calling `np.random.poisson()` on
+a predicted number of counts map or sampling of event lists. The latter is addressed
+in a separate PIG (#009). The direct sampling of binned data could be supported
+as following:
 
-TBD
+.. code::
+
+    # allow counts=None on init
+    dataset = MapDataset(counts=None)
+
+    # to sample a counts map from npred
+    dataset.counts = dataset.simulate_counts(random_seed=0)
+
+    fit = Fit(dataset)
+    fit.optmimize()
 
 
 List of Pull Requests
@@ -327,33 +390,54 @@ ordered by priority:
 1. Refactor the current `FluxPointFit` into a `FluxPointsDataset` class
 and make it work with the current `Fit` class. Ensure that the `Fit` class
 supports the old inheritance scheme as well as the new dataset on init.
-Update tests and tutorials. (**v0.11**)
+Update tests and tutorials (**v0.11**).
 
-2. Implement the `Datasets` class in `gammapy.utils.fitting.datasets`, add tests
-using multiple `FluxPointsDataset`. Change the `Fit` interafce to take a `Datasets`
-object or list of `FluxPointsDataset` on input. (**v0.11**)
-
-3. Refactor the current `MapFit` into the `MapDataset` class. Only support a
+2. Refactor the current `MapFit` into the `MapDataset` class. Only support a
 fixed energy dispersion and psf first. Use the current `MapEvaluator` for model
 evaluation, but split out the background evaluation. Update test and tutorials (**v0.11**)
 
-5. Add support for energy disperion and psf maps to `MapDataset`(**v0.11**)
+3. Implement the `Datasets` class in `gammapy.utils.fitting.datasets`, add tests
+using multiple `MapDataset`. Change the `Fit` interface to take a `Datasets`
+object or list of `MapDataset` on input (**v0.11**).
 
-6. Add tutorial for joint-likelhood fitting of multiple observations (**v0.11**).
+4. Add a `name` attribute to datasets and a `Datasets.__getitem__` method (**v0.11**).
 
-7. Implement a `SpectrumDataset` class (**v0.12**).
+5. Enable joint-likelihood analyses by filtering the `Datasets.parameters` for
+unique parameters only. Add a tutorial for joint-likelihood fitting of multiple
+observations (**v0.11**).
 
-8. Implement `MapDataset.setup()` method (**v0.12**)
+6. Implement `MapDataset.setup()` method, using a list of `MapEvaluator`
+objects. Add an `.evaluation_radius()` attribute to all the spatial models.
+Only support a fixed PSF and edisp per model component (**v0.11**).
 
-9. Add tutorial for joint-likelihood fitting of IACT and Fermi-LAT data (**v0.12**).
+7. Add support for psf maps to `MapDataset.setup()`. Extend the `.setup()` method
+to look up the correct PSF for the given model component. A `PSFMap` has to be
+passed on `MapDataset.__init__()` (**v0.11**).
 
-10. Implement dataset serialization (**v0.12**).
+8. Add support for energy dispersion maps to `MapDataset`. Extend the `.setup()`
+method to look up the correct EDisp for a given model component. An `EdispMap`
+has to be passed on `MapDataset.__init__()` (**v0.11**).
 
+9. Add tutorial for joint-likelihood fitting of IACT and Fermi-LAT data, based
+on the joint-crab dataset (**v0.12**).
+
+10. Implement dataset serialization to yaml (**v0.12**).
+
+11. Implement datasets serialization to a single fits file (**v0.12**).
+
+12. Add the direct likelihood evaluation to the `FluxPointsDataset`, by
+interpolating flux point likelihood profiles (**v0.12**).
+
+13.
 
 Alternatives
 ============
-
-Collaborate with 3ML.
+Joint-likelihood analyses for multiple instruments are already possible using
+the 3ML Python package. Alternatively Gammapy could provide a plugin for the
+3ML software and enable the joint-likelihood or joint-instrument analyses for
+users this way. In this scenario, because joint-likelihood fitting is a required
+feature of the future CTA science tools, 3ML would have to be shiped along with
+CTA science tools. We explore the possibilities of collaborating closer with 3ML.
 
 
 Decision
