@@ -116,8 +116,7 @@ class SkyElongatedGaussian(SkySpatialModel):
 
     .. math::
 
-             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}} e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}  -b\left(\text{lon} - \text{lon}_{0}\right)
-            \left(\text{lat} - \text{lat}\right)  -c\left(\text{lat} - \text{lat}_{0}\right)^{2}}       
+             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}} e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}  -b\left(\text{lon} - \text{lon}_{0}\right)\left(\text{lat} - \text{lat}\right)  -c\left(\text{lat} - \text{lat}_{0}\right)^{2}}       
 
     Using the following definitions:
 
