@@ -400,26 +400,26 @@ evaluation, but split out the background evaluation. Update test and tutorials (
 using multiple `MapDataset`. Change the `Fit` interface to take a `Datasets`
 object or list of `MapDataset` on input (**v0.11**).
 
-4. Add a `name` attribute to datasets and a `Datasets.__getitem__` method (**v0.11**).
-
-5. Enable joint-likelihood analyses by filtering the `Datasets.parameters` for
+4. Enable joint-likelihood analyses by filtering the `Datasets.parameters` for
 unique parameters only. Add a tutorial for joint-likelihood fitting of multiple
 observations (**v0.11**).
 
-6. Implement `MapDataset.setup()` method, using a list of `MapEvaluator`
+5. Implement `MapDataset.setup()` method, using a list of `MapEvaluator`
 objects. Add an `.evaluation_radius()` attribute to all the spatial models.
 Only support a fixed PSF and edisp per model component (**v0.11**).
 
-7. Add support for psf maps to `MapDataset.setup()`. Extend the `.setup()` method
+6. Add support for psf maps to `MapDataset.setup()`. Extend the `.setup()` method
 to look up the correct PSF for the given model component. A `PSFMap` has to be
 passed on `MapDataset.__init__()` (**v0.11**).
 
-8. Add support for energy dispersion maps to `MapDataset`. Extend the `.setup()`
+7. Add support for energy dispersion maps to `MapDataset`. Extend the `.setup()`
 method to look up the correct EDisp for a given model component. An `EdispMap`
 has to be passed on `MapDataset.__init__()` (**v0.11**).
 
-9. Add tutorial for joint-likelihood fitting of IACT and Fermi-LAT data, based
+8. Add tutorial for joint-likelihood fitting of IACT and Fermi-LAT data, based
 on the joint-crab dataset (**v0.12**).
+
+9. Add a `name` attribute to datasets and a `Datasets.__getitem__` method (**v0.12**).
 
 10. Implement dataset serialization to yaml (**v0.12**).
 
@@ -428,7 +428,7 @@ on the joint-crab dataset (**v0.12**).
 12. Add the direct likelihood evaluation to the `FluxPointsDataset`, by
 interpolating flux point likelihood profiles (**v0.12**).
 
-13.
+
 
 Alternatives
 ============
