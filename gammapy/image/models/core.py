@@ -130,7 +130,7 @@ class SkyElongatedGaussian(SkySpatialModel):
             c = \left(\frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
             \frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
 
-    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the 68% containment semi-axes of the gaussian before rotation, and :math:`\theta` is the rotation angle.
+    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the 68% containment semi-axes of the gaussian before rotation, and :math:`\theta` is the rotation angle (with respect to the constant longitude axis).
 
     Parameters
     ----------

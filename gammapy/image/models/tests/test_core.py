@@ -36,18 +36,18 @@ def test_sky_gaussian():
 def test_sky_elongated_gaussian():
     model = SkyElongatedGaussian(
         lon_0="1 deg",
-        lat_0="1 deg",
+        lat_0="10 deg",
         sigma_lon="1 deg",
         sigma_lat="0.5 deg",
-        theta="0.2 rad",
+        theta="0.5 rad",
     )
     lon = [1, 0.5, 359] * u.deg
-    lat = 0.5 * u.deg
+    lat = 11 * u.deg
     val = model(lon, lat)
     assert val.unit == "deg-2"
     assert model.parameters["sigma_lon"].min == 0
     assert model.parameters["sigma_lat"].min == 0
-    desired = [643.24463319, 647.26508367, 123.20327128]
+    desired = [199.63632071, 303.81143696, 84.92913364]
     assert_allclose(val.to_value("sr-1"), desired)
 
 
