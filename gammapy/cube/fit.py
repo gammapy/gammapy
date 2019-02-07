@@ -6,14 +6,11 @@ from ..utils.fitting import Fit, Parameters
 from ..stats import cash
 from ..maps import Map, MapAxis
 
-__all__ = ["MapFit", "MapEvaluator"]
+__all__ = ["MapFit", "MapDataset"]
 
 
-class MapFit(Fit):
+class MapDataset:
     """Perform sky model likelihood fit on maps.
-
-    This is the first go at such a class. It's geared to the
-    `~gammapy.spectrum.SpectrumFit` class which does the 1D spectrum fit.
 
     Parameters
     ----------
@@ -23,18 +20,16 @@ class MapFit(Fit):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    background : `~gammapy.maps.WcsNDMap`
-        Background Cube
     mask : `~gammapy.maps.WcsNDMap`
-        Mask to apply for the fit. All the pixels that contain 1 or True are included
-        in the fit, all others are ignored.
+        Mask to apply to the likelihood.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     background_model: `~gammapy.cube.models.BackgroundModel`
-        Background model to use for the fit. Can be specified instead of
-        `background` to fit the background as well.
+        Background model to use for the fit.
+    likelihood : {"cash"}
+	    Likelihood function to use for the fit.
     """
 
     def __init__(
@@ -42,7 +37,6 @@ class MapFit(Fit):
         model,
         counts,
         exposure,
-        background=None,
         mask=None,
         psf=None,
         edisp=None,
@@ -51,22 +45,28 @@ class MapFit(Fit):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        self._model = model
+        self.model = model
         self.counts = counts
         self.exposure = exposure
-        self.background = background
         self.mask = mask
         self.psf = psf
         self.edisp = edisp
+        self.background_model = background_model
 
         self.evaluator = MapEvaluator(
             model=self._model,
             exposure=exposure,
-            background=self.background,
             psf=self.psf,
-            edisp=self.edisp,
-            background_model=background_model,
+            edisp=self.edisp
         )
+
+    @property
+    def npred(self):
+        model_npred = self.evaluator.compute_npred()
+        back_counts = self.background_model.evaluate()
+        back_npred = self.exposure.copy(data=back_counts)
+        return model_npred + back_npred
+
 
     @property
     def stat(self):
@@ -86,21 +86,14 @@ class MapFit(Fit):
 class MapEvaluator:
     """Sky model evaluation on maps.
 
-    This is a first attempt to compute flux as well as predicted counts maps.
-
-    The basic idea is that this evaluator is created once at the start
-    of the analysis, and pre-computes some things.
-    It it then evaluated many times during likelihood fit when model parameters
-    change, re-using pre-computed quantities each time.
-    At the moment it does some things, e.g. cache and re-use energy and coordinate grids,
-    but overall it is not an efficient implementation yet.
+    This evaluates a sky model on a 3D map and convolves with the IRFs,
+    and returns a map of the predicted counts.
+    Note that background counts are not added.
 
     For now, we only make it work for 3D WCS maps with an energy axis.
     No HPX, no other axes, those can be added later here or via new
     separate model evaluator classes.
 
-    We should discuss how to organise the model and IRF evaluation code,
-    and things like integrations and convolutions in a good way.
 
     Parameters
     ----------
@@ -114,33 +107,21 @@ class MapEvaluator:
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background_model: `~gammapy.cube.models.BackgroundModel`
-        Background model to use for the evaluation. Can be specified
-        instead of `background`.
     """
 
     def __init__(
         self,
         model=None,
         exposure=None,
-        background=None,
         psf=None,
         edisp=None,
-        background_model=None,
     ):
         self.model = model
-        self.background_model = background_model
         self.exposure = exposure
-        self.background = background
         self.psf = psf
         self.edisp = edisp
-        if background_model:
-            self.parameters = Parameters(
-                self.model.parameters.parameters
-                + self.background_model.parameters.parameters
-            )
-        else:
-            self.parameters = Parameters(self.model.parameters.parameters)
+
+        self.parameters = Parameters(self.model.parameters.parameters)
 
     @lazyproperty
     def geom(self):
@@ -265,8 +246,8 @@ class MapEvaluator:
 
         Returns
         -------
-        npred.data : ~numpy.ndarray
-            array of the predicted counts in each bin (in reco energy)
+        npred : `~gammapy.maps.Map`
+            Predicted counts on the map (in reco energy bins)
         """
         flux = self.compute_flux()
         npred = self.apply_exposure(flux)
@@ -274,9 +255,4 @@ class MapEvaluator:
             npred = self.apply_psf(npred)
         if self.edisp is not None:
             npred = self.apply_edisp(npred)
-        if self.background_model:
-            npred.data += self.background_model.evaluate().value
-        else:
-            if self.background:
-                npred.data += self.background.data
-        return npred.data
+        return npred
