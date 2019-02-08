@@ -112,15 +112,19 @@ class SkyGaussian(SkySpatialModel):
 
 
 class SkyElongatedGaussian(SkySpatialModel):
-    r"""Two-dimensional elongated Gaussian model (defined on the plane).
+    r"""Two-dimensional elongated Gaussian model. Model formula:
 
     .. math::
 
-             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}} e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}  -b\left(\text{lon} - \text{lon}_{0}\right)\left(\text{lat} - \text{lat}\right)  -c\left(\text{lat} - \text{lat}_{0}\right)^{2}}
+             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}} 
+                                         e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}  
+                                        -b\left(\text{lon} - \text{lon}_{0}\right)\left(\text{lat} - \text{lat}\right)  
+                                        -c\left(\text{lat} - \text{lat}_{0}\right)^{2}}
 
     Using the following definitions:
 
-            a = \left(\frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
+    .. math::
+            a = \left(\frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} + 
             \frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
 
             b = \left(\frac{\sin{\left (2 \theta \right )}}{2 \sigma_{\text{lon}}^{2}} -
@@ -129,20 +133,20 @@ class SkyElongatedGaussian(SkySpatialModel):
             c = \left(\frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
             \frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
 
-    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the 68% containment semi-axes of the gaussian before rotation, and :math:`\theta` is the rotation angle (with respect to the constant latitude axis).
+    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the                                                                                                                                semi-axes of the Gaussian before rotation, and :math:`\theta` is the rotation angle of the Gaussian with respect to the longitude axis. 
 
     Parameters
     ----------
     lon_0 : `~astropy.coordinates.Longitude`
-        :math:`lon_0`
+        Longitude coordinate for the center of the Gaussian. 
     lat_0 : `~astropy.coordinates.Latitude`
-        :math:`lat_0`
+        Latitude coordinate for the center of the Gaussian.
     sigma_lon : `~astropy.coordinates.Angle`
-        :math:`\sigma_{\text{lon}}`
+        :math:`\sigma_{\text{lon}}`: Standard deviation of the Gaussian along the `lon` axis, before rotating by theta.
     sigma_lat : `~astropy.coordinates.Angle`
-        :math:`\sigma_{\text{lat}}`
-    theta : `~astropy.coordinates.Angle`
-        :math:`\theta}`
+        :math:`\sigma_{\text{lat}}`: Standard deviation of the Gaussian along the `lat` axis, before rotating by theta.
+    theta : `~astropy.coordinates.Angle` 
+        :math:`\theta`: Rotation angle of the Gaussian, measured between the rotated `sigma_lon` and the `lon` axis. 
     """
 
     def __init__(self, lon_0, lat_0, sigma_lon, sigma_lat, theta):
@@ -169,7 +173,7 @@ class SkyElongatedGaussian(SkySpatialModel):
         dlat3 = 180.0 * u.deg - (np.abs(lat) + np.abs(lat_0))
         lat_sep = Angle(
             np.where(
-                np.logical_and(dlat1 <= dlat2, dlat1 <= dlat3),
+                dlat1 <= dlat2 & dlat1 <= dlat3,
                 dlat1,
                 np.where(dlat2 <= dlat3, dlat2, dlat3),
             )
@@ -177,17 +181,19 @@ class SkyElongatedGaussian(SkySpatialModel):
         )
 
         norm = 1 / (2 * np.pi * sigma_lon * sigma_lat)
+        lon_std2 = sigma_lon ** 2
+        lat_std2 = sigma_lat ** 2
         cost2 = np.cos(theta) ** 2
         sint2 = np.sin(theta) ** 2
         sin2t = np.sin(2.0 * theta)
 
-        a = 0.5 * ((cost2 / sigma_lon ** 2) + (sint2 / sigma_lat ** 2))
-        b = 0.5 * ((sin2t / sigma_lon ** 2) - (sin2t / sigma_lat ** 2))
-        c = 0.5 * ((sint2 / sigma_lon ** 2) + (cost2 / sigma_lat ** 2))
+        a = 0.5 * ((cost2 / lon_std2) + (sint2 / lat_std2 ** 2))
+        b = 0.5 * ((sin2t / lon_std2) - (sin2t / lat_std2 ** 2))
+        c = 0.5 * ((sint2 / lon_std2) + (cost2 / lat_std2 ** 2))
 
-        return norm * np.exp(
-            -((a * lon_sep ** 2) + (b * lon_sep * lat_sep) + (c * lat_sep ** 2))
-        )
+        exponent = -((a * lon_sep ** 2) + (b * lon_sep * lat_sep) + (c * lat_sep ** 2))
+
+        return norm * np.exp(exponent)
 
 
 class SkyDisk(SkySpatialModel):
