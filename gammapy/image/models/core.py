@@ -173,7 +173,7 @@ class SkyElongatedGaussian(SkySpatialModel):
         dlat3 = 180.0 * u.deg - (np.abs(lat) + np.abs(lat_0))
         lat_sep = Angle(
             np.where(
-                dlat1 <= dlat2 & dlat1 <= dlat3,
+                np.logical_and(dlat1 <= dlat2, dlat1 <= dlat3),
                 dlat1,
                 np.where(dlat2 <= dlat3, dlat2, dlat3),
             )
@@ -187,9 +187,9 @@ class SkyElongatedGaussian(SkySpatialModel):
         sint2 = np.sin(theta) ** 2
         sin2t = np.sin(2.0 * theta)
 
-        a = 0.5 * ((cost2 / lon_std2) + (sint2 / lat_std2 ** 2))
-        b = 0.5 * ((sin2t / lon_std2) - (sin2t / lat_std2 ** 2))
-        c = 0.5 * ((sint2 / lon_std2) + (cost2 / lat_std2 ** 2))
+        a = 0.5 * ((cost2 / lon_std2) + (sint2 / lat_std2))
+        b = 0.5 * ((sin2t / lon_std2) - (sin2t / lat_std2))
+        c = 0.5 * ((sint2 / lon_std2) + (cost2 / lat_std2))
 
         exponent = -((a * lon_sep ** 2) + (b * lon_sep * lat_sep) + (c * lat_sep ** 2))
 
