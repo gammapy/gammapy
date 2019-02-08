@@ -346,6 +346,8 @@ class SkyDiffuseCube(SkyModelBase):
 class BackgroundModel(Model):
     """Background model
 
+    Create a new map by a tilt and normalisation on the available map
+
     Parameters
     ----------
     background : `~gammapy.maps.Map`
@@ -356,6 +358,11 @@ class BackgroundModel(Model):
         Additional tilt in the spectrum
     reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
+
+    Returns
+    ---------
+    background_map : `~gammapy.maps.Map`
+        Background evaluated on the Map
     """
 
     def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
@@ -386,4 +393,5 @@ class BackgroundModel(Model):
         tilt = self.parameters["tilt"].value
         reference = self.parameters["reference"].quantity
         tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
-        return u.Quantity(norm * self.map.data * tilt_factor, self.map.unit, copy=False)
+        back_values = norm * self.map.data * tilt_factor.value
+        return self.map.copy(data=back_values)
