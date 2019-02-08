@@ -81,9 +81,7 @@ class Fit:
     def _parameters(self):
         # TODO: This is a temporary solution to support datasets as
         # well as the old inhertiance scheme, remove soon.
-        if self.__class__.__name__ == "MapFit":
-            parameters = self.evaluator.parameters
-        elif self.__class__.__name__ == "SpectrumFit":
+        if self.__class__.__name__ == "SpectrumFit":
             parameters = self._model.parameters
         else:
             parameters = self.datasets.parameters

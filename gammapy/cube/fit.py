@@ -6,7 +6,7 @@ from ..utils.fitting import Fit, Parameters
 from ..stats import cash
 from ..maps import Map, MapAxis
 
-__all__ = ["MapFit", "MapDataset"]
+__all__ = ["MapEvaluator", "MapDataset"]
 
 
 class MapDataset:
@@ -35,8 +35,8 @@ class MapDataset:
     def __init__(
         self,
         model,
-        counts,
-        exposure,
+        counts=None,
+        exposure=None,
         mask=None,
         psf=None,
         edisp=None,
@@ -52,9 +52,16 @@ class MapDataset:
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
+        if background_model:
+            self.parameters = Parameters(
+                self.model.parameters.parameters
+                + self.background_model.parameters.parameters
+            )
+        else:
+            self.parameters = Parameters(self.model.parameters.parameters)
 
         self.evaluator = MapEvaluator(
-            model=self._model,
+            model=self.model,
             exposure=exposure,
             psf=self.psf,
             edisp=self.edisp
@@ -62,24 +69,28 @@ class MapDataset:
 
     @property
     def npred(self):
+        """Returns npred map (model + background)"""
         model_npred = self.evaluator.compute_npred()
-        back_counts = self.background_model.evaluate()
-        back_npred = self.exposure.copy(data=back_counts)
-        return model_npred + back_npred
+        back_npred = self.background_model.evaluate()
+        total_npred = model_npred.data + back_npred.data
+        return back_npred.copy(data=total_npred)
+        # TODO: return model_npred + back_npred
+        # There is some bug: edisp.e_reco.unit is dimensionless
+        # thus map arithmetic does not work.
+
 
 
     @property
-    def stat(self):
+    def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        npred = self.evaluator.compute_npred()
-        return cash(n_on=self.counts.data, mu_on=npred)
+        return cash(n_on=self.counts.data, mu_on=self.npred.data)
 
-    def total_stat(self, parameters):
+    def likelihood(self):
         """Total likelihood given the current model parameters"""
         if self.mask:
-            stat = self.stat[self.mask.data]
+            stat = self.likelihood_per_bin()[self.mask]
         else:
-            stat = self.stat
+            stat = self.likelihood_per_bin()
         return np.sum(stat, dtype=np.float64)
 
 
@@ -233,7 +244,7 @@ class MapEvaluator:
         data = np.dot(data, self.edisp.pdf_matrix)
         data = np.rollaxis(data, -1, loc)
         e_reco_axis = MapAxis.from_edges(
-            self.edisp.e_reco.bins, unit=self.edisp.e_reco.unit
+            self.edisp.e_reco.bins, unit=self.edisp.e_reco.unit, name="energy"
         )
         geom_ereco = self.exposure.geom.to_image().to_cube(axes=[e_reco_axis])
         npred = Map.from_geom(geom_ereco, unit="")

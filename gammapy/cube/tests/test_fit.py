@@ -6,13 +6,14 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency
+from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
 from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import SkyModel, BackgroundModel
-from .. import MapEvaluator, MapFit, make_map_exposure_true_energy, PSFKernel
+from .. import MapEvaluator, MapDataset, make_map_exposure_true_energy, PSFKernel
 
 
 def geom(ebounds):
@@ -85,11 +86,19 @@ def mask(geom, sky_model):
 
 
 def counts(sky_model, exposure, background, psf, edisp):
-    evaluator = MapEvaluator(
-        model=sky_model, exposure=exposure, background=background, psf=psf, edisp=edisp
-    )
-    npred = evaluator.compute_npred()
-    return WcsNDMap(background.geom, npred)
+    """This computes the total npred"""
+    npred = MapDataset(
+        model=sky_model, exposure=exposure, background_model=background,
+        psf=psf, edisp=edisp).npred
+    #evaluator = MapEvaluator(
+    #    model=sky_model, exposure=exposure, psf=psf, edisp=edisp
+    #)
+    #npred = evaluator.compute_npred()
+    #back_npred = background.evaluate()
+    #npred = npred + back_npred
+
+    return npred
+
 
 
 @requires_dependency("iminuit")
@@ -199,17 +208,17 @@ def test_map_fit_bkg(sky_model):
     geom_t = geom_etrue(ebounds_true)
 
     background_map = background(geom_r)
+    background_model = BackgroundModel(background_map, norm=1.0)
+
     psf_map = psf(geom_t)
     edisp_map = edisp(geom_r, geom_t)
     exposure_map = exposure(geom_t)
-    counts_map = counts(sky_model, exposure_map, background_map, psf_map, edisp_map)
+    counts_map = counts(sky_model, exposure_map, background_model, psf_map, edisp_map)
     mask_map = mask(geom_r, sky_model)
 
     sky_model.parameters["sigma"].frozen = True
 
-    background_model = BackgroundModel(background_map, norm=0.5)
-
-    fit = MapFit(
+    dataset = MapDataset(
         model=sky_model,
         counts=counts_map,
         exposure=exposure_map,
@@ -218,6 +227,7 @@ def test_map_fit_bkg(sky_model):
         edisp=edisp_map,
         background_model=background_model,
     )
+    fit = Fit(dataset)
     result = fit.run()
     assert_allclose(background_model.parameters["norm"].value, 0.98307, rtol=1e-3)
     assert_allclose(result.total_stat, 5424.79128, atol=0.01)
