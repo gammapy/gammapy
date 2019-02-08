@@ -112,19 +112,19 @@ class SkyGaussian(SkySpatialModel):
 
 
 class SkyElongatedGaussian(SkySpatialModel):
-    r"""Two-dimensional elongated Gaussian model. Model formula:
+    r"""Two-dimensional elongated Gaussian model:
 
     .. math::
 
-             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}} 
-                                         e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}  
-                                        -b\left(\text{lon} - \text{lon}_{0}\right)\left(\text{lat} - \text{lat}\right)  
+             f(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma_{\text{lon}}\sigma_{\text{lat}}}
+                                         e^{-a\left(\text{lon} - \text{lon}_{0}\right)^{2}
+                                        -b\left(\text{lon} - \text{lon}_{0}\right)\left(\text{lat} - \text{lat}\right)
                                         -c\left(\text{lat} - \text{lat}_{0}\right)^{2}}
 
     Using the following definitions:
 
     .. math::
-            a = \left(\frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} + 
+            a = \left(\frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
             \frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
 
             b = \left(\frac{\sin{\left (2 \theta \right )}}{2 \sigma_{\text{lon}}^{2}} -
@@ -133,20 +133,21 @@ class SkyElongatedGaussian(SkySpatialModel):
             c = \left(\frac{\sin^{2}{\left (\theta \right )}}{2 \sigma_{\text{lon}}^{2}} +
             \frac{\cos^{2}{\left (\theta \right )}}{2 \sigma_{\text{lat}}^{2}}\right)
 
-    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the                                                                                                                                semi-axes of the Gaussian before rotation, and :math:`\theta` is the rotation angle of the Gaussian with respect to the longitude axis. 
+    where :math:`\sigma_{\text{lon}}` and :math:`\sigma_{\text{lat}}` are the semi-axes of the Gaussian before rotation, \
+    and :math:`\theta` is the rotation angle of the Gaussian with respect to the longitude axis.
 
     Parameters
     ----------
     lon_0 : `~astropy.coordinates.Longitude`
-        Longitude coordinate for the center of the Gaussian. 
+        Longitude coordinate for the center of the Gaussian.
     lat_0 : `~astropy.coordinates.Latitude`
         Latitude coordinate for the center of the Gaussian.
     sigma_lon : `~astropy.coordinates.Angle`
-        :math:`\sigma_{\text{lon}}`: Standard deviation of the Gaussian along the `lon` axis, before rotating by theta.
+        :math:`\sigma_{\text{lon}}`: Standard deviation of the Gaussian along the `lon` axis, before rotating by :math:`\theta`.
     sigma_lat : `~astropy.coordinates.Angle`
-        :math:`\sigma_{\text{lat}}`: Standard deviation of the Gaussian along the `lat` axis, before rotating by theta.
-    theta : `~astropy.coordinates.Angle` 
-        :math:`\theta`: Rotation angle of the Gaussian, measured between the rotated `sigma_lon` and the `lon` axis. 
+        :math:`\sigma_{\text{lat}}`: Standard deviation of the Gaussian along the `lat` axis, before rotating by :math:`\theta`.
+    theta : `~astropy.coordinates.Angle`
+        :math:`\theta`: Rotation angle of the Gaussian, measured between the rotated `sigma_lon` and the `lon` axis.
     """
 
     def __init__(self, lon_0, lat_0, sigma_lon, sigma_lat, theta):
