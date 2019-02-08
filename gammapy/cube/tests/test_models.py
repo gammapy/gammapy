@@ -72,13 +72,13 @@ def psf(geom_true):
 
 
 @pytest.fixture(scope="session")
-def evaluator(sky_model, exposure, background, psf, edisp):
-    return MapEvaluator(sky_model, exposure, background, psf=psf, edisp=edisp)
+def evaluator(sky_model, exposure, psf, edisp):
+    return MapEvaluator(sky_model, exposure, psf=psf, edisp=edisp)
 
 
 @pytest.fixture(scope="session")
-def diffuse_evaluator(diffuse_model, exposure, background, psf, edisp):
-    return MapEvaluator(diffuse_model, exposure, background, psf=psf, edisp=edisp)
+def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
+    return MapEvaluator(diffuse_model, exposure, psf=psf, edisp=edisp)
 
 
 @pytest.fixture(scope="session")
@@ -291,9 +291,9 @@ class TestSkyDiffuseCubeMapEvaluator:
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
-        assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 1.106403e12, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 5.586252e08, rtol=1e-5)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 1.106403e12, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 5.586252e08, rtol=1e-5)
 
 
 class TestSkyModelMapEvaluator:
@@ -373,6 +373,6 @@ class TestSkyModelMapEvaluator:
     @staticmethod
     def test_compute_npred(evaluator):
         out = evaluator.compute_npred()
-        assert out.shape == (2, 4, 5)
-        assert_allclose(out.sum(), 6.25133e-06, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 1.240524e-07, rtol=1e-5)
+        assert out.data.shape == (2, 4, 5)
+        assert_allclose(out.data.sum(), 2.25133e-06, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 0.240524e-07, rtol=1e-5)
