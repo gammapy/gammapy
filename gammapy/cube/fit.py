@@ -61,10 +61,7 @@ class MapDataset:
             self.parameters = Parameters(self.model.parameters.parameters)
 
         self.evaluator = MapEvaluator(
-            model=self.model,
-            exposure=exposure,
-            psf=self.psf,
-            edisp=self.edisp
+            model=self.model, exposure=exposure, psf=self.psf, edisp=self.edisp
         )
 
     @property
@@ -77,7 +74,6 @@ class MapDataset:
         # TODO: return model_npred + back_npred
         # There is some bug: edisp.e_reco.unit is dimensionless
         # thus map arithmetic does not work.
-
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
@@ -118,13 +114,7 @@ class MapEvaluator:
         Energy dispersion
     """
 
-    def __init__(
-        self,
-        model=None,
-        exposure=None,
-        psf=None,
-        edisp=None,
-    ):
+    def __init__(self, model=None, exposure=None, psf=None, edisp=None):
         self.model = model
         self.exposure = exposure
         self.psf = psf

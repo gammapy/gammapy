@@ -88,10 +88,13 @@ def mask(geom, sky_model):
 def counts(sky_model, exposure, background, psf, edisp):
     """This computes the total npred"""
     npred = MapDataset(
-        model=sky_model, exposure=exposure, background_model=background,
-        psf=psf, edisp=edisp).npred
+        model=sky_model,
+        exposure=exposure,
+        background_model=background,
+        psf=psf,
+        edisp=edisp,
+    ).npred
     return npred
-
 
 
 @requires_dependency("iminuit")
@@ -149,7 +152,6 @@ def test_map_fit(sky_model):
     assert_allclose(pars.error("amplitude"), 4.03049e-13, rtol=1e-2)
 
     assert_allclose(pars["norm"].value, 0.493, rtol=1e-2)
-
 
 
 @requires_dependency("iminuit")
