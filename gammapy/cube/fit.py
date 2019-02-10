@@ -79,16 +79,14 @@ class MapDataset:
         # thus map arithmetic does not work.
 
 
-
-    @property
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred.data)
 
-    def likelihood(self):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters"""
         if self.mask:
-            stat = self.likelihood_per_bin()[self.mask]
+            stat = self.likelihood_per_bin()[self.mask.data]
         else:
             stat = self.likelihood_per_bin()
         return np.sum(stat, dtype=np.float64)
