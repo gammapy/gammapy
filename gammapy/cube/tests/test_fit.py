@@ -13,7 +13,7 @@ from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import SkyModel, BackgroundModel
-from .. import MapEvaluator, MapDataset, make_map_exposure_true_energy, PSFKernel
+from .. import MapDataset, make_map_exposure_true_energy, PSFKernel
 
 
 def geom(ebounds):
