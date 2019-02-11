@@ -21,5 +21,6 @@ label`_ .
     pig-002
     pig-003
     pig-004
+    pig-005
 
 .. _pull requests with the "pig" label: https://github.com/gammapy/gammapy/issues?q=label%3Apig

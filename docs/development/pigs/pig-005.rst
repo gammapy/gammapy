@@ -8,9 +8,9 @@ PIG 5 - Gammapy 1.0 Roadmap
 
 * Author: Axel Donath (editor), Régis Terrier & Christoph Deil
 * Created: September 28, 2018
-* Accepted: -
-* Status: open
-* Discussion: https://github.com/gammapy/gammapy/pull/1841
+* Accepted: January 31, 2019
+* Status: accepted
+* Discussion: `GH 1841`_
 
 Introduction
 ============
@@ -192,5 +192,8 @@ GitHub project board.
 
 Decision
 ========
-(to be decided by the Gammapy CC)
+The PIG was discussed extensively in `GH 1841`_, resulting in many improvements
+and changes. The Gammapy roadmap was accepted by the CC, after the deadline for
+comments elapsed January 31st.
 
+.. _GH 1841:  https://github.com/gammapy/gammapy/pull/1841
