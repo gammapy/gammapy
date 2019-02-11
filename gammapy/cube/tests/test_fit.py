@@ -93,7 +93,7 @@ def counts(sky_model, exposure, background, psf, edisp):
         background_model=background,
         psf=psf,
         edisp=edisp,
-    ).npred
+    ).npred()
     return npred
 
 
@@ -137,7 +137,7 @@ def test_map_fit(sky_model):
     assert result.success
     assert "minuit" in repr(result)
 
-    npred = dataset.npred.data.sum()
+    npred = dataset.npred().data.sum()
     assert_allclose(npred, 2455.230889, rtol=1e-3)
     assert_allclose(result.total_stat, 5424.791272, rtol=1e-3)
 
@@ -188,7 +188,7 @@ def test_map_fit_one_energy_bin(sky_model):
 
     assert result.success
 
-    npred = dataset.npred.data.sum()
+    npred = dataset.npred().data.sum()
     assert_allclose(npred, 87.11356, rtol=1e-3)
     assert_allclose(result.total_stat, 696.74531, rtol=1e-3)
 
