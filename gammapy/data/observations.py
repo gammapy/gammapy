@@ -267,13 +267,13 @@ class Observations:
     """
 
     def __init__(self, obs_list=None):
-        self._obs_list = obs_list or []
+        self.list = obs_list or []
 
     def __getitem__(self, key):
-        return self._obs_list[key]
+        return self.list[key]
 
     def __len__(self):
-        return len(self._obs_list)
+        return len(self.list)
 
     def __str__(self):
         s = self.__class__.__name__ + "\n"
