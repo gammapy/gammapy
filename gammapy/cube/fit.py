@@ -64,7 +64,6 @@ class MapDataset:
             model=self.model, exposure=exposure, psf=self.psf, edisp=self.edisp
         )
 
-    @property
     def npred(self):
         """Returns npred map (model + background)"""
         model_npred = self.evaluator.compute_npred()
@@ -77,7 +76,7 @@ class MapDataset:
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data, mu_on=self.npred.data)
+        return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def likelihood(self, parameters):
         """Total likelihood given the current model parameters"""
