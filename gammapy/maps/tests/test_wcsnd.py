@@ -467,7 +467,7 @@ def test_smooth(kernel):
     smoothed = m.smooth(0.2 * u.deg, kernel)
     actual = smoothed.data.sum()
     assert_allclose(actual, desired)
-
+    assert smoothed.data.dtype == float
 
 @pytest.mark.parametrize("mode", ["partial", "strict", "trim"])
 def test_make_cutout(mode):
