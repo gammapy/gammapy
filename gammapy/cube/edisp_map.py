@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
+import astropy.io.fits as fits
 from ..irf import EnergyDispersion
 from ..maps import Map
 
@@ -38,20 +38,22 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map = None):
     energy = energy_axis.center * energy_axis.unit
 
     migra_axis = geom.get_axis_by_name("migra")
-    migra = Angle(migra_axis.center, unit=migra_axis.unit)
+    migra = u.Quantity(migra_axis.center, unit=migra_axis.unit)
 
     # Compute separations with pointing position
     separations = pointing.separation(geom.to_image().get_coord().skycoord)
     valid = np.where(separations < max_offset)
 
     # Compute PSF values
-    edisp_values = edisp.evaluate(offset=separations[valid], energy=energy, migra=migra)
+    edisp_values = edisp.data.evaluate(offset=separations[valid],
+                                       e_true=energy[:,np.newaxis],
+                                       migra=migra[:,np.newaxis, np.newaxis])
 
     # Re-order axes to be consistent with expected geometry
-    edisp_values = np.transpose(edisp_values, axes=(2, 0, 1))
+    edisp_values = np.transpose(edisp_values, axes=(1, 0, 2))
 
     # Create Map and fill relevant entries
-    edispmap = Map.from_geom(geom, unit="sr-1")
+    edispmap = Map.from_geom(geom, unit="")
     edispmap.data[:, :, valid[0], valid[1]] += edisp_values.to_value(edispmap.unit)
 
     return EDispMap(edispmap, exposure_map)

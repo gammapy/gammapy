@@ -5,17 +5,33 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Unit
 from astropy.coordinates import SkyCoord
-from ...irf import EnergyDispersion2D
+from ...irf import EnergyDispersion2D, EffectiveAreaTable2D
 from ...maps import MapAxis, WcsGeom
-from ...cube import EDispMap, make_edisp_map
+from ...cube import EDispMap, make_edisp_map, make_map_exposure_true_energy
 
+def fake_aeff2d(area=1e6 * u.m ** 2):
+    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
+    energy = np.logspace(-1, 1, 5) * u.TeV
+    energy_lo = energy[:-1]
+    energy_hi = energy[1:]
 
-def test_make_edisp_map():
+    aeff_values = np.ones((4, 3)) * area
+
+    return EffectiveAreaTable2D(
+        energy_lo,
+        energy_hi,
+        offset_lo=offsets[:-1],
+        offset_hi=offsets[1:],
+        data=aeff_values,
+    )
+
+def make_edisp_map_test():
 
     etrue = [0.2, 0.7, 1.5, 2.0, 10.0]*u.TeV
     migra = np.linspace(0.0, 3.0, 51)
+    offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
 
-    edisp2d = EnergyDispersion2D.from_gauss(e_true, migra, 0.0, 0.1, offset)
+    edisp2d = EnergyDispersion2D.from_gauss(etrue, migra, 0.0, 0.1, offsets)
 
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
@@ -25,14 +41,51 @@ def test_make_edisp_map():
         skydir=pointing, binsz=0.2, width=5, axes=[migra_axis, energy_axis]
     )
 
-    edmap = make_edisp_map(edisp2d, pointing, geom, 3 * u.deg)
+    aeff2d = fake_aeff2d()
+    exposure_geom = WcsGeom.create(
+        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
+    )
 
-    assert edmap.psf_map.geom.axes[0] == migra_axis
-    assert edmap.psf_map.geom.axes[1] == energy_axis
-    assert edmap.psf_map.unit == Unit("sr-1")
+    exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
+
+    return make_edisp_map(edisp2d, pointing, geom, 3 * u.deg, exposure_map)
+
+def test_make_edisp_map():
+
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+
+    edmap = make_edisp_map_test()
+
+    assert edmap.edisp_map.geom.axes[0] == migra_axis
+    assert edmap.edisp_map.geom.axes[1] == energy_axis
+    assert edmap.edisp_map.unit == Unit("")
     assert edmap.data.shape == (4, 50, 25, 25)
 
 
+def test_edisp_map_to_from_hdulist():
+    edmap = make_edisp_map_test()
+    hdulist = edmap.to_hdulist(edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP")
+    assert "EDISP" in hdulist
+    assert "BANDSEDISP" in hdulist
+    assert "EXPMAP" in hdulist
+    assert "BANDSEXP" in hdulist
+
+    new_edmap = EDispMap.from_hdulist(hdulist, edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP")
+    assert_allclose(edmap.edisp_map.data, new_edmap.edisp_map.data)
+    assert new_edmap.geom == edmap.geom
+    assert new_edmap.exposure_map.geom == edmap.exposure_map.geom
+
+
+def test_edisp_map_read_write(tmpdir):
+    edmap = make_edisp_map_test()
+
+    # test read/write
+    filename = str(tmpdir / "edispmap.fits")
+    edmap.write(filename, overwrite=True)
+    new_edmap = EDispMap.read(filename)
+
+    assert_allclose(edmap.edisp_map.quantity, new_edmap.edisp_map.quantity)
 
 #def test_edisp_map(tmpdir):
 #    migra = np.linspace(0.,3.0,100.)
