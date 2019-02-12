@@ -6,6 +6,7 @@ from astropy.utils.misc import InheritDocstrings
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
+from .datasets import Datasets
 
 __all__ = ["Fit"]
 
@@ -62,10 +63,21 @@ registry = Registry()
 
 
 class Fit:
-    """Abstract Fit base class.
-    """
+    """Fit class.
 
+    The fit class provides a uniform interface to multiple fitting
+    backends, such as `scipy.optimize`, `iminuit` or `sherpa`.
+
+    Parameters
+    ----------
+    datasets : `Dataset`, list of `Dataset` or `Datasets`
+        Dataset or joint datasets to be fitted.
+
+    """
     def __init__(self, datasets):
+        if not isinstance(datasets, Datasets):
+            datasets = Datasets(datasets)
+
         self.datasets = datasets
 
         # TODO: remove once datasets are fully supported
