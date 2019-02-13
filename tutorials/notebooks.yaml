@@ -57,6 +57,10 @@
     - images
     - catalogs
     - ebl
+- name: hess
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hess.ipynb
+  datasets:
+    - hess-dl3-dr1
 - name: hgps
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/hgps.ipynb
 - name: image_analysis
