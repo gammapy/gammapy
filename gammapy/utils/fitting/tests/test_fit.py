@@ -24,7 +24,7 @@ class MyDataset:
         self.model = MyModel()
         self.parameters = self.model.parameters
 
-    def likelihood(self, parameters):
+    def likelihood(self, parameters, mask=None):
         # self._model.parameters = parameters
         x, y, z = [p.value for p in self.model.parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
@@ -33,11 +33,12 @@ class MyDataset:
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     result = fit.run(
         optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
     )
-    pars = result.model.parameters
+    pars = fit.datasets.parameters
 
     assert result.success is True
     assert fit._model is result.model
@@ -58,9 +59,10 @@ def test_run(backend):
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     result = fit.optimize(backend=backend)
-    pars = result.model.parameters
+    pars = dataset.parameters
 
     assert fit._model is result.model
     assert result.success is True

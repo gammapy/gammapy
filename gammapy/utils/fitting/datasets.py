@@ -1,3 +1,4 @@
+import numpy as np
 from astropy.utils import lazyproperty
 from .parameter import Parameters
 
@@ -9,54 +10,41 @@ class Datasets:
     ----------
     datasets : `Dataset` or list of `Dataset`
         List of `Dataset` objects ot be joined.
+    mask : `~numpy.ndarray`
+        Global fitting mask used for all datasets.
 
     """
-
     def __init__(self, datasets, mask=None):
         if not isinstance(datasets, list):
-            self.datasets = [datasets]
+            datasets = [datasets]
         self.datasets = datasets
+
+        if mask is not None and not self.is_all_same_type:
+            raise ValueError("Cannot apply mask if datasets are not of the same type.")
+
         self.mask = mask
 
+        # join parameter lists
+        parameters = []
+        for dataset in self.datasets:
+            parameters += dataset.parameters.parameters
+        self.parameters = Parameters(parameters)
+
+    @property
+    def model(self):
+        return self.datasets[0].model
+
     @lazyproperty
-    def is_same_type(self):
+    def is_all_same_type(self):
         """Whether all contained datasets are of the same type"""
         dataset_type = type(self.datasets[0])
         is_dataset_type = [isinstance(_, dataset_type) for _ in self.datasets]
         return np.all(is_dataset_type)
 
-    @property
-    def parameters(self):
-        return Parameters([dataset.parameters for dataset in self.datasets])
-
-    def likelihood_per_bin(self):
-        """"""
-        if not self.is_same_type:
-            raise ValueError("Cannot join likelihood per bin, if datasets are not of the same type")
-
-        for idx, dataset in enumerate(self.datasets):
-            if idx == 0:
-                total_likelihood = dataset.likelihood_per_bin(None)
-            else:
-                total_likelihood += dataset.likelihood_per_bin(None)
-
-        return total_likelihood
-
-
-    def _likelihood(self, parameters=None):
+    def likelihood(self, parameters=None):
         """Compute joint likelihood"""
         total_likelihood = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self.datasets:
-            total_likelihood += dataset.likelihood(None)
+            total_likelihood += dataset.likelihood(parameters=parameters, mask=self.mask)
         return total_likelihood
-
-
-    def _likelihood_same_type(self, parameters):
-        """Total likelihood given the current model parameters"""
-        # update parameters
-        if self.mask:
-            stat = self.likelihood_per_bin()[self.mask]
-        else:
-            stat = self.likelihood_per_bin()
-        return np.nansum(stat, dtype=np.float64)
