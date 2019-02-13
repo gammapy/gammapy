@@ -83,20 +83,17 @@ class MapDataset:
 
         Parameters
         ----------
-        mask : `~numopy.ndarray`
+        mask : `~numpy.ndarray`
             Mask to be combined with the dataset mask.
         """
         if self.mask is None and mask is None:
             stat = self.likelihood_per_bin()
-
         elif self.mask is None:
             stat = self.likelihood_per_bin()[mask]
-
         elif mask is None:
-            stat = 
-
+            stat = self.likelihood_per_bin()[self.mask.data]
         else:
-
+            stat = self.likelihood_per_bin()[mask & self.mask.data]
         return np.sum(stat, dtype=np.float64)
 
 

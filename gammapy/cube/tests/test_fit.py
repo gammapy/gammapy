@@ -141,7 +141,7 @@ def test_map_fit(sky_model):
     assert_allclose(npred, 2455.230889, rtol=1e-3)
     assert_allclose(result.total_stat, 5424.791272, rtol=1e-3)
 
-    pars = dataset.parameters
+    pars = fit.datasets.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars.error("lon_0"), 0.004177, rtol=1e-2)
 
@@ -192,7 +192,7 @@ def test_map_fit_one_energy_bin(sky_model):
     assert_allclose(npred, 87.11356, rtol=1e-3)
     assert_allclose(result.total_stat, 696.74531, rtol=1e-3)
 
-    pars = dataset.parameters
+    pars = fit.datasets.parameters
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
     assert_allclose(pars.error("lon_0"), 0.021715, rtol=1e-2)

@@ -1117,11 +1117,21 @@ class FluxPointsDataset:
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self, parameters):
-        """Total likelihood given the current model parameters"""
-        # update parameters
-        if self.mask:
+    def likelihood(self, parameters, mask=None):
+        """Total likelihood given the current model parameters.
+
+        Parameters
+        ----------
+        mask : `~numpy.ndarray`
+            Mask to be combined with the dataset mask.
+        """
+        if self.mask is None and mask is None:
+            stat = self.likelihood_per_bin()
+        elif self.mask is None:
+            stat = self.likelihood_per_bin()[mask]
+        elif mask is None:
             stat = self.likelihood_per_bin()[self.mask]
         else:
-            stat = self.likelihood_per_bin()
+            stat = self.likelihood_per_bin()[mask & self.mask]
         return np.nansum(stat, dtype=np.float64)
+
