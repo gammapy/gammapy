@@ -130,7 +130,6 @@ class Fit:
         covariance_result = self.covariance(**covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
-        optimize_result._model = covariance_result.model
         optimize_result._success = optimize_result.success and covariance_result.success
         optimize_result._nfev += covariance_result.nfev
 

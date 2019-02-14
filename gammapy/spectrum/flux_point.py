@@ -928,7 +928,7 @@ class FluxPointEstimator:
             Dict with symmetric error for the flux point norm.
         """
         result = self.fit.covariance()
-        norm_err = result.model.parameters.error("norm")
+        norm_err = result.parameters.error("norm")
         return {"norm_err": norm_err}
 
     def estimate_norm_ul(self):
@@ -993,7 +993,7 @@ class FluxPointEstimator:
         result = self.fit.optimize()
 
         if result.success:
-            norm = result.model.parameters["norm"].value
+            norm = result.parameters["norm"].value
             self.model.parameters["norm"].value = norm
         else:
             emin, emax = self.fit.true_fit_range[0]

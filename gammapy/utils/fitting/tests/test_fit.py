@@ -41,7 +41,6 @@ def test_run(backend):
     pars = result.parameters
 
     assert result.success is True
-    assert fit._model is result.model
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
@@ -64,7 +63,6 @@ def test_optimize(backend):
     result = fit.optimize(backend=backend)
     pars = dataset.parameters
 
-    assert fit._model is result.model
     assert result.success is True
     assert_allclose(result.total_stat, 0)
 
@@ -80,7 +78,8 @@ def test_optimize(backend):
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     fit.optimize(backend=backend)
     result = fit.confidence("x")
 
@@ -89,11 +88,12 @@ def test_confidence(backend):
     assert_allclose(result["errn"], 1)
 
     # Check that original value state wasn't changed
-    assert_allclose(fit._model.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["x"].value, 2)
 
 
 def test_likelihood_profile():
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     fit.run()
     result = fit.likelihood_profile("x", nvalues=3)
 
@@ -101,11 +101,12 @@ def test_likelihood_profile():
     assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
 
     # Check that original value state wasn't changed
-    assert_allclose(fit._model.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["x"].value, 2)
 
 
 def test_minos_contour():
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     fit.optimize(backend="minuit")
     result = fit.minos_contour("x", "y")
 
@@ -121,4 +122,4 @@ def test_minos_contour():
     assert_allclose(y[-1], 300.866004, rtol=1e-5)
 
     # Check that original value state wasn't changed
-    assert_allclose(fit._model.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["x"].value, 2)
