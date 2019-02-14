@@ -38,7 +38,7 @@ def test_run(backend):
     result = fit.run(
         optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
     )
-    pars = fit.datasets.parameters
+    pars = result.parameters
 
     assert result.success is True
     assert fit._model is result.model
