@@ -33,7 +33,7 @@ class Datasets:
     @lazyproperty
     def types(self):
         """Types of the contained dataets"""
-        return [type(dataset).__name__ for dataset in self.dataets]
+        return [type(dataset).__name__ for dataset in self.datasets]
 
     @lazyproperty
     def is_all_same_type(self):
