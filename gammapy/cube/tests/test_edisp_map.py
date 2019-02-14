@@ -8,6 +8,7 @@ from ...irf import EnergyDispersion2D, EffectiveAreaTable2D
 from ...maps import MapAxis, WcsGeom
 from ...cube import EDispMap, make_edisp_map, make_map_exposure_true_energy
 
+
 def fake_aeff2d(area=1e6 * u.m ** 2):
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
     energy = np.logspace(-1, 1, 5) * u.TeV
@@ -24,14 +25,21 @@ def fake_aeff2d(area=1e6 * u.m ** 2):
         data=aeff_values,
     )
 
+
 def make_edisp_map_test():
 
-    etrue = [0.2, 0.7, 1.5, 2.0, 10.0]*u.TeV
+    etrue = [0.2, 0.7, 1.5, 2.0, 10.0] * u.TeV
     migra = np.linspace(0.0, 3.0, 51)
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
 
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy", node_type="edges", interp="log")
+    energy_axis = MapAxis(
+        nodes=[0.2, 0.7, 1.5, 2.0, 10.0],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="log",
+    )
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
 
     edisp2d = EnergyDispersion2D.from_gauss(etrue, migra, 0.0, 0.2, offsets)
@@ -49,9 +57,16 @@ def make_edisp_map_test():
 
     return make_edisp_map(edisp2d, pointing, geom, 3 * u.deg, exposure_map)
 
+
 def test_make_edisp_map():
 
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy", node_type="edges", interp="log")
+    energy_axis = MapAxis(
+        nodes=[0.2, 0.7, 1.5, 2.0, 10.0],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="log",
+    )
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
 
     edmap = make_edisp_map_test()
@@ -70,7 +85,9 @@ def test_edisp_map_to_from_hdulist():
     assert "EXPMAP" in hdulist
     assert "BANDSEXP" in hdulist
 
-    new_edmap = EDispMap.from_hdulist(hdulist, edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP")
+    new_edmap = EDispMap.from_hdulist(
+        hdulist, edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP"
+    )
     assert_allclose(edmap.edisp_map.data, new_edmap.edisp_map.data)
     assert new_edmap.geom == edmap.geom
     assert new_edmap.exposure_map.geom == edmap.exposure_map.geom
@@ -86,14 +103,24 @@ def test_edisp_map_read_write(tmpdir):
 
     assert_allclose(edmap.edisp_map.quantity, new_edmap.edisp_map.quantity)
 
+
 def test_edisp_map_to_energydispersion():
     edmap = make_edisp_map_test()
 
     position = SkyCoord(0, 0, unit="deg")
-    e_reco = np.logspace(-0.3,0.2,200)*u.TeV
+    e_reco = np.logspace(-0.3, 0.2, 200) * u.TeV
 
     edisp = edmap.get_energy_dispersion(position, e_reco)
     # Note that the bias and resolution are rather poorly evaluated on an EnergyDisperion object
-    assert_allclose(edisp.get_bias(e_true=1.0*u.TeV), 0.0, atol=3e-2)
-    assert_allclose(edisp.get_resolution(e_true=1.0*u.TeV), 0.2, atol=3e-2)
+    assert_allclose(edisp.get_bias(e_true=1.0 * u.TeV), 0.0, atol=3e-2)
+    assert_allclose(edisp.get_resolution(e_true=1.0 * u.TeV), 0.2, atol=3e-2)
 
+
+def test_edisp_map_stacking():
+    edmap1 = make_edisp_map_test()
+    edmap2 = make_edisp_map_test()
+    edmap2.exposure_map.quantity *= 2
+
+    edmap_stack = edmap1.stack(edmap2)
+    assert_allclose(edmap_stack.data, edmap1.data)
+    assert_allclose(edmap_stack.exposure_map.data, edmap1.exposure_map.data * 3)

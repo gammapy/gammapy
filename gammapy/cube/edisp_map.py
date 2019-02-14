@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
 import astropy.io.fits as fits
@@ -8,7 +7,8 @@ from ..maps import Map
 
 __all__ = ["make_edisp_map", "EDispMap"]
 
-def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map = None):
+
+def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     """Make a edisp map for a single observation
 
     Expected axes : migra and true energy in this specific order
@@ -45,9 +45,11 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map = None):
     valid = np.where(separations < max_offset)
 
     # Compute PSF values
-    edisp_values = edisp.data.evaluate(offset=separations[valid],
-                                       e_true=energy[:,np.newaxis],
-                                       migra=migra[:,np.newaxis, np.newaxis])
+    edisp_values = edisp.data.evaluate(
+        offset=separations[valid],
+        e_true=energy[:, np.newaxis],
+        migra=migra[:, np.newaxis, np.newaxis],
+    )
 
     # Re-order axes to be consistent with expected geometry
     edisp_values = np.transpose(edisp_values, axes=(1, 0, 2))
@@ -119,10 +121,11 @@ class EDispMap(object):
             # First adapt geometry, keep only energy axis
             expected_geom = edisp_map.geom.to_image().to_cube([edisp_map.geom.axes[1]])
             if exposure_map.geom != expected_geom:
-                raise ValueError("EDispMap and exposure_map have inconsistent geometries")
+                raise ValueError(
+                    "EDispMap and exposure_map have inconsistent geometries"
+                )
 
         self._exposure_map = exposure_map
-
 
     @property
     def edisp_map(self):
@@ -224,7 +227,6 @@ class EDispMap(object):
         hdulist = self.to_hdulist(**kwargs)
         hdulist.writeto(filename, overwrite=overwrite)
 
-
     def get_energy_dispersion(self, position, e_reco, migra_step=5e-3):
         """ Returns EnergyDispersion at a given position
 
@@ -255,7 +257,7 @@ class EDispMap(object):
         mrec_min = self.geom.axes[0].edges[0]
         mrec_max = self.geom.axes[0].edges[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
-        pix_migra = (mig_array - mrec_min)/mrec_max * self.geom.axes[0].nbin
+        pix_migra = (mig_array - mrec_min) / mrec_max * self.geom.axes[0].nbin
 
         # Convert position to pixels
         pix_lon, pix_lat = self.edisp_map.geom.to_image().coord_to_pix(position)
@@ -264,7 +266,8 @@ class EDispMap(object):
         pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
         edisp_values = np.squeeze(
-            self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)# * migra_step
+            self.edisp_map.interp_by_pix(pix)
+            * u.Unit(self.edisp_map.unit)  # * migra_step
         )
         e_trues = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
         data = []
@@ -277,7 +280,9 @@ class EDispMap(object):
             migra_e_reco = e_reco / e_true
 
             # Compute normalized cumulative sum to prepare integration
-            tmp = np.nan_to_num(np.cumsum(edisp_values[:,i]) / np.sum(edisp_values[:,i]))
+            tmp = np.nan_to_num(
+                np.cumsum(edisp_values[:, i]) / np.sum(edisp_values[:, i])
+            )
 
             # Determine positions (bin indices) of e_reco bounds in migration array
             pos_mig = np.digitize(migra_e_reco, mig_array) - 1
@@ -292,7 +297,9 @@ class EDispMap(object):
 
         data = np.asarray(data)
         # EnergyDispersion uses edges of true energy bins
-        e_true_edges = self.edisp_map.geom.axes[1].edges * self.edisp_map.geom.axes[1].unit
+        e_true_edges = (
+            self.edisp_map.geom.axes[1].edges * self.edisp_map.geom.axes[1].unit
+        )
         e_lo, e_hi = e_true_edges[:-1], e_true_edges[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
@@ -329,5 +336,7 @@ class EDispMap(object):
         other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
         stacked_edisp_quantity += other.quantity * other_exposure
         stacked_edisp_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
-        stacked_edisp = Map.from_geom(self.geom, data=stacked_edisp_quantity.to("").value, unit="")
+        stacked_edisp = Map.from_geom(
+            self.geom, data=stacked_edisp_quantity.to("").value, unit=""
+        )
         return EDispMap(stacked_edisp, total_exposure)
