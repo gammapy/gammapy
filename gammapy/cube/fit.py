@@ -54,8 +54,8 @@ class MapDataset:
         self.background_model = background_model
         if background_model:
             self.parameters = Parameters(
-                self.model.parameters.parameters
-                + self.background_model.parameters.parameters
+                self.model.parameters.parameters +
+                self.background_model.parameters.parameters
             )
         else:
             self.parameters = Parameters(self.model.parameters.parameters)

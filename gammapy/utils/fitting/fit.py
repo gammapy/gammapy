@@ -82,7 +82,6 @@ class Fit:
 
         # TODO: remove once datasets are fully supported
         self.total_stat = datasets.likelihood
-        self._model = datasets.model
 
     @abc.abstractmethod
     def total_stat(self, parameters):
@@ -188,7 +187,6 @@ class Fit:
         parameters.set_parameter_factors(factors)
 
         return OptimizeResult(
-            model=self._model,
             parameters=parameters,
             total_stat=self.total_stat(self._parameters),
             backend=backend,
@@ -229,7 +227,6 @@ class Fit:
 
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(
-            model=self._model,
             parameters=parameters,
             success=info["success"],
             nfev=0
@@ -416,16 +413,10 @@ class Fit:
 class CovarianceResult:
     """Covariance result object."""
 
-    def __init__(self, model, parameters, success, nfev):
-        self._model = model
+    def __init__(self, parameters, success, nfev):
         self._parameters = parameters
         self._success = success
         self._nfev = nfev
-
-    @property
-    def model(self):
-        """Best fit model."""
-        return self._model
 
     @property
     def parameters(self):
@@ -445,8 +436,7 @@ class CovarianceResult:
 
 class OptimizeResult:
     """Optmize result object."""
-    def __init__(self, model, parameters, success, nfev, total_stat, message, backend, method):
-        self._model = model
+    def __init__(self, parameters, success, nfev, total_stat, message, backend, method):
         self._parameters = parameters
         self._success = success
         self._nfev = nfev
@@ -454,11 +444,6 @@ class OptimizeResult:
         self._message = message
         self._backend = backend
         self._method = method
-
-    @property
-    def model(self):
-        """Best fit model."""
-        return self._model
 
     @property
     def parameters(self):

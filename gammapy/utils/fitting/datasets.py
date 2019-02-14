@@ -30,16 +30,15 @@ class Datasets:
             parameters += dataset.parameters.parameters
         self.parameters = Parameters(parameters)
 
-    @property
-    def model(self):
-        return self.datasets[0].model
+    @lazyproperty
+    def types(self):
+        """Types of the contained dataets"""
+        return [type(dataset).__name__ for dataset in self.dataets]
 
     @lazyproperty
     def is_all_same_type(self):
         """Whether all contained datasets are of the same type"""
-        dataset_type = type(self.datasets[0])
-        is_dataset_type = [isinstance(_, dataset_type) for _ in self.datasets]
-        return np.all(is_dataset_type)
+        return np.all(np.array(self.types) == self.types[0])
 
     def likelihood(self, parameters=None):
         """Compute joint likelihood"""
