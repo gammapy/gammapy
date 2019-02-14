@@ -166,7 +166,7 @@ class SkyShell(SkySpatialModel):
                     0 & \text{for } \theta > r_{out}
                 \end{cases}
 
-    where :math:`\theta` is the sky separation and :math:`r_{\textout} = r_{\text{in}}` + width
+    where :math:`\theta` is the sky separation and :math:`r_{\text{out}} = r_{\text{in}}` + width
 
     Note that the normalization is a small angle approximation,
     although that approximation is still very good even for 10 deg radius shells.
