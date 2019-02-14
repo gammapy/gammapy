@@ -201,6 +201,8 @@ class SkyDisk(SkySpatialModel):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
+
+        # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
         norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
         return u.Quantity(norm.value * (sep <= r_0), "sr-1", copy=False)
 
