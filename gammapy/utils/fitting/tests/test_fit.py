@@ -23,6 +23,7 @@ class MyDataset:
     def __init__(self):
         self.model = MyModel()
         self.parameters = self.model.parameters
+        self.data_shape = (1,)
 
     def likelihood(self, parameters, mask=None):
         # self._model.parameters = parameters

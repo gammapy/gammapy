@@ -1082,6 +1082,10 @@ class FluxPointsDataset:
                 " either 'chi2' or 'chi2assym'"
             )
 
+    def data_shape(self):
+        """Shape of the flux points data"""
+        return self.data.e_ref.shape
+
     @staticmethod
     def _likelihood_chi2(data, model, sigma):
         return ((data - model) / sigma).to_value("") ** 2

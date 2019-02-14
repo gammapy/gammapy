@@ -64,6 +64,11 @@ class MapDataset:
             model=self.model, exposure=exposure, psf=self.psf, edisp=self.edisp
         )
 
+    @property
+    def data_shape(self):
+        """Shape of the counts data"""
+        return self.counts.data.shape
+
     def npred(self):
         """Returns npred map (model + background)"""
         model_npred = self.evaluator.compute_npred()
