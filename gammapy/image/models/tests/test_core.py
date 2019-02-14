@@ -7,6 +7,7 @@ from ....utils.testing import requires_data
 from ..core import (
     SkyPointSource,
     SkyGaussian,
+    PlaneGaussian,
     SkyDisk,
     SkyShell,
     SkyDiffuseConstant,
@@ -30,6 +31,16 @@ def test_sky_gaussian():
     assert val.unit == "deg-2"
     assert model.parameters["sigma"].min == 0
     assert_allclose(val.to_value("sr-1"), [316.8970202, 118.6505303])
+
+
+def test_plane_gaussian():
+    model = PlaneGaussian(lon_0="1 deg", lat_0="45 deg", sigma="1 deg")
+    lon = [1, 359] * u.deg
+    lat = 46 * u.deg
+    val = model(lon, lat)
+    assert val.unit == "deg-2"
+    assert model.parameters["sigma"].min == 0
+    assert_allclose(val.to_value("sr-1"), [316.8970202, 42.88734798])
 
 
 def test_sky_disk():

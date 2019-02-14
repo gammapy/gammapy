@@ -11,6 +11,7 @@ __all__ = [
     "SkySpatialModel",
     "SkyPointSource",
     "SkyGaussian",
+    "PlaneGaussian",
     "SkyDisk",
     "SkyShell",
     "SkyDiffuseConstant",
@@ -19,6 +20,16 @@ __all__ = [
 
 
 log = logging.getLogger(__name__)
+
+
+def planar_separation(lon, lat, lon_0, lat_0):
+    """Computes the distance between two points on the plane, taking care of `Longitude` and `Latitude` wrapping."""
+    dlon1 = np.abs(lon - lon_0)
+    dlon2 = 360.0 * u.deg - dlon1
+    lon_sep = np.minimum(dlon1, dlon2)
+    lat_sep = np.abs(lat - lat_0)
+
+    return np.sqrt(lon_sep ** 2 + lat_sep ** 2)
 
 
 class SkySpatialModel(Model):
@@ -110,15 +121,58 @@ class SkyGaussian(SkySpatialModel):
         return norm * np.exp(exponent)
 
 
+class PlaneGaussian(SkySpatialModel):
+    r"""Two-dimensional symmetric Gaussian model, in cartesian approximation
+
+    .. math::
+
+        \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
+            \frac{\theta^2}{\sigma^2}\right)}\,\,,
+
+    where :math:`\theta` is the sky separation given by the simple Pythagoras rule (and taking care of the `Longitude` and `Latitude` wrapping):
+
+    .. math::
+
+        \theta=\sqrt{(\text{lon}-\text{lon}_0)^2+(\text{lat}-\text{lat}_0)^2}\,\,.
+
+    Parameters
+    ----------
+    lon_0 : `~astropy.coordinates.Longitude`
+        :math:`\text{lon}_0`
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`\text{lat}_0`
+    sigma : `~astropy.coordinates.Angle`
+        :math:`\sigma`
+    """
+
+    def __init__(self, lon_0, lat_0, sigma):
+        self.parameters = Parameters(
+            [
+                Parameter("lon_0", Longitude(lon_0)),
+                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("sigma", Angle(sigma), min=0),
+            ]
+        )
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, sigma):
+        """Evaluate the model (static function)."""
+
+        sep = planar_separation(lon, lat, lon_0, lat_0)
+        norm = 1 / (2 * np.pi * sigma ** 2)
+        exponent = -0.5 * (sep / sigma) ** 2
+        return norm * np.exp(exponent)
+
+
 class SkyDisk(SkySpatialModel):
     r"""Constant radial disk model.
 
     .. math::
 
-        \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r}) } \cdot
+        \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r_0}) } \cdot
                 \begin{cases}
                     1 & \text{for } \theta \leq r_0 \\
-                    0 & \text{for } \theta < r_0
+                    0 & \text{for } \theta > r_0
                 \end{cases}
 
     where :math:`\theta` is the sky separation
@@ -147,7 +201,6 @@ class SkyDisk(SkySpatialModel):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
-        # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
         norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
         return u.Quantity(norm.value * (sep <= r_0), "sr-1", copy=False)
 
@@ -166,7 +219,7 @@ class SkyShell(SkySpatialModel):
                     0 & \text{for } \theta > r_{out}
                 \end{cases}
 
-    where :math:`\theta` is the sky separation and :math:`r_out = r_in` + width
+    where :math:`\theta` is the sky separation and :math:`r_{\text{out}} = r_{\text{in}}` + width.
 
     Note that the normalization is a small angle approximation,
     although that approximation is still very good even for 10 deg radius shells.
