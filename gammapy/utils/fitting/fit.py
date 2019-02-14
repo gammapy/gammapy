@@ -187,8 +187,9 @@ class Fit:
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
 
-        return FitResult(
+        return OptimizeResult(
             model=self._model,
+            parameters=parameters,
             total_stat=self.total_stat(self._parameters),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -227,7 +228,12 @@ class Fit:
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(model=self._model, success=info["success"], nfev=0)
+        return CovarianceResult(
+            model=self._model,
+            parameters=parameters,
+            success=info["success"],
+            nfev=0
+        )
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
@@ -410,8 +416,9 @@ class Fit:
 class CovarianceResult:
     """Covariance result object."""
 
-    def __init__(self, model, success, nfev):
+    def __init__(self, model, parameters, success, nfev):
         self._model = model
+        self._parameters = parameters
         self._success = success
         self._nfev = nfev
 
@@ -419,6 +426,11 @@ class CovarianceResult:
     def model(self):
         """Best fit model."""
         return self._model
+
+    @property
+    def parameters(self):
+        """Best fit parameters and convariance."""
+        return self._parameters
 
     @property
     def success(self):
@@ -431,11 +443,11 @@ class CovarianceResult:
         return self._nfev
 
 
-class FitResult:
-    """Fit result object."""
-
-    def __init__(self, model, success, nfev, total_stat, message, backend, method):
+class OptimizeResult:
+    """Optmize result object."""
+    def __init__(self, model, parameters, success, nfev, total_stat, message, backend, method):
         self._model = model
+        self._parameters = parameters
         self._success = success
         self._nfev = nfev
         self._total_stat = total_stat
@@ -447,6 +459,11 @@ class FitResult:
     def model(self):
         """Best fit model."""
         return self._model
+
+    @property
+    def parameters(self):
+        """Best fit model."""
+        return self._parameters
 
     @property
     def success(self):
