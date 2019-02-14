@@ -11,6 +11,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
 from ..utils.time import time_ref_from_dict
 from .filters import ObservationFilter
+from .pointing import FixedPointingInfo
 
 __all__ = ["DataStoreObservation", "Observations"]
 
@@ -206,6 +207,11 @@ class DataStoreObservation:
     def pointing_zen(self):
         """Pointing zenith angle sky (`~astropy.units.Quantity`)."""
         return Quantity(self.obs_info["ZEN_PNT"], unit="deg")
+
+    @property
+    def fixed_pointing_info(self):
+        """Fixed pointing info for this observation (`FixedPointingInfo`)."""
+        return FixedPointingInfo(self.events.table.meta)
 
     @property
     def target_radec(self):
