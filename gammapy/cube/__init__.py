@@ -5,5 +5,6 @@ from .exposure import *
 from .background import *
 from .psf_kernel import *
 from .psf_map import *
+from .edisp_map import *
 from .make import *
 from .fit import *

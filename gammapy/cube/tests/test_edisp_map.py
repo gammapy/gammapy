@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -31,11 +30,11 @@ def make_edisp_map_test():
     migra = np.linspace(0.0, 3.0, 51)
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
 
-    edisp2d = EnergyDispersion2D.from_gauss(etrue, migra, 0.0, 0.1, offsets)
-
     pointing = SkyCoord(0, 0, unit="deg")
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy", node_type="edges", interp="log")
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
+
+    edisp2d = EnergyDispersion2D.from_gauss(etrue, migra, 0.0, 0.2, offsets)
 
     geom = WcsGeom.create(
         skydir=pointing, binsz=0.2, width=5, axes=[migra_axis, energy_axis]
@@ -52,7 +51,7 @@ def make_edisp_map_test():
 
 def test_make_edisp_map():
 
-    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy")
+    energy_axis = MapAxis(nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy", node_type="edges", interp="log")
     migra_axis = MapAxis(nodes=np.linspace(0.0, 3.0, 51), unit="", name="migra")
 
     edmap = make_edisp_map_test()
@@ -87,7 +86,14 @@ def test_edisp_map_read_write(tmpdir):
 
     assert_allclose(edmap.edisp_map.quantity, new_edmap.edisp_map.quantity)
 
-#def test_edisp_map(tmpdir):
-#    migra = np.linspace(0.,3.0,100.)
-#    edisp2d = EnergyDispersion2D.from_gauss(e_true, migra, 0.0, 0.1, offset)
+def test_edisp_map_to_energydispersion():
+    edmap = make_edisp_map_test()
+
+    position = SkyCoord(0, 0, unit="deg")
+    e_reco = np.logspace(-0.3,0.2,200)*u.TeV
+
+    edisp = edmap.get_energy_dispersion(position, e_reco)
+    # Note that the bias and resolution are rather poorly evaluated on an EnergyDisperion object
+    assert_allclose(edisp.get_bias(e_true=1.0*u.TeV), 0.0, atol=3e-2)
+    assert_allclose(edisp.get_resolution(e_true=1.0*u.TeV), 0.2, atol=3e-2)
 

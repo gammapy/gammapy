@@ -242,6 +242,7 @@ class EDispMap(object):
         migra_step : float
             Integration step in migration
         """
+        # TODO: reduce code duplication with EnergyDispersion2D.get_response
         if position.size != 1:
             raise ValueError(
                 "EnergyDispersion can be extracted at one single position only."
@@ -252,26 +253,23 @@ class EDispMap(object):
 
         # Define a vector of migration with mig_step step
         mrec_min = self.geom.axes[0].edges[0]
-        mrec_max = self.geom.axis[0].edges[-1]
+        mrec_max = self.geom.axes[0].edges[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
-        pix_migra = (mig_array - mrec_min)/mrec_max * self.geom.axis[0].nbin
+        pix_migra = (mig_array - mrec_min)/mrec_max * self.geom.axes[0].nbin
 
         # Convert position to pixels
         pix_lon, pix_lat = self.edisp_map.geom.to_image().coord_to_pix(position)
 
         # Build the pixels tuple
         pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
-
         # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
         edisp_values = np.squeeze(
-            self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)
+            self.edisp_map.interp_by_pix(pix) * u.Unit(self.edisp_map.unit)# * migra_step
         )
-
         e_trues = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
-
         data = []
 
-        for e_true in e_trues:
+        for i, e_true in enumerate(e_trues):
             # We now perform integration over migra
             # The code is adapted from `~gammapy.EnergyDispersion2D.get_response`
 
@@ -279,7 +277,7 @@ class EDispMap(object):
             migra_e_reco = e_reco / e_true
 
             # Compute normalized cumulative sum to prepare integration
-            tmp = np.nan_to_num(np.cumsum(edisp_values))
+            tmp = np.nan_to_num(np.cumsum(edisp_values[:,i]) / np.sum(edisp_values[:,i]))
 
             # Determine positions (bin indices) of e_reco bounds in migration array
             pos_mig = np.digitize(migra_e_reco, mig_array) - 1
@@ -290,10 +288,12 @@ class EDispMap(object):
             # to get integral over reco energy bin
             integral = np.diff(tmp[pos_mig])
 
-            data.append(vec)
+            data.append(integral)
 
         data = np.asarray(data)
-        e_lo, e_hi = e_trues[:-1], e_trues[1:]
+        # EnergyDispersion uses edges of true energy bins
+        e_true_edges = self.edisp_map.geom.axes[1].edges * self.edisp_map.geom.axes[1].unit
+        e_lo, e_hi = e_true_edges[:-1], e_true_edges[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
         return EnergyDispersion(
