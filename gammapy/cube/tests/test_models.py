@@ -88,7 +88,7 @@ def sky_models(sky_model):
 
 @pytest.fixture(scope="session")
 def compound_model(sky_model):
-    return sky_model + sky_model
+    return CompoundSkyModel(sky_model, sky_model, np.add)
 
 
 def test_background_model(background):
@@ -104,15 +104,6 @@ def test_background_model(background):
 
 
 class TestSkyModels:
-    @staticmethod
-    def test_to_compound_model(sky_models):
-        model = sky_models.to_compound_model()
-        assert isinstance(model, CompoundSkyModel)
-        pars = model.parameters.parameters
-        assert len(pars) == 12
-        assert pars[0].name == "lon_0"
-        assert pars[-1].name == "reference"
-
     @staticmethod
     def test_parameters(sky_models):
         parnames = ["lon_0", "lat_0", "sigma", "index", "amplitude", "reference"] * 2

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
-import operator
 import numpy as np
 from astropy.utils.decorators import lazyproperty
 import astropy.units as u
@@ -12,7 +11,6 @@ __all__ = [
     "SkyModelBase",
     "SkyModels",
     "SkyModel",
-    "CompoundSkyModel",
     "SkyDiffuseCube",
     "BackgroundModel",
 ]
@@ -20,9 +18,15 @@ __all__ = [
 
 class SkyModelBase(Model):
     """Sky model base class"""
-
     def __add__(self, skymodel):
-        return CompoundSkyModel(self, skymodel, operator.add)
+        skymodels = []
+        if isinstance(self, SkyModels):
+            skymodels += self.skymodels
+        elif isinstance(self, SkyModel):
+            skymodels += [self, ]
+        else:
+            raise NotImplementedError
+        return SkyModels(skymodels)
 
     def __radd__(self, model):
         return self.__add__(model)
@@ -31,7 +35,7 @@ class SkyModelBase(Model):
         return self.evaluate(lon, lat, energy)
 
 
-class SkyModels(Model):
+class SkyModels(SkyModelBase):
     """Collection of `~gammapy.cube.models.SkyModel`
 
     Parameters
@@ -65,14 +69,6 @@ class SkyModels(Model):
         Currently no way to distinguish spectral and spatial.
         """
         return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        idx = 0
-        for skymodel in self.skymodels:
-            n_par = len(skymodel.parameters.parameters)
-            skymodel.parameters.parameters = parameters.parameters[idx : idx + n_par]
-            idx += n_par
 
     @classmethod
     def from_xml(cls, xml):
@@ -108,15 +104,26 @@ class SkyModels(Model):
         with filename.open("w") as output:
             output.write(xml)
 
-    def to_compound_model(self):
-        """Return `~gammapy.cube.models.CompoundSkyModel`"""
-        return np.sum([m for m in self.skymodels])
-
     def evaluate(self, lon, lat, energy):
         out = self.skymodels[0].evaluate(lon, lat, energy)
         for skymodel in self.skymodels[1:]:
             out += skymodel.evaluate(lon, lat, energy)
         return out
+
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n\n"
+
+        for idx, skymodel in enumerate(self.skymodels):
+            str_ += "Component: {idx}\n\n\t".format(idx=idx)
+            table = skymodel.parameters.to_table()
+            str_ += "\n\t".join(table.pformat())
+            str_ += "\n\n"
+
+        if self.parameters.covariance is not None:
+            str_ += "\n\nCovariance: \n\n\t"
+            covariance = self.parameters.covariance_to_table()
+            str_ += "\n\t".join(covariance.pformat())
+        return str_
 
 
 class SkyModel(SkyModelBase):
@@ -137,7 +144,6 @@ class SkyModel(SkyModelBase):
     name : str
         Model identifier
     """
-
     def __init__(self, spatial_model, spectral_model, name="SkyModel"):
         self.name = name
         self._spatial_model = spatial_model
@@ -149,36 +155,17 @@ class SkyModel(SkyModelBase):
     @property
     def spatial_model(self):
         """`~gammapy.image.models.SkySpatialModel`"""
-        # propagate sub-covariance
-        if self.parameters.covariance is not None:
-            idx = len(self._spatial_model.parameters.parameters)
-            self._spatial_model.parameters.covariance = self.parameters.covariance[
-                :idx, :idx
-            ]
         return self._spatial_model
 
     @property
     def spectral_model(self):
         """`~gammapy.spectrum.models.SpectralModel`"""
-        # propagate sub-covariance
-        if self.parameters.covariance is not None:
-            idx = len(self._spatial_model.parameters.parameters)
-            self._spectral_model.parameters.covariance = self.parameters.covariance[
-                idx:, idx:
-            ]
         return self._spectral_model
 
     @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.Parameters`)"""
         return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        self._parameters = parameters
-        idx = len(self.spatial_model.parameters.parameters)
-        self._spatial_model.parameters.parameters = parameters.parameters[:idx]
-        self._spectral_model.parameters.parameters = parameters.parameters[idx:]
 
     def __repr__(self):
         fmt = "{}(spatial_model={!r}, spectral_model={!r})"
@@ -208,10 +195,7 @@ class SkyModel(SkyModelBase):
         """
         val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
         val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
-        val = val_spatial * val_spectral
-        # TODO: shall remove hard coded return units? If really needed users can
-        # always do this themselves. For fitting this also adds a performance penalty...
-        return val.to("cm-2 s-1 TeV-1 deg-2")
+        return val_spatial * val_spectral
 
 
 class CompoundSkyModel(SkyModelBase):
@@ -225,7 +209,6 @@ class CompoundSkyModel(SkyModelBase):
     operator : callable
         Binary operator to combine the models
     """
-
     def __init__(self, model1, model2, operator):
         self.model1 = model1
         self.model2 = model2
