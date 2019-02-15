@@ -15,9 +15,8 @@ PIG 9 - Event simulator
 Abstract
 ========
 
-- create an event simulator 
-- required by the CTA Science Tools
-- necessary to simulate the DC2
+We aim at creating an event simulator, which sample random events from an input map with spatial morphology and spectral distribution. The proposed simulator takes into account PSF and energy dispersion corrections, possibly includes the simulation of background events, and it gives an output astropy table. We developed our simulator on the basis of the "ASTRIsim" simulator, written in IDL.
+We note that it is important to build an event simulator because this is required by the CTA Science Tools. In addition, it will be used to simulate the next CTA Data Challenge (DC2).
 
 
 Proposal
@@ -31,6 +30,10 @@ Proposal
 - the PSF is applied to the source counts
 - source and background events are stacked together 
 - write them all into an event list file (.fits)
+
+We propose to create an event simulator based on Gammapy, which is needed for the Science Tools, and it would allow a valid alternative to ctobssim. 
+We designed our simulator exploiting the already available ASTRI simulator (ASTRIsim), written in IDL. ASTRIsim starts from an input source flux cube (possibly associated to a spatial map), gives a set of simulated events (with associated positions, energies and times). Furthermore, there is possibility to provide an input light-curve to take into account source time variability.
+
 
 We would like to improve the class presented in general_random_array.py issue. We propose to add the sorting of the cumulative distribution and then we also want to provide an interpolation along the bins. This class has to be extended sampling along a given axis and not along all the array. 
 
@@ -132,7 +135,7 @@ The 'sample()' method returns an astropy table containing source+bkg events.
 
     pdf = Map()
 
-    table = psf.sample(n_samples, ramdoms_state=0)
+    table = pdf.sample(n_samples, ramdoms_state=0)
 
     sampler = MapEventSampler(pdf)
 
