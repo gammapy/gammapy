@@ -150,7 +150,7 @@ def test_make_map_background_irf_constant(bkg_3d_constant, fixed_pointing_info):
         bkg=bkg_3d_constant,
         geom=WcsGeom.create(
             npix=(3, 3),
-            binsz=2,
+            binsz=4,
             axes=[axis],
             skydir=fixed_pointing_info.radec
         ),
@@ -170,10 +170,10 @@ def test_make_map_background_irf_sym(bkg_3d_symmetric, fixed_pointing_info):
     m = make_map_background_irf(
         pointing=fixed_pointing_info,
         ontime="42 s",
-        bkg=bkg_3d_constant,
+        bkg=bkg_3d_symmetric,
         geom=WcsGeom.create(
             npix=(3, 3),
-            binsz=2,
+            binsz=4,
             axes=[axis],
             skydir=fixed_pointing_info.radec
         ),
@@ -193,7 +193,7 @@ def test_make_map_background_irf_asym(bkg_3d_asymmetric, fixed_pointing_info):
         bkg=bkg_3d_asymmetric,
         geom=WcsGeom.create(
             npix=(3, 3),
-            binsz=2,
+            binsz=4,
             axes=[axis],
             skydir=fixed_pointing_info.radec
         ),
