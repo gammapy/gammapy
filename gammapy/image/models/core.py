@@ -73,21 +73,36 @@ class SkyPointSource(SkySpatialModel):
 
 
 class SkyGaussian(SkySpatialModel):
-    r"""Two-dimensional symmetric Gaussian model.
+    r"""Two-dimensional symmetric Gaussian model
 
     .. math::
 
-        \phi(lon, lat) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
+        \phi(\text{lon}, \text{lat}) = N \times \text{exp}\left\{-\frac{1}{2}
+            \frac{1-\text{cos}\theta}{1-\text{cos}\sigma}\right\}\,,
+
+    where :math:`\theta` is the angular separation between the center of the Gaussian and the evaluation point.
+    This angle is calculated on the celestial sphere using the function `angular.separation` defined in `astropy.coordinates.angle_utilities`. The Gaussian is normalized to 1 on
+    the sphere:
+
+    .. math::
+
+        N = \frac{1}{4\pi a\left[1-\text{exp}(-1/a)\right]}\,,\,\,\,\,
+        a = 1-\text{cos}\sigma\,.
+
+    In the limit of small :math:`\theta` and :math:`\sigma`, this definition reduces to the usual form:
+
+    .. math::
+
+        \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
             \frac{\theta^2}{\sigma^2}\right)}
 
-    where :math:`\theta` is the sky separation
 
     Parameters
     ----------
     lon_0 : `~astropy.coordinates.Longitude`
-        :math:`lon_0`
+        :math:`\text{lon}_0`
     lat_0 : `~astropy.coordinates.Latitude`
-        :math:`lat_0`
+        :math:`\text{lat}_0`
     sigma : `~astropy.coordinates.Angle`
         :math:`\sigma`
     """
@@ -105,9 +120,10 @@ class SkyGaussian(SkySpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, sigma):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
-        norm = 1 / (2 * np.pi * sigma ** 2)
-        exponent = -0.5 * (sep / sigma) ** 2
-        return norm * np.exp(exponent)
+        a = 1.0 - np.cos(sigma)
+        norm = (1 / (4 * np.pi * a * (1.0 - np.exp(-1.0 / a)))) * u.sr ** -1
+        exponent = -0.5 * ((1 - np.cos(sep)) / a)
+        return (norm * np.exp(exponent)).to("deg-2")
 
 
 class SkyDisk(SkySpatialModel):

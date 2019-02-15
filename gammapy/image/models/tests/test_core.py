@@ -23,13 +23,13 @@ def test_sky_point_source():
 
 
 def test_sky_gaussian():
-    model = SkyGaussian(lon_0="1 deg", lat_0="45 deg", sigma="1 deg")
-    lon = [1, 359] * u.deg
-    lat = 46 * u.deg
-    val = model(lon, lat)
-    assert val.unit == "deg-2"
+    model = SkyGaussian(lon_0="5 deg", lat_0="15 deg", sigma="1 deg")
     assert model.parameters["sigma"].min == 0
-    assert_allclose(val.to_value("sr-1"), [316.8970202, 118.6505303])
+    val_0 = model(5 * u.deg, 15 * u.deg)
+    val_sigma = model(5 * u.deg, 16 * u.deg)
+    assert val_0.unit == "deg-2"
+    ratio = val_0 / val_sigma
+    assert_allclose(ratio, np.exp(0.5))
 
 
 def test_sky_disk():
