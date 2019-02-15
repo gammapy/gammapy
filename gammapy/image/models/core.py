@@ -115,10 +115,10 @@ class SkyDisk(SkySpatialModel):
 
     .. math::
 
-        \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r}) } \cdot
+        \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r_0}) } \cdot
                 \begin{cases}
                     1 & \text{for } \theta \leq r_0 \\
-                    0 & \text{for } \theta < r_0
+                    0 & \text{for } \theta > r_0
                 \end{cases}
 
     where :math:`\theta` is the sky separation
@@ -166,7 +166,7 @@ class SkyShell(SkySpatialModel):
                     0 & \text{for } \theta > r_{out}
                 \end{cases}
 
-    where :math:`\theta` is the sky separation and :math:`r_out = r_in` + width
+    where :math:`\theta` is the sky separation and :math:`r_{\text{out}} = r_{\text{in}}` + width
 
     Note that the normalization is a small angle approximation,
     although that approximation is still very good even for 10 deg radius shells.
