@@ -44,7 +44,7 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     separations = pointing.separation(geom.to_image().get_coord().skycoord)
     valid = np.where(separations < max_offset)
 
-    # Compute PSF values
+    # Compute EDisp values
     edisp_values = edisp.data.evaluate(
         offset=separations[valid],
         e_true=energy[:, np.newaxis],
@@ -97,11 +97,11 @@ class EDispMap(object):
         # Create WcsGeom
         geom = WcsGeom.create(binsz=0.25*u.deg, width=10*u.deg, skydir=pointing, axes=[migra_axis, energy_axis])
 
-        # Extract EnergyDependentTablePSF from CTA 1DC IRF
+        # Extract EnergyDispersion2D from CTA 1DC IRF
         filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
         edisp2D = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 
-        # create the PSFMap for the specified pointing
+        # create the EDispMap for the specified pointing
         edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset)
 
         # Get an Energy Dispersion (1D) at any position in the image
@@ -147,7 +147,7 @@ class EDispMap(object):
 
     @property
     def exposure_map(self):
-        """the exposure map associated to the PSFMap."""
+        """the exposure map associated to the EDispMap."""
         return self._exposure_map
 
     @property
@@ -267,7 +267,7 @@ class EDispMap(object):
 
         # Build the pixels tuple
         pix = np.meshgrid(pix_lon, pix_lat, pix_migra, pix_ener)
-        # Interpolate in the PSF map. Squeeze to remove dimensions of length 1
+        # Interpolate in the EDisp map. Squeeze to remove dimensions of length 1
         edisp_values = np.squeeze(
             self.edisp_map.interp_by_pix(pix)
             * u.Unit(self.edisp_map.unit)  # * migra_step
