@@ -28,14 +28,54 @@ def bkg_3d():
 
 
 @pytest.fixture(scope="session")
-def bkg_3d_asymmetric():
-    """Example with simple values to test evaluate"""
+def bkg_3d_constant():
+    """Example with contant values"""
     energy = [0.1, 10, 1000] * u.TeV
     fov_lon = [0, 1, 2, 3] * u.deg
     fov_lat = [0, 1, 2, 3] * u.deg
 
     data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
-    data *= np.arange(1, 4).reshape(1, 3, 1)
+    return Background3D(
+        energy_lo=energy[:-1],
+        energy_hi=energy[1:],
+        fov_lon_lo=fov_lon[:-1],
+        fov_lon_hi=fov_lon[1:],
+        fov_lat_lo=fov_lat[:-1],
+        fov_lat_hi=fov_lat[1:],
+        data=data,
+    )
+
+
+@pytest.fixture(scope="session")
+def bkg_3d_symmetric():
+    """Example with contant values"""
+    energy = [0.1, 10, 1000] * u.TeV
+    fov_lon = [0, 1, 2, 3] * u.deg
+    fov_lat = [0, 1, 2, 3] * u.deg
+
+    data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
+    data[:, 1, 1] *= 2
+    return Background3D(
+        energy_lo=energy[:-1],
+        energy_hi=energy[1:],
+        fov_lon_lo=fov_lon[:-1],
+        fov_lon_hi=fov_lon[1:],
+        fov_lat_lo=fov_lat[:-1],
+        fov_lat_hi=fov_lat[1:],
+        data=data,
+    )
+
+
+@pytest.fixture(scope="session")
+def bkg_3d_asymmetric():
+    """Example with asymmetric values"""
+    energy = [0.1, 10, 1000] * u.TeV
+    fov_lon = [0, 1, 2, 3] * u.deg
+    fov_lat = [0, 1, 2, 3] * u.deg
+
+    # data = np.indices((3, 3)).sum(0) + 1
+    data = np.indices((3, 3))[0] + 1
+    data = np.stack(2 * [data]) * u.Unit("s-1 MeV-1 sr-1")
     return Background3D(
         energy_lo=energy[:-1],
         energy_hi=energy[1:],
@@ -99,16 +139,65 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
     assert m.unit == ""
     assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
 
+
+def test_make_map_background_irf_constant(bkg_3d_constant, fixed_pointing_info):
+    axis = MapAxis.from_edges(
+        [0.1, 1, 10], name="energy", unit="TeV", interp="log"
+    )
+    m = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42 s",
+        bkg=bkg_3d_constant,
+        geom=WcsGeom.create(
+            npix=(3, 3),
+            binsz=2,
+            axes=[axis],
+            skydir=fixed_pointing_info.radec
+        ),
+    )
+    for d in m.data:
+        assert_allclose(d[1, :], d[1, 0])  # Constant along lon
+        assert_allclose(d[0, 1], d[2, 1])  # Symmetric along lat
+        with pytest.raises(AssertionError):
+            # Not constant along lat due to changes in solid angle (great circle)
+            assert_allclose(d[:, 1], d[0, 1])
+
+
+def test_make_map_background_irf_sym(bkg_3d_symmetric, fixed_pointing_info):
+    axis = MapAxis.from_edges(
+        [0.1, 1, 10], name="energy", unit="TeV", interp="log"
+    )
+    m = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42 s",
+        bkg=bkg_3d_constant,
+        geom=WcsGeom.create(
+            npix=(3, 3),
+            binsz=2,
+            axes=[axis],
+            skydir=fixed_pointing_info.radec
+        ),
+    )
+    for d in m.data:
+        assert_allclose(d[1, 0], d[1, 2])  # Symmetric along lon
+        assert_allclose(d[0, 1], d[2, 1])  # Symmetric along lat
+
+
 def test_make_map_background_irf_asym(bkg_3d_asymmetric, fixed_pointing_info):
+    axis = MapAxis.from_edges(
+        [0.1, 1, 10], name="energy", unit="TeV", interp="log"
+    )
     m = make_map_background_irf(
         pointing=fixed_pointing_info,
         ontime="42 s",
         bkg=bkg_3d_asymmetric,
-        geom=geom(
-            map_type="wcs",
-            ebounds=[0.1, 1, 10],
+        geom=WcsGeom.create(
+            npix=(3, 3),
+            binsz=2,
+            axes=[axis],
             skydir=fixed_pointing_info.radec
         ),
     )
-    assert_allclose(m.data[0, 0, 0], 34420.569872, rtol=1e-5)
-    assert_allclose(m.data[0, 1, 2], 47216.385951, rtol=1e-5)
+    for d in m.data:
+        assert_allclose(d[1, 0], d[1, 2])  # Symmetric along lon
+        assert(d[0, 1] < d[2, 1])  # Asymmetric along lat
