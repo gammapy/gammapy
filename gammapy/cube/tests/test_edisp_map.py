@@ -45,12 +45,12 @@ def make_edisp_map_test():
     edisp2d = EnergyDispersion2D.from_gauss(etrue, migra, 0.0, 0.2, offsets)
 
     geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[migra_axis, energy_axis]
+        skydir=pointing, binsz=1., width=5., axes=[migra_axis, energy_axis]
     )
 
     aeff2d = fake_aeff2d()
     exposure_geom = WcsGeom.create(
-        skydir=pointing, binsz=0.2, width=5, axes=[energy_axis]
+        skydir=pointing, binsz=1., width=5., axes=[energy_axis]
     )
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
@@ -74,7 +74,7 @@ def test_make_edisp_map():
     assert edmap.edisp_map.geom.axes[0] == migra_axis
     assert edmap.edisp_map.geom.axes[1] == energy_axis
     assert edmap.edisp_map.unit == Unit("")
-    assert edmap.data.shape == (4, 50, 25, 25)
+    assert edmap.data.shape == (4, 50, 5, 5)
 
 
 def test_edisp_map_to_from_hdulist():

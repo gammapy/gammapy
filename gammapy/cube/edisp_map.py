@@ -16,7 +16,7 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
 
     Parameters
     ----------
-    psf : `~gammapy.irf.EnergyDispersion2D`
+    edisp : `~gammapy.irf.EnergyDispersion2D`
         the 2D Energy Dispersion IRF
     pointing : `~astropy.coordinates.SkyCoord`
         the pointing direction
@@ -69,6 +69,9 @@ class EDispMap(object):
     edisp_map : `~gammapy.maps.Map`
         the input Energy Dispersion Map. Should be a Map with 2 non spatial axes.
         migra and true energy axes should be given in this specific order.
+    exposure_map : `~gammapy.maps.Map`, optional
+        the associated exposure map.
+        default is None
 
     Examples
     --------
@@ -102,7 +105,7 @@ class EDispMap(object):
         edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset)
 
         # Get an Energy Dispersion (1D) at any position in the image
-        psf_table = edisp_map.get_energy_dispersion(SkyCoord(2., 2.5, unit='deg'))
+        edisp = edisp_map.get_energy_dispersion(SkyCoord(2., 2.5, unit='deg'))
 
         # Write map to disk
         edisp_map.write('edisp_map.fits')
@@ -234,15 +237,15 @@ class EDispMap(object):
         ----------
         position : `~astropy.coordinates.SkyCoord`
             the target position. Should be a single coordinates
-
-        Returns
-        -------
-        psf_table : `~gammapy.irf.EnergyDependentTablePSF`
-            the table PSF
         e_reco : `~astropy.units.Quantity`
             Reconstruced energy axis binning
         migra_step : float
             Integration step in migration
+
+        Returns
+        -------
+        edisp : `~gammapy.irf.EnergyDispersion`
+            the energy dispersion (i.e. rmf object)
         """
         # TODO: reduce code duplication with EnergyDispersion2D.get_response
         if position.size != 1:
