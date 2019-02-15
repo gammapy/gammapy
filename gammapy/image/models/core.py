@@ -90,6 +90,7 @@ class SkyGaussian(SkySpatialModel):
         N = \frac{1}{4\pi a\left[1-\text{exp}(-1/a)\right]}\,,\,\,\,\,
         a = 1-\text{cos}\sigma\,.
 
+    The normalization factor is in units of :math:`\text{deg}^{-2}`.
     In the limit of small :math:`\theta` and :math:`\sigma`, this definition reduces to the usual form:
 
     .. math::
