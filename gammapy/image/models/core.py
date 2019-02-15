@@ -82,7 +82,7 @@ class SkyGaussian(SkySpatialModel):
 
     where :math:`\theta` is the angular separation between the center of the Gaussian and the evaluation point.
     This angle is calculated on the celestial sphere using the function `angular.separation` defined in
-     `astropy.coordinates.angle_utilities`. The Gaussian is normalized to 1 on
+    `astropy.coordinates.angle_utilities`. The Gaussian is normalized to 1 on
     the sphere:
 
     .. math::
