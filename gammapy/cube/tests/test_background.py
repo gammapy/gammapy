@@ -35,12 +35,12 @@ def geom(map_type, ebounds):
         {
             "geom": geom(map_type="wcs", ebounds=[0.1, 1, 10]),
             "shape": (2, 3, 4),
-            "sum": 744.281309,
+            "sum": 744.268356,
         },
         {
             "geom": geom(map_type="wcs", ebounds=[0.1, 10]),
             "shape": (1, 3, 4),
-            "sum": 799.760344,
+            "sum": 799.743734,
         },
         # TODO: make this work for HPX
         # 'HpxGeom' object has no attribute 'separation'
