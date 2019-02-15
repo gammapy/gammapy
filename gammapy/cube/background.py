@@ -26,6 +26,15 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     background : `~gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reco energy
     """
+    # TODO:
+    #  This implementation can be improved in two ways:
+    #  1. Create equal time intervals between TSTART and TSTOP and sum up the
+    #  background IRF for each interval. This is instead of multiplying by
+    #  the total ontime. This then handles the rotation of the FoV.
+    #  2. Use the pointing table (does not currently exist in CTA files) to
+    #  obtain the RA DEC and time for each interval. This then considers that
+    #  the pointing might change slightly over the observation duration
+
     # Get altaz coords for map
     map_coord = geom.to_image().get_coord()
     sky_coord = map_coord.skycoord
