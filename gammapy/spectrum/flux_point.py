@@ -928,7 +928,7 @@ class FluxPointEstimator:
             Dict with symmetric error for the flux point norm.
         """
         result = self.fit.covariance()
-        norm_err = result.model.parameters.error("norm")
+        norm_err = result.parameters.error("norm")
         return {"norm_err": norm_err}
 
     def estimate_norm_ul(self):
@@ -993,7 +993,7 @@ class FluxPointEstimator:
         result = self.fit.optimize()
 
         if result.success:
-            norm = result.model.parameters["norm"].value
+            norm = result.parameters["norm"].value
             self.model.parameters["norm"].value = norm
         else:
             emin, emax = self.fit.true_fit_range[0]
@@ -1082,6 +1082,10 @@ class FluxPointsDataset:
                 " either 'chi2' or 'chi2assym'"
             )
 
+    def data_shape(self):
+        """Shape of the flux points data"""
+        return self.data.e_ref.shape
+
     @staticmethod
     def _likelihood_chi2(data, model, sigma):
         return ((data - model) / sigma).to_value("") ** 2
@@ -1117,11 +1121,21 @@ class FluxPointsDataset:
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self, parameters):
-        """Total likelihood given the current model parameters"""
-        # update parameters
-        if self.mask:
+    def likelihood(self, parameters, mask=None):
+        """Total likelihood given the current model parameters.
+
+        Parameters
+        ----------
+        mask : `~numpy.ndarray`
+            Mask to be combined with the dataset mask.
+        """
+        if self.mask is None and mask is None:
+            stat = self.likelihood_per_bin()
+        elif self.mask is None:
+            stat = self.likelihood_per_bin()[mask]
+        elif mask is None:
             stat = self.likelihood_per_bin()[self.mask]
         else:
-            stat = self.likelihood_per_bin()
+            stat = self.likelihood_per_bin()[mask & self.mask]
         return np.nansum(stat, dtype=np.float64)
+
