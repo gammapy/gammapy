@@ -79,6 +79,11 @@ class FixedPointingInfo:
         return self.time_ref + t_stop
 
     @lazyproperty
+    def obstime(self):
+        """Average observation time for the observation (`~astropy.time.Time`)"""
+        return self.time_start + self.duration / 2
+
+    @lazyproperty
     def duration(self):
         """Pointing duration (`~astropy.time.TimeDelta`).
 
@@ -91,14 +96,14 @@ class FixedPointingInfo:
         """RA / DEC pointing postion from table
         (`~astropy.coordinates.SkyCoord`)"""
         print(self.meta.keys())
-        lon = self.meta["RA_PNT"]
-        lat = self.meta["DEC_PNT"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+        ra = self.meta["RA_PNT"]
+        dec = self.meta["DEC_PNT"]
+        return SkyCoord(ra, dec, unit="deg", frame="icrs")
 
     @lazyproperty
     def altaz_frame(self):
         """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
-        return AltAz(obstime=self.time_start, location=self.location)
+        return AltAz(obstime=self.obstime, location=self.location)
 
     @lazyproperty
     def altaz(self):
