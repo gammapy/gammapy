@@ -95,7 +95,6 @@ class FixedPointingInfo:
     def radec(self):
         """RA / DEC pointing postion from table
         (`~astropy.coordinates.SkyCoord`)"""
-        print(self.meta.keys())
         ra = self.meta["RA_PNT"]
         dec = self.meta["DEC_PNT"]
         return SkyCoord(ra, dec, unit="deg", frame="icrs")
