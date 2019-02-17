@@ -149,7 +149,7 @@ def test_parameters_set_parameter_factors(pars):
 
 
 def test_parameters_set_covariance_factors(pars):
-    cov_factor = [[3, 4], [7, 8]]
+    cov_factor = np.array([[3, 4], [7, 8]])
     pars.set_covariance_factors(cov_factor)
     assert_allclose(pars.covariance, cov_factor)
 

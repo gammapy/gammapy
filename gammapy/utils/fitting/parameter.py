@@ -249,6 +249,11 @@ class Parameters:
         """List of `Parameter`."""
         return self._parameters
 
+    @property
+    def free_parameters(self):
+        """List of free parameters"""
+        return [par for par in self.parameters if not par.frozen]
+
     # TODO: replace this with a better API to update parameters
     @parameters.setter
     def parameters(self, vals):
@@ -464,7 +469,10 @@ class Parameters:
 
         Used in the optimizer interface.
         """
-        self.covariance = self._scale_matrix * self._expand_factor_matrix(matrix)
+        if not np.sqrt(matrix.size) == len(self.parameters):
+            matrix = self._expand_factor_matrix(matrix)
+
+        self.covariance = self._scale_matrix * matrix
 
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.
