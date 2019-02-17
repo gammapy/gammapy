@@ -48,7 +48,10 @@ def test_iminuit_frozen(pars):
 
     assert info["success"]
 
+    assert_allclose(pars["x"].value, 2.004907, rtol=1e-5)
     assert_allclose(pars["y"].value, 3.1e2)
+    assert_allclose(pars["z"].value, 0.044906, rtol=1e-5)
+    assert_allclose(fcn(pars), 100, rtol=1e-5)
     assert minuit.list_of_fixed_param() == ["par_001_y"]
 
 
