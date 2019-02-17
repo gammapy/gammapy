@@ -19,11 +19,11 @@ __all__ = [
 class SkyModelBase(Model):
     """Sky model base class"""
     def __add__(self, skymodel):
-        skymodels = []
-        if isinstance(self, SkyModels):
-            skymodels += self.skymodels
-        elif isinstance(self, SkyModel):
-            skymodels += [self, ]
+        skymodels = [self]
+        if isinstance(skymodel, SkyModels):
+            skymodels += skymodel.skymodels
+        elif isinstance(skymodel, (SkyModel, SkyDiffuseCube)):
+            skymodels += [skymodel]
         else:
             raise NotImplementedError
         return SkyModels(skymodels)
@@ -114,9 +114,7 @@ class SkyModels(SkyModelBase):
         str_ = self.__class__.__name__ + "\n\n"
 
         for idx, skymodel in enumerate(self.skymodels):
-            str_ += "Component: {idx}\n\n\t".format(idx=idx)
-            table = skymodel.parameters.to_table()
-            str_ += "\n\t".join(table.pformat())
+            str_ += "Component {idx}: {skymodel}\n\n\t".format(idx=idx, skymodel=skymodel)
             str_ += "\n\n"
 
         if self.parameters.covariance is not None:
@@ -124,6 +122,25 @@ class SkyModels(SkyModelBase):
             covariance = self.parameters.covariance_to_table()
             str_ += "\n\t".join(covariance.pformat())
         return str_
+
+    def __iadd__(self, skymodel):
+        if isinstance(skymodel, SkyModels):
+            self.skymodels += skymodel.skymodels
+        elif isinstance(skymodel, (SkyModel, SkyDiffuseCube)):
+            self.skymodels += [skymodel]
+        else:
+            raise NotImplementedError
+        return self
+
+    def __add__(self, skymodel):
+        skymodels = self.skymodels.copy()
+        if isinstance(skymodel, SkyModels):
+            skymodels += skymodel.skymodels
+        elif isinstance(skymodel, (SkyModel, SkyDiffuseCube)):
+            skymodels += [skymodel]
+        else:
+            raise NotImplementedError
+        return SkyModels(skymodels)
 
 
 class SkyModel(SkyModelBase):
