@@ -91,6 +91,29 @@ def compound_model(sky_model):
     return CompoundSkyModel(sky_model, sky_model, np.add)
 
 
+def test_skymodel_addition(sky_model, sky_models, diffuse_model):
+    result = sky_model + sky_model.copy()
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 2
+
+    result = sky_model + sky_models
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 3
+
+    result = sky_models + sky_model
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 3
+
+    result = sky_models + diffuse_model
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 3
+
+    result = sky_models + sky_models
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 4
+
+
+
 def test_background_model(background):
     bkg1 = BackgroundModel(background, norm=2.0).evaluate()
     assert_allclose(bkg1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
