@@ -149,6 +149,11 @@ class TestSkyModels:
         assert q.shape == (5, 3, 4)
         assert_allclose(q.value, 3.536776513153229e-13)
 
+    @staticmethod
+    def test_str(sky_models):
+        assert "Component 0" in str(sky_models)
+        assert "Component 1" in str(sky_models)
+
 
 class TestSkyModel:
     @staticmethod
