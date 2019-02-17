@@ -63,7 +63,7 @@ def covariance_iminuit(minuit):
 
     message, success = "Hesse terminated successfully.", True
     try:
-        covariance_factors = _get_covariance(minuit)
+        covariance_factors = minuit.np_covariance
     except TypeError:
         N = len(minuit.args)
         covariance_factors = np.nan * np.ones((N, N))
@@ -146,28 +146,15 @@ def make_minuit_par_kwargs(parameters):
     kwargs = {"forced_parameters": names}
 
     for name, par in zip(names, parameters):
-        kwargs[name] = par.factor
+        if not par.frozen:
+            kwargs[name] = par.factor
 
-        min_ = None if np.isnan(par.factor_min) else par.factor_min
-        max_ = None if np.isnan(par.factor_max) else par.factor_max
-        kwargs["limit_{}".format(name)] = (min_, max_)
+            min_ = None if np.isnan(par.factor_min) else par.factor_min
+            max_ = None if np.isnan(par.factor_max) else par.factor_max
+            kwargs["limit_{}".format(name)] = (min_, max_)
 
-        kwargs["error_{}".format(name)] = 1
-        kwargs["fix_{}".format(name)] = par.frozen
+            kwargs["error_{}".format(name)] = 1
+            kwargs["fix_{}".format(name)] = par.frozen
 
     return kwargs
 
-
-def _get_covariance(minuit):
-    """Get full covariance matrix as Numpy array.
-
-    This was added as `minuit.np_covariance` in `iminuit` in v1.3,
-    but we still want to support v1.2
-    """
-    n = len(minuit.parameters)
-    m = np.zeros((n, n))
-    for i1, k1 in enumerate(minuit.parameters):
-        for i2, k2 in enumerate(minuit.parameters):
-            if {k1, k2} <= set(minuit.list_of_vary_param()):
-                m[i1, i2] = minuit.covariance[(k1, k2)]
-    return m

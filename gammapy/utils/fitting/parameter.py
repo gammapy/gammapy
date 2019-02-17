@@ -444,19 +444,27 @@ class Parameters:
         Used in the optimizer interface.
         """
         for factor, parameter in zip(factors, self.parameters):
-            parameter.factor = factor
+            if not parameter.frozen:
+                parameter.factor = factor
 
     @property
     def _scale_matrix(self):
         scales = [par.scale for par in self.parameters]
         return np.outer(scales, scales)
 
+    def _expand_factor_matrix(self, matrix):
+        """Expand covariance matrix with zeros for frozen parameters"""
+        idxs = np.where([par.frozen for par in self.parameters])[0]
+        matrix = np.insert(matrix, idxs, 0, axis=1)
+        matrix = np.insert(matrix, idxs, 0, axis=0)
+        return matrix
+
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
 
         Used in the optimizer interface.
         """
-        self.covariance = self._scale_matrix * matrix
+        self.covariance = self._scale_matrix * self._expand_factor_matrix(matrix)
 
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.

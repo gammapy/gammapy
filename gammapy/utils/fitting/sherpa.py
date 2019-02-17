@@ -45,9 +45,9 @@ def optimize_sherpa(parameters, function, **kwargs):
     optimizer = get_sherpa_optimizer(method)
     optimizer.config.update(kwargs)
 
-    pars = [par.factor for par in parameters.parameters]
-    parmins = [par.factor_min for par in parameters.parameters]
-    parmaxes = [par.factor_max for par in parameters.parameters]
+    pars = [par.factor for par in parameters.parameters if not par.frozen]
+    parmins = [par.factor_min for par in parameters.parameters if not par.frozen]
+    parmaxes = [par.factor_max for par in parameters.parameters if not par.frozen]
 
     statfunc = SherpaLikelihood(function, parameters)
 
