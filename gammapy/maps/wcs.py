@@ -776,7 +776,10 @@ class WcsGeom(MapGeom):
         # Compute solid angle across centres of the pixels, approximating it
         # as a rectangle
         # First index is "y", second index is "x"
-        # TODO: Calculate actual solid angle between two great circles?
+        # TODO: Calculate actual solid angle between two great circles? Here are two references
+        # suggesting more precise methods:
+        # https://mail.python.org/pipermail/astropy/2013-December/002632.html
+        # https://cta-redmine.irap.omp.eu/issues/1017
         lon_centres = (lon[..., :-1, :-1] + lon[..., 1:, 1:]) / 2
         lat_centres = (lat[..., :-1, :-1] + lat[..., 1:, 1:]) / 2
 
