@@ -243,7 +243,7 @@ def fit():
     data = FluxPoints.read(path)
     data.table["e_ref"] = data.e_ref.to("TeV")
 
-    model = PowerLaw(index=2.3, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV")
+    model = PowerLaw(index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV")
     dataset = FluxPointsDataset(model, data)
     return Fit(dataset)
 
@@ -257,7 +257,6 @@ class TestFluxPointFit:
         self.assert_result(result)
 
     @requires_dependency("sherpa")
-    @pytest.mark.skip(reason="Sherpa backend does not support fixing parameters yet.")
     def test_fit_pwl_sherpa(self, fit):
         result = fit.optimize(backend="sherpa", method="simplex")
         self.assert_result(result)
@@ -267,12 +266,14 @@ class TestFluxPointFit:
         assert result.success
         assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
 
-        index = result.model.parameters["index"]
+        index = result.parameters["index"]
         assert_allclose(index.value, 2.216, rtol=1e-3)
 
-        # Right now sherpa also fits the reference energy
-        amplitude = result.model(1 * u.TeV).to("cm-2 s-1 TeV-1")
+        amplitude = result.parameters["amplitude"]
         assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
+
+        reference = result.parameters["reference"]
+        assert_allclose(reference.value, 1, rtol=1e-8)
 
     @requires_dependency("iminuit")
     @staticmethod
@@ -286,8 +287,8 @@ class TestFluxPointFit:
         ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
-        value = result.model.parameters["amplitude"].value
-        err = result.model.parameters.error("amplitude")
+        value = result.parameters["amplitude"].value
+        err = result.parameters.error("amplitude")
         values = np.array([value - err, value, value + err])
 
         profile = fit.likelihood_profile("amplitude", values=values)

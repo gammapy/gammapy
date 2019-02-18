@@ -23,8 +23,9 @@ class MyDataset:
     def __init__(self):
         self.model = MyModel()
         self.parameters = self.model.parameters
+        self.data_shape = (1,)
 
-    def likelihood(self, parameters):
+    def likelihood(self, parameters, mask=None):
         # self._model.parameters = parameters
         x, y, z = [p.value for p in self.model.parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
@@ -33,14 +34,14 @@ class MyDataset:
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_run(backend):
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     result = fit.run(
         optimize_opts={"backend": backend}, covariance_opts={"backend": backend}
     )
-    pars = result.model.parameters
+    pars = result.parameters
 
     assert result.success is True
-    assert fit._model is result.model
 
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
     assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
@@ -58,11 +59,11 @@ def test_run(backend):
 @requires_dependency("sherpa")
 @pytest.mark.parametrize("backend", ["minuit", "sherpa", "scipy"])
 def test_optimize(backend):
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     result = fit.optimize(backend=backend)
-    pars = result.model.parameters
+    pars = dataset.parameters
 
-    assert fit._model is result.model
     assert result.success is True
     assert_allclose(result.total_stat, 0)
 
@@ -78,7 +79,8 @@ def test_optimize(backend):
 
 @pytest.mark.parametrize("backend", ["minuit"])
 def test_confidence(backend):
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     fit.optimize(backend=backend)
     result = fit.confidence("x")
 
@@ -87,11 +89,12 @@ def test_confidence(backend):
     assert_allclose(result["errn"], 1)
 
     # Check that original value state wasn't changed
-    assert_allclose(fit._model.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["x"].value, 2)
 
 
 def test_likelihood_profile():
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     fit.run()
     result = fit.likelihood_profile("x", nvalues=3)
 
@@ -99,11 +102,12 @@ def test_likelihood_profile():
     assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
 
     # Check that original value state wasn't changed
-    assert_allclose(fit._model.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["x"].value, 2)
 
 
 def test_minos_contour():
-    fit = Fit(MyDataset())
+    dataset = MyDataset()
+    fit = Fit(dataset)
     fit.optimize(backend="minuit")
     result = fit.minos_contour("x", "y")
 
@@ -119,4 +123,4 @@ def test_minos_contour():
     assert_allclose(y[-1], 300.866004, rtol=1e-5)
 
     # Check that original value state wasn't changed
-    assert_allclose(fit._model.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["x"].value, 2)
