@@ -167,6 +167,23 @@ def test_wcsgeom_solid_angle():
     assert_allclose(solid_angle.value[0, 9, 5], 0.0003038, rtol=1e-3)
 
 
+def test_wcsgeom_solid_angle_symmetry():
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        coordsys="GAL",
+        npix=(3, 3),
+        binsz=20.0 * u.deg,
+    )
+
+    sa = geom.solid_angle()
+
+    assert_allclose(sa[1, :], sa[1, 0])  # Constant along lon
+    assert_allclose(sa[0, 1], sa[2, 1])  # Symmetric along lat
+    with pytest.raises(AssertionError):
+        # Not constant along lat due to changes in solid angle (great circle)
+        assert_allclose(sa[:, 1], sa[0, 1])
+
+
 def test_wcsgeom_solid_angle_ait():
     # Pixels that don't correspond to locations on ths sky
     # should have solid angles set to NaN

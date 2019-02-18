@@ -773,15 +773,23 @@ class WcsGeom(MapGeom):
         lon = coord.lon * np.pi / 180.0
         lat = coord.lat * np.pi / 180.0
 
-        # Compute solid angle using the approximation that it's
-        # the product between angular separation of pixel corners.
+        # Compute solid angle across centres of the pixels, approximating it
+        # as a rectangle
         # First index is "y", second index is "x"
-        ylo_xlo = lon[..., :-1, :-1], lat[..., :-1, :-1]
-        ylo_xhi = lon[..., :-1, 1:], lat[..., :-1, 1:]
-        yhi_xlo = lon[..., 1:, :-1], lat[..., 1:, :-1]
+        # TODO: Calculate actual solid angle between two great circles? Here are two references
+        # suggesting more precise methods:
+        # https://mail.python.org/pipermail/astropy/2013-December/002632.html
+        # https://cta-redmine.irap.omp.eu/issues/1017
+        lon_centres = (lon[..., :-1, :-1] + lon[..., 1:, 1:]) / 2
+        lat_centres = (lat[..., :-1, :-1] + lat[..., 1:, 1:]) / 2
 
-        dx = angular_separation(*(ylo_xlo + ylo_xhi))
-        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+        ymid_xlo = lon[..., :-1, :-1], lat_centres
+        ymid_xhi = lon[..., :-1, 1:], lat_centres
+        ylo_xmid = lon_centres, lat[..., :-1, 1:]
+        yhi_xmid = lon_centres, lat[..., 1:, :-1]
+
+        dx = angular_separation(*(ymid_xlo + ymid_xhi))
+        dy = angular_separation(*(ylo_xmid + yhi_xmid))
 
         return u.Quantity(dx * dy, "sr", copy=False)
 

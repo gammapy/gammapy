@@ -268,7 +268,7 @@ class TestSkyDiffuseCubeMapEvaluator:
         assert out.shape == (3, 4, 5)
         out = out.to("cm-2 s-1")
         assert_allclose(out.value.sum(), 633263.444803, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 1164.578565, rtol=1e-5)
+        assert_allclose(out.value[0, 0, 0], 1164.656176, rtol=1e-5)
 
     @staticmethod
     def test_apply_psf(diffuse_evaluator):
@@ -277,7 +277,7 @@ class TestSkyDiffuseCubeMapEvaluator:
         out = diffuse_evaluator.apply_psf(npred)
         assert out.data.shape == (3, 4, 5)
         assert_allclose(out.data.sum(), 1.106404e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586252e08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=1e-5)
 
     @staticmethod
     def test_apply_edisp(diffuse_evaluator):
@@ -286,14 +286,14 @@ class TestSkyDiffuseCubeMapEvaluator:
         out = diffuse_evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.606345e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 1.164579e09, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 1.164656e09, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(diffuse_evaluator):
         out = diffuse_evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 1.106403e12, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 5.586252e08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 5.586508e08, rtol=1e-5)
 
 
 class TestSkyModelMapEvaluator:
@@ -350,7 +350,7 @@ class TestSkyModelMapEvaluator:
         out = evaluator.compute_flux().to_value("cm-2 s-1")
         assert out.shape == (3, 4, 5)
         assert_allclose(out.sum(), 1.291427605881036e-12, rtol=1e-5)
-        assert_allclose(out[0, 0, 0], 4.630536473119458e-14, rtol=1e-5)
+        assert_allclose(out[0, 0, 0], 4.630845e-14, rtol=1e-5)
 
     @staticmethod
     def test_apply_psf(evaluator):
@@ -359,7 +359,7 @@ class TestSkyModelMapEvaluator:
         out = evaluator.apply_psf(npred)
         assert out.data.shape == (3, 4, 5)
         assert_allclose(out.data.sum(), 2.2530737e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 2.4071529e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 2.407252e-08, rtol=1e-5)
 
     @staticmethod
     def test_apply_edisp(evaluator):
@@ -368,11 +368,11 @@ class TestSkyModelMapEvaluator:
         out = evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 3.2758538225058153e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 4.630536473119458e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 4.630845e-08, rtol=1e-5)
 
     @staticmethod
     def test_compute_npred(evaluator):
         out = evaluator.compute_npred()
         assert out.data.shape == (2, 4, 5)
         assert_allclose(out.data.sum(), 2.253073467739508e-06, rtol=1e-5)
-        assert_allclose(out.data[0, 0, 0], 2.4071528770264194e-08, rtol=1e-5)
+        assert_allclose(out.data[0, 0, 0], 2.407252e-08, rtol=1e-5)
