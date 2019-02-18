@@ -27,7 +27,7 @@ def test_sky_gaussian():
     assert model.parameters["sigma"].min == 0
     val_0 = model(5 * u.deg, 15 * u.deg)
     val_sigma = model(5 * u.deg, 16 * u.deg)
-    assert val_0.unit == "deg-2"
+    assert val_0.unit == "sr-1"
     ratio = val_0 / val_sigma
     assert_allclose(ratio, np.exp(0.5))
 

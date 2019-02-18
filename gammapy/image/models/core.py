@@ -90,7 +90,7 @@ class SkyGaussian(SkySpatialModel):
         N = \frac{1}{4\pi a\left[1-\text{exp}(-1/a)\right]}\,,\,\,\,\,
         a = 1-\text{cos}\sigma\,.
 
-    The normalization factor is in units of :math:`\text{deg}^{-2}`.
+    The normalization factor is in units of :math:`\text{sr}^{-1}`.
     In the limit of small :math:`\theta` and :math:`\sigma`, this definition reduces to the usual form:
 
     .. math::
@@ -123,9 +123,9 @@ class SkyGaussian(SkySpatialModel):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         a = 1.0 - np.cos(sigma)
-        norm = (1 / (4 * np.pi * a * (1.0 - np.exp(-1.0 / a)))) * u.sr ** -1
+        norm = 1 / (4 * np.pi * a * (1.0 - np.exp(-1.0 / a)))
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
-        return (norm * np.exp(exponent)).to("deg-2")
+        return u.Quantity(norm.value * np.exp(exponent).value, "sr-1", copy=False)
 
 
 class SkyDisk(SkySpatialModel):
