@@ -63,7 +63,7 @@ def covariance_iminuit(minuit):
 
     message, success = "Hesse terminated successfully.", True
     try:
-        covariance_factors = _get_covariance(minuit)
+        covariance_factors = minuit.np_covariance()
     except TypeError:
         N = len(minuit.args)
         covariance_factors = np.nan * np.ones((N, N))
@@ -157,17 +157,3 @@ def make_minuit_par_kwargs(parameters):
 
     return kwargs
 
-
-def _get_covariance(minuit):
-    """Get full covariance matrix as Numpy array.
-
-    This was added as `minuit.np_covariance` in `iminuit` in v1.3,
-    but we still want to support v1.2
-    """
-    n = len(minuit.parameters)
-    m = np.zeros((n, n))
-    for i1, k1 in enumerate(minuit.parameters):
-        for i2, k2 in enumerate(minuit.parameters):
-            if {k1, k2} <= set(minuit.list_of_vary_param()):
-                m[i1, i2] = minuit.covariance[(k1, k2)]
-    return m

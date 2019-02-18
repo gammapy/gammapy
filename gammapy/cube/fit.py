@@ -54,8 +54,8 @@ class MapDataset:
         self.background_model = background_model
         if background_model:
             self.parameters = Parameters(
-                self.model.parameters.parameters
-                + self.background_model.parameters.parameters
+                self.model.parameters.parameters +
+                self.background_model.parameters.parameters
             )
         else:
             self.parameters = Parameters(self.model.parameters.parameters)
@@ -63,6 +63,11 @@ class MapDataset:
         self.evaluator = MapEvaluator(
             model=self.model, exposure=exposure, psf=self.psf, edisp=self.edisp
         )
+
+    @property
+    def data_shape(self):
+        """Shape of the counts data"""
+        return self.counts.data.shape
 
     def npred(self):
         """Returns npred map (model + background)"""
@@ -78,12 +83,22 @@ class MapDataset:
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
-    def likelihood(self, parameters):
-        """Total likelihood given the current model parameters"""
-        if self.mask:
+    def likelihood(self, parameters, mask=None):
+        """Total likelihood given the current model parameters.
+
+        Parameters
+        ----------
+        mask : `~numpy.ndarray`
+            Mask to be combined with the dataset mask.
+        """
+        if self.mask is None and mask is None:
+            stat = self.likelihood_per_bin()
+        elif self.mask is None:
+            stat = self.likelihood_per_bin()[mask]
+        elif mask is None:
             stat = self.likelihood_per_bin()[self.mask.data]
         else:
-            stat = self.likelihood_per_bin()
+            stat = self.likelihood_per_bin()[mask & self.mask.data]
         return np.sum(stat, dtype=np.float64)
 
 

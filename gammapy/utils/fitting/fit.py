@@ -6,6 +6,7 @@ from astropy.utils.misc import InheritDocstrings
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy
+from .datasets import Datasets
 
 __all__ = ["Fit"]
 
@@ -62,15 +63,25 @@ registry = Registry()
 
 
 class Fit:
-    """Abstract Fit base class.
-    """
+    """Fit class.
 
+    The fit class provides a uniform interface to multiple fitting
+    backends, such as `scipy.optimize`, `iminuit` or `sherpa`.
+
+    Parameters
+    ----------
+    datasets : `Dataset`, list of `Dataset` or `Datasets`
+        Dataset or joint datasets to be fitted.
+
+    """
     def __init__(self, datasets):
+        if not isinstance(datasets, Datasets):
+            datasets = Datasets(datasets)
+
         self.datasets = datasets
 
         # TODO: remove once datasets are fully supported
         self.total_stat = datasets.likelihood
-        self._model = datasets.model
 
     @abc.abstractmethod
     def total_stat(self, parameters):
@@ -119,7 +130,6 @@ class Fit:
         covariance_result = self.covariance(**covariance_opts)
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
-        optimize_result._model = covariance_result.model
         optimize_result._success = optimize_result.success and covariance_result.success
         optimize_result._nfev += covariance_result.nfev
 
@@ -175,8 +185,8 @@ class Fit:
         # Copy final results into the parameters object
         parameters.set_parameter_factors(factors)
 
-        return FitResult(
-            model=self._model,
+        return OptimizeResult(
+            parameters=parameters,
             total_stat=self.total_stat(self._parameters),
             backend=backend,
             method=kwargs.get("method", backend),
@@ -215,7 +225,11 @@ class Fit:
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(model=self._model, success=info["success"], nfev=0)
+        return CovarianceResult(
+            parameters=parameters,
+            success=info["success"],
+            nfev=0
+        )
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
@@ -398,15 +412,15 @@ class Fit:
 class CovarianceResult:
     """Covariance result object."""
 
-    def __init__(self, model, success, nfev):
-        self._model = model
+    def __init__(self, parameters, success, nfev):
+        self._parameters = parameters
         self._success = success
         self._nfev = nfev
 
     @property
-    def model(self):
-        """Best fit model."""
-        return self._model
+    def parameters(self):
+        """Best fit parameters and convariance."""
+        return self._parameters
 
     @property
     def success(self):
@@ -419,11 +433,10 @@ class CovarianceResult:
         return self._nfev
 
 
-class FitResult:
-    """Fit result object."""
-
-    def __init__(self, model, success, nfev, total_stat, message, backend, method):
-        self._model = model
+class OptimizeResult:
+    """Optmize result object."""
+    def __init__(self, parameters, success, nfev, total_stat, message, backend, method):
+        self._parameters = parameters
         self._success = success
         self._nfev = nfev
         self._total_stat = total_stat
@@ -432,9 +445,9 @@ class FitResult:
         self._method = method
 
     @property
-    def model(self):
+    def parameters(self):
         """Best fit model."""
-        return self._model
+        return self._parameters
 
     @property
     def success(self):

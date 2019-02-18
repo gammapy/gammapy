@@ -155,7 +155,7 @@ class TestFit:
             obs_list=obs, stat="cash", model=self.source_model, forward_folded=False
         )
         result = fit.run()
-        true_idx = result.model.parameters["index"].value
+        true_idx = result.parameters["index"].value
         values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
         profile = fit.likelihood_profile("index", values=values)
         actual = values[np.argmin(profile["likelihood"])]
