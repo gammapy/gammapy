@@ -29,7 +29,7 @@ def pars():
 
 @pytest.mark.parametrize("method", ["moncar", "simplex"])
 def test_sherpa(method, pars):
-    factors, info, optimizer = optimize_sherpa(
+    factors, info, _ = optimize_sherpa(
         function=fcn, parameters=pars, method=method
     )
 
@@ -45,11 +45,10 @@ def test_sherpa(method, pars):
     assert_allclose(factors, [2, 3, 4])
 
 
-
 def test_sherpa_frozen(pars):
     pars["y"].frozen = True
 
-    factors, info, minuit = optimize_sherpa(function=fcn, parameters=pars)
+    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars)
 
     assert info["success"]
     assert_allclose(pars["x"].value, 2)
@@ -61,7 +60,7 @@ def test_sherpa_frozen(pars):
 def test_sherpa_limits(pars):
     pars["y"].min = 301000
 
-    factors, info, minuit = optimize_sherpa(function=fcn, parameters=pars)
+    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars)
 
     assert info["success"]
 
