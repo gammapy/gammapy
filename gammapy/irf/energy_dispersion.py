@@ -459,14 +459,15 @@ class EnergyDispersion:
             Bias energy
         """
         from ..spectrum.models import TableModel
+        energy = self.e_true.nodes
+        values = self.get_bias(energy)
 
         if emin is None:
-            emin = self.e_true.nodes[0]
+            emin = energy[np.nanargmax(values)]
         if emax is None:
-            emax = self.e_true.nodes[-1]
+            emax = energy[-1]
 
-        values = self.get_bias(self.e_true.nodes)
-        bias_spectrum = TableModel(self.e_true.nodes, values, values_scale="lin")
+        bias_spectrum = TableModel(energy, values)
         return bias_spectrum.inverse(Quantity(bias), emin=emin, emax=emax)
 
     def get_mean(self, e_true):
