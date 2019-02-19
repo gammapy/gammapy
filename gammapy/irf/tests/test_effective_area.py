@@ -101,6 +101,10 @@ class TestEffectiveAreaTable:
         assert elo_threshold.unit == "TeV"
         assert_allclose(elo_threshold.value, 0.552741, rtol=1e-3)
 
+        ehi_threshold = arf.find_energy(0.9 * arf.max_area, reverse=True)
+        assert ehi_threshold.unit == "TeV"
+        assert_allclose(ehi_threshold.value, 53.600246, rtol=1e-3)
+
         # Test evaluation outside safe range
         data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
         energy = np.logspace(0, 10, 10) * u.TeV
