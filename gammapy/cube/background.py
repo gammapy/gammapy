@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.coordinates import Angle
 from ..maps import WcsNDMap
+from ..utils.coordinates import sky_to_fov
 
 __all__ = ["make_map_background_irf"]
 
@@ -11,8 +11,8 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
 
     Parameters
     ----------
-    pointing : `~astropy.coordinates.SkyCoord`
-        Pointing direction
+    pointing : `~gammapy.data.pointing.FixedPointingInfo`
+        Fixed Pointing info
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
         see https://gamma-astro-data-formats.readthedocs.io/en/stable/irfs/full_enclosure/bkg/index.html#notes)
@@ -26,11 +26,27 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     background : `~gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reco energy
     """
-    # Compute FOV coordinates; at the moment assume symmetric background model
-    # TODO: implement FOV coordinates properly
+    # TODO:
+    #  This implementation can be improved in two ways:
+    #  1. Create equal time intervals between TSTART and TSTOP and sum up the
+    #  background IRF for each interval. This is instead of multiplying by
+    #  the total ontime. This then handles the rotation of the FoV.
+    #  2. Use the pointing table (does not currently exist in CTA files) to
+    #  obtain the RA DEC and time for each interval. This then considers that
+    #  the pointing might change slightly over the observation duration
+
+    # Get altaz coords for map
     map_coord = geom.to_image().get_coord()
-    fov_lon = map_coord.skycoord.separation(pointing)
-    fov_lat = Angle(np.zeros_like(fov_lon), fov_lon.unit)
+    sky_coord = map_coord.skycoord
+    altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
+
+    # Compute FOV coordinates of map relative to pointing
+    fov_lon, fov_lat = sky_to_fov(
+        altaz_coord.az,
+        altaz_coord.alt,
+        pointing.altaz.az,
+        pointing.altaz.alt
+    )
 
     energy_axis = geom.get_axis_by_name("energy")
     energies = energy_axis.edges * energy_axis.unit

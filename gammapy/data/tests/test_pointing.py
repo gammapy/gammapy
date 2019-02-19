@@ -2,7 +2,52 @@
 from numpy.testing import assert_allclose
 from astropy.time import Time
 from ...utils.testing import requires_data, assert_time_allclose
-from ..pointing import PointingInfo
+from ..pointing import FixedPointingInfo, PointingInfo
+
+
+@requires_data("gammapy-data")
+class TestFixedPointingInfo:
+    @classmethod
+    def setup_class(cls):
+        filename = "$GAMMAPY_DATA/tests/hess_event_list.fits"
+        cls.fpi = FixedPointingInfo.read(filename)
+
+    def test_location(self):
+        lon, lat, height = self.fpi.location.geodetic
+        assert_allclose(lon.deg, 16.5002222222222)
+        assert_allclose(lat.deg, -23.2717777777778)
+        assert_allclose(height.value, 1834.999999999783)
+
+    def test_time_ref(self):
+        expected = Time(51910.00074287037, format="mjd", scale="tt")
+        assert_time_allclose(self.fpi.time_ref, expected)
+
+    def test_time_start(self):
+        time = self.fpi.time_start
+        expected = Time(53025.826414166666, format="mjd", scale="tt")
+        assert_time_allclose(time, expected)
+
+    def test_time_stop(self):
+        time = self.fpi.time_stop
+        expected = Time(53025.844770648146, format="mjd", scale="tt")
+        assert_time_allclose(time, expected)
+
+    def test_duration(self):
+        duration = self.fpi.duration
+        assert_allclose(duration.sec, 1586.0000000044238)
+
+    def test_radec(self):
+        pos = self.fpi.radec
+        assert_allclose(pos.ra.deg, 83.633333333333)
+        assert_allclose(pos.dec.deg, 24.51444444)
+        assert pos.name == "icrs"
+
+    def test_altaz(self):
+        pos = self.fpi.altaz
+        assert_allclose(pos.az.deg, 7.48272)
+        assert_allclose(pos.alt.deg, 41.84191)
+        assert pos.name == "altaz"
+
 
 
 @requires_data("gammapy-data")

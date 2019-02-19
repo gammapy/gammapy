@@ -9,7 +9,106 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fits import earth_location_from_dict
 
-__all__ = ["PointingInfo"]
+__all__ = [
+    "FixedPointingInfo",
+    "PointingInfo",
+]
+
+
+class FixedPointingInfo:
+    """IACT array pointing info.
+
+    Data format specification: :ref:`gadf:iact-pnt`
+
+    Parameters
+    ----------
+    meta : `~astropy.table.Table.meta`
+        Meta header info from Table on pointing
+
+    Examples
+    --------
+    >>> from gammapy.data import PointingInfo
+    >>> path = '$GAMMAPY_DATA/tests/hess_event_list.fits'
+    >>> pointing_info = PointingInfo.read(path)
+    >>> print(pointing_info)
+    """
+
+    def __init__(self, meta):
+        self.meta = meta
+
+    @classmethod
+    def read(cls, filename, hdu="EVENTS"):
+        """Read pointing information table from file to obtain the metadata.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        hdu : int or str
+            HDU number or name
+
+        Returns
+        -------
+        pointing_info : `PointingInfo`
+            Pointing info object
+        """
+        filename = make_path(filename)
+        table = Table.read(str(filename), hdu=hdu)
+        return cls(meta=table.meta)
+
+    @lazyproperty
+    def location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return earth_location_from_dict(self.meta)
+
+    @lazyproperty
+    def time_ref(self):
+        """Time reference (`~astropy.time.Time`)"""
+        return time_ref_from_dict(self.meta)
+
+    @lazyproperty
+    def time_start(self):
+        """Start time (`~astropy.time.Time`)"""
+        t_start = Quantity(self.meta['TSTART'], "second")
+        return self.time_ref + t_start
+
+    @lazyproperty
+    def time_stop(self):
+        """Stop time (`~astropy.time.Time`)"""
+        t_stop = Quantity(self.meta['TSTOP'], "second")
+        return self.time_ref + t_stop
+
+    @lazyproperty
+    def obstime(self):
+        """Average observation time for the observation (`~astropy.time.Time`)"""
+        return self.time_start + self.duration / 2
+
+    @lazyproperty
+    def duration(self):
+        """Pointing duration (`~astropy.time.TimeDelta`).
+
+        The time difference between the TSTART and TSTOP.
+        """
+        return self.time_stop - self.time_start
+
+    @lazyproperty
+    def radec(self):
+        """RA / DEC pointing postion from table
+        (`~astropy.coordinates.SkyCoord`)"""
+        ra = self.meta["RA_PNT"]
+        dec = self.meta["DEC_PNT"]
+        return SkyCoord(ra, dec, unit="deg", frame="icrs")
+
+    @lazyproperty
+    def altaz_frame(self):
+        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        return AltAz(obstime=self.obstime, location=self.location)
+
+    @lazyproperty
+    def altaz(self):
+        """ALT / AZ pointing position computed from RA / DEC
+        (`~astropy.coordinates.SkyCoord`)"""
+        return self.radec.transform_to(self.altaz_frame)
 
 
 class PointingInfo:
