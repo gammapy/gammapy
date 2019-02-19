@@ -145,9 +145,9 @@ class TestSkyModels:
 
         q = sky_models.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
-        assert q.unit == "cm-2 s-1 TeV-1 deg-2"
+        assert q.unit == "cm-2 s-1 TeV-1 sr-1"
         assert q.shape == (5, 3, 4)
-        assert_allclose(q.value, 3.53758465e-13)
+        assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 3.53758465e-13)
 
     @staticmethod
     def test_str(sky_models):
@@ -183,9 +183,9 @@ class TestSkyModel:
 
         q = sky_model.evaluate(lon, lat, energy)
 
-        assert q.unit == "cm-2 s-1 TeV-1 deg-2"
+        assert q.unit == "cm-2 s-1 TeV-1 sr-1"
         assert np.isscalar(q.value)
-        assert_allclose(q.value, 1.76879232e-13)
+        assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 1.76879232e-13)
 
     @staticmethod
     def test_evaluate_array(sky_model):
@@ -196,7 +196,7 @@ class TestSkyModel:
         q = sky_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
         assert q.shape == (5, 3, 4)
-        assert_allclose(q.value, 1.76879232e-13)
+        assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 1.76879232e-13)
 
 
 class TestCompoundSkyModel:
@@ -224,9 +224,9 @@ class TestCompoundSkyModel:
 
         q = compound_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
 
-        assert q.unit == "cm-2 s-1 TeV-1 deg-2"
+        assert q.unit == "cm-2 s-1 TeV-1 sr-1"
         assert q.shape == (5, 3, 4)
-        assert_allclose(q.value, 3.53758465e-13)
+        assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 3.53758465e-13)
 
 
 class TestSkyDiffuseCube:
@@ -360,9 +360,9 @@ class TestSkyModelMapEvaluator:
     def test_compute_dnde(evaluator):
         out = evaluator.compute_dnde()
         assert out.shape == (3, 4, 5)
-        assert out.unit == "cm-2 s-1 TeV-1 deg-2"
-        assert_allclose(out.value.sum(), 1.1788166328203174e-11, rtol=1e-5)
-        assert_allclose(out.value[0, 0, 0], 5.087056282039508e-13, rtol=1e-5)
+        assert out.unit == "cm-2 s-1 TeV-1 sr-1"
+        assert_allclose(out.to_value("cm-2 s-1 TeV-1 deg-2").sum(), 1.1788166328203174e-11, rtol=1e-5)
+        assert_allclose(out.to_value("cm-2 s-1 TeV-1 deg-2")[0, 0, 0], 5.087056282039508e-13, rtol=1e-5)
 
     @staticmethod
     def test_compute_flux(evaluator):
