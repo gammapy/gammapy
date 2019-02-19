@@ -201,11 +201,12 @@ class SpectrumObservation:
         # vector, otherwise Sherpa will not understand the files
 
         # Low threshold
+        e_center = np.sqrt(self.e_true[0] * self.e_true[-1])
         if method_lo == "area_max":
             aeff_thres = kwargs["area_percent_lo"] / 100 * self.aeff.max_area
-            thres_lo = self.aeff.find_energy(aeff_thres)
+            thres_lo = self.aeff.find_energy(aeff_thres, emax=e_center)
         elif method_lo == "energy_bias":
-            thres_lo = self.edisp.get_bias_energy(kwargs["bias_percent_lo"] / 100)
+            thres_lo = self.edisp.get_bias_energy(kwargs["bias_percent_lo"] / 100, emax=e_center)
         elif method_lo == "none":
             thres_lo = self.e_true[0]
         else:
@@ -218,10 +219,11 @@ class SpectrumObservation:
         # High threshold
         if method_hi == "area_max":
             aeff_thres = kwargs["area_percent_hi"] / 100 * self.aeff.max_area
-            thres_hi = self.aeff.find_energy(aeff_thres)
+            thres_hi = self.aeff.find_energy(aeff_thres, emin=e_center, emax=self.e_true[-1])
         elif method_hi == "energy_bias":
             thres_hi = self.edisp.get_bias_energy(
-                kwargs["bias_percent_hi"] / 100
+                kwargs["bias_percent_hi"] / 100,
+                emin=e_center,
             )
         elif method_hi == "none":
             thres_hi = self.e_true[-1]

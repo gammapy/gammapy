@@ -270,7 +270,7 @@ class EffectiveAreaTable:
         if emax is None:
             emax = self.energy.nodes[-1]
 
-        aeff_spectrum = TableModel(self.energy.nodes, self.data.data)
+        aeff_spectrum = TableModel(self.energy.nodes, self.data.data, values_scale="lin")
         return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
 
     def to_sherpa(self, name):

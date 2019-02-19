@@ -59,7 +59,7 @@ def test_spectrum_observation_2():
         excess=824,
         excess_safe_range=824,
         lo_threshold=0.012045,
-        hi_threshold=83.021757,
+        hi_threshold=100,
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
@@ -188,7 +188,7 @@ class SpectrumObservationTester:
         if self.obs.edisp is not None:
             self.obs.compute_energy_threshold(
                 method_lo="energy_bias",
-                method_hi="energy_bias",
+                method_hi="none",
                 bias_percent_lo=10,
                 bias_percent_hi=10
             )
