@@ -44,8 +44,8 @@ class TestFixedPointingInfo:
 
     def test_altaz(self):
         pos = self.fpi.altaz
-        assert_allclose(pos.az.deg, 11.45751357)
-        assert_allclose(pos.alt.deg, 41.34088901)
+        assert_allclose(pos.az.deg, 7.48272)
+        assert_allclose(pos.alt.deg, 41.84191)
         assert pos.name == "altaz"
 
 

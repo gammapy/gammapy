@@ -3,7 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.time import Time
 from ...utils.testing import requires_data
 from ...maps import WcsGeom, HpxGeom, MapAxis
 from ...irf import Background3D
@@ -22,17 +23,25 @@ def fixed_pointing_info():
 
 
 @pytest.fixture(scope="session")
-def fixed_pointing_info_at_origin(fixed_pointing_info):
-    # Create Fixed Pointing Info at altaz origin (removes rotation in FoV)
-    altaz_origin = SkyCoord(
+def fixed_pointing_info_aligned(fixed_pointing_info):
+    # Create Fixed Pointing Info aligined between sky and horizon coordinates
+    # (removes rotation in FoV and results in predictable solid angles)
+    origin = SkyCoord(
         0, 0,
-        unit='deg', frame='altaz',
-        location=fixed_pointing_info.location,
-        obstime=fixed_pointing_info.obstime
+        unit='deg', frame='icrs',
+        location=EarthLocation(lat=90*u.deg, lon=0*u.deg),
+        obstime=Time('2000-9-21 12:00:00')
     )
-    meta = fixed_pointing_info.meta.copy()
-    meta['RA_PNT'] = altaz_origin.icrs.ra
-    meta['DEC_PNT'] = altaz_origin.icrs.dec
+    fpi = fixed_pointing_info
+    meta = fpi.meta.copy()
+    meta['RA_PNT'] = origin.icrs.ra
+    meta['DEC_PNT'] = origin.icrs.dec
+    meta['GEOLON'] = origin.location.lon
+    meta['GEOLAT'] = origin.location.lat
+    meta['ALTITUDE'] = origin.location.height
+    time_start = origin.obstime.datetime - fpi.time_ref.datetime
+    meta['TSTART'] = time_start.total_seconds()
+    meta['TSTOP'] = meta['TSTART'] + 60
     return FixedPointingInfo(meta)
 
 
@@ -105,13 +114,13 @@ def geom(map_type, ebounds, skydir):
             "map_type": "wcs",
             "ebounds": [0.1, 1, 10],
             "shape": (2, 3, 4),
-            "sum": 931.012235,
+            "sum": 940.167672,
         },
         {
             "map_type": "wcs",
             "ebounds": [0.1, 10],
             "shape": (1, 3, 4),
-            "sum": 1009.55574,
+            "sum": 1019.495516,
         },
         # TODO: make this work for HPX
         # 'HpxGeom' object has no attribute 'separation'
@@ -140,9 +149,9 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
     assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
 
 
-def test_make_map_background_irf_constant(fixed_pointing_info_at_origin):
+def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_at_origin, symmetry='constant'
+        fpi=fixed_pointing_info_aligned, symmetry='constant'
     )
     for d in m.data:
         assert_allclose(d[1, :], d[1, 0])  # Constant along lon
@@ -153,18 +162,18 @@ def test_make_map_background_irf_constant(fixed_pointing_info_at_origin):
             assert_allclose(d[:, 1], d[0, 1])
 
 
-def test_make_map_background_irf_sym(fixed_pointing_info_at_origin):
+def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_at_origin, symmetry='symmetric'
+        fpi=fixed_pointing_info_aligned, symmetry='symmetric'
     )
     for d in m.data:
-        assert_allclose(d[1, 0], d[1, 2], rtol=1e-5)  # Symmetric along lon
-        assert_allclose(d[0, 1], d[2, 1], rtol=1e-5)  # Symmetric along lat
+        assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
+        assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
 
 
-def test_make_map_background_irf_asym(fixed_pointing_info_at_origin):
+def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_at_origin, symmetry='asymmetric'
+        fpi=fixed_pointing_info_aligned, symmetry='asymmetric'
     )
     for d in m.data:
         # TODO:
@@ -172,7 +181,7 @@ def test_make_map_background_irf_asym(fixed_pointing_info_at_origin):
         #  representated as [lon, lat, energy] in the api, but the bkg irf
         #  dimensions are currently [energy, lon, lat] - Will be changed in
         #  the future (perhaps when IRFs use the skymaps class)
-        assert_allclose(d[1, 0], d[1, 2], rtol=1e-2)  # Symmetric along lon
+        assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
         with pytest.raises(AssertionError):
-            assert_allclose(d[0, 1], d[2, 1], rtol=1e-2)  # Symmetric along lat
-        assert_allclose(d[0, 1], d[2, 1]*9, rtol=1e-2)  # Asymmetric along lat
+            assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
+        assert_allclose(d[0, 1]*9, d[2, 1], rtol=1e-4)  # Asymmetric along lat
