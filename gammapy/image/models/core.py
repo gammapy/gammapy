@@ -220,7 +220,7 @@ class SkyEllipse(SkySpatialModel):
 
         import numpy as np
         from gammapy.image.models.core import *
-        import astropy.units as u 
+        import astropy.units as u
         from gammapy.maps import Map, WcsGeom
         import matplotlib.pyplot as plt
         from matplotlib import rc
@@ -232,10 +232,10 @@ class SkyEllipse(SkySpatialModel):
         ell=SkyEllipse(2*u.deg,2*u.deg,1*u.deg,.8,30*u.deg)
 
         m_geom = WcsGeom.create(binsz=.01,width=(3,3),skydir=(2,2),coordsys="GAL",proj="AIT")
-        coords=m_geom.get_coord()  
-        lon=coords.lon*u.deg  
+        coords=m_geom.get_coord()
+        lon=coords.lon*u.deg
         lat=coords.lat*u.deg  
-        vals=ell(lon,lat) 
+        vals=ell(lon,lat)
         mymap=Map.from_geom(m_geom,data=vals.value)
 
         fig,ax,_=mymap.plot()
