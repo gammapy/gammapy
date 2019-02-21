@@ -5,7 +5,9 @@ from numpy.testing import assert_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable
+from ...utils.fitting import Fit, Parameters
 from ...spectrum import (
+    CountsSpectrum,
     PHACountsSpectrum,
     SpectrumObservationList,
     SpectrumObservation,
@@ -23,7 +25,7 @@ class TestSpectrumDataset:
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
 
-        self.source_model = PowerLaw(
+        self.source_model = models.PowerLaw(
             index=2.1, amplitude=1e5 / u.TeV / u.s, reference=0.1 * u.TeV
         )
 

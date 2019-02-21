@@ -3,7 +3,7 @@ import logging
 import copy
 import numpy as np
 import astropy.units as u
-from ..utils.fitting import Fit
+from ..utils.fitting import Fit, Parameters
 from .. import stats
 from .utils import CountsPredictor
 from .observation import SpectrumObservationList, SpectrumObservation
@@ -70,7 +70,7 @@ class SpectrumDataset:
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.data.shape
+        return self.counts.data.shape
 
     def npred(self):
         """Returns npred map (model + background)"""
@@ -82,7 +82,7 @@ class SpectrumDataset:
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data.data, mu_on=self.npred())
+        return stats.cash(n_on=self.counts.data.data, mu_on=self.npred())
 
     def likelihood(self, parameters, mask=None):
         """Total likelihood given the current model parameters.
