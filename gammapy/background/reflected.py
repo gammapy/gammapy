@@ -129,12 +129,15 @@ class ReflectedRegionsFinder:
         self.exclusion_mask = exclusion_mask
         self.max_region_number = max_region_number
         self.reflected_regions = None
+        self.reference_map = None
 
     def run(self):
         """Run all steps.
         """
         if self.exclusion_mask is None:
-            self.exclusion_mask = self.make_empty_mask(self.region, self.center)
+            self.reference_map = self.make_empty_mask(self.region, self.center)
+        else:
+            self.reference_map = self.exclusion_mask
         self.setup()
         self.find_regions()
 
@@ -164,7 +167,7 @@ class ReflectedRegionsFinder:
 
     def setup(self):
         """Compute parameters for reflected regions algorithm."""
-        wcs = self.exclusion_mask.geom.wcs
+        wcs = self.reference_map.geom.wcs
         self._pix_region = self.region.to_pixel(wcs)
         self._pix_center = PixCoord(*self.center.to_pixel(wcs))
         dx = self._pix_region.center.x - self._pix_center.x
@@ -188,7 +191,7 @@ class ReflectedRegionsFinder:
         )
 
         # Distance image
-        self._distance_image = _compute_distance_image(self.exclusion_mask)
+        self._distance_image = _compute_distance_image(self.reference_map)#exclusion_mask)
 
     def find_regions(self):
         """Find reflected regions."""
@@ -198,7 +201,7 @@ class ReflectedRegionsFinder:
             test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
             test_reg = CirclePixelRegion(test_pos, self._pix_region.radius)
             if not self._is_inside_exclusion(test_reg, self._distance_image):
-                refl_region = test_reg.to_sky(self.exclusion_mask.geom.wcs)
+                refl_region = test_reg.to_sky(self.reference_map.geom.wcs)
                 log.debug("Placing reflected region\n{}".format(refl_region))
                 reflected_regions.append(refl_region)
                 curr_angle = curr_angle + self._min_ang
@@ -342,9 +345,9 @@ class ReflectedRegionsBackgroundEstimator:
         """
         import matplotlib.pyplot as plt
 
-        fig, ax, cbar = self.finder.exclusion_mask.plot(fig=fig, ax=ax)
+        fig, ax, cbar = self.finder.reference_map.plot(fig=fig, ax=ax)
 
-        wcs = self.finder.exclusion_mask.geom.wcs
+        wcs = self.finder.reference_map.geom.wcs
         on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(color="red")
         ax.add_patch(on_patch)
 
