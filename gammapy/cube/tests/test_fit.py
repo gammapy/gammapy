@@ -47,7 +47,7 @@ def exposure(geom_etrue):
 
 def background(geom):
     m = Map.from_geom(geom)
-    m.quantity = np.ones(m.data.shape) * 1e-5
+    m.quantity = 0.2 * np.ones(m.data.shape)
     return m
 
 
@@ -106,48 +106,69 @@ def test_map_fit(sky_model):
     geom_t = geom_etrue(ebounds_true)
 
     background_map = background(geom_r)
-    background_model = BackgroundModel(background_map, norm=0.5)
+    background_model_1 = BackgroundModel(background_map, norm=0.5)
+    background_model_2 = BackgroundModel(background_map, norm=1)
 
     psf_map = psf(geom_t)
     edisp_map = edisp(geom_r, geom_t)
     exposure_map = exposure(geom_t)
-    counts_map = counts(sky_model, exposure_map, background_model, psf_map, edisp_map)
+    counts_map_1 = counts(sky_model, exposure_map, background_model_1, psf_map, edisp_map)
+    counts_map_2 = counts(sky_model, exposure_map, background_model_2, psf_map, edisp_map)
+
     mask_map = mask(geom_r, sky_model)
     sky_model.parameters["sigma"].frozen = True
 
-    dataset = MapDataset(
+    dataset_1 = MapDataset(
         model=sky_model,
-        counts=counts_map,
+        counts=counts_map_1,
         exposure=exposure_map,
         mask=mask_map,
         psf=psf_map,
         edisp=edisp_map,
-        background_model=background_model,
+        background_model=background_model_1,
     )
 
-    background_model.parameters["norm"].value = 0.4
+    dataset_2 = MapDataset(
+        model=sky_model,
+        counts=counts_map_2,
+        exposure=exposure_map,
+        mask=mask_map,
+        psf=psf_map,
+        edisp=edisp_map,
+        background_model=background_model_2,
+    )
 
-    fit = Fit(dataset)
+    background_model_1.parameters["norm"].value = 0.4
+    background_model_2.parameters["norm"].value = 0.9
+
+    fit = Fit([dataset_1, dataset_2])
     result = fit.run()
 
     assert result.success
     assert "minuit" in repr(result)
 
-    npred = dataset.npred().data.sum()
-    assert_allclose(npred, 2455.230889, rtol=1e-3)
-    assert_allclose(result.total_stat, 5424.791272, rtol=1e-3)
+    npred = dataset_1.npred().data.sum()
+    assert_allclose(npred, 4454.932873, rtol=1e-3)
+    assert_allclose(result.total_stat, 29918.649855, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.004177, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.003627, rtol=1e-2)
 
     assert_allclose(pars["index"].value, 3, rtol=1e-2)
-    assert_allclose(pars.error("index"), 0.033947, rtol=1e-2)
+    assert_allclose(pars.error("index"), 0.031294, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 4.03049e-13, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 3.885326e-13, rtol=1e-2)
 
-    assert_allclose(pars["norm"].value, 0.493, rtol=1e-2)
+    # background norm 1
+    assert_allclose(pars[6].value, 0.5, rtol=1e-2)
+    assert_allclose(pars.error(pars[6]), 0.015399, rtol=1e-2)
+
+    # background norm 2
+
+    assert_allclose(pars[9].value, 1, rtol=1e-2)
+    assert_allclose(pars.error(pars[9]), 0.02104, rtol=1e-2)
 
 
 @requires_dependency("iminuit")
@@ -185,16 +206,16 @@ def test_map_fit_one_energy_bin(sky_model):
     assert result.success
 
     npred = dataset.npred().data.sum()
-    assert_allclose(npred, 87.11356, rtol=1e-3)
-    assert_allclose(result.total_stat, 696.74531, rtol=1e-3)
+    assert_allclose(npred, 1087.073518, rtol=1e-3)
+    assert_allclose(result.total_stat, 5177.19198, rtol=1e-3)
 
     pars = result.parameters
 
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("lon_0"), 0.021715, rtol=1e-2)
+    assert_allclose(pars.error("lon_0"), 0.04623, rtol=1e-2)
 
     assert_allclose(pars["sigma"].value, 0.2, rtol=1e-2)
-    assert_allclose(pars.error("sigma"), 0.011, rtol=1e-2)
+    assert_allclose(pars.error("sigma"), 0.031759, rtol=1e-2)
 
     assert_allclose(pars["amplitude"].value, 1e-11, rtol=1e-2)
-    assert_allclose(pars.error("amplitude"), 1.07049e-12, rtol=1e-2)
+    assert_allclose(pars.error("amplitude"), 2.163318e-12, rtol=1e-2)
