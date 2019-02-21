@@ -12,7 +12,68 @@ from ...spectrum import (
     SpectrumFit,
     SpectrumFitResult,
     models,
+    SpectrumDataset,
 )
+
+
+class TestSpectrumDataset:
+    """Test fit on counts spectra without any IRFs"""
+
+    def setup(self):
+        self.nbins = 30
+        binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
+
+        self.source_model = PowerLaw(
+            index=2.1, amplitude=1e5 / u.TeV / u.s, reference=0.1 * u.TeV
+        )
+
+        self.livetime = 100 * u.s
+
+        bkg_rate = np.ones(self.nbins) / u.s
+        bkg_expected = bkg_rate * self.livetime
+
+        self.bkg = CountsSpectrum(
+            energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_expected
+        )
+
+        random_state = get_random_state(23)
+        self.npred = self.source_model.integral(binning[:-1], binning[1:]) * self.livetime
+        self.npred += bkg_expected
+        source_counts = random_state.poisson(self.npred)
+
+        self.src = CountsSpectrum(
+            energy_lo=binning[:-1],
+            energy_hi=binning[1:],
+            data=source_counts
+        )
+        self.dataset = SpectrumDataset(self.source_model,
+                                       self.src,
+                                       self.livetime,
+                                       None,
+                                       None,
+                                       None,
+                                       self.bkg
+                                       )
+
+    def test_cash(self):
+        """Simple CASH fit to the on vector"""
+
+        fit = Fit(self.dataset)
+        result = fit.run()
+
+        assert result.success
+        assert "minuit" in repr(result)
+
+        npred = self.dataset.npred().sum()
+        assert_allclose(npred, self.npred.sum(), rtol=1e-3)
+        assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
+
+        pars = result.parameters
+        assert_allclose(pars["index"].value, 2.1, rtol=1e-2)
+        assert_allclose(pars.error("index"), 0.00127, rtol=1e-2)
+
+        assert_allclose(pars["amplitude"].value, 1e5, rtol=1e-3)
+        assert_allclose(pars.error("amplitude"), 153.450, rtol=1e-2)
 
 
 @requires_dependency("sherpa")
