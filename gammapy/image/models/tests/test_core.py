@@ -2,12 +2,13 @@
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
-from ....maps import Map
+from ....maps import Map, WcsGeom
 from ....utils.testing import requires_data
 from ..core import (
     SkyPointSource,
     SkyGaussian,
     SkyDisk,
+    SkyEllipse,
     SkyShell,
     SkyDiffuseConstant,
     SkyDiffuseMap,
@@ -40,6 +41,22 @@ def test_sky_disk():
     assert val.unit == "sr-1"
     desired = [261.263956, 0, 261.263956]
     assert_allclose(val.value, desired)
+
+
+def test_sky_ellipse():
+    model = SkyEllipse(2 * u.deg, 2 * u.deg, 1 * u.deg, 0.8, 30 * u.deg)
+    m_allsky = WcsGeom.create(
+        binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT"
+    )
+    coords = m_allsky.get_coord()
+    lon = coords.lon * u.deg
+    lat = coords.lat * u.deg
+    vals = model(lon, lat)
+    assert vals.unit == "sr-1"
+    mymap = Map.from_geom(m_allsky, data=vals.value)
+    assert_allclose(
+        np.sum(mymap.quantity * u.sr ** -1 * m_allsky.solid_angle()), 1, rtol=5.0e-4
+    )
 
 
 def test_sky_shell():

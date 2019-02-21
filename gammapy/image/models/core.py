@@ -2,16 +2,18 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates.angle_utilities import angular_separation, offset_by
 from astropy.coordinates import Angle, Longitude, Latitude
 from ...utils.fitting import Parameter, Parameters, Model
 from ...maps import Map
+from scipy.integrate import quad
 
 __all__ = [
     "SkySpatialModel",
     "SkyPointSource",
     "SkyGaussian",
     "SkyDisk",
+    "SkyEllipse",
     "SkyShell",
     "SkyDiffuseConstant",
     "SkyDiffuseMap",
@@ -168,6 +170,136 @@ class SkyDisk(SkySpatialModel):
         # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
         norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
         return u.Quantity(norm.value * (sep <= r_0), "sr-1", copy=False)
+
+
+class SkyEllipse(SkySpatialModel):
+    r"""Constant elliptical model
+
+    .. math::
+       \phi(\text{lon}, \text{lat}) =
+                \begin{cases}
+                    N & \text{for }  \,\,\,dist(F_1,P)+dist(F_2,P)\leq 2 a \\
+                    0 & \text{otherwise }\,,
+                \end{cases}
+
+
+
+    where :math:`F_1` and :math:`F_2` represent the foci of the ellipse (located by the method `find_foci()`),
+    :math:`P` is a generic point of coordinates :math:`(\text{lon}, \text{lat})`,
+    :math:`a` is the major semiaxis of the ellipse and N is the model's
+    normalization, in units of :math:`\text{sr}^{-1}`.
+    
+    The model is defined on the celestial sphere, by computing angles and distances with the functions defined in
+    `astropy.coordinates.angle_utilities`, and setting the normalization such that:
+
+    .. math::
+       \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
+
+
+    Parameters
+    ----------
+    lon_0 : `~astropy.coordinates.Longitude`
+        :math:`\text{lon}_0`: `lon` coordinate for the center of the ellipse.
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`\text{lat}_0`: `lat` coordinate for the center of the ellipse.
+    semi_major : `~astropy.coordinates.Angle`
+        :math:`a`: length of the major semiaxis, in angular units.
+    e : `float`
+        Eccentricity of the ellipse (:math:`0< e< 1`).
+    theta : `~astropy.coordinates.Angle`
+        :math:`\theta`: 
+        Rotation angle of the major semiaxis.  The
+        rotation angle increases clockwise (i.e., East of North) from the positive `lon`
+        axis.
+
+
+        Examples
+    --------
+    .. plot::
+        :include-source:
+
+        import numpy as np
+        from gammapy.image.models.core import *
+        import astropy.units as u 
+        from gammapy.maps import Map, WcsGeom
+        import matplotlib.pyplot as plt
+        from matplotlib import rc
+        rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+        ## for Palatino and other serif fonts use:
+        #rc('font',**{'family':'serif','serif':['Palatino']})
+        rc('text', usetex=True)
+
+        ell=SkyEllipse(2*u.deg,2*u.deg,1*u.deg,.8,30*u.deg)
+
+        m_geom = WcsGeom.create(binsz=.01,width=(3,3),skydir=(2,2),coordsys="GAL",proj="AIT")
+        coords=m_geom.get_coord()  
+        lon=coords.lon*u.deg  
+        lat=coords.lat*u.deg  
+        vals=ell(lon,lat) 
+        mymap=Map.from_geom(m_geom,data=vals.value)
+
+        fig,ax,_=mymap.plot()
+        ax.scatter(2, 2, transform=ax.get_transform('galactic'), s=20,edgecolor='red', facecolor='red')
+        plt.text(2.08, 2.06, r'$(l_0,b_0)$' ,transform=ax.get_transform('galactic'), fontsize=12)
+        plt.plot([2,2+np.cos(np.pi/6)],[2,2+np.sin(np.pi/6)], transform=ax.get_transform('galactic'))
+        ax.hlines(y=2,color='r', linestyle='--',transform=ax.get_transform('galactic'),xmin=0,xmax=5)
+        plt.text(2.4, 2.06, r'$\theta$' ,transform=ax.get_transform('galactic'), fontsize=12)
+
+        plt.show()
+    """
+
+    def __init__(self, lon_0, lat_0, semi_major, e, theta):
+        self.parameters = Parameters(
+            [
+                Parameter("lon_0", Longitude(lon_0)),
+                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("semi_major", Angle(semi_major)),
+                Parameter("e", e, min=0, max=1),
+                Parameter("theta", Angle(theta)),
+            ]
+        )
+
+    def find_foci(lon_0, lat_0, semi_major, e, theta):
+        """Find the foci of the ellipse."""
+        c = semi_major * e
+        lon_1, lat_1 = offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
+        lon_2, lat_2 = offset_by(lon_0, lat_0, 270 * u.deg - theta, c)
+        return lon_1, lat_1, lon_2, lat_2
+
+    def compute_norm(semi_major, e):
+        """Compute the normalization factor."""
+        semi_minor = semi_major * np.sqrt(1 - e ** 2)
+
+        def integral_fcn(x, a, b):
+            A = 1 + 1 / a.to("rad").value ** 2
+            B = 1 + 1 / b.to("rad").value ** 2
+            C = A - B
+            cs2 = np.cos(x) ** 2
+            return 1 - np.sqrt(1 - 1 / (B + C * cs2))
+
+        return (
+            quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, 2 * np.pi)[0]
+            ** -1
+        )
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, semi_major, e, theta):
+        """Evaluate the model (static function)."""
+        lon_1, lat_1, lon_2, lat_2 = SkyEllipse.find_foci(
+            lon_0, lat_0, semi_major, e, theta
+        )
+        sep_1 = angular_separation(lon, lat, lon_1, lat_1)
+        sep_2 = angular_separation(lon, lat, lon_2, lat_2)
+        in_ellipse = sep_1 + sep_2 <= 2 * semi_major
+        norm = u.Quantity(
+            SkyEllipse.compute_norm(semi_major, e), unit="sr-1", copy=False
+        )
+        result = np.select([in_ellipse], [norm])
+
+        if isinstance(norm, u.Quantity):
+            return u.Quantity(result, unit=norm.unit, copy=False)
+        else:
+            return result
 
 
 class SkyShell(SkySpatialModel):
