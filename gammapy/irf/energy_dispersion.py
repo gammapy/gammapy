@@ -442,7 +442,11 @@ class EnergyDispersion:
         return bias
 
     def get_bias_energy(self, bias, emin=None, emax=None):
-        """Find energy correspoding to a given bias
+        """Find energy corresponding to a given bias.
+
+        In case the solution is not unique, provide the `emin` or `emax` arguments
+        to limit the solution to the given range.  By default the peak energy of the
+        bias is chosen as `emin`.
 
         Parameters
         ----------
@@ -456,19 +460,23 @@ class EnergyDispersion:
         Returns
         -------
         bias_energy : `~astropy.unit.Quantity`
-            Bias energy
+            Reconstructed energy corresponding to the given bias.
         """
         from ..spectrum.models import TableModel
-        energy = self.e_true.nodes
-        values = self.get_bias(energy)
+        e_true = self.e_true.nodes
+        values = self.get_bias(e_true)
 
         if emin is None:
-            emin = energy[np.nanargmax(values)]
+            # use the peak bias energy as default minimum
+            emin = e_true[np.nanargmax(values)]
         if emax is None:
-            emax = energy[-1]
+            emax = e_true[-1]
 
-        bias_spectrum = TableModel(energy, values)
-        return bias_spectrum.inverse(Quantity(bias), emin=emin, emax=emax)
+        bias_spectrum = TableModel(e_true, values)
+        e_true = bias_spectrum.inverse(Quantity(bias), emin=emin, emax=emax)
+
+        # return reconstructed energy
+        return e_true * (1 + bias)
 
     def get_mean(self, e_true):
         """Get mean reconstructed energy for a given true energy."""

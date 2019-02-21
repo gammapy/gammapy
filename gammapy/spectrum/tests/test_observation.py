@@ -28,7 +28,7 @@ def test_spectrum_observation_1():
         npred=109.014552,
         excess=169.916667,
         excess_safe_range=116.33,
-        lo_threshold=8.912509e+08,
+        lo_threshold=1.e+09,
         hi_threshold=1e11,
     )
     tester = SpectrumObservationTester(obs, pars)
@@ -58,7 +58,7 @@ def test_spectrum_observation_2():
         npred=292.00223031875987,
         excess=824,
         excess_safe_range=824,
-        lo_threshold=0.012045,
+        lo_threshold=0.013219,
         hi_threshold=100,
     )
     tester = SpectrumObservationTester(obs, pars)
@@ -193,8 +193,8 @@ class SpectrumObservationTester:
                 bias_percent_hi=10
             )
 
-            assert_allclose(self.obs.lo_threshold.value, self.vals["lo_threshold"], rtol=1e-5)
-            assert_allclose(self.obs.hi_threshold.value, self.vals["hi_threshold"], rtol=1e-5)
+            assert_allclose(self.obs.lo_threshold.value, self.vals["lo_threshold"], rtol=1e-4)
+            assert_allclose(self.obs.hi_threshold.value, self.vals["hi_threshold"], rtol=1e-4)
             self.obs.reset_thresholds()
 
 

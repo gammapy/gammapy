@@ -101,7 +101,7 @@ class TestEffectiveAreaTable:
         assert elo_threshold.unit == "TeV"
         assert_allclose(elo_threshold.value, 0.554086, rtol=1e-3)
 
-        ehi_threshold = arf.find_energy(0.9 * arf.max_area, emin=30 * u.TeV)
+        ehi_threshold = arf.find_energy(0.9 * arf.max_area, emin=30 * u.TeV, emax=100 * u.TeV)
         assert ehi_threshold.unit == "TeV"
         assert_allclose(ehi_threshold.value, 53.347217, rtol=1e-3)
 

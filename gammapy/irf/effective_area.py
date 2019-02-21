@@ -247,7 +247,11 @@ class EffectiveAreaTable:
         return cleaned_data.max()
 
     def find_energy(self, aeff, emin=None, emax=None):
-        """Find energy for given effective area.
+        """Find energy for a given effective area.
+
+        In case the solution is not unique, provide the `emin` or `emax` arguments
+        to limit the solution to the given range. By default the peak energy of the
+        effective area is chosen as `emax`.
 
         Parameters
         ----------
@@ -261,14 +265,16 @@ class EffectiveAreaTable:
         Returns
         -------
         energy : `~astropy.units.Quantity`
-            Energy corresponding to aeff
+            Energy corresponding to the given aeff.
         """
         from ..spectrum.models import TableModel
+        energy = self.energy.nodes
 
         if emin is None:
-            emin = self.energy.nodes[0]
+            emin = energy[0]
         if emax is None:
-            emax = self.energy.nodes[-1]
+            # use the peak effective area as a default for the energy maximum
+            emax = energy[np.argmax(self.data.data)]
 
         aeff_spectrum = TableModel(self.energy.nodes, self.data.data, values_scale="lin")
         return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
