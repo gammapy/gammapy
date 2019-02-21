@@ -8,9 +8,99 @@ from .. import stats
 from .utils import CountsPredictor
 from .observation import SpectrumObservationList, SpectrumObservation
 
-__all__ = ["SpectrumFit"]
+__all__ = ["SpectrumFit", "SpectrumDataset"]
 
 log = logging.getLogger(__name__)
+
+class SpectrumDataset:
+    """Perform spectral model likelihood fit on a CountsSpectrum.
+
+    Parameters
+    ----------
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Fit model
+    counts : `~gammapy.spectrum.CountsSpectrum`
+        Counts spectrum
+    livetime : float
+        Livetime
+    mask : numpy.array
+        Mask to apply to the likelihood.
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        Effective area
+    edisp : `~gammapy.irf.EnergyDispersion`
+        Energy dispersion
+    background: `~gammapy.spectrum.CountsSpectrum`
+        Background to use for the fit.
+    """
+
+    def __init__(
+        self,
+        model,
+        counts=None,
+        livetime=None,
+        mask=None,
+        aeff=None,
+        edisp=None,
+        background=None,
+    ):
+        if mask is not None and mask.dtype != np.dtype("bool"):
+            raise ValueError("mask data must have dtype bool")
+
+        self.model = model
+        self.counts = counts
+        self.livetime = livetime
+        self.mask = mask
+        self.aeff = aeff
+        self.edisp = edisp
+        self.background = background
+
+        self.parameters = Parameters(self.model.parameters.parameters)
+
+        if edisp is None:
+            self.predictor = CountsPredictor(model=self.model,
+                                              livetime=self.livetime,
+                                              aeff=self.aeff,
+                                              e_true=self.counts.energy.bins)
+        else:
+            self.predictor = CountsPredictor(model=self.model,
+                                        aeff=self.aeff,
+                                        edisp=self.edisp,
+                                        livetime=self.livetime)
+
+    @property
+    def data_shape(self):
+        """Shape of the counts data"""
+        return self.counts.data.data.shape
+
+    def npred(self):
+        """Returns npred map (model + background)"""
+        self.predictor.run()
+        model_npred = self.predictor.npred.data.data
+        back_npred = self.background.data.data
+        total_npred = model_npred + back_npred
+        return total_npred
+
+    def likelihood_per_bin(self):
+        """Likelihood per bin given the current model parameters"""
+        return cash(n_on=self.counts.data.data, mu_on=self.npred())
+
+    def likelihood(self, parameters, mask=None):
+        """Total likelihood given the current model parameters.
+
+        Parameters
+        ----------
+        mask : `~numpy.ndarray`
+            Mask to be combined with the dataset mask.
+        """
+        if self.mask is None and mask is None:
+            stat = self.likelihood_per_bin()
+        elif self.mask is None:
+            stat = self.likelihood_per_bin()[mask]
+        elif mask is None:
+            stat = self.likelihood_per_bin()[self.mask]
+        else:
+            stat = self.likelihood_per_bin()[mask & self.mask]
+        return np.sum(stat, dtype=np.float64)
 
 
 class SpectrumFit(Fit):
