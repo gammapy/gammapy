@@ -191,7 +191,7 @@ class ReflectedRegionsFinder:
         )
 
         # Distance image
-        self._distance_image = _compute_distance_image(self.reference_map)#exclusion_mask)
+        self._distance_image = _compute_distance_image(self.reference_map)
 
     def find_regions(self):
         """Find reflected regions."""
