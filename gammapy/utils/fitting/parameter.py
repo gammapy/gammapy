@@ -231,9 +231,20 @@ class Parameters:
     """
 
     def __init__(self, parameters, covariance=None, apply_autoscale=True):
-        self._parameters = parameters
+        self._parameters = self._filter_unique_parameters(parameters)
         self.covariance = covariance
         self.apply_autoscale = apply_autoscale
+
+    @staticmethod
+    def _filter_unique_parameters(parameters):
+        """Filter unique parameters from a list of parameters"""
+        unique_parameters = []
+
+        for par in parameters:
+            if par not in unique_parameters:
+                unique_parameters.append(par)
+
+        return unique_parameters
 
     def _init_covariance(self):
         if self.covariance is None:

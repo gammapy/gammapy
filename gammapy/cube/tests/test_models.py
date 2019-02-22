@@ -83,12 +83,12 @@ def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
 
 @pytest.fixture(scope="session")
 def sky_models(sky_model):
-    return SkyModels([sky_model, sky_model])
+    return SkyModels([sky_model, sky_model.copy()])
 
 
 @pytest.fixture(scope="session")
 def compound_model(sky_model):
-    return CompoundSkyModel(sky_model, sky_model, np.add)
+    return CompoundSkyModel(sky_model, sky_model.copy(), np.add)
 
 
 def test_skymodel_addition(sky_model, sky_models, diffuse_model):
