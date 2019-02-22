@@ -235,7 +235,8 @@ class Parameters:
         self.covariance = covariance
         self.apply_autoscale = apply_autoscale
 
-    def _filter_unique_parameters(self, parameters):
+    @staticmethod
+    def _filter_unique_parameters(parameters):
         """Filter unique parameters from a list of parameters"""
         unique_parameters = []
 
