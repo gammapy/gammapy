@@ -28,6 +28,8 @@ def test_spectrum_observation_1():
         npred=109.014552,
         excess=169.916667,
         excess_safe_range=116.33,
+        lo_threshold=1.e+09,
+        hi_threshold=1e11,
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
@@ -56,6 +58,8 @@ def test_spectrum_observation_2():
         npred=292.00223031875987,
         excess=824,
         excess_safe_range=824,
+        lo_threshold=0.013219,
+        hi_threshold=100,
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
@@ -77,7 +81,13 @@ def test_spectrum_observation_3():
     )
     obs = SpectrumObservation(on_vector=on_vector, aeff=aeff)
     pars = dict(
-        total_on=171, livetime=livetime, npred=1425.6, excess=171, excess_safe_range=171
+        total_on=171,
+        livetime=livetime,
+        npred=1425.6,
+        excess=171,
+        excess_safe_range=171,
+        lo_threshold=0.1,
+        hi_threshold=10
     )
     tester = SpectrumObservationTester(obs, pars)
     tester.test_all()
@@ -134,6 +144,7 @@ class SpectrumObservationTester:
         self.test_to_sherpa()
         self.test_peek()
         self.test_npred()
+        self.test_energy_thresholds()
 
     def test_basic(self):
         assert "Observation summary report" in str(self.obs)
@@ -172,6 +183,19 @@ class SpectrumObservationTester:
     def test_peek(self):
         with mpl_plot_check():
             self.obs.peek()
+
+    def test_energy_thresholds(self):
+        if self.obs.edisp is not None:
+            self.obs.compute_energy_threshold(
+                method_lo="energy_bias",
+                method_hi="none",
+                bias_percent_lo=10,
+                bias_percent_hi=10
+            )
+
+            assert_allclose(self.obs.lo_threshold.value, self.vals["lo_threshold"], rtol=1e-4)
+            assert_allclose(self.obs.hi_threshold.value, self.vals["hi_threshold"], rtol=1e-4)
+            self.obs.reset_thresholds()
 
 
 def _read_hess_obs():

@@ -205,11 +205,11 @@ class SpectrumObservation:
             aeff_thres = kwargs["area_percent_lo"] / 100 * self.aeff.max_area
             thres_lo = self.aeff.find_energy(aeff_thres)
         elif method_lo == "energy_bias":
-            thres_lo = self._find_bias_energy(kwargs["bias_percent_lo"] / 100)
+            thres_lo = self.edisp.get_bias_energy(kwargs["bias_percent_lo"] / 100)
         elif method_lo == "none":
             thres_lo = self.e_true[0]
         else:
-            raise ValueError("Undefine method for low threshold: {}".format(method_lo))
+            raise ValueError("Undefined method for low threshold: {}".format(method_lo))
 
         self.on_vector.lo_threshold = thres_lo
         if self.off_vector is not None:
@@ -218,10 +218,13 @@ class SpectrumObservation:
         # High threshold
         if method_hi == "area_max":
             aeff_thres = kwargs["area_percent_hi"] / 100 * self.aeff.max_area
-            thres_hi = self.aeff.find_energy(aeff_thres, reverse=True)
+            e_min = self.e_true[-1]
+            thres_hi = self.aeff.find_energy(aeff_thres, emin=e_min)
         elif method_hi == "energy_bias":
-            thres_hi = self._find_bias_energy(
-                kwargs["bias_percent_hi"] / 100, reverse=True
+            e_min = self.e_true[-1]
+            thres_hi = self.edisp.get_bias_energy(
+                kwargs["bias_percent_hi"] / 100,
+                emin=e_min,
             )
         elif method_hi == "none":
             thres_hi = self.e_true[-1]
@@ -233,31 +236,6 @@ class SpectrumObservation:
         self.on_vector.hi_threshold = thres_hi
         if self.off_vector is not None:
             self.off_vector.hi_threshold = thres_hi
-
-    def _find_bias_energy(self, bias_value, reverse=False):
-        """Helper function to interpolate between bias values to retrieve an energy"""
-        e = self.e_true.log_centers
-        bias = np.abs(self.edisp.get_bias(e))
-        with np.errstate(invalid="ignore"):
-            valid = np.where(bias <= bias_value)[0]
-        idx = valid[0]
-        if reverse:
-            idx = valid[-1]
-        if not reverse:
-            if idx == 0:
-                energy = self.e_true[idx].value
-            else:
-                energy = np.interp(
-                    bias_value, (bias[[idx - 1, idx]].value), (e[[idx - 1, idx]].value)
-                )
-        else:
-            if idx == e.size - 1:
-                energy = self.e_true[idx + 1].value
-            else:
-                energy = np.interp(
-                    bias_value, (bias[[idx, idx + 1]].value), (e[[idx, idx + 1]].value)
-                )
-        return energy * self.e_true.unit
 
     @property
     def background_vector(self):

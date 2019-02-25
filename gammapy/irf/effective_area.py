@@ -246,55 +246,39 @@ class EffectiveAreaTable:
         cleaned_data = self.data.data[np.where(~np.isnan(self.data.data))]
         return cleaned_data.max()
 
-    def find_energy(self, aeff, reverse=False):
-        """Find energy for given effective area.
+    def find_energy(self, aeff, emin=None, emax=None):
+        """Find energy for a given effective area.
 
-        A linear interpolation is performed between the two nodes closest to
-        the desired effective area value. By default, the first match is
-        returned (use `reverse` to search starting from the end of the array)
-
-        TODO: Move to `~gammapy.utils.nddata.NDDataArray`
+        In case the solution is not unique, provide the `emin` or `emax` arguments
+        to limit the solution to the given range. By default the peak energy of the
+        effective area is chosen as `emax`.
 
         Parameters
         ----------
         aeff : `~astropy.units.Quantity`
             Effective area value
-        reverse : bool
-            Reverse the direction, i.e. search starting from the end of the array
+        emin : `~astropy.units.Quantity`
+            Lower bracket value in case solution is not unique.
+        emax : `~astropy.units.Quantity`
+            Upper bracket value in case solution is not unique.
 
         Returns
         -------
         energy : `~astropy.units.Quantity`
-            Energy corresponding to aeff
+            Energy corresponding to the given aeff.
         """
-        valid = np.where(self.data.data > aeff)[0]
-        idx = valid[0]
-        if reverse:
-            idx = valid[-1]
+        from ..spectrum.models import TableModel
+        energy = self.energy.nodes
 
-        if not reverse:
-            # Return lower edge if first bin is selected
-            if idx == 0:
-                energy = self.energy.lo[idx].value
-            # Perform linear interpolation otherwise
-            else:
-                energy = np.interp(
-                    aeff.value,
-                    (self.data.data[[idx - 1, idx]].value),
-                    (self.energy.nodes[[idx - 1, idx]].value),
-                )
-        else:
-            # Return upper edge if last bin is selected
-            if idx == self.data.data.size - 1:
-                energy = self.energy.hi[idx].value
-            # Perform linear interpolation otherwise
-            else:
-                energy = np.interp(
-                    aeff.value,
-                    (self.data.data[[idx, idx + 1]].value),
-                    (self.energy.nodes[[idx, idx + 1]].value),
-                )
-        return energy * self.energy.unit
+        if emin is None:
+            emin = energy[0]
+        if emax is None:
+            # use the peak effective area as a default for the energy maximum
+            emax = energy[np.argmax(self.data.data)]
+
+        aeff_spectrum = TableModel(energy, self.data.data, values_scale="lin")
+        return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
+
 
     def to_sherpa(self, name):
         """Convert to `~sherpa.astro.data.DataARF`
