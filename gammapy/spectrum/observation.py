@@ -209,7 +209,7 @@ class SpectrumObservation:
         elif method_lo == "none":
             thres_lo = self.e_true[0]
         else:
-            raise ValueError("Undefine method for low threshold: {}".format(method_lo))
+            raise ValueError("Undefined method for low threshold: {}".format(method_lo))
 
         self.on_vector.lo_threshold = thres_lo
         if self.off_vector is not None:
@@ -218,11 +218,13 @@ class SpectrumObservation:
         # High threshold
         if method_hi == "area_max":
             aeff_thres = kwargs["area_percent_hi"] / 100 * self.aeff.max_area
-            thres_hi = self.aeff.find_energy(aeff_thres, emin=e_center, emax=self.e_true[-1])
+            e_min = self.e_true[-1]
+            thres_hi = self.aeff.find_energy(aeff_thres, emin=e_min)
         elif method_hi == "energy_bias":
+            e_min = self.e_true[-1]
             thres_hi = self.edisp.get_bias_energy(
                 kwargs["bias_percent_hi"] / 100,
-                emin=e_center,
+                emin=e_min,
             )
         elif method_hi == "none":
             thres_hi = self.e_true[-1]
