@@ -2,8 +2,6 @@
 import logging
 from collections import OrderedDict
 import numpy as np
-import math
-import copy
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError

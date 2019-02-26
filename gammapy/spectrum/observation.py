@@ -687,12 +687,12 @@ class SpectrumObservationList(UserList):
         from ipywidgets import interact
 
         max_ = len(self) - 1
-        print("{}".format(max_))
 
         def show_obs(idx):
             self[idx].peek()
 
         return interact(show_obs, idx=(0, max_, 1))
+
 
 class SpectrumObservationStacker:
     r"""Stack observations in a `~gammapy.spectrum.SpectrumObservationList`.

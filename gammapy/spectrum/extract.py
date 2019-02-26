@@ -255,16 +255,10 @@ class SpectrumExtraction:
             Overwrite existing files?
         """
         outdir = make_path(outdir)
-        log.info(' Writing OGIP files to {}'.format(outdir / ogipdir))
+        log.info('Writing OGIP files to {}'.format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
         self.spectrum_observations.write(
             outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
         )
 
         # TODO : add more debug plots etc. here
-
-    def peek(self):
-        self.observations.peek()
-
-    def print(self):
-        print(self.observations.stack())
