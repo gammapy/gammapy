@@ -242,7 +242,6 @@ def _significance_simple(n_on, mu_bkg):
 
 
 def _significance_lima(n_on, mu_bkg):
-
     sign = np.sign(n_on - mu_bkg)
     val = np.sqrt(2) * np.sqrt(n_on * np.log(n_on / mu_bkg) - n_on + mu_bkg)
     return sign * val

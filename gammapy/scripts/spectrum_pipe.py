@@ -55,7 +55,7 @@ class SpectrumAnalysisIACT:
 
     def run(self, optimize_opts=None):
         """Run all steps."""
-        log.info(" Running {}".format(self.__class__.__name__))
+        log.info("Running {}".format(self.__class__.__name__))
         self.run_extraction()
         self.run_fit(optimize_opts)
 
@@ -69,23 +69,10 @@ class SpectrumAnalysisIACT:
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
-<<<<<<< HEAD
-            **self.config['extraction'])
-        if self.config['area_max'] != None:
-            self.extraction.define_energy_threshold('area_max', percent=self.config['area_max'])
-            log.info(" Using the safe Threshold E>E({}*area_max)".format(self.config['area_max']/100.))
-
-        self.extraction.run(outdir=self.config['outdir'])
-        # self.extraction.peek() #BKH - 2017/06/26 : for me it crashs
-        print("\n\n")
-        self.extraction.print()
-        print("\n")
-=======
             **self.config["extraction"]
         )
 
         self.extraction.run()
->>>>>>> upstream/master
 
     def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
@@ -111,15 +98,9 @@ class SpectrumAnalysisIACT:
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-<<<<<<< HEAD
-            obs=self.extraction.observations,
-            sqrt_ts_threshold=delta_ts)
-        self.flux_point_estimator.compute_points()
-=======
             obs=self.extraction.spectrum_observations,
         )
         self.flux_points = self.flux_point_estimator.run()
->>>>>>> upstream/master
 
     @property
     def spectrum_result(self):
