@@ -260,3 +260,5 @@ class SpectrumExtraction:
         self.spectrum_observations.write(
             outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
         )
+
+        # TODO : add more debug plots etc. here
