@@ -1,40 +1,31 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
+from collections import namedtuple
 import numpy as np
-from astropy.utils.console import ProgressBar
-from astropy.io import fits
-from astropy.units import Quantity
-from astropy.time import Time
+from astropy.units import Quantity, Unit
 from astropy.coordinates import SkyCoord, Angle, AltAz
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from ..utils.energy import EnergyBounds
+from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
-from ..extern.pathlib import Path
 from ..utils.time import time_ref_from_dict
-from .utils import _earth_location_from_dict
-from .gti import GTI
-from . import InvalidDataError
+from ..utils.testing import Checker
 
-__all__ = [
-    'EventList',
-    'EventListDataset',
-    'EventListDatasetChecker',
-]
+__all__ = ["EventListBase", "EventList", "EventListLAT"]
 
 log = logging.getLogger(__name__)
 
 
-class EventList(object):
+class EventListBase:
     """Event list.
 
-    Data format specification: ref:`gadf:iact-events`
+    This class represents the base for two different event lists:
+    - EventList: targeted for IACT event lists
+    - EventListLAT: targeted for Fermi-LAT event lists
 
     Event list data is stored in ``table`` (`~astropy.table.Table`) data member.
-
-    TODO: merge this class with EventListDataset, which also holds a GTI extension.
 
     The most important reconstructed event parameters
     are available as the following columns:
@@ -61,30 +52,15 @@ class EventList(object):
     ----------
     table : `~astropy.table.Table`
         Event list table
-
-    Examples
-    --------
-    To load an example H.E.S.S. event list:
-
-    >>> from gammapy.data import EventList
-    >>> filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz'
-    >>> events = EventList.read(filename)
-
-    To load an example Fermi-LAT event list (the one corresponding to the 2FHL catalog dataset):
-
-    >>> filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz'
-    >>> events = EventList.read(filename)
     """
 
     def __init__(self, table):
 
-        # TODO: remove this temp fix once we change to a new test dataset
-        # This is a temp fix because this test dataset is used for many Gammapy tests
-        # but it doesn't have the units set properly
-        # '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
-        if 'ENERGY' in table.colnames:
-            if not table['ENERGY'].unit:
-                table['ENERGY'].unit = 'TeV'
+        # TODO: remove this temp fix once we drop support for `hess-hd-hap-prod2`
+        # There the unit wasn't set correctly in the FITS table, so this hack is needed.
+        if "ENERGY" in table.colnames:
+            if not table["ENERGY"].unit:
+                table["ENERGY"].unit = "TeV"
 
         self.table = table
 
@@ -96,13 +72,11 @@ class EventList(object):
 
         Parameters
         ----------
-        filename : `~gammapy.extern.pathlib.Path`, str
+        filename : `pathlib.Path`, str
             Filename
         """
         filename = make_path(filename)
-        if 'hdu' not in kwargs:
-            kwargs.update(hdu='EVENTS')
-
+        kwargs.setdefault("hdu", "EVENTS")
         table = Table.read(str(filename), **kwargs)
         return cls(table=table)
 
@@ -122,20 +96,32 @@ class EventList(object):
         return cls(stacked_table)
 
     def __str__(self):
-        ss = 'EventList info:\n'
-        ss += '- Number of events: {}\n'.format(len(self.table))
+        ss = (
+            "EventList info:\n"
+            + "- Number of events: {}\n".format(len(self.table))
+            + "- Median energy: {:.3g} {}\n".format(
+                np.median(self.energy.value), self.energy.unit
+            )
+        )
+
+        if "OBS_ID" in self.table.meta:
+            ss += "- OBS_ID = {}".format(self.table.meta["OBS_ID"])
+
         # TODO: add time, RA, DEC and if present GLON, GLAT info ...
 
-        ss += '- Median energy: {}\n'.format(np.median(self.energy))
-
-        if 'AZ' in self.table.colnames:
+        if "AZ" in self.table.colnames:
             # TODO: azimuth should be circular median
-            ss += '- Median azimuth: {}\n'.format(np.median(self.table['AZ']))
+            ss += "- Median azimuth: {}\n".format(np.median(self.table["AZ"]))
 
-        if 'ALT' in self.table.colnames:
-            ss += '- Median altitude: {}\n'.format(np.median(self.table['ALT']))
+        if "ALT" in self.table.colnames:
+            ss += "- Median altitude: {}\n".format(np.median(self.table["ALT"]))
 
         return ss
+
+    @property
+    def time_ref(self):
+        """Time reference (`~astropy.time.Time`)"""
+        return time_ref_from_dict(self.table.meta)
 
     @property
     def time(self):
@@ -147,61 +133,33 @@ class EventList(object):
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met_ref = time_ref_from_dict(self.table.meta)
-        met = Quantity(self.table['TIME'].astype('float64'), 'second')
-        time = met_ref + met
-        return time
+        met = Quantity(self.table["TIME"].astype("float64"), "second")
+        return self.time_ref + met
+
+    @property
+    def observation_time_start(self):
+        """Observation start time (`~astropy.time.Time`)."""
+        return self.time_ref + Quantity(self.table.meta["TSTART"], "second")
+
+    @property
+    def observation_time_end(self):
+        """Observation stop time (`~astropy.time.Time`)."""
+        return self.time_ref + Quantity(self.table.meta["TSTOP"], "second")
 
     @property
     def radec(self):
         """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-
-        TODO: the `radec` and `galactic` properties should be cached as table columns
         """
-        lon, lat = self.table['RA'], self.table['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        lon, lat = self.table["RA"], self.table["DEC"]
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def galactic(self):
         """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
 
-        Note: uses the ``GLON`` and ``GLAT`` columns.
-        If only ``RA`` and ``DEC`` are present use the explicit
-        ``event_list.radec.to('galactic')`` instead.
+        Always computed from RA / DEC using Astropy.
         """
-        self.add_galactic_columns()
-        lon, lat = self.table['GLON'], self.table['GLAT']
-        return SkyCoord(lon, lat, unit='deg', frame='galactic')
-
-    def add_galactic_columns(self):
-        """Add Galactic coordinate columns to the table.
-
-        Adds the following columns to the table if not already present:
-        - "GLON" - Galactic longitude (deg)
-        - "GLAT" - Galactic latitude (deg)
-        """
-        if set(['GLON', 'GLAT']).issubset(self.table.colnames):
-            return
-
-        galactic = self.radec.galactic
-        self.table['GLON'] = galactic.l.degree
-        self.table['GLAT'] = galactic.b.degree
-
-    # TODO: the following properties are also present on the `DataStoreObservation` class.
-    # This duplication should be removed.
-    # Maybe the EventList or EventListDataset should have an `observation` object member?
-    @property
-    def observatory_earth_location(self):
-        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
-        return _earth_location_from_dict(self.table.meta)
-
-    @property
-    def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
-
-        The wall time, including dead-time.
-        """
-        return Quantity(self.table.meta['ONTIME'], 'second')
+        return self.radec.galactic
 
     @property
     def observation_live_time_duration(self):
@@ -209,10 +167,12 @@ class EventList(object):
 
         The dead-time-corrected observation time.
 
-        Computed as ``t_live = t_observation * (1 - f_dead)``
+        - In Fermi-LAT it is automatically provided in the header of the event list.
+        - In IACTs is computed as ``t_live = t_observation * (1 - f_dead)``
+
         where ``f_dead`` is the dead-time fraction.
         """
-        return Quantity(self.table.meta['LIVETIME'], 'second')
+        return Quantity(self.table.meta["LIVETIME"], "second")
 
     @property
     def observation_dead_time_fraction(self):
@@ -222,30 +182,20 @@ class EventList(object):
 
         Dead-time is defined as the time during the observation
         where the detector didn't record events:
-        http://en.wikipedia.org/wiki/Dead_time
-        http://adsabs.harvard.edu/abs/2004APh....22..285F
+        https://en.wikipedia.org/wiki/Dead_time
+        https://adsabs.harvard.edu/abs/2004APh....22..285F
 
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.
         """
-        return 1 - self.table.meta['DEADC']
-
-    @property
-    def altaz(self):
-        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)."""
-        time = self.time
-        location = self.observatory_earth_location
-        altaz_frame = AltAz(obstime=time, location=location)
-
-        lon, lat = self.table['AZ'], self.table['ALT']
-        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
+        return 1 - self.table.meta["DEADC"]
 
     @property
     def pointing_radec(self):
         """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
         info = self.table.meta
-        lon, lat = info['RA_PNT'], info['DEC_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        lon, lat = info["RA_PNT"], info["DEC_PNT"]
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
 
     @property
     def offset(self):
@@ -253,12 +203,12 @@ class EventList(object):
         position = self.radec
         center = self.pointing_radec
         offset = center.separation(position)
-        return Angle(offset, unit='deg')
+        return Angle(offset, unit="deg")
 
     @property
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)."""
-        return self.table['ENERGY'].quantity
+        return self.table["ENERGY"].quantity
 
     def select_row_subset(self, row_specifier):
         """Select table row subset.
@@ -311,34 +261,26 @@ class EventList(object):
         >>> event_list = event_list.select_energy()
         """
         energy = self.energy
-        mask = (energy_band[0] <= energy)
-        mask &= (energy < energy_band[1])
-        return self.select_row_subset(mask)
-
-    def select_offset(self, offset_band):
-        """Select events in offset band.
-
-        Parameters
-        ----------
-        offset_band : `~astropy.coordinates.Angle`
-            offset band ``[offset_min, offset_max)``
-
-        Returns
-        -------
-        event_list : `EventList`
-            Copy of event list with selection applied.
-        """
-        offset = self.offset
-        mask = (offset_band[0] <= offset)
-        mask &= (offset < offset_band[1])
+        mask = energy_band[0] <= energy
+        mask &= energy < energy_band[1]
         return self.select_row_subset(mask)
 
     def select_time(self, time_interval):
         """Select events in time interval.
+
+        Parameters
+        ----------
+        time_interval : `astropy.time.Time`
+            Start time (inclusive) and stop time (exclusive) for the selection.
+
+        Returns
+        -------
+        events : `EventList`
+            Copy of event list with selection applied.
         """
         time = self.time
-        mask = (time_interval[0] <= time)
-        mask &= (time < time_interval[1])
+        mask = time_interval[0] <= time
+        mask &= time < time_interval[1]
         return self.select_row_subset(mask)
 
     def select_sky_cone(self, center, radius):
@@ -383,12 +325,13 @@ class EventList(object):
         mask = mask1 * mask2
         return self.select_row_subset(mask)
 
-    def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
+    def select_sky_box(self, lon_lim, lat_lim, frame="icrs"):
         """Select events in sky box.
 
         TODO: move `gammapy.catalog.select_sky_box` to gammapy.utils.
         """
         from ..catalog import select_sky_box
+
         selected = select_sky_box(self.table, lon_lim, lat_lim, frame)
         return self.__class__(selected)
 
@@ -419,12 +362,12 @@ class EventList(object):
 
         Parameters
         ----------
-        region : list of `~region.SkyRegion`
+        region : list of `~regions.SkyRegion`
             List of sky regions
 
         Returns
         -------
-        index_array : `np.array`
+        index_array : `numpy.ndarray`
             Index array of selected events
         """
         position = self.radec
@@ -435,119 +378,51 @@ class EventList(object):
             mask = np.union1d(mask, temp)
         return mask
 
-    def peek(self):
-        """Summary plots."""
-        import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
-        self.plot_image_radec(ax=axes[0])
-        #        self.plot_time_map(ax=axes[1])
-        self.plot_time(ax=axes[1])
+    def select_parameter(self, parameter, band):
+        """Select events with respect to a specified parameter
 
-        # log-log scale for time map
-        #        xlims = axes[1].set_xlim()
-        #        ylims = axes[1].set_ylim()
-        #        axes[1].set_xlim(1e-3, xlims[1])
-        #        axes[1].set_ylim(1e-3, ylims[1])
-        #        axes[1].loglog()
-        # TODO: self.plot_energy_dependence(ax=axes[x])
-        # TODO: self.plot_offset_dependence(ax=axes[x])
-        plt.tight_layout()
+        Parameters
+        ----------
+        parameter : str
+            Parameter used for the selection. Must be present in `self.table`.
+        band : tuple or `astropy.units.Quantity`
+            Min and max value for the parameter to be selected (min <= parameter < max).
+            If parameter is not dimensionless you have to provide a Quantity.
 
-    def plot_image_radec(self, ax=None, number_bins=50):
-        """Plot a sky  counts image in RADEC coordinate.
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
 
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
+        Examples
+        --------
+        >>> from gammapy.data import EventList
+        >>> event_list = EventList.read('events.fits')
+        >>> phase_region = (0.3, 0.5)
+        >>> event_list = event_list.select_parameter(parameter='PHASE', band=phase_region)
         """
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
-        from matplotlib.colors import PowerNorm
+        mask = band[0] <= self.table[parameter].quantity
+        mask &= self.table[parameter].quantity < band[1]
+        return self.select_row_subset(mask)
 
-        ax = plt.gca() if ax is None else ax
+    def _default_plot_ebounds(self):
+        energy = self.energy
+        return EnergyBounds.equal_log_spacing(energy.min(), energy.max(), 50)
 
-        # max_x = max(self.table['RA'])
-        # min_x = min(self.table['RA'])
-        # max_y = max(self.table['DEC'])
-        # min_y = min(self.table['DEC'])
-        #
-        # x_edges = np.linspace(min_x, max_x, number_bins)
-        # y_edges = np.linspace(min_y, max_y, number_bins)
-
-        count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]['RA'], self.table[:]['DEC'], bins=number_bins)
-
-        ax.set_title('# Photons')
-
-        ax.set_xlabel('RA')
-        ax.set_ylabel('DEC')
-
-        ax.plot(self.pointing_radec.ra.value, self.pointing_radec.dec.value, '+', ms=20, mew=3, color='white')
-
-        im = ax.imshow(count_image, interpolation='nearest', origin='low',
-                       extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]],
-                       norm=PowerNorm(gamma=0.5))
-
-        ax.invert_xaxis()
-        ax.grid()
-
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im, cax=cax)
-
-    def plot_image(self, ax=None, number_bins=50):
-        """Plot the counts as a function of x and y camera coordinate.
-
-        TODO: fix the histogramming ... this example shows that it's currently incorrect:
-        gammapy-data-show ~/work/hess-host-analyses/hap-hd-example-files/run023000-023199/run023037/hess_events_023037.fits.gz events -p
-        Maybe we can use the FOVCube class for this with one energy bin.
-        Or add a separate FOVImage class.
-        """
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        max_x = max(self.table['DETX'])
-        min_x = min(self.table['DETX'])
-        max_y = max(self.table['DETY'])
-        min_y = min(self.table['DETY'])
-
-        x_edges = np.linspace(min_x, max_x, number_bins)
-        y_edges = np.linspace(min_y, max_y, number_bins)
-
-        count_image, x_edges, y_edges = np.histogram2d(
-            self.table[:]['DETY'], self.table[:]['DETX'],
-            bins=(x_edges, y_edges)
-        )
-
-        ax.set_title('# Photons')
-
-        ax.set_xlabel('x / deg')
-        ax.set_ylabel('y / deg')
-        ax.imshow(count_image, interpolation='nearest', origin='low',
-                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
-
-    def plot_energy_hist(self, ax=None, ebounds=None, **kwargs):
-        """Plot counts as a function of energy."""
+    def _counts_spectrum(self, ebounds):
         from ..spectrum import CountsSpectrum
 
-        if ebounds is None:
-            emin = np.min(self['ENERGY'].quantity)
-            emax = np.max(self['ENERGY'].quantity)
-            ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
+        if not ebounds:
+            ebounds = self._default_plot_ebounds()
+        spec = CountsSpectrum(energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
+        spec.fill(self.energy)
+        return spec
 
-        spec = CountsSpectrum(energy=ebounds)
-        spec.fill(self)
-        spec.plot(ax=ax, **kwargs)
+    def plot_energy(self, ax=None, ebounds=None, **kwargs):
+        """Plot counts as a function of energy."""
+        spec = self._counts_spectrum(ebounds)
+        ax = spec.plot(ax=ax, **kwargs)
         return ax
-
-    def plot_offset_hist(self, ax=None):
-        """Plot counts as a function of camera offset."""
-        raise NotImplementedError
-
-    def plot_energy_offset(self, ax=None):
-        """Plot energy dependence as a function of camera offset."""
-        raise NotImplementedError
 
     def plot_time(self, ax=None):
         """Plots an event rate time curve.
@@ -561,54 +436,53 @@ class EventList(object):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes
-
-        Examples
-        --------
-        Plot the rate of the events:
-
-        .. plot::
-            :include-source:
-
-            import matplotlib.pyplot as plt
-            from gammapy.data import DataStore
-
-            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
-            events = ds.obs(obs_id=23523).events
-            events.plot_time_map()
-            plt.show()
-
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        time = self.table['TIME']
-        first_event_time = np.min(time)
-
         # Note the events are not necessarily in time order
-        relative_event_times = time - first_event_time
+        time = self.table["TIME"]
+        time = time - np.min(time)
 
-        ax.set_title('Event rate ')
+        ax.set_xlabel("Time (sec)")
+        ax.set_ylabel("Counts")
+        y, x_edges = np.histogram(time, bins=30)
+        # x = (x_edges[1:] + x_edges[:-1]) / 2
+        xerr = np.diff(x_edges) / 2
+        x = x_edges[:-1] + xerr
+        yerr = np.sqrt(y)
 
-        ax.set_xlabel('seconds')
-        ax.set_ylabel('Events / s')
-        rate, t = np.histogram(relative_event_times, bins=50)
-        t_center = (t[1:] + t[:-1]) / 2
-
-        ax.plot(t_center, rate)
+        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, fmt="none")
 
         return ax
 
-    def plot_time_map(self, ax=None):
-        """A time map showing for each event the time between the previous and following event.
+    def plot_offset2_distribution(self, ax=None, center=None, **kwargs):
+        """Plot offset^2 distribution of the events.
 
-        The use and implementation are described here:
-        https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
+        The distribution shown in this plot is for this quantity::
+
+            offset = center.separation(events.radec).deg
+            offset2 = offset ** 2
+
+        Note that this method is just for a quicklook plot.
+
+        If you want to do computations with the offset or offset^2 values, you can
+        use the line above. As an example, here's how to compute the 68% event
+        containment radius using `numpy.percentile`::
+
+            import numpy as np
+            r68 = np.percentile(offset, q=68)
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes` or None
+        ax : `~matplotlib.axes.Axes` (optional)
             Axes
+        center : `astropy.coordinates.SkyCoord`
+            Center position for the offset^2 distribution.
+            Default is the observation pointing position.
+        **kwargs :
+            Extra keyword arguments are passed to `matplotlib.pyplot.hist`.
 
         Returns
         -------
@@ -617,453 +491,390 @@ class EventList(object):
 
         Examples
         --------
-        Plot a time map of the events:
+        Load an example event list:
 
-        .. plot::
-            :include-source:
+        >>> from gammapy.data import EventList
+        >>> events = EventList.read('$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz')
 
-            import matplotlib.pyplot as plt
-            from gammapy.data import DataStore
+        Plot the offset^2 distribution wrt. the observation pointing position
+        (this is a commonly used plot to check the background spatial distribution):
 
-            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
-            events = ds.obs(obs_id=23523).events
-            events.plot_time_map()
-            plt.show()
+        >>> events.plot_offset2_distribution()
+
+        Plot the offset^2 distribution wrt. the Crab pulsar position
+        (this is commonly used to check both the gamma-ray signal and the background spatial distribution):
+
+        >>> import numpy as np
+        >>> from astropy.coordinates import SkyCoord
+        >>> center = SkyCoord(83.63307, 22.01449, unit='deg')
+        >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30)
+        >>> events.plot_offset2_distribution(center=center, bins=bins)
+
+        Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control the histogram binning,
+        in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        time = self.table['TIME']
-        first_event_time = np.min(time)
+        if center is None:
+            center = self.pointing_radec
 
-        # Note the events are not necessarily in time order
-        relative_event_times = time - first_event_time
+        offset2 = center.separation(self.radec).deg ** 2
 
-        diffs = relative_event_times[1:] - relative_event_times[:-1]
-
-        xcoords = diffs[:-1]  # all differences except the last
-        ycoords = diffs[1:]  # all differences except the first
-
-        ax.set_title('Time Map')
-
-        ax.set_xlabel('time before event / s')
-        ax.set_ylabel('time after event / s')
-        ax.scatter(xcoords, ycoords)
+        ax.hist(offset2, **kwargs)
+        ax.set_xlabel("Offset^2 (deg^2)")
+        ax.set_ylabel("Counts")
 
         return ax
 
+    def plot_energy_offset(self, ax=None):
+        """Plot counts histogram with energy and offset axes."""
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
 
-class EventListDataset(object):
-    """Event list dataset (event list plus some extra info).
+        ax = plt.gca() if ax is None else ax
 
-    TODO: I'm not sure if IRFs should be included in this
-    class or if an extra container class should be added.
+        energy_bounds = self._default_plot_ebounds()
+        offset_bounds = np.linspace(0, 4, 30)
+
+        counts = np.histogram2d(
+            x=self.energy, y=self.offset, bins=(energy_bounds, offset_bounds)
+        )[0]
+
+        ax.pcolormesh(energy_bounds, offset_bounds, counts.T, norm=LogNorm())
+        ax.set_xscale("log")
+        ax.set_xlabel("Energy (TeV)")
+        ax.set_ylabel("Offset (deg)")
+
+    def check(self, checks="all"):
+        """Run checks.
+
+        This is a generator that yields a list of dicts.
+        """
+        checker = EventListChecker(self)
+        return checker.run(checks=checks)
+
+
+class EventList(EventListBase):
+    """Event list for IACT dataset
+
+    Data format specification: :ref:`gadf:iact-events`
+
+    For further information, see the base class: `~gammapy.data.EventListBase`.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Event list table
+
+    Examples
+    --------
+    To load an example H.E.S.S. event list:
+
+    >>> from gammapy.data import EventList
+    >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
+    >>> events = EventList.read(filename)
+    """
+
+    @property
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)."""
+        return earth_location_from_dict(self.table.meta)
+
+    @property
+    def observation_time_duration(self):
+        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        This is a keyword related to IACTs
+        The wall time, including dead-time.
+        """
+        return Quantity(self.table.meta["ONTIME"], "second")
+
+    @property
+    def observation_dead_time_fraction(self):
+        """Dead-time fraction (float).
+        This is a keyword related to IACTs
+        Defined as dead-time over observation time.
+
+        Dead-time is defined as the time during the observation
+        where the detector didn't record events:
+        http://en.wikipedia.org/wiki/Dead_time
+        http://adsabs.harvard.edu/abs/2004APh....22..285F
+
+        The dead-time fraction is used in the live-time computation,
+        which in turn is used in the exposure and flux computation.
+        """
+        return 1 - self.table.meta["DEADC"]
+
+    @property
+    def altaz_frame(self):
+        """ALT / AZ frame (`~astropy.coordinates.AltAz`)."""
+        return AltAz(obstime=self.time, location=self.observatory_earth_location)
+
+    @property
+    def altaz(self):
+        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
+        return self.radec.transform_to(self.altaz_frame)
+
+    @property
+    def altaz_from_table(self):
+        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
+        lon = self.table["AZ"]
+        lat = self.table["ALT"]
+        return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
+
+    @property
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)."""
+        info = self.table.meta
+        lon, lat = info["RA_PNT"], info["DEC_PNT"]
+        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+
+    @property
+    def offset(self):
+        """Event offset from the array pointing position (`~astropy.coordinates.Angle`)."""
+        position = self.radec
+        center = self.pointing_radec
+        offset = center.separation(position)
+        return Angle(offset, unit="deg")
+
+    def select_offset(self, offset_band):
+        """Select events in offset band.
+
+        Parameters
+        ----------
+        offset_band : `~astropy.coordinates.Angle`
+            offset band ``[offset_min, offset_max)``
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        offset = self.offset
+        mask = offset_band[0] <= offset
+        mask &= offset < offset_band[1]
+        return self.select_row_subset(mask)
+
+    def peek(self):
+        """Quick look plots."""
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
+
+        self.plot_energy(ax=axes[0, 0])
+        bins = np.linspace(start=0, stop=4 ** 2, num=30)
+        self.plot_offset2_distribution(ax=axes[0, 1], bins=bins)
+        self.plot_time(ax=axes[0, 2])
+
+        axes[1, 0].axis("off")
+        m = self._counts_image()
+        ax = plt.subplot(2, 3, 4, projection=m.geom.wcs)
+        m.plot(ax=ax, stretch="sqrt")
+
+        self.plot_energy_offset(ax=axes[1, 1])
+
+        self._plot_text_summary(ax=axes[1, 2])
+
+        plt.tight_layout()
+
+    def _plot_text_summary(self, ax):
+        ax.axis("off")
+        txt = str(self)
+        ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
+
+    def _counts_image(self):
+        from ..maps import WcsNDMap
+
+        opts = {
+            "width": (7, 7),
+            "binsz": 0.1,
+            "proj": "TAN",
+            "coordsys": "GAL",
+            "skydir": self.pointing_radec,
+        }
+        m = WcsNDMap.create(**opts)
+        m.fill_by_coord(self.radec)
+        m = m.smooth(width=1)
+        return m
+
+    def plot_image(self):
+        """Quick look counts map sky plot."""
+        m = self._counts_image()
+        m.plot(stretch="sqrt")
+
+
+class EventListLAT(EventListBase):
+    """Event list for Fermi-LAT dataset
+
+    Fermi-LAT data products
+    https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
+    Data format specification (columns)
+    https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_Data_Columns.html
+
+    For further information, see the base class: `~gammapy.data.EventListBase`.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Event list table
+
+    Examples
+    --------
+    To load an example Fermi-LAT event list:
+
+    >>> from gammapy.data import EventListLAT
+    >>> filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
+    >>> events = EventListLAT.read(filename)
+    """
+
+    def plot_image(self):
+        """Quick look counts map sky plot."""
+        from ..maps import WcsNDMap
+
+        m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj="AIT", coordsys="GAL")
+        m.fill_by_coord(self.radec)
+        m.plot(stretch="sqrt")
+
+
+class EventListChecker(Checker):
+    """Event list checker.
+
+    Data format specification: ref:`gadf:iact-events`
 
     Parameters
     ----------
     event_list : `~gammapy.data.EventList`
-        Event list table
-    gti : `~gammapy.data.GTI`
-        Good time interval table
+        Event list
     """
 
-    def __init__(self, event_list, gti=None):
+    CHECKS = {
+        "meta": "check_meta",
+        "columns": "check_columns",
+        "times": "check_times",
+        "coordinates_galactic": "check_coordinates_galactic",
+        "coordinates_altaz": "check_coordinates_altaz",
+    }
+
+    accuracy = {"angle": Angle("1 arcsec"), "time": Quantity(1, "microsecond")}
+
+    # https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
+    meta_required = [
+        "HDUCLASS",
+        "HDUDOC",
+        "HDUVERS",
+        "HDUCLAS1",
+        "OBS_ID",
+        "TSTART",
+        "TSTOP",
+        "ONTIME",
+        "LIVETIME",
+        "DEADC",
+        "RA_PNT",
+        "DEC_PNT",
+        # TODO: what to do about these?
+        # They are currently listed as required in the spec,
+        # but I think we should just require ICRS and those
+        # are irrelevant, should not be used.
+        # 'RADECSYS',
+        # 'EQUINOX',
+        "ORIGIN",
+        "TELESCOP",
+        "INSTRUME",
+        "CREATOR",
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        "MJDREFI",
+        "MJDREFF",
+        "TIMEUNIT",
+        "TIMESYS",
+        "TIMEREF",
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/general/coordinates.html#coords-location
+        "GEOLON",
+        "GEOLAT",
+        "ALTITUDE",
+    ]
+
+    _col = namedtuple("col", ["name", "unit"])
+    columns_required = [
+        _col(name="EVENT_ID", unit=""),
+        _col(name="TIME", unit="s"),
+        _col(name="RA", unit="deg"),
+        _col(name="DEC", unit="deg"),
+        _col(name="ENERGY", unit="TeV"),
+    ]
+
+    def __init__(self, event_list):
         self.event_list = event_list
-        self.gti = gti
 
-    @classmethod
-    def from_hdu_list(cls, hdu_list):
-        """Create `EventList` from a `~astropy.io.fits.HDUList`."""
-        # TODO: This doesn't work because FITS / Table is not integrated.
-        # Maybe the easiest solution for now it to write the hdu_list
-        # to an in-memory buffer with StringIO and then read it
-        # back using Table.read()?
-        raise NotImplementedError
-        event_list = EventList.from_hdu(hdu_list['EVENTS'])
-        gti = GTI.from_hdu(hdu_list['GTI'])
+    def _record(self, level="info", msg=None):
+        obs_id = self.event_list.table.meta["OBS_ID"]
+        return {"level": level, "obs_id": obs_id, "msg": msg}
 
-        return cls(event_list=event_list, gti=gti)
+    def check_meta(self):
+        meta_missing = sorted(set(self.meta_required) - set(self.event_list.table.meta))
+        if meta_missing:
+            yield self._record(
+                level="error", msg="Missing meta keys: {!r}".format(meta_missing)
+            )
 
-    @classmethod
-    def read(cls, filename):
-        """Read event list from FITS file."""
-        event_list = EventList.read(filename)
+    def check_columns(self):
+        t = self.event_list.table
 
-        try:
-            gti = GTI.read(filename, hdu='GTI')
-        except KeyError:
-            gti = None
+        if len(t) == 0:
+            yield self._record(level="error", msg="Events table has zero rows")
 
-        return cls(event_list=event_list, gti=gti)
-
-    @classmethod
-    def vstack_from_files(cls, filenames, logger=None):
-        """Stack event lists vertically (combine events and GTIs).
-
-        This function stacks (a.k.a. concatenates) event lists.
-        E.g. if you have one event list with 100 events (i.e. 100 rows)
-        and another with 42 events, the output event list will have 142 events.
-
-        It also stacks the GTIs so that exposure computations are still
-        possible using the stacked event list.
-
-
-        At the moment this can require a lot of memory.
-        All event lists are loaded into memory at the same time.
-
-        TODO: implement and benchmark different a more efficient method:
-        Get number of rows from headers, pre-allocate a large table,
-        open files one by one and fill correct rows.
-
-        TODO: handle header keywords "correctly".
-        At the moment the output event list header keywords are copies of
-        the values from the first observation, i.e. meaningless.
-        Here's a (probably incomplete) list of values we should handle
-        (usually by computing the min, max or mean or removing it):
-        - OBS_ID
-        - DATE_OBS, DATE_END
-        - TIME_OBS, TIME_END
-        - TSTART, TSTOP
-        - LIVETIME, DEADC
-        - RA_PNT, DEC_PNT
-        - ALT_PNT, AZ_PNT
-
-
-        Parameters
-        ----------
-        filenames : list of str
-            List of event list filenames
-
-        Returns
-        -------
-        event_list_dataset : `~gammapy.data.EventListDataset`
-
-        """
-        total_filesize = 0
-        for filename in filenames:
-            total_filesize += Path(filename).stat().st_size
-
-        if logger:
-            logger.info('Number of files to stack: {}'.format(len(filenames)))
-            logger.info('Total filesize: {:.2f} MB'.format(total_filesize / 1024. ** 2))
-            logger.info('Reading event list files ...')
-
-        event_lists = []
-        gtis = []
-        for filename in ProgressBar(filenames):
-            # logger.info('Reading {}'.format(filename))
-            event_list = Table.read(filename, hdu='EVENTS')
-
-            # TODO: Remove and modify header keywords for stacked event list
-            meta_del = ['OBS_ID', 'OBJECT']
-            meta_mod = ['DATE_OBS', 'DATE_END', 'TIME_OBS', 'TIME_END']
-
-            gti = Table.read(filename, hdu='GTI')
-            event_lists.append(event_list)
-            gtis.append(gti)
-
-        total_event_list = vstack_tables(event_lists, metadata_conflicts='silent')
-        total_gti = vstack_tables(gtis, metadata_conflicts='silent')
-
-        total_event_list.meta['EVTSTACK'] = 'yes'
-        total_gti.meta['EVTSTACK'] = 'yes'
-
-        return cls(event_list=total_event_list, gti=total_gti)
-
-    def write(self, *args, **kwargs):
-        """Write to FITS file.
-
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
-        """
-        self.to_fits().writeto(*args, **kwargs)
-
-    def to_fits(self):
-        """Convert to FITS HDU list format.
-
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            HDU list with EVENTS and GTI extension.
-        """
-        # TODO: simplify when Table / FITS integration improves:
-        # https://github.com/astropy/astropy/issues/2632#issuecomment-70281392
-        # TODO: I think this makes an in-memory copy, i.e. is inefficient.
-        # Can we avoid this?
-        hdu_list = fits.HDUList()
-
-        # TODO:
-        del self.event_list['TELMASK']
-
-        data = self.event_list.as_array()
-        header = fits.Header()
-        header.update(self.event_list.meta)
-        hdu_list.append(fits.BinTableHDU(data=data, header=header, name='EVENTS'))
-
-        data = self.gti.as_array()
-        header = fits.Header()
-        header.update(self.gti.meta)
-        hdu_list.append(fits.BinTableHDU(data, header=header, name='GTI'))
-
-        return hdu_list
-
-    def __str__(self):
-        ss = 'Event list dataset info:\n'
-        ss += str(self.event_list)
-        ss += str(self.gti)
-        return ss
-
-    def check(self, checks='all'):
-        """Check if format and content is ok.
-
-        This is a convenience method that instantiates
-        and runs a `~gammapy.data.EventListDatasetChecker` ...
-        if you want more options use this way to use it:
-
-        >>> from gammapy.data import EventListDatasetChecker
-        >>> checker = EventListDatasetChecker(event_list, ...)
-        >>> checker.run(which, ...)  #
-
-        Parameters
-        ----------
-        checks : list of str or 'all'
-            Which checks to run (see list in
-            `~gammapy.data.EventListDatasetChecker.run` docstring).
-
-        Returns
-        -------
-        ok : bool
-            Everything ok?
-        """
-        checker = EventListDatasetChecker(self)
-        return checker.run(checks)
-
-
-class EventListDatasetChecker(object):
-    """Event list dataset checker.
-
-    Data format specification: ref:`gadf:iact-events`
-
-    Having such a checker is useful at the moment because
-    the CTA data formats are quickly evolving and there's
-    various sources of event list data, e.g. exporters are
-    being written for the existing IACTs and simulators
-    are being written for CTA.
-
-    Parameters
-    ----------
-    event_list_dataset : `~gammapy.data.EventListDataset`
-        Event list dataset
-    logger : `logging.Logger` or None
-        Logger to use (use module-level Gammapy logger by default)
-    """
-    _AVAILABLE_CHECKS = OrderedDict(
-        misc='check_misc',
-        times='check_times',
-        coordinates='check_coordinates',
-    )
-
-    accuracy = OrderedDict(
-        angle=Angle('1 arcsec'),
-        time=Quantity(1, 'microsecond'),
-
-    )
-
-    def __init__(self, event_list_dataset, logger=None):
-        self.dset = event_list_dataset
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = log
-
-    def run(self, checks='all'):
-        """Run checks.
-
-        Available checks: {...}
-
-        Parameters
-        ----------
-        checks : list of str or "all"
-            Which checks to run
-
-        Returns
-        -------
-        ok : bool
-            Everything ok?
-        """
-        if checks == 'all':
-            checks = self._AVAILABLE_CHECKS.keys()
-
-        unknown_checks = set(checks).difference(self._AVAILABLE_CHECKS.keys())
-        if unknown_checks:
-            raise ValueError('Unknown checks: {}'.format(unknown_checks))
-
-        ok = True
-        for check in checks:
-            check_method = getattr(self, self._AVAILABLE_CHECKS[check])
-            ok &= check_method()
-
-        return ok
-
-    def check_misc(self):
-        """Check misc basic stuff."""
-        ok = True
-
-        required_meta = ['TELESCOP', 'OBS_ID']
-        missing_meta = set(required_meta) - set(self.dset.event_list.table.meta)
-        if missing_meta:
-            ok = False
-            self.logger.error('Missing meta info: {}'.format(missing_meta))
-
-        # TODO: implement more basic checks that all required info is present.
-
-        return ok
-
-    def _check_times_gtis(self):
-        """Check GTI info."""
-        # TODO:
-        # Check that required info is there
-        for colname in ['START', 'STOP']:
-            if colname not in self.colnames:
-                raise InvalidDataError('GTI missing column: {}'.format(colname))
-
-        for key in ['TSTART', 'TSTOP', 'MJDREFI', 'MJDREFF']:
-            if key not in self.meta:
-                raise InvalidDataError('GTI missing header keyword: {}'.format(key))
-
-        # TODO: Check that header keywords agree with table entries
-        # TSTART, TSTOP, MJDREFI, MJDREFF
-
-        # Check that START and STOP times are consecutive
-        times = np.ravel(self['START'], self['STOP'])
-        # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
-        if not np.all(np.diff(times) >= 0):
-            raise InvalidDataError('GTIs are not consecutive or sorted.')
+        for name, unit in self.columns_required:
+            if name not in t.colnames:
+                yield self._record(
+                    level="error", msg="Missing table column: {!r}".format(name)
+                )
+            else:
+                if Unit(unit) != (t[name].unit or ""):
+                    yield self._record(
+                        level="error", msg="Invalid unit for column: {!r}".format(name)
+                    )
 
     def check_times(self):
-        """Check if various times are consistent.
+        dt = (self.event_list.time - self.event_list.observation_time_start).sec
+        if dt.min() < self.accuracy["time"].to_value("s"):
+            yield self._record(level="error", msg="Event times before obs start time")
 
-        The headers and tables of the FITS EVENTS and GTI extension
-        contain various observation and event time information.
-        """
-        ok = True
+        dt = (self.event_list.time - self.event_list.observation_time_end).sec
+        if dt.max() > self.accuracy["time"].to_value("s"):
+            yield self._record(level="error", msg="Event times after the obs end time")
 
-        # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
-        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
-        telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01T00:00:00'),
-            HESS=Time('2001-01-01T00:00:00'),
-        )
+        if np.min(np.diff(dt)) <= 0:
+            yield self._record(level="error", msg="Events are not time-ordered.")
 
-        meta = self.dset.event_list.table.meta
-        telescope = meta['TELESCOP']
-        met_ref = time_ref_from_dict(meta)
-
-        if telescope in telescope_met_refs.keys():
-            dt = (met_ref - telescope_met_refs[telescope])
-            if dt > self.accuracy['time']:
-                ok = False
-                self.logger.error('MET reference is incorrect.')
-        else:
-            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
-
-        # TODO: check latest CTA spec to see which info is required / optional
-        # EVENTS header keywords:
-        # 'DATE_OBS': '2004-10-14'
-        # 'TIME_OBS': '00:08:27'
-        # 'DATE_END': '2004-10-14'
-        # 'TIME_END': '00:34:44'
-        # 'TSTART': 150984507.0
-        # 'TSTOP': 150986084.0
-        # 'MJDREFI': 51544
-        # 'MJDREFF': 0.5
-        # 'TIMEUNIT': 's'
-        # 'TIMESYS': 'TT'
-        # 'TIMEREF': 'local'
-        # 'TASSIGN': 'Namibia'
-        # 'TELAPSE': 0
-        # 'ONTIME': 1577.0
-        # 'LIVETIME': 1510.95910644531
-        # 'DEADC': 0.964236799627542
-
-        return ok
-
-    def check_coordinates(self):
-        """Check if various event list coordinates are consistent.
-
-        Parameters
-        ----------
-        event_list_dataset : `~gammapy.data.EventListDataset`
-            Event list dataset
-        accuracy : `~astropy.coordinates.Angle`
-            Required accuracy.
-
-        Returns
-        -------
-        status : bool
-            All coordinates consistent?
-        """
-        ok = True
-        ok &= self._check_coordinates_header()
-        ok &= self._check_coordinates_galactic()
-        ok &= self._check_coordinates_altaz()
-        ok &= self._check_coordinates_field_of_view()
-        return ok
-
-    def _check_coordinates_header(self):
-        """Check TODO"""
-        # TODO: implement
-        return True
-
-    def _check_coordinates_galactic(self):
+    def check_coordinates_galactic(self):
         """Check if RA / DEC matches GLON / GLAT."""
-        event_list = self.dset.event_list
+        t = self.event_list.table
 
-        for colname in ['RA', 'DEC', 'GLON', 'GLAT']:
-            if colname not in event_list.table.colnames:
-                # GLON / GLAT columns are optional ...
-                # so it's OK if they are not present ... just move on ...
-                self.logger.info('Skipping Galactic coordinate check. '
-                                 'Missing column: "{}".'.format(colname))
-                return True
+        if "GLON" not in t.colnames:
+            return
 
-        radec = event_list.radec
-        galactic = event_list.galactic
-        separation = radec.separation(galactic).to('arcsec')
-        return self._check_separation(separation, 'GLON / GLAT', 'RA / DEC')
+        galactic = SkyCoord(t["GLON"], t["GLAT"], unit="deg", frame="galactic")
+        separation = self.event_list.radec.separation(galactic).to("arcsec")
+        if separation.max() > self.accuracy["angle"]:
+            yield self._record(
+                level="error", msg="GLON / GLAT not consistent with RA / DEC"
+            )
 
-    def _check_coordinates_altaz(self):
+    def check_coordinates_altaz(self):
         """Check if ALT / AZ matches RA / DEC."""
-        event_list = self.dset.event_list
+        t = self.event_list.table
 
-        for colname in ['RA', 'DEC', 'AZ', 'ALT']:
-            if colname not in event_list.table.colnames:
-                # AZ / ALT columns are optional ...
-                # so it's OK if they are not present ... just move on ...
-                self.logger.info('Skipping AltAz coordinate check. '
-                                 'Missing column: "{}".'.format(colname))
-                return True
+        if "AZ" not in t.colnames:
+            return
 
-        radec = event_list.radec
-        altaz_expected = event_list.altaz
-        altaz_actual = radec.transform_to(altaz_expected)
-        separation = altaz_actual.separation(altaz_expected).to('arcsec')
-        return self._check_separation(separation, 'ALT / AZ', 'RA / DEC')
-
-    def _check_coordinates_field_of_view(self):
-        """Check if DETX / DETY matches ALT / AZ."""
-        # TODO: implement
-        return True
-
-    def _check_separation(self, separation, tag1, tag2):
-        max_separation = separation.max()
-
-        if max_separation > self.accuracy['angle']:
-            # TODO: probably we need to print run number and / or other
-            # things for this to be useful in a pipeline ...
-            fmt = '{} not consistent with {}. Max separation: {}'
-            args = [tag1, tag2, max_separation]
-            self.logger.warning(fmt.format(*args))
-            return False
-        else:
-            return True
+        altaz_astropy = self.event_list.altaz
+        separation = angular_separation(
+            altaz_astropy.data.lon,
+            altaz_astropy.data.lat,
+            t["AZ"].quantity,
+            t["ALT"].quantity,
+        )
+        if separation.max() > self.accuracy["angle"]:
+            yield self._record(
+                level="error", msg="ALT / AZ not consistent with RA / DEC"
+            )

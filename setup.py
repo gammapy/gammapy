@@ -32,7 +32,7 @@ DESCRIPTION = metadata.get('description', 'Astropy affiliated package')
 AUTHOR = metadata.get('author', '')
 AUTHOR_EMAIL = metadata.get('author_email', '')
 LICENSE = metadata.get('license', 'unknown')
-URL = metadata.get('url', 'http://astropy.org')
+URL = metadata.get('url', 'https://gammapy.org')
 
 # Get the long description from the package's docstring
 # __import__(PACKAGENAME)
@@ -47,7 +47,7 @@ builtins._ASTROPY_PACKAGE_NAME_ = PACKAGENAME
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 # We use the format is `x.y` or `x.y.z` or `x.y.dev`
-VERSION = '0.7.dev'
+VERSION = '0.11.dev'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
@@ -100,32 +100,30 @@ setup(
     name=PACKAGENAME,
     version=VERSION,
     description=DESCRIPTION,
+    python_requires='>=3.5',
     # Note: these are the versions we test.
     # Older versions could work, but are unsupported.
     # To find out if everything works run the Gammapy tests.
     install_requires=[
-      'numpy>=1.8',
-      'astropy>=1.3',
-      'regions',
+      'numpy>=1.10',
+      'astropy>=2.0',
+      'scipy>=0.15',
+      'regions>=0.3',
+      'pyyaml',
       'click',
     ],
     extras_require=dict(
       analysis=[
-          'pyyaml',
-          'scipy>=0.15',
-          'scikit-image>=0.10',
-          'photutils',
           'reproject',
-          'gwcs',
-          'astroplan',
           'uncertainties>=2.4',
           'naima',
-          'iminuit',
+          'iminuit>=1.3.2',
           'sherpa',
       ],
       plotting=[
-          'matplotlib>=1.5',
-          'aplpy>=0.9',
+          'matplotlib>=2.1',
+      ],
+      test=['pytest-astropy',
       ],
     ),
     author=AUTHOR,
@@ -139,11 +137,10 @@ setup(
       'Operating System :: OS Independent',
       'Programming Language :: C',
       'Programming Language :: Cython',
-      'Programming Language :: Python :: 2',
-      'Programming Language :: Python :: 2.7',
       'Programming Language :: Python :: 3',
       'Programming Language :: Python :: 3.5',
       'Programming Language :: Python :: 3.6',
+      'Programming Language :: Python :: 3.7',
       'Programming Language :: Python :: Implementation :: CPython',
       'Topic :: Scientific/Engineering :: Astronomy',
       'Development Status :: 3 - Alpha',

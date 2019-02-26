@@ -1,15 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random sampling for some common distributions"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numbers
 import numpy as np
 from astropy.coordinates import Angle
 
 __all__ = [
-    'get_random_state',
-    'sample_sphere',
-    'sample_sphere_distance',
-    'sample_powerlaw',
+    "get_random_state",
+    "sample_sphere",
+    "sample_sphere_distance",
+    "sample_powerlaw",
 ]
 
 
@@ -20,7 +19,7 @@ def get_random_state(init):
     to initialise a `~numpy.random.RandomState` instance,
     a.k.a. a random number generator (``rng``).
 
-    See :ref:`development_random` for usage examples and further information.
+    See :ref:`dev_random` for usage examples and further information.
 
     Parameters
     ----------
@@ -41,18 +40,20 @@ def get_random_state(init):
     """
     if isinstance(init, (numbers.Integral, np.integer)):
         return np.random.RandomState(init)
-    elif init == 'random-seed':
+    elif init == "random-seed":
         return np.random.RandomState(None)
-    elif init == 'global-rng':
+    elif init == "global-rng":
         return np.random.mtrand._rand
     elif isinstance(init, np.random.RandomState):
         return init
     else:
-        raise ValueError('{} cannot be used to seed a numpy.random.RandomState'
-                         ' instance'.format(init))
+        raise ValueError(
+            "{} cannot be used to seed a numpy.random.RandomState"
+            " instance".format(init)
+        )
 
 
-def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-seed'):
+def sample_sphere(size, lon_range=None, lat_range=None, random_state="random-seed"):
     """Sample random points on the sphere.
 
     Reference: http://mathworld.wolfram.com/SpherePointPicking.html
@@ -77,10 +78,10 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
     random_state = get_random_state(random_state)
 
     if lon_range is None:
-        lon_range = Angle([0., 360.], 'deg')
+        lon_range = Angle([0.0, 360.0], "deg")
 
     if lat_range is None:
-        lat_range = Angle([-90., 90.], 'deg')
+        lat_range = Angle([-90.0, 90.0], "deg")
 
     # Sample random longitude
     u = random_state.uniform(size=size)
@@ -95,7 +96,7 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
     return lon, lat
 
 
-def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
+def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
     """Sample random values from a power law distribution.
 
     f(x) = x ** (-gamma) in the range x_min to x_max
@@ -134,8 +135,9 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
     return x
 
 
-def sample_sphere_distance(distance_min=0, distance_max=1, size=None,
-                           random_state='random-seed'):
+def sample_sphere_distance(
+    distance_min=0, distance_max=1, size=None, random_state="random-seed"
+):
     """Sample random distances if the 3-dim space density is constant.
 
     This function uses inverse transform sampling
@@ -167,14 +169,14 @@ def sample_sphere_distance(distance_min=0, distance_max=1, size=None,
     #     a = 1 / (r_max ^ 3 - r_min ^ 3)
     #     b = -a * r_min ** 3
 
-    a = 1. / (distance_max ** 3 - distance_min ** 3)
-    b = - a * distance_min ** 3
+    a = 1.0 / (distance_max ** 3 - distance_min ** 3)
+    b = -a * distance_min ** 3
 
     # Now for inverse transform sampling we need to use the inverse of
     #     u = a * r ^ 3 + b
     # which is
     #     r = [(u - b)/ a] ^ (1 / 3)
     u = random_state.uniform(size=size)
-    distance = ((u - b) / a) ** (1. / 3)
+    distance = ((u - b) / a) ** (1.0 / 3)
 
     return distance

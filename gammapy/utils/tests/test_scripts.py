@@ -1,6 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from ...utils.scripts import recursive_merge_dicts
 
 
@@ -9,8 +7,8 @@ def test_recursive_merge_dicts():
     update = dict(d=99, b=dict(g=98, c=50))
 
     new = recursive_merge_dicts(old, update)
-    assert new['b']['c'] == 50
-    assert new['b']['e'] == 44
-    assert new['b']['g'] == 98
-    assert new['a'] == 42
-    assert new['d'] == 99
+    assert new["b"]["c"] == 50
+    assert new["b"]["e"] == 44
+    assert new["b"]["g"] == 98
+    assert new["a"] == 42
+    assert new["d"] == 99

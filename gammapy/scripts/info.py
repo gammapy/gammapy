@@ -1,105 +1,122 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+import os
+import platform
 import sys
+import warnings
 import logging
 import importlib
-from ..utils.scripts import get_parser
-
-__all__ = ['print_info']
+from collections import OrderedDict
+import click
+from .. import version
 
 log = logging.getLogger(__name__)
 
+GAMMAPY_DEPENDENCIES = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "cython",
+    "astropy",
+    "astropy_healpix",
+    "reproject",
+    "sherpa",
+    "pytest",
+    "sphinx",
+    "healpy",
+    "regions",
+    "iminuit",
+    "naima",
+    "uncertainties",
+]
 
-def print_info_main(args=None):
-    parser = get_parser(print_info)
-    parser.add_argument('--version', action='store_true',
-                        help='Print Gammapy version number')
-    # TODO: fix or remove:
-    # parser.add_argument('--tools', action='store_true',
-    #                     help='Print available command line tools')
-    parser.add_argument('--dependencies', action='store_true',
-                        help='Print available versions of dependencies')
-    args = parser.parse_args(args)
-
-    if len(sys.argv) <= 1:
-        parser.print_help()
-        sys.exit(1)
-
-    print_info(**vars(args))
+GAMMAPY_ENV_VARIABLES = [
+    "GAMMA_CAT",
+    "GAMMAPY_DATA",
+    "GAMMAPY_EXTRA",
+    "GAMMAPY_FERMI_LAT_DATA",
+]
 
 
-def print_info(version=False, tools=False, dependencies=False):
-    """Print various info on Gammapy to the console.
-
-    TODO: explain.
+@click.command(name="info")
+@click.option("--system/--no-system", default=True, help="Show system info")
+@click.option("--version/--no-version", default=True, help="Show version info")
+@click.option(
+    "--dependencies/--no-dependencies", default=True, help="Show dependencies info"
+)
+@click.option("--envvar/--no-envvar", default=True, help="Show environment variables")
+def cli_info(system, version, dependencies, envvar):
+    """Display information about Gammapy
     """
-    if version:
-        _print_info_version()
+    if system:
+        info = get_info_system()
+        print_info(info=info, title="System")
 
-    if tools:
-        _print_info_tools()
+    if version:
+        info = get_info_version()
+        print_info(info=info, title="Gammapy package")
 
     if dependencies:
-        _print_info_dependencies()
+        info = get_info_dependencies()
+        print_info(info=info, title="Other packages")
+
+    if envvar:
+        info = get_info_envvar()
+        print_info(info=info, title="Gammapy environment variables")
 
 
-def _print_info_version():
-    """Print Gammapy version info."""
-    from gammapy import version
-    print('\n*** Gammapy version info ***\n')
-    print('version: {}'.format(version.version))
-    print('release: {}'.format(version.release))
-    print('githash: {}'.format(version.githash))
-    print('')
+def print_info(info, title):
+    """Print Gammapy info."""
+    info_all = "\n{}:\n\n".format(title)
+
+    for key, value in info.items():
+        info_all += "\t{:22s} : {:<10s} \n".format(key, value)
+
+    print(info_all)
 
 
-def _print_info_tools():
-    """Print info about Gammapy command line tools."""
-    print('\n*** Gammapy tools ***\n')
-
-    # TODO: how to get a one-line description or
-    # full help text from the docstring or ArgumentParser?
-    # This is the function names, we want the command-line names
-    # that are defined in setup.py !???
-    from gammapy.utils.scripts import get_all_main_functions
-    scripts = get_all_main_functions()
-    names = sorted(scripts.keys())
-    for name in names:
-        print(name)
-
-    # Old stuff that doesn't work any more ...
-    # We assume all tools are installed in the same folder as this script
-    # and their names start with "gammapy-".
-    # import os
-    # from glob import glob
-    # DIR = os.path.dirname(__file__)
-    # os.chdir(DIR)
-    # tools = glob('gammapy-*')
-    # for tool in tools:
-    #     # Extract first line from docstring as description
-    #     description = 'no description available'
-    #     lines = open(tool).readlines()
-    #     for line in lines:
-    #         if line.startswith('"""'):
-    #             description = line.strip()[3:]
-    #             if description.endswith('"""'):
-    #                 description = description[:-3]
-    #             break
-    #     print('{0:35s} : {1}'.format(tool, description))
-
-    print('')
+def get_info_system():
+    """Get info about user system"""
+    info = OrderedDict()
+    info["python_executable"] = sys.executable
+    info["python_version"] = platform.python_version()
+    info["machine"] = platform.machine()
+    info["system"] = platform.system()
+    return info
 
 
-def _print_info_dependencies():
-    """Print info about Gammapy dependencies."""
-    print('\n*** Gammapy dependencies ***\n')
-    from gammapy.conftest import PYTEST_HEADER_MODULES
+def get_info_version():
+    """Get detailed info about Gammapy version."""
+    info = OrderedDict()
+    try:
+        path = sys.modules["gammapy"].__path__[0]
+    except:
+        path = "unknown"
+    info["path"] = path
+    info["version"] = version.version
+    if not version.release:
+        info["githash"] = version.githash
+    return info
 
-    for label, name in PYTEST_HEADER_MODULES.items():
+
+def get_info_dependencies():
+    """Get info about Gammapy dependencies."""
+    info = OrderedDict()
+    for name in GAMMAPY_DEPENDENCIES:
         try:
-            module = importlib.import_module(name)
-            version = module.__version__
-        except ImportError:
-            version = 'not available'
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                module = importlib.import_module(name)
 
-        print('{:>20s} -- {}'.format(label, version))
+            module_version = getattr(module, "__version__", "no version info found")
+        except ImportError:
+            module_version = "not installed"
+        info[name] = module_version
+    return info
+
+
+def get_info_envvar():
+    """Get info about Gammapy environment variables."""
+    info = OrderedDict()
+    for name in GAMMAPY_ENV_VARIABLES:
+        info[name] = os.environ.get(name, "not set")
+    return info

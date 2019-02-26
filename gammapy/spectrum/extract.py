@@ -1,23 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from collections import OrderedDict
 import numpy as np
-from regions import CircleSkyRegion
 import astropy.units as u
-from . import PHACountsSpectrum
-from . import SpectrumObservation, SpectrumObservationList, SpectrumObservationStacker
+from regions import CircleSkyRegion
 from ..utils.scripts import make_path
-from ..irf import PSF3D
+from ..irf import PSF3D, apply_containment_fraction
+from .core import PHACountsSpectrum
+from .observation import SpectrumObservation, SpectrumObservationList
 
-__all__ = [
-    'SpectrumExtraction',
-]
+__all__ = ["SpectrumExtraction"]
 
 log = logging.getLogger(__name__)
 
 
-class SpectrumExtraction(object):
+class SpectrumExtraction:
     """Creating input data to 1D spectrum fitting.
 
     This class is responsible for extracting a
@@ -26,13 +22,15 @@ class SpectrumExtraction(object):
     beforehand, using e.g. the
     `~gammapy.background.ReflectedRegionsBackgroundEstimator`. For point
     sources analyzed with 'full containment' IRFs, a correction for PSF
-    leakage out of the circular ON region can be applied.  For more info see
-    :ref:`spectral_fitting`. For a usage example see
-    :gp-extra-notebook:`spectrum_analysis`
+    leakage out of the circular ON region can be applied.
+
+    For more info see :ref:`spectral_fitting`.
+
+    For a usage example see :gp-notebook:`spectrum_analysis`
 
     Parameters
     ----------
-    obs_list : `~gammapy.data.ObservationList`
+    observations : `~gammapy.data.Observations`
         Observations to process
     bkg_estimate : `~gammapy.background.BackgroundEstimate`
         Background estimate, e.g. of
@@ -50,75 +48,81 @@ class SpectrumExtraction(object):
         Extract spectrum only within the recommended valid energy range of the
         effective area table (default is True).
     """
+
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
     """Reconstruced energy axis to be used if not specified otherwise"""
 
-    def __init__(self, obs_list, bkg_estimate, e_reco=None, e_true=None,
-                 containment_correction=False, max_alpha=1, use_recommended_erange=True):
+    def __init__(
+        self,
+        observations,
+        bkg_estimate,
+        e_reco=None,
+        e_true=None,
+        containment_correction=False,
+        max_alpha=1,
+        use_recommended_erange=True,
+    ):
 
-        self.obs_list = obs_list
+        self.observations = observations
         self.bkg_estimate = bkg_estimate
-        self.e_reco = e_reco or self.DEFAULT_RECO_ENERGY
-        self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
+        self.e_reco = e_reco if e_reco is not None else self.DEFAULT_RECO_ENERGY
+        self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
         self.use_recommended_erange = use_recommended_erange
-        self.observations = SpectrumObservationList()
+        self.spectrum_observations = SpectrumObservationList()
 
-    def run(self, outdir=None, use_sherpa=False):
+        self.containment = None
+        self._on_vector = None
+        self._off_vector = None
+        self._aeff = None
+        self._edisp = None
+
+    def run(self):
         """Run all steps.
-
-        Parameters
-        ----------
-        outdir : Path, str
-            directory to write results files to (if given)
-        use_sherpa : bool, optional
-            Write Sherpa compliant files, default: False
         """
-        log.info(' Running {}'.format(self))
-        for obs, bkg in zip(self.obs_list, self.bkg_estimate):
-            if not self._alpha_ok(obs, bkg):
-                log.warning("\033[1;33m Alpha not OK for Obs #{}\033[0m".format(obs.obs_id))
+        log.info("Running {}".format(self))
+        for obs, bkg in zip(self.observations, self.bkg_estimate):
+            if not self._alpha_ok(bkg):
                 continue
-            self.observations.append(self.process(obs, bkg))
-        if outdir is not None:
-            self.write(outdir, use_sherpa=use_sherpa)
+            self.spectrum_observations.append(self.process(obs, bkg))
 
-    def _alpha_ok(self, obs, bkg):
+    def _alpha_ok(self, bkg):
         """Check if observation fulfills alpha criterion"""
         condition = bkg.a_off == 0 or bkg.a_on / bkg.a_off > self.max_alpha
         if condition:
-            msg = ' Skipping because {} / {} > {}'
+            msg = "Skipping because {} / {} > {}"
             log.info(msg.format(bkg.a_on, bkg.a_off, self.max_alpha))
             return False
         else:
             return True
 
-    def process(self, obs, bkg):
+    def process(self, observation, bkg):
         """Process one observation.
-        
+
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
-        
+
         Returns
         -------
         spectrum_observation : `~gammapy.spectrum.SpectrumObservation`
             Spectrum observation
         """
-        print("\n")
-        log.info(' Process observation for Obs #{}'.format(obs.obs_id))
-        self.make_empty_vectors(obs, bkg)
+        log.info("Process observation\n {}".format(observation))
+        self.make_empty_vectors(observation, bkg)
         self.extract_counts(bkg)
-        self.extract_irfs(obs)
+        self.extract_irfs(observation)
 
         if self.containment_correction:
-            self.apply_containment_correction(obs, bkg)
+            self.apply_containment_correction(observation, bkg)
+        else:
+            self.containment = np.ones(self._aeff.energy.nbins)
 
         spectrum_observation = SpectrumObservation(
             on_vector=self._on_vector,
@@ -129,40 +133,38 @@ class SpectrumExtraction(object):
 
         if self.use_recommended_erange:
             try:
-                spectrum_observation.hi_threshold = obs.aeff.high_threshold
-                spectrum_observation.lo_threshold = obs.aeff.low_threshold
+                spectrum_observation.hi_threshold = observation.aeff.high_threshold
+                spectrum_observation.lo_threshold = observation.aeff.low_threshold
             except KeyError:
-                log.warning('No thresholds defined for obs {}'.format(obs))
+                log.warning("No thresholds defined for obs {}".format(observation))
 
         return spectrum_observation
 
-    def make_empty_vectors(self, obs, bkg):
+    def make_empty_vectors(self, observation, bkg):
         """Create empty vectors.
 
         This method copies over all meta info and sets up the energy binning.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        log.info(' Update observation meta info')
-        # Copy over existing meta information
-        meta = OrderedDict(obs._obs_info)
-        offset = obs.pointing_radec.separation(bkg.on_region.center)
-        log.info(' Offset : {:.2f}'.format(offset))
-        meta['OFFSET'] = offset.deg
+        log.info("Update observation meta info")
 
-        # LIVETIME is called EXPOSURE in the OGIP standard
-        meta['EXPOSURE'] = meta.pop('LIVETIME')
+        offset = observation.pointing_radec.separation(bkg.on_region.center)
+        log.info("Offset : {}\n".format(offset))
 
         self._on_vector = PHACountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
-            meta=meta, )
+            offset=offset,
+            livetime=observation.observation_live_time_duration,
+            obs_id=observation.obs_id,
+        )
 
         self._off_vector = self._on_vector.copy()
         self._off_vector.is_bkg = True
@@ -176,64 +178,57 @@ class SpectrumExtraction(object):
         bkg : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        # log.info('Fill events')
+        log.info("Fill events")
         self._on_vector.fill(bkg.on_events)
         self._off_vector.fill(bkg.off_events)
 
-    def extract_irfs(self, obs):
+    def extract_irfs(self, observation):
         """Extract IRFs.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             Observation
         """
-        # log.info('Extract IRFs')
+        log.info("Extract IRFs")
         offset = self._on_vector.offset
-        self._aeff = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
-        self._edisp = obs.edisp.to_energy_dispersion(
-            offset, e_reco=self.e_reco, e_true=self.e_true)
+        self._aeff = observation.aeff.to_effective_area_table(
+            offset, energy=self.e_true
+        )
+        self._edisp = observation.edisp.to_energy_dispersion(
+            offset, e_reco=self.e_reco, e_true=self.e_true
+        )
 
-    def apply_containment_correction(self, obs, bkg):
+    def apply_containment_correction(self, observation, bkg):
         """Apply PSF containment correction.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             observation
         bkg : `~gammapy.background.BackgroundEstimate`
             background esimate
         """
-        # TODO: This should be split out into a separate class
         if not isinstance(bkg.on_region, CircleSkyRegion):
-            raise TypeError("Incorrect region type for containment correction."
-                            " Should be CircleSkyRegion.")
+            raise TypeError(
+                "Incorrect region type for containment correction."
+                " Should be CircleSkyRegion."
+            )
 
-        log.info(' Apply containment correction')
+        log.info("Apply containment correction")
         # First need psf
-        angles = np.linspace(0., 1.5, 150) * u.deg
+        angles = np.linspace(0.0, 1.5, 150) * u.deg
         offset = self._on_vector.offset
-        if isinstance(obs.psf, PSF3D):
-            psf = obs.psf.to_energy_dependent_table_psf(theta=offset)
+        if isinstance(observation.psf, PSF3D):
+            psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
         else:
-            psf = obs.psf.to_energy_dependent_table_psf(offset, angles)
+            psf = observation.psf.to_energy_dependent_table_psf(offset, angles)
 
-        center_energies = self._on_vector.energy.nodes
-        areascal = []
-        for index, energy in enumerate(center_energies):
-            try:
-                correction = psf.integral(energy,
-                                          0. * u.deg,
-                                          bkg.on_region.radius)
-            except:
-                msg = 'Containment correction failed for bin {}, energy {}.'
-                log.warning(msg.format(index, energy))
-                correction = 1
-            finally:
-                areascal.append(correction)
+        new_aeff = apply_containment_fraction(self._aeff, psf, bkg.on_region.radius)
 
-        self._on_vector.areascal = areascal
-        self._off_vector.areascal = areascal
+        # TODO: check whether keeping containment is necessary
+        self.containment = new_aeff.data.data.value / self._aeff.data.data.value
+        self._aeff = new_aeff
 
     def compute_energy_threshold(self, **kwargs):
         """Compute and set the safe energy threshold for all observations.
@@ -242,25 +237,29 @@ class SpectrumExtraction(object):
         documentation about the options.
         """
 
-        for obs in self.observations:
+        for obs in self.spectrum_observations:
             obs.compute_energy_threshold(**kwargs)
 
-    def write(self, outdir, ogipdir='ogip_data', use_sherpa=False):
+    def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk.
 
         Parameters
         ----------
-        outdir : `~gammapy.extern.pathlib.Path`
+        outdir : `pathlib.Path`
             Output folder
         ogipdir : str, optional
             Folder name for OGIP data, default: 'ogip_data'
         use_sherpa : bool, optional
-            Write Sherpa compliant files, default: False
+            Write Sherpa compliant files?
+        overwrite : bool
+            Overwrite existing files?
         """
         outdir = make_path(outdir)
         log.info(' Writing OGIP files to {}'.format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.observations.write(outdir / ogipdir, use_sherpa=use_sherpa)
+        self.spectrum_observations.write(
+            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
+        )
 
         # TODO : add more debug plots etc. here
 

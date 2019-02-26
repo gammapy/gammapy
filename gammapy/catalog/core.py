@@ -1,25 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Source catalog and object base classes.
-"""
-from __future__ import absolute_import, division, print_function, unicode_literals
+"""Source catalog and object base classes."""
 from collections import OrderedDict
-import sys
-from copy import deepcopy
-from pprint import pprint
+import copy
 import numpy as np
-from astropy.extern import six
 from astropy.utils import lazyproperty
-from astropy.units import Quantity
 from ..utils.array import _is_int
+from ..utils.table import table_row_to_dict
 from .utils import skycoord_from_table
 
-__all__ = [
-    'SourceCatalog',
-    'SourceCatalogObject',
-]
+__all__ = ["SourceCatalog", "SourceCatalogObject"]
 
 
-class SourceCatalogObject(object):
+class SourceCatalogObject:
     """Source catalog object.
 
     This class can be used directly, but it's mostly used as a
@@ -33,8 +25,9 @@ class SourceCatalogObject(object):
     The catalog table row index is stored in `_table_row_index` though,
     because it can be useful for debugging or display.
     """
-    _source_name_key = 'Source_Name'
-    _source_index_key = 'catalog_row_index'
+
+    _source_name_key = "Source_Name"
+    _source_index_key = "catalog_row_index"
 
     def __init__(self, data, data_extended=None):
         self.data = data
@@ -43,21 +36,14 @@ class SourceCatalogObject(object):
 
     @property
     def name(self):
-        """Source name"""
+        """Source name (str)"""
         name = self.data[self._source_name_key]
         return name.strip()
 
     @property
     def index(self):
-        """Row index of source in catalog"""
+        """Row index of source in catalog (int)"""
         return self.data[self._source_index_key]
-
-    def pprint(self, file=None):
-        """Pretty-print source data"""
-        if not file:
-            file = sys.stdout
-
-        pprint(self.data, stream=file)
 
     @property
     def _data_python_dict(self):
@@ -82,21 +68,13 @@ class SourceCatalogObject(object):
 
         return out
 
-    def info(self):
-        """
-        Print summary info about the object.
-        """
-        print(self)
-
     @property
     def position(self):
-        """
-        `~astropy.coordinates.SkyCoord`
-        """
+        """Source position (`~astropy.coordinates.SkyCoord`)."""
         return skycoord_from_table(self.data)
 
 
-class SourceCatalog(object):
+class SourceCatalog:
     """Generic source catalog.
 
     This class can be used directly, but it's mostly used as a
@@ -115,26 +93,22 @@ class SourceCatalog(object):
         Columns with source name aliases. This will allow accessing the source
         row by alias names as well.
     """
+
     source_object_class = SourceCatalogObject
 
     # TODO: at the moment these are duplicated in SourceCatalogObject.
     # Should we share them somehow?
-    _source_index_key = 'catalog_row_index'
+    _source_index_key = "catalog_row_index"
 
-    def __init__(self, table, source_name_key='Source_Name', source_name_alias=()):
+    def __init__(self, table, source_name_key="Source_Name", source_name_alias=()):
         self.table = table
         self._source_name_key = source_name_key
         self._source_name_alias = source_name_alias
 
     def __str__(self):
-        """Info string."""
-        ss = self.description
-        ss += ' with {} objects.'.format(len(self.table))
-        return ss
-
-    def info(self):
-        """Print info string."""
-        print(self)
+        s = self.description
+        s += " with {} objects.".format(len(self.table))
+        return s
 
     @lazyproperty
     def _name_to_index_cache(self):
@@ -144,8 +118,8 @@ class SourceCatalog(object):
             name = row[self._source_name_key]
             names[name.strip()] = idx
             for alias_column in self._source_name_alias:
-                for alias in row[alias_column].split(','):
-                    if not alias == '':
+                for alias in row[alias_column].split(","):
+                    if not alias == "":
                         names[alias.strip()] = idx
         return names
 
@@ -168,10 +142,10 @@ class SourceCatalog(object):
 
         possible_names = [row[self._source_name_key]]
         for alias_column in self._source_name_alias:
-            possible_names += row[alias_column].split(',')
+            possible_names += row[alias_column].split(",")
 
         if name not in possible_names:
-            self.__dict__.pop('_name_to_index_cache')
+            self.__dict__.pop("_name_to_index_cache")
             index = self._name_to_index_cache[name]
         return index
 
@@ -205,13 +179,13 @@ class SourceCatalog(object):
         At the moment this can raise KeyError, IndexError and ValueError
         for invalid keys. Should we always raise KeyError to simplify this?
         """
-        if isinstance(key, six.string_types):
+        if isinstance(key, str):
             index = self.row_index(key)
         elif _is_int(key):
             index = key
         else:
-            msg = 'Key must be source name string or row index integer. '
-            msg += 'Type not understood: {}'.format(type(key))
+            msg = "Key must be source name string or row index integer. "
+            msg += "Type not understood: {}".format(type(key))
             raise ValueError(msg)
 
         return self._make_source_object(index)
@@ -229,13 +203,13 @@ class SourceCatalog(object):
         source : `SourceCatalogObject`
             Source object
         """
-        data = self._make_source_dict(self.table, index)
+        data = table_row_to_dict(self.table[index])
         data[self._source_index_key] = index
 
         try:
-            name_extended = data['Extended_Source_Name'].strip()
+            name_extended = data["Extended_Source_Name"].strip()
             idx = self._lookup_extended_source_idx[name_extended]
-            data_extended = self._make_source_dict(self.extended_sources_table, idx)
+            data_extended = table_row_to_dict(self.extended_sources_table[idx])
         except KeyError:
             data_extended = None
 
@@ -244,37 +218,9 @@ class SourceCatalog(object):
 
     @lazyproperty
     def _lookup_extended_source_idx(self):
-        names = [_.strip() for _ in self.extended_sources_table['Source_Name']]
+        names = [_.strip() for _ in self.extended_sources_table["Source_Name"]]
         idx = range(len(names))
         return dict(zip(names, idx))
-
-    @staticmethod
-    def _make_source_dict(table, idx):
-        """Make one source data dict.
-
-        Parameters
-        ----------
-        idx : int
-            Row index
-
-        Returns
-        -------
-        data : `~collections.OrderedDict`
-            Source data
-        """
-        data = OrderedDict()
-        for colname in table.colnames:
-            col = table[colname]
-
-            if isinstance(col, Quantity):
-                val = col[idx]
-            else:
-                val = col.data[idx]
-                if col.unit:
-                    val = Quantity(val, col.unit)
-
-            data[colname] = val
-        return data
 
     @property
     def _data_python_list(self):
@@ -289,30 +235,9 @@ class SourceCatalog(object):
 
     @property
     def positions(self):
-        """
-        `~astropy.coordinates.SkyCoord`
-        """
+        """Source positions (`~astropy.coordinates.SkyCoord`)."""
         return skycoord_from_table(self.table)
-
-    def select_image_region(self, image):
-        """
-        Select all source within an image
-
-        Parameters
-        ----------
-        image : `~gammapy.image.SkyImage`
-            Sky image
-
-        Returns
-        -------
-        catalog : `SourceCatalog`
-            Source catalog selection.
-        """
-        catalog = self.copy()
-        selection = image.contains(self.positions)
-        catalog.table = catalog.table[selection]
-        return catalog
 
     def copy(self):
         """Copy catalog"""
-        return deepcopy(self)
+        return copy.deepcopy(self)

@@ -1,28 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import sys
 import os
 import shutil
 from collections import OrderedDict
+from pathlib import Path
 from astropy.table import Table
 import astropy.utils.data
-from ..extern.pathlib import Path
 
-__all__ = [
-    'Datasets',
-    'gammapy_extra',
-]
+__all__ = ["Datasets", "gammapy_data"]
 
 log = logging.getLogger(__name__)
 
 # This is the cross-platform way to get the HOME directory, also in Windows
 # https://docs.python.org/3/library/pathlib.html#pathlib.Path.home
 # http://stackoverflow.com/a/4028943
-DATASET_DIR = Path.home() / '.gammapy/datasets'
+DATASET_DIR = Path.home() / ".gammapy/datasets"
 
 
-def download_file(url, filename, overwrite=False, mkdir=True, show_progress=True, timeout=None):
+def download_file(
+    url, filename, overwrite=False, mkdir=True, show_progress=True, timeout=None
+):
     """Download a URL to a given filename.
 
     This is a wrapper for the `astropy.utils.data.download_file` function,
@@ -44,7 +42,8 @@ def download_file(url, filename, overwrite=False, mkdir=True, show_progress=True
 
     # This saves the file to a temp folder, with `cache=False` the Astropy cache isn't touched!
     temp_filename = astropy.utils.data.download_file(
-        remote_url=url, cache=False, show_progress=show_progress, timeout=timeout)
+        remote_url=url, cache=False, show_progress=show_progress, timeout=timeout
+    )
 
     shutil.move(temp_filename, str(filename))
 
@@ -55,22 +54,18 @@ def make_dataset(config):
     """Dataset factory function.
     """
     # For not we just have simple datasets
-    name = config['name']
-    filename = DATASET_DIR / config['filename']
-    url = config.get('url')
-    description = config.get('description')
-    tags = config.get('tags')
+    name = config["name"]
+    filename = DATASET_DIR / config["filename"]
+    url = config.get("url")
+    description = config.get("description")
+    tags = config.get("tags")
     ds = OneFileDataset(
-        name=name,
-        filename=filename,
-        url=url,
-        description=description,
-        tags=tags
+        name=name, filename=filename, url=url, description=description, tags=tags
     )
     return ds
 
 
-class OneFileDataset(object):
+class OneFileDataset:
     """One file simple dataset."""
 
     def __init__(self, name, filename, url=None, description=None, tags=None):
@@ -94,24 +89,20 @@ class OneFileDataset(object):
         self._print_status(file=file)
 
     def _print_status(self, file):
-        available = 'yes' if self.is_available() else 'no'
-        print('Available: {}'.format(available), file=file)
+        available = "yes" if self.is_available() else "no"
+        print("Available: {}".format(available), file=file)
 
 
-class Datasets(object):
+class Datasets:
     """Download and access for all built-in datasets.
 
     TODO: this isn't used much at the moment and not documented.
-    I added this before I decided to add `gammapy_extra`,
+    I added this before I decided to add `gammapy_data`,
     and then this class wasn't needed to access datasets for tests.
 
     We still need something like this to manage files that aren't
-    in gammapy-extra, e.g. large files from the web that we don't
-    want to stick in gammapy-extra.
-
-    This class has overlap with the `gammapy.data.DataManager` class ...
-    maybe it should be merged or maybe it's better to keep that one
-    focused on HESS (and Fermi?) data management?
+    in gammapy-data, e.g. large files from the web that we don't
+    want to stick in gammapy-data.
 
     Parameters
     ----------
@@ -123,8 +114,9 @@ class Datasets(object):
     datasets : list of `Dataset` objects
         List of datasets
     """
+
     # DEFAULT_CONFIG_FILE = Path.home() / '.gammapy/data-register.yaml'
-    DEFAULT_CONFIG_FILE = astropy.utils.data.get_pkg_data_filename('datasets.yaml')
+    DEFAULT_CONFIG_FILE = astropy.utils.data.get_pkg_data_filename("datasets.yaml")
 
     def __init__(self, config=None):
         if not config:
@@ -140,7 +132,7 @@ class Datasets(object):
 
     @classmethod
     def from_yaml(cls, filename):
-        """Create a `DataManager` from a YAML config file.
+        """Create from a YAML config file.
 
         Parameters
         ----------
@@ -153,6 +145,7 @@ class Datasets(object):
     @staticmethod
     def _load_config(filename):
         import yaml
+
         with Path(filename).open() as fh:
             config = yaml.safe_load(fh)
         return config
@@ -162,7 +155,7 @@ class Datasets(object):
         if not file:
             file = sys.stdout
 
-        print('Number of datasets: {}'.format(len(self.datasets)), file=file)
+        print("Number of datasets: {}".format(len(self.datasets)), file=file)
 
         self.info_table.pprint()
 
@@ -175,12 +168,12 @@ class Datasets(object):
         rows = []
         for ds in self.datasets.values():
             row = dict()
-            row['Name'] = ds.name
-            row['Available'] = 'yes' if ds.is_available() else 'no'
-            row['Filename'] = ds.filename
+            row["Name"] = ds.name
+            row["Available"] = "yes" if ds.is_available() else "no"
+            row["Filename"] = ds.filename
             rows.append(row)
 
-        table = Table(rows=rows, names=['Name', 'Available', 'Filename'])
+        table = Table(rows=rows, names=["Name", "Available", "Filename"])
         return table
 
     def __getitem__(self, name):
@@ -192,7 +185,7 @@ class Datasets(object):
         dataset = self.datasets[name]
         dataset.fetch()
 
-    def fetch_all(self, tags='catalog'):
+    def fetch_all(self, tags="catalog"):
         """Fetch all datasets that match one of the tags.
         """
         for dataset in self.datasets.values():
@@ -202,27 +195,28 @@ class Datasets(object):
                 dataset.fetch()
 
 
-class GammapyExtraNotFoundError(OSError):
-    """The gammapy-extra repo is not available.
+class GammapyDataNotFoundError(OSError):
+    """The gammapy-data is not available.
 
-    You have to set the GAMMAPY_EXTRA environment variable so that it's found.
+    You have to set the GAMMAPY_DATA environment variable so that it's found.
     """
+
     pass
 
 
-class _GammapyExtra(object):
-    """Access files from gammapy-extra repo.
+class _GammapyData:
+    """Access files from gammapy-data.
 
-    You have to set the `GAMMAPY_EXTRA` environment variable
+    You have to set the `GAMMAPY_DATA` environment variable
     so that it's found.
     """
 
     @property
     def is_available(self):
-        """Is the gammapy-extra repo available?"""
-        if 'GAMMAPY_EXTRA' in os.environ:
-            # Make sure this is really pointing to a gammapy-extra folder
-            filename = Path(os.environ['GAMMAPY_EXTRA']) / 'logo/gammapy_logo.pdf'
+        """Is gammapy-data available?"""
+        if "GAMMAPY_DATA" in os.environ:
+            # Make sure this is really pointing to a gammapy-data folder
+            filename = Path(os.environ["GAMMAPY_DATA"]) / "gamma-cat/gammacat.fits.gz"
             if filename.is_file():
                 return True
 
@@ -230,26 +224,26 @@ class _GammapyExtra(object):
 
     @property
     def dir(self):
-        """Path to the gammapy-extra repo.
+        """Path to the gammapy-data repo.
 
-        Raises `GammapyExtraNotFoundError` if gammapy-extra isn't found.
+        Raises `GammapyDataNotFoundError` if gammapy-data isn't found.
         """
         if self.is_available:
-            return Path(os.environ['GAMMAPY_EXTRA'])
+            return Path(os.environ["GAMMAPY_DATA"])
         else:
-            msg = 'The gammapy-extra repo is not available. '
-            msg += 'You have to set the GAMMAPY_EXTRA environment variable '
-            msg += 'to point to the location for it to be found.'
-            raise GammapyExtraNotFoundError(msg)
+            msg = "The gammapy-data repo is not available. "
+            msg += "You have to set the GAMMAPY_DATA environment variable "
+            msg += "to point to the location for it to be found."
+            raise GammapyDataNotFoundError(msg)
 
     def filename(self, filename):
-        """Filename in gammapy-extra as string.
+        """Filename in gammapy-data as string.
         """
         return str(self.dir / filename)
 
 
-gammapy_extra = _GammapyExtra()
-"""Module-level variable to access gammapy-extra.
+gammapy_data = _GammapyData()
+"""Module-level variable to access gammapy-data.
 
 TODO: usage examples
 """

@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Units and Quantity related helper functions"""
-from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import astropy.units as u
 
-__all__ = [
-    'standardise_unit',
-]
+__all__ = ["standardise_unit", "unit_from_fits_image_hdu"]
+
+log = logging.getLogger("__name__")
 
 
 def standardise_unit(unit):
@@ -39,8 +39,30 @@ def standardise_unit(unit):
     unit = u.Unit(unit)
     bases, powers = [], []
     for base, power in zip(unit.bases, unit.powers):
-        if str(base) not in {'ph', 'ct'}:
+        if str(base) not in {"ph", "ct"}:
             bases.append(base)
             powers.append(power)
 
     return u.CompositeUnit(scale=unit.scale, bases=bases, powers=powers)
+
+
+def unit_from_fits_image_hdu(header):
+    """Read unit from a FITS image HDU.
+
+    - The ``BUNIT`` key is used.
+    - `astropy.units.Unit` is called.
+      If the ``BUNIT`` value is invalid, a log warning
+      is emitted and the empty unit is used.
+    - `standardise_unit` is called
+    """
+    unit = header.get("BUNIT", "")
+
+    try:
+        u.Unit(unit)
+    except ValueError:
+        log.warning(
+            "Invalid value BUNIT={!r} in FITS header. Setting empty unit.".format(unit)
+        )
+        unit = ""
+
+    return standardise_unit(unit)

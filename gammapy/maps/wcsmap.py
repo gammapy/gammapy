@@ -1,43 +1,49 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+import json
 import numpy as np
 from astropy.io import fits
-from .geom import find_and_read_bands
-from .base import MapBase
+from .base import Map
 from .wcs import WcsGeom
 from .utils import find_hdu, find_bands_hdu
 
-__all__ = [
-    'WcsMap',
-]
+__all__ = ["WcsMap"]
 
 
-class WcsMap(MapBase):
+class WcsMap(Map):
     """Base class for WCS map classes.
 
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
         A WCS geometry object.
-
     data : `~numpy.ndarray`
         Data array.
     """
 
-    def __init__(self, geom, data=None):
-        MapBase.__init__(self, geom, data)
-
     @classmethod
-    def create(cls, map_type=None, npix=None, binsz=0.1, width=None,
-               proj='CAR', coordsys='CEL', refpix=None,
-               axes=None, skydir=None, dtype='float32', conv=None):
+    def create(
+        cls,
+        map_type="wcs",
+        npix=None,
+        binsz=0.1,
+        width=None,
+        proj="CAR",
+        coordsys="CEL",
+        refpix=None,
+        axes=None,
+        skydir=None,
+        dtype="float32",
+        conv="gadf",
+        meta=None,
+        unit="",
+    ):
         """Factory method to create an empty WCS map.
 
         Parameters
         ----------
-        map_type : str
-            Internal map representation.  Valid types are `WcsMapND`/`wcs` and
-            `WcsMapSparse`/`wcs-sparse`.
+        map_type : {'wcs', 'wcs-sparse'}
+            Map type.  Selects the class that will be used to
+            instantiate the map.
         npix : int or tuple or list
             Width of the map in pixels. A tuple will be interpreted as
             parameters for longitude and latitude axes.  For maps with
@@ -69,37 +75,48 @@ class WcsMap(MapBase):
             be chosen to be center of the map.
         dtype : str, optional
             Data type, default is float32
-        conv : str, optional
-            FITS format convention ('fgst-ccube', 'fgst-template',
-            'gadf').  Default is 'gadf'.
+        conv : {'fgst-ccube','fgst-template','gadf'}, optional
+            FITS format convention.  Default is 'gadf'.
+        meta : `~collections.OrderedDict`
+            Dictionary to store meta data.
+        unit : str or `~astropy.units.Unit`
+            The unit of the map
 
         Returns
         -------
         map : `~WcsMap`
             A WCS map object.
         """
-        from .wcsnd import WcsMapND
+        from .wcsnd import WcsNDMap
+
         # from .wcssparse import WcsMapSparse
 
-        geom = WcsGeom.create(npix=npix, binsz=binsz, width=width,
-                              proj=proj, skydir=skydir,
-                              coordsys=coordsys, refpix=refpix, axes=axes,
-                              conv=conv)
+        geom = WcsGeom.create(
+            npix=npix,
+            binsz=binsz,
+            width=width,
+            proj=proj,
+            skydir=skydir,
+            coordsys=coordsys,
+            refpix=refpix,
+            axes=axes,
+            conv=conv,
+        )
 
-        if map_type in [None, 'wcs', 'WcsMapND']:
-            return WcsMapND(geom, dtype=dtype)
-        elif map_type in ['wcs-sparse', 'WcsMapSparse']:
+        if map_type == "wcs":
+            return WcsNDMap(geom, dtype=dtype, meta=meta, unit=unit)
+        elif map_type == "wcs-sparse":
             raise NotImplementedError
         else:
-            raise ValueError('Unregnized Map type: {}'.format(map_type))
+            raise ValueError("Invalid map type: {!r}".format(map_type))
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu=None, hdu_bands=None):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
         ----------
-        hdulist :  `~astropy.io.fits.HDUList`
+        hdu_list :  `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str
             Name or index of the HDU with the map data.
@@ -112,56 +129,79 @@ class WcsMap(MapBase):
             Map object
         """
         if hdu is None:
-            hdu = find_hdu(hdulist)
+            hdu = find_hdu(hdu_list)
         else:
-            hdu = hdulist[hdu]
+            hdu = hdu_list[hdu]
 
         if hdu_bands is None:
-            hdu_bands = find_bands_hdu(hdulist, hdu)
+            hdu_bands = find_bands_hdu(hdu_list, hdu)
 
         if hdu_bands is not None:
-            hdu_bands = hdulist[hdu_bands]
+            hdu_bands = hdu_list[hdu_bands]
 
         return cls.from_hdu(hdu, hdu_bands)
 
-    def to_hdulist(self, extname=None, extname_bands=None, sparse=False,
-                   conv=None):
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, conv=None):
+        """Convert to `~astropy.io.fits.HDUList`.
 
+        Parameters
+        ----------
+        hdu : str
+            Name or index of the HDU with the map data.
+        hdu_bands : str
+            Name or index of the HDU with the BANDS table.
+        sparse : bool
+            Sparsify the map by only writing pixels with non-zero
+            amplitude.
+        conv : {'fgst-ccube','fgst-template','gadf',None}, optional
+            FITS format convention.  If None this will be set to the
+            default convention of the map.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+
+        """
         if sparse:
-            extname = 'SKYMAP' if extname is None else extname.upper()
+            hdu = "SKYMAP" if hdu is None else hdu.upper()
         else:
-            extname = 'PRIMARY' if extname is None else extname.upper()
+            hdu = "PRIMARY" if hdu is None else hdu.upper()
 
-        if sparse and extname == 'PRIMARY':
-            raise ValueError(
-                'Sparse maps cannot be written to the PRIMARY HDU.')
+        if sparse and hdu == "PRIMARY":
+            raise ValueError("Sparse maps cannot be written to the PRIMARY HDU.")
 
         if self.geom.axes:
-            bands_hdu = self.geom.make_bands_hdu(extname=extname_bands,
-                                                 conv=conv)
-            extname_bands = bands_hdu.name
-
-        hdu = self.make_hdu(extname=extname, extname_bands=extname_bands,
-                            sparse=sparse, conv=conv)
-
-        if extname == 'PRIMARY':
-            hdulist = [hdu]
+            hdu_bands_out = self.geom.make_bands_hdu(
+                hdu=hdu_bands, hdu_skymap=hdu, conv=conv
+            )
+            hdu_bands = hdu_bands_out.name
         else:
-            hdulist = [fits.PrimaryHDU(), hdu]
+            hdu_bands = None
+
+        hdu_out = self.make_hdu(hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, conv=conv)
+
+        hdu_out.header["META"] = json.dumps(self.meta)
+
+        hdu_out.header["BUNIT"] = self.unit.to_string("fits")
+
+        if hdu == "PRIMARY":
+            hdulist = [hdu_out]
+        else:
+            hdulist = [fits.PrimaryHDU(), hdu_out]
 
         if self.geom.axes:
-            hdulist += [bands_hdu]
+            hdulist += [hdu_bands_out]
+
         return fits.HDUList(hdulist)
 
-    def make_hdu(self, extname='SKYMAP', extname_bands=None, sparse=False,
-                 conv=None):
+    def make_hdu(self, hdu="SKYMAP", hdu_bands=None, sparse=False, conv=None):
         """Make a FITS HDU from this map.
 
         Parameters
         ----------
-        extname : str
+        hdu : str
             The HDU extension name.
-        extname_bands : str
+        hdu_bands : str
             The HDU extension name for BANDS table.
         sparse : bool
             Set INDXSCHM to SPARSE and sparsify the map by only
@@ -172,59 +212,75 @@ class WcsMap(MapBase):
         hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
             HDU containing the map data.
         """
-        data = self.data
-        shape = data.shape
         header = self.geom.make_header()
 
-        if extname_bands is not None:
-            header['BANDSHDU'] = extname_bands
+        if hdu_bands is not None:
+            header["BANDSHDU"] = hdu_bands
 
-        cols = []
         if sparse:
-
-            if len(shape) == 2:
-                data_flat = np.ravel(data)
-                data_flat[~np.isfinite(data_flat)] = 0
-                nonzero = np.where(data_flat > 0)
-                cols.append(fits.Column('PIX', 'J', array=nonzero[0]))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat[nonzero].astype(float)))
-            elif self.geom.npix[0].size == 1:
-                data_flat = np.ravel(data).reshape(
-                    shape[:-2] + (shape[-1] * shape[-2],))
-                data_flat[~np.isfinite(data_flat)] = 0
-                nonzero = np.where(data_flat > 0)
-                channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
-                cols.append(fits.Column('PIX', 'J', array=nonzero[-1]))
-                cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat[nonzero].astype(float)))
-            else:
-
-                data_flat = []
-                channel = []
-                pix = []
-                for i, _ in np.ndenumerate(self.geom.npix[0]):
-                    data_i = np.ravel(data[i[::-1]])
-                    data_i[~np.isfinite(data_i)] = 0
-                    pix_i = np.where(data_i > 0)
-                    data_i = data_i[pix_i]
-                    data_flat += [data_i]
-                    pix += pix_i
-                    channel += [np.ones(data_i.size, dtype=int) *
-                                np.ravel_multi_index(i[::-1], shape[:-2])]
-                data_flat = np.concatenate(data_flat)
-                pix = np.concatenate(pix)
-                channel = np.concatenate(channel)
-                cols.append(fits.Column('PIX', 'J', array=pix))
-                cols.append(fits.Column('CHANNEL', 'I', array=channel))
-                cols.append(fits.Column('VALUE', 'E',
-                                        array=data_flat.astype(float)))
-
-            hdu = fits.BinTableHDU.from_columns(cols, header=header,
-                                                name=extname)
-        elif extname == 'PRIMARY':
-            hdu = fits.PrimaryHDU(data, header=header)
+            hdu_out = self._make_hdu_sparse(self.data, self.geom.npix, hdu, header)
+        elif hdu == "PRIMARY":
+            hdu_out = fits.PrimaryHDU(self.data, header=header)
         else:
-            hdu = fits.ImageHDU(data, header=header, name=extname)
-        return hdu
+            hdu_out = fits.ImageHDU(self.data, header=header, name=hdu)
+
+        return hdu_out
+
+    @staticmethod
+    def _make_hdu_sparse(data, npix, hdu, header):
+        shape = data.shape
+
+        # We make a copy, because below we modify `data` to handle non-finite entries
+        # TODO: The code below could probably be simplified to use expressions
+        # that create new arrays instead of in-place modifications
+        # But first: do we want / need the non-finite entry handling at all and always cast to 64-bit float?
+        data = data.copy()
+
+        if len(shape) == 2:
+            data_flat = np.ravel(data)
+            data_flat[~np.isfinite(data_flat)] = 0
+            nonzero = np.where(data_flat > 0)
+            value = data_flat[nonzero].astype(float)
+            cols = [
+                fits.Column("PIX", "J", array=nonzero[0]),
+                fits.Column("VALUE", "E", array=value),
+            ]
+        elif npix[0].size == 1:
+            shape_flat = shape[:-2] + (shape[-1] * shape[-2],)
+            data_flat = np.ravel(data).reshape(shape_flat)
+            data_flat[~np.isfinite(data_flat)] = 0
+            nonzero = np.where(data_flat > 0)
+            channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
+            value = data_flat[nonzero].astype(float)
+            cols = [
+                fits.Column("PIX", "J", array=nonzero[-1]),
+                fits.Column("CHANNEL", "I", array=channel),
+                fits.Column("VALUE", "E", array=value),
+            ]
+        else:
+            data_flat = []
+            channel = []
+            pix = []
+            for i, _ in np.ndenumerate(npix[0]):
+                data_i = np.ravel(data[i[::-1]])
+                data_i[~np.isfinite(data_i)] = 0
+                pix_i = np.where(data_i > 0)
+                data_i = data_i[pix_i]
+                data_flat += [data_i]
+                pix += pix_i
+                channel += [
+                    np.ones(data_i.size, dtype=int)
+                    * np.ravel_multi_index(i[::-1], shape[:-2])
+                ]
+
+            pix = np.concatenate(pix)
+            channel = np.concatenate(channel)
+            value = np.concatenate(data_flat).astype(float)
+
+            cols = [
+                fits.Column("PIX", "J", array=pix),
+                fits.Column("CHANNEL", "I", array=channel),
+                fits.Column("VALUE", "E", array=value),
+            ]
+
+        return fits.BinTableHDU.from_columns(cols, header=header, name=hdu)

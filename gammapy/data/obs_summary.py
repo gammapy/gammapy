@@ -1,18 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from .obs_stats import ObservationStats
 
-__all__ = [
-    'ObservationTableSummary',
-    'ObservationSummary',
-]
+__all__ = ["ObservationTableSummary", "ObservationSummary"]
 
 
-class ObservationTableSummary(object):
+class ObservationTableSummary:
     """Observation table summary.
 
     Class allowing to summarize informations contained in
@@ -34,30 +29,25 @@ class ObservationTableSummary(object):
     def offset(self):
         """Observation pointing ot target offset (`~astropy.coordinates.Angle`).
         """
-        pnt_pos = SkyCoord(self.obs_table['RA_PNT'],
-                           self.obs_table['DEC_PNT'],
-                           unit='deg')
+        t = self.obs_table
+        pnt_pos = SkyCoord(t["RA_PNT"], t["DEC_PNT"], unit="deg")
 
-        offset = pnt_pos.separation(self.target_pos)
-
-        return offset
+        return pnt_pos.separation(self.target_pos)
 
     def __str__(self):
-        """Summary report (`str`).
-        """
-        ss = '*** Observation summary ***\n'
-        ss += 'Target position: {}\n'.format(self.target_pos)
+        ss = "*** Observation summary ***\n"
+        ss += "Target position: {}\n".format(self.target_pos)
 
-        ss += 'Number of observations: {}\n'.format(len(self.obs_table))
+        ss += "Number of observations: {}\n".format(len(self.obs_table))
 
-        livetime = Quantity(sum(self.obs_table['LIVETIME']), 'second')
-        ss += 'Livetime: {:.2f}\n'.format(livetime.to('hour'))
-        zenith = self.obs_table['ZEN_PNT']
-        ss += 'Zenith angle: (mean={:.2f}, std={:.2f})\n'.format(
-            zenith.mean(), zenith.std())
+        livetime = u.Quantity(sum(self.obs_table["LIVETIME"]), "second")
+        ss += "Livetime: {:.2f}\n".format(livetime.to("hour"))
+        zenith = self.obs_table["ZEN_PNT"]
+        ss += "Zenith angle: (mean={:.2f}, std={:.2f})\n".format(
+            zenith.mean(), zenith.std()
+        )
         offset = self.offset
-        ss += 'Offset: (mean={:.2f}, std={:.2f})\n'.format(
-            offset.mean(), offset.std())
+        ss += "Offset: (mean={:.2f}, std={:.2f})\n".format(offset.mean(), offset.std())
 
         return ss
 
@@ -79,17 +69,18 @@ class ObservationTableSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
-        zenith = self.obs_table['ZEN_PNT']
+        zenith = self.obs_table["ZEN_PNT"]
 
         if bins is None:
             bins = np.linspace(0, zenith.max() + 5, 30)
 
         ax.hist(zenith, bins=bins)
-        ax.set_title('Zenith distribution')
-        ax.set_xlabel('Zenith (Deg)')
-        ax.set_ylabel('#Entries')
+        ax.set_title("Zenith distribution")
+        ax.set_xlabel("Zenith (Deg)")
+        ax.set_ylabel("#Entries")
 
         return ax
 
@@ -111,21 +102,23 @@ class ObservationTableSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         offset = self.offset
 
         if bins is None:
             bins = np.linspace(0, offset.degree.max() + 0.5, 10)
+
         ax.hist(offset.degree, bins=bins)
-        ax.set_title('Offset distribution')
-        ax.set_xlabel('Offset (Deg)')
-        ax.set_ylabel('#Entries')
+        ax.set_title("Offset distribution")
+        ax.set_xlabel("Offset (Deg)")
+        ax.set_ylabel("#Entries")
 
         return ax
 
 
-class ObservationSummary(object):
+class ObservationSummary:
     """Summary of observations.
 
     For a list of observation stats, this class can make a
@@ -179,18 +172,17 @@ class ObservationSummary(object):
             self.sigma[index] = stack.sigma
 
     def obs_wise_summary(self):
-        """Observation wise summary report (`str`)."""
-        ss = '*** Observation Wise summary ***\n'
+        """Observation wise summary report (str)."""
+        ss = "*** Observation Wise summary ***\n"
         for obs in self.obs_stats:
-            ss += '{}\n'.format(obs)
+            ss += "{}\n".format(obs)
 
         return ss
 
     def __str__(self):
-        """Observation summary report (`str`)."""
         stack = ObservationStats.stack(self.obs_stats)
-        ss = '*** Observation summary ***\n'
-        ss += '{}\n'.format(stack)
+        ss = "*** Observation summary ***\n"
+        ss += "{}\n".format(stack)
         return ss
 
     def plot_significance_vs_livetime(self, ax=None, **kwargs):
@@ -207,14 +199,17 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.sigma, "o", **kwargs)
 
-        ax.set_xlabel('Livetime ({})'.format(u.h))
-        ax.set_ylabel('Significance ($\sigma$)')
-        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
-                 0., np.amax(self.sigma) * 1.2])
-        ax.set_title('Significance evolution')
+        ax.set_xlabel("Livetime ({})".format(u.h))
+        ax.set_ylabel("Significance")
+
+        xmax = np.amax(self.livetime.to_value("h")) * 1.2
+        ymax = np.amax(self.sigma) * 1.2
+        ax.axis([0, xmax, 0, ymax])
+        ax.set_title("Significance evolution")
         return ax
 
     def plot_excess_vs_livetime(self, ax=None, **kwargs):
@@ -231,14 +226,17 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.excess, "o", **kwargs)
 
-        ax.set_xlabel('Livetime ({})'.format(u.h))
-        ax.set_ylabel('Excess')
-        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
-                 0., np.amax(self.excess) * 1.2])
-        ax.set_title('Excess evolution')
+        ax.set_xlabel("Livetime ({})".format(u.h))
+        ax.set_ylabel("Excess")
+
+        xmax = np.amax(self.livetime.to_value("h")) * 1.2
+        ymax = np.amax(self.excess) * 1.2
+        ax.axis([0, xmax, 0, ymax])
+        ax.set_title("Excess evolution")
         return ax
 
     def plot_background_vs_livetime(self, ax=None, **kwargs):
@@ -255,14 +253,17 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.background, "o", **kwargs)
 
-        ax.set_xlabel('Livetime ({})'.format(u.h))
-        ax.set_ylabel('Background')
-        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
-                 0., np.amax(self.background) * 1.2])
-        ax.set_title('Background evolution')
+        ax.set_xlabel("Livetime ({})".format(u.h))
+        ax.set_ylabel("Background")
+
+        xmax = np.amax(self.livetime.to_value("h")) * 1.2
+        ymax = np.amax(self.background) * 1.2
+        ax.axis([0, xmax, 0, ymax])
+        ax.set_title("Background evolution")
         return ax
 
     def plot_gamma_rate(self, ax=None, **kwargs):
@@ -279,19 +280,19 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         xtick_vals, xtick_labels = self._get_xtick_info()
 
         ax.plot(xtick_vals, self.gamma_rate, "o", **kwargs)
-        ax.set_xlabel('Observation Ids')
+        ax.set_xlabel("Observation ID")
 
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
-        ax.set_ylabel('$\gamma$ rate ({})'.format(self.gamma_rate.unit))
-        ax.axis([0, len(self.gamma_rate),
-                 0., np.amax(self.gamma_rate.value) * 1.2])
-        ax.set_title('$\gamma$ rates')
+        ax.set_ylabel("Excess rate ({})".format(self.gamma_rate.unit))
+        ax.axis([0, len(self.gamma_rate), 0.0, np.amax(self.gamma_rate.value) * 1.2])
+        ax.set_title("Excess rates")
         return ax
 
     def plot_background_rate(self, ax=None, **kwargs):
@@ -308,19 +309,19 @@ class ObservationSummary(object):
             Axis
         """
         import matplotlib.pyplot as plt
+
         ax = plt.gca() if ax is None else ax
 
         xtick_vals, xtick_labels = self._get_xtick_info()
 
         ax.plot(xtick_vals, self.bg_rate, "o", **kwargs)
-        ax.set_xlabel('Observation Ids')
+        ax.set_xlabel("Observation Ids")
 
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
-        ax.set_ylabel('Background rate ({})'.format(self.bg_rate.unit))
-        ax.axis([0, len(self.bg_rate),
-                 0., np.amax(self.bg_rate.value) * 1.2])
-        ax.set_title('Background rates')
+        ax.set_ylabel("Background rate ({})".format(self.bg_rate.unit))
+        ax.axis([0, len(self.bg_rate), 0.0, np.amax(self.bg_rate.value) * 1.2])
+        ax.set_title("Background rates")
         return ax
 
     def _get_xtick_info(self):

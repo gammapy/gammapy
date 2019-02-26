@@ -1,37 +1,61 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
-from numpy.testing.utils import assert_allclose
+import pytest
+from numpy.testing import assert_allclose
 from astropy.convolution import Gaussian2DKernel
-from ...utils.testing import requires_dependency, requires_data
-from ...detect import TSImageEstimator
-from ...image import SkyImageList
+from ...utils.testing import requires_data
+from ...maps import Map
+from ...detect import TSMapEstimator
 
 
-@requires_dependency('scipy')
-@requires_dependency('skimage')
-@requires_data('gammapy-extra')
-def test_compute_ts_map():
+@pytest.fixture(scope="session")
+def input_maps():
+    filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz"
+    return {
+        "counts": Map.read(filename, hdu="counts"),
+        "exposure": Map.read(filename, hdu="exposure"),
+        "background": Map.read(filename, hdu="background"),
+    }
+
+
+@requires_data("gammapy-data")
+def test_compute_ts_map(input_maps):
     """Minimal test of compute_ts_image"""
-    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-    images = SkyImageList.read(filename)
+    kernel = Gaussian2DKernel(5)
 
+    ts_estimator = TSMapEstimator(method="leastsq iter", n_jobs=4, threshold=1)
+    result = ts_estimator.run(input_maps, kernel=kernel)
+
+    assert "leastsq iter" in repr(ts_estimator)
+    assert_allclose(result["ts"].data[99, 99], 1714.23, rtol=1e-2)
+    assert_allclose(result["niter"].data[99, 99], 3)
+    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
+
+
+@requires_data("gammapy-data")
+def test_compute_ts_map_downsampled(input_maps):
+    """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(2.5)
 
-    images['counts'] = images['counts'].downsample(2, np.nansum)
-    images['background'] = images['background'].downsample(2, np.nansum)
-    images['exposure'] = images['exposure'].downsample(2, np.mean)
+    ts_estimator = TSMapEstimator(
+        method="root brentq", n_jobs=4, error_method="conf", ul_method="conf"
+    )
+    result = ts_estimator.run(input_maps, kernel=kernel, downsampling_factor=2)
 
-    ts_estimator = TSImageEstimator(method='leastsq iter')
-    result = ts_estimator.run(images, kernel=kernel)
+    assert_allclose(result["ts"].data[99, 99], 1675.28, rtol=1e-2)
+    assert_allclose(result["niter"].data[99, 99], 7)
+    assert_allclose(result["flux"].data[99, 99], 1.02e-09, rtol=1e-2)
+    assert_allclose(result["flux_err"].data[99, 99], 3.84e-11, rtol=1e-2)
+    assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
-    for name, order in zip(['ts', 'flux', 'flux_err', 'flux_ul', 'niter'], [2, 5, 5, 5, 0]):
-        result[name].data = np.nan_to_num(result[name].data)
-        result[name] = result[name].upsample(2, order=order)
 
-    assert_allclose(1705.840212274973, result['ts'].data[99, 99], rtol=1e-3)
-    assert_allclose([[99], [99]], np.where(result['ts'].data == result['ts'].data.max()))
-    assert_allclose(3, result['niter'].data[99, 99])
-    assert_allclose(1.0227934338735763e-09, result['flux'].data[99, 99], rtol=1e-3)
-    assert_allclose(3.842162268386843e-11, result['flux_err'].data[99, 99], rtol=1e-3)
-    assert_allclose(1.0996355030292762e-09, result['flux_ul'].data[99, 99], rtol=1e-3)
+@requires_data("gammapy-data")
+def test_large_kernel(input_maps):
+    """Minimal test of compute_ts_image"""
+    kernel = Gaussian2DKernel(100)
+    ts_estimator = TSMapEstimator()
+
+    with pytest.raises(ValueError) as err:
+        ts_estimator.run(input_maps, kernel=kernel)
+        assert "Kernel shape larger" in str(err.value)

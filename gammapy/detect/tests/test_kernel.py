@@ -1,89 +1,71 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
-from ...image import SkyImage, SkyImageList
-from ...datasets import FermiGalacticCenter
+from ...utils.testing import requires_data
+from ...maps import Map
 from ..kernel import KernelBackgroundEstimator
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-class TestKernelBackgroundEstimator(object):
-    def setup_class(self):
-        """Prepares appropriate input and defines inputs for test cases.
-        """
-        source_kernel = np.ones((1, 3))
-        background_kernel = np.ones((5, 3))
+@pytest.fixture(scope="session")
+def images():
+    """A simple test case for the algorithm."""
+    counts = Map.create(npix=10, binsz=1)
+    counts.data += 42
+    counts.data[4][4] = 1000
 
-        # Loads prepared inputs into estimator
-        self.kbe = KernelBackgroundEstimator(
-            kernel_src=source_kernel,
-            kernel_bkg=background_kernel,
-            significance_threshold=4,
-            mask_dilation_radius=1 * u.deg
-        )
+    background = Map.from_geom(counts.geom)
+    background.data += 42
 
-    def _images_point(self):
-        """
-        Test images for a point source
-        """
-        counts = SkyImage.empty(name='counts', nxpix=10, nypix=10, binsz=1, fill=42.)
-        counts.data[4][4] = 1000
+    exclusion = Map.from_geom(counts.geom)
+    exclusion.data += 1
 
-        background = SkyImage.empty_like(counts, fill=42., name='background')
-        exclusion = SkyImage.empty_like(counts, name='exclusion', fill=1.)
-        return SkyImageList([counts, background, exclusion])
+    return {"counts": counts, "background": background, "exclusion": exclusion}
 
-    def _images_psf(self):
-        # Initial counts required by one of the tests.
-        images = self._images_point()
 
-        psf = FermiGalacticCenter.psf()
-        erange = [10, 500] * u.GeV
-        psf = psf.table_psf_in_energy_band(erange)
-        kernel_array = psf.kernel(images['counts'])
+@pytest.fixture()
+def kbe():
+    source_kernel = np.ones((1, 3))
+    background_kernel = np.ones((5, 3))
+    return KernelBackgroundEstimator(
+        kernel_src=source_kernel,
+        kernel_bkg=background_kernel,
+        significance_threshold=4,
+        mask_dilation_radius="1 deg",
+        keep_record=True,
+    )
 
-        images['counts'] = images['counts'].convolve(kernel_array, mode='constant')
-        return images
 
-    def test_run_iteration_point(self):
-        """Asserts that mask and background are as expected according to input."""
+@requires_data("gammapy-data")
+def test_run_iteration(kbe, images):
+    result = kbe.run_iteration(images)
+    mask, background = result["exclusion"].data, result["background"].data
 
-        images = self._images_point()
+    # Check mask
+    idx = [(4, 3), (4, 4), (4, 5), (3, 4), (5, 4)]
+    i, j = zip(*idx)
+    assert_allclose(mask[i, j], 0)
+    assert_allclose((1.0 - mask).sum(), 11)
 
-        # Call the _run_iteration code as this is what is explicitly being tested
-        result = self.kbe._run_iteration(images)
-        mask, background = result['exclusion'].data, result['background'].data
+    # Check background, should be 42 uniformly
+    assert_allclose(background, 42 * np.ones((10, 10)))
 
-        # Check mask
-        idx = [(4, 3), (4, 4), (4, 5), (3, 4), (5, 4)]
-        i, j = zip(*idx)
-        assert_allclose(mask[i, j], 0)
-        assert_allclose((1. - mask).sum(), 11)
 
-        # Check background, should be 42 uniformly
-        assert_allclose(background, 42 * np.ones((10, 10)))
+@requires_data("gammapy-data")
+def test_run(kbe, images):
+    result = kbe.run(images)
+    mask, background = result["exclusion"].data, result["background"].data
 
-    def test_run_iteration_blob(self):
-        """Asserts that mask and background are as expected according to input."""
+    assert_allclose(mask.sum(), 89)
+    assert_allclose(background, 42 * np.ones((10, 10)))
+    assert len(kbe.images_stack) == 4
 
-        images = self._images_psf()
 
-        # Call the run_iteration code as this is what is explicitly being tested
-        result = self.kbe._run_iteration(images)
-        background = result['background'].data
+@requires_data("gammapy-data")
+def test_run_without_defaults(kbe, images):
+    result = kbe.run({"counts": images["counts"]})
+    mask, background = result["exclusion"].data, result["background"].data
 
-        # Check background, should be 42 uniformly within 10%
-        assert_allclose(background, 42 * np.ones((10, 10)), rtol=0.1)
-
-    def test_run(self):
-        """Tests run script."""
-        images = self._images_point()
-        result = self.kbe.run(images)
-        mask, background = result['exclusion'].data, result['background'].data
-
-        assert_allclose(mask.sum(), 89)
-        assert_allclose(background, 42 * np.ones((10, 10)))
+    assert_allclose(mask.sum(), 89)
+    assert_allclose(background, 42 * np.ones((10, 10)))
+    assert len(kbe.images_stack) == 4

@@ -1,38 +1,35 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 
-__all__ = [
-    'plot_periodogram',
-]
+__all__ = ["plot_periodogram"]
 
 
-def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_period=None, significance=None):
-    """Plot a light curve, its periodogram and spectral window function.
+def plot_periodogram(
+    time, flux, periods, power, flux_err=None, best_period=None, fap=None
+):
+    """
+    Plot a light curve and its periodogram.
 
-    The highest period of the periodogram and its significance will be added to the plot, if given.
-    If multiple significances are forwarded, the lowest one will be used.
+    The highest period of the periodogram and its false alarm probability (FAP) is added to the plot, if given.
 
     Parameters
     ----------
-    time : `~numpy.ndarray`
+    time : `numpy.ndarray`
         Time array of the light curve
-    flux : `~numpy.ndarray`
+    flux : `numpy.ndarray`
         Flux array of the light curve
-    flux_err : `~numpy.ndarray`
-        Flux error array of the light curve
-    periods : `~numpy.ndarray`
+    periods : `numpy.ndarray`
         Periods for the periodogram
-    psd_data : `~numpy.ndarray`
+    power : `numpy.ndarray`
         Periodogram peaks of the data
-    best_period : float
-        Highest period of the periodogram
-    significance : float or `~numpy.ndarray`
-        Significance of ``best_period`` under the specified significance criterion.
-        If the significance criterion is not defined, the minimum significance
-        of all significance criteria is used.
-    psd_win : `~numpy.ndarray`
-        Periodogram peaks of the window function
-        
+    flux_err : `numpy.ndarray` (optional, default=None)
+        Flux error array of the light curve.
+        Is set to 0 if not given.
+    best_period : float (optional, default=None)
+        Period of the highest periodogram peak
+    fap : float (optional, default=None)
+        False alarm probability of ``best_period`` under a certain significance criterion.
+
     Returns
     -------
     fig : `~matplotlib.figure.Figure`
@@ -40,42 +37,43 @@ def plot_periodogram(time, flux, flux_err, periods, psd_data, psd_win, best_peri
     """
     import matplotlib.pyplot as plt
 
+    if flux_err is None:
+        flux_err = np.zeros_like(flux)
+
     # set up the figure & axes for plotting
     fig = plt.figure(figsize=(16, 9))
-    grid_spec = plt.GridSpec(3, 1)
+    grid_spec = plt.GridSpec(2, 1)
 
     # plot the light curve
     ax = fig.add_subplot(grid_spec[0, :])
-    ax.errorbar(time, flux, flux_err, fmt='ok', elinewidth=1.5, capsize=0)
-    ax.set_xlabel('time (d)')
-    ax.set_ylabel('magnitude (a.u.)')
+    ax.errorbar(
+        time, flux, flux_err, fmt="ok", label="light curve", elinewidth=1.5, capsize=0
+    )
+    ax.set_xlabel("time")
+    ax.set_ylabel("flux")
+    ax.legend()
 
     # plot the periodogram
     ax = fig.add_subplot(grid_spec[1, :])
-    ax.plot(periods, psd_data)
+    ax.plot(periods, power, c="k", label="periodogram")
     # mark the best period and label with significance
     if best_period is not None:
-        if significance is None:
-            raise ValueError('Must give a significance if you give a best_period')
+        if fap is None:
+            raise ValueError(
+                "Must give a false alarm probability if you give a best_period"
+            )
 
         # set precision for period format
         pre = int(abs(np.floor(np.log10(np.max(np.diff(periods))))))
-        s_min = min(significance.values())
-        label = 'Detected period p = {:.{}f} with {:.2f} significance'.format(best_period, pre, s_min)
-        ymax = psd_data[periods == best_period]
-        ax.axvline(best_period, ymin=0, ymax=ymax, label=label)
+        label = "Detected period p = {:.{}f} with {:.2E} FAP".format(
+            best_period, pre, fap
+        )
+        ymax = power[periods == best_period]
+        ax.axvline(best_period, ymin=0, ymax=ymax, label=label, c="r")
 
-    ax.set_xlabel('period (d)')
-    ax.set_ylabel('power')
+    ax.set_xlabel("period")
+    ax.set_ylabel("power")
     ax.set_xlim(0, np.max(periods))
-    ax.set_ylim(0, 1)
-    ax.legend(loc='upper right')
-
-    # plot the spectral window function
-    ax = fig.add_subplot(grid_spec[2, :])
-    ax.plot(periods, psd_win)
-    ax.set_xlabel('period (d)')
-    ax.set_ylabel('power')
-    ax.set_xlim(0, np.max(periods))
+    ax.legend()
 
     return fig

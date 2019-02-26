@@ -33,22 +33,24 @@ try:
     import astropy_helpers
 except ImportError:
     # Building from inside the docs/ directory?
-    if os.path.basename(os.getcwd()) == 'docs':
-        a_h_path = os.path.abspath(os.path.join('..', 'astropy_helpers'))
+    if os.path.basename(os.getcwd()) == "docs":
+        a_h_path = os.path.abspath(os.path.join("..", "astropy_helpers"))
         if os.path.isdir(a_h_path):
             sys.path.insert(1, a_h_path)
 
 # Load all of the global Astropy configuration
 from astropy_helpers.sphinx.conf import *
 
+# Load utils docs functions
+from gammapy.utils.docs import gammapy_sphinx_ext_activate
+from gammapy.utils.docs import gammapy_sphinx_notebooks
+
 # Get configuration information from setup.cfg
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
+
 conf = ConfigParser()
-conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
-setup_cfg = dict(conf.items('metadata'))
+conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
+setup_cfg = dict(conf.items("metadata"))
 
 plot_html_show_source_link = False
 
@@ -60,25 +62,43 @@ plot_html_show_source_link = False
 # We currently want to link to the latest development version of the astropy docs,
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
-intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
-intersphinx_mapping['regions'] = ('http://astropy-regions.readthedocs.io/en/latest/', None)
-intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
-intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.io/en/latest/', None)
-
-# Extend intersphinx_mapping with packages we use in gammapy
-intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
-intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/', None)
-intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
-intersphinx_mapping['sklearn'] = ('http://scikit-learn.org/stable/', None)
-intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/', None)
-intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.io/en/latest/', None)
-intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
-intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
+intersphinx_mapping.pop("h5py", None)
+intersphinx_mapping["matplotlib"] = ("https://matplotlib.org/", None)
+intersphinx_mapping["astropy"] = ("http://docs.astropy.org/en/latest/", None)
+intersphinx_mapping["regions"] = (
+    "https://astropy-regions.readthedocs.io/en/latest/",
+    None,
+)
+intersphinx_mapping["reproject"] = ("https://reproject.readthedocs.io/en/latest/", None)
+intersphinx_mapping["uncertainties"] = ("https://pythonhosted.org/uncertainties/", None)
+intersphinx_mapping["naima"] = ("https://naima.readthedocs.io/en/latest/", None)
+intersphinx_mapping["gadf"] = (
+    "https://gamma-astro-data-formats.readthedocs.io/en/latest/",
+    None,
+)
+intersphinx_mapping["iminuit"] = ("https://iminuit.readthedocs.io/en/latest/", None)
 
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns.append('_templates')
+exclude_patterns.append("_templates")
+exclude_patterns.append("_static")
+exclude_patterns.append("**.ipynb_checkpoints")
+
+
+#
+# -- nbsphinx settings
+extensions.extend(
+    [
+        "nbsphinx",
+        "sphinx_click.ext",
+        "IPython.sphinxext.ipython_console_highlighting",
+        "sphinx.ext.mathjax",
+    ]
+)
+nbsphinx_execute = "never"
+
+# --
 
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
@@ -88,20 +108,19 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg['package_name']
-author = setup_cfg['author']
-copyright = '{0}, {1}'.format(
-    datetime.datetime.now().year, setup_cfg['author'])
+project = setup_cfg["package_name"]
+author = setup_cfg["author"]
+copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-__import__(setup_cfg['package_name'])
-package = sys.modules[setup_cfg['package_name']]
+__import__(setup_cfg["package_name"])
+package = sys.modules[setup_cfg["package_name"]]
 
 # The short X.Y version.
-version = package.__version__.split('-', 1)[0]
+version = package.__version__.split("-", 1)[0]
 # The full version, including alpha/beta/rc tags.
 release = package.__version__
 
@@ -114,10 +133,22 @@ release = package.__version__
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
+# html_theme_options = {
+#    'logotext1': 'gamma',  # white,  semi-bold
+#    'logotext2': 'py',  # orange, light
+#    'logotext3': ':docs'  # white,  light
+# }
+
 html_theme_options = {
-    'logotext1': 'gamma',  # white,  semi-bold
-    'logotext2': 'py',  # orange, light
-    'logotext3': ':docs'  # white,  light
+    "canonical_url": setup_cfg["url_docs"],
+    "analytics_id": "",
+    "logo_only": False,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    # Toc options
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -127,7 +158,7 @@ html_theme_options = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-# html_theme = None
+html_theme = "sphinx_rtd_theme"
 
 # Custom sidebar templates, maps document names to template names.
 # html_sidebars = {}
@@ -136,11 +167,6 @@ html_theme_options = {
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 # html_favicon = ''
-
-# The Gammapy logo doesn't look good so small (would need to make it thicker)
-# So let's use the Astropy icon for now, i.e. not set `html_favicon` here.
-# https://github.com/gammapy/gammapy-website/tree/master/logos
-# html_favicon = '_static/gammapy_logo.ico'
 
 # TODO: set this image also in the title bar
 # (html_logo is not the right option)
@@ -151,56 +177,56 @@ html_theme_options = {
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = '{0} v{1}'.format(project, release)
+html_title = "{} v{}".format(project, release)
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = project + 'doc'
+htmlhelp_basename = project + "doc"
 
 # Static files to copy after template files
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
-# download gammapy-extra for read the docs build
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
-if on_rtd:
-    from zipfile import ZipFile
-    from astropy.extern.six.moves import urllib
-    from tempfile import mktemp
-
-    filename = mktemp('gammapy-extra-master.zip')
-    url = 'https://github.com/gammapy/gammapy-extra/archive/master.zip'
-    name, hdrs = urllib.request.urlretrieve(url, filename)
-    gp_extra_zip = ZipFile(filename)
-    path = os.path.dirname(filename)
-    gp_extra_zip.extractall(path)
-    gp_extra_zip.close()
-    os.environ['GAMMAPY_EXTRA'] = os.path.join(path, 'gammapy-extra-master')
-
-from gammapy.utils.docs import gammapy_sphinx_ext_activate
 gammapy_sphinx_ext_activate()
 
-html_style = 'gammapy.css'
+# Integration of notebooks
+gammapy_sphinx_notebooks(setup_cfg)
+
+
+# Theme style
+# html_style = ''
+def setup(app):
+    app.add_stylesheet("gammapy.css")
+    app.add_javascript("copybutton.js")
+    app.add_javascript("gammapy.js")
+
+
+# copybutton.js provides hide/show button for python prompts >>>
+# slightly modified to work on RTD theme from javascript file in easydev package
+# https://github.com/cokelaer/easydev/blob/master/easydev/share/copybutton.js
+
+
+html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
 # -- Options for LaTeX output --------------------------------------------------
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [('index', project + '.tex', project + u' Documentation',
-                    author, 'manual')]
+latex_documents = [
+    ("index", project + ".tex", project + " Documentation", author, "manual")
+]
 
 # -- Options for manual page output --------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [('index', project.lower(), project + u' Documentation',
-              [author], 1)]
+man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
 
 # -- Options for the edit_on_github extension ----------------------------------------
 
-if eval(setup_cfg.get('edit_on_github')):
-    extensions += ['astropy.sphinx.ext.edit_on_github']
+if eval(setup_cfg.get("edit_on_github")):
+    extensions += ["astropy.sphinx.ext.edit_on_github"]
 
-    versionmod = __import__(setup_cfg['package_name'] + '.version')
-    edit_on_github_project = setup_cfg['github_project']
+    versionmod = __import__(setup_cfg["package_name"] + ".version")
+    edit_on_github_project = setup_cfg["github_project"]
     if versionmod.version.release:
         edit_on_github_branch = "v" + versionmod.version.version
     else:
@@ -209,7 +235,8 @@ if eval(setup_cfg.get('edit_on_github')):
     edit_on_github_source_root = ""
     edit_on_github_doc_root = "docs"
 
-github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
+
+github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
 # -- Other options --
 
@@ -217,15 +244,13 @@ github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 # show inherited members for classes
 automodsumm_inherited_members = True
 
+
 # In `about.rst` and `references.rst` we are giving lists of citations
 # (e.g. papers using Gammapy) that partly aren't referenced from anywhere
 # in the Gammapy docs. This is normal, but Sphinx emits a warning.
 # The following config option suppresses the warning.
 # http://www.sphinx-doc.org/en/stable/rest.html#citations
 # http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
-suppress_warnings = [
-    'ref.citation'
-]
-
+suppress_warnings = ["ref.citation"]
 
 # nitpicky = True

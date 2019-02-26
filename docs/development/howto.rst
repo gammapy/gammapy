@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _development_howto:
+.. _dev_howto:
 
 ***************
 Developer HOWTO
@@ -9,79 +9,7 @@ Developer HOWTO
 This page is a collection of notes for Gammapy contributors and maintainers,
 in the form of short "How to" or "Q & A" entries.
 
-
-.. _development-contact:
-
-Contact points
---------------
-
-If you want to talk about Gammapy, what are the options?
-
-* You can always post on the `Gammapy mailing list`_!
-  E.g. if you have an issue with Gammapy installation, analysis, a feature request or found a possible issue.
-* You can also file and issue or pull request on the `Gammapy Github page`_.
-  Making an account on Github takes only a minute and is free.
-  Github is where Gammapy development takes place, i.e. anything that might / will lead
-  to a change to the Gammapy code or documentation will eventually result in a pull request on Github.
-* Often it's unclear if some issue (e.g. an error during installation) is the result of you executing
-  the wrong command, or an actual issue in Gammapy that must be addressed by a documentation or code change.
-  In those cases we suggest you post on the mailing list first.
-* We have a `Slack`_ set up for Gammapy developer chat. You can use it via the Slack app or from your
-  web browser at `Gammapy on Slack`_. If you need help with git, Github, Python or have questions about
-  Github development (e.g. how to run tests, build the docs, ...), i.e. chat that isn't directly related
-  to an issue or pull request on Github, you can use Slack.
-* If you want to have a non-public conversation about Gammapy, or added to the Gammapy slack, please email `Christoph Deil`_.
-
-
-.. _make_clean:
-
-How to clean up old files
--------------------------
-
-TODO: Gammapy now has a Makefile ... this section should be expanded to a page about setup.py and make.
-
-Many projects have a ``Makefile`` to build and install the software and do all kinds of other tasks.
-In Astropy and Gammapy and most Python projects, there is no ``Makefile``, but the ``setup.py`` file
-and you're supposed to type ``python setup.py <cmd>`` and use ``--help`` and ``--help-commands`` to
-see all the available commands and options.
-
-There's one common task, cleaning up old generated files, that's not done via ``setup.py``.
-The equivalent of ``make clean`` is:
-
-.. code-block:: bash
-
-    $ rm -r build docs/_build docs/api htmlcov
-
-These folders only contain generated files and are always safe to delete!
-Most of the time you don't have to delete them, but if you e.g. remove or rename files or functions / classes,
-then you should, because otherwise the old files will still be around and you might get confusing results,
-such as Sphinx warnings or import errors or code that works locally because it uses old things, but fails
-on travis-ci or for other developers.
-
-* The ``build`` folder is where ``python setup.py build`` or ``python setup.py install`` generate files.
-* The ``docs/api`` folder is where ``python setup.py build_docs`` generates [RST]_ files from the docstrings
-  (temporary files part of the HTML documentation generation).
-* The  ``docs/_build`` folder is where ``python setup.py build_docs`` generates the HTML and other Sphinx
-  documentation output files.
-* The ``htmlcov`` folder is where ``python setup.py test --coverage`` generates the HTML coverage report.
-
-If you use ``python setup.py build_ext --inplace``, then files are generated in the ``gammapy`` source folder.
-Usually that's not a problem, but if you want to clean up those generated files, you can use
-`git clean <http://git-scm.com/docs/git-clean>`__:
-
-.. code-block:: bash
-
-    $ git status
-    # The following command will remove all untracked files!
-    # If you have written code that is not committed yet in a new file it will be gone!
-    # So use with caution!
-    $ git clean -fdx
-
-At least for now we prefer not to add a ``Makefile`` to Gammapy, because that splits the developers into
-those that use ``setup.py`` and those that use ``make``, which can grow into an overall **more** complicated
-system where some things are possible only with ``setup.py`` and others only with ``make``.
-
-.. _development-import_from:
+.. _dev_import:
 
 Where should I import from?
 ---------------------------
@@ -111,65 +39,27 @@ Note that this means that in the definition of an "end-user namespace", e.g. in 
 ``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
 modules in ``gammapy/data`` are loaded when imported from other modules in that sub-package.
 
-.. _development-result_object:
+.. _dev-result_object:
 
 Functions returning several values
 ----------------------------------
 
-Functions that return more than a single value shouldn't return a list
-or dictionary of values but rather a Python Bunch result object. A Bunch
-is similar to a dict, except that it allows attribute access to the result
-values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
-An example of how Bunches are used in gammapy is given by the `~gammapy.image.SkyImageList`
-class.
+It is up to the developer to decide how to return multiple things from functions and methods.
+For up to three things, if callers usually will want access to several things,
+using a ``tuple`` or ``collections.namedtuple`` is OK.
+For three or more things, using a Python ``dict`` instead should be preferred.
 
-.. _development-python2and3:
+.. _dev-python2and3:
 
-Python 2 and 3 support
+Python version support
 ----------------------
 
-We support Python 2.7 and 3.4 or later using a single code base.
-This is the strategy adopted by most scientific Python projects and a good starting point to learn about it is
-`here <http://python3porting.com/noconv.html>`__ and
-`here <http://docs.astropy.org/en/latest/development/codeguide.html#writing-portable-code-for-python-2-and-3>`__.
+In Gammapy we currently support Python 3.5 or later.
 
-For developers, it would have been nice to only support Python 3 in Gammapy.
-But the CIAO and Fermi Science tools software are distributed with Python 2.7
-and probably never will be updated to Python 3.
-Plus many potential users will likely keep running on Python 2.7 for many years
-(see e.g. `this survey <http://ipython.org/usersurvey2013.html#python-versions>`__).
+We plan to discuss later in 2019 whether to bump the version requirement to Python 3.6,
+to be able to take advantage of the new features introduced there.
 
-The decision to drop Python 2.6 and 3.2 support was made in August 2014 just before the Gammapy 0.1 release,
-based on a few scientific Python user surveys on the web that show that only a small minority are still
-using such an old version, so that it's not worth the developer and maintainer effort to test
-these old versions and to find workarounds for their missing features or bugs.
-
-Python 3.3 support was dropped in August 2015 because conda packages for some of the affiliated packages
-weren't available for testing on travis-ci.
-
-.. _development-wipe_readthedocs:
-
-Wipe readthedocs
-----------------
-
-After things (classes, methods, functions) are removed, the Sphinx API docs often show these old items.
-If you notice this, you have to "wipe" the Gammapy install on Readthedocs and start a fresh build.
-If you don't have permissions on Readthedocs, file a Github issue or mention this on the mailing list.
-
-The wipe procedure is described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__.
-
-The steps are:
-
-* log in `here <https://readthedocs.org/accounts/login/>`__
-* hit this URL and click the "wipe" button to wipe the existing install:
-
-   https://readthedocs.org/wipe/gammapy/latest/
-* go `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
-* go `here <https://readthedocs.org/builds/gammapy/>`__ and check if the build succeeded
-* re-check the output docs page where you had previously seen something outdated.
-
-
-.. _development-skip_tests:
+.. _dev-skip_tests:
 
 Skip unit tests for some Astropy versions
 -----------------------------------------
@@ -183,9 +73,6 @@ Skip unit tests for some Astropy versions
    @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
    def test_something():
       ...
-
-.. _development-check_html_links:
-
 
 Fix non-Unix line endings
 -------------------------
@@ -202,62 +89,17 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
     $ git status
     $ cd astropy_helpers && git checkout -- . && cd ..
 
+.. _dev-check_html_links:
+
 Check HTML links
 ----------------
 
-There's two ways to check the docs for broken links.
-
-
-This will check external links (not nice because you have to install first):
+To check for broken external links from the Sphinx documentation:
 
 .. code-block:: bash
 
    $ python setup.py install
    $ cd docs; make linkcheck
-
-To check all internal and external links use this `linkchecker <https://github.com/wummel/linkchecker>`__:
-
-.. code-block:: bash
-
-   $ pip install linkchecker
-   $ linkchecker --check-extern docs/_build/html/index.html
-
-Because Sphinx doesn't warn about some broken internal links for some reason,
-we run ``linkchecker docs/_build/html/index.html`` on travis-ci,
-but not with the ``--check-extern`` option as that would probably fail
-randomly quite often whenever one of the external websites is down.
-
-
-Other codes
------------
-
-These projects are on Github, which is great because
-it has full-text search and git history view:
-
-* https://github.com/gammapy/gammapy
-* https://github.com/gammapy/gammapy-extra
-* https://github.com/astropy/astropy
-* https://github.com/astropy/photutils
-* https://github.com/gammalib/gammalib
-* https://github.com/ctools/ctools
-* https://github.com/sherpa/sherpa
-* https://github.com/zblz/naima
-* https://github.com/woodmd/gammatools
-* https://github.com/fermiPy/fermipy
-* https://github.com/kialio/VHEObserverTools
-* https://github.com/taldcroft/xrayevents
-
-These are unofficial, unmaintained copies on open codes on Github:
-
-* https://github.com/Xarthisius/yt-drone
-* https://github.com/cdeil/Fermi-ScienceTools-mirror
-
-Actually at this point we welcome experimentation, so you can use cool new technologies
-to implement some functionality in Gammapy if you like, e.g.
-
-* `Numba <http://numba.pydata.org/>`__
-* `Bokeh <http://bokeh.pydata.org/en/latest/>`__
-* `Blaze <http://blaze.pydata.org/en/latest/>`__
 
 
 What checks and conversions should I do for inputs?
@@ -336,30 +178,19 @@ and explicit type conversions to 32 bit before writing to file.
 Clobber or overwrite?
 ---------------------
 
-In Gammapy we use on ``overwrite`` bool option for `gammapy.scripts` and functions that
-write to files.
+In Gammapy we consistently use an ``overwrite`` bool option for `gammapy.scripts` and functions that
+write to files. This is in line with Astropy, which had a mix of ``clobber`` and ``overwrite`` in
+the past, and has switched to uniform ``overwrite`` everywhere.
 
-Why not use ``clobber`` instead?
-After all the
-`FTOOLS <http://heasarc.gsfc.nasa.gov/ftools/ftools_menu.html>`__
-always use ``clobber``.
-
-The reason is that ``overwrite`` is clear to everyone, but ``clobber`` is defined by the dictionary
-(e.g. see `here <http://dictionary.reference.com/browse/clobber>`__)
-as "to batter severely; strike heavily. to defeat decisively. to denounce or criticize vigorously."
-and isn't intuitively clear to new users.
-
-Astropy uses both ``clobber`` and ``overwrite`` in various places at the moment.
-For Gammapy we can re-visit this decision before the 1.0 release, but for now,
-please be consistent and use ``overwrite``.
+The default value should be ``overwrite=False``, although we note that this decision was very
+controversial, several core developers would prefer to use ``overwrite=True``.
+For discussion on this, see `GH 1396 <https://github.com/gammapy/gammapy/issues/1396>`__.
 
 Pixel coordinate convention
 ---------------------------
 
 All code in Gammapy should follow the Astropy pixel coordinate convention that the center of the first pixel
 has pixel coordinates ``(0, 0)`` (and not ``(1, 1)`` as shown e.g. in ds9).
-It's currently documented `here <http://photutils.readthedocs.io/en/latest/photutils/overview.html#coordinate-conventions>`__
-but I plan to document it in the Astropy docs soon (see `issue 2607 <https://github.com/astropy/astropy/issues/2607>`__).
 
 You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
 
@@ -391,27 +222,6 @@ an optional dependency we use for speed, or whether we use the much more establi
 At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
 and Numba is not used yet.
 
-What belongs in Gammapy and what doesn't?
------------------------------------------
-
-The scope of Gammapy is currently not very well defined ... if in doubt whether it makes sense to
-add something, please ask on the mailing list or via a Github issue.
-
-Roughly the scope is high-level science analysis of gamma-ray data, starting with event lists
-after gamma-hadron separation and corresponding IRFs, as well as source and source population modeling.
-
-For lower-level data processing (calibration, event reconstruction, gamma-hadron separation)
-there's `ctapipe`_. There's some functionality (event list processing, PSF or background model building,
-sensitivity computations ...) that could go in either ctapipe or Gammapy and we'll have to try
-and avoid duplication.
-
-SED modeling code belongs in `naima`_.
-
-A lot of code that's not gamma-ray specific belongs in other packages
-(e.g. `Scipy`_, `Astropy`_, other Astropy-affiliated packages, `Sherpa`_).
-We currently have quite a bit of code that should be moved "upstream" or already has been,
-but the Gammapy code hasn't been adapted yet.
-
 Assert convention
 -----------------
 
@@ -431,20 +241,32 @@ it should be used consistently everywhere instead of using the
 dozens of other available asserts from pytest or numpy in various
 places.
 
-In case of assertion on arrays of quantity objects, such as
-`~astropy.units.Quantity` or `~astropy.coordinates.Angle`, the
-following method can be used:
-`astropy.tests.helper.assert_quantity_allclose`.
-In this case, use
+For assertions on `~astropy.units.Quantity` objects, you can do this
+to assert on the unit and value separately:
 
 .. code-block:: python
 
-    from astropy.tests.helper import assert_quantity_allclose
+    from numpy.testing import assert_allclose
+    import astropy.units as u
 
-at the top of the file and then just use ``assert_quantity_allclose``
-for the tests.
+    actual = 1 / 3 * u.deg
+    assert actual.unit == 'deg'
+    assert_allclose(actual.value, 0.33333333)
 
-.. _development_random:
+Note that  `~astropy.units.Quantity` can be compared to unit strings directly.
+Also note that the default for ``assert_allclose`` is ``atol=0`` and ``rtol=1e-7``,
+so when using it, you have to give the reference value with a precision of
+``rtol ~ 1e-8``, i.e. 8 digits to be on the safe side (or pass a lower ``rtol`` or set an ``atol``).
+
+The use of `~astropy.tests.helper.assert_quantity_allclose` is discouraged,
+because it only requires that the values match after unit conversions.
+This is not so bad, but units in test cases should not change randomly,
+so asserting on unit and value separately establishes more behaviour.
+
+If you don't like the two separate lines, you can use `gammapy.utils.testing.assert_quantity_allclose`,
+which does assert that units are equal, and calls `numpy.testing.assert_equal` for the values.
+
+.. _dev_random:
 
 Random numbers
 --------------
@@ -502,143 +324,9 @@ Another option is to pass an integer seed to every function that generates rando
 
 This pattern was inspired by the way
 `scikit-learn handles random numbers <http://scikit-learn.org/stable/developers/#random-numbers>`__.
-We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'global-rng'``,
+We have changed the ``None`` option of ``sklearn.utils.check_random_state`` to ``'global-rng'``,
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
-
-Sphinx docs build
------------------
-
-Generating the HTML docs for Gammapy is straight-forward::
-
-    python setup.py build_docs
-    open docs/_build/html/index.html
-
-Generating the PDF docs is more complex.
-This should work::
-
-    python setup.py build_docs -b latex
-    cd docs/_build/latex
-    makeindex -s python.ist gammapy.idx
-    pdflatex -interaction=nonstopmode gammapy.tex
-    open gammapy.pdf
-
-You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
-
-The PDF is also generated on Read the Docs and available online here:
-https://media.readthedocs.org/pdf/gammapy/latest/gammapy.pdf
-
-Documentation guidelines
-------------------------
-
-Like almost all Python projects, the Gammapy documentation is written in a format called
-`restructured text (RST)`_ and built using `Sphinx`_.
-We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
-which are based on the `Numpy docstring standard`_,
-which is what most scientific Python packages use.
-
-.. _restructured text (RST) : http://sphinx-doc.org/rest.html
-.. _Sphinx: http://sphinx-doc.org/
-.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
-
-There's a few details that are not easy to figure out by browsing the Numpy or Astropy
-documentation guidelines, or that we actually do differently in Gammapy.
-These are listed here so that Gammapy developers have a reference.
-
-Usually the quickest way to figure out how something should be done is to browse the Astropy
-or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
-or search the Numpy or Astropy documentation guidelines mentioned above.
-If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
-pull request you're working on on Github, or send an email to the Gammapy mailing list.
-
-
-Functions or class methods that return a single object
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-For functions or class methods that return a single object, following the
-Numpy docstring standard and adding a *Returns* section usually means
-that you duplicate the one-line description and repeat the function name as
-return variable name.
-See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
-as examples in the Astropy codebase. Here's a simple example:
-
-.. code-block:: python
-
-    def circle_area(radius):
-        """Circle area.
-
-        Parameters
-        ----------
-        radius : `~astropy.units.Quantity`
-            Circle radius
-
-        Returns
-        -------
-        area : `~astropy.units.Quantity`
-            Circle area
-        """
-        return 3.14 * (radius ** 2)
-
-In these cases, the following shorter format omitting the *Returns* section is recommended:
-
-.. code-block:: python
-
-    def circle_area(radius):
-        """Circle area (`~astropy.units.Quantity`).
-
-        Parameters
-        ----------
-        radius : `~astropy.units.Quantity`
-            Circle radius
-        """
-        return 3.14 * (radius ** 2)
-
-Usually the parameter description doesn't fit on the one line, so it's
-recommended to always keep this in the *Parameters* section.
-
-This is just a recommendation, e.g. for `gammapy.cube.SkyCube.spectral_index`
-we decided to use this shorter format, but for `gammapy.cube.SkyCube.flux` we
-decided to stick with the more verbose format, because the return type and units
-didn't fit on the first line.
-
-A common case where the short format is appropriate are class properties,
-because they always return a single object.
-As an example see `gammapy.data.EventList.radec`, which is reproduced here:
-
-.. code-block:: python
-
-    @property
-    def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
-        """
-        lon, lat = self['RA'], self['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
-
-
-Class attributes
-++++++++++++++++
-
-Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.cube.SkyCube` as an example.
-Attributes are listed in an *Attributes* section because I've listed them in a class-level
-docstring attributes section as recommended `here`__.
-Properties are listed in separate *Attributes summary* and *Attributes Documentation*
-sections, which is confusing to users ("what's the difference between attributes and properties?").
-
-.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
-
-One solution is to always use properties, but that can get very verbose if we have to write
-so many getters and setters. I don't have a solution for this yet ... for now I'll go read
-`this`__ and meditate.
-
-.. __: https://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
-
-TODO: make a decision on this and describe the issue / solution here.
-
-Constructor parameters
-++++++++++++++++++++++
-
-TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
 
 Logging
 -------
@@ -774,11 +462,11 @@ merged a pull request (you can add ``[skip ci]`` on this commit).
 File and directory path handling
 --------------------------------
 
-In Gammapy use ``Path`` objects to handle file and directory paths.
+In Gammapy use `pathlib.Path` objects to handle file and directory paths.
 
 .. code-block:: python
 
-    from gammapy.extern.pathlib import Path
+    from pathlib import Path
 
     dir = Path('folder/subfolder')
     filename = dir / 'filename.fits'
@@ -794,13 +482,6 @@ One gotcha is that many functions (such as ``table.write`` in this example)
 expect ``str`` objects and refuse to work with ``Path`` objects, so you have
 to explicitly convert to ``str(path)``.
 
-Note that pathlib was added to the Python standard library in 3.4
-(see `here <https://docs.python.org/3/library/pathlib.html>`__),
-but since we support Python 2.7 and the Python devs keep improving the
-version in the standard library (by adding new methods and new options
-for existing methods), we decided to bundle the latest version
-(from `here <https://pypi.python.org/pypi/pathlib2/>`__) in
-``gammapy/extern/pathlib.py`` and that should always be used.
 
 Bundled gammapy.extern code
 ---------------------------
@@ -827,7 +508,7 @@ In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response fun
 data grids, or to reproject diffuse models on data grids.
 
 Note: For some use cases that require interpolation the
-`~gammapy.utils.nddata.NDDataArray` base class might be useful. 
+`~gammapy.utils.nddata.NDDataArray` base class might be useful.
 
 The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
 (more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
@@ -869,7 +550,7 @@ Methods that use interpolation should provide an option to the caller to pass in
 ``RegularGridInterpolator`` in case the default behaviour doesn't suit the application.
 
 TODO: we have some classes (aeff2d and edisp2d) that pre-compute an interpolator, currently in the constructor.
-In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the `read` and other constructors.
+In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the ``read`` and other constructors.
 Do we want / need that?
 
 
@@ -899,52 +580,160 @@ putting this in ``docs/conf.py`` can also help sometimes::
     warnings.showwarning = warn_with_traceback
 
 
-Object summary info string
---------------------------
+Object text repr, str and info
+------------------------------
 
-If you want to add a method to provide some basic information about a class instance,
-you should use the Python ``__str__`` method.
+In Python, by default objects don't have a good string representation. This
+section explains how Python repr, str and print work, and gives guidelines for
+writing ``__repr__``, ``__str__`` and ``info`` methods on Gammapy classes.
 
-.. code-block:: python
+Let's use this as an example::
 
-    class Spam(object):
-        def __init__(self, ham):
-            self.ham = ham
+    class Person:
+        def __init__(self, name='Anna', age=8):
+            self.name = name
+            self.age = age
+
+The default ``repr`` and ``str`` are this::
+
+    >>> repr(p)
+    '<__main__.Person object at 0x105fe3b70>'
+    >>> p.__repr__()
+    '<__main__.Person object at 0x105fe3b70>'
+    >>> str(p)
+    '<__main__.Person object at 0x105fe3b70>'
+    >>> p.__str__()
+
+Users will see that. If they just give an object in the Python REPL, the
+``repr`` is shown. If they print the object, the ``str`` is shown. In both cases
+without the quotes seen above.
+
+    >>> p = Person()
+    >>> p
+    <__main__.Person at 0x105fd0cf8>
+    >>> print(p)
+    <__main__.Person object at 0x105fe3b70>
+
+There are ways to make this better and avoid writing boilerplate code,
+specifically `attrs <http://www.attrs.org/>`__ and `dataclasses
+<https://docs.python.org/3/library/dataclasses.html>`__. We might use those in
+the future in Gammapy, but for now, we don't.
+
+If you want a better repr or str for a given object, you have to add
+``__repr__`` and / or ``__str__`` methods when writing the class. Note that you
+don't have to do that, it's mainly useful for objects users interact with a lot.
+For classes that are mainly used internally, developers can e.g. just do this to
+see the attributes printed nicely::
+
+    >>> p.__dict__
+    {'name': 'Anna', 'age': 8}
+
+
+Here's an example how to write ``__repr__``::
+
+    def __repr__(self):
+        return '{}(name={!r}, age={!r})'.format(
+            self.__class__.__name__, self.name, self.age
+        )
+
+Note how we use ``{!r}`` in the format string to fill in the ``repr`` of the
+object being formatted, and how we used ``self.__class__.__name__`` to avoid
+duplicating the class name (easier to refactor code, and shows sub-class name if
+repr is inherited).
+
+This will give a nice string representation. The same one for ``repr`` and
+``str``, you don't have to write ``__str__``::
+
+    >>> p = Person(name='Anna', age=8)
+    >>> p
+    Person(name='Anna', age=8)
+    >>> print(p)
+    Person(name='Anna', age=8)
+
+The string representation is usually used for more informal or longer printout.
+Here's an example::
+
+    def __str__(self):
+        return (
+            "Hi, my name is {} and I'm {} years old.\n"
+            "I live in Heidelberg."
+        ).format(self.name, self.age)
+
+If you need text representation that is configurable, i.e. tables arguments what
+to show, you should add a method called ``info``. To avoid code duplication, you
+should then call ``info`` from ``__str__``. Example::
+
+    class Person:
+        def __init__(self, name='Anna', age=8):
+            self.name = name
+            self.age = age
+
+        def __repr__(self):
+            return '{}(name={!r}, age={!r})'.format(
+                self.__class__.__name__, self.name, self.age
+            )
 
         def __str__(self):
-            ss = 'Summary Info about class Spam\n'
-            ss += '{:.2f}'.format(self.ham)
-            return ss
+            return self.info(add_location=False)
 
-If you want to add configurable info output, please provide a method ``summary``,
-like :func:`here <gammapy.catalog.SourceCatalogObjectHGPS.summary>`.
-In this case the ``__str__`` method should be a call to ``summary`` with default
-parameters. Do not use an ``info`` method, since this would lead to conflicts
-for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
-``astropy.table.Table``.
+        def info(self, add_location=True):
+            s = ("Hi, my name is {} and I'm {} years old."
+                ).format(self.name, self.age)
+            if add_location:
+                s += "\nI live in Heidelberg"
+            return s
 
+This pattern of returning a string from ``info`` has some pros and cons.
+It's easy to get the string, and do what you like with it, e.g. combine
+it with other text, or store it in a list and write it to file later.
+The main con is that users have to call ``print(p.info())`` to see a
+nice printed version of the string instead of ``\n``::
 
-Validating H.E.S.S. FITS exporters
-----------------------------------
+    >>> p = Person()
+    >>> p.info()
+    "Hi, my name is Anna and I'm 8 years old.\nI live in Heidelberg"
+    >>> print(p.info())
+    Hi, my name is Anna and I'm 8 years old.
+    I live in Heidelberg
 
-The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:main-page` format.
-The Gammapy tests contain a mechanism to track changes in these exporters.
+To make ``info`` print by default, and be re-usable from ``__str__`` and make it
+possible to get a string (without having to monkey-patch ``sys.stdout``), would
+require adding this ``show`` option and if-else at the end of every ``info``
+method::
 
+    def __str__(self):
+        return self.info(add_location=False, show=False)
 
-In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads
-IRF files from different chains and prints the output of the ``__str__`` method to a file. It also creates a YAML file
-holding information about the datastore used for each chain, the observations used, etc.
+    def info(self, add_location=True, show=True):
+        s = ("Hi, my name is {} and I'm {} years old."
+             ).format(self.name, self.age)
+        if add_location:
+            s += "\nI live in Heidelberg"
 
+        if show:
+            print(s)
+        else:
+            return s
 
-The test ``gammapy/irf/tests/test_hess_chains.py`` load exactly the same files as the script and compares the output of the
-``__str__`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by
-Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script
-again to ensure the passing of all Gammapy tests.
+To summarise: start without adding and code for text representation. If there's a
+useful short text representation, you can add a ``__repr__``. If really useful,
+add a ``__str__``. If you need it configurable, add an ``info`` and call
+``info`` from ``str``. If ``repr`` and ``str`` are similar, it's not really
+useful: delete the ``__str__`` and only keep the ``__repr__``.
 
+It is common to have bugs in ``__repr__``, ``__str__`` and ``info`` that are not
+tested. E.g. a ``NameError`` or ``AttributeError`` because some attribute name
+changed, and updating the repr / str / info was forgotten. So tests should be added
+that execute these methods once. You can write the reference string in the output,
+but that is not required (and actually very hard for cases where you have floats
+or Numpy arrays or str, where formatting differs across Python or Numpy version.
+Example what to put as a test::
 
-If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to
- manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
-
+    def test_person_txt():
+        p = Person()
+        assert repr(p).startswith('Person')
+        assert str(p).startswith('Hi')
+        assert p.info(add_location=True).endswith('Heidelberg')
 
 .. _use-nddata:
 
@@ -956,55 +745,275 @@ Gammapy has a class for generic n-dimensional data arrays,
 should use this class. The goal is to reuse code for interpolation
 and have an coherent I/O interface, mainly in `~gammapy.irf`.
 
-A usage example can be found in :gp-extra-notebooks:``nddata_demo``.
+A usage example can be found in :gp-notebook:`nddata_demo`.
 
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
-setup your interpolator. 
+setup your interpolator.
+
+Sphinx docs build
+-----------------
+
+Generating the HTML docs for Gammapy is straight-forward::
+
+    make docs-all
+    make docs-show
+
+Generating the PDF docs is more complex.
+This should work::
+
+    python setup.py build_docs -b latex
+    cd docs/_build/latex
+    makeindex -s python.ist gammapy.idx
+    pdflatex -interaction=nonstopmode gammapy.tex
+    open gammapy.pdf
+
+You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
+
+Jupyter notebooks stripped of output cells are present in the ``tutorials`` folder.
+They are by default tested, executed, and copied to the ``docs/notebooks`` and
+``docs/_static/notebooks`` folders during the process of generating HTML docs. This
+triggers its conversion to Sphinx formatted HTML files and ``.py`` scripts. The Sphinx
+formatted versions of the notebooks provide links to the raw ``.ipynb`` Jupyter files
+and ``.py`` script versions stored in ``docs/_static/notebooks`` folder.
+
+Once the documentation built you can optimize the speed of re-building processes,
+for example in case you are modifying or creating new docs and you would like to check
+these changes are displayed nicely. For that purpose, if your modified RST file
+does not contain links to notebooks, you may run ``make docs-all nbs=False`` so
+that notebooks are not executed during the docs build.
+
+In the case one single notebook is modified or added to the documentation, you can
+execute the build doc process with the ``src`` parameter with value the name of the
+considered notebook. i.e. ``make docs-all src=tutorials/my-notebook.ipynb``
+
+Each *fixed-text* Sphinx formatted notebook present in the documentation has its
+own link pointing to its specific space in Gammapy Binder. Since notebooks are
+evolving with Gammapy functionalities and documentation, it is possible to link
+the different versions of the notebooks to the same versions built in Gammapy Binder.
+For stable releases, it is useful to use the ``release`` parameter with the value
+of the release label tag used in Github. This value will be used to build the links
+to Binder for that specific stable release for each of the tutorials published in
+the :ref:`tutorials` section. i.e. ``make docs-all release=v0.8``
+
+Documentation guidelines
+------------------------
+
+Like almost all Python projects, the Gammapy documentation is written in a format called
+`restructured text (RST)`_ and built using `Sphinx`_.
+We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+which are based on the `Numpy docstring standard`_,
+which is what most scientific Python packages use.
+
+.. _restructured text (RST) : http://sphinx-doc.org/rest.html
+.. _Sphinx: http://sphinx-doc.org/
+.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+
+There's a few details that are not easy to figure out by browsing the Numpy or Astropy
+documentation guidelines, or that we actually do differently in Gammapy.
+These are listed here so that Gammapy developers have a reference.
+
+Usually the quickest way to figure out how something should be done is to browse the Astropy
+or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
+or search the Numpy or Astropy documentation guidelines mentioned above.
+If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
+pull request you're working on on Github, or send an email to the Gammapy mailing list.
+
+Functions or class methods that return a single object
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+For functions or class methods that return a single object, following the
+Numpy docstring standard and adding a *Returns* section usually means
+that you duplicate the one-line description and repeat the function name as
+return variable name.
+See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
+as examples in the Astropy codebase. Here's a simple example:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area.
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+
+        Returns
+        -------
+        area : `~astropy.units.Quantity`
+            Circle area
+        """
+        return 3.14 * (radius ** 2)
+
+In these cases, the following shorter format omitting the *Returns* section is recommended:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area (`~astropy.units.Quantity`).
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+        """
+        return 3.14 * (radius ** 2)
+
+Usually the parameter description doesn't fit on the one line, so it's
+recommended to always keep this in the *Parameters* section.
+
+A common case where the short format is appropriate are class properties,
+because they always return a single object.
+As an example see `gammapy.data.EventList.radec`, which is reproduced here:
+
+.. code-block:: python
+
+    @property
+    def radec(self):
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """
+        lon, lat = self['RA'], self['DEC']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
 
-Write a test for an IPython notebook
-------------------------------------
+Class attributes
+++++++++++++++++
 
-There is a script called ``test_notebooks.py`` in the gammapy main folder. It
-exectues all notebooks listed in file ``notebook.yaml`` in
-``gammapy-extra/notebooks.yaml`` using
-`runipy <https://github.com/paulgb/runipy>`__. So if you edit an existing
-notebook or make changes to gammapy that break an existing notebook, you have
-to run ``test_notebooks.py`` until all notebooks run without raising an error.
-If you add a new notebook and want it to be under test (which of course is what
-you want) you have to add it to ``gammapy-extra/notebooks/notebooks.yaml``.
-Note that there is also the command ``make test-notebooks`` which is used for
+Class attributes (data members) and properties are currently a bit of a mess.
+Attributes are listed in an *Attributes* section because I've listed them in a class-level
+docstring attributes section as recommended `here`__.
+Properties are listed in separate *Attributes summary* and *Attributes Documentation*
+sections, which is confusing to users ("what's the difference between attributes and properties?").
 
-continuous integration on travis CI. It is not recommended to use this locally,
-since it overwrides your gammapy installation (see issue 727).
+.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
 
-Link to a notebook in gammapy-extra from the docs
+One solution is to always use properties, but that can get very verbose if we have to write
+so many getters and setters. We could start using descriptors.
+
+TODO: make a decision on this and describe the issue / solution here.
+
+Link to a notebook from the docs
 -------------------------------------------------
 
-From docstrings and high-level docs in Gammapy, you can use the ``gp-extra-notebook``
-Sphinx role to link to notebooks in ``gammapy-extra/notebooks`` on NBViewer, by using the filename.
+Jupyter notebooks stored in the ``tutorials`` folder and are copied to the ``notebooks`` folder
+during the process of Sphinx building documentation. They are converted to HTML files using
+`nb_sphinx <http://nbsphinx.readthedocs.io/>`__ Sphinx extension that provides a source parser
+for .ipynb files. From docstrings and high-level docs in Gammapy you can link to these
+*fixed-text* formatted versions using the ``gp-notebook`` Sphinx role providing
+**only the filename**.
 
-Example: :gp-extra-notebook:`image_analysis`
+Example: :gp-notebook:`analysis_3d`
 
 Sphinx directive to generate that link::
 
-    :gp-extra-notebook:`image_analysis`
+      :gp-notebook:`analysis_3d`
 
+More info on Sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
 
-More info on sphinx roles is `here <http://www.sphinx-doc.org/en/stable/markup/inline.html>`__
+Alternatively you can also link to the notebooks providing its filename with .html file extension and the relative path to the ``notebooks`` folder. This folder is created at the root of the ``docs`` folder in the process of documentation building.
+
+Example: `First steps with Gammapy <../notebooks/first_steps.html>`__
+
+Sphinx directive to generate that link::
+
+    `First steps with Gammapy <../notebooks/first_steps.html>`__
+
 
 Include images from gammapy-extra into the docs
 -----------------------------------------------
 
-Similar to the ``gp-extra-notebook`` role, Gammapy has a ``gp-extra-image`` directive.
+Similar to the ``gp-notebook`` role, Gammapy has a ``gp-image`` directive.
 
-To include an image from ``gammapy-extra/figures/``, use the ``gp-extra-image`` directive
+To include an image from ``gammapy-extra/figures/``, use the ``gp-image`` directive
 instead of the usual Sphinx ``image`` directive like this:
 
 
 .. code-block:: rst
 
-    .. gp-extra-image:: detect/fermi_ts_image.png
+    .. gp-image:: detect/fermi_ts_image.png
         :scale: 100%
 
 More info on the image directive is `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__
+
+Coordinate and axis names
+-------------------------
+
+In Gammapy, the following coordinate and axis names should be used.
+
+This applies to most of the code, ranging from IRFs to maps
+to sky models, for function parameters and variable names.
+
+* ``time`` - time
+* ``energy`` - energy
+* ``ra``, ``dec`` - sky coordinates, ``radec`` frame (i.e. ``icrs`` to be precise)
+* ``glon``, ``glat`` - sky coordinates, ``galactic`` frame
+* ``az``, ``alt`` - sky coordinates, ``altaz`` frame
+* ``lon``, ``lat`` for spherical coordinates that aren't in a specific frame.
+
+For angular sky separation angles:
+
+* ``psf_theta`` - offset wrt. PSF center position
+* ``fov_theta`` - offset wrt. field of view (FOV) center
+* ``theta`` - when no PSF is involved, e.g. to evaluate spatial sky models
+
+For the general case of FOV coordinates that depend on angular orientation
+of the FOV coordinate frame:
+
+* ``fov_{frame}_lon``, ``fov_{frame}_lat`` - field of view coordinates
+* ``fov_theta``, ``fov_{frame}_phi`` - field of view polar coordinates
+
+where ``{frame}`` can be one of ``radec``, ``galactic`` or ``altaz``,
+depending on with which frame the FOV coordinate frame is aligned.
+
+Notes:
+
+* In cases where it's unclear if the value is for true or reconstructed event
+  parameters, a postfix ``_true`` or ``_reco`` should be added.
+  In Gammapy, this mostly occurs for ``energy_true`` and ``energy_reco``,
+  e.g. the background IRF has an axis ``energy_reco``, but effective area
+  usually ``energy_true``, and energy dispersion has both axes.
+  We are not pedantic about adding ``_true`` and ``_reco`` everywhere.
+  Note that this would quickly become annoying (e.g. source models use true
+  parameters, and it's not clear why one should write ``ra_true``).
+  E.g. the property on the event list ``energy`` matches the ``ENERGY``
+  column from the event list table, which is for real data always reco energy.
+* Currently, no sky frames centered on the source, or non-radially symmetric
+  PSFs are in use, and thus the case of "source frames" that have to be with
+  a well-defined alignment, like we have for the "FOV frames" above,
+  doesn't occur and thus doesn't need to be defined yet (but it would be natural
+  to use the same naming convention as for FOV if it eventually does occur).
+* These definitions are mostly in agreement with the `format spec <gadf>`_.
+  We do not achieve 100% consistency everywhere in the spec and Gammapy code.
+  Achieving this seems unrealistic, because legacy formats have to be supported,
+  we are not starting from scratch and have time to make all formats consistent.
+  Our strategy is to do renames on I/O where needed, to and from the internal
+  Gammapy names defined here, to the names used in the formats.
+  Of course, where formats are not set in stone yet, we advocate and encourage
+  the use of the names chosen here.
+* Finally, we realise that eventually probably CTA will define this, and Gammapy
+  is only a prototype. So if CTA chooses something else, probably we will follow
+  suite and do one more backward-incompatible change at some point to align with CTA.
+
+
+Testing of plotting functions
+-----------------------------
+
+Many of the data classes in Gammapy implement ``.plot()`` or ``.peek()`` methods to
+allow users a quick look in the data. Those methods should be tested using the
+`mpl_check_plot()` context manager. The context manager will take care of creating
+a new figure to plot on and writing the plot to a byte-stream to trigger the
+rendering of the plot, which can rasie errore as well. Here is a short example:
+
+.. code-block:: python
+
+    from gammapy.utils.testing import mpl_plot_check
+
+    def test_plot():
+        with mpl_plot_check():
+            plt.plot([1., 2., 3., 4., 5.])
+
+
+With this approach we make sure that the plotting code is at least executed once
+and runs completely (up to saving the plot to file) without errors. In future we
+will maybe change to something like https://github.com/matplotlib/pytest-mpl
+to ensure that correct plots are produced.

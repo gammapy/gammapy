@@ -1,87 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 
-__all__ = [
-    'LogEnergyAxis',
-    'CountsPredictor',
-    'integrate_spectrum',
-]
+__all__ = ["CountsPredictor", "integrate_spectrum"]
 
 
-class LogEnergyAxis(object):
-    """
-    Log energy axis.
-
-    Defines a transformation between:
-
-    * ``energy = 10 ** x``
-    * ``x = log10(energy)``
-    * ``pix`` in the range [0, ..., len(x)] via linear interpolation of the ``x`` array,
-      e.g. ``pix=0`` corresponds to ``x[0]``
-      and ``pix=0.3`` is ``0.5 * (0.3 * x[0] + 0.7 * x[1])``
-
-    .. note::
-        The `specutils.Spectrum1DLookupWCS <http://specutils.readthedocs.io/en/latest/api/specutils.wcs.specwcs.Spectrum1DLookupWCS.html>`__
-        class is similar (only that it doesn't include the ``log`` transformation and the API is different.
-        Also see this Astropy feature request: https://github.com/astropy/astropy/issues/2362
-
-    Parameters
-    ----------
-    energy : `~astropy.units.Quantity`
-        Energy array
-    mode : ['center', 'edges']
-        Whether the energy array represents the values at the center or edges of
-        the pixels.
-    """
-
-    def __init__(self, energy, mode='center'):
-        from scipy.interpolate import RegularGridInterpolator
-
-        if mode == 'center':
-            z = np.arange(len(energy))
-        elif mode == 'edges':
-            z = np.arange(len(energy)) - 0.5
-        else:
-            raise ValueError('Not a valid mode.')
-
-        self.mode = mode
-        self._eunit = energy.unit
-
-        log_e = np.log(energy.value)
-        kwargs = dict(bounds_error=False, fill_value=None, method='linear')
-        self._z_to_log_e = RegularGridInterpolator((z,), log_e, **kwargs)
-        self._log_e_to_z = RegularGridInterpolator((log_e,), z, **kwargs)
-
-    def wcs_world2pix(self, energy):
-        """
-        Convert energy to pixel coordinates.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Energy coordinate.
-        """
-        log_e = np.log(energy.to(self._eunit).value)
-        log_e = np.atleast_1d(log_e)
-        return self._log_e_to_z(log_e)
-
-    def wcs_pix2world(self, z):
-        """
-        Convert pixel to energy coordinates.
-
-        Parameters
-        ----------
-        z : float
-            Pixel coordinate
-        """
-        z = np.atleast_1d(z)
-        log_e = self._z_to_log_e(z)
-        return np.exp(log_e) * self._eunit
-
-
-class CountsPredictor(object):
+class CountsPredictor:
     """Calculate number of predicted counts (``npred``).
 
     The true and reconstructed energy binning are inferred from the provided IRFs.
@@ -117,11 +41,11 @@ class CountsPredictor(object):
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
         edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
-                                            sigma=0.3)
+                                            sigma=0.3, bias=0)
 
         model = models.PowerLaw(index=2.3,
-                                amplitude=2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1'),
-                                reference=1*u.TeV)
+                                amplitude="2.5e-12 cm-2 s-1 TeV-1",
+                                reference="1 TeV")
 
         livetime = 1 * u.h
 
@@ -157,32 +81,35 @@ class CountsPredictor(object):
             # TODO: True energy is converted to model amplitude unit. See issue 869
             ref_unit = None
             try:
-                for unit in self.model.parameters['amplitude'].unit.bases:
-                    if unit.is_equivalent('eV'):
+                for unit in self.model.parameters["amplitude"].quantity.unit.bases:
+                    if unit.is_equivalent("eV"):
                         ref_unit = unit
             except IndexError:
-                ref_unit = 'TeV'
+                ref_unit = "TeV"
             self.e_true = self.aeff.energy.bins.to(ref_unit)
         else:
             if self.e_true is None:
                 raise ValueError("No true energy binning given")
 
-        self.true_flux = self.model.integral(emin=self.e_true[:-1],
-                                             emax=self.e_true[1:],
-                                             intervals=True)
+        self.true_flux = self.model.integral(
+            emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
+        )
 
     def apply_aeff(self):
         if self.aeff is not None:
             cts = self.true_flux * self.aeff.data.data
-            if cts.unit.is_equivalent('s-1'):
-                cts *= self.livetime
         else:
             cts = self.true_flux
 
-        self.true_counts = cts.to('')
+        # Multiply with livetime if not already contained in aeff or model
+        if cts.unit.is_equivalent("s-1"):
+            cts *= self.livetime
+
+        self.true_counts = cts.to("")
 
     def apply_edisp(self):
         from . import CountsSpectrum
+
         if self.edisp is not None:
             cts = self.edisp.apply(self.true_counts)
             self.e_reco = self.edisp.e_reco.bins
@@ -190,9 +117,9 @@ class CountsPredictor(object):
             cts = self.true_counts
             self.e_reco = self.e_true
 
-        self.npred = CountsSpectrum(data=cts,
-                                    energy_lo=self.e_reco[:-1],
-                                    energy_hi=self.e_reco[1:])
+        self.npred = CountsSpectrum(
+            data=cts, energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
+        )
 
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
@@ -222,7 +149,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     if isinstance(xmin, Quantity):
         unit = xmin.unit
         xmin = xmin.value
-        xmax = xmax.to(unit).value
+        xmax = xmax.to_value(unit)
         is_quantity = True
 
     if np.isscalar(xmin):
@@ -245,6 +172,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
 
 # This function is copied over from https://github.com/zblz/naima/blob/master/naima/utils.py#L261
 # and slightly modified to allow use with the uncertainties package
+
 
 def _trapz_loglog(y, x, axis=-1, intervals=False):
     """
@@ -275,12 +203,12 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         y_unit = y.unit
         y = y.value
     except AttributeError:
-        y_unit = 1.
+        y_unit = 1.0
     try:
         x_unit = x.unit
         x = x.value
     except AttributeError:
-        x_unit = 1.
+        x_unit = 1.0
 
     y = np.asanyarray(y)
     x = np.asanyarray(x)
@@ -289,10 +217,12 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
     slice2 = [slice(None)] * y.ndim
     slice1[axis] = slice(None, -1)
     slice2[axis] = slice(1, None)
+    slice1, slice2 = tuple(slice1), tuple(slice2)
 
     # arrays with uncertainties contain objects
-    if y.dtype == 'O':
+    if y.dtype == "O":
         from uncertainties.unumpy import log10
+
         # uncertainties.unumpy.log10 can't deal with tiny values see
         # https://github.com/gammapy/gammapy/issues/687, so we filter out the values
         # here. As the values are so small it doesn't affect the final result.
@@ -306,19 +236,21 @@ def _trapz_loglog(y, x, axis=-1, intervals=False):
         shape[axis] = x.shape[0]
         x = x.reshape(shape)
 
-    with np.errstate(invalid='ignore', divide='ignore'):
+    with np.errstate(invalid="ignore", divide="ignore"):
         # Compute the power law indices in each integration bin
         b = log10(y[slice2] / y[slice1]) / log10(x[slice2] / x[slice1])
 
         # if local powerlaw index is -1, use \int 1/x = log(x); otherwise use normal
         # powerlaw integration
         trapzs = np.where(
-            np.abs(b + 1.) > 1e-10, (y[slice1] * (
-                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (b + 1),
-            x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
+            np.abs(b + 1.0) > 1e-10,
+            (y[slice1] * (x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1]))
+            / (b + 1),
+            x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]),
+        )
 
-    tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
-    trapzs[tozero] = 0.
+    tozero = (y[slice1] == 0.0) + (y[slice2] == 0.0) + (x[slice1] == x[slice2])
+    trapzs[tozero] = 0.0
 
     if intervals:
         return trapzs * x_unit * y_unit

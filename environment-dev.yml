@@ -1,0 +1,47 @@
+# Conda environment for Gammapy development
+#
+# Install:    conda env create -f environment-dev.yml
+# Update:     conda env update -f environment-dev.yml
+# Activate:   conda activate gammapy-dev
+# Deactivate: conda deactivate
+
+name: gammapy-dev
+
+channels:
+  - conda-forge
+  - sherpa
+
+dependencies:
+  - python==3.7
+  - ipython
+  - jupyter
+  - jupyterlab
+  - cython
+  - numpy
+  - pandas
+  - astropy
+  - regions
+  - click
+  - pyyaml
+  - scipy
+  - matplotlib
+  - uncertainties
+  - healpy
+  - reproject
+  - sherpa
+  - iminuit>=1.3.2
+  - pytest
+  - pytest-cov
+  - sphinx
+  - pandoc
+  - pylint
+  - flake8
+  - pip:
+    - sphinx-rtd-theme
+    - nbsphinx
+    - sphinx-click
+    - pydocstyle
+    - black
+    - naima
+    - numdifftools
+    - pytest-astropy

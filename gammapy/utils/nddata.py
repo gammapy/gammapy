@@ -1,25 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility functions and classes for n-dimensional data and axes.
-"""
-from __future__ import absolute_import, division, print_function, unicode_literals
-import itertools
+"""Utility functions and classes for n-dimensional data and axes."""
 from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
 from .array import array_stats_str
+from .interpolation import ScaledRegularGridInterpolator
 
-__all__ = [
-    'NDDataArray',
-    'DataAxis',
-    'BinnedDataAxis',
-    'sqrt_space',
-]
+__all__ = ["NDDataArray", "DataAxis", "BinnedDataAxis", "sqrt_space"]
 
 
-class NDDataArray(object):
+class NDDataArray:
     """ND Data Array Base class
 
-    for usage examples see :gp-extra-notebook:`nddata_demo`
+    for usage examples see :gp-notebook:`nddata_demo`
 
     Parameters
     ----------
@@ -32,15 +25,14 @@ class NDDataArray(object):
     interp_kwargs : dict
         TODO
     """
-    default_interp_kwargs = dict(bounds_error=False)
+
+    default_interp_kwargs = dict(bounds_error=False, values_scale="lin")
     """Default interpolation kwargs used to initialize the
     `scipy.interpolate.RegularGridInterpolator`.  The interpolation behaviour
     of an individual axis ('log', 'linear') can be passed to the axis on
     initialization."""
 
-    def __init__(self, axes, data=None, meta=None,
-                 interp_kwargs=None):
-
+    def __init__(self, axes, data=None, meta=None, interp_kwargs=None):
         self._axes = axes
         if data is not None:
             self.data = data
@@ -49,6 +41,13 @@ class NDDataArray(object):
         self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
 
         self._regular_grid_interp = None
+
+    def __str__(self):
+        ss = "NDDataArray summary info\n"
+        for axis in self.axes:
+            ss += array_stats_str(axis.nodes, axis.name)
+        ss += array_stats_str(self.data, "Data")
+        return ss
 
     @property
     def axes(self):
@@ -60,7 +59,7 @@ class NDDataArray(object):
         try:
             idx = [_.name for _ in self.axes].index(name)
         except ValueError:
-            raise ValueError('Axis {} not found'.format(name))
+            raise ValueError("Axis {} not found".format(name))
         return self.axes[idx]
 
     @property
@@ -83,17 +82,19 @@ class NDDataArray(object):
         data = Quantity(data)
         dimension = len(data.shape)
         if dimension != self.dim:
-            raise ValueError('Overall dimensions to not match. '
-                             'Data: {}, Hist: {}'.format(dimension, self.dim))
+            raise ValueError(
+                "Overall dimensions to not match. "
+                "Data: {}, Hist: {}".format(dimension, self.dim)
+            )
 
         for dim in np.arange(self.dim):
             axis = self.axes[dim]
             if axis.nbins != data.shape[dim]:
-                msg = 'Data shape does not match in dimension {d}\n'
-                msg += 'Axis {n} : {sa}, Data {sd}'
-                raise ValueError(msg.format(d=dim, n=axis.name,
-                                            sa=axis.nbins,
-                                            sd=data.shape[dim]))
+                msg = "Data shape does not match in dimension {d}\n"
+                msg += "Axis {n} : {sa}, Data {sd}"
+                raise ValueError(
+                    msg.format(d=dim, n=axis.name, sa=axis.nbins, sd=data.shape[dim])
+                )
         self._regular_grid_interp = None
         self._data = data
 
@@ -101,14 +102,6 @@ class NDDataArray(object):
     def dim(self):
         """Dimension (number of axes)"""
         return len(self.axes)
-
-    def __str__(self):
-        """String representation"""
-        ss = 'NDDataArray summary info\n'
-        for axis in self.axes:
-            ss += array_stats_str(axis.nodes, axis.name)
-        ss += array_stats_str(self.data, 'Data')
-        return ss
 
     def find_node(self, **kwargs):
         """Find next node
@@ -147,11 +140,14 @@ class NDDataArray(object):
             Interpolated values, axis order is the same as for the NDData array
         """
         values = []
-        for axis in self.axes:
+        for idx, axis in enumerate(self.axes):
             # Extract values for each axis, default: nodes
-            temp = Quantity(kwargs.pop(axis.name, axis.nodes))
+            shape = np.ones(len(self.axes), dtype=int)
+            shape[idx] = -1
+            default = axis.nodes.reshape(shape)
+            temp = Quantity(kwargs.pop(axis.name, default))
             # Transform to correct unit
-            temp = temp.to(axis.unit).value
+            temp = temp.to_value(axis.unit)
             # Transform to match interpolation behaviour of axis
             values.append(np.atleast_1d(axis._interp_values(temp)))
 
@@ -159,39 +155,10 @@ class NDDataArray(object):
         if kwargs != {}:
             raise ValueError("Input given for unknown axis: {}".format(kwargs))
 
-        if method is None:
-            return self._eval_regular_grid_interp(
-                values) * self.data.unit
-        elif method == 'linear':
-            return self._eval_regular_grid_interp(
-                values, method='linear') * self.data.unit
-        elif method == 'nearest':
-            return self._eval_regular_grid_interp(
-                values, method='nearest') * self.data.unit
-        else:
-            raise ValueError('Interpolator {} not available'.format(method))
-
-    def _eval_regular_grid_interp(self, values, **kwargs):
-        """Evaluate linear interpolator
-
-        Input: list of values to evaluate, in correct units and correct order.
-        """
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        # This is necessary since np.append does not support the 1D case
-        if self.dim > 1:
-            shapes = np.concatenate([np.shape(_) for _ in values])
-
-        else:
-            shapes = values[0].shape
-        # Flatten in order to support 2D array input
-        values = [_.flatten() for _ in values]
-        points = list(itertools.product(*values))
-        res = self._regular_grid_interp(points, **kwargs)
-        res = np.reshape(res, shapes).squeeze()
-
-        return res
+        return self._regular_grid_interp(values, method=method, **kwargs)
 
     def _add_regular_grid_interp(self, interp_kwargs=None):
         """Add `~scipy.interpolate.RegularGridInterpolator`
@@ -203,28 +170,30 @@ class NDDataArray(object):
         interp_kwargs : dict, optional
             Interpolation kwargs
         """
-        from scipy.interpolate import RegularGridInterpolator
-
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
         points = [a._interp_nodes() for a in self.axes]
-        values = self.data.value
+
+        values = self.data
 
         # If values contains nan, only setup interpolator in valid range
         if np.isnan(values).any():
             if self.dim > 1:
-                raise NotImplementedError('Data grid contains nan. This is not'
-                                          'supported for arrays dimension > 1')
+                raise NotImplementedError(
+                    "Data grid contains nan. This is not"
+                    "supported for arrays dimension > 1"
+                )
             else:
                 mask = np.isfinite(values)
                 points = [points[0][mask]]
                 values = values[mask]
 
-        self._regular_grid_interp = RegularGridInterpolator(points, values,
-                                                            **interp_kwargs)
+        self._regular_grid_interp = ScaledRegularGridInterpolator(
+            points, values, **interp_kwargs
+        )
 
 
-class DataAxis(object):
+class DataAxis:
     """Data axis to be used with NDDataArray
 
     Axis values are interpreted as nodes.
@@ -241,7 +210,7 @@ class DataAxis(object):
         Interpolation behaviour, default: 'linear'
     """
 
-    def __init__(self, nodes, name='Default', interpolation_mode='linear'):
+    def __init__(self, nodes, name="Default", interpolation_mode="linear"):
         # Need this for subclassing (see BinnedDataAxis)
         if nodes is not None:
             self._data = Quantity(nodes)
@@ -250,10 +219,10 @@ class DataAxis(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\nName: {}'.format(self.name)
-        ss += '\nUnit: {}'.format(self.unit)
-        ss += '\nNodes: {}'.format(self.nbins)
-        ss += '\nInterpolation mode: {}'.format(self.interpolation_mode)
+        ss += "\nName: {}".format(self.name)
+        ss += "\nUnit: {}".format(self.unit)
+        ss += "\nNodes: {}".format(self.nbins)
+        ss += "\nInterpolation mode: {}".format(self.interpolation_mode)
 
         return ss
 
@@ -280,7 +249,7 @@ class DataAxis(object):
         unit : `~astropy.units.UnitBase`, str
             Unit
         """
-        kwargs.setdefault('interpolation_mode', 'log')
+        kwargs.setdefault("interpolation_mode", "log")
 
         if unit is not None:
             vmin = Quantity(vmin, unit)
@@ -307,8 +276,11 @@ class DataAxis(object):
         val = Quantity(val)
 
         if not val.unit.is_equivalent(self.unit):
-            raise ValueError('Units {} and {} do not match'.format(
-                val.unit, self.unit))
+            raise ValueError(
+                "Units mismatch: val.unit = {!r}, self.unit = {!r}".format(
+                    val.unit, self.unit
+                )
+            )
 
         val = val.to(self.nodes.unit)
         val = np.atleast_1d(val)
@@ -336,14 +308,14 @@ class DataAxis(object):
 
     def _interp_nodes(self):
         """Nodes to be used for interpolation"""
-        if self.interpolation_mode == 'log':
+        if self.interpolation_mode == "log":
             return np.log10(self.nodes.value)
         else:
             return self.nodes.value
 
     def _interp_values(self, values):
         """Transform values correctly for interpolation"""
-        if self.interpolation_mode == 'log':
+        if self.interpolation_mode == "log":
             return np.log10(values)
         else:
             return values
@@ -367,7 +339,7 @@ class BinnedDataAxis(DataAxis):
     def __init__(self, lo, hi, **kwargs):
         self.lo = Quantity(lo)
         self.hi = Quantity(hi)
-        super(BinnedDataAxis, self).__init__(None, **kwargs)
+        super().__init__(None, **kwargs)
 
     @classmethod
     def logspace(cls, emin, emax, nbins, unit=None, **kwargs):
@@ -376,9 +348,9 @@ class BinnedDataAxis(DataAxis):
         return cls(vals[:-1], vals[1:], **kwargs)
 
     def __str__(self):
-        ss = super(BinnedDataAxis, self).__str__()
-        ss += '\nLower bounds {}'.format(self.lo)
-        ss += '\nUpper bounds {}'.format(self.hi)
+        ss = super().__str__()
+        ss += "\nLower bounds {}".format(self.lo)
+        ss += "\nUpper bounds {}".format(self.hi)
 
         return ss
 
@@ -386,7 +358,7 @@ class BinnedDataAxis(DataAxis):
     def bins(self):
         """Bin edges"""
         unit = self.lo.unit
-        val = np.append(self.lo.value, self.hi.to(unit).value[-1])
+        val = np.append(self.lo.value, self.hi.to_value(unit)[-1])
         return val * unit
 
     @property
@@ -401,7 +373,7 @@ class BinnedDataAxis(DataAxis):
         Depending on the interpolation mode, either log or lin center are
         returned
         """
-        if self.interpolation_mode == 'log':
+        if self.interpolation_mode == "log":
             return self.log_center()
         else:
             return self.lin_center()

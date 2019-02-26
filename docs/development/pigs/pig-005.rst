@@ -1,0 +1,199 @@
+.. include:: ../../references.txt
+
+.. _pig-005:
+
+***************************
+PIG 5 - Gammapy 1.0 Roadmap
+***************************
+
+* Author: Axel Donath (editor), Régis Terrier & Christoph Deil
+* Created: September 28, 2018
+* Accepted: January 31, 2019
+* Status: accepted
+* Discussion: `GH 1841`_
+
+Introduction
+============
+This PIG describes the required short- and medium-term **development work up to
+the Gammapy 1.0** release. The anticipated time scale for this development effort
+is **9 - 12 months** and will be concluded by the Gammapy 1.0 release in fall 2019.
+The question of **API design and sub-module structure for Gammapy 1.0 will be
+addressed in separate PIGs**.
+
+The content of this document was decided based upon user feedback from the first
+CTA data challenge (DC1), experience from analysing existing datasets as well as
+definition of use cases (see below). The content will be **updated in the comming month**
+and be adjusted to upcoming **requirements defined by CTA**. Current requirements
+defined by CTA are described observer access use cases (private link to slides_)
+and in the document written summarizing the SUSS workshop Dec. 2018 (private link to indico_).
+
+.. _slides: https://forge.in2p3.fr/login?back_url=https%3A%2F%2Fforge.in2p3.fr%2Fprojects%2Fobserver-access-use-cases%2Fwiki%2FScience_Tools_Use-Cases).
+.. _indico: https://indico.cta-observatory.org/event/2070/
+
+Releases
+========
+Up to the Gammapy 1.0 release we will pursue a **shorter release cycle**, with
+releases  **every 2-3 months**. The following releases are planned:
+
+* Gammapy 0.9 in November 2018
+* Gammapy 0.10 in January 2019
+* Gammapy 0.11 in March 2019
+* Gammapy 0.12 in Mai 2019
+* Gammapy 0.13 in Juli 2019
+* Gammapy 0.14 in September 2019
+* Gammapy 1.0 in October 2019
+
+The exact schedule is flexible, as it depends on when features are ready to ship.
+With this process we aim to enhance user feedback as well as set intermediate
+**milestones for the development progress**.
+
+Meetings
+========
+We plan to hold **three coding sprints** up to the Gammapy 1.0 release.
+
+We plan to continue the **weekly developers calls** every Friday 10 am.
+
+In addition we could start **monthly Gammapy user calls**, for regular user support
+and feedback (to be discussed). We plan to hold **Gammapy workshops and tutorials**
+at upcoming science and collaboration meetings (to be disccused).
+
+
+Projects
+========
+The actual **development work will be structured in projects**. Each project is
+tackled by a team of (at least) two developers. They take over **responsibility
+for writing a PIG document** for the project as well as **take care of its actual
+implementation**. The PIG will be written in close **collaboration with the lead
+development team**. For the implementation we recommend a workflow where typically
+one person works on the implementation while the other is available for discussion
+and code review. We have defined the following projects:
+
+
+Maintenance and Code Quality
+----------------------------
+Continue the clean up process of Gammapy. Improve code, test coverage and test
+quality in general. Change to a more uniform code style for tests. Reduce runtime
+of tests. Implement required bugfixes. Maintenance is as important as adding new
+features, but will be mostly taken over by experienced developers.
+
+Improve the Gammapy development workflow. Improve developer documentation. Define
+Github labels, projects and milestones to reflect the content of the roadmap.
+
+
+Documentation
+-------------
+Improve documentation structure and content. Improve install instructions.
+Improve existing tutorial notebooks and add missing topics.
+
+
+Data and Observation handling
+-----------------------------
+Implement support for good time intervals (GTIs). Simplify DL3 data access and
+simpify creation of custom index files. Implement support for event types.
+
+
+IRFs
+----
+Clean up and partly redesign the `gammapy.irf` sub-package. Implement IRF coordinate
+handling, unify axis handling with `gammapy.maps`. Evaluate the use of maps to store
+IRFs. Work on the IRF interface and data formats in close collaboration with
+`ctapipe`. Implement support for event types.
+
+
+Maps
+----
+Unify coordinate and unit handling in `gammapy.maps`. Migrate the healpix code
+from `healpy` to `astropy_healpix`. Finish implementation of multi-resolution
+maps (low priority).
+
+
+Map Analysis / Data Reduction
+-----------------------------
+Unify and improve integration of background and exposure maps along the energy
+axes. Improve performance of the model evaluation by using bounding boxes and
+caching (low priority). Add support for healpix maps (low priority). Implement
+3D background model creation. Better expose classical image based background
+methods such as ring- and adaptive ring-backround. Implement spectral points
+estimation with 3D analysis.
+
+
+Datasets
+--------
+Implement a `Dataset` or `Observation` container class, that bundles data and
+reduced IRFs and is used to evaluate the likelihood. Enable joint fit across
+multiple datasets. Enable joint Fermi-LAT / IACT analyses.
+
+
+Modeling
+--------
+Unify quantity support for model evaluation. Implement coordinate frame handling
+for spatial models. Implement full support of the XML I/O as well as improve the
+existing YAML IO. Add missing models. Implement (hierachical) model parameter
+name handling and improve parameter user interface. Add support for baysian priors
+on model parameters. Add support for handling tied parameters.
+
+
+Fitting
+-------
+Design and implement configuration and result handling. Finish implemention of
+the unified fitting front end in `gammapy.utils.fitting`. Fully support of the
+`sherpa` fitting backend. Add further fitting backends, such as `scipy.optimize`
+or `emcee`. Implement fitting helper and diagnosis methods to compute likelihood
+contours. Improve interactive handling of the fitting front end.
+
+
+Event Simulation
+----------------
+Implement event sampler, required for Gammapy to participate and simulate part of
+CTA DC2 data.
+
+
+Timing Analysis
+---------------
+Rewrite the current lightcurve estimation . Improve the existing `Lightcurve` class.
+Implement 3D analysis based lightcurve estimation.
+
+
+High-level interface
+--------------------
+Implement a config-file based high level analysis interface (e.g. as used in `fermipy`)
+and command line tool. It gives access to limited, pre-scripted standard analysis
+workflows. Alternatively the high level analysis interface could generate pre-filled
+Python scripts or notebooks, that can be edited and executed by users.
+
+
+Papers
+------
+As a reference for the current work as well as giving credit to current and past
+contributors, we plan to release a short Gammapy paper in  2019. Based on one of
+the Gammapy intermediate releases we will introduce the idea of building the CTA
+ST based on Python, Numpy and Astropy to the community. Alternatively a paper about
+Gammapy v1.0 could be written.
+
+There will be a HESS validation paper. We will support the paper with implementing
+required bugfixes and features on short time scales.
+
+Authors of other papers please also get in contact with the Gammapy team and let
+us know about required developments.
+
+
+Project Management
+==================
+This roadmap document will result in a series of subsequent PIGs, which are written
+and implemented by lead or contributing developers, that take responsibility for
+one or multiple of the projects described above. Each of those project PIGs should
+define a list of proposed pull requests, with preliminary milestones (version number
+as listed above) assigned. For each development project we will create a GitHub
+project and list the proposed pull requests as issues under the project. Responsibilities,
+updated milestones and discussion on implementation details are discussed in thoses
+issues. The general progress of the development work can be tracked using the
+GitHub project board.
+
+
+Decision
+========
+The PIG was discussed extensively in `GH 1841`_, resulting in many improvements
+and changes. The Gammapy roadmap was accepted by the CC, after the deadline for
+comments elapsed January 31st.
+
+.. _GH 1841:  https://github.com/gammapy/gammapy/pull/1841

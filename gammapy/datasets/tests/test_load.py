@@ -1,21 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_data
-from ..core import gammapy_extra
-from ...datasets import (
-    load_poisson_stats_image,
-)
+from ..core import gammapy_data
+from ...datasets import load_poisson_stats_image
 
 
-@requires_data('gammapy-extra')
-def test_gammapy_extra():
-    """Try loading a file from gammapy-extra.
+@requires_data("gammapy-data")
+def test_gammapy_data():
+    """Try loading a file from gammapy-data.
     """
-    assert gammapy_extra.dir.is_dir()
+    assert gammapy_data.dir.is_dir()
 
 
-@requires_data('gammapy-extra')
+@requires_data("gammapy-data")
 def test_load_poisson_stats_image():
     data = load_poisson_stats_image()
     assert data.sum() == 40896

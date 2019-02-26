@@ -50,14 +50,15 @@ surface density of pulsars and related objects used in literature:
 
 .. plot:: astro/population/plot_radial_distributions.py
 
-TODO: add illustration of Galactocentric z-distribution model and combined
-(r, z) distribution for the Besancon model.
+TODO: add illustration of Galactocentric z-distribution model and combined (r,
+z) distribution for the Besancon model.
 
 Spiral arm models
 -----------------
 
 Two spiral arm models of the Milky way are available:
-(`~gammapy.astro.population.ValleeSpiral` and `gammapy.astro.population.FaucherSpiral`)
+`~gammapy.astro.population.ValleeSpiral` and
+`gammapy.astro.population.FaucherSpiral`
 
 .. plot:: astro/population/plot_spiral_arm_models.py
 

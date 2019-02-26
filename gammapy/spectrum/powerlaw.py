@@ -11,24 +11,22 @@
 * We might want to completely remove this module and expose the functionality
   directly on the spectral model classes some day.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
 import numpy as np
 
 __all__ = [
-    'power_law_evaluate',
-    'power_law_pivot_energy',
-    'power_law_df_over_f',
-    'power_law_flux',
-    'power_law_energy_flux',
-    'power_law_integral_flux',
-    'power_law_g_from_f',
-    'power_law_g_from_points',
-    'power_law_I_from_points',
-    'power_law_f_from_points',
-    'power_law_f_with_err',
-    'power_law_I_with_err',
-    'power_law_compatibility',
+    "power_law_evaluate",
+    "power_law_pivot_energy",
+    "power_law_df_over_f",
+    "power_law_flux",
+    "power_law_energy_flux",
+    "power_law_integral_flux",
+    "power_law_g_from_f",
+    "power_law_g_from_points",
+    "power_law_I_from_points",
+    "power_law_f_from_points",
+    "power_law_f_with_err",
+    "power_law_I_with_err",
+    "power_law_compatibility",
 ]
 
 E_INF = 1e10
@@ -141,8 +139,8 @@ def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
     e2 : array_like
         Energy band maximum
     """
-    g1 = 1. - g
-    g2 = 2. - g
+    g1 = 1.0 - g
+    g2 = 2.0 - g
     factor = g1 / g2 * (e1 ** g2 - e2 ** g2) / e ** g1
     return I * factor
 
@@ -186,8 +184,7 @@ def power_law_g_from_points(e1, e2, f1, f2):
 def power_law_I_from_points(e1, e2, f1, f2):
     """Integral flux in energy bin for power law"""
     g = power_law_g_from_points(e1, e2, f1, f2)
-    pl_int_flux = (f1 * e1 / (-g + 1) *
-                   ((e2 / e1) ** (-g + 1) - 1))
+    pl_int_flux = f1 * e1 / (-g + 1) * ((e2 / e1) ** (-g + 1) - 1)
     return pl_int_flux
 
 
@@ -199,11 +196,13 @@ def power_law_f_from_points(e1, e2, f1, f2, e):
     return np.exp(logy)
 
 
-def power_law_f_with_err(I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0,
-                         e=1, e1=1, e2=E_INF):
+def power_law_f_with_err(
+    I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0, e=1, e1=1, e2=E_INF
+):
     """Wrapper for f so the user doesn't have to know about
     the uncertainties module"""
     from uncertainties import unumpy
+
     I = unumpy.uarray(I_val, I_err)
     g = unumpy.uarray(g_val, g_err)
     _f = power_law_flux(I, g, e, e1, e2)
@@ -212,11 +211,13 @@ def power_law_f_with_err(I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0,
     return f_val, f_err
 
 
-def power_law_I_with_err(f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0,
-                         e=1, e1=1, e2=E_INF):
+def power_law_I_with_err(
+    f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0, e=1, e1=1, e2=E_INF
+):
     """Wrapper for f so the user doesn't have to know about
     the uncertainties module"""
     from uncertainties import unumpy
+
     f = unumpy.uarray(f_val, f_err)
     g = unumpy.uarray(g_val, g_err)
     _I = power_law_integral_flux(f, g, e, e1, e2)
@@ -256,9 +257,9 @@ def power_law_compatibility(par_low, par_high):
     sigma_high = (g_match - g_high) / g_err_high
     sigma_combined = np.sqrt(sigma_low ** 2 + sigma_high ** 2)
 
-    return OrderedDict([
-        ('g_match', g_match),
-        ('sigma_low', sigma_low),
-        ('sigma_high', sigma_high),
-        ('sigma_combined', sigma_combined),
-    ])
+    return {
+        "g_match": g_match,
+        "sigma_low": sigma_low,
+        "sigma_high": sigma_high,
+        "sigma_combined": sigma_combined,
+    }

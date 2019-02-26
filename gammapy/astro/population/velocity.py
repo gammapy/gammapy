@@ -1,20 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Pulsar velocity distribution models"""
-from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
+"""Pulsar velocity distribution models."""
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
 
 __all__ = [
-    'FaucherKaspi2006VelocityMaxwellian',
-    'FaucherKaspi2006VelocityBimodal',
-    'Paczynski1990Velocity',
-    'velocity_distributions',
+    "FaucherKaspi2006VelocityMaxwellian",
+    "FaucherKaspi2006VelocityBimodal",
+    "Paczynski1990Velocity",
+    "velocity_distributions",
 ]
 
 # Simulation range used for random number drawing
-VMIN, VMAX = Quantity([0, 4000], 'km/s')
+VMIN, VMAX = Quantity([0, 4000], "km/s")
 
 
 class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
@@ -33,16 +31,16 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
     sigma : float
         Velocity parameter (km s^-1)
     """
+
     amplitude = Parameter()
     sigma = Parameter()
 
     def __init__(self, amplitude=1, sigma=265, **kwargs):
-        super(FaucherKaspi2006VelocityMaxwellian, self).__init__(amplitude=amplitude,
-                                                                 sigma=sigma, **kwargs)
+        super().__init__(amplitude=amplitude, sigma=sigma, **kwargs)
 
     @staticmethod
     def evaluate(v, amplitude, sigma):
-        """One dimensional Faucher-Guigere & Kaspi 2006 velocity model function"""
+        """One dimensional velocity model function."""
         term1 = np.sqrt(2 / np.pi) * v ** 2 / sigma ** 3
         term2 = np.exp(-v ** 2 / (2 * sigma ** 2))
         return term1 * term2
@@ -69,16 +67,16 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
     w : float
         See model formula
     """
+
     amplitude = Parameter()
     sigma_1 = Parameter()
     sigma_2 = Parameter()
     w = Parameter()
 
     def __init__(self, amplitude=1, sigma_1=160, sigma_2=780, w=0.9, **kwargs):
-        super(FaucherKaspi2006VelocityBimodal, self).__init__(amplitude=amplitude,
-                                                              sigma_1=sigma_1,
-                                                              sigma_2=sigma_1,
-                                                              w=w, **kwargs)
+        super().__init__(
+            amplitude=amplitude, sigma_1=sigma_1, sigma_2=sigma_1, w=w, **kwargs
+        )
 
     @staticmethod
     def evaluate(v, amplitude, sigma_1, sigma_2, w):
@@ -104,21 +102,22 @@ class Paczynski1990Velocity(Fittable1DModel):
     v_0 : float
         Velocity parameter (km s^-1)
     """
+
     amplitude = Parameter()
     v_0 = Parameter()
 
     def __init__(self, amplitude=1, v_0=560, **kwargs):
-        super(Paczynski1990Velocity, self).__init__(amplitude=amplitude,
-                                                    v_0=v_0, **kwargs)
+        super().__init__(amplitude=amplitude, v_0=v_0, **kwargs)
 
     @staticmethod
     def evaluate(v, amplitude, v_0):
         """One dimensional Paczynski 1990 velocity model function."""
-        return amplitude * 4. / (np.pi * v_0 * (1 + (v / v_0) ** 2) ** 2)
+        return amplitude * 4.0 / (np.pi * v_0 * (1 + (v / v_0) ** 2) ** 2)
 
 
-velocity_distributions = OrderedDict()
-velocity_distributions.__doc__ = """Velocity distributions (dict mapping names to classes)."""
-velocity_distributions['H05'] = FaucherKaspi2006VelocityMaxwellian
-velocity_distributions['F06B'] = FaucherKaspi2006VelocityBimodal
-velocity_distributions['F06P'] = Paczynski1990Velocity
+"""Velocity distributions (dict mapping names to classes)."""
+velocity_distributions = {
+    "H05": FaucherKaspi2006VelocityMaxwellian,
+    "F06B": FaucherKaspi2006VelocityBimodal,
+    "F06P": Paczynski1990Velocity,
+}

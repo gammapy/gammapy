@@ -6,8 +6,8 @@
 gamma-cat
 *********
 
-``gamma-cat`` (https://github.com/gammapy/gamma-cat) is an
-open data collection and source catalog for TeV gamma-ray astronomy.
+``gamma-cat`` (https://github.com/gammapy/gamma-cat) is an open data collection
+and source catalog for TeV gamma-ray astronomy.
 
 As explained further in the ``gamma-cat`` docs, it provides two data products:
 
@@ -19,17 +19,13 @@ Catalog
 
 The gamma-cat catalog is available here:
 
-* ``$GAMMA_CAT/docs/data/gammacat.fits.gz`` -- latest version
-* ``$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz``
-  - a stable version copied to the ``gammapy-extra`` repo,
-  used for the ``gammapy.catalog.gammacat`` tests.
+* ``$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz``: latest version.
 
-To work with the gamma-cat catalog from Gammapy,
-pick a version and create a `~gammapy.catalog.SourceCatalogGammaCat`::
+To work with the gamma-cat catalog from Gammapy, pick a version and create a
+`~gammapy.catalog.SourceCatalogGammaCat`::
 
     from gammapy.catalog import SourceCatalogGammaCat
-    filename = '$GAMMA_CAT/docs/data/gammacat.fits.gz'
-    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat.fits.gz'
+    filename = '$GAMMAPY_DATA/catalogs/gammacat/gammacat.fits.gz'
     cat = SourceCatalogGammaCat(filename)
 
 TODO: add examples how to use it and links to notebooks.
@@ -43,19 +39,13 @@ JSON index file summarising all available data and containing pointers to the ot
 
 It is available here:
 
-* ``$GAMMA_CAT/docs/data/gammacat-datasets.json`` -- latest version
-* ``$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat-datasets.json``
-  - a stable version copied to the ``gammapy-extra`` repo,
-  used for the ``gammapy.catalog.gammacat`` tests.
+* ``$GAMMAPY_DATA/catalogs/gammacat/gammacat-datasets.json``: latest version
 
-To work with the gamma-cat data collection from Gammapy,
-pick a version and create a `~gammapy.catalog.GammaCatDataCollection` class.
-
-::
+To work with the gamma-cat data collection from Gammapy, pick a version and
+create a `~gammapy.catalog.GammaCatDataCollection` class::
 
     from gammapy.catalog import GammaCatDataCollection
-    filename = '$GAMMA_CAT/docs/data/gammacat-datasets.json'
-    filename = '$GAMMAPY_EXTRA/datasets/catalogs/gammacat/gammacat-datasets.json'
+    filename = '$GAMMAPY_DATA/catalogs/gammacat/gammacat-datasets.json'
     gammacat = GammaCatDataCollection.from_index(filename)
 
 TODO: add examples how to use it and links to notebooks.

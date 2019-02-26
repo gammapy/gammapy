@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of the GeneralRandomArray class"""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ...utils.random import get_random_state
 
-__all__ = ['GeneralRandomArray']
+__all__ = ["GeneralRandomArray"]
 
 
-class GeneralRandomArray(object):
+class GeneralRandomArray:
     """Draw random indices from a discrete probability distribution
     given by a numpy array.
     The array dimension can be arbitrary.
@@ -32,7 +31,7 @@ class GeneralRandomArray(object):
         self.ndim = pdf.ndim
         self.shape = pdf.shape
 
-    def draw(self, n=1, return_flat_index=False, random_state='random-seed'):
+    def draw(self, n=1, return_flat_index=False, random_state="random-seed"):
         """Returns n draws from the pdf.
 
         If return_flat_index == true, a linearized index is returned.

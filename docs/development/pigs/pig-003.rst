@@ -1,0 +1,145 @@
+.. include:: ../../references.txt
+
+.. _pig-003:
+
+********************************************
+PIG 3 - Plan for dropping Python 2.7 support
+********************************************
+
+* Author: Christoph Deil & Matthew Wood
+* Created: Feb 1, 2018
+* Status: draft
+* Discussion: `GH 1278`_
+
+Abstract
+========
+
+We propose to drop Python 2.7 support in Gammapy v0.11 in March 2019.
+
+All earlier Gammapy versions, up to Gammapy v0.10, support Python 2.7 and of
+course will remain available indefinitely.
+
+User surveys in 2018 have shown that most Gammapy users are already on Python 3.
+Gammapy v0.8 shipped with a recommended conda environment based on Python 3.6
+that works on Linux, Mac and Windows and can be installed by anyone, also on
+older machines.
+
+To support Fermipy, which uses gammapy.maps and still requires Python 2.7, as
+well as other users on Python 2.7 (if any), we will backport bug-fixes and make
+patch releases in the Gammapy v0.10.x branch as needed, throughout 2019.
+
+This change will reduce the effort spent on Gammapy testing and packaging in
+2019, and also will simplify life for Gammapy developers a bit and make a few
+new features of the Python 3 language available for Gammapy.
+
+Support for Python 3 will remain as-is (Python 3.5 or later) for now, whether to
+require Python 3.6 or later for Gammapy v1.0 in fall 2019 or later will be
+discussed separately.
+
+User perspective
+================
+
+Most Gammapy users are already using Python 3.
+
+We did a "Gammapy installation questionnaire" on the Gammapy mailing list and
+Gammapy Slack in Feb 2018 which resulted in only 12 responses. Only 2 people
+were still using Python 2.7, only one person suggested to keep Python 2.7
+support for a while longer, until January 2019.
+
+In CTA, a "CTA first data challenge user survey" was done in August 2018, which
+yielded 50 responses. There 40% said they were still using Python 2.7. The
+question why, or if / when they would be happy to switch to Python 3 wasn't
+asked.
+
+Based on these two questionnaires, and talking to Gammapy users in 2018, it
+became clear that the only good reason to keep using Gammapy with Python 2.7 is
+when using Fermipy, which uses gammapy.maps and the Fermi science tools, which
+at this time don't support Python 3 yet, and the timeline for Python 3 support
+there isn't clear.
+
+Based on discussions with the Fermipy maintainers, as mentioned in the abstract
+already, the suggested solution here would be that Fermipy puts ``gammapy<0.11``
+in their ``setup.py`` which will mean that users will get the latest Python 2
+compatible version. Probably even that isn't needed, because the ``setup.py`` in
+Gammapy v0.11 and later will declare that it only supports Python 3 or later, so
+``pip`` or ``conda`` would always pick the latest Python 2.7 compatible version
+automatically.
+
+If other Gammapy users need support, please contact us. We can either help you
+update your scripts to run on Python 3 (preferred, usually trivial changes) or
+backport fixes to older Gammapy versions that still support Python 2.7 (if
+really needed).
+
+Maintainer and developer perspective
+====================================
+
+This change will have a big positive impact on Gammapy maintenance and
+development. It is an important step to allow for developments in 2019 towards
+the Gammapy 1.0 release that is planned for fall 2019 (see `PIG 5 - Gammapy 1.0
+Roadmap`_).
+
+Python 3 was introduced 10 years ago. The transition from Python 2 to Python 3
+has been long and painful, and is still ongoing, but it is coming to an end.
+Most scientific Python projects have already dropped Python 2.7 support or are
+doing it now  (see `Python 3 statement`_).
+
+Astropy and the ``astropy-helpers`` that we use have already dropped Python 2
+support (see `Astropy statement`_). Jupyter that we extensively use for the
+documentation has dropped Python 2 support as well. While these projects are
+still maintaining long-term-support (LST) branches for the last Python 2
+compatible versions, it is getting harder and harder to keep the Python 2 builds
+(especially the Sphinx documentation build) and tests in continuous integration
+(CI) working. Dropping Python 2 support in Gammapy means less maintainer time
+spent on this moving forward.
+
+There are also new developments that are slowed down by keeping Python 2
+support. E.g. we want to continue and finish the development of
+``astropy-healpix`` and ``astropy-regions`` to the point where it can be moved
+into the Astropy core package. This should happen before Gammapy v1.0 and then
+we should use ``astropy-healpix`` instead of ``healpy`` in Gammapy (see `GH 1167
+for Gammapy`_). Given that Astropy core doesn't support Python 2 any more, it
+makes sense to directly develop those packages with this target, i.e. Python 3
+only. Keeping support for Python 2 there does cause some extra work in
+development (see `GH 111 for astropy-healpix`_) and also for packaging. Finally,
+we want to collaborate with `ctapipe`_ in Gammapy, and they only supported
+Python 3 from the start and are using Python 3 only features.
+
+So to summarise: the extra maintenance effort to keep supporting Python 2.7 in
+Gammapy in 2019 would be significant and also slow down the work on
+``astropy-healpix`` and ``astropy-regions``. Moving to Python 3 only make life
+better for all Gammapy maintainers and developers.
+
+Detailed plan
+=============
+
+There are two ways to execute this. When dropping Python 2 support from the git
+master branch, one can either remove the Python 2 shims directly, or keep them
+in place and do as few code changes as possible for the time period where one
+has to backport bug-fixes to the Python 2 compatible branch to avoid the amount
+of git and manual edits needed. Many big and stable projects like e.g. Numpy
+that have several stable branches that are supported sometimes for years, and
+thus do a lot of backporting, don't do the cleanup directly.
+
+However, for Gammapy, we propose to do the cleanup directly in the master branch
+following the v0.10 release.
+
+The motivation for this is that in 2019 we will have to re-organise the Gammapy
+sub-packages and move and edit most files as we work towards Gammapy v1.0 in
+fall 2019 (see `PIG 5 - Gammapy 1.0 Roadmap`). So it seems unlikely that ``git
+cherry-pick`` would work at all to backport bugfixes. Instead, the strategy
+would be to manually re-apply important bug fixes (mostly to ``gammapy.maps``,
+hopefully not many) in the ``v0.10.x`` branch.
+
+Decision
+========
+
+tbd
+
+.. _GH 1278: https://github.com/gammapy/gammapy/pull/1278
+.. _Numpy statement: https://docs.scipy.org/doc/numpy-1.14.1/neps/dropping-python2.7-proposal.html
+.. _Astropy statement: https://github.com/astropy/astropy-APEs/blob/master/APE10.rst
+.. _Python 3 statement: http://www.python3statement.org/
+.. _ctapipe: https://github.com/cta-observatory/ctapipe
+.. _PIG 5 - Gammapy 1.0 Roadmap: https://github.com/gammapy/gammapy/pull/1841
+.. _GH 111 for astropy-healpix: https://github.com/astropy/astropy-healpix/issues/111
+.. _GH 1167 for Gammapy: https://github.com/gammapy/gammapy/pull/1167

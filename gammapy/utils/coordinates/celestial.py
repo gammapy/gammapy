@@ -1,14 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Celestial coordinate utility functions.
-"""
-from __future__ import absolute_import, division, print_function, unicode_literals
+"""Celestial coordinate utility functions."""
 import numpy as np
 from astropy.coordinates.angle_utilities import angular_separation
 
-__all__ = [
-    'minimum_separation',
-    'pair_correlation',
-]
+__all__ = ["minimum_separation", "pair_correlation"]
 
 
 def minimum_separation(lon1, lat1, lon2, lat2):

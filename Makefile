@@ -9,7 +9,8 @@ help:
 	@echo ''
 	@echo '     help             Print this help message (the default)'
 	@echo ''
-	@echo '     doc-show         Open local HTML docs in browser'
+	@echo '     docs-show        Open local HTML docs in browser'
+	@echo '     docs-all         Build documentation'
 	@echo '     clean            Remove generated files'
 	@echo '     clean-repo       Remove all untracked files and directories (use with care!)'
 	@echo '     cython           Compile cython files'
@@ -35,20 +36,25 @@ help:
 	@echo ' More info:'
 	@echo ''
 	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
-	@echo ' * Gammapy docs: http://docs.gammapy.org/'
+	@echo ' * Gammapy docs: https://docs.gammapy.org/'
 	@echo ''
 	@echo ' Environment:'
 	@echo ''
-	@echo '     GAMMAPY_EXTRA = $(GAMMAPY_EXTRA)'
+	@echo '     GAMMAPY_DATA = $(GAMMAPY_DATA)'
 	@echo ''
 	@echo ' To get more info about your Gammapy installation and setup run this command'
-	@echo ' (Gammapy needs to be installed and on your PATH)'
 	@echo ''
-	@echo '     gammapy-info'
+	@echo '     gammapy info'
 	@echo ''
+	@echo ' For this to work, Gammapy needs to be installed and on your PATH.'
+	@echo ' If it is not, then use this equivalent command:'
+	@echo ''
+	@echo '     python -m gammapy info'
 
 clean:
-	rm -rf build dist docs/_build docs/api htmlcov MANIFEST gammapy.egg-info .coverage .cache
+	rm -rf build dist docs/_build docs/api temp/ docs/notebooks docs/_static/notebooks \
+	  htmlcov MANIFEST v gammapy.egg-info .eggs .coverage .cache .pytest_cache \
+	  tutorials/.ipynb_checkpoints
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
 	find gammapy -name '*.c' -exec rm {} \;
@@ -63,44 +69,46 @@ cython:
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
-code-analysis: flake8 pylint
-
-# TODO: fix or silence everything reported here
-# TODO: remove the weird pipe / grep line and configure properly
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
-	       --exclude=gammapy/extern \
-	       --ignore=E501 \
-	       | grep -v __init__ | grep -v external
+    --exclude=gammapy/extern,gammapy/conftest.py,gammapy/_astropy_init.py,__init__.py \
+    --ignore=E501
+
+black:
+	black $(PROJECT)/ examples/ docs/ \
+	--exclude="_astropy_init.py|version.py|extern/|docs/_static|docs/_build" \
+	--line-length 88
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
 	pylint -E $(PROJECT)/ \
-	       --ignore=_astropy_init.py -f colorized \
-	       -d E1103,E0611,E1101 \
-	       --msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
-
-# TODO: fix or silence all the issue (and check which codes we really want to ignore if any)
-# TODO: figure out how exclude works (see https://github.com/PyCQA/pydocstyle/issues/175):
-# Should exclude: gammapy/version.py, gammapy/extern
-#	       --match-dir='[^gammapy/extern]' \
+	--ignore=_astropy_init.py,gammapy/extern \
+	-d E0611,E1101,E1103 \
+	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})' -f colorized
 
 pydocstyle:
-	pydocstyle $(PROJECT)/ \
-	       --convention=numpy \
-	       --add-ignore=D410,D104,D102,D100,D200
+	pydocstyle $(PROJECT) \
+	--convention=numpy \
+	--add-ignore=D100,D102,D104,D105,D200,D410 \
+	--add-ignore=D301 # TODO: re-activate and fix this one
 
 # TODO: add test and code quality checks for `examples`
 
-doc-show:
+docs-show:
 	open docs/_build/html/index.html
+
+docs-all:
+	which python
+	pip install -e .
+	python -m gammapy.utils.tutorials_process --src="$(src)" --release="$(release)" --nbs="$(nbs)"
+	python setup.py build_docs
 
 test-notebooks:
 	which python
-	python setup.py install --user
-	python test_notebooks.py
+	pip install -e .
+	python -m gammapy.utils.tutorials_test
 
 conda:
 	python setup.py bdist_conda

@@ -6,27 +6,22 @@ Check Gammapy installation
 How to run checks
 -----------------
 
-To check if Gammapy is correctly installed, start up python or ipython,
-import Gammapy and run the unit tests::
+To check if Gammapy is correctly installed, start up python or ipython, import
+Gammapy and run the unit tests::
 
-   $ python -c 'import gammapy; gammapy.test()'
-
-To check if the Gammapy command line tools are on your ``$PATH`` try this::
-
-   $ gammapy-info --tools
+    $ python -c 'import gammapy; gammapy.test()'
 
 To check which dependencies of Gammapy you have installed::
 
-   $ gammapy-info --dependencies
+    $ gammapy info --dependencies
 
 .. _install-issues:
 
 Common issues
 -------------
 
-If you have an issue with Gammapy installation or usage, please check
-this list. If your issue is not adressed, please send an email to the
-mailing list.
+If you have an issue with Gammapy installation or usage, please check this list.
+If your issue is not addressed, please send an email to the mailing list.
 
 - Q: I get an error mentioning something (e.g. Astropy) isn't available,
   but I did install it.
@@ -40,3 +35,12 @@ mailing list.
       echo $PYTHONPATH
       python -c 'import astropy'
 
+
+Known issues
+------------
+
+- **Astropy <3.0.5 and Matplotlib 3.0**
+
+There is an incompatibility between WCSAxes and Matplotlib 3.0, which causes
+the inline plotting in notebooks to fail. The issue as well as a temporary workaround is
+described `here <https://github.com/gammapy/gammapy/issues/1843#issuecomment-435909533>`__.
