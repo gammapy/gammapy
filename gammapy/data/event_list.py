@@ -571,14 +571,14 @@ class EventListBase:
 
         cols = {k.upper(): v for k, v in self.table.columns.items()}
 
-        for axis in mask.geom.axes:
+        for axis in geom.axes:
             try:
                 col = cols[axis.name.upper()]
-                coord[axis.name] = u.Quantity(col).to(axis.unit)
+                coord[axis.name] = Quantity(col).to(axis.unit)
             except KeyError:
                 raise KeyError("Column not found in event list: {!r}".format(axis.name))
 
-        return MapCoord(coord,coordsys="CEL")
+        return MapCoord.create(coord, coordsys="CEL")
 
     def select_from_map_mask(self, mask):
         """Return EventList contained in a Map mask.

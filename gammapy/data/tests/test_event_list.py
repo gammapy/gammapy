@@ -2,10 +2,13 @@
 import pytest
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import SkyCoord
+from astropy.table import Table
+from regions import CircleSkyRegion
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...data.event_list import EventListBase, EventList, EventListLAT
-
+from ...maps import WcsGeom, Map, MapAxis
 
 @requires_data("gammapy-data")
 class TestEventListBase:
@@ -120,3 +123,25 @@ class TestEventListChecker:
     def test_check_all(self):
         records = list(self.event_list.check())
         assert len(records) == 3
+
+class TestEventSelection:
+    def setup(self):
+        ra = [0., 0., 0., 10.]*u.deg
+        dec = [0.,0.9, 10., 10.]*u.deg
+        energy = [1.,1.5, 1.5, 10.]*u.TeV
+
+        evt_table = Table([ra,dec,energy], names=['RA','DEC','ENERGY'])
+        self.evt_list = EventListBase(evt_table)
+
+        center = SkyCoord(0.,0., frame='icrs', unit='deg')
+        self.on_region = CircleSkyRegion(center,radius=1.0*u.deg)
+
+    def test_map_select(self):
+        axis = MapAxis.from_edges((0.5, 2.), unit='TeV', name='ENERGY')
+        geom = WcsGeom.create(skydir=(0,0), binsz=0.2, width=4. * u.deg, proj='TAN', axes=[axis])
+
+        mask_data = geom.region_mask(regions=[self.on_region], inside=True).astype(float)
+        mask = Map.from_geom(geom, data=mask_data)
+        new_list = self.evt_list.select_from_map_mask(mask)
+        print(new_list.table)
+        assert len(new_list.table) == 2
