@@ -184,11 +184,11 @@ class SkyEllipse(SkySpatialModel):
 
 
 
-    where :math:`F_1` and :math:`F_2` represent the foci of the ellipse (located by the method `find_foci()`),
+    where :math:`F_1` and :math:`F_2` represent the foci of the ellipse,
     :math:`P` is a generic point of coordinates :math:`(\text{lon}, \text{lat})`,
     :math:`a` is the major semiaxis of the ellipse and N is the model's
     normalization, in units of :math:`\text{sr}^{-1}`.
-    
+
     The model is defined on the celestial sphere, by computing angles and distances with the functions defined in
     `astropy.coordinates.angle_utilities`, and setting the normalization such that:
 
@@ -207,43 +207,41 @@ class SkyEllipse(SkySpatialModel):
     e : `float`
         Eccentricity of the ellipse (:math:`0< e< 1`).
     theta : `~astropy.coordinates.Angle`
-        :math:`\theta`: 
-        Rotation angle of the major semiaxis.  The
-        rotation angle increases clockwise (i.e., East of North) from the positive `lon`
-        axis.
+        :math:`\theta`:
+        Rotation angle of the major semiaxis.  The rotation angle increases clockwise
+        (i.e., East of North) from the positive `lon` axis.
 
 
-        Examples
+    Examples
     --------
     .. plot::
         :include-source:
 
         import numpy as np
-        from gammapy.image.models.core import *
+        from gammapy.image.models.core import SkyEllipse
         import astropy.units as u
         from gammapy.maps import Map, WcsGeom
         import matplotlib.pyplot as plt
-        from matplotlib import rc
-        rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-        ## for Palatino and other serif fonts use:
-        #rc('font',**{'family':'serif','serif':['Palatino']})
-        rc('text', usetex=True)
+        from matplotlib import rc_context
 
-        ell=SkyEllipse(2*u.deg,2*u.deg,1*u.deg,.8,30*u.deg)
+        ell = SkyEllipse(2*u.deg, 2*u.deg, 1*u.deg, .8, 30*u.deg)
 
-        m_geom = WcsGeom.create(binsz=.01,width=(3,3),skydir=(2,2),coordsys="GAL",proj="AIT")
-        coords=m_geom.get_coord()
-        lon=coords.lon*u.deg
-        lat=coords.lat*u.deg  
-        vals=ell(lon,lat)
-        mymap=Map.from_geom(m_geom,data=vals.value)
+        m_geom = WcsGeom.create(binsz=.01, width=(3,3), skydir=(2,2), coordsys="GAL", proj="AIT")
+        coords = m_geom.get_coord()
+        lon = coords.lon*u.deg
+        lat = coords.lat*u.deg
+        vals = ell(lon,lat)
+        mymap = Map.from_geom(m_geom, data=vals.value)
 
-        fig,ax,_=mymap.plot()
-        ax.scatter(2, 2, transform=ax.get_transform('galactic'), s=20,edgecolor='red', facecolor='red')
-        plt.text(2.08, 2.06, r'$(l_0,b_0)$' ,transform=ax.get_transform('galactic'), fontsize=12)
-        plt.plot([2,2+np.cos(np.pi/6)],[2,2+np.sin(np.pi/6)], transform=ax.get_transform('galactic'))
-        ax.hlines(y=2,color='r', linestyle='--',transform=ax.get_transform('galactic'),xmin=0,xmax=5)
-        plt.text(2.4, 2.06, r'$\theta$' ,transform=ax.get_transform('galactic'), fontsize=12)
+        rc_params = {'text.usetex': True}
+        with rc_context(rc=rc_params):
+            fig, ax, _ = mymap.plot()
+            transform = ax.get_transform('galactic')
+            ax.scatter(2, 2, transform=transform, s=20,edgecolor='red', facecolor='red')
+            plt.text(2.08, 2.06, r'$(l_0,b_0)$', transform=transform, fontsize=12)
+            plt.plot([2, 2+np.cos(np.pi/6)], [2, 2+np.sin(np.pi/6)], transform=transform)
+            ax.hlines(y=2, color='r', linestyle='--', transform=transform, xmin=0, xmax=5)
+            plt.text(2.4, 2.06, r'$\theta$', transform=transform, fontsize=12)
 
         plt.show()
     """
@@ -259,47 +257,37 @@ class SkyEllipse(SkySpatialModel):
             ]
         )
 
-    def find_foci(lon_0, lat_0, semi_major, e, theta):
-        """Find the foci of the ellipse."""
-        c = semi_major * e
-        lon_1, lat_1 = offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
-        lon_2, lat_2 = offset_by(lon_0, lat_0, 270 * u.deg - theta, c)
-        return lon_1, lat_1, lon_2, lat_2
-
     def compute_norm(semi_major, e):
         """Compute the normalization factor."""
         semi_minor = semi_major * np.sqrt(1 - e ** 2)
 
         def integral_fcn(x, a, b):
-            A = 1 + 1 / a.to("rad").value ** 2
-            B = 1 + 1 / b.to("rad").value ** 2
+            A = 1 / np.sin(a) ** 2
+            B = 1 / np.sin(b) ** 2
             C = A - B
             cs2 = np.cos(x) ** 2
+
             return 1 - np.sqrt(1 - 1 / (B + C * cs2))
 
         return (
-            quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, 2 * np.pi)[0]
-            ** -1
-        )
+            2 * quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, np.pi)[0]
+        ) ** -1
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, semi_major, e, theta):
         """Evaluate the model (static function)."""
-        lon_1, lat_1, lon_2, lat_2 = SkyEllipse.find_foci(
-            lon_0, lat_0, semi_major, e, theta
-        )
+
+        # find the foci of the ellipse
+        c = semi_major * e
+        lon_1, lat_1 = offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
+        lon_2, lat_2 = offset_by(lon_0, lat_0, 270 * u.deg - theta, c)
+
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
         in_ellipse = sep_1 + sep_2 <= 2 * semi_major
-        norm = u.Quantity(
-            SkyEllipse.compute_norm(semi_major, e), unit="sr-1", copy=False
-        )
-        result = np.select([in_ellipse], [norm])
 
-        if isinstance(norm, u.Quantity):
-            return u.Quantity(result, unit=norm.unit, copy=False)
-        else:
-            return result
+        norm = SkyEllipse.compute_norm(semi_major, e)
+        return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
 
 
 class SkyShell(SkySpatialModel):
