@@ -12,6 +12,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.testing import Checker
+from ..maps import MapCoord
 
 __all__ = ["EventListBase", "EventList", "EventListLAT"]
 
@@ -554,6 +555,46 @@ class EventListBase:
         """
         checker = EventListChecker(self)
         return checker.run(checks=checks)
+
+    def _get_coord_from_geom(self, geom):
+        """Return MapCoord of the EventList relative to an input geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.MapGeom`
+            the geom used to define the MapCoord
+        Returns
+        -------
+        mapcoord : `~gammapy.Map.MapCoord`
+        """
+        coord = dict(skycoord=self.radec)
+
+        cols = {k.upper(): v for k, v in self.table.columns.items()}
+
+        for axis in mask.geom.axes:
+            try:
+                col = cols[axis.name.upper()]
+                coord[axis.name] = u.Quantity(col).to(axis.unit)
+            except KeyError:
+                raise KeyError("Column not found in event list: {!r}".format(axis.name))
+
+        return MapCoord(coord,coordsys="CEL")
+
+    def select_from_map_mask(self, mask):
+        """Return EventList contained in a Map mask.
+
+        Parameters
+        ----------
+        mask : `~gammapy.maps.Map`
+            the mask to be used
+        Returns
+        -------
+        eventlist : `~gammapy.data.EventList`
+        """
+        coord = self._get_coord_from_geom(mask.geom)
+        values = mask.get_by_coord(coord)
+        valid = values > 0
+        return self.select_row_subset(valid)
 
 
 class EventList(EventListBase):
