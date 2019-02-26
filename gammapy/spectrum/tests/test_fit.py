@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable
-from ...utils.fitting import Fit, Parameters
+from ...utils.fitting import Fit
 from ...spectrum import (
     CountsSpectrum,
     PHACountsSpectrum,
@@ -17,7 +17,7 @@ from ...spectrum import (
     SpectrumDataset,
 )
 
-
+@requires_dependency("iminuit")
 class TestSpectrumDataset:
     """Test fit on counts spectra without any IRFs"""
 
