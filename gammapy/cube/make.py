@@ -562,19 +562,18 @@ class IrfMapMaker:
 
     def _process_obs(self, obs):
         # Compute cutout geometry and slices to stack results back later
-        cutout_geom = self.geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
 
         # Compute field of view mask on the cutout
-        coords = cutout_geom.get_coord()
+        coords = self.geom.get_coord()
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
         exposure = make_map_exposure_true_energy(
-            pointing=obs.pointing_radec,
-            livetime=obs.observation_live_time_duration,
-            aeff=obs.aeff,
-            geom=self.geom_true,
+            pointing=self.obs.pointing_radec,
+            livetime=self.obs.observation_live_time_duration,
+            aeff=self.obs.aeff,
+            geom=self.geom,
         )
         exposure.data[..., fov_mask] = 0
 
