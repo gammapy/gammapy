@@ -580,15 +580,10 @@ class IrfMapMaker:
         exposure.data[..., fov_mask] = 0
 
         if self.rad_axis is not None:
-            cutout_psf_geom = self.psf_geom.cutout(
-                position=obs.pointing_radec,
-                width=2 * self.offset_max,
-                mode="trim"
-            )
             obs_psf_map = make_psf_map(
                 psf=obs.psf,
                 pointing=obs.pointing_radec,
-                geom=cutout_psf_geom,
+                geom=self.psf_geom,
                 max_offset=self.offset_max,
                 exposure_map=exposure
             )
@@ -596,11 +591,10 @@ class IrfMapMaker:
             self.psf_map = self.psf_map.stack(obs_psf_map)
 
         if self.migra_axis is not None:
-            cutout_edisp_geom = self.edisp_geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
             obs_edisp_map = make_edisp_map(
                 edisp=obs.edisp,
                 pointing=obs.pointing_radec,
-                geom=cutout_edisp_geom,
+                geom=self.edisp_geom,
                 max_offset=self.offset_max,
                 exposure_map=exposure
             )
