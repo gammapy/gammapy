@@ -12,7 +12,6 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.testing import Checker
-from ..maps import MapCoord
 
 __all__ = ["EventListBase", "EventList", "EventListLAT"]
 
@@ -563,6 +562,7 @@ class EventListBase:
         ----------
         geom : `~gammapy.maps.MapGeom`
             the geom used to define the MapCoord
+
         Returns
         -------
         mapcoord : `~gammapy.Map.MapCoord`
@@ -578,15 +578,16 @@ class EventListBase:
             except KeyError:
                 raise KeyError("Column not found in event list: {!r}".format(axis.name))
 
-        return MapCoord.create(coord, coordsys="CEL")
+        return coord
 
-    def select_from_map_mask(self, mask):
+    def select_map_mask(self, mask):
         """Return EventList contained in a Map mask.
 
         Parameters
         ----------
         mask : `~gammapy.maps.Map`
             the mask to be used
+
         Returns
         -------
         eventlist : `~gammapy.data.EventList`
