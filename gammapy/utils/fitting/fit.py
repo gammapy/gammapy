@@ -279,7 +279,7 @@ class Fit:
             "nfev": result["nfev"],
         }
 
-    def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11):
+    def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11, reoptimize=False, optimize_opts=None):
         """Compute likelihood profile.
 
         The method used is to vary one parameter, keeping all others fixed.
@@ -301,6 +301,8 @@ class Fit:
             spaced between those.
         nvalues : int
             Number of parameter grid points to use.
+        reoptimize : bool
+            Re-optimize other parameters, when computing the likelihood profile.
 
         Returns
         -------
@@ -309,6 +311,8 @@ class Fit:
         """
         parameters = self._parameters
         parameter = parameters[parameter]
+
+        optimize_opts = optimize_opts or {}
 
         if values is None:
             if isinstance(bounds, tuple):
@@ -324,23 +328,16 @@ class Fit:
         with parameters.restore_values:
             for value in values:
                 parameter.value = value
-                stat = self.total_stat(parameters)
+                if reoptimize:
+                    parameter.frozen = True
+                    result = self.optimize(**optimize_opts)
+                    stat = result.total_stat
+                else:
+                    stat = self.total_stat(parameters)
                 likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
 
-    def minos_profile(self):
-        """Compute MINOS profile.
-
-        The method used is to vary one parameter,
-        then re-optimise all other free parameters
-        and to take the likelihood at that point.
-
-        See also: `Fit.likelihood_profile`
-
-        Calls ``iminuit.Minuit.mnprofile``
-        """
-        raise NotImplementedError
 
     def likelihood_contour(self):
         """Compute likelihood contour.
