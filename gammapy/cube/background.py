@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy.coordinates import SkyOffsetFrame
+from ..data import FixedPointingInfo
 from ..maps import WcsNDMap
 from ..utils.coordinates import sky_to_fov
 
@@ -9,10 +11,14 @@ __all__ = ["make_map_background_irf"]
 def make_map_background_irf(pointing, ontime, bkg, geom):
     """Compute background map from background IRFs.
 
+    If a `FixedPointingInfo` is passed the correct FoV coordinates are properly computed.
+    If a simple `SkyCoord` is passed, FoV coordinates are computed without proper rotation
+    of the frame.
+
     Parameters
     ----------
-    pointing : `~gammapy.data.pointing.FixedPointingInfo`
-        Fixed Pointing info
+    pointing : `~gammapy.data.pointing.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+        Fixed Pointing info or coordinates of the pointing
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
         see https://gamma-astro-data-formats.readthedocs.io/en/stable/irfs/full_enclosure/bkg/index.html#notes)
@@ -38,15 +44,23 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     # Get altaz coords for map
     map_coord = geom.to_image().get_coord()
     sky_coord = map_coord.skycoord
-    altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
 
-    # Compute FOV coordinates of map relative to pointing
-    fov_lon, fov_lat = sky_to_fov(
-        altaz_coord.az,
-        altaz_coord.alt,
-        pointing.altaz.az,
-        pointing.altaz.alt
-    )
+    if isinstance(pointing, FixedPointingInfo):
+        altaz_coord = sky_coord.transform_to(pointing.altaz_frame)
+
+        # Compute FOV coordinates of map relative to pointing
+        fov_lon, fov_lat = sky_to_fov(
+            altaz_coord.az,
+            altaz_coord.alt,
+            pointing.altaz.az,
+            pointing.altaz.alt
+        )
+    else:
+        # Create OffsetFrame
+        frame = SkyOffsetFrame(origin=pointing)
+        pseudo_fov_coord = sky_coord.transform_to(frame)
+        fov_lon = pseudo_fov_coord.lon
+        fov_lat = pseudo_fov_coord.lat
 
     energy_axis = geom.get_axis_by_name("energy")
     energies = energy_axis.edges * energy_axis.unit
