@@ -55,6 +55,19 @@ class SkyPointSource(SkySpatialModel):
             [Parameter("lon_0", Longitude(lon_0)), Parameter("lat_0", Latitude(lat_0))]
         )
 
+    @property
+    def evaluation_radius(self):
+        """Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For a point source, we fix it to 4 pixels.
+    
+        Returns
+        -------
+        pix_radius : `int`
+            Radius in pixel	
+        """
+        pix_radius=4
+        return pix_radius
+
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
         """Evaluate the model (static function)."""
@@ -118,6 +131,20 @@ class SkyGaussian(SkySpatialModel):
             ]
         )
 
+    @property
+    def evaluation_radius(self):
+        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For a Gaussian source, we fix it to :math:`7\sigma`.
+    
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+           Radius in angular units
+  
+        """
+        radius = u.Quantity(7 * self.parameters["sigma"].value, unit="deg", copy=False)
+        return radius
+
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, sigma):
         """Evaluate the model (static function)."""
@@ -159,6 +186,20 @@ class SkyDisk(SkySpatialModel):
                 Parameter("r_0", Angle(r_0)),
             ]
         )
+
+    @property
+    def evaluation_radius(self):
+        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For a Disk source, we fix it to :math:`r_0`.
+    
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+            Radius in angular units
+  
+        """
+        radius = u.Quantity(self.parameters["r_0"].value, unit="deg", copy=False)
+        return radius
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0):
@@ -211,6 +252,20 @@ class SkyShell(SkySpatialModel):
             ]
         )
 
+    @property
+    def evaluation_radius(self):
+        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For a Shell source, we fix it to :math:`r_\text{out}`.
+    
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+            Radius in angular units
+  
+        """
+        radius = u.Quantity(self.parameters["radius"].value + self.parameters["width"].value, unit="deg", copy=False)
+        return radius
+
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
         """Evaluate the model (static function)."""
@@ -241,6 +296,19 @@ class SkyDiffuseConstant(SkySpatialModel):
 
     def __init__(self, value=1):
         self.parameters = Parameters([Parameter("value", value)])
+
+    @property
+    def evaluation_radius(self):
+        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For a Shell source, we fix it to None.
+    
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+             None
+  
+        """
+        return None
 
     @staticmethod
     def evaluate(lon, lat, value):
@@ -287,6 +355,21 @@ class SkyDiffuseMap(SkySpatialModel):
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+
+    @property
+    def evaluation_radius(self):
+        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For a DiffuseMap source, we fix it to the maximal dimension of the map.
+    
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+            Radius in angular units.
+  
+        """
+        width_0, width_1 = (self.map).geom.width
+        radius = u.Quantity(max(width_0[0], width_1[0]), unit="deg", copy=False)
+        return radius
 
     def normalize(self):
         """Normalize the diffuse map model so that it integrates to unity."""
