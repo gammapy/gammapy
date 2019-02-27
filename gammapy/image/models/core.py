@@ -309,7 +309,7 @@ class SkyDiffuseConstant(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
              None
-  
+
         """
         return None
 
