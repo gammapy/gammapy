@@ -142,7 +142,7 @@ class SkyGaussian(SkySpatialModel):
            Radius in angular units
 
         """
-        radius = 7 * self.parameters["sigma"].value * u.deg
+        radius = 7 * self.parameters["sigma"].quantity
         return radius
 
     @staticmethod
@@ -198,7 +198,7 @@ class SkyDisk(SkySpatialModel):
             Radius in angular units
 
         """
-        radius = self.parameters["r_0"].value * u.deg
+        radius = self.parameters["r_0"].quantity
         return radius
 
     @staticmethod
@@ -264,8 +264,8 @@ class SkyShell(SkySpatialModel):
 
         """
         radius = (
-            self.parameters["radius"].value * u.deg
-            + self.parameters["width"].value * u.deg
+            self.parameters["radius"].quantity
+            + self.parameters["width"].quantity
         )
         return radius
 
@@ -303,7 +303,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     @property
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a Shell source, we fix it to None.
+        For a constant diffuse model, we fix it to None.
 
         Returns
         -------
