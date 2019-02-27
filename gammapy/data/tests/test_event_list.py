@@ -142,6 +142,6 @@ class TestEventSelection:
 
         mask_data = geom.region_mask(regions=[self.on_region], inside=True).astype(float)
         mask = Map.from_geom(geom, data=mask_data)
-        new_list = self.evt_list.select_from_map_mask(mask)
+        new_list = self.evt_list.select_map_mask(mask)
         print(new_list.table)
         assert len(new_list.table) == 2
