@@ -140,7 +140,7 @@ class SkyGaussian(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
            Radius in angular units
-  
+
         """
         radius = 7 * self.parameters["sigma"].value * u.deg
         return radius
@@ -196,7 +196,7 @@ class SkyDisk(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
             Radius in angular units
-  
+
         """
         radius = self.parameters["r_0"].value * u.deg
         return radius
@@ -261,7 +261,7 @@ class SkyShell(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
             Radius in angular units
-  
+
         """
         radius = (
             self.parameters["radius"].value * u.deg
