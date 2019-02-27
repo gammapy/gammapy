@@ -217,6 +217,21 @@ def test_wcsgeom_separation():
     assert_allclose(separation.value[0, 0], 0.7106291438079875)
 
 
+def test_cutout():
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        npix=10,
+        binsz=0.1,
+        coordsys="GAL",
+        proj="CAR",
+        axes=[MapAxis.from_edges([0, 2, 3])],
+    )
+    position = SkyCoord(0.1, 0.2, unit="deg", frame="galactic")
+    cutout_geom = geom.cutout(position=position, width=2 * 0.3 * u.deg, mode="trim")
+    assert_allclose(cutout_geom.center_coord, (0.1, 0.2, 2.))
+    assert cutout_geom.data_shape == (2, 6, 6)
+
+
 def test_wcsgeom_get_coord():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(4, 3), binsz=1, coordsys="GAL", proj="CAR"

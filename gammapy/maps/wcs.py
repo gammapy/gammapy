@@ -4,6 +4,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
+from astropy.nddata import Cutout2D
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
@@ -58,15 +59,15 @@ def cast_to_shape(param, shape, dtype):
 
 # TODO: remove this function, move code to the one caller below
 def _make_image_header(
-    nxpix=100,
-    nypix=100,
-    binsz=0.1,
-    xref=0,
-    yref=0,
-    proj="CAR",
-    coordsys="GAL",
-    xrefpix=None,
-    yrefpix=None,
+        nxpix=100,
+        nypix=100,
+        binsz=0.1,
+        xref=0,
+        yref=0,
+        proj="CAR",
+        coordsys="GAL",
+        xrefpix=None,
+        yrefpix=None,
 ):
     """Generate a FITS header from scratch.
 
@@ -314,16 +315,16 @@ class WcsGeom(MapGeom):
 
     @classmethod
     def create(
-        cls,
-        npix=None,
-        binsz=0.5,
-        proj="CAR",
-        coordsys="CEL",
-        refpix=None,
-        axes=None,
-        skydir=None,
-        width=None,
-        conv="gadf",
+            cls,
+            npix=None,
+            binsz=0.5,
+            proj="CAR",
+            coordsys="CEL",
+            refpix=None,
+            axes=None,
+            skydir=None,
+            width=None,
+            conv="gadf",
     ):
         """Create a WCS geometry object.
 
@@ -742,7 +743,7 @@ class WcsGeom(MapGeom):
     def downsample(self, factor):
 
         if not np.all(np.mod(self.npix[0], factor) == 0) or not np.all(
-            np.mod(self.npix[1], factor) == 0
+                np.mod(self.npix[1], factor) == 0
         ):
             raise ValueError(
                 "Data shape not divisible by factor {!r} in all axes."
@@ -808,6 +809,38 @@ class WcsGeom(MapGeom):
         """
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
+
+    def cutout(self, position, width, mode="trim"):
+        """
+        Create a cutout around a given position.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        mode : {'trim', 'partial', 'strict'}
+            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.WcsNDMap`
+            Cutout map
+        """
+        width = _check_width(width)
+        dummy_data = np.empty(self.to_image().data_shape)
+        c2d = Cutout2D(
+            data=dummy_data,
+            wcs=self.wcs,
+            position=position,
+            # Cutout2D takes size with order (lat, lon)
+            size=width[::-1] * u.deg,
+            mode=mode,
+        )
+
+        return self._init_copy(wcs=c2d.wcs, npix=c2d.shape[::-1])
 
     def region_mask(self, regions, inside=True):
         """Create a mask from a given list of regions
@@ -909,7 +942,7 @@ class WcsGeom(MapGeom):
 
 
 def create_wcs(
-    skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
+        skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
 ):
     """Create a WCS object.
 

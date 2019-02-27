@@ -84,22 +84,17 @@ class MapMaker:
 
     def _process_obs(self, obs, selection):
         # Compute cutout geometry and slices to stack results back later
-        cutout_map = Map.from_geom(self.geom).cutout(
-            position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
-        )
-        cutout_map_etrue = Map.from_geom(self.geom_true).cutout(
-            position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
-        )
-
+        cutout_geom = self.geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
+        cutout_geom_etrue = self.geom_true.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
 
         # Compute field of view mask on the cutout
-        coords = cutout_map.geom.get_coord()
+        coords = cutout_geom.get_coord()
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
         # Compute field of view mask on the cutout in true energy
-        coords_etrue = cutout_map_etrue.geom.get_coord()
+        coords_etrue = cutout_geom_etrue.get_coord()
         offset_etrue = coords_etrue.skycoord.separation(obs.pointing_radec)
         fov_mask_etrue = offset_etrue >= self.offset_max
 
@@ -114,8 +109,8 @@ class MapMaker:
         # Make maps for this observation
         maps_obs = MapMakerObs(
             observation=obs,
-            geom=cutout_map.geom,
-            geom_true=cutout_map_etrue.geom,
+            geom=cutout_geom,
+            geom_true=cutout_geom_etrue,
             fov_mask=fov_mask,
             fov_mask_etrue=fov_mask_etrue,
             exclusion_mask=exclusion_mask,
@@ -178,13 +173,13 @@ class MapMakerObs:
     """
 
     def __init__(
-        self,
-        observation,
-        geom,
-        geom_true=None,
-        fov_mask=None,
-        fov_mask_etrue=None,
-        exclusion_mask=None,
+            self,
+            observation,
+            geom,
+            geom_true=None,
+            fov_mask=None,
+            fov_mask_etrue=None,
+            exclusion_mask=None,
     ):
         self.observation = observation
         self.geom = geom
