@@ -7,6 +7,8 @@ from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from .background import make_map_background_irf
+from .psf_map import PSFMap, make_psf_map
+from .edisp_map import EDispMap, make_edisp_map
 
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
@@ -516,11 +518,24 @@ class IrfMapMaker:
         if rad_axis is None and migra_axis is None:
             raise ValueError("No rad nor migra axis passed to IrfMapMaker")
 
-
         self.rad_axis = rad_axis
         self.migra_axis = migra_axis
 
         self.maps = {}
+
+        # Initialise zero-filled maps
+        exposure = Map.from_geom(self.geom, unit="m2s")
+
+        if self.migra_axis is not None:
+            self.edisp_geom = self.geom.to_cube([migra_axis])
+            self.edisp_map = EDispMap(Map.from_geom(self.edisp_geom, unit=""),exposure)
+            self.maps['edisp'] = self.edisp_map
+
+        if self.rad_axis is not None:
+            self.psf_geom = self.geom.to_cube([rad_axis])
+            self.psf_map = PSFMap(Map.from_geom(self.psf_geom, unit="1/sr"), exposure)
+            self.maps['psf'] = self.psf_map
+
 
     def run(self, observations):
         """
@@ -536,19 +551,6 @@ class IrfMapMaker:
         -----------
         maps: dict of stacked PsfMap and EdispMap
         """
-        # Initialise zero-filled maps
-        exposure = Map.from_geom(self.geom, unit="m2s")
-
-        if self.migra_axis is not None:
-            self.edisp_geom = self.geom.to_cube([migra_axis])
-            self.edisp_map = EDispMap(Map.from_geom(self.edisp_geom, unit=""),exposure)
-            self.maps['edisp'] = self.edisp_map
-
-        if self.rad_axis is not None:
-            self.psf_geom = self.geom.to_cube([rad_axis])
-            self.psf_map = PSFMap(Map.from_geom(self.psf_geom, unit="1/sr"), exposure)
-            self.maps['psf'] = self.psf_map
-
         for obs in observations:
             try:
                 self._process_obs(obs)
