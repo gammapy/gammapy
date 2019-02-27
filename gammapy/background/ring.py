@@ -214,7 +214,7 @@ class AdaptiveRingBackgroundEstimator:
         result : dict of `~gammapy.maps.WcsNDMap`
             Result sky maps.
         """
-        required = ["counts", "exposure_on", "exclusion"]
+        required = ["counts", "background", "exclusion"]
         counts, exposure_on, exclusion = [images[_] for _ in required]
 
         if not counts.geom.is_image:
@@ -338,43 +338,35 @@ class RingBackgroundEstimator:
         result : dict of `~gammapy.maps.WcsNDMap`
             Result sky maps
         """
-        p = self.parameters
-        required = ["counts", "exposure_on", "exclusion"]
 
-        counts, exposure_on, exclusion = [images[_] for _ in required]
+        required = ["counts", "background", "exclusion"]
+
+        counts, background, exclusion = [images[_] for _ in required]
 
         result = {}
         ring = self.kernel(counts)
 
-        counts_excluded = counts.copy(data=counts.data * exclusion.data.astype("float"))
-        result["off"] = counts_excluded.convolve(
-            ring.array, use_fft=p["use_fft_convolution"]
-        )
+        counts_excluded = counts * exclusion
 
-        exposure_on_excluded = exposure_on.copy(
-            data=exposure_on.data * exclusion.data.astype("float")
-        )
-        result["exposure_off"] = exposure_on_excluded.convolve(
-            ring.array, use_fft=p["use_fft_convolution"]
-        )
+        result["off"] = counts_excluded.convolve(ring.array)
+
+        background_excluded = background * exclusion
+
+        result["acceptance_off"] = background_excluded.convolve(ring.array)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             # set pixels, where ring is too small to NaN
-            not_has_off_exposure = ~(result["exposure_off"].data > 0)
-            result["exposure_off"].data[not_has_off_exposure] = np.nan
+            not_has_off_exposure = (result["acceptance_off"].data <= 0)
+            result["acceptance_off"].data[not_has_off_exposure] = np.nan
 
-            not_has_exposure = ~(exposure_on.data > 0)
+            not_has_exposure = (background.data <= 0)
             result["off"].data[not_has_exposure] = 0
-            result["exposure_off"].data[not_has_exposure] = 0
+            result["acceptance_off"].data[not_has_exposure] = 0
 
-            result["alpha"] = exposure_on.copy(
-                data=exposure_on.data / result["exposure_off"].data
-            )
+            result["alpha"] = background / result["acceptance_off"]
             result["alpha"].data[not_has_exposure] = 0
 
-        result["background"] = counts.copy(
-            data=result["alpha"].data * result["off"].data
-        )
+        result["background"] = result["alpha"] * result["off"]
 
         return result
 

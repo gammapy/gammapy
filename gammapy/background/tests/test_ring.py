@@ -35,7 +35,7 @@ def test_ring_background_estimator(images):
 
     result = ring.run(images)
 
-    in_fov = images["exposure_on"].data > 0
+    in_fov = images["background"].data > 0
 
     assert_allclose(result["background"].data[in_fov], 2.0)
     assert_allclose(result["alpha"].data[in_fov].mean(), 0.003488538457592745)
