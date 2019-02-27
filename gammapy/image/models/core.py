@@ -59,7 +59,7 @@ class SkyPointSource(SkySpatialModel):
     def evaluation_radius(self):
         """Returns the effective radius of the sky region where the model evaluates to non-zero.
         For a point source, we fix it to 4 pixels.
-    
+
         Returns
         -------
         pix_radius : `int`
@@ -135,7 +135,7 @@ class SkyGaussian(SkySpatialModel):
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
         For a Gaussian source, we fix it to :math:`7\sigma`.
-    
+
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
@@ -191,7 +191,7 @@ class SkyDisk(SkySpatialModel):
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
         For a Disk source, we fix it to :math:`r_0`.
-    
+
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
@@ -256,7 +256,7 @@ class SkyShell(SkySpatialModel):
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
         For a Shell source, we fix it to :math:`r_\text{out}`.
-    
+
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
@@ -304,7 +304,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
         For a Shell source, we fix it to None.
-    
+
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
@@ -363,7 +363,7 @@ class SkyDiffuseMap(SkySpatialModel):
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
         For a DiffuseMap source, we fix it to the maximal dimension of the map.
-    
+
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
