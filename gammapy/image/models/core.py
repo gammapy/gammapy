@@ -142,7 +142,7 @@ class SkyGaussian(SkySpatialModel):
            Radius in angular units
   
         """
-        radius = u.Quantity(7 * self.parameters["sigma"].value, unit="deg", copy=False)
+        radius = 7 * self.parameters["sigma"].value * u.deg
         return radius
 
     @staticmethod
@@ -198,7 +198,7 @@ class SkyDisk(SkySpatialModel):
             Radius in angular units
   
         """
-        radius = u.Quantity(self.parameters["r_0"].value, unit="deg", copy=False)
+        radius = self.parameters["r_0"].value * u.deg
         return radius
 
     @staticmethod
@@ -263,7 +263,7 @@ class SkyShell(SkySpatialModel):
             Radius in angular units
   
         """
-        radius = u.Quantity(self.parameters["radius"].value + self.parameters["width"].value, unit="deg", copy=False)
+        radius = self.parameters["radius"].value * u.deg + self.parameters["width"].value * u.deg
         return radius
 
     @staticmethod
@@ -368,7 +368,7 @@ class SkyDiffuseMap(SkySpatialModel):
   
         """
         width_0, width_1 = (self.map).geom.width
-        radius = u.Quantity(max(width_0[0], width_1[0]), unit="deg", copy=False)
+        radius = max(width_0[0], width_1[0]) * u.deg
         return radius
 
     def normalize(self):
