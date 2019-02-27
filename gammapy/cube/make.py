@@ -486,3 +486,121 @@ class MapMakerRing(MapMaker):
             * ``"off"``: off map
         """
         return self._run(observations, sum_over_axis=False)
+
+
+class IrfMapMaker:
+    """Make IRF maps from IACT observations.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.WcsGeom`
+        Reference map geometry with true energy axis
+    offset_max : `~astropy.coordinates.Angle`
+        Maximum offset angle
+    rad_axis : `~gammapy.maps.MapAxis`
+        The rad axis of the PsfMap to be built
+    migra_axis: `~gammapy.maps.MapAxis`
+        The migra axis of the EDispMap to be built
+    """
+
+    def __init__(self, geom, offset_max, rad_axis=None, migra_axis=None):
+        if not isinstance(geom, WcsGeom):
+            raise ValueError("IrfMapMaker only works with WcsGeom")
+
+        if geom.is_image:
+            raise ValueError("IrfMapMaker only works with geom with an energy axis")
+
+        self.geom = geom
+        self.offset_max = Angle(offset_max)
+
+        if rad_axis is None and migra_axis is None:
+            raise ValueError("No rad nor migra axis passed to IrfMapMaker")
+
+
+        self.rad_axis = rad_axis
+        self.migra_axis = migra_axis
+
+        self.maps = {}
+
+    def run(self, observations):
+        """
+        Run IrfMapMaker for a list of observations to create
+        stacked PsfMap and EdispMap
+
+        Parameters
+        --------------
+        observations : `~gammapy.data.Observations`
+            Observations to process
+
+        Returns
+        -----------
+        maps: dict of stacked PsfMap and EdispMap
+        """
+        # Initialise zero-filled maps
+        exposure = Map.from_geom(self.geom, unit="m2s")
+
+        if self.migra_axis is not None:
+            self.edisp_geom = self.geom.to_cube([migra_axis])
+            self.edisp_map = EDispMap(Map.from_geom(self.edisp_geom, unit=""),exposure)
+            self.maps['edisp'] = self.edisp_map
+
+        if self.rad_axis is not None:
+            self.psf_geom = self.geom.to_cube([rad_axis])
+            self.psf_map = PSFMap(Map.from_geom(self.psf_geom, unit="1/sr"), exposure)
+            self.maps['psf'] = self.psf_map
+
+        for obs in observations:
+            try:
+                self._process_obs(obs)
+            except NoOverlapError:
+                log.info(
+                    "Skipping observation {}, no overlap with map.".format(obs.obs_id)
+                )
+                continue
+
+        return self.maps
+
+    def _process_obs(self, obs):
+        # Compute cutout geometry and slices to stack results back later
+        cutout_geom = self.geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
+        log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
+
+        # Compute field of view mask on the cutout
+        coords = cutout_geom.get_coord()
+        offset = coords.skycoord.separation(obs.pointing_radec)
+        fov_mask = offset >= self.offset_max
+
+        exposure = make_map_exposure_true_energy(
+            pointing=obs.pointing_radec,
+            livetime=obs.observation_live_time_duration,
+            aeff=obs.aeff,
+            geom=self.geom_true,
+        )
+        exposure.data[..., fov_mask] = 0
+
+        if self.rad_axis is not None:
+            cutout_psf_geom = self.psf_geom.cutout(
+                position=obs.pointing_radec,
+                width=2 * self.offset_max,
+                mode="trim"
+            )
+            obs_psf_map = make_psf_map(
+                psf=obs.psf,
+                pointing=obs.pointing_radec,
+                geom=cutout_psf_geom,
+                max_offset=self.offset_max,
+                exposure_map=exposure
+            )
+
+            self.psf_map = self.psf_map.stack(obs_psf_map)
+
+        if self.migra_axis is not None:
+            cutout_edisp_geom = self.edisp_geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
+            obs_edisp_map = make_edisp_map(
+                edisp=obs.edisp,
+                pointing=obs.pointing_radec,
+                geom=cutout_edisp_geom,
+                max_offset=self.offset_max,
+                exposure_map=exposure
+            )
+            self.edisp_map = self.edisp_map.stack(obs_edisp_map)

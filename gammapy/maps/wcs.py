@@ -835,8 +835,8 @@ class WcsGeom(MapGeom):
 
         Returns
         -------
-        cutout : `~gammapy.maps.WcsNDMap`
-            Cutout map
+        cutout : `~gammapy.maps.WcsGeom`
+            Cutout WcsGeom
         """
         width = _check_width(width)
         dummy_data = np.empty(self.to_image().data_shape)
