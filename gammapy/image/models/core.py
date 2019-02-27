@@ -63,9 +63,9 @@ class SkyPointSource(SkySpatialModel):
         Returns
         -------
         pix_radius : `int`
-            Radius in pixel	
+            Radius in pixel
         """
-        pix_radius=4
+        pix_radius = 4
         return pix_radius
 
     @staticmethod
@@ -263,7 +263,10 @@ class SkyShell(SkySpatialModel):
             Radius in angular units
   
         """
-        radius = self.parameters["radius"].value * u.deg + self.parameters["width"].value * u.deg
+        radius = (
+            self.parameters["radius"].value * u.deg
+            + self.parameters["width"].value * u.deg
+        )
         return radius
 
     @staticmethod
@@ -365,7 +368,7 @@ class SkyDiffuseMap(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
             Radius in angular units.
-  
+
         """
         width_0, width_1 = (self.map).geom.width
         radius = max(width_0[0], width_1[0]) * u.deg

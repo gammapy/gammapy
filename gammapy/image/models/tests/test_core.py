@@ -35,11 +35,11 @@ def test_sky_gaussian():
     assert_allclose(ratio, np.exp(0.5))
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 7*sigma.value)
+    assert_allclose(radius.value, 7 * sigma.value)
 
 
 def test_sky_disk():
-    r_0 = 2*u.deg
+    r_0 = 2 * u.deg
     model = SkyDisk(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
     lon = [1, 5, 359] * u.deg
     lat = 46 * u.deg
@@ -51,9 +51,10 @@ def test_sky_disk():
     assert radius.unit == "deg"
     assert_allclose(radius.value, r_0.value)
 
+
 def test_sky_shell():
-    width = 2*u.deg
-    rad = 2*u.deg
+    width = 2 * u.deg
+    rad = 2 * u.deg
     model = SkyShell(lon_0="1 deg", lat_0="45 deg", radius=rad, width=width)
     lon = [1, 2, 4] * u.deg
     lat = 45 * u.deg
@@ -65,6 +66,7 @@ def test_sky_shell():
     assert radius.unit == "deg"
     assert_allclose(radius.value, rad.value + width.value)
 
+
 def test_sky_diffuse_constant():
     model = SkyDiffuseConstant(value="42 sr-1")
     lon = [1, 2] * u.deg
@@ -74,6 +76,7 @@ def test_sky_diffuse_constant():
     assert_allclose(val.value, 42)
     radius = model.evaluation_radius
     assert radius == None
+
 
 @requires_data("gammapy-data")
 def test_sky_diffuse_map():
@@ -87,7 +90,8 @@ def test_sky_diffuse_map():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 1.28, rtol=1.e-2)
+    assert_allclose(radius.value, 1.28, rtol=1.0e-2)
+
 
 @requires_data("gammapy-data")
 def test_sky_diffuse_map_normalize():
