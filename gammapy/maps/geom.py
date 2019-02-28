@@ -484,6 +484,8 @@ class MapAxis:
         nodes = np.array(nodes, ndmin=1)
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
+        if len(nodes) != len(np.unique(nodes)):
+            raise ValueError("Remove duplicate elements from nodes")
 
         return cls(nodes, node_type="center", **kwargs)
 
@@ -505,6 +507,10 @@ class MapAxis:
         """
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
+        if len(nodes) != len(np.unique(nodes)):
+            raise ValueError(
+                "Remove duplicate elements! \n Cannot create axis with width=0"
+            )
 
         return cls(edges, node_type="edges", **kwargs)
 
