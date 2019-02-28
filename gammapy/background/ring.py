@@ -356,10 +356,10 @@ class RingBackgroundEstimator:
 
         with np.errstate(divide="ignore", invalid="ignore"):
             # set pixels, where ring is too small to NaN
-            not_has_off_exposure = (result["exposure_off"].data <= 0)
+            not_has_off_exposure = result["exposure_off"].data <= 0
             result["exposure_off"].data[not_has_off_exposure] = np.nan
 
-            not_has_exposure = (background.data <= 0)
+            not_has_exposure = background.data <= 0
             result["off"].data[not_has_exposure] = 0
             result["exposure_off"].data[not_has_exposure] = 0
 
@@ -375,4 +375,3 @@ class RingBackgroundEstimator:
         s += "r_in : {}\n".format(self.parameters["r_in"])
         s += "width: {}\n".format(self.parameters["width"])
         return s
-
