@@ -117,16 +117,53 @@ class PrimaryFlux:
 
 
 class DMAnnihilModel(SpectralModel):
+    r"""Spectral model for dark matter annihilation.
+
+    The gamma-ray flux is computed as follows:
+
+    .. math::
+
+        \frac{\mathrm d \phi}{\mathrm d E \mathrm d\Omega} =
+        \frac{\langle \sigma\nu \rangle}{4\pi k m^2_{\mathrm{DM}}}
+        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+
+    Parameters
+    ----------
+    mass : `~astropy.units.Quantity`
+        Dark matter mass
+    channel : str
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
+    scale : float
+        Scale parameter for model fitting
+    jfact : `~astropy.units.Quantity`
+        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used
+    z: float
+        Redshift value
+    k: int
+        Type of dark matter particle (k:2 Majorana, k:4 Dirac)
+
+    Examples
+    --------
+    This is how to instantiate a `DMAnnihilModel` model::
+
+        from astropy import units as u
+        from gammapy.astro.darkmatter import DMAnnihilModel
+
+        channel = "b"
+        massDM = 5000*u.Unit("GeV")
+        jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+        modelDM = DMAnnihilModel(mass=massDM, channel=channel, jfactor=jfactor)
+
+    References
+    ----------
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
-    """Thermal relic cross section"""
+    """Thermally averaged annihilation cross-section"""
 
     def __init__(self, mass, channel, scale=1, jfactor=1, z=0, k=2):
-        self.parameters = Parameters(
-            [
-                Parameter("scale", scale),
-            ]
-        )
+        self.parameters = Parameters([Parameter("scale", scale)])
         self.k = k
         self.z = z
         self.mass = mass
@@ -136,13 +173,13 @@ class DMAnnihilModel(SpectralModel):
 
     def evaluate(self, energy, scale):
         flux = (
-                scale
-                * self.jfactor
-                * self.THERMAL_RELIC_CROSS_SECTION
-                * self.table_model.evaluate(energy=energy * (1 + self.z), norm=1)
-                / self.k
-                / self.mass
-                / self.mass
-                / (4 * np.pi)
+            scale
+            * self.jfactor
+            * self.THERMAL_RELIC_CROSS_SECTION
+            * self.table_model.evaluate(energy=energy * (1 + self.z), norm=1)
+            / self.k
+            / self.mass
+            / self.mass
+            / (4 * np.pi)
         )
         return flux
