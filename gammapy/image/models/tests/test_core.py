@@ -2,7 +2,6 @@
 import pytest
 from numpy.testing import assert_allclose
 import numpy as np
-import astropy
 import astropy.units as u
 from ....maps import Map, WcsGeom
 from ....utils.testing import requires_data
