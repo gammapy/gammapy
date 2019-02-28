@@ -279,14 +279,13 @@ class SkyEllipse(SkySpatialModel):
             2 * quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, np.pi)[0]
         ) ** -1
 
-    @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, semi_major, e, theta):
+    def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, theta):
         """Evaluate the model (static function)."""
 
         # find the foci of the ellipse
         c = semi_major * e
-        lon_1, lat_1 = offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
-        lon_2, lat_2 = offset_by(lon_0, lat_0, 270 * u.deg - theta, c)
+        lon_1, lat_1 = self._offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
+        lon_2, lat_2 = self._offset_by(lon_0, lat_0, 270 * u.deg - theta, c)
 
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
