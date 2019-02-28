@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
 import numpy as np
+import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from ...utils.scripts import make_path
-from ...spectrum.models import TableModel
+from ...utils.fitting import Parameter, Parameters
+from ...spectrum.models import SpectralModel, TableModel
 
-__all__ = ["PrimaryFlux"]
+__all__ = ["PrimaryFlux", "DMAnnihilModel"]
 
 
 class PrimaryFlux:
@@ -112,3 +114,35 @@ class PrimaryFlux:
         dN_dE = dN_dlogx / (energies * np.log(10))
 
         return TableModel(energy=energies, values=dN_dE, values_scale="lin")
+
+
+class DMAnnihilModel(SpectralModel):
+
+    THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
+    """Thermal relic cross section"""
+
+    def __init__(self, mass, channel, scale=1, jfactor=1, z=0, k=2):
+        self.parameters = Parameters(
+            [
+                Parameter("scale", scale),
+            ]
+        )
+        self.k = k
+        self.z = z
+        self.mass = mass
+        self.channel = channel
+        self.jfactor = jfactor
+        self.table_model = PrimaryFlux(mass, channel=self.channel).table_model
+
+    def evaluate(self, energy, scale):
+        flux = (
+                scale
+                * self.jfactor
+                * self.THERMAL_RELIC_CROSS_SECTION
+                * self.table_model.evaluate(energy=energy * (1 + self.z), norm=1)
+                / self.k
+                / self.mass
+                / self.mass
+                / (4 * np.pi)
+        )
+        return flux
