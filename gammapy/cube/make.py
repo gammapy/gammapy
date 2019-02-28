@@ -4,6 +4,7 @@ from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from ..maps import Map, WcsGeom
+from ..irf import PSF3D
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from .background import make_map_background_irf
@@ -526,13 +527,15 @@ class IrfMapMaker:
         # Initialise zero-filled maps
         exposure = Map.from_geom(self.geom, unit="m2s")
 
+        energy_axis = self.geom.get_axis_by_name('energy')
+
         if self.migra_axis is not None:
-            self.edisp_geom = self.geom.to_cube([migra_axis])
+            self.edisp_geom = self.geom.to_image().to_cube([migra_axis, energy_axis])
             self.edisp_map = EDispMap(Map.from_geom(self.edisp_geom, unit=""),exposure)
             self.maps['edisp'] = self.edisp_map
 
         if self.rad_axis is not None:
-            self.psf_geom = self.geom.to_cube([rad_axis])
+            self.psf_geom = self.geom.to_image().to_cube([rad_axis, energy_axis])
             self.psf_map = PSFMap(Map.from_geom(self.psf_geom, unit="1/sr"), exposure)
             self.maps['psf'] = self.psf_map
 
@@ -572,23 +575,31 @@ class IrfMapMaker:
         fov_mask = offset >= self.offset_max
 
         exposure = make_map_exposure_true_energy(
-            pointing=self.obs.pointing_radec,
-            livetime=self.obs.observation_live_time_duration,
-            aeff=self.obs.aeff,
+            pointing=obs.pointing_radec,
+            livetime=obs.observation_live_time_duration,
+            aeff=obs.aeff,
             geom=self.geom,
         )
         exposure.data[..., fov_mask] = 0
 
         if self.rad_axis is not None:
+            if not isinstance(obs.psf, PSF3D):
+                psf = obs.psf.to_psf3d(self.rad_axis.edges*self.rad_axis.unit)
+            else:
+                psf = obs.psf
+
             obs_psf_map = make_psf_map(
-                psf=obs.psf,
+                psf=psf,
                 pointing=obs.pointing_radec,
                 geom=self.psf_geom,
                 max_offset=self.offset_max,
                 exposure_map=exposure
             )
 
-            self.psf_map = self.psf_map.stack(obs_psf_map)
+            self.tmp = obs_psf_map
+            tmp = self.psf_map.stack(obs_psf_map)
+            self.psf_map._psf_map = tmp.psf_map
+            self.psf_map._exposure_map = tmp.exposure_map
 
         if self.migra_axis is not None:
             obs_edisp_map = make_edisp_map(
@@ -598,4 +609,7 @@ class IrfMapMaker:
                 max_offset=self.offset_max,
                 exposure_map=exposure
             )
-            self.edisp_map = self.edisp_map.stack(obs_edisp_map)
+            self.tmp = obs_edisp_map
+            tmp = self.edisp_map.stack(obs_edisp_map)
+            self.edisp_map._edisp_map = tmp.edisp_map
+            self.edisp_map._exposure_map = tmp.exposure_map
