@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
 import numpy as np
+import astropy
 import astropy.units as u
 from ....maps import Map, WcsGeom
 from ....utils.testing import requires_data
@@ -43,6 +45,7 @@ def test_sky_disk():
     assert_allclose(val.value, desired)
 
 
+@pytest.mark.skipif(astropy.version.version_info < (3, 1), reason="at least astropy-3.1 required")
 def test_sky_ellipse():
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(

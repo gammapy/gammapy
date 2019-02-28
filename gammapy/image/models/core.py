@@ -247,6 +247,12 @@ class SkyEllipse(SkySpatialModel):
     """
 
     def __init__(self, lon_0, lat_0, semi_major, e, theta):
+        try:
+            from astropy.coordinates.angle_utilities import offset_by
+            self._offset_by = offset_by
+        except ImportError:
+            raise ImportError("The SkyEllipse model requires astropy>=3.1")
+
         self.parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0)),
