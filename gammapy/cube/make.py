@@ -262,7 +262,7 @@ def _check_selection(selection):
     return selection
 
 
-class ImageMaker():
+class ImageMaker:
     """Make 2D images.
     The main motivation for this class in addition to the `MapMaker`
     is to have the common 2D image background estimation methods,
@@ -280,7 +280,9 @@ class ImageMaker():
         Ring background estimator or something with an equivalend API.
     """
 
-    def __init__(self, geom, offset_max, exclusion_mask=None, background_estimator=None):
+    def __init__(
+        self, geom, offset_max, exclusion_mask=None, background_estimator=None
+    ):
 
         self.geom = geom
         self.offset_max = Angle(offset_max)
@@ -288,8 +290,7 @@ class ImageMaker():
         self.exclusion_mask = exclusion_mask
         self.stacked_maps = {}
 
-
-    def make_maps(self, obs, summed=False):
+    def make_maps(self, obs, sum_over_axes=False):
         """ Returns a dict of on, off, background and alpha maps for each observation
 
         Parameters
@@ -297,7 +298,7 @@ class ImageMaker():
         obs : `~gammapy.data.Observations.DataStoreObservation`
             Observation to process
 
-        summed: boolean
+        sum_over_axes: boolean
             Specifies whether computation should be done on
             the map summed over the energy axes, or
             for each spatial slice.
@@ -306,7 +307,6 @@ class ImageMaker():
         -----------
         maps: dict of on, off, background and alpha maps
         """
-
 
         selection = ["counts", "exposure", "background"]
 
@@ -320,27 +320,31 @@ class ImageMaker():
         try:
             maker._process_obs(obs, selection)
         except NoOverlapError:
-            log.info(
-                "Skipping observation {}, no overlap with map.".format(obs.obs_id)
-            )
+            log.info("Skipping observation {}, no overlap with map.".format(obs.obs_id))
 
-        if summed:
-            images = {'counts': maker.maps['counts'].sum_over_axes(),
-                      'background': maker.maps['background'].sum_over_axes(),
-                      'exclusion': self.exclusion_mask.sum_over_axes()}
+        if sum_over_axes:
+            images = {
+                "counts": maker.maps["counts"].sum_over_axes(),
+                "background": maker.maps["background"].sum_over_axes(),
+                "exclusion": self.exclusion_mask.sum_over_axes(),
+            }
         else:
-            images = {'counts': maker.maps['counts'],
-                    'background': maker.maps['background'],
-                    'exclusion': self.exclusion_mask}
+            images = {
+                "counts": maker.maps["counts"],
+                "background": maker.maps["background"],
+                "exclusion": self.exclusion_mask,
+            }
 
         result = self.background_estimator.run(images)
-        maps = {'on': maker.maps['counts'],
-                'alpha': result["alpha"],
-                'off': result["off"],
-                'background': result["background"]}
+        maps = {
+            "on": images["counts"],
+            "alpha": result["alpha"],
+            "off": result["off"],
+            "background": result["background"],
+        }
         return maps
 
-    def run(self, observations, summed=False):
+    def run(self, observations, sum_over_axes=False):
         """
         Run ImageMaker for a list of observations to create
         stacked on, off and alpha maps
@@ -350,7 +354,7 @@ class ImageMaker():
         observations : `~gammapy.data.Observations`
             Observations to process
 
-        summed: boolean
+        sum_over_axes: boolean
             Specifies whether computation should be done on
             the map summed over the energy axes, or
             for each spatial slice.
@@ -361,15 +365,14 @@ class ImageMaker():
         """
         results = []
         for obs in observations:
-            results.append(self.make_maps(obs, summed=summed))
+            results.append(self.make_maps(obs, sum_over_axes=sum_over_axes))
 
-        self.stacked_maps["on"] = Map.from_geom(geom=self.geom)
-        self.stacked_maps["off"] = Map.from_geom(geom=self.geom)
-        self.stacked_maps["alpha"] = Map.from_geom(geom=self.geom)
-
+        self.stacked_maps["on"] = Map.from_geom(geom=results[0]["on"].geom)
+        self.stacked_maps["off"] = Map.from_geom(geom=results[0]["on"].geom)
+        self.stacked_maps["alpha"] = Map.from_geom(geom=results[0]["on"].geom)
 
         for aresult in results:
-            self.stacked_maps["on"] += aresult['on']
+            self.stacked_maps["on"] += aresult["on"]
             self.stacked_maps["off"] += aresult["off"]
             self.stacked_maps["alpha"] += aresult["off"] * aresult["alpha"]
         self.stacked_maps["alpha"] /= self.stacked_maps["off"]
@@ -377,17 +380,37 @@ class ImageMaker():
     @property
     def significance_map(self):
         """returns the significance map for all pixels"""
-        data = significance_on_off(n_on=self.stacked_maps["on"].data,
-                                     n_off=self.stacked_maps["off"].data,
-                                     alpha=self.stacked_maps["alpha"].data,
-                                     method='lima')
+        data = significance_on_off(
+            n_on=self.stacked_maps["on"].data,
+            n_off=self.stacked_maps["off"].data,
+            alpha=self.stacked_maps["alpha"].data,
+            method="lima",
+        )
         return self.stacked_maps["on"].copy(data=data)
 
     @property
     def excess_map(self):
         """returns the excess map for all pixels"""
-        return self.stacked_maps["on"] -  self.stacked_maps["alpha"] * self.stacked_maps["off"]
+        return (
+            self.stacked_maps["on"]
+            - self.stacked_maps["alpha"] * self.stacked_maps["off"]
+        )
 
+    @property
+    def significance_map_off(self):
+        """returns the significance map with exclusion region applied"""
+        if self.significance_map.geom.is_image:
+            return self.significance_map * self.exclusion_mask.sum_over_axes()
+        else:
+            return self.significance_map * self.exclusion_mask
+
+    @property
+    def excess_map_off(self):
+        """returns the excess map with exclusion region applied"""
+        if self.excess_map.geom.is_image:
+            return self.excess_map * self.exclusion_mask.sum_over_axes()
+        else:
+            return self.excess_map * self.exclusion_mask
 
     def plot(self, idx=[0]):
         """Makes some useful plots: the significance and excess maps,
@@ -405,15 +428,12 @@ class ImageMaker():
         if self.excess_map.geom.is_image:
             significance_map = self.significance_map
             excess_map = self.excess_map
-            exclusion_mask = self.exclusion_mask
+
         else:
             significance_map = self.significance_map.get_image_by_idx(idx)
             excess_map = self.excess_map.get_image_by_idx(idx)
-            exclusion_mask = self.exclusion_mask.get_image_by_idx(idx)
-
 
         import matplotlib.pyplot as plt
-
 
         plt.figure(figsize=(10, 10))
         ax1 = plt.subplot(221, projection=significance_map.geom.wcs)
@@ -428,30 +448,44 @@ class ImageMaker():
         excess_map.plot(ax=ax2, add_cbar=True, stretch="sqrt")
 
         significance_all = significance_map.data.ravel()
-        significance_off = (significance_map * exclusion_mask).data.ravel()
+        significance_off = self.significance_map_off.data.ravel()
 
-        ax3.hist(significance_all, normed=True, alpha=0.5, color="red", label="all bins",
-                 range=[np.nanmin(significance_all), np.nanmax(significance_all)])
-        ax3.hist(significance_off, normed=True, alpha=0.5, color="blue", label="off bins",
-                 range=[np.nanmin(significance_off), np.nanmax(significance_off)])
+        ax3.hist(
+            significance_all,
+            normed=True,
+            alpha=0.5,
+            color="red",
+            label="all bins",
+            range=[np.nanmin(significance_all), np.nanmax(significance_all)],
+        )
+        ax3.hist(
+            significance_off,
+            normed=True,
+            alpha=0.5,
+            color="blue",
+            label="off bins",
+            range=[np.nanmin(significance_off), np.nanmax(significance_off)],
+        )
         ax3.legend()
         ax3.set_xlabel("significance")
         ax3.set_yscale("log")
 
-        ax4.hist(significance_off, bins=20, normed=True, alpha=0.5, color="blue", label="off bins",
-                 range=[np.nanmin(significance_off), np.nanmax(significance_off)])
+        ax4.hist(
+            significance_off,
+            bins=20,
+            normed=True,
+            alpha=0.5,
+            color="blue",
+            label="off bins",
+            range=[np.nanmin(significance_off), np.nanmax(significance_off)],
+        )
         mu, std = norm.fit(significance_off[~np.isnan(significance_off)])
         xmin, xmax = ax4.get_xlim()
         x = np.linspace(xmin, xmax, 50)
         p = norm.pdf(x, mu, std)
-        title = "Fit results: mu = %.2f, std= %.2f" %(mu, std)
+        title = "Fit results: mu = %.2f, std= %.2f" % (mu, std)
         ax4.legend()
         ax4.set_title(title)
         ax4.plot(x, p, lw=2, color="black")
         ax4.set_xlabel("significance")
         ax4.set_yscale("log")
-
-
-
-
-

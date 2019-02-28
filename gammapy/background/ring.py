@@ -352,18 +352,18 @@ class RingBackgroundEstimator:
 
         background_excluded = background * exclusion
 
-        result["acceptance_off"] = background_excluded.convolve(ring.array)
+        result["exposure_off"] = background_excluded.convolve(ring.array)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             # set pixels, where ring is too small to NaN
-            not_has_off_exposure = (result["acceptance_off"].data <= 0)
-            result["acceptance_off"].data[not_has_off_exposure] = np.nan
+            not_has_off_exposure = (result["exposure_off"].data <= 0)
+            result["exposure_off"].data[not_has_off_exposure] = np.nan
 
             not_has_exposure = (background.data <= 0)
             result["off"].data[not_has_exposure] = 0
-            result["acceptance_off"].data[not_has_exposure] = 0
+            result["exposure_off"].data[not_has_exposure] = 0
 
-            result["alpha"] = background / result["acceptance_off"]
+            result["alpha"] = background / result["exposure_off"]
             result["alpha"].data[not_has_exposure] = 0
 
         result["background"] = result["alpha"] * result["off"]
@@ -376,57 +376,3 @@ class RingBackgroundEstimator:
         s += "width: {}\n".format(self.parameters["width"])
         return s
 
-
-def ring_r_out(theta, r_in, area_factor):
-    """Compute ring outer radius.
-
-    The determining equation is:
-        area_factor =
-        off_area / on_area =
-        (pi (r_out**2 - r_in**2)) / (pi * theta**2 )
-
-    Parameters
-    ----------
-    theta : float
-        On region radius
-    r_in : float
-        Inner ring radius
-    area_factor : float
-        Desired off / on area ratio
-
-    Returns
-    -------
-    r_out : float
-        Outer ring radius
-    """
-    return np.sqrt(area_factor * theta ** 2 + r_in ** 2)
-
-
-def ring_area_factor(theta, r_in, r_out):
-    """Compute ring area factor.
-
-    Parameters
-    ----------
-    theta : float
-        On region radius
-    r_in : float
-        Inner ring radius
-    r_out : float
-        Outer ring radius
-    """
-    return (r_out ** 2 - r_in ** 2) / theta ** 2
-
-
-def ring_alpha(theta, r_in, r_out):
-    """Compute ring alpha, the inverse area factor.
-
-    Parameters
-    ----------
-    theta : float
-        On region radius
-    r_in : float
-        Inner ring radius
-    r_out : float
-        Outer ring radius
-    """
-    return 1.0 / ring_area_factor(theta, r_in, r_out)

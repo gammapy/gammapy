@@ -91,7 +91,7 @@ def profile_background_estimate(pos, on_radius, inner_radius, outer_radius, even
     # TODO: change to region areas here (e.g. in steratian?)
     a_on = 1
     a_off = (outer_radius ** 2 - inner_radius ** 2) / on_radius ** 2
-    #a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
+    # a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
 
     return BackgroundEstimate(
         on_region=on_region,

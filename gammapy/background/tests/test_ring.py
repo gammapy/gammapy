@@ -21,8 +21,8 @@ def images():
     images["counts"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 2.0)
     images["counts"].data *= mask
 
-    images["exposure_on"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
-    images["exposure_on"].data *= mask
+    images["background"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
+    images["background"].data *= mask
 
     exclusion = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
     exclusion.data[90:110, 90:110] = 0
@@ -52,8 +52,8 @@ class TestAdaptiveRingBackgroundEstimator:
         self.images = {}
         self.images["counts"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
         self.images["counts"].data += 1.0
-        self.images["exposure_on"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
-        self.images["exposure_on"].data += 1e10
+        self.images["background"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
+        self.images["background"].data += 1e10
         exclusion = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
         exclusion.data += 1
         exclusion.data[40:60, 40:60] = 0
