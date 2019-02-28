@@ -44,35 +44,46 @@ def test_sky_disk():
 
 
 def test_sky_ellipse():
-    # test the normalization for a small elongated ellipse near the Galactic Plane
+    # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
-        binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT"
+        binsz=0.015, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_1.get_coord()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
-    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, 1 * u.deg, 0.9, 45 * u.deg)
+    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, 10 * u.deg, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     mymap_1 = Map.from_geom(m_geom_1, data=vals_1.value)
     assert_allclose(
-        np.sum(mymap_1.quantity * u.sr ** -1 * m_geom_1.solid_angle()), 1, rtol=5.0e-4
+        np.sum(mymap_1.quantity * u.sr ** -1 * m_geom_1.solid_angle()), 1, rtol=1.e-3
     )
 
-    # test the normalization for a big disk (ellipse with e=0) at the Galactic Pole.
-    # The computation of the solid angle is done analytically in this case, as the degree
-    # of distortion due to the sky projection is huge at high latitudes
+    # test the normalization for a disk (ellipse with e=0) at the Galactic Pole,
+    # both analytically and comparing with the SkyDisk model
     m_geom_2 = WcsGeom.create(
-        binsz=0.1, width=(12, 12), skydir=(0, 90), coordsys="GAL", proj="AIT"
+        binsz=0.1, width=(6,6), skydir=(0, 90), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_2.get_coord()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
-    model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, 10 * u.deg, 0.0, 0.0 * u.deg)
+
+    model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, 5 * u.deg, 0.0, 0.0 * u.deg)
     vals_2 = model_2(lon, lat)
     mymap_2 = Map.from_geom(m_geom_2, data=vals_2.value)
-    solid_angle = 2 * np.pi * (1 - np.cos(10 * u.deg))
+
+    disk = SkyDisk(lon_0="0 deg", lat_0="90 deg", r_0="5 deg")
+    vals_disk = disk(lon,lat)
+    mymap_disk = Map.from_geom(m_geom_2, data=vals_disk.value)
+
+    solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
     assert_allclose(np.max(vals_2).value * solid_angle, 1)
+
+    assert_allclose(
+        np.sum(mymap_2.quantity * u.sr ** -1 * m_geom_2.solid_angle()),
+        np.sum(mymap_disk.quantity * u.sr ** -1 * m_geom_2.solid_angle())
+    )
+
 
 
 def test_sky_shell():
