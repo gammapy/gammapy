@@ -346,7 +346,7 @@ class MapAxis:
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
         self.name = name
         self.unit = unit
-        self._nodes = nodes
+        self._nodes = np.array(nodes)
         self._node_type = node_type
         self._interp = interp
 
@@ -503,6 +503,7 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
+        edges = np.array(edges, ndmin=1)
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
 
