@@ -45,8 +45,8 @@ def test_sky_disk():
     assert_allclose(val.value, desired)
 
 
-@pytest.importorskip("astropy", minversion="3.1.1")
 def test_sky_ellipse():
+    pytest.importorskip("astropy", minversion="3.1.1")
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
         binsz=0.015, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
