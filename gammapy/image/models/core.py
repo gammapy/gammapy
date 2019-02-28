@@ -218,30 +218,27 @@ class SkyEllipse(SkySpatialModel):
         :include-source:
 
         import numpy as np
-        from gammapy.image.models.core import SkyEllipse
-        import astropy.units as u
-        from gammapy.maps import Map, WcsGeom
         import matplotlib.pyplot as plt
-        from matplotlib import rc_context
+        import astropy.units as u
+        from gammapy.image.models.core import SkyEllipse
+        from gammapy.maps import Map, WcsGeom
 
-        ell = SkyEllipse(2*u.deg, 2*u.deg, 1*u.deg, .8, 30*u.deg)
+        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "30 deg")
 
-        m_geom = WcsGeom.create(binsz=.01, width=(3,3), skydir=(2,2), coordsys="GAL", proj="AIT")
+        m_geom = WcsGeom.create(binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT")
         coords = m_geom.get_coord()
-        lon = coords.lon*u.deg
-        lat = coords.lat*u.deg
-        vals = ell(lon,lat)
-        mymap = Map.from_geom(m_geom, data=vals.value)
+        lon = coords.lon * u.deg
+        lat = coords.lat * u.deg
+        vals = model(lon, lat)
+        skymap = Map.from_geom(m_geom, data=vals.value)
 
-        rc_params = {'text.usetex': True}
-        with rc_context(rc=rc_params):
-            fig, ax, _ = mymap.plot()
-            transform = ax.get_transform('galactic')
-            ax.scatter(2, 2, transform=transform, s=20,edgecolor='red', facecolor='red')
-            plt.text(2.08, 2.06, r'$(l_0,b_0)$', transform=transform, fontsize=12)
-            plt.plot([2, 2+np.cos(np.pi/6)], [2, 2+np.sin(np.pi/6)], transform=transform)
-            ax.hlines(y=2, color='r', linestyle='--', transform=transform, xmin=0, xmax=5)
-            plt.text(2.4, 2.06, r'$\theta$', transform=transform, fontsize=12)
+        _, ax, _ = skymap.smooth("0.05 deg").plot()
+        transform = ax.get_transform('galactic')
+        ax.scatter(2, 2, transform=transform, s=20, edgecolor='red', facecolor='red')
+        ax.text(2.0, 1.8, r"$(l_0, b_0)$", transform=transform, ha="center")
+        ax.plot([2, 2 + np.cos(np.pi / 6)], [2, 2 + np.sin(np.pi / 6)], color="r", transform=transform)
+        ax.hlines(y=2, color='r', linestyle='--', transform=transform, xmin=0, xmax=5)
+        ax.text(2.5, 2.06, r"$\theta$", transform=transform);
 
         plt.show()
     """
