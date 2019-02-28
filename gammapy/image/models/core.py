@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation, offset_by
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude
 from ...utils.fitting import Parameter, Parameters, Model
 from ...maps import Map
