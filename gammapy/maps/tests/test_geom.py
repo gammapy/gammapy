@@ -14,12 +14,12 @@ mapaxis_geoms = [
 ]
 
 mapaxis_geoms_node_type = [
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "edges"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "edges"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "sqrt", "edges"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "lin", "center"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "log", "center"),
-    (np.array([0.25, 0.75, 1.0, 2.0]), "sqrt", "center"),
+    ([0.25, 0.75, 1.0, 2.0], "lin", "edges"),
+    ([0.25, 0.75, 1.0, 2.0], "log", "edges"),
+    ([0.25, 0.75, 1.0, 2.0], "sqrt", "edges"),
+    ([0.25, 0.75, 1.0, 2.0], "lin", "center"),
+    ([0.25, 0.75, 1.0, 2.0], "log", "center"),
+    ([0.25, 0.75, 1.0, 2.0], "sqrt", "center"),
 ]
 
 
