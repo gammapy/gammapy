@@ -106,6 +106,6 @@ class TestObservationStats:
     def test_stack_bad_on(self, stats_stacked_bad_on_region):
         data = stats_stacked_bad_on_region.to_dict()
         assert data["n_on"] == 156
-        assert data["n_off"] == 1003
+        assert data["n_off"] == 1006
         assert_allclose(data["alpha"], 0.125, rtol=1e-3)
         assert_allclose(data["livetime"].value, 26.211, rtol=1e-3)

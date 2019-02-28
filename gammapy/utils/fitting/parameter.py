@@ -524,10 +524,12 @@ class restore_parameters_values:
     def __init__(self, parameters):
         self.parameters = parameters
         self.values = [_.value for _ in parameters]
+        self.frozen = [_.frozen for _ in parameters]
 
     def __enter__(self):
         pass
 
     def __exit__(self, type, value, traceback):
-        for value, par in zip(self.values, self.parameters):
+        for value, par, frozen in zip(self.values, self.parameters, self.frozen):
             par.value = value
+            par.frozen = frozen

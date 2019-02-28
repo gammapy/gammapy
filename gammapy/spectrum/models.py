@@ -218,8 +218,9 @@ class SpectralModel(Model):
     @classmethod
     def from_dict(cls, val):
         """Create from dict."""
-        classname = val.pop("name")
-        parameters = Parameters.from_dict(val)
+        val_copy = val.copy()
+        classname = val_copy.pop("name")
+        parameters = Parameters.from_dict(val_copy)
         model = globals()[classname]()
         model.parameters = parameters
         model.parameters.covariance = parameters.covariance

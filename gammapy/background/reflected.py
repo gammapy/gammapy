@@ -88,6 +88,8 @@ class ReflectedRegionsFinder:
         Maximum number of regions to use
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
         Exclusion mask
+    binsz : `~astropy.coordinates.Angle`
+        Bin size of the reference map used for region finding. Default : 0.02 deg
 
     Examples
     --------
@@ -116,6 +118,7 @@ class ReflectedRegionsFinder:
         min_distance_input="0.1 rad",
         max_region_number=10000,
         exclusion_mask=None,
+        binsz="0.02 deg"
     ):
         self.region = region
         self.center = center
@@ -129,18 +132,25 @@ class ReflectedRegionsFinder:
         self.exclusion_mask = exclusion_mask
         self.max_region_number = max_region_number
         self.reflected_regions = None
+        self.reference_map = None
+        self.binsz = Angle(binsz)
 
     def run(self):
         """Run all steps.
         """
-        if self.exclusion_mask is None:
-            self.exclusion_mask = self.make_empty_mask(self.region, self.center)
+        self.reference_map = self.make_reference_map(self.region, self.center, self.binsz)
+        if self.exclusion_mask is not None:
+            coords = self.reference_map.geom.get_coord()
+            vals = self.exclusion_mask.get_by_coord(coords)
+            self.reference_map.data += vals
+        else:
+            self.reference_map.data += 1
         self.setup()
         self.find_regions()
 
     @staticmethod
-    def make_empty_mask(region, center):
-        """Create empty exclusion mask.
+    def make_reference_map(region, center, binsz="0.02 deg"):
+        """Create empty reference map.
 
         The size of the mask is chosen such that all reflected region are
         contained on the image.
@@ -151,20 +161,21 @@ class ReflectedRegionsFinder:
             Region to rotate
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
+        binsz : `~astropy.coordinates.Angle`
+            Reference map bin size. Default : 0.02 deg
+
         """
-        log.debug("No exclusion mask provided, creating an emtpy one")
-        binsz = 0.02
-        width = 3 * region.center.separation(center)
+        binsz = Angle(binsz)
+        width = 3.0 * region.center.separation(center)
 
         maskmap = WcsNDMap.create(
             skydir=center, binsz=binsz, width=width, coordsys="GAL", proj="TAN"
         )
-        maskmap.data += 1.0
         return maskmap
 
     def setup(self):
         """Compute parameters for reflected regions algorithm."""
-        wcs = self.exclusion_mask.geom.wcs
+        wcs = self.reference_map.geom.wcs
         self._pix_region = self.region.to_pixel(wcs)
         self._pix_center = PixCoord(*self.center.to_pixel(wcs))
         dx = self._pix_region.center.x - self._pix_center.x
@@ -188,7 +199,7 @@ class ReflectedRegionsFinder:
         )
 
         # Distance image
-        self._distance_image = _compute_distance_image(self.exclusion_mask)
+        self._distance_image = _compute_distance_image(self.reference_map)
 
     def find_regions(self):
         """Find reflected regions."""
@@ -198,7 +209,7 @@ class ReflectedRegionsFinder:
             test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
             test_reg = CirclePixelRegion(test_pos, self._pix_region.radius)
             if not self._is_inside_exclusion(test_reg, self._distance_image):
-                refl_region = test_reg.to_sky(self.exclusion_mask.geom.wcs)
+                refl_region = test_reg.to_sky(self.reference_map.geom.wcs)
                 log.debug("Placing reflected region\n{}".format(refl_region))
                 reflected_regions.append(refl_region)
                 curr_angle = curr_angle + self._min_ang
@@ -215,8 +226,8 @@ class ReflectedRegionsFinder:
 
         See example here: :ref:'regions_reflected'.
         """
-        fig, ax, cbar = self.exclusion_mask.plot(fig=fig, ax=ax, cmap="gray")
-        wcs = self.exclusion_mask.geom.wcs
+        fig, ax, cbar = self.reference_map.plot(fig=fig, ax=ax, cmap="gray")
+        wcs = self.reference_map.geom.wcs
         on_patch = self.region.to_pixel(wcs=wcs).as_artist(color="red", alpha=0.6)
         ax.add_patch(on_patch)
 
@@ -342,9 +353,9 @@ class ReflectedRegionsBackgroundEstimator:
         """
         import matplotlib.pyplot as plt
 
-        fig, ax, cbar = self.finder.exclusion_mask.plot(fig=fig, ax=ax)
+        fig, ax, cbar = self.finder.reference_map.plot(fig=fig, ax=ax)
 
-        wcs = self.finder.exclusion_mask.geom.wcs
+        wcs = self.finder.reference_map.geom.wcs
         on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(color="red")
         ax.add_patch(on_patch)
 
