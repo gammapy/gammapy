@@ -42,11 +42,7 @@ class MapMaker:
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom
         self.offset_max = Angle(offset_max)
-        self.maps = {}
-
-        # Some background estimation methods need an exclusion mask.
-        if exclusion_mask is not None:
-            self.maps["exclusion"] = exclusion_mask
+        self.exclusion_mask = exclusion_mask
 
     def run(self, observations, selection=None):
         """
@@ -68,12 +64,14 @@ class MapMaker:
         """
         selection = _check_selection(selection)
 
+        maps = {}
+
         # Initialise zero-filled maps
         for name in selection:
             if name == "exposure":
-                self.maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
+                maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
             else:
-                self.maps[name] = Map.from_geom(self.geom, unit="")
+                maps[name] = Map.from_geom(self.geom, unit="")
 
         for obs in observations:
             try:
@@ -87,14 +85,13 @@ class MapMaker:
             maps_obs = obs_maker.run(selection)
 
             for name in selection:
-                data = maps_obs[name].quantity.to_value(self.maps[name].unit)
+                data = maps_obs[name].quantity.to_value(maps[name].unit)
                 if name == "exposure":
-                    self.maps[name].fill_by_coord(obs_maker.coords_etrue, data)
+                    maps[name].fill_by_coord(obs_maker.coords_etrue, data)
                 else:
-                    self.maps[name].fill_by_coord(obs_maker.coords, data)
-
-
-        return self.maps
+                    maps[name].fill_by_coord(obs_maker.coords, data)
+        self.maps = maps
+        return maps
 
 
     def _process_obs(self, obs):
@@ -105,10 +102,10 @@ class MapMaker:
 
 
         # Only if there is an exclusion mask, make a cutout
-        # Exclusion mask only on the background, so only in reco-energy
-        exclusion_mask = self.maps.get("exclusion", None)
-        if exclusion_mask is not None:
-            exclusion_mask = exclusion_mask.cutout(
+        # Exclusion mask only on the background, so on ly in reco-energy
+        exclusion_mask = None
+        if self.exclusion_mask is not None:
+            exclusion_mask = self.exclusion_mask.cutout(
                 position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
             )
 
@@ -120,7 +117,6 @@ class MapMaker:
             offset_max=self.offset_max,
             exclusion_mask=exclusion_mask,
         )
-
 
     def make_images(self, spectrum=None, keepdims=False):
         """Create images by summing over the energy axis.
