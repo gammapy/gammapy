@@ -63,29 +63,35 @@ def test_sky_ellipse():
     coords = m_geom_1.get_coord()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
-    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, 10 * u.deg, 0.4, 30 * u.deg)
+    semi_major = 10 * u.deg
+    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, semi_major, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     mymap_1 = Map.from_geom(m_geom_1, data=vals_1.value)
     assert_allclose(
-        np.sum(mymap_1.quantity * u.sr ** -1 * m_geom_1.solid_angle()), 1, rtol=1.e-3
+        np.sum(mymap_1.quantity * u.sr ** -1 * m_geom_1.solid_angle()), 1, rtol=1.0e-3
     )
+
+    radius = model_1.evaluation_radius
+    assert radius.unit == "deg"
+    assert_allclose(radius.value, semi_major.value)
 
     # test the normalization for a disk (ellipse with e=0) at the Galactic Pole,
     # both analytically and comparing with the SkyDisk model
     m_geom_2 = WcsGeom.create(
-        binsz=0.1, width=(6,6), skydir=(0, 90), coordsys="GAL", proj="AIT"
+        binsz=0.1, width=(6, 6), skydir=(0, 90), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_2.get_coord()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
 
-    model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, 5 * u.deg, 0.0, 0.0 * u.deg)
+    semi_major = 5 * u.deg
+    model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, semi_major, 0.0, 0.0 * u.deg)
     vals_2 = model_2(lon, lat)
     mymap_2 = Map.from_geom(m_geom_2, data=vals_2.value)
 
     disk = SkyDisk(lon_0="0 deg", lat_0="90 deg", r_0="5 deg")
-    vals_disk = disk(lon,lat)
+    vals_disk = disk(lon, lat)
     mymap_disk = Map.from_geom(m_geom_2, data=vals_disk.value)
 
     solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
@@ -93,9 +99,8 @@ def test_sky_ellipse():
 
     assert_allclose(
         np.sum(mymap_2.quantity * u.sr ** -1 * m_geom_2.solid_angle()),
-        np.sum(mymap_disk.quantity * u.sr ** -1 * m_geom_2.solid_angle())
+        np.sum(mymap_disk.quantity * u.sr ** -1 * m_geom_2.solid_angle()),
     )
-
 
 
 def test_sky_shell():

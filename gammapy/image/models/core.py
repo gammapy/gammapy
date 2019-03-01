@@ -287,6 +287,7 @@ class SkyEllipse(SkySpatialModel):
     def __init__(self, lon_0, lat_0, semi_major, e, theta):
         try:
             from astropy.coordinates.angle_utilities import offset_by
+
             self._offset_by = offset_by
         except ImportError:
             raise ImportError("The SkyEllipse model requires astropy>=3.1")
@@ -300,6 +301,20 @@ class SkyEllipse(SkySpatialModel):
                 Parameter("theta", Angle(theta)),
             ]
         )
+
+    @property
+    def evaluation_radius(self):
+        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        For an elliptical source, we fix it to the length of the semi-major axis.
+
+        Returns
+        -------
+        radius : `~astropy.coordinates.Angle`
+            Radius in angular units
+
+        """
+        radius = self.parameters["semi_major"].quantity
+        return radius
 
     def compute_norm(semi_major, e):
         """Compute the normalization factor."""
@@ -385,10 +400,7 @@ class SkyShell(SkySpatialModel):
             Radius in angular units
 
         """
-        radius = (
-            self.parameters["radius"].quantity
-            + self.parameters["width"].quantity
-        )
+        radius = self.parameters["radius"].quantity + self.parameters["width"].quantity
         return radius
 
     @staticmethod
