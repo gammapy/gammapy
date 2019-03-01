@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from astropy.nddata.utils import NoOverlapError
 from astropy.coordinates import Angle
+from astropy.utils import lazyproperty
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
@@ -76,30 +77,32 @@ class MapMaker:
 
         for obs in observations:
             try:
-                self._process_obs(obs, selection)
+                obs_maker = self._process_obs(obs)
             except NoOverlapError:
                 log.info(
                     "Skipping observation {}, no overlap with map.".format(obs.obs_id)
                 )
                 continue
 
+            maps_obs = obs_maker.run(selection)
+
+            for name in selection:
+                data = maps_obs[name].quantity.to_value(self.maps[name].unit)
+                if name == "exposure":
+                    self.maps[name].fill_by_coord(obs_maker.coords_etrue, data)
+                else:
+                    self.maps[name].fill_by_coord(obs_maker.coords, data)
+
+
         return self.maps
 
-    def _process_obs(self, obs, selection):
+
+    def _process_obs(self, obs):
         # Compute cutout geometry and slices to stack results back later
         cutout_geom = self.geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
         cutout_geom_etrue = self.geom_true.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
 
-        # Compute field of view mask on the cutout
-        coords = cutout_geom.get_coord()
-        offset = coords.skycoord.separation(obs.pointing_radec)
-        fov_mask = offset >= self.offset_max
-
-        # Compute field of view mask on the cutout in true energy
-        coords_etrue = cutout_geom_etrue.get_coord()
-        offset_etrue = coords_etrue.skycoord.separation(obs.pointing_radec)
-        fov_mask_etrue = offset_etrue >= self.offset_max
 
         # Only if there is an exclusion mask, make a cutout
         # Exclusion mask only on the background, so only in reco-energy
@@ -110,22 +113,14 @@ class MapMaker:
             )
 
         # Make maps for this observation
-        maps_obs = MapMakerObs(
+        return MapMakerObs(
             observation=obs,
             geom=cutout_geom,
             geom_true=cutout_geom_etrue,
-            fov_mask=fov_mask,
-            fov_mask_etrue=fov_mask_etrue,
+            offset_max=self.offset_max,
             exclusion_mask=exclusion_mask,
-        ).run(selection)
+        )
 
-        # Stack observation maps to total
-        for name in selection:
-            data = maps_obs[name].quantity.to_value(self.maps[name].unit)
-            if name == "exposure":
-                self.maps[name].fill_by_coord(coords_etrue, data)
-            else:
-                self.maps[name].fill_by_coord(coords, data)
 
     def make_images(self, spectrum=None, keepdims=False):
         """Create images by summing over the energy axis.
@@ -179,18 +174,42 @@ class MapMakerObs:
             self,
             observation,
             geom,
+            offset_max,
             geom_true=None,
-            fov_mask=None,
-            fov_mask_etrue=None,
             exclusion_mask=None,
     ):
         self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom
-        self.fov_mask = fov_mask
-        self.fov_mask_etrue = fov_mask_etrue
+        self.offset_max = offset_max
         self.exclusion_mask = exclusion_mask
         self.maps = {}
+
+    def _fov_mask(self, coords):
+        pointing = self.observation.pointing_radec
+        offset = coords.skycoord.separation(pointing)
+        fov_mask = offset >= self.offset_max
+        return fov_mask
+
+    @lazyproperty
+    def fov_mask_etrue(self):
+        return self._fov_mask(self.coords_etrue)
+
+    @lazyproperty
+    def fov_mask(self):
+        return self._fov_mask(self.coords)
+
+    @lazyproperty
+    def coords(self):
+        coords = self.geom.get_coord()
+        return coords
+
+    @lazyproperty
+    def coords_etrue(self):
+        # Compute field of view mask on the cutout in true energy
+        coords_etrue = self.geom_true.get_coord()
+        return coords_etrue
+
 
     def run(self, selection=None):
         """Make maps.
