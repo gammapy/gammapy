@@ -44,6 +44,17 @@ class MapMaker:
         self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
 
+    def _get_empty_maps(self, selection):
+        # Initialise zero-filled maps
+        maps = {}
+        for name in selection:
+            if name == "exposure":
+                maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
+            else:
+                maps[name] = Map.from_geom(self.geom, unit="")
+        return maps
+
+
     def run(self, observations, selection=None):
         """
         Run MapMaker for a list of observations to create
@@ -63,19 +74,13 @@ class MapMaker:
         maps: dict of stacked counts, background and exposure maps.
         """
         selection = _check_selection(selection)
-
-        maps = {}
-
-        # Initialise zero-filled maps
-        for name in selection:
-            if name == "exposure":
-                maps[name] = Map.from_geom(self.geom_true, unit="m2 s")
-            else:
-                maps[name] = Map.from_geom(self.geom, unit="")
+        maps = self._get_empty_maps(selection)
 
         for obs in observations:
+            log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
+
             try:
-                obs_maker = self._process_obs(obs)
+                obs_maker = self._get_obs_maker(obs)
             except NoOverlapError:
                 log.info(
                     "Skipping observation {}, no overlap with map.".format(obs.obs_id)
@@ -90,24 +95,25 @@ class MapMaker:
                     maps[name].fill_by_coord(obs_maker.coords_etrue, data)
                 else:
                     maps[name].fill_by_coord(obs_maker.coords, data)
-        self.maps = maps
+        self._maps = maps
         return maps
 
 
-    def _process_obs(self, obs):
+    def _get_obs_maker(self, obs):
         # Compute cutout geometry and slices to stack results back later
-        cutout_geom = self.geom.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
-        cutout_geom_etrue = self.geom_true.cutout(position=obs.pointing_radec, width=2 * self.offset_max, mode="trim")
-        log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
+        cutout_kwargs = {
+            "position": obs.pointing_radec,
+            "width": 2 * self.offset_max,
+            "mode": "trim"
+        }
 
+        cutout_geom = self.geom.cutout(**cutout_kwargs)
+        cutout_geom_etrue = self.geom_true.cutout(**cutout_kwargs)
 
-        # Only if there is an exclusion mask, make a cutout
-        # Exclusion mask only on the background, so on ly in reco-energy
-        exclusion_mask = None
         if self.exclusion_mask is not None:
-            exclusion_mask = self.exclusion_mask.cutout(
-                position=obs.pointing_radec, width=2 * self.offset_max, mode="trim"
-            )
+            cutout_exclusion = self.exclusion_mask.cutout(**cutout_kwargs)
+        else:
+            cutout_exclusion = None
 
         # Make maps for this observation
         return MapMakerObs(
@@ -115,10 +121,33 @@ class MapMaker:
             geom=cutout_geom,
             geom_true=cutout_geom_etrue,
             offset_max=self.offset_max,
-            exclusion_mask=exclusion_mask,
+            exclusion_mask=cutout_exclusion,
         )
 
-    def make_images(self, spectrum=None, keepdims=False):
+    @staticmethod
+    def _maps_sum_over_axes(maps, spectrum, keepdims):
+        """Compute weighted sum over map axes.
+
+        Parameters
+        ----------
+        spectrum : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+
+        keepdims : bool, optional
+            If this is set to True, the energy axes is kept with a single bin.
+            If False, the energy axes is removed
+
+        """
+        images = {}
+        for name, map in maps.items():
+            if name == "exposure":
+                map = _map_spectrum_weight(map, spectrum)
+
+            images[name] = map.sum_over_axes(keepdims=keepdims)
+        return images
+
+    def run_images(self, observations=None, spectrum=None, keepdims=False):
         """Create images by summing over the energy axis.
 
         Exposure is weighted with an assumed spectrum,
@@ -126,6 +155,8 @@ class MapMaker:
 
         Parameters
         ----------
+        observations: ...
+            TODO
         spectrum : `~gammapy.spectrum.models.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
@@ -138,13 +169,12 @@ class MapMaker:
         -------
         images : dict of `~gammapy.maps.Map`
         """
-        images = {}
-        for name, map in self.maps.items():
-            if name == "exposure":
-                map = _map_spectrum_weight(map, spectrum)
+        if not hasattr(self, "_maps"):
+            if observations is None:
+                raise ValueError("Requires observations...")
+            self.run(observations)
 
-            images[name] = map.sum_over_axes(keepdims=keepdims)
-
+        images = self._maps_sum_over_axes(self._maps, spectrum, keepdims)
         return images
 
 
@@ -263,7 +293,6 @@ class MapMakerObs:
 def _check_selection(selection):
     """Handle default and validation of selection"""
     available = ["counts", "exposure", "background"]
-
     if selection is None:
         selection = available
 
@@ -277,12 +306,99 @@ def _check_selection(selection):
     return selection
 
 
-class ImageMaker:
-    """Make 2D images.
+
+class MapMakerRing(MapMaker):
+    """Make maps from IACT observations.
+
     The main motivation for this class in addition to the `MapMaker`
     is to have the common 2D image background estimation methods,
     like `~gammapy.background.RingBackgroundEstimator`,
     that work using on and off maps.
+
+    Parameters
+    ----------
+    background_estimator : `~gammapy.background.RingBackgroundEstimator`
+        Ring background estimator or something with an equivalend API.
+    geom : `~gammapy.maps.WcsGeom`
+        Reference image geometry
+    offset_max : `~astropy.coordinates.Angle`
+        Maximum offset angle
+    exclusion_mask : `~gammapy.maps.Map`
+        Exclusion mask
+
+    """
+
+    def __init__(self, background_estimator, **kwargs):
+        self.background_estimator = background_estimator
+        super().__init__(self, **kwargs)
+
+
+    def _run(self, observations, sum_over_axis=False):
+        """
+        Parameters
+        --------------
+        observations : `~gammapy.data.Observations`
+            Observations to process
+
+        Returns
+        -----------
+        maps: dict of stacked counts, background and exposure maps.
+
+        """
+        selection = ["counts", "background", "exposure", "alpha", "off"]
+        maps = self._get_empty_maps(selection)
+
+        for obs in observations:
+            try:
+                obs_maker = self._get_obs_maker(obs)
+            except NoOverlapError:
+                log.info(
+                    "Skipping observation {}, no overlap with map.".format(obs.obs_id)
+                )
+                continue
+
+            maps_obs = obs_maker.run()
+
+            if sum_over_axis:
+                maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)
+
+            maps_obs_bkg = self.background_estimator(maps_obs)
+            maps_obs.update(maps_obs_bkg)
+
+            for name in selection:
+                data = maps_obs[name].quantity.to_value(maps[name].unit)
+                if name == "exposure":
+                    maps[name].fill_by_coord(obs_maker.coords_etrue, data)
+                elif name == "alpha":
+                    data = data * maps_obs["off"]
+                    maps[name].fill_by_coord(obs_maker.coords_etrue, data)
+                else:
+                    maps[name].fill_by_coord(obs_maker.coords, data)
+
+            maps["alpha"] /= maps["off"]
+        self._maps = maps
+        return maps
+
+
+    def run_images(self, observations, spectrum=None, keepdims=False):
+        """Run images.
+
+        """
+        return self._run(observations, sum_over_axis=True)
+
+    def run(self, observations):
+        """"""
+        return self._run(observations, sum_over_axis=False)
+
+
+class ImageMaker:
+    """Make 2D images.
+
+    The main motivation for this class in addition to the `MapMaker`
+    is to have the common 2D image background estimation methods,
+    like `~gammapy.background.RingBackgroundEstimator`,
+    that work using on and off maps.
+
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
