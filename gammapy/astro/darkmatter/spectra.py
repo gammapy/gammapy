@@ -123,7 +123,7 @@ class DMAnnihilModel(SpectralModel):
 
     .. math::
 
-        \frac{\mathrm d \phi}{\mathrm d E \mathrm d\Omega} =
+        \frac{\mathrm d \phi}{\mathrm d E} =
         \frac{\langle \sigma\nu \rangle}{4\pi k m^2_{\mathrm{DM}}}
         \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
 
