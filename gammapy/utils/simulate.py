@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Simulate observations"""
 import numpy as np
 import astropy.units as u
 from ..cube import MapDataset, PSFKernel
@@ -57,7 +59,7 @@ def simulate_3d(
     )
 
     if edisp:
-        energy = axis.edges * axis.unit
+        energy = geom.axes[0].edges * geom.axes[0].unit
         edisp = irfs["edisp"].to_energy_dispersion(offset, e_reco=energy, e_true=energy)
     else:
         edisp = None
