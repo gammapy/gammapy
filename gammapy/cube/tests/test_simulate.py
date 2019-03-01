@@ -41,8 +41,8 @@ def test_simulate():
         sky_model_simu, geom, pointing, irfs, livetime=1 * u.h, edisp=True
     )
 
-    assert type(dataset) == MapDataset
-    assert type(dataset.model) == SkyModel
+    assert isinstance(dataset, MapDataset)
+    assert isinstance(dataset.model, SkyModel)
 
     assert dataset.counts.data.dtype is np.dtype("int")
     assert np.sum(dataset.counts.data) > 0
