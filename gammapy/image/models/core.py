@@ -562,3 +562,8 @@ class SkyDiffuseMap(SkySpatialModel):
         coord = {"lon": lon.to_value("deg"), "lat": lat.to_value("deg")}
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         return u.Quantity(norm.value * val, self.map.unit, copy=False)
+
+    @property
+    def position(self):
+        """`~astropy.coordinates.SkyCoord`"""
+        return self.map.geom.center_skydir

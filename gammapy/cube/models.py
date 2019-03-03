@@ -184,6 +184,16 @@ class SkyModel(SkyModelBase):
         """Parameters (`~gammapy.utils.modeling.Parameters`)"""
         return self._parameters
 
+    @property
+    def position(self):
+        """`~astropy.coordinates.SkyCoord`"""
+        return self.spatial_model.position
+
+    @property
+    def evaluation_radius(self):
+        """`~astropy.coordinates.Angle`"""
+        return self.spatial_model.evaluation_radius
+
     def __repr__(self):
         fmt = "{}(spatial_model={!r}, spectral_model={!r})"
         return fmt.format(
@@ -341,6 +351,18 @@ class SkyDiffuseCube(SkyModelBase):
     def copy(self):
         """A shallow copy"""
         return copy.copy(self)
+
+    @property
+    def position(self):
+        """`~astropy.coordinates.SkyCoord`"""
+        return self.map.geom.center_skydir
+
+    @property
+    def evaluation_radius(self):
+        """`~astropy.coordinates.Angle`"""
+        radius = np.max(self.map.geom.width) / 2.
+        return radius
+
 
 
 class BackgroundModel(Model):
