@@ -41,7 +41,7 @@ class SkySpatialModel(Model):
             lon = self.parameters["lon_0"].quantity
             lat = self.parameters["lat_0"].quantity
             return SkyCoord(lon, lat, frame=self.frame)
-        except KeyError:
+        except IndexError:
             raise ValueError("Model does not have a defined center position")
 
 
@@ -454,7 +454,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     value : `~astropy.units.Quantity`
         Value
     """
-
+    frame = None
     def __init__(self, value=1):
         self.parameters = Parameters([Parameter("value", value)])
 
