@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
-from astropy.coordinates import Angle, Longitude, Latitude
+from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
 from ...utils.fitting import Parameter, Parameters, Model
 from ...maps import Map
 from scipy.integrate import quad
@@ -25,7 +25,6 @@ log = logging.getLogger(__name__)
 
 class SkySpatialModel(Model):
     """Sky spatial model base class."""
-
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = dict()
@@ -34,6 +33,16 @@ class SkySpatialModel(Model):
 
         return self.evaluate(lon, lat, **kwargs)
 
+    @property
+    def position(self):
+        """Spatial model center position"""
+        try:
+            # TODO: this relies on hard-coded parameter names, which is not the ideal solution
+            lon = self.parameters["lon_0"].quantity
+            lat = self.parameters["lat_0"].quantity
+            return SkyCoord(lon, lat, self.frame)
+        except KeyError:
+            raise ValueError("Model does not have a defined center position")
 
 class SkyPointSource(SkySpatialModel):
     r"""Point Source.
@@ -42,7 +51,6 @@ class SkyPointSource(SkySpatialModel):
 
         \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
 
-    A tolerance of 1 arcsecond is accepted for numerical stability
 
     Parameters
     ----------
@@ -50,9 +58,12 @@ class SkyPointSource(SkySpatialModel):
         :math:`lon_0`
     lat_0 : `~astropy.coordinates.Latitude`
         :math:`lat_0`
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    def __init__(self, lon_0, lat_0):
+    def __init__(self, lon_0, lat_0, frame="galactic"):
+        self.frame = frame
         self.parameters = Parameters(
             [Parameter("lon_0", Longitude(lon_0)), Parameter("lat_0", Latitude(lat_0))]
         )
@@ -60,15 +71,15 @@ class SkyPointSource(SkySpatialModel):
     @property
     def evaluation_radius(self):
         """Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a point source, we fix it to 4 pixels.
+        For a Gaussian source, we fix it to :math:`0`.
 
         Returns
         -------
-        pix_radius : `int`
-            Radius in pixel
+        radius : `~astropy.units.Quantity`
+            Radius
         """
-        pix_radius = 4
-        return pix_radius
+        radius = 0 * u.deg
+        return radius
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
@@ -122,9 +133,12 @@ class SkyGaussian(SkySpatialModel):
         :math:`\text{lat}_0`
     sigma : `~astropy.coordinates.Angle`
         :math:`\sigma`
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    def __init__(self, lon_0, lat_0, sigma):
+    def __init__(self, lon_0, lat_0, sigma, frame="galactic"):
+        self.frame = frame
         self.parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0)),
@@ -178,9 +192,12 @@ class SkyDisk(SkySpatialModel):
         :math:`lat_0`
     r_0 : `~astropy.coordinates.Angle`
         :math:`r_0`
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    def __init__(self, lon_0, lat_0, r_0):
+    def __init__(self, lon_0, lat_0, r_0, frame="galactic"):
+        self.frame = frame
         self.parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0)),
@@ -251,6 +268,8 @@ class SkyEllipse(SkySpatialModel):
         :math:`\theta`:
         Rotation angle of the major semiaxis.  The rotation angle increases clockwise
         (i.e., East of North) from the positive `lon` axis.
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
 
 
     Examples
@@ -284,7 +303,7 @@ class SkyEllipse(SkySpatialModel):
         plt.show()
     """
 
-    def __init__(self, lon_0, lat_0, semi_major, e, theta):
+    def __init__(self, lon_0, lat_0, semi_major, e, theta, frame="galactic"):
         try:
             from astropy.coordinates.angle_utilities import offset_by
 
@@ -292,6 +311,7 @@ class SkyEllipse(SkySpatialModel):
         except ImportError:
             raise ImportError("The SkyEllipse model requires astropy>=3.1")
 
+        self.frame = frame
         self.parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0)),
@@ -377,9 +397,12 @@ class SkyShell(SkySpatialModel):
         Inner radius, :math:`r_{in}`
     width : `~astropy.coordinates.Angle`
         Shell width
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    def __init__(self, lon_0, lat_0, radius, width):
+    def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
+        self.frame = frame
         self.parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0)),
@@ -496,7 +519,7 @@ class SkyDiffuseMap(SkySpatialModel):
     @property
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a DiffuseMap source, we fix it to the maximal dimension of the map.
+        For a DiffuseMap source, we fix it to half of the maximal dimension of the map.
 
         Returns
         -------
@@ -504,8 +527,7 @@ class SkyDiffuseMap(SkySpatialModel):
             Radius in angular units.
 
         """
-        width_0, width_1 = (self.map).geom.width
-        radius = max(width_0[0], width_1[0]) * u.deg
+        radius = np.max(self.map.geom.width) / 2.
         return radius
 
     def normalize(self):
