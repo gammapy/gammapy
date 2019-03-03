@@ -37,7 +37,7 @@ def test_sky_gaussian():
     assert_allclose(ratio, np.exp(0.5))
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 7 * sigma.value)
+    assert_allclose(radius.value, 5 * sigma.value)
 
 
 def test_sky_disk():

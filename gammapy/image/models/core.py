@@ -136,7 +136,7 @@ class SkyGaussian(SkySpatialModel):
     @property
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a Gaussian source, we fix it to :math:`7\sigma`.
+        For a Gaussian source, we fix it to :math:`5\sigma`.
 
         Returns
         -------
@@ -144,7 +144,7 @@ class SkyGaussian(SkySpatialModel):
            Radius in angular units
 
         """
-        radius = 7 * self.parameters["sigma"].quantity
+        radius = 5 * self.parameters["sigma"].quantity
         return radius
 
     @staticmethod
