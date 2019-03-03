@@ -170,8 +170,14 @@ class MapEvaluator:
 
         Returns ``lon, lat`` tuple of `~astropy.units.Quantity`.
         """
-        lon, lat = self.geom_image.get_coord()
-        return (u.Quantity(lon, "deg", copy=False), u.Quantity(lat, "deg", copy=False))
+        coord = self.geom_image.get_coord()
+        frame = self.model.position.frame
+        coordsys = "CEL" if frame == "icrs" else "GAL"
+
+        if not coord.coordsys == coordsys:
+            coord = coord.to_coordsys(coordsys)
+
+        return (u.Quantity(coord.lon, "deg", copy=False), u.Quantity(coord.lat, "deg", copy=False))
 
     @lazyproperty
     def lon(self):

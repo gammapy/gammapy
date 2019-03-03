@@ -480,7 +480,7 @@ def test_make_cutout(mode):
     actual = cutout.data.sum()
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape, m.geom.shape)
-    assert_allclose(cutout.geom.width, [[2.0], [3.0]])
+    assert_allclose(cutout.geom.width.to_value("deg"), [[2.0], [3.0]])
 
 
 def test_convolve_vs_smooth():
