@@ -13,6 +13,7 @@ __all__ = [
     "SkyModel",
     "SkyDiffuseCube",
     "BackgroundModel",
+    "BackgroundModels"
 ]
 
 
@@ -194,6 +195,10 @@ class SkyModel(SkyModelBase):
         """`~astropy.coordinates.Angle`"""
         return self.spatial_model.evaluation_radius
 
+    @property
+    def frame(self):
+        return self.spatial_model.frame
+
     def __repr__(self):
         fmt = "{}(spatial_model={!r}, spectral_model={!r})"
         return fmt.format(
@@ -363,6 +368,10 @@ class SkyDiffuseCube(SkyModelBase):
         radius = np.max(self.map.geom.width) / 2.
         return radius
 
+    @property
+    def frame(self):
+        return self.position.frame
+
 
 
 class BackgroundModel(Model):
@@ -396,7 +405,7 @@ class BackgroundModel(Model):
         self.map = background
         self.parameters = Parameters(
             [
-                Parameter("norm", norm, unit=""),
+                Parameter("norm", norm, unit="", min=0),
                 Parameter("tilt", tilt, unit="", frozen=True),
                 Parameter("reference", reference, frozen=True),
             ]
@@ -417,3 +426,77 @@ class BackgroundModel(Model):
         tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
+
+    @classmethod
+    def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, **kwargs):
+        """Create background model from sky model by applying IRFs.
+
+        Typically used for diffuse Galactic emission models or constant diffuse emission
+        models.
+
+        Parameters
+        ----------
+        skymodel : `SkyModel` or `SkyDiffuseCube`
+            Sky model.
+        exposure : `Map`
+            Exposure map.
+        edisp : `EnergyDispersion`
+            Energy dispersion.
+        psf : `PSFKernel`
+            PSF to apply.
+        """
+        from .fit import MapEvaluator
+        evaluator = MapEvaluator(model=skymodel, exposure=exposure, edisp=edisp, psf=psf)
+        background = evaluator.compute_npred()
+        return cls(background=background, **kwargs)
+
+    def __add__(self, model):
+        models = [self]
+        if isinstance(model, BackgroundModels):
+            models += model.models
+        elif isinstance(model, BackgroundModel):
+            models += [model]
+        else:
+            raise NotImplementedError
+        return BackgroundModels(models)
+
+
+
+class BackgroundModels:
+    """Background models.
+
+    Parameters
+    ----------
+    models : list of `BackgroundModel`
+        List of background models.
+    """
+    def __init__(self, models):
+        self.models = models
+        pars = []
+        for model in models:
+            for p in model.parameters:
+                pars.append(p)
+        self.parameters = Parameters(pars)
+
+    def evaluate(self):
+        """Evaluate background models."""
+        for idx, model in enumerate(self.models):
+            if idx == 0:
+                vals = model.evaluate()
+            else:
+                vals += model.evaluate()
+        return vals
+
+    def __iadd__(self, model):
+        if isinstance(model, BackgroundModels):
+            self.models += model.models
+        elif isinstance(model, BackgroundModel):
+            self.models += [model]
+        else:
+            raise NotImplementedError
+        return self
+
+    def __add__(self, model):
+        model_ = self.copy()
+        model_ += model
+        return model_
