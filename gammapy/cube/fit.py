@@ -14,8 +14,8 @@ class MapDataset:
 
     Parameters
     ----------
-    model : `~gammapy.cube.models.SkyModel`
-        Fit model
+    model : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyModels`
+        Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
@@ -26,8 +26,8 @@ class MapDataset:
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background_model: `~gammapy.cube.models.BackgroundModel`
-        Background model to use for the fit.
+    background_model: `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModel`
+        Background models to use for the fit.
     likelihood : {"cash"}
 	    Likelihood function to use for the fit.
     """
@@ -142,6 +142,15 @@ class MapEvaluator:
         return self.exposure.geom
 
     @lazyproperty
+    def geom_reco(self):
+        edges = self.edisp.e_reco.bins
+        e_reco_axis = MapAxis.from_edges(
+            edges=edges, name="energy",
+            unit=self.edisp.e_reco.unit,
+            interp=self.edisp.e_reco.interpolation_mode)
+        return self.geom_image.to_cube(axes=[e_reco_axis])
+
+    @lazyproperty
     def geom_image(self):
         return self.geom.to_image()
 
@@ -171,11 +180,13 @@ class MapEvaluator:
         Returns ``lon, lat`` tuple of `~astropy.units.Quantity`.
         """
         coord = self.geom_image.get_coord()
-        frame = self.model.position.frame
-        coordsys = "CEL" if frame == "icrs" else "GAL"
+        frame = self.model.frame
 
-        if not coord.coordsys == coordsys:
-            coord = coord.to_coordsys(coordsys)
+        if frame is not None:
+            coordsys = "CEL" if frame == "icrs" else "GAL"
+
+            if not coord.coordsys == coordsys:
+                coord = coord.to_coordsys(coordsys)
 
         return (u.Quantity(coord.lon, "deg", copy=False), u.Quantity(coord.lat, "deg", copy=False))
 
@@ -228,7 +239,7 @@ class MapEvaluator:
         For now just divide flux cube by exposure
         """
         npred = (flux * self.exposure.quantity).to_value("")
-        return self.exposure.copy(data=npred)
+        return Map.from_geom(self.geom, data=npred, unit="")
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
@@ -251,13 +262,7 @@ class MapEvaluator:
         data = np.rollaxis(npred.data, loc, len(npred.data.shape))
         data = np.dot(data, self.edisp.pdf_matrix)
         data = np.rollaxis(data, -1, loc)
-        e_reco_axis = MapAxis.from_edges(
-            self.edisp.e_reco.bins, unit=self.edisp.e_reco.unit, name="energy"
-        )
-        geom_ereco = self.exposure.geom.to_image().to_cube(axes=[e_reco_axis])
-        npred = Map.from_geom(geom_ereco, unit="")
-        npred.data = data
-        return npred
+        return Map.from_geom(self.geom_reco, data=data, unit="")
 
     def compute_npred(self):
         """
