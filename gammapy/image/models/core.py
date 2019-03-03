@@ -66,7 +66,7 @@ class SkyPointSource(SkySpatialModel):
     def __init__(self, lon_0, lat_0, frame="galactic"):
         self.frame = frame
         self.parameters = Parameters(
-            [Parameter("lon_0", Longitude(lon_0)), Parameter("lat_0", Latitude(lat_0))]
+            [Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180), Parameter("lat_0", Latitude(lat_0), min=-90, max=90)]
         )
 
     @property
@@ -142,8 +142,8 @@ class SkyGaussian(SkySpatialModel):
         self.frame = frame
         self.parameters = Parameters(
             [
-                Parameter("lon_0", Longitude(lon_0)),
-                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
+                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
                 Parameter("sigma", Angle(sigma), min=0),
             ]
         )
@@ -201,8 +201,8 @@ class SkyDisk(SkySpatialModel):
         self.frame = frame
         self.parameters = Parameters(
             [
-                Parameter("lon_0", Longitude(lon_0)),
-                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
+                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
                 Parameter("r_0", Angle(r_0)),
             ]
         )
@@ -315,8 +315,8 @@ class SkyEllipse(SkySpatialModel):
         self.frame = frame
         self.parameters = Parameters(
             [
-                Parameter("lon_0", Longitude(lon_0)),
-                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
+                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
                 Parameter("semi_major", Angle(semi_major)),
                 Parameter("e", e, min=0, max=1),
                 Parameter("theta", Angle(theta)),
@@ -406,8 +406,8 @@ class SkyShell(SkySpatialModel):
         self.frame = frame
         self.parameters = Parameters(
             [
-                Parameter("lon_0", Longitude(lon_0)),
-                Parameter("lat_0", Latitude(lat_0)),
+                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
+                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
                 Parameter("radius", Angle(radius)),
                 Parameter("width", Angle(width)),
             ]
