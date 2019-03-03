@@ -40,9 +40,10 @@ class SkySpatialModel(Model):
             # TODO: this relies on hard-coded parameter names, which is not the ideal solution
             lon = self.parameters["lon_0"].quantity
             lat = self.parameters["lat_0"].quantity
-            return SkyCoord(lon, lat, self.frame)
+            return SkyCoord(lon, lat, frame=self.frame)
         except KeyError:
             raise ValueError("Model does not have a defined center position")
+
 
 class SkyPointSource(SkySpatialModel):
     r"""Point Source.
