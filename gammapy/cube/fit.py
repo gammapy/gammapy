@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
@@ -8,6 +9,8 @@ from ..maps import Map, MapAxis
 from .models import SkyModel, SkyModels
 
 __all__ = ["MapEvaluator", "MapDataset"]
+
+log = logging.getLogger(__name__)
 
 
 UPDATE_THRESHOLD = 0.25 * u.deg
@@ -66,7 +69,9 @@ class MapDataset:
         elif likelihood == "cstat":
             self._stat = cstat
         else:
-            raise ValueError("Not a valid fit statistic. Choose between 'cash' and 'cstat'.")
+            raise ValueError(
+                "Not a valid fit statistic. Choose between 'cash' and 'cstat'."
+            )
 
         evaluators = []
 
@@ -81,8 +86,8 @@ class MapDataset:
         """List of parameters (`~gammapy.utils.fitting.Parameters`)"""
         if self.background_model:
             parameters = Parameters(
-                self.model.parameters.parameters +
-                self.background_model.parameters.parameters
+                self.model.parameters.parameters
+                + self.background_model.parameters.parameters
             )
         else:
             parameters = Parameters(self.model.parameters.parameters)
@@ -122,7 +127,6 @@ class MapDataset:
                 npred_total.data[evaluator.coords_idx] += npred.data
 
         return npred_total
-
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
@@ -179,7 +183,7 @@ class MapEvaluator:
         self.psf = psf
         self.edisp = edisp
 
-    @lazyproperty
+    @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.MapGeom`)"""
         return self.exposure.geom
@@ -189,12 +193,14 @@ class MapEvaluator:
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
         edges = self.edisp.e_reco.bins
         e_reco_axis = MapAxis.from_edges(
-            edges=edges, name="energy",
+            edges=edges,
+            name="energy",
             unit=self.edisp.e_reco.unit,
-            interp=self.edisp.e_reco.interpolation_mode)
+            interp=self.edisp.e_reco.interpolation_mode,
+        )
         return self.geom_image.to_cube(axes=[e_reco_axis])
 
-    @lazyproperty
+    @property
     def geom_image(self):
         """Image map geometry (`~gammapy.maps.MapGeom`)"""
         return self.geom.to_image()
@@ -231,7 +237,10 @@ class MapEvaluator:
             if not coord.coordsys == coordsys:
                 coord = coord.to_coordsys(coordsys)
 
-        return (u.Quantity(coord.lon, "deg", copy=False), u.Quantity(coord.lat, "deg", copy=False))
+        return (
+            u.Quantity(coord.lon, "deg", copy=False),
+            u.Quantity(coord.lat, "deg", copy=False),
+        )
 
     @property
     def lon(self):
@@ -276,6 +285,7 @@ class MapEvaluator:
 
     def update(self, exposure, psf, edisp, geom):
         """Update MapEvaluator, based on the current position of the model component.
+
         Parameters
         ----------
         exposure : `Map`
@@ -287,6 +297,7 @@ class MapEvaluator:
         geom : `MapGeom`
             Reference geometry of the data.
         """
+        log.debug("Updating model evaluator")
         # TODO: lookup correct Edisp for this component
         self.edisp = edisp
         self.psf = psf
@@ -295,11 +306,20 @@ class MapEvaluator:
         width = np.max(psf.psf_kernel_map.geom.width) + 2 * self.model.evaluation_radius
 
         self.exposure = exposure.cutout(position=self.model.position, width=width)
-        self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
 
         # Reset cached quantities
-        for cached_property in ["lon_lat", "solid_angle", "bin_volume"]:
+        for cached_property in [
+            "lon_lat",
+            "solid_angle",
+            "bin_volume",
+            "geom_reco",
+            "energy_bin_width",
+            "energy_edges",
+            "energy_center",
+        ]:
             self.__dict__.pop(cached_property, None)
+
+        self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
