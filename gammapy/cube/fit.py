@@ -5,8 +5,12 @@ import astropy.units as u
 from ..utils.fitting import Fit, Parameters
 from ..stats import cash
 from ..maps import Map, MapAxis
+from .models import SkyModel, SkyModels
 
 __all__ = ["MapEvaluator", "MapDataset"]
+
+
+UPDATE_THRESHOLD = 0.25 * u.deg
 
 
 class MapDataset:
@@ -45,6 +49,10 @@ class MapDataset:
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
+
+
         self.model = model
         self.counts = counts
         self.exposure = exposure
@@ -60,9 +68,20 @@ class MapDataset:
         else:
             self.parameters = Parameters(self.model.parameters.parameters)
 
-        self.evaluator = MapEvaluator(
-            model=self.model, exposure=exposure, psf=self.psf, edisp=self.edisp
-        )
+        evaluators = []
+
+        for component in self.model.skymodels:
+            evaluator = MapEvaluator(component)
+            evaluators.append(evaluator)
+
+        self._evaluators = evaluators
+
+    @property
+    def _geom(self):
+        if self.counts is not None:
+            return self.counts.geom
+        else:
+            return self.background_model.map.geom
 
     @property
     def data_shape(self):
@@ -71,13 +90,27 @@ class MapDataset:
 
     def npred(self):
         """Returns npred map (model + background)"""
-        model_npred = self.evaluator.compute_npred()
-        back_npred = self.background_model.evaluate()
-        total_npred = model_npred.data + back_npred.data
-        return back_npred.copy(data=total_npred)
-        # TODO: return model_npred + back_npred
-        # There is some bug: edisp.e_reco.unit is dimensionless
-        # thus map arithmetic does not work.
+        if self.background_model:
+            npred_total = self.background_model.evaluate()
+        else:
+            npred_total = Map.from_geom(self._geom)
+
+        for evaluator in self._evaluators:
+            # if the model component drifts out of its support the evaluator has
+            # has to be updated
+            if evaluator.needs_update:
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+
+            npred = evaluator.compute_npred()
+
+            # avoid slow fancy indexing, when the shape is equivalent
+            if npred.data.shape == npred_total.data.shape:
+                npred_total += npred.data
+            else:
+                npred_total.data[evaluator.coords_idx] += npred.data
+
+        return npred_total
+
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
@@ -188,11 +221,11 @@ class MapEvaluator:
 
         return (u.Quantity(coord.lon, "deg", copy=False), u.Quantity(coord.lat, "deg", copy=False))
 
-    @lazyproperty
+    @property
     def lon(self):
         return self.lon_lat[0]
 
-    @lazyproperty
+    @property
     def lat(self):
         return self.lon_lat[1]
 
@@ -207,6 +240,54 @@ class MapEvaluator:
         omega = self.solid_angle
         de = self.energy_bin_width
         return omega * de
+
+    @property
+    def coords(self):
+        """Return evaluator coords"""
+        lon, lat = self.lon_lat
+        if self.edisp:
+            energy = self.edisp.e_reco.nodes[:, np.newaxis, np.newaxis]
+        else:
+            energy = self.energy_center
+        return {"lon": lon.value, "lat": lat.value, "energy": energy}
+
+    @property
+    def needs_update(self):
+        """Check whether the model component has drifted away from its support."""
+        if self.exposure is None:
+            update = True
+        else:
+            position = self.model.position
+            separation = self.exposure.geom.center_skydir.separation(position)
+            update = separation > UPDATE_THRESHOLD
+        return update
+
+    def update(self, exposure, psf, edisp, geom):
+        """Update MapEvaluator, based on the current position of the model component.
+        Parameters
+        ----------
+        exposure : `Map`
+            Exposure map.
+        psf : `PSFMap`
+            PSF map.
+        edisp : `EdispMap`
+            Edisp map.
+        geom : `MapGeom`
+            Reference geometry of the data.
+        """
+        # TODO: lookup correct Edisp for this component
+        self.edisp = edisp
+        self.psf = psf
+
+        # TODO: lookup correct PSF for this component
+        width = np.max(psf.psf_kernel_map.geom.width) + 2 * self.model.evaluation_radius
+
+        self.exposure = exposure.cutout(position=self.model.position, width=width)
+        self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
+
+        # Reset cached quantities
+        for cached_property in ["lon_lat", "solid_angle", "bin_volume"]:
+            self.__dict__.pop(cached_property, None)
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
