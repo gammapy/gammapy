@@ -1,18 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
+from scipy.optimize import minimize
 from .likelihood import Likelihood
+
 
 __all__ = ["optimize_scipy", "covariance_scipy"]
 
 
 def optimize_scipy(parameters, function, **kwargs):
-    from scipy.optimize import minimize
+    pars = [par.factor for par in parameters.free_parameters]
 
-    pars = [par.factor for par in parameters.parameters]
+    bounds = []
+    for par in parameters.free_parameters:
+        parmin = par.factor_min if not np.isnan(par.factor_min) else None
+        parmax = par.factor_max if not np.isnan(par.factor_max) else None
+        bounds.append((parmin, parmax))
+
+
     likelihood = Likelihood(function, parameters)
-
-    # TODO: understand options for this optimiser
-    tol = kwargs.pop("tol", 1e-2)
-    result = minimize(likelihood.fcn, pars, tol=tol, **kwargs)
+    result = minimize(likelihood.fcn, pars, bounds=bounds, **kwargs)
 
     factors = result.x
     info = {"success": result.success, "message": result.message, "nfev": result.nfev}
