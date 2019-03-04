@@ -134,15 +134,14 @@ class MapEvaluator:
         self.psf = psf
         self.edisp = edisp
 
-        self.parameters = Parameters(self.model.parameters.parameters)
-
     @lazyproperty
     def geom(self):
-        """This will give the energy axes in e_true"""
+        """True energy map geometry (`~gammapy.maps.MapGeom`)"""
         return self.exposure.geom
 
     @lazyproperty
     def geom_reco(self):
+        """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
         edges = self.edisp.e_reco.bins
         e_reco_axis = MapAxis.from_edges(
             edges=edges, name="energy",
@@ -152,6 +151,7 @@ class MapEvaluator:
 
     @lazyproperty
     def geom_image(self):
+        """Image map geometry (`~gammapy.maps.MapGeom`)"""
         return self.geom.to_image()
 
     @lazyproperty
@@ -163,7 +163,7 @@ class MapEvaluator:
 
     @lazyproperty
     def energy_edges(self):
-        """Energy axis bin edges (`~astropy.units.Quantity`)"""
+        """True energy axis bin edges (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.get_axis_by_name("energy")
         energy = energy_axis.edges * energy_axis.unit
         return energy[:, np.newaxis, np.newaxis]
@@ -175,9 +175,7 @@ class MapEvaluator:
 
     @lazyproperty
     def lon_lat(self):
-        """Spatial coordinate pixel centers.
-
-        Returns ``lon, lat`` tuple of `~astropy.units.Quantity`.
+        """Spatial coordinate pixel centers (``lon, lat`` tuple of `~astropy.units.Quantity`).
         """
         coord = self.geom_image.get_coord()
         frame = self.model.frame
