@@ -8,6 +8,7 @@ __all__ = ["optimize_scipy", "covariance_scipy"]
 
 
 def optimize_scipy(parameters, function, **kwargs):
+    method = kwargs.pop("method", "Nelder-Mead")
     pars = [par.factor for par in parameters.free_parameters]
 
     bounds = []
@@ -18,7 +19,7 @@ def optimize_scipy(parameters, function, **kwargs):
 
 
     likelihood = Likelihood(function, parameters)
-    result = minimize(likelihood.fcn, pars, bounds=bounds, **kwargs)
+    result = minimize(likelihood.fcn, pars, bounds=bounds, method=method, **kwargs)
 
     factors = result.x
     info = {"success": result.success, "message": result.message, "nfev": result.nfev}

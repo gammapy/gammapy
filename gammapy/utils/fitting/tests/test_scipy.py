@@ -44,7 +44,7 @@ def test_scipy_frozen(pars, method):
     assert_allclose(pars["x"].value, 2, rtol=1e-4)
     assert_allclose(pars["y"].value, 3.1e5)
     assert_allclose(pars["z"].value, 4.e-5, rtol=1e-4)
-    assert_allclose(fcn(pars), 0.11111, rtol=1e-5)
+    assert_allclose(fcn(pars), 0.1111111, rtol=1e-5)
 
 
 @pytest.mark.parametrize("method", ["L-BFGS-B"])
