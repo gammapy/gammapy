@@ -459,9 +459,11 @@ class Parameters:
 
         Used in the optimizer interface.
         """
-        for factor, parameter in zip(factors, self.parameters):
+        idx = 0
+        for parameter in self.parameters:
             if not parameter.frozen:
-                parameter.factor = factor
+                parameter.factor = factors[idx]
+                idx += 1
 
     @property
     def _scale_matrix(self):
