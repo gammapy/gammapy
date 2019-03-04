@@ -3,7 +3,7 @@ import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
 from ..utils.fitting import Fit, Parameters
-from ..stats import cash
+from ..stats import cash, cstat
 from ..maps import Map, MapAxis
 from .models import SkyModel, SkyModels
 
@@ -32,7 +32,7 @@ class MapDataset:
         Energy dispersion
     background_model: `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModel`
         Background models to use for the fit.
-    likelihood : {"cash"}
+    likelihood : {"cash", "cstat"}
 	    Likelihood function to use for the fit.
     """
 
@@ -45,13 +45,13 @@ class MapDataset:
         psf=None,
         edisp=None,
         background_model=None,
+        likelihood="cash",
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         if isinstance(model, SkyModel):
             model = SkyModels([model])
-
 
         self.model = model
         self.counts = counts
@@ -60,13 +60,13 @@ class MapDataset:
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
-        if background_model:
-            self.parameters = Parameters(
-                self.model.parameters.parameters +
-                self.background_model.parameters.parameters
-            )
+
+        if likelihood == "cash":
+            self._stat = cash
+        elif likelihood == "cstat":
+            self._stat = cstat
         else:
-            self.parameters = Parameters(self.model.parameters.parameters)
+            raise ValueError("Not a valid fit statistic. Choose between 'cash' and 'cstat'.")
 
         evaluators = []
 
@@ -75,6 +75,18 @@ class MapDataset:
             evaluators.append(evaluator)
 
         self._evaluators = evaluators
+
+    @lazyproperty
+    def parameters(self):
+        """List of parameters (`~gammapy.utils.fitting.Parameters`)"""
+        if self.background_model:
+            parameters = Parameters(
+                self.model.parameters.parameters +
+                self.background_model.parameters.parameters
+            )
+        else:
+            parameters = Parameters(self.model.parameters.parameters)
+        return parameters
 
     @property
     def _geom(self):
