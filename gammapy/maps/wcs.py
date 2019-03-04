@@ -237,7 +237,9 @@ class WcsGeom(MapGeom):
     @property
     def width(self):
         """Tuple with image dimension in deg in longitude and latitude."""
-        return (self._cdelt[0] * self._npix[0], self._cdelt[1] * self._npix[1])
+        dlon = self._cdelt[0] * self._npix[0]
+        dlat = self._cdelt[1] * self._npix[1]
+        return (dlon, dlat) * u.deg
 
     @property
     def pixel_area(self):

@@ -23,7 +23,12 @@ def test_sky_point_source():
     assert val.unit == "deg-2"
     assert_allclose(val.sum().value, 1)
     radius = model.evaluation_radius
-    assert_allclose(radius, 4)
+    assert radius.unit == "deg"
+    assert_allclose(radius.value, 0)
+    assert model.frame == "galactic"
+
+    assert_allclose(model.position.l.deg, 2.5)
+    assert_allclose(model.position.b.deg, 2.5)
 
 
 def test_sky_gaussian():
@@ -37,7 +42,7 @@ def test_sky_gaussian():
     assert_allclose(ratio, np.exp(0.5))
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 7 * sigma.value)
+    assert_allclose(radius.value, 5 * sigma.value)
 
 
 def test_sky_disk():
@@ -141,7 +146,7 @@ def test_sky_diffuse_map():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 1.28, rtol=1.0e-2)
+    assert_allclose(radius.value, 0.64, rtol=1.0e-2)
 
 
 @requires_data("gammapy-data")
