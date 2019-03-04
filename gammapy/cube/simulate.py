@@ -7,11 +7,11 @@ from ..maps import WcsNDMap
 from ..cube.models import BackgroundModel
 from ..utils.random import get_random_state
 
-__all__ = ["simulate_3d"]
+__all__ = ["simulate_dataset"]
 
 
-def simulate_3d(
-    skymodel, geom, pointing, irfs, livetime=1 * u.h, offset=0 * u.deg, edisp=False, random_state='random-seed'
+def simulate_dataset(
+    skymodel, geom, pointing, irfs, livetime=1 * u.h, offset=0 * u.deg, max_radius=0.8 * u.deg, random_state='random-seed'
 ):
 
     """Simulate a 3D dataset
@@ -36,8 +36,8 @@ def simulate_3d(
     offset : `~astropy.units.quantity.Quantity`
         Offset from the center of the pointing position.
         This is used for the PSF and Edisp estimation
-    edisp : bool
-        Whether to include energy dispersion in the dataset.
+    max_radius : `~astropy.coordinates.Angle`
+        The maximum radius of the PSF kernel.
     random_state: {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
 
@@ -54,13 +54,13 @@ def simulate_3d(
     background_model = BackgroundModel(background)
 
     psf = irfs["psf"].to_energy_dependent_table_psf(theta=offset)
-    psf_kernel = PSFKernel.from_table_psf(psf, geom, max_radius=0.5 * u.deg)
+    psf_kernel = PSFKernel.from_table_psf(psf, geom, max_radius=max_radius)
 
     exposure = make_map_exposure_true_energy(
         pointing=pointing, livetime=livetime, aeff=irfs["aeff"], geom=geom
     )
 
-    if edisp:
+    if "edisp" in irfs:
         energy = geom.axes[0].edges * geom.axes[0].unit
         edisp = irfs["edisp"].to_energy_dispersion(offset, e_reco=energy, e_true=energy)
     else:
