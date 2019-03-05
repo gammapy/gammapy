@@ -172,6 +172,7 @@ class DMAnnihilation(SpectralModel):
         self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
 
     def evaluate(self, energy, scale):
+        """Evaluate dark matter annihilation model."""
         flux = (
             scale
             * self.jfactor
