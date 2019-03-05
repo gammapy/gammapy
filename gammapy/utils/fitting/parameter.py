@@ -459,9 +459,11 @@ class Parameters:
 
         Used in the optimizer interface.
         """
-        for factor, parameter in zip(factors, self.parameters):
+        idx = 0
+        for parameter in self.parameters:
             if not parameter.frozen:
-                parameter.factor = factor
+                parameter.factor = factors[idx]
+                idx += 1
 
     @property
     def _scale_matrix(self):
@@ -470,10 +472,12 @@ class Parameters:
 
     def _expand_factor_matrix(self, matrix):
         """Expand covariance matrix with zeros for frozen parameters"""
-        idxs = np.where([par.frozen for par in self.parameters])[0]
-        matrix = np.insert(matrix, idxs, 0, axis=1)
-        matrix = np.insert(matrix, idxs, 0, axis=0)
-        return matrix
+        shape = (len(self.parameters), len(self.parameters))
+        matrix_expanded = np.zeros(shape)
+        mask = np.array([par.frozen for par in self.parameters])
+        free_parameters = ~(mask | mask[:, np.newaxis])
+        matrix_expanded[free_parameters] = matrix.ravel()
+        return matrix_expanded
 
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.

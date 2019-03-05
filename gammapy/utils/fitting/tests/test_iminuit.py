@@ -54,8 +54,6 @@ def test_iminuit_frozen(pars):
     assert_allclose(pars["z"].value, 4.e-5, rtol=1e-4)
     assert_allclose(fcn(pars), 0.111112, rtol=1e-5)
 
-    assert minuit.list_of_fixed_param() == ["par_001_y"]
-
 
 def test_iminuit_limits(pars):
     pars["y"].min = 301000
