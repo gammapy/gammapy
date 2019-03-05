@@ -169,14 +169,14 @@ class DMAnnihilation(SpectralModel):
         self.mass = mass
         self.channel = channel
         self.jfactor = jfactor
-        self.table_model = PrimaryFlux(mass, channel=self.channel).table_model
+        self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
 
     def evaluate(self, energy, scale):
         flux = (
             scale
             * self.jfactor
             * self.THERMAL_RELIC_CROSS_SECTION
-            * self.table_model.evaluate(energy=energy * (1 + self.z), norm=1)
+            * self.primary_flux.evaluate(energy=energy * (1 + self.z), norm=1)
             / self.k
             / self.mass
             / self.mass
