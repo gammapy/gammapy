@@ -11,7 +11,14 @@ __all__ = ["simulate_dataset"]
 
 
 def simulate_dataset(
-    skymodel, geom, pointing, irfs, livetime=1 * u.h, offset=0 * u.deg, max_radius=0.8 * u.deg, random_state='random-seed'
+    skymodel,
+    geom,
+    pointing,
+    irfs,
+    livetime=1 * u.h,
+    offset=0 * u.deg,
+    max_radius=0.8 * u.deg,
+    random_state="random-seed",
 ):
 
     """Simulate a 3D dataset
