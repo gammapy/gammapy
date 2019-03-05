@@ -37,6 +37,12 @@ class MapDataset:
         Background models to use for the fit.
     likelihood : {"cash", "cstat"}
 	    Likelihood function to use for the fit.
+	evaluation_mode : {"local", "global"}
+        Model evaluation mode. The "cutout" mode evaluates the model components on smaller grids
+        and assigns spatially dependent IRFs (if provided) to the model component. This mode is
+        recommended for local optimization algorithms. The "global" evaluation mode assumes a global PSF
+        and energy dispersion and evaluates the model components on the full map. This mode is recommended
+        for global optimization algorithms.
     """
 
     def __init__(
@@ -49,6 +55,7 @@ class MapDataset:
         edisp=None,
         background_model=None,
         likelihood="cash",
+        evaluation_mode="local",
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -73,13 +80,19 @@ class MapDataset:
                 "Not a valid fit statistic. Choose between 'cash' and 'cstat'."
             )
 
-        evaluators = []
+        if evaluation_mode == "local":
+            evaluators = []
 
-        for component in self.model.skymodels:
-            evaluator = MapEvaluator(component)
-            evaluators.append(evaluator)
+            for component in self.model.skymodels:
+                evaluator = MapEvaluator(component)
+                evaluators.append(evaluator)
 
-        self._evaluators = evaluators
+            self._evaluators = evaluators
+        elif evaluation_mode == "global":
+            evaluator = MapEvaluator(self.model, self.exposure, self.psf, self.edisp)
+            self._evaluators = [evaluator]
+        else:
+            raise ValueError("Not a valid model evaluation mode. Choose between 'cutout' and 'global'")
 
     @lazyproperty
     def parameters(self):
@@ -130,7 +143,7 @@ class MapDataset:
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
+        return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
     def likelihood(self, parameters, mask=None):
         """Total likelihood given the current model parameters.
@@ -277,6 +290,8 @@ class MapEvaluator:
         """Check whether the model component has drifted away from its support."""
         if self.exposure is None:
             update = True
+        elif isinstance(self.model, SkyModels):
+            update = False
         else:
             position = self.model.position
             separation = self.exposure.geom.center_skydir.separation(position)

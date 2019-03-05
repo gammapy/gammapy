@@ -128,6 +128,7 @@ def test_map_fit(sky_model):
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_1,
+        evaluation_mode="local",
     )
 
     dataset_2 = MapDataset(
@@ -138,6 +139,7 @@ def test_map_fit(sky_model):
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_2,
+        evaluation_mode="global"
     )
 
     background_model_1.parameters["norm"].value = 0.4
