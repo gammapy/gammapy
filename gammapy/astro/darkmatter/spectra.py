@@ -9,7 +9,7 @@ from ...utils.scripts import make_path
 from ...utils.fitting import Parameter, Parameters
 from ...spectrum.models import SpectralModel, TableModel
 
-__all__ = ["PrimaryFlux", "DMAnnihilModel"]
+__all__ = ["PrimaryFlux", "DMAnnihilation"]
 
 
 class PrimaryFlux:
@@ -116,7 +116,7 @@ class PrimaryFlux:
         return TableModel(energy=energies, values=dN_dE, values_scale="lin")
 
 
-class DMAnnihilModel(SpectralModel):
+class DMAnnihilation(SpectralModel):
     r"""Spectral model for dark matter annihilation.
 
     The gamma-ray flux is computed as follows:
@@ -144,15 +144,15 @@ class DMAnnihilModel(SpectralModel):
 
     Examples
     --------
-    This is how to instantiate a `DMAnnihilModel` model::
+    This is how to instantiate a `DMAnnihilation` model::
 
         from astropy import units as u
-        from gammapy.astro.darkmatter import DMAnnihilModel
+        from gammapy.astro.darkmatter import DMAnnihilation
 
         channel = "b"
         massDM = 5000*u.Unit("GeV")
         jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        modelDM = DMAnnihilModel(mass=massDM, channel=channel, jfactor=jfactor)
+        modelDM = DMAnnihilation(mass=massDM, channel=channel, jfactor=jfactor)
 
     References
     ----------
