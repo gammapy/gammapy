@@ -33,8 +33,15 @@ class DownloadDataset:
     and a path that tells you where the file will be placed when downloaded.
 
     If you want to add a DownloadDataset, make a new class and add it to the list below.
+
+    The followLinks flag declares how to build the destination paths in the local desktop
+    according to the datasets paths used in the tutorials.
+        GAMMAPY-EXTRA: datasets stored in Gammapy-extra reporsitory
+        JOINT-CRAB: datasets stored in Joint-crab reporsitory
+        OTHERS: datasets stored in others repositories
     """
 
+    followLinks = "GAMMAPY-EXTRA"
     base_url = "https://github.com/gammapy/gammapy-extra/raw/master/datasets"
     local_repo = Path(os.environ["GAMMAPY_EXTRA"]) / "datasets"
 
@@ -47,13 +54,32 @@ class DownloadDataset:
         }
 
     @property
+    def pathlist(self):
+        for itempath in (self.local_repo / self.name).glob("**/*.*"):
+            if not itempath.name.startswith("."):
+                yield itempath.as_posix().replace(self.local_repo.as_posix() + "/", "")
+
+    @property
     def files(self):
-        for path in (self.local_repo / self.name).glob("**/*.*"):
-            if not path.name.startswith('.'):
-                urlpath = path.as_posix().replace(self.local_repo.as_posix(), "")
-                filesize = os.path.getsize(path)
-                md5 = hashmd5(path)
-                yield {"path": urlpath[1:], "url": self.base_url + urlpath, "filesize": filesize, "hashmd5": md5}
+        for item in self.pathlist:
+
+            if self.followLinks == "GAMMAPY-EXTRA":
+                jsonpath = str(Path(item))
+            elif self.followLinks == "JOINT-CRAB":
+                jsonpath = str(Path("joint-crab") / Path("spectra") / Path(item))
+            else:
+                jsonpath = str(Path(self.name) / Path(item).name)
+
+            itempath = self.local_repo / item
+            urlpath = itempath.as_posix().replace(self.local_repo.as_posix(), "")
+            filesize = os.path.getsize(itempath)
+            md5 = hashmd5(itempath)
+            yield {
+                "path": jsonpath,
+                "url": self.base_url + urlpath,
+                "filesize": filesize,
+                "hashmd5": md5,
+            }
 
 
 class DatasetCTA1DC(DownloadDataset):
@@ -109,7 +135,6 @@ class DatasetTests(DownloadDataset):
 class DatasetFigures(DownloadDataset):
     name = "figures"
     description = "tbd"
-
     base_url = "https://github.com/gammapy/gammapy-extra/raw/master"
     local_repo = Path(os.environ["GAMMAPY_EXTRA"])
 
@@ -117,89 +142,67 @@ class DatasetFigures(DownloadDataset):
 class DatasetJointCrab(DownloadDataset):
     name = "joint-crab"
     description = "tbd"
+    base_url = (
+        "https://github.com/open-gamma-ray-astro/joint-crab/raw/master/results/spectra"
+    )
+    local_repo = Path(os.environ["JOINT_CRAB"]) / "results" / "spectra"
 
-    base_url = "https://github.com/open-gamma-ray-astro/joint-crab/raw/master/results/spectra"
-    local_repo = Path(os.environ["JOINT_CRAB"]) / 'results' / 'spectra'
-    files = []
-
-    for path in (local_repo).glob("**/*.*"):
-        if not path.name.startswith('.'):
-            jsonpath = str(path).replace(str(local_repo), 'joint-crab/spectra')
-            urlpath = path.as_posix().replace(local_repo.as_posix(), "")
-            filesize = os.path.getsize(path)
-            md5 = hashmd5(path)
-            files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
+    followLinks = "JOINT-CRAB"
+    pathlist = []
+    for itempath in (local_repo).glob("**/*.*"):
+        if not itempath.name.startswith("."):
+            pathlist.append(
+                itempath.as_posix().replace(local_repo.as_posix() + "/", "")
+            )
 
 
 class DatasetGammaCat(DownloadDataset):
     name = "gamma-cat"
     description = "tbd"
-
     base_url = "https://github.com/gammapy/gamma-cat/raw/master"
     local_repo = Path(os.environ["GAMMA_CAT"])
-    files = []
 
-    pathlist = [str(Path('output') / 'gammacat.fits.gz')]
-
-    for item in pathlist:
-        path = local_repo / item
-        jsonpath = str(Path('gamma-cat') / Path(item).name)
-        urlpath = path.as_posix().replace(local_repo.as_posix(), "")
-        filesize = os.path.getsize(path)
-        md5 = hashmd5(path)
-        files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
+    followLinks = "Others"
+    pathlist = [str(Path("output") / "gammacat.fits.gz")]
 
 
 class DatasetFermiLat(DownloadDataset):
-    name = "fermi-lat-data"
-    description = "tbd"
 
+    name = "fermi-3fhl"
+    description = "tbd"
     base_url = "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master"
     local_repo = Path(os.environ["GAMMAPY_FERMI_LAT_DATA"])
-    files = []
 
+    followLinks = "Others"
     pathlist = [
-        str(Path('3fhl') / 'allsky' / 'fermi_3fhl_events_selected.fits.gz'),
-        str(Path('3fhl') / 'allsky' / 'fermi_3fhl_exposure_cube_hpx.fits.gz'),
-        str(Path('3fhl') / 'allsky' / 'fermi_3fhl_psf_gc.fits.gz'),
-        str(Path('isodiff') / 'iso_P8R2_SOURCE_V6_v06.txt')
+        str(Path("3fhl") / "allsky" / "fermi_3fhl_events_selected.fits.gz"),
+        str(Path("3fhl") / "allsky" / "fermi_3fhl_exposure_cube_hpx.fits.gz"),
+        str(Path("3fhl") / "allsky" / "fermi_3fhl_psf_gc.fits.gz"),
+        str(Path("isodiff") / "iso_P8R2_SOURCE_V6_v06.txt"),
     ]
-
-    for item in pathlist:
-        path = local_repo / item
-        jsonpath = str(Path('fermi_3fhl') / Path(item).name)
-        urlpath = path.as_posix().replace(local_repo.as_posix(), "")
-        filesize = os.path.getsize(path)
-        md5 = hashmd5(path)
-        files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
 
 
 class DatasetFermi3FHLGC(DownloadDataset):
+
     name = "fermi-3fhl-gc"
     description = "Prepared Fermi-LAT 3FHL dataset of the Galactic center region"
-    local_repo = Path(os.environ["GAMMAPY_FERMI_LAT_DATA"])
     base_url = "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master"
-    files = []
-    filenames = [
-        "fermi-3fhl-gc-background.fits.gz",
-        "fermi-3fhl-gc-background-cube.fits.gz",
-        "fermi-3fhl-gc-counts.fits.gz",
-        "fermi-3fhl-gc-counts-cube.fits.gz",
-        "fermi-3fhl-gc-events.fits.gz",
-        "fermi-3fhl-gc-exposure-cube.fits.gz",
-        "fermi-3fhl-gc-exposure.fits.gz",
-        "fermi-3fhl-gc-psf.fits.gz",
-        "fermi-3fhl-gc-psf-cube.fits.gz",
-        "gll_iem_v06_gc.fits.gz",
-    ]
+    local_repo = Path(os.environ["GAMMAPY_FERMI_LAT_DATA"])
+    basepath = Path("3fhl") / "galactic-center"
 
-    for filename in filenames:
-        path = local_repo / "3fhl/galactic-center" / filename
-        jsonpath = str(Path('fermi-3fhl-gc') / filename)
-        urlpath = path.as_posix().replace(local_repo.as_posix(), "")
-        filesize = os.path.getsize(path)
-        md5 = hashmd5(path)
-        files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
+    followLinks = "Others"
+    pathlist = [
+        str(basepath / "fermi-3fhl-gc-background.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-background-cube.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-counts.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-counts-cube.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-events.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-exposure-cube.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-exposure.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-psf.fits.gz"),
+        str(basepath / "fermi-3fhl-gc-psf-cube.fits.gz"),
+        str(basepath / "gll_iem_v06_gc.fits.gz"),
+    ]
 
 
 class DownloadDatasetIndex:
@@ -216,13 +219,13 @@ class DownloadDatasetIndex:
         DatasetGammaCat,
         DatasetFermi3FHLGC,
         DatasetTests,
-        DatasetFigures
+        DatasetFigures,
     ]
 
     def make(self):
         records = list(self.make_records())
         txt = json.dumps(records, indent=True)
-        log.info(f"Writing {self.path}")
+        log.info("Writing {}".format(self.path))
         Path(self.path).write_text(txt)
 
     def make_records(self):
@@ -232,7 +235,7 @@ class DownloadDatasetIndex:
 
 @click.group()
 def cli():
-    """Make a dataset index JSON file to download with gammapy download datasets"""
+    """Make a dataset index JSON file to download datasets with gammapy download datasets"""
     logging.basicConfig(level="INFO")
 
 
