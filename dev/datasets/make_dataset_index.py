@@ -22,17 +22,17 @@ def hashmd5(path):
     return md5_hash.hexdigest()
 
 
-class Dataset:
-    """Dataset base class.
+class DownloadDataset:
+    """DownloadDataset base class.
 
-    The Dataset class has a local_repo property where to scan the content
+    The DownloadDataset class has a local_repo property where to scan the content
     and a base_url to build access links for each file.
 
-    A dataset has a name as identifier.
+    A DownloadDataset has a name as identifier.
     It also has a description and list of files, each file has a given URL
     and a path that tells you where the file will be placed when downloaded.
 
-    If you want to add a dataset, make a new class and add it to the list below.
+    If you want to add a DownloadDataset, make a new class and add it to the list below.
     """
 
     base_url = "https://github.com/gammapy/gammapy-extra/raw/master/datasets"
@@ -56,57 +56,57 @@ class Dataset:
                 yield {"path": urlpath[1:], "url": self.base_url + urlpath, "filesize": filesize, "hashmd5": md5}
 
 
-class DatasetCTA1DC(Dataset):
+class DatasetCTA1DC(DownloadDataset):
     name = "cta-1dc"
     description = "tbd"
 
 
-class DatasetDarkMatter(Dataset):
+class DatasetDarkMatter(DownloadDataset):
     name = "dark_matter_spectra"
     description = "tbd"
 
 
-class DatasetCatalogs(Dataset):
+class DatasetCatalogs(DownloadDataset):
     name = "catalogs"
     description = "tbd"
 
 
-class DatasetFermi2FHL(Dataset):
+class DatasetFermi2FHL(DownloadDataset):
     name = "fermi_2fhl"
     description = "tbd"
 
 
-class DatasetFermi3FHL(Dataset):
+class DatasetFermi3FHL(DownloadDataset):
     name = "fermi_3fhl"
     description = "tbd"
 
 
-class DatasetFermiSurvey(Dataset):
+class DatasetFermiSurvey(DownloadDataset):
     name = "fermi_survey"
     description = "tbd"
 
 
-class DatasetHESSDL3DR1(Dataset):
+class DatasetHESSDL3DR1(DownloadDataset):
     name = "hess-dl3-dr1"
     description = "tbd"
 
 
-class DatasetImages(Dataset):
+class DatasetImages(DownloadDataset):
     name = "images"
     description = "tbd"
 
 
-class DatasetEBL(Dataset):
+class DatasetEBL(DownloadDataset):
     name = "ebl"
     description = "tbd"
 
 
-class DatasetTests(Dataset):
+class DatasetTests(DownloadDataset):
     name = "tests"
     description = "tbd"
 
 
-class DatasetFigures(Dataset):
+class DatasetFigures(DownloadDataset):
     name = "figures"
     description = "tbd"
 
@@ -114,7 +114,7 @@ class DatasetFigures(Dataset):
     local_repo = Path(os.environ["GAMMAPY_EXTRA"])
 
 
-class DatasetJointCrab(Dataset):
+class DatasetJointCrab(DownloadDataset):
     name = "joint-crab"
     description = "tbd"
 
@@ -131,7 +131,7 @@ class DatasetJointCrab(Dataset):
             files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
 
 
-class DatasetGammaCat(Dataset):
+class DatasetGammaCat(DownloadDataset):
     name = "gamma-cat"
     description = "tbd"
 
@@ -150,7 +150,7 @@ class DatasetGammaCat(Dataset):
         files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
 
 
-class DatasetFermiLat(Dataset):
+class DatasetFermiLat(DownloadDataset):
     name = "fermi-lat-data"
     description = "tbd"
 
@@ -174,7 +174,7 @@ class DatasetFermiLat(Dataset):
         files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
 
 
-class DatasetFermi3FHLGC(Dataset):
+class DatasetFermi3FHLGC(DownloadDataset):
     name = "fermi-3fhl-gc"
     description = "Prepared Fermi-LAT 3FHL dataset of the Galactic center region"
     local_repo = Path(os.environ["GAMMAPY_FERMI_LAT_DATA"])
@@ -202,9 +202,9 @@ class DatasetFermi3FHLGC(Dataset):
         files.append({"path": jsonpath, "url": base_url + urlpath, "filesize": filesize, "hashmd5": md5})
 
 
-class DatasetIndex:
+class DownloadDatasetIndex:
     path = "gammapy-data-index.json"
-    datasets = [
+    download_datasets = [
         DatasetCTA1DC,
         DatasetDarkMatter,
         DatasetCatalogs,
@@ -226,13 +226,13 @@ class DatasetIndex:
         Path(self.path).write_text(txt)
 
     def make_records(self):
-        for cls in self.datasets:
+        for cls in self.download_datasets:
             yield cls().record
 
 
 @click.group()
 def cli():
-    """Make the gammapy.org webpage."""
+    """Make a dataset index JSON file to download with gammapy download datasets"""
     logging.basicConfig(level="INFO")
 
 
@@ -240,13 +240,13 @@ def cli():
 @click.pass_context
 def cli_all(ctx):
     """Run all steps"""
-    ctx.invoke(cli_dataset_index)
+    ctx.invoke(cli_download_dataset_index)
 
 
 @cli.command("dataset-index")
-def cli_dataset_index():
-    """Generate data index file"""
-    DatasetIndex().make()
+def cli_download_dataset_index():
+    """Generate dataset index JSON file"""
+    DownloadDatasetIndex().make()
 
 
 if __name__ == "__main__":
