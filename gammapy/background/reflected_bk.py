@@ -2,66 +2,17 @@
 import logging
 import numpy as np
 from scipy.ndimage import distance_transform_edt
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
-from regions import PixCoord, CirclePixelRegion
+from regions import PixCoord, CirclePixelRegion, CircleAnnulusPixelRegion, \
+                     RectanglePixelRegion, RectangleAnnulusPixelRegion, \
+                     EllipsePixelRegion,EllipseAnnulusPixelRegion
 from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 
 __all__ = ["ReflectedRegionsFinder_BK", "ReflectedRegionsBackgroundEstimator_BK"]
 
 log = logging.getLogger(__name__)
-
-
-def _compute_distance_image_BK(mask_map):
-    """Distance to nearest exclusion region.
-
-    Compute distance image, i.e. the Euclidean (=Cartesian 2D)
-    distance (in pixels) to the nearest exclusion region.
-
-    We need to call distance_transform_edt twice because it only computes
-    dist for pixels outside exclusion regions, so to get the
-    distances for pixels inside we call it on the inverted mask
-    and then combine both distance images into one, using negative
-    distances (note the minus sign) for pixels inside exclusion regions.
-
-    If data consist only of ones, it'll be supposed to be far away
-    from zero pixels, so in capacity of answer it should be return
-    the matrix with the shape as like as data but packed by constant
-    value Max_Value (MAX_VALUE = 1e10).
-
-    If data consist only of zeros, it'll be supposed to be deep inside
-    an exclusion region, so in capacity of answer it should be return
-    the matrix with the shape as like as data but packed by constant
-    value -Max_Value (MAX_VALUE = 1e10).
-
-    Returns
-    -------
-    distance : `~gammapy.maps.WcsNDMap`
-        Map of distance to nearest exclusion region.
-    """
-    max_value = 1e10
-
-    if np.all(mask_map.data == 1):
-        dist_map = mask_map.copy(data=mask_map.data * max_value)
-        return dist_map
-
-    if np.all(mask_map.data == 0):
-        dist_map = mask_map.copy(data=mask_map.data - max_value)
-        return dist_map
-
-    distance_outside = distance_transform_edt(mask_map.data)
-
-    invert_mask = np.invert(np.array(mask_map.data, dtype=np.bool))
-    distance_inside = distance_transform_edt(invert_mask)
-
-    distance = np.where(
-        mask_map.data,
-        distance_outside,
-        -distance_inside,  # pylint:disable=invalid-unary-operand-type
-    )
-
-    return mask_map.copy(data=distance)
 
 
 class ReflectedRegionsFinder_BK:
@@ -141,12 +92,17 @@ class ReflectedRegionsFinder_BK:
         """
         self.obs_id = obs_id
         self.reference_map = self.make_reference_map(self)
+        # Make the reprojection only once
+
         if self.exclusion_mask is not None:
+            _run_exclusion_mask = self.exclusion_mask.reproject(self.reference_map.geom)
+            _run_exclusion_mask.data[np.where(np.isnan(_run_exclusion_mask.data))] = 1
             coords = self.reference_map.geom.get_coord()
-            vals = self.exclusion_mask.get_by_coord(coords)
-            self.reference_map.data += vals
+            vals = _run_exclusion_mask.get_by_coord(coords)
+            self.reference_map.data += int(vals is True)
+            # self.reference_map.data[np.where(np.isnan(self.reference_map.data))] = 1
         else:
-            self.reference_map.data += 1
+            self.reference_map.data = np.ones(self.reference_map.data.shape)
         self.setup()
         self.find_regions()
 
@@ -162,7 +118,7 @@ class ReflectedRegionsFinder_BK:
         reference_map : `~gammapy.maps.WcsNDMap`
             Map containing the region
         """
-        self.width = 15.
+        width = 15.
 
         try:
             reg_center = self.region.center
@@ -171,22 +127,16 @@ class ReflectedRegionsFinder_BK:
 
         if 'ra' in reg_center.representation_component_names:
             _maskmap = WcsNDMap.create(
-                skydir=self.center, binsz=self.binsz, width=self.width, coordsys="CEL", proj="TAN"
+                skydir=self.center, binsz=self.binsz, width=width, coordsys="CEL", proj="TAN"
              )
         else:
             _maskmap = WcsNDMap.create(
-                skydir=self.center, binsz=self.binsz, width=self.width, coordsys="GAL", proj="TAN"
+                skydir=self.center, binsz=self.binsz, width=width, coordsys="GAL", proj="TAN"
             )
 
-        # wcs = _maskmap.geom.wcs
-        # _region_pix = self.region.to_pixel(wcs)
-        # _ixmin = _region_pix.bounding_box.ixmin
-        # _ixmax = _region_pix.bounding_box.ixmax
-        # _iymin = _region_pix.bounding_box.iymin
-        # _iymax = _region_pix.bounding_box.iymax
-        # self.cog = PixCoord((_ixmin + _ixmax) / 2., (_iymin + _iymax) / 2.).to_sky(wcs)
-        self.width = Angle(3.0 * reg_center.transform_to(self.center).separation(self.center), u.degree)
-        maskmap = _maskmap.cutout(self.center, self.width)
+        # width is the full width of an image (not the radius)
+        width = Angle(3.0 * reg_center.transform_to(self.center).separation(self.center), u.degree) * 2.
+        maskmap = _maskmap.cutout(self.center, width)
 
         return maskmap
 
@@ -194,7 +144,7 @@ class ReflectedRegionsFinder_BK:
         """Compute parameters for reflected regions algorithm."""
         geom = self.reference_map.geom
         self._pix_region = self.region.to_pixel(geom.wcs)
-        self._pix_center = PixCoord(*self.center.to_pixel(geom.wcs))
+        self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
         dx = self._pix_region.center.x - self._pix_center.x
         dy = self._pix_region.center.y - self._pix_center.y
 
@@ -210,7 +160,7 @@ class ReflectedRegionsFinder_BK:
         self.on_reference_map = WcsNDMap(geom=geom, data=_mask)
 
         # Starting angle of region
-        self._angle = Angle(np.arctan2(dx, dy), "rad")
+        self._angle = Angle(np.arctan2(dy, dx), "rad")
 
         # Minimum angle a circle has to be moved to not overlap with previous one
         pix_idx = geom.get_pix()
@@ -233,44 +183,54 @@ class ReflectedRegionsFinder_BK:
             self._angle + Angle("360deg") - self._min_ang - self.min_distance_input
         )
 
-        # Distance image
-        # self._distance_image = _compute_distance_image_BK(self.reference_map)
+        if self._min_ang < 0:
+            print("ISSUE self._min_ang=", self._min_ang)
+        if self.min_distance_input < 0:
+            print("ISSUE self.min_distance_input=", self.min_distance_input)
 
     def find_regions(self):
         """Find reflected regions."""
         curr_angle = self._angle + self._min_ang + self.min_distance_input
         reflected_regions = []
+        geom = self.reference_map.geom
+        _run_exclusion_mask = None
+        _excluded_skycoords = None
+        if not self.exclusion_mask is None:
+            _run_exclusion_mask = self.exclusion_mask.reproject(self.reference_map.geom)
+            _run_exclusion_mask.data[np.where(np.isnan(_run_exclusion_mask.data))] = 1
+            _mask_array = np.where(_run_exclusion_mask.data < 0.99)
+            _excluded_coords = geom.get_coord().apply_mask(_mask_array).to_coordsys('CEL')
+            _excluded_skycoords = SkyCoord(_excluded_coords[0], _excluded_coords[1], unit='deg')
+
         while curr_angle < self._max_angle:
-            test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
-            # TODO : to generalise to any shape
-            test_reg = CirclePixelRegion(test_pos, self._pix_region.radius)
-            _region = test_reg.to_sky(self.exclusion_mask.geom.wcs)
-            if not self._is_inside_exclusion(_region):
-                refl_region = test_reg.to_sky(self.reference_map.geom.wcs)
-                log.debug("Placing reflected region\n{}".format(refl_region))
-                reflected_regions.append(refl_region)
+            _test_reg = self._create_rotated_reg(curr_angle)
+            _region = _test_reg.to_sky(geom.wcs)
+            if _run_exclusion_mask is None or not np.any(_region.contains(_excluded_skycoords, geom.wcs)):
+                log.debug("Placing reflected region\n{}".format(_region))
+                reflected_regions.append(_region)
                 curr_angle = curr_angle + self._min_ang
                 if self.max_region_number <= len(reflected_regions):
                     break
             else:
                 curr_angle = curr_angle + self.angle_increment
 
+        print("Found {0} reflected regions for the Obs #{1}".format(len(reflected_regions), self.obs_id))
         log.debug("Found {} reflected regions".format(len(reflected_regions)))
 
         self.reflected_regions = reflected_regions
 
+        # Make the OFF reference map
+        _mask = geom.region_mask(self.reflected_regions, inside=True)
+        self.off_reference_map = WcsNDMap(geom=geom, data=_mask)
+
     def plot(self, fig=None, ax=None):
         """Standard debug plot.
-
-        TODO : if a center is defined for the on_region, then make the plot in the WCS of this center (e.g.: ICRS for AGN)
 
         See example here: :ref:'regions_reflected'.
         """
         fig, ax, cbar = self.reference_map.plot(fig=fig, ax=ax, cmap="gray")
         wcs = self.reference_map.geom.wcs
-        # self.on_reference_map.plot(fig=fig, ax=ax)
 
-        # This is good
         on_patch = self.region.to_pixel(wcs=wcs).as_artist(color="red", alpha=0.6)
         ax.add_patch(on_patch)
 
@@ -279,55 +239,58 @@ class ReflectedRegionsFinder_BK:
             off_patch = tmp.as_artist(color="blue", alpha=0.6)
             ax.add_patch(off_patch)
 
-            test_pointing = self.center
-            ax.scatter(
-                test_pointing.galactic.l.degree,
-                test_pointing.galactic.b.degree,
-                transform=ax.get_transform("galactic"),
+            xx, yy = self.center.to_pixel(wcs)
+            ax.plot(
+                xx, yy,
                 marker="+",
-                s=300,
-                linewidths=3,
                 color="green",
+                markersize=20,
+                linewidth=5,
             )
 
         return fig, ax
 
-    def _is_inside_exclusion(self, testreg):
-        """Test if a `~regions.SkyRegion` overlaps with an exclusion mask.
-
-        If the regions is outside the exclusion mask (0 when to be excluded), return 'False'
-        """
-        if self.exclusion_mask is None:
-            return False
-
-        geom = self.exclusion_mask.geom
-        _mask = geom.region_mask([testreg], inside=True)
-        pix_idx = geom.get_pix()
-        pix_on_x = pix_idx[0][_mask]
-        pix_on_y = pix_idx[1][_mask]
-
-        for x, y in zip(pix_on_x, pix_on_y):
-            try:
-                val = self.exclusion_mask.data[np.round(y).astype(int), np.round(x).astype(int)]
-                # print("[{0}, {1}] val={2}".format(x, y, val))
-            except IndexError:
-                continue
-            if val is False:
-                return True
-
-        return False
-
     @staticmethod
     def _compute_xy(pix_center, offset, angle):
-        """Compute x, y position for a given position angle and offset.
-
-        # TODO: replace by calculation using `astropy.coordinates`
-        """
-        dx = offset * np.sin(angle)
-        dy = offset * np.cos(angle)
+        """Compute x, y position for a given position angle and offset."""
+        dx = offset * np.cos(angle)
+        dy = offset * np.sin(angle)
         x = pix_center.x + dx
         y = pix_center.y + dy
         return PixCoord(x=x, y=y)
+
+    def _create_rotated_reg(self, curr_angle):
+        """ Compute a rotated region"""
+        _test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
+        _reg_type = type(self._pix_region).__name__
+
+        if _reg_type == 'CirclePixelRegion':
+            _test_reg = CirclePixelRegion(_test_pos, self._pix_region.radius)
+        elif _reg_type == 'CircleAnnulusPixelRegion':
+            _test_reg = CircleAnnulusPixelRegion(
+                _test_pos, self._pix_region.inner_radius, self._pix_region.outer_radius)
+        elif _reg_type == 'EllipsePixelRegion':
+            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
+            _test_reg = EllipsePixelRegion(
+                _test_pos, self._pix_region.height, self._pix_region.width, _angle)
+        elif _reg_type == 'EllipseAnnulusPixelRegion':
+            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
+            _test_reg = EllipseAnnulusPixelRegion(
+                _test_pos, self._pix_region.inner_width, self._pix_region.outer_width,
+                self._pix_region.inner_height, self._pix_region.outer_height, _angle)
+        elif _reg_type == 'RectanglePixelRegion':
+            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
+            _test_reg = RectanglePixelRegion(
+                _test_pos, self._pix_region.width, self._pix_region.height, _angle)
+        elif _reg_type == 'RectangleAnnulusPixelRegion':
+            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
+            _test_reg = RectangleAnnulusPixelRegion(
+                _test_pos, self._pix_region.inner_width, self._pix_region.outer_width,
+                self._pix_region.inner_height, self._pix_region.outer_height, _angle)
+        else:
+            raise NotImplementedError("Region type not supported!!! [{0}]".format(_reg_type))
+
+        return _test_reg
 
 
 class ReflectedRegionsBackgroundEstimator_BK:
@@ -363,8 +326,10 @@ class ReflectedRegionsBackgroundEstimator_BK:
             if binsz > 0.01*u.deg:
                 binsz = 0.01*u.deg
         self.binsz = binsz
+        log.debug("ReflectedRegionsFinder Ref. Map: bins={}".format(self.binsz))
         self.finder = ReflectedRegionsFinder_BK(region=on_region, center=None, binsz=Angle(binsz), **kwargs)
 
+        self.exclusion_mask = kwargs.get("exclusion_mask")
         self.result = None
 
     def __str__(self):
@@ -409,8 +374,8 @@ class ReflectedRegionsBackgroundEstimator_BK:
         self.finder.center = obs.pointing_radec
         self.finder.run(obs.obs_id)
         off_region = self.finder.reflected_regions
-        # off_events = obs.events.select_circular_region(off_region)      # TODO: replace with the Regis PR
-        # on_events = obs.events.select_circular_region(self.on_region)   # TODO: replace with the Regis PR
+        off_events = obs.events.select_map_mask(self.finder.off_reference_map)
+        on_events = obs.events.select_map_mask(self.finder.on_reference_map)
         off_events = obs.events
         on_events = obs.events
         a_on = 1
@@ -448,22 +413,23 @@ class ReflectedRegionsBackgroundEstimator_BK:
         except:
             raise NotImplementedError("Algorithm not yet adapted to this Region shape")
 
-        IsGal = True
         if 'ra' in reg_center.representation_component_names:
             _plotmap = WcsNDMap.create(
                 skydir=reg_center, binsz=self.binsz, width=10., coordsys="CEL", proj="TAN"
              )
-            IsGal = False
         else:
             _plotmap = WcsNDMap.create(
                 skydir=reg_center, binsz=self.binsz, width=10., coordsys="GAL", proj="TAN"
             )
-
-        fig, ax, cbar = _plotmap.plot(fig=fig, ax=ax)
-        # if not (self.finder.exclusion_mask is None):
-        #     self.finder.exclusion_mask.plot(fig=fig, ax=ax, cmap="gray")
-
+        _plotmap.data = np.ones(_plotmap.data.shape)
         wcs = _plotmap.geom.wcs
+
+        if fig is None:
+            fig = plt.figure(figsize=(7, 7))
+        fig, ax, cbar = _plotmap.plot(fig=fig, ax=ax)
+        if not (self.exclusion_mask is None):
+            self.exclusion_mask.reproject(_plotmap.geom).plot(fig=fig, ax=ax, cmap="gray")
+
         on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(color="red")
         ax.add_patch(on_patch)
 
@@ -491,28 +457,14 @@ class ReflectedRegionsBackgroundEstimator_BK:
             if off_regions:
                 handles.append(handle)
 
-            if IsGal:
-                test_pointing = obs.pointing_radec.galactic
-                ax.scatter(
-                    test_pointing.l.degree,
-                    test_pointing.b.degree,
-                    transform=ax.get_transform("galactic"),
-                    marker="+",
-                    color=colors[idx_],
-                    s=300,
-                    linewidths=3,
-                )
-            else:
-                test_pointing = obs.pointing_radec
-                ax.scatter(
-                    test_pointing.ra.degree,
-                    test_pointing.dec.degree,
-                    marker="+",
-                    color=colors[idx_],
-                    s=300,
-                    linewidths=3,
-                )
-                print("BKH> OK {0} {1}".format(test_pointing.ra.degree,test_pointing.dec.degree))
+            xx, yy = obs.pointing_radec.to_pixel(wcs)
+            ax.plot(
+                xx, yy,
+                marker="+",
+                color=colors[idx_],
+                markersize=20,
+                linewidth=5,
+            )
 
         if add_legend:
             ax.legend(handles=handles)
