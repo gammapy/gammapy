@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import copy
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 from astropy.coordinates import Angle, SkyCoord
@@ -261,33 +262,16 @@ class ReflectedRegionsFinder_BK:
     def _create_rotated_reg(self, curr_angle):
         """ Compute a rotated region"""
         _test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
-        _reg_type = type(self._pix_region).__name__
 
-        if _reg_type == 'CirclePixelRegion':
-            _test_reg = CirclePixelRegion(_test_pos, self._pix_region.radius)
-        elif _reg_type == 'CircleAnnulusPixelRegion':
-            _test_reg = CircleAnnulusPixelRegion(
-                _test_pos, self._pix_region.inner_radius, self._pix_region.outer_radius)
-        elif _reg_type == 'EllipsePixelRegion':
+        _test_reg = copy.deepcopy(self._pix_region)
+        for par in _test_reg._repr_params:
+            _test_reg.__setattr__(par, self._pix_region.__getattribute__(par))
+
+        if hasattr(_test_reg, 'angle'):
             _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-            _test_reg = EllipsePixelRegion(
-                _test_pos, self._pix_region.height, self._pix_region.width, _angle)
-        elif _reg_type == 'EllipseAnnulusPixelRegion':
-            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-            _test_reg = EllipseAnnulusPixelRegion(
-                _test_pos, self._pix_region.inner_width, self._pix_region.outer_width,
-                self._pix_region.inner_height, self._pix_region.outer_height, _angle)
-        elif _reg_type == 'RectanglePixelRegion':
-            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-            _test_reg = RectanglePixelRegion(
-                _test_pos, self._pix_region.width, self._pix_region.height, _angle)
-        elif _reg_type == 'RectangleAnnulusPixelRegion':
-            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-            _test_reg = RectangleAnnulusPixelRegion(
-                _test_pos, self._pix_region.inner_width, self._pix_region.outer_width,
-                self._pix_region.inner_height, self._pix_region.outer_height, _angle)
-        else:
-            raise NotImplementedError("Region type not supported!!! [{0}]".format(_reg_type))
+            _test_reg.angle = _angle
+        if hasattr(_test_reg, 'center'):
+            _test_reg.center = _test_pos
 
         return _test_reg
 
@@ -373,10 +357,8 @@ class ReflectedRegionsBackgroundEstimator_BK:
         self.finder.center = obs.pointing_radec
         self.finder.run(obs.obs_id)
         off_region = self.finder.reflected_regions
-        # off_events = obs.events.select_map_mask(self.finder.off_reference_map)
-        # on_events = obs.events.select_map_mask(self.finder.on_reference_map)
-        off_events = obs.events
-        on_events = obs.events
+        off_events = obs.events.select_map_mask(self.finder.off_reference_map)
+        on_events = obs.events.select_map_mask(self.finder.on_reference_map)
         a_on = 1
         a_off = len(off_region)
         return BackgroundEstimate(
