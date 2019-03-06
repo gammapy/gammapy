@@ -80,7 +80,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 
     if not geom.is_allsky:
         coords = geom.center_coord[:2] + tuple([ax.center[0] for ax in geom.axes])
-        coords[0][...] += 2.0 * np.max(geom.width[0])
+        coords[0][...] += 2.0 * np.max(geom.width[0].to_value("deg"))
         idx = geom.coord_to_idx(coords)
         assert_allclose(np.full_like(coords[0], -1, dtype=int), idx[0])
         idx = geom.coord_to_idx(coords, clip=True)
@@ -215,6 +215,21 @@ def test_wcsgeom_separation():
     assert separation.unit == "deg"
     assert separation.shape == (10, 10)
     assert_allclose(separation.value[0, 0], 0.7106291438079875)
+
+
+def test_cutout():
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        npix=10,
+        binsz=0.1,
+        coordsys="GAL",
+        proj="CAR",
+        axes=[MapAxis.from_edges([0, 2, 3])],
+    )
+    position = SkyCoord(0.1, 0.2, unit="deg", frame="galactic")
+    cutout_geom = geom.cutout(position=position, width=2 * 0.3 * u.deg, mode="trim")
+    assert_allclose(cutout_geom.center_coord, (0.1, 0.2, 2.))
+    assert cutout_geom.data_shape == (2, 6, 6)
 
 
 def test_wcsgeom_get_coord():

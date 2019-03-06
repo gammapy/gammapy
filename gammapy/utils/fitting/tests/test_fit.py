@@ -105,6 +105,18 @@ def test_likelihood_profile():
     assert_allclose(dataset.parameters["x"].value, 2)
 
 
+def test_likelihood_profile_reoptimize():
+    dataset = MyDataset()
+    fit = Fit(dataset)
+    fit.run()
+
+    dataset.parameters["y"].value = 0
+    result = fit.likelihood_profile("x", nvalues=3, reoptimize=True)
+
+    assert_allclose(result["values"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["likelihood"], [4, 0, 4], atol=1e-7)
+
+
 def test_minos_contour():
     dataset = MyDataset()
     fit = Fit(dataset)

@@ -49,15 +49,5 @@ def fill_map_counts(counts_map, events):
     It works for IACT and Fermi-LAT events, for WCS or HEALPix map geometries,
     and also for extra axes. Especially energy axes are automatically handled correctly.
     """
-    coord = dict(skycoord=events.radec)
-
-    cols = {k.upper(): v for k, v in events.table.columns.items()}
-
-    for axis in counts_map.geom.axes:
-        try:
-            col = cols[axis.name.upper()]
-            coord[axis.name] = Quantity(col).to(axis.unit)
-        except KeyError:
-            raise KeyError("Column not found in event list: {!r}".format(axis.name))
-
+    coord = events._get_coord_from_geom(counts_map.geom)
     counts_map.fill_by_coord(coord)

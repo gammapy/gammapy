@@ -142,18 +142,16 @@ def make_minuit_par_kwargs(parameters):
 
     See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
     """
-    names = _make_parnames(parameters)
+    names = _make_parnames(parameters.free_parameters)
     kwargs = {"forced_parameters": names}
 
-    for name, par in zip(names, parameters):
+    for name, par in zip(names, parameters.free_parameters):
         kwargs[name] = par.factor
 
         min_ = None if np.isnan(par.factor_min) else par.factor_min
         max_ = None if np.isnan(par.factor_max) else par.factor_max
         kwargs["limit_{}".format(name)] = (min_, max_)
-
         kwargs["error_{}".format(name)] = 1
-        kwargs["fix_{}".format(name)] = par.frozen
 
     return kwargs
 

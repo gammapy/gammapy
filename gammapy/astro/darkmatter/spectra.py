@@ -56,20 +56,27 @@ class PrimaryFlux:
         "V->tau": "V->\\[Tau]",
     }
 
+    table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
+
     def __init__(self, mDM, channel):
+
+        self.table_path = make_path(self.table_filename)
+        if not self.table_path.exists():
+            message = "\n\nFile {} not found.\n" \
+                      "You may download the dataset needed with the following command:\n" \
+                      "gammapy download datasets --src dark_matter_spectra" \
+                      "".format(self.table_filename)
+
+            raise FileNotFoundError(message)
+        else:
+            self.table = Table.read(str(self.table_path),
+                    format="ascii.fast_basic",
+                    guess=False,
+                    delimiter=" ",
+                )
+
         self.mDM = mDM
         self.channel = channel
-
-    @lazyproperty
-    def table(self):
-        """Lookup table (`~astropy.table.Table`)."""
-        filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
-        return Table.read(
-            str(make_path(filename)),
-            format="ascii.fast_basic",
-            guess=False,
-            delimiter=" ",
-        )
 
     @property
     def mDM(self):
