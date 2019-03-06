@@ -194,18 +194,17 @@ class ReflectedRegionsFinder_BK:
         reflected_regions = []
         geom = self.reference_map.geom
         _run_exclusion_mask = None
-        _excluded_skycoords = None
         if not self.exclusion_mask is None:
             _run_exclusion_mask = self.exclusion_mask.reproject(self.reference_map.geom)
             _run_exclusion_mask.data[np.where(np.isnan(_run_exclusion_mask.data))] = 1
             _mask_array = np.where(_run_exclusion_mask.data < 0.99)
             _excluded_coords = geom.get_coord().apply_mask(_mask_array).to_coordsys('CEL')
-            _excluded_skycoords = SkyCoord(_excluded_coords[0], _excluded_coords[1], unit='deg')
+            _excluded_pixcoords = PixCoord(*SkyCoord(*_excluded_coords, unit='deg').to_pixel(geom.wcs))
 
         while curr_angle < self._max_angle:
             _test_reg = self._create_rotated_reg(curr_angle)
-            _region = _test_reg.to_sky(geom.wcs)
-            if _run_exclusion_mask is None or not np.any(_region.contains(_excluded_skycoords, geom.wcs)):
+            if _run_exclusion_mask is None or not np.any(_test_reg.contains(_excluded_pixcoords)):
+                _region = _test_reg.to_sky(geom.wcs)
                 log.debug("Placing reflected region\n{}".format(_region))
                 reflected_regions.append(_region)
                 curr_angle = curr_angle + self._min_ang
@@ -374,8 +373,8 @@ class ReflectedRegionsBackgroundEstimator_BK:
         self.finder.center = obs.pointing_radec
         self.finder.run(obs.obs_id)
         off_region = self.finder.reflected_regions
-        off_events = obs.events.select_map_mask(self.finder.off_reference_map)
-        on_events = obs.events.select_map_mask(self.finder.on_reference_map)
+        # off_events = obs.events.select_map_mask(self.finder.off_reference_map)
+        # on_events = obs.events.select_map_mask(self.finder.on_reference_map)
         off_events = obs.events
         on_events = obs.events
         a_on = 1
