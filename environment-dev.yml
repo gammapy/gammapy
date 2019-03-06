@@ -36,6 +36,7 @@ dependencies:
   - pandoc
   - pylint
   - flake8
+  - tornado<6
   - pip:
     - sphinx-rtd-theme
     - nbsphinx
