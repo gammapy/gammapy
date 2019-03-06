@@ -3,7 +3,7 @@ import pytest
 import astropy.units as u
 from ....utils.testing import assert_quantity_allclose, requires_data
 from ....maps import WcsGeom
-from .. import JFactory, profiles, PrimaryFlux, compute_dm_flux
+from .. import JFactory, profiles, DMAnnihilation
 
 
 @pytest.fixture(scope="session")
@@ -17,19 +17,16 @@ def jfact(geom):
     return jfactory.compute_jfactor()
 
 
-@pytest.fixture(scope="session")
-def prim_flux():
-    return PrimaryFlux(mDM=1 * u.TeV, channel="W")
-
-
 @requires_data("gammapy-data")
-def test_dmfluxmapmaker(jfact, prim_flux):
-    x_section = 1e-26 * u.Unit("cm3 s-1")
-    energy_range = [0.1, 1] * u.TeV
-    flux = compute_dm_flux(
-        jfact=jfact, prim_flux=prim_flux, x_section=x_section, energy_range=energy_range
-    )
+def test_dmfluxmap(jfact):
 
-    actual = flux[5, 5]
-    desired = 6.49463e-13 / u.cm ** 2 / u.s
+    emin = 0.1 * u.TeV
+    emax = 10 * u.TeV
+    massDM = 1 * u.TeV
+    channel = "W"
+
+    diff_flux = DMAnnihilation(mass=massDM, channel=channel)
+    int_flux = (jfact * diff_flux.integral(emin=emin, emax=emax)).to("cm-2 s-1")
+    actual = int_flux[5, 5]
+    desired = 1.94839226e-12 / u.cm ** 2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-5)

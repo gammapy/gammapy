@@ -3,7 +3,7 @@
 import numpy as np
 import astropy.units as u
 
-__all__ = ["JFactory", "compute_dm_flux"]
+__all__ = ["JFactory"]
 
 
 class JFactory:
@@ -52,41 +52,3 @@ class JFactory:
         """
         diff_jfact = self.compute_differential_jfactor()
         return diff_jfact * self.geom.to_image().solid_angle()
-
-
-def compute_dm_flux(jfact, prim_flux, x_section, energy_range):
-    r"""Create dark matter flux maps.
-
-    The gamma-ray flux is computed as follows:
-
-    .. math::
-
-        \frac{\mathrm d \phi}{\mathrm d E \mathrm d\Omega} =
-        \frac{\langle \sigma\nu \rangle}{8\pi m^2_{\mathrm{DM}}}
-        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
-
-    Parameters
-    ----------
-    jfact : `~astropy.units.Quantity`
-        J-Factor as computed by `~gammapy.astro.darkmatter.JFactory`
-    prim_flux : `~gammapy.astro.darkmatter.PrimaryFlux`
-        Primary gamma-ray flux
-    x_section : `~astropy.units.Quantity`
-        Velocity averaged annihilation cross section, :math:`\langle \sigma\nu\rangle`
-    energy_range : tuple of `~astropy.units.Quantity`
-        Energy range for the map
-
-    Returns
-    -------
-    flux : `~astropy.units.Quantity`
-        DM Flux
-
-    References
-    ----------
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
-    """
-    prefactor = x_section / (8 * np.pi * prim_flux.mDM ** 2)
-    int_flux = prim_flux.table_model.integral(
-        emin=energy_range[0], emax=energy_range[1]
-    )
-    return (jfact * prefactor * int_flux).to("cm-2 s-1")
