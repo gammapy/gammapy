@@ -1,8 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
 import astropy.units as u
+from ...maps import WcsNDMap
+from ...image.models import SkyPointSource
+from ...cube.models import SkyModel
+from ...cube.fit import MapDataset
+from ...spectrum.models import AbsorbedSpectralModel
+from ...utils.fitting import Fit
+from .spectra import DMAnnihilation
+from scipy.optimize import brentq
+from scipy.interpolate import interp1d
 
-__all__ = ["JFactory"]
+__all__ = ["JFactory", "SigmaVEstimator"]
 
 
 class JFactory:
@@ -51,3 +60,118 @@ class JFactory:
         """
         diff_jfact = self.compute_differential_jfactor()
         return diff_jfact * self.geom.to_image().solid_angle()
+
+
+class SigmaVEstimator:
+    r"""Estimates :math:`\langle \sigma\nu\rangle` for a list of annihilation channels and particle masses.
+
+    To estimate the different values of :math:`\langle \sigma\nu\rangle` a random poisson realization for a given
+    dark matter annihilation simulated 3D dataset is fitted to a list of `~gammapy.astro.darkmatter.DMAnnihilation`
+    models, that are created within the range of the given lists of annihilation channels and particle masses. For
+    each model fitted in flux, the value of the scale parameter that makes :math:`\delta TS > 2.71` is multiplied by
+    the thermal relic cross section and take it as the estimated value for that :math:`\langle \sigma\nu\rangle`.
+
+    Parameters
+    ----------
+    dataset : `~gammapy.cube.fit.MapDataset`
+        Specific random realization of simulated dark matter annihilation dataset
+    masses : list of `~astropy.units.Quantity`
+        List of mDM where the values of :math:`\langle \sigma\nu\rangle` will be calculated
+    channels : list of strings allowed in `~gammapy.astro.darkmatter.PrimaryFlux`
+        List of channels where the values of :math:`\langle \sigma\nu\rangle` will be calculated
+    jfact : `~astropy.units.Quantity` (optional)
+        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used, default value 1
+    absorption_model : `~gammapy.spectrum.models.Absorption` (optional)
+        Absorption model, default is None
+    z: float (optional)
+        Redshift value, default value 0
+    k: int (optional)
+        Type of dark matter particle (k:2 Majorana, k:4 Dirac), default value 2
+    xsection: `~astropy.units.Quantity` (optional)
+        Thermally averaged annihilation cross-section, default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`
+    """
+
+    def __init__(self, dataset, masses, channels, jfact=1, absorption_model=None, z=0, k=2, xsection=None):
+
+        self.dataset = dataset
+        self.masses = masses
+        self.channels = channels
+        self.jfact = jfact
+        self.absorption_model = absorption_model
+        self.z = z
+        self.k = k
+
+        if not xsection:
+            xsection = DMAnnihilation.THERMAL_RELIC_CROSS_SECTION
+        self.xsection = xsection
+
+        self._spatial_model = dataset.model.spatial_model
+        self._geom = dataset.counts.geom
+        self._exposure = dataset.exposure
+        self._background_model = dataset.background_model
+        self._psf = dataset.psf
+        self._edisp = dataset.edisp
+
+        self._counts_map = WcsNDMap(self._geom, np.random.poisson(dataset.npred().data))
+
+
+    def run(self):
+        """Run the SigmaVEstimator for all channels and masses.
+
+        Returns
+        -------
+        result : dict
+            Dict with results for each channel.
+        """
+
+        result = {}
+        for ch in self.channels:
+            result[ch] = {}
+
+            for mass in self.masses:
+                DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
+                spectral_model = DMAnnihilation(
+                    mass=mass,
+                    channel=ch,
+                    scale=1,
+                    jfactor=self.jfact,
+                    z = self.z,
+                    k = self.k
+                )
+                if self.absorption_model:
+                    spectral_model = AbsorbedSpectralModel(spectral_model, self.absorption_model, self.z)
+                spatial_model = self._spatial_model
+                flux_model = SkyModel(
+                    spatial_model=spatial_model,
+                    spectral_model=spectral_model
+                )
+                if isinstance(self._spatial_model, SkyPointSource):
+                    flux_model.parameters['lat_0'].frozen = True
+                    flux_model.parameters['lon_0'].frozen = True
+
+                dataset_loop = MapDataset(
+                    model=flux_model,
+                    counts=self._counts_map,
+                    exposure=self._exposure,
+                    background_model=self._background_model,
+                    psf=self._psf,
+                    edisp=self._edisp
+                )
+
+                fit = Fit(dataset_loop)
+                fit.datasets.parameters.apply_autoscale = False
+                fit_result = fit.run()
+
+                profile = fit.likelihood_profile(parameter="scale", bounds=5, nvalues=50)
+                xvals = profile["values"]
+                yvals = profile["likelihood"] - fit_result.total_stat - 2.71
+                scale_min = fit_result.parameters["scale"].value
+                scale_max = max(xvals)
+
+                scale_found = brentq(interp1d(xvals, yvals, kind='cubic'), scale_min, scale_max, maxiter=100, rtol=1e-5)
+                sigma_v = scale_found * self.xsection
+
+                result[ch][mass] = sigma_v
+
+        return result
+
