@@ -117,8 +117,15 @@ class SigmaVEstimator:
         self._counts_map = WcsNDMap(self._geom, np.random.poisson(dataset.npred().data))
 
 
-    def run(self):
+    def run(self, optimize_opts=None, covariance_opts=None):
         """Run the SigmaVEstimator for all channels and masses.
+
+        Parameters
+        ----------
+        optimize_opts : dict
+            Options passed to `Fit.optimize`.
+        covariance_opts : dict
+            Options passed to `Fit.covariance`.
 
         Returns
         -------
@@ -163,7 +170,7 @@ class SigmaVEstimator:
                 try:
                     fit = Fit(dataset_loop)
                     fit.datasets.parameters.apply_autoscale = False
-                    fit_result = fit.run()
+                    fit_result = fit.run(optimize_opts, covariance_opts)
 
                     profile = fit.likelihood_profile(parameter="scale", bounds=5, nvalues=50)
                     xvals = profile["values"]
