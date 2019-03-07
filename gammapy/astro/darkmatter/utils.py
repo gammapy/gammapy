@@ -65,22 +65,23 @@ class JFactory:
 
 
 class SigmaVEstimator:
-    r"""Estimates :math:`\langle \sigma\nu\rangle` for a list of annihilation channels and particle masses.
+    r"""Estimates :math:`\sigma\nu` for a list of annihilation channels and particle masses.
 
-    To estimate the different values of :math:`\langle \sigma\nu\rangle` a random poisson realization for a given
-    dark matter annihilation simulated 3D dataset is fitted to a list of `~gammapy.astro.darkmatter.DMAnnihilation`
-    models, that are created within the range of the given lists of annihilation channels and particle masses. For
-    each model fitted in flux, the value of the scale parameter that makes :math:`\delta TS > 2.71` is multiplied by
-    the thermal relic cross section and take it as the estimated value for that :math:`\langle \sigma\nu\rangle`.
+    To estimate the different values of :math:`\sigma\nu`, a random poisson realization for a given
+    annihilation simulated dataset is fitted to a list of `~gammapy.astro.darkmatter.DMAnnihilation`
+    models. These are created within the range of the given lists of annihilation channels and particle
+    masses. For each fit, the value of the scale parameter that makes :math:`\Delta TS > 2.71` is
+    multiplied by the thermal relic cross section, and subsequently taken as the estimated value of
+    :math:`\sigma\nu`.
 
     Parameters
     ----------
     dataset : `~gammapy.cube.fit.MapDataset`
-        Specific random realization of simulated dark matter annihilation dataset
+        Simulated dark matter annihilation dataset
     masses : list of `~astropy.units.Quantity`
-        List of mDM where the values of :math:`\langle \sigma\nu\rangle` will be calculated
+        List of particle masses where the values of :math:`\sigma\nu` will be calculated
     channels : list of strings allowed in `~gammapy.astro.darkmatter.PrimaryFlux`
-        List of channels where the values of :math:`\langle \sigma\nu\rangle` will be calculated
+        List of channels where the values of :math:`\sigma\nu` will be calculated
     jfact : `~astropy.units.Quantity` (optional)
         Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used, default value 1
     absorption_model : `~gammapy.spectrum.models.Absorption` (optional)
@@ -91,6 +92,20 @@ class SigmaVEstimator:
         Type of dark matter particle (k:2 Majorana, k:4 Dirac), default value 2
     xsection: `~astropy.units.Quantity` (optional)
         Thermally averaged annihilation cross-section, default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`
+
+    Examples
+    --------
+    This is how you may run the `SigmaVEstimator`::
+
+        import logging
+        logging.basicConfig()
+        logging.getLogger("gammapy.astro.darkmatter.utils").setLevel("INFO")
+
+        jfact = 3.41e19 * u.Unit("GeV2 cm-5")
+        channels = ["b", "t", "Z"]
+        masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
+        estimator = SigmaVEstimator(simulated_dataset, masses, channels, jfact=JFAC)
+        result = estimator.run()
     """
 
     def __init__(self, dataset, masses, channels, jfact=1, absorption_model=None, z=0, k=2, xsection=None):
