@@ -363,6 +363,8 @@ class SpectrumResult:
         butterfly_kwargs.update(common_kwargs)
 
         self.model.plot(energy_range=energy_range, ax=ax0, **fit_kwargs)
+        butterfly_kwargs.setdefault("color", ax0.lines[-1].get_color())
+        butterfly_kwargs.setdefault("alpha", 0.2)
         self.model.plot_error(energy_range=energy_range, ax=ax0, **butterfly_kwargs)
         self.points.plot(ax=ax0, **point_kwargs)
         point_kwargs.pop("flux_unit")
