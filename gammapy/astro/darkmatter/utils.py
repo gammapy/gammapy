@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
 import astropy.units as u
+from astropy.units import Quantity
 from ...maps import WcsNDMap
 from ...image.models import SkyPointSource
 from ...cube.models import SkyModel
 from ...cube.fit import MapDataset
 from ...spectrum.models import AbsorbedSpectralModel
 from ...utils.fitting import Fit
+from ...utils.table import table_from_row_data
 from .spectra import DMAnnihilation
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
@@ -15,6 +17,7 @@ import logging
 __all__ = ["JFactory", "SigmaVEstimator"]
 
 log = logging.getLogger(__name__)
+
 
 class JFactory:
     """Compute J-Factor maps.
@@ -77,21 +80,21 @@ class SigmaVEstimator:
     Parameters
     ----------
     dataset : `~gammapy.cube.fit.MapDataset`
-        Simulated dark matter annihilation dataset
+        Simulated dark matter annihilation dataset.
     masses : list of `~astropy.units.Quantity`
-        List of particle masses where the values of :math:`\sigma\nu` will be calculated
+        List of particle masses where the values of :math:`\sigma\nu` will be calculated.
     channels : list of strings allowed in `~gammapy.astro.darkmatter.PrimaryFlux`
-        List of channels where the values of :math:`\sigma\nu` will be calculated
+        List of channels where the values of :math:`\sigma\nu` will be calculated.
     jfact : `~astropy.units.Quantity` (optional)
-        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used, default value 1
+        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used, default value 1.
     absorption_model : `~gammapy.spectrum.models.Absorption` (optional)
-        Absorption model, default is None
+        Absorption model, default is None.
     z: float (optional)
-        Redshift value, default value 0
+        Redshift value, default value 0.
     k: int (optional)
-        Type of dark matter particle (k:2 Majorana, k:4 Dirac), default value 2
+        Type of dark matter particle (k:2 Majorana, k:4 Dirac), default value 2.
     xsection: `~astropy.units.Quantity` (optional)
-        Thermally averaged annihilation cross-section, default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`
+        Thermally averaged annihilation cross-section, default value declared in `~gammapy.astro.darkmatter.DMAnnihilation`.
 
     Examples
     --------
@@ -108,7 +111,17 @@ class SigmaVEstimator:
         result = estimator.run()
     """
 
-    def __init__(self, dataset, masses, channels, jfact=1, absorption_model=None, z=0, k=2, xsection=None):
+    def __init__(
+        self,
+        dataset,
+        masses,
+        channels,
+        jfact=1,
+        absorption_model=None,
+        z=0,
+        k=2,
+        xsection=None,
+    ):
 
         self.dataset = dataset
         self.masses = masses
@@ -131,7 +144,6 @@ class SigmaVEstimator:
 
         self._counts_map = WcsNDMap(self._geom, np.random.poisson(dataset.npred().data))
 
-
     def run(self, optimize_opts=None, covariance_opts=None):
         """Run the SigmaVEstimator for all channels and masses.
 
@@ -145,14 +157,16 @@ class SigmaVEstimator:
         Returns
         -------
         result : dict
-            Dict with results for each channel.
+            Dict with results as `~astropy.table.Table` objects for each channel.
         """
 
         result = {}
+        sigma_unit = ""
         for ch in self.channels:
-            result[ch] = {}
+            tablerows = []
             log.info("Channel: {}".format(ch))
             for mass in self.masses:
+                row = {}
                 log.info("Mass: {}".format(mass))
                 DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
                 spectral_model = DMAnnihilation(
@@ -160,19 +174,20 @@ class SigmaVEstimator:
                     channel=ch,
                     scale=1,
                     jfactor=self.jfact,
-                    z = self.z,
-                    k = self.k
+                    z=self.z,
+                    k=self.k,
                 )
                 if self.absorption_model:
-                    spectral_model = AbsorbedSpectralModel(spectral_model, self.absorption_model, self.z)
+                    spectral_model = AbsorbedSpectralModel(
+                        spectral_model, self.absorption_model, self.z
+                    )
                 spatial_model = self._spatial_model
                 flux_model = SkyModel(
-                    spatial_model=spatial_model,
-                    spectral_model=spectral_model
+                    spatial_model=spatial_model, spectral_model=spectral_model
                 )
                 if isinstance(self._spatial_model, SkyPointSource):
-                    flux_model.parameters['lat_0'].frozen = True
-                    flux_model.parameters['lon_0'].frozen = True
+                    flux_model.parameters["lat_0"].frozen = True
+                    flux_model.parameters["lon_0"].frozen = True
 
                 dataset_loop = MapDataset(
                     model=flux_model,
@@ -180,28 +195,51 @@ class SigmaVEstimator:
                     exposure=self._exposure,
                     background_model=self._background_model,
                     psf=self._psf,
-                    edisp=self._edisp
+                    edisp=self._edisp,
                 )
                 try:
                     fit = Fit(dataset_loop)
                     fit.datasets.parameters.apply_autoscale = False
                     fit_result = fit.run(optimize_opts, covariance_opts)
-
-                    profile = fit.likelihood_profile(parameter="scale", bounds=5, nvalues=50)
+                    likemin = fit_result.total_stat
+                    profile = fit.likelihood_profile(
+                        parameter="scale", bounds=5, nvalues=50
+                    )
                     xvals = profile["values"]
-                    yvals = profile["likelihood"] - fit_result.total_stat - 2.71
+                    yvals = profile["likelihood"] - likemin - 2.71
                     scale_min = fit_result.parameters["scale"].value
                     scale_max = max(xvals)
 
-                    scale_found = brentq(interp1d(xvals, yvals, kind='cubic'), scale_min, scale_max, maxiter=100, rtol=1e-5)
+                    scale_found = brentq(
+                        interp1d(xvals, yvals, kind="cubic"),
+                        scale_min,
+                        scale_max,
+                        maxiter=100,
+                        rtol=1e-5,
+                    )
                     sigma_v = scale_found * self.xsection
 
                 except Exception as ex:
                     sigma_v = None
+                    scale_min = None
+                    profile = None
+                    likemin = None
                     log.error(ex)
 
-                result[ch][mass] = sigma_v
+                row["mass"] = mass
+                if isinstance(sigma_v, Quantity):
+                    row["sigma_v"] = sigma_v.value
+                    sigma_unit = sigma_v.unit
+                else:
+                    row["sigma_v"] = sigma_v
+                row["scale"] = scale_min
+                row["likeprofile"] = profile
+                row["likemin"] = likemin
+                tablerows.append(row)
                 log.info("Sigma v: {}".format(sigma_v))
 
-        return result
+            table = table_from_row_data(rows=tablerows)
+            table["sigma_v"].unit = sigma_unit
+            result[ch] = table
 
+        return result
