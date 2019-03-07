@@ -289,6 +289,26 @@ def test_region_mask():
     assert np.sum(mask) == 8
 
 
+def test_energy_mask():
+    energy_axis = MapAxis.from_nodes([1, 10, 100], interp="log", name="energy", unit="TeV")
+    geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
+
+    mask = geom.energy_mask(emin=3 * u.TeV)
+    assert not mask[0, 0, 0]
+    assert mask[1, 0, 0]
+    assert mask[2, 0, 0]
+
+    mask = geom.energy_mask(emax=30 * u.TeV)
+    assert mask[0, 0, 0]
+    assert mask[1, 0, 0]
+    assert not mask[2, 0, 0]
+
+    mask = geom.energy_mask(emin=3 * u.TeV, emax=30 * u.TeV)
+    assert not mask[0, 0, 0]
+    assert not mask[-1, 0, 0]
+    assert mask[1, 0, 0]
+
+
 @pytest.mark.parametrize(
     ("width", "out"),
     [
