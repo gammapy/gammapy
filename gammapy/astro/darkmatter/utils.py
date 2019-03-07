@@ -10,9 +10,11 @@ from ...utils.fitting import Fit
 from .spectra import DMAnnihilation
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
+import logging
 
 __all__ = ["JFactory", "SigmaVEstimator"]
 
+log = logging.getLogger(__name__)
 
 class JFactory:
     """Compute J-Factor maps.
@@ -127,8 +129,9 @@ class SigmaVEstimator:
         result = {}
         for ch in self.channels:
             result[ch] = {}
-
+            log.info("Channel: {}".format(ch))
             for mass in self.masses:
+                log.info("Mass: {}".format(mass))
                 DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
                 spectral_model = DMAnnihilation(
                     mass=mass,
@@ -157,21 +160,26 @@ class SigmaVEstimator:
                     psf=self._psf,
                     edisp=self._edisp
                 )
+                try:
+                    fit = Fit(dataset_loop)
+                    fit.datasets.parameters.apply_autoscale = False
+                    fit_result = fit.run()
 
-                fit = Fit(dataset_loop)
-                fit.datasets.parameters.apply_autoscale = False
-                fit_result = fit.run()
+                    profile = fit.likelihood_profile(parameter="scale", bounds=5, nvalues=50)
+                    xvals = profile["values"]
+                    yvals = profile["likelihood"] - fit_result.total_stat - 2.71
+                    scale_min = fit_result.parameters["scale"].value
+                    scale_max = max(xvals)
 
-                profile = fit.likelihood_profile(parameter="scale", bounds=5, nvalues=50)
-                xvals = profile["values"]
-                yvals = profile["likelihood"] - fit_result.total_stat - 2.71
-                scale_min = fit_result.parameters["scale"].value
-                scale_max = max(xvals)
+                    scale_found = brentq(interp1d(xvals, yvals, kind='cubic'), scale_min, scale_max, maxiter=100, rtol=1e-5)
+                    sigma_v = scale_found * self.xsection
 
-                scale_found = brentq(interp1d(xvals, yvals, kind='cubic'), scale_min, scale_max, maxiter=100, rtol=1e-5)
-                sigma_v = scale_found * self.xsection
+                except Exception as ex:
+                    sigma_v = None
+                    log.error(ex)
 
                 result[ch][mass] = sigma_v
+                log.info("Sigma v: {}".format(sigma_v))
 
         return result
 
