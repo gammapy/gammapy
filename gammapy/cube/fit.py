@@ -38,7 +38,7 @@ class MapDataset:
     likelihood : {"cash", "cstat"}
 	    Likelihood function to use for the fit.
 	evaluation_mode : {"local", "global"}
-        Model evaluation mode. The "cutout" mode evaluates the model components on smaller grids
+        Model evaluation mode. The "local" mode evaluates the model components on smaller grids
         and assigns spatially dependent IRFs (if provided) to the model component. This mode is
         recommended for local optimization algorithms. The "global" evaluation mode assumes a global PSF
         and energy dispersion and evaluates the model components on the full map. This mode is recommended
@@ -92,7 +92,7 @@ class MapDataset:
             evaluator = MapEvaluator(self.model, self.exposure, self.psf, self.edisp)
             self._evaluators = [evaluator]
         else:
-            raise ValueError("Not a valid model evaluation mode. Choose between 'cutout' and 'global'")
+            raise ValueError("Not a valid model evaluation mode. Choose between 'local' and 'global'")
 
     @lazyproperty
     def parameters(self):
