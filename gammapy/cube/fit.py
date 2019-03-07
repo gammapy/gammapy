@@ -13,7 +13,7 @@ __all__ = ["MapEvaluator", "MapDataset"]
 log = logging.getLogger(__name__)
 
 
-UPDATE_THRESHOLD = 0.25 * u.deg
+CUTOUT_MARGIN = 0.1 * u.deg
 
 
 class MapDataset:
@@ -38,11 +38,9 @@ class MapDataset:
     likelihood : {"cash", "cstat"}
 	    Likelihood function to use for the fit.
 	evaluation_mode : {"local", "global"}
-        Model evaluation mode. The "local" mode evaluates the model components on smaller grids
-        and assigns spatially dependent IRFs (if provided) to the model component. This mode is
-        recommended for local optimization algorithms. The "global" evaluation mode assumes a global PSF
-        and energy dispersion and evaluates the model components on the full map. This mode is recommended
-        for global optimization algorithms.
+        Model evaluation mode. The "local" mode evaluates the model components on smaller grids to save computation
+        time. This mode is recommended for local optimization algorithms. The "global" evaluation mode evaluates the
+        model components on the full map. This mode is recommended for global optimization algorithms.
     """
 
     def __init__(
@@ -80,19 +78,13 @@ class MapDataset:
                 "Not a valid fit statistic. Choose between 'cash' and 'cstat'."
             )
 
-        if evaluation_mode == "local":
-            evaluators = []
+        evaluators = []
 
-            for component in self.model.skymodels:
-                evaluator = MapEvaluator(component)
-                evaluators.append(evaluator)
+        for component in self.model.skymodels:
+            evaluator = MapEvaluator(component, evaluation_mode=evaluation_mode)
+            evaluators.append(evaluator)
 
-            self._evaluators = evaluators
-        elif evaluation_mode == "global":
-            evaluator = MapEvaluator(self.model, self.exposure, self.psf, self.edisp)
-            self._evaluators = [evaluator]
-        else:
-            raise ValueError("Not a valid model evaluation mode. Choose between 'local' and 'global'")
+        self._evaluators = evaluators
 
     @lazyproperty
     def parameters(self):
@@ -119,7 +111,13 @@ class MapDataset:
         return self.counts.data.shape
 
     def npred(self):
-        """Returns npred map (model + background)"""
+        """Compute predicted counts from the source and background model.
+
+        Returns
+        -------
+        npred : `Map`
+            Map of predicted counts.
+        """
         if self.background_model:
             npred_total = self.background_model.evaluate()
         else:
@@ -188,13 +186,29 @@ class MapEvaluator:
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    evaluation_mode : {"local", "global"}
+        Model evaluation mode.
     """
+    _cached_properties = [
+        "lon_lat",
+        "solid_angle",
+        "bin_volume",
+        "geom_reco",
+        "energy_bin_width",
+        "energy_edges",
+        "energy_center",
+    ]
 
-    def __init__(self, model=None, exposure=None, psf=None, edisp=None):
+    def __init__(self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"):
         self.model = model
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
+
+        if evaluation_mode not in ["local", "global"]:
+            raise ValueError("Not a valid model evaluation mode. Choose between 'local' and 'global'")
+
+        self.evaluation_mode = evaluation_mode
 
     @property
     def geom(self):
@@ -290,12 +304,10 @@ class MapEvaluator:
         """Check whether the model component has drifted away from its support."""
         if self.exposure is None:
             update = True
-        elif isinstance(self.model, SkyModels):
-            update = False
         else:
             position = self.model.position
-            separation = self.exposure.geom.center_skydir.separation(position)
-            update = separation > UPDATE_THRESHOLD
+            separation = self._init_position.separation(position)
+            update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
         return update
 
     def update(self, exposure, psf, edisp, geom):
@@ -312,29 +324,29 @@ class MapEvaluator:
         geom : `MapGeom`
             Reference geometry of the data.
         """
-        log.debug("Updating model evaluator")
+        log.info("Updating model evaluator")
+        # cache current position of the model component
+        self._init_position = self.model.position
+
         # TODO: lookup correct Edisp for this component
         self.edisp = edisp
-        self.psf = psf
 
         # TODO: lookup correct PSF for this component
-        width = np.max(psf.psf_kernel_map.geom.width) + 2 * self.model.evaluation_radius
+        self.psf = psf
 
-        self.exposure = exposure.cutout(position=self.model.position, width=width)
+        if self.evaluation_mode == "local":
+            width = np.max(psf.psf_kernel_map.geom.width) + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+            self.exposure = exposure.cutout(position=self.model.position, width=width)
 
-        # Reset cached quantities
-        for cached_property in [
-            "lon_lat",
-            "solid_angle",
-            "bin_volume",
-            "geom_reco",
-            "energy_bin_width",
-            "energy_edges",
-            "energy_center",
-        ]:
-            self.__dict__.pop(cached_property, None)
+            # Reset cached quantities
+            for cached_property in self._cached_properties:
+                self.__dict__.pop(cached_property, None)
 
-        self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
+            self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
+
+        else:
+            self.exposure = exposure
+
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
