@@ -19,6 +19,15 @@ __all__ = [
 
 class SkyModelBase(Model):
     """Sky model base class"""
+
+    def __init__(self, params):
+        super().__init__(params)
+
+    @property
+    def parameters(self):
+        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
+        return self._parameters
+
     def __add__(self, skymodel):
         skymodels = [self]
         if isinstance(skymodel, SkyModels):
@@ -57,19 +66,11 @@ class SkyModels(SkyModelBase):
     def __init__(self, skymodels):
         self.skymodels = skymodels
 
-        pars = []
+        params = []
         for skymodel in skymodels:
             for p in skymodel.parameters:
-                pars.append(p)
-        self._parameters = Parameters(pars)
-
-    @property
-    def parameters(self):
-        """Concatenated parameters.
-
-        Currently no way to distinguish spectral and spatial.
-        """
-        return self._parameters
+                params.append(p)
+        super().__init__(params)
 
     @classmethod
     def from_xml(cls, xml):
@@ -169,6 +170,7 @@ class SkyModel(SkyModelBase):
         self._parameters = Parameters(
             spatial_model.parameters.parameters + spectral_model.parameters.parameters
         )
+        super().__init__(self._parameters.parameters)
 
     @property
     def spatial_model(self):
@@ -179,11 +181,6 @@ class SkyModel(SkyModelBase):
     def spectral_model(self):
         """`~gammapy.spectrum.models.SpectralModel`"""
         return self._spectral_model
-
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
 
     @property
     def position(self):
@@ -248,18 +245,7 @@ class CompoundSkyModel(SkyModelBase):
         self._parameters = Parameters(
             self.model1.parameters.parameters + self.model2.parameters.parameters
         )
-
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        self._parameters = parameters
-        idx = len(self.model1.parameters.parameters)
-        self.model1.parameters.parameters = parameters.parameters[:idx]
-        self.model2.parameters.parameters = parameters.parameters[idx:]
+        super().__init__(self._parameters.parameters)
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -318,13 +304,14 @@ class SkyDiffuseCube(SkyModelBase):
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self.parameters = Parameters([Parameter("norm", norm)])
+        self._parameters = Parameters([Parameter("norm", norm)])
         self.meta = {} if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+        super().__init__(self._parameters.parameters)
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -403,13 +390,14 @@ class BackgroundModel(Model):
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = background
-        self.parameters = Parameters(
+        self._parameters = Parameters(
             [
                 Parameter("norm", norm, unit="", min=0),
                 Parameter("tilt", tilt, unit="", frozen=True),
                 Parameter("reference", reference, frozen=True),
             ]
         )
+        super().__init__(self._parameters.parameters)
 
     @lazyproperty
     def energy_center(self):
@@ -476,7 +464,8 @@ class BackgroundModels:
         for model in models:
             for p in model.parameters:
                 pars.append(p)
-        self.parameters = Parameters(pars)
+        self._parameters = Parameters(pars)
+        super().__init__(self._parameters.parameters)
 
     def evaluate(self):
         """Evaluate background models."""

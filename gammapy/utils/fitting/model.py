@@ -7,7 +7,9 @@ __all__ = ["Model"]
 class Model:
     """Model base class."""
 
-    # TODO: expose model parameters as attributes
+    def __init__(self, params):
+        for par in params:
+            setattr(self, par.name, par)
 
     def copy(self):
         """A deep copy."""

@@ -25,6 +25,15 @@ log = logging.getLogger(__name__)
 
 class SkySpatialModel(Model):
     """Sky spatial model base class."""
+
+    def __init__(self, params):
+        super().__init__(params)
+
+    @property
+    def parameters(self):
+        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
+        return self._parameters
+
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = dict()
@@ -38,8 +47,8 @@ class SkySpatialModel(Model):
         """Spatial model center position"""
         try:
             # TODO: this relies on hard-coded parameter names, which is not the ideal solution
-            lon = self.parameters["lon_0"].quantity
-            lat = self.parameters["lat_0"].quantity
+            lon = self.lon_0.quantity
+            lat = self.lat_0.quantity
             return SkyCoord(lon, lat, frame=self.frame)
         except IndexError:
             raise ValueError("Model does not have a defined center position")
@@ -65,9 +74,10 @@ class SkyPointSource(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
+        self._parameters = Parameters(
             [Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180), Parameter("lat_0", Latitude(lat_0), min=-90, max=90)]
         )
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
@@ -140,13 +150,14 @@ class SkyGaussian(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, sigma, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
+        self._parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
                 Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
                 Parameter("sigma", Angle(sigma), min=0),
             ]
         )
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
@@ -199,13 +210,14 @@ class SkyDisk(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, r_0, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
+        self._parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
                 Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
                 Parameter("r_0", Angle(r_0)),
             ]
         )
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
@@ -313,7 +325,7 @@ class SkyEllipse(SkySpatialModel):
             raise ImportError("The SkyEllipse model requires astropy>=3.1")
 
         self.frame = frame
-        self.parameters = Parameters(
+        self._parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
                 Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
@@ -322,6 +334,7 @@ class SkyEllipse(SkySpatialModel):
                 Parameter("theta", Angle(theta)),
             ]
         )
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
@@ -404,7 +417,7 @@ class SkyShell(SkySpatialModel):
 
     def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
+        self._parameters = Parameters(
             [
                 Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
                 Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
@@ -412,6 +425,7 @@ class SkyShell(SkySpatialModel):
                 Parameter("width", Angle(width)),
             ]
         )
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
@@ -456,7 +470,8 @@ class SkyDiffuseConstant(SkySpatialModel):
     """
     frame = None
     def __init__(self, value=1):
-        self.parameters = Parameters([Parameter("value", value)])
+        self._parameters = Parameters([Parameter("value", value)])
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
@@ -509,13 +524,14 @@ class SkyDiffuseMap(SkySpatialModel):
         if normalize:
             self.normalize()
 
-        self.parameters = Parameters([Parameter("norm", norm)])
+        self._parameters = Parameters([Parameter("norm", norm)])
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+        super().__init__(self._parameters.parameters)
 
     @property
     def evaluation_radius(self):
