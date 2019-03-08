@@ -1,12 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
 from ..utils.fitting import Fit, Parameters
-from ..stats import cash
+from ..stats import cash, cstat
 from ..maps import Map, MapAxis
+from .models import SkyModel, SkyModels
 
 __all__ = ["MapEvaluator", "MapDataset"]
+
+log = logging.getLogger(__name__)
+
+
+CUTOUT_MARGIN = 0.1 * u.deg
 
 
 class MapDataset:
@@ -28,8 +35,12 @@ class MapDataset:
         Energy dispersion
     background_model: `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModel`
         Background models to use for the fit.
-    likelihood : {"cash"}
+    likelihood : {"cash", "cstat"}
 	    Likelihood function to use for the fit.
+	evaluation_mode : {"local", "global"}
+        Model evaluation mode. The "local" mode evaluates the model components on smaller grids to save computation
+        time. This mode is recommended for local optimization algorithms. The "global" evaluation mode evaluates the
+        model components on the full map. This mode is recommended for global optimization algorithms.
     """
 
     def __init__(
@@ -41,9 +52,14 @@ class MapDataset:
         psf=None,
         edisp=None,
         background_model=None,
+        likelihood="cash",
+        evaluation_mode="local",
     ):
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
+
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
 
         self.model = model
         self.counts = counts
@@ -52,17 +68,42 @@ class MapDataset:
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
-        if background_model:
-            self.parameters = Parameters(
-                self.model.parameters.parameters +
-                self.background_model.parameters.parameters
+
+        if likelihood == "cash":
+            self._stat = cash
+        elif likelihood == "cstat":
+            self._stat = cstat
+        else:
+            raise ValueError(
+                "Not a valid fit statistic. Choose between 'cash' and 'cstat'."
+            )
+
+        evaluators = []
+
+        for component in self.model.skymodels:
+            evaluator = MapEvaluator(component, evaluation_mode=evaluation_mode)
+            evaluators.append(evaluator)
+
+        self._evaluators = evaluators
+
+    @lazyproperty
+    def parameters(self):
+        """List of parameters (`~gammapy.utils.fitting.Parameters`)"""
+        if self.background_model:
+            parameters = Parameters(
+                self.model.parameters.parameters
+                + self.background_model.parameters.parameters
             )
         else:
-            self.parameters = Parameters(self.model.parameters.parameters)
+            parameters = Parameters(self.model.parameters.parameters)
+        return parameters
 
-        self.evaluator = MapEvaluator(
-            model=self.model, exposure=exposure, psf=self.psf, edisp=self.edisp
-        )
+    @property
+    def _geom(self):
+        if self.counts is not None:
+            return self.counts.geom
+        else:
+            return self.background_model.map.geom
 
     @property
     def data_shape(self):
@@ -70,18 +111,37 @@ class MapDataset:
         return self.counts.data.shape
 
     def npred(self):
-        """Returns npred map (model + background)"""
-        model_npred = self.evaluator.compute_npred()
-        back_npred = self.background_model.evaluate()
-        total_npred = model_npred.data + back_npred.data
-        return back_npred.copy(data=total_npred)
-        # TODO: return model_npred + back_npred
-        # There is some bug: edisp.e_reco.unit is dimensionless
-        # thus map arithmetic does not work.
+        """Compute predicted counts from the source and background model.
+
+        Returns
+        -------
+        npred : `Map`
+            Map of predicted counts.
+        """
+        if self.background_model:
+            npred_total = self.background_model.evaluate()
+        else:
+            npred_total = Map.from_geom(self._geom)
+
+        for evaluator in self._evaluators:
+            # if the model component drifts out of its support the evaluator has
+            # has to be updated
+            if evaluator.needs_update:
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+
+            npred = evaluator.compute_npred()
+
+            # avoid slow fancy indexing, when the shape is equivalent
+            if npred.data.shape == npred_total.data.shape:
+                npred_total += npred.data
+            else:
+                npred_total.data[evaluator.coords_idx] += npred.data
+
+        return npred_total
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
+        return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
     def likelihood(self, parameters, mask=None):
         """Total likelihood given the current model parameters.
@@ -126,15 +186,31 @@ class MapEvaluator:
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    evaluation_mode : {"local", "global"}
+        Model evaluation mode.
     """
+    _cached_properties = [
+        "lon_lat",
+        "solid_angle",
+        "bin_volume",
+        "geom_reco",
+        "energy_bin_width",
+        "energy_edges",
+        "energy_center",
+    ]
 
-    def __init__(self, model=None, exposure=None, psf=None, edisp=None):
+    def __init__(self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"):
         self.model = model
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
 
-    @lazyproperty
+        if evaluation_mode not in ["local", "global"]:
+            raise ValueError("Not a valid model evaluation mode. Choose between 'local' and 'global'")
+
+        self.evaluation_mode = evaluation_mode
+
+    @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.MapGeom`)"""
         return self.exposure.geom
@@ -144,12 +220,14 @@ class MapEvaluator:
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
         edges = self.edisp.e_reco.bins
         e_reco_axis = MapAxis.from_edges(
-            edges=edges, name="energy",
+            edges=edges,
+            name="energy",
             unit=self.edisp.e_reco.unit,
-            interp=self.edisp.e_reco.interpolation_mode)
+            interp=self.edisp.e_reco.interpolation_mode,
+        )
         return self.geom_image.to_cube(axes=[e_reco_axis])
 
-    @lazyproperty
+    @property
     def geom_image(self):
         """Image map geometry (`~gammapy.maps.MapGeom`)"""
         return self.geom.to_image()
@@ -186,13 +264,16 @@ class MapEvaluator:
             if not coord.coordsys == coordsys:
                 coord = coord.to_coordsys(coordsys)
 
-        return (u.Quantity(coord.lon, "deg", copy=False), u.Quantity(coord.lat, "deg", copy=False))
+        return (
+            u.Quantity(coord.lon, "deg", copy=False),
+            u.Quantity(coord.lat, "deg", copy=False),
+        )
 
-    @lazyproperty
+    @property
     def lon(self):
         return self.lon_lat[0]
 
-    @lazyproperty
+    @property
     def lat(self):
         return self.lon_lat[1]
 
@@ -207,6 +288,65 @@ class MapEvaluator:
         omega = self.solid_angle
         de = self.energy_bin_width
         return omega * de
+
+    @property
+    def coords(self):
+        """Return evaluator coords"""
+        lon, lat = self.lon_lat
+        if self.edisp:
+            energy = self.edisp.e_reco.nodes[:, np.newaxis, np.newaxis]
+        else:
+            energy = self.energy_center
+        return {"lon": lon.value, "lat": lat.value, "energy": energy}
+
+    @property
+    def needs_update(self):
+        """Check whether the model component has drifted away from its support."""
+        if self.exposure is None:
+            update = True
+        else:
+            position = self.model.position
+            separation = self._init_position.separation(position)
+            update = separation > (self.model.evaluation_radius + CUTOUT_MARGIN)
+        return update
+
+    def update(self, exposure, psf, edisp, geom):
+        """Update MapEvaluator, based on the current position of the model component.
+
+        Parameters
+        ----------
+        exposure : `Map`
+            Exposure map.
+        psf : `PSFMap`
+            PSF map.
+        edisp : `EdispMap`
+            Edisp map.
+        geom : `MapGeom`
+            Reference geometry of the data.
+        """
+        log.info("Updating model evaluator")
+        # cache current position of the model component
+        self._init_position = self.model.position
+
+        # TODO: lookup correct Edisp for this component
+        self.edisp = edisp
+
+        # TODO: lookup correct PSF for this component
+        self.psf = psf
+
+        if self.evaluation_mode == "local":
+            width = np.max(psf.psf_kernel_map.geom.width) + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+            self.exposure = exposure.cutout(position=self.model.position, width=width)
+
+            # Reset cached quantities
+            for cached_property in self._cached_properties:
+                self.__dict__.pop(cached_property, None)
+
+            self.coords_idx = geom.coord_to_idx(self.coords)[::-1]
+
+        else:
+            self.exposure = exposure
+
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.

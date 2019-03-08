@@ -53,7 +53,7 @@ class SkyModels(SkyModelBase):
         filename = '$GAMMAPY_DATA/tests/models/fermi_model.xml'
         sourcelib = SkyModels.read(filename)
     """
-
+    frame = None
     def __init__(self, skymodels):
         self.skymodels = skymodels
 
