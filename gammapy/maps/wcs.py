@@ -164,7 +164,7 @@ class WcsGeom(MapGeom):
     """
 
     _slice_spatial_axes = slice(0, 2)
-    _slice_non_spatial_axes = slice(2, -1)
+    _slice_non_spatial_axes = slice(2, None)
     is_hpx = False
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv="gadf"):
@@ -179,9 +179,6 @@ class WcsGeom(MapGeom):
 
         # Shape to use for WCS transformations
         wcs_shape = max([get_shape(t) for t in [npix, cdelt]])
-        if np.sum(wcs_shape) > 1 and wcs_shape != self.shape_axes:
-            raise ValueError()
-
         self._npix = cast_to_shape(npix, wcs_shape, int)
         self._cdelt = cast_to_shape(cdelt, wcs_shape, float)
 
@@ -194,14 +191,18 @@ class WcsGeom(MapGeom):
     @property
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
+        return self._shape[::-1]
+
+    @property
+    def _shape(self):
         npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
         ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)[::-1]
+        return tuple(npix_shape + ax_shape)
 
     @property
     def shape_axes(self):
         """Shape of non-spatial axes."""
-        return tuple([ax.nbin for ax in self._axes])
+        return self._shape[self._slice_non_spatial_axes]
 
     @property
     def wcs(self):
