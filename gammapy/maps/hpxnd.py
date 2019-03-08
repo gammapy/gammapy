@@ -173,7 +173,7 @@ class HpxNDMap(HpxMap):
             wcs = hpx2wcs.wcs.to_image()
         else:
             hpx_data = self.data
-            wcs_shape = tuple([t.flat[0] for t in hpx2wcs.npix]) + self.geom.shape
+            wcs_shape = tuple([t.flat[0] for t in hpx2wcs.npix]) + self.geom.shape_axes
             wcs_data = np.zeros(wcs_shape).T
             wcs = hpx2wcs.wcs.to_cube(self.geom.axes)
 

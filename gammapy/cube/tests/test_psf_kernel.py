@@ -52,7 +52,7 @@ def test_make_image():
         [100, 200, 1000], name="energy", unit="TeV", interp="log"
     )
     geom = WcsGeom.create(binsz=0.1, npix=20, axes=[energy_axis])
-    exposures = np.ones(geom.shape)
+    exposures = np.ones(geom.shape_axes)
     sigma = 0.5 * u.deg
     kernel = PSFKernel.from_gauss(geom, sigma)
     psf2D = kernel.make_image(exposures=exposures)

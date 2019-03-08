@@ -341,7 +341,7 @@ class Map(metaclass=MapMeta):
         idx : tuple
             Index of image plane.
         """
-        for idx in np.ndindex(self.geom.shape):
+        for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
     def iter_by_pix(self, buffersize=1):

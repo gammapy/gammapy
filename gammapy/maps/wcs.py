@@ -179,7 +179,7 @@ class WcsGeom(MapGeom):
 
         # Shape to use for WCS transformations
         wcs_shape = max([get_shape(t) for t in [npix, cdelt]])
-        if np.sum(wcs_shape) > 1 and wcs_shape != self.shape:
+        if np.sum(wcs_shape) > 1 and wcs_shape != self.shape_axes:
             raise ValueError()
 
         self._npix = cast_to_shape(npix, wcs_shape, int)
@@ -197,6 +197,11 @@ class WcsGeom(MapGeom):
         npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
         ax_shape = [ax.nbin for ax in self.axes]
         return tuple(npix_shape + ax_shape)[::-1]
+
+    @property
+    def shape_axes(self):
+        """Shape of non-spatial axes."""
+        return tuple([ax.nbin for ax in self._axes])
 
     @property
     def wcs(self):
@@ -261,11 +266,6 @@ class WcsGeom(MapGeom):
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
-
-    @property
-    def shape(self):
-        """Shape of non-spatial axes."""
-        return tuple([ax.nbin for ax in self._axes])
 
     @property
     def ndim(self):
@@ -567,14 +567,14 @@ class WcsGeom(MapGeom):
             shape = (np.max(self._npix[0]), np.max(self._npix[1]))
 
             if idx is None:
-                shape = shape + self.shape
+                shape = shape + self.shape_axes
             else:
                 shape = shape + (1,) * len(self.axes)
 
             pix2 = [
                 np.full(shape, np.nan, dtype=float) for i in range(2 + len(self.axes))
             ]
-            for idx_img in np.ndindex(self.shape):
+            for idx_img in np.ndindex(self.shape_axes):
 
                 if idx is not None and idx_img != idx:
                     continue

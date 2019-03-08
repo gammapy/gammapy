@@ -61,7 +61,7 @@ class WcsNDMap(WcsMap):
         # Check whether corners of each image plane are valid
         coords = []
         if not geom.is_regular:
-            for idx in np.ndindex(geom.shape):
+            for idx in np.ndindex(geom.shape_axes):
                 pix = (
                     np.array([0.0, float(geom.npix[0][idx] - 1)]),
                     np.array([0.0, float(geom.npix[1][idx] - 1)]),
@@ -82,7 +82,7 @@ class WcsNDMap(WcsMap):
                 data = np.zeros(shape_np, dtype=dtype)
             else:
                 data = np.full(shape_np, np.nan, dtype=dtype)
-                for idx in np.ndindex(geom.shape):
+                for idx in np.ndindex(geom.shape_axes):
                     data[idx, slice(geom.npix[0][idx]), slice(geom.npix[1][idx])] = 0.0
         else:
             data = np.full(shape_np, np.nan, dtype=dtype)
