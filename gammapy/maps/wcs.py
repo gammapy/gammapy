@@ -13,7 +13,7 @@ import astropy.units as u
 from regions import SkyRegion
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
-from .geom import get_shape, make_axes, find_and_read_bands
+from .geom import get_shape, make_axes, find_and_read_bands, axes_pix_to_coord
 
 __all__ = ["WcsGeom"]
 
@@ -544,20 +544,8 @@ class WcsGeom(MapGeom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
-
-    def get_pix(self, idx=None, mode="center"):
-        """Get map pix coordinates from the geometry.
-
-        Parameters
-        ----------
-        mode : {'center', 'edges'}
-            Get center or edge pix coordinates for the spatial axes.
-
-        Returns
-        -------
-        coord : tuple
-            Map pix coordinate tuple.
-        """
+    def _get_pix_all(self, idx=None, mode="center"):
+        """Get idx coordinate array without footprint of the projection applied"""
         if mode == "edges":
             shape = self._shape_edges
         else:
@@ -574,7 +562,22 @@ class WcsGeom(MapGeom):
                 pix_array -= 0.5
 
         pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
+        return pix
 
+    def get_pix(self, idx=None, mode="center"):
+        """Get map pix coordinates from the geometry.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}
+            Get center or edge pix coordinates for the spatial axes.
+
+        Returns
+        -------
+        coord : tuple
+            Map pix coordinate tuple.
+        """
+        pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         for i in range(len(pix)):
@@ -594,11 +597,12 @@ class WcsGeom(MapGeom):
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self.get_pix(idx=idx, mode=mode)
+        pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
 
         if flat:
-            coords = tuple([c[np.isfinite(c)] for c in coords])
+            is_finite = np.isfinite(coords[0])
+            coords = tuple([c[is_finite] for c in coords])
 
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
         cdict = OrderedDict(zip(axes_names, coords))
@@ -607,8 +611,6 @@ class WcsGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
-        if coords.size == 0:
-            return tuple([np.array([]) for i in range(coords.ndim)])
 
         c = self.coord_to_tuple(coords)
         # Variable Bin Size
@@ -634,17 +636,14 @@ class WcsGeom(MapGeom):
     def pix_to_coord(self, pix):
         # Variable Bin Size
         if not self.is_regular:
-            idxs = pix_tuple_to_idx([pix[2 + i] for i, ax in enumerate(self.axes)])
-            vals = [ax.pix_to_coord(pix[2 + i]) for i, ax in enumerate(self.axes)]
+            idxs = pix_tuple_to_idx(pix[self._slice_non_spatial_axes])
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
-            coords = pix2world(self.wcs, cdelt, crpix, pix[:2])
-            coords += vals
+            coords = pix2world(self.wcs, cdelt, crpix, pix[self._slice_spatial_axes])
         else:
             coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
-            for i, ax in enumerate(self.axes):
-                coords += [ax.pix_to_coord(pix[i + 2])]
 
+        coords += axes_pix_to_coord(self.axes, pix[self._slice_non_spatial_axes])
         return tuple(coords)
 
     def pix_to_idx(self, pix, clip=False):
@@ -652,7 +651,7 @@ class WcsGeom(MapGeom):
         # pix_tuple_to_idx seems to always make a copy!?
         idxs = pix_tuple_to_idx(pix)
         if not self.is_regular:
-            ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
+            ibin = pix[self._slice_non_spatial_axes]
             ibin = pix_tuple_to_idx(ibin)
             for i, ax in enumerate(self.axes):
                 np.clip(ibin[i], 0, ax.nbin - 1, out=ibin[i])
