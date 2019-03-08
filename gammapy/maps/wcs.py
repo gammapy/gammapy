@@ -615,7 +615,6 @@ class WcsGeom(MapGeom):
         c = self.coord_to_tuple(coords)
         # Variable Bin Size
         if not self.is_regular:
-            bins = [ax.coord_to_pix(c[i + 2]) for i, ax in enumerate(self.axes)]
             idxs = tuple(
                 [
                     np.clip(ax.coord_to_idx(c[i + 2]), 0, ax.nbin - 1)
@@ -625,11 +624,12 @@ class WcsGeom(MapGeom):
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
-            pix = list(pix) + bins
+            pix = list(pix)
         else:
             pix = self._wcs.wcs_world2pix(coords.lon, coords.lat, 0)
-            for i, ax in enumerate(self.axes):
-                pix += [ax.coord_to_pix(c[i + 2])]
+
+        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
+            pix += [ax.coord_to_pix(coord)]
 
         return tuple(pix)
 
@@ -909,134 +909,6 @@ class WcsGeom(MapGeom):
         return not self.__eq__(other)
 
 
-def create_wcs(
-        skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
-):
-    """Create a WCS object.
-
-    Parameters
-    ----------
-    skydir : `~astropy.coordinates.SkyCoord`
-        Sky coordinate of the WCS reference point
-    coordsys : str
-        TODO
-    projection : str
-        TODO
-    cdelt : float
-        TODO
-    crpix : float or (float,float)
-        In the first case the same value is used for x and y axes
-    axes : list
-        List of non-spatial axes
-    """
-    naxis = 2
-    if axes is not None:
-        naxis += len(axes)
-
-    w = WCS(naxis=naxis)
-
-    if coordsys == "CEL":
-        w.wcs.ctype[0] = "RA---{}".format(projection)
-        w.wcs.ctype[1] = "DEC--{}".format(projection)
-        w.wcs.crval[0] = skydir.icrs.ra.deg
-        w.wcs.crval[1] = skydir.icrs.dec.deg
-    elif coordsys == "GAL":
-        w.wcs.ctype[0] = "GLON-{}".format(projection)
-        w.wcs.ctype[1] = "GLAT-{}".format(projection)
-        w.wcs.crval[0] = skydir.galactic.l.deg
-        w.wcs.crval[1] = skydir.galactic.b.deg
-    else:
-        raise ValueError("Invalid coordsys: {!r}".format(coordsys))
-
-    if isinstance(crpix, tuple):
-        w.wcs.crpix[0] = crpix[0]
-        w.wcs.crpix[1] = crpix[1]
-    else:
-        w.wcs.crpix[0] = crpix
-        w.wcs.crpix[1] = crpix
-
-    w.wcs.cdelt[0] = -cdelt
-    w.wcs.cdelt[1] = cdelt
-
-    w = WCS(w.to_header())
-    # FIXME: Figure out what to do here
-    # if naxis == 3 and energies is not None:
-    #    w.wcs.crpix[2] = 1
-    #    w.wcs.crval[2] = energies[0]
-    #    w.wcs.cdelt[2] = energies[1] - energies[0]
-    #    w.wcs.ctype[2] = 'Energy'
-    #    w.wcs.cunit[2] = 'MeV'
-
-    return w
-
-
-def wcs_add_energy_axis(wcs, energies):
-    """Copy a WCS object, and add on the energy axis.
-
-    Parameters
-    ----------
-    wcs : `~astropy.wcs.WCS`
-        WCS
-    energies : array-like
-        Array of energies
-    """
-    if wcs.naxis != 2:
-        raise ValueError("WCS naxis must be 2. Got: {}".format(wcs.naxis))
-
-    w = WCS(naxis=3)
-    w.wcs.crpix[0] = wcs.wcs.crpix[0]
-    w.wcs.crpix[1] = wcs.wcs.crpix[1]
-    w.wcs.ctype[0] = wcs.wcs.ctype[0]
-    w.wcs.ctype[1] = wcs.wcs.ctype[1]
-    w.wcs.crval[0] = wcs.wcs.crval[0]
-    w.wcs.crval[1] = wcs.wcs.crval[1]
-    w.wcs.cdelt[0] = wcs.wcs.cdelt[0]
-    w.wcs.cdelt[1] = wcs.wcs.cdelt[1]
-
-    w = WCS(w.to_header())
-    w.wcs.crpix[2] = 1
-    w.wcs.crval[2] = energies[0]
-    w.wcs.cdelt[2] = energies[1] - energies[0]
-    w.wcs.ctype[2] = "Energy"
-
-    return w
-
-
-def offset_to_sky(skydir, offset_lon, offset_lat, coordsys="CEL", projection="AIT"):
-    """Convert a cartesian offset (X,Y) in the given projection into
-    a pair of spherical coordinates."""
-    offset_lon = np.array(offset_lon, ndmin=1)
-    offset_lat = np.array(offset_lat, ndmin=1)
-
-    w = create_wcs(skydir, coordsys, projection)
-    pixcrd = np.vstack((offset_lon, offset_lat)).T
-
-    return w.wcs_pix2world(pixcrd, 0)
-
-
-def sky_to_offset(skydir, lon, lat, coordsys="CEL", projection="AIT"):
-    """Convert sky coordinates to a projected offset.
-
-    This function is the inverse of offset_to_sky.
-    """
-    w = create_wcs(skydir, coordsys, projection)
-    skycrd = np.vstack((lon, lat)).T
-
-    if len(skycrd) == 0:
-        return skycrd
-
-    return w.wcs_world2pix(skycrd, 0)
-
-
-def offset_to_skydir(skydir, offset_lon, offset_lat, coordsys="CEL", projection="AIT"):
-    """Convert a cartesian offset (X,Y) in the given projection into
-    a SkyCoord."""
-    offset_lon = np.array(offset_lon, ndmin=1)
-    offset_lat = np.array(offset_lat, ndmin=1)
-
-    w = create_wcs(skydir, coordsys, projection)
-    return SkyCoord.from_pixel(offset_lon, offset_lat, w, 0)
-
 
 def pix2world(wcs, cdelt, crpix, pix):
     """Perform pixel to world coordinate transformation for a WCS
@@ -1094,20 +966,3 @@ def get_coordys(wcs):
     else:
         raise ValueError("Unrecognized WCS coordinate system.")
 
-
-def wcs_to_axes(w, npix):
-    """Generate a sequence of bin edge vectors corresponding to the
-    axes of a WCS object."""
-    npix = npix[::-1]
-
-    cdelt0 = np.abs(w.wcs.cdelt[0])
-    x = np.linspace(-(npix[0]) / 2.0, (npix[0]) / 2.0, npix[0] + 1) * cdelt0
-
-    cdelt1 = np.abs(w.wcs.cdelt[1])
-    y = np.linspace(-(npix[1]) / 2.0, (npix[1]) / 2.0, npix[1] + 1) * cdelt1
-
-    cdelt2 = np.log10((w.wcs.cdelt[2] + w.wcs.crval[2]) / w.wcs.crval[2])
-    z = np.linspace(0, npix[2], npix[2] + 1) * cdelt2
-    z += np.log10(w.wcs.crval[2])
-
-    return x, y, z
