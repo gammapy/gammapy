@@ -8,6 +8,7 @@ from astropy.nddata import Cutout2D
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
+from astropy.utils import lazyproperty
 import astropy.units as u
 from regions import SkyRegion
 from ..utils.wcs import get_resampled_wcs
@@ -196,6 +197,12 @@ class WcsGeom(MapGeom):
     @property
     def _shape(self):
         npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
+        ax_shape = [ax.nbin for ax in self.axes]
+        return tuple(npix_shape + ax_shape)
+
+    @property
+    def _shape_edges(self):
+        npix_shape = [np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1]
         ax_shape = [ax.nbin for ax in self.axes]
         return tuple(npix_shape + ax_shape)
 
@@ -537,6 +544,7 @@ class WcsGeom(MapGeom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
+
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
 
@@ -550,64 +558,22 @@ class WcsGeom(MapGeom):
         coord : tuple
             Map pix coordinate tuple.
         """
-        # FIXME: Figure out if there is some way to employ open/sparse
-        # vectors
-
-        # FIXME: It would be more efficient to split this into one
-        # method that computes indices and a method that casts
-        # those to floats and adds the appropriate offset
-
-        npix = copy.deepcopy(self.npix)
-
         if mode == "edges":
-            for pix_num in npix[:2]:
-                pix_num += 1
-
-        if self.axes and not self.is_regular:
-
-            shape = (np.max(self._npix[0]), np.max(self._npix[1]))
-
-            if idx is None:
-                shape = shape + self.shape_axes
-            else:
-                shape = shape + (1,) * len(self.axes)
-
-            pix2 = [
-                np.full(shape, np.nan, dtype=float) for i in range(2 + len(self.axes))
-            ]
-            for idx_img in np.ndindex(self.shape_axes):
-
-                if idx is not None and idx_img != idx:
-                    continue
-
-                npix0, npix1 = npix[0][idx_img], npix[1][idx_img]
-                pix_img = np.meshgrid(
-                    np.arange(npix0), np.arange(npix1), indexing="ij", sparse=False
-                )
-
-                if idx is None:
-                    s_img = (slice(0, npix0), slice(0, npix1)) + idx_img
-                else:
-                    s_img = (slice(0, npix0), slice(0, npix1)) + (0,) * len(self.axes)
-
-                pix2[0][s_img] = pix_img[0]
-                pix2[1][s_img] = pix_img[1]
-                for j in range(len(self.axes)):
-                    pix2[j + 2][s_img] = idx_img[j]
-            pix = [t.T for t in pix2]
+            shape = self._shape_edges
         else:
-            pix = [np.arange(npix[0], dtype=float), np.arange(npix[1], dtype=float)]
+            shape = self._shape
 
-            if idx is None:
-                pix += [np.arange(ax.nbin, dtype=float) for ax in self.axes]
-            else:
-                pix += [float(t) for t in idx]
-
-            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=False)[::-1]
+        if idx is None:
+            pix = [np.arange(n, dtype=float) for n in shape]
+        else:
+            pix = [np.arange(n, dtype=float) for n in shape[self._slice_spatial_axes]]
+            pix += [float(t) for t in idx]
 
         if mode == "edges":
             for pix_array in pix[self._slice_spatial_axes]:
                 pix_array -= 0.5
+
+        pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
 
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
