@@ -8,7 +8,6 @@ from astropy.nddata import Cutout2D
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
-from astropy.utils import lazyproperty
 import astropy.units as u
 from regions import SkyRegion
 from ..utils.wcs import get_resampled_wcs
@@ -611,6 +610,9 @@ class WcsGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
+
+        if coords.size == 0:
+            return tuple([np.array([]) for i in range(coords.ndim)])
 
         c = self.coord_to_tuple(coords)
         # Variable Bin Size

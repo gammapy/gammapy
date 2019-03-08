@@ -7,7 +7,7 @@ from ...irf import load_cta_irfs
 from ...maps import WcsGeom, MapAxis
 from ...spectrum.models import PowerLaw
 from ...image.models import SkyGaussian
-from ...cube.models import SkyModel
+from ...cube.models import SkyModel, SkyModels
 from ...cube import MapDataset
 from ..simulate import simulate_dataset
 
@@ -43,7 +43,7 @@ def test_simulate():
     )
 
     assert isinstance(dataset, MapDataset)
-    assert isinstance(dataset.model, SkyModel)
+    assert isinstance(dataset.model, SkyModels)
 
     assert dataset.counts.data.dtype is np.dtype("int")
     assert_allclose(dataset.counts.data[5, 20, 20],5)
