@@ -33,28 +33,36 @@ def cli_jupyter_run(ctx, tutor, kernel):
 def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
     try:
-        t = time.time()
-        cmd = [
-            sys.executable,
-            "-m",
-            "jupyter",
-            "nbconvert",
-            "--allow-errors",
-            "--log-level={}".format(loglevel),
-            "--ExecutePreprocessor.timeout=None",
-            "--ExecutePreprocessor.kernel_name={}".format(kernel),
-            "--to",
-            "notebook",
-            "--inplace",
-            "--execute",
-            "{}".format(path),
-        ]
-        subprocess.call(cmd)
+        import jupyter
+        jupyter_module = "jupyter"
+    except ImportError:
+        import jupyter_core
+        jupyter_module = "jupyter_core"
+
+    t = time.time()
+    cmd = [
+        sys.executable,
+        "-m",
+        jupyter_module,
+        "nbconvert",
+        "--allow-errors",
+        "--log-level={}".format(loglevel),
+        "--ExecutePreprocessor.timeout=None",
+        "--ExecutePreprocessor.kernel_name={}".format(kernel),
+        "--to",
+        "notebook",
+        "--inplace",
+        "--execute",
+        "{}".format(path),
+    ]
+
+    if subprocess.call(cmd):
+        log.error("Error executing file {}".format(str(path)))
+        return False
+    else:
         t = (time.time() - t) / 60
         log.info("   ... Executing duration: {:.2f} mn".format(t))
-    except Exception as ex:
-        log.error("Error executing file {}".format(str(path)))
-        log.error(ex)
+        return True
 
 
 @click.command(name="strip")
@@ -150,10 +158,10 @@ def notebook_test(path, kernel="python3"):
     """Execute and parse a Jupyter notebook exposing broken cells."""
     import nbformat
 
-    passed = True
     log.info("   ... EXECUTING {}".format(str(path)))
-    execute_notebook(path, kernel)
+    passed = execute_notebook(path, kernel)
     rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
+    report = ""
 
     for cell in rawnb.cells:
         if "outputs" in cell.keys():

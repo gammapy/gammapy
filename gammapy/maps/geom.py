@@ -484,6 +484,8 @@ class MapAxis:
         nodes = np.array(nodes, ndmin=1)
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
+        if len(nodes) != len(np.unique(nodes)):
+            raise ValueError("MapAxis: node values must be unique")
 
         return cls(nodes, node_type="center", **kwargs)
 
@@ -506,6 +508,8 @@ class MapAxis:
         edges = np.array(edges, ndmin=1)
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
+        if len(edges) != len(np.unique(edges)):
+            raise ValueError("MapAxis: edge values must be unique")
 
         return cls(edges, node_type="edges", **kwargs)
 
@@ -1445,3 +1449,29 @@ class MapGeom(metaclass=MapGeomMeta):
             Copied map geometry.
         """
         return self._init_copy(**kwargs)
+
+    def energy_mask(self, emin=None, emax=None):
+        """Create a mask for a given energy range.
+
+        Parameters
+        ----------
+        emin : `~astropy.units.Quantity `
+            Minimum energy.
+        emax : `~astropy.units.Quantity `
+            Maximum energy.
+
+        """
+        # get energy axes and values
+        energy_axis = self.get_axis_by_name("energy")
+        edges = energy_axis.edges
+
+        # set default values
+        emin = emin if emin is not None else edges[0] * energy_axis.unit
+        emax = emax if emax is not None else edges[-1] * energy_axis.unit
+
+        # create mask
+        coords = self.get_coord()
+        mask = coords["energy"] > emin.to_value(energy_axis.unit)
+        mask &= coords["energy"] < emax.to_value(energy_axis.unit)
+        return mask
+

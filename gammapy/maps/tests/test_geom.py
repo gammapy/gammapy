@@ -28,6 +28,9 @@ def test_mapaxis_init_from_edges(edges, interp):
     axis = MapAxis(edges, interp=interp)
     assert_allclose(axis.edges, edges)
     assert_allclose(axis.nbin, len(edges) - 1)
+    with pytest.raises(ValueError):
+        MapAxis.from_edges([1])
+        MapAxis.from_edges([0, 1, 1, 2])
 
 
 @pytest.mark.parametrize(("nodes", "interp"), mapaxis_geoms)
@@ -35,6 +38,9 @@ def test_mapaxis_from_nodes(nodes, interp):
     axis = MapAxis.from_nodes(nodes, interp=interp)
     assert_allclose(axis.center, nodes)
     assert_allclose(axis.nbin, len(nodes))
+    with pytest.raises(ValueError):
+        MapAxis.from_nodes([])
+        MapAxis.from_nodes([0, 1, 1, 2])
 
 
 @pytest.mark.parametrize(("nodes", "interp"), mapaxis_geoms)

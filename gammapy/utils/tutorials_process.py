@@ -98,6 +98,12 @@ def build_notebooks(args):
     # convert into scripts
     # copy generated filled notebooks to doc
     # if passed:
+    try:
+        import jupyter
+        jupyter_module = "jupyter"
+    except ImportError:
+        import jupyter_core
+        jupyter_module = "jupyter_core"
 
     if pathsrc == path_empty_nbs:
         # copytree is needed to copy subfolder images
@@ -107,7 +113,7 @@ def build_notebooks(args):
                 [
                     sys.executable,
                     "-m",
-                    "jupyter",
+                    jupyter_module,
                     "nbconvert",
                     "--to",
                     "script",
@@ -123,7 +129,7 @@ def build_notebooks(args):
             [
                 sys.executable,
                 "-m",
-                "jupyter",
+                jupyter_module,
                 "nbconvert",
                 "--to",
                 "script",
