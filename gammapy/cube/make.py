@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.nddata.utils import NoOverlapError
+from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.coordinates import Angle
+from astropy.convolution import Tophat2DKernel
 from astropy.utils import lazyproperty
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
@@ -11,7 +12,7 @@ from .background import make_map_background_irf
 from ..stats import significance_on_off
 from scipy.stats import norm
 
-__all__ = ["MapMaker", "MapMakerObs", "ImageMaker"]
+__all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +54,6 @@ class MapMaker:
             else:
                 maps[name] = Map.from_geom(self.geom, unit="")
         return maps
-
 
     def run(self, observations, selection=None):
         """
@@ -98,13 +98,12 @@ class MapMaker:
         self._maps = maps
         return maps
 
-
-    def _get_obs_maker(self, obs):
+    def _get_obs_maker(self, obs, mode="trim"):
         # Compute cutout geometry and slices to stack results back later
         cutout_kwargs = {
             "position": obs.pointing_radec,
             "width": 2 * self.offset_max,
-            "mode": "trim"
+            "mode": mode,
         }
 
         cutout_geom = self.geom.cutout(**cutout_kwargs)
@@ -197,12 +196,7 @@ class MapMakerObs:
     """
 
     def __init__(
-            self,
-            observation,
-            geom,
-            offset_max,
-            geom_true=None,
-            exclusion_mask=None,
+        self, observation, geom, offset_max, geom_true=None, exclusion_mask=None
     ):
         self.observation = observation
         self.geom = geom
@@ -235,7 +229,6 @@ class MapMakerObs:
         # Compute field of view mask on the cutout in true energy
         coords_etrue = self.geom_true.get_coord()
         return coords_etrue
-
 
     def run(self, selection=None):
         """Make maps.
@@ -306,98 +299,16 @@ def _check_selection(selection):
     return selection
 
 
-
 class MapMakerRing(MapMaker):
     """Make maps from IACT observations.
 
     The main motivation for this class in addition to the `MapMaker`
-    is to have the common 2D image background estimation methods,
+    is to have the common image background estimation methods,
     like `~gammapy.background.RingBackgroundEstimator`,
     that work using on and off maps.
 
-    Parameters
-    ----------
-    background_estimator : `~gammapy.background.RingBackgroundEstimator`
-        Ring background estimator or something with an equivalend API.
-    geom : `~gammapy.maps.WcsGeom`
-        Reference image geometry
-    offset_max : `~astropy.coordinates.Angle`
-        Maximum offset angle
-    exclusion_mask : `~gammapy.maps.Map`
-        Exclusion mask
-
-    """
-
-    def __init__(self, background_estimator, **kwargs):
-        self.background_estimator = background_estimator
-        super().__init__(self, **kwargs)
-
-
-    def _run(self, observations, sum_over_axis=False):
-        """
-        Parameters
-        --------------
-        observations : `~gammapy.data.Observations`
-            Observations to process
-
-        Returns
-        -----------
-        maps: dict of stacked counts, background and exposure maps.
-
-        """
-        selection = ["counts", "background", "exposure", "alpha", "off"]
-        maps = self._get_empty_maps(selection)
-
-        for obs in observations:
-            try:
-                obs_maker = self._get_obs_maker(obs)
-            except NoOverlapError:
-                log.info(
-                    "Skipping observation {}, no overlap with map.".format(obs.obs_id)
-                )
-                continue
-
-            maps_obs = obs_maker.run()
-
-            if sum_over_axis:
-                maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)
-
-            maps_obs_bkg = self.background_estimator(maps_obs)
-            maps_obs.update(maps_obs_bkg)
-
-            for name in selection:
-                data = maps_obs[name].quantity.to_value(maps[name].unit)
-                if name == "exposure":
-                    maps[name].fill_by_coord(obs_maker.coords_etrue, data)
-                elif name == "alpha":
-                    data = data * maps_obs["off"]
-                    maps[name].fill_by_coord(obs_maker.coords_etrue, data)
-                else:
-                    maps[name].fill_by_coord(obs_maker.coords, data)
-
-            maps["alpha"] /= maps["off"]
-        self._maps = maps
-        return maps
-
-
-    def run_images(self, observations, spectrum=None, keepdims=False):
-        """Run images.
-
-        """
-        return self._run(observations, sum_over_axis=True)
-
-    def run(self, observations):
-        """"""
-        return self._run(observations, sum_over_axis=False)
-
-
-class ImageMaker:
-    """Make 2D images.
-
-    The main motivation for this class in addition to the `MapMaker`
-    is to have the common 2D image background estimation methods,
-    like `~gammapy.background.RingBackgroundEstimator`,
-    that work using on and off maps.
+    To ensure adequate statistics, only observations that are fully
+    contained within the reference geometry will be analysed
 
     Parameters
     ----------
@@ -408,142 +319,261 @@ class ImageMaker:
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
     background_estimator : `~gammapy.background.RingBackgroundEstimator`
-        Ring background estimator or something with an equivalend API.
+        or `~gammapy.background.AdaptiveRingBackgroundEstimator`
+        Ring background estimator or something with an equivalent API.
+
     """
 
     def __init__(
         self, geom, offset_max, exclusion_mask=None, background_estimator=None
     ):
-
-        self.geom = geom
-        self.offset_max = Angle(offset_max)
+        super(MapMakerRing, self).__init__(
+            geom=geom,
+            offset_max=offset_max,
+            exclusion_mask=exclusion_mask,
+            geom_true=None,
+        )
         self.background_estimator = background_estimator
-        self.exclusion_mask = exclusion_mask
-        self.stacked_maps = {}
 
-    def make_maps(self, obs, sum_over_axes=False):
-        """ Returns a dict of on, off, background and alpha maps for each observation
-
-        Parameters
-        --------------
-        obs : `~gammapy.data.Observations.DataStoreObservation`
-            Observation to process
-
-        sum_over_axes: boolean
-            Specifies whether computation should be done on
-            the map summed over the energy axes, or
-            for each spatial slice.
-
-        Returns
-        -----------
-        maps: dict of on, off, background and alpha maps
-        """
-
+    def _stack(self, maps_obs, obs_maker):
         selection = ["counts", "exposure", "background"]
-
-        maker = MapMaker(self.geom, offset_max=self.offset_max)
-        # Initialise zero-filled maps
+        maps = self._get_empty_maps(selection)
         for name in selection:
+            data = maps_obs[name].quantity.to_value(maps[name].unit)
             if name == "exposure":
-                maker.maps[name] = Map.from_geom(self.geom, unit="m2 s")
+                maps[name].fill_by_coord(obs_maker.coords_etrue, data)
             else:
-                maker.maps[name] = Map.from_geom(self.geom, unit="")
-        try:
-            maker._process_obs(obs, selection)
-        except NoOverlapError:
-            log.info("Skipping observation {}, no overlap with map.".format(obs.obs_id))
-
-        if sum_over_axes:
-            images = {
-                "counts": maker.maps["counts"].sum_over_axes(),
-                "background": maker.maps["background"].sum_over_axes(),
-                "exclusion": self.exclusion_mask.sum_over_axes(),
-            }
-        else:
-            images = {
-                "counts": maker.maps["counts"],
-                "background": maker.maps["background"],
-                "exclusion": self.exclusion_mask,
-            }
-
-        result = self.background_estimator.run(images)
-        maps = {
-            "on": images["counts"],
-            "alpha": result["alpha"],
-            "off": result["off"],
-            "background": result["background"],
-        }
+                maps[name].fill_by_coord(obs_maker.coords, data)
         return maps
 
-    def run(self, observations, sum_over_axes=False):
+    def _run(self, observations, sum_over_axis=False, spectrum=None, keepdims=False):
         """
-        Run ImageMaker for a list of observations to create
-        stacked on, off and alpha maps
-
         Parameters
         --------------
         observations : `~gammapy.data.Observations`
             Observations to process
 
-        sum_over_axes: boolean
-            Specifies whether computation should be done on
-            the map summed over the energy axes, or
-            for each spatial slice.
-
         Returns
         -----------
-        maps: dict of stacked on, off and alpha maps
+        maps: list of dict of maps. Each observation will have the following maps
+            counts: The counts map
+            background_irf: The template background map from the IRF
+            exposure: The uncorrelated on exposure map
+            exposure_off: The off exposure map convolved with the ring
+            alpha: The alpha map (1/exposure map)
+            off: The off map
+            background_ring: The ring background map ( = alpha * off)
+            exclusion: The exclusion mask
+
         """
-        results = []
+
+        map_list = []
         for obs in observations:
-            results.append(self.make_maps(obs, sum_over_axes=sum_over_axes))
+            try:
+                obs_maker = self._get_obs_maker(obs, mode="strict")
+            except NoOverlapError:
+                log.info(
+                    "Skipping observation {}, no overlap with map.".format(obs.obs_id)
+                )
+            except PartialOverlapError:
+                log.info(
+                    "Skipping observation {}, partial overlap with map.".format(
+                        obs.obs_id
+                    )
+                )
+                continue
 
-        self.stacked_maps["on"] = Map.from_geom(geom=results[0]["on"].geom)
-        self.stacked_maps["off"] = Map.from_geom(geom=results[0]["on"].geom)
-        self.stacked_maps["alpha"] = Map.from_geom(geom=results[0]["on"].geom)
+            maps_obs = obs_maker.run()
 
-        for aresult in results:
-            self.stacked_maps["on"] += aresult["on"]
-            self.stacked_maps["off"] += aresult["off"]
-            self.stacked_maps["alpha"] += aresult["off"] * aresult["alpha"]
-        self.stacked_maps["alpha"] /= self.stacked_maps["off"]
+            # Now paste it back on ref geom
+            maps_obs = self._stack(maps_obs, obs_maker)
 
-    @property
-    def significance_map(self):
-        """returns the significance map for all pixels"""
+            maps_obs["exclusion"] = self.exclusion_mask
+
+            if sum_over_axis:
+                maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)
+                maps_obs["exclusion"] = self.exclusion_mask.get_image_by_idx([0])
+
+            maps_obs_bkg = self.background_estimator.run(maps_obs)
+            maps_obs.update(maps_obs_bkg)
+            map_list.append(maps_obs)
+
+        return map_list
+
+    def run_images(self, observations, spectrum=None, keepdims=False):
+        """Returns a list of dictionaries of 2D maps.
+        The maps are summed over on the energy axis for a classical image analysis
+
+        Parameters
+        ---------
+
+        observations: `~gammapy.data.Observations`
+            Observations to process
+        spectrum : `~gammapy.spectrum.models.SpectralModel`, optional
+            Spectral model to compute the weights.
+            Default is power-law with spectral index of 2.
+        keepdims : bool, optional
+            If this is set to True, the energy axes is kept with a single bin.
+            If False, the energy axes is removed
+
+        Returns
+        ---------
+        maps: list of dict of maps. Each observation will have the following maps
+            counts: The counts map
+            background_irf: The template background map from the IRF
+            exposure: The uncorrelated on exposure map
+            exposure_off: The off exposure map convolved with the ring
+            alpha: The alpha map (1/exposure map)
+            off: The off map
+            background_ring: The ring background map ( = alpha * off)
+
+        """
+        return self._run(
+            observations, sum_over_axis=True, spectrum=spectrum, keepdims=keepdims
+        )
+
+    def run(self, observations):
+        """Returns a list of dictionaries of 3D maps
+        Significance and excess can be computed for each slice
+
+        Returns
+        ---------
+        maps: list of dict of maps. Each observation will have the following maps
+            counts: The counts map
+            background_irf: The template background map from the IRF
+            exposure: The uncorrelated on exposure map
+            exposure_off: The off exposure map convolved with the ring
+            alpha: The alpha map (1/exposure map)
+            off: The off map
+            background_ring: The ring background map ( = alpha * off)
+
+        """
+        return self._run(observations, sum_over_axis=False)
+
+    def significance_map(self, maplist, convolution_radius=None):
+        """
+        Parameters
+        ---------
+        maplist: the list of dictionaries returned by MapMakerRing.run()
+                or MapMakerRing.run_images()
+        convolution_radius: `~astropy.units.Quantity`
+            The convolution radius for Tophat2DKernel
+
+            If not specified, returns the uncorrelated significance map
+
+        Returns
+        -------
+        significance_map: `~gammapy.maps.Map`
+        Stacked significance map for the entire region.
+
+        """
+        if convolution_radius:
+            scale = counts.geom.pixel_scales[0].to("deg")
+            theta = (convolution_radius * scale).value
+        else:
+            theta = 1
+        tophat = Tophat2DKernel(theta)
+        tophat.normalize("peak")
+        selection = ["on", "off", "exposure_on", "exposure_off"]
+
+        stacked_map = {}
+        for name in selection:
+            stacked_map[name] = Map.from_geom(maplist[0]["counts"].geom)
+
+        for amap in maplist:
+            stacked_map["on"] += amap["counts"]
+            stacked_map["off"] += amap["off"]
+            stacked_map["exposure_on"] += amap["background"]
+            stacked_map["exposure_off"] += amap["exposure_off"]
+        stacked_map["exposure_on"] = stacked_map["exposure_on"].convolve(tophat.array)
+        stacked_map["exposure_off"] = stacked_map["exposure_off"].convolve(tophat.array)
+        stacked_map["on"] = stacked_map["on"].convolve(tophat.array)
+        stacked_map["off"] = stacked_map["off"].convolve(tophat.array)
+        alpha_map = stacked_map["exposure_on"] / stacked_map["exposure_off"]
+
         data = significance_on_off(
-            n_on=self.stacked_maps["on"].data,
-            n_off=self.stacked_maps["off"].data,
-            alpha=self.stacked_maps["alpha"].data,
+            n_on=stacked_map["on"].data,
+            n_off=stacked_map["off"].data,
+            alpha=alpha_map.data,
             method="lima",
         )
-        return self.stacked_maps["on"].copy(data=data)
+        return stacked_map["on"].copy(data=data)
 
-    @property
-    def excess_map(self):
-        """returns the excess map for all pixels"""
-        return (
-            self.stacked_maps["on"]
-            - self.stacked_maps["alpha"] * self.stacked_maps["off"]
-        )
+    def significance_map_off(self, maplist, convolution_radius=None):
+        """returns the significance map with exclusion region applied
 
-    @property
-    def significance_map_off(self):
-        """returns the significance map with exclusion region applied"""
-        if self.significance_map.geom.is_image:
-            return self.significance_map * self.exclusion_mask.sum_over_axes()
+        Parameters
+        ---------
+        maplist: the list of dictionaries returned by MapMakerRing.run()
+                or MapMakerRing.run_images()
+        convolution_radius: `~astropy.units.Quantity`
+            The convolution radius for Tophat2DKernel
+
+            If not specified, returns the uncorrelated significance map
+
+        Returns
+        -------
+        significance_map_off: `~gammapy.maps.Map`
+        Stacked significance map for the off regions region.
+
+        """
+
+        significance_map = self.significance_map(maplist, convolution_radius)
+        if significance_map.geom.is_image:
+            return significance_map * self.exclusion_mask.get_image_by_idx([0])
         else:
-            return self.significance_map * self.exclusion_mask
+            return significance_map * self.exclusion_mask
 
-    @property
-    def excess_map_off(self):
-        """returns the excess map with exclusion region applied"""
-        if self.excess_map.geom.is_image:
-            return self.excess_map * self.exclusion_mask.sum_over_axes()
+    def excess_map(self, maplist):
+        """
+        excess = on - alpha * off
+
+        Parameters
+        ---------
+        maplist: the list of dictionaries returned by MapMakerRing.run()
+                or MapMakerRing.run_images()
+
+        Returns
+        -------
+        excess_map: `~gammapy.maps.Map`
+        Stacked excess map for the entire region for each pixel.
+        """
+
+        selection = ["on", "alpha", "off"]
+        stacked_map = {}
+        for name in selection:
+            stacked_map[name] = Map.from_geom(maplist[0]["counts"].geom)
+        for amap in maplist:
+            stacked_map["on"] += amap["counts"]
+            stacked_map["off"] += amap["off"]
+            stacked_map["alpha"] += amap["off"] * amap["alpha"]
+        stacked_map["alpha"] /= stacked_map["off"]
+        excess_map = stacked_map["on"] - stacked_map["alpha"] * stacked_map["off"]
+
+        return excess_map
+
+    def excess_map_off(self, maplist):
+        """
+        returns the excess map with exclusion region applied
+
+        Parameters
+        ---------
+        maplist: the list of dictionaries returned by MapMakerRing.run()
+                or MapMakerRing.run_images()
+
+        Returns
+        -------
+        excess_map_off: `~gammapy.maps.Map`
+        Stacked excess map for the off for each pixel.
+        """
+
+        excess_map = self.excess_map(maplist)
+        if excess_map.geom.is_image:
+            return excess_map * self.exclusion_mask.get_image_by_idx([0])
         else:
-            return self.excess_map * self.exclusion_mask
+            return excess_map * self.exclusion_mask
 
-    def plot(self, idx=[0]):
+    def plot(self, maplist, convolution_radius=None, idx=[0]):
         """Makes some useful plots: the significance and excess maps,
         and the histograms of the significance.
 
@@ -552,17 +582,20 @@ class ImageMaker:
 
         Parameters
         ----------
-        idx : tuple, optional
-        Tuple of scalar indices for each non spatial dimension of the map.
-        Tuple should be ordered as (I_0, ..., I_n).
-        """
-        if self.excess_map.geom.is_image:
-            significance_map = self.significance_map
-            excess_map = self.excess_map
+        maplist : list of dictionaries of maps
 
-        else:
-            significance_map = self.significance_map.get_image_by_idx(idx)
-            excess_map = self.excess_map.get_image_by_idx(idx)
+        idx : tuple, optional
+            Tuple of scalar indices for each non spatial dimension of the map.
+            Tuple should be ordered as (I_0, ..., I_n).
+
+        """
+        excess_map = self.excess_map(maplist)
+        significance_map = self.significance_map(maplist, convolution_radius)
+        significance_map_off = self.significance_map_off(maplist, convolution_radius)
+        if excess_map.geom.is_image is False:
+            significance_map = significance_map.get_image_by_idx(idx)
+            excess_map = excess_map.get_image_by_idx(idx)
+            significance_map_off = significance_map_off.get_image_by_idx(idx)
 
         import matplotlib.pyplot as plt
 
@@ -579,7 +612,7 @@ class ImageMaker:
         excess_map.plot(ax=ax2, add_cbar=True, stretch="sqrt")
 
         significance_all = significance_map.data.ravel()
-        significance_off = self.significance_map_off.data.ravel()
+        significance_off = significance_map_off.data.ravel()
 
         ax3.hist(
             significance_all,

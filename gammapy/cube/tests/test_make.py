@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_data
 from ...data import DataStore
 from ...maps import WcsGeom, MapAxis, Map
-from ..make import MapMaker, ImageMaker
+from ..make import MapMaker, MapMakerRing
 from ...background import RingBackgroundEstimator
 import numpy as np
 
@@ -91,7 +91,7 @@ def test_map_maker(pars, observations, keepdims):
     assert background.unit == ""
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
-    images = maker.make_images(keepdims=keepdims)
+    images = maker.run_images(keepdims=keepdims)
 
     counts = images["counts"]
     assert counts.unit == ""
@@ -106,29 +106,8 @@ def test_map_maker(pars, observations, keepdims):
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
 
-@pytest.mark.parametrize(
-    "pars",
-    [
-        {
-            "summed": True,
-            "is_image": True,
-            "sig_all": 54.0826,
-            "sig_off": 34.4020,
-            "exc_all": 1800.9717,
-            "exc_off": 1432.493835,
-        },
-        {
-            "summed": False,
-            "is_image": False,
-            "sig_all": -353.508,
-            "sig_off": -366.492,
-            "exc_all": -18107.51,
-            "exc_off": -17562.59318,
-        },
-    ],
-)
-def test_image_maker(observations, pars):
-    ring_bkg = RingBackgroundEstimator(r_in="1.2 deg", width="0.4 deg")
+def test_image_maker(observations):
+    ring_bkg = RingBackgroundEstimator(r_in="0.5 deg", width="0.4 deg")
     geomd = geom(ebounds=[0.1, 1, 10])
 
     mask = Map.from_geom(geomd)
@@ -139,11 +118,14 @@ def test_image_maker(observations, pars):
     )
     mask.data = mask.geom.region_mask([regions], inside=False)
 
-    im = ImageMaker(geomd, 2.0 * u.deg, mask, ring_bkg)
-    im.run(observations, sum_over_axes=pars["summed"])
+    im = MapMakerRing(geomd, 2.0 * u.deg, mask, ring_bkg)
+    maps = im.run(observations)
 
-    assert_allclose(np.nansum(im.significance_map.data), pars["sig_all"], rtol=1e-2)
-    assert_allclose(np.nansum(im.significance_map_off.data), pars["sig_off"], rtol=1e-2)
-    assert_allclose(np.nansum(im.excess_map.data), pars["exc_all"], rtol=1e-2)
-    assert_allclose(np.nansum(im.excess_map_off.data), pars["exc_off"], rtol=1e-2)
-    assert im.significance_map.geom.is_image == pars["is_image"]
+    assert_allclose(np.nansum(im.significance_map(maps).data), -17.56, rtol=1e-2)
+    assert_allclose(np.nansum(im.excess_map(maps).data), -13809.8955, rtol=1e-2)
+    assert im.significance_map(maps).geom.is_image == False
+
+    images = im.run_images(observations)
+    assert_allclose(np.nansum(im.significance_map(images).data), 28.13, rtol=1e-2)
+    assert_allclose(np.nansum(im.excess_map(images).data), 197.248, rtol=1e-2)
+    assert im.significance_map(images).geom.is_image == True
