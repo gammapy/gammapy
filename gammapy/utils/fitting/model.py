@@ -7,6 +7,8 @@ __all__ = ["Model"]
 class Model:
     """Model base class."""
 
+    __slots__ = []
+
     def __init__(self, params):
         for par in params:
             setattr(self, par.name, par)

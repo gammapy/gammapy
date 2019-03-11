@@ -25,7 +25,9 @@ FLUX_POINTS_FILES = [
 
 
 class LWTestModel(SpectralModel):
-    parameters = Parameters([])
+    def __init__(self):
+        self._parameters = Parameters([])
+        super().__init__(self._parameters)
 
     @staticmethod
     def evaluate(x):
@@ -39,7 +41,9 @@ class LWTestModel(SpectralModel):
 
 
 class XSqrTestModel(SpectralModel):
-    parameters = Parameters([])
+    def __init__(self):
+        self._parameters = Parameters([])
+        super().__init__(self._parameters)
 
     @staticmethod
     def evaluate(x):
@@ -53,7 +57,9 @@ class XSqrTestModel(SpectralModel):
 
 
 class ExpTestModel(SpectralModel):
-    parameters = Parameters([])
+    def __init__(self):
+        self._parameters = Parameters([])
+        super().__init__(self._parameters)
 
     @staticmethod
     def evaluate(x):

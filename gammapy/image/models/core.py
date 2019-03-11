@@ -26,6 +26,8 @@ log = logging.getLogger(__name__)
 class SkySpatialModel(Model):
     """Sky spatial model base class."""
 
+    __slots__ = []
+
     def __init__(self, params):
         super().__init__(params)
 
@@ -33,6 +35,10 @@ class SkySpatialModel(Model):
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.Parameters`)"""
         return self._parameters
+
+    @parameters.setter
+    def parameters(self, parameters):
+        self._parameters = parameters
 
     def __call__(self, lon, lat):
         """Call evaluate method"""
@@ -46,7 +52,6 @@ class SkySpatialModel(Model):
     def position(self):
         """Spatial model center position"""
         try:
-            # TODO: this relies on hard-coded parameter names, which is not the ideal solution
             lon = self.lon_0.quantity
             lat = self.lat_0.quantity
             return SkyCoord(lon, lat, frame=self.frame)
@@ -72,10 +77,15 @@ class SkyPointSource(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "_parameters", "lon_0", "lat_0"]
+
     def __init__(self, lon_0, lat_0, frame="galactic"):
         self.frame = frame
         self._parameters = Parameters(
-            [Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180), Parameter("lat_0", Latitude(lat_0), min=-90, max=90)]
+            [
+                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
+                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
+            ]
         )
         super().__init__(self._parameters.parameters)
 
@@ -148,6 +158,8 @@ class SkyGaussian(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "_parameters", "lon_0", "lat_0", "sigma"]
+
     def __init__(self, lon_0, lat_0, sigma, frame="galactic"):
         self.frame = frame
         self._parameters = Parameters(
@@ -207,6 +219,8 @@ class SkyDisk(SkySpatialModel):
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
     """
+
+    __slots__ = ["frame", "_parameters", "lon_0", "lat_0", "r_0"]
 
     def __init__(self, lon_0, lat_0, r_0, frame="galactic"):
         self.frame = frame
@@ -316,6 +330,17 @@ class SkyEllipse(SkySpatialModel):
         plt.show()
     """
 
+    __slots__ = [
+        "frame",
+        "_parameters",
+        "lon_0",
+        "lat_0",
+        "semi_major",
+        "e",
+        "theta",
+        "_offset_by",
+    ]
+
     def __init__(self, lon_0, lat_0, semi_major, e, theta, frame="galactic"):
         try:
             from astropy.coordinates.angle_utilities import offset_by
@@ -415,6 +440,8 @@ class SkyShell(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "_parameters", "lon_0", "lat_0", "radius", "width"]
+
     def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
         self.frame = frame
         self._parameters = Parameters(
@@ -468,7 +495,11 @@ class SkyDiffuseConstant(SkySpatialModel):
     value : `~astropy.units.Quantity`
         Value
     """
+
+    __slots__ = ["_parameters", "value"]
+
     frame = None
+
     def __init__(self, value=1):
         self._parameters = Parameters([Parameter("value", value)])
         super().__init__(self._parameters.parameters)
@@ -512,6 +543,8 @@ class SkyDiffuseMap(SkySpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
+    __slots__ = ["map", "_parameters", "norm", "meta", "_interp_kwargs"]
+
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
             log.warn(
@@ -544,7 +577,7 @@ class SkyDiffuseMap(SkySpatialModel):
             Radius in angular units.
 
         """
-        radius = np.max(self.map.geom.width) / 2.
+        radius = np.max(self.map.geom.width) / 2.0
         return radius
 
     def normalize(self):

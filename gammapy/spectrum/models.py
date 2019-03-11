@@ -37,6 +37,8 @@ class SpectralModel(Model):
     `~gammapy.spectrum.models.PowerLaw`.
     """
 
+    __slots__ = []
+
     def __init__(self, params):
         super().__init__(params)
 
@@ -44,6 +46,10 @@ class SpectralModel(Model):
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.Parameters`)"""
         return self._parameters
+
+    @parameters.setter
+    def parameters(self, parameters):
+        self._parameters = parameters
 
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
@@ -452,6 +458,8 @@ class ConstantModel(SpectralModel):
         :math:`k`
     """
 
+    __slots__ = ["_parameters", "const"]
+
     def __init__(self, const):
         self._parameters = Parameters([Parameter("const", const)])
         super().__init__(self._parameters.parameters)
@@ -472,8 +480,10 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        self._parameters = self.model1.parameters.parameters + self.model2.parameters.parameters
-        super().__init__(self._parameters.parameters)
+        self._parameters = Parameters(
+            self.model1.parameters.parameters + self.model2.parameters.parameters
+        )
+
     # TODO: Think about how to deal with covariance matrix
 
     def __str__(self):
@@ -522,6 +532,8 @@ class PowerLaw(SpectralModel):
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+
+    __slots__ = ["_parameters", "index", "amplitude", "reference"]
 
     def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
         self._parameters = Parameters(
@@ -712,6 +724,8 @@ class PowerLaw2(SpectralModel):
         plt.show()
     """
 
+    __slots__ = ["_parameters", "index", "amplitude", "emin", "emax"]
+
     def __init__(
         self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
     ):
@@ -841,6 +855,8 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         plt.show()
     """
 
+    __slots__ = ["_parameters", "index", "amplitude", "reference", "lambda_"]
+
     def __init__(
         self,
         index=1.5,
@@ -921,6 +937,8 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         plt.show()
     """
 
+    __slots__ = ["_parameters", "index", "amplitude", "reference", "ecut"]
+
     def __init__(
         self,
         index=1.5,
@@ -984,6 +1002,8 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+
+    __slots__ = ["_parameters", "index_1", "index_2", "amplitude", "reference", "ecut"]
 
     def __init__(
         self,
@@ -1057,6 +1077,8 @@ class LogParabola(SpectralModel):
         log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+
+    __slots__ = ["_parameters", "amplitude", "reference", "alpha", "beta"]
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
@@ -1136,6 +1158,8 @@ class TableModel(SpectralModel):
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
+
+    __slots__ = ["_parameters", "energy", "values", "norm", "meta", "_evaluate"]
 
     def __init__(
         self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
@@ -1244,6 +1268,8 @@ class ScaleModel(SpectralModel):
         Multiplicative norm factor for the model value.
     """
 
+    __slots__ = ["_parameters", "norm", "model"]
+
     def __init__(self, model, norm=1):
         self._parameters = Parameters([Parameter("norm", norm, unit="")])
         self.model = model
@@ -1302,6 +1328,8 @@ class Absorption:
         # show plot
         plt.show()
     """
+
+    __slots__ = ["energy_lo", "energy_hi", "param_lo", "param_hi", "data"]
 
     def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
         axes = [
@@ -1426,6 +1454,14 @@ class AbsorbedSpectralModel(SpectralModel):
         parameter name
     """
 
+    __slots__ = [
+        "_parameters",
+        "spectral_model",
+        "absorption",
+        "parameter",
+        "parameter_name",
+    ]
+
     def __init__(
         self, spectral_model, absorption, parameter, parameter_name="redshift"
     ):
@@ -1444,11 +1480,9 @@ class AbsorbedSpectralModel(SpectralModel):
         max_ = self.absorption.data.axes[0].lo[-1]
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         param_list.append(par)
-
         self._parameters = Parameters(param_list)
-        super().__init__(self._parameters.parameters)
 
-def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
         # assign redshift value and remove it from dictionnary
         # since it does not belong to the spectral model
