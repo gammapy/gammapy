@@ -129,7 +129,8 @@ def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
         npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
     )
     coords = geom.get_coord()
-    coords = [c[np.isfinite(c)] for c in coords]
+    m = np.isfinite(coords[0])
+    coords = [c[m] for c in coords]
     assert_allclose(geom.contains(coords), np.ones(coords[0].shape, dtype=bool))
 
     if axes is not None:
