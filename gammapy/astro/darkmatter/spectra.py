@@ -170,7 +170,6 @@ class DMAnnihilation(SpectralModel):
     """
 
     __slots__ = [
-        "_parameters",
         "mass",
         "channel",
         "scale",

@@ -31,14 +31,9 @@ class SkySpatialModel(Model):
     def __init__(self, params):
         super().__init__(params)
 
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        self._parameters = parameters
+    #    @parameters.setter
+    #    def parameters(self, parameters):
+    #        self._parameters = parameters
 
     def __call__(self, lon, lat):
         """Call evaluate method"""
@@ -77,17 +72,21 @@ class SkyPointSource(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    __slots__ = ["frame", "_parameters", "lon_0", "lat_0"]
+    __slots__ = ["frame", "lon_0", "lat_0"]
 
     def __init__(self, lon_0, lat_0, frame="galactic"):
         self.frame = frame
-        self._parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
-        super().__init__(self._parameters.parameters)
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):
@@ -158,18 +157,22 @@ class SkyGaussian(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    __slots__ = ["frame", "_parameters", "lon_0", "lat_0", "sigma"]
+    __slots__ = ["frame", "lon_0", "lat_0", "sigma"]
 
     def __init__(self, lon_0, lat_0, sigma, frame="galactic"):
         self.frame = frame
-        self._parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("sigma", Angle(sigma), min=0),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
-        super().__init__(self._parameters.parameters)
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.sigma = Parameter("sigma", Angle(sigma), min=0)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):
@@ -220,18 +223,22 @@ class SkyDisk(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    __slots__ = ["frame", "_parameters", "lon_0", "lat_0", "r_0"]
+    __slots__ = ["frame", "lon_0", "lat_0", "r_0"]
 
     def __init__(self, lon_0, lat_0, r_0, frame="galactic"):
         self.frame = frame
-        self._parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("r_0", Angle(r_0)),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
-        super().__init__(self._parameters.parameters)
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.r_0 = Parameter("r_0", Angle(r_0))
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):
@@ -330,16 +337,7 @@ class SkyEllipse(SkySpatialModel):
         plt.show()
     """
 
-    __slots__ = [
-        "frame",
-        "_parameters",
-        "lon_0",
-        "lat_0",
-        "semi_major",
-        "e",
-        "theta",
-        "_offset_by",
-    ]
+    __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "theta", "_offset_by"]
 
     def __init__(self, lon_0, lat_0, semi_major, e, theta, frame="galactic"):
         try:
@@ -350,16 +348,20 @@ class SkyEllipse(SkySpatialModel):
             raise ImportError("The SkyEllipse model requires astropy>=3.1")
 
         self.frame = frame
-        self._parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("semi_major", Angle(semi_major)),
-                Parameter("e", e, min=0, max=1),
-                Parameter("theta", Angle(theta)),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
-        super().__init__(self._parameters.parameters)
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.semi_major = Parameter("semi_major", Angle(semi_major))
+        self.e = Parameter("e", e, min=0, max=1)
+        self.theta = Parameter("theta", Angle(theta))
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):
@@ -440,19 +442,23 @@ class SkyShell(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
-    __slots__ = ["frame", "_parameters", "lon_0", "lat_0", "radius", "width"]
+    __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]
 
     def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
         self.frame = frame
-        self._parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("radius", Angle(radius)),
-                Parameter("width", Angle(width)),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
-        super().__init__(self._parameters.parameters)
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.radius = Parameter("radius", Angle(radius))
+        self.width = Parameter("width", Angle(width))
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):
@@ -496,13 +502,16 @@ class SkyDiffuseConstant(SkySpatialModel):
         Value
     """
 
-    __slots__ = ["_parameters", "value"]
+    __slots__ = ["value"]
 
     frame = None
 
     def __init__(self, value=1):
-        self._parameters = Parameters([Parameter("value", value)])
-        super().__init__(self._parameters.parameters)
+        self.value = Parameter("value", value)
+
+        params = []
+        params.append(getattr(self, "value"))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):
@@ -543,7 +552,7 @@ class SkyDiffuseMap(SkySpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    __slots__ = ["map", "_parameters", "norm", "meta", "_interp_kwargs"]
+    __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
@@ -557,14 +566,17 @@ class SkyDiffuseMap(SkySpatialModel):
         if normalize:
             self.normalize()
 
-        self._parameters = Parameters([Parameter("norm", norm)])
+        self.norm = Parameter("norm", norm)
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
-        super().__init__(self._parameters.parameters)
+
+        params = []
+        params.append(getattr(self, "norm"))
+        super().__init__(params)
 
     @property
     def evaluation_radius(self):

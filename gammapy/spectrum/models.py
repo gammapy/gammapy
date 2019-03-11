@@ -42,15 +42,6 @@ class SpectralModel(Model):
     def __init__(self, params):
         super().__init__(params)
 
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters):
-        self._parameters = parameters
-
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
         kwargs = dict()
@@ -458,11 +449,14 @@ class ConstantModel(SpectralModel):
         :math:`k`
     """
 
-    __slots__ = ["_parameters", "const"]
+    __slots__ = ["const"]
 
     def __init__(self, const):
-        self._parameters = Parameters([Parameter("const", const)])
-        super().__init__(self._parameters.parameters)
+        self.const = Parameter("const", const)
+
+        params = []
+        params.append(getattr(self, "const"))
+        super().__init__(params)
 
     @staticmethod
     def evaluate(energy, const):
@@ -533,17 +527,19 @@ class PowerLaw(SpectralModel):
         plt.show()
     """
 
-    __slots__ = ["_parameters", "index", "amplitude", "reference"]
+    __slots__ = ["index", "amplitude", "reference"]
 
     def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
-        self._parameters = Parameters(
-            [
-                Parameter("index", index),
-                Parameter("amplitude", amplitude),
-                Parameter("reference", reference, frozen=True),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.index = Parameter("index", index)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
@@ -724,20 +720,22 @@ class PowerLaw2(SpectralModel):
         plt.show()
     """
 
-    __slots__ = ["_parameters", "index", "amplitude", "emin", "emax"]
+    __slots__ = ["index", "amplitude", "emin", "emax"]
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
     ):
-        self._parameters = Parameters(
-            [
-                Parameter("amplitude", amplitude),
-                Parameter("index", index),
-                Parameter("emin", emin, frozen=True),
-                Parameter("emax", emax, frozen=True),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.index = Parameter("index", index)
+        self.emin = Parameter("emin", emin, frozen=True)
+        self.emax = Parameter("emax", emax, frozen=True)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @staticmethod
     def evaluate(energy, amplitude, index, emin, emax):
@@ -855,7 +853,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         plt.show()
     """
 
-    __slots__ = ["_parameters", "index", "amplitude", "reference", "lambda_"]
+    __slots__ = ["index", "amplitude", "reference", "lambda_"]
 
     def __init__(
         self,
@@ -864,15 +862,17 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         reference="1 TeV",
         lambda_="0.1 TeV-1",
     ):
-        self._parameters = Parameters(
-            [
-                Parameter("index", index),
-                Parameter("amplitude", amplitude),
-                Parameter("reference", reference, frozen=True),
-                Parameter("lambda_", lambda_),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.index = Parameter("index", index)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+        self.lambda_ = Parameter("lambda_", lambda_)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, lambda_):
@@ -937,7 +937,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         plt.show()
     """
 
-    __slots__ = ["_parameters", "index", "amplitude", "reference", "ecut"]
+    __slots__ = ["index", "amplitude", "reference", "ecut"]
 
     def __init__(
         self,
@@ -946,15 +946,17 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         reference="1 TeV",
         ecut="10 TeV",
     ):
-        self._parameters = Parameters(
-            [
-                Parameter("index", index),
-                Parameter("amplitude", amplitude),
-                Parameter("reference", reference, frozen=True),
-                Parameter("ecut", ecut),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.index = Parameter("index", index)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+        self.ecut = Parameter("ecut", ecut)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @staticmethod
     def evaluate(energy, index, amplitude, reference, ecut):
@@ -1003,7 +1005,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         plt.show()
     """
 
-    __slots__ = ["_parameters", "index_1", "index_2", "amplitude", "reference", "ecut"]
+    __slots__ = ["index_1", "index_2", "amplitude", "reference", "ecut"]
 
     def __init__(
         self,
@@ -1013,16 +1015,18 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         reference="1 TeV",
         ecut="10 TeV",
     ):
-        self._parameters = Parameters(
-            [
-                Parameter("index_1", index_1),
-                Parameter("index_2", index_2),
-                Parameter("amplitude", amplitude),
-                Parameter("reference", reference, frozen=True),
-                Parameter("ecut", ecut),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.index_1 = Parameter("index_1", index_1)
+        self.index_2 = Parameter("index_2", index_2)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+        self.ecut = Parameter("ecut", ecut)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):
@@ -1078,20 +1082,22 @@ class LogParabola(SpectralModel):
         plt.show()
     """
 
-    __slots__ = ["_parameters", "amplitude", "reference", "alpha", "beta"]
+    __slots__ = ["amplitude", "reference", "alpha", "beta"]
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
     ):
-        self._parameters = Parameters(
-            [
-                Parameter("amplitude", amplitude),
-                Parameter("reference", reference, frozen=True),
-                Parameter("alpha", alpha),
-                Parameter("beta", beta),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+        self.alpha = Parameter("alpha", alpha)
+        self.beta = Parameter("beta", beta)
+
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
@@ -1159,12 +1165,12 @@ class TableModel(SpectralModel):
         Meta information, meta['filename'] will be used for serialization
     """
 
-    __slots__ = ["_parameters", "energy", "values", "norm", "meta", "_evaluate"]
+    __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
 
     def __init__(
         self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
     ):
-        self._parameters = Parameters([Parameter("norm", norm, unit="")])
+        self.norm = Parameter("norm", norm, unit="")
         self.energy = energy
         self.values = values
         self.meta = dict() if meta is None else meta
@@ -1175,7 +1181,10 @@ class TableModel(SpectralModel):
         self._evaluate = ScaledRegularGridInterpolator(
             points=(np.log(energy.value),), values=values, **interp_kwargs
         )
-        super().__init__(self._parameters.parameters)
+
+        params = []
+        params.append(getattr(self, "norm"))
+        super().__init__(params)
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1268,12 +1277,15 @@ class ScaleModel(SpectralModel):
         Multiplicative norm factor for the model value.
     """
 
-    __slots__ = ["_parameters", "norm", "model"]
+    __slots__ = ["norm", "model"]
 
     def __init__(self, model, norm=1):
-        self._parameters = Parameters([Parameter("norm", norm, unit="")])
+        self.norm = Parameter("norm", norm, unit="")
         self.model = model
-        super().__init__(self._parameters.parameters)
+
+        params = []
+        params.append(getattr(self, "norm"))
+        super().__init__(params)
 
     def evaluate(self, energy, norm):
         return norm * self.model(energy)
@@ -1454,13 +1466,7 @@ class AbsorbedSpectralModel(SpectralModel):
         parameter name
     """
 
-    __slots__ = [
-        "_parameters",
-        "spectral_model",
-        "absorption",
-        "parameter",
-        "parameter_name",
-    ]
+    __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
 
     def __init__(
         self, spectral_model, absorption, parameter, parameter_name="redshift"

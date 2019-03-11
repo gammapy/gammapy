@@ -25,11 +25,6 @@ class SkyModelBase(Model):
     def __init__(self, params):
         super().__init__(params)
 
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
-
     def __add__(self, skymodel):
         skymodels = [self]
         if isinstance(skymodel, SkyModels):
@@ -64,22 +59,18 @@ class SkyModels(SkyModelBase):
         filename = '$GAMMAPY_DATA/tests/models/fermi_model.xml'
         sourcelib = SkyModels.read(filename)
     """
+
     frame = None
 
-    __slots__ = ["skymodels", "_parameters"]
+    __slots__ = ["skymodels"]
 
     def __init__(self, skymodels):
         self.skymodels = skymodels
-        params = []
+        pars = []
         for skymodel in skymodels:
             for p in skymodel.parameters:
-                params.append(p)
-        self._parameters = Parameters(params)
-
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
+                pars.append(p)
+        self._parameters = Parameters(pars)
 
     @classmethod
     def from_xml(cls, xml):
@@ -175,7 +166,7 @@ class SkyModel(SkyModelBase):
         Model identifier
     """
 
-    __slots__ = ["name", "_spatial_model", "_spectral_model", "_parameters"]
+    __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="SkyModel"):
         self.name = name
@@ -252,7 +243,7 @@ class CompoundSkyModel(SkyModelBase):
         Binary operator to combine the models
     """
 
-    __slots__ = ["model1", "model2", "operator", "_parameters"]
+    __slots__ = ["model1", "model2", "operator"]
 
     def __init__(self, model1, model2, operator):
         self.model1 = model1
@@ -324,7 +315,7 @@ class SkyDiffuseCube(SkyModelBase):
 
     """
 
-    __slots__ = ["_parameters", "map", "norm", "meta", "_interp_kwargs"]
+    __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
         axis = map.geom.get_axis_by_name("energy")
@@ -333,14 +324,17 @@ class SkyDiffuseCube(SkyModelBase):
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self._parameters = Parameters([Parameter("norm", norm)])
+        self.norm = Parameter("norm", norm)
         self.meta = {} if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
-        super().__init__(self._parameters.parameters)
+
+        params = []
+        params.append(getattr(self, "norm"))
+        super().__init__(params)
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -411,7 +405,7 @@ class BackgroundModel(Model):
         Background evaluated on the Map
     """
 
-    __slots__ = ["_parameters", "map", "norm", "tilt", "reference"]
+    __slots__ = ["map", "norm", "tilt", "reference"]
 
     def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
 
@@ -420,19 +414,16 @@ class BackgroundModel(Model):
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = background
-        self._parameters = Parameters(
-            [
-                Parameter("norm", norm, unit="", min=0),
-                Parameter("tilt", tilt, unit="", frozen=True),
-                Parameter("reference", reference, frozen=True),
-            ]
-        )
-        super().__init__(self._parameters.parameters)
+        self.norm = Parameter("norm", norm, unit="", min=0)
+        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
+        self.reference = Parameter("reference", reference, frozen=True)
 
-    @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
+        params = []
+        for slot in self.__slots__:
+            attr = getattr(self, slot)
+            if isinstance(attr, Parameter):
+                params.append(getattr(self, slot))
+        super().__init__(params)
 
     @property
     def energy_center(self):
@@ -495,7 +486,7 @@ class BackgroundModels:
         List of background models.
     """
 
-    __slots__ = ["models", "_parameters"]
+    __slots__ = ["models"]
 
     def __init__(self, models):
         self.models = models
