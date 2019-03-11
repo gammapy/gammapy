@@ -74,7 +74,7 @@ class SkyModels(SkyModelBase):
         for skymodel in skymodels:
             for p in skymodel.parameters:
                 params.append(p)
-        super().__init__(params)
+        self._parameters = Parameters(params)
 
     @property
     def parameters(self):
