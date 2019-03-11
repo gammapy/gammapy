@@ -486,7 +486,7 @@ class BackgroundModels:
         List of background models.
     """
 
-    __slots__ = ["models"]
+    __slots__ = ["models", "_parameters"]
 
     def __init__(self, models):
         self.models = models
