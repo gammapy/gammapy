@@ -183,13 +183,14 @@ class DMAnnihilation(SpectralModel):
     """Thermally averaged annihilation cross-section"""
 
     def __init__(self, mass, channel, scale=1, jfactor=1, z=0, k=2):
-        self._parameters = Parameters([Parameter("scale", scale)])
+        self.scale = Parameter("scale", scale)
         self.k = k
         self.z = z
         self.mass = mass
         self.channel = channel
         self.jfactor = jfactor
         self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
+        super().__init__([self.scale])
 
     def evaluate(self, energy, scale):
         """Evaluate dark matter annihilation model."""

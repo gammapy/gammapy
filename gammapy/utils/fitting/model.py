@@ -12,8 +12,6 @@ class Model:
 
     def __init__(self, params):
         self._parameters = Parameters(params)
-        for par in params:
-            setattr(self, par.name, par)
 
     @property
     def parameters(self):

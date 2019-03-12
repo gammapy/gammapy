@@ -26,15 +26,6 @@ log = logging.getLogger(__name__)
 class SkySpatialModel(Model):
     """Sky spatial model base class."""
 
-    __slots__ = []
-
-    def __init__(self, params):
-        super().__init__(params)
-
-    #    @parameters.setter
-    #    def parameters(self, parameters):
-    #        self._parameters = parameters
-
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = dict()
@@ -81,12 +72,7 @@ class SkyPointSource(SkySpatialModel):
         )
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
 
-        params = []
-        for slot in self.__slots__:
-            attr = getattr(self, slot)
-            if isinstance(attr, Parameter):
-                params.append(getattr(self, slot))
-        super().__init__(params)
+        super().__init__([self.lon_0, self.lat_0])
 
     @property
     def evaluation_radius(self):
@@ -167,12 +153,7 @@ class SkyGaussian(SkySpatialModel):
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.sigma = Parameter("sigma", Angle(sigma), min=0)
 
-        params = []
-        for slot in self.__slots__:
-            attr = getattr(self, slot)
-            if isinstance(attr, Parameter):
-                params.append(getattr(self, slot))
-        super().__init__(params)
+        super().__init__([self.lon_0, self.lat_0, self.sigma])
 
     @property
     def evaluation_radius(self):
@@ -233,12 +214,7 @@ class SkyDisk(SkySpatialModel):
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.r_0 = Parameter("r_0", Angle(r_0))
 
-        params = []
-        for slot in self.__slots__:
-            attr = getattr(self, slot)
-            if isinstance(attr, Parameter):
-                params.append(getattr(self, slot))
-        super().__init__(params)
+        super().__init__([self.lon_0, self.lat_0, self.r_0])
 
     @property
     def evaluation_radius(self):
@@ -356,12 +332,7 @@ class SkyEllipse(SkySpatialModel):
         self.e = Parameter("e", e, min=0, max=1)
         self.theta = Parameter("theta", Angle(theta))
 
-        params = []
-        for slot in self.__slots__:
-            attr = getattr(self, slot)
-            if isinstance(attr, Parameter):
-                params.append(getattr(self, slot))
-        super().__init__(params)
+        super().__init__([self.lon_0, self.lat_0, self.semi_major, self.e, self.theta])
 
     @property
     def evaluation_radius(self):
@@ -453,12 +424,7 @@ class SkyShell(SkySpatialModel):
         self.radius = Parameter("radius", Angle(radius))
         self.width = Parameter("width", Angle(width))
 
-        params = []
-        for slot in self.__slots__:
-            attr = getattr(self, slot)
-            if isinstance(attr, Parameter):
-                params.append(getattr(self, slot))
-        super().__init__(params)
+        super().__init__([self.lon_0, self.lat_0, self.radius, self.width])
 
     @property
     def evaluation_radius(self):
@@ -509,9 +475,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     def __init__(self, value=1):
         self.value = Parameter("value", value)
 
-        params = []
-        params.append(getattr(self, "value"))
-        super().__init__(params)
+        super().__init__([self.value])
 
     @property
     def evaluation_radius(self):
@@ -574,9 +538,7 @@ class SkyDiffuseMap(SkySpatialModel):
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
 
-        params = []
-        params.append(getattr(self, "norm"))
-        super().__init__(params)
+        super().__init__([self.norm])
 
     @property
     def evaluation_radius(self):
