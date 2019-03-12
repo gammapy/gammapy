@@ -58,9 +58,7 @@ class MapDataset:
         if mask is not None and mask.data.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        if isinstance(model, SkyModel):
-            model = SkyModels([model])
-
+        self.evaluation_mode = evaluation_mode
         self.model = model
         self.counts = counts
         self.exposure = exposure
@@ -78,10 +76,23 @@ class MapDataset:
                 "Not a valid fit statistic. Choose between 'cash' and 'cstat'."
             )
 
+    @property
+    def model(self):
+        """Sky model to fit instance of `SkyModel` or `SkyModels`"""
+        return self._model
+
+    @model.setter
+    def model(self, model):
+        """Set sky model to fit"""
+        if isinstance(model, SkyModel):
+            model = SkyModels([model])
+
+        self._model = model
+
         evaluators = []
 
-        for component in self.model.skymodels:
-            evaluator = MapEvaluator(component, evaluation_mode=evaluation_mode)
+        for component in model.skymodels:
+            evaluator = MapEvaluator(component, evaluation_mode=self.evaluation_mode)
             evaluators.append(evaluator)
 
         self._evaluators = evaluators
