@@ -468,7 +468,7 @@ class MapMakerRing(MapMaker):
 
         """
         if convolution_radius:
-            scale = counts.geom.pixel_scales[0].to("deg")
+            scale = self.geom.pixel_scales[0].to("deg")
             theta = (convolution_radius * scale).value
         else:
             theta = 1
