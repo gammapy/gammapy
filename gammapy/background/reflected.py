@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import copy
 import numpy as np
-from scipy.ndimage import distance_transform_edt
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from regions import PixCoord, CirclePixelRegion, CircleAnnulusPixelRegion, \
@@ -88,7 +86,7 @@ class ReflectedRegionsFinder:
         self.reference_map = None
         self.binsz = Angle(binsz)
 
-    def run(self, obs_id):
+    def run(self, obs_id=-1):
         """Run all steps.
         """
         self.obs_id = obs_id
@@ -194,16 +192,19 @@ class ReflectedRegionsFinder:
         reflected_regions = []
         geom = self.reference_map.geom
         _run_exclusion_mask = None
+        _pixel_excluded = False
         if not self.exclusion_mask is None:
             _run_exclusion_mask = self.exclusion_mask.reproject(self.reference_map.geom)
             _run_exclusion_mask.data[np.where(np.isnan(_run_exclusion_mask.data))] = 1
             _mask_array = np.where(_run_exclusion_mask.data < 0.99)
             _excluded_coords = geom.get_coord().apply_mask(_mask_array).to_coordsys('CEL')
-            _excluded_pixcoords = PixCoord(*SkyCoord(*_excluded_coords, unit='deg').to_pixel(geom.wcs))
+            if len(_excluded_coords[0]) > 0 and len(_excluded_coords[1]) > 0 :
+                _excluded_pixcoords = PixCoord(*SkyCoord(*_excluded_coords, unit='deg').to_pixel(geom.wcs))
+                _pixel_excluded = True
 
         while curr_angle < self._max_angle:
             _test_reg = self._create_rotated_reg(curr_angle)
-            if _run_exclusion_mask is None or not np.any(_test_reg.contains(_excluded_pixcoords)):
+            if _pixel_excluded is False or not np.any(_test_reg.contains(_excluded_pixcoords)):
                 _region = _test_reg.to_sky(geom.wcs)
                 log.debug("Placing reflected region\n{}".format(_region))
                 reflected_regions.append(_region)
@@ -264,15 +265,13 @@ class ReflectedRegionsFinder:
         """ Compute a rotated region"""
         _test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
 
-        _test_reg = copy.deepcopy(self._pix_region)
-        for par in _test_reg._repr_params:
-            _test_reg.__setattr__(par, self._pix_region.__getattribute__(par))
+        # The function copy.deepcopy does not work for these regions classes
+        dict = { _ : getattr(self._pix_region, _) for _ in self._pix_region._repr_params}
+        _test_reg = self._pix_region.__class__(_test_pos, **dict)
 
         if hasattr(_test_reg, 'angle'):
             _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
             _test_reg.angle = _angle
-        if hasattr(_test_reg, 'center'):
-            _test_reg.center = _test_pos
 
         return _test_reg
 
