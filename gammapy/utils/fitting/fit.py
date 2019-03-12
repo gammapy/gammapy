@@ -145,8 +145,10 @@ class Fit:
         **kwargs : dict
             Keyword arguments passed to the optimizer. For the `"minuit"` backend
             see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
-            for a detailed description of the available options. For the `"sherpa"`
-            backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
+            for a detailed description of the available options. If there is an entry
+             'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
+
+            For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
             Those methods are described and compared in detail on
             http://cxc.cfa.harvard.edu/sherpa/methods/index.html. The available
             options of the optimization methods are described on the following
@@ -156,6 +158,9 @@ class Fit:
                 * http://cxc.cfa.harvard.edu/sherpa/ahelp/montecarlo.html
                 * http://cxc.cfa.harvard.edu/sherpa/ahelp/gridsearch.html
                 * http://cxc.cfa.harvard.edu/sherpa/ahelp/levmar.html
+
+            For the `"scipy"` backend the available options are desribed in detail here:
+            https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
 
         Returns
         -------

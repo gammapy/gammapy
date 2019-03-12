@@ -27,7 +27,8 @@ def optimize_iminuit(parameters, function, **kwargs):
     function : callable
         Likelihood function
     **kwargs : dict
-        Options passed to `iminuit.Minuit` constructor
+        Options passed to `iminuit.Minuit` constructor. If there is an entry 'migrad_opts', those options
+        will be passed to `iminuit.Minuit.migrad()`.
 
     Returns
     -------
@@ -44,8 +45,10 @@ def optimize_iminuit(parameters, function, **kwargs):
 
     minuit_func = MinuitLikelihood(function, parameters)
 
+    kwargs = kwargs.copy()
+    migrad_opts = kwargs.pop("migrad_opts", {})
     minuit = Minuit(minuit_func.fcn, **kwargs)
-    minuit.migrad()
+    minuit.migrad(**migrad_opts)
 
     factors = minuit.args
     info = {

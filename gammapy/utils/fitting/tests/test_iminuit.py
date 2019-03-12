@@ -77,3 +77,10 @@ def test_iminuit_limits(pars):
     # The next assert can be added when we no longer test on iminuit 1.2
     # See https://github.com/gammapy/gammapy/pull/1771
     # assert states[1]["upper_limit"] is None
+
+
+def test_migrad_opts(pars):
+    kwargs = {}
+    kwargs["migrad_opts"] = {"ncall": 20}
+    factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars, **kwargs)
+    assert info["nfev"] == 20
