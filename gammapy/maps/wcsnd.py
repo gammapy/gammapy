@@ -14,7 +14,7 @@ from ..utils.units import unit_from_fits_image_hdu
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from .geom import pix_tuple_to_idx
 from .wcs import _check_width
-from .utils import interp_to_order
+from .utils import interp_to_order, INVALID_INDEX
 from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 
@@ -87,7 +87,7 @@ class WcsNDMap(WcsMap):
         else:
             data = np.full(shape_np, np.nan, dtype=dtype)
             idx = geom.get_idx()
-            m = np.all(np.stack([t != -1 for t in idx]), axis=0)
+            m = np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
             data[m] = 0.0
 
         return data
@@ -211,7 +211,7 @@ class WcsNDMap(WcsMap):
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
-        msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
+        msk = np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
 
         if weights is not None:

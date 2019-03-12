@@ -12,7 +12,7 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from ..utils.interpolation import interpolation_scale
-from .utils import find_hdu, find_bands_hdu
+from .utils import find_hdu, find_bands_hdu, INVALID_INDEX
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 
@@ -221,7 +221,7 @@ def pix_tuple_to_idx(pix):
             idx += [p]
         else:
             p_idx = np.rint(p).astype(int)
-            p_idx[~np.isfinite(p)] = -1
+            p_idx[~np.isfinite(p)] = INVALID_INDEX.int_value
             idx += [p_idx]
 
     return tuple(idx)
@@ -259,9 +259,9 @@ def coord_to_idx(edges, x, clip=False):
         ibin[x > edges[-1]] = len(edges) - 1
     else:
         with np.errstate(invalid="ignore"):
-            ibin[x > edges[-1]] = -1
+            ibin[x > edges[-1]] = INVALID_INDEX.int_value
 
-    ibin[~np.isfinite(x)] = -1
+    ibin[~np.isfinite(x)] = INVALID_INDEX.int_value
     return ibin
 
 
@@ -1212,7 +1212,7 @@ class MapGeom(metaclass=MapGeomMeta):
             Bool array.
         """
         idx = self.pix_to_idx(pix)
-        return np.all(np.stack([t != -1 for t in idx]), axis=0)
+        return np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
 
     def slice_by_idx(self, slices):
         """Create a new geometry by cutting in the non-spatial dimensions of

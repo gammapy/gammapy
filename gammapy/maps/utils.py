@@ -5,7 +5,7 @@ from ..utils.random import get_random_state
 
 
 class InvalidValue:
-    """Class to define placeholder for invalid values."""
+    """Class to define placeholder for invalid array values."""
     float_value = np.nan
     int_value = np.iinfo(np.int32).min
     bool_value = False
@@ -21,7 +21,15 @@ class InvalidValue:
             raise ValueError("No invalid value placeholder defined for {}".format(dtype))
 
 
+class InvalidIndex:
+    """Class to define placeholder for invalid array indices."""
+    float_value = np.nan
+    int_value = -1
+    bool_value = False
+
+
 INVALID_VALUE = InvalidValue()
+INVALID_INDEX = InvalidIndex()
 
 
 def fill_poisson(map_in, mu, random_state="random-seed"):
