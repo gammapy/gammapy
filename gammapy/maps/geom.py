@@ -350,6 +350,9 @@ class MapAxis:
         self._node_type = node_type
         self._interp = interp
 
+        if (self._nodes < 0).any() and interp != "lin":
+            raise ValueError("Interpolation scaling '{}' only support for positive node values.".format(interp))
+
         # Set pixel coordinate of first node
         if node_type == "edges":
             self._pix_offset = -0.5
