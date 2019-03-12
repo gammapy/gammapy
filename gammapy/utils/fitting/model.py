@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+from .parameter import Parameters
 
 __all__ = ["Model"]
 
@@ -7,7 +8,19 @@ __all__ = ["Model"]
 class Model:
     """Model base class."""
 
-    # TODO: expose model parameters as attributes
+    __slots__ = ["_parameters"]
+
+    def __init__(self, params):
+        self._parameters = Parameters(params)
+
+    @property
+    def parameters(self):
+        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, parameters):
+        self._parameters = parameters
 
     def copy(self):
         """A deep copy."""

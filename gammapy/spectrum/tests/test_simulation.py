@@ -66,7 +66,8 @@ class TestSpectrumSimulation:
 
     def test_without_aeff(self):
         e_true = EnergyBounds.equal_log_spacing(1, 10, 5, u.TeV)
-        self.source_model.parameters["amplitude"].quantity = "1 TeV-1 s-1"
+        self.source_model.amplitude.unit = "TeV-1 s-1"
+        self.source_model.amplitude.value = 1
         sim = SpectrumSimulation(
             source_model=self.source_model, livetime=4 * u.h, e_true=e_true
         )

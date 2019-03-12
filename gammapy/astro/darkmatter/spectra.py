@@ -64,18 +64,21 @@ class PrimaryFlux:
 
         self.table_path = make_path(self.table_filename)
         if not self.table_path.exists():
-            message = "\n\nFile {} not found.\n" \
-                      "You may download the dataset needed with the following command:\n" \
-                      "gammapy download datasets --src dark_matter_spectra" \
-                      "".format(self.table_filename)
+            message = (
+                "\n\nFile {} not found.\n"
+                "You may download the dataset needed with the following command:\n"
+                "gammapy download datasets --src dark_matter_spectra"
+                "".format(self.table_filename)
+            )
 
             raise FileNotFoundError(message)
         else:
-            self.table = Table.read(str(self.table_path),
-                    format="ascii.fast_basic",
-                    guess=False,
-                    delimiter=" ",
-                )
+            self.table = Table.read(
+                str(self.table_path),
+                format="ascii.fast_basic",
+                guess=False,
+                delimiter=" ",
+            )
 
         self.mDM = mDM
         self.channel = channel
@@ -166,17 +169,28 @@ class DMAnnihilation(SpectralModel):
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
+    __slots__ = [
+        "mass",
+        "channel",
+        "scale",
+        "jfactor",
+        "z",
+        "k",
+        "primary_flux",
+    ]
+
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
     """Thermally averaged annihilation cross-section"""
 
     def __init__(self, mass, channel, scale=1, jfactor=1, z=0, k=2):
-        self.parameters = Parameters([Parameter("scale", scale)])
+        self.scale = Parameter("scale", scale)
         self.k = k
         self.z = z
         self.mass = mass
         self.channel = channel
         self.jfactor = jfactor
         self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
+        super().__init__([self.scale])
 
     def evaluate(self, energy, scale):
         """Evaluate dark matter annihilation model."""

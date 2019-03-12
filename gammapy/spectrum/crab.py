@@ -56,7 +56,7 @@ class MeyerCrabModel(SpectralModel):
     coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708])
 
     def __init__(self):
-        self.parameters = Parameters([])
+        self._parameters = Parameters([])
 
     @staticmethod
     def evaluate(energy):

@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 
 class SkySpatialModel(Model):
     """Sky spatial model base class."""
+
     def __call__(self, lon, lat):
         """Call evaluate method"""
         kwargs = dict()
@@ -37,9 +38,8 @@ class SkySpatialModel(Model):
     def position(self):
         """Spatial model center position"""
         try:
-            # TODO: this relies on hard-coded parameter names, which is not the ideal solution
-            lon = self.parameters["lon_0"].quantity
-            lat = self.parameters["lat_0"].quantity
+            lon = self.lon_0.quantity
+            lat = self.lat_0.quantity
             return SkyCoord(lon, lat, frame=self.frame)
         except IndexError:
             raise ValueError("Model does not have a defined center position")
@@ -63,11 +63,16 @@ class SkyPointSource(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "lon_0", "lat_0"]
+
     def __init__(self, lon_0, lat_0, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
-            [Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180), Parameter("lat_0", Latitude(lat_0), min=-90, max=90)]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+
+        super().__init__([self.lon_0, self.lat_0])
 
     @property
     def evaluation_radius(self):
@@ -138,15 +143,17 @@ class SkyGaussian(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "lon_0", "lat_0", "sigma"]
+
     def __init__(self, lon_0, lat_0, sigma, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("sigma", Angle(sigma), min=0),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.sigma = Parameter("sigma", Angle(sigma), min=0)
+
+        super().__init__([self.lon_0, self.lat_0, self.sigma])
 
     @property
     def evaluation_radius(self):
@@ -197,15 +204,17 @@ class SkyDisk(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "lon_0", "lat_0", "r_0"]
+
     def __init__(self, lon_0, lat_0, r_0, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("r_0", Angle(r_0)),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.r_0 = Parameter("r_0", Angle(r_0))
+
+        super().__init__([self.lon_0, self.lat_0, self.r_0])
 
     @property
     def evaluation_radius(self):
@@ -304,6 +313,8 @@ class SkyEllipse(SkySpatialModel):
         plt.show()
     """
 
+    __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "theta", "_offset_by"]
+
     def __init__(self, lon_0, lat_0, semi_major, e, theta, frame="galactic"):
         try:
             from astropy.coordinates.angle_utilities import offset_by
@@ -313,15 +324,15 @@ class SkyEllipse(SkySpatialModel):
             raise ImportError("The SkyEllipse model requires astropy>=3.1")
 
         self.frame = frame
-        self.parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("semi_major", Angle(semi_major)),
-                Parameter("e", e, min=0, max=1),
-                Parameter("theta", Angle(theta)),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.semi_major = Parameter("semi_major", Angle(semi_major))
+        self.e = Parameter("e", e, min=0, max=1)
+        self.theta = Parameter("theta", Angle(theta))
+
+        super().__init__([self.lon_0, self.lat_0, self.semi_major, self.e, self.theta])
 
     @property
     def evaluation_radius(self):
@@ -402,16 +413,18 @@ class SkyShell(SkySpatialModel):
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
+    __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]
+
     def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
         self.frame = frame
-        self.parameters = Parameters(
-            [
-                Parameter("lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180),
-                Parameter("lat_0", Latitude(lat_0), min=-90, max=90),
-                Parameter("radius", Angle(radius)),
-                Parameter("width", Angle(width)),
-            ]
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.radius = Parameter("radius", Angle(radius))
+        self.width = Parameter("width", Angle(width))
+
+        super().__init__([self.lon_0, self.lat_0, self.radius, self.width])
 
     @property
     def evaluation_radius(self):
@@ -454,9 +467,15 @@ class SkyDiffuseConstant(SkySpatialModel):
     value : `~astropy.units.Quantity`
         Value
     """
+
+    __slots__ = ["value"]
+
     frame = None
+
     def __init__(self, value=1):
-        self.parameters = Parameters([Parameter("value", value)])
+        self.value = Parameter("value", value)
+
+        super().__init__([self.value])
 
     @property
     def evaluation_radius(self):
@@ -497,6 +516,8 @@ class SkyDiffuseMap(SkySpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
+    __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
+
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
             log.warn(
@@ -509,13 +530,15 @@ class SkyDiffuseMap(SkySpatialModel):
         if normalize:
             self.normalize()
 
-        self.parameters = Parameters([Parameter("norm", norm)])
+        self.norm = Parameter("norm", norm)
         self.meta = dict() if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+
+        super().__init__([self.norm])
 
     @property
     def evaluation_radius(self):
@@ -528,7 +551,7 @@ class SkyDiffuseMap(SkySpatialModel):
             Radius in angular units.
 
         """
-        radius = np.max(self.map.geom.width) / 2.
+        radius = np.max(self.map.geom.width) / 2.0
         return radius
 
     def normalize(self):
