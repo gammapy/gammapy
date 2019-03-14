@@ -72,7 +72,6 @@ class Fit:
     ----------
     datasets : `Dataset`, list of `Dataset` or `Datasets`
         Dataset or joint datasets to be fitted.
-
     """
     def __init__(self, datasets):
         if not isinstance(datasets, Datasets):
@@ -146,7 +145,7 @@ class Fit:
             Keyword arguments passed to the optimizer. For the `"minuit"` backend
             see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
             for a detailed description of the available options. If there is an entry
-             'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
+            'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
 
             For the `"sherpa"` backend you can from the options `method = {"simplex",  "levmar", "moncar", "gridsearch"}`
             Those methods are described and compared in detail on

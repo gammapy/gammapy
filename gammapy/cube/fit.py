@@ -36,11 +36,14 @@ class MapDataset:
     background_model: `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModel`
         Background models to use for the fit.
     likelihood : {"cash", "cstat"}
-	    Likelihood function to use for the fit.
-	evaluation_mode : {"local", "global"}
-        Model evaluation mode. The "local" mode evaluates the model components on smaller grids to save computation
-        time. This mode is recommended for local optimization algorithms. The "global" evaluation mode evaluates the
-        model components on the full map. This mode is recommended for global optimization algorithms.
+        Likelihood function to use for the fit.
+    evaluation_mode : {"local", "global"}
+        Model evaluation mode.
+
+        The "local" mode evaluates the model components on smaller grids to save computation time.
+        This mode is recommended for local optimization algorithms.
+        The "global" evaluation mode evaluates the model components on the full map.
+        This mode is recommended for global optimization algorithms.
     """
 
     def __init__(
@@ -191,8 +194,6 @@ class MapEvaluator:
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map
-    background : `~gammapy.maps.Map`
-        Background map
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`

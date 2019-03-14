@@ -11,18 +11,22 @@ __all__ = ["Parameter", "Parameters"]
 
 
 class Parameter:
-    """
-    Class representing model parameters.
+    """A model parameter.
+
     Note that the parameter value has been split into
     a factor and scale like this::
+
         value = factor x scale
+
     Users should interact with the ``value``, ``quantity``
     or ``min`` and ``max`` properties and consider the fact
     that there is a ``factor``` and ``scale`` an implementation detail.
+
     That was introduced for numerical stability in parameter and error
     estimation methods, only in the Gammapy optimiser interface do we
     interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
     i.e. the optimiser "sees" the well-scaled problem.
+
     Parameters
     ----------
     name : str
@@ -109,6 +113,7 @@ class Parameter:
     @property
     def factor_min(self):
         """Factor min (float).
+
         This ``factor_min = min / scale`` is for the optimizer interface.
         """
         return self.min / self.scale
@@ -125,6 +130,7 @@ class Parameter:
     @property
     def factor_max(self):
         """Factor max (float).
+
         This ``factor_max = max / scale`` is for the optimizer interface.
         """
         return self.max / self.scale
@@ -187,13 +193,18 @@ class Parameter:
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
+
         Set ``factor`` and ``scale`` according to ``method``
+
         Available methods:
+
         * ``scale10`` sets ``scale`` to power of 10,
           so that abs(factor) is in the range 1 to 10
         * ``factor1`` sets ``factor, scale = 1, value``
+
         In both cases the sign of value is stored in ``factor``,
         i.e. the ``scale`` is always positive.
+
         Parameters
         ----------
         method : {'factor1', 'scale10'}
@@ -214,7 +225,9 @@ class Parameter:
 
 class Parameters:
     """List of `Parameter`.
-    Holds covariance matrix
+
+    Holds covariance matrix.
+
     Parameters
     ----------
     parameters : list of `Parameter`
@@ -281,6 +294,7 @@ class Parameters:
 
     def _get_idx(self, val):
         """Get position index for a given parameter.
+
         The input can be a parameter object, parameter name (str)
         or if a parameter index (int) is passed in, it is simply returned.
         """
@@ -368,9 +382,7 @@ class Parameters:
 
     @property
     def _ufloats(self):
-        """
-        Return dict of ufloats with covariance
-        """
+        """Return dict of ufloats with covariance."""
         from uncertainties import correlated_values
 
         values = [_.value for _ in self.parameters]
@@ -389,8 +401,8 @@ class Parameters:
 
     # TODO: deprecate or remove this?
     def set_parameter_errors(self, errors):
-        """
-        Set uncorrelated parameters errors.
+        """Set uncorrelated parameters errors.
+
         Parameters
         ----------
         errors : dict of `~astropy.units.Quantity`
@@ -407,6 +419,7 @@ class Parameters:
     # to handle covariance matrices via a class
     def error(self, parname):
         """Get parameter error.
+
         Parameters
         ----------
         parname : str, int
@@ -422,6 +435,7 @@ class Parameters:
     # to handle covariance matrices via a class
     def set_error(self, parname, err):
         """Set parameter error.
+
         Parameters
         ----------
         parname : str, int
@@ -438,7 +452,9 @@ class Parameters:
     @property
     def correlation(self):
         r"""Correlation matrix (`numpy.ndarray`).
+
         Correlation :math:`C` is related to covariance :math:`\Sigma` via:
+
         .. math::
             C_{ij} = \frac{ \Sigma_{ij} }{ \sqrt{\Sigma_{ii} \Sigma_{jj}} }
         """
@@ -447,6 +463,7 @@ class Parameters:
 
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.
+
         Used in the optimizer interface.
         """
         idx = 0
@@ -471,6 +488,7 @@ class Parameters:
 
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
+
         Used in the optimizer interface.
         """
         if not np.sqrt(matrix.size) == len(self.parameters):
@@ -480,7 +498,9 @@ class Parameters:
 
     def autoscale(self, method="scale10"):
         """Autoscale all parameters.
+
         See :func:`~gammapy.utils.modelling.Parameter.autoscale`
+
         Parameters
         ----------
         method : {'factor1', 'scale10'}
@@ -492,11 +512,14 @@ class Parameters:
     @property
     def restore_values(self):
         """Context manager to restore values.
+
         A copy of the values is made on enter,
         and those values are restored on exit.
+
         Examples
         --------
         ::
+
             from gammapy.spectrum.models import PowerLaw
             pwl = PowerLaw(index=2)
             with pwl.parameters.restore_values:

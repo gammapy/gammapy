@@ -468,6 +468,7 @@ class BackgroundModel(Model):
 
 class BackgroundModels(Model):
     """Background models.
+
     Parameters
     ----------
     models : list of `BackgroundModel`

@@ -1458,11 +1458,8 @@ class MapGeom(metaclass=MapGeomMeta):
 
         Parameters
         ----------
-        emin : `~astropy.units.Quantity `
-            Minimum energy.
-        emax : `~astropy.units.Quantity `
-            Maximum energy.
-
+        emin, emax : `~astropy.units.Quantity`
+            Energy range
         """
         # get energy axes and values
         energy_axis = self.get_axis_by_name("energy")
