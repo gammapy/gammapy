@@ -15,7 +15,6 @@ from ...utils.fitting import Parameters, Fit
 from ..models import PowerLaw, SpectralModel
 from ..flux_point import FluxPoints, FluxPointsDataset
 
-
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
     "diff_flux_points.fits",
@@ -25,10 +24,6 @@ FLUX_POINTS_FILES = [
 
 
 class LWTestModel(SpectralModel):
-    def __init__(self):
-        self._parameters = Parameters([])
-        super().__init__(self._parameters)
-
     @staticmethod
     def evaluate(x):
         return 1e4 * np.exp(-6 * x)
@@ -41,10 +36,6 @@ class LWTestModel(SpectralModel):
 
 
 class XSqrTestModel(SpectralModel):
-    def __init__(self):
-        self._parameters = Parameters([])
-        super().__init__(self._parameters)
-
     @staticmethod
     def evaluate(x):
         return x ** 2
@@ -57,10 +48,6 @@ class XSqrTestModel(SpectralModel):
 
 
 class ExpTestModel(SpectralModel):
-    def __init__(self):
-        self._parameters = Parameters([])
-        super().__init__(self._parameters)
-
     @staticmethod
     def evaluate(x):
         return np.exp(x * u.Unit("1 / TeV"))
