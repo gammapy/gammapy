@@ -240,7 +240,10 @@ class Parameters:
         see `~gammapy.utils.modeling.Parameter.autoscale`
     """
 
-    def __init__(self, parameters, covariance=None, apply_autoscale=True):
+    def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
+        if parameters is None:
+            parameters = []
+
         self._parameters = self._filter_unique_parameters(parameters)
         self.covariance = covariance
         self.apply_autoscale = apply_autoscale

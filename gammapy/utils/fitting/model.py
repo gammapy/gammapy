@@ -10,7 +10,7 @@ class Model:
 
     __slots__ = ["_parameters"]
 
-    def __init__(self, params):
+    def __init__(self, params=None):
         self._parameters = Parameters(params)
 
     @property
