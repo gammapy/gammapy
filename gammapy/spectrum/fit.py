@@ -13,7 +13,7 @@ __all__ = ["SpectrumFit", "SpectrumDataset"]
 log = logging.getLogger(__name__)
 
 class SpectrumDataset:
-    """Perform spectral model likelihood fit on a CountsSpectrum.
+    """Compute spectral model fit statistic on a CountsSpectrum.
 
     Parameters
     ----------
