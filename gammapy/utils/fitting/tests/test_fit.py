@@ -92,6 +92,19 @@ def test_confidence(backend):
     assert_allclose(dataset.parameters["x"].value, 2)
 
 
+@pytest.mark.parametrize("backend", ["minuit"])
+def test_confidence(backend):
+    dataset = MyDataset()
+    dataset.parameters["x"].frozen = True
+    fit = Fit(dataset)
+    fit.optimize(backend=backend)
+    result = fit.confidence("y")
+
+    assert result["success"] is True
+    assert_allclose(result["errp"], 1)
+    assert_allclose(result["errn"], 1)
+
+
 def test_likelihood_profile():
     dataset = MyDataset()
     fit = Fit(dataset)

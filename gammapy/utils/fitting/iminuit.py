@@ -77,8 +77,9 @@ def covariance_iminuit(minuit):
 def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     # TODO: this is ugly - design something better for translating to MINUIT parameter names.
     # Maybe a wrapper class MinuitParameters?
-    idx = parameters._get_idx(parameter)
-    var = _make_parname(idx, parameters[idx])
+    parameter = parameters[parameter]
+    idx = parameters.free_parameters.index(parameter)
+    var = _make_parname(idx, parameter)
 
     message, success = "Minos terminated successfully.", True
     try:
