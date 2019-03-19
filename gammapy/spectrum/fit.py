@@ -5,6 +5,8 @@ import numpy as np
 import astropy.units as u
 from ..utils.fitting import Fit, Parameters
 from .. import stats
+from ..utils.random import get_random_state
+from .core import CountsSpectrum
 from .utils import CountsPredictor
 from .observation import SpectrumObservationList, SpectrumObservation
 
@@ -102,6 +104,34 @@ class SpectrumDataset:
             stat = self.likelihood_per_bin()[mask & self.mask]
         return np.sum(stat, dtype=np.float64)
 
+    def fake(self, seed):
+        """Simulate a fake `~gammapy.spectrum.CountsSpectrum` from the current dataset
+
+        Parameters
+        ----------
+        seed : int
+            Random number generator seed
+
+        Returns
+        -------
+        spectrum : `~gammapy.spectrum.CountsSpectrum`
+            the fake count spectrum
+        """
+        random_state = get_random_state(seed)
+        random_counts = random_state.poisson(self.npred())
+
+        if self.edisp is None:
+            e_lo = self.counts.energy.bins[:-1]
+            e_hi = self.counts.energy.bins[1:]
+        else:
+            e_lo = edisp.e_reco[:-1]
+            e_hi = edisp.e_reco[1:]
+
+        return CountsSpectrum(
+            energy_lo=e_lo,
+            energy_hi=e_hi,
+            data=random_counts
+        )
 
 class SpectrumFit(Fit):
     """Orchestrate a 1D counts spectrum fit.

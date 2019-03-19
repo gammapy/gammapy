@@ -77,6 +77,13 @@ class TestSpectrumDataset:
         assert_allclose(pars["amplitude"].value, 1e5, rtol=1e-3)
         assert_allclose(pars.error("amplitude"), 153.450, rtol=1e-2)
 
+    def test_fake(self):
+        """Test the fake dataset"""
+        fake_spectrum = self.dataset.fake(314)
+
+        assert isinstance(fake_spectrum, CountsSpectrum)
+        assert_allclose(fake_spectrum.energy.bins, self.dataset.counts.energy.bins)
+        assert fake_spectrum.data.data.sum() == 907331
 
 @requires_dependency("sherpa")
 class TestFit:
