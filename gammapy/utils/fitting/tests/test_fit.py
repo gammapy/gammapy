@@ -93,7 +93,7 @@ def test_confidence(backend):
 
 
 @pytest.mark.parametrize("backend", ["minuit"])
-def test_confidence(backend):
+def test_confidence_frozen(backend):
     dataset = MyDataset()
     dataset.parameters["x"].frozen = True
     fit = Fit(dataset)
