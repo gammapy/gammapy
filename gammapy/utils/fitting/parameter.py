@@ -304,10 +304,7 @@ class Parameters:
         if isinstance(val, int):
             return val
         elif isinstance(val, Parameter):
-            for idx, par in enumerate(self.parameters):
-                if val is par:
-                    return idx
-            raise IndexError("No parameter: {!r}".format(val))
+            return self.parameters.index(val)
         elif isinstance(val, str):
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
