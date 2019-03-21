@@ -8,7 +8,7 @@ from ..utils.coordinates import sky_to_fov
 __all__ = ["make_map_background_irf"]
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom):
+def make_map_background_irf(pointing, ontime, bkg, geom, nodes_per_decade=30):
     """Compute background map from background IRFs.
 
     If a `FixedPointingInfo` is passed the correct FoV coordinates are properly computed.
@@ -26,6 +26,8 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
+    nodes_per_decade : int
+        Minimum number of nodes per decade of energy used in the integration
 
     Returns
     -------
@@ -63,13 +65,25 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
         fov_lat = pseudo_fov_coord.lat
 
     energy_axis = geom.get_axis_by_name("energy")
-    energies = energy_axis.edges * energy_axis.unit
 
+    # make sure the integration uses at least `nodes_per_decade` nodes
+    logemin = np.log10(energy_axis.edges[0])
+    logemax = np.log10(energy_axis.edges[-1])
+    n_decade = logemax - logemin
+    n_nodes = energy_axis.nbin
+    oversample = int( np.ceil( nodes_per_decade / (n_nodes / n_decade) ) )
+    energies = np.logspace(logemin, logemax, n_nodes * oversample + 1) * energy_axis.unit
+
+    # perform integration
     bkg_de = bkg.evaluate_integrate(
         fov_lon=fov_lon,
         fov_lat=fov_lat,
         energy_reco=energies[:, np.newaxis, np.newaxis],
     )
+
+    # combine energy bins to obtain binning of original energy axis
+    indices = np.arange(0, n_nodes * oversample, oversample)
+    bkg_de = np.add.reduceat(bkg_de, indices, axis=0)
 
     d_omega = geom.solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
