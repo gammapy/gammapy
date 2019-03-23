@@ -334,13 +334,27 @@ class PSFMap:
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")
 
-        total_exposure = self.exposure_map + other.exposure_map
+        # Reproject other exposure
+        exposure_coord = self.exposure_map.geom.get_coord()
+        reproj_exposure = Map.from_geom(self.exposure_map.geom, unit=self.exposure_map.unit)
+        reproj_exposure.fill_by_coord(exposure_coord, other.exposure_map.get_by_coord(exposure_coord))
+
+        # Reproject other psfmap using same geom
+        psfmap_coord = self.psf_map.geom.get_coord()
+        reproj_psfmap = Map.from_geom(self.psf_map.geom, unit = self.psf_map.unit)
+        reproj_psfmap.fill_by_coord(psfmap_coord, other.psf_map.get_by_coord(psfmap_coord))
+
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
         stacked_psf_quantity = self.quantity * exposure
-        other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_psf_quantity += other.quantity * other_exposure
-        stacked_psf_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
-        stacked_psf = Map.from_geom(
-            self.geom, data=stacked_psf_quantity.to("1/sr").value, unit="1/sr"
-        )
-        return PSFMap(stacked_psf, total_exposure)
+
+        other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity += reproj_psfmap.quantity * other_exposure
+
+        total_exposure = exposure + other_exposure
+        stacked_psf_quantity /= total_exposure
+
+        reproj_psfmap.quantity = stacked_psf_quantity
+        # We need to remove the extra axis in the total exposure
+        reproj_exposure.quantity = total_exposure[:,0,:,:]
+
+        return PSFMap(reproj_psfmap, reproj_exposure)
