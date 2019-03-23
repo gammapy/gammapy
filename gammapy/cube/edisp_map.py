@@ -318,7 +318,6 @@ class EDispMap(object):
         """Stack EdispMap with another one.
 
         The current EdispMap is unchanged and a new one is created and returned.
-        For the moment, this works only if the EDispMap to be stacked contain compatible exposure maps.
 
         Parameters
         ----------
@@ -333,13 +332,27 @@ class EDispMap(object):
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for EdispMap.stack")
 
-        total_exposure = self.exposure_map + other.exposure_map
+        # Reproject other exposure
+        exposure_coord = self.exposure_map.geom.get_coord()
+        reproj_exposure = Map.from_geom(self.exposure_map.geom, unit=self.exposure_map.unit)
+        reproj_exposure.fill_by_coord(exposure_coord, other.exposure_map.get_by_coord(exposure_coord))
+
+        # Reproject other psfmap using same geom
+        edispmap_coord = self.edisp_map.geom.get_coord()
+        reproj_edispmap = Map.from_geom(self.edisp_map.geom, unit = self.edisp_map.unit)
+        reproj_edispmap.fill_by_coord(edispmap_coord, other.edisp_map.get_by_coord(edispmap_coord))
+
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
         stacked_edisp_quantity = self.quantity * exposure
-        other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_edisp_quantity += other.quantity * other_exposure
-        stacked_edisp_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
-        stacked_edisp = Map.from_geom(
-            self.geom, data=stacked_edisp_quantity.to("").value, unit=""
-        )
-        return EDispMap(stacked_edisp, total_exposure)
+
+        other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
+        stacked_edisp_quantity += reproj_edispmap.quantity * other_exposure
+
+        total_exposure = exposure + other_exposure
+        stacked_edisp_quantity /= total_exposure
+
+        reproj_edispmap.quantity = stacked_edisp_quantity
+        # We need to remove the extra axis in the total exposure
+        reproj_exposure.quantity = total_exposure[:,0,:,:]
+
+        return EDispMap(reproj_edispmap, reproj_exposure)

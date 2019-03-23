@@ -319,7 +319,6 @@ class PSFMap:
         """Stack PSFMap with another one.
 
         The current PSFMap is unchanged and a new one is created and returned.
-        For the moment, this works only if the PSFMap to be stacked contain compatible exposure maps.
 
         Parameters
         ----------
