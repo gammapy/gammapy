@@ -335,13 +335,19 @@ class PSFMap:
 
         # Reproject other exposure
         exposure_coord = self.exposure_map.geom.get_coord()
-        reproj_exposure = Map.from_geom(self.exposure_map.geom, unit=self.exposure_map.unit)
-        reproj_exposure.fill_by_coord(exposure_coord, other.exposure_map.get_by_coord(exposure_coord))
+        reproj_exposure = Map.from_geom(
+            self.exposure_map.geom, unit=self.exposure_map.unit
+        )
+        reproj_exposure.fill_by_coord(
+            exposure_coord, other.exposure_map.get_by_coord(exposure_coord)
+        )
 
         # Reproject other psfmap using same geom
         psfmap_coord = self.psf_map.geom.get_coord()
-        reproj_psfmap = Map.from_geom(self.psf_map.geom, unit = self.psf_map.unit)
-        reproj_psfmap.fill_by_coord(psfmap_coord, other.psf_map.get_by_coord(psfmap_coord))
+        reproj_psfmap = Map.from_geom(self.psf_map.geom, unit=self.psf_map.unit)
+        reproj_psfmap.fill_by_coord(
+            psfmap_coord, other.psf_map.get_by_coord(psfmap_coord)
+        )
 
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
         stacked_psf_quantity = self.quantity * exposure
@@ -354,6 +360,6 @@ class PSFMap:
 
         reproj_psfmap.quantity = stacked_psf_quantity
         # We need to remove the extra axis in the total exposure
-        reproj_exposure.quantity = total_exposure[:,0,:,:]
+        reproj_exposure.quantity = total_exposure[:, 0, :, :]
 
         return PSFMap(reproj_psfmap, reproj_exposure)

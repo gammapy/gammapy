@@ -334,13 +334,19 @@ class EDispMap(object):
 
         # Reproject other exposure
         exposure_coord = self.exposure_map.geom.get_coord()
-        reproj_exposure = Map.from_geom(self.exposure_map.geom, unit=self.exposure_map.unit)
-        reproj_exposure.fill_by_coord(exposure_coord, other.exposure_map.get_by_coord(exposure_coord))
+        reproj_exposure = Map.from_geom(
+            self.exposure_map.geom, unit=self.exposure_map.unit
+        )
+        reproj_exposure.fill_by_coord(
+            exposure_coord, other.exposure_map.get_by_coord(exposure_coord)
+        )
 
         # Reproject other psfmap using same geom
         edispmap_coord = self.edisp_map.geom.get_coord()
-        reproj_edispmap = Map.from_geom(self.edisp_map.geom, unit = self.edisp_map.unit)
-        reproj_edispmap.fill_by_coord(edispmap_coord, other.edisp_map.get_by_coord(edispmap_coord))
+        reproj_edispmap = Map.from_geom(self.edisp_map.geom, unit=self.edisp_map.unit)
+        reproj_edispmap.fill_by_coord(
+            edispmap_coord, other.edisp_map.get_by_coord(edispmap_coord)
+        )
 
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
         stacked_edisp_quantity = self.quantity * exposure
@@ -353,6 +359,6 @@ class EDispMap(object):
 
         reproj_edispmap.quantity = stacked_edisp_quantity
         # We need to remove the extra axis in the total exposure
-        reproj_exposure.quantity = total_exposure[:,0,:,:]
+        reproj_exposure.quantity = total_exposure[:, 0, :, :]
 
         return EDispMap(reproj_edispmap, reproj_exposure)
