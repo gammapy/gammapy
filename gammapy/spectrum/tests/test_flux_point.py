@@ -268,8 +268,8 @@ class TestFluxPointFit:
         reference = result.parameters["reference"]
         assert_allclose(reference.value, 1, rtol=1e-8)
 
-    @requires_dependency("iminuit")
     @staticmethod
+    @requires_dependency("iminuit")
     def test_likelihood_profile(fit):
         optimize_opts = {"backend": "minuit"}
 
