@@ -315,7 +315,7 @@ class PSFMap:
 
         return m
 
-    def stack(self, other):
+    def stack(self, other, in_place=True):
         """Stack PSFMap with another one.
 
         The current PSFMap is unchanged and a new one is created and returned.
@@ -324,7 +324,8 @@ class PSFMap:
         ----------
         other : `~gammapy.cube.PSFMap`
             the psfmap to be stacked with this one.
-
+        in_place : bool
+            if set to False returns a new PSFMap
         Returns
         -------
         new : `~gammapy.cube.PSFMap`

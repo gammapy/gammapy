@@ -147,7 +147,7 @@ def test_psfmap_read_write(tmpdir):
     assert_allclose(psfmap.psf_map.quantity, new_psfmap.psf_map.quantity)
 
 
-def test_containment_radius_map(tmpdir):
+def test_containment_radius_map():
     psf = fake_psf3d(0.15 * u.deg)
     pointing = SkyCoord(0, 0, unit="deg")
     energy_axis = MapAxis(nodes=[0.2, 1, 2], unit="TeV", name="energy")
@@ -168,12 +168,12 @@ def test_psfmap_stacking():
     psfmap2 = make_test_psfmap(0.1 * u.deg, shape="flat")
     psfmap2.exposure_map.quantity *= 2
 
-    psfmap_stack = psfmap1.stack(psfmap2)
+    psfmap_stack = psfmap1.stack(psfmap2, False)
     assert_allclose(psfmap_stack.data, psfmap1.data)
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
     psfmap3 = make_test_psfmap(0.3 * u.deg, shape="flat")
-    psfmap_stack = psfmap1.stack(psfmap3)
+    psfmap_stack = psfmap1.stack(psfmap3, False)
 
     assert_allclose(psfmap_stack.data[0, 40, 20, 20], 0.0)
     assert_allclose(psfmap_stack.data[0, 20, 20, 20], 5805.28955078125)
