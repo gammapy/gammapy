@@ -242,7 +242,7 @@ class AdaptiveRingBackgroundEstimator:
             "exposure_off": counts.copy(data=exposure_off),
             "off": counts.copy(data=off),
             "alpha": counts.copy(data=alpha),
-            "background": counts.copy(data=background),
+            "background_ring": counts.copy(data=background),
         }
 
 
@@ -251,9 +251,6 @@ class RingBackgroundEstimator:
 
     - Step 1: apply exclusion mask
     - Step 2: ring-correlate
-    - Step 3: apply psi cut
-
-    TODO: add method to apply the psi cut
 
     Parameters
     ----------
@@ -288,17 +285,14 @@ class RingBackgroundEstimator:
     gammapy.detect.KernelBackgroundEstimator, AdaptiveRingBackgroundEstimator
     """
 
-    def __init__(self, r_in, width, use_fft_convolution=False):
-        self._parameters = {
-            "r_in": Angle(r_in),
-            "width": Angle(width),
-            "use_fft_convolution": use_fft_convolution,
-        }
+    def __init__(self, r_in, width):
+        self._parameters = {"r_in": Angle(r_in), "width": Angle(width)}
 
     @property
     def parameters(self):
         """dict of parameters"""
         return self._parameters
+
 
     def kernel(self, image):
         """Ring kernel.
@@ -366,7 +360,7 @@ class RingBackgroundEstimator:
             result["alpha"] = background / result["exposure_off"]
             result["alpha"].data[not_has_exposure] = 0
 
-        result["background"] = result["alpha"] * result["off"]
+        result["background_ring"] = result["alpha"] * result["off"]
 
         return result
 

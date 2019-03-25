@@ -119,13 +119,13 @@ def test_image_maker(observations):
     mask.data = mask.geom.region_mask([regions], inside=False)
 
     im = MapMakerRing(geomd, 2.0 * u.deg, mask, ring_bkg)
-    maps = im.run(observations)
 
-    assert_allclose(np.nansum(im.significance_map(maps).data), -17.56, rtol=1e-2)
-    assert_allclose(np.nansum(im.excess_map(maps).data), -13809.8955, rtol=1e-2)
-    assert im.significance_map(maps).geom.is_image == False
+    maps = im.run(observations)
+    assert_allclose(np.nansum(maps["on"].data), 21981, rtol=1e-2)
+    assert_allclose(np.nansum(maps["exposure_off"].data), 8310.035, rtol=1e-2)
+    assert maps["on"].geom.is_image == False
 
     images = im.run_images(observations)
-    assert_allclose(np.nansum(im.significance_map(images).data), 28.13, rtol=1e-2)
-    assert_allclose(np.nansum(im.excess_map(images).data), 197.248, rtol=1e-2)
-    assert im.significance_map(images).geom.is_image == True
+    assert_allclose(np.nansum(images["on"].data), 21981, rtol=1e-2)
+    assert_allclose(np.nansum(images["exposure_off"].data), 109751.45, rtol=1e-2)
+    assert images["on"].geom.is_image == True
