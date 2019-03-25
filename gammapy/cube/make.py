@@ -142,7 +142,8 @@ class MapMaker:
         for name, map in maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
-
+            if name == "exclusion":
+                map = map.slice_by_idx({"energy":0})
             images[name] = map.sum_over_axes(keepdims=keepdims)
         return images
 
