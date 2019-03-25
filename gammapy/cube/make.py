@@ -3,14 +3,12 @@ import logging
 import numpy as np
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.coordinates import Angle
-from astropy.convolution import Tophat2DKernel
 from astropy.utils import lazyproperty
 from ..maps import Map, WcsGeom
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
 from .background import make_map_background_irf
-from ..detect import compute_lima_on_off_image
-from scipy.stats import norm
+
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
@@ -330,7 +328,44 @@ class MapMakerRing(MapMaker):
         or `~gammapy.background.AdaptiveRingBackgroundEstimator`
         Ring background estimator or something with an equivalent API.
 
+    Example
+    ---------
+    ::
+        import numpy as np
+        from astropy import units as u
+        from astropy.coordinates import SkyCoord
+        from gammapy.maps import Map, WcsGeom, MapAxis
+        from gammapy.cube import MapMakerRing
+        from gammapy.data import DataStore
+        from gammapy.background import RingBackgroundEstimator
 
+        # Create observation list
+        data_store = DataStore.from_file("$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz")
+        data_sel = data_store.obs_table["TARGET_NAME"] == "MSH 15-52"
+        obs_table = data_store.obs_table[data_sel]
+        observations = data_store.get_observations(obs_table["OBS_ID"])
+
+        #Define the geom
+        energy_axis = MapAxis.from_edges(np.logspace(0, 5.0, 5), unit="TeV", name="energy")
+        geom = WcsGeom.create(
+             skydir=pos_msh1552,
+             binsz=0.02,
+             width=(5, 5),
+             axes=[energy_axis])
+
+        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
+
+        #Make a region mask
+        regions = CircleSkyRegion(center=pos_msh1552, radius=0.3 * u.deg)
+        mask = Map.from_geom(geom)
+        mask.data = mask.geom.region_mask([regions], inside=False)
+
+        #Instantiate ring background estimator
+        ring_bkg = RingBackgroundEstimator(r_in="0.5 deg", width="0.3 deg")
+
+        #Execute this class
+        im = MapMakerRing(geom=geom, offset_max=2.0 * u.deg, exclusion_mask=mask, background_estimator=ring_bkg)
+        images = im.run_images(observations)
     
     """
 
