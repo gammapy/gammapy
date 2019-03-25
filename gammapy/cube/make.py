@@ -28,7 +28,7 @@ class MapMaker:
         Exclusion mask
     """
 
-    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None):
+    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None, bg_coord_system="fov_altaz"):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
 
@@ -39,6 +39,7 @@ class MapMaker:
         self.geom_true = geom_true if geom_true else geom
         self.offset_max = Angle(offset_max)
         self.maps = {}
+        self.bg_coord_system = bg_coord_system
 
         # Some background estimation methods need an exclusion mask.
         if exclusion_mask is not None:
@@ -114,6 +115,7 @@ class MapMaker:
             fov_mask=fov_mask,
             fov_mask_etrue=fov_mask_etrue,
             exclusion_mask=exclusion_mask,
+            bg_coord_system=self.bg_coord_system,
         ).run(selection)
 
         # Stack observation maps to total
@@ -180,6 +182,7 @@ class MapMakerObs:
             fov_mask=None,
             fov_mask_etrue=None,
             exclusion_mask=None,
+            bg_coord_system="fov_altaz",
     ):
         self.observation = observation
         self.geom = geom
@@ -187,6 +190,7 @@ class MapMakerObs:
         self.fov_mask = fov_mask
         self.fov_mask_etrue = fov_mask_etrue
         self.exclusion_mask = exclusion_mask
+        self.bg_coord_system = bg_coord_system
         self.maps = {}
 
     def run(self, selection=None):
@@ -227,8 +231,15 @@ class MapMakerObs:
         self.maps["exposure"] = exposure
 
     def _make_background(self):
+        if self.bg_coord_system == "fov_altaz":
+            pnt = self.observation.fixed_pointing_info
+        elif self.bg_coord_system == "fov_radec":
+            pnt = self.observation.pointing_radec
+        else:
+            raise ValueError("Unknow background coordinate system: \"{}\". "
+                             "Use \"fov_altaz\" or \"fov_radec\".".format(self.bg_coord_system))
         background = make_map_background_irf(
-            pointing=self.observation.fixed_pointing_info,
+            pointing=pnt,
             ontime=self.observation.observation_time_duration,
             bkg=self.observation.bkg,
             geom=self.geom,
