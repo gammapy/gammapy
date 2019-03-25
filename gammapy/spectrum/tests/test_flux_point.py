@@ -230,7 +230,7 @@ def test_compute_flux_points_dnde_fermi():
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def fit():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
