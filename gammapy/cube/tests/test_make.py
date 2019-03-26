@@ -36,7 +36,6 @@ def geom(ebounds):
             # Default, normal test case
             "geom": geom(ebounds=[0.1, 1, 10]),
             "geom_true": None,
-            "bkg_coordsys":"fov_altaz",
             "counts": 34366,
             "exposure": 3.99815e11,
             "exposure_image": 7.921993e10,
@@ -46,7 +45,6 @@ def geom(ebounds):
             # Test single energy bin
             "geom": geom(ebounds=[0.1, 10]),
             "geom_true": None,
-            "bkg_coordsys":"fov_altaz",
             "counts": 34366,
             "exposure": 1.16866e11,
             "exposure_image": 1.16866e11,
@@ -56,7 +54,6 @@ def geom(ebounds):
             # Test single energy bin with exclusion mask
             "geom": geom(ebounds=[0.1, 10]),
             "geom_true": None,
-            "bkg_coordsys":"fov_altaz",
             "exclusion_mask": Map.from_geom(geom(ebounds=[0.1, 10])),
             "counts": 34366,
             "exposure": 1.16866e11,
@@ -67,27 +64,16 @@ def geom(ebounds):
             # Test for different e_true and e_reco bins
             "geom": geom(ebounds=[0.1, 1, 10]),
             "geom_true": geom(ebounds=[0.1, 0.5, 2.5, 10.0]),
-            "bkg_coordsys":"fov_altaz",
             "counts": 34366,
             "exposure": 5.971096e11,
             "exposure_image": 6.492968e10,
-            "background": 27986.945,
-        },
-        {
-            # Test with a different bkg_coordsys
-            "geom": geom(ebounds=[0.1, 1, 10]),
-            "geom_true": None,
-            "bkg_coordsys":"fov_radec",
-            "counts": 34366,
-            "exposure": 3.99815e11,
-            "exposure_image": 7.921993e10,
             "background": 27986.945,
         },
     ],
 )
 @pytest.mark.parametrize("keepdims", [True, False])
 def test_map_maker(pars, observations, keepdims):
-    maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg", bkg_coordsys=pars["bkg_coordsys"])
+    maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg")
 
     maps = maker.run(observations)
 
