@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, EllipseAnnulusSkyRegion
 from ...utils.testing import (
     requires_data,
     requires_dependency,
@@ -64,22 +65,22 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     )
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 14
-    assert_quantity_allclose(regions[3].center.icrs.ra, Angle("83.674 deg"), rtol=1e-2)
+    assert len(regions) == 15
+    assert_quantity_allclose(regions[3].center.icrs.ra, Angle("82.592 deg"), rtol=1e-2)
 
     # Test without exclusion
     fregions.exclusion_mask = None
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 16
+    assert len(regions) == 17
 
     # Test with too small exclusion
-    small_mask = exclusion_mask.cutout(pointing, Angle("0.2 deg"))
+    small_mask = exclusion_mask.cutout(pointing, Angle("0.1 deg"))
     fregions.exclusion_mask = small_mask
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 16
-    assert_quantity_allclose(regions[3].center.icrs.ra, Angle("83.674 deg"), rtol=1e-2)
+    assert len(regions) == 17
+    assert_quantity_allclose(regions[14].center.icrs.ra, Angle("83.868 deg"), rtol=1e-2)
 
     # Test with maximum number of regions
     fregions.max_region_number = 5
@@ -87,6 +88,16 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     regions = fregions.reflected_regions
     assert len(regions) == 5
 
+    # Test with an other type of region
+    on_ellipse_annulus = EllipseAnnulusSkyRegion(center=on_region.center.transform_to('galactic'),
+        inner_width = 0.1 * u.deg, outer_width = 0.2 * u.deg,
+        inner_height = 0.3 * u.deg, outer_height = 0.6 * u.deg,
+        angle = 130 * u.deg)
+    fregions.region = on_ellipse_annulus
+    fregions.reference_map = None
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 5
 
 @requires_data()
 class TestReflectedRegionBackgroundEstimator:
