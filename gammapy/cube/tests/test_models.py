@@ -11,7 +11,7 @@ from ...cube.models import SkyDiffuseCube, BackgroundModel
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..fit import MapEvaluator
-from ..models import SkyModel, SkyModels, CompoundSkyModel
+from ..models import SkyModel, SkyModels
 
 
 @pytest.fixture(scope="session")
@@ -84,11 +84,6 @@ def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
 @pytest.fixture(scope="session")
 def sky_models(sky_model):
     return SkyModels([sky_model, sky_model.copy()])
-
-
-@pytest.fixture(scope="session")
-def compound_model(sky_model):
-    return CompoundSkyModel(sky_model, sky_model.copy(), np.add)
 
 
 def test_skymodel_addition(sky_model, sky_models, diffuse_model):
@@ -197,36 +192,6 @@ class TestSkyModel:
 
         assert q.shape == (5, 3, 4)
         assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 1.76879232e-13)
-
-
-class TestCompoundSkyModel:
-    @staticmethod
-    def test_parameters(compound_model):
-        parnames = ["lon_0", "lat_0", "sigma", "index", "amplitude", "reference"] * 2
-        assert compound_model.parameters.names == parnames
-
-        # Check that model parameters are references to the parts
-        assert (
-            compound_model.parameters["lon_0"]
-            is compound_model.model1.parameters["lon_0"]
-        )
-
-        # Check that parameter assignment works
-        assert compound_model.parameters.parameters[-1].value == 1
-        compound_model.parameters = compound_model.parameters.copy()
-        assert compound_model.parameters.parameters[-1].value == 1
-
-    @staticmethod
-    def test_evaluate(compound_model):
-        lon = 3 * u.deg * np.ones(shape=(3, 4))
-        lat = 4 * u.deg * np.ones(shape=(3, 4))
-        energy = [1, 1, 1, 1, 1] * u.TeV
-
-        q = compound_model.evaluate(lon, lat, energy[:, np.newaxis, np.newaxis])
-
-        assert q.unit == "cm-2 s-1 TeV-1 sr-1"
-        assert q.shape == (5, 3, 4)
-        assert_allclose(q.to_value("cm-2 s-1 TeV-1 deg-2"), 3.53758465e-13)
 
 
 class TestSkyDiffuseCube:
