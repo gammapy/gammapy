@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from regions import CircleSkyRegion
-from .ring import ring_area_factor
 
-__all__ = ["BackgroundEstimate", "ring_background_estimate"]
+
+__all__ = ["BackgroundEstimate", "profile_background_estimate"]
 
 
 class BackgroundEstimate:
@@ -10,7 +10,7 @@ class BackgroundEstimate:
 
     This container holds the result from a region based background estimation
     for one observation. Currently, it is filled by the functions
-    :func:`~gammapy.background.ring_background_estimate` and
+    :func:`~gammapy.background.profile_background_estimate` and
     the `~gammapy.background.ReflectedRegionsBackgroundEstimator`.
 
     Parameters
@@ -61,10 +61,8 @@ class BackgroundEstimate:
         return ss
 
 
-def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events):
-    """Simple ring background estimate.
-
-    No acceptance correction is applied
+def profile_background_estimate(pos, on_radius, inner_radius, outer_radius, events):
+    """Simple profile background estimation
 
     TODO : Replace with AnnulusSkyRegion
 
@@ -92,7 +90,8 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
 
     # TODO: change to region areas here (e.g. in steratian?)
     a_on = 1
-    a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
+    a_off = (outer_radius ** 2 - inner_radius ** 2) / on_radius ** 2
+    # a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
 
     return BackgroundEstimate(
         on_region=on_region,

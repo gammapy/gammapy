@@ -21,8 +21,8 @@ def images():
     images["counts"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 2.0)
     images["counts"].data *= mask
 
-    images["exposure_on"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
-    images["exposure_on"].data *= mask
+    images["background"] = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
+    images["background"].data *= mask
 
     exclusion = m_ref.copy(data=np.zeros_like(m_ref.data) + 1.0)
     exclusion.data[90:110, 90:110] = 0
@@ -35,9 +35,9 @@ def test_ring_background_estimator(images):
 
     result = ring.run(images)
 
-    in_fov = images["exposure_on"].data > 0
+    in_fov = images["background"].data > 0
 
-    assert_allclose(result["background"].data[in_fov], 2.0)
+    assert_allclose(result["background_ring"].data[in_fov], 2.0)
     assert_allclose(result["alpha"].data[in_fov].mean(), 0.003488538457592745)
     assert_allclose(result["exposure_off"].data[in_fov].mean(), 305.1268970794541)
     assert_allclose(result["off"].data[in_fov].mean(), 610.2537941589082)
@@ -52,8 +52,8 @@ class TestAdaptiveRingBackgroundEstimator:
         self.images = {}
         self.images["counts"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
         self.images["counts"].data += 1.0
-        self.images["exposure_on"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
-        self.images["exposure_on"].data += 1e10
+        self.images["background"] = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
+        self.images["background"].data += 1e10
         exclusion = WcsNDMap.create(binsz=0.02, npix=101, dtype=float)
         exclusion.data += 1
         exclusion.data[40:60, 40:60] = 0
@@ -65,12 +65,12 @@ class TestAdaptiveRingBackgroundEstimator:
         )
         result = ring.run(self.images)
 
-        assert_allclose(result["background"].data[50, 50], 1)
+        assert_allclose(result["background_ring"].data[50, 50], 1)
         assert_allclose(result["alpha"].data[50, 50], 0.002638522427440632)
         assert_allclose(result["exposure_off"].data[50, 50], 379 * 1e10)
         assert_allclose(result["off"].data[50, 50], 379)
 
-        assert_allclose(result["background"].data[0, 0], 1)
+        assert_allclose(result["background_ring"].data[0, 0], 1)
         assert_allclose(result["alpha"].data[0, 0], 0.008928571428571418)
         assert_allclose(result["exposure_off"].data[0, 0], 112 * 1e10)
         assert_allclose(result["off"].data[0, 0], 112)
@@ -84,12 +84,12 @@ class TestAdaptiveRingBackgroundEstimator:
         )
         result = ring.run(self.images)
 
-        assert_allclose(result["background"].data[50, 50], 1)
+        assert_allclose(result["background_ring"].data[50, 50], 1)
         assert_allclose(result["alpha"].data[50, 50], 0.002638522427440632)
         assert_allclose(result["exposure_off"].data[50, 50], 379 * 1e10)
         assert_allclose(result["off"].data[50, 50], 379)
 
-        assert_allclose(result["background"].data[0, 0], 1)
+        assert_allclose(result["background_ring"].data[0, 0], 1)
         assert_allclose(result["alpha"].data[0, 0], 0.008928571428571418)
         assert_allclose(result["exposure_off"].data[0, 0], 112 * 1e10)
         assert_allclose(result["off"].data[0, 0], 112)
