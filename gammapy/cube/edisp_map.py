@@ -231,14 +231,14 @@ class EDispMap(object):
         hdulist.writeto(filename, overwrite=overwrite)
 
     def get_energy_dispersion(self, position, e_reco, migra_step=5e-3):
-        """ Returns EnergyDispersion at a given position
+        """Get energy dispersion at a given position.
 
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
             the target position. Should be a single coordinates
         e_reco : `~astropy.units.Quantity`
-            Reconstruced energy axis binning
+            Reconstructed energy axis binning
         migra_step : float
             Integration step in migration
 

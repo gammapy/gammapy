@@ -1697,7 +1697,7 @@ class HpxGeom(MapGeom):
         return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
     def get_skydirs(self):
-        """Get the sky coordinates of all the pixels in this geometry. """
+        """Get the sky coordinates of all the pixels in this geometry."""
         coords = self.get_coord()
         frame = "galactic" if self.coordsys == "GAL" else "icrs"
         return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)

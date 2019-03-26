@@ -464,7 +464,7 @@ class EnergyDependentMultiGaussPSF:
         )
 
     def to_psf3d(self, rad):
-        """ Creates a PSF3D from an analytical PSF.
+        """Create a PSF3D from an analytical PSF.
 
         Parameters
         ----------

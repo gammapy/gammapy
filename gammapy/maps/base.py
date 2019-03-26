@@ -1029,7 +1029,7 @@ class Map(metaclass=MapMeta):
         return str_
 
     def _arithmetics(self, operator, other, copy):
-        """ Perform arithmetics on maps after checking geometry consistency"""
+        """Perform arithmetics on maps after checking geometry consistency."""
         if isinstance(other, Map):
             if self.geom == other.geom:
                 q = other.quantity
