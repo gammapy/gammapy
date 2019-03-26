@@ -241,7 +241,7 @@ class SigmaVEstimator:
                     scale_max = max(xvals)
 
                     scale_found = brentq(
-                        interp1d(xvals, yvals, kind="cubic"),
+                        interp1d(xvals, yvals, kind="quadratic"),
                         scale_min,
                         scale_max,
                         maxiter=100,
