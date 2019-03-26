@@ -134,7 +134,7 @@ class SigmaVEstimator:
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
         estimator = SigmaVEstimator(sim_dataset, masses, channels, jfact=JFAC)
-        result = estimator.run()
+        result = estimator.run(likelihood_profile_opts=dict(bounds=3, nvalues=25))
     """
 
     def __init__(
@@ -161,15 +161,19 @@ class SigmaVEstimator:
             xsection = DMAnnihilation.THERMAL_RELIC_CROSS_SECTION
         self.xsection = xsection
 
-    def run(self, optimize_opts=None, covariance_opts=None):
+    def run(
+        self, likelihood_profile_opts=None, optimize_opts=None, covariance_opts=None
+    ):
         """Run the SigmaVEstimator for all channels and masses.
 
         Parameters
         ----------
+        likelihood_profile_opts : dict
+            Options passed to `~gammapy.utils.fitting.Fit.likelihood_profile`.
         optimize_opts : dict
-            Options passed to `Fit.optimize`.
+            Options passed to `~gammapy.utils.fitting.Fit.optimize`.
         covariance_opts : dict
-            Options passed to `Fit.covariance`.
+            Options passed to `~gammapy.utils.fitting.Fit.covariance`.
 
         Returns
         -------
@@ -181,6 +185,10 @@ class SigmaVEstimator:
         counts_map = WcsNDMap(
             self.dataset.counts.geom, np.random.poisson(self.dataset.npred().data)
         )
+
+        if likelihood_profile_opts is None:
+            likelihood_profile_opts = {"bounds": 5, "nvalues": 50}
+        likelihood_profile_opts["parameter"] = "scale"
 
         result = {}
         sigma_unit = ""
@@ -222,9 +230,7 @@ class SigmaVEstimator:
                     fit = Fit(dataset_loop)
                     fit_result = fit.run(optimize_opts, covariance_opts)
                     likemin = fit_result.total_stat
-                    profile = fit.likelihood_profile(
-                        parameter="scale", bounds=5, nvalues=50
-                    )
+                    profile = fit.likelihood_profile(**likelihood_profile_opts)
                     xvals = profile["values"]
                     yvals = profile["likelihood"] - likemin - 2.71
                     scale_min = fit_result.parameters["scale"].value
