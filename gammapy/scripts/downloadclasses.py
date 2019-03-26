@@ -13,13 +13,10 @@ from .. import version
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://gammapy.org/download"
-DEV_NBS_YAML_URL = (
-    "https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/notebooks.yaml"
-)
-DEV_SCRIPTS_YAML_URL = (
-    "https://raw.githubusercontent.com/gammapy/gammapy/master/examples/scripts.yaml"
-)
-DEV_DATA_JSON_URL = "https://raw.githubusercontent.com/gammapy/gammapy-webpage/gh-pages/download/data/gammapy-data-index.json"
+BASE_URL_DEV = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
+DEV_NBS_YAML_URL = BASE_URL_DEV + "tutorials/notebooks.yaml"
+DEV_SCRIPTS_YAML_URL = BASE_URL_DEV + "examples/scripts.yaml"
+DEV_DATA_JSON_URL = BASE_URL_DEV + "dev/datasets/gammapy-data-index.json"
 
 
 def get_file(ftuple):
