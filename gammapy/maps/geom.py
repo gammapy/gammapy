@@ -175,14 +175,11 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
     -------
     lon : `~numpy.ndarray`
         Longitude in degrees.
-
     lat : `~numpy.ndarray`
         Latitude in degrees.
-
     frame : str
         Name of coordinate frame.
     """
-
     if coordsys in ["CEL", "C"]:
         skycoord = skycoord.transform_to("icrs")
     elif coordsys in ["GAL", "G"]:

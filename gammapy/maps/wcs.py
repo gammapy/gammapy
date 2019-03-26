@@ -531,7 +531,6 @@ class WcsGeom(MapGeom):
 
     def get_image_shape(self, idx):
         """Get the shape of the image plane at index ``idx``."""
-
         if self.is_regular:
             return int(self.npix[0]), int(self.npix[1])
         else:

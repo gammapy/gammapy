@@ -74,7 +74,6 @@ class SensitivityEstimator:
 
     def run(self):
         """Run the computation."""
-
         # TODO: let the user decide on energy binning
         # then integrate bkg model and gamma over those energy bins.
         energy = self.rmf.e_reco.log_center()

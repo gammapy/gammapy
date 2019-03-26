@@ -65,7 +65,6 @@ class DocsImage(Image):
 
 def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[]):
     """Link to a notebook"""
-
     # check if file exists in local notebooks folder
     nbfolder = Path("notebooks")
     nbfilename = notebook + ".ipynb"
@@ -118,7 +117,6 @@ def parse_notebooks(folder, url_docs, git_commit):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
-
     DOWNLOAD_CELL = """
 <div class="alert alert-info">
 
@@ -176,10 +174,7 @@ def parse_notebooks(folder, url_docs, git_commit):
 
 
 def gammapy_sphinx_notebooks(setup_cfg):
-    """
-    Manages the processes for the building of sphinx formatted notebooks
-    """
-
+    """Manage creation of Sphinx-formatted notebooks."""
     if not strtobool(setup_cfg["build_notebooks"]):
         log.info("Config build_notebooks is False; skipping notebook processing")
         return

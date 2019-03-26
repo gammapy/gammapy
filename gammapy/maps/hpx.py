@@ -433,7 +433,6 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
         Indices of HEALpix pixels of nside ``nside_superpix`` that
         contain pixel indices ``idx`` of nside ``nside_subpix``.
     """
-
     import healpy as hp
 
     idx = np.array(idx)
@@ -621,7 +620,6 @@ class HpxGeom(MapGeom):
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
-
         if isinstance(region, str):
             ipix = [
                 self.get_index_list(nside, self._nest, region)

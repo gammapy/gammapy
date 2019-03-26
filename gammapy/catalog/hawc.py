@@ -29,7 +29,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         info : {'all', 'basic', 'position', 'spectrum'}
             Comma separated list of options
         """
-
         if info == "all":
             info = "basic,position,spectrum"
 
