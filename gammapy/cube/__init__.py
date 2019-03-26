@@ -8,3 +8,4 @@ from .psf_map import *
 from .edisp_map import *
 from .make import *
 from .fit import *
+from .simulate import *

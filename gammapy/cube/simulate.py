@@ -20,8 +20,7 @@ def simulate_dataset(
     max_radius=0.8 * u.deg,
     random_state="random-seed",
 ):
-
-    """Simulate a 3D dataset
+    """Simulate a 3D dataset.
     
     Simulate a source defined with a sky model for a given pointing,
     geometry and irfs for a given exposure time.
@@ -53,7 +52,6 @@ def simulate_dataset(
     dataset : `~gammapy.cube.fit.MapDataset`
         A dataset of the simulated observation.
     """
-
     background = make_map_background_irf(
         pointing=pointing, ontime=livetime, bkg=irfs["bkg"], geom=geom
     )

@@ -108,7 +108,7 @@ pydocstyle:
 	pydocstyle $(PROJECT) \
 	--convention=numpy \
 	--match-dir='^(?!extern).*' \
-	--add-ignore=D100,D102,D103,D104,D105,D200,D201,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D405,D409,D410
+	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D405,D409,D410
 
 # TODO: add test and code quality checks for `examples`
 
