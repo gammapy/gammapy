@@ -26,12 +26,9 @@ class MapMaker:
         If none, the same as geom is assumed
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
-    bkg_coordsys : str
-        Coordinate system of the background model.
-        Supported: 'fov_altaz', 'fov_radec'
     """
 
-    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None, bkg_coordsys="fov_altaz"):
+    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
 
@@ -41,7 +38,6 @@ class MapMaker:
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom
         self.offset_max = Angle(offset_max)
-        self.bkg_coordsys = bkg_coordsys
         self.maps = {}
 
         # Some background estimation methods need an exclusion mask.
@@ -118,7 +114,6 @@ class MapMaker:
             fov_mask=fov_mask,
             fov_mask_etrue=fov_mask_etrue,
             exclusion_mask=exclusion_mask,
-            bkg_coordsys=self.bkg_coordsys,
         ).run(selection)
 
         # Stack observation maps to total
@@ -175,9 +170,6 @@ class MapMakerObs:
         Mask to select pixels in field of view
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask (used by some background estimators)
-    bkg_coordsys : str
-        Coordinate system of the background model.
-        Supported: 'fov_altaz', 'fov_radec'
     """
 
     def __init__(
@@ -188,7 +180,6 @@ class MapMakerObs:
             fov_mask=None,
             fov_mask_etrue=None,
             exclusion_mask=None,
-            bkg_coordsys="fov_altaz",
     ):
         self.observation = observation
         self.geom = geom
@@ -196,7 +187,6 @@ class MapMakerObs:
         self.fov_mask = fov_mask
         self.fov_mask_etrue = fov_mask_etrue
         self.exclusion_mask = exclusion_mask
-        self.bkg_coordsys = bkg_coordsys
         self.maps = {}
 
     def run(self, selection=None):
@@ -237,13 +227,14 @@ class MapMakerObs:
         self.maps["exposure"] = exposure
 
     def _make_background(self):
-        if self.bkg_coordsys == "fov_altaz":
+        bkg_coordsys = self.observation.bkg.meta.get('FOVALIGN', 'ALTAZ')
+        if bkg_coordsys == "ALTAZ":
             pnt = self.observation.fixed_pointing_info
-        elif self.bkg_coordsys == "fov_radec":
+        elif bkg_coordsys == "RADEC":
             pnt = self.observation.pointing_radec
         else:
-            raise ValueError("Unknow background coordinate system: \"{}\". "
-                             "Use \"fov_altaz\" or \"fov_radec\".".format(self.bkg_coordsys))
+            raise ValueError("Found unknown background coordinate system definition: \"{}\". "
+                             "Should be \"ALTAZ\" or \"RADEC\".".format(bkg_coordsys))
         background = make_map_background_irf(
             pointing=pnt,
             ontime=self.observation.observation_time_duration,
