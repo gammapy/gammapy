@@ -105,12 +105,11 @@ pylint:
 # D405: Section name should be properly capitalized ('See Also', not 'See also')
 # D409: Section underline should match the length of its name (Expected 7 dashes in section 'Returns', got 8)
 # D412: No blank lines allowed between a section header and its content ('Examples')
-# D414: Section has no content ('Returns')
 pydocstyle:
 	pydocstyle $(PROJECT) \
 	--convention=numpy \
 	--match-dir='^(?!extern).*' \
-	--add-ignore=D100,D102,D103,D104,D105,D200,D201,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D405,D409,D410,D412,D414
+	--add-ignore=D100,D102,D103,D104,D105,D200,D201,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D405,D409,D410,D412
 
 # TODO: add test and code quality checks for `examples`
 
