@@ -73,9 +73,10 @@ class SigmaVEstimator:
     To estimate the different values of :math:`\sigma\nu`, a random poisson realization for a given
     annihilation simulated dataset is fitted to a list of `~gammapy.astro.darkmatter.DMAnnihilation`
     models. These are created within the range of the given lists of annihilation channels and particle
-    masses. For each fit, the value of the scale parameter that makes :math:`\Delta TS > 2.71` is
+    masses. For each fit, the value of the scale parameter that makes :math:`\Delta TS > TS\_DIFF` is
     multiplied by the thermal relic cross section, and subsequently taken as the estimated value of
-    :math:`\sigma\nu`.
+    :math:`\sigma\nu. TS\_DIFF` value is set by default to 2.71 and may be modified as an attribute
+    of this `SigmaVEstimator` class.
 
     Parameters
     ----------
@@ -126,7 +127,7 @@ class SigmaVEstimator:
         JFAC = 3.41e19 * u.Unit("GeV2 cm-5")
         flux_model = DMAnnihilation(mass=5000*u.GeV, channel="b", jfactor=JFAC, z=5)
 
-        # Combine into sky model
+        # Combine into a sky model and create a simulated dataset
         sky_model = SkyModel(spatial_model=spatial_model, spectral_model=flux_model)
         sim_dataset = simulate_dataset(sky_model, geom=geom, pointing=src_pos, irfs=irfs, livetime=50*u.hour, offset=2*u.deg)
 
@@ -136,6 +137,9 @@ class SigmaVEstimator:
         estimator = SigmaVEstimator(sim_dataset, masses, channels, jfact=JFAC)
         result = estimator.run(likelihood_profile_opts=dict(bounds=3, nvalues=25))
     """
+
+    TS_DIFF = 2.71
+    """Value that solves the equation :math:`\Delta TS > TS\_DIFF` - set to 2.71 by default."""
 
     def __init__(
         self,
@@ -232,7 +236,7 @@ class SigmaVEstimator:
                     likemin = fit_result.total_stat
                     profile = fit.likelihood_profile(**likelihood_profile_opts)
                     xvals = profile["values"]
-                    yvals = profile["likelihood"] - likemin - 2.71
+                    yvals = profile["likelihood"] - likemin - self.TS_DIFF
                     scale_min = fit_result.parameters["scale"].value
                     scale_max = max(xvals)
 
