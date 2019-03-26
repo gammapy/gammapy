@@ -102,12 +102,11 @@ pylint:
 # D401: First line should be in imperative mood; try rephrasing (found 'Function')
 # D403: First word of the first line should be properly capitalized ('Add', not 'add')
 # D404: First word of the docstring should not be `This`
-# D405: Section name should be properly capitalized ('See Also', not 'See also')
 pydocstyle:
 	pydocstyle $(PROJECT) \
 	--convention=numpy \
 	--match-dir='^(?!extern).*' \
-	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D405,D410
+	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D410
 
 # TODO: add test and code quality checks for `examples`
 

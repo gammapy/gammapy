@@ -35,7 +35,7 @@ FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 class SourceCatalogObjectHGPSComponent:
     """One Gaussian component from the HGPS catalog.
 
-    See also
+    See Also
     --------
     SourceCatalogHGPS, SourceCatalogObjectHGPS
     """
