@@ -404,7 +404,7 @@ class MapEvaluator:
             Predicted counts in true energy bins
 
         Returns
-        ---------
+        -------
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reco energy bins
         """

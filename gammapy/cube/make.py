@@ -45,12 +45,10 @@ class MapMaker:
             self.maps["exclusion"] = exclusion_mask
 
     def run(self, observations, selection=None):
-        """
-        Run MapMaker for a list of observations to create
-        stacked counts, exposure and background maps
+        """Make maps for a list of observations.
 
         Parameters
-        --------------
+        ----------
         observations : `~gammapy.data.Observations`
             Observations to process
         selection : list
@@ -59,7 +57,7 @@ class MapMaker:
             By default, all maps are made.
 
         Returns
-        -----------
+        -------
         maps: dict of stacked counts, background and exposure maps.
         """
         selection = _check_selection(selection)

@@ -1447,7 +1447,7 @@ class MapGeom(metaclass=MapGeomMeta):
             Keyword arguments to overwrite in the map geometry constructor.
 
         Returns
-        --------
+        -------
         copy : `MapGeom`
             Copied map geometry.
         """

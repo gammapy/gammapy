@@ -179,7 +179,7 @@ class SpectrumFit(Fit):
             Fold model with IRFs
 
         Returns
-        ------
+        -------
         predicted_counts : `numpy.ndarray`
             Predicted counts for one observation
         """
@@ -230,7 +230,7 @@ class SpectrumFit(Fit):
             Predicted counts
 
         Returns
-        ------
+        -------
         statsval : tuple of `~numpy.ndarray`
             Statval
         """

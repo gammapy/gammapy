@@ -725,7 +725,7 @@ class Map(metaclass=MapMeta):
             Pixel indices can be either float or integer type.
 
         Returns
-        ----------
+        -------
         vals : `~numpy.ndarray`
            Array of pixel values.  np.nan used to flag coordinates
            outside of map
@@ -754,7 +754,7 @@ class Map(metaclass=MapMeta):
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
 
         Returns
-        ----------
+        -------
         vals : `~numpy.ndarray`
            Array of pixel values.
            np.nan used to flag coordinate outside of map
@@ -1006,7 +1006,7 @@ class Map(metaclass=MapMeta):
             Keyword arguments to overwrite in the map constructor.
 
         Returns
-        --------
+        -------
         copy : `Map`
             Copied Map.
         """

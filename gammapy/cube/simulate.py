@@ -48,7 +48,7 @@ def simulate_dataset(
         Defines random number generator initialisation.
 
     Returns
-    ---------
+    -------
     dataset : `~gammapy.cube.fit.MapDataset`
         A dataset of the simulated observation.
     """

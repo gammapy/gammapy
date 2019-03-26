@@ -64,7 +64,7 @@ class ObservationTableSummary:
             By default, 30 bins from 0 deg to max zenith + 5 deg is used.
 
         Returns
-        --------
+        -------
         ax : `~matplotlib.axes.Axes`
             Axis
         """
