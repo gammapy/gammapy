@@ -140,8 +140,6 @@ class MapMaker:
         for name, map in maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
-            if name == "exclusion":
-                map = map.slice_by_idx({"energy":0})
             images[name] = map.sum_over_axes(keepdims=keepdims)
         return images
 
@@ -422,7 +420,12 @@ class MapMakerRing(MapMaker):
 
             if sum_over_axis:
                 maps_obs = self._maps_sum_over_axes(maps_obs, spectrum, keepdims)
-                maps_obs["exclusion"] = obs_maker.exclusion_mask.get_image_by_idx([0])
+                maps_obs["exclusion"] = obs_maker.exclusion_mask.sum_over_axes(
+                    keepdims=keepdims
+                )
+                maps_obs["exclusion"].data = (
+                    maps_obs["exclusion"].data / self.geom.axes[0].nbin
+                )
 
             maps_obs_bkg = self.background_estimator.run(maps_obs)
             maps_obs.update(maps_obs_bkg)
