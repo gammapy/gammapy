@@ -161,15 +161,6 @@ class SigmaVEstimator:
             xsection = DMAnnihilation.THERMAL_RELIC_CROSS_SECTION
         self.xsection = xsection
 
-        self._spatial_model = dataset.model.spatial_model
-        self._geom = dataset.counts.geom
-        self._exposure = dataset.exposure
-        self._background_model = dataset.background_model
-        self._psf = dataset.psf
-        self._edisp = dataset.edisp
-
-        self._counts_map = WcsNDMap(self._geom, np.random.poisson(dataset.npred().data))
-
     def run(self, optimize_opts=None, covariance_opts=None):
         """Run the SigmaVEstimator for all channels and masses.
 
@@ -185,6 +176,11 @@ class SigmaVEstimator:
         result : dict
             Dict with results as `~astropy.table.Table` objects for each channel.
         """
+
+        spatial_model = self.dataset.model.spatial_model
+        counts_map = WcsNDMap(
+            self.dataset.counts.geom, np.random.poisson(self.dataset.npred().data)
+        )
 
         result = {}
         sigma_unit = ""
@@ -207,21 +203,20 @@ class SigmaVEstimator:
                     spectral_model = AbsorbedSpectralModel(
                         spectral_model, self.absorption_model, self.z
                     )
-                spatial_model = self._spatial_model
                 flux_model = SkyModel(
                     spatial_model=spatial_model, spectral_model=spectral_model
                 )
-                if isinstance(self._spatial_model, SkyPointSource):
+                if isinstance(spatial_model, SkyPointSource):
                     flux_model.parameters["lat_0"].frozen = True
                     flux_model.parameters["lon_0"].frozen = True
 
                 dataset_loop = MapDataset(
                     model=flux_model,
-                    counts=self._counts_map,
-                    exposure=self._exposure,
-                    background_model=self._background_model,
-                    psf=self._psf,
-                    edisp=self._edisp,
+                    counts=counts_map,
+                    exposure=self.dataset.exposure,
+                    background_model=self.dataset.background_model,
+                    psf=self.dataset.psf,
+                    edisp=self.dataset.edisp,
                 )
                 try:
                     fit = Fit(dataset_loop)
