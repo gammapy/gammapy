@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import astropy.units as u
 from ..utils.energy import Energy
-from . import PSF3D, EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
+from . import EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
 
 __all__ = ["make_psf", "make_mean_psf", "make_mean_edisp", "apply_containment_fraction"]
 

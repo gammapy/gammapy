@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.table import Table
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from ..utils.fitting import Parameter, Parameters, Model
+from ..utils.fitting import Parameter, Model
 
 __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 

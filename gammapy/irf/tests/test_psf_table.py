@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...utils.testing import assert_quantity_allclose
 from ...irf import TablePSF, EnergyDependentTablePSF
 
 

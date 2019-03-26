@@ -11,7 +11,7 @@ from ...utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
 )
-from ...utils.fitting import Parameters, Fit
+from ...utils.fitting import Fit
 from ..models import PowerLaw, SpectralModel
 from ..flux_point import FluxPoints, FluxPointsDataset
 

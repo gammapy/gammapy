@@ -15,7 +15,6 @@ from ..psf_table import EnergyDependentTablePSF, TablePSF
 from ...data import DataStore, Observations
 from ...utils.testing import requires_data, assert_quantity_allclose
 from ...utils.energy import Energy, EnergyBounds
-from ...spectrum.models import PowerLaw
 
 
 @pytest.fixture(scope="session")

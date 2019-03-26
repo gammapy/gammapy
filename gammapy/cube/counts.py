@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy.units import Quantity
 
 __all__ = ["fill_map_counts"]
 

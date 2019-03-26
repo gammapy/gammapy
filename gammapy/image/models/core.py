@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
-from ...utils.fitting import Parameter, Parameters, Model
+from ...utils.fitting import Parameter, Model
 from ...maps import Map
 from scipy.integrate import quad
 

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
-from ..utils.fitting import Fit, Parameters
+from ..utils.fitting import Parameters
 from ..stats import cash, cstat
 from ..maps import Map, MapAxis
 from .models import SkyModel, SkyModels

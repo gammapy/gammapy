@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import numpy as np
-from astropy.utils.decorators import lazyproperty
 import astropy.units as u
-from ..utils.fitting import Parameters, Parameter, Model
+from ..utils.fitting import Parameter, Model
 from ..utils.scripts import make_path
 from ..maps import Map
 

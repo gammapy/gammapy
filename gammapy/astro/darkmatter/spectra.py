@@ -4,9 +4,8 @@ import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
-from astropy.utils import lazyproperty
 from ...utils.scripts import make_path
-from ...utils.fitting import Parameter, Parameters
+from ...utils.fitting import Parameter
 from ...spectrum.models import SpectralModel, TableModel
 
 __all__ = ["PrimaryFlux", "DMAnnihilation"]
