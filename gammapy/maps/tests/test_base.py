@@ -127,7 +127,7 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
 
     # Test none slicing
     sliced = m.slice_by_idx({})
-    assert_equal(m.geom.shape, sliced.geom.shape)
+    assert_equal(m.geom.shape_axes, sliced.geom.shape_axes)
 
     slices = {"energy": slice(0, 1), "time": slice(0, 2)}
     sliced = m.slice_by_idx(slices)

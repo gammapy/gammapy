@@ -10,6 +10,11 @@
     - fermi-3fhl-gc
   images:
     - DC1_3d
+- name: analysis_3d_joint
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/analysis_3d_joint.ipynb
+  requires: iminuit
+  datasets:
+    - cta-1dc  
 - name: astro_dark_matter
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astro_dark_matter.ipynb
   datasets:
@@ -82,6 +87,11 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/light_curve.ipynb
   datasets:
     - hess-dl3-dr1
+- name: mcmc_sampling
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/mcmc_sampling.ipynb
+  requires: emcee
+  datasets:
+    - cta-1dc
 - name: nddata_demo
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/nddata_demo.ipynb
 - name: sed_fitting_gammacat_fermi

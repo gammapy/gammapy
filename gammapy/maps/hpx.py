@@ -578,8 +578,7 @@ class HpxGeom(MapGeom):
 
         self._nside = np.array(nside, ndmin=1)
         self._axes = make_axes(axes, conv)
-        self._shape = tuple([ax.nbin for ax in self._axes])
-        if self.nside.size > 1 and self.nside.shape != self._shape:
+        if self.nside.size > 1 and self.nside.shape != self.shape_axes:
             raise ValueError(
                 "Wrong dimensionality for nside. nside must "
                 "be a scalar or have a dimensionality consistent "
@@ -590,7 +589,7 @@ class HpxGeom(MapGeom):
         self._nest = nest
         self._coordsys = coordsys
         self._maxpix = 12 * self._nside * self._nside
-        self._maxpix = self._maxpix * np.ones(self._shape, dtype=int)
+        self._maxpix = self._maxpix * np.ones(self.shape_axes, dtype=int)
         self._sparse = sparse
 
         self._ipix = None
@@ -603,7 +602,7 @@ class HpxGeom(MapGeom):
             for i, ipix in enumerate(self._ipix.flat):
                 self._rmap[ipix] = i
 
-        self._npix = self._npix * np.ones(self._shape, dtype=int)
+        self._npix = self._npix * np.ones(self.shape_axes, dtype=int)
         self._conv = conv
         self._center_skydir = self._get_ref_dir()
         lon, lat, frame = skycoord_to_lonlat(self._center_skydir)
@@ -656,8 +655,8 @@ class HpxGeom(MapGeom):
             if len(region) == 1:
                 self._npix = np.array([len(region[0])])
             else:
-                self._npix = np.zeros(self._shape, dtype=int)
-                idx = np.ravel_multi_index(region[1:], self._shape)
+                self._npix = np.zeros(self.shape_axes, dtype=int)
+                idx = np.ravel_multi_index(region[1:], self.shape_axes)
                 cnt = np.unique(idx, return_counts=True)
                 self._npix.flat[cnt[0]] = cnt[1]
 
@@ -867,7 +866,7 @@ class HpxGeom(MapGeom):
         if len(slices) != self.ndim - 2:
             raise ValueError()
 
-        nside = np.ones(self.shape, dtype=int) * self.nside
+        nside = np.ones(self.shape_axes, dtype=int) * self.nside
         nside = np.squeeze(nside[slices])
 
         axes = [ax.slice(s) for ax, s in zip(self.axes, slices)]
@@ -896,9 +895,10 @@ class HpxGeom(MapGeom):
         return self._axes
 
     @property
-    def shape(self):
+    def shape_axes(self):
         """Shape of non-spatial axes."""
-        return self._shape
+        return tuple([ax.nbin for ax in self._axes])
+
 
     @property
     def ndim(self):
@@ -1594,7 +1594,7 @@ class HpxGeom(MapGeom):
         )
 
     def get_idx(self, idx=None, local=False, flat=False):
-        if idx is not None and np.any(np.array(idx) >= np.array(self._shape)):
+        if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
             raise ValueError("Image index out of range: {!r}".format(idx))
 
         # Regular all- and partial-sky maps
@@ -1613,11 +1613,11 @@ class HpxGeom(MapGeom):
 
             shape = (np.max(self.npix),)
             if idx is None:
-                shape = shape + self.shape
+                shape = shape + self.shape_axes
             else:
                 shape = shape + (1,) * len(self.axes)
             pix = [np.full(shape, -1, dtype=int) for i in range(1 + len(self.axes))]
-            for idx_img in np.ndindex(self.shape):
+            for idx_img in np.ndindex(self.shape_axes):
 
                 if idx is not None and idx_img != idx:
                     continue
@@ -1638,7 +1638,7 @@ class HpxGeom(MapGeom):
 
             if idx is not None:
                 npix_sum = np.concatenate(([0], np.cumsum(self._npix)))
-                idx_ravel = np.ravel_multi_index(idx, self._shape)
+                idx_ravel = np.ravel_multi_index(idx, self.shape_axes)
                 s = slice(npix_sum[idx_ravel], npix_sum[idx_ravel + 1])
             else:
                 s = slice(None)
@@ -1646,12 +1646,12 @@ class HpxGeom(MapGeom):
 
             shape = (np.max(self.npix),)
             if idx is None:
-                shape = shape + self.shape
+                shape = shape + self.shape_axes
             else:
                 shape = shape + (1,) * len(self.axes)
             pix = [np.full(shape, -1, dtype=int) for _ in range(1 + len(self.axes))]
 
-            for idx_img in np.ndindex(self.shape):
+            for idx_img in np.ndindex(self.shape_axes):
 
                 if idx is not None and idx_img != idx:
                     continue

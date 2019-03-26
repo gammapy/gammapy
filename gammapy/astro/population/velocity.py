@@ -75,7 +75,7 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
 
     def __init__(self, amplitude=1, sigma_1=160, sigma_2=780, w=0.9, **kwargs):
         super().__init__(
-            amplitude=amplitude, sigma_1=sigma_1, sigma_2=sigma_1, w=w, **kwargs
+            amplitude=amplitude, sigma_1=sigma_1, sigma_2=sigma_2, w=w, **kwargs
         )
 
     @staticmethod

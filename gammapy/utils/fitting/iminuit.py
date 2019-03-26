@@ -27,7 +27,8 @@ def optimize_iminuit(parameters, function, **kwargs):
     function : callable
         Likelihood function
     **kwargs : dict
-        Options passed to `iminuit.Minuit` constructor
+        Options passed to `iminuit.Minuit` constructor. If there is an entry 'migrad_opts', those options
+        will be passed to `iminuit.Minuit.migrad()`.
 
     Returns
     -------
@@ -44,8 +45,10 @@ def optimize_iminuit(parameters, function, **kwargs):
 
     minuit_func = MinuitLikelihood(function, parameters)
 
+    kwargs = kwargs.copy()
+    migrad_opts = kwargs.pop("migrad_opts", {})
     minuit = Minuit(minuit_func.fcn, **kwargs)
-    minuit.migrad()
+    minuit.migrad(**migrad_opts)
 
     factors = minuit.args
     info = {
@@ -74,8 +77,9 @@ def covariance_iminuit(minuit):
 def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
     # TODO: this is ugly - design something better for translating to MINUIT parameter names.
     # Maybe a wrapper class MinuitParameters?
-    idx = parameters._get_idx(parameter)
-    var = _make_parname(idx, parameters[idx])
+    parameter = parameters[parameter]
+    idx = parameters.free_parameters.index(parameter)
+    var = _make_parname(idx, parameter)
 
     message, success = "Minos terminated successfully.", True
     try:
@@ -142,18 +146,16 @@ def make_minuit_par_kwargs(parameters):
 
     See: http://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
     """
-    names = _make_parnames(parameters)
+    names = _make_parnames(parameters.free_parameters)
     kwargs = {"forced_parameters": names}
 
-    for name, par in zip(names, parameters):
+    for name, par in zip(names, parameters.free_parameters):
         kwargs[name] = par.factor
 
         min_ = None if np.isnan(par.factor_min) else par.factor_min
         max_ = None if np.isnan(par.factor_max) else par.factor_max
         kwargs["limit_{}".format(name)] = (min_, max_)
-
         kwargs["error_{}".format(name)] = 1
-        kwargs["fix_{}".format(name)] = par.frozen
 
     return kwargs
 

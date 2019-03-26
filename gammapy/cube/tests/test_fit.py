@@ -52,8 +52,10 @@ def background(geom):
 
 
 def edisp(geom, geom_etrue):
-    e_true = geom_etrue.get_axis_by_name("energy").edges
-    e_reco = geom.get_axis_by_name("energy").edges
+    e_true_axis = geom_etrue.get_axis_by_name("energy")
+    e_reco_axis = geom.get_axis_by_name("energy")
+    e_true = e_true_axis.edges * e_true_axis.unit
+    e_reco = e_reco_axis.edges * e_reco_axis.unit
     return EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
@@ -126,6 +128,7 @@ def test_map_fit(sky_model):
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_1,
+        evaluation_mode="local",
     )
 
     dataset_2 = MapDataset(
@@ -136,6 +139,7 @@ def test_map_fit(sky_model):
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_2,
+        evaluation_mode="global"
     )
 
     background_model_1.parameters["norm"].value = 0.4

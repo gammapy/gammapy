@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
 import numpy as np
+import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from ...utils.scripts import make_path
-from ...spectrum.models import TableModel
+from ...utils.fitting import Parameter, Parameters
+from ...spectrum.models import SpectralModel, TableModel
 
-__all__ = ["PrimaryFlux"]
+__all__ = ["PrimaryFlux", "DMAnnihilation"]
 
 
 class PrimaryFlux:
@@ -56,20 +58,30 @@ class PrimaryFlux:
         "V->tau": "V->\\[Tau]",
     }
 
+    table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
+
     def __init__(self, mDM, channel):
+
+        self.table_path = make_path(self.table_filename)
+        if not self.table_path.exists():
+            message = (
+                "\n\nFile {} not found.\n"
+                "You may download the dataset needed with the following command:\n"
+                "gammapy download datasets --src dark_matter_spectra"
+                "".format(self.table_filename)
+            )
+
+            raise FileNotFoundError(message)
+        else:
+            self.table = Table.read(
+                str(self.table_path),
+                format="ascii.fast_basic",
+                guess=False,
+                delimiter=" ",
+            )
+
         self.mDM = mDM
         self.channel = channel
-
-    @lazyproperty
-    def table(self):
-        """Lookup table (`~astropy.table.Table`)."""
-        filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
-        return Table.read(
-            str(make_path(filename)),
-            format="ascii.fast_basic",
-            guess=False,
-            delimiter=" ",
-        )
 
     @property
     def mDM(self):
@@ -112,3 +124,84 @@ class PrimaryFlux:
         dN_dE = dN_dlogx / (energies * np.log(10))
 
         return TableModel(energy=energies, values=dN_dE, values_scale="lin")
+
+
+class DMAnnihilation(SpectralModel):
+    r"""Spectral model for dark matter annihilation.
+
+    The gamma-ray flux is computed as follows:
+
+    .. math::
+
+        \frac{\mathrm d \phi}{\mathrm d E} =
+        \frac{\langle \sigma\nu \rangle}{4\pi k m^2_{\mathrm{DM}}}
+        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+
+    Parameters
+    ----------
+    mass : `~astropy.units.Quantity`
+        Dark matter mass
+    channel : str
+        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
+    scale : float
+        Scale parameter for model fitting
+    jfact : `~astropy.units.Quantity`
+        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used
+    z: float
+        Redshift value
+    k: int
+        Type of dark matter particle (k:2 Majorana, k:4 Dirac)
+
+    Examples
+    --------
+    This is how to instantiate a `DMAnnihilation` model::
+
+        from astropy import units as u
+        from gammapy.astro.darkmatter import DMAnnihilation
+
+        channel = "b"
+        massDM = 5000*u.Unit("GeV")
+        jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+        modelDM = DMAnnihilation(mass=massDM, channel=channel, jfactor=jfactor)
+
+    References
+    ----------
+    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    """
+
+    __slots__ = [
+        "mass",
+        "channel",
+        "scale",
+        "jfactor",
+        "z",
+        "k",
+        "primary_flux",
+    ]
+
+    THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
+    """Thermally averaged annihilation cross-section"""
+
+    def __init__(self, mass, channel, scale=1, jfactor=1, z=0, k=2):
+        self.scale = Parameter("scale", scale)
+        self.k = k
+        self.z = z
+        self.mass = mass
+        self.channel = channel
+        self.jfactor = jfactor
+        self.primary_flux = PrimaryFlux(mass, channel=self.channel).table_model
+        super().__init__([self.scale])
+
+    def evaluate(self, energy, scale):
+        """Evaluate dark matter annihilation model."""
+        flux = (
+            scale
+            * self.jfactor
+            * self.THERMAL_RELIC_CROSS_SECTION
+            * self.primary_flux.evaluate(energy=energy * (1 + self.z), norm=1)
+            / self.k
+            / self.mass
+            / self.mass
+            / (4 * np.pi)
+        )
+        return flux

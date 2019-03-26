@@ -489,7 +489,11 @@ class EnergyDispersion:
         norm = np.sum(pdf, axis=-1)
         temp = np.sum(pdf * self.e_reco.nodes, axis=-1)
 
-        return temp / norm
+        with np.errstate(invalid="ignore"):
+            # corm can be zero
+            mean = np.nan_to_num(temp / norm)
+
+        return mean
 
     def _get_variance(self, e_true):
         """Get variance of log reconstructed energy."""

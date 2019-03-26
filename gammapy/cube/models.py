@@ -13,11 +13,13 @@ __all__ = [
     "SkyModel",
     "SkyDiffuseCube",
     "BackgroundModel",
+    "BackgroundModels",
 ]
 
 
 class SkyModelBase(Model):
     """Sky model base class"""
+
     def __add__(self, skymodel):
         skymodels = [self]
         if isinstance(skymodel, SkyModels):
@@ -53,22 +55,18 @@ class SkyModels(SkyModelBase):
         sourcelib = SkyModels.read(filename)
     """
 
+    frame = None
+
+    __slots__ = ["skymodels"]
+
     def __init__(self, skymodels):
         self.skymodels = skymodels
+        parameters = []
 
-        pars = []
         for skymodel in skymodels:
             for p in skymodel.parameters:
-                pars.append(p)
-        self._parameters = Parameters(pars)
-
-    @property
-    def parameters(self):
-        """Concatenated parameters.
-
-        Currently no way to distinguish spectral and spatial.
-        """
-        return self._parameters
+                parameters.append(p)
+        super().__init__(parameters)
 
     @classmethod
     def from_xml(cls, xml):
@@ -114,7 +112,9 @@ class SkyModels(SkyModelBase):
         str_ = self.__class__.__name__ + "\n\n"
 
         for idx, skymodel in enumerate(self.skymodels):
-            str_ += "Component {idx}: {skymodel}\n\n\t".format(idx=idx, skymodel=skymodel)
+            str_ += "Component {idx}: {skymodel}\n\n\t".format(
+                idx=idx, skymodel=skymodel
+            )
             str_ += "\n\n"
 
         if self.parameters.covariance is not None:
@@ -161,13 +161,16 @@ class SkyModel(SkyModelBase):
     name : str
         Model identifier
     """
+
+    __slots__ = ["name", "_spatial_model", "_spectral_model"]
+
     def __init__(self, spatial_model, spectral_model, name="SkyModel"):
         self.name = name
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
-        self._parameters = Parameters(
-            spatial_model.parameters.parameters + spectral_model.parameters.parameters
-        )
+        parameters = spatial_model.parameters.parameters + spectral_model.parameters.parameters
+        super().__init__(parameters)
+
 
     @property
     def spatial_model(self):
@@ -180,9 +183,18 @@ class SkyModel(SkyModelBase):
         return self._spectral_model
 
     @property
-    def parameters(self):
-        """Parameters (`~gammapy.utils.modeling.Parameters`)"""
-        return self._parameters
+    def position(self):
+        """`~astropy.coordinates.SkyCoord`"""
+        return self.spatial_model.position
+
+    @property
+    def evaluation_radius(self):
+        """`~astropy.coordinates.Angle`"""
+        return self.spatial_model.evaluation_radius
+
+    @property
+    def frame(self):
+        return self.spatial_model.frame
 
     def __repr__(self):
         fmt = "{}(spatial_model={!r}, spectral_model={!r})"
@@ -226,13 +238,15 @@ class CompoundSkyModel(SkyModelBase):
     operator : callable
         Binary operator to combine the models
     """
+
+    __slots__ = ["model1", "model2", "operator"]
+
     def __init__(self, model1, model2, operator):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        self._parameters = Parameters(
-            self.model1.parameters.parameters + self.model2.parameters.parameters
-        )
+        parameters = self.model1.parameters.parameters + self.model2.parameters.parameters
+        super().__init__(parameters)
 
     @property
     def parameters(self):
@@ -296,6 +310,8 @@ class SkyDiffuseCube(SkyModelBase):
 
     """
 
+    __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
+
     def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
         axis = map.geom.get_axis_by_name("energy")
 
@@ -303,13 +319,15 @@ class SkyDiffuseCube(SkyModelBase):
             raise ValueError('Need a map with energy axis node_type="center"')
 
         self.map = map
-        self.parameters = Parameters([Parameter("norm", norm)])
+        self.norm = Parameter("norm", norm)
         self.meta = {} if meta is None else meta
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+
+        super().__init__([self.norm])
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -342,6 +360,21 @@ class SkyDiffuseCube(SkyModelBase):
         """A shallow copy"""
         return copy.copy(self)
 
+    @property
+    def position(self):
+        """`~astropy.coordinates.SkyCoord`"""
+        return self.map.geom.center_skydir
+
+    @property
+    def evaluation_radius(self):
+        """`~astropy.coordinates.Angle`"""
+        radius = np.max(self.map.geom.width) / 2.0
+        return radius
+
+    @property
+    def frame(self):
+        return self.position.frame
+
 
 class BackgroundModel(Model):
     """Background model
@@ -365,6 +398,8 @@ class BackgroundModel(Model):
         Background evaluated on the Map
     """
 
+    __slots__ = ["map", "norm", "tilt", "reference"]
+
     def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
 
         axis = background.geom.get_axis_by_name("energy")
@@ -372,15 +407,13 @@ class BackgroundModel(Model):
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
 
         self.map = background
-        self.parameters = Parameters(
-            [
-                Parameter("norm", norm, unit=""),
-                Parameter("tilt", tilt, unit="", frozen=True),
-                Parameter("reference", reference, frozen=True),
-            ]
-        )
+        self.norm = Parameter("norm", norm, unit="", min=0)
+        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
+        self.reference = Parameter("reference", reference, frozen=True)
 
-    @lazyproperty
+        super().__init__([self.norm, self.tilt, self.reference])
+
+    @property
     def energy_center(self):
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.map.geom.get_axis_by_name("energy")
@@ -395,3 +428,82 @@ class BackgroundModel(Model):
         tilt_factor = np.power((self.energy_center / reference).to(""), -tilt)
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
+
+    @classmethod
+    def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, **kwargs):
+        """Create background model from sky model by applying IRFs.
+
+        Typically used for diffuse Galactic emission models or constant diffuse emission
+        models.
+
+        Parameters
+        ----------
+        skymodel : `SkyModel` or `SkyDiffuseCube`
+            Sky model.
+        exposure : `Map`
+            Exposure map.
+        edisp : `EnergyDispersion`
+            Energy dispersion.
+        psf : `PSFKernel`
+            PSF to apply.
+        """
+        from .fit import MapEvaluator
+
+        evaluator = MapEvaluator(
+            model=skymodel, exposure=exposure, edisp=edisp, psf=psf
+        )
+        background = evaluator.compute_npred()
+        return cls(background=background, **kwargs)
+
+    def __add__(self, model):
+        models = [self]
+        if isinstance(model, BackgroundModels):
+            models += model.models
+        elif isinstance(model, BackgroundModel):
+            models += [model]
+        else:
+            raise NotImplementedError
+        return BackgroundModels(models)
+
+
+class BackgroundModels(Model):
+    """Background models.
+
+    Parameters
+    ----------
+    models : list of `BackgroundModel`
+        List of background models.
+    """
+
+    __slots__ = ["models", "_parameters"]
+
+    def __init__(self, models):
+        self.models = models
+        parameters = []
+        for model in models:
+            for p in model.parameters:
+                parameters.append(p)
+        super().__init__(parameters)
+
+    def evaluate(self):
+        """Evaluate background models."""
+        for idx, model in enumerate(self.models):
+            if idx == 0:
+                vals = model.evaluate()
+            else:
+                vals += model.evaluate()
+        return vals
+
+    def __iadd__(self, model):
+        if isinstance(model, BackgroundModels):
+            self.models += model.models
+        elif isinstance(model, BackgroundModel):
+            self.models += [model]
+        else:
+            raise NotImplementedError
+        return self
+
+    def __add__(self, model):
+        model_ = self.copy()
+        model_ += model
+        return model_

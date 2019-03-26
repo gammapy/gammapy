@@ -4,6 +4,7 @@ import numpy as np
 from astropy.utils import lazyproperty
 from .parameter import Parameters
 
+__all__ = ["Datasets"]
 
 class Datasets:
     """Join multiple datasets
