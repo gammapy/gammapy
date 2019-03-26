@@ -53,8 +53,8 @@ def test_sherpa_frozen(pars):
     assert info["success"]
     assert_allclose(pars["x"].value, 2)
     assert_allclose(pars["y"].value, 3.1e5)
-    assert_allclose(pars["z"].value, 4.1e-5)
-    assert_allclose(fcn(pars), 0.173611, rtol=1e-6)
+    assert_allclose(pars["z"].value, 4.e-5)
+    assert_allclose(fcn(pars), 0.11111111, rtol=1e-6)
 
 
 def test_sherpa_limits(pars):

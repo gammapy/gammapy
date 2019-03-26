@@ -3,6 +3,7 @@
 import copy
 import numpy as np
 from astropy import units as u
+from astropy.units.core import UnitConversionError
 from astropy.table import Table
 from ..array import check_type
 
@@ -10,8 +11,7 @@ __all__ = ["Parameter", "Parameters"]
 
 
 class Parameter:
-    """
-    Class representing model parameters.
+    """A model parameter.
 
     Note that the parameter value has been split into
     a factor and scale like this::
@@ -54,7 +54,9 @@ class Parameter:
         self.scale = scale
 
         if isinstance(factor, u.Quantity) or isinstance(factor, str):
-            self.quantity = factor
+            val = u.Quantity(factor)
+            self.value = val.value
+            self.unit = val.unit
         else:
             self.factor = factor
             self.unit = unit
@@ -159,8 +161,16 @@ class Parameter:
     @quantity.setter
     def quantity(self, val):
         val = u.Quantity(val)
-        self.value = val.value
-        self.unit = val.unit
+        try:
+            val.to(self.unit)
+            self.value = val.value
+            self.unit = val.unit
+        except UnitConversionError:
+            raise UnitConversionError(
+                "{0} parameter must have units homogeneous with {1}".format(
+                    self.name, self.unit
+                )
+            )
 
     def __repr__(self):
         return (
@@ -216,7 +226,7 @@ class Parameter:
 class Parameters:
     """List of `Parameter`.
 
-    Holds covariance matrix
+    Holds covariance matrix.
 
     Parameters
     ----------
@@ -230,7 +240,10 @@ class Parameters:
         see `~gammapy.utils.modeling.Parameter.autoscale`
     """
 
-    def __init__(self, parameters, covariance=None, apply_autoscale=True):
+    def __init__(self, parameters=None, covariance=None, apply_autoscale=True):
+        if parameters is None:
+            parameters = []
+
         self._parameters = self._filter_unique_parameters(parameters)
         self.covariance = covariance
         self.apply_autoscale = apply_autoscale
@@ -291,10 +304,7 @@ class Parameters:
         if isinstance(val, int):
             return val
         elif isinstance(val, Parameter):
-            for idx, par in enumerate(self.parameters):
-                if val is par:
-                    return idx
-            raise IndexError("No parameter: {!r}".format(val))
+            return self.parameters.index(val)
         elif isinstance(val, str):
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
@@ -372,9 +382,7 @@ class Parameters:
 
     @property
     def _ufloats(self):
-        """
-        Return dict of ufloats with covariance
-        """
+        """Return dict of ufloats with covariance."""
         from uncertainties import correlated_values
 
         values = [_.value for _ in self.parameters]
@@ -393,8 +401,7 @@ class Parameters:
 
     # TODO: deprecate or remove this?
     def set_parameter_errors(self, errors):
-        """
-        Set uncorrelated parameters errors.
+        """Set uncorrelated parameters errors.
 
         Parameters
         ----------
@@ -459,9 +466,11 @@ class Parameters:
 
         Used in the optimizer interface.
         """
-        for factor, parameter in zip(factors, self.parameters):
+        idx = 0
+        for parameter in self.parameters:
             if not parameter.frozen:
-                parameter.factor = factor
+                parameter.factor = factors[idx]
+                idx += 1
 
     @property
     def _scale_matrix(self):
@@ -470,10 +479,12 @@ class Parameters:
 
     def _expand_factor_matrix(self, matrix):
         """Expand covariance matrix with zeros for frozen parameters"""
-        idxs = np.where([par.frozen for par in self.parameters])[0]
-        matrix = np.insert(matrix, idxs, 0, axis=1)
-        matrix = np.insert(matrix, idxs, 0, axis=0)
-        return matrix
+        shape = (len(self.parameters), len(self.parameters))
+        matrix_expanded = np.zeros(shape)
+        mask = np.array([par.frozen for par in self.parameters])
+        free_parameters = ~(mask | mask[:, np.newaxis])
+        matrix_expanded[free_parameters] = matrix.ravel()
+        return matrix_expanded
 
     def set_covariance_factors(self, matrix):
         """Set covariance from factor covariance matrix.
@@ -510,11 +521,9 @@ class Parameters:
         ::
 
             from gammapy.spectrum.models import PowerLaw
-
             pwl = PowerLaw(index=2)
             with pwl.parameters.restore_values:
                 pwl.parameters["index"].value = 3
-
             print(pwl.parameters["index"].value)
         """
         return restore_parameters_values(self)

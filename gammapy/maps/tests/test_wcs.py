@@ -80,7 +80,7 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 
     if not geom.is_allsky:
         coords = geom.center_coord[:2] + tuple([ax.center[0] for ax in geom.axes])
-        coords[0][...] += 2.0 * np.max(geom.width[0])
+        coords[0][...] += 2.0 * np.max(geom.width[0].to_value("deg"))
         idx = geom.coord_to_idx(coords)
         assert_allclose(np.full_like(coords[0], -1, dtype=int), idx[0])
         idx = geom.coord_to_idx(coords, clip=True)
@@ -129,7 +129,8 @@ def test_wcsgeom_contains(npix, binsz, coordsys, proj, skydir, axes):
         npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
     )
     coords = geom.get_coord()
-    coords = [c[np.isfinite(c)] for c in coords]
+    m = np.isfinite(coords[0])
+    coords = [c[m] for c in coords]
     assert_allclose(geom.contains(coords), np.ones(coords[0].shape, dtype=bool))
 
     if axes is not None:
@@ -287,6 +288,26 @@ def test_region_mask():
 
     mask = geom.region_mask(regions, inside=False)
     assert np.sum(mask) == 8
+
+
+def test_energy_mask():
+    energy_axis = MapAxis.from_nodes([1, 10, 100], interp="log", name="energy", unit="TeV")
+    geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
+
+    mask = geom.energy_mask(emin=3 * u.TeV)
+    assert not mask[0, 0, 0]
+    assert mask[1, 0, 0]
+    assert mask[2, 0, 0]
+
+    mask = geom.energy_mask(emax=30 * u.TeV)
+    assert mask[0, 0, 0]
+    assert mask[1, 0, 0]
+    assert not mask[2, 0, 0]
+
+    mask = geom.energy_mask(emin=3 * u.TeV, emax=30 * u.TeV)
+    assert not mask[0, 0, 0]
+    assert not mask[-1, 0, 0]
+    assert mask[1, 0, 0]
 
 
 @pytest.mark.parametrize(

@@ -271,6 +271,12 @@ class TestSkyDiffuseCube:
         assert val.shape == (1,)
         assert_allclose(val.value, 1.396424e-12, rtol=1e-5)
 
+    @staticmethod
+    def test_evaluation_radius(diffuse_model):
+        radius = diffuse_model.evaluation_radius
+        assert radius.unit == "deg"
+        assert_allclose(radius.value, 4)
+
 
 class TestSkyDiffuseCubeMapEvaluator:
     @staticmethod

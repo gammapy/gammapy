@@ -120,7 +120,7 @@ def test_parameters_getitem(pars):
     with pytest.raises(IndexError):
         pars["lamb"]
 
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError):
         pars[Parameter("bam!", 99)]
 
 

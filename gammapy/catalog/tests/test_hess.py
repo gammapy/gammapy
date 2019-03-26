@@ -184,7 +184,7 @@ class TestSourceCatalogObjectHGPS:
         model = cat["HESS J1119-614"].sky_model()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 7.959899015960725e-13)
-        assert_allclose(p["lon_0"].value, 292.1280822753906)
+        assert_allclose(p["lon_0"].value, -67.871918)
         assert_allclose(p["lat_0"].value, -0.5332353711128235)
         assert_allclose(p["sigma"].value, 0.09785966575145721)
 
@@ -241,7 +241,7 @@ class TestSourceCatalogObjectHGPS:
         model = cat["Vela Junior"].sky_model()
         p = model.parameters
         assert_allclose(p["amplitude"].value, 3.2163001428830995e-11)
-        assert_allclose(p["lon_0"].value, 266.2873840332031)
+        assert_allclose(p["lon_0"].value, -93.712616)
         assert_allclose(p["lat_0"].value, -1.243260383605957)
         assert_allclose(p["radius"].value, 0.95)
         assert_allclose(p["width"].value, 0.05)

@@ -12,7 +12,7 @@ import astropy.units as u
 from regions import SkyRegion
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
-from .geom import get_shape, make_axes, find_and_read_bands
+from .geom import get_shape, make_axes, find_and_read_bands, axes_pix_to_coord
 
 __all__ = ["WcsGeom"]
 
@@ -164,7 +164,7 @@ class WcsGeom(MapGeom):
     """
 
     _slice_spatial_axes = slice(0, 2)
-    _slice_non_spatial_axes = slice(2, -1)
+    _slice_non_spatial_axes = slice(2, None)
     is_hpx = False
 
     def __init__(self, wcs, npix, cdelt=None, crpix=None, axes=None, conv="gadf"):
@@ -179,9 +179,6 @@ class WcsGeom(MapGeom):
 
         # Shape to use for WCS transformations
         wcs_shape = max([get_shape(t) for t in [npix, cdelt]])
-        if np.sum(wcs_shape) > 1 and wcs_shape != self.shape:
-            raise ValueError()
-
         self._npix = cast_to_shape(npix, wcs_shape, int)
         self._cdelt = cast_to_shape(cdelt, wcs_shape, float)
 
@@ -194,9 +191,24 @@ class WcsGeom(MapGeom):
     @property
     def data_shape(self):
         """Shape of the Numpy data array matching this geometry."""
+        return self._shape[::-1]
+
+    @property
+    def _shape(self):
         npix_shape = [np.max(self.npix[0]), np.max(self.npix[1])]
         ax_shape = [ax.nbin for ax in self.axes]
-        return tuple(npix_shape + ax_shape)[::-1]
+        return tuple(npix_shape + ax_shape)
+
+    @property
+    def _shape_edges(self):
+        npix_shape = [np.max(self.npix[0]) + 1, np.max(self.npix[1]) + 1]
+        ax_shape = [ax.nbin for ax in self.axes]
+        return tuple(npix_shape + ax_shape)
+
+    @property
+    def shape_axes(self):
+        """Shape of non-spatial axes."""
+        return self._shape[self._slice_non_spatial_axes]
 
     @property
     def wcs(self):
@@ -237,7 +249,9 @@ class WcsGeom(MapGeom):
     @property
     def width(self):
         """Tuple with image dimension in deg in longitude and latitude."""
-        return (self._cdelt[0] * self._npix[0], self._cdelt[1] * self._npix[1])
+        dlon = self._cdelt[0] * self._npix[0]
+        dlat = self._cdelt[1] * self._npix[1]
+        return (dlon, dlat) * u.deg
 
     @property
     def pixel_area(self):
@@ -259,11 +273,6 @@ class WcsGeom(MapGeom):
     def axes(self):
         """List of non-spatial axes."""
         return self._axes
-
-    @property
-    def shape(self):
-        """Shape of non-spatial axes."""
-        return tuple([ax.nbin for ax in self._axes])
 
     @property
     def ndim(self):
@@ -534,6 +543,26 @@ class WcsGeom(MapGeom):
             pix = tuple([p[np.isfinite(p)] for p in pix])
         return pix_tuple_to_idx(pix)
 
+    def _get_pix_all(self, idx=None, mode="center"):
+        """Get idx coordinate array without footprint of the projection applied"""
+        if mode == "edges":
+            shape = self._shape_edges
+        else:
+            shape = self._shape
+
+        if idx is None:
+            pix = [np.arange(n, dtype=float) for n in shape]
+        else:
+            pix = [np.arange(n, dtype=float) for n in shape[self._slice_spatial_axes]]
+            pix += [float(t) for t in idx]
+
+        if mode == "edges":
+            for pix_array in pix[self._slice_spatial_axes]:
+                pix_array -= 0.5
+
+        pix = np.meshgrid(*pix[::-1], indexing="ij")[::-1]
+        return pix
+
     def get_pix(self, idx=None, mode="center"):
         """Get map pix coordinates from the geometry.
 
@@ -547,65 +576,7 @@ class WcsGeom(MapGeom):
         coord : tuple
             Map pix coordinate tuple.
         """
-        # FIXME: Figure out if there is some way to employ open/sparse
-        # vectors
-
-        # FIXME: It would be more efficient to split this into one
-        # method that computes indices and a method that casts
-        # those to floats and adds the appropriate offset
-
-        npix = copy.deepcopy(self.npix)
-
-        if mode == "edges":
-            for pix_num in npix[:2]:
-                pix_num += 1
-
-        if self.axes and not self.is_regular:
-
-            shape = (np.max(self._npix[0]), np.max(self._npix[1]))
-
-            if idx is None:
-                shape = shape + self.shape
-            else:
-                shape = shape + (1,) * len(self.axes)
-
-            pix2 = [
-                np.full(shape, np.nan, dtype=float) for i in range(2 + len(self.axes))
-            ]
-            for idx_img in np.ndindex(self.shape):
-
-                if idx is not None and idx_img != idx:
-                    continue
-
-                npix0, npix1 = npix[0][idx_img], npix[1][idx_img]
-                pix_img = np.meshgrid(
-                    np.arange(npix0), np.arange(npix1), indexing="ij", sparse=False
-                )
-
-                if idx is None:
-                    s_img = (slice(0, npix0), slice(0, npix1)) + idx_img
-                else:
-                    s_img = (slice(0, npix0), slice(0, npix1)) + (0,) * len(self.axes)
-
-                pix2[0][s_img] = pix_img[0]
-                pix2[1][s_img] = pix_img[1]
-                for j in range(len(self.axes)):
-                    pix2[j + 2][s_img] = idx_img[j]
-            pix = [t.T for t in pix2]
-        else:
-            pix = [np.arange(npix[0], dtype=float), np.arange(npix[1], dtype=float)]
-
-            if idx is None:
-                pix += [np.arange(ax.nbin, dtype=float) for ax in self.axes]
-            else:
-                pix += [float(t) for t in idx]
-
-            pix = np.meshgrid(*pix[::-1], indexing="ij", sparse=False)[::-1]
-
-        if mode == "edges":
-            for pix_array in pix[self._slice_spatial_axes]:
-                pix_array -= 0.5
-
+        pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         for i in range(len(pix)):
@@ -625,11 +596,12 @@ class WcsGeom(MapGeom):
         coord : `~MapCoord`
             Map coordinate object.
         """
-        pix = self.get_pix(idx=idx, mode=mode)
+        pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
 
         if flat:
-            coords = tuple([c[np.isfinite(c)] for c in coords])
+            is_finite = np.isfinite(coords[0])
+            coords = tuple([c[is_finite] for c in coords])
 
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
         cdict = OrderedDict(zip(axes_names, coords))
@@ -638,13 +610,13 @@ class WcsGeom(MapGeom):
 
     def coord_to_pix(self, coords):
         coords = MapCoord.create(coords, coordsys=self.coordsys)
+
         if coords.size == 0:
             return tuple([np.array([]) for i in range(coords.ndim)])
 
         c = self.coord_to_tuple(coords)
         # Variable Bin Size
         if not self.is_regular:
-            bins = [ax.coord_to_pix(c[i + 2]) for i, ax in enumerate(self.axes)]
             idxs = tuple(
                 [
                     np.clip(ax.coord_to_idx(c[i + 2]), 0, ax.nbin - 1)
@@ -654,28 +626,26 @@ class WcsGeom(MapGeom):
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
             pix = world2pix(self.wcs, cdelt, crpix, (coords.lon, coords.lat))
-            pix = list(pix) + bins
+            pix = list(pix)
         else:
             pix = self._wcs.wcs_world2pix(coords.lon, coords.lat, 0)
-            for i, ax in enumerate(self.axes):
-                pix += [ax.coord_to_pix(c[i + 2])]
+
+        for coord, ax in zip(c[self._slice_non_spatial_axes], self.axes):
+            pix += [ax.coord_to_pix(coord)]
 
         return tuple(pix)
 
     def pix_to_coord(self, pix):
         # Variable Bin Size
         if not self.is_regular:
-            idxs = pix_tuple_to_idx([pix[2 + i] for i, ax in enumerate(self.axes)])
-            vals = [ax.pix_to_coord(pix[2 + i]) for i, ax in enumerate(self.axes)]
+            idxs = pix_tuple_to_idx(pix[self._slice_non_spatial_axes])
             crpix = [t[idxs] for t in self._crpix]
             cdelt = [t[idxs] for t in self._cdelt]
-            coords = pix2world(self.wcs, cdelt, crpix, pix[:2])
-            coords += vals
+            coords = pix2world(self.wcs, cdelt, crpix, pix[self._slice_spatial_axes])
         else:
             coords = self._wcs.wcs_pix2world(pix[0], pix[1], 0)
-            for i, ax in enumerate(self.axes):
-                coords += [ax.pix_to_coord(pix[i + 2])]
 
+        coords += axes_pix_to_coord(self.axes, pix[self._slice_non_spatial_axes])
         return tuple(coords)
 
     def pix_to_idx(self, pix, clip=False):
@@ -683,7 +653,7 @@ class WcsGeom(MapGeom):
         # pix_tuple_to_idx seems to always make a copy!?
         idxs = pix_tuple_to_idx(pix)
         if not self.is_regular:
-            ibin = [pix[2 + i] for i, ax in enumerate(self.axes)]
+            ibin = pix[self._slice_non_spatial_axes]
             ibin = pix_tuple_to_idx(ibin)
             for i, ax in enumerate(self.axes):
                 np.clip(ibin[i], 0, ax.nbin - 1, out=ibin[i])
@@ -941,134 +911,6 @@ class WcsGeom(MapGeom):
         return not self.__eq__(other)
 
 
-def create_wcs(
-        skydir, coordsys="CEL", projection="AIT", cdelt=1.0, crpix=1.0, axes=None
-):
-    """Create a WCS object.
-
-    Parameters
-    ----------
-    skydir : `~astropy.coordinates.SkyCoord`
-        Sky coordinate of the WCS reference point
-    coordsys : str
-        TODO
-    projection : str
-        TODO
-    cdelt : float
-        TODO
-    crpix : float or (float,float)
-        In the first case the same value is used for x and y axes
-    axes : list
-        List of non-spatial axes
-    """
-    naxis = 2
-    if axes is not None:
-        naxis += len(axes)
-
-    w = WCS(naxis=naxis)
-
-    if coordsys == "CEL":
-        w.wcs.ctype[0] = "RA---{}".format(projection)
-        w.wcs.ctype[1] = "DEC--{}".format(projection)
-        w.wcs.crval[0] = skydir.icrs.ra.deg
-        w.wcs.crval[1] = skydir.icrs.dec.deg
-    elif coordsys == "GAL":
-        w.wcs.ctype[0] = "GLON-{}".format(projection)
-        w.wcs.ctype[1] = "GLAT-{}".format(projection)
-        w.wcs.crval[0] = skydir.galactic.l.deg
-        w.wcs.crval[1] = skydir.galactic.b.deg
-    else:
-        raise ValueError("Invalid coordsys: {!r}".format(coordsys))
-
-    if isinstance(crpix, tuple):
-        w.wcs.crpix[0] = crpix[0]
-        w.wcs.crpix[1] = crpix[1]
-    else:
-        w.wcs.crpix[0] = crpix
-        w.wcs.crpix[1] = crpix
-
-    w.wcs.cdelt[0] = -cdelt
-    w.wcs.cdelt[1] = cdelt
-
-    w = WCS(w.to_header())
-    # FIXME: Figure out what to do here
-    # if naxis == 3 and energies is not None:
-    #    w.wcs.crpix[2] = 1
-    #    w.wcs.crval[2] = energies[0]
-    #    w.wcs.cdelt[2] = energies[1] - energies[0]
-    #    w.wcs.ctype[2] = 'Energy'
-    #    w.wcs.cunit[2] = 'MeV'
-
-    return w
-
-
-def wcs_add_energy_axis(wcs, energies):
-    """Copy a WCS object, and add on the energy axis.
-
-    Parameters
-    ----------
-    wcs : `~astropy.wcs.WCS`
-        WCS
-    energies : array-like
-        Array of energies
-    """
-    if wcs.naxis != 2:
-        raise ValueError("WCS naxis must be 2. Got: {}".format(wcs.naxis))
-
-    w = WCS(naxis=3)
-    w.wcs.crpix[0] = wcs.wcs.crpix[0]
-    w.wcs.crpix[1] = wcs.wcs.crpix[1]
-    w.wcs.ctype[0] = wcs.wcs.ctype[0]
-    w.wcs.ctype[1] = wcs.wcs.ctype[1]
-    w.wcs.crval[0] = wcs.wcs.crval[0]
-    w.wcs.crval[1] = wcs.wcs.crval[1]
-    w.wcs.cdelt[0] = wcs.wcs.cdelt[0]
-    w.wcs.cdelt[1] = wcs.wcs.cdelt[1]
-
-    w = WCS(w.to_header())
-    w.wcs.crpix[2] = 1
-    w.wcs.crval[2] = energies[0]
-    w.wcs.cdelt[2] = energies[1] - energies[0]
-    w.wcs.ctype[2] = "Energy"
-
-    return w
-
-
-def offset_to_sky(skydir, offset_lon, offset_lat, coordsys="CEL", projection="AIT"):
-    """Convert a cartesian offset (X,Y) in the given projection into
-    a pair of spherical coordinates."""
-    offset_lon = np.array(offset_lon, ndmin=1)
-    offset_lat = np.array(offset_lat, ndmin=1)
-
-    w = create_wcs(skydir, coordsys, projection)
-    pixcrd = np.vstack((offset_lon, offset_lat)).T
-
-    return w.wcs_pix2world(pixcrd, 0)
-
-
-def sky_to_offset(skydir, lon, lat, coordsys="CEL", projection="AIT"):
-    """Convert sky coordinates to a projected offset.
-
-    This function is the inverse of offset_to_sky.
-    """
-    w = create_wcs(skydir, coordsys, projection)
-    skycrd = np.vstack((lon, lat)).T
-
-    if len(skycrd) == 0:
-        return skycrd
-
-    return w.wcs_world2pix(skycrd, 0)
-
-
-def offset_to_skydir(skydir, offset_lon, offset_lat, coordsys="CEL", projection="AIT"):
-    """Convert a cartesian offset (X,Y) in the given projection into
-    a SkyCoord."""
-    offset_lon = np.array(offset_lon, ndmin=1)
-    offset_lat = np.array(offset_lat, ndmin=1)
-
-    w = create_wcs(skydir, coordsys, projection)
-    return SkyCoord.from_pixel(offset_lon, offset_lat, w, 0)
-
 
 def pix2world(wcs, cdelt, crpix, pix):
     """Perform pixel to world coordinate transformation for a WCS
@@ -1126,20 +968,3 @@ def get_coordys(wcs):
     else:
         raise ValueError("Unrecognized WCS coordinate system.")
 
-
-def wcs_to_axes(w, npix):
-    """Generate a sequence of bin edge vectors corresponding to the
-    axes of a WCS object."""
-    npix = npix[::-1]
-
-    cdelt0 = np.abs(w.wcs.cdelt[0])
-    x = np.linspace(-(npix[0]) / 2.0, (npix[0]) / 2.0, npix[0] + 1) * cdelt0
-
-    cdelt1 = np.abs(w.wcs.cdelt[1])
-    y = np.linspace(-(npix[1]) / 2.0, (npix[1]) / 2.0, npix[1] + 1) * cdelt1
-
-    cdelt2 = np.log10((w.wcs.cdelt[2] + w.wcs.crval[2]) / w.wcs.crval[2])
-    z = np.linspace(0, npix[2], npix[2] + 1) * cdelt2
-    z += np.log10(w.wcs.crval[2])
-
-    return x, y, z

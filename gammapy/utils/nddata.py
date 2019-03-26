@@ -214,8 +214,13 @@ class DataAxis:
         # Need this for subclassing (see BinnedDataAxis)
         if nodes is not None:
             self._data = Quantity(nodes)
+            if (self._data < 0).any() and interpolation_mode == "log":
+                raise ValueError("Interpolation scaling 'log' only support for positive node values.")
+
+
         self.name = name
         self._interpolation_mode = interpolation_mode
+
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -339,6 +344,10 @@ class BinnedDataAxis(DataAxis):
     def __init__(self, lo, hi, **kwargs):
         self.lo = Quantity(lo)
         self.hi = Quantity(hi)
+
+        if ((self.lo < 0).any() or (self.hi < 0).any()) and kwargs.get("interpolation_mode") == "log":
+            raise ValueError("Interpolation scaling 'log' only support for positive node values.")
+
         super().__init__(None, **kwargs)
 
     @classmethod

@@ -15,7 +15,6 @@ from ...utils.fitting import Parameters, Fit
 from ..models import PowerLaw, SpectralModel
 from ..flux_point import FluxPoints, FluxPointsDataset
 
-
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
     "diff_flux_points.fits",
@@ -25,8 +24,6 @@ FLUX_POINTS_FILES = [
 
 
 class LWTestModel(SpectralModel):
-    parameters = Parameters([])
-
     @staticmethod
     def evaluate(x):
         return 1e4 * np.exp(-6 * x)
@@ -39,8 +36,6 @@ class LWTestModel(SpectralModel):
 
 
 class XSqrTestModel(SpectralModel):
-    parameters = Parameters([])
-
     @staticmethod
     def evaluate(x):
         return x ** 2
@@ -53,8 +48,6 @@ class XSqrTestModel(SpectralModel):
 
 
 class ExpTestModel(SpectralModel):
-    parameters = Parameters([])
-
     @staticmethod
     def evaluate(x):
         return np.exp(x * u.Unit("1 / TeV"))
@@ -237,7 +230,7 @@ def test_compute_flux_points_dnde_fermi():
         assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def fit():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
@@ -275,8 +268,8 @@ class TestFluxPointFit:
         reference = result.parameters["reference"]
         assert_allclose(reference.value, 1, rtol=1e-8)
 
-    @requires_dependency("iminuit")
     @staticmethod
+    @requires_dependency("iminuit")
     def test_likelihood_profile(fit):
         optimize_opts = {"backend": "minuit"}
 

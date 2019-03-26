@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
 import numpy as np
 import astropy.units as u
-from ....maps import Map
+from ....maps import Map, WcsGeom
 from ....utils.testing import requires_data
 from ..core import (
     SkyPointSource,
     SkyGaussian,
     SkyDisk,
+    SkyEllipse,
     SkyShell,
     SkyDiffuseConstant,
     SkyDiffuseMap,
@@ -21,7 +23,12 @@ def test_sky_point_source():
     assert val.unit == "deg-2"
     assert_allclose(val.sum().value, 1)
     radius = model.evaluation_radius
-    assert_allclose(radius, 4)
+    assert radius.unit == "deg"
+    assert_allclose(radius.value, 0)
+    assert model.frame == "galactic"
+
+    assert_allclose(model.position.l.deg, 2.5)
+    assert_allclose(model.position.b.deg, 2.5)
 
 
 def test_sky_gaussian():
@@ -35,7 +42,7 @@ def test_sky_gaussian():
     assert_allclose(ratio, np.exp(0.5))
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 7 * sigma.value)
+    assert_allclose(radius.value, 5 * sigma.value)
 
 
 def test_sky_disk():
@@ -50,6 +57,55 @@ def test_sky_disk():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, r_0.value)
+
+
+def test_sky_ellipse():
+    pytest.importorskip("astropy", minversion="3.1.1")
+    # test the normalization for an elongated ellipse near the Galactic Plane
+    m_geom_1 = WcsGeom.create(
+        binsz=0.015, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
+    )
+    coords = m_geom_1.get_coord()
+    lon = coords.lon * u.deg
+    lat = coords.lat * u.deg
+    semi_major = 10 * u.deg
+    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, semi_major, 0.4, 30 * u.deg)
+    vals_1 = model_1(lon, lat)
+    assert vals_1.unit == "sr-1"
+    mymap_1 = Map.from_geom(m_geom_1, data=vals_1.value)
+    assert_allclose(
+        np.sum(mymap_1.quantity * u.sr ** -1 * m_geom_1.solid_angle()), 1, rtol=1.0e-3
+    )
+
+    radius = model_1.evaluation_radius
+    assert radius.unit == "deg"
+    assert_allclose(radius.value, semi_major.value)
+
+    # test the normalization for a disk (ellipse with e=0) at the Galactic Pole,
+    # both analytically and comparing with the SkyDisk model
+    m_geom_2 = WcsGeom.create(
+        binsz=0.1, width=(6, 6), skydir=(0, 90), coordsys="GAL", proj="AIT"
+    )
+    coords = m_geom_2.get_coord()
+    lon = coords.lon * u.deg
+    lat = coords.lat * u.deg
+
+    semi_major = 5 * u.deg
+    model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, semi_major, 0.0, 0.0 * u.deg)
+    vals_2 = model_2(lon, lat)
+    mymap_2 = Map.from_geom(m_geom_2, data=vals_2.value)
+
+    disk = SkyDisk(lon_0="0 deg", lat_0="90 deg", r_0="5 deg")
+    vals_disk = disk(lon, lat)
+    mymap_disk = Map.from_geom(m_geom_2, data=vals_disk.value)
+
+    solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
+    assert_allclose(np.max(vals_2).value * solid_angle, 1)
+
+    assert_allclose(
+        np.sum(mymap_2.quantity * u.sr ** -1 * m_geom_2.solid_angle()),
+        np.sum(mymap_disk.quantity * u.sr ** -1 * m_geom_2.solid_angle()),
+    )
 
 
 def test_sky_shell():
@@ -90,7 +146,7 @@ def test_sky_diffuse_map():
     assert_allclose(val.value, desired)
     radius = model.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 1.28, rtol=1.0e-2)
+    assert_allclose(radius.value, 0.64, rtol=1.0e-2)
 
 
 @requires_data("gammapy-data")
