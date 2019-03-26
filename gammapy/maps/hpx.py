@@ -1804,13 +1804,15 @@ class HpxToWcsMapping:
     @property
     def lmap(self):
         """An array(nx,ny) giving the mapping of the local HEALPIX pixel
-        indices for each WCS pixel"""
+        indices for each WCS pixel.
+        """
         return self._lmap
 
     @property
     def valid(self):
-        """An array(nx,ny) of bools giving if each WCS pixel in inside the
-        HEALPIX region"""
+        """Array(nx,ny) of bools giving if each WCS pixel in inside the
+        HEALPIX region.
+        """
         return self._valid
 
     @classmethod

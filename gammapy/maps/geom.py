@@ -271,8 +271,7 @@ def bin_to_val(edges, bins):
 
 
 def coord_to_pix(edges, coord, interp="lin"):
-    """Convert axis coordinates to pixel coordinates using the chosen
-    interpolation scheme."""
+    """Convert axis to pixel coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
@@ -283,8 +282,7 @@ def coord_to_pix(edges, coord, interp="lin"):
 
 
 def pix_to_coord(edges, pix, interp="lin"):
-    """Convert pixel coordinates to grid coordinates using the chosen
-    interpolation scheme."""
+    """Convert pixel to grid coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(

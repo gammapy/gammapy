@@ -20,7 +20,8 @@ class GeneralRandom:
 
     Note: Should it be required the cdf could be deleted
     after computing to inversecdf to free memory since it is
-    not required for random number generation."""
+    not required for random number generation.
+    """
 
     def __init__(self, pdf, min_range, max_range, ninversecdf=None, ran_res=1e3):
         """Initialize the lookup table
@@ -108,7 +109,8 @@ class GeneralRandom:
         """Plot the pdf, cdf and inversecdf
         and a random distribution of sample size N.
 
-        Useful for illustrating the interpolation and debugging."""
+        Useful for illustrating the interpolation and debugging.
+        """
         import matplotlib.pyplot as plt
 
         # Plot the cdf

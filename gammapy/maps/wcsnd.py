@@ -336,8 +336,7 @@ class WcsNDMap(WcsMap):
         return self._init_copy(geom=geom, data=data)
 
     def _pad_coadd(self, geom, pad_width, mode, cval, order):
-        """Pad a map manually by coadding the original map with the new
-        map."""
+        """Pad a map manually by coadding the original map with the new map."""
         idx_in = self.geom.get_idx(flat=True)
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
         idx_out = geom.get_idx(flat=True)[::-1]

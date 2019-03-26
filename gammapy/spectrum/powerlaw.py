@@ -199,8 +199,7 @@ def power_law_f_from_points(e1, e2, f1, f2, e):
 def power_law_f_with_err(
     I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0, e=1, e1=1, e2=E_INF
 ):
-    """Wrapper for f so the user doesn't have to know about
-    the uncertainties module"""
+    """Evaluate power-law ``dnde`` and propagate errors."""
     from uncertainties import unumpy
 
     I = unumpy.uarray(I_val, I_err)
@@ -214,8 +213,7 @@ def power_law_f_with_err(
 def power_law_I_with_err(
     f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0, e=1, e1=1, e2=E_INF
 ):
-    """Wrapper for f so the user doesn't have to know about
-    the uncertainties module"""
+    """Evaluate power-law flux and propagate errors."""
     from uncertainties import unumpy
 
     f = unumpy.uarray(f_val, f_err)

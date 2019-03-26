@@ -93,8 +93,7 @@ class FixedPointingInfo:
 
     @lazyproperty
     def radec(self):
-        """RA / DEC pointing postion from table
-        (`~astropy.coordinates.SkyCoord`)"""
+        """RA/DEC pointing position from table (`~astropy.coordinates.SkyCoord`)."""
         ra = self.meta["RA_PNT"]
         dec = self.meta["DEC_PNT"]
         return SkyCoord(ra, dec, unit="deg", frame="icrs")
@@ -106,8 +105,7 @@ class FixedPointingInfo:
 
     @lazyproperty
     def altaz(self):
-        """ALT / AZ pointing position computed from RA / DEC
-        (`~astropy.coordinates.SkyCoord`)"""
+        """ALT/AZ pointing position computed from RA/DEC (`~astropy.coordinates.SkyCoord`)."""
         return self.radec.transform_to(self.altaz_frame)
 
 

@@ -217,8 +217,10 @@ class WcsGeom(MapGeom):
 
     @property
     def coordsys(self):
-        """Coordinate system of the projection, either Galactic ('GAL') or
-        Equatorial ('CEL')."""
+        """Coordinate system of the projection.
+
+        Galactic ('GAL') or Equatorial ('CEL').
+        """
         return self._coordsys
 
     @property
@@ -236,10 +238,10 @@ class WcsGeom(MapGeom):
 
     @property
     def is_regular(self):
-        """Flag identifying whether this geometry is regular in non-spatial
-        dimensions.  False for multi-resolution or irregular
-        geometries.  If true all image planes have the same pixel
-        geometry.
+        """Is this geometry is regular in non-spatial dimensions (bool)?
+
+        - False for multi-resolution or irregular geometries.
+        - True if all image planes have the same pixel geometry.
         """
         if self.npix[0].size > 1:
             return False
