@@ -73,10 +73,10 @@ class SigmaVEstimator:
     To estimate the different values of :math:`\sigma\nu`, a random poisson realization for a given
     annihilation simulated dataset is fitted to a list of `~gammapy.astro.darkmatter.DMAnnihilation`
     models. These are created within the range of the given lists of annihilation channels and particle
-    masses. For each fit, the value of the scale parameter that makes :math:`\Delta TS > TS\_DIFF` is
-    multiplied by the thermal relic cross section, and subsequently taken as the estimated value of
-    :math:`\sigma\nu. TS\_DIFF` value is set by default to 2.71 and may be modified as an attribute
-    of this `SigmaVEstimator` class.
+    masses. For each fit, the value of the scale parameter (in the range of the physical region >=0)
+    that makes the likelihood ratio :math:`-2\lambda_P = RATIO` is multiplied by the thermal relic cross
+    section, and subsequently taken as the estimated value of :math:`\sigma\nu`. The value of :math:`RATIO`
+    is set by default to 2.71 and may be modified as an attribute of this `SigmaVEstimator` class.
 
     Parameters
     ----------
@@ -135,11 +135,11 @@ class SigmaVEstimator:
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
         estimator = SigmaVEstimator(sim_dataset, masses, channels, jfact=JFAC)
-        result = estimator.run(likelihood_profile_opts=dict(bounds=3, nvalues=25))
+        result = estimator.run(likelihood_profile_opts=dict(bounds=(0, 500), nvalues=100))
     """
 
-    TS_DIFF = 2.71
-    """Value that solves the equation :math:`\Delta TS > TS\_DIFF` - set to 2.71 by default."""
+    RATIO = 2.71
+    """Value for the likelihood ratio criteria - set to 2.71 by default."""
 
     def __init__(
         self,
@@ -166,7 +166,7 @@ class SigmaVEstimator:
         self.xsection = xsection
 
     def run(
-        self, likelihood_profile_opts=None, optimize_opts=None, covariance_opts=None
+        self, likelihood_profile_opts=dict(bounds=5, nvalues=50), optimize_opts=None, covariance_opts=None
     ):
         """Run the SigmaVEstimator for all channels and masses.
 
@@ -189,15 +189,12 @@ class SigmaVEstimator:
         counts_map = WcsNDMap(
             self.dataset.counts.geom, np.random.poisson(self.dataset.npred().data)
         )
-
-        if likelihood_profile_opts is None:
-            likelihood_profile_opts = {"bounds": 5, "nvalues": 50}
         likelihood_profile_opts["parameter"] = "scale"
 
         result = {}
         sigma_unit = ""
         for ch in self.channels:
-            tablerows = []
+            table_rows = []
             log.info("Channel: {}".format(ch))
             for mass in self.masses:
                 row = {}
@@ -233,17 +230,26 @@ class SigmaVEstimator:
                 try:
                     fit = Fit(dataset_loop)
                     fit_result = fit.run(optimize_opts, covariance_opts)
+                    all_profile = fit.likelihood_profile(**likelihood_profile_opts)
+                    scale_best = fit_result.parameters["scale"].value
                     likemin = fit_result.total_stat
-                    profile = fit.likelihood_profile(**likelihood_profile_opts)
-                    xvals = profile["values"]
-                    yvals = profile["likelihood"] - likemin - self.TS_DIFF
-                    scale_min = fit_result.parameters["scale"].value
-                    scale_max = max(xvals)
+                    profile = all_profile
+
+                    # consider scale value in the physical region > 0
+                    assert np.max(profile["values"]) > 0, "Values for scale found outside the physical region"
+                    if scale_best < 0:
+                        scale_best = 0
+                        likemin = interp1d(all_profile["values"], all_profile["likelihood"], kind="quadratic")(0)
+                        idx = np.min(np.argwhere(all_profile["values"] > 0))
+                        filtered_x_values = all_profile["values"][all_profile["values"] > 0]
+                        filtered_y_values = all_profile["likelihood"][idx:]
+                        profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
+                        profile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
 
                     scale_found = brentq(
-                        interp1d(xvals, yvals, kind="quadratic"),
-                        scale_min,
-                        scale_max,
+                        interp1d(profile["values"], profile["likelihood"] - likemin - self.RATIO, kind="quadratic"),
+                        scale_best,
+                        np.max(profile["values"]),
                         maxiter=100,
                         rtol=1e-5,
                     )
@@ -251,8 +257,8 @@ class SigmaVEstimator:
 
                 except Exception as ex:
                     sigma_v = None
-                    scale_min = None
-                    profile = None
+                    scale_best = None
+                    all_profile = None
                     likemin = None
                     log.error(ex)
 
@@ -262,13 +268,13 @@ class SigmaVEstimator:
                     sigma_unit = sigma_v.unit
                 else:
                     row["sigma_v"] = sigma_v
-                row["scale"] = scale_min
-                row["likeprofile"] = profile
+                row["scale"] = scale_best
+                row["likeprofile"] = all_profile
                 row["likemin"] = likemin
-                tablerows.append(row)
+                table_rows.append(row)
                 log.info("Sigma v: {}".format(sigma_v))
 
-            table = table_from_row_data(rows=tablerows)
+            table = table_from_row_data(rows=table_rows)
             table["sigma_v"].unit = sigma_unit
             result[ch] = table
 
