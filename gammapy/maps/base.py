@@ -543,7 +543,6 @@ class Map(metaclass=MapMeta):
         -------
         map : `Map`
             Upsampled map.
-
         """
         pass
 
@@ -580,9 +579,17 @@ class Map(metaclass=MapMeta):
             for non-spatial dimensions of the map. Dict should specify the axis
             names of the non-spatial axes such as {'axes0': x_0, ..., 'axesn': x_n}.
 
+        Returns
+        -------
+        map_out : `Map`
+            Map with spatial dimensions only.
+
+        See Also
+        --------
+        get_image_by_idx, get_image_by_pix
+
         Examples
         --------
-
         ::
 
             import numpy as np
@@ -619,15 +626,6 @@ class Map(metaclass=MapMeta):
 
             # Get image by coord dict with quantities
             image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
-
-        See Also
-        --------
-        get_image_by_idx, get_image_by_pix
-
-        Returns
-        -------
-        map_out : `Map`
-            Map with spatial dimensions only.
         """
         if isinstance(coords, tuple):
             axes_names = [_.name for _ in self.geom.axes]

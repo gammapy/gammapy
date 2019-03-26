@@ -218,7 +218,6 @@ class SmartHDUList:
 
     Examples
     --------
-
     Opening a SmartHDUList calls `astropy.io.fits.open` to get a `~astropy.io.fits.HDUList`
     object, and then stores it away in the ``hdu_list`` attribute:
 

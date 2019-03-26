@@ -46,7 +46,6 @@ class SkyModels(SkyModelBase):
 
     Examples
     --------
-
     Read from an XML file::
 
         from gammapy.cube import SkyModels

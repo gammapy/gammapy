@@ -413,7 +413,6 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
 
     Notes
     -----
-
     The 0th moment (total flux) is given by:
 
     .. math::

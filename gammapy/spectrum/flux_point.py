@@ -258,7 +258,6 @@ class FluxPoints:
 
         Examples
         --------
-
         >>> from gammapy.spectrum import FluxPoints
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
@@ -1047,7 +1046,6 @@ class FluxPointsDataset:
 
     Examples
     --------
-
     Load flux points from file and fit with a power-law model::
 
         from astropy import units as u
