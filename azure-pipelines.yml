@@ -85,19 +85,19 @@ jobs:
   - script: |
       source activate gammapy-dev
       make flake8
-      exit 1  # allow fail
+      exit 0  # allow fail
     displayName: 'Run flake8'
 
   - script: |
       source activate gammapy-dev
       make pylint
-      exit 1  # allow fail
+      exit 0  # allow fail
     displayName: 'Run pylint'
 
   - script: |
       source activate gammapy-dev
       make pydocstyle
-      exit 1  # allow fail
+      exit 0  # allow fail
     displayName: 'Run pydocstyle'
 
 
