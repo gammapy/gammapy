@@ -7,7 +7,6 @@ from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
-from ..utils.fitting import Fit
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux

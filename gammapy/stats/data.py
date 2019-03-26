@@ -86,6 +86,8 @@ def make_stats(
 
     Returns
     -------
+    stats : `Stats`
+        Statistics
     """
     random_state = get_random_state(random_state)
 

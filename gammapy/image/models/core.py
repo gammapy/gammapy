@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
-from ...utils.fitting import Parameter, Parameters, Model
+from ...utils.fitting import Parameter, Model
 from ...maps import Map
 from scipy.integrate import quad
 
@@ -348,6 +348,7 @@ class SkyEllipse(SkySpatialModel):
         radius = self.parameters["semi_major"].quantity
         return radius
 
+    @staticmethod
     def compute_norm(semi_major, e):
         """Compute the normalization factor."""
         semi_minor = semi_major * np.sqrt(1 - e ** 2)

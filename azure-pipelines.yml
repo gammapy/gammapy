@@ -61,6 +61,45 @@ jobs:
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
 
+- job: 'Lint'
+
+  pool:
+    vmImage: 'Ubuntu 16.04'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      architecture: 'x64'
+
+  - bash: echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+    displayName: Add conda to PATH
+
+  - script: |
+      conda env create --file environment-dev.yml
+      source activate gammapy-dev
+      pip install -e .
+      gammapy info
+    displayName: 'Create gammapy-dev conda environment'
+
+  - script: |
+      source activate gammapy-dev
+      make flake8
+      exit 0  # allow fail
+    displayName: 'Run flake8'
+
+  - script: |
+      source activate gammapy-dev
+      make pylint
+      exit 0  # allow fail
+    displayName: 'Run pylint'
+
+  - script: |
+      source activate gammapy-dev
+      make pydocstyle
+      exit 0  # allow fail
+    displayName: 'Run pydocstyle'
+
 
 - job: 'DevDocs'
   pool:

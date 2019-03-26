@@ -82,9 +82,9 @@ class MapPanelPlotter:
         ax.set_ylim(*ylim_pix)
         return ax
 
-    def plot_panel(self, image, panel=1, panel_fov=None, **kwargs):
+    def plot_panel(self, map, panel=1, panel_fov=None, **kwargs):
         """
-        Plot sky image on one panel.
+        Plot sky map on one panel.
 
         Parameters
         ----------
@@ -96,27 +96,27 @@ class MapPanelPlotter:
         if panel_fov is None:
             panel_fov = panel
         spec = self.grid_spec[panel]
-        ax = self.figure.add_subplot(spec, projection=image.geom.wcs)
+        ax = self.figure.add_subplot(spec, projection=map.geom.wcs)
         try:
-            ax = image.plot(ax=ax, **kwargs)[1]
+            ax = map.plot(ax=ax, **kwargs)[1]
         except AttributeError:
-            ax = image.plot_rgb(ax=ax, **kwargs)
+            ax = map.plot_rgb(ax=ax, **kwargs)
         ax = self._set_ax_fov(ax, panel_fov)
         return ax
 
-    def plot(self, image, **kwargs):
+    def plot(self, map, **kwargs):
         """
-        Plot sky image on all panels.
+        Plot sky map on all panels.
 
         Parameters
         ----------
-       map : `~gammapy.maps.WcsNDMap`
+        map : `~gammapy.maps.WcsNDMap`
             Map to plot.
         """
         p = self.parameters
         axes = []
         for panel in range(p["npanels"]):
-            ax = self.plot_panel(image, panel=panel, **kwargs)
+            ax = self.plot_panel(map, panel=panel, **kwargs)
             axes.append(ax)
         return axes
 
