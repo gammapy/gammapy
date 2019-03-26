@@ -69,16 +69,16 @@ cython:
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
+black:
+	black $(PROJECT)/ examples/ docs/ \
+	--exclude="_astropy_init.py|version.py|extern/|docs/_static|docs/_build" \
+	--line-length 88
+
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
     --exclude=gammapy/extern,gammapy/conftest.py,gammapy/_astropy_init.py,__init__.py \
     --ignore=E501
-
-black:
-	black $(PROJECT)/ examples/ docs/ \
-	--exclude="_astropy_init.py|version.py|extern/|docs/_static|docs/_build" \
-	--line-length 88
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
@@ -86,13 +86,32 @@ pylint:
 	pylint -E $(PROJECT)/ \
 	--ignore=_astropy_init.py,gammapy/extern \
 	-d E0611,E1101,E1103 \
-	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})' -f colorized
+	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
 
+# TODO: fix and re-activate check for the following:
+# D103: Missing docstring in public function
+# D201: No blank lines allowed before function docstring (found 1)
+# D202: No blank lines allowed after function docstring (found 1)
+# D204: 1 blank line required after class docstring (found 0)
+# D205: 1 blank line required between summary line and description (found 0)
+# D207: Docstring is under-indented
+# D209: Multi-line docstring closing quotes should be on a separate line
+# D210: No whitespaces allowed surrounding docstring text
+# D300: Use """triple double quotes""" (found """"-quotes)
+# D301: Use r""" if any backslashes in a docstring
+# D400: First line should end with a period (not ')')
+# D401: First line should be in imperative mood; try rephrasing (found 'Function')
+# D403: First word of the first line should be properly capitalized ('Add', not 'add')
+# D404: First word of the docstring should not be `This`
+# D405: Section name should be properly capitalized ('See Also', not 'See also')
+# D409: Section underline should match the length of its name (Expected 7 dashes in section 'Returns', got 8)
+# D412: No blank lines allowed between a section header and its content ('Examples')
+# D414: Section has no content ('Returns')
 pydocstyle:
 	pydocstyle $(PROJECT) \
 	--convention=numpy \
-	--add-ignore=D100,D102,D104,D105,D200,D410 \
-	--add-ignore=D301 # TODO: re-activate and fix this one
+	--match-dir='^(?!extern).*' \
+	--add-ignore=D100,D102,D103,D104,D105,D200,D201,D202,D204,D205,D207,D209,D210,D300,D301,D400,D401,D403,D404,D405,D409,D410,D412,D414
 
 # TODO: add test and code quality checks for `examples`
 
