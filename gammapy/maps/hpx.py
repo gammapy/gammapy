@@ -735,7 +735,7 @@ class HpxGeom(MapGeom):
             return ravel_hpx_index(idx_local, self.npix)
 
     def __getitem__(self, idx_global):
-        """This implements the global-to-local index lookup.
+        """Implement global-to-local index lookup.
 
         For all-sky maps it just returns the input array.  For
         partial-sky maps it returns the local indices corresponding to
