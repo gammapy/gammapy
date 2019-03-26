@@ -348,6 +348,7 @@ class SkyEllipse(SkySpatialModel):
         radius = self.parameters["semi_major"].quantity
         return radius
 
+    @staticmethod
     def compute_norm(semi_major, e):
         """Compute the normalization factor."""
         semi_minor = semi_major * np.sqrt(1 - e ** 2)
