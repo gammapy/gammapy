@@ -84,7 +84,9 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
     # np.rint
     n_on_conv = np.rint(n_on.convolve(kernel.array).data)
     a_on_conv = a_on.convolve(kernel.array).data
-    alpha_conv = a_on_conv / a_off.data
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        alpha_conv = a_on_conv / a_off.data
 
     significance_conv = significance_on_off(
         n_on_conv, n_off.data, alpha_conv, method="lima"

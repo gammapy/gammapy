@@ -379,21 +379,6 @@ class MapMakerRing(MapMaker):
         self.background_estimator = background_estimator
 
     def _run(self, observations, sum_over_axis=False, spectrum=None, keepdims=False):
-        """
-        Parameters
-        --------------
-        observations : `~gammapy.data.Observations`
-            Observations to process
-
-        Returns
-        -----------
-        maps: dict of stacked maps.
-            on: The counts map
-            exposure_on: The on exposure map, which is just the
-                 template background map from the IRF
-            exposure_off: The off exposure map convolved with the ring
-            off: The off map
-        """
         selection = ["on", "exposure_on", "off", "exposure_off", "exposure"]
         maps = self._get_empty_maps(selection)
         if sum_over_axis:
@@ -441,12 +426,12 @@ class MapMakerRing(MapMaker):
         return maps
 
     def run_images(self, observations, spectrum=None, keepdims=False):
-        """Returns dictionaries of stacked2D maps.
-        The maps are summed over on the energy axis for a classical image analysis
+        """Run image making.
+
+        The maps are summed over on the energy axis for a classical image analysis.
 
         Parameters
-        ---------
-
+        ----------
         observations: `~gammapy.data.Observations`
             Observations to process
         spectrum : `~gammapy.spectrum.models.SpectralModel`, optional
@@ -457,31 +442,37 @@ class MapMakerRing(MapMaker):
             If False, the energy axes is removed
 
         Returns
-        -----------
-        maps: dict of stacked maps.
-            on: The counts map
-            exposure_on: The on exposure map, which is just the
-                 template background map from the IRF
-            exposure_off: The off exposure map convolved with the ring
-            off: The off map
+        -------
+        maps: dict of `~gammapy.maps.Map`
+            Dictionary containing the following maps:
+                * `"on"`: counts map
+                * `"exposure_on"`: on exposure map, which is just the
+                     template background map from the IRF
+                * `"exposure_off"`: off exposure map convolved with the ring
+                * `"off"`: off map
 
         """
-
         return self._run(
             observations, sum_over_axis=True, spectrum=spectrum, keepdims=keepdims
         )
 
     def run(self, observations):
-        """Returns a list of dictionaries of 3D maps
-        Significance and excess can be computed for each slice
+        """Run map making.
+
+        Parameters
+        ----------
+        observations: `~gammapy.data.Observations`
+            Observations to process
 
         Returns
-        -----------
-        maps: dict of stacked maps.
-            on: The counts map
-            exposure_on: The on exposure map, which is just the
-                 template background map from the IRF
-            exposure_off: The off exposure map convolved with the ring
-            off: The off map
+        -------
+        maps: dict of `~gammapy.maps.Map`
+            Dictionary containing the following maps:
+                * `"on"`: counts map
+                * `"exposure_on"`: on exposure map, which is just the
+                     template background map from the IRF
+                * `"exposure_off"`: off exposure map convolved with the ring
+                * `"off"`: off map
+
         """
         return self._run(observations, sum_over_axis=False)

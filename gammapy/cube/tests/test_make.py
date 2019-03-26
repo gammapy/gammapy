@@ -1,14 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from ...utils.testing import requires_data
 from ...data import DataStore
 from ...maps import WcsGeom, MapAxis, Map
 from ..make import MapMaker, MapMakerRing
 from ...background import RingBackgroundEstimator
-import numpy as np
 
 
 @pytest.fixture(scope="session")
@@ -111,7 +112,6 @@ def test_image_maker(observations):
     geomd = geom(ebounds=[0.1, 1, 10])
 
     mask = Map.from_geom(geomd)
-    from regions import CircleSkyRegion
 
     regions = CircleSkyRegion(
         SkyCoord(0, 0, unit="deg", frame="galactic"), radius=0.5 * u.deg
