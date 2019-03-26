@@ -394,7 +394,7 @@ class MapMakerRing(MapMaker):
             exposure_off: The off exposure map convolved with the ring
             off: The off map
         """
-        selection = ["on", "exposure_on", "off", "exposure_off"]
+        selection = ["on", "exposure_on", "off", "exposure_off", "exposure"]
         maps = self._get_empty_maps(selection)
         if sum_over_axis:
             maps = self._maps_sum_over_axes(maps, spectrum, keepdims)
