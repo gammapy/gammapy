@@ -103,11 +103,37 @@ class SigmaVEstimator:
         import logging
         logging.basicConfig()
         logging.getLogger("gammapy.astro.darkmatter.utils").setLevel("INFO")
+        from gammapy.cube.simulate import simulate_dataset
+        from gammapy.maps import WcsGeom, MapAxis
+        from gammapy.cube.models import SkyModel
+        from gammapy.image.models import SkyPointSource
+        from gammapy.astro.darkmatter import DMAnnihilation, SigmaVEstimator
+        from gammapy.irf import load_cta_irfs
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+        import numpy as np
 
-        jfact = 3.41e19 * u.Unit("GeV2 cm-5")
+        # Create point source map
+        GLON = 96.34 * u.deg
+        GLAT = -60.19 * u.deg
+        src_pos = SkyCoord(GLON, GLAT, frame="galactic")
+        irfs = load_cta_irfs("$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits")
+        axis = MapAxis.from_edges(np.logspace(np.log10(0.01), np.log10(100), 30), unit="TeV", name="energy", interp="log")
+        geom = WcsGeom.create(skydir=src_pos, binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis])
+        spatial_model = SkyPointSource(lat_0=GLAT, lon_0=GLON)
+
+        # Create annihilation model
+        JFAC = 3.41e19 * u.Unit("GeV2 cm-5")
+        flux_model = DMAnnihilation(mass=5000*u.GeV, channel="b", jfactor=JFAC, z=5)
+
+        # Combine into sky model
+        sky_model = SkyModel(spatial_model=spatial_model, spectral_model=flux_model)
+        sim_dataset = simulate_dataset(sky_model, geom=geom, pointing=src_pos, irfs=irfs, livetime=50*u.hour, offset=2*u.deg)
+
+        # Define channels and masses to run estimator
         channels = ["b", "t", "Z"]
         masses = [70, 200, 500, 5000, 10000, 50000, 100000]*u.GeV
-        estimator = SigmaVEstimator(simulated_dataset, masses, channels, jfact=JFAC)
+        estimator = SigmaVEstimator(sim_dataset, masses, channels, jfact=JFAC)
         result = estimator.run()
     """
 
