@@ -227,8 +227,16 @@ class MapMakerObs:
         self.maps["exposure"] = exposure
 
     def _make_background(self):
+        bkg_coordsys = self.observation.bkg.meta.get('FOVALIGN', 'ALTAZ')
+        if bkg_coordsys == "ALTAZ":
+            pnt = self.observation.fixed_pointing_info
+        elif bkg_coordsys == "RADEC":
+            pnt = self.observation.pointing_radec
+        else:
+            raise ValueError("Found unknown background coordinate system definition: \"{}\". "
+                             "Should be \"ALTAZ\" or \"RADEC\".".format(bkg_coordsys))
         background = make_map_background_irf(
-            pointing=self.observation.fixed_pointing_info,
+            pointing=pnt,
             ontime=self.observation.observation_time_duration,
             bkg=self.observation.bkg,
             geom=self.geom,

@@ -20,9 +20,9 @@ class Background3D:
     energy_lo, energy_hi : `~astropy.units.Quantity`
         Energy binning
     fov_lon_lo, fov_lon_hi : `~astropy.units.Quantity`
-        FOV coordinate X-axis binning, in AltAz frame.
+        FOV coordinate X-axis binning.
     fov_lat_lo, fov_lat_hi : `~astropy.units.Quantity`
-        FOV coordinate Y-axis binning, in AltAz frame.
+        FOV coordinate Y-axis binning.
     data : `~astropy.units.Quantity`
         Background rate (usually: ``s^-1 MeV^-1 sr^-1``)
 
