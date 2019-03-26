@@ -1407,7 +1407,7 @@ class HpxGeom(MapGeom):
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
     def make_header(self, **kwargs):
-        """"Build and return FITS header for this HEALPIX map."""
+        """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
         conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[self.conv])
 
