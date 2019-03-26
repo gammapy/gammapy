@@ -220,7 +220,6 @@ class SigmaVEstimator:
                 )
                 try:
                     fit = Fit(dataset_loop)
-                    fit.datasets.parameters.apply_autoscale = False
                     fit_result = fit.run(optimize_opts, covariance_opts)
                     likemin = fit_result.total_stat
                     profile = fit.likelihood_profile(
