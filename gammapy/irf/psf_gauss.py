@@ -107,7 +107,7 @@ class EnergyDependentMultiGaussPSF:
         interps = []
         for values in values_list:
             interp = ScaledRegularGridInterpolator(
-                points=(self.theta.value, self.energy.value),
+                points=(self.theta, self.energy),
                 values=values
                 )
             interps.append(interp)
@@ -237,8 +237,8 @@ class EnergyDependentMultiGaussPSF:
         psf : `~gammapy.morphology.MultiGauss2D`
             Multigauss PSF object.
         """
-        energy = Energy(energy).to_value(self.energy.unit)
-        theta = Quantity(theta).to_value(self.theta.unit)
+        energy = Energy(energy)
+        theta = Quantity(theta)
 
         pars = {}
         for name, interp_norm in zip(["scale", "A_2", "A_3"], self._interp_norms):
