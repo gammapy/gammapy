@@ -464,7 +464,7 @@ class EnergyDependentMultiGaussPSF:
         )
 
     def to_psf3d(self, rad):
-        """ Creates a PSF3D from an analytical PSF.
+        """Create a PSF3D from an analytical PSF.
 
         Parameters
         ----------
@@ -567,7 +567,8 @@ class HESSMultiGaussPSF:
 
         Note: We have to set norm = 2 * A * sigma ^ 2, because in
         MultiGauss2D norm represents the integral, and in HESS A
-        represents the amplitude at 0."""
+        represents the amplitude at 0.
+        """
         sigmas, norms = [], []
         for ii in range(1, self.n_gauss() + 1):
             A = self.pars["A_{}".format(ii)]

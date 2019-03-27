@@ -90,26 +90,19 @@ pylint:
 
 # TODO: fix and re-activate check for the following:
 # D103: Missing docstring in public function
-# D201: No blank lines allowed before function docstring (found 1)
 # D202: No blank lines allowed after function docstring (found 1)
 # D204: 1 blank line required after class docstring (found 0)
 # D205: 1 blank line required between summary line and description (found 0)
-# D209: Multi-line docstring closing quotes should be on a separate line
-# D210: No whitespaces allowed surrounding docstring text
-# D300: Use """triple double quotes""" (found """"-quotes)
 # D301: Use r""" if any backslashes in a docstring
 # D400: First line should end with a period (not ')')
 # D401: First line should be in imperative mood; try rephrasing (found 'Function')
 # D403: First word of the first line should be properly capitalized ('Add', not 'add')
-# D404: First word of the docstring should not be `This`
-# D405: Section name should be properly capitalized ('See Also', not 'See also')
-# D409: Section underline should match the length of its name (Expected 7 dashes in section 'Returns', got 8)
-# D412: No blank lines allowed between a section header and its content ('Examples')
 pydocstyle:
 	pydocstyle $(PROJECT) \
 	--convention=numpy \
 	--match-dir='^(?!extern).*' \
-	--add-ignore=D100,D102,D103,D104,D105,D200,D201,D202,D204,D205,D209,D210,D300,D301,D400,D401,D403,D404,D405,D409,D410,D412
+	--match='(?!test_).*\.py' \
+	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D204,D205,D301,D400,D401,D403,D410
 
 # TODO: add test and code quality checks for `examples`
 

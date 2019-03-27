@@ -483,7 +483,7 @@ class LightCurveEstimator:
 
     @staticmethod
     def _alpha(time_holder, obs_properties, n, istart, i):
-        """ Helper function for make_time_intervals_min_significance
+        """Helper function for make_time_intervals_min_significance.
 
         Parameters
         ----------

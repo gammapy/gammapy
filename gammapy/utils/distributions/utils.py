@@ -8,8 +8,7 @@ __all__ = ["normalize", "density", "draw", "pdf"]
 
 
 def normalize(func, x_min, x_max):
-    """Normalize a 1D function over a given range.
-    """
+    """Normalize a 1D function over a given range."""
 
     def f(x):
         return func(x) / quad(func, x_min, x_max)[0]
@@ -18,8 +17,7 @@ def normalize(func, x_min, x_max):
 
 
 def pdf(func):
-    """Returns the one dimensional PDF of a given radial surface density.
-    """
+    """One-dimensional PDF of a given radial surface density."""
 
     def f(x):
         return x * func(x)
@@ -28,8 +26,7 @@ def pdf(func):
 
 
 def density(func):
-    """Returns the radial surface density of a given one dimensional PDF.
-    """
+    """Radial surface density of a given one dimensional PDF."""
 
     def f(x):
         return func(x) / x

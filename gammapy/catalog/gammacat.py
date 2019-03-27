@@ -29,17 +29,11 @@ log = logging.getLogger(__name__)
 
 
 class NoDataAvailableError(LookupError):
-    """Generic error used in Gammapy, when some data isn't available.
-    """
-
-    pass
+    """Generic error used in Gammapy, when some data isn't available."""
 
 
 class GammaCatNotFoundError(OSError):
-    """The gamma-cat repo is not available.
-    """
-
-    pass
+    """The gamma-cat repo is not available."""
 
 
 class SourceCatalogObjectGammaCat(SourceCatalogObject):
@@ -62,7 +56,6 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         info : {'all', 'basic', 'position, 'model'}
             Comma separated list of options
         """
-
         if info == "all":
             info = "basic,position,model"
 

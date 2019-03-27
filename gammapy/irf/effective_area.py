@@ -17,11 +17,9 @@ class EffectiveAreaTable:
     TODO: Document
 
     Parameters
-    -----------
-    energy_lo : `~astropy.units.Quantity`
-        Lower bin edges of energy axis
-    energy_hi : `~astropy.units.Quantity`
-        Upper bin edges of energy axis
+    ----------
+    energy_lo, energy_hi : `~astropy.units.Quantity`
+        Energy axis bin edges
     data : `~astropy.units.Quantity`
         Effective area
 
@@ -305,7 +303,7 @@ class EffectiveAreaTable2D:
     Data format specification: :ref:`gadf:aeff_2d`
 
     Parameters
-    -----------
+    ----------
     energy_lo, energy_hi : `~astropy.units.Quantity`
         Energy binning
     offset_lo, offset_hi : `~astropy.units.Quantity`

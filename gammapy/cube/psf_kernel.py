@@ -265,7 +265,7 @@ class PSFKernel:
         self.psf_kernel_map.write(*args, **kwargs)
 
     def make_image(self, exposures, spectrum=None):
-        """ Make a 2D PSF from a PSF kernel
+        """Make a 2D PSF from a PSF kernel.
 
         The PSF Kernel is first weighed with a spectrum and an array of exposures.
         The PSF is also normalised after summation.

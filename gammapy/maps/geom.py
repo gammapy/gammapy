@@ -175,14 +175,11 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
     -------
     lon : `~numpy.ndarray`
         Longitude in degrees.
-
     lat : `~numpy.ndarray`
         Latitude in degrees.
-
     frame : str
         Name of coordinate frame.
     """
-
     if coordsys in ["CEL", "C"]:
         skycoord = skycoord.transform_to("icrs")
     elif coordsys in ["GAL", "G"]:
@@ -274,8 +271,7 @@ def bin_to_val(edges, bins):
 
 
 def coord_to_pix(edges, coord, interp="lin"):
-    """Convert axis coordinates to pixel coordinates using the chosen
-    interpolation scheme."""
+    """Convert axis to pixel coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
@@ -286,8 +282,7 @@ def coord_to_pix(edges, coord, interp="lin"):
 
 
 def pix_to_coord(edges, pix, interp="lin"):
-    """Convert pixel coordinates to grid coordinates using the chosen
-    interpolation scheme."""
+    """Convert pixel to grid coordinates for given interpolation scheme."""
     scale = interpolation_scale(interp)
 
     interp_fn = interp1d(
@@ -1447,7 +1442,7 @@ class MapGeom(metaclass=MapGeomMeta):
             Keyword arguments to overwrite in the map geometry constructor.
 
         Returns
-        --------
+        -------
         copy : `MapGeom`
             Copied map geometry.
         """

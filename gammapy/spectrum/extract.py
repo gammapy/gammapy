@@ -236,7 +236,6 @@ class SpectrumExtraction:
         See `SpectrumObservation.compute_energy_threshold` for full
         documentation about the options.
         """
-
         for obs in self.spectrum_observations:
             obs.compute_energy_threshold(**kwargs)
 

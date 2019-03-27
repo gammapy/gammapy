@@ -39,7 +39,8 @@ def polar(x, y):
 
 def galactic(x, y, z, obs_pos=None):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)
-    for given position in cartesian coordinates (kpc)"""
+    for given position in cartesian coordinates (kpc).
+    """
     obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
     y_prime = y + D_SUN_TO_GALACTIC_CENTER
     d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)

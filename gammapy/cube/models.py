@@ -46,7 +46,6 @@ class SkyModels(SkyModelBase):
 
     Examples
     --------
-
     Read from an XML file::
 
         from gammapy.cube import SkyModels
@@ -390,11 +389,6 @@ class BackgroundModel(Model):
         Additional tilt in the spectrum
     reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
-
-    Returns
-    ---------
-    background_map : `~gammapy.maps.Map`
-        Background evaluated on the Map
     """
 
     __slots__ = ["map", "norm", "tilt", "reference"]
@@ -420,7 +414,13 @@ class BackgroundModel(Model):
         return energy[:, np.newaxis, np.newaxis]
 
     def evaluate(self):
-        """Evaluate background model"""
+        """Evaluate background model.
+
+        Returns
+        -------
+        background_map : `~gammapy.maps.Map`
+            Background evaluated on the Map
+        """
         norm = self.parameters["norm"].value
         tilt = self.parameters["tilt"].value
         reference = self.parameters["reference"].quantity

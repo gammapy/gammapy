@@ -291,7 +291,6 @@ def grayify_colormap(cmap, mode="hsp"):
 
     References
     ----------
-
     .. [1] Darel Rex Finley, "HSP Color Model - Alternative to HSV (HSB) and HSL"
        http://alienryderflex.com/hsp.html
 

@@ -16,7 +16,7 @@ class Background3D:
     Data format specification: :ref:`gadf:bkg_3d`
 
     Parameters
-    -----------
+    ----------
     energy_lo, energy_hi : `~astropy.units.Quantity`
         Energy binning
     fov_lon_lo, fov_lon_hi : `~astropy.units.Quantity`
@@ -218,7 +218,7 @@ class Background2D:
     Data format specification: :ref:`gadf:bkg_2d`
 
     Parameters
-    -----------
+    ----------
     energy_lo, energy_hi : `~astropy.units.Quantity`
         Energy binning
     offset_lo, offset_hi : `~astropy.units.Quantity`

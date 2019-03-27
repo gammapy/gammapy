@@ -417,7 +417,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         Examples
         --------
-
         >>> from gammapy.catalog import source_catalogs
         >>> source = source_catalogs['3fgl']['3FGL J0349.9-2102']
         >>> lc = source.lightcurve

@@ -29,7 +29,6 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         info : {'all', 'basic', 'position', 'spectrum'}
             Comma separated list of options
         """
-
         if info == "all":
             info = "basic,position,spectrum"
 
@@ -151,7 +150,7 @@ class SourceCatalog2HWC(SourceCatalog):
     used to make the catalog, but then in the discussion considered as one source.
 
     References
-    -----------
+    ----------
     .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
        On ADS: `2017ApJ...843...40A <http://adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
     """

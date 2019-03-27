@@ -224,7 +224,7 @@ class SpectrumEnergyGroupMaker:
     groups : `~gammapy.spectrum.SpectrumEnergyGroups`
         List of energy groups
 
-    See also
+    See Also
     --------
     SpectrumEnergyGroups, SpectrumEnergyGroup, FluxPointEstimator
     """

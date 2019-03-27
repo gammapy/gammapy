@@ -72,7 +72,7 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel):
         Dictionary containing result maps
         Keys are: significance, n_on, background, excess, alpha
 
-    See also
+    See Also
     --------
     gammapy.stats.significance_on_off
     """

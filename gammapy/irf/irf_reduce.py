@@ -144,7 +144,7 @@ def make_mean_edisp(
 
 
 def apply_containment_fraction(aeff, psf, radius):
-    """ Estimate PSF containment inside a given radius and correct effective area for leaking flux.
+    """Estimate PSF containment inside a given radius and correct effective area for leaking flux.
 
     The PSF and effective area must have the same binning in energy.
 

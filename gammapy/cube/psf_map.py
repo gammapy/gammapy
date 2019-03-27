@@ -228,7 +228,7 @@ class PSFMap:
         hdulist.writeto(filename, overwrite=overwrite)
 
     def get_energy_dependent_table_psf(self, position):
-        """ Returns EnergyDependentTable PSF at a given position
+        """Get energy-dependent PSF at a given position.
 
         Parameters
         ----------

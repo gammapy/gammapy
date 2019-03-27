@@ -433,7 +433,6 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
         Indices of HEALpix pixels of nside ``nside_superpix`` that
         contain pixel indices ``idx`` of nside ``nside_subpix``.
     """
-
     import healpy as hp
 
     idx = np.array(idx)
@@ -621,7 +620,6 @@ class HpxGeom(MapGeom):
 
     def _create_lookup(self, region):
         """Create local-to-global pixel lookup table."""
-
         if isinstance(region, str):
             ipix = [
                 self.get_index_list(nside, self._nest, region)
@@ -735,7 +733,7 @@ class HpxGeom(MapGeom):
             return ravel_hpx_index(idx_local, self.npix)
 
     def __getitem__(self, idx_global):
-        """This implements the global-to-local index lookup.
+        """Implement global-to-local index lookup.
 
         For all-sky maps it just returns the input array.  For
         partial-sky maps it returns the local indices corresponding to
@@ -1409,7 +1407,7 @@ class HpxGeom(MapGeom):
         return cls.from_header(hdu.header, hdu_bands=hdu_bands, pix=pix)
 
     def make_header(self, **kwargs):
-        """"Build and return FITS header for this HEALPIX map."""
+        """Build and return FITS header for this HEALPIX map."""
         header = fits.Header()
         conv = kwargs.get("conv", HPX_FITS_CONVENTIONS[self.conv])
 
@@ -1699,7 +1697,7 @@ class HpxGeom(MapGeom):
         return np.all(np.stack([t != -1 for t in idx]), axis=0)
 
     def get_skydirs(self):
-        """Get the sky coordinates of all the pixels in this geometry. """
+        """Get the sky coordinates of all the pixels in this geometry."""
         coords = self.get_coord()
         frame = "galactic" if self.coordsys == "GAL" else "icrs"
         return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
@@ -1806,13 +1804,15 @@ class HpxToWcsMapping:
     @property
     def lmap(self):
         """An array(nx,ny) giving the mapping of the local HEALPIX pixel
-        indices for each WCS pixel"""
+        indices for each WCS pixel.
+        """
         return self._lmap
 
     @property
     def valid(self):
-        """An array(nx,ny) of bools giving if each WCS pixel in inside the
-        HEALPIX region"""
+        """Array(nx,ny) of bools giving if each WCS pixel in inside the
+        HEALPIX region.
+        """
         return self._valid
 
     @classmethod
