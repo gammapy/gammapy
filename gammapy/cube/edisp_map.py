@@ -81,8 +81,8 @@ class EDispMap(object):
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDispersion2D
-        from gammapy.cube import make_edisp_map, EDispMap
+        from gammapy.irf import EnergyDispersion2D, EffectiveAreaTable2D
+        from gammapy.cube import make_edisp_map, EDispMap, make_map_exposure_true_energy
 
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
@@ -100,9 +100,14 @@ class EDispMap(object):
         # Extract EnergyDispersion2D from CTA 1DC IRF
         filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
         edisp2D = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+        aeff2d = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+
+        # Create the exposure map
+        exposure_geom = geom.to_image().to_cube([energy_axis])
+        exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
         # create the EDispMap for the specified pointing
-        edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset)
+        edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset, exposure_map)
 
         # Get an Energy Dispersion (1D) at any position in the image
         edisp = edisp_map.get_energy_dispersion(SkyCoord(2., 2.5, unit='deg'))
