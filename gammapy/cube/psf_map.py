@@ -79,8 +79,8 @@ class PSFMap:
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDependentMultiGaussPSF
-        from gammapy.cube import make_psf_map, PSFMap
+        from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D
+        from gammapy.cube import make_psf_map, PSFMap, make_map_exposure_true_energy
 
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
@@ -99,9 +99,14 @@ class PSFMap:
         filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
         psf3d = psf.to_psf3d(rads)
+        aeff2d = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+
+        # Create the exposure map
+        exposure_geom = geom.to_image().to_cube([energy_axis])
+        exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
         # create the PSFMap for the specified pointing
-        psf_map = make_psf_map(psf3d, pointing, geom, max_offset)
+        psf_map = make_psf_map(psf3d, pointing, geom, max_offset, exposure_map)
 
         # Get an EnergyDependentTablePSF at any position in the image
         psf_table = psf_map.get_energy_dependent_table_psf(SkyCoord(2., 2.5, unit='deg'))
@@ -126,7 +131,6 @@ class PSFMap:
                 raise ValueError("PSFMap and exposure_map have inconsistent geometries")
 
         self.exposure_map = exposure_map
-
 
     @classmethod
     def from_hdulist(

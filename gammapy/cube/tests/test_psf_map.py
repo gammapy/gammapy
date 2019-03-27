@@ -182,4 +182,5 @@ def test_psfmap_stacking():
     psfmap1.stack(psfmap3, False)
     assert_allclose(psfmap1.psf_map.data, psfmap_stack.psf_map.data)
 
+
 # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations
