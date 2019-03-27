@@ -318,14 +318,15 @@ class PSFMap:
     def stack(self, other, copy=True):
         """Stack PSFMap with another one.
 
-        The current PSFMap is unchanged and a new one is created and returned.
+        The other PSFMap is projected on the current PSFMap geometry.
 
         Parameters
         ----------
         other : `~gammapy.cube.PSFMap`
             the psfmap to be stacked with this one.
         copy : bool
-            if set to False returns a new PSFMap
+            if set to True returns a new PSFMap
+
         Returns
         -------
         new : `~gammapy.cube.PSFMap`

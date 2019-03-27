@@ -314,7 +314,7 @@ class EDispMap(object):
             data=data,
         )
 
-    def stack(self, other):
+    def stack(self, other, copy=True):
         """Stack EdispMap with another one.
 
         The current EdispMap is unchanged and a new one is created and returned.
@@ -323,6 +323,8 @@ class EDispMap(object):
         ----------
         other : `~gammapy.cube.EDispMap`
             the edispmap to be stacked with this one.
+        copy : bool
+            if set to True returns a new EdispMap
 
         Returns
         -------
@@ -361,4 +363,9 @@ class EDispMap(object):
         # We need to remove the extra axis in the total exposure
         reproj_exposure.quantity = total_exposure[:, 0, :, :]
 
-        return EDispMap(reproj_edispmap, reproj_exposure)
+        if copy:
+            return EDispMap(reproj_edispmap, reproj_exposure)
+        else:
+            self._edisp_map = reproj_edispmap
+            self._exposure_map = reproj_exposure
+            return self

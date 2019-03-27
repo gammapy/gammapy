@@ -124,3 +124,6 @@ def test_edisp_map_stacking():
     edmap_stack = edmap1.stack(edmap2)
     assert_allclose(edmap_stack.data, edmap1.data)
     assert_allclose(edmap_stack.exposure_map.data, edmap1.exposure_map.data * 3)
+
+    edmap1.stack(edmap2, False)
+    assert_allclose(edmap1.edisp_map.data, edmap_stack.edisp_map.data)
