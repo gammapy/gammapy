@@ -16,10 +16,12 @@ class ScaledRegularGridInterpolator:
 
     Parameters
     ----------
-    points : tuple
+    points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
         Tuple of points passed to `RegularGridInterpolator`.
-    values :
+    values : `~numpy.ndarray`
         Values passed to `RegularGridInterpolator`.
+    points_scale : tuple of str
+        Interpolation scale used for the points.
     values_scale : {'lin', 'log', 'sqrt'}
         Interpolation scaling applied to values. If the values vary over many magnitudes
         a 'log' scaling is recommended.
@@ -27,16 +29,15 @@ class ScaledRegularGridInterpolator:
         Keyword arguments passed to `RegularGridInterpolator`.
     """
 
-    # TODO: add points scaling or axis scaling argument
-    def __init__(self, points, values, values_scale="lin", extrapolate=True, **kwargs):
+    def __init__(self, points, values, points_scale=None, values_scale="lin", extrapolate=True, **kwargs):
 
-        if isinstance(values, u.Quantity):
-            self._values_unit = values.unit
-            values = values.value
-        else:
-            self._values_unit = None
+        if points_scale is None:
+            points_scale = ["lin"] * len(points)
 
+        self.scale_points = [interpolation_scale(scale) for scale in points_scale]
         self.scale = interpolation_scale(values_scale)
+
+        points_scaled = tuple([scale(p) for p, scale in zip(points, self.scale_points)])
         values_scaled = self.scale(values)
 
         if extrapolate:
@@ -44,7 +45,7 @@ class ScaledRegularGridInterpolator:
             kwargs.setdefault("fill_value", None)
 
         self._interpolate = RegularGridInterpolator(
-            points=points, values=values_scaled, **kwargs
+            points=points_scaled, values=values_scaled, **kwargs
         )
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
@@ -52,7 +53,7 @@ class ScaledRegularGridInterpolator:
 
         Parameters
         ----------
-        points : tuple of `np.ndarray`
+        points : tuple of `np.ndarray` or `~astropy.units.Quantity`
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
             broadcasted internally.
         method : {"linear", "nearest"}
@@ -60,6 +61,8 @@ class ScaledRegularGridInterpolator:
         clip : bool
             Clip values at zero after interpolation.
         """
+        points = tuple([scale(p) for scale, p in zip(self.scale_points, points)])
+
         points = np.broadcast_arrays(*points)
         points_interp = np.stack([_.flat for _ in points]).T
 
@@ -69,10 +72,7 @@ class ScaledRegularGridInterpolator:
         if clip:
             values = np.clip(values, 0, np.inf)
 
-        if self._values_unit:
-            return u.Quantity(values, self._values_unit, copy=False)
-        else:
-            return values
+        return values
 
 
 def interpolation_scale(scale="lin"):
@@ -93,35 +93,54 @@ def interpolation_scale(scale="lin"):
         raise ValueError("Not a valid value scaling mode.")
 
 
-class LogScale:
+class InterpolationScale:
+    """Interpolation scale base class."""
+    def __call__(self, values):
+        if hasattr(self, "_unit"):
+            values = values.to_value(self._unit)
+        else:
+            if isinstance(values, u.Quantity):
+                self._unit = values.unit
+                values = values.value
+        return self._scale(values)
+
+    def inverse(self, values):
+        values = self._inverse(values)
+        if hasattr(self, "_unit"):
+            return u.Quantity(values, self._unit, copy=False)
+        else:
+            return values
+
+
+class LogScale(InterpolationScale):
     """Logarithmic scaling"""
 
     tiny = np.finfo(np.float32).tiny
 
-    def __call__(self, values):
+    def _scale(self, values):
         values = np.clip(values, self.tiny, np.inf)
         return np.log(values)
 
-    def inverse(self, values):
+    def _inverse(self, values):
         return np.exp(values)
 
 
-class SqrtScale:
+class SqrtScale(InterpolationScale):
     """Sqrt scaling"""
 
-    def __call__(self, values):
+    def _scale(self, values):
         sign = np.sign(values)
         return sign * np.sqrt(sign * values)
 
-    def inverse(self, values):
+    def _inverse(self, values):
         return np.power(values, 2)
 
 
-class LinearScale:
+class LinearScale(InterpolationScale):
     """Linear scaling"""
 
-    def __call__(self, values):
+    def _scale(self, values):
         return values
 
-    def inverse(self, values):
+    def _inverse(self, values):
         return values
