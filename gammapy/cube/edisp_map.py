@@ -118,7 +118,7 @@ class EDispMap(object):
         if edisp_map.geom.axes[0].name.upper() != "MIGRA":
             raise ValueError("Incorrect migra axis position in input Map")
 
-        self._edisp_map = edisp_map
+        self.edisp_map = edisp_map
 
         if exposure_map is not None:
             # First adapt geometry, keep only energy axis
@@ -128,32 +128,7 @@ class EDispMap(object):
                     "EDispMap and exposure_map have inconsistent geometries"
                 )
 
-        self._exposure_map = exposure_map
-
-    @property
-    def edisp_map(self):
-        """the EDispMap itself (`~gammapy.maps.Map`)"""
-        return self._edisp_map
-
-    @property
-    def data(self):
-        """the EDispMap data"""
-        return self._edisp_map.data
-
-    @property
-    def quantity(self):
-        """the EDispMap data as a quantity"""
-        return self._edisp_map.quantity
-
-    @property
-    def exposure_map(self):
-        """the exposure map associated to the EDispMap."""
-        return self._exposure_map
-
-    @property
-    def geom(self):
-        """The EDispMap MapGeom object"""
-        return self._edisp_map.geom
+        self.exposure_map = exposure_map
 
     @classmethod
     def from_hdulist(
@@ -254,13 +229,13 @@ class EDispMap(object):
             )
 
         # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.geom.axes[1].nbin)
+        pix_ener = np.arange(self.edisp_map.geom.axes[1].nbin)
 
         # Define a vector of migration with mig_step step
-        mrec_min = self.geom.axes[0].edges[0]
-        mrec_max = self.geom.axes[0].edges[-1]
+        mrec_min = self.edisp_map.geom.axes[0].edges[0]
+        mrec_max = self.edisp_map.geom.axes[0].edges[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
-        pix_migra = (mig_array - mrec_min) / mrec_max * self.geom.axes[0].nbin
+        pix_migra = (mig_array - mrec_min) / mrec_max * self.edisp_map.geom.axes[0].nbin
 
         # Convert position to pixels
         pix_lon, pix_lat = self.edisp_map.geom.to_image().coord_to_pix(position)
@@ -351,7 +326,7 @@ class EDispMap(object):
         )
 
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_edisp_quantity = self.quantity * exposure
+        stacked_edisp_quantity = self.edisp_map.quantity * exposure
 
         other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
         stacked_edisp_quantity += reproj_edispmap.quantity * other_exposure

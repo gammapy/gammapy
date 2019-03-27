@@ -74,7 +74,7 @@ def test_make_edisp_map():
     assert edmap.edisp_map.geom.axes[0] == migra_axis
     assert edmap.edisp_map.geom.axes[1] == energy_axis
     assert edmap.edisp_map.unit == Unit("")
-    assert edmap.data.shape == (4, 50, 5, 5)
+    assert edmap.edisp_map.data.shape == (4, 50, 5, 5)
 
 
 def test_edisp_map_to_from_hdulist():
@@ -89,7 +89,7 @@ def test_edisp_map_to_from_hdulist():
         hdulist, edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP"
     )
     assert_allclose(edmap.edisp_map.data, new_edmap.edisp_map.data)
-    assert new_edmap.geom == edmap.geom
+    assert new_edmap.edisp_map.geom == edmap.edisp_map.geom
     assert new_edmap.exposure_map.geom == edmap.exposure_map.geom
 
 
@@ -122,7 +122,7 @@ def test_edisp_map_stacking():
     edmap2.exposure_map.quantity *= 2
 
     edmap_stack = edmap1.stack(edmap2)
-    assert_allclose(edmap_stack.data, edmap1.data)
+    assert_allclose(edmap_stack.edisp_map.data, edmap1.edisp_map.data)
     assert_allclose(edmap_stack.exposure_map.data, edmap1.exposure_map.data * 3)
 
     edmap1.stack(edmap2, False)
