@@ -38,7 +38,7 @@ sky_model_1 = SkyModel(spatial_model=spatial_model_1, spectral_model=spectral_mo
 
 sky_model_2 = SkyModel(spatial_model=spatial_model_2, spectral_model=spectral_model_2)
 
-compound_model = sky_model_1 + sky_model_2
+models = sky_model_1 + sky_model_2
 
 # Define map geometry
 axis = MapAxis.from_edges(np.logspace(-1.0, 1.0, 10), unit="TeV")
@@ -56,7 +56,7 @@ exposure_map = make_map_exposure_true_energy(
     pointing=pointing, livetime=livetime, aeff=aeff, geom=geom
 )
 
-evaluator = MapEvaluator(model=compound_model, exposure=exposure_map)
+evaluator = MapEvaluator(model=models, exposure=exposure_map)
 
 
 npred = evaluator.compute_npred()
@@ -81,10 +81,10 @@ counts_map.sum_over_axes().plot()
 # plt.show()
 plt.clf()
 
-compound_model.parameters.set_error(2, 0.1 * u.deg)
-compound_model.parameters.set_error(4, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
-compound_model.parameters.set_error(8, 0.1 * u.deg)
-compound_model.parameters.set_error(10, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
+models.parameters.set_error(2, 0.1 * u.deg)
+models.parameters.set_error(4, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
+models.parameters.set_error(8, 0.1 * u.deg)
+models.parameters.set_error(10, 1e-12 * u.Unit("cm-2 s-1 TeV-1"))
 
-fit = MapFit(model=compound_model, counts=counts_map, exposure=exposure_map)
+fit = MapFit(model=models, counts=counts_map, exposure=exposure_map)
 fit.run()
