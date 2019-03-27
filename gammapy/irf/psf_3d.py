@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 from astropy.table import Table
 from astropy.io import fits
-from astropy.units import Quantity
+from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.utils import lazyproperty
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
 from ..utils.scripts import make_path
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from .psf_table import TablePSF, EnergyDependentTablePSF
 
 __all__ = ["PSF3D"]
@@ -46,8 +47,9 @@ class PSF3D:
         rad_lo,
         rad_hi,
         psf_value,
-        energy_thresh_lo=Quantity(0.1, "TeV"),
-        energy_thresh_hi=Quantity(100, "TeV"),
+        energy_thresh_lo=u.Quantity(0.1, "TeV"),
+        energy_thresh_hi=u.Quantity(100, "TeV"),
+        interp_kwargs=None
     ):
         self.energy_lo = energy_lo.to("TeV")
         self.energy_hi = energy_hi.to("TeV")
@@ -57,6 +59,21 @@ class PSF3D:
         self.psf_value = psf_value.to("sr^-1")
         self.energy_thresh_lo = energy_thresh_lo.to("TeV")
         self.energy_thresh_hi = energy_thresh_hi.to("TeV")
+
+        self._interp_kwargs = interp_kwargs or {}
+
+    @lazyproperty
+    def _interpolate(self):
+        energy = self._energy_logcenter()
+        offset = self.offset.to("deg")
+        rad = self._rad_center()
+
+        return ScaledRegularGridInterpolator(
+            points=(rad, offset, energy),
+            values=self.psf_value,
+            **self._interp_kwargs
+        )
+
 
     def info(self):
         """Print some basic info.
@@ -128,8 +145,8 @@ class PSF3D:
 
         opts = {}
         try:
-            opts["energy_thresh_lo"] = Quantity(table.meta["LO_THRES"], "TeV")
-            opts["energy_thresh_hi"] = Quantity(table.meta["HI_THRES"], "TeV")
+            opts["energy_thresh_lo"] = u.Quantity(table.meta["LO_THRES"], "TeV")
+            opts["energy_thresh_hi"] = u.Quantity(table.meta["HI_THRES"], "TeV")
         except KeyError:
             pass
 
@@ -183,7 +200,7 @@ class PSF3D:
         """
         self.to_fits().writeto(filename, *args, **kwargs)
 
-    def evaluate(self, energy=None, offset=None, rad=None, interp_kwargs=None):
+    def evaluate(self, energy=None, offset=None, rad=None):
         """Interpolate PSF value at a given offset and energy.
 
         Parameters
@@ -194,17 +211,12 @@ class PSF3D:
             Offset in the field of view
         rad : `~astropy.coordinates.Angle`
             Offset wrt source position
-        interp_kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        if not interp_kwargs:
-            interp_kwargs = dict(bounds_error=False, fill_value=None)
-
         if energy is None:
             energy = self._energy_logcenter()
         if offset is None:
@@ -212,21 +224,10 @@ class PSF3D:
         if rad is None:
             rad = self._rad_center()
 
-        energy = Energy(energy).to("TeV")
-        offset = Angle(offset).to("deg")
-        rad = Angle(rad).to("deg")
-
-        energy_bin = self._energy_logcenter()
-
-        offset_bin = self.offset.to("deg")
-        rad_bin = self._rad_center()
-        points = (rad_bin, offset_bin, energy_bin)
-        interpolator = RegularGridInterpolator(points, self.psf_value, **interp_kwargs)
-        rr, off, ee = np.meshgrid(rad.value, offset.value, energy.value, indexing="ij")
-        shape = ee.shape
-        pix_coords = np.column_stack([rr.flat, off.flat, ee.flat])
-        data_interp = interpolator(pix_coords)
-        return Quantity(data_interp.reshape(shape), self.psf_value.unit)
+        rad = np.atleast_1d(u.Quantity(rad))
+        offset = np.atleast_1d(u.Quantity(offset))
+        energy = np.atleast_1d(u.Quantity(energy))
+        return self._interpolate((rad[:, np.newaxis, np.newaxis], offset[np.newaxis, :, np.newaxis], energy[np.newaxis, np.newaxis, :]))
 
     def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
         """
@@ -256,14 +257,12 @@ class PSF3D:
         else:
             rad = Angle(rad)
 
-        psf_value = self.evaluate(offset=theta, rad=rad)
-        psf_value = psf_value[:, 0, :].transpose()
-
+        psf_value = self.evaluate(offset=theta, rad=rad).squeeze()
         return EnergyDependentTablePSF(
-            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
+            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value.T
         )
 
-    def to_table_psf(self, energy, theta="0 deg", interp_kwargs=None, **kwargs):
+    def to_table_psf(self, energy, theta="0 deg", **kwargs):
         """Create `~gammapy.irf.TablePSF` at one given energy.
 
         Parameters
@@ -272,17 +271,15 @@ class PSF3D:
             Energy
         theta : `~astropy.coordinates.Angle`
             Offset in the field of view. Default theta = 0 deg
-        interp_kwargs : dict
-            Option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
         psf : `~gammapy.irf.TablePSF`
             Table PSF
         """
-        energy = Quantity(energy)
+        energy = u.Quantity(energy)
         theta = Angle(theta)
-        psf_value = self.evaluate(energy, theta, interp_kwargs=interp_kwargs).squeeze()
+        psf_value = self.evaluate(energy, theta).squeeze()
         rad = self._rad_center()
         return TablePSF(rad, psf_value, **kwargs)
 
@@ -305,15 +302,15 @@ class PSF3D:
         radius : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        energy = np.atleast_1d(Quantity(energy))
-        theta = np.atleast_1d(Quantity(theta))
+        energy = np.atleast_1d(u.Quantity(energy))
+        theta = np.atleast_1d(u.Quantity(theta))
 
         radii = []
         for t in theta:
             psf = self.to_energy_dependent_table_psf(theta=t)
             radii.append(psf.containment_radius(energy, fraction=fraction))
 
-        return Quantity(radii).T.squeeze()
+        return u.Quantity(radii).T.squeeze()
 
     def plot_containment_vs_energy(
         self, fractions=[0.68, 0.95], thetas=Angle([0, 1], "deg"), ax=None
@@ -337,7 +334,7 @@ class PSF3D:
         ax.set_xlabel("Energy (TeV)")
         ax.set_ylabel("Containment radius (deg)")
 
-    def plot_psf_vs_rad(self, theta="0 deg", energy=Quantity(1, "TeV")):
+    def plot_psf_vs_rad(self, theta="0 deg", energy=u.Quantity(1, "TeV")):
         """Plot PSF vs rad.
 
         Parameters
