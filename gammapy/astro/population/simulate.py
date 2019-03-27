@@ -119,7 +119,7 @@ def make_catalog_random_positions_sphere(
 
     # TODO: it shouldn't be necessary here to convert to cartesian ourselves ...
     x, y, z = spherical_to_cartesian(radius, lat, lon)
-    pos = SkyCoord(x, y, z, frame="galactocentric", representation="cartesian")
+    pos = SkyCoord(x, y, z, frame="galactocentric", representation_type="cartesian")
 
     if center == "Milky Way":
         pass
