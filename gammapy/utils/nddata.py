@@ -146,10 +146,7 @@ class NDDataArray:
             shape[idx] = -1
             default = axis.nodes.reshape(tuple(shape))
             temp = Quantity(kwargs.pop(axis.name, default))
-            # Transform to correct unit
-            temp = temp.to_value(axis.unit)
-            # Transform to match interpolation behaviour of axis
-            values.append(np.atleast_1d(axis._interp_values(temp)))
+            values.append(np.atleast_1d(temp))
 
         # This is to catch e.g. typos in axis names
         if kwargs != {}:
@@ -172,24 +169,11 @@ class NDDataArray:
         """
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
-        points = [a._interp_nodes() for a in self.axes]
 
-        values = self.data
-
-        # If values contains nan, only setup interpolator in valid range
-        if np.isnan(values).any():
-            if self.dim > 1:
-                raise NotImplementedError(
-                    "Data grid contains nan. This is not"
-                    "supported for arrays dimension > 1"
-                )
-            else:
-                mask = np.isfinite(values)
-                points = [points[0][mask]]
-                values = values[mask]
-
+        points = [a.nodes for a in self.axes]
+        points_scale = [a.interpolation_mode for a in self.axes]
         self._regular_grid_interp = ScaledRegularGridInterpolator(
-            points, values, **interp_kwargs
+            points, self.data, points_scale=points_scale, **interp_kwargs
         )
 
 
@@ -310,20 +294,6 @@ class DataAxis:
         """Interpolation mode
         """
         return self._interpolation_mode
-
-    def _interp_nodes(self):
-        """Nodes to be used for interpolation"""
-        if self.interpolation_mode == "log":
-            return np.log10(self.nodes.value)
-        else:
-            return self.nodes.value
-
-    def _interp_values(self, values):
-        """Transform values correctly for interpolation"""
-        if self.interpolation_mode == "log":
-            return np.log10(values)
-        else:
-            return values
 
 
 class BinnedDataAxis(DataAxis):

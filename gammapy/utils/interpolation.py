@@ -83,14 +83,14 @@ def interpolation_scale(scale="lin"):
     scale : {"lin", "log", "sqrt"}
         Choose interpolation scaling.
     """
-    if scale == "lin":
+    if scale in ["lin", "linear"]:
         return LinearScale()
     elif scale == "log":
         return LogScale()
     elif scale == "sqrt":
         return SqrtScale()
     else:
-        raise ValueError("Not a valid value scaling mode.")
+        raise ValueError("Not a valid value scaling mode: '{}'.".format(scale))
 
 
 class InterpolationScale:
