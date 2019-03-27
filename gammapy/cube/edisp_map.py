@@ -341,6 +341,6 @@ class EDispMap(object):
         if copy:
             return EDispMap(reproj_edispmap, reproj_exposure)
         else:
-            self._edisp_map = reproj_edispmap
-            self._exposure_map = reproj_exposure
+            self.edisp_map = reproj_edispmap
+            self.exposure_map = reproj_exposure
             return self

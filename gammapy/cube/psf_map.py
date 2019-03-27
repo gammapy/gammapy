@@ -117,7 +117,7 @@ class PSFMap:
         if psf_map.geom.axes[0].name.upper() != "THETA":
             raise ValueError("Incorrect theta axis position in input Map")
 
-        self._psf_map = psf_map
+        self.psf_map = psf_map
 
         if exposure_map is not None:
             # First adapt geometry, keep only energy axis
@@ -125,32 +125,8 @@ class PSFMap:
             if exposure_map.geom != expected_geom:
                 raise ValueError("PSFMap and exposure_map have inconsistent geometries")
 
-        self._exposure_map = exposure_map
+        self.exposure_map = exposure_map
 
-    @property
-    def psf_map(self):
-        """the PSFMap itself (`~gammapy.maps.Map`)"""
-        return self._psf_map
-
-    @property
-    def data(self):
-        """the PSFMap data"""
-        return self._psf_map.data
-
-    @property
-    def quantity(self):
-        """the PSFMap data as a quantity"""
-        return self._psf_map.quantity
-
-    @property
-    def exposure_map(self):
-        """the exposure map associated to the PSFMap."""
-        return self._exposure_map
-
-    @property
-    def geom(self):
-        """The PSFMap MapGeom object"""
-        return self._psf_map.geom
 
     @classmethod
     def from_hdulist(
@@ -246,8 +222,8 @@ class PSFMap:
             )
 
         # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.geom.axes[1].nbin)
-        pix_rad = np.arange(self.geom.axes[0].nbin)
+        pix_ener = np.arange(self.psf_map.geom.axes[1].nbin)
+        pix_rad = np.arange(self.psf_map.geom.axes[0].nbin)
 
         # Convert position to pixels
         pix_lon, pix_lat = self.psf_map.geom.to_image().coord_to_pix(position)
@@ -305,8 +281,8 @@ class PSFMap:
         containment_radius_map : `~gammapy.maps.Map`
             Containment radius map
         """
-        coords = self.geom.to_image().get_coord().skycoord.flatten()
-        m = Map.from_geom(self.geom.to_image(), unit="deg")
+        coords = self.psf_map.geom.to_image().get_coord().skycoord.flatten()
+        m = Map.from_geom(self.psf_map.geom.to_image(), unit="deg")
 
         for coord in coords:
             psf_table = self.get_energy_dependent_table_psf(coord)
@@ -352,7 +328,7 @@ class PSFMap:
         )
 
         exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_psf_quantity = self.quantity * exposure
+        stacked_psf_quantity = self.psf_map.quantity * exposure
 
         other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
         stacked_psf_quantity += reproj_psfmap.quantity * other_exposure
@@ -367,6 +343,6 @@ class PSFMap:
         if copy:
             return PSFMap(reproj_psfmap, reproj_exposure)
         else:
-            self._psf_map = reproj_psfmap
-            self._exposure_map = reproj_exposure
+            self.psf_map = reproj_psfmap
+            self.exposure_map = reproj_exposure
             return self
