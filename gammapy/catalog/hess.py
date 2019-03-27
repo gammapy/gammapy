@@ -736,7 +736,7 @@ class SourceCatalogLargeScaleHGPS:
         for column in table.colnames:
             values = self.table[column].quantity
             interp = ScaledRegularGridInterpolator(
-                (glon.degree,), values, **interp_kwargs
+                (glon,), values, **interp_kwargs
             )
             interps[column] = interp
 
@@ -744,7 +744,7 @@ class SourceCatalogLargeScaleHGPS:
 
     def _interpolate_parameter(self, parname, glon):
         glon = glon.wrap_at("180d")
-        return self._interp[parname]((np.asanyarray(glon.degree),), clip=False)
+        return self._interp[parname]((np.asanyarray(glon),), clip=False)
 
     def peak_brightness(self, glon):
         """Peak brightness at a given longitude.

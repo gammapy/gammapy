@@ -1138,9 +1138,10 @@ class TableModel(SpectralModel):
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
+        interp_kwargs.setdefault("points_scale", ("log",))
 
         self._evaluate = ScaledRegularGridInterpolator(
-            points=(np.log(energy.value),), values=values, **interp_kwargs
+            points=(energy,), values=values, **interp_kwargs
         )
 
         super().__init__([self.norm])
@@ -1220,8 +1221,7 @@ class TableModel(SpectralModel):
 
     def evaluate(self, energy, norm):
         """Evaluate the model (static function)."""
-        x = np.log(energy.to_value(self.energy.unit))
-        values = self._evaluate((x,), clip=True)
+        values = self._evaluate((energy,), clip=True)
         return norm * values
 
 

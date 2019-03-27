@@ -38,7 +38,7 @@ class TablePSF:
 
     @lazyproperty
     def _interpolate(self):
-        points = (self.rad.value,)
+        points = (self.rad,)
         return ScaledRegularGridInterpolator(
             points=points, values=self.psf_value, **self._interp_kwargs
         )
@@ -130,7 +130,7 @@ class TablePSF:
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        rad = np.atleast_1d(u.Quantity(rad, "rad").value)
+        rad = np.atleast_1d(u.Quantity(rad))
         return self._interpolate((rad,))
 
     def containment(self, rad_max):
@@ -146,7 +146,7 @@ class TablePSF:
         integral : float
             PSF integral
         """
-        rad = np.atleast_1d(u.Quantity(rad_max, "rad").value)
+        rad = np.atleast_1d(rad_max)
         return self._interpolate_containment((rad,))
 
     def containment_radius(self, fraction):
@@ -262,7 +262,7 @@ class EnergyDependentTablePSF:
 
     @lazyproperty
     def _interpolate(self):
-        points = (self.energy.value, self.rad.value)
+        points = (self.energy, self.rad)
         return ScaledRegularGridInterpolator(
             points=points, values=self.psf_value, **self._interp_kwargs
         )
@@ -279,7 +279,7 @@ class EnergyDependentTablePSF:
             rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
         )
 
-        points = (self.energy.value, rad)
+        points = (self.energy, rad)
         return ScaledRegularGridInterpolator(points=points, values=values, fill_value=1)
 
     def __str__(self):
@@ -380,8 +380,8 @@ class EnergyDependentTablePSF:
         if rad is None:
             rad = self.rad
 
-        energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
-        rad = np.atleast_1d(u.Quantity(rad, "rad").value)
+        energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
+        rad = np.atleast_1d(u.Quantity(rad))
         return self._interpolate((energy, rad), clip=True, method=method)
 
     def table_psf_at_energy(self, energy, method="linear", **kwargs):
@@ -483,8 +483,8 @@ class EnergyDependentTablePSF:
         fraction : array_like
             Containment fraction (in range 0 .. 1)
         """
-        energy = np.atleast_1d(u.Quantity(energy, "GeV").value)[:, np.newaxis]
-        rad_max = np.atleast_1d(u.Quantity(rad_max, "rad").value)
+        energy = np.atleast_1d(u.Quantity(energy))[:, np.newaxis]
+        rad_max = np.atleast_1d(u.Quantity(rad_max))
         return self._interpolate_containment((energy, rad_max))
 
     def info(self):
