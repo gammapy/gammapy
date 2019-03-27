@@ -494,16 +494,20 @@ class MapMakerRing(MapMaker):
 class IrfMapMaker:
     """Make IRF maps from IACT observations.
 
+    Passing a rads array (Angle) will build a PSFMap.
+    Passing a migra array (dimensionless) will build an EDispMap.
+    Passing both will build both PSFMap and EDispMap.
+
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
         Reference map geometry with true energy axis
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
-    rad_axis : `~gammapy.maps.MapAxis`
-        The rad axis of the PsfMap to be built
-    migra_axis: `~gammapy.maps.MapAxis`
-        The migra axis of the EDispMap to be built
+    rads : `~astropy.Quantity`
+        The rad edges of the PSFMap axis to be built
+    migra: `~astropy.Quantity`
+        The migra edges of the EDispMap axis to be built
     """
 
     def __init__(self, geom, offset_max, rad_axis=None, migra_axis=None):
@@ -516,11 +520,11 @@ class IrfMapMaker:
         self.geom = geom
         self.offset_max = Angle(offset_max)
 
-        if rad_axis is None and migra_axis is None:
-            raise ValueError("No rad nor migra axis passed to IrfMapMaker")
+        if rads is None and migra is None:
+            raise ValueError("No rad nor migra passed to IrfMapMaker")
 
-        self.rad_axis = rad_axis
-        self.migra_axis = migra_axis
+        self.rad_axis = None
+        self.migra_axis = None
 
         self.maps = {}
 
@@ -529,12 +533,14 @@ class IrfMapMaker:
 
         energy_axis = self.geom.get_axis_by_name('energy')
 
-        if self.migra_axis is not None:
+        if migra is not None:
+            self.migra_axis = MapAxis.from_edges(migra, unit='', name='migra')
             self.edisp_geom = self.geom.to_image().to_cube([migra_axis, energy_axis])
             self.edisp_map = EDispMap(Map.from_geom(self.edisp_geom, unit=""),exposure)
             self.maps['edisp'] = self.edisp_map
 
-        if self.rad_axis is not None:
+        if rads is not None:
+            self.rad_axis = MapAxis.from_edges(rads.to('deg').value, unit='deg', name='theta')
             self.psf_geom = self.geom.to_image().to_cube([rad_axis, energy_axis])
             self.psf_map = PSFMap(Map.from_geom(self.psf_geom, unit="1/sr"), exposure)
             self.maps['psf'] = self.psf_map
