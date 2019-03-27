@@ -168,16 +168,18 @@ def test_psfmap_stacking():
     psfmap2 = make_test_psfmap(0.1 * u.deg, shape="flat")
     psfmap2.exposure_map.quantity *= 2
 
-    psfmap_stack = psfmap1.stack(psfmap2, False)
+    psfmap_stack = psfmap1.stack(psfmap2, True)
     assert_allclose(psfmap_stack.data, psfmap1.data)
     assert_allclose(psfmap_stack.exposure_map.data, psfmap1.exposure_map.data * 3)
 
     psfmap3 = make_test_psfmap(0.3 * u.deg, shape="flat")
-    psfmap_stack = psfmap1.stack(psfmap3, False)
+    psfmap_stack = psfmap1.stack(psfmap3, True)
 
     assert_allclose(psfmap_stack.data[0, 40, 20, 20], 0.0)
     assert_allclose(psfmap_stack.data[0, 20, 20, 20], 5805.28955078125)
     assert_allclose(psfmap_stack.data[0, 0, 20, 20], 58052.78955078125)
 
+    psfmap1.stack(psfmap3, False)
+    assert_allclose(psfmap1.psf_map.data, psfmap_stack.psf_map.data)
 
 # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of observations in an Observations

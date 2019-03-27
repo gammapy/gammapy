@@ -315,7 +315,7 @@ class PSFMap:
 
         return m
 
-    def stack(self, other, in_place=True):
+    def stack(self, other, copy=True):
         """Stack PSFMap with another one.
 
         The current PSFMap is unchanged and a new one is created and returned.
@@ -324,7 +324,7 @@ class PSFMap:
         ----------
         other : `~gammapy.cube.PSFMap`
             the psfmap to be stacked with this one.
-        in_place : bool
+        copy : bool
             if set to False returns a new PSFMap
         Returns
         -------
@@ -363,4 +363,9 @@ class PSFMap:
         # We need to remove the extra axis in the total exposure
         reproj_exposure.quantity = total_exposure[:, 0, :, :]
 
-        return PSFMap(reproj_psfmap, reproj_exposure)
+        if copy:
+            return PSFMap(reproj_psfmap, reproj_exposure)
+        else:
+            self._psf_map = reproj_psfmap
+            self._exposure_map = reproj_exposure
+            return self
