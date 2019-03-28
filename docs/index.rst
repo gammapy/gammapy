@@ -48,7 +48,6 @@ To get started with Gammapy, follow the installation and setup instructions in
     utils/index
     scripts/index
 
-    datasets/index
     catalog/index
     astro/index
 
