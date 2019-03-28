@@ -6,10 +6,10 @@
 Summary
 +++++++
 
-- Released on March 27th, 2019
+- Released on March 29th, 2019
 - 11 contributors
 - 2 months of work
-- 50 pull requests (not all listed below)
+- 61 pull requests (not all listed below)
 
 **What's new?**
 
@@ -25,7 +25,7 @@ We also added a tutorial demonstrating the use of the `MapDataset` class for
 MCMC sampling and show how to interface Gammapy to the widely used emcee package.
 
 Gammapy v0.11 now supports the evalution of non-radially symmetric 3D background
-models and defining multiple background models for a singel `MapDataset`.
+models and defining multiple background models for a single `MapDataset`.
 
 Gammapy v0.11 improves the support for the scipy and sherpa fitting backends. It
 now implements full support of parameter freezing and parameter limits for both
@@ -77,6 +77,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.11 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
 
+- [#2093] Clean up PSF3D / TablePSF interpolation unit handling (Axel Donath)
+- [#2085] Improve EDispMap and PSFMap stacking (Régis Terrier)
 - [#2077] Add MCMC tutorial using emcee (Fabio Acero)
 - [#2076] Clean up maps/wcs.py (Axel Donath)
 - [#2071] Implement MapDataset npred evaluation using cutouts (Axel Donath)
