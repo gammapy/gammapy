@@ -4,7 +4,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from ..utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .utils import interp_to_order
+from .utils import interp_to_order, INVALID_INDEX
 from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
 
@@ -308,7 +308,7 @@ class HpxNDMap(HpxMap):
 
         pix, wts = hp.get_interp_weights(nside, theta, phi, nest=self.geom.nest)
         wts[:, m] = 0
-        pix[:, m] = -1
+        pix[:, m] = INVALID_INDEX.int
 
         if not self.geom.is_regular:
             pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
@@ -316,7 +316,7 @@ class HpxNDMap(HpxMap):
             pix_local = [self.geom[pix]]
 
         # If a pixel lies outside of the geometry set its index to the center pixel
-        m = pix_local[0] == -1
+        m = pix_local[0] == INVALID_INDEX.int
         if m.any():
             coords_ctr = [coords.lon, coords.lat]
             coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
@@ -355,7 +355,7 @@ class HpxNDMap(HpxMap):
             if not self.geom.is_regular:
                 pix, wts = self._get_interp_weights(coords, pix_i)
 
-            wts[pix[0] == -1] = 0
+            wts[pix[0] == INVALID_INDEX.int] = 0
             wt[~np.isfinite(wt)] = 0
             val += np.nansum(wts * wt * self.data.T[tuple(pix[:1] + pix_i)], axis=0)
 
@@ -363,7 +363,7 @@ class HpxNDMap(HpxMap):
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
-        msk = np.all(np.stack([t != -1 for t in idx]), axis=0)
+        msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         if weights is not None:
             weights = weights[msk]
         idx = [t[msk] for t in idx]

@@ -1,6 +1,35 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 from astropy.io import fits
 from ..utils.random import get_random_state
+
+
+class InvalidValue:
+    """Class to define placeholder for invalid array values."""
+    float = np.nan
+    int = np.nan
+    bool = np.nan
+
+    def __getitem__(self, dtype):
+        if np.issubdtype(dtype, np.integer):
+            return self.int
+        elif np.issubdtype(dtype, np.floating):
+            return self.float
+        elif np.issubdtype(dtype, np.dtype(bool).type):
+            return self.bool
+        else:
+            raise ValueError("No invalid value placeholder defined for {}".format(dtype))
+
+
+class InvalidIndex:
+    """Class to define placeholder for invalid array indices."""
+    float = np.nan
+    int = -1
+    bool = False
+
+
+INVALID_VALUE = InvalidValue()
+INVALID_INDEX = InvalidIndex()
 
 
 def fill_poisson(map_in, mu, random_state="random-seed"):

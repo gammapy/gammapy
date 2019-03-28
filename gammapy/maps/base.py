@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from .geom import pix_tuple_to_idx, MapCoord
-from .utils import unpack_seq
+from .utils import unpack_seq, INVALID_VALUE
 from ..utils.scripts import make_path
 
 __all__ = ["Map"]
@@ -705,12 +705,8 @@ class Map(metaclass=MapMeta):
            outside of map.
         """
         coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
-        msk = self.geom.contains(coords)
-        vals = np.empty(coords.shape, dtype=self.data.dtype)
-        coords = coords.apply_mask(msk)
-        idx = self.geom.coord_to_idx(coords)
-        vals[msk] = self.get_by_idx(idx)
-        vals[~msk] = np.nan
+        pix = self.geom.coord_to_pix(coords)
+        vals = self.get_by_pix(pix)
         return vals
 
     def get_by_pix(self, pix):
@@ -732,14 +728,16 @@ class Map(metaclass=MapMeta):
         """
         # FIXME: Support local indexing here?
         # FIXME: Support slicing?
-        pix = [np.array(p, copy=False, ndmin=1) for p in pix]
         pix = np.broadcast_arrays(*pix)
-        msk = self.geom.contains_pix(pix)
-        vals = np.empty(pix[0].shape, dtype=self.data.dtype)
-        pix = tuple([p[msk] for p in pix])
         idx = self.geom.pix_to_idx(pix)
-        vals[msk] = self.get_by_idx(idx)
-        vals[~msk] = np.nan
+        vals = self.get_by_idx(idx)
+        mask = self.geom.contains_pix(pix)
+
+        if not mask.all():
+            invalid = INVALID_VALUE[self.data.dtype]
+            vals = vals.astype(type(invalid))
+            vals[~mask] = invalid
+
         return vals
 
     @abc.abstractmethod

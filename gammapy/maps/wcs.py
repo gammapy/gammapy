@@ -13,6 +13,7 @@ from regions import SkyRegion
 from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes, find_and_read_bands, axes_pix_to_coord
+from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]
 
@@ -581,7 +582,7 @@ class WcsGeom(MapGeom):
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
         for _ in pix:
-            _[~m] = np.nan
+            _[~m] = INVALID_INDEX.float
         return pix
 
     def get_coord(self, idx=None, flat=False, mode="center"):
@@ -678,7 +679,7 @@ class WcsGeom(MapGeom):
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
-        return np.all(np.stack([t != -1 for t in idx]), axis=0)
+        return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))

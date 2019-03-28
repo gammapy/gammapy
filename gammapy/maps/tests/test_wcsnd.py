@@ -157,6 +157,17 @@ def test_wcsndmap_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
     m.set_by_pix(pix, coords[0])
     assert_allclose(coords[0], m.get_by_pix(pix))
 
+def test_get_by_coord_bool_int():
+    mask = WcsNDMap.create(width=2, dtype='bool')
+    coords={'lon': [0, 3], 'lat':[0, 3]}
+    vals = mask.get_by_coord(coords)
+    assert_allclose(vals, [0, np.nan])
+
+    mask = WcsNDMap.create(width=2, dtype='int')
+    coords = {'lon': [0, 3], 'lat': [0, 3]}
+    vals = mask.get_by_coord(coords)
+    assert_allclose(vals, [0, np.nan])
+
 
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms

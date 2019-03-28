@@ -7,6 +7,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.units import Quantity
+from .utils import INVALID_INDEX
 from .wcs import WcsGeom
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx
 from .geom import coordsys_to_frame, skycoord_to_lonlat
@@ -449,10 +450,10 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
     idx //= ratio
 
     if not nest:
-        m = idx == -1
+        m = idx == INVALID_INDEX.int
         idx[m] = 0
         idx = hp.nest2ring(nside_superpix, idx)
-        idx[m] = -1
+        idx[m] = INVALID_INDEX.int
 
     return idx
 
@@ -504,15 +505,15 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
     if not np.all(npix[0] == npix):
         x = np.broadcast_to(x, idx.shape + x.shape)
         idx = idx[..., None] + x
-        idx[x >= np.broadcast_to(npix[..., None], x.shape)] = -1
+        idx[x >= np.broadcast_to(npix[..., None], x.shape)] = INVALID_INDEX.int
     else:
         idx = idx[..., None] + x
 
     if not nest:
-        m = idx == -1
+        m = idx == INVALID_INDEX.int
         idx[m] = 0
         idx = hp.nest2ring(nside_subpix[..., None], idx)
-        idx[m] = -1
+        idx[m] = INVALID_INDEX.int
 
     return idx
 
@@ -723,9 +724,9 @@ class HpxGeom(MapGeom):
         else:
             idx_local = unravel_hpx_index(retval, self._npix)
 
-        m = np.any(np.stack([t == -1 for t in idx_local]), axis=0)
+        m = np.any(np.stack([t == INVALID_INDEX.int for t in idx_local]), axis=0)
         for i, t in enumerate(idx_local):
-            idx_local[i][m] = -1
+            idx_local[i][m] = INVALID_INDEX.int
 
         if not ravel:
             return idx_local
@@ -795,7 +796,7 @@ class HpxGeom(MapGeom):
             pix = tuple([pix] + bins)
             if np.any(m):
                 for p in pix:
-                    p[m] = -1
+                    p[m] = INVALID_INDEX.int
         else:
             pix = (hp.ang2pix(self.nside, theta, phi, nest=self.nest),)
 
@@ -819,14 +820,14 @@ class HpxGeom(MapGeom):
                 nside = self.nside
 
             ipix = np.round(pix[0]).astype(int)
-            m = ipix == -1
+            m = ipix == INVALID_INDEX.int
             ipix[m] = 0
             theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
             coords = [np.degrees(phi), np.degrees(np.pi / 2.0 - theta)]
             coords = tuple(coords + vals)
             if np.any(m):
                 for c in coords:
-                    c[m] = np.nan
+                    c[m] = INVALID_INDEX.float
         else:
             ipix = np.round(pix[0]).astype(int)
             theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest)
@@ -878,7 +879,7 @@ class HpxGeom(MapGeom):
             idx = self.get_idx()
             slices = (slice(None),) + slices
             idx = [p[slices[::-1]] for p in idx]
-            idx = [p[p != -1] for p in idx]
+            idx = [p[p != INVALID_INDEX.int] for p in idx]
             if drop_axes:
                 idx = [idx[i] for i in range(len(idx)) if i in slice_dims]
             region = tuple(idx)
@@ -1678,7 +1679,7 @@ class HpxGeom(MapGeom):
             pix = self.global_to_local(pix)
 
         if flat:
-            pix = tuple([p[p != -1] for p in pix])
+            pix = tuple([p[p != INVALID_INDEX.int] for p in pix])
 
         return pix
 
@@ -1694,7 +1695,7 @@ class HpxGeom(MapGeom):
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
-        return np.all(np.stack([t != -1 for t in idx]), axis=0)
+        return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def get_skydirs(self):
         """Get the sky coordinates of all the pixels in this geometry."""
