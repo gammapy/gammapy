@@ -71,15 +71,15 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     regions = fregions.reflected_regions
     assert len(regions) == 16
 
-    # Test with maximum number of regions
-    fregions.max_region_number = 5
-    fregions.run()
-    regions = fregions.reflected_regions
-    assert len(regions) == 5
-
     # Test with too small exclusion
     small_mask = exclusion_mask.cutout(pointing, Angle("0.2 deg"))
     fregions.exclusion_mask = small_mask
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 16
+
+    # Test with maximum number of regions
+    fregions.max_region_number = 5
     fregions.run()
     regions = fregions.reflected_regions
     assert len(regions) == 5
