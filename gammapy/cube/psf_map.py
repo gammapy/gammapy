@@ -79,8 +79,8 @@ class PSFMap:
         from astropy import units as u
         from astropy.coordinates import SkyCoord
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.irf import EnergyDependentMultiGaussPSF
-        from gammapy.cube import make_psf_map, PSFMap
+        from gammapy.irf import EnergyDependentMultiGaussPSF, EffectiveAreaTable2D
+        from gammapy.cube import make_psf_map, PSFMap, make_map_exposure_true_energy
 
         # Define energy axis. Note that the name is fixed.
         energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
@@ -99,9 +99,14 @@ class PSFMap:
         filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
         psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
         psf3d = psf.to_psf3d(rads)
+        aeff2d = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+
+        # Create the exposure map
+        exposure_geom = geom.to_image().to_cube([energy_axis])
+        exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
 
         # create the PSFMap for the specified pointing
-        psf_map = make_psf_map(psf3d, pointing, geom, max_offset)
+        psf_map = make_psf_map(psf3d, pointing, geom, max_offset, exposure_map)
 
         # Get an EnergyDependentTablePSF at any position in the image
         psf_table = psf_map.get_energy_dependent_table_psf(SkyCoord(2., 2.5, unit='deg'))
@@ -117,7 +122,7 @@ class PSFMap:
         if psf_map.geom.axes[0].name.upper() != "THETA":
             raise ValueError("Incorrect theta axis position in input Map")
 
-        self._psf_map = psf_map
+        self.psf_map = psf_map
 
         if exposure_map is not None:
             # First adapt geometry, keep only energy axis
@@ -125,32 +130,7 @@ class PSFMap:
             if exposure_map.geom != expected_geom:
                 raise ValueError("PSFMap and exposure_map have inconsistent geometries")
 
-        self._exposure_map = exposure_map
-
-    @property
-    def psf_map(self):
-        """the PSFMap itself (`~gammapy.maps.Map`)"""
-        return self._psf_map
-
-    @property
-    def data(self):
-        """the PSFMap data"""
-        return self._psf_map.data
-
-    @property
-    def quantity(self):
-        """the PSFMap data as a quantity"""
-        return self._psf_map.quantity
-
-    @property
-    def exposure_map(self):
-        """the exposure map associated to the PSFMap."""
-        return self._exposure_map
-
-    @property
-    def geom(self):
-        """The PSFMap MapGeom object"""
-        return self._psf_map.geom
+        self.exposure_map = exposure_map
 
     @classmethod
     def from_hdulist(
@@ -246,8 +226,8 @@ class PSFMap:
             )
 
         # axes ordering fixed. Could be changed.
-        pix_ener = np.arange(self.geom.axes[1].nbin)
-        pix_rad = np.arange(self.geom.axes[0].nbin)
+        pix_ener = np.arange(self.psf_map.geom.axes[1].nbin)
+        pix_rad = np.arange(self.psf_map.geom.axes[0].nbin)
 
         # Convert position to pixels
         pix_lon, pix_lat = self.psf_map.geom.to_image().coord_to_pix(position)
@@ -305,8 +285,8 @@ class PSFMap:
         containment_radius_map : `~gammapy.maps.Map`
             Containment radius map
         """
-        coords = self.geom.to_image().get_coord().skycoord.flatten()
-        m = Map.from_geom(self.geom.to_image(), unit="deg")
+        coords = self.psf_map.geom.to_image().get_coord().skycoord.flatten()
+        m = Map.from_geom(self.psf_map.geom.to_image(), unit="deg")
 
         for coord in coords:
             psf_table = self.get_energy_dependent_table_psf(coord)
@@ -315,16 +295,17 @@ class PSFMap:
 
         return m
 
-    def stack(self, other):
+    def stack(self, other, copy=True):
         """Stack PSFMap with another one.
 
-        The current PSFMap is unchanged and a new one is created and returned.
-        For the moment, this works only if the PSFMap to be stacked contain compatible exposure maps.
+        The other PSFMap is projected on the current PSFMap geometry.
 
         Parameters
         ----------
         other : `~gammapy.cube.PSFMap`
             the psfmap to be stacked with this one.
+        copy : bool
+            if set to True returns a new PSFMap
 
         Returns
         -------
@@ -334,13 +315,38 @@ class PSFMap:
         if self.exposure_map is None or other.exposure_map is None:
             raise ValueError("Missing exposure map for PSFMap.stack")
 
-        total_exposure = self.exposure_map + other.exposure_map
-        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_psf_quantity = self.quantity * exposure
-        other_exposure = other.exposure_map.quantity[:, np.newaxis, :, :]
-        stacked_psf_quantity += other.quantity * other_exposure
-        stacked_psf_quantity /= total_exposure.quantity[:, np.newaxis, :, :]
-        stacked_psf = Map.from_geom(
-            self.geom, data=stacked_psf_quantity.to("1/sr").value, unit="1/sr"
+        # Reproject other exposure
+        exposure_coord = self.exposure_map.geom.get_coord()
+        reproj_exposure = Map.from_geom(
+            self.exposure_map.geom, unit=self.exposure_map.unit
         )
-        return PSFMap(stacked_psf, total_exposure)
+        reproj_exposure.fill_by_coord(
+            exposure_coord, other.exposure_map.get_by_coord(exposure_coord)
+        )
+
+        # Reproject other psfmap using same geom
+        psfmap_coord = self.psf_map.geom.get_coord()
+        reproj_psfmap = Map.from_geom(self.psf_map.geom, unit=self.psf_map.unit)
+        reproj_psfmap.fill_by_coord(
+            psfmap_coord, other.psf_map.get_by_coord(psfmap_coord)
+        )
+
+        exposure = self.exposure_map.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity = self.psf_map.quantity * exposure
+
+        other_exposure = reproj_exposure.quantity[:, np.newaxis, :, :]
+        stacked_psf_quantity += reproj_psfmap.quantity * other_exposure
+
+        total_exposure = exposure + other_exposure
+        stacked_psf_quantity /= total_exposure
+
+        reproj_psfmap.quantity = stacked_psf_quantity
+        # We need to remove the extra axis in the total exposure
+        reproj_exposure.quantity = total_exposure[:, 0, :, :]
+
+        if copy:
+            return PSFMap(reproj_psfmap, reproj_exposure)
+        else:
+            self.psf_map = reproj_psfmap
+            self.exposure_map = reproj_exposure
+            return self

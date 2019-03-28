@@ -45,12 +45,12 @@ def make_edisp_map_test():
     edisp2d = EnergyDispersion2D.from_gauss(etrue, migra, 0.0, 0.2, offsets)
 
     geom = WcsGeom.create(
-        skydir=pointing, binsz=1., width=5., axes=[migra_axis, energy_axis]
+        skydir=pointing, binsz=1.0, width=5.0, axes=[migra_axis, energy_axis]
     )
 
     aeff2d = fake_aeff2d()
     exposure_geom = WcsGeom.create(
-        skydir=pointing, binsz=1., width=5., axes=[energy_axis]
+        skydir=pointing, binsz=1.0, width=5.0, axes=[energy_axis]
     )
 
     exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
@@ -74,7 +74,7 @@ def test_make_edisp_map():
     assert edmap.edisp_map.geom.axes[0] == migra_axis
     assert edmap.edisp_map.geom.axes[1] == energy_axis
     assert edmap.edisp_map.unit == Unit("")
-    assert edmap.data.shape == (4, 50, 5, 5)
+    assert edmap.edisp_map.data.shape == (4, 50, 5, 5)
 
 
 def test_edisp_map_to_from_hdulist():
@@ -89,7 +89,7 @@ def test_edisp_map_to_from_hdulist():
         hdulist, edisp_hdu="EDISP", edisp_hdubands="BANDSEDISP"
     )
     assert_allclose(edmap.edisp_map.data, new_edmap.edisp_map.data)
-    assert new_edmap.geom == edmap.geom
+    assert new_edmap.edisp_map.geom == edmap.edisp_map.geom
     assert new_edmap.exposure_map.geom == edmap.exposure_map.geom
 
 
@@ -121,6 +121,9 @@ def test_edisp_map_stacking():
     edmap2 = make_edisp_map_test()
     edmap2.exposure_map.quantity *= 2
 
-    edmap_stack = edmap1.stack(edmap2)
-    assert_allclose(edmap_stack.data, edmap1.data)
+    edmap_stack = edmap1.stack(edmap2, True)
+    assert_allclose(edmap_stack.edisp_map.data, edmap1.edisp_map.data)
     assert_allclose(edmap_stack.exposure_map.data, edmap1.exposure_map.data * 3)
+
+    edmap1.stack(edmap2, False)
+    assert_allclose(edmap1.edisp_map.data, edmap_stack.edisp_map.data)
