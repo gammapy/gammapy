@@ -77,6 +77,7 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     fregions.run()
     regions = fregions.reflected_regions
     assert len(regions) == 16
+    assert_quantity_allclose(regions[3].center.icrs.ra, Angle("83.674 deg"), rtol=1e-2)
 
     # Test with maximum number of regions
     fregions.max_region_number = 5

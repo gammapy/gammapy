@@ -581,13 +581,8 @@ class WcsGeom(MapGeom):
         pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
-<<<<<<< HEAD
         for _ in pix:
             _[~m] = INVALID_INDEX.float
-=======
-        for i in range(len(pix)):
-            pix[i][~m] = INVALID_INDEX.float
->>>>>>> Use np.nan as placeholder consistently
         return pix
 
     def get_coord(self, idx=None, flat=False, mode="center"):
