@@ -74,11 +74,10 @@ def requires_data(name):
     ::
 
         from gammapy.utils.testing import requires_data
-        from gammapy.datasets import data
 
         @requires_data('gammapy-data')
         def test_using_data_files():
-            filename = gammapy_data.filename('...')
+            filename = "$GAMMAPY_DATA/..."
             ...
     """
     import pytest

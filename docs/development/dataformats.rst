@@ -10,9 +10,6 @@ Data Formats
     This page contains extra information about which formats we support in
     Gammapy and which class corresponds to which format.
 
-.. note:: In :ref:`datasets` you find example gamma-ray datasets,
-          some in the formats described here.
-
 Where available and useful existing standards are used, e.g. for spectral data
 the X-ray community has developed the ``PHA``, ``ARF`` and ``RMF`` file formats
 and they have developed powerful tools to work with data in that format.
