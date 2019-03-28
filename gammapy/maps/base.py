@@ -728,14 +728,16 @@ class Map(metaclass=MapMeta):
         """
         # FIXME: Support local indexing here?
         # FIXME: Support slicing?
-        pix = [np.array(p, copy=False, ndmin=1) for p in pix]
         pix = np.broadcast_arrays(*pix)
-        msk = self.geom.contains_pix(pix)
-        vals = np.empty(pix[0].shape, dtype=self.data.dtype)
-        pix = tuple([p[msk] for p in pix])
         idx = self.geom.pix_to_idx(pix)
-        vals[msk] = self.get_by_idx(idx)
-        vals[~msk] = INVALID_VALUE[self.data.dtype]
+        vals = self.get_by_idx(idx)
+        mask = self.geom.contains_pix(pix)
+
+        if not mask.all():
+            invalid = INVALID_VALUE[self.data.dtype]
+            vals = vals.astype(type(invalid))
+            vals[~mask] = invalid
+
         return vals
 
     @abc.abstractmethod

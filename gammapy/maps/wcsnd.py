@@ -87,7 +87,7 @@ class WcsNDMap(WcsMap):
         else:
             data = np.full(shape_np, np.nan, dtype=dtype)
             idx = geom.get_idx()
-            m = np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
+            m = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
             data[m] = 0.0
 
         return data
@@ -211,7 +211,7 @@ class WcsNDMap(WcsMap):
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
-        msk = np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
+        msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
 
         if weights is not None:

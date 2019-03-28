@@ -6,26 +6,26 @@ from ..utils.random import get_random_state
 
 class InvalidValue:
     """Class to define placeholder for invalid array values."""
-    float_value = np.nan
-    int_value = np.iinfo(np.int32).min
-    bool_value = False
+    float = np.nan
+    int = np.nan
+    bool = np.nan
 
     def __getitem__(self, dtype):
         if np.issubdtype(dtype, np.integer):
-            return self.int_value
+            return self.int
         elif np.issubdtype(dtype, np.floating):
-            return self.float_value
+            return self.float
         elif np.issubdtype(dtype, np.dtype(bool).type):
-            return self.bool_value
+            return self.bool
         else:
             raise ValueError("No invalid value placeholder defined for {}".format(dtype))
 
 
 class InvalidIndex:
     """Class to define placeholder for invalid array indices."""
-    float_value = np.nan
-    int_value = -1
-    bool_value = False
+    float = np.nan
+    int = -1
+    bool = False
 
 
 INVALID_VALUE = InvalidValue()

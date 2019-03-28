@@ -82,7 +82,7 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     fregions.exclusion_mask = small_mask
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 0
+    assert len(regions) == 5
 
 
 

@@ -581,8 +581,13 @@ class WcsGeom(MapGeom):
         pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
+<<<<<<< HEAD
         for _ in pix:
             _[~m] = INVALID_INDEX.float
+=======
+        for i in range(len(pix)):
+            pix[i][~m] = INVALID_INDEX.float
+>>>>>>> Use np.nan as placeholder consistently
         return pix
 
     def get_coord(self, idx=None, flat=False, mode="center"):
@@ -679,7 +684,7 @@ class WcsGeom(MapGeom):
 
     def contains(self, coords):
         idx = self.coord_to_idx(coords)
-        return np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
+        return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def to_image(self):
         npix = (np.max(self._npix[0]), np.max(self._npix[1]))

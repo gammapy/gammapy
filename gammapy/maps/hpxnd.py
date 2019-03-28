@@ -308,7 +308,7 @@ class HpxNDMap(HpxMap):
 
         pix, wts = hp.get_interp_weights(nside, theta, phi, nest=self.geom.nest)
         wts[:, m] = 0
-        pix[:, m] = INVALID_INDEX.int_value
+        pix[:, m] = INVALID_INDEX.int
 
         if not self.geom.is_regular:
             pix_local = [self.geom.global_to_local([pix] + list(idxs))[0]]
@@ -316,7 +316,7 @@ class HpxNDMap(HpxMap):
             pix_local = [self.geom[pix]]
 
         # If a pixel lies outside of the geometry set its index to the center pixel
-        m = pix_local[0] == INVALID_INDEX.int_value
+        m = pix_local[0] == INVALID_INDEX.int
         if m.any():
             coords_ctr = [coords.lon, coords.lat]
             coords_ctr += [ax.pix_to_coord(t) for ax, t in zip(self.geom.axes, idxs)]
@@ -355,7 +355,7 @@ class HpxNDMap(HpxMap):
             if not self.geom.is_regular:
                 pix, wts = self._get_interp_weights(coords, pix_i)
 
-            wts[pix[0] == INVALID_INDEX.int_value] = 0
+            wts[pix[0] == INVALID_INDEX.int] = 0
             wt[~np.isfinite(wt)] = 0
             val += np.nansum(wts * wt * self.data.T[tuple(pix[:1] + pix_i)], axis=0)
 
@@ -363,7 +363,7 @@ class HpxNDMap(HpxMap):
 
     def fill_by_idx(self, idx, weights=None):
         idx = pix_tuple_to_idx(idx)
-        msk = np.all(np.stack([t != INVALID_INDEX.int_value for t in idx]), axis=0)
+        msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         if weights is not None:
             weights = weights[msk]
         idx = [t[msk] for t in idx]
