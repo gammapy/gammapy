@@ -332,9 +332,10 @@ class MapMakerRing(MapMaker):
         or `~gammapy.background.AdaptiveRingBackgroundEstimator`
         Ring background estimator or something with an equivalent API.
 
-    Example
-    ---------
-    ::
+    Examples
+    --------
+    Here is an example how to ise the MapMakerRing with H.E.S.S. DL3 data::
+
         import numpy as np
         from astropy import units as u
         from astropy.coordinates import SkyCoord
@@ -451,11 +452,11 @@ class MapMakerRing(MapMaker):
         -------
         maps: dict of `~gammapy.maps.Map`
             Dictionary containing the following maps:
-                * `"on"`: counts map
-                * `"exposure_on"`: on exposure map, which is just the
+                * ``"on"``: counts map
+                * ``"exposure_on"``: on exposure map, which is just the
                      template background map from the IRF
-                * `"exposure_off"`: off exposure map convolved with the ring
-                * `"off"`: off map
+                * ``"exposure_off"``: off exposure map convolved with the ring
+                * ``"off"``: off map
 
         """
         return self._run(
@@ -474,11 +475,11 @@ class MapMakerRing(MapMaker):
         -------
         maps: dict of `~gammapy.maps.Map`
             Dictionary containing the following maps:
-                * `"on"`: counts map
-                * `"exposure_on"`: on exposure map, which is just the
+                * ``"on"``: counts map
+                * ``"exposure_on"``: on exposure map, which is just the
                      template background map from the IRF
-                * `"exposure_off"`: off exposure map convolved with the ring
-                * `"off"`: off map
+                * ``"exposure_off"``: off exposure map convolved with the ring
+                * ``"off"``: off map
 
         """
         return self._run(observations, sum_over_axis=False)
