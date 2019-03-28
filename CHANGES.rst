@@ -6,40 +6,41 @@
 Summary
 +++++++
 
-- Released on March 29th, 2019
+- Released on March 29, 2019
 - 11 contributors
 - 2 months of work
-- 61 pull requests (not all listed below)
+- 65 pull requests (not all listed below)
 
 **What's new?**
 
 Gammapy v0.11 implements a large part of the new joint-likelihood fitting
-framework, proposed in `PIG 7`_. This includes the introduction of the
-`FluxPointsDataset`, `MapDataset` and `Datasets` classes, which now represent
-the main interface to the `Fit` class and fitting backends in Gammapy. As a
+framework proposed in `PIG 8`_. This includes the introduction of the
+``FluxPointsDataset``, ``MapDataset`` and ``Datasets`` classes, which now represent
+the main interface to the ``Fit`` class and fitting backends in Gammapy. As a
 first use-case of the new dataset classes we added a tutorial demonstrating a
 joint-likelihood fit of a CTA 1DC Galactic center observations. We also
 considerably improved the performance of the 3D likelihood evaluation (~factor
 of 10) by evaluating the source model components on smaller cutouts of the map.
-We also added a tutorial demonstrating the use of the `MapDataset` class for
+We also added a tutorial demonstrating the use of the ``MapDataset`` class for
 MCMC sampling and show how to interface Gammapy to the widely used emcee package.
-
-Gammapy v0.11 now supports the evalution of non-radially symmetric 3D background
-models and defining multiple background models for a single `MapDataset`.
+Gammapy v0.11 also includes a new pulsar analysis tutorial. It demonstrates
+how to compute phase curves and phase resolved sky maps with Gammapy.
+To better support classical analysis methods in our main API we implemented
+a ``MapMakerRing`` class, that provides ring and adaptive ring background
+estimation for map and image estimation.
 
 Gammapy v0.11 improves the support for the scipy and sherpa fitting backends. It
 now implements full support of parameter freezing and parameter limits for both
-backends. We also added a `reoptimize` option to the `Fit.likelihood_profile`
+backends. We also added a ``reoptimize`` option to the ``Fit.likelihood_profile``
 method to compute likelihood profiles with reoptimizing remaining free parameters.
 
-For Gammapy v0.11 we added a SkyEllipse model to support fitting of elongated
-sources and changed the parametrization of the `SkyGaussian` to integrate correctly
+For Gammapy v0.11 we added a ``SkyEllipse`` model to support fitting of elongated
+sources and changed the parametrization of the ``SkyGaussian`` to integrate correctly
 on the sphere. The spatial model classes now feature simple support for coordinate
 frames, such that the position of the source can be defined and fitted independently
-of the coordinate system of the data.
-
-Gammapy v0.11 also includes a new pulsar analysis tutorial. It demonstrates
-how to compute phase curves and phase resolved sky maps with Gammapy.
+of the coordinate system of the data. Gammapy v0.11 now supports the evaluation
+non-radially symmetric 3D background models and defining multiple background models
+for a single ``MapDataset``.
 
 Gammapy v0.11 drops support for Python 2.7, only Python 3.5 or newer is supported (see `PIG 3`_).
 If you have any questions or need help to install Python 3, or to update your
@@ -51,6 +52,11 @@ in some cases. pip and conda should handle this correctly, i.e. automatically
 pick the last compatible version (Gammapy v0.10) on Python 2, or if you try
 to force installation of a later version by explicitly giving a version number,
 emit an error and exit without installing or updating.
+
+For Gammapy v0.11 we removed the unmaintained ``gammapy.datasets`` sub-module.
+Please use the ``gammapy download`` command to download datasets instead and
+the ``$GAMMAPY_DATA`` environment variable to access the data directly from
+your local gammapy-datasets folder.
 
 **Contributors:**
 
@@ -77,6 +83,8 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 
 See the complete `Gammapy 0.11 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?q=is%3Apr+milestone%3A0.11+is%3Aclosed>`__.
 
+- [#2098] Remove gammapy.datasets submodule (Axel Donath)
+- [#2097] Clean up tutorial notebooks (Christoph Deil)
 - [#2093] Clean up PSF3D / TablePSF interpolation unit handling (Axel Donath)
 - [#2085] Improve EDispMap and PSFMap stacking (Régis Terrier)
 - [#2077] Add MCMC tutorial using emcee (Fabio Acero)
