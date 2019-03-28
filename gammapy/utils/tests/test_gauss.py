@@ -60,25 +60,29 @@ class TestMultiGauss2D:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
 
-    def test_call(self):
+    @staticmethod
+    def test_call():
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         xy_max = 5 * m.max_sigma  # integration range
         integral = dblquad(m, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max)[0]
         assert_almost_equal(integral, 7, decimal=5)
 
-    def test_dpdtheta2(self):
+    @staticmethod
+    def test_dpdtheta2():
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         theta2_max = (7 * m.max_sigma) ** 2
         integral = quad(m.dpdtheta2, 0, theta2_max)[0]
         assert_almost_equal(integral, 7, decimal=5)
 
-    def test_integral_normalize(self):
+    @staticmethod
+    def test_integral_normalize():
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         assert_equal(m.integral, 7)
         m.normalize()
         assert_equal(m.integral, 1)
 
-    def test_containment(self):
+    @staticmethod
+    def test_containment():
         g, g2 = Gauss2DPDF(sigma=1), Gauss2DPDF(sigma=2)
         m = MultiGauss2D(sigmas=[1])
         m2 = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
@@ -92,7 +96,8 @@ class TestMultiGauss2D:
             )
             assert_almost_equal(actual, desired)
 
-    def test_theta(self):
+    @staticmethod
+    def test_theta():
         # Closure test
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         for theta in [0, 0.1, 1, 5]:
@@ -100,7 +105,8 @@ class TestMultiGauss2D:
             t = m.containment_radius(c)
             assert_almost_equal(t, theta, decimal=5)
 
-    def test_gauss_convolve(self):
+    @staticmethod
+    def test_gauss_convolve():
         # Convolution must add sigmas in square
         m = MultiGauss2D(sigmas=[3], norms=[5])
         m2 = m.gauss_convolve(4, 6)

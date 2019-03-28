@@ -46,21 +46,24 @@ def cosine_profile():
 
 
 class TestImageProfileEstimator:
-    def test_lat_profile_sum(self, checkerboard_image):
+    @staticmethod
+    def test_lat_profile_sum(checkerboard_image):
         p = ImageProfileEstimator(axis="lat", method="sum")
         profile = p.run(checkerboard_image)
 
         desired = 10 * np.ones(6) * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
-    def test_lon_profile_sum(self, checkerboard_image):
+    @staticmethod
+    def test_lon_profile_sum(checkerboard_image):
         p = ImageProfileEstimator(axis="lon", method="sum")
         profile = p.run(checkerboard_image)
 
         desired = 6 * np.ones(10) * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
-    def test_radial_profile_sum(self, checkerboard_image):
+    @staticmethod
+    def test_radial_profile_sum(checkerboard_image):
         center = SkyCoord(0, 0, unit="deg", frame="galactic")
         p = ImageProfileEstimator(axis="radial", method="sum", center=center)
         profile = p.run(checkerboard_image)
@@ -68,21 +71,24 @@ class TestImageProfileEstimator:
         desired = [4.0, 8.0, 20.0, 12.0, 12.0] * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
-    def test_lat_profile_mean(self, checkerboard_image):
+    @staticmethod
+    def test_lat_profile_mean(checkerboard_image):
         p = ImageProfileEstimator(axis="lat", method="mean")
         profile = p.run(checkerboard_image)
 
         desired = np.ones(6) * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
-    def test_lon_profile_mean(self, checkerboard_image):
+    @staticmethod
+    def test_lon_profile_mean(checkerboard_image):
         p = ImageProfileEstimator(axis="lon", method="mean")
         profile = p.run(checkerboard_image)
 
         desired = np.ones(10) * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
-    def test_x_edges_lat(self, checkerboard_image):
+    @staticmethod
+    def test_x_edges_lat(checkerboard_image):
         x_edges = Angle(np.linspace(-0.06, 0.06, 4), "deg")
 
         p = ImageProfileEstimator(x_edges=x_edges, axis="lat", method="sum")
@@ -91,7 +97,8 @@ class TestImageProfileEstimator:
         desired = 20 * np.ones(3) * u.Unit("cm-2 s-1")
         assert_quantity_allclose(profile.profile, desired)
 
-    def test_x_edges_lon(self, checkerboard_image):
+    @staticmethod
+    def test_x_edges_lon(checkerboard_image):
         x_edges = Angle(np.linspace(-0.1, 0.1, 6), "deg")
 
         p = ImageProfileEstimator(x_edges=x_edges, axis="lon", method="sum")
@@ -102,7 +109,8 @@ class TestImageProfileEstimator:
 
 
 class TestImageProfile:
-    def test_normalize(self, cosine_profile):
+    @staticmethod
+    def test_normalize(cosine_profile):
         normalized = cosine_profile.normalize(mode="integral")
         profile = normalized.profile
         assert_quantity_allclose(profile.sum(), 1 * u.Unit("cm-2 s-1"))
@@ -111,11 +119,13 @@ class TestImageProfile:
         profile = normalized.profile
         assert_quantity_allclose(profile.max(), 1 * u.Unit("cm-2 s-1"))
 
-    def test_profile_x_edges(self, cosine_profile):
+    @staticmethod
+    def test_profile_x_edges(cosine_profile):
         assert_quantity_allclose(cosine_profile.x_ref.sum(), 0 * u.deg)
 
     @pytest.mark.parametrize("kernel", ["gauss", "box"])
-    def test_smooth(self, cosine_profile, kernel):
+    @staticmethod
+    def test_smooth(cosine_profile, kernel):
         # smoothing should preserve the mean
         desired_mean = cosine_profile.profile.mean()
         smoothed = cosine_profile.smooth(kernel, radius=3)
@@ -126,6 +136,7 @@ class TestImageProfile:
         assert smoothed.profile_err.mean() < cosine_profile.profile_err.mean()
 
     @requires_dependency("matplotlib")
-    def test_peek(self, cosine_profile):
+    @staticmethod
+    def test_peek(cosine_profile):
         with mpl_plot_check():
             cosine_profile.peek()

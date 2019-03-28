@@ -104,10 +104,10 @@ class TestFermi3FGLObject:
 
     def test_data_python_dict(self):
         data = self.source._data_python_dict
-        assert type(data["RAJ2000"]) == float
+        assert isinstance(data["RAJ2000"], float)
         assert data["RAJ2000"] == 83.63719940185547
-        assert type(data["Unc_Flux100_300"]) == list
-        assert type(data["Unc_Flux100_300"][0]) == float
+        assert isinstance(data["Unc_Flux100_300"], list)
+        assert isinstance(data["Unc_Flux100_300"][0], float)
         assert_allclose(data["Unc_Flux100_300"][0], -1.44535601265261e-08)
 
     @requires_dependency("uncertainties")
@@ -280,10 +280,10 @@ class TestFermi3FHLObject:
 
     def test_data_python_dict(self):
         data = self.source._data_python_dict
-        assert type(data["RAJ2000"]) == float
+        assert isinstance(data["RAJ2000"], float)
         assert data["RAJ2000"] == 83.63483428955078
-        assert type(data["Flux_Band"]) == list
-        assert type(data["Flux_Band"][0]) == float
+        assert isinstance(data["Flux_Band"], list)
+        assert isinstance(data["Flux_Band"][0], float)
         assert_allclose(data["Flux_Band"][0], 5.1698894054652555e-09)
 
     @requires_dependency("uncertainties")

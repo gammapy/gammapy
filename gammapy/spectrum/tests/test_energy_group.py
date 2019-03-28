@@ -57,38 +57,45 @@ class TestSpectrumEnergyGroups:
             ]
         )
 
-    def test_repr(self, groups):
+    @staticmethod
+    def test_repr(groups):
         assert repr(groups) == "SpectrumEnergyGroups(len=4)"
 
-    def test_str(self, groups):
+    @staticmethod
+    def test_str(groups):
         txt = str(groups)
         assert "SpectrumEnergyGroups" in txt
         assert "energy_group_idx" in txt
 
-    def test_copy(self, groups):
+    @staticmethod
+    def test_copy(groups):
         """Make sure groups.copy() is a deep copy"""
         groups2 = groups.copy()
         groups2[0].bin_type = "spam"
         assert groups[0].bin_type == "normal"
 
-    def test_group_table(self, groups):
+    @staticmethod
+    def test_group_table(groups):
         """Check that info to and from group table round-trips"""
         table = groups.to_group_table()
         groups2 = SpectrumEnergyGroups.from_group_table(table)
         assert groups2 == groups
 
-    def test_from_total_table(self, groups):
+    @staticmethod
+    def test_from_total_table(groups):
         table = groups.to_total_table()
         groups2 = SpectrumEnergyGroups.from_total_table(table)
         assert groups2 == groups
 
-    def test_energy_range(self, groups):
+    @staticmethod
+    def test_energy_range(groups):
         actual = groups.energy_range
         expected = [100, 300] * u.TeV
         assert_allclose(actual, expected)
         assert actual.unit == "TeV"
 
-    def test_energy_bounds(self, groups):
+    @staticmethod
+    def test_energy_bounds(groups):
         actual = groups.energy_bounds
         expected = [100, 210, 260, 270, 300] * u.TeV
         assert_allclose(actual, expected)
@@ -108,14 +115,16 @@ class TestSpectrumEnergyGroupMaker:
         )
         return SpectrumObservation(on_vector=on_vector)
 
-    def test_groups_from_obs(self, obs):
+    @staticmethod
+    def test_groups_from_obs(obs):
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.groups_from_obs()
         groups = seg.groups
 
         assert len(groups) == obs.e_reco.nbins
 
-    def test_compute_groups_fixed_basic(self, obs):
+    @staticmethod
+    def test_compute_groups_fixed_basic(obs):
         ebounds = [1, 2, 10] * u.TeV
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
@@ -130,11 +139,12 @@ class TestSpectrumEnergyGroupMaker:
 
         assert groups == expected
 
+    @staticmethod
     @pytest.mark.parametrize(
         "ebounds",
         [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
     )
-    def test_compute_groups_fixed_edges(self, obs, ebounds):
+    def test_compute_groups_fixed_edges(obs, ebounds):
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
@@ -150,7 +160,8 @@ class TestSpectrumEnergyGroupMaker:
 
         assert groups == expected
 
-    def test_compute_groups_fixed_below_range(self, obs):
+    @staticmethod
+    def test_compute_groups_fixed_below_range(obs):
         ebounds = [0.7, 0.8, 1, 4] * u.TeV
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
@@ -165,7 +176,8 @@ class TestSpectrumEnergyGroupMaker:
 
         assert groups == expected
 
-    def test_compute_groups_fixed_above_range(self, obs):
+    @staticmethod
+    def test_compute_groups_fixed_above_range(obs):
         ebounds = [5, 7, 11, 13] * u.TeV
         seg = SpectrumEnergyGroupMaker(obs=obs)
         seg.compute_groups_fixed(ebounds=ebounds)
@@ -181,7 +193,8 @@ class TestSpectrumEnergyGroupMaker:
 
         assert groups == expected
 
-    def test_compute_groups_fixed_outside_range(self, obs):
+    @staticmethod
+    def test_compute_groups_fixed_outside_range(obs):
         ebounds = [20, 30, 40] * u.TeV
         seg = SpectrumEnergyGroupMaker(obs=obs)
         with pytest.raises(ValueError):

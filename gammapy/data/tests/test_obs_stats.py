@@ -78,11 +78,14 @@ def stats_stacked_bad_on_region(bad_on_region, observations):
 
 @requires_data("gammapy-data")
 class TestObservationStats:
-    def test_str(self, stats):
+
+    @staticmethod
+    def test_str(stats):
         text = str(stats)
         assert "Observation summary report" in text
 
-    def test_to_dict(self, stats):
+    @staticmethod
+    def test_to_dict(stats):
         data = stats.to_dict()
         assert data["n_on"] == 425
         assert data["n_off"] == 395
@@ -92,18 +95,21 @@ class TestObservationStats:
         assert_allclose(data["bg_rate"].value, 4.995, rtol=1e-3)
         assert_allclose(data["livetime"].value, 26.362, rtol=1e-3)
 
-    def test_bad_on(self, stats_bad_on_region):
+    @staticmethod
+    def test_bad_on(stats_bad_on_region):
         data = stats_bad_on_region.to_dict()
         assert data["alpha"] == 0
 
-    def test_stack(self, stats_stacked):
+    @staticmethod
+    def test_stack(stats_stacked):
         data = stats_stacked.to_dict()
         assert data["n_on"] == 900
         assert data["n_off"] == 766
         assert_allclose(data["alpha"], 0.333, rtol=1e-2)
         assert_allclose(data["sigma"], 25.244, rtol=1e-3)
 
-    def test_stack_bad_on(self, stats_stacked_bad_on_region):
+    @staticmethod
+    def test_stack_bad_on(stats_stacked_bad_on_region):
         data = stats_stacked_bad_on_region.to_dict()
         assert data["n_on"] == 156
         assert data["n_off"] == 1006

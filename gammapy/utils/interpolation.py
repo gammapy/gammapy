@@ -121,26 +121,31 @@ class LogScale(InterpolationScale):
         values = np.clip(values, self.tiny, np.inf)
         return np.log(values)
 
-    def _inverse(self, values):
+    @staticmethod
+    def _inverse(values):
         return np.exp(values)
 
 
 class SqrtScale(InterpolationScale):
     """Sqrt scaling"""
 
-    def _scale(self, values):
+    @staticmethod
+    def _scale(values):
         sign = np.sign(values)
         return sign * np.sqrt(sign * values)
 
-    def _inverse(self, values):
+    @staticmethod
+    def _inverse(values):
         return np.power(values, 2)
 
 
 class LinearScale(InterpolationScale):
     """Linear scaling"""
 
-    def _scale(self, values):
+    @staticmethod
+    def _scale(values):
         return values
 
-    def _inverse(self, values):
+    @staticmethod
+    def _inverse(values):
         return values

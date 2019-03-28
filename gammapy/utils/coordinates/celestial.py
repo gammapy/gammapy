@@ -25,14 +25,8 @@ def minimum_separation(lon1, lat1, lon2, lat2):
     """
     lon1 = np.asanyarray(lon1)
     lat1 = np.asanyarray(lat1)
-
-    theta_min = np.empty_like(lon1, dtype=np.float64)
-
-    for i1 in range(lon1.size):
-        thetas = angular_separation(lon1[i1], lat1[i1], lon2, lat2)
-        theta_min[i1] = thetas.min()
-
-    return theta_min
+    separation = angular_separation(lon1[:, np.newaxis], lat1[:, np.newaxis], lon2, lat2)
+    return separation.min(axis=1)
 
 
 def pair_correlation(lon, lat, theta_bins):
@@ -53,15 +47,6 @@ def pair_correlation(lon, lat, theta_bins):
     counts : array
         Array of point separations per ``theta`` bin.
     """
-    # TODO: Implement speedups:
-    # - use radians
-    # - avoid processing each pair twice (distance a to b and b to a)
-    counts = np.zeros(shape=len(theta_bins) - 1, dtype=int)
-    # If there are many points this should have acceptable performance
-    # because the inner loop is in np.histogram, not in Python
-    for ii in range(len(lon)):
-        theta = angular_separation(lon[ii], lat[ii], lon, lat)
-        hist = np.histogram(theta, theta_bins)[0]
-        counts += hist
-
-    return counts
+    separation = angular_separation(lon[:, np.newaxis], lat[:, np.newaxis], lon, lat)
+    pair_correlation, _ = np.histogram(separation.ravel(), theta_bins)
+    return pair_correlation

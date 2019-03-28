@@ -462,7 +462,8 @@ class FluxPoints:
                 "Missing columns for sed type '{}':" " {}".format(sed_type, missing)
             )
 
-    def _get_y_energy_unit(self, y_unit):
+    @staticmethod
+    def _get_y_energy_unit(y_unit):
         """Get energy part of the given y unit."""
         try:
             return [_ for _ in y_unit.bases if _.physical_type == "energy"][0]
@@ -711,12 +712,12 @@ class FluxPoints:
         # Compute likelihood "image" one energy bin at a time
         # by interpolating e2dnde at the log bin centers
         z = np.empty((len(self.table), len(y_values)))
-        for idx in range(len(self.table)):
+        for idx, row in enumerate(self.table):
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
-            norm_scan = self.table[idx]["norm_scan"]
+            norm_scan = row["norm_scan"]
             dloglike_scan = (
-                self.table[idx]["dloglike_scan"] - self.table[idx]["loglike"]
+                row["dloglike_scan"] - row["loglike"]
             )
             z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
 
@@ -1007,9 +1008,9 @@ class FluxPointEstimator:
     def _set_quality(self, energy_group):
         quality_orig = []
 
-        for index in range(len(self.obs)):
+        for obs in self.obs:
             # Set quality bins to only bins in energy_group
-            quality_orig_unit = self.obs[index].on_vector.quality
+            quality_orig_unit = obs.on_vector.quality
             quality_len = len(quality_orig_unit)
             quality_orig.append(quality_orig_unit)
             quality = np.zeros(quality_len, dtype=int)
@@ -1020,13 +1021,13 @@ class FluxPointEstimator:
                     or (energy_group.bin_type != "normal")
                 ):
                     quality[bin] = 1
-            self.obs[index].on_vector.quality = quality
+            obs.on_vector.quality = quality
 
         return quality_orig
 
     def _restore_quality(self, quality_orig):
-        for index in range(len(quality_orig)):
-            self.obs[index].on_vector.quality = quality_orig[index]
+        for obs, quality in zip(self.obs, quality_orig):
+            obs.on_vector.quality = quality
 
 
 class FluxPointsDataset:

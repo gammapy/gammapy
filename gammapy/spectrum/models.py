@@ -357,7 +357,8 @@ class SpectralModel(Model):
         self._plot_format_ax(ax, energy, y_lo, energy_power)
         return ax
 
-    def _plot_format_ax(self, ax, energy, y, energy_power):
+    @staticmethod
+    def _plot_format_ax(ax, energy, y, energy_power):
         ax.set_xlabel("Energy [{}]".format(energy.unit))
         if energy_power > 0:
             ax.set_ylabel("E{} * Flux [{}]".format(energy_power, y.unit))
@@ -367,7 +368,8 @@ class SpectralModel(Model):
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
 
-    def _plot_scale_flux(self, energy, flux, energy_power):
+    @staticmethod
+    def _plot_scale_flux(energy, flux, energy_power):
         try:
             eunit = [_ for _ in flux.unit.bases if _.physical_type == "energy"][0]
         except IndexError:

@@ -395,7 +395,8 @@ class FaucherSpiral(LogSpiral):
     theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], "rad")
     spiralarms = np.array(["Norma", "Carina Sagittarius", "Perseus", "Crux Scutum"])
 
-    def _blur(self, radius, theta, amount=0.07, random_state="random-seed"):
+    @staticmethod
+    def _blur(radius, theta, amount=0.07, random_state="random-seed"):
         """Blur the positions around the centroid of the spiralarm.
 
         The given positions are blurred by drawing a displacement in radius from
@@ -422,8 +423,9 @@ class FaucherSpiral(LogSpiral):
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
+    @staticmethod
     def _gc_correction(
-        self, radius, theta, r_corr=Quantity(2.857, "kpc"), random_state="random-seed"
+        radius, theta, r_corr=Quantity(2.857, "kpc"), random_state="random-seed"
     ):
         """Correction of source distribution towards the galactic center.
 

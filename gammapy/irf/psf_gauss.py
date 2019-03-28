@@ -254,24 +254,22 @@ class EnergyDependentMultiGaussPSF:
         """Compute containment for all energy and theta values"""
         # This is a false positive from pylint
         # See https://github.com/PyCQA/pylint/issues/2435
-        energy = Energy(energy).flatten()  # pylint:disable=assignment-from-no-return
-        theta = Angle(theta).flatten()
+        energies = Energy(energy).flatten()  # pylint:disable=assignment-from-no-return
+        thetas = Angle(theta).flatten()
         radius = np.empty((theta.size, energy.size))
 
-        for idx_energy in range(len(energy)):
-            for idx_theta in range(len(theta)):
+        for idx, energy in enumerate(energies):
+            for jdx, theta in enumerate(thetas):
                 try:
-                    psf = self.psf_at_energy_and_theta(
-                        energy[idx_energy], theta[idx_theta]
-                    )
-                    radius[idx_theta, idx_energy] = psf.containment_radius(fraction)
+                    psf = self.psf_at_energy_and_theta(energy, theta)
+                    radius[jdx, idx] = psf.containment_radius(fraction)
                 except ValueError:
                     log.debug(
                         "Computing containment failed for E = {:.2f}"
-                        " and Theta={:.2f}".format(energy[idx_energy], theta[idx_theta])
+                        " and Theta={:.2f}".format(energy, theta)
                     )
                     log.debug("Sigmas: {} Norms: {}".format(psf.sigmas, psf.norms))
-                    radius[idx_theta, idx_energy] = np.nan
+                    radius[jdx, idx] = np.nan
 
         return Angle(radius, "deg")
 

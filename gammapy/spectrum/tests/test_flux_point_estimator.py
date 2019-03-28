@@ -52,19 +52,22 @@ def fpe_ecpl():
 
 
 class TestFluxPointEstimator:
-    def test_str(self, fpe_pwl):
+    @staticmethod
+    def test_str(fpe_pwl):
         assert "FluxPointEstimator" in str(fpe_pwl)
 
+    @staticmethod
     @requires_dependency("iminuit")
-    def test_energy_range(self, fpe_pwl):
+    def test_energy_range(fpe_pwl):
         group = fpe_pwl.groups[1]
         fpe_pwl.estimate_flux_point(group)
         fit_range = fpe_pwl.fit.true_fit_range[0]
         assert_quantity_allclose(fit_range[0], group.energy_min)
         assert_quantity_allclose(fit_range[1], group.energy_max)
 
+    @staticmethod
     @requires_dependency("iminuit")
-    def test_run_pwl(self, fpe_pwl):
+    def test_run_pwl(fpe_pwl):
         fp = fpe_pwl.run()
         actual = fp.table["norm"].data
         assert_allclose(actual, [1.080933, 0.910776, 0.922278], rtol=1e-5)
@@ -90,7 +93,8 @@ class TestFluxPointEstimator:
         actual = fp.table["dloglike_scan"][0]
         assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-5)
 
+    @staticmethod
     @requires_dependency("iminuit")
-    def test_run_ecpl(self, fpe_ecpl):
+    def test_run_ecpl(fpe_ecpl):
         fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.groups[1])
         assert_allclose(fp["norm"], 1, rtol=1e-1)
