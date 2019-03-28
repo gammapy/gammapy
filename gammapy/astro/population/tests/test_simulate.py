@@ -22,8 +22,11 @@ def test_make_catalog_random_positions_cube():
 
 def test_make_catalog_random_positions_sphere():
     size = 100
-    table = make_catalog_random_positions_sphere(size=size, center="Milky Way")
+    table = make_catalog_random_positions_sphere(size=size, center="Milky Way", random_state=27)
     assert len(table) == size
+
+    assert_allclose(table["GLON"][0], 153.259708)
+    assert_allclose(table["GLAT"][0], 62.312573)
 
 
 def test_make_base_catalog_galactic():

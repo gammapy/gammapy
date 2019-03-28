@@ -23,7 +23,7 @@ class GeneralRandom:
     not required for random number generation.
     """
 
-    def __init__(self, pdf, min_range, max_range, ninversecdf=None, ran_res=1e3):
+    def __init__(self, pdf, min_range, max_range, ninversecdf=None, ran_res=1000):
         """Initialize the lookup table
 
         Inputs:

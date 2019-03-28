@@ -461,8 +461,8 @@ class EnergyDependentTablePSF:
         containment = self.containment(energy=energy, rad_max=rad_max)
 
         if not np.allclose(containment.max(axis=1), 1, atol=0.01):
-            log.warn("PSF does not integrate to unity within a precision of 1% in each energy bin."
-                     " Containment radius computation might give biased results.")
+            log.warning("PSF does not integrate to unity within a precision of 1% in each energy bin."
+                        " Containment radius computation might give biased results.")
 
         # find nearest containment value
         fraction_idx = np.argmin(np.abs(containment - fraction), axis=1)

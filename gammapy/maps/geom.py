@@ -1424,7 +1424,7 @@ class MapGeom(metaclass=MapGeomMeta):
     def _init_copy(self, **kwargs):
         """Init map instance by copying missing init arguments from self.
         """
-        argnames = inspect.getargspec(self.__init__).args
+        argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
 
         for arg in argnames:
