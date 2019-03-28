@@ -7,57 +7,11 @@ from astropy.table import Table
 from .core import gammapy_data
 
 __all__ = [
-    "load_poisson_stats_image",
     "load_tev_spectrum",
     "load_crab_flux_points",
     "load_diffuse_gamma_spectrum",
     "load_electron_spectrum",
 ]
-
-
-def load_poisson_stats_image(extra_info=False, return_filenames=False):
-    """Load Poisson statistics counts image of a Gaussian source on flat background.
-
-    See poissson_stats_image/README.md for further info.
-    TODO: add better description (extract from README?)
-
-    Parameters
-    ----------
-    extra_info : bool
-        If true, a dict of images is returned.
-    return_filenames : bool
-        If true, return filenames instead of images
-
-    Returns
-    -------
-    data : numpy array or dict of arrays or filenames
-        Depending on the ``extra_info`` and ``return_filenames`` options.
-    """
-    path = gammapy_data.dir / "tests/unbundled/poisson_stats_image"
-
-    if extra_info:
-        out = dict()
-        for name in ["counts", "model", "source", "background", "exposure"]:
-            filename = str(path / "{}.fits.gz".format(name))
-            if return_filenames:
-                out[name] = filename
-            else:
-                data = fits.getdata(filename)
-                out[name] = data.astype("float64")
-        if return_filenames:
-            out["psf"] = str(path / "psf.json")
-    else:
-        filename = str(path / "counts.fits.gz")
-        if return_filenames:
-            out = filename
-        else:
-            out = fits.getdata(filename).astype("float64")
-
-    if extra_info and not return_filenames:
-        filename = str(path / "counts.fits.gz")
-        out["header"] = fits.getheader(filename)
-
-    return out
 
 
 def load_tev_spectrum(source_name):
