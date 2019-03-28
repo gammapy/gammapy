@@ -92,8 +92,14 @@
   requires: emcee
   datasets:
     - cta-1dc
+  images:
+    - gammapy_mcmc
 - name: nddata_demo
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/nddata_demo.ipynb
+- name: pulsar_analysis
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/pulsar_analysis.ipynb
+  datasets:
+    - cta-1dc
 - name: sed_fitting_gammacat_fermi
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/sed_fitting_gammacat_fermi.ipynb
   requires: iminuit

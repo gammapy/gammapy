@@ -27,6 +27,7 @@ Notebooks
    notebooks/cta_1dc_introduction.ipynb
    notebooks/cta_data_analysis.ipynb
    notebooks/analysis_3d.ipynb
+   notebooks/analysis_3d_joint.ipynb
    notebooks/simulate_3d.ipynb
    notebooks/hess.ipynb
    notebooks/detect_ts.ipynb
@@ -62,6 +63,7 @@ To get started with H.E.S.S. data analysis see here:
 3-dimensional cube analysis:
 
 - `3D analysis <notebooks/analysis_3d.html>`__ | *analysis_3d.ipynb*
+- `Joint 3D analysis <notebooks/analysis_3d_joint.html>`__ | *analysis_3d_joint.ipynb*
 - `3D simulation and fitting <notebooks/simulate_3d.html>`__ | *simulate_3d.ipynb*
 - `Fermi-LAT data with Gammapy <notebooks/fermi_lat.html>`__ | *fermi_lat.ipynb*
 
@@ -101,6 +103,7 @@ Extra topics
     notebooks/astro_dark_matter.ipynb
     notebooks/background_model.ipynb
     notebooks/mcmc_sampling.ipynb
+    notebooks/pulsar_analysis.ipynb
 
 These notebooks contain examples on some more specialised functionality in Gammapy.
 
@@ -110,6 +113,7 @@ These notebooks contain examples on some more specialised functionality in Gamma
 - `Dark matter spatial and spectral models <notebooks/astro_dark_matter.html>`__ | *astro_dark_matter.ipynb*
 - `Make template background model <notebooks/background_model.html>`__ | *background_model.ipynb*
 - `MCMC sampling of Gammapy models using the emcee package <notebooks/mcmc_sampling.html>`__ | *mcmc_sampling.ipynb*
+- `Pulsar analysis with Gammapy <notebooks/pulsar_analysis.html>`__ | *pulsar_analysis.ipynb*
 
 .. _tutorials_basics:
 
