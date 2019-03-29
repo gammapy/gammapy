@@ -110,7 +110,7 @@ class EDispMap(object):
         edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset, exposure_map)
 
         # Get an Energy Dispersion (1D) at any position in the image
-        edisp = edisp_map.get_energy_dispersion(SkyCoord(2., 2.5, unit='deg'))
+        edisp = edisp_map.get_energy_dispersion(SkyCoord(2., 2.5, unit='deg'), e_reco=np.logspace(-1.,1.,10)*u.TeV)
 
         # Write map to disk
         edisp_map.write('edisp_map.fits')
