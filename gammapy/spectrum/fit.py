@@ -3,7 +3,7 @@ import logging
 import copy
 import numpy as np
 import astropy.units as u
-from ..utils.fitting import Fit, Parameters
+from ..utils.fitting import Fit, Parameters, Dataset
 from .. import stats
 from ..utils.random import get_random_state
 from .core import CountsSpectrum
@@ -15,7 +15,7 @@ __all__ = ["SpectrumFit", "SpectrumDataset"]
 log = logging.getLogger(__name__)
 
 
-class SpectrumDataset:
+class SpectrumDataset(Dataset):
     """Compute spectral model fit statistic on a CountsSpectrum.
 
     Parameters
@@ -26,13 +26,13 @@ class SpectrumDataset:
         Counts spectrum
     livetime : float
         Livetime
-    mask : numpy.array
+    mask : `~numpy.ndarray`
         Mask to apply to the likelihood.
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background: `~gammapy.spectrum.CountsSpectrum`
+    background : `~gammapy.spectrum.CountsSpectrum`
         Background to use for the fit.
     """
 
@@ -107,6 +107,7 @@ class SpectrumDataset:
             stat = self.likelihood_per_bin()[self.mask]
         else:
             stat = self.likelihood_per_bin()[mask & self.mask]
+
         return np.sum(stat, dtype=np.float64)
 
     def fake(self, random_state='random-seed'):
