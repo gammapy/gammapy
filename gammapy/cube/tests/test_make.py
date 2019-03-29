@@ -107,7 +107,7 @@ def test_map_maker(pars, observations, keepdims):
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
 
-def test_image_maker(observations):
+def test_map_maker_ring(observations):
     ring_bkg = RingBackgroundEstimator(r_in="0.5 deg", width="0.4 deg")
     geomd = geom(ebounds=[0.1, 1, 10])
 
@@ -118,14 +118,14 @@ def test_image_maker(observations):
     )
     mask.data = mask.geom.region_mask([regions], inside=False)
 
-    im = MapMakerRing(geomd, 2.0 * u.deg, mask, ring_bkg)
+    maker = MapMakerRing(geomd, 2.0 * u.deg, mask, ring_bkg)
 
-    maps = im.run(observations)
+    maps = maker.run(observations)
     assert_allclose(np.nansum(maps["on"].data), 21981, rtol=1e-2)
     assert_allclose(np.nansum(maps["exposure_off"].data), 8310.035, rtol=1e-2)
-    assert maps["on"].geom.is_image == False
+    assert maps["on"].geom.is_image is False
 
-    images = im.run_images(observations)
+    images = maker.run_images(observations)
     assert_allclose(np.nansum(images["on"].data), 21981, rtol=1e-2)
     assert_allclose(np.nansum(images["exposure_off"].data), 109751.45, rtol=1e-2)
-    assert images["on"].geom.is_image == True
+    assert images["on"].geom.is_image is True

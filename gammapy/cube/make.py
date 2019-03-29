@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
@@ -67,7 +66,8 @@ class MapMaker:
 
         Returns
         -------
-        maps: dict of stacked counts, background and exposure maps.
+        maps : dict
+            Stacked counts, background and exposure maps
         """
         selection = _check_selection(selection)
         maps = self._get_empty_maps(selection)
@@ -78,9 +78,7 @@ class MapMaker:
             try:
                 obs_maker = self._get_obs_maker(obs)
             except NoOverlapError:
-                log.info(
-                    "Skipping observation {}, no overlap with map.".format(obs.obs_id)
-                )
+                log.info("Skipping observation {} (no map overlap)".format(obs.obs_id))
                 continue
 
             maps_obs = obs_maker.run(selection)
@@ -128,40 +126,37 @@ class MapMaker:
         spectrum : `~gammapy.spectrum.models.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
-
         keepdims : bool, optional
             If this is set to True, the energy axes is kept with a single bin.
             If False, the energy axes is removed
-
         """
         images = {}
         for name, map in maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
             images[name] = map.sum_over_axes(keepdims=keepdims)
+
         return images
 
     def run_images(self, observations=None, spectrum=None, keepdims=False):
         """Create images by summing over the energy axis.
 
-        Exposure is weighted with an assumed spectrum,
-        resulting in a weighted mean exposure image.
-
-        Parameters
-        ----------
-        observations: `~gammapy.data.Observations`
-            Observations to process
-
         Either MapMaker.run() has to be called before calling this function,
         or observations need to be passed.
-
         If  MapMaker.run() has been called before, then those maps will be
         summed over. Else, new maps will be computed and then summed.
 
+        Exposure is weighted with an assumed spectrum,
+        resulting in a weighted mean exposure image.
+
+
+        Parameters
+        ----------
+        observations : `~gammapy.data.Observations`
+            Observations to process
         spectrum : `~gammapy.spectrum.models.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
-
         keepdims : bool, optional
             If this is set to True, the energy axes is kept with a single bin.
             If False, the energy axes is removed
@@ -188,11 +183,11 @@ class MapMakerObs:
         Observation
     geom : `~gammapy.maps.WcsGeom`
         Reference image geometry
+    offset_max : `~astropy.coordinates.Angle`
+        Maximum offset angle
     geom_true : `~gammapy.maps.WcsGeom`
         Reference image geometry in true energy, used for exposure maps and PSF.
         If none, the same as geom is assumed
-    fov_mask : `~numpy.ndarray`
-        Mask to select pixels in field of view
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask (used by some background estimators)
     """
@@ -339,41 +334,38 @@ class MapMakerRing(MapMaker):
     Here is an example how to ise the MapMakerRing with H.E.S.S. DL3 data::
 
         import numpy as np
-        from astropy import units as u
+        import astropy.units as u
         from astropy.coordinates import SkyCoord
+        from regions import CircleSkyRegion
         from gammapy.maps import Map, WcsGeom, MapAxis
         from gammapy.cube import MapMakerRing
         from gammapy.data import DataStore
         from gammapy.background import RingBackgroundEstimator
 
         # Create observation list
-        data_store = DataStore.from_file("$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz")
+        data_store = DataStore.from_file(
+            "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz"
+        )
         data_sel = data_store.obs_table["TARGET_NAME"] == "MSH 15-52"
         obs_table = data_store.obs_table[data_sel]
         observations = data_store.get_observations(obs_table["OBS_ID"])
 
-        #Define the geom
+        # Define the geom
+        pos = SkyCoord(228.32, -59.08, unit="deg")
         energy_axis = MapAxis.from_edges(np.logspace(0, 5.0, 5), unit="TeV", name="energy")
-        geom = WcsGeom.create(
-             skydir=pos_msh1552,
-             binsz=0.02,
-             width=(5, 5),
-             axes=[energy_axis])
+        geom = WcsGeom.create(skydir=pos, binsz=0.02, width=(5, 5), axes=[energy_axis])
 
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
-
-        #Make a region mask
-        regions = CircleSkyRegion(center=pos_msh1552, radius=0.3 * u.deg)
+        # Make a region mask
+        regions = CircleSkyRegion(center=pos, radius=0.3 * u.deg)
         mask = Map.from_geom(geom)
         mask.data = mask.geom.region_mask([regions], inside=False)
 
-        #Instantiate ring background estimator
+        # Run map maker with ring background estimation
         ring_bkg = RingBackgroundEstimator(r_in="0.5 deg", width="0.3 deg")
-
-        #Execute this class
-        im = MapMakerRing(geom=geom, offset_max=2.0 * u.deg, exclusion_mask=mask, background_estimator=ring_bkg)
-        images = im.run_images(observations)
-    
+        maker = MapMakerRing(
+            geom=geom, offset_max="2 deg", exclusion_mask=mask, background_estimator=ring_bkg
+        )
+        images = maker.run_images(observations)
     """
 
     def __init__(
@@ -397,16 +389,10 @@ class MapMakerRing(MapMaker):
             try:
                 obs_maker = self._get_obs_maker(obs, mode="strict")
             except NoOverlapError:
-                log.info(
-                    "Skipping observation {}, no overlap with map.".format(obs.obs_id)
-                )
+                log.info("Skipping obs_id: {} (no map overlap)".format(obs.obs_id))
                 continue
             except PartialOverlapError:
-                log.info(
-                    "Skipping observation {}, partial overlap with map.".format(
-                        obs.obs_id
-                    )
-                )
+                log.info("Skipping obs_id: {} (partial map overlap)".format(obs.obs_id))
                 continue
 
             maps_obs = obs_maker.run()
@@ -441,7 +427,7 @@ class MapMakerRing(MapMaker):
 
         Parameters
         ----------
-        observations: `~gammapy.data.Observations`
+        observations : `~gammapy.data.Observations`
             Observations to process
         spectrum : `~gammapy.spectrum.models.SpectralModel`, optional
             Spectral model to compute the weights.
@@ -452,14 +438,14 @@ class MapMakerRing(MapMaker):
 
         Returns
         -------
-        maps: dict of `~gammapy.maps.Map`
+        maps : dict of `~gammapy.maps.Map`
             Dictionary containing the following maps:
-                * ``"on"``: counts map
-                * ``"exposure_on"``: on exposure map, which is just the
-                     template background map from the IRF
-                * ``"exposure_off"``: off exposure map convolved with the ring
-                * ``"off"``: off map
 
+            * ``"on"``: counts map
+            * ``"exposure_on"``: on exposure map, which is just the
+              template background map from the IRF
+            * ``"exposure_off"``: off exposure map convolved with the ring
+            * ``"off"``: off map
         """
         return self._run(
             observations, sum_over_axis=True, spectrum=spectrum, keepdims=keepdims
@@ -470,18 +456,18 @@ class MapMakerRing(MapMaker):
 
         Parameters
         ----------
-        observations: `~gammapy.data.Observations`
+        observations : `~gammapy.data.Observations`
             Observations to process
 
         Returns
         -------
-        maps: dict of `~gammapy.maps.Map`
+        maps : dict of `~gammapy.maps.Map`
             Dictionary containing the following maps:
-                * ``"on"``: counts map
-                * ``"exposure_on"``: on exposure map, which is just the
-                     template background map from the IRF
-                * ``"exposure_off"``: off exposure map convolved with the ring
-                * ``"off"``: off map
 
+            * ``"on"``: counts map
+            * ``"exposure_on"``: on exposure map, which is just the
+              template background map from the IRF
+            * ``"exposure_off"``: off exposure map convolved with the ring
+            * ``"off"``: off map
         """
         return self._run(observations, sum_over_axis=False)
