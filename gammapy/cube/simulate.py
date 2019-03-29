@@ -31,15 +31,15 @@ def simulate_dataset(
     ----------
     skymodel : `~gammapy.cube.models.SkyModel`
         Background model map
-    geom : `~gammapy.maps.wcs.WcsGeom`
+    geom : `~gammapy.maps.WcsGeom`
         Geometry object for the observation
     pointing : `~astropy.coordinates.SkyCoord`
         Pointing position
     irfs : dict
         Irfs used for simulating the observation
-    livetime : `~astropy.units.quantity.Quantity`
+    livetime : `~astropy.units.Quantity`
         Livetime exposure of the simulated observation
-    offset : `~astropy.units.quantity.Quantity`
+    offset : `~astropy.units.Quantity`
         Offset from the center of the pointing position.
         This is used for the PSF and Edisp estimation
     max_radius : `~astropy.coordinates.Angle`
@@ -49,7 +49,7 @@ def simulate_dataset(
 
     Returns
     -------
-    dataset : `~gammapy.cube.fit.MapDataset`
+    dataset : `~gammapy.cube.MapDataset`
         A dataset of the simulated observation.
     """
     background = make_map_background_irf(
