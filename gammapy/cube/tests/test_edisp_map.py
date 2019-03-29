@@ -27,7 +27,6 @@ def fake_aeff2d(area=1e6 * u.m ** 2):
 
 
 def make_edisp_map_test():
-
     etrue = [0.2, 0.7, 1.5, 2.0, 10.0] * u.TeV
     migra = np.linspace(0.0, 3.0, 51)
     offsets = np.array((0.0, 1.0, 2.0, 3.0)) * u.deg
@@ -59,7 +58,6 @@ def make_edisp_map_test():
 
 
 def test_make_edisp_map():
-
     energy_axis = MapAxis(
         nodes=[0.2, 0.7, 1.5, 2.0, 10.0],
         unit="TeV",
@@ -96,7 +94,6 @@ def test_edisp_map_to_from_hdulist():
 def test_edisp_map_read_write(tmpdir):
     edmap = make_edisp_map_test()
 
-    # test read/write
     filename = str(tmpdir / "edispmap.fits")
     edmap.write(filename, overwrite=True)
     new_edmap = EDispMap.read(filename)
@@ -121,9 +118,6 @@ def test_edisp_map_stacking():
     edmap2 = make_edisp_map_test()
     edmap2.exposure_map.quantity *= 2
 
-    edmap_stack = edmap1.stack(edmap2, True)
+    edmap_stack = edmap1.stack(edmap2)
     assert_allclose(edmap_stack.edisp_map.data, edmap1.edisp_map.data)
     assert_allclose(edmap_stack.exposure_map.data, edmap1.exposure_map.data * 3)
-
-    edmap1.stack(edmap2, False)
-    assert_allclose(edmap1.edisp_map.data, edmap_stack.edisp_map.data)
