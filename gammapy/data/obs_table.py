@@ -364,7 +364,7 @@ class ObservationTable(Table):
         Returns
         -------
         gti : `~gammapy.data.GTI`
-            GTI table containing one row (TSTART and TSTOP of the observation with `obs_id`)
+            GTI table containing one row (TSTART and TSTOP of the observation with ``obs_id``)
         """
         meta = OrderedDict(
             EXTNAME="GTI",

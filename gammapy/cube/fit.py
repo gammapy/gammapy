@@ -75,18 +75,15 @@ class MapDataset:
         elif likelihood == "cstat":
             self._stat = cstat
         else:
-            raise ValueError(
-                "Not a valid fit statistic. Choose between 'cash' and 'cstat'."
-            )
+            raise ValueError("Invalid likelihood: {!r}".format(likelihood))
 
     @property
     def model(self):
-        """Sky model to fit instance of `SkyModel` or `SkyModels`"""
+        """Sky model to fit (`~gammapy.cube.SkyModel` or `~gammapy.cube.SkyModels`)"""
         return self._model
 
     @model.setter
     def model(self, model):
-        """Set sky model to fit"""
         if isinstance(model, SkyModel):
             model = SkyModels([model])
 
@@ -121,17 +118,11 @@ class MapDataset:
 
     @property
     def data_shape(self):
-        """Shape of the counts data"""
+        """Shape of the counts data (tuple)"""
         return self.counts.data.shape
 
     def npred(self):
-        """Compute predicted counts from the source and background model.
-
-        Returns
-        -------
-        npred : `Map`
-            Map of predicted counts.
-        """
+        """Predicted source and background counts (`~gammapy.maps.Map`)."""
         if self.background_model:
             npred_total = self.background_model.evaluate()
         else:
@@ -187,7 +178,6 @@ class MapEvaluator:
     No HPX, no other axes, those can be added later here or via new
     separate model evaluator classes.
 
-
     Parameters
     ----------
     model : `~gammapy.cube.models.SkyModel`
@@ -220,10 +210,8 @@ class MapEvaluator:
         self.psf = psf
         self.edisp = edisp
 
-        if evaluation_mode not in ["local", "global"]:
-            raise ValueError(
-                "Not a valid model evaluation mode. Choose between 'local' and 'global'"
-            )
+        if evaluation_mode not in {"local", "global"}:
+            raise ValueError("Invalid evaluation_mode: {!r}".format(evaluation_mode))
 
         self.evaluation_mode = evaluation_mode
 
@@ -314,6 +302,7 @@ class MapEvaluator:
             energy = self.edisp.e_reco.nodes[:, np.newaxis, np.newaxis]
         else:
             energy = self.energy_center
+
         return {"lon": lon.value, "lat": lat.value, "energy": energy}
 
     @property
@@ -332,16 +321,16 @@ class MapEvaluator:
 
         Parameters
         ----------
-        exposure : `Map`
+        exposure : `~gammapy.maps.Map`
             Exposure map.
-        psf : `PSFMap`
+        psf : `gammapy.cube.PSFMap`
             PSF map.
-        edisp : `EdispMap`
+        edisp : `gammapy.cube.EDispMap`
             Edisp map.
-        geom : `MapGeom`
+        geom : `gammapy.maps.MapGeom`
             Reference geometry of the data.
         """
-        log.info("Updating model evaluator")
+        log.debug("Updating model evaluator")
         # cache current position of the model component
         self._init_position = self.model.position
 
@@ -435,4 +424,5 @@ class MapEvaluator:
             npred = self.apply_psf(npred)
         if self.edisp is not None:
             npred = self.apply_edisp(npred)
+
         return npred

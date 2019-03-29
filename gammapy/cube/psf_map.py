@@ -69,7 +69,7 @@ class PSFMap:
         the input PSF Map. Should be a Map with 2 non spatial axes.
         rad and true energy axes should be given in this specific order.
     exposure_map : `~gammapy.maps.Map`
-        the associated exposure map. It should have a consistent `MapGeom`
+        Associated exposure map. Needs to have a consistent map geometry.
 
     Examples
     --------

@@ -11,14 +11,13 @@ __all__ = ["make_map_background_irf"]
 def make_map_background_irf(pointing, ontime, bkg, geom):
     """Compute background map from background IRFs.
 
-    If a `FixedPointingInfo` is passed the correct FoV coordinates are properly computed.
-    If a simple `SkyCoord` is passed, FoV coordinates are computed without proper rotation
-    of the frame.
-
     Parameters
     ----------
-    pointing : `~gammapy.data.pointing.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
-        Fixed Pointing info or coordinates of the pointing
+    pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+        Observation pointing
+
+        - If a ``FixedPointingInfo`` is passed, FOV coordinates are properly computed.
+        - If a ``SkyCoord`` is passed, FOV frame rotation is not taken into account.
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
         see https://gamma-astro-data-formats.readthedocs.io/en/stable/irfs/full_enclosure/bkg/index.html#notes)
@@ -74,7 +73,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
 
 
 def _fov_background_norm(acceptance_map, counts_map, exclusion_mask=None):
-    """Compute FOV background norm
+    """Compute FOV background norm.
 
     This operation is normally performed on single observation maps.
     An exclusion map is used to avoid using regions with significant gamma-ray emission.
@@ -91,7 +90,7 @@ def _fov_background_norm(acceptance_map, counts_map, exclusion_mask=None):
 
     Returns
     -------
-    norm_factor : array
+    norm_factor : `~numpy.ndarray`
         Background normalisation factor as function of energy (1D vector)
     """
     if exclusion_mask is None:

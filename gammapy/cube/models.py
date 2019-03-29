@@ -241,7 +241,7 @@ class SkyDiffuseCube(SkyModelBase):
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     interp_kwargs : dict
-        Interpolation keyword arguments passed to `Map.interp_by_coord()`.
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
 
     """
@@ -313,7 +313,7 @@ class SkyDiffuseCube(SkyModelBase):
 
 
 class BackgroundModel(Model):
-    """Background model
+    """Background model.
 
     Create a new map by a tilt and normalisation on the available map
 
@@ -332,7 +332,6 @@ class BackgroundModel(Model):
     __slots__ = ["map", "norm", "tilt", "reference"]
 
     def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
-
         axis = background.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
@@ -374,14 +373,14 @@ class BackgroundModel(Model):
 
         Parameters
         ----------
-        skymodel : `SkyModel` or `SkyDiffuseCube`
-            Sky model.
-        exposure : `Map`
-            Exposure map.
-        edisp : `EnergyDispersion`
-            Energy dispersion.
-        psf : `PSFKernel`
-            PSF to apply.
+        skymodel : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyDiffuseCube`
+            Sky model
+        exposure : `~gammapy.maps.Map`
+            Exposure map
+        edisp : `~gammapy.irf.EnergyDispersion`
+            Energy dispersion
+        psf : `~gammapy.cube.PSFKernel`
+            PSF kernel
         """
         from .fit import MapEvaluator
 

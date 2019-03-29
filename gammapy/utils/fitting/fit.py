@@ -65,8 +65,8 @@ registry = Registry()
 class Fit:
     """Fit class.
 
-    The fit class provides a uniform interface to multiple fitting
-    backends, such as `scipy.optimize`, `iminuit` or `sherpa`.
+    The fit class provides a uniform interface to multiple fitting backends.
+    Currently available: "minuit", "sherpa" and "scipy"
 
     Parameters
     ----------

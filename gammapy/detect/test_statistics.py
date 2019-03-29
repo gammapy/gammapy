@@ -165,13 +165,13 @@ class TSMapEstimator:
         Parameters
         ----------
         maps : dict
-            Input sky maps. Requires `counts`, `background` and `exposure` maps.
+            Input sky maps. Requires "counts", "background" and "exposure" maps.
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
         Returns
         -------
-        flux_approx : `WcsNDMap`
+        flux_approx : `gammapy.maps.WcsNDMap`
             Approximate flux map.
         """
         flux = (maps["counts"].data - maps["background"].data) / maps["exposure"].data
@@ -185,13 +185,13 @@ class TSMapEstimator:
         Parameters
         ----------
         maps : dict
-            Input sky maps. Requires `background` and `exposure`.
+            Input sky maps. Requires "background" and "exposure".
         kernel : `astropy.convolution.Kernel2D`
             Source model kernel.
 
         Returns
         -------
-        mask : `WcsNDMap`
+        mask : `gammapy.maps.WcsNDMap`
             Mask map.
         """
         mask = np.zeros(maps["exposure"].data.shape, dtype=int)
@@ -208,6 +208,7 @@ class TSMapEstimator:
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
         mask[maps["background"].data == 0] = 0
+
         return maps["exposure"].copy(data=mask.astype("int"))
 
     @staticmethod
@@ -226,12 +227,12 @@ class TSMapEstimator:
 
         Parameters
         ----------
-        map_ts : `WcsNDMap`
+        map_ts : `gammapy.maps.WcsNDMap`
             Input TS map.
 
         Returns
         -------
-        sqrt_ts : `WcsNDMap`
+        sqrt_ts : `gammapy.maps.WcsNDMap`
             Sqrt(TS) map.
         """
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -243,7 +244,7 @@ class TSMapEstimator:
         """
         Run TS map estimation.
 
-        Requires `counts`, `exposure` and `background` map to run.
+        Requires "counts", "exposure" and "background" map to run.
 
         Parameters
         ----------

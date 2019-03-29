@@ -250,8 +250,7 @@ class SkyEllipse(SkySpatialModel):
     :math:`a` is the major semiaxis of the ellipse and N is the model's
     normalization, in units of :math:`\text{sr}^{-1}`.
 
-    The model is defined on the celestial sphere, by computing angles and distances with the functions defined in
-    `astropy.coordinates.angle_utilities`, and setting the normalization such that:
+    The model is defined on the celestial sphere, with a normalization defined by:
 
     .. math::
        \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
@@ -488,7 +487,7 @@ class SkyDiffuseConstant(SkySpatialModel):
 class SkyDiffuseMap(SkySpatialModel):
     """Spatial sky map template model (2D).
 
-    This is for a 2D image. Use `~gammapy.cube.SkyDiffuseCube` for 3D cubes with
+    This is for a 2D image. Use `~gammapy.cube.models.SkyDiffuseCube` for 3D cubes with
     an energy axis.
 
     Parameters
@@ -502,7 +501,7 @@ class SkyDiffuseMap(SkySpatialModel):
     normalize : bool
         Normalize the input map so that it integrates to unity.
     interp_kwargs : dict
-        Interpolation keyword arguments passed to `Map.interp_by_coord()`.
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
