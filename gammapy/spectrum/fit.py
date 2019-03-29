@@ -109,30 +109,25 @@ class SpectrumDataset:
             stat = self.likelihood_per_bin()[mask & self.mask]
         return np.sum(stat, dtype=np.float64)
 
-    def fake(self, seed):
-        """Simulate a fake `~gammapy.spectrum.CountsSpectrum` from the current dataset
+    def fake(self, random_state='random-seed'):
+        """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
 
         Parameters
         ----------
-        seed : int
-            Random number generator seed
-
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`.
         Returns
         -------
         spectrum : `~gammapy.spectrum.CountsSpectrum`
             the fake count spectrum
         """
-        random_state = get_random_state(seed)
-        random_counts = random_state.poisson(self.npred())
+        random_state = get_random_state(random_state)
+        data = random_state.poisson(self.npred())
 
-        if self.edisp is None:
-            e_lo = self.counts.energy.bins[:-1]
-            e_hi = self.counts.energy.bins[1:]
-        else:
-            e_lo = edisp.e_reco[:-1]
-            e_hi = edisp.e_reco[1:]
+        ebounds = self.counts.energy.bins
 
-        return CountsSpectrum(energy_lo=e_lo, energy_hi=e_hi, data=random_counts)
+        return CountsSpectrum(ebounds[:-1], ebounds[1:], data)
 
 
 class SpectrumFit(Fit):
