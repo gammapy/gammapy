@@ -61,7 +61,7 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     return EDispMap(edispmap, exposure_map)
 
 
-class EDispMap(object):
+class EDispMap:
     """Class containing the Map of Energy Dispersions and allowing to interact with it.
 
     Parameters
@@ -294,7 +294,7 @@ class EDispMap(object):
             data=data,
         )
 
-    def stack(self, other, copy=True):
+    def stack(self, other):
         """Stack EdispMap with another one.
 
         The current EdispMap is unchanged and a new one is created and returned.
@@ -303,8 +303,6 @@ class EDispMap(object):
         ----------
         other : `~gammapy.cube.EDispMap`
             the edispmap to be stacked with this one.
-        copy : bool
-            if set to True returns a new EdispMap
 
         Returns
         -------
@@ -343,9 +341,4 @@ class EDispMap(object):
         # We need to remove the extra axis in the total exposure
         reproj_exposure.quantity = total_exposure[:, 0, :, :]
 
-        if copy:
-            return EDispMap(reproj_edispmap, reproj_exposure)
-        else:
-            self.edisp_map = reproj_edispmap
-            self.exposure_map = reproj_exposure
-            return self
+        return EDispMap(reproj_edispmap, reproj_exposure)
