@@ -7,7 +7,7 @@ from ...utils.testing import requires_data
 from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
-from ...cube.models import SkyDiffuseCube, BackgroundModel
+from ...cube.models import SkyDiffuseCube, BackgroundModel, BackgroundModels
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..fit import MapEvaluator
@@ -118,6 +118,14 @@ def test_background_model(background):
     ).evaluate()
     assert_allclose(bkg2.data[0][0][0], 2.254e-07, rtol=1e-3)
     assert_allclose(bkg2.data.sum(), 7.352e-06, rtol=1e-3)
+
+
+def test_background_models(background):
+    bkg_1 = BackgroundModel(background, norm=1.0)
+    bkg_2 = BackgroundModel(background, norm=2.0)
+    models = BackgroundModels([bkg_1, bkg_2])
+    bkg_eval = models.evaluate()
+    assert_allclose(3 * bkg_1.map.data[0][0][0], bkg_eval.data[0][0][0])
 
 
 class TestSkyModels:

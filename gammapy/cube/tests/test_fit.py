@@ -144,6 +144,7 @@ def test_map_fit(sky_model):
         edisp=edisp_map,
         background_model=background_model_2,
         evaluation_mode="global",
+        likelihood="cstat"
     )
 
     background_model_1.parameters["norm"].value = 0.4
@@ -157,7 +158,7 @@ def test_map_fit(sky_model):
 
     npred = dataset_1.npred().data.sum()
     assert_allclose(npred, 4454.932873, rtol=1e-3)
-    assert_allclose(result.total_stat, 29918.649855, rtol=1e-3)
+    assert_allclose(result.total_stat, 12728.351643, rtol=1e-3)
 
     pars = result.parameters
     assert_allclose(pars["lon_0"].value, 0.2, rtol=1e-2)
@@ -174,9 +175,13 @@ def test_map_fit(sky_model):
     assert_allclose(pars.error(pars[6]), 0.015399, rtol=1e-2)
 
     # background norm 2
-
     assert_allclose(pars[9].value, 1, rtol=1e-2)
     assert_allclose(pars.error(pars[9]), 0.02104, rtol=1e-2)
+
+    # test global mask evaluation
+    fit.datasets.mask = geom_r.energy_mask(emin=1 * u.TeV)
+    stat = fit.datasets.likelihood()
+    assert_allclose(stat, 5895.205587)
 
 
 @requires_dependency("iminuit")
