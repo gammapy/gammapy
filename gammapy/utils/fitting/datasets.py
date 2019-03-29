@@ -1,10 +1,10 @@
-
 from collections import Counter
 import numpy as np
 from astropy.utils import lazyproperty
 from .parameter import Parameters
 
 __all__ = ["Datasets"]
+
 
 class Datasets:
     """Join multiple datasets
@@ -17,13 +17,16 @@ class Datasets:
         Global fitting mask used for all datasets.
 
     """
+
     def __init__(self, datasets, mask=None):
         if not isinstance(datasets, list):
             datasets = [datasets]
         self._datasets = datasets
 
         if mask is not None and not self.is_all_same_shape:
-            raise ValueError("Cannot apply mask if datasets are not of the same type and shape.")
+            raise ValueError(
+                "Cannot apply mask if datasets are not of the same type and shape."
+            )
 
         self.mask = mask
 
@@ -60,7 +63,9 @@ class Datasets:
         total_likelihood = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self.datasets:
-            total_likelihood += dataset.likelihood(parameters=parameters, mask=self.mask)
+            total_likelihood += dataset.likelihood(
+                parameters=parameters, mask=self.mask
+            )
         return total_likelihood
 
     def __str__(self):

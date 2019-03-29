@@ -201,6 +201,7 @@ class MapEvaluator:
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
     """
+
     _cached_properties = [
         "lon_lat",
         "solid_angle",
@@ -211,14 +212,18 @@ class MapEvaluator:
         "energy_center",
     ]
 
-    def __init__(self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"):
+    def __init__(
+        self, model=None, exposure=None, psf=None, edisp=None, evaluation_mode="local"
+    ):
         self.model = model
         self.exposure = exposure
         self.psf = psf
         self.edisp = edisp
 
         if evaluation_mode not in ["local", "global"]:
-            raise ValueError("Not a valid model evaluation mode. Choose between 'local' and 'global'")
+            raise ValueError(
+                "Not a valid model evaluation mode. Choose between 'local' and 'global'"
+            )
 
         self.evaluation_mode = evaluation_mode
 
@@ -347,7 +352,9 @@ class MapEvaluator:
         self.psf = psf
 
         if self.evaluation_mode == "local":
-            width = np.max(psf.psf_kernel_map.geom.width) + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
+            width = np.max(psf.psf_kernel_map.geom.width) + 2 * (
+                self.model.evaluation_radius + CUTOUT_MARGIN
+            )
             self.exposure = exposure.cutout(position=self.model.position, width=width)
 
             # Reset cached quantities
@@ -358,7 +365,6 @@ class MapEvaluator:
 
         else:
             self.exposure = exposure
-
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.

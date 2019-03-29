@@ -50,10 +50,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
 
         # Compute FOV coordinates of map relative to pointing
         fov_lon, fov_lat = sky_to_fov(
-            altaz_coord.az,
-            altaz_coord.alt,
-            pointing.altaz.az,
-            pointing.altaz.alt
+            altaz_coord.az, altaz_coord.alt, pointing.altaz.az, pointing.altaz.alt
         )
     else:
         # Create OffsetFrame

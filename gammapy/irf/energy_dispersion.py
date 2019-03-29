@@ -463,6 +463,7 @@ class EnergyDispersion:
             Reconstructed energy corresponding to the given bias.
         """
         from ..spectrum.models import TableModel
+
         e_true = self.e_true.nodes
         values = self.get_bias(e_true)
 

@@ -34,9 +34,11 @@ def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
     try:
         import jupyter
+
         jupyter_module = "jupyter"
     except ImportError:
         import jupyter_core
+
         jupyter_module = "jupyter_core"
 
     t = time.time()

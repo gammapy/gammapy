@@ -108,7 +108,6 @@ def test_skymodel_addition(sky_model, sky_models, diffuse_model):
     assert len(result.skymodels) == 4
 
 
-
 def test_background_model(background):
     bkg1 = BackgroundModel(background, norm=2.0).evaluate()
     assert_allclose(bkg1.data[0][0][0], background.data[0][0][0] * 2.0, rtol=1e-3)
@@ -332,8 +331,16 @@ class TestSkyModelMapEvaluator:
         out = evaluator.compute_dnde()
         assert out.shape == (3, 4, 5)
         assert out.unit == "cm-2 s-1 TeV-1 sr-1"
-        assert_allclose(out.to_value("cm-2 s-1 TeV-1 deg-2").sum(), 1.1788166328203174e-11, rtol=1e-5)
-        assert_allclose(out.to_value("cm-2 s-1 TeV-1 deg-2")[0, 0, 0], 5.087056282039508e-13, rtol=1e-5)
+        assert_allclose(
+            out.to_value("cm-2 s-1 TeV-1 deg-2").sum(),
+            1.1788166328203174e-11,
+            rtol=1e-5,
+        )
+        assert_allclose(
+            out.to_value("cm-2 s-1 TeV-1 deg-2")[0, 0, 0],
+            5.087056282039508e-13,
+            rtol=1e-5,
+        )
 
     @staticmethod
     def test_compute_flux(evaluator):

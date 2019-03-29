@@ -17,7 +17,6 @@ def optimize_scipy(parameters, function, **kwargs):
         parmax = par.factor_max if not np.isnan(par.factor_max) else None
         bounds.append((parmin, parmax))
 
-
     likelihood = Likelihood(function, parameters)
     result = minimize(likelihood.fcn, pars, bounds=bounds, method=method, **kwargs)
 

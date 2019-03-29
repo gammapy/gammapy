@@ -25,7 +25,9 @@ def minimum_separation(lon1, lat1, lon2, lat2):
     """
     lon1 = np.asanyarray(lon1)
     lat1 = np.asanyarray(lat1)
-    separation = angular_separation(lon1[:, np.newaxis], lat1[:, np.newaxis], lon2, lat2)
+    separation = angular_separation(
+        lon1[:, np.newaxis], lat1[:, np.newaxis], lon2, lat2
+    )
     return separation.min(axis=1)
 
 

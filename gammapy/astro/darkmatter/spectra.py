@@ -168,15 +168,7 @@ class DMAnnihilation(SpectralModel):
     * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
-    __slots__ = [
-        "mass",
-        "channel",
-        "scale",
-        "jfactor",
-        "z",
-        "k",
-        "primary_flux",
-    ]
+    __slots__ = ["mass", "channel", "scale", "jfactor", "z", "k", "primary_flux"]
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
     """Thermally averaged annihilation cross-section"""

@@ -170,10 +170,7 @@ def test_wcsgeom_solid_angle():
 
 def test_wcsgeom_solid_angle_symmetry():
     geom = WcsGeom.create(
-        skydir=(0, 0),
-        coordsys="GAL",
-        npix=(3, 3),
-        binsz=20.0 * u.deg,
+        skydir=(0, 0), coordsys="GAL", npix=(3, 3), binsz=20.0 * u.deg
     )
 
     sa = geom.solid_angle()
@@ -229,7 +226,7 @@ def test_cutout():
     )
     position = SkyCoord(0.1, 0.2, unit="deg", frame="galactic")
     cutout_geom = geom.cutout(position=position, width=2 * 0.3 * u.deg, mode="trim")
-    assert_allclose(cutout_geom.center_coord, (0.1, 0.2, 2.))
+    assert_allclose(cutout_geom.center_coord, (0.1, 0.2, 2.0))
     assert cutout_geom.data_shape == (2, 6, 6)
 
 
@@ -291,7 +288,9 @@ def test_region_mask():
 
 
 def test_energy_mask():
-    energy_axis = MapAxis.from_nodes([1, 10, 100], interp="log", name="energy", unit="TeV")
+    energy_axis = MapAxis.from_nodes(
+        [1, 10, 100], interp="log", name="energy", unit="TeV"
+    )
     geom = WcsGeom.create(npix=(1, 1), binsz=1, proj="CAR", axes=[energy_axis])
 
     mask = geom.energy_mask(emin=3 * u.TeV)

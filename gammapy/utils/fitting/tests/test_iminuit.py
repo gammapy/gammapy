@@ -12,7 +12,11 @@ def fcn(parameters):
     z = parameters["z"].value
     x_opt, y_opt, z_opt = 2, 3e5, 4e-5
     x_err, y_err, z_err = 0.2, 3e4, 4e-6
-    return ((x - x_opt) / x_err) ** 2 + ((y - y_opt) / y_err) ** 2 + ((z - z_opt) / z_err) ** 2
+    return (
+        ((x - x_opt) / x_err) ** 2
+        + ((y - y_opt) / y_err) ** 2
+        + ((z - z_opt) / z_err) ** 2
+    )
 
 
 @pytest.fixture()
@@ -51,7 +55,7 @@ def test_iminuit_frozen(pars):
 
     assert_allclose(pars["x"].value, 2, rtol=1e-4)
     assert_allclose(pars["y"].value, 3.1e5)
-    assert_allclose(pars["z"].value, 4.e-5, rtol=1e-4)
+    assert_allclose(pars["z"].value, 4.0e-5, rtol=1e-4)
     assert_allclose(fcn(pars), 0.111112, rtol=1e-5)
 
 

@@ -346,7 +346,11 @@ class MapAxis:
         self._interp = interp
 
         if (self._nodes < 0).any() and interp != "lin":
-            raise ValueError("Interpolation scaling '{}' only support for positive node values.".format(interp))
+            raise ValueError(
+                "Interpolation scaling '{}' only support for positive node values.".format(
+                    interp
+                )
+            )
 
         # Set pixel coordinate of first node
         if node_type == "edges":
@@ -1469,4 +1473,3 @@ class MapGeom(metaclass=MapGeomMeta):
         mask = coords["energy"] > emin.to_value(energy_axis.unit)
         mask &= coords["energy"] < emax.to_value(energy_axis.unit)
         return mask
-

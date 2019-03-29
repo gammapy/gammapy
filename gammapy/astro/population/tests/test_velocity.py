@@ -35,6 +35,7 @@ velocity_models_1D = {
     },
 }
 
+
 @pytest.mark.parametrize(
     ("model_class", "test_parameters"), list(velocity_models_1D.items())
 )

@@ -36,6 +36,7 @@ class SpectralModel(Model):
     See for example return pardict of
     `~gammapy.spectrum.models.PowerLaw`.
     """
+
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
         kwargs = dict()
@@ -468,7 +469,9 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        parameters = self.model1.parameters.parameters + self.model2.parameters.parameters
+        parameters = (
+            self.model1.parameters.parameters + self.model2.parameters.parameters
+        )
         super().__init__(parameters)
 
     # TODO: Think about how to deal with covariance matrix
@@ -994,7 +997,9 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         self.reference = Parameter("reference", reference, frozen=True)
         self.ecut = Parameter("ecut", ecut)
 
-        super().__init__([self.index_1, self.index_2, self.amplitude, self.reference, self.ecut])
+        super().__init__(
+            [self.index_1, self.index_2, self.amplitude, self.reference, self.ecut]
+        )
 
     @staticmethod
     def evaluate(energy, amplitude, reference, ecut, index_1, index_2):

@@ -158,4 +158,3 @@ def make_minuit_par_kwargs(parameters):
         kwargs["error_{}".format(name)] = 1
 
     return kwargs
-

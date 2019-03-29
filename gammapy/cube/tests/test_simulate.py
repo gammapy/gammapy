@@ -46,9 +46,8 @@ def test_simulate():
     assert isinstance(dataset.model, SkyModels)
 
     assert dataset.counts.data.dtype is np.dtype("int")
-    assert_allclose(dataset.counts.data[5, 20, 20],5)
-    assert_allclose(dataset.exposure.data[5, 20, 20],16122681639.856329)
-    assert_allclose(dataset.background_model.map.data[5, 20, 20],0.9765544250896915)
-    assert_allclose(dataset.psf.data[5, 32, 32],0.044402823)
-    assert_allclose(dataset.edisp.data.data[10,10],0.6623215756621856)
-
+    assert_allclose(dataset.counts.data[5, 20, 20], 5)
+    assert_allclose(dataset.exposure.data[5, 20, 20], 16122681639.856329)
+    assert_allclose(dataset.background_model.map.data[5, 20, 20], 0.9765544250896915)
+    assert_allclose(dataset.psf.data[5, 32, 32], 0.044402823)
+    assert_allclose(dataset.edisp.data.data[10, 10], 0.6623215756621856)

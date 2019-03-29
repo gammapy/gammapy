@@ -49,7 +49,6 @@ class TestFixedPointingInfo:
         assert pos.name == "altaz"
 
 
-
 @requires_data("gammapy-data")
 class TestPointingInfo:
     @classmethod

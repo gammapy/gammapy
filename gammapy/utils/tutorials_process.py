@@ -100,9 +100,11 @@ def build_notebooks(args):
     # if passed:
     try:
         import jupyter
+
         jupyter_module = "jupyter"
     except ImportError:
         import jupyter_core
+
         jupyter_module = "jupyter_core"
 
     if pathsrc == path_empty_nbs:

@@ -223,8 +223,7 @@ class SpectrumObservation:
         elif method_hi == "energy_bias":
             e_min = self.e_true[-1]
             thres_hi = self.edisp.get_bias_energy(
-                kwargs["bias_percent_hi"] / 100,
-                emin=e_min,
+                kwargs["bias_percent_hi"] / 100, emin=e_min
             )
         elif method_hi == "none":
             thres_hi = self.e_true[-1]

@@ -293,7 +293,6 @@ class RingBackgroundEstimator:
         """dict of parameters"""
         return self._parameters
 
-
     def kernel(self, image):
         """Ring kernel.
 

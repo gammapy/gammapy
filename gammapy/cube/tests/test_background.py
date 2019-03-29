@@ -16,9 +16,7 @@ pytest.importorskip("healpy")
 
 @pytest.fixture(scope="session")
 def fixed_pointing_info():
-    filename = (
-        "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
-    )
+    filename = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
     return FixedPointingInfo.read(filename)
 
 
@@ -27,21 +25,23 @@ def fixed_pointing_info_aligned(fixed_pointing_info):
     # Create Fixed Pointing Info aligined between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
     origin = SkyCoord(
-        0, 0,
-        unit='deg', frame='icrs',
-        location=EarthLocation(lat=90*u.deg, lon=0*u.deg),
-        obstime=Time('2000-9-21 12:00:00')
+        0,
+        0,
+        unit="deg",
+        frame="icrs",
+        location=EarthLocation(lat=90 * u.deg, lon=0 * u.deg),
+        obstime=Time("2000-9-21 12:00:00"),
     )
     fpi = fixed_pointing_info
     meta = fpi.meta.copy()
-    meta['RA_PNT'] = origin.icrs.ra
-    meta['DEC_PNT'] = origin.icrs.dec
-    meta['GEOLON'] = origin.location.lon
-    meta['GEOLAT'] = origin.location.lat
-    meta['ALTITUDE'] = origin.location.height
+    meta["RA_PNT"] = origin.icrs.ra
+    meta["DEC_PNT"] = origin.icrs.dec
+    meta["GEOLON"] = origin.location.lon
+    meta["GEOLAT"] = origin.location.lat
+    meta["ALTITUDE"] = origin.location.height
     time_start = origin.obstime.datetime - fpi.time_ref.datetime
-    meta['TSTART'] = time_start.total_seconds()
-    meta['TSTOP'] = meta['TSTART'] + 60
+    meta["TSTART"] = time_start.total_seconds()
+    meta["TSTOP"] = meta["TSTART"] + 60
     return FixedPointingInfo(meta)
 
 
@@ -53,13 +53,13 @@ def bkg_3d():
     return Background3D.read(filename, hdu="BACKGROUND")
 
 
-def bkg_3d_custom(symmetry='constant'):
-    if symmetry == 'constant':
+def bkg_3d_custom(symmetry="constant"):
+    if symmetry == "constant":
         data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
-    elif symmetry == 'symmetric':
+    elif symmetry == "symmetric":
         data = np.ones((2, 3, 3)) * u.Unit("s-1 MeV-1 sr-1")
         data[:, 1, 1] *= 2
-    elif symmetry == 'asymmetric':
+    elif symmetry == "asymmetric":
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data]) * u.Unit("s-1 MeV-1 sr-1")
     else:
@@ -79,20 +79,13 @@ def bkg_3d_custom(symmetry='constant'):
     )
 
 
-def make_map_background_irf_with_symmetry(fpi, symmetry='constant'):
-    axis = MapAxis.from_edges(
-        [0.1, 1, 10], name="energy", unit="TeV", interp="log"
-    )
+def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
     return make_map_background_irf(
         pointing=fpi,
         ontime="42 s",
         bkg=bkg_3d_custom(symmetry),
-        geom=WcsGeom.create(
-            npix=(3, 3),
-            binsz=4,
-            axes=[axis],
-            skydir=fpi.radec
-        ),
+        geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.radec),
     )
 
 
@@ -131,16 +124,15 @@ def geom(map_type, ebounds, skydir):
         # },
     ],
 )
-
 def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
     m = make_map_background_irf(
         pointing=fixed_pointing_info,
         ontime="42 s",
         bkg=bkg_3d,
         geom=geom(
-            map_type=pars['map_type'],
-            ebounds=pars['ebounds'],
-            skydir=fixed_pointing_info.radec
+            map_type=pars["map_type"],
+            ebounds=pars["ebounds"],
+            skydir=fixed_pointing_info.radec,
         ),
     )
 
@@ -151,7 +143,7 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
 
 def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry='constant'
+        fpi=fixed_pointing_info_aligned, symmetry="constant"
     )
     for d in m.data:
         assert_allclose(d[1, :], d[1, 0])  # Constant along lon
@@ -164,7 +156,7 @@ def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
 
 def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry='symmetric'
+        fpi=fixed_pointing_info_aligned, symmetry="symmetric"
     )
     for d in m.data:
         assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
@@ -173,7 +165,7 @@ def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
 
 def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
-        fpi=fixed_pointing_info_aligned, symmetry='asymmetric'
+        fpi=fixed_pointing_info_aligned, symmetry="asymmetric"
     )
     for d in m.data:
         # TODO:
@@ -184,4 +176,4 @@ def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
         assert_allclose(d[1, 0], d[1, 2], rtol=1e-4)  # Symmetric along lon
         with pytest.raises(AssertionError):
             assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
-        assert_allclose(d[0, 1]*9, d[2, 1], rtol=1e-4)  # Asymmetric along lat
+        assert_allclose(d[0, 1] * 9, d[2, 1], rtol=1e-4)  # Asymmetric along lat

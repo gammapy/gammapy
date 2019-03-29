@@ -114,8 +114,12 @@ def test_map_fit(sky_model):
     psf_map = psf(geom_t)
     edisp_map = edisp(geom_r, geom_t)
     exposure_map = exposure(geom_t)
-    counts_map_1 = counts(sky_model, exposure_map, background_model_1, psf_map, edisp_map)
-    counts_map_2 = counts(sky_model, exposure_map, background_model_2, psf_map, edisp_map)
+    counts_map_1 = counts(
+        sky_model, exposure_map, background_model_1, psf_map, edisp_map
+    )
+    counts_map_2 = counts(
+        sky_model, exposure_map, background_model_2, psf_map, edisp_map
+    )
 
     mask_map = mask(geom_r, sky_model)
     sky_model.parameters["sigma"].frozen = True
@@ -139,7 +143,7 @@ def test_map_fit(sky_model):
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_2,
-        evaluation_mode="global"
+        evaluation_mode="global",
     )
 
     background_model_1.parameters["norm"].value = 0.4

@@ -29,7 +29,15 @@ class ScaledRegularGridInterpolator:
         Keyword arguments passed to `RegularGridInterpolator`.
     """
 
-    def __init__(self, points, values, points_scale=None, values_scale="lin", extrapolate=True, **kwargs):
+    def __init__(
+        self,
+        points,
+        values,
+        points_scale=None,
+        values_scale="lin",
+        extrapolate=True,
+        **kwargs
+    ):
 
         if points_scale is None:
             points_scale = ["lin"] * len(points)
@@ -95,6 +103,7 @@ def interpolation_scale(scale="lin"):
 
 class InterpolationScale:
     """Interpolation scale base class."""
+
     def __call__(self, values):
         if hasattr(self, "_unit"):
             values = values.to_value(self._unit)

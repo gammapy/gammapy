@@ -60,15 +60,15 @@ def cast_to_shape(param, shape, dtype):
 
 # TODO: remove this function, move code to the one caller below
 def _make_image_header(
-        nxpix=100,
-        nypix=100,
-        binsz=0.1,
-        xref=0,
-        yref=0,
-        proj="CAR",
-        coordsys="GAL",
-        xrefpix=None,
-        yrefpix=None,
+    nxpix=100,
+    nypix=100,
+    binsz=0.1,
+    xref=0,
+    yref=0,
+    proj="CAR",
+    coordsys="GAL",
+    xrefpix=None,
+    yrefpix=None,
 ):
     """Generate a FITS header from scratch.
 
@@ -327,16 +327,16 @@ class WcsGeom(MapGeom):
 
     @classmethod
     def create(
-            cls,
-            npix=None,
-            binsz=0.5,
-            proj="CAR",
-            coordsys="CEL",
-            refpix=None,
-            axes=None,
-            skydir=None,
-            width=None,
-            conv="gadf",
+        cls,
+        npix=None,
+        binsz=0.5,
+        proj="CAR",
+        coordsys="CEL",
+        refpix=None,
+        axes=None,
+        skydir=None,
+        width=None,
+        conv="gadf",
     ):
         """Create a WCS geometry object.
 
@@ -715,7 +715,7 @@ class WcsGeom(MapGeom):
     def downsample(self, factor):
 
         if not np.all(np.mod(self.npix[0], factor) == 0) or not np.all(
-                np.mod(self.npix[1], factor) == 0
+            np.mod(self.npix[1], factor) == 0
         ):
             raise ValueError(
                 "Data shape not divisible by factor {!r} in all axes."
@@ -913,7 +913,6 @@ class WcsGeom(MapGeom):
         return not self.__eq__(other)
 
 
-
 def pix2world(wcs, cdelt, crpix, pix):
     """Perform pixel to world coordinate transformation for a WCS
     projection with a given pixel size (CDELT) and reference pixel
@@ -969,4 +968,3 @@ def get_coordys(wcs):
         return "GAL"
     else:
         raise ValueError("Unrecognized WCS coordinate system.")
-

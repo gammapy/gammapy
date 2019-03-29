@@ -12,7 +12,11 @@ def fcn(parameters):
     z = parameters["z"].value
     x_opt, y_opt, z_opt = 2, 3e5, 4e-5
     x_err, y_err, z_err = 0.2, 3e4, 4e-6
-    return ((x - x_opt) / x_err) ** 2 + ((y - y_opt) / y_err) ** 2 + ((z - z_opt) / z_err) ** 2
+    return (
+        ((x - x_opt) / x_err) ** 2
+        + ((y - y_opt) / y_err) ** 2
+        + ((z - z_opt) / z_err) ** 2
+    )
 
 
 @pytest.fixture()
@@ -29,9 +33,7 @@ def pars():
 
 @pytest.mark.parametrize("method", ["moncar", "simplex"])
 def test_sherpa(method, pars):
-    factors, info, _ = optimize_sherpa(
-        function=fcn, parameters=pars, method=method
-    )
+    factors, info, _ = optimize_sherpa(function=fcn, parameters=pars, method=method)
 
     assert info["success"]
     assert_allclose(fcn(pars), 0, atol=1e-12)
@@ -53,7 +55,7 @@ def test_sherpa_frozen(pars):
     assert info["success"]
     assert_allclose(pars["x"].value, 2)
     assert_allclose(pars["y"].value, 3.1e5)
-    assert_allclose(pars["z"].value, 4.e-5)
+    assert_allclose(pars["z"].value, 4.0e-5)
     assert_allclose(fcn(pars), 0.11111111, rtol=1e-6)
 
 

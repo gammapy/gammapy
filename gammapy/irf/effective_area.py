@@ -266,6 +266,7 @@ class EffectiveAreaTable:
             Energy corresponding to the given aeff.
         """
         from ..spectrum.models import TableModel
+
         energy = self.energy.nodes
 
         if emin is None:
@@ -276,7 +277,6 @@ class EffectiveAreaTable:
 
         aeff_spectrum = TableModel(energy, self.data.data, values_scale="lin")
         return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
-
 
     def to_sherpa(self, name):
         """Convert to `~sherpa.astro.data.DataARF`

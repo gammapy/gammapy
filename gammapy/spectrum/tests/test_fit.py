@@ -17,6 +17,7 @@ from ...spectrum import (
     SpectrumDataset,
 )
 
+
 @requires_dependency("iminuit")
 class TestSpectrumDataset:
     """Test fit on counts spectra without any IRFs"""
@@ -39,23 +40,18 @@ class TestSpectrumDataset:
         )
 
         random_state = get_random_state(23)
-        self.npred = self.source_model.integral(binning[:-1], binning[1:]) * self.livetime
+        self.npred = (
+            self.source_model.integral(binning[:-1], binning[1:]) * self.livetime
+        )
         self.npred += bkg_expected
         source_counts = random_state.poisson(self.npred)
 
         self.src = CountsSpectrum(
-            energy_lo=binning[:-1],
-            energy_hi=binning[1:],
-            data=source_counts
+            energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
         )
-        self.dataset = SpectrumDataset(self.source_model,
-                                       self.src,
-                                       self.livetime,
-                                       None,
-                                       None,
-                                       None,
-                                       self.bkg
-                                       )
+        self.dataset = SpectrumDataset(
+            self.source_model, self.src, self.livetime, None, None, None, self.bkg
+        )
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
@@ -84,6 +80,7 @@ class TestSpectrumDataset:
         assert isinstance(fake_spectrum, CountsSpectrum)
         assert_allclose(fake_spectrum.energy.bins, self.dataset.counts.energy.bins)
         assert fake_spectrum.data.data.sum() == 907331
+
 
 @requires_dependency("sherpa")
 class TestFit:

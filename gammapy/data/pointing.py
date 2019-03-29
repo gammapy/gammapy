@@ -9,10 +9,7 @@ from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.fits import earth_location_from_dict
 
-__all__ = [
-    "FixedPointingInfo",
-    "PointingInfo",
-]
+__all__ = ["FixedPointingInfo", "PointingInfo"]
 
 
 class FixedPointingInfo:
@@ -69,13 +66,13 @@ class FixedPointingInfo:
     @lazyproperty
     def time_start(self):
         """Start time (`~astropy.time.Time`)"""
-        t_start = Quantity(self.meta['TSTART'], "second")
+        t_start = Quantity(self.meta["TSTART"], "second")
         return self.time_ref + t_start
 
     @lazyproperty
     def time_stop(self):
         """Stop time (`~astropy.time.Time`)"""
-        t_stop = Quantity(self.meta['TSTOP'], "second")
+        t_stop = Quantity(self.meta["TSTOP"], "second")
         return self.time_ref + t_stop
 
     @lazyproperty

@@ -14,6 +14,7 @@ __all__ = ["SpectrumFit", "SpectrumDataset"]
 
 log = logging.getLogger(__name__)
 
+
 class SpectrumDataset:
     """Compute spectral model fit statistic on a CountsSpectrum.
 
@@ -59,15 +60,19 @@ class SpectrumDataset:
         self.parameters = Parameters(self.model.parameters.parameters)
 
         if edisp is None:
-            self.predictor = CountsPredictor(model=self.model,
-                                              livetime=self.livetime,
-                                              aeff=self.aeff,
-                                              e_true=self.counts.energy.bins)
+            self.predictor = CountsPredictor(
+                model=self.model,
+                livetime=self.livetime,
+                aeff=self.aeff,
+                e_true=self.counts.energy.bins,
+            )
         else:
-            self.predictor = CountsPredictor(model=self.model,
-                                        aeff=self.aeff,
-                                        edisp=self.edisp,
-                                        livetime=self.livetime)
+            self.predictor = CountsPredictor(
+                model=self.model,
+                aeff=self.aeff,
+                edisp=self.edisp,
+                livetime=self.livetime,
+            )
 
     @property
     def data_shape(self):
@@ -127,11 +132,8 @@ class SpectrumDataset:
             e_lo = edisp.e_reco[:-1]
             e_hi = edisp.e_reco[1:]
 
-        return CountsSpectrum(
-            energy_lo=e_lo,
-            energy_hi=e_hi,
-            data=random_counts
-        )
+        return CountsSpectrum(energy_lo=e_lo, energy_hi=e_hi, data=random_counts)
+
 
 class SpectrumFit(Fit):
     """Orchestrate a 1D counts spectrum fit.

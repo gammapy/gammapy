@@ -73,6 +73,7 @@ class Fit:
     datasets : `Dataset`, list of `Dataset` or `Datasets`
         Dataset or joint datasets to be fitted.
     """
+
     def __init__(self, datasets):
         if not isinstance(datasets, Datasets):
             datasets = Datasets(datasets)
@@ -229,11 +230,7 @@ class Fit:
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(
-            parameters=parameters,
-            success=info["success"],
-            nfev=0
-        )
+        return CovarianceResult(parameters=parameters, success=info["success"], nfev=0)
 
     def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
         """Estimate confidence interval.
@@ -283,7 +280,15 @@ class Fit:
             "nfev": result["nfev"],
         }
 
-    def likelihood_profile(self, parameter, values=None, bounds=2, nvalues=11, reoptimize=False, optimize_opts=None):
+    def likelihood_profile(
+        self,
+        parameter,
+        values=None,
+        bounds=2,
+        nvalues=11,
+        reoptimize=False,
+        optimize_opts=None,
+    ):
         """Compute likelihood profile.
 
         The method used is to vary one parameter, keeping all others fixed.
@@ -341,7 +346,6 @@ class Fit:
                 likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
-
 
     def likelihood_contour(self):
         """Compute likelihood contour.
@@ -436,6 +440,7 @@ class CovarianceResult:
 
 class OptimizeResult:
     """Optmize result object."""
+
     def __init__(self, parameters, success, nfev, total_stat, message, backend, method):
         self._parameters = parameters
         self._success = success

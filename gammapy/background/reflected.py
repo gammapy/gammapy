@@ -118,7 +118,7 @@ class ReflectedRegionsFinder:
         min_distance_input="0.1 rad",
         max_region_number=10000,
         exclusion_mask=None,
-        binsz="0.02 deg"
+        binsz="0.02 deg",
     ):
         self.region = region
         self.center = center
@@ -138,7 +138,9 @@ class ReflectedRegionsFinder:
     def run(self):
         """Run all steps.
         """
-        self.reference_map = self.make_reference_map(self.region, self.center, self.binsz)
+        self.reference_map = self.make_reference_map(
+            self.region, self.center, self.binsz
+        )
         if self.exclusion_mask is not None:
             coords = self.reference_map.geom.get_coord()
             vals = self.exclusion_mask.get_by_coord(coords)

@@ -6,6 +6,7 @@ from ..utils.random import get_random_state
 
 class InvalidValue:
     """Class to define placeholder for invalid array values."""
+
     float = np.nan
     int = np.nan
     bool = np.nan
@@ -18,11 +19,14 @@ class InvalidValue:
         elif np.issubdtype(dtype, np.dtype(bool).type):
             return self.bool
         else:
-            raise ValueError("No invalid value placeholder defined for {}".format(dtype))
+            raise ValueError(
+                "No invalid value placeholder defined for {}".format(dtype)
+            )
 
 
 class InvalidIndex:
     """Class to define placeholder for invalid array indices."""
+
     float = np.nan
     int = -1
     bool = False

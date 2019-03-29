@@ -21,7 +21,6 @@ __all__ = ["EnergyDependentMultiGaussPSF"]
 log = logging.getLogger(__name__)
 
 
-
 class EnergyDependentMultiGaussPSF:
     """
     Triple Gauss analytical PSF depending on energy and theta.
@@ -107,9 +106,8 @@ class EnergyDependentMultiGaussPSF:
         interps = []
         for values in values_list:
             interp = ScaledRegularGridInterpolator(
-                points=(self.theta, self.energy),
-                values=values
-                )
+                points=(self.theta, self.energy), values=values
+            )
             interps.append(interp)
         return interps
 

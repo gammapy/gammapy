@@ -898,7 +898,6 @@ class HpxGeom(MapGeom):
         """Shape of non-spatial axes."""
         return tuple([ax.nbin for ax in self._axes])
 
-
     @property
     def ndim(self):
         """Number of dimensions (int)."""

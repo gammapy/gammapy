@@ -166,9 +166,10 @@ class SkyModel(SkyModelBase):
         self.name = name
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
-        parameters = spatial_model.parameters.parameters + spectral_model.parameters.parameters
+        parameters = (
+            spatial_model.parameters.parameters + spectral_model.parameters.parameters
+        )
         super().__init__(parameters)
-
 
     @property
     def spatial_model(self):

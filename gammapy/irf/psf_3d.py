@@ -49,7 +49,7 @@ class PSF3D:
         psf_value,
         energy_thresh_lo=u.Quantity(0.1, "TeV"),
         energy_thresh_hi=u.Quantity(100, "TeV"),
-        interp_kwargs=None
+        interp_kwargs=None,
     ):
         self.energy_lo = energy_lo.to("TeV")
         self.energy_hi = energy_hi.to("TeV")
@@ -69,11 +69,8 @@ class PSF3D:
         rad = self._rad_center()
 
         return ScaledRegularGridInterpolator(
-            points=(rad, offset, energy),
-            values=self.psf_value,
-            **self._interp_kwargs
+            points=(rad, offset, energy), values=self.psf_value, **self._interp_kwargs
         )
-
 
     def info(self):
         """Print some basic info.
@@ -227,7 +224,13 @@ class PSF3D:
         rad = np.atleast_1d(u.Quantity(rad))
         offset = np.atleast_1d(u.Quantity(offset))
         energy = np.atleast_1d(u.Quantity(energy))
-        return self._interpolate((rad[:, np.newaxis, np.newaxis], offset[np.newaxis, :, np.newaxis], energy[np.newaxis, np.newaxis, :]))
+        return self._interpolate(
+            (
+                rad[:, np.newaxis, np.newaxis],
+                offset[np.newaxis, :, np.newaxis],
+                energy[np.newaxis, np.newaxis, :],
+            )
+        )
 
     def to_energy_dependent_table_psf(self, theta="0 deg", rad=None, exposure=None):
         """

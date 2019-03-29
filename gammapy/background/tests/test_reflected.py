@@ -86,7 +86,6 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     assert len(regions) == 5
 
 
-
 @requires_data("gammapy-data")
 class TestReflectedRegionBackgroundEstimator:
     def test_basic(self, bkg_estimator):

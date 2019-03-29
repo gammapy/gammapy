@@ -716,9 +716,7 @@ class FluxPoints:
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
-            dloglike_scan = (
-                row["dloglike_scan"] - row["loglike"]
-            )
+            dloglike_scan = row["dloglike_scan"] - row["loglike"]
             z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
 
         kwargs.setdefault("vmax", 0)
@@ -1093,7 +1091,7 @@ class FluxPointsDataset:
         """
         Assymetric chi2 statistics for a list of flux points and model.
         """
-        is_p = (model > data)
+        is_p = model > data
         sigma = sigma_n
         sigma[is_p] = sigma_p[is_p]
         return FluxPointsDataset._likelihood_chi2(data, model, sigma)
@@ -1136,4 +1134,3 @@ class FluxPointsDataset:
         else:
             stat = self.likelihood_per_bin()[mask & self.mask]
         return np.nansum(stat, dtype=np.float64)
-
