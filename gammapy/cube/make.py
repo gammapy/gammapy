@@ -3,7 +3,7 @@ import logging
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
-from ..maps import Map, WcsGeom
+from ..maps import Map, WcsGeom, MapAxis
 from ..irf import PSF3D
 from .counts import fill_map_counts
 from .exposure import make_map_exposure_true_energy, _map_spectrum_weight
@@ -12,7 +12,7 @@ from .psf_map import PSFMap, make_psf_map
 from .edisp_map import EDispMap, make_edisp_map
 
 
-__all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
+__all__ = ["MapMaker", "MapMakerObs", "MapMakerRing", "IrfMapMaker"]
 
 log = logging.getLogger(__name__)
 
@@ -510,7 +510,7 @@ class IrfMapMaker:
         The migra edges of the EDispMap axis to be built
     """
 
-    def __init__(self, geom, offset_max, rad_axis=None, migra_axis=None):
+    def __init__(self, geom, offset_max, rads=None, migra=None):
         if not isinstance(geom, WcsGeom):
             raise ValueError("IrfMapMaker only works with WcsGeom")
 
@@ -526,8 +526,6 @@ class IrfMapMaker:
         self.rad_axis = None
         self.migra_axis = None
 
-        self.maps = {}
-
         # Initialise zero-filled maps
         exposure = Map.from_geom(self.geom, unit="m2s")
 
@@ -535,15 +533,13 @@ class IrfMapMaker:
 
         if migra is not None:
             self.migra_axis = MapAxis.from_edges(migra, unit='', name='migra')
-            self.edisp_geom = self.geom.to_image().to_cube([migra_axis, energy_axis])
+            self.edisp_geom = self.geom.to_image().to_cube([self.migra_axis, energy_axis])
             self.edisp_map = EDispMap(Map.from_geom(self.edisp_geom, unit=""),exposure)
-            self.maps['edisp'] = self.edisp_map
 
         if rads is not None:
             self.rad_axis = MapAxis.from_edges(rads.to('deg').value, unit='deg', name='theta')
-            self.psf_geom = self.geom.to_image().to_cube([rad_axis, energy_axis])
+            self.psf_geom = self.geom.to_image().to_cube([self.rad_axis, energy_axis])
             self.psf_map = PSFMap(Map.from_geom(self.psf_geom, unit="1/sr"), exposure)
-            self.maps['psf'] = self.psf_map
 
 
     def run(self, observations):
@@ -569,14 +565,24 @@ class IrfMapMaker:
                 )
                 continue
 
-        return self.maps
+        maps = {'PSFMap':self.psf_map, 'EDispMap':self.edisp_map}
+        return maps
 
     def _process_obs(self, obs):
         # Compute cutout geometry and slices to stack results back later
         log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
 
+        # Create the cutout
+        cutout_kwargs = {
+            "position": obs.pointing_radec,
+            "width": 2 * self.offset_max,
+            "mode": "trim",
+        }
+
+        cutout_geom = self.geom.cutout(**cutout_kwargs)
+
         # Compute field of view mask on the cutout
-        coords = self.geom.get_coord()
+        coords = cutout_geom.get_coord()
         offset = coords.skycoord.separation(obs.pointing_radec)
         fov_mask = offset >= self.offset_max
 
@@ -584,8 +590,9 @@ class IrfMapMaker:
             pointing=obs.pointing_radec,
             livetime=obs.observation_live_time_duration,
             aeff=obs.aeff,
-            geom=self.geom,
+            geom=cutout_geom,
         )
+
         exposure.data[..., fov_mask] = 0
 
         if self.rad_axis is not None:
@@ -594,28 +601,26 @@ class IrfMapMaker:
             else:
                 psf = obs.psf
 
+            cutout_psf_geom = self.psf_geom.cutout(**cutout_kwargs)
+
             obs_psf_map = make_psf_map(
                 psf=psf,
                 pointing=obs.pointing_radec,
-                geom=self.psf_geom,
+                geom=cutout_psf_geom,
                 max_offset=self.offset_max,
                 exposure_map=exposure
             )
 
-            self.tmp = obs_psf_map
-            tmp = self.psf_map.stack(obs_psf_map)
-            self.psf_map._psf_map = tmp.psf_map
-            self.psf_map._exposure_map = tmp.exposure_map
+            self.psf_map = self.psf_map.stack(obs_psf_map)
 
         if self.migra_axis is not None:
+            cutout_edisp_geom = self.edisp_geom.cutout(**cutout_kwargs)
+
             obs_edisp_map = make_edisp_map(
                 edisp=obs.edisp,
                 pointing=obs.pointing_radec,
-                geom=self.edisp_geom,
+                geom=cutout_edisp_geom,
                 max_offset=self.offset_max,
                 exposure_map=exposure
             )
-            self.tmp = obs_edisp_map
-            tmp = self.edisp_map.stack(obs_edisp_map)
-            self.edisp_map._edisp_map = tmp.edisp_map
-            self.edisp_map._exposure_map = tmp.exposure_map
+            self.edisp_map = self.edisp_map.stack(obs_edisp_map)
