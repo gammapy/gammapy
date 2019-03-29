@@ -131,7 +131,7 @@ def test_sky_diffuse_constant():
     assert val.unit == "sr-1"
     assert_allclose(val.value, 42)
     radius = model.evaluation_radius
-    assert radius == None
+    assert radius is None
 
 
 @requires_data("gammapy-data")

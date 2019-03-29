@@ -91,7 +91,6 @@ pylint:
 # TODO: fix and re-activate check for the following:
 # D103: Missing docstring in public function
 # D202: No blank lines allowed after function docstring (found 1)
-# D204: 1 blank line required after class docstring (found 0)
 # D205: 1 blank line required between summary line and description (found 0)
 # D301: Use r""" if any backslashes in a docstring
 # D400: First line should end with a period (not ')')
@@ -102,7 +101,7 @@ pydocstyle:
 	--convention=numpy \
 	--match-dir='^(?!extern).*' \
 	--match='(?!test_).*\.py' \
-	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D204,D205,D301,D400,D401,D403,D410
+	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D205,D301,D400,D401,D403,D410
 
 # TODO: add test and code quality checks for `examples`
 

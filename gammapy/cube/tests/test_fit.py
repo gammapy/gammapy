@@ -144,7 +144,7 @@ def test_map_fit(sky_model):
         edisp=edisp_map,
         background_model=background_model_2,
         evaluation_mode="global",
-        likelihood="cstat"
+        likelihood="cstat",
     )
 
     background_model_1.parameters["norm"].value = 0.4

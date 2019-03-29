@@ -185,15 +185,12 @@ class SpectrumObservation:
         ----------
         method_lo : {'area_max', 'energy_bias', 'none'}
             Method for defining the low energy threshold
-
         method_hi : {'area_max', 'energy_bias', 'none'}
             Method for defining the high energy threshold
-
         reset : bool
             Reset existing energy thresholds before setting the new ones
             (default is `False`)
         """
-
         if reset:
             self.reset_thresholds()
 
@@ -209,7 +206,7 @@ class SpectrumObservation:
         elif method_lo == "none":
             thres_lo = self.e_true[0]
         else:
-            raise ValueError("Undefined method for low threshold: {}".format(method_lo))
+            raise ValueError("Invalid method_lo: {}".format(method_lo))
 
         self.on_vector.lo_threshold = thres_lo
         if self.off_vector is not None:
@@ -228,9 +225,7 @@ class SpectrumObservation:
         elif method_hi == "none":
             thres_hi = self.e_true[-1]
         else:
-            raise ValueError(
-                "Undefined method for high threshold: {}".format(method_hi)
-            )
+            raise ValueError("Invalid method_hi: {}".format(method_hi))
 
         self.on_vector.hi_threshold = thres_hi
         if self.off_vector is not None:

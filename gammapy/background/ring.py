@@ -331,7 +331,6 @@ class RingBackgroundEstimator:
         result : dict of `~gammapy.maps.WcsNDMap`
             Result sky maps
         """
-
         required = ["counts", "background", "exclusion"]
 
         counts, background, exclusion = [images[_] for _ in required]

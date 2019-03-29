@@ -110,7 +110,7 @@ class SpectrumDataset(Dataset):
 
         return np.sum(stat, dtype=np.float64)
 
-    def fake(self, random_state='random-seed'):
+    def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
 
         Parameters
@@ -118,6 +118,7 @@ class SpectrumDataset(Dataset):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
+
         Returns
         -------
         spectrum : `~gammapy.spectrum.CountsSpectrum`
