@@ -6,12 +6,10 @@
 - Planned for May 15, 2019
 
 
-
-
 .. _gammapy_0p11_release:
 
-0.11 (2019-03-29)
------------------
+0.11 (Mar 29, 2019)
+-------------------
 
 Summary
 +++++++
@@ -84,8 +82,6 @@ In alphabetical order by first name:
 - Luca Giunti (new)
 - Régis Terrier
 
-
-
 Pull requests
 +++++++++++++
 
@@ -127,16 +123,15 @@ See the complete `Gammapy 0.11 merged pull requests list on Github <https://gith
 - [#2012] Drop Python 2 support (Christoph Deil)
 - [#2009] Improve field-of-view coordinate transformations (Lars Mohrmann)
 
-
 .. _gammapy_0p10_release:
 
-0.10 (2019-01-28)
------------------
+0.10 (Jan 28, 2019)
+-------------------
 
 Summary
 +++++++
 
-- Released on Jan 28, 2019 (`Gammapy 0.10 on PyPI <https://pypi.org/project/gammapy/0.10>`__)
+- Released on January 28, 2019 (`Gammapy 0.10 on PyPI <https://pypi.org/project/gammapy/0.10>`__)
 - 7 contributors
 - 2 months of work
 - 30 pull requests (not all listed below)
@@ -166,7 +161,6 @@ pyyaml is now a core dependency of Gammapy, i.e. will always be automatically
 installed as a dependency. Instructions for installing Gammapy on Windows, and
 continuous testing on Windows were improved.
 
-.. _PIG 3: https://github.com/gammapy/gammapy/pull/1278
 .. _PIG 7 - models: https://github.com/gammapy/gammapy/pull/1971
 .. _PIG 8 - datasets: https://github.com/gammapy/gammapy/pull/1986
 
@@ -205,8 +199,8 @@ See the complete `Gammapy 0.10 merged pull requests list on Github <https://gith
 
 .. _gammapy_0p9_release:
 
-0.9 (2018-11-29)
-----------------
+0.9 (Nov 29, 2018)
+------------------
 
 Summary
 +++++++
@@ -313,8 +307,8 @@ See the complete `Gammapy 0.9 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p8_release:
 
-0.8 (2018-09-23)
-----------------
+0.8 (Sep 23, 2018)
+------------------
 
 Summary
 +++++++
@@ -530,13 +524,13 @@ See the complete `Gammapy 0.8 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p7_release:
 
-0.7 (2018-02-28)
-----------------
+0.7 (Feb 28, 2018)
+------------------
 
 Summary
 +++++++
 
-- Released on Feb 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.org/project/gammapy/0.7>`__)
+- Released on February 28, 2018 (`Gammapy 0.7 on PyPI <https://pypi.org/project/gammapy/0.7>`__)
 - 25 contributors (16 new)
 - 10 months of work (from April 28, 2017 to Feb 28, 2018)
 - 178 pull requests (not all listed below)
@@ -746,8 +740,8 @@ See the complete `Gammapy 0.7 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p6_release:
 
-0.6 (April 28, 2017)
---------------------
+0.6 (Apr 28, 2017)
+------------------
 
 Summary
 +++++++
@@ -894,8 +888,8 @@ See the complete `Gammapy 0.6 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p5_release:
 
-0.5 (November 22, 2016)
------------------------
+0.5 (Nov 22, 2016)
+------------------
 
 Summary
 +++++++
@@ -1009,8 +1003,8 @@ See the complete `Gammapy 0.5 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p4_release:
 
-0.4 (April 20, 2016)
---------------------
+0.4 (Apr 20, 2016)
+------------------
 
 Summary
 +++++++
@@ -1112,8 +1106,8 @@ See the complete `Gammapy 0.4 merged pull requests list on Github <https://githu
 
 .. _gammapy_0p3_release:
 
-0.3 (August 13, 2015)
----------------------
+0.3 (Aug 13, 2015)
+------------------
 
 Summary
 +++++++
@@ -1170,8 +1164,8 @@ Pull requests
 
 .. _gammapy_0p2_release:
 
-0.2 (April 13, 2015)
---------------------
+0.2 (Apr 13, 2015)
+------------------
 
 Summary
 +++++++
@@ -1222,8 +1216,8 @@ Pull requests
 
 .. _gammapy_0p1_release:
 
-0.1 (August 25, 2014)
----------------------
+0.1 (Aug 25, 2014)
+------------------
 
 Summary
 +++++++
