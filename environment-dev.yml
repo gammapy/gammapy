@@ -45,3 +45,4 @@ dependencies:
     - naima
     - numdifftools
     - pytest-astropy
+    - twine
