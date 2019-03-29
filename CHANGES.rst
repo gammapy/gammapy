@@ -1,3 +1,13 @@
+.. _gammapy_0p12_release:
+
+0.12 (unreleased)
+-----------------
+
+- Planned for May 15, 2019
+
+
+
+
 .. _gammapy_0p11_release:
 
 0.11 (2019-03-29)
