@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Process tutorials notebooks for publication in documentation."""
 import logging
 import os

@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import Counter
 import numpy as np
 from astropy.utils import lazyproperty
@@ -7,7 +8,7 @@ __all__ = ["Datasets"]
 
 
 class Datasets:
-    """Join multiple datasets
+    """Join multiple datasets.
 
     Parameters
     ----------
@@ -15,7 +16,6 @@ class Datasets:
         List of `Dataset` objects ot be joined.
     mask : `~numpy.ndarray`
         Global fitting mask used for all datasets.
-
     """
 
     def __init__(self, datasets, mask=None):
