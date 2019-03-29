@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
-from ..utils.fitting import Parameters
+from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat
 from ..maps import Map, MapAxis
 from .models import SkyModel, SkyModels
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 CUTOUT_MARGIN = 0.1 * u.deg
 
 
-class MapDataset:
+class MapDataset(Dataset):
     """Perform sky model likelihood fit on maps.
 
     Parameters
@@ -33,7 +33,7 @@ class MapDataset:
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background_model: `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModel`
+    background_model : `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModels`
         Background models to use for the fit.
     likelihood : {"cash", "cstat"}
         Likelihood function to use for the fit.
@@ -164,6 +164,7 @@ class MapDataset:
             stat = self.likelihood_per_bin()[self.mask.data]
         else:
             stat = self.likelihood_per_bin()[mask & self.mask.data]
+
         return np.sum(stat, dtype=np.float64)
 
 

@@ -1,10 +1,37 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import abc
 from collections import Counter
 import numpy as np
 from astropy.utils import lazyproperty
 from .parameter import Parameters
 
-__all__ = ["Datasets"]
+__all__ = ["Dataset", "Datasets"]
+
+
+class Dataset(abc.ABC):
+    """Dataset abstract base class.
+
+    TODO: add tutorial how to create your own dataset types.
+
+    For now, see existing examples in Gammapy how this works:
+
+    - `gammapy.cube.MapDataset`
+    - `gammapy.spectrum.SpectrumDataset`
+    - `gammapy.spectrum.FluxPointsDataset`
+    """
+
+    @abc.abstractmethod
+    def likelihood(self, parameters, mask=None):
+        """Total likelihood (float, sum over bins).
+
+        TODO: fix interface.
+        Remove ``parameters`` and ``mask``, add update method?
+        """
+        pass
+
+    @abc.abstractmethod
+    def likelihood_per_bin(self):
+        """Likelihood per bin given the current model parameters"""
 
 
 class Datasets:
@@ -43,7 +70,7 @@ class Datasets:
 
     @lazyproperty
     def types(self):
-        """Types of the contained dataets"""
+        """Types of the contained datasets"""
         return [type(dataset).__name__ for dataset in self.datasets]
 
     @lazyproperty

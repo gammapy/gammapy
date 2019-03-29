@@ -8,6 +8,7 @@ from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.fitting import Dataset
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 from .observation import SpectrumObservationList, SpectrumObservation
@@ -1028,7 +1029,7 @@ class FluxPointEstimator:
             obs.on_vector.quality = quality
 
 
-class FluxPointsDataset:
+class FluxPointsDataset(Dataset):
     """
     Fit a set of flux points with a parametric model.
 
@@ -1097,8 +1098,7 @@ class FluxPointsDataset:
         return FluxPointsDataset._likelihood_chi2(data, model, sigma)
 
     def flux_pred(self):
-        """Compute predicted flux.
-        """
+        """Compute predicted flux."""
         return self.model(self.data.e_ref)
 
     def likelihood_per_bin(self):
@@ -1133,4 +1133,5 @@ class FluxPointsDataset:
             stat = self.likelihood_per_bin()[self.mask]
         else:
             stat = self.likelihood_per_bin()[mask & self.mask]
+
         return np.nansum(stat, dtype=np.float64)
