@@ -24,7 +24,6 @@ OFF = ["GAMMA_CAT", "GAMMAPY_DATA", "GAMMAPY_EXTRA", "GAMMAPY_FERMI_LAT_DATA"]
 @click.option("--kernel", default="python3", help="Kernel name", show_default=True)
 def cli_jupyter_run(ctx, tutor, kernel):
     """Execute Jupyter notebooks."""
-
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
             notebook_test(path, kernel)
@@ -62,8 +61,8 @@ def execute_notebook(path, kernel="python3", loglevel=30):
         log.error("Error executing file {}".format(str(path)))
         return False
     else:
-        t = (time.time() - t) / 60
-        log.info("   ... Executing duration: {:.2f} mn".format(t))
+        t = time.time() - t
+        log.info("   ... Executing duration: {:.1f} seconds".format(t))
         return True
 
 
@@ -82,7 +81,7 @@ def cli_jupyter_strip(ctx):
                 cell["outputs"] = []
 
         nbformat.write(rawnb, str(path))
-        log.info("Jupyter notebook {} stripped out.".format(str(path)))
+        log.info("Strip output cells in notebook: {}".format(str(path)))
 
 
 @click.command(name="black")
@@ -97,7 +96,7 @@ def cli_jupyter_black(ctx):
         blacknb.blackformat()
         rawnb = blacknb.rawnb
         nbformat.write(rawnb, str(path))
-        log.info("Jupyter notebook {} blacked.".format(str(path)))
+        log.info("Applied black to notebook: {}".format(str(path)))
 
 
 class BlackNotebook:
@@ -128,7 +127,6 @@ class BlackNotebook:
 
     def tag_magics(self, cellcode):
         """Comment magic commands."""
-
         lines = cellcode.splitlines(False)
         for line in lines:
             if line.startswith("%") or line.startswith("!"):
@@ -150,7 +148,6 @@ class BlackNotebook:
 @click.option("--kernel", default="python3", help="Kernel name", show_default=True)
 def cli_jupyter_test(ctx, tutor, kernel):
     """Check if Jupyter notebooks are broken."""
-
     with environment(OFF, tutor, ctx):
         for path in ctx.obj["paths"]:
             notebook_test(path, kernel)
@@ -192,9 +189,7 @@ def notebook_test(path, kernel="python3"):
 
 
 class environment:
-    """
-    Helper for setting environmental variables
-    """
+    """Helper for setting environmental variables."""
 
     def __init__(self, envs, tutor, ctx):
         self.envs = envs
@@ -202,7 +197,6 @@ class environment:
         self.ctx = ctx
 
     def __enter__(self):
-
         self.old = os.environ
         if self.tutor:
             for item in self.envs:
