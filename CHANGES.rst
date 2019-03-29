@@ -1,6 +1,6 @@
 .. _gammapy_0p11_release:
 
-0.11 (unreleased)
+0.11 (2019-03-29)
 -----------------
 
 Summary
@@ -14,13 +14,13 @@ Summary
 **What's new?**
 
 Gammapy v0.11 implements a large part of the new joint-likelihood fitting
-framework proposed in `PIG 8`_. This includes the introduction of the
+framework proposed in `PIG 8 - datasets`_ . This includes the introduction of the
 ``FluxPointsDataset``, ``MapDataset`` and ``Datasets`` classes, which now represent
 the main interface to the ``Fit`` class and fitting backends in Gammapy. As a
 first use-case of the new dataset classes we added a tutorial demonstrating a
 joint-likelihood fit of a CTA 1DC Galactic center observations. We also
-considerably improved the performance of the 3D likelihood evaluation (~factor
-of 10) by evaluating the source model components on smaller cutouts of the map.
+considerably improved the performance of the 3D likelihood evaluation by
+evaluating the source model components on smaller cutouts of the map.
 We also added a tutorial demonstrating the use of the ``MapDataset`` class for
 MCMC sampling and show how to interface Gammapy to the widely used emcee package.
 Gammapy v0.11 also includes a new pulsar analysis tutorial. It demonstrates
@@ -104,7 +104,7 @@ See the complete `Gammapy 0.11 merged pull requests list on Github <https://gith
 - [#2037] Add parameter freezing for sherpa backend (Axel Donath)
 - [#2035] Fix symmetry issue in solid angle calculation for WcsGeom (Jason Watson)
 - [#2034] Change SkyGaussian to spherical representation (Luca Giunti)
-- [#2033] Add evaluation of asymmetric background models in alt-az aligned fov coordinates (Jason Watson)
+- [#2033] Add evaluation of asymmetric background models (Jason Watson)
 - [#2031] Add EDispMap class (Régis Terrier)
 - [#2030] Add Datasets class (Axel Donath)
 - [#2028] Add hess notebook to gammapy download list (José Enrique Ruiz)
