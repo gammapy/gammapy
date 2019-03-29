@@ -84,8 +84,7 @@ class SkyPointSource(SkySpatialModel):
         radius : `~astropy.units.Quantity`
             Radius
         """
-        radius = 0 * u.deg
-        return radius
+        return 0 * u.deg
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
@@ -101,6 +100,7 @@ class SkyPointSource(SkySpatialModel):
 
         lon_val = np.select([lon_diff < 1], [1 - lon_diff], 0) / np.abs(grad_lon)
         lat_val = np.select([lat_diff < 1], [1 - lat_diff], 0) / np.abs(grad_lat)
+
         return lon_val * lat_val
 
 
@@ -129,7 +129,6 @@ class SkyGaussian(SkySpatialModel):
 
         \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
             \frac{\theta^2}{\sigma^2}\right)}
-
 
     Parameters
     ----------
@@ -164,10 +163,8 @@ class SkyGaussian(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
            Radius in angular units
-
         """
-        radius = 5 * self.parameters["sigma"].quantity
-        return radius
+        return 5 * self.parameters["sigma"].quantity
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, sigma):
@@ -225,10 +222,8 @@ class SkyDisk(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
             Radius in angular units
-
         """
-        radius = self.parameters["r_0"].quantity
-        return radius
+        return self.parameters["r_0"].quantity
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0):
@@ -241,7 +236,7 @@ class SkyDisk(SkySpatialModel):
 
 
 class SkyEllipse(SkySpatialModel):
-    r"""Constant elliptical model
+    r"""Constant elliptical model.
 
     .. math::
        \phi(\text{lon}, \text{lat}) =
@@ -249,8 +244,6 @@ class SkyEllipse(SkySpatialModel):
                     N & \text{for }  \,\,\,dist(F_1,P)+dist(F_2,P)\leq 2 a \\
                     0 & \text{otherwise }\,,
                 \end{cases}
-
-
 
     where :math:`F_1` and :math:`F_2` represent the foci of the ellipse,
     :math:`P` is a generic point of coordinates :math:`(\text{lon}, \text{lat})`,
@@ -280,7 +273,6 @@ class SkyEllipse(SkySpatialModel):
         (i.e., East of North) from the positive `lon` axis.
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
-
 
     Examples
     --------
@@ -367,7 +359,6 @@ class SkyEllipse(SkySpatialModel):
 
     def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, theta):
         """Evaluate the model (static function)."""
-
         # find the foci of the ellipse
         c = semi_major * e
         lon_1, lat_1 = self._offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
@@ -382,7 +373,7 @@ class SkyEllipse(SkySpatialModel):
 
 
 class SkyShell(SkySpatialModel):
-    r"""Shell model
+    r"""Shell model.
 
     .. math::
 
@@ -430,16 +421,15 @@ class SkyShell(SkySpatialModel):
     @property
     def evaluation_radius(self):
         r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a Shell source, we fix it to :math:`r_\text{out}`.
+
+        Given by :math:`r_\text{out}`.
 
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
             Radius in angular units
-
         """
-        radius = self.parameters["radius"].quantity + self.parameters["width"].quantity
-        return radius
+        return self.parameters["radius"].quantity + self.parameters["width"].quantity
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
@@ -487,7 +477,6 @@ class SkyDiffuseConstant(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
              None
-
         """
         return None
 
@@ -521,10 +510,7 @@ class SkyDiffuseMap(SkySpatialModel):
 
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
-            log.warn(
-                "Map template contains negative values, please check the"
-                " data and fix if needed."
-            )
+            log.warning("Diffuse map has negative values. Check and fix this!")
 
         self.map = map
 
@@ -550,10 +536,8 @@ class SkyDiffuseMap(SkySpatialModel):
         -------
         radius : `~astropy.coordinates.Angle`
             Radius in angular units.
-
         """
-        radius = np.max(self.map.geom.width) / 2.0
-        return radius
+        return np.max(self.map.geom.width) / 2.0
 
     def normalize(self):
         """Normalize the diffuse map model so that it integrates to unity."""

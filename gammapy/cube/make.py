@@ -170,8 +170,7 @@ class MapMaker:
                 raise ValueError("Requires observations...")
             self.run(observations)
 
-        images = self._maps_sum_over_axes(self._maps, spectrum, keepdims)
-        return images
+        return self._maps_sum_over_axes(self._maps, spectrum, keepdims)
 
 
 class MapMakerObs:
@@ -205,8 +204,7 @@ class MapMakerObs:
     def _fov_mask(self, coords):
         pointing = self.observation.pointing_radec
         offset = coords.skycoord.separation(pointing)
-        fov_mask = offset >= self.offset_max
-        return fov_mask
+        return offset >= self.offset_max
 
     @lazyproperty
     def fov_mask_etrue(self):
@@ -218,14 +216,12 @@ class MapMakerObs:
 
     @lazyproperty
     def coords(self):
-        coords = self.geom.get_coord()
-        return coords
+        return self.geom.get_coord()
 
     @lazyproperty
     def coords_etrue(self):
         # Compute field of view mask on the cutout in true energy
-        coords_etrue = self.geom_true.get_coord()
-        return coords_etrue
+        return self.geom_true.get_coord()
 
     def run(self, selection=None):
         """Make maps.

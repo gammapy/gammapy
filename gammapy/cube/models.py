@@ -370,8 +370,7 @@ class BackgroundModel(Model):
     def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, **kwargs):
         """Create background model from sky model by applying IRFs.
 
-        Typically used for diffuse Galactic emission models or constant diffuse emission
-        models.
+        Typically used for diffuse Galactic or constant emission models.
 
         Parameters
         ----------
