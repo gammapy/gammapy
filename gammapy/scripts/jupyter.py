@@ -101,7 +101,12 @@ def cli_jupyter_black(ctx):
 
 
 class BlackNotebook:
-    """Manage the process of black formatting."""
+    """Manage the process of black formatting.
+
+    Probably this will become available directly in the future.
+
+    See https://github.com/ambv/black/issues/298#issuecomment-476960082
+    """
 
     MAGIC_TAG = "###-MAGIC TAG-"
 
@@ -110,7 +115,7 @@ class BlackNotebook:
 
     def blackformat(self):
         """Format code cells."""
-        from black import format_str
+        import black
 
         for cell in self.rawnb.cells:
             fmt = cell["source"]
@@ -118,7 +123,7 @@ class BlackNotebook:
                 try:
                     fmt = "\n".join(self.tag_magics(fmt))
                     has_semicolon = fmt.endswith(";")
-                    fmt = format_str(src_contents=fmt, line_length=79).rstrip()
+                    fmt = black.format_str(src_contents=fmt, mode=black.FileMode(line_length=79)).rstrip()
                     if has_semicolon:
                         fmt += ";"
                 except Exception as ex:
