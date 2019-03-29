@@ -62,7 +62,7 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
 
 
 class EDispMap:
-    """Class containing the Map of Energy Dispersions and allowing to interact with it.
+    """Energy dispersion map.
 
     Parameters
     ----------
@@ -80,27 +80,26 @@ class EDispMap:
         import numpy as np
         from astropy import units as u
         from astropy.coordinates import SkyCoord
-        from gammapy.maps import Map, WcsGeom, MapAxis
+        from gammapy.maps import WcsGeom, MapAxis
         from gammapy.irf import EnergyDispersion2D, EffectiveAreaTable2D
-        from gammapy.cube import make_edisp_map, EDispMap, make_map_exposure_true_energy
+        from gammapy.cube import make_edisp_map, make_map_exposure_true_energy
 
-        # Define energy axis. Note that the name is fixed.
-        energy_axis = MapAxis.from_edges(np.logspace(-1., 1., 4), unit='TeV', name='energy')
-        # Define migra axis. Again note the axis name
-        migras = np.linspace(0., 3.0, 100)
-        migra_axis = MapAxis.from_edges(migras, unit='', name='migra')
-
-        # Define parameters
-        pointing = SkyCoord(0., 0., unit='deg')
+        # Define energy dispersion map geometry
+        energy_axis = MapAxis.from_edges(np.logspace(-1, 1, 4), unit="TeV", name="energy")
+        migra_axis = MapAxis.from_edges(np.linspace(0, 3, 100), name="migra")
+        pointing = SkyCoord(0, 0, unit="deg")
         max_offset = 4 * u.deg
-
-        # Create WcsGeom
-        geom = WcsGeom.create(binsz=0.25*u.deg, width=10*u.deg, skydir=pointing, axes=[migra_axis, energy_axis])
+        geom = WcsGeom.create(
+            binsz=0.25 * u.deg,
+            width=10 * u.deg,
+            skydir=pointing,
+            axes=[migra_axis, energy_axis],
+        )
 
         # Extract EnergyDispersion2D from CTA 1DC IRF
-        filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-        edisp2D = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
-        aeff2d = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+        filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+        edisp2D = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
+        aeff2d = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
         # Create the exposure map
         exposure_geom = geom.to_image().to_cube([energy_axis])
@@ -110,10 +109,12 @@ class EDispMap:
         edisp_map = make_edisp_map(edisp2D, pointing, geom, max_offset, exposure_map)
 
         # Get an Energy Dispersion (1D) at any position in the image
-        edisp = edisp_map.get_energy_dispersion(SkyCoord(2., 2.5, unit='deg'), e_reco=np.logspace(-1.,1.,10)*u.TeV)
+        pos = SkyCoord(2.0, 2.5, unit="deg")
+        e_reco = np.logspace(-1.0, 1.0, 10) * u.TeV
+        edisp = edisp_map.get_energy_dispersion(pos=pos, e_reco=e_reco)
 
         # Write map to disk
-        edisp_map.write('edisp_map.fits')
+        edisp_map.write("edisp_map.fits")
     """
 
     def __init__(self, edisp_map, exposure_map):
