@@ -8,11 +8,10 @@ from multiprocessing import Pool
 import numpy as np
 from scipy.optimize import newton, brentq
 from astropy.convolution import CustomKernel, Kernel2D
+from ..stats import cash, cash_sum_cython
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 from ._test_statistics_cython import (
-    _cash_cython,
     _amplitude_bounds_cython,
-    _cash_sum_cython,
     _f_cash_root_cython,
     _x_best_leastsq,
 )
@@ -65,7 +64,7 @@ def f_cash(x, counts, background, model):
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
+    return cash_sum_cython(counts.ravel(), (background + x * FLUX_FACTOR * model).ravel())
 
 
 class TSMapEstimator:
@@ -310,7 +309,7 @@ class TSMapEstimator:
         exposure = maps["exposure"].data.astype(float)
 
         # Compute null statistics per pixel for the whole image
-        c_0 = _cash_cython(counts, background)
+        c_0 = cash(counts, background)
 
         error_method = p["error_method"] if "flux_err" in which else "none"
         ul_method = p["ul_method"] if "flux_ul" in which else "none"
