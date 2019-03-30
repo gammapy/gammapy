@@ -5,7 +5,7 @@ from astropy.utils import lazyproperty
 import astropy.units as u
 from astropy.nddata.utils import NoOverlapError
 from ..utils.fitting import Parameters, Dataset
-from ..stats import cash, cstat
+from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
 from ..maps import Map, MapAxis
 from .models import SkyModel, SkyModels
 
@@ -73,8 +73,10 @@ class MapDataset(Dataset):
 
         if likelihood == "cash":
             self._stat = cash
+            self._stat_sum = cash_sum_cython
         elif likelihood == "cstat":
             self._stat = cstat
+            self._stat_sum = cstat_sum_cython
         else:
             raise ValueError("Invalid likelihood: {!r}".format(likelihood))
 
@@ -149,6 +151,10 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
+    @lazyproperty
+    def _counts_data(self):
+        return self.counts.data.astype(float)
+
     def likelihood(self, parameters, mask=None):
         """Total likelihood given the current model parameters.
 
@@ -157,16 +163,19 @@ class MapDataset(Dataset):
         mask : `~numpy.ndarray`
             Mask to be combined with the dataset mask.
         """
-        if self.mask is None and mask is None:
-            stat = self.likelihood_per_bin()
-        elif self.mask is None:
-            stat = self.likelihood_per_bin()[mask]
-        elif mask is None:
-            stat = self.likelihood_per_bin()[self.mask.data]
-        else:
-            stat = self.likelihood_per_bin()[mask & self.mask.data]
+        counts, npred = self._counts_data, self.npred().data
 
-        return np.sum(stat, dtype=np.float64)
+        if self.mask is None and mask is None:
+            stat = self._stat_sum(counts.ravel(), npred.ravel())
+        elif self.mask is None:
+            stat = self._stat_sum(counts[mask], npred[mask])
+        elif mask is None:
+            stat = self._stat_sum(counts[self.mask.data], npred[self.mask.data])
+        else:
+            mask_joined = mask & self.mask.data
+            stat = self._stat_sum(counts[mask_joined], npred[mask_joined])
+
+        return stat
 
 
 class MapEvaluator:
