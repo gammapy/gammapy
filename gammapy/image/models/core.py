@@ -507,6 +507,8 @@ class SkyDiffuseMap(SkySpatialModel):
 
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
+    frame = None
+
     def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
         if (map.data < 0).any():
             log.warning("Diffuse map has negative values. Check and fix this!")
