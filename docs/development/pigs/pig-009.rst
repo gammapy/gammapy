@@ -50,6 +50,7 @@ cdf_sampler.sample()
 
 
 
+
 class InverseCDFSampler:
     """Inverse CDF sampler.
     
