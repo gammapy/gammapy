@@ -17,8 +17,9 @@ Introduction
 
 An event simulator of gamma events is of high importance in exploiting the potentiality of the future Cherenkov Telescope Array (CTA). It will allows us to simulate sources with different spectral and morphological properties, hence investigating the best configurations for each type of objects and the expected performances of CTA.
 We note that an event simulator is currently required by the CTA Science Tools. In addition, there will be the possibility to adopt it to simulate the next CTA Data Challenge (DC2).
-Therefore, we propose to create an event simulator, which sample random events for given sources. It will need input maps with spatial morphology and spectral distributions. The proposed simulator will also be able to apply, from the IRF, the PSF and energy dispersion to correct position and energy of the sampled events. In addition, it will possibly include the simulation of background events. 
-The output of the simulator will be astropy table. 
+Therefore, we propose to create an event simulator which sample random events for given sources. It will need input maps where spatial morphology and spectral distributions are provided. Then the proposed simulator will be able to apply the PSF and energy dispersion, for each simulated observation, to correct position and energy of the sampled events. Source lightcurves will be also taken into account to simulate temporal variations.
+Furthermore, the sampler will possibly include the simulation of background events. 
+The output of the simulator is an astropy table. 
 
 Proposal
 ========
@@ -28,13 +29,15 @@ We propose to introduce the following classes to implement the simulator in Gamm
 InverseCDFSampler
 ========
 
-The first step of an event simulator can be obtained by developing a sampler of the cumulative distribution function for a given input probability distribution function. In particular, it determines a set of random numbers and calculate the cumulative distribution function.
+The first step of an event simulator can be obtained by developing a sampler of the cumulative distribution function for a given input probability distribution function. In more detail, it calculates the cumulative distribution function and, once a set of random numbers is determined, it samples a set of events.
 
-It should work as the following:
+The basic design of the class works as following:
 
 	from gammapy.utils.distributions import InverseCDFSampler
 
 	cdf_sampler = InverseCDFSampler(pdf=npred_map.data, axis=None, random_state=random_state)
+
+where the gammapy.utils.random.get_random_state method is used.
 
 
 The class implements the following methods:
@@ -49,6 +52,9 @@ The class implements the following methods:
 that will allow us to sample alternatively along all the axes or a given axis of the input map.
 
 
+MapEventSampler
+========
+
 - It remains the question on how does it relate with the Gammapy MapDataset class. 
 
 
@@ -61,9 +67,9 @@ List of proposed pull requests
 
 This is a proposal for a list of pull requests implementing the proposed changes, ordered by priority:
 
-1. Introduce the InverseCDFSampler .
+1. Introduce the InverseCDFSampler.
 2. Dismiss the ``general_random`` class in gammapy.utils.distributions.
-3. Implement the InverseCDFSampler into gammapy.utils.distributions (in Gammapy v.0.12).
+3. Implement the InverseCDFSampler into gammapy.utils.distributions (Gammapy v.0.12).
 
 
 Decision
