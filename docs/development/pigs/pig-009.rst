@@ -55,7 +55,7 @@ that will allow us to sample alternatively along all the axes or a given axis of
 MapEventSampler
 ========
 
-- It remains the question on how does it relate with the Gammapy MapDataset class. 
+- We should resolve the question on how does it relate with the Gammapy MapDataset class. 
 
 
 Alternatives
