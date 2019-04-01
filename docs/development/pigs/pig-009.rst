@@ -28,6 +28,26 @@ We propose to introduce the following classes to implement the simulator in Gamm
 InverseCDFSampler
 ========
 
+The first step of an event simulator can be obtained by developing a sampler of the cumulative distribution function. The sampling can be performed on alternatively all the axes or a given axis.
+
+It should work as the following:
+
+from gammapy.utils.distributions import InverseCDFSampler
+
+cdf_sampler = InverseCDFSampler(pdf=npred_map.data, axis=None, random_state=random_state)
+
+where ``npred_map.data`` is an input map for the probability distribution function.
+
+
+The class implements the following methods:
+
+
+cdf_sampler = InverseCDFSampler()
+
+cdf_sampler.sample_axis()
+
+cdf_sampler.sample()
+
 
 
 class InverseCDFSampler:
