@@ -147,6 +147,7 @@ def test_sky_diffuse_map():
     radius = model.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, 0.64, rtol=1.0e-2)
+    assert model.frame.name == "fk5"
 
 
 @requires_data("gammapy-data")

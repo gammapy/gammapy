@@ -574,3 +574,7 @@ class SkyDiffuseMap(SkySpatialModel):
     def position(self):
         """`~astropy.coordinates.SkyCoord`"""
         return self.map.geom.center_skydir
+
+    @property
+    def frame(self):
+        return self.position.frame
