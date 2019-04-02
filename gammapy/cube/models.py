@@ -309,7 +309,7 @@ class SkyDiffuseCube(SkyModelBase):
 
     @property
     def frame(self):
-        return self.position.frame
+        return self.position.frame.name
 
 
 class BackgroundModel(Model):
