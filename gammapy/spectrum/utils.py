@@ -2,10 +2,10 @@
 import numpy as np
 from astropy.units import Quantity
 
-__all__ = ["CountsPredictor", "integrate_spectrum"]
+__all__ = ["SpectrumEvaluator", "integrate_spectrum"]
 
 
-class CountsPredictor:
+class SpectrumEvaluator:
     """Calculate number of predicted counts (``npred``).
 
     The true and reconstructed energy binning are inferred from the provided IRFs.
@@ -25,13 +25,13 @@ class CountsPredictor:
 
     Examples
     --------
-    Calculate prediced counts in a desired reconstruced energy binning
+    Calculate predicted counts in a desired reconstruced energy binning
 
     .. plot::
         :include-source:
 
         from gammapy.irf import EnergyDispersion, EffectiveAreaTable
-        from gammapy.spectrum import models, CountsPredictor
+        from gammapy.spectrum import models, SpectrumEvaluator
         import numpy as np
         import astropy.units as u
         import matplotlib.pyplot as plt
@@ -49,12 +49,11 @@ class CountsPredictor:
 
         livetime = 1 * u.h
 
-        predictor = CountsPredictor(model=model,
-                                    aeff=aeff,
-                                    edisp=edisp,
-                                    livetime=livetime)
-        predictor.run()
-        predictor.npred.plot_hist()
+        predictor = SpectrumEvaluator(model=model,
+                                      aeff=aeff,
+                                      edisp=edisp,
+                                      livetime=livetime)
+        predictor.compute_npred().plot_hist()
         plt.show()
     """
 
@@ -66,14 +65,10 @@ class CountsPredictor:
         self.e_true = e_true
         self.e_reco = None
 
-        self.true_flux = None
-        self.true_counts = None
-        self.npred = None
-
-    def run(self):
-        self.integrate_model()
-        self.apply_aeff()
-        self.apply_edisp()
+    def compute_npred(self):
+        integral_flux = self.integrate_model()
+        true_counts = self.apply_aeff(integral_flux)
+        return self.apply_edisp(true_counts)
 
     def integrate_model(self):
         """Integrate model in true energy space"""
@@ -91,33 +86,33 @@ class CountsPredictor:
             if self.e_true is None:
                 raise ValueError("No true energy binning given")
 
-        self.true_flux = self.model.integral(
+        return self.model.integral(
             emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
         )
 
-    def apply_aeff(self):
+    def apply_aeff(self, integral_flux):
         if self.aeff is not None:
-            cts = self.true_flux * self.aeff.data.data
+            cts = integral_flux * self.aeff.data.data
         else:
-            cts = self.true_flux
+            cts = integral_flux
 
         # Multiply with livetime if not already contained in aeff or model
         if cts.unit.is_equivalent("s-1"):
             cts *= self.livetime
 
-        self.true_counts = cts.to("")
+        return cts.to("")
 
-    def apply_edisp(self):
+    def apply_edisp(self, true_counts):
         from . import CountsSpectrum
 
         if self.edisp is not None:
-            cts = self.edisp.apply(self.true_counts)
+            cts = self.edisp.apply(true_counts)
             self.e_reco = self.edisp.e_reco.bins
         else:
-            cts = self.true_counts
+            cts = true_counts
             self.e_reco = self.e_true
 
-        self.npred = CountsSpectrum(
+        return CountsSpectrum(
             data=cts, energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
         )
 

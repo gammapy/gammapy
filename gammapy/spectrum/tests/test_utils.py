@@ -7,7 +7,7 @@ import astropy.units as u
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...spectrum import integrate_spectrum, CountsPredictor
+from ...spectrum import integrate_spectrum, SpectrumEvaluator
 from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
 from ..models import ExponentialCutoffPowerLaw, PowerLaw, TableModel
 
@@ -138,7 +138,6 @@ def get_test_cases():
 @pytest.mark.parametrize("case", get_test_cases())
 def test_counts_predictor(case):
     desired = case.pop("npred")
-    predictor = CountsPredictor(**case)
-    predictor.run()
-    actual = predictor.npred.total_counts.value
+    predictor = SpectrumEvaluator(**case)
+    actual = predictor.compute_npred().total_counts.value
     assert_allclose(actual, desired)

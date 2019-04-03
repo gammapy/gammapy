@@ -3,7 +3,7 @@ from collections import OrderedDict
 import logging
 from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds
-from .utils import CountsPredictor
+from .utils import SpectrumEvaluator
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
 
@@ -62,33 +62,31 @@ class SpectrumSimulation:
     def npred_source(self):
         """Predicted source `~gammapy.spectrum.CountsSpectrum`.
 
-        Calls :func:`gammapy.spectrum.utils.CountsPredictor`.
+        Calls :func:`gammapy.spectrum.utils.SpectrumEvaluator`.
         """
-        predictor = CountsPredictor(
+        predictor = SpectrumEvaluator(
             livetime=self.livetime,
             aeff=self.aeff,
             edisp=self.edisp,
             e_true=self.e_true,
             model=self.source_model,
         )
-        predictor.run()
-        return predictor.npred
+        return predictor.compute_npred()
 
     @property
     def npred_background(self):
         """Predicted background (`~gammapy.spectrum.CountsSpectrum`).
 
-        Calls :func:`gammapy.spectrum.utils.CountsPredictor`.
+        Calls :func:`gammapy.spectrum.utils.SpectrumEvaluator`.
         """
-        predictor = CountsPredictor(
+        predictor = SpectrumEvaluator(
             livetime=self.livetime,
             aeff=self.aeff,
             edisp=self.edisp,
             e_true=self.e_true,
             model=self.background_model,
         )
-        predictor.run()
-        return predictor.npred
+        return predictor.compute_npred()
 
     @property
     def e_reco(self):
