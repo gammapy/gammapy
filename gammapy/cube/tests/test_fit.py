@@ -183,6 +183,13 @@ def test_map_fit(sky_model):
     stat = fit.datasets.likelihood()
     assert_allclose(stat, 5895.205587)
 
+    # test model evaluation outside image
+
+    with pytest.raises(ValueError):
+        dataset_1.model.skymodels[0].spatial_model.lon_0.value = 150
+        dataset_1.npred()
+
+
 
 @requires_dependency("iminuit")
 @requires_data("gammapy-data")

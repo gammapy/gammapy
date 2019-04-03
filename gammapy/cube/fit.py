@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
+from astropy.nddata.utils import NoOverlapError
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat
 from ..maps import Map, MapAxis
@@ -345,7 +346,11 @@ class MapEvaluator:
             width = np.max(psf.psf_kernel_map.geom.width) + 2 * (
                 self.model.evaluation_radius + CUTOUT_MARGIN
             )
-            self.exposure = exposure.cutout(position=self.model.position, width=width)
+            try:
+                self.exposure = exposure.cutout(position=self.model.position, width=width)
+            except NoOverlapError:
+                raise ValueError("Position {} of model component is outside the image boundaries."
+                                 " Please check the starting values or position parameter boundaries of the model.".format(self.model.position))
 
             # Reset cached quantities
             for cached_property in self._cached_properties:
