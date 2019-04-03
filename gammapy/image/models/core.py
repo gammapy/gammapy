@@ -577,4 +577,4 @@ class SkyDiffuseMap(SkySpatialModel):
 
     @property
     def frame(self):
-        return self.position.frame
+        return self.position.frame.name
