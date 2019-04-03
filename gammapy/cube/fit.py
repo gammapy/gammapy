@@ -165,6 +165,8 @@ class MapDataset(Dataset):
         """
         counts, npred = self._counts_data, self.npred().data
 
+        #TODO: add mask handling to _stat_sum, so that the temp copy
+        # created by the fancy indexing is avoided
         if self.mask is None and mask is None:
             stat = self._stat_sum(counts.ravel(), npred.ravel())
         elif self.mask is None:
