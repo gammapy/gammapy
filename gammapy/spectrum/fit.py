@@ -7,7 +7,7 @@ from ..utils.fitting import Fit, Parameters, Dataset
 from .. import stats
 from ..utils.random import get_random_state
 from .core import CountsSpectrum
-from .utils import CountsPredictor
+from .utils import SpectrumEvaluator
 from .observation import SpectrumObservationList, SpectrumObservation
 
 __all__ = ["SpectrumFit", "SpectrumDataset"]
@@ -60,14 +60,14 @@ class SpectrumDataset(Dataset):
         self.parameters = Parameters(self.model.parameters.parameters)
 
         if edisp is None:
-            self.predictor = CountsPredictor(
+            self.predictor = SpectrumEvaluator(
                 model=self.model,
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self.counts.energy.bins,
             )
         else:
-            self.predictor = CountsPredictor(
+            self.predictor = SpectrumEvaluator(
                 model=self.model,
                 aeff=self.aeff,
                 edisp=self.edisp,
@@ -81,8 +81,7 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
-        self.predictor.run()
-        model_npred = self.predictor.npred.data.data
+        model_npred = self.predictor.compute_npred().data.data
         back_npred = self.background.data.data
         total_npred = model_npred + back_npred
         return total_npred
@@ -302,7 +301,7 @@ class SpectrumFit(Fit):
         predicted_counts : `numpy.ndarray`
             Predicted counts for one observation
         """
-        predictor = CountsPredictor(model=model)
+        predictor = SpectrumEvaluator(model=model)
         if forward_folded:
             predictor.aeff = obs.aeff
             predictor.edisp = obs.edisp
@@ -311,8 +310,7 @@ class SpectrumFit(Fit):
 
         predictor.livetime = obs.livetime
 
-        predictor.run()
-        counts = predictor.npred.data.data
+        counts = predictor.compute_npred().data.data
 
         # Check count unit (~unit of model amplitude)
         if counts.unit.is_equivalent(""):

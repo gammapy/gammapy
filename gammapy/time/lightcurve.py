@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from ..spectrum.utils import CountsPredictor
+from ..spectrum.utils import SpectrumEvaluator
 from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
 from ..utils.table import table_from_row_data
@@ -815,14 +815,13 @@ class LightCurveEstimator:
                     )  # user
                 )
             )[0]
-            counts_predictor = CountsPredictor(
+            counts_predictor = SpectrumEvaluator(
                 livetime=livetime_to_add,
                 aeff=spec.aeff,
                 edisp=spec.edisp,
                 model=spectral_model,
             )
-            counts_predictor.run()
-            counts_predicted_excess = counts_predictor.npred.data.data[e_idx[:-1]]
+            counts_predicted_excess = counts_predictor.compute_npred().data.data[e_idx[:-1]]
 
             obs_predicted_excess = np.sum(counts_predicted_excess)
 

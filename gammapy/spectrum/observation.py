@@ -10,7 +10,7 @@ from ..utils.table import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum, PHACountsSpectrumList
-from .utils import CountsPredictor
+from .utils import SpectrumEvaluator
 
 __all__ = [
     "SpectrumStats",
@@ -346,11 +346,10 @@ class SpectrumObservation:
         npred : `~gammapy.spectrum.CountsSpectrum`
             Predicted counts
         """
-        predictor = CountsPredictor(
+        predictor = SpectrumEvaluator(
             model=model, edisp=self.edisp, aeff=self.aeff, livetime=self.livetime
         )
-        predictor.run()
-        return predictor.npred
+        return predictor.compute_npred()
 
     @classmethod
     def read(cls, filename):

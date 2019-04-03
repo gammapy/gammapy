@@ -3,7 +3,7 @@ from astropy.table import Table, Column
 import astropy.units as u
 from ..stats import excess_matching_significance_on_off
 from .models import PowerLaw
-from .utils import CountsPredictor
+from .utils import SpectrumEvaluator
 
 __all__ = ["SensitivityEstimator"]
 
@@ -91,11 +91,10 @@ class SensitivityEstimator:
         )
 
         # TODO: simplify the following computation
-        predictor = CountsPredictor(
+        predictor = SpectrumEvaluator(
             model, aeff=self.arf, edisp=self.rmf, livetime=self.livetime
         )
-        predictor.run()
-        counts = predictor.npred.data.data.value
+        counts = predictor.compute_npred().data.data.value
         phi_0 = excess_counts / counts
 
         dnde_model = model(energy=energy)
