@@ -6,6 +6,7 @@ from ..utils.scripts import make_path
 rom ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import PHACountsSpectrum
 from .utils import SpectrumEvaluator
+from ..utils.fitting import Dataset
 
 __all__ = [
     "OGIPSpectrumDataset"
@@ -186,15 +187,15 @@ class OGIPSpectrumDataset(Dataset):
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        phafile = self.on_vector.phafile
-        bkgfile = self.on_vector.bkgfile
-        arffile = self.on_vector.arffile
-        rmffile = self.on_vector.rmffile
+        phafile = self.ONcounts.phafile
+        bkgfile = self.ONcounts.bkgfile
+        arffile = self.ONcounts.arffile
+        rmffile = self.ONcounts.rmffile
 
-        self.on_vector.write(outdir / phafile, overwrite=overwrite)
+        self.ONcounts.write(outdir / phafile, overwrite=overwrite)
         self.aeff.write(outdir / arffile, overwrite=overwrite)
-        if self.off_vector is not None:
-            self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
+        if self.ONcounts is not None:
+            self.ONcounts.write(outdir / bkgfile, overwrite=overwrite)
         if self.edisp is not None:
             self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
 
