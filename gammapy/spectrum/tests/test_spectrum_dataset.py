@@ -7,42 +7,56 @@ from ...utils.testing import requires_data, requires_dependency
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...utils.fitting import Fit
+from ..models import PowerLaw, ConstantModel
 from ...spectrum import (
     PHACountsSpectrum,
     ONOFFSpectrumDataset
 )
 
-@pytest.fixture
-def effective_area():
-    etrue = np.logspace(-1,1,10)*u.TeV
-    return EffectiveAreaTable.from_parametrization(etrue)
-
-@pytest.fixture
-def energy_dispersion():
-    etrue = np.logspace(-1,1,10)*u.TeV
-    ereco = np.logspace(-1,1,5)*u.TeV
-    return EnergyDispersion.from_diagonal_response(etrue, ereco)
-
-@pytest.fixture
-def on_spectrum():
-    ereco = np.logspace(-1,1,5)*u.TeV
-    return PHACountsSpectrum(ereco[:-1], ereco[1:], np.ones(4), backscal=np.ones(4))
-
-@pytest.fixture
-def off_spectrum():
-    ereco = np.logspace(-1,1,5)*u.TeV
-    return PHACountsSpectrum(ereco[:-1], ereco[1:], np.ones(4)*10, backscal=np.ones(4)*10)
-
-@pytest.fixture
-def model():
-     return PowerLaw(index=2, amplitude=1e-11 / u.TeV/u.s/u.cm**2, reference=1 * u.TeV)
 
 
-def test_ogip_spectrum_dataset_init(on_spectrum, off_spectrum, effective_area, energy_dispersion):
-    dataset = ONOFFSpectrumDataset(ONcounts=on_spectrum, OFFcounts=off_spectrum,
-                         aeff=effective_area, edisp=energy_dispersion)
+class Test_ONOFFSpectrumDataset:
+    """ Test ON OFF SpectrumDataset"""
+    def setup(self):
+
+        etrue = np.logspace(-1,1,10)*u.TeV
+        self.e_true = etrue
+        ereco = np.logspace(-1,1,5)*u.TeV
+        elo = ereco[:-1]
+        ehi = ereco[1:]
+
+        self.aeff = EffectiveAreaTable(etrue[:-1],etrue[1:], np.ones(9)*u.cm**2)
+        self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
+
+        self.on_counts = PHACountsSpectrum(elo, ehi, np.ones_like(elo), backscal=np.ones_like(elo))
+        self.off_counts = PHACountsSpectrum(elo, ehi, np.ones_like(elo)*10, backscal=np.ones_like(elo)*10)
+
+        self.livetime = 1000*u.s
+
+    def test_init_no_model(self):
+        dataset = ONOFFSpectrumDataset(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
+
+        with pytest.raises(AttributeError):
+            dataset.npred()
+
+    def test_alpha(self):
+        dataset = ONOFFSpectrumDataset(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
+
+        assert dataset.alpha.shape == (4,)
+        assert_allclose(dataset.alpha, 0.1)
+
+    def test_init_no_edisp(self):
+        const = 1 / u.TeV / u.cm ** 2 / u.s
+        model = ConstantModel(const)
+        livetime = 1*u.s
+        dataset = ONOFFSpectrumDataset(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+                         aeff=self.aeff, model=model, livetime = livetime)
+
+        expected = self.aeff.data.data[0]*(self.aeff.energy.hi[-1]-self.aeff.energy.lo[0])*const*livetime
+
+        assert_allclose(dataset.npred().sum(), expected.value)
 
 
-    assert dataset.alpha.shape == (4,)
-    assert_allclose(dataset.alpha, 0.1)
 

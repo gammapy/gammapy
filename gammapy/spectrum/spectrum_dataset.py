@@ -6,7 +6,7 @@ from ..utils.scripts import make_path
 from ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import PHACountsSpectrum
 from .utils import SpectrumEvaluator
-from ..utils.fitting import Dataset
+from ..utils.fitting import Dataset, Parameters
 
 __all__ = [
     "ONOFFSpectrumDataset"
@@ -48,13 +48,14 @@ class ONOFFSpectrumDataset(Dataset):
         if mask is not None and mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        self.model = model
         self.ONcounts = ONcounts
         self.OFFcounts = OFFcounts
         self.livetime = livetime
         self.mask = mask
         self.aeff = aeff
         self.edisp = edisp
+
+        self.model = model
 
     @property
     def alpha(self):
