@@ -13,13 +13,17 @@ PIG 9 - Event simulator
 * Discussion:  
 
 Introduction
-========
+============
 
-An event simulator of gamma events is of high importance in exploiting the potentiality of the future Cherenkov Telescope Array (CTA). It will allows us to simulate sources with different spectral and morphological properties, hence investigating the best configurations for each type of objects and the expected performances of CTA.
-We note that an event simulator is currently required by the CTA Science Tools. In addition, there will be the possibility to adopt it to simulate the next CTA Data Challenge (DC2).
-Therefore, we propose to create an event simulator which sample random events for given sources. It will need input maps where spatial morphology and spectral distributions are provided. Then the proposed simulator will be able to apply the PSF and energy dispersion, for each simulated observation, to correct position and energy of the sampled events. Source lightcurves will be also taken into account to simulate temporal variations.
-Furthermore, the sampler will possibly include the simulation of background events. 
-The output of the simulator is an astropy table. 
+An event simulator of gamma events is of high importance in exploiting the potentiality of the future Cherenkov Telescope
+Array (CTA). It will allows us to simulate sources with different spectral and morphological properties, hence investigating
+the best configurations for each type of objects and the expected performances of CTA. We note that an event simulator is
+currently required by the CTA Science Tools. In addition, there will be the possibility to adopt it to simulate the next
+CTA Data Challenge (DC2). Therefore, we propose to create an event simulator which sample random events for given sources.
+It will need input maps where spatial morphology and spectral distributions are provided. Then the proposed simulator will
+be able to apply the PSF and energy dispersion, for each simulated observation, to correct position and energy of the sampled
+events. Source lightcurves will be also taken into account to simulate temporal variations. Furthermore, the sampler will
+possibly include the simulation of background events. The output of the simulator is an astropy table.
 
 Proposal
 ========
@@ -27,9 +31,11 @@ Proposal
 We propose to introduce the following classes to implement the simulator in Gammapy:
 
 InverseCDFSampler
-========
+=================
 
-The first step of an event simulator can be obtained by developing a sampler of the cumulative distribution function for a given input probability distribution function. In more detail, it calculates the cumulative distribution function and, once a set of random numbers is determined, it samples a set of events.
+The first step of an event simulator can be obtained by developing a sampler of the cumulative distribution function for
+a given input probability distribution function. In more detail, it calculates the cumulative distribution function and,
+once a set of random numbers is determined, it samples a set of events.
 
 The basic design of the class works as following:
 
@@ -53,13 +59,86 @@ that will allow us to sample alternatively along all the axes or a given axis of
 
 
 MapEventSampler
-========
+===============
 
-- We should resolve the question on how does it relate with the Gammapy MapDataset class. 
+src = SkyModel()
+evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
+npred_map = evaluator.compute_npred()
+
+src_sampler = MapEventSampler(npred_map, psf_map, edisp_map)
+events_src = map_sampler.sample()
+# events_src is an astropy table
+
+bkg_map = Map()
+bkg_sampler = MapEventSampler(bkg_map, psf_map=None, edisp_map=None)
+events_bkg = bkg_sample.sample()
+
+
+IRFMapSampler
+=============
+
+events = vstack([events_src_1, events_src_2, ..., events_src_N])
+irf_sampler = IRFSampler(events, psf_map, edisp_map)
+events_obs = irf_sampler.sample()
+
+# or
+
+irf_sampler = IRFSampler(psf_map, edisp_map)
+events = irf_sampler.sample_psf(events)
+events = irf_sampler.sample_edisp(events)
+
+
+
+MapDatasetEventSampler?
+=======================
+
+Propose high level structure:
+
+    dataset_sampler = MapDatasetEventSampler(dataset)
+    events = dataset_sampler.sample()
+
+    # or alternatively
+
+    events = dataset.sample_events()
+
+
+More detailed:
+
+    events = []
+
+    # sample from source components
+    for evaluator in dataset._evaluators:
+        evaluator.psf = None?
+        evaluator.edisp = None?
+        npred = evaluator.compute_npred()
+
+        sampler = MapEventSampler(npred)
+
+        # set an ID for the source component?
+        
+        events.append(sampler.sample())
+
+    events_stacked = vstack(events)
+
+    # apply IRFs
+    irf_sampler = IRFSampler(events_stacked, dataset.psf_map, dataset.edisp_map)
+    events_reco = irf_sampler.sample()
+
+    # sample from background
+    bkg_sampler = MapEventSampler(dataset.background_model.map)
+    events_bkg = bkg_sampler.sample()
+
+    events_total = vstack([events_reco, event_bkg])
+
+
 
 
 Alternatives
 ============
+
+Use the ctools sampler for data challenge?
+Use the ASTRI sampler and write in a format compatible with Gammapy? 
+Always use binned simulation?
 
 
 List of proposed pull requests
