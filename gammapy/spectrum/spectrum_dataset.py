@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from astropy.units import Quantity
 from ..utils.scripts import make_path
-rom ..irf import EffectiveAreaTable, EnergyDispersion
+from ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import PHACountsSpectrum
 from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset

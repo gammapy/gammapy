@@ -12,3 +12,4 @@ from .simulation import *
 from .fit import *
 from .results import *
 from .sensitivity import *
+from .spectrum_dataset import *
