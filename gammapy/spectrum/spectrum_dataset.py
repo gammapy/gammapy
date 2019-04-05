@@ -7,6 +7,7 @@ from ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import PHACountsSpectrum
 from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset, Parameters
+from..stats import wstat
 
 __all__ = [
     "ONOFFSpectrumDataset"
@@ -106,7 +107,7 @@ class ONOFFSpectrumDataset(Dataset):
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        on_stat_ = stats.wstat(
+        on_stat_ = wstat(
             n_on=self.ONcounts.data.data,
             n_off=self.OFFcounts.data.data,
             alpha=self.alpha,
