@@ -61,6 +61,10 @@ that will allow us to sample alternatively along all the axes or a given axis of
 MapEventSampler
 ===============
 
+To sample events, it is fundamental to create a map of the predicted events. This can be done with the MapDataset class 
+which takes as input a Skymodel(s) and a given exposure time. The predicted event map is then given to the new proposed 
+class MapEventSampler(). The source events will be simulated as following:
+
 src = SkyModel()
 evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
 npred_map = evaluator.compute_npred()
@@ -73,9 +77,16 @@ bkg_map = Map()
 bkg_sampler = MapEventSampler(bkg_map, psf_map=None, edisp_map=None)
 events_bkg = bkg_sample.sample()
 
+where the MapEventSampler() class can be used to generate both source and background events.
+
 
 IRFMapSampler
 =============
+
+We introduce a class that applies the IRF properties to the previously sampled event list. In more detail, the class 
+will take as input the MapEventSampler source object and then it evaluates a map of the psf and energy dispersion 
+calculated for each event true position and true energy. The reconstructed energy and positions are then listed into 
+an astropy table. We propose two different options to accomplish this task, which should work as follows:
 
 events = vstack([events_src_1, events_src_2, ..., events_src_N])
 irf_sampler = IRFSampler(events, psf_map, edisp_map)
@@ -87,6 +98,9 @@ irf_sampler = IRFSampler(psf_map, edisp_map)
 events = irf_sampler.sample_psf(events)
 events = irf_sampler.sample_edisp(events)
 
+In the first case, the IRF is applied to the stacking of all the simulated sources, with the IRFSampler class which
+contains only the sample() method. In the second case, the IRFSampler reads the psf and energy maps only, and then 
+it contains two methods that apply the psf and edisp corrections to the events; for more than one source, a loop is needed.
 
 
 MapDatasetEventSampler?
@@ -149,6 +163,10 @@ This is a proposal for a list of pull requests implementing the proposed changes
 1. Introduce the InverseCDFSampler.
 2. Dismiss the ``general_random`` class in gammapy.utils.distributions.
 3. Implement the InverseCDFSampler into gammapy.utils.distributions (Gammapy v.0.12).
+4. Introduce the MapEventSampler class.
+5. Implement MapEventSampler into gammapy. ... (v.0.12).?
+6. Introduce the IRFSampler class.
+7. Implement IRFSampler into gammapy. ... (v.0.12). ?
 
 
 Decision
@@ -158,126 +176,4 @@ Decision
 
 
 
-
-
-
-
-
-
-
-
-#####################################
-- the design follows the ASTRIsim simulator
-- the latter requests the expected source flux cube for a given spectrum and morphology, prior the application of the IRF
-- (to the counts-cube can be associated a light-curve)
-- expected background counts cube evaluated from the IRF
-- the energy dispersion is applied to the source counts
-- the PSF is applied to the source counts
-- source and background events are stacked together 
-- write them all into an event list file (.fits)
-
-We propose to create an event simulator based on Gammapy, which is needed for the Science Tools, and it would allow a valid alternative to ctobssim. 
-We designed our simulator exploiting the already available ASTRI simulator (ASTRIsim), written in IDL. ASTRIsim starts from an input source flux cube (possibly associated to a spatial map), gives a set of simulated events (with associated positions, energies and times). Furthermore, there is possibility to provide an input light-curve to take into account source time variability.
-
-
-We would like to improve the class presented in general_random_array.py issue. We propose to add the sorting of the cumulative distribution and then we also want to provide an interpolation along the bins. This class has to be extended sampling along a given axis and not along all the array. 
-
-.. code::
-
-    class InverseCDFSampler:
-         """Inverse CDF folder"""
-         def __init__(self, pdf, random_state=0):
-             self.random_state = get_random_state(random_state)
-             self.pdf_shape = pdf.shape
-
-             pdf = pdf.ravel() / pdf.sum()
-             self.sortindex = np.argsort(pdf, axis=None)
-
-             self.pdf = pdf[self.sortindex]
-             self.cdf = np.cumsum(self.pdf)
-
-
-         def sample(self, size):
-             #pick numbers which are uniformly random over the cumulative 
-    distribution function
-             choice = self.random_state.uniform(high=1, size=size)
-
-             #find the indices corresponding to this point on the CDF
-             index = np.searchsorted(self.cdf, choice)
-             index = self.sortindex[index]
-
-             # map back to multi-dimensional indexing
-             index = np.unravel_index(index, self.pdf_shape)
-             index = np.vstack(index)
-
-             index = index + self.random_state.uniform(low=-0.5, high=0.5, 
-    size=index.shape)
-             return index
-
-
-We propose a new class labelled as 'MapEventSampler', which takes in input the predicted events, the PSF, energy dispersion and background maps. This includes the methods which implement energy dispersion (
-'apply_edisp') and PSF ('apply_psf') corrections, and calculate the background and source events. 
-
-We create a method called 'sample_events' that randomizes the map of predicted source counts to which are then applied the correct PSF and energy dispersion per event. The PSF and Energy dispersion corrections are not taken into account with a loop on the events.
-
-
-
-
-- to discuss: introduce the time of each event. In this moment, we just provide a counts-cube for all the components, but this does not allow us to associate the events to different light-curves. --> solution: create counts-cube for each component, apply the light-curve, and then stack all the components...
-
-The approach we propose works well only if the resolution in energy and spatial coordinates is very fine, in particular smaller than the IRF energy and PSF resolution. The choice of the map resolution is left to the user.
-
-.. code::
-
-    class MapEventSampler:
-         """Map event sampler"""
-         def __init__(self, npred_map, psf_map, edisp_map, background_map, 
-    random_state=0):
-             self.random_state = get_random_state(random_state)
-             self.npred = npred
-
-         def npred_total(self):
-             return self.random_state.poisson(self.npred.data.sum())
-
-         def apply_edisp(self, events):
-             # apply energy dispersion to list of events
-             pdf = self.edisp_map.interp_by_coord({"skycoord": events.radec, 
-    "energy": events.energy})
-
-             return events
-
-         def apply_psf(self, events):
-             # apply psf to list of events
-             rad = np.linspace(0, 1 * u.deg, 100)[np.newaxis;, :]
-             pdf = self.psf_map.interp_by_coord({"skycoord": events.radec, 
-    "energy": events.energy, "rad" rad})
-
-             # sample from pdf along rad axis
-             return events
-
-         def sample_background(self):
-             # sample from background model without applying IRFs
-             return events
-
-         def sample_npred(self):
-             n_events = self.npred_total()
-             pix_coords = self.cdf_sampler.sample(10 * n_events)
-             return self.npred.geom.pix_to_coord(pix_coords[::-1])
-
-         def sample_events(self):
-             events = self.sample_npred()
-             events = self.apply_psf(events)
-             events = self.apply_edisp(events)
-
-             bkg_events = self.sample_background()
-
-             table = vstack(events, bkg_events)
-             return EventList(table)
-
-
-- Copy of the stack-overflow code that implements the sampling of n-dimensional discrete probability distributions (details are given in https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584)
-- We would like to improve the GeneralRandomArray class (details are given in https://github.com/gammapy/gammapy/issues/74)
-
-
-- Events simulator and IRF corrections
 
