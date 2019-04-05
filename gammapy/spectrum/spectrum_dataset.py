@@ -9,20 +9,21 @@ from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset
 
 __all__ = [
-    "OGIPSpectrumDataset"
+    "ONOFFSpectrumDataset"
 ]
 
 
-class OGIPSpectrumDataset(Dataset):
-    """Compute spectral model fit statistic on a PHACountsSpectrum.
+class ONOFFSpectrumDataset(Dataset):
+    """Compute spectral model fit statistic on a ON OFF Spectrum.
+
 
     Parameters
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
         Fit model
-    ONcounts : `~gammapy.spectrum.CountsSpectrum`
+    ONcounts : `~gammapy.spectrum.PHACountsSpectrum`
         ON Counts spectrum
-    OFFcounts : `~gammapy.spectrum.CountsSpectrum`
+    OFFcounts : `~gammapy.spectrum.PHACountsSpectrum`
         ON Counts spectrum
     livetime : float
         Livetime
@@ -72,7 +73,7 @@ class OGIPSpectrumDataset(Dataset):
                 self._predictor = SpectrumEvaluator(model=self.model,
                                                     livetime=self.livetime,
                                                     aeff=self.aeff,
-                                                    e_true=self.counts.energy.bins)
+                                                    e_true=self.ONcounts.energy.bins)
             else:
                 self._predictor = SpectrumEvaluator(model=self.model,
                                                     aeff=self.aeff,
@@ -132,8 +133,8 @@ class OGIPSpectrumDataset(Dataset):
         return np.sum(stat, dtype=np.float64)
 
     @classmethod
-    def read(cls, filename):
-        """Read  from OGIP files.
+    def read_from_ogip(cls, filename):
+        """Read from OGIP files.
 
         BKG file, ARF, and RMF must be set in the PHA header and be present in
         the same folder.
@@ -174,7 +175,7 @@ class OGIPSpectrumDataset(Dataset):
             livetime=on_vector.livetime
         )
 
-    def write(self, outdir=None, overwrite=False):
+    def export_to_ogip(self, outdir=None, overwrite=False):
         """Write OGIP files.
 
         Parameters
