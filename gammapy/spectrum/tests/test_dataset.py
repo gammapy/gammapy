@@ -8,34 +8,40 @@ from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...utils.fitting import Fit
 from ..models import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
-from ...spectrum import (
-    PHACountsSpectrum,
-    SpectrumDatasetOnOff
-)
-
+from ...spectrum import PHACountsSpectrum, SpectrumDatasetOnOff
 
 
 class TestSpectrumDatasetOnOff:
     """ Test ON OFF SpectrumDataset"""
+
     def setup(self):
 
-        etrue = np.logspace(-1,1,10)*u.TeV
+        etrue = np.logspace(-1, 1, 10) * u.TeV
         self.e_true = etrue
-        ereco = np.logspace(-1,1,5)*u.TeV
+        ereco = np.logspace(-1, 1, 5) * u.TeV
         elo = ereco[:-1]
         ehi = ereco[1:]
 
-        self.aeff = EffectiveAreaTable(etrue[:-1],etrue[1:], np.ones(9)*u.cm**2)
+        self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
         self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
 
-        self.on_counts = PHACountsSpectrum(elo, ehi, np.ones_like(elo), backscal=np.ones_like(elo))
-        self.off_counts = PHACountsSpectrum(elo, ehi, np.ones_like(elo)*10, backscal=np.ones_like(elo)*10)
+        self.on_counts = PHACountsSpectrum(
+            elo, ehi, np.ones_like(elo), backscal=np.ones_like(elo)
+        )
+        self.off_counts = PHACountsSpectrum(
+            elo, ehi, np.ones_like(elo) * 10, backscal=np.ones_like(elo) * 10
+        )
 
-        self.livetime = 1000*u.s
+        self.livetime = 1000 * u.s
 
     def test_init_no_model(self):
-        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
-                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            livetime=self.livetime,
+        )
 
         with pytest.raises(AttributeError):
             dataset.npred()
@@ -43,37 +49,62 @@ class TestSpectrumDatasetOnOff:
         with pytest.raises(AttributeError):
             print(dataset.parameters)
 
-
     def test_alpha(self):
-        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
-                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            livetime=self.livetime,
+        )
 
         assert dataset.alpha.shape == (4,)
         assert_allclose(dataset.alpha, 0.1)
 
     def test_data_shape(self):
-        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
-                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            livetime=self.livetime,
+        )
 
         assert dataset.data_shape == self.on_counts.data.data.shape
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
-        livetime = 1*u.s
-        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
-                         aeff=self.aeff, model=model, livetime = livetime)
+        livetime = 1 * u.s
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            model=model,
+            livetime=livetime,
+        )
 
-        expected = self.aeff.data.data[0]*(self.aeff.energy.hi[-1]-self.aeff.energy.lo[0])*const*livetime
+        expected = (
+            self.aeff.data.data[0]
+            * (self.aeff.energy.hi[-1] - self.aeff.energy.lo[0])
+            * const
+            * livetime
+        )
 
         assert_allclose(dataset.npred().sum(), expected.value)
 
     def test_incorrect_mask(self):
-        mask = np.ones(self.on_counts.data.data.shape, dtype='int')
+        mask = np.ones(self.on_counts.data.data.shape, dtype="int")
 
         with pytest.raises(ValueError):
-            dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
-                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime, mask=mask)
+            SpectrumDatasetOnOff(
+                counts_on=self.on_counts,
+                counts_off=self.off_counts,
+                aeff=self.aeff,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
 
 
 @requires_dependency("iminuit")
@@ -86,9 +117,7 @@ class TestSimpleFit:
         self.source_model = PowerLaw(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = PowerLaw(
-            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
-        )
+        self.bkg_model = PowerLaw(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
 
         self.alpha = 0.1
         random_state = get_random_state(23)
@@ -116,7 +145,6 @@ class TestSimpleFit:
             data=off_counts,
             backscal=1.0 / self.alpha,
         )
-
 
     def test_wstat(self):
         """WStat with on source and background spectrum"""
@@ -181,7 +209,7 @@ class TestSpectralFit:
         self.obs_list[0].model = self.pwl
         self.fit = Fit(self.obs_list[0])
 
-    def set_model(self, model ):
+    def set_model(self, model):
         for obs in self.obs_list:
             obs.model = model
 
@@ -240,4 +268,3 @@ class TestSpectralFit:
         actual = fit.datasets.parameters["amplitude"].quantity
         assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
-

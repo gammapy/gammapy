@@ -1,15 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from pathlib import Path
 import numpy as np
-from ..utils.scripts import make_path
 from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset, Parameters
-from..stats import wstat
+from ..stats import wstat
 
-__all__ = [
-    "SpectrumDatasetOnOff"
-]
+__all__ = ["SpectrumDatasetOnOff"]
 
 
 class SpectrumDatasetOnOff(Dataset):
@@ -35,14 +31,14 @@ class SpectrumDatasetOnOff(Dataset):
     """
 
     def __init__(
-            self,
-            model=None,
-            counts_on=None,
-            counts_off=None,
-            livetime=None,
-            mask=None,
-            aeff=None,
-            edisp=None,
+        self,
+        model=None,
+        counts_on=None,
+        counts_off=None,
+        livetime=None,
+        mask=None,
+        aeff=None,
+        edisp=None,
     ):
         if mask is not None and mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -71,15 +67,19 @@ class SpectrumDatasetOnOff(Dataset):
         if model is not None:
             self._parameters = Parameters(self._model.parameters.parameters)
             if self.edisp is None:
-                self._predictor = SpectrumEvaluator(model=self.model,
-                                                    livetime=self.livetime,
-                                                    aeff=self.aeff,
-                                                    e_true=self.counts_on.energy.bins)
+                self._predictor = SpectrumEvaluator(
+                    model=self.model,
+                    livetime=self.livetime,
+                    aeff=self.aeff,
+                    e_true=self.counts_on.energy.bins,
+                )
             else:
-                self._predictor = SpectrumEvaluator(model=self.model,
-                                                    aeff=self.aeff,
-                                                    edisp=self.edisp,
-                                                    livetime=self.livetime)
+                self._predictor = SpectrumEvaluator(
+                    model=self.model,
+                    aeff=self.aeff,
+                    edisp=self.edisp,
+                    livetime=self.livetime,
+                )
 
         else:
             self._parameters = None
@@ -145,12 +145,8 @@ class SpectrumDatasetOnOff(Dataset):
         filename : str
             OGIP PHA file to read
         """
-        filename = make_path(filename)
-        dirname = filename.parent
-
         observation = SpectrumObservation.read(filename)
         return SpectrumDatasetOnOff._from_spectrum_observation(observation)
-
 
     # TODO: check if SpectrumObservation is needed in the long run
     @classmethod
@@ -159,7 +155,7 @@ class SpectrumDatasetOnOff(Dataset):
 
         # Build mask from quality vector
         quality = observation.on_vector.quality
-        mask = (quality == 0)
+        mask = quality == 0
 
         return cls(
             counts_on=observation.on_vector,
@@ -167,5 +163,5 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off=observation.off_vector,
             edisp=observation.edisp,
             livetime=observation.livetime,
-            mask=mask
+            mask=mask,
         )
