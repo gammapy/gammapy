@@ -2,8 +2,7 @@
 from pathlib import Path
 import numpy as np
 from ..utils.scripts import make_path
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from .core import PHACountsSpectrum
+from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset, Parameters
 from..stats import wstat
@@ -98,37 +97,6 @@ class SpectrumDatasetOnOff(Dataset):
         """Shape of the counts data"""
         return self.counts.data.shape
 
-    @property
-    def meta(self):
-        """Meta information"""
-        return self.counts_on.meta
-
-    # TODO: check if this is really needed
-    @property
-    def background_vector(self):
-        """Background `~gammapy.spectrum.CountsSpectrum`.
-
-        bkg = alpha * n_off
-
-        If alpha is a function of energy this will differ from
-        self.on_vector * self.total_stats.alpha because the latter returns an
-        average value for alpha.
-        """
-        energy = self.counts_off.energy
-        data = self.counts_off.data.data * self.alpha
-        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
-
-    # TODO: check if this is really needed
-    @property
-    def excess_vector(self):
-        """Excess `~gammapy.spectrum.CountsSpectrum`.
-
-        excess = n_on = alpha * n_off
-        """
-        energy = self.counts_off.energy
-        data = self.counts_on.data.data - self.background_vector.data.data
-        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
-
 
     def npred(self):
         """Returns npred counts vector """
@@ -178,51 +146,32 @@ class SpectrumDatasetOnOff(Dataset):
         filename : str
             OGIP PHA file to read
         """
-        return SpectrumDatasetOnOff._read_from_ogip(filename)
-
-
-    @classmethod
-    def _read_from_ogip(cls, filename):
-        """Read from OGIP files.        """
-
         filename = make_path(filename)
         dirname = filename.parent
-        on_vector = PHACountsSpectrum.read(filename)
-        rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
 
-        try:
-            energy_dispersion = EnergyDispersion.read(str(dirname / rmf))
-        except IOError:
-            # TODO : Add logger and echo warning
-            energy_dispersion = None
+        observation = SpectrumObservation.read(filename)
+        return SpectrumDatasetOnOff._from_spectrum_observation(observation)
 
-        try:
-            off_vector = PHACountsSpectrum.read(str(dirname / bkg))
-        except IOError:
-            # TODO : Add logger and echo warning
-            off_vector = None
 
-        try:
-            effective_area = EffectiveAreaTable.read(str(dirname / arf))
-        except IOError:
-            # TODO : Add logger and echo warning
-            effective_area = None
+    # TODO: check if SpectrumObservation is needed in the long run
+    @classmethod
+    def _from_spectrum_observation(cls, observation):
+        """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
 
         # Build mask from quality vector
-        try:
-            quality = on_vector.quality
-            mask = (quality == 0)
-        except AttributeError:
-            mask = None
+        quality = observation.on_vector.quality
+        mask = (quality == 0)
 
         return cls(
-            counts_on=on_vector,
-            aeff=effective_area,
-            counts_off=off_vector,
-            edisp=energy_dispersion,
-            livetime=on_vector.livetime,
+            counts_on=observation.on_vector,
+            aeff=observation.aeff,
+            counts_off=observation.off_vector,
+            edisp=observation.edisp,
+            livetime=observation.livetime,
             mask=mask
         )
+
+
 
     def write_to_ogip(self, outdir=None, overwrite=False):
         """Write OGIP files.
