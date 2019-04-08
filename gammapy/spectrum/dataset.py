@@ -175,12 +175,20 @@ class SpectrumDatasetONOFF(Dataset):
             # TODO : Add logger and echo warning
             effective_area = None
 
+        # Build mask from quality vector
+        try:
+            quality = on_vector.quality
+            mask = (quality == 0)
+        except AttributeError:
+            mask = None
+
         return cls(
             ONcounts=on_vector,
             aeff=effective_area,
             OFFcounts=off_vector,
             edisp=energy_dispersion,
-            livetime=on_vector.livetime
+            livetime=on_vector.livetime,
+            mask=mask
         )
 
     def export_to_ogip(self, outdir=None, overwrite=False):
