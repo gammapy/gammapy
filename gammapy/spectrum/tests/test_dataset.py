@@ -40,12 +40,22 @@ class TestSpectrumDatasetOnOff:
         with pytest.raises(AttributeError):
             dataset.npred()
 
+        with pytest.raises(AttributeError):
+            print(dataset.parameters)
+
+
     def test_alpha(self):
         dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
                          aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
 
         assert dataset.alpha.shape == (4,)
         assert_allclose(dataset.alpha, 0.1)
+
+    def test_data_shape(self):
+        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
+                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
+
+        assert dataset.data_shape == self.on_counts.data.data.shape
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
@@ -57,6 +67,14 @@ class TestSpectrumDatasetOnOff:
         expected = self.aeff.data.data[0]*(self.aeff.energy.hi[-1]-self.aeff.energy.lo[0])*const*livetime
 
         assert_allclose(dataset.npred().sum(), expected.value)
+
+    def test_incorrect_mask(self):
+        mask = np.ones(self.on_counts.data.data.shape, dtype='int')
+
+        with pytest.raises(ValueError):
+            dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
+                         aeff=self.aeff, edisp=self.edisp, livetime = self.livetime, mask=mask)
+
 
 @requires_dependency("iminuit")
 class TestSimpleFit:

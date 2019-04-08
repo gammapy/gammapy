@@ -95,8 +95,7 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.shape
-
+        return self.counts_on.data.data.shape
 
     def npred(self):
         """Returns npred counts vector """
@@ -170,32 +169,3 @@ class SpectrumDatasetOnOff(Dataset):
             livetime=observation.livetime,
             mask=mask
         )
-
-
-
-    def write_to_ogip(self, outdir=None, overwrite=False):
-        """Write OGIP files.
-
-        Parameters
-        ----------
-        outdir : `pathlib.Path`
-            output directory, default: pwd
-        overwrite : bool
-            Overwrite existing files?
-        """
-        outdir = Path.cwd() if outdir is None else Path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
-
-        phafile = self.counts_on.phafile
-        bkgfile = self.counts_on.bkgfile
-        arffile = self.counts_on.arffile
-        rmffile = self.counts_on.rmffile
-
-        self.counts_on.write(outdir / phafile, overwrite=overwrite)
-        self.aeff.write(outdir / arffile, overwrite=overwrite)
-        if self.counts_on is not None:
-            self.counts_on.write(outdir / bkgfile, overwrite=overwrite)
-        if self.edisp is not None:
-            self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
-
-
