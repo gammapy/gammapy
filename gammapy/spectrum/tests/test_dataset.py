@@ -10,12 +10,12 @@ from ...utils.fitting import Fit
 from ..models import PowerLaw, ConstantModel
 from ...spectrum import (
     PHACountsSpectrum,
-    ONOFFSpectrumDataset
+    SpectrumDatasetONOFF
 )
 
 
 
-class Test_ONOFFSpectrumDataset:
+class TestONOFFSpectrumDataset:
     """ Test ON OFF SpectrumDataset"""
     def setup(self):
 
@@ -34,14 +34,14 @@ class Test_ONOFFSpectrumDataset:
         self.livetime = 1000*u.s
 
     def test_init_no_model(self):
-        dataset = ONOFFSpectrumDataset(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+        dataset = SpectrumDatasetONOFF(ONcounts=self.on_counts, OFFcounts=self.off_counts,
                          aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
 
         with pytest.raises(AttributeError):
             dataset.npred()
 
     def test_alpha(self):
-        dataset = ONOFFSpectrumDataset(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+        dataset = SpectrumDatasetONOFF(ONcounts=self.on_counts, OFFcounts=self.off_counts,
                          aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
 
         assert dataset.alpha.shape == (4,)
@@ -51,7 +51,7 @@ class Test_ONOFFSpectrumDataset:
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
         livetime = 1*u.s
-        dataset = ONOFFSpectrumDataset(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+        dataset = SpectrumDatasetONOFF(ONcounts=self.on_counts, OFFcounts=self.off_counts,
                          aeff=self.aeff, model=model, livetime = livetime)
 
         expected = self.aeff.data.data[0]*(self.aeff.energy.hi[-1]-self.aeff.energy.lo[0])*const*livetime
@@ -104,7 +104,7 @@ class TestFit:
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
         on_vector.data.data += self.bkg.data.data
-        obs = ONOFFSpectrumDataset(ONcounts=on_vector, OFFcounts=self.off)
+        obs = SpectrumDatasetONOFF(ONcounts=on_vector, OFFcounts=self.off)
         obs.model = self.source_model
 
         self.source_model.parameters.index = 1.12
@@ -121,14 +121,14 @@ class TestFit:
         """Test joint fit for obs with different energy binning"""
         on_vector = self.src.copy()
         on_vector.data.data += self.bkg.data.data
-        obs1 = ONOFFSpectrumDataset(ONcounts=on_vector, OFFcounts=self.off)
+        obs1 = SpectrumDatasetONOFF(ONcounts=on_vector, OFFcounts=self.off)
         obs1.model = self.source_model
 
         src_rebinned = self.src.rebin(2)
         bkg_rebinned = self.off.rebin(2)
         src_rebinned.data.data += self.bkg.rebin(2).data.data
 
-        obs2 = ONOFFSpectrumDataset(ONcounts=src_rebinned, OFFcounts=bkg_rebinned)
+        obs2 = SpectrumDatasetONOFF(ONcounts=src_rebinned, OFFcounts=bkg_rebinned)
         obs2.model = self.source_model
 
         fit = Fit([obs1, obs2])

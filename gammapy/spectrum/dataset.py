@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import numpy as np
-from astropy.units import Quantity
 from ..utils.scripts import make_path
 from ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import PHACountsSpectrum
@@ -10,11 +9,11 @@ from ..utils.fitting import Dataset, Parameters
 from..stats import wstat
 
 __all__ = [
-    "ONOFFSpectrumDataset"
+    "SpectrumDatasetONOFF"
 ]
 
 
-class ONOFFSpectrumDataset(Dataset):
+class SpectrumDatasetONOFF(Dataset):
     """Compute spectral model fit statistic on a ON OFF Spectrum.
 
 
@@ -26,7 +25,7 @@ class ONOFFSpectrumDataset(Dataset):
         ON Counts spectrum
     OFFcounts : `~gammapy.spectrum.PHACountsSpectrum`
         ON Counts spectrum
-    livetime : float
+    livetime : `~astropy.units.Quantity`
         Livetime
     mask : numpy.array
         Mask to apply to the likelihood.
@@ -135,17 +134,24 @@ class ONOFFSpectrumDataset(Dataset):
         return np.sum(stat, dtype=np.float64)
 
     @classmethod
-    def read_from_ogip(cls, filename):
-        """Read from OGIP files.
+    def read(cls, filename):
+        """Read from file
 
-        BKG file, ARF, and RMF must be set in the PHA header and be present in
-        the same folder.
+        For now, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names
+        must be set in the PHA header and be present in the same folder
 
         Parameters
         ----------
         filename : str
             OGIP PHA file to read
         """
+        return SpectrumDatasetONOFF._read_from_ogip(filename)
+
+
+    @classmethod
+    def _read_from_ogip(cls, filename):
+        """Read from OGIP files.        """
+
         filename = make_path(filename)
         dirname = filename.parent
         on_vector = PHACountsSpectrum.read(filename)
