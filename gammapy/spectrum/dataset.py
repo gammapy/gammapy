@@ -9,11 +9,11 @@ from ..utils.fitting import Dataset, Parameters
 from..stats import wstat
 
 __all__ = [
-    "SpectrumDatasetONOFF"
+    "SpectrumDatasetOnOff"
 ]
 
 
-class SpectrumDatasetONOFF(Dataset):
+class SpectrumDatasetOnOff(Dataset):
     """Compute spectral model fit statistic on a ON OFF Spectrum.
 
 
@@ -21,10 +21,10 @@ class SpectrumDatasetONOFF(Dataset):
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
         Fit model
-    ONcounts : `~gammapy.spectrum.PHACountsSpectrum`
+    counts_on : `~gammapy.spectrum.PHACountsSpectrum`
         ON Counts spectrum
-    OFFcounts : `~gammapy.spectrum.PHACountsSpectrum`
-        ON Counts spectrum
+    counts_off : `~gammapy.spectrum.PHACountsSpectrum`
+        OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
     mask : numpy.array
@@ -38,8 +38,8 @@ class SpectrumDatasetONOFF(Dataset):
     def __init__(
             self,
             model=None,
-            ONcounts=None,
-            OFFcounts=None,
+            counts_on=None,
+            counts_off=None,
             livetime=None,
             mask=None,
             aeff=None,
@@ -48,8 +48,8 @@ class SpectrumDatasetONOFF(Dataset):
         if mask is not None and mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        self.ONcounts = ONcounts
-        self.OFFcounts = OFFcounts
+        self.counts_on = counts_on
+        self.counts_off = counts_off
         self.livetime = livetime
         self.mask = mask
         self.aeff = aeff
@@ -59,7 +59,8 @@ class SpectrumDatasetONOFF(Dataset):
 
     @property
     def alpha(self):
-        return self.ONcounts.backscal / self.OFFcounts.backscal
+        """Exposure ratio between signal and background regions"""
+        return self.counts_on.backscal / self.counts_off.backscal
 
     @property
     def model(self):
@@ -74,7 +75,7 @@ class SpectrumDatasetONOFF(Dataset):
                 self._predictor = SpectrumEvaluator(model=self.model,
                                                     livetime=self.livetime,
                                                     aeff=self.aeff,
-                                                    e_true=self.ONcounts.energy.bins)
+                                                    e_true=self.counts_on.energy.bins)
             else:
                 self._predictor = SpectrumEvaluator(model=self.model,
                                                     aeff=self.aeff,
@@ -97,6 +98,38 @@ class SpectrumDatasetONOFF(Dataset):
         """Shape of the counts data"""
         return self.counts.data.shape
 
+    @property
+    def meta(self):
+        """Meta information"""
+        return self.counts_on.meta
+
+    # TODO: check if this is really needed
+    @property
+    def background_vector(self):
+        """Background `~gammapy.spectrum.CountsSpectrum`.
+
+        bkg = alpha * n_off
+
+        If alpha is a function of energy this will differ from
+        self.on_vector * self.total_stats.alpha because the latter returns an
+        average value for alpha.
+        """
+        energy = self.counts_off.energy
+        data = self.counts_off.data.data * self.alpha
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+
+    # TODO: check if this is really needed
+    @property
+    def excess_vector(self):
+        """Excess `~gammapy.spectrum.CountsSpectrum`.
+
+        excess = n_on = alpha * n_off
+        """
+        energy = self.counts_off.energy
+        data = self.counts_on.data.data - self.background_vector.data.data
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+
+
     def npred(self):
         """Returns npred counts vector """
         if self._predictor is None:
@@ -107,8 +140,8 @@ class SpectrumDatasetONOFF(Dataset):
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
         on_stat_ = wstat(
-            n_on=self.ONcounts.data.data,
-            n_off=self.OFFcounts.data.data,
+            n_on=self.counts_on.data.data,
+            n_off=self.counts_off.data.data,
             alpha=self.alpha,
             mu_sig=self.npred(),
         )
@@ -145,7 +178,7 @@ class SpectrumDatasetONOFF(Dataset):
         filename : str
             OGIP PHA file to read
         """
-        return SpectrumDatasetONOFF._read_from_ogip(filename)
+        return SpectrumDatasetOnOff._read_from_ogip(filename)
 
 
     @classmethod
@@ -183,15 +216,15 @@ class SpectrumDatasetONOFF(Dataset):
             mask = None
 
         return cls(
-            ONcounts=on_vector,
+            counts_on=on_vector,
             aeff=effective_area,
-            OFFcounts=off_vector,
+            counts_off=off_vector,
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
             mask=mask
         )
 
-    def export_to_ogip(self, outdir=None, overwrite=False):
+    def write_to_ogip(self, outdir=None, overwrite=False):
         """Write OGIP files.
 
         Parameters
@@ -204,15 +237,15 @@ class SpectrumDatasetONOFF(Dataset):
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        phafile = self.ONcounts.phafile
-        bkgfile = self.ONcounts.bkgfile
-        arffile = self.ONcounts.arffile
-        rmffile = self.ONcounts.rmffile
+        phafile = self.counts_on.phafile
+        bkgfile = self.counts_on.bkgfile
+        arffile = self.counts_on.arffile
+        rmffile = self.counts_on.rmffile
 
-        self.ONcounts.write(outdir / phafile, overwrite=overwrite)
+        self.counts_on.write(outdir / phafile, overwrite=overwrite)
         self.aeff.write(outdir / arffile, overwrite=overwrite)
-        if self.ONcounts is not None:
-            self.ONcounts.write(outdir / bkgfile, overwrite=overwrite)
+        if self.counts_on is not None:
+            self.counts_on.write(outdir / bkgfile, overwrite=overwrite)
         if self.edisp is not None:
             self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
 

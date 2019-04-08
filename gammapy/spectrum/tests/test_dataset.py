@@ -10,12 +10,12 @@ from ...utils.fitting import Fit
 from ..models import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
 from ...spectrum import (
     PHACountsSpectrum,
-    SpectrumDatasetONOFF
+    SpectrumDatasetOnOff
 )
 
 
 
-class TestSpectrumDatasetONOFF:
+class TestSpectrumDatasetOnOff:
     """ Test ON OFF SpectrumDataset"""
     def setup(self):
 
@@ -34,14 +34,14 @@ class TestSpectrumDatasetONOFF:
         self.livetime = 1000*u.s
 
     def test_init_no_model(self):
-        dataset = SpectrumDatasetONOFF(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
                          aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
 
         with pytest.raises(AttributeError):
             dataset.npred()
 
     def test_alpha(self):
-        dataset = SpectrumDatasetONOFF(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
                          aeff=self.aeff, edisp=self.edisp, livetime = self.livetime)
 
         assert dataset.alpha.shape == (4,)
@@ -51,7 +51,7 @@ class TestSpectrumDatasetONOFF:
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
         livetime = 1*u.s
-        dataset = SpectrumDatasetONOFF(ONcounts=self.on_counts, OFFcounts=self.off_counts,
+        dataset = SpectrumDatasetOnOff(counts_on=self.on_counts, counts_off=self.off_counts,
                          aeff=self.aeff, model=model, livetime = livetime)
 
         expected = self.aeff.data.data[0]*(self.aeff.energy.hi[-1]-self.aeff.energy.lo[0])*const*livetime
@@ -104,7 +104,7 @@ class TestSimpleFit:
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
         on_vector.data.data += self.bkg.data.data
-        obs = SpectrumDatasetONOFF(ONcounts=on_vector, OFFcounts=self.off)
+        obs = SpectrumDatasetOnOff(counts_on=on_vector, counts_off=self.off)
         obs.model = self.source_model
 
         self.source_model.parameters.index = 1.12
@@ -121,18 +121,18 @@ class TestSimpleFit:
         """Test joint fit for obs with different energy binning"""
         on_vector = self.src.copy()
         on_vector.data.data += self.bkg.data.data
-        obs1 = SpectrumDatasetONOFF(ONcounts=on_vector, OFFcounts=self.off)
+        obs1 = SpectrumDatasetOnOff(counts_on=on_vector, counts_off=self.off)
         obs1.model = self.source_model
 
         src_rebinned = self.src.rebin(2)
         bkg_rebinned = self.off.rebin(2)
         src_rebinned.data.data += self.bkg.rebin(2).data.data
 
-        obs2 = SpectrumDatasetONOFF(ONcounts=src_rebinned, OFFcounts=bkg_rebinned)
+        obs2 = SpectrumDatasetOnOff(counts_on=src_rebinned, counts_off=bkg_rebinned)
         obs2.model = self.source_model
 
         fit = Fit([obs1, obs2])
-        result = fit.run()
+        fit.run()
         pars = self.source_model.parameters
         assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
 
@@ -144,8 +144,8 @@ class TestSpectralFit:
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumDatasetONOFF.read(path + "pha_obs23523.fits")
-        obs2 = SpectrumDatasetONOFF.read(path + "pha_obs23592.fits")
+        obs1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+        obs2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
         self.pwl = PowerLaw(
