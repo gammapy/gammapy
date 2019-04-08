@@ -170,7 +170,7 @@ class TestSpectralFit:
     def test_basic_results(self):
         self.set_model(self.pwl)
         result = self.fit.run()
-        pars = self.pwl.parameters
+        pars = self.fit.datasets.parameters
 
         assert self.pwl is self.obs_list[0].model
 
@@ -180,4 +180,25 @@ class TestSpectralFit:
         assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
         assert_allclose(self.obs_list[0].npred()[60], 0.6102, rtol=1e-3)
         pars.to_table()
+
+    def test_basic_errors(self):
+        self.set_model(self.pwl)
+        fit_result = self.fit.run()
+        pars = self.fit.datasets.parameters
+
+        assert_allclose(pars.error("index"), 0.1496, rtol=1e-3)
+        assert_allclose(pars.error("amplitude"), 6.423e-12, rtol=1e-3)
+        pars.to_table()
+
+    def test_compound(self):
+        model = self.pwl * 2
+        self.set_model(model)
+        fit = Fit(self.obs_list[0])
+        result = fit.run()
+        pars = fit.datasets.parameters
+
+        assert_allclose(pars["index"].value, 2.8166, rtol=1e-3)
+        p = pars["amplitude"]
+        assert p.unit == "cm-2 s-1 TeV-1"
+        assert_allclose(p.value, 5.0714e-12, rtol=1e-3)
 
