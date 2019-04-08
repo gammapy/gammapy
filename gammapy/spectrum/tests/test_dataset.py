@@ -15,7 +15,7 @@ from ...spectrum import (
 
 
 
-class TestONOFFSpectrumDataset:
+class TestSpectrumDatasetONOFF:
     """ Test ON OFF SpectrumDataset"""
     def setup(self):
 
@@ -138,6 +138,7 @@ class TestSimpleFit:
 
 
 @requires_data("gammapy-data")
+@requires_dependency("iminuit")
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""
 
@@ -183,7 +184,7 @@ class TestSpectralFit:
 
     def test_basic_errors(self):
         self.set_model(self.pwl)
-        fit_result = self.fit.run()
+        self.fit.run()
         pars = self.fit.datasets.parameters
 
         assert_allclose(pars.error("index"), 0.1496, rtol=1e-3)
@@ -194,11 +195,31 @@ class TestSpectralFit:
         model = self.pwl * 2
         self.set_model(model)
         fit = Fit(self.obs_list[0])
-        result = fit.run()
+        fit.run()
         pars = fit.datasets.parameters
 
         assert_allclose(pars["index"].value, 2.8166, rtol=1e-3)
         p = pars["amplitude"]
         assert p.unit == "cm-2 s-1 TeV-1"
         assert_allclose(p.value, 5.0714e-12, rtol=1e-3)
+
+    def test_ecpl_fit(self):
+        self.set_model(self.ecpl)
+        fit = Fit(self.obs_list[0])
+        fit.run()
+
+        actual = fit.datasets.parameters["lambda_"].quantity
+        assert actual.unit == "TeV-1"
+        assert_allclose(actual.value, 0.145215, rtol=1e-2)
+
+    def test_joint_fit(self):
+        self.set_model(self.pwl)
+        fit = Fit(self.obs_list)
+        fit.run()
+        actual = fit.datasets.parameters["index"].value
+        assert_allclose(actual, 2.7806, rtol=1e-3)
+
+        actual = fit.datasets.parameters["amplitude"].quantity
+        assert actual.unit == "cm-2 s-1 TeV-1"
+        assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
