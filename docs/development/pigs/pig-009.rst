@@ -61,9 +61,10 @@ that will allow us to sample alternatively along all the axes or a given axis of
 MapEventSampler
 ===============
 
-To sample events, it is fundamental to create a map of the predicted events. This can be done with the MapDataset class 
-which takes as input a Skymodel(s) and a given exposure time. The predicted event map is then given to the new proposed 
-class MapEventSampler(). The source events will be simulated as following:
+The next fundamental step is the creation of a map of the predicted events. This can be performed, for a given exposure time,
+ with the MapDataset class which takes as input a Skymodel(s) object. The predicted event map is then the input of the new 
+proposed class MapEventSampler(). The same approach can be applied to the background events. The source events will be simulated 
+as following:
 
 src = SkyModel()
 evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
@@ -77,16 +78,17 @@ bkg_map = Map()
 bkg_sampler = MapEventSampler(bkg_map, psf_map=None, edisp_map=None)
 events_bkg = bkg_sample.sample()
 
-where the MapEventSampler() class can be used to generate both source and background events.
+where the MapEventSampler() class can be used to generate alternatively source or background events.
 
 
 IRFMapSampler
 =============
 
-We introduce a class that applies the IRF properties to the previously sampled event list. In more detail, the class 
-will take as input the MapEventSampler source object and then it evaluates a map of the psf and energy dispersion 
-calculated for each event true position and true energy. The reconstructed energy and positions are then listed into 
-an astropy table. We propose two different options to accomplish this task, which should work as follows:
+We introduce a class that bundles the IRF psf and energy dispersion and applies them to the previously sampled event list. 
+In more detail, the class will take as input the MapEventSampler.sample() source object and then it evaluates a map of 
+the psf and the energy dispersion calculated for each event true position and true energy. The reconstructed energies and 
+positions are then listed into an astropy table. We propose two different options to accomplish this task, which should work 
+as follows:
 
 events = vstack([events_src_1, events_src_2, ..., events_src_N])
 irf_sampler = IRFSampler(events, psf_map, edisp_map)
@@ -98,9 +100,10 @@ irf_sampler = IRFSampler(psf_map, edisp_map)
 events = irf_sampler.sample_psf(events)
 events = irf_sampler.sample_edisp(events)
 
-In the first case, the IRF is applied to the stacking of all the simulated sources, with the IRFSampler class which
+In the first case, the IRF is applied to the stacking of all the simulated sources, with the IRFSampler() class which
 contains only the sample() method. In the second case, the IRFSampler reads the psf and energy maps only, and then 
-it contains two methods that apply the psf and edisp corrections to the events; for more than one source, a loop is needed.
+it contains two methods that apply separately the psf and edisp corrections to the events; for more than one simulated 
+source, a loop will be needed.
 
 
 MapDatasetEventSampler?
