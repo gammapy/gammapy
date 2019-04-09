@@ -8,7 +8,7 @@ from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.fitting import Dataset, Datasets
+from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 
@@ -753,15 +753,15 @@ class FluxPointEstimator:
     energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
     for details.
 
-    The method is also described in the FERMI-LAT catalog paper
+    The method is also described in the Fermi-LAT catalog paper
     https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
     or the HESS Galactic Plane Survey paper
     https://ui.adsabs.harvard.edu/#abs/2018A%26A...612A...1H
 
     Parameters
     ----------
-    obs : `~gammapy.spectrum.SpectrumObservation` or `~gammapy.spectrum.SpectrumObservationList`
-        Spectrum observation(s)
+    datasets : list of `~gammapy.spectrum.SpectrumDatatset`
+        Spectrum datasets.
     groups : `~gammapy.spectrum.SpectrumEnergyGroups`
         Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
     model : `~gammapy.spectrum.models.SpectralModel`
@@ -792,27 +792,30 @@ class FluxPointEstimator:
         sigma=1,
         sigma_ul=2,
     ):
-        datasets = Datasets(datasets).copy()
-        if not datasets.is_all_same_type and datasets.is_all_same_shape:
-            raise ValueError("Flux point estimation only supported for a"
-                             " homogeneous set of datasets.")
-
         # make a copy to not modify the input datasets
+        datasets = Datasets(datasets).copy()
+
+        if not datasets.is_all_same_type and datasets.is_all_same_shape:
+            raise ValueError("Flux point estimation requires a list of datasets"
+                             " of the same type and data shape.")
+
         self.datasets = datasets
         self.groups = groups
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
-        if norm_values is None:
-            norm_values = np.logspace(
-                np.log10(norm_min), np.log10(norm_max), norm_n_values
-            )
-        self.norm_values = norm_values
-        self.sigma = sigma
-        self.sigma_ul = sigma_ul
 
         # set the model on all datasets
         for dataset in self.datasets.datasets:
             dataset.model = self.model
+
+        if norm_values is None:
+            norm_values = np.logspace(
+                np.log10(norm_min), np.log10(norm_max), norm_n_values
+            )
+
+        self.norm_values = norm_values
+        self.sigma = sigma
+        self.sigma_ul = sigma_ul
 
     @property
     def ref_model(self):
@@ -896,6 +899,12 @@ class FluxPointEstimator:
         self.datasets.mask = self._energy_mask(e_group)
         result.update(self.estimate_norm())
 
+        if not result.pop("success"):
+            log.warning(
+                "Fit failed for flux point between {e_min:.3f} and {e_max:.3f},"
+                " setting NaN.".format(e_min=e_min, e_max=e_max)
+            )
+
         if steps == "all":
             steps = ["err", "errp-errn", "ul", "ts", "norm-scan"]
 
@@ -912,7 +921,7 @@ class FluxPointEstimator:
             result.update(self.estimate_norm_ts())
 
         if "norm-scan" in steps:
-            result.update(self.estimate_norm_scan(result))
+            result.update(self.estimate_norm_scan())
 
         return result
 
@@ -957,7 +966,7 @@ class FluxPointEstimator:
         Returns
         -------
         result : dict
-            Dict with ts and srtq_ts for the flux point.
+            Dict with ts and sqrt(ts) for the flux point.
         """
         parameters = self.model.parameters
 
@@ -974,7 +983,7 @@ class FluxPointEstimator:
         sqrt_ts = np.sign(norm_best_fit) * np.sqrt(ts)
         return {"sqrt_ts": sqrt_ts, "ts": ts}
 
-    def estimate_norm_scan(self, flux_point):
+    def estimate_norm_scan(self):
         """Estimate likelihood profile for the norm parameter
 
         Returns
@@ -982,7 +991,6 @@ class FluxPointEstimator:
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        # norm = self.model.parameters["norm"]
         result = self.fit.likelihood_profile("norm", values=self.norm_values)
         dloglike_scan = result["likelihood"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
@@ -995,23 +1003,15 @@ class FluxPointEstimator:
         result : dict
             Dict with "norm" and "loglike" for the flux point.
         """
-        from ..utils.fitting import Fit
-
         self.fit = Fit(self.datasets)
         result = self.fit.optimize()
 
         if result.success:
             norm = result.parameters["norm"].value
-            self.model.parameters["norm"].value = norm
         else:
-            emin, emax = self.fit.true_fit_range[0]
-            log.warning(
-                "Fit failed for flux point between {emin:.3f} and {emax:.3f},"
-                " setting NaN.".format(emin=emin, emax=emax)
-            )
             norm = np.nan
 
-        return {"norm": norm, "loglike": result.total_stat}
+        return {"norm": norm, "loglike": result.total_stat, "success": result.success}
 
 
 

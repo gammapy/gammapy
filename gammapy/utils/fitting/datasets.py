@@ -34,6 +34,10 @@ class Dataset(abc.ABC):
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
 
+    def copy(self):
+        """A deep copy."""
+        return copy.deepcopy(self)
+
 
 class Datasets:
     """Join multiple datasets.
@@ -71,17 +75,17 @@ class Datasets:
         """List of datasets"""
         return self._datasets
 
-    @lazyproperty
+    @property
     def types(self):
         """Types of the contained datasets"""
         return [type(dataset).__name__ for dataset in self.datasets]
 
-    @lazyproperty
+    @property
     def is_all_same_type(self):
         """Whether all contained datasets are of the same type"""
         return np.all(np.array(self.types) == self.types[0])
 
-    @lazyproperty
+    @property
     def is_all_same_shape(self):
         """Whether all contained datasets have the same data shape"""
         ref_shape = self.datasets[0].data_shape

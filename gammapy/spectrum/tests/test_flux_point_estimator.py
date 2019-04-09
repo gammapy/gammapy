@@ -9,7 +9,6 @@ from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator
-from ..dataset import SpectrumDatasetOnOff
 
 
 # TODO: use pregenerate data instead
