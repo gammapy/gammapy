@@ -26,7 +26,7 @@ def simulate_dataset(model):
     )
     sim.run(seed=[0])
     obs = sim.result[0]
-    return SpectrumDatasetOnOff._from_spectrum_observation(obs)
+    return obs.to_spectrum_dataset()
 
 
 def define_energy_groups(dataset):

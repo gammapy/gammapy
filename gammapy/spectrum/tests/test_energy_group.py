@@ -117,7 +117,7 @@ class TestSpectrumEnergyGroupMaker:
 
     @staticmethod
     def test_groups_from_obs(obs):
-        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
         seg.groups_from_obs()
         groups = seg.groups
 
@@ -126,7 +126,7 @@ class TestSpectrumEnergyGroupMaker:
     @staticmethod
     def test_compute_groups_fixed_basic(obs):
         ebounds = [1, 2, 10] * u.TeV
-        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
@@ -145,7 +145,7 @@ class TestSpectrumEnergyGroupMaker:
         [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
     )
     def test_compute_groups_fixed_edges(obs, ebounds):
-        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
@@ -163,7 +163,7 @@ class TestSpectrumEnergyGroupMaker:
     @staticmethod
     def test_compute_groups_fixed_below_range(obs):
         ebounds = [0.7, 0.8, 1, 4] * u.TeV
-        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
@@ -179,7 +179,7 @@ class TestSpectrumEnergyGroupMaker:
     @staticmethod
     def test_compute_groups_fixed_above_range(obs):
         ebounds = [5, 7, 11, 13] * u.TeV
-        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
         seg.compute_groups_fixed(ebounds=ebounds)
         groups = seg.groups
 
@@ -196,6 +196,6 @@ class TestSpectrumEnergyGroupMaker:
     @staticmethod
     def test_compute_groups_fixed_outside_range(obs):
         ebounds = [20, 30, 40] * u.TeV
-        seg = SpectrumEnergyGroupMaker(obs=obs)
+        seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
         with pytest.raises(ValueError):
             seg.compute_groups_fixed(ebounds=ebounds)

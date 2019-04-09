@@ -88,13 +88,14 @@ class SpectrumAnalysisIACT:
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.spectrum_observations.stack()
-        self.egm = SpectrumEnergyGroupMaker(stacked_obs)
+        self.egm = SpectrumEnergyGroupMaker(stacked_obs.e_reco)
         self.egm.compute_groups_fixed(self.config["fp_binning"])
 
+        datasets = [obs.to_spectrum_dataset() for obs in self.extraction.spectrum_observations]
         self.flux_point_estimator = FluxPointEstimator(
             groups=self.egm.groups,
             model=self.fit.result[0].model,
-            obs=self.extraction.spectrum_observations,
+            datasets=datasets,
         )
         self.flux_points = self.flux_point_estimator.run()
 
