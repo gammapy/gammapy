@@ -9,10 +9,11 @@ from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator
+from ..dataset import SpectrumDatasetOnOff
 
 
 # TODO: use pregenerate data instead
-def simulate_obs(model):
+def simulate_dataset(model):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     bkg_model = PowerLaw(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
@@ -24,21 +25,23 @@ def simulate_obs(model):
         alpha=0.2,
     )
     sim.run(seed=[0])
-    return sim.result[0]
+    obs = sim.result[0]
+    return SpectrumDatasetOnOff._from_spectrum_observation(obs)
 
 
-def define_energy_groups(obs):
+def define_energy_groups(dataset):
     # the energy bounds ar choosen such, that one flux point is
     ebounds = [0.1, 1, 10, 100] * u.TeV
-    segm = SpectrumEnergyGroupMaker(obs=obs)
+    e_reco = dataset.counts_on.energy.bins
+    segm = SpectrumEnergyGroupMaker(e_reco)
     segm.compute_groups_fixed(ebounds=ebounds)
     return segm.groups
 
 
 def create_fpe(model):
-    obs = simulate_obs(model)
-    groups = define_energy_groups(obs)
-    return FluxPointEstimator(obs=obs, model=model, groups=groups, norm_n_values=3)
+    dataset = simulate_dataset(model)
+    groups = define_energy_groups(dataset)
+    return FluxPointEstimator(datasets=[dataset], model=model, groups=groups, norm_n_values=3)
 
 
 @pytest.fixture(scope="session")
@@ -55,15 +58,6 @@ class TestFluxPointEstimator:
     @staticmethod
     def test_str(fpe_pwl):
         assert "FluxPointEstimator" in str(fpe_pwl)
-
-    @staticmethod
-    @requires_dependency("iminuit")
-    def test_energy_range(fpe_pwl):
-        group = fpe_pwl.groups[1]
-        fpe_pwl.estimate_flux_point(group)
-        fit_range = fpe_pwl.fit.true_fit_range[0]
-        assert_quantity_allclose(fit_range[0], group.energy_min)
-        assert_quantity_allclose(fit_range[1], group.energy_max)
 
     @staticmethod
     @requires_dependency("iminuit")

@@ -21,6 +21,7 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.table import vstack as table_vstack
 from ..utils.table import table_from_row_data, table_row_to_dict
+from ..utils.energy import EnergyBounds
 
 __all__ = ["SpectrumEnergyGroup", "SpectrumEnergyGroups", "SpectrumEnergyGroupMaker"]
 
@@ -219,8 +220,8 @@ class SpectrumEnergyGroupMaker:
 
     Attributes
     ----------
-    obs : `~gammapy.spectrum.SpectrumObservation`
-        Spectrum observation data
+    e_reco : `~astropy.units.Quantity`
+        Array of reconstructed energies.
     groups : `~gammapy.spectrum.SpectrumEnergyGroups`
         List of energy groups
 
@@ -229,13 +230,13 @@ class SpectrumEnergyGroupMaker:
     SpectrumEnergyGroups, SpectrumEnergyGroup, FluxPointEstimator
     """
 
-    def __init__(self, obs):
-        self.obs = obs
+    def __init__(self, e_reco):
+        self.e_reco = EnergyBounds(e_reco)
         self.groups = None
 
     def groups_from_obs(self):
         """Compute energy groups with one group per energy bin."""
-        ebounds_obs = self.obs.e_reco
+        ebounds_obs = self.e_reco
         size = ebounds_obs.nbins
         table = Table()
         table["bin_idx"] = np.arange(size)
@@ -256,7 +257,7 @@ class SpectrumEnergyGroupMaker:
         ebounds : `~astropy.units.Quantity`
             Energy bounds array
         """
-        ebounds_src = self.obs.e_reco.to(ebounds.unit)
+        ebounds_src = self.e_reco.to(ebounds.unit)
         bin_edges_src = np.arange(len(ebounds_src))
 
         temp = np.interp(ebounds, ebounds_src, bin_edges_src)

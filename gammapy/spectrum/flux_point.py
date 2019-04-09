@@ -8,10 +8,9 @@ from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.fitting import Dataset
+from ..utils.fitting import Dataset, Datasets
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
-from .observation import SpectrumObservationList, SpectrumObservation
 
 __all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointsDataset"]
 
@@ -783,7 +782,7 @@ class FluxPointEstimator:
 
     def __init__(
         self,
-        obs,
+        datasets,
         groups,
         model,
         norm_min=0.2,
@@ -793,10 +792,13 @@ class FluxPointEstimator:
         sigma=1,
         sigma_ul=2,
     ):
-        if isinstance(obs, SpectrumObservation):
-            obs = SpectrumObservationList([obs])
-        self.obs = SpectrumObservationList(obs)
+        datasets = Datasets(datasets).copy()
+        if not datasets.is_all_same_type and datasets.is_all_same_shape:
+            raise ValueError("Flux point estimation only supported for a"
+                             " homogeneous set of datasets.")
 
+        # make a copy to not modify the input datasets
+        self.datasets = datasets
         self.groups = groups
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
@@ -808,13 +810,17 @@ class FluxPointEstimator:
         self.sigma = sigma
         self.sigma_ul = sigma_ul
 
+        # set the model on all datasets
+        for dataset in self.datasets.datasets:
+            dataset.model = self.model
+
     @property
     def ref_model(self):
         return self.model.model
 
     def __str__(self):
         s = "{}:\n".format(self.__class__.__name__)
-        s += str(self.obs) + "\n"
+        s += str(self.datasets) + "\n"
         s += str(self.groups) + "\n"
         s += str(self.model) + "\n"
         return s
@@ -842,6 +848,11 @@ class FluxPointEstimator:
         meta = OrderedDict([("SED_TYPE", "likelihood")])
         table = table_from_row_data(rows=rows, meta=meta)
         return FluxPoints(table).to_sed_type("dnde")
+
+    def _energy_mask(self, e_group):
+        energy_mask = np.zeros(self.datasets.datasets[0].data_shape)
+        energy_mask[e_group.bin_idx_min:e_group.bin_idx_max + 1] = 1
+        return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
         """Estimate flux point for a single energy group.
@@ -882,7 +893,7 @@ class FluxPointEstimator:
             ]
         )
 
-        quality_orig = self._set_quality(e_group)
+        self.datasets.mask = self._energy_mask(e_group)
         result.update(self.estimate_norm())
 
         if steps == "all":
@@ -903,7 +914,6 @@ class FluxPointEstimator:
         if "norm-scan" in steps:
             result.update(self.estimate_norm_scan(result))
 
-        self._restore_quality(quality_orig)
         return result
 
     def estimate_norm_errn_errp(self):
@@ -951,7 +961,7 @@ class FluxPointEstimator:
         """
         parameters = self.model.parameters
 
-        loglike = self.fit.total_stat(parameters)
+        loglike = self.datasets.likelihood()
         norm_best_fit = parameters["norm"].value
 
         # store best fit amplitude, set amplitude of fit model to zero
@@ -985,9 +995,9 @@ class FluxPointEstimator:
         result : dict
             Dict with "norm" and "loglike" for the flux point.
         """
-        from .fit import SpectrumFit
+        from ..utils.fitting import Fit
 
-        self.fit = SpectrumFit(self.obs, self.model)
+        self.fit = Fit(self.datasets)
         result = self.fit.optimize()
 
         if result.success:
@@ -1003,30 +1013,6 @@ class FluxPointEstimator:
 
         return {"norm": norm, "loglike": result.total_stat}
 
-    # TODO: clean up this helper function and maybe move it to SpectrumObservations
-    def _set_quality(self, energy_group):
-        quality_orig = []
-
-        for obs in self.obs:
-            # Set quality bins to only bins in energy_group
-            quality_orig_unit = obs.on_vector.quality
-            quality_len = len(quality_orig_unit)
-            quality_orig.append(quality_orig_unit)
-            quality = np.zeros(quality_len, dtype=int)
-            for bin in range(quality_len):
-                if (
-                    (bin < energy_group.bin_idx_min)
-                    or (bin > energy_group.bin_idx_max)
-                    or (energy_group.bin_type != "normal")
-                ):
-                    quality[bin] = 1
-            obs.on_vector.quality = quality
-
-        return quality_orig
-
-    def _restore_quality(self, quality_orig):
-        for obs, quality in zip(self.obs, quality_orig):
-            obs.on_vector.quality = quality
 
 
 class FluxPointsDataset(Dataset):

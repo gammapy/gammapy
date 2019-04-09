@@ -58,11 +58,13 @@ class Datasets:
 
         self.mask = mask
 
+    @lazyproperty
+    def parameters(self):
         # join parameter lists
         parameters = []
         for dataset in self.datasets:
             parameters += dataset.parameters.parameters
-        self.parameters = Parameters(parameters)
+        return Parameters(parameters)
 
     @property
     def datasets(self):
