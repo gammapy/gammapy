@@ -126,6 +126,7 @@ class SpectrumDataset(Dataset):
 
         return CountsSpectrum(ebounds[:-1], ebounds[1:], data)
 
+
 class SpectrumDatasetOnOff(Dataset):
     """Compute spectral model fit statistic on a ON OFF Spectrum.
 

@@ -190,7 +190,6 @@ def test_map_fit(sky_model):
         dataset_1.npred()
 
 
-
 @requires_dependency("iminuit")
 @requires_data("gammapy-data")
 def test_map_fit_one_energy_bin(sky_model):

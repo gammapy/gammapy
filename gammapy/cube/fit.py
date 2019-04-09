@@ -165,7 +165,7 @@ class MapDataset(Dataset):
         """
         counts, npred = self._counts_data, self.npred().data
 
-        #TODO: add mask handling to _stat_sum, so that the temp copy
+        # TODO: add mask handling to _stat_sum, so that the temp copy
         # created by the fancy indexing is avoided
         if self.mask is None and mask is None:
             stat = self._stat_sum(counts.ravel(), npred.ravel())
@@ -358,10 +358,16 @@ class MapEvaluator:
                 self.model.evaluation_radius + CUTOUT_MARGIN
             )
             try:
-                self.exposure = exposure.cutout(position=self.model.position, width=width)
+                self.exposure = exposure.cutout(
+                    position=self.model.position, width=width
+                )
             except NoOverlapError:
-                raise ValueError("Position {} of model component is outside the image boundaries."
-                                 " Please check the starting values or position parameter boundaries of the model.".format(self.model.position))
+                raise ValueError(
+                    "Position {} of model component is outside the image boundaries."
+                    " Please check the starting values or position parameter boundaries of the model.".format(
+                        self.model.position
+                    )
+                )
 
             # Reset cached quantities
             for cached_property in self._cached_properties:

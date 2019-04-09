@@ -76,7 +76,7 @@ def cli_jupyter_strip(ctx):
         rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
         for cell in rawnb.cells:
-            cell["metadata"].pop('pycharm', None)
+            cell["metadata"].pop("pycharm", None)
             if cell["cell_type"] == "code":
                 cell["execution_count"] = None
                 cell["outputs"] = []
@@ -123,7 +123,9 @@ class BlackNotebook:
                 try:
                     fmt = "\n".join(self.tag_magics(fmt))
                     has_semicolon = fmt.endswith(";")
-                    fmt = black.format_str(src_contents=fmt, mode=black.FileMode(line_length=79)).rstrip()
+                    fmt = black.format_str(
+                        src_contents=fmt, mode=black.FileMode(line_length=79)
+                    ).rstrip()
                     if has_semicolon:
                         fmt += ";"
                 except Exception as ex:

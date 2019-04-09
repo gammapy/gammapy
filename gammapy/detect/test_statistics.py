@@ -64,7 +64,9 @@ def f_cash(x, counts, background, model):
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    return cash_sum_cython(counts.ravel(), (background + x * FLUX_FACTOR * model).ravel())
+    return cash_sum_cython(
+        counts.ravel(), (background + x * FLUX_FACTOR * model).ravel()
+    )
 
 
 class TSMapEstimator:

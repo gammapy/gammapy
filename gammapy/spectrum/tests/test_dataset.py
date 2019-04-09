@@ -8,7 +8,12 @@ from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...utils.fitting import Fit
 from ..models import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
-from ...spectrum import PHACountsSpectrum, SpectrumDatasetOnOff, SpectrumDataset, CountsSpectrum
+from ...spectrum import (
+    PHACountsSpectrum,
+    SpectrumDatasetOnOff,
+    SpectrumDataset,
+    CountsSpectrum,
+)
 
 
 @requires_dependency("iminuit")
@@ -73,7 +78,6 @@ class TestSpectrumDataset:
         assert isinstance(fake_spectrum, CountsSpectrum)
         assert_allclose(fake_spectrum.energy.bins, self.dataset.counts.energy.bins)
         assert fake_spectrum.data.data.sum() == 907331
-
 
 
 class TestSpectrumDatasetOnOff:
