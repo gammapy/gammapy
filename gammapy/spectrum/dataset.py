@@ -265,22 +265,4 @@ class SpectrumDatasetOnOff(Dataset):
             OGIP PHA file to read
         """
         observation = SpectrumObservation.read(filename)
-        return SpectrumDatasetOnOff._from_spectrum_observation(observation)
-
-    # TODO: check if SpectrumObservation is needed in the long run
-    @classmethod
-    def _from_spectrum_observation(cls, observation):
-        """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
-
-        # Build mask from quality vector
-        quality = observation.on_vector.quality
-        mask = quality == 0
-
-        return cls(
-            counts_on=observation.on_vector,
-            aeff=observation.aeff,
-            counts_off=observation.off_vector,
-            edisp=observation.edisp,
-            livetime=observation.livetime,
-            mask=mask,
-        )
+        return observation.to_spectrum_dataset()
