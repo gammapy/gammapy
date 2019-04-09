@@ -4,6 +4,7 @@ from .core import *
 from .observation import *
 from .cosmic_ray import *
 from .crab import *
+from .dataset import *
 from .energy_group import *
 from .flux_point import *
 from .utils import *
