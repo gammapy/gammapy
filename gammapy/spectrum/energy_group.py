@@ -234,7 +234,7 @@ class SpectrumEnergyGroupMaker:
         self.e_reco = EnergyBounds(e_reco)
         self.groups = None
 
-    def groups_from_obs(self):
+    def compute_groups_from_obs(self):
         """Compute energy groups with one group per energy bin."""
         ebounds_obs = self.e_reco
         size = ebounds_obs.nbins

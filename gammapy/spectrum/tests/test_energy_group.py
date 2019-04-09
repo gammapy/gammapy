@@ -118,7 +118,7 @@ class TestSpectrumEnergyGroupMaker:
     @staticmethod
     def test_groups_from_obs(obs):
         seg = SpectrumEnergyGroupMaker(e_reco=obs.e_reco)
-        seg.groups_from_obs()
+        seg.compute_groups_from_obs()
         groups = seg.groups
 
         assert len(groups) == obs.e_reco.nbins
