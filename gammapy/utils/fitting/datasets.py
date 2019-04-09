@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
+import copy
 from collections import Counter
 import numpy as np
 from astropy.utils import lazyproperty
@@ -105,3 +106,7 @@ class Datasets:
             str_ += "\t{key}: {value} \n".format(key=key, value=value)
 
         return str_
+
+    def copy(self):
+        """A deep copy."""
+        return copy.deepcopy(self)
