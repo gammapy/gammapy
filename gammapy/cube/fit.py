@@ -354,9 +354,12 @@ class MapEvaluator:
         self.psf = psf
 
         if self.evaluation_mode == "local":
-            width = np.max(psf.psf_kernel_map.geom.width) + 2 * (
-                self.model.evaluation_radius + CUTOUT_MARGIN
-            )
+            if psf is not None:
+                psf_width = np.max(psf.psf_kernel_map.geom.width)
+            else:
+                psf_width = 0 * u.deg
+
+            width = psf_width + 2 * (self.model.evaluation_radius + CUTOUT_MARGIN)
             try:
                 self.exposure = exposure.cutout(
                     position=self.model.position, width=width
