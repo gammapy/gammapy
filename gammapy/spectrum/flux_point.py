@@ -968,19 +968,15 @@ class FluxPointEstimator:
         result : dict
             Dict with ts and sqrt(ts) for the flux point.
         """
-        parameters = self.model.parameters
-
         loglike = self.datasets.likelihood()
-        norm_best_fit = parameters["norm"].value
 
         # store best fit amplitude, set amplitude of fit model to zero
-        parameters["norm"].value = 0
-        loglike_null = self.fit.total_stat(parameters)
-        parameters["norm"].value = 1.0
+        self.model.norm.value = 0
+        loglike_null = self.datasets.likelihood()
 
         # compute sqrt TS
         ts = np.abs(loglike_null - loglike)
-        sqrt_ts = np.sign(norm_best_fit) * np.sqrt(ts)
+        sqrt_ts = np.sqrt(ts)
         return {"sqrt_ts": sqrt_ts, "ts": ts}
 
     def estimate_norm_scan(self):
@@ -1003,6 +999,9 @@ class FluxPointEstimator:
         result : dict
             Dict with "norm" and "loglike" for the flux point.
         """
+        # start optimization with norm=1
+        self.model.norm.value = 1.0
+
         self.fit = Fit(self.datasets)
         result = self.fit.optimize()
 
