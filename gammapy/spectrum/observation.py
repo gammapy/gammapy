@@ -518,6 +518,24 @@ class SpectrumObservation:
         """A deep copy."""
         return copy.deepcopy(self)
 
+    def to_spectrum_dataset(self):
+        """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
+        from .dataset import SpectrumDatasetOnOff
+
+        # Build mask from quality vector
+        quality = self.on_vector.quality
+        mask = quality == 0
+
+        return SpectrumDatasetOnOff(
+            counts_on=self.on_vector,
+            aeff=self.aeff,
+            counts_off=self.off_vector,
+            edisp=self.edisp,
+            livetime=self.livetime,
+            mask=mask,
+        )
+
+
 
 class SpectrumObservationList(UserList):
     """List of `~gammapy.spectrum.SpectrumObservation` objects."""

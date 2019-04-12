@@ -100,7 +100,7 @@ class MapDataset(Dataset):
 
         self._evaluators = evaluators
 
-    @lazyproperty
+    @property
     def parameters(self):
         """List of parameters (`~gammapy.utils.fitting.Parameters`)"""
         if self.background_model:
