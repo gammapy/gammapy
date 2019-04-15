@@ -280,7 +280,7 @@ class TestMapAxisGropuping:
     def test_basic(energy_axis_ref):
         e_edges = [1, 2, 10] * u.TeV
 
-        groups = energy_axis_ref.group(e_edges)
+        groups = energy_axis_ref.group_table(e_edges)
 
         assert_allclose(groups["group_idx"], [0, 1])
         assert_allclose(groups["idx_min"], [0, 1])
@@ -297,7 +297,7 @@ class TestMapAxisGropuping:
         [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
     )
     def test_edges(energy_axis_ref, e_edges):
-        groups = energy_axis_ref.group(e_edges)
+        groups = energy_axis_ref.group_table(e_edges)
 
         assert_allclose(groups["group_idx"], [0, 1, 2, 3])
         assert_allclose(groups["idx_min"], [0, 1, 4, 6])
@@ -311,7 +311,7 @@ class TestMapAxisGropuping:
     @staticmethod
     def test_below_range(energy_axis_ref):
         e_edges = [0.7, 0.8, 1, 4] * u.TeV
-        groups = energy_axis_ref.group(e_edges)
+        groups = energy_axis_ref.group_table(e_edges)
 
         assert_allclose(groups["group_idx"], [0, 1])
         assert_allclose(groups["idx_min"], [0, 3])
@@ -326,7 +326,7 @@ class TestMapAxisGropuping:
     @staticmethod
     def test_above_range(energy_axis_ref):
         e_edges = [5, 7, 11, 13] * u.TeV
-        groups = energy_axis_ref.group(e_edges)
+        groups = energy_axis_ref.group_table(e_edges)
 
         assert_allclose(groups["group_idx"], [0, 1, 2])
         assert_allclose(groups["idx_min"], [0, 4, 6])
@@ -343,4 +343,4 @@ class TestMapAxisGropuping:
         e_edges = [20, 30, 40] * u.TeV
 
         with pytest.raises(ValueError):
-            energy_axis_ref.group(e_edges)
+            energy_axis_ref.group_table(e_edges)

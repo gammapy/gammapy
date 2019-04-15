@@ -827,7 +827,7 @@ class FluxPointEstimator:
         from ..maps import MapAxis
         e_edges = self.datasets.datasets[0].counts_on.energy.bins
         energy_axis = MapAxis.from_edges(e_edges, unit=e_edges.unit, name="energy")
-        return energy_axis.group(self.e_edges)
+        return energy_axis.group_table(self.e_edges)
 
     def __str__(self):
         s = "{}:\n".format(self.__class__.__name__)

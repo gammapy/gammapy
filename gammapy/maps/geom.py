@@ -651,8 +651,8 @@ class MapAxis:
         return copy.deepcopy(self)
 
 
-    def group(self, edges):
-        """Compute bin groups for the map axis, given coarser bin edges.
+    def group_table(self, edges):
+        """Compute bin groups table for the map axis, given coarser bin edges.
 
         Parameters
         ----------
@@ -664,6 +664,7 @@ class MapAxis:
         groups : `~astropy.table.Table`
             Map axis group table.
         """
+        # TODO: try to simplify this code
         if not self.node_type == "edges":
             raise ValueError("Only edge based map axis can be grouped")
 
