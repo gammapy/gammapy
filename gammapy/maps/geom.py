@@ -11,6 +11,7 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import QTable, Column
 from ..utils.interpolation import interpolation_scale
 from .utils import find_hdu, find_bands_hdu, INVALID_INDEX
 
@@ -483,7 +484,12 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        nodes = np.array(nodes, ndmin=1)
+        if isinstance(nodes, u.Quantity):
+            kwargs.setdefault("unit", nodes.unit)
+            nodes = nodes.to_value(kwargs["unit"])
+        else:
+            nodes = np.array(nodes, ndmin=1)
+
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
         if len(nodes) != len(np.unique(nodes)):
@@ -507,7 +513,12 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        edges = np.array(edges, ndmin=1)
+        if isinstance(edges, u.Quantity):
+            kwargs.setdefault("unit", edges.unit)
+            edges = edges.to_value(kwargs["unit"])
+        else:
+            edges = np.array(edges, ndmin=1)
+
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
         if len(edges) != len(np.unique(edges)):
