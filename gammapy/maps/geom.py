@@ -651,6 +651,68 @@ class MapAxis:
         return copy.deepcopy(self)
 
 
+    def group(self, edges):
+        """Compute bin groups for the map axis, given coarser bin edges.
+
+        Parameters
+        ----------
+        edges : `~astropy.units.Quantity`
+            Group bin edges.
+
+        Returns
+        -------
+        groups : `~astropy.table.Table`
+            Map axis group table.
+        """
+        if not self.node_type == "edges":
+            raise ValueError("Only edge based map axis can be grouped")
+
+        edges_pix = self.coord_to_pix(edges)
+        edges_pix = np.clip(edges_pix, -0.5, self.nbin - 0.5)
+        edges_idx = np.round(edges_pix + 0.5) - 0.5
+        edges_idx = np.unique(edges_idx)
+        edges_ref = self.pix_to_coord(edges_idx) * self.unit
+
+        groups = QTable()
+        groups["{}_min".format(self.name)] = edges_ref[:-1]
+        groups["{}_max".format(self.name)] = edges_ref[1:]
+
+        groups["idx_min"] = (edges_idx[:-1] + 0.5).astype(int)
+        groups["idx_max"] = (edges_idx[1:] - 0.5).astype(int)
+
+        if len(groups) == 0:
+            raise ValueError("No overlap between reference and target edges.")
+
+        groups["bin_type"] = "normal   "
+
+        edge_idx_start, edge_ref_start = edges_idx[0], edges_ref[0]
+        if edge_idx_start > 0:
+            underflow = {
+                "bin_type": "underflow",
+                "idx_min": 0,
+                "idx_max": edge_idx_start,
+                "{}_min".format(self.name): self.pix_to_coord(-0.5) * self.unit,
+                "{}_max".format(self.name): edge_ref_start,
+            }
+            groups.insert_row(0, vals=underflow)
+
+        edge_idx_end, edge_ref_end = edges_idx[-1], edges_ref[-1]
+
+        if edge_idx_end < (self.nbin - 0.5):
+            overflow = {
+                "bin_type": "overflow",
+                "idx_min": edge_idx_end + 1,
+                "idx_max": self.nbin - 1,
+                "{}_min".format(self.name): edge_ref_end,
+                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5) * self.unit,
+                }
+            groups.add_row(vals=overflow)
+
+        group_idx = Column(np.arange(len(groups)))
+        groups.add_column(group_idx, name="group_idx", index=0)
+        return groups
+
+
 class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.
 
