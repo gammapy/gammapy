@@ -743,8 +743,8 @@ class FluxPoints:
 class FluxPointEstimator:
     """Flux point estimator.
 
-    Estimates flux points for a given spectrum observation dataset, energy groups
-    and spectral model.
+    Estimates flux points for a given list of spectral datasets, energies and
+    spectral model.
 
     To estimate the flux point the amplitude of the reference spectral model is
     fitted within the energy range defined by the energy group. This is done for
@@ -762,8 +762,8 @@ class FluxPointEstimator:
     ----------
     datasets : list of `~gammapy.spectrum.SpectrumDatatset`
         Spectrum datasets.
-    groups : `~gammapy.spectrum.SpectrumEnergyGroups`
-        Energy groups (usually output of `~gammapy.spectrum.SpectrumEnergyGroupMaker`)
+    e_edges : `~astropy.units.Quantity`
+        Energy edges of the flux point bins.
     model : `~gammapy.spectrum.models.SpectralModel`
         Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
     norm_min : float
@@ -783,7 +783,7 @@ class FluxPointEstimator:
     def __init__(
         self,
         datasets,
-        groups,
+        e_edges,
         model,
         norm_min=0.2,
         norm_max=5,
@@ -800,7 +800,7 @@ class FluxPointEstimator:
                              " of the same type and data shape.")
 
         self.datasets = datasets
-        self.groups = groups
+        self.e_edges = e_edges
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
 
@@ -821,10 +821,18 @@ class FluxPointEstimator:
     def ref_model(self):
         return self.model.model
 
+    @property
+    def e_groups(self):
+        """"""
+        from ..maps import MapAxis
+        e_edges = self.datasets.datasets[0].counts_on.energy.bins
+        energy_axis = MapAxis.from_edges(e_edges, unit=e_edges.unit, name="energy")
+        return energy_axis.group(self.e_edges)
+
     def __str__(self):
         s = "{}:\n".format(self.__class__.__name__)
         s += str(self.datasets) + "\n"
-        s += str(self.groups) + "\n"
+        s += str(self.e_edges) + "\n"
         s += str(self.model) + "\n"
         return s
 
@@ -840,12 +848,13 @@ class FluxPointEstimator:
             and available options.
         """
         rows = []
-        for group in self.groups:
-            if group.bin_type != "normal":
-                log.debug("Skipping energy group:\n{}".format(group))
+
+        for e_group in self.e_groups:
+            if e_group["bin_type"].strip() != "normal":
+                log.debug("Skipping under-/ overflow bin in flux point estimation.")
                 continue
 
-            row = self.estimate_flux_point(group, steps=steps)
+            row = self.estimate_flux_point(e_group, steps=steps)
             rows.append(row)
 
         meta = OrderedDict([("SED_TYPE", "likelihood")])
@@ -854,7 +863,7 @@ class FluxPointEstimator:
 
     def _energy_mask(self, e_group):
         energy_mask = np.zeros(self.datasets.datasets[0].data_shape)
-        energy_mask[e_group.bin_idx_min:e_group.bin_idx_max + 1] = 1
+        energy_mask[e_group["idx_min"]:e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -862,7 +871,7 @@ class FluxPointEstimator:
 
         Parameters
         ----------
-        e_group : `SpectrumEnergyGroup`
+        e_group : `~astropy.table.Row`
             Energy group to compute the flux point for.
         steps : list of str
             Which steps to execute. Available options are:
@@ -880,8 +889,8 @@ class FluxPointEstimator:
         result : dict
             Dict with results for the flux point.
         """
+        e_min, e_max = e_group["energy_min"], e_group["energy_max"]
         # Put at log center of the bin
-        e_min, e_max = e_group.energy_min, e_group.energy_max
         e_ref = np.sqrt(e_min * e_max)
 
         result = OrderedDict(
