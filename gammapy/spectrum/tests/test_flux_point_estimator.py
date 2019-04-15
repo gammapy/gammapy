@@ -3,9 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from ...utils.testing import assert_quantity_allclose, requires_dependency
+from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable
-from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator

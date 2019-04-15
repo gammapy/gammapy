@@ -2,7 +2,6 @@
 import logging
 from ..utils.scripts import make_path
 from ..spectrum import (
-    SpectrumEnergyGroupMaker,
     FluxPointEstimator,
     SpectrumExtraction,
     SpectrumFit,
