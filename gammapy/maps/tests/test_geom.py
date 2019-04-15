@@ -2,7 +2,7 @@
 import pytest
 from collections import OrderedDict
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from ..geom import MapAxis, MapCoord
@@ -266,3 +266,81 @@ def test_squash():
     assert_allclose(axis.edges[0], ax_sq.edges[0])
     assert_allclose(axis.edges[-1], ax_sq.edges[1])
     assert_allclose(ax_sq.center, 1.5)
+
+
+@pytest.fixture(scope="session")
+def energy_axis_ref():
+    edges = np.arange(1, 11) * u.TeV
+    return MapAxis.from_edges(edges, name="energy")
+
+
+
+class TestMapAxisGropuping:
+    @staticmethod
+    def test_basic(energy_axis_ref):
+        e_edges = [1, 2, 10] * u.TeV
+
+        groups = energy_axis_ref.group(e_edges)
+
+        assert_allclose(groups["group_idx"], [0, 1])
+        assert_allclose(groups["idx_min"], [0, 1])
+        assert_allclose(groups["idx_max"], [0, 8])
+        assert_allclose(groups["energy_min"].to_value("TeV"), [1, 2])
+        assert_allclose(groups["energy_max"].to_value("TeV"), [2, 10])
+
+        bin_type = [_.strip() for _ in groups["bin_type"]]
+        assert_equal(bin_type, ["normal", "normal"])
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "e_edges",
+        [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
+    )
+    def test_edges(energy_axis_ref, e_edges):
+        groups = energy_axis_ref.group(e_edges)
+
+        assert_allclose(groups["group_idx"], [0, 1, 2, 3])
+        assert_allclose(groups["idx_min"], [0, 1, 4, 6])
+        assert_allclose(groups["idx_max"], [0, 3, 5, 8])
+        assert_allclose(groups["energy_min"].to_value("TeV"), [1, 2, 5, 7])
+        assert_allclose(groups["energy_max"].to_value("TeV"), [2, 5, 7, 10])
+
+        bin_type = [_.strip() for _ in groups["bin_type"]]
+        assert_equal(bin_type, ["underflow", "normal", "normal", "overflow"])
+
+    @staticmethod
+    def test_below_range(energy_axis_ref):
+        e_edges = [0.7, 0.8, 1, 4] * u.TeV
+        groups = energy_axis_ref.group(e_edges)
+
+        assert_allclose(groups["group_idx"], [0, 1])
+        assert_allclose(groups["idx_min"], [0, 3])
+        assert_allclose(groups["idx_max"], [2, 8])
+        assert_allclose(groups["energy_min"].to_value("TeV"), [1, 4])
+        assert_allclose(groups["energy_max"].to_value("TeV"), [4, 10])
+
+        bin_type = [_.strip() for _ in groups["bin_type"]]
+        assert_equal(bin_type, ["normal", "overflow"])
+
+
+    @staticmethod
+    def test_above_range(energy_axis_ref):
+        e_edges = [5, 7, 11, 13] * u.TeV
+        groups = energy_axis_ref.group(e_edges)
+
+        assert_allclose(groups["group_idx"], [0, 1, 2])
+        assert_allclose(groups["idx_min"], [0, 4, 6])
+        assert_allclose(groups["idx_max"], [3, 5, 8])
+        assert_allclose(groups["energy_min"].to_value("TeV"), [1, 5, 7])
+        assert_allclose(groups["energy_max"].to_value("TeV"), [5, 7, 10])
+
+        bin_type = [_.strip() for _ in groups["bin_type"]]
+        assert_equal(bin_type, ["underflow", "normal", "normal"])
+
+
+    @staticmethod
+    def test_outside_range(energy_axis_ref):
+        e_edges = [20, 30, 40] * u.TeV
+
+        with pytest.raises(ValueError):
+            energy_axis_ref.group(e_edges)
