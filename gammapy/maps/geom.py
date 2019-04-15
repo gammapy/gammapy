@@ -306,7 +306,7 @@ class MapAxis:
 
     Parameters
     ----------
-    nodes : `~numpy.ndarray`
+    nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
         Array of node values.  These will be interpreted as either bin
         edges or centers according to ``node_type``.
     interp : str
@@ -341,8 +341,15 @@ class MapAxis:
 
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
         self.name = name
+
+        if isinstance(nodes, u.Quantity):
+            unit = nodes.unit
+            nodes = nodes.value
+        else:
+            nodes = np.array(nodes)
+
         self.unit = unit
-        self._nodes = np.array(nodes)
+        self._nodes = nodes
         self._node_type = node_type
         self._interp = interp
 
@@ -484,12 +491,6 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        if isinstance(nodes, u.Quantity):
-            kwargs.setdefault("unit", nodes.unit)
-            nodes = nodes.to_value(kwargs["unit"])
-        else:
-            nodes = np.array(nodes, ndmin=1)
-
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
         if len(nodes) != len(np.unique(nodes)):
@@ -513,12 +514,6 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        if isinstance(edges, u.Quantity):
-            kwargs.setdefault("unit", edges.unit)
-            edges = edges.to_value(kwargs["unit"])
-        else:
-            edges = np.array(edges, ndmin=1)
-
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
         if len(edges) != len(np.unique(edges)):
