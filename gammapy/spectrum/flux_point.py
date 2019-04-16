@@ -701,8 +701,8 @@ class FluxPoints:
         if y_values is None:
             ref_values = self.table["ref_" + self.sed_type].quantity
             y_values = np.logspace(
-                np.log10(ref_values.value.min()) - 1,
-                np.log10(ref_values.value.max()) + 1,
+                np.log10(0.2 * ref_values.value.min()),
+                np.log10(5 * ref_values.value.max()),
                 500,
             )
             y_values = u.Quantity(y_values, y_unit, copy=False)
@@ -1129,3 +1129,137 @@ class FluxPointsDataset(Dataset):
             stat = self.likelihood_per_bin()[mask & self.mask]
 
         return np.nansum(stat, dtype=np.float64)
+
+    def residuals(self):
+        """Compute flux point residuals
+
+        Defined as `(data - model) / model`.
+
+        Returns
+        -------
+        residuals : `~numpy.ndarray`
+            Flux point residuals
+        """
+        fp = self.data
+        data = fp.table[fp.sed_type].quantity
+
+        model = self.model(fp.e_ref)
+        residuals = ((data - model) / model).to_value("")
+
+        # Remove residuals for upper_limits
+        residuals[fp.is_ul] = np.nan
+        return residuals
+
+    def peek(self):
+        """Plot flux points, best fit model and residuals.
+        """
+        from matplotlib.gridspec import GridSpec
+        import matplotlib.pyplot as plt
+
+        gs = GridSpec(7, 1)
+
+        ax_spectrum = plt.subplot(gs[:5, :])
+        self.plot_spectrum(ax=ax_spectrum)
+
+        ax_spectrum.set_xticklabels([])
+
+        ax_residuals = plt.subplot(gs[5:, :])
+        self.plot_residuals(ax=ax_residuals)
+
+    @property
+    def _e_range(self):
+        return u.Quantity([self.data.e_min.min(), self.data.e_max.max()])
+
+    @property
+    def _e_unit(self):
+        return self.data.e_ref.unit
+
+    def plot_residuals(self, ax=None, **kwargs):
+        """Plot flux point residuals.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        residuals = self.residuals()
+
+        fp = self.data
+
+        xerr = fp._plot_get_energy_err()
+        xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
+
+        model = self.model(fp.e_ref)
+        yerr = fp._plot_get_flux_err(fp.sed_type)
+        yerr = (yerr[0] / model).to_value(""), (yerr[1] / model).to_value("")
+
+        kwargs.setdefault("marker", "+")
+        kwargs.setdefault("ls", "None")
+        ax.errorbar(self.data.e_ref.value, residuals, xerr=xerr, yerr=yerr, **kwargs)
+
+        # format axes
+        ax.axhline(0, color="black", lw=0.5)
+        ax.set_ylabel("Residuals")
+        ax.set_xlabel("Energy ({})".format(self._e_unit))
+        ax.set_ylim(-1, 1)
+        ax.set_xscale("log")
+        ax.set_xlim(self._e_range.to_value(self._e_unit))
+        return ax
+
+    def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
+        """
+        Plot spectrum including flux points and model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+        fp_kwargs : dict
+            Keyword arguments passed to `FluxPoints.plot`.
+        model_kwargs : dict
+            Keywords passed to `SpectralModel.plot` and `SpectralModel.plot_error`
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+        fp_kwargs = {} if fp_kwargs is None else fp_kwargs
+        model_kwargs = {} if model_kwargs is None else model_kwargs
+
+        kwargs = {}
+        kwargs.setdefault("flux_unit", "erg-1 cm-2 s-1")
+        kwargs.setdefault("energy_unit", "TeV")
+        kwargs.setdefault("energy_power", 2)
+
+        # plot flux points
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(fp_kwargs)
+        ax = self.data.plot(ax=ax, **plot_kwargs)
+
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.setdefault("energy_range", self._e_range)
+        plot_kwargs.setdefault("zorder", 10)
+        plot_kwargs.update(model_kwargs)
+        self.model.plot(ax=ax, **plot_kwargs)
+
+        plot_kwargs.setdefault("color", ax.lines[-1].get_color())
+        self.model.plot_error(ax=ax, **plot_kwargs)
+
+        # format axes
+        ax.set_xlim(self._e_range.to_value(self._e_unit))
+        return ax
