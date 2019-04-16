@@ -11,6 +11,7 @@ from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import QTable, Column
 from ..utils.interpolation import interpolation_scale
 from .utils import find_hdu, find_bands_hdu, INVALID_INDEX
 
@@ -305,7 +306,7 @@ class MapAxis:
 
     Parameters
     ----------
-    nodes : `~numpy.ndarray`
+    nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
         Array of node values.  These will be interpreted as either bin
         edges or centers according to ``node_type``.
     interp : str
@@ -340,8 +341,15 @@ class MapAxis:
 
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
         self.name = name
+
+        if isinstance(nodes, u.Quantity):
+            unit = nodes.unit
+            nodes = nodes.value
+        else:
+            nodes = np.array(nodes)
+
         self.unit = unit
-        self._nodes = np.array(nodes)
+        self._nodes = nodes
         self._node_type = node_type
         self._interp = interp
 
@@ -483,7 +491,6 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        nodes = np.array(nodes, ndmin=1)
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
         if len(nodes) != len(np.unique(nodes)):
@@ -507,7 +514,6 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         """
-        edges = np.array(edges, ndmin=1)
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
         if len(edges) != len(np.unique(edges)):
@@ -638,6 +644,69 @@ class MapAxis:
     def copy(self):
         """Copy `MapAxis` object"""
         return copy.deepcopy(self)
+
+
+    def group_table(self, edges):
+        """Compute bin groups table for the map axis, given coarser bin edges.
+
+        Parameters
+        ----------
+        edges : `~astropy.units.Quantity`
+            Group bin edges.
+
+        Returns
+        -------
+        groups : `~astropy.table.Table`
+            Map axis group table.
+        """
+        # TODO: try to simplify this code
+        if not self.node_type == "edges":
+            raise ValueError("Only edge based map axis can be grouped")
+
+        edges_pix = self.coord_to_pix(edges)
+        edges_pix = np.clip(edges_pix, -0.5, self.nbin - 0.5)
+        edges_idx = np.round(edges_pix + 0.5) - 0.5
+        edges_idx = np.unique(edges_idx)
+        edges_ref = self.pix_to_coord(edges_idx) * self.unit
+
+        groups = QTable()
+        groups["{}_min".format(self.name)] = edges_ref[:-1]
+        groups["{}_max".format(self.name)] = edges_ref[1:]
+
+        groups["idx_min"] = (edges_idx[:-1] + 0.5).astype(int)
+        groups["idx_max"] = (edges_idx[1:] - 0.5).astype(int)
+
+        if len(groups) == 0:
+            raise ValueError("No overlap between reference and target edges.")
+
+        groups["bin_type"] = "normal   "
+
+        edge_idx_start, edge_ref_start = edges_idx[0], edges_ref[0]
+        if edge_idx_start > 0:
+            underflow = {
+                "bin_type": "underflow",
+                "idx_min": 0,
+                "idx_max": edge_idx_start,
+                "{}_min".format(self.name): self.pix_to_coord(-0.5) * self.unit,
+                "{}_max".format(self.name): edge_ref_start,
+            }
+            groups.insert_row(0, vals=underflow)
+
+        edge_idx_end, edge_ref_end = edges_idx[-1], edges_ref[-1]
+
+        if edge_idx_end < (self.nbin - 0.5):
+            overflow = {
+                "bin_type": "overflow",
+                "idx_min": edge_idx_end + 1,
+                "idx_max": self.nbin - 1,
+                "{}_min".format(self.name): edge_ref_end,
+                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5) * self.unit,
+                }
+            groups.add_row(vals=overflow)
+
+        group_idx = Column(np.arange(len(groups)))
+        groups.add_column(group_idx, name="group_idx", index=0)
+        return groups
 
 
 class MapCoord:

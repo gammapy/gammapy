@@ -3,9 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from ...utils.testing import assert_quantity_allclose, requires_dependency
+from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable
-from ..energy_group import SpectrumEnergyGroupMaker
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator
@@ -28,19 +27,10 @@ def simulate_dataset(model):
     return obs.to_spectrum_dataset()
 
 
-def define_energy_groups(dataset):
-    # the energy bounds ar choosen such, that one flux point is
-    ebounds = [0.1, 1, 10, 100] * u.TeV
-    e_reco = dataset.counts_on.energy.bins
-    segm = SpectrumEnergyGroupMaker(e_reco)
-    segm.compute_groups_fixed(ebounds=ebounds)
-    return segm.groups
-
-
 def create_fpe(model):
     dataset = simulate_dataset(model)
-    groups = define_energy_groups(dataset)
-    return FluxPointEstimator(datasets=[dataset], model=model, groups=groups, norm_n_values=3)
+    e_edges = [0.1, 1, 10, 100] * u.TeV
+    return FluxPointEstimator(datasets=[dataset], model=model, e_edges=e_edges, norm_n_values=3)
 
 
 @pytest.fixture(scope="session")
@@ -89,5 +79,5 @@ class TestFluxPointEstimator:
     @staticmethod
     @requires_dependency("iminuit")
     def test_run_ecpl(fpe_ecpl):
-        fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.groups[1])
+        fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.e_groups[1])
         assert_allclose(fp["norm"], 1, rtol=1e-1)

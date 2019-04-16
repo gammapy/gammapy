@@ -2,7 +2,6 @@
 import logging
 from ..utils.scripts import make_path
 from ..spectrum import (
-    SpectrumEnergyGroupMaker,
     FluxPointEstimator,
     SpectrumExtraction,
     SpectrumFit,
@@ -88,12 +87,10 @@ class SpectrumAnalysisIACT:
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.spectrum_observations.stack()
-        self.egm = SpectrumEnergyGroupMaker(stacked_obs.e_reco)
-        self.egm.compute_groups_fixed(self.config["fp_binning"])
 
         datasets = [obs.to_spectrum_dataset() for obs in self.extraction.spectrum_observations]
         self.flux_point_estimator = FluxPointEstimator(
-            groups=self.egm.groups,
+            e_edges=self.config["fp_binning"],
             model=self.fit.result[0].model,
             datasets=datasets,
         )
