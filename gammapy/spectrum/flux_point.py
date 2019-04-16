@@ -1250,15 +1250,18 @@ class FluxPointsDataset(Dataset):
         # plot flux points
         plot_kwargs = kwargs.copy()
         plot_kwargs.update(fp_kwargs)
+        plot_kwargs.setdefault("label", "Flux points")
         ax = self.data.plot(ax=ax, **plot_kwargs)
 
         plot_kwargs = kwargs.copy()
         plot_kwargs.setdefault("energy_range", self._e_range)
         plot_kwargs.setdefault("zorder", 10)
         plot_kwargs.update(model_kwargs)
+        plot_kwargs.setdefault("label", "Best fit model")
         self.model.plot(ax=ax, **plot_kwargs)
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
+        del plot_kwargs["label"]
         self.model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
