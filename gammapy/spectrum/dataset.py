@@ -77,16 +77,17 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
-        model_npred = self.predictor.compute_npred().data.data
-        back_npred = self.background.data.data
-        total_npred = model_npred + back_npred
-        return total_npred
+        npred = self.predictor.compute_npred().data.data
+        if self.background:
+            npred += self.background.data.data
+        return npred
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data.data, mu_on=self.npred())
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters=None
+                   , mask=None):
         """Total likelihood given the current model parameters.
 
         Parameters
