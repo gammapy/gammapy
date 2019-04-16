@@ -1161,10 +1161,11 @@ class FluxPointsDataset(Dataset):
         ax_spectrum = plt.subplot(gs[:5, :])
         self.plot_spectrum(ax=ax_spectrum)
 
-        ax_spectrum.set_xticklabels([])
+        ax_spectrum.set_xticks([])
 
         ax_residuals = plt.subplot(gs[5:, :])
         self.plot_residuals(ax=ax_residuals)
+        return ax_spectrum, ax_residuals
 
     @property
     def _e_range(self):
