@@ -123,8 +123,8 @@ class TestImageProfile:
     def test_profile_x_edges(cosine_profile):
         assert_quantity_allclose(cosine_profile.x_ref.sum(), 0 * u.deg)
 
-    @pytest.mark.parametrize("kernel", ["gauss", "box"])
     @staticmethod
+    @pytest.mark.parametrize("kernel", ["gauss", "box"])
     def test_smooth(cosine_profile, kernel):
         # smoothing should preserve the mean
         desired_mean = cosine_profile.profile.mean()
@@ -135,8 +135,8 @@ class TestImageProfile:
         # smoothing should decrease errors
         assert smoothed.profile_err.mean() < cosine_profile.profile_err.mean()
 
-    @requires_dependency("matplotlib")
     @staticmethod
+    @requires_dependency("matplotlib")
     def test_peek(cosine_profile):
         with mpl_plot_check():
             cosine_profile.peek()
