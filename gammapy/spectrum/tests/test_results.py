@@ -4,9 +4,9 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
+from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
-from ..models import PowerLaw, ConstantModel
+from ..models import PowerLaw
 from .. import SpectrumObservation, SpectrumFitResult, FluxPoints
 
 
@@ -58,8 +58,3 @@ class TestSpectrumFitResult:
         read_result = SpectrumFitResult.from_yaml(filename)
         test_e = 12.5 * u.TeV
         assert_quantity_allclose(fit_result.model(test_e), read_result.model(test_e))
-
-    @requires_dependency("matplotlib")
-    def test_plot(self, fit_result):
-        with mpl_plot_check():
-            fit_result.plot()
