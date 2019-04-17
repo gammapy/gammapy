@@ -7,7 +7,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...utils.energy import EnergyBounds
 from ..models import PowerLaw, ConstantModel
-from .. import SpectrumObservation, SpectrumFitResult, FluxPoints, SpectrumResult
+from .. import SpectrumObservation, SpectrumFitResult, FluxPoints
 
 
 @pytest.fixture(scope="session")
@@ -46,13 +46,6 @@ def flux_points():
     return FluxPoints(table)
 
 
-@pytest.fixture(scope="session")
-def spectrum_result(flux_points):
-    model = ConstantModel(const=1e-11 * u.Unit("cm-2 s-1 TeV-1"))
-    model.parameters.set_error(0, 1e-10 * u.Unit("cm-2 s-1 TeV-1"))
-    return SpectrumResult(model=model, points=flux_points)
-
-
 @requires_data("gammapy-data")
 class TestSpectrumFitResult:
     @requires_dependency("uncertainties")
@@ -71,20 +64,3 @@ class TestSpectrumFitResult:
     def test_plot(self, fit_result):
         with mpl_plot_check():
             fit_result.plot()
-
-
-@requires_data("gammapy-data")
-class TestSpectrumResult:
-    def test_basic(self, spectrum_result):
-        assert "SpectrumResult" in str(spectrum_result)
-
-    def test_residuals(self, spectrum_result):
-        res, res_err = spectrum_result.flux_point_residuals
-        assert_quantity_allclose(res, [0, 1, -0.5, np.nan])
-        assert_quantity_allclose(res_err, [0.1, 0.1, 0.1, np.nan])
-
-    @requires_dependency("matplotlib")
-    @requires_dependency("uncertainties")
-    def test_plot(self, spectrum_result):
-        with mpl_plot_check():
-            spectrum_result.plot(energy_range=[1, 10] * u.TeV, energy_power=2)

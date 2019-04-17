@@ -3,9 +3,9 @@ import logging
 from ..utils.scripts import make_path
 from ..spectrum import (
     FluxPointEstimator,
+    FluxPointsDataset,
     SpectrumExtraction,
     SpectrumFit,
-    SpectrumResult,
 )
 from ..background import ReflectedRegionsBackgroundEstimator
 
@@ -98,5 +98,5 @@ class SpectrumAnalysisIACT:
 
     @property
     def spectrum_result(self):
-        """`~gammapy.spectrum.SpectrumResult`"""
-        return SpectrumResult(points=self.flux_points, model=self.fit.result[0].model)
+        """`~gammapy.spectrum.FluxPointsDataset`"""
+        return FluxPointsDataset(data=self.flux_points, model=self.fit.result[0].model)
