@@ -314,29 +314,65 @@ class SpectrumDatasetOnOff(Dataset):
         self.plot_residuals(ax=ax_residuals)
         return ax_spectrum, ax_residuals
 
-    def plot_counts(self, ax):
-        """Plot predicted and detected counts."""
-        self.npred().plot(ax=ax, label="mu_src")
-        self.excess().plot(ax=ax, label="Excess", fmt=".", energy_unit="TeV")
+    @property
+    def _e_unit(self):
+        return self.counts_on.energy.unit
+
+    def plot_counts(self, ax=None):
+        """Plot predicted and detected counts.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+`
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        self.npred().plot(ax=ax, label="mu_src", energy_unit=self._e_unit)
+        self.excess().plot(ax=ax, label="Excess", fmt=".", energy_unit=self._e_unit)
 
         e_min, e_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
-        ax.axvline(e_min.to_value("TeV"), label="fit range", **kwargs)
-        ax.axvline(e_max.to_value("TeV"),  **kwargs)
+        ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
+        ax.axvline(e_max.to_value(self._e_unit),  **kwargs)
 
         ax.legend(numpoints=1)
         ax.set_title("")
+        return  ax
 
-    def plot_residuals(self, ax):
-        """Plot residuals."""
+    def plot_residuals(self, ax=None):
+        """Plot residuals.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+`
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axes`
+            Axes object.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
         residuals = self.residuals()
 
-        residuals.plot(ax=ax, ecolor="black", fmt="none")
+        residuals.plot(ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit)
         ax.axhline(0, color="black", lw=0.5)
 
         ymax = 1.2 * max(residuals.data.data.value)
         ax.set_ylim(-ymax, ymax)
 
-        ax.set_xlabel("Energy [{}]".format("TeV"))
+        ax.set_xlabel("Energy [{}]".format(self._e_unit))
         ax.set_ylabel("Residuals")
+        return ax
 
