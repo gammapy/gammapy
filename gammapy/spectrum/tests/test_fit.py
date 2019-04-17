@@ -109,34 +109,14 @@ class TestFit:
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
         obs = SpectrumObservation(on_vector=self.src)
-        obs_list = SpectrumObservationList([obs])
+        dataset = obs.to_spectrum_dataset()
 
-        fit = SpectrumFit(
-            obs_list=obs_list, model=self.source_model, stat=None, forward_folded=False
-        )
-        assert np.sum(fit._bins_in_fit_range[0]) == self.nbins
-        assert_allclose(fit.true_fit_range[0][-1].value, 10)
-        assert_allclose(fit.true_fit_range[0][0].value, 0.1)
+        assert np.sum(dataset.mask) == self.nbins
+        e_min, e_max = dataset.energy_range
 
-        fit.fit_range = [200, 600] * u.GeV
-        assert np.sum(fit._bins_in_fit_range[0]) == 6
-        assert_allclose(fit.true_fit_range[0][0].value, 0.21544347, rtol=1e-5)
-        assert_allclose(fit.true_fit_range[0][-1].value, 0.54117, rtol=1e-5)
+        assert_allclose(e_max.value, 10)
+        assert_allclose(e_min.value, 0.1)
 
-        fit.fit_range = [0.11659144 + 1.0e-5, 1.0 - 1.0e-5] * u.TeV
-        assert np.sum(fit._bins_in_fit_range[0]) == 14
-
-        # Check different fit ranges for different observations
-        on_vector2 = self.src.copy()
-        obs2 = SpectrumObservation(on_vector=on_vector2)
-        obs2.lo_threshold = 5 * u.TeV
-        obs_list.append(obs2)
-        fit = SpectrumFit(
-            obs_list=obs_list, model=self.source_model, stat=None, forward_folded=False
-        )
-        fit.fit_range = [2, 8] * u.TeV
-        assert_allclose(fit.true_fit_range[0][0].value, 2.15443, rtol=1e-3)
-        assert_allclose(fit.true_fit_range[1][0].value, 5.41169, rtol=1e-3)
 
     def test_likelihood_profile(self):
         dataset = SpectrumDataset(model=self.source_model, counts=self.src)
@@ -170,9 +150,6 @@ class TestSpectralFit:
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
         )
-
-        # Example fit for one observation
-        self.fit = SpectrumFit(self.obs_list[0], self.pwl)
 
 
     def test_basic_results(self):
@@ -231,26 +208,13 @@ class TestSpectralFit:
 
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
-        obs = self.fit.obs_list[0]
+        obs = self.obs_list[0]
         desired = obs.on_vector.lo_threshold
-        actual = self.fit.true_fit_range[0][0]
+
+        dataset = obs.to_spectrum_dataset()
+        actual = dataset.energy_range[0]
+
         assert actual.unit == "keV"
-        assert_allclose(actual.value, desired.value)
-
-        # Restrict fit range
-        fit_range = [4, 20] * u.TeV
-        self.fit.fit_range = fit_range
-
-        range_bin = obs.on_vector.energy.find_node(fit_range[1])
-        desired = obs.on_vector.energy.lo[range_bin]
-        actual = self.fit.true_fit_range[0][1]
-        assert_allclose(actual.value, desired.value)
-
-        # Make sure fit range is not extended below threshold
-        fit_range = [0.001, 10] * u.TeV
-        self.fit.fit_range = fit_range
-        desired = obs.on_vector.lo_threshold
-        actual = self.fit.true_fit_range[0][0]
         assert_allclose(actual.value, desired.value)
 
     def test_no_edisp(self):
