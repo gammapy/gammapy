@@ -300,10 +300,14 @@ class TestSpectralFit:
 
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
-        obs_list = SpectrumObservationList([stacked_obs])
-        fit = SpectrumFit(obs_list, self.pwl)
-        fit.run()
-        pars = fit.result[0].model.parameters
+
+        dataset = stacked_obs.to_spectrum_dataset()
+        dataset.model = self.pwl
+
+        fit = Fit([dataset])
+        result = fit.run()
+        pars = result.parameters
+
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
