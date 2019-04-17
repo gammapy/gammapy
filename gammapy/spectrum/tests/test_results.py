@@ -51,7 +51,6 @@ class TestSpectrumFitResult:
     @requires_dependency("uncertainties")
     def test_basic(self, fit_result):
         assert "PowerLaw" in str(fit_result)
-        assert "index" in fit_result.to_table().colnames
 
     def test_io(self, tmpdir, fit_result):
         filename = tmpdir / "test.yaml"
