@@ -266,8 +266,8 @@ class ReflectedRegionsFinder:
         _test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
 
         # The function copy.deepcopy does not work for these regions classes
-        dict = { _ : getattr(self._pix_region, _) for _ in self._pix_region._repr_params}
-        _test_reg = self._pix_region.__class__(_test_pos, **dict)
+        _regdict = { _ : getattr(self._pix_region, _) for _ in self._pix_region._repr_params}
+        _test_reg = self._pix_region.__class__(_test_pos, **_regdict)
 
         if hasattr(_test_reg, 'angle'):
             _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
