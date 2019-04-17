@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy import units as u
 from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset, Parameters
@@ -77,16 +78,17 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
-        model_npred = self.predictor.compute_npred().data.data
-        back_npred = self.background.data.data
-        total_npred = model_npred + back_npred
-        return total_npred
+        npred = self.predictor.compute_npred().data.data
+        if self.background:
+            npred += self.background.data.data
+        return npred
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data.data, mu_on=self.npred())
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters=None
+                   , mask=None):
         """Total likelihood given the current model parameters.
 
         Parameters
@@ -125,6 +127,13 @@ class SpectrumDataset(Dataset):
         ebounds = self.counts.energy.bins
 
         return CountsSpectrum(ebounds[:-1], ebounds[1:], data)
+
+    @property
+    def energy_range(self):
+        """Energy range defined by the mask"""
+        e_lo = self.counts.energy.lo[self.mask]
+        e_hi = self.counts.energy.hi[self.mask]
+        return u.Quantity([e_lo.min(), e_hi.max()])
 
 
 class SpectrumDatasetOnOff(Dataset):
@@ -266,3 +275,10 @@ class SpectrumDatasetOnOff(Dataset):
         """
         observation = SpectrumObservation.read(filename)
         return observation.to_spectrum_dataset()
+
+    @property
+    def energy_range(self):
+        """Energy range defined by the mask"""
+        e_lo = self.counts_on.energy.lo[self.mask]
+        e_hi = self.counts_on.energy.hi[self.mask]
+        return u.Quantity([e_lo.min(), e_hi.max()])

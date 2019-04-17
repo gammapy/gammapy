@@ -120,49 +120,6 @@ class SpectrumFitResult:
 
         return cls(model=model, fit_range=energy_range)
 
-    # TODO: rather add this to Parameters?
-    def to_table(self, energy_unit="TeV", flux_unit="cm-2 s-1 TeV-1", **kwargs):
-        """Convert to `~astropy.table.Table`.
-
-        Produce overview table containing the most important parameters
-        """
-        t = Table()
-        t["model"] = [self.model.__class__.__name__]
-
-        for par_name, value in self.model.parameters._ufloats.items():
-            val = value.n
-            err = value.s
-
-            # Apply correction factor for units
-            # TODO: Refactor
-            current_unit = u.Unit(self.model.parameters[par_name].unit)
-            if current_unit.is_equivalent(energy_unit):
-                factor = current_unit.to(energy_unit)
-                col_unit = energy_unit
-            elif current_unit.is_equivalent(1 / u.Unit(energy_unit)):
-                factor = current_unit.to(1 / u.Unit(energy_unit))
-                col_unit = 1 / u.Unit(energy_unit)
-            elif current_unit.is_equivalent(flux_unit):
-                factor = current_unit.to(flux_unit)
-                col_unit = flux_unit
-            elif current_unit.is_equivalent(u.dimensionless_unscaled):
-                factor = 1
-                col_unit = current_unit
-            else:
-                raise ValueError(current_unit)
-
-            t[par_name] = Column(
-                data=np.atleast_1d(val * factor), unit=col_unit, **kwargs
-            )
-            t["{}_err".format(par_name)] = Column(
-                data=np.atleast_1d(err * factor), unit=col_unit, **kwargs
-            )
-
-        t["fit_range"] = Column(
-            data=[self.fit_range.to(energy_unit)], unit=energy_unit, **kwargs
-        )
-
-        return t
 
     def __str__(self):
         s = "\nFit result info \n"
@@ -174,35 +131,6 @@ class SpectrumFitResult:
             s += "\nFit Range: {}".format(self.fit_range)
         s += "\n"
         return s
-
-    def butterfly(self, energy=None, flux_unit="TeV-1 cm-2 s-1"):
-        """Compute butterfly table.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`, optional
-            Energies at which to evaluate the butterfly.
-        flux_unit : str
-            Flux unit for the butterfly.
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Butterfly info in table (cols: 'energy', 'flux', 'flux_lo', 'flux_hi')
-        """
-        if energy is None:
-            energy = EnergyBounds.equal_log_spacing(
-                self.fit_range[0], self.fit_range[1], 100
-            )
-
-        flux, flux_err = self.model.evaluate_error(energy)
-
-        table = Table()
-        table["energy"] = energy
-        table["flux"] = flux.to(flux_unit)
-        table["flux_lo"] = flux - flux_err.to(flux_unit)
-        table["flux_hi"] = flux + flux_err.to(flux_unit)
-        return table
 
     @property
     def expected_source_counts(self):
