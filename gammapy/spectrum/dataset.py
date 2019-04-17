@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy import units as u
 from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
 from ..utils.fitting import Dataset, Parameters
@@ -126,6 +127,13 @@ class SpectrumDataset(Dataset):
         ebounds = self.counts.energy.bins
 
         return CountsSpectrum(ebounds[:-1], ebounds[1:], data)
+
+    @property
+    def energy_range(self):
+        """Energy range defined by the mask"""
+        e_lo = self.counts.energy.lo[self.mask]
+        e_hi = self.counts.energy.hi[self.mask]
+        return u.Quantity([e_lo.min(), e_hi.max()])
 
 
 class SpectrumDatasetOnOff(Dataset):
@@ -267,3 +275,10 @@ class SpectrumDatasetOnOff(Dataset):
         """
         observation = SpectrumObservation.read(filename)
         return observation.to_spectrum_dataset()
+
+    @property
+    def energy_range(self):
+        """Energy range defined by the mask"""
+        e_lo = self.counts_on.energy.lo[self.mask]
+        e_hi = self.counts_on.energy.hi[self.mask]
+        return u.Quantity([e_lo.min(), e_hi.max()])
