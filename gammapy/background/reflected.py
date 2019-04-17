@@ -292,25 +292,24 @@ class ReflectedRegionsBackgroundEstimator:
         Target region with any shape, except `~region.PolygonSkyRegion`
     observations : `~gammapy.data.Observations`
         Observations to process
+    binsz : `~astropy.coordinates.Angle`
+        Optional, bin size of the maps used to compute the regions
     kwargs : dict
         Forwarded to `~gammapy.background.ReflectedRegionsFinder`
     """
 
-    def __init__(self, on_region, observations, **kwargs):
+    def __init__(self, on_region, observations, binsz=0.01*u.deg, **kwargs):
         self.on_region = on_region
         self.observations = observations
 
-        # Proper management of the bin size (as it has impact on results)
-        binsz = 0.01 * u.deg
-        if "binsz" in kwargs:
-            binsz = kwargs.get("binsz")
+        # Proper management of the bin size (as it has an impact on results)
+        size = self._get_bounding_size(on_region, observations[0].pointing_radec) / 10.
+        if size < binsz:
+            self.binsz = size
         else:
-            binsz = self._get_bounding_size(on_region, observations[0].pointing_radec)/10.
-            if binsz > 0.01*u.deg:
-                binsz = 0.01*u.deg
-        self.binsz = binsz
+            self.binsz = binsz
         log.debug("ReflectedRegionsFinder Ref. Map: bins={}".format(self.binsz))
-        self.finder = ReflectedRegionsFinder(region=on_region, center=None, binsz=Angle(binsz), **kwargs)
+        self.finder = ReflectedRegionsFinder(region=on_region, center=None, binsz=Angle(self.binsz), **kwargs)
 
         self.exclusion_mask = kwargs.get("exclusion_mask")
         self.result = None
