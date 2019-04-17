@@ -6,7 +6,7 @@ from astropy import units as u
 from regions import PixCoord, CirclePixelRegion, CircleAnnulusPixelRegion, \
                      RectanglePixelRegion, RectangleAnnulusPixelRegion, \
                      EllipsePixelRegion,EllipseAnnulusPixelRegion
-from ..maps import WcsNDMap
+from ..maps import WcsNDMap, WcsGeom
 from .background_estimate import BackgroundEstimate
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
@@ -326,18 +326,15 @@ class ReflectedRegionsBackgroundEstimator:
     def _get_bounding_size(region, center):
         """Return the typical radius of the bounding size"""
 
-        _map = WcsNDMap.create(
-            skydir=center, binsz=Angle("0.01 deg"), width=10., coordsys="GAL", proj="TAN"
-        )
-        wcs = _map.geom.wcs
+        geom = WcsGeom.create(skydir=center, width=10.*u.deg, binsz=Angle("0.01 deg"), coordsys="GAL", proj="TAN")
 
-        region_pix = region.to_pixel(wcs)
+        region_pix = region.to_pixel(geom.wcs)
         _ixmin = region_pix.bounding_box.ixmin
         _ixmax = region_pix.bounding_box.ixmax
         _iymin = region_pix.bounding_box.iymin
         _iymax = region_pix.bounding_box.iymax
-        _min_point = PixCoord(_ixmin, _iymin).to_sky(wcs)
-        _max_point = PixCoord(_ixmax, _iymax).to_sky(wcs)
+        _min_point = PixCoord(_ixmin, _iymin).to_sky(geom.wcs)
+        _max_point = PixCoord(_ixmax, _iymax).to_sky(geom.wcs)
 
         return np.round(_min_point.separation(_max_point), decimals=3)
 
