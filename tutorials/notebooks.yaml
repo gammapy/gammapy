@@ -19,10 +19,6 @@
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astro_dark_matter.ipynb
   datasets:
     - dark_matter_spectra
-- name: astropy_introduction
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/astropy_introduction.ipynb
-  datasets:
-    - catalogs
 - name: cta_1dc_introduction
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/cta_1dc_introduction.ipynb
   datasets:

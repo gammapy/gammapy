@@ -42,7 +42,6 @@ Notebooks
    notebooks/cta_sensitivity.ipynb
    notebooks/spectrum_simulation.ipynb
    notebooks/spectrum_simulation_cta.ipynb
-   notebooks/astropy_introduction.ipynb
    notebooks/image_analysis.ipynb
 
 
@@ -120,22 +119,14 @@ These notebooks contain examples on some more specialised functionality in Gamma
 Basics
 ------
 
-Gammapy is a Python package built on Numpy and Astropy, so for now you have to learn
-a bit of Python, Numpy and Astropy to be able to use Gammapy.
-To make plots you have to learn a bit of matplotlib.
+Gammapy is a Python package built on `Numpy`_ and `Astropy`_, so to use it effectively,
+you have to learn the basics. To make plots you have to learn a bit of `matplotlib`_.
 
 We plan to add a very simple to use high-level interface to Gammapy where you just have to
 adjust a config file, but that isn't available yet.
 
-Here are some great resources:
+Here are some great hands-on tutorials to get started quickly:
 
 - Python: `A Whirlwind tour of Python <https://nbviewer.jupyter.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb>`__
 - IPython, Jupyter, Numpy, matplotlib: `Python data science handbook <http://nbviewer.jupyter.org/github/jakevdp/PythonDataScienceHandbook/blob/master/notebooks/Index.ipynb>`__
-- `Astropy introduction for Gammapy users <notebooks/astropy_introduction.html>`__  | *astropy_introduction.ipynb*
-- `Astropy Hands On (1st ASTERICS-OBELICS International School) <https://github.com/Asterics2020-Obelics/School2017/blob/master/astropy/astropy_hands_on.ipynb>`__
-
-Other useful resources:
-
-- http://www.astropy.org/astropy-tutorials
-- http://astropy.readthedocs.io
-- https://python4astronomers.github.io
+- Astropy: `Astropy Hands-On Tutorial <https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy>`__
