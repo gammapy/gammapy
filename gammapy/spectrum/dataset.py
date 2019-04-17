@@ -78,14 +78,14 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
-        npred = self.predictor.compute_npred().data.data
+        npred = self.predictor.compute_npred()
         if self.background:
-            npred += self.background.data.data
+            npred.data.data += self.background.data.data
         return npred
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data.data, mu_on=self.npred())
+        return cash(n_on=self.counts.data.data, mu_on=self.npred().data.data)
 
     def likelihood(self, parameters=None
                    , mask=None):
@@ -122,11 +122,9 @@ class SpectrumDataset(Dataset):
             the fake count spectrum
         """
         random_state = get_random_state(random_state)
-        data = random_state.poisson(self.npred())
-
-        ebounds = self.counts.energy.bins
-
-        return CountsSpectrum(ebounds[:-1], ebounds[1:], data)
+        data = random_state.poisson(self.npred().data.data)
+        energy = self.counts.energy
+        return CountsSpectrum(energy.lo, energy.hi, data)
 
     @property
     def energy_range(self):
@@ -177,7 +175,6 @@ class SpectrumDatasetOnOff(Dataset):
         self.mask = mask
         self.aeff = aeff
         self.edisp = edisp
-
         self.model = model
 
     @property
@@ -229,16 +226,17 @@ class SpectrumDatasetOnOff(Dataset):
         """Returns npred counts vector """
         if self._predictor is None:
             raise AttributeError("No model set for this Dataset")
-        model_npred = self._predictor.compute_npred().data.data
-        return model_npred
+        npred = self._predictor.compute_npred()
+        return npred
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
+        npred = self.npred()
         on_stat_ = wstat(
             n_on=self.counts_on.data.data,
             n_off=self.counts_off.data.data,
             alpha=self.alpha,
-            mu_sig=self.npred(),
+            mu_sig=npred.data.data,
         )
         return np.nan_to_num(on_stat_)
 
@@ -282,3 +280,63 @@ class SpectrumDatasetOnOff(Dataset):
         e_lo = self.counts_on.energy.lo[self.mask]
         e_hi = self.counts_on.energy.hi[self.mask]
         return u.Quantity([e_lo.min(), e_hi.max()])
+
+    def _as_counts_spectrum(self, data):
+        energy = self.counts_on.energy
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+
+    def excess(self):
+        """Excess (counts_on - alpha * counts_off)"""
+        excess = self.counts_on.data.data - self.alpha * self.counts_off.data.data
+        return self._as_counts_spectrum(excess)
+
+    def residuals(self):
+        """Residuals (npred - excess). """
+        residuals = self.npred().data.data - self.excess().data.data
+        return self._as_counts_spectrum(residuals)
+
+    def peek(self):
+        """Plot counts and residuals in two panels.
+
+        Calls ``plot_counts`` and ``plot_residuals``.
+        """
+        from matplotlib.gridspec import GridSpec
+        import matplotlib.pyplot as plt
+
+        gs = GridSpec(7, 1)
+
+        ax_spectrum = plt.subplot(gs[:5, :])
+        self.plot_counts(ax=ax_spectrum)
+
+        ax_spectrum.set_xticks([])
+
+        ax_residuals = plt.subplot(gs[5:, :])
+        self.plot_residuals(ax=ax_residuals)
+        return ax_spectrum, ax_residuals
+
+    def plot_counts(self, ax):
+        """Plot predicted and detected counts."""
+        self.npred().plot(ax=ax, label="mu_src")
+        self.excess().plot(ax=ax, label="Excess", fmt=".", energy_unit="TeV")
+
+        e_min, e_max = self.energy_range
+        kwargs = {"color": "black", "linestyle": "dashed"}
+        ax.axvline(e_min.to_value("TeV"), label="fit range", **kwargs)
+        ax.axvline(e_max.to_value("TeV"),  **kwargs)
+
+        ax.legend(numpoints=1)
+        ax.set_title("")
+
+    def plot_residuals(self, ax):
+        """Plot residuals."""
+        residuals = self.residuals()
+
+        residuals.plot(ax=ax, ecolor="black", fmt="none")
+        ax.axhline(0, color="black", lw=0.5)
+
+        ymax = 1.2 * max(residuals.data.data.value)
+        ax.set_ylim(-ymax, ymax)
+
+        ax.set_xlabel("Energy [{}]".format("TeV"))
+        ax.set_ylabel("Residuals")
+

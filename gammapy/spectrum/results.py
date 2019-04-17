@@ -139,55 +139,6 @@ class SpectrumFitResult:
         data = self.npred
         return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
 
-    # TODO: is this the quantity, and sign, we want for residuals?
-    @property
-    def residuals(self):
-        """Residuals (predicted source - excess).
-        """
-        resspec = self.expected_source_counts.copy()
-        resspec.data.data -= self.obs.excess_vector.data.data
-        return resspec
-
-    def plot(self, **kwargs):
-        """Plot counts and residuals in two panels.
-
-        Calls ``plot_counts`` and ``plot_residuals``.
-        """
-        ax0, ax1 = get_plot_axis(**kwargs)
-
-        self.plot_counts(ax0)
-        self.plot_residuals(ax1)
-
-        return ax0, ax1
-
-    def plot_counts(self, ax):
-        """Plot predicted and detected counts."""
-        self.expected_source_counts.plot(ax=ax, label="mu_src")
-
-        self.obs.excess_vector.plot(ax=ax, label="excess", fmt=".", energy_unit="TeV")
-
-        ax.axvline(
-            self.fit_range.to_value("TeV")[0],
-            color="black",
-            linestyle="dashed",
-            label="fit range",
-        )
-
-        ax.axvline(self.fit_range.to_value("TeV")[1], color="black", linestyle="dashed")
-
-        ax.legend(numpoints=1)
-        ax.set_title("")
-
-    def plot_residuals(self, ax):
-        """Plot residuals."""
-        self.residuals.plot(ax=ax, ecolor="black", fmt="none")
-        ax.axhline(color="black")
-
-        ymax = 1.4 * max(self.residuals.data.data.value)
-        ax.set_ylim(-ymax, ymax)
-
-        ax.set_xlabel("Energy [{}]".format("TeV"))
-        ax.set_ylabel("ON (Predicted - Detected)")
 
 
 
