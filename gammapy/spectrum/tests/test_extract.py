@@ -66,6 +66,7 @@ def extraction(bkg_estimate, observations):
 
 @requires_data("gammapy-data")
 class TestSpectrumExtraction:
+    @staticmethod
     @pytest.mark.parametrize(
         "pars, results",
         [
@@ -73,7 +74,7 @@ class TestSpectrumExtraction:
                 dict(containment_correction=False),
                 dict(
                     n_on=192,
-                    sigma=20.941125,
+                    sigma=20.866044,
                     aeff=580254.9 * u.m ** 2,
                     edisp=0.236176,
                     containment=1,
@@ -83,16 +84,15 @@ class TestSpectrumExtraction:
                 dict(containment_correction=True),
                 dict(
                     n_on=192,
-                    sigma=20.941125,
-                    aeff=373237.8 * u.m ** 2,
+                    sigma=20.866044,
+                    aeff=361924.746081 * u.m ** 2,
                     edisp=0.236176,
-                    containment=0.661611,
+                    containment=0.643835,
                 ),
             ),
         ],
     )
-    @pytest.mark.xfail
-    def test_extract(self, pars, results, observations, bkg_estimate):
+    def test_extract(pars, results, observations, bkg_estimate):
         """Test quantitative output for various configs"""
         extraction = SpectrumExtraction(
             observations=observations, bkg_estimate=bkg_estimate, **pars
