@@ -4,6 +4,7 @@ import operator
 import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
+from astropy.constants import c
 from astropy.table import Table
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -25,6 +26,7 @@ __all__ = [
     "TableModel",
     "AbsorbedSpectralModel",
     "Absorption",
+    "NaimaModel",
 ]
 
 
@@ -1464,3 +1466,77 @@ class AbsorbedSpectralModel(SpectralModel):
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption
+
+
+class NaimaModel(SpectralModel):
+    r""""""
+    from naima import models
+
+    __slots__ = ["radiative_model", "distance"]
+
+    def __init__(self, radiative_model, distance=1.0 * u.kpc):
+        self.radiative_model = radiative_model
+        self.distance = Parameter("distance", distance, frozen=True)
+        parameters = []
+
+        model_parameters = self.radiative_model.particle_distribution.__dict__
+        for (name, quantity) in model_parameters.items():
+            if name[0] == "_" or name == "unit":
+                continue
+            parameters.append(Parameter(name, quantity))
+
+        try:
+            B = self.radiative_model.B
+            parameters.append(Parameter("B", B))
+        except:
+            pass
+
+        super().__init__(parameters)
+        #     add the possibility to normalize using the (observed) gamma-ray energy flux
+        #     change the test and the doc
+
+    def __call__(self, energy, seed=None, distance=None):
+        """Call evaluate method"""
+        kwargs = dict()
+        for par in self.parameters.parameters:
+            quantity = par.quantity
+            if quantity.unit.physical_type == "energy":
+                quantity = quantity.to(energy.unit)
+            kwargs[par.name] = quantity
+
+        if distance == None:
+            distance = self.distance.quantity
+        eval = self.evaluate(
+            energy.flatten(), self.radiative_model, seed, distance, kwargs
+        )
+
+        return eval.reshape(energy.shape)
+
+    def freeze(self, name, freeze=True):
+        """"""
+        parameters = self.parameters.parameters
+        for parameter in parameters:
+            if parameter.name == name:
+                parameter.frozen = freeze
+                return
+
+        raise AttributeError("Parameter {} not found".format(name))
+
+    @staticmethod
+    def evaluate(energy, radiative_model, seed, distance, kwargs):
+        """Evaluate the model (static function)."""
+        try:
+            radiative_model.B = kwargs.pop("B").quantity
+        except:
+            pass
+
+        parameters_dict = radiative_model.particle_distribution.__dict__
+        for key, value in kwargs.items():
+            parameters_dict[key] = kwargs.get(key, value)
+
+        if seed == None:
+            dnde = radiative_model.flux(energy, distance=distance)
+        else:
+            dnde = radiative_model.flux(energy, seed=seed, distance=distance)
+
+        return dnde.to("cm-2 s-1 TeV-1")
