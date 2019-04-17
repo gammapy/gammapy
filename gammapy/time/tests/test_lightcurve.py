@@ -86,10 +86,6 @@ def test_lightcurve_properties_flux(lc):
 # is no header info in CSV to store the time scale!
 
 
-@pytest.mark.skipif(
-    sys.version_info >= (3, 7),
-    reason="https://github.com/astropy/astropy/issues/7744#issuecomment-419813519",
-)
 @pytest.mark.parametrize("format", ["fits", "ascii.ecsv", "ascii.csv"])
 def test_lightcurve_read_write(tmpdir, lc, format):
     filename = str(tmpdir / "spam")
