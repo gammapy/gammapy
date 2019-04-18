@@ -1476,8 +1476,8 @@ class NaimaModel(SpectralModel):
         self.distance = Parameter("distance", distance)
 
         parameters = []
-        model_parameters = self.radiative_model.particle_distribution.__dict__
-        for (name, quantity) in model_parameters.items():
+        parameters_dict = self.radiative_model.particle_distribution.__dict__
+        for (name, quantity) in parameters_dict.items():
             if name[0] == "_" or name == "unit":
                 continue
             parameters.append(Parameter(name, quantity))
@@ -1503,13 +1503,12 @@ class NaimaModel(SpectralModel):
 
     def freeze(self, name, freeze=True):
         """"""
-        parameters = self.parameters.parameters
-        for parameter in parameters:
-            if parameter.name == name:
-                parameter.frozen = freeze
-                return
+        try:
+            par_idx = self.parameters._get_idx(name)
+        except:
+            raise AttributeError("Parameter {} not found".format(name))
 
-        raise AttributeError("Parameter {} not found".format(name))
+        self.parameters.parameters[par_idx].frozen = freeze
 
     @staticmethod
     def evaluate(energy, radiative_model, seed, distance, kwargs):
