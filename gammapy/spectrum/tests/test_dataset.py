@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 import numpy as np
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...utils.fitting import Fit
@@ -60,7 +60,7 @@ class TestSpectrumDataset:
         assert result.success
         assert "minuit" in repr(result)
 
-        npred = self.dataset.npred().sum()
+        npred = self.dataset.npred().data.data.sum()
         assert_allclose(npred, self.npred.sum(), rtol=1e-3)
         assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
 
@@ -95,10 +95,10 @@ class TestSpectrumDatasetOnOff:
         self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
 
         self.on_counts = PHACountsSpectrum(
-            elo, ehi, np.ones_like(elo), backscal=np.ones_like(elo)
+            elo, ehi, np.ones(elo.shape), backscal=np.ones(elo.shape)
         )
         self.off_counts = PHACountsSpectrum(
-            elo, ehi, np.ones_like(elo) * 10, backscal=np.ones_like(elo) * 10
+            elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
         )
 
         self.livetime = 1000 * u.s
@@ -160,7 +160,7 @@ class TestSpectrumDatasetOnOff:
             * livetime
         )
 
-        assert_allclose(dataset.npred().sum(), expected.value)
+        assert_allclose(dataset.npred().data.data.sum(), expected.value)
 
     def test_incorrect_mask(self):
         mask = np.ones(self.on_counts.data.data.shape, dtype="int")
@@ -174,6 +174,21 @@ class TestSpectrumDatasetOnOff:
                 livetime=self.livetime,
                 mask=mask,
             )
+
+    @requires_dependency("matplotlib")
+    def test_peek(self):
+        model = PowerLaw()
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            model=model,
+            livetime=self.livetime,
+            edisp=self.edisp
+        )
+        with mpl_plot_check():
+            dataset.peek()
+
 
 
 @requires_dependency("iminuit")
@@ -294,7 +309,7 @@ class TestSpectralFit:
         assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
         assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
-        assert_allclose(self.obs_list[0].npred()[60], 0.6102, rtol=1e-3)
+        assert_allclose(self.obs_list[0].npred().data.data[60], 0.6102, rtol=1e-3)
         pars.to_table()
 
     def test_basic_errors(self):

@@ -63,7 +63,7 @@ class TestFit:
         """Simple CASH fit to the on vector"""
         dataset = SpectrumDataset(model=self.source_model, counts=self.src)
 
-        npred = dataset.npred()
+        npred = dataset.npred().data.data
         assert_allclose(npred[5], 660.5171, rtol=1e-5)
 
         stat_val = dataset.likelihood()
@@ -166,7 +166,7 @@ class TestSpectralFit:
         assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
 
-        npred = dataset.npred()
+        npred = dataset.npred().data.data
         assert_allclose(npred[60], 0.6102, rtol=1e-3)
 
     def test_basic_errors(self):
