@@ -80,23 +80,9 @@ class Fit:
 
         self.datasets = datasets
 
-        # TODO: remove once datasets are fully supported
-        self.total_stat = datasets.likelihood
-
-    @abc.abstractmethod
-    def total_stat(self, parameters):
-        """Total likelihood given the current model parameters"""
-        pass
-
     @property
     def _parameters(self):
-        # TODO: This is a temporary solution to support datasets as
-        # well as the old inhertiance scheme, remove soon.
-        if self.__class__.__name__ == "SpectrumFit":
-            parameters = self._model.parameters
-        else:
-            parameters = self.datasets.parameters
-        return parameters
+        return self.datasets.parameters
 
     def run(self, optimize_opts=None, covariance_opts=None):
         """
@@ -177,7 +163,7 @@ class Fit:
         # probably should pass a likelihood, which has a model, which has parameters
         # and return something simpler, not a tuple of three things
         factors, info, optimizer = compute(
-            parameters=parameters, function=self.total_stat, **kwargs
+            parameters=parameters, function=self.datasets.likelihood, **kwargs
         )
 
         # TODO: Change to a stateless interface for minuit also, or if we must support
@@ -192,7 +178,7 @@ class Fit:
 
         return OptimizeResult(
             parameters=parameters,
-            total_stat=self.total_stat(self._parameters),
+            total_stat=self.datasets.likelihood(),
             backend=backend,
             method=kwargs.get("method", backend),
             **info
@@ -224,8 +210,7 @@ class Fit:
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                function = self.total_stat
-                covariance_factors, info = compute(parameters, function)
+                covariance_factors, info = compute(parameters, self.datasets.likelihood)
 
         parameters.set_covariance_factors(covariance_factors)
 
@@ -342,7 +327,7 @@ class Fit:
                     result = self.optimize(**optimize_opts)
                     stat = result.total_stat
                 else:
-                    stat = self.total_stat(parameters)
+                    stat = self.datasets.likelihood()
                 likelihood.append(stat)
 
         return {"values": values, "likelihood": np.array(likelihood)}
