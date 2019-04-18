@@ -4,7 +4,6 @@ import operator
 import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
-from astropy.constants import c
 from astropy.table import Table
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
@@ -1470,30 +1469,20 @@ class AbsorbedSpectralModel(SpectralModel):
 
 class NaimaModel(SpectralModel):
     r""""""
-    from naima import models
-
     __slots__ = ["radiative_model", "distance"]
 
     def __init__(self, radiative_model, distance=1.0 * u.kpc):
         self.radiative_model = radiative_model
-        self.distance = Parameter("distance", distance, frozen=True)
-        parameters = []
+        self.distance = Parameter("distance", distance)
 
+        parameters = []
         model_parameters = self.radiative_model.particle_distribution.__dict__
         for (name, quantity) in model_parameters.items():
             if name[0] == "_" or name == "unit":
                 continue
             parameters.append(Parameter(name, quantity))
 
-        try:
-            B = self.radiative_model.B
-            parameters.append(Parameter("B", B))
-        except:
-            pass
-
         super().__init__(parameters)
-        #     add the possibility to normalize using the (observed) gamma-ray energy flux
-        #     change the test and the doc
 
     def __call__(self, energy, seed=None, distance=None):
         """Call evaluate method"""
@@ -1525,11 +1514,6 @@ class NaimaModel(SpectralModel):
     @staticmethod
     def evaluate(energy, radiative_model, seed, distance, kwargs):
         """Evaluate the model (static function)."""
-        try:
-            radiative_model.B = kwargs.pop("B").quantity
-        except:
-            pass
-
         parameters_dict = radiative_model.particle_distribution.__dict__
         for key, value in kwargs.items():
             parameters_dict[key] = kwargs.get(key, value)

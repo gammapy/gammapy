@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from naima import models, radiative
 import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
@@ -15,6 +16,7 @@ from ..models import (
     AbsorbedSpectralModel,
     Absorption,
     ConstantModel,
+    NaimaModel,
 )
 
 
@@ -191,6 +193,86 @@ try:
     )
 except ImportError:
     pass
+
+# Add compound models
+TEST_MODELS.append(
+    dict(
+        name="compound1",
+        model=TEST_MODELS[0]["model"] * 5,
+        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 5,
+        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 5,
+        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 5,
+    )
+)
+
+TEST_MODELS.append(
+    dict(
+        name="compound2",
+        model=5 * TEST_MODELS[0]["model"],
+        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 5,
+        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 5,
+        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 5,
+    )
+)
+
+TEST_MODELS.append(
+    dict(
+        name="compound3",
+        model=TEST_MODELS[0]["model"] + TEST_MODELS[0]["model"],
+        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 2,
+        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 2,
+        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 2,
+    )
+)
+
+# Add Naima models
+particle_distributions = [
+    models.PowerLaw(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5),
+    models.ExponentialCutoffBrokenPowerLaw(
+        amplitude=2e33 / u.eV,
+        e_0=10 * u.TeV,
+        alpha_1=2.5,
+        alpha_2=2.7,
+        e_break=900 * u.GeV,
+        e_cutoff=10 * u.TeV,
+    ),
+    models.LogParabola(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=1.3, beta=0.5),
+]
+radiative_models = [
+    radiative.PionDecay(particle_distributions[0], nh=1 * u.cm ** -3),
+    radiative.InverseCompton(particle_distributions[1], seed_photon_fields=["CMB"]),
+    radiative.Synchrotron(particle_distributions[2], B=2 * u.G),
+]
+
+TEST_MODELS.append(
+    dict(
+        name="naima1",
+        model=NaimaModel(radiative_models[0]),
+        val_at_2TeV=9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1"),
+        integral_1_10TeV=3.530537143620737e-13 * u.Unit("cm-2 s-1"),
+        eflux_1_10TeV=7.643559573105779e-13 * u.Unit("TeV cm-2 s-1"),
+    )
+)
+
+TEST_MODELS.append(
+    dict(
+        name="naima2",
+        model=NaimaModel(radiative_models[1]),
+        val_at_2TeV=4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        integral_1_10TeV=1.5958109911918303e-11 * u.Unit("cm-2 s-1"),
+        eflux_1_10TeV=2.851281562480875e-11 * u.Unit("TeV cm-2 s-1"),
+    )
+)
+
+TEST_MODELS.append(
+    dict(
+        name="naima3",
+        model=NaimaModel(radiative_models[2]),
+        val_at_2TeV=1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1"),
+        integral_1_10TeV=4.4491861907713736e-13 * u.Unit("cm-2 s-1"),
+        eflux_1_10TeV=4.594120986691428e-13 * u.Unit("TeV cm-2 s-1"),
+    )
+)
 
 
 @requires_dependency("uncertainties")
