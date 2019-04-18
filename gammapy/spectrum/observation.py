@@ -721,6 +721,7 @@ class SpectrumObservationList(UserList):
             observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
 
         """
+        from ..utils.fitting.datasets import Datasets
         datasets = []
 
         for obs in self:
@@ -730,11 +731,12 @@ class SpectrumObservationList(UserList):
             datasets.append(dataset)
 
         if fit_range is not None:
-            energies = dataset.counts_on.energy.nodes
-            mask = (energies > fit_range[0])  & (energies < fit_range[1])
-            datasets.mask = mask
+            energy = dataset.counts_on.energy
+            mask = (energy.lo > fit_range[0])  & (energy.hi < fit_range[1])
+        else:
+            mask = None
 
-        return datasets
+        return Datasets(datasets, mask=mask)
 
 
 class SpectrumObservationStacker:

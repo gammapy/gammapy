@@ -111,30 +111,36 @@ class SpectrumAnalysisIACT:
 
     def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
-        datasets = self.extraction.spectrum_observations.to_spectrum_datasets(**self.config["fit"])
+        datasets_fit = self.extraction.spectrum_observations.to_spectrum_datasets(**self.config["fit"])
 
-        self.fit = Fit(datasets)
+        self.fit = Fit(datasets_fit)
         self.fit_result = self.fit.run(optimize_opts=optimize_opts)
 
         model = self.config["fit"]["model"]
         modelname = model.__class__.__name__
 
+        model.parameters.covariance = self.fit_result.parameters.covariance
+
         filename = make_path(self.config["outdir"]) / "fit_result_{}.yaml".format(
             modelname
         )
+
         self.write(filename=filename)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.spectrum_observations.stack()
 
+        datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()
         self.flux_point_estimator = FluxPointEstimator(
             e_edges=self.config["fp_binning"],
             model=model,
-            datasets=datasets,
+            datasets=datasets_fp,
         )
-        self.flux_points = self.flux_point_estimator.run()
+        fp = self.flux_point_estimator.run()
+        fp.table["is_ul"] = fp.table["ts"] < 4
+        self.flux_points = fp
 
     @property
     def spectrum_result(self):
         """`~gammapy.spectrum.FluxPointsDataset`"""
-        return FluxPointsDataset(data=self.flux_points, model=self.fit.datasets[0].model)
+        return FluxPointsDataset(data=self.flux_points, model=self.fit.datasets.datasets[0].model)

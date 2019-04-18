@@ -793,7 +793,10 @@ class FluxPointEstimator:
         sigma_ul=2,
     ):
         # make a copy to not modify the input datasets
-        datasets = Datasets(datasets).copy()
+        if not isinstance(datasets, Datasets):
+            datasets = Datasets(datasets)
+
+        datasets = datasets.copy()
 
         if not datasets.is_all_same_type and datasets.is_all_same_shape:
             raise ValueError("Flux point estimation requires a list of datasets"
