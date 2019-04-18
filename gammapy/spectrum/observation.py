@@ -520,20 +520,32 @@ class SpectrumObservation:
 
     def to_spectrum_dataset(self, model=None):
         """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
-        from .dataset import SpectrumDatasetOnOff
+        from .dataset import SpectrumDatasetOnOff, SpectrumDataset
 
-        # Build mask from quality vector
         quality = self.on_vector.quality
         mask = quality == 0
-        dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_vector,
-            aeff=self.aeff,
-            counts_off=self.off_vector,
-            edisp=self.edisp,
-            livetime=self.livetime,
-            mask=mask,
-        )
-        dataset.model = model
+
+        if self.off_vector is not None:
+            # Build mask from quality vector
+            dataset = SpectrumDatasetOnOff(
+                model=model,
+                counts_on=self.on_vector,
+                aeff=self.aeff,
+                counts_off=self.off_vector,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
+        else:
+            dataset = SpectrumDataset(
+                model=model,
+                counts=self.on_vector,
+                aeff=self.aeff,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
+
         return dataset
 
 
