@@ -127,7 +127,6 @@ class SpectrumAnalysisIACT:
 
         self.write(filename=filename)
 
-        # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.spectrum_observations.stack()
 
         datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()

@@ -765,7 +765,7 @@ class FluxPointEstimator:
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
     model : `~gammapy.spectrum.models.SpectralModel`
-        Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+        Global best fit model.
     norm_min : float
         Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
