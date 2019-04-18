@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import yaml
 from ..utils.scripts import make_path
+from ..utils.fitting import Fit
 from ..spectrum import (
     FluxPointEstimator,
     FluxPointsDataset,
     SpectrumExtraction,
-    SpectrumFit,
 )
 from ..background import ReflectedRegionsBackgroundEstimator
 
@@ -29,8 +30,6 @@ class SpectrumAnalysisIACT:
         Forwarded to `~gammapy.background.ReflectedRegionsBackgroundEstimator`
     * extraction : dict
         Forwarded to `~gammapy.spectrum.SpectrumExtraction`
-    * fit : dict
-        Forwareded to `~gammapy.spectrum.SpectrumFit`
     * fp_binning : `~astropy.units.Quantity`
         Flux points binning
 
@@ -73,25 +72,64 @@ class SpectrumAnalysisIACT:
 
         self.extraction.run()
 
+    @property
+    def _result_dict(self):
+        """Convert to dict."""
+        val = dict()
+        model = self.config["fit"]["model"]
+        val["model"] = model.to_dict()
+
+        fit_range = self.config["fit"].get("fit_range")
+
+        if fit_range is not None:
+            val["fit_range"] = dict(
+                min=fit_range[0].value,
+                max=fit_range[1].value,
+                unit=fit_range.unit.to_string("fits"),
+            )
+
+        val["statval"] = float(self.fit_result.total_stat)
+        val["statname"] = "wstat"
+
+        return val
+
+    def write(self, filename, mode="w"):
+        """Write to YAML file.
+
+        Parameters
+        ----------
+        filename : str
+            File to write
+        mode : str
+            Write mode
+        """
+        d = self._result_dict
+        val = yaml.safe_dump(d, default_flow_style=False)
+
+        with open(str(filename), mode) as outfile:
+            outfile.write(val)
+
     def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
-        self.fit = SpectrumFit(
-            obs_list=self.extraction.spectrum_observations, **self.config["fit"]
-        )
-        self.fit.run(optimize_opts=optimize_opts)
-        modelname = self.fit.result[0].model.__class__.__name__
+        datasets = self.extraction.spectrum_observations.to_spectrum_datasets(**self.config["fit"])
+
+        self.fit = Fit(datasets)
+        self.fit_result = self.fit.run(optimize_opts=optimize_opts)
+
+        model = self.config["fit"]["model"]
+        modelname = model.__class__.__name__
+
         filename = make_path(self.config["outdir"]) / "fit_result_{}.yaml".format(
             modelname
         )
-        self.fit.result[0].to_yaml(filename=filename)
+        self.write(filename=filename)
 
         # TODO: Don't stack again if SpectrumFit has already done the stacking
         stacked_obs = self.extraction.spectrum_observations.stack()
 
-        datasets = [obs.to_spectrum_dataset() for obs in self.extraction.spectrum_observations]
         self.flux_point_estimator = FluxPointEstimator(
             e_edges=self.config["fp_binning"],
-            model=self.fit.result[0].model,
+            model=model,
             datasets=datasets,
         )
         self.flux_points = self.flux_point_estimator.run()
@@ -99,4 +137,4 @@ class SpectrumAnalysisIACT:
     @property
     def spectrum_result(self):
         """`~gammapy.spectrum.FluxPointsDataset`"""
-        return FluxPointsDataset(data=self.flux_points, model=self.fit.result[0].model)
+        return FluxPointsDataset(data=self.flux_points, model=self.fit.datasets[0].model)

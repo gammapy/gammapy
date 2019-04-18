@@ -534,7 +534,7 @@ class SpectrumObservation:
             mask=mask,
         )
         dataset.model = model
-        return model
+        return dataset
 
 
 
@@ -706,20 +706,33 @@ class SpectrumObservationList(UserList):
         return interact(show_obs, idx=(0, max_, 1))
 
 
-    def to_spectrum_datasets(self, model=None):
+    def to_spectrum_datasets(self, model=None, fit_range=None, forward_folded=True):
         """Creates a list of SpectrumDatasetOnOff
 
         Parameters
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model to use for all datasets.
+        forward_folded : bool, default: True
+            Fold ``model`` with the IRFs given in ``obs_list``
+        fit_range : tuple of `~astropy.units.Quantity`
+            The intersection between the fit range and the observation thresholds will be used.
+            If you want to control which bins are taken into account in the fit for each
+            observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
 
         """
         datasets = []
 
         for obs in self:
             dataset = obs.to_spectrum_dataset(model)
+            if not forward_folded:
+                dataset.edisp = None
             datasets.append(dataset)
+
+        if fit_range is not None:
+            energies = dataset.counts_on.energy.nodes
+            mask = (energies > fit_range[0])  & (energies < fit_range[1])
+            datasets.mask = mask
 
         return datasets
 
