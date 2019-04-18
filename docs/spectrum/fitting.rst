@@ -17,18 +17,18 @@ Getting Started
 ===============
 
 The following example shows how to fit a power law simultaneously to two
-simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
+simulated crab runs using the `~gammapy.utils.fitting.Fit` class.
 
 .. code-block:: python
 
-    from gammapy.spectrum import SpectrumObservation, SpectrumObservationList, SpectrumFit
+    from gammapy.spectrum import SpectrumDatasetOnOff
+    from gammapy.utils.fitting import Fit
     from gammapy.spectrum.models import PowerLaw
     import matplotlib.pyplot as plt
 
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-    obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
-    obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
-    obs_list = SpectrumObservationList([obs1, obs2])
+    obs_1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+    obs_2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
 
     model = PowerLaw(
         index=2,
@@ -36,56 +36,54 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
         reference='1 TeV',
     )
 
-    fit = SpectrumFit(obs_list=obs_list, model=model, stat='wstat')
+    obs_1.model = model
+    obs_2.model = model
+
+    fit = Fit([obs_1, obs_2])
     result = fit.run()
 
-You can check the fit results by looking at
-`~gammapy.spectrum.SpectrumFitResult` that is attached to the
-`~gammapy.spectrum.SpectrumFit` for each observation.
+model.parameters.covariance = result.parameters.covariance
+You can check the fit results by looking at the result and model object:
 
 .. code-block:: python
 
     >>> print(result)
-    FitResult
+
+        OptimizeResult
 
         backend    : minuit
         method     : minuit
         success    : True
-        nfev       : 99
-        total stat : 63.00
+        nfev       : 115
+        total stat : 65.36
         message    : Optimization terminated successfully.
 
-    >>> print(fit.result[0])
 
-    Fit result info
-    ---------------
-    Model: PowerLaw
+    >>> print(model)
 
-    Parameters:
+        PowerLaw
 
-           name     value     error         unit         min    max
-        --------- --------- --------- --------------- --------- ---
-            index 2.761e+00 1.094e-01                       nan nan
-        amplitude 5.118e-11 4.849e-12 1 / (cm2 s TeV)       nan nan
-        reference 1.000e+00 0.000e+00             TeV 0.000e+00 nan
+        Parameters:
 
-    Covariance:
+               name     value     error        unit      min max frozen
+            --------- --------- --------- -------------- --- --- ------
+                index 2.781e+00 1.120e-01                nan nan  False
+            amplitude 5.201e-11 4.965e-12 cm-2 s-1 TeV-1 nan nan  False
+            reference 1.000e+00 0.000e+00            TeV nan nan   True
 
-           name           index                amplitude        reference
-        --------- ---------------------- ---------------------- ---------
-            index   0.011973084948262436 3.3890114528842897e-13       0.0
-        amplitude 3.3890114528842897e-13 2.3510477262284227e-23       0.0
-        reference                    0.0                    0.0       0.0
+        Covariance:
 
-    Statistic: 21.076 (wstat)
-    Fit Range: [8.79922544e+08 1.00000000e+11] keV
+               name     index   amplitude reference
+            --------- --------- --------- ---------
+                index 1.255e-02 3.578e-13 0.000e+00
+            amplitude 3.578e-13 2.465e-23 0.000e+00
+            reference 0.000e+00 0.000e+00 0.000e+00
 
 
 Interactive Sherpa Fit
 ======================
 
-If you want to do something specific that is not handled by the
-`~gammapy.spectrum.SpectrumFit` class you can always fit the PHA data directly
+If you want to do something specific you can always fit the PHA data directly
 using `Sherpa`_. The following example illustrates how to do this with the
 example dataset used above. It makes use of the Sherpa `datastack module
 <http://cxc.harvard.edu/sherpa/ahelp/datastack.html>`_.
@@ -126,15 +124,15 @@ This should give the following output
     Datasets              = 1, 2
     Method                = levmar
     Statistic             = wstat
-    Initial fit statistic = 250.031
-    Final fit statistic   = 63.0023 at function evaluation 25
-    Data points           = 74
-    Degrees of freedom    = 72
-    Probability [Q-value] = 0.766494
-    Reduced statistic     = 0.875031
-    Change in statistic   = 187.029
-       powlaw1d.default.gamma   2.76099      +/- 0.118197
-       powlaw1d.default.ampl   5.11739      +/- 0.491756
+    Initial fit statistic = 253.552
+    Final fit statistic   = 65.361 at function evaluation 25
+    Data points           = 82
+    Degrees of freedom    = 80
+    Probability [Q-value] = 0.88159
+    Reduced statistic     = 0.817012
+    Change in statistic   = 188.191
+       powlaw1d.default.gamma   2.78053      +/- 0.121423
+       powlaw1d.default.ampl   5.20034      +/- 0.510299
     Datasets              = 1, 2
     Confidence Method     = covariance
     Iterative Fit Method  = None
@@ -143,7 +141,7 @@ This should give the following output
     covariance 1-sigma (68.2689%) bounds:
        Param            Best-Fit  Lower Bound  Upper Bound
        -----            --------  -----------  -----------
-       powlaw1d.default.gamma      2.76099    -0.109432     0.109432
-       powlaw1d.default.ampl      5.11739    -0.484906     0.484906
+       powlaw1d.default.gamma      2.78053    -0.112025     0.112025
+       powlaw1d.default.ampl      5.20034    -0.496564     0.496564
 
 

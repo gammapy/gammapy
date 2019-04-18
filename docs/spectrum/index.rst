@@ -29,47 +29,47 @@ OGIP format and fit a spectral model.
 
 .. code-block:: python
 
-    from gammapy.spectrum import SpectrumObservation, SpectrumFit
+    from gammapy.spectrum import SpectrumDatasetOnOff
+    from gammapy.utils.fitting import Fit
     from gammapy.spectrum.models import PowerLaw
 
     filename = '$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits'
-    obs = SpectrumObservation.read(filename)
+    dataset = SpectrumDatasetOnOff.read(filename)
 
     model = PowerLaw(
         index=2,
         amplitude='1e-12 cm-2 s-1 TeV-1',
         reference='1 TeV',
     )
-    fit = SpectrumFit(obs_list=[obs], model=model)
-    fit.run()
-    print(fit.result[0])
+
+    dataset.model = model
+
+    fit = Fit([dataset])
+    result = fit.run()
+    model.parameters.covariance = result.parameters.covariance
+    print(model)
 
 It will print the following output to the console:
 
 .. code-block:: text
 
-    Fit result info
-    ---------------
-    Model: PowerLaw
+    PowerLaw
 
     Parameters:
 
-           name     value     error         unit         min    max
-        --------- --------- --------- --------------- --------- ---
-            index 2.791e+00 1.456e-01                       nan nan
-        amplitude 5.030e-11 6.251e-12 1 / (cm2 s TeV)       nan nan
-        reference 1.000e+00 0.000e+00             TeV 0.000e+00 nan
+           name     value     error        unit      min max frozen
+        --------- --------- --------- -------------- --- --- ------
+            index 2.817e+00 1.496e-01                nan nan  False
+        amplitude 5.142e-11 6.423e-12 cm-2 s-1 TeV-1 nan nan  False
+        reference 1.000e+00 0.000e+00            TeV nan nan   True
 
     Covariance:
 
-           name           index               amplitude        reference
-        --------- --------------------- ---------------------- ---------
-            index  0.021213640646334082  5.788340722422449e-13       0.0
-        amplitude 5.788340722422449e-13 3.9079614123597625e-23       0.0
-        reference                   0.0                    0.0       0.0
-
-    Statistic: 41.756 (wstat)
-    Fit Range: [8.79922544e+08 1.00000000e+11] keV
+           name     index   amplitude reference
+        --------- --------- --------- ---------
+            index 2.239e-02 6.160e-13 0.000e+00
+        amplitude 6.160e-13 4.126e-23 0.000e+00
+        reference 0.000e+00 0.000e+00 0.000e+00
 
 Using `gammapy.spectrum`
 ========================
