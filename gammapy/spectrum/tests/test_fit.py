@@ -10,8 +10,6 @@ from ...spectrum import (
     PHACountsSpectrum,
     SpectrumObservationList,
     SpectrumObservation,
-    SpectrumFit,
-    SpectrumFitResult,
     models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
@@ -275,22 +273,6 @@ class TestSpectralFit:
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
-
-    def test_run(self, tmpdir):
-        fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.run()
-
-        result = fit.result[0]
-        modelname = result.model.__class__.__name__
-        filename = tmpdir / "fit_result_{}.yaml".format(modelname)
-        result.to_yaml(filename)
-
-        read_result = SpectrumFitResult.from_yaml(tmpdir / "fit_result_PowerLaw.yaml")
-
-        desired = fit.result[0].model.evaluate_error(1 * u.TeV)
-        actual = read_result.model.evaluate_error(1 * u.TeV)
-        assert actual.unit == desired.unit
-        assert_allclose(actual.value, desired.value)
 
     @requires_dependency("sherpa")
     def test_sherpa_fit(self, tmpdir):
