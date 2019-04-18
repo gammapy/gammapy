@@ -194,37 +194,6 @@ try:
 except ImportError:
     pass
 
-# Add compound models
-TEST_MODELS.append(
-    dict(
-        name="compound1",
-        model=TEST_MODELS[0]["model"] * 5,
-        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 5,
-        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 5,
-        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 5,
-    )
-)
-
-TEST_MODELS.append(
-    dict(
-        name="compound2",
-        model=5 * TEST_MODELS[0]["model"],
-        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 5,
-        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 5,
-        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 5,
-    )
-)
-
-TEST_MODELS.append(
-    dict(
-        name="compound3",
-        model=TEST_MODELS[0]["model"] + TEST_MODELS[0]["model"],
-        val_at_2TeV=TEST_MODELS[0]["val_at_2TeV"] * 2,
-        integral_1_10TeV=TEST_MODELS[0]["integral_1_10TeV"] * 2,
-        eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 2,
-    )
-)
-
 # Add Naima models
 particle_distributions = [
     models.PowerLaw(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5),
