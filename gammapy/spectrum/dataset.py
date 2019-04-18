@@ -330,6 +330,7 @@ class SpectrumDatasetOnOff(Dataset):
         -------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+
         """
         import matplotlib.pyplot as plt
 
@@ -359,6 +360,7 @@ class SpectrumDatasetOnOff(Dataset):
         -------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+
         """
         import matplotlib.pyplot as plt
 
