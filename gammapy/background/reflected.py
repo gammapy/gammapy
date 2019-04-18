@@ -116,7 +116,6 @@ class ReflectedRegionsFinder:
             Map containing the region
         """
 
-
         try:
             reg_center = region.center
         except:
