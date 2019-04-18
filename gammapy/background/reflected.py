@@ -103,12 +103,22 @@ class ReflectedRegionsFinder:
         self.setup()
         self.find_regions()
 
+
     @staticmethod
     def make_reference_map(region, center, binsz):
         """Create empty reference map.
 
         The size of the mask is chosen such that all reflected region are
         contained on the image.
+
+        Parameters
+        ----------
+        region : `~regions.CircleSkyRegion`
+            Region to rotate
+        center : `~astropy.coordinates.SkyCoord`
+            Rotation point
+        binsz : `~astropy.coordinates.Angle`
+            Reference map bin size. Default : 0.02 deg
 
         Returns
         -------
@@ -119,7 +129,7 @@ class ReflectedRegionsFinder:
         try:
             reg_center = region.center
         except:
-            raise NotImplementedError("Algorithm not yet adapted to this Region shape")
+            raise TypeError("Algorithm not yet adapted to this Region shape")
 
         # width is the full width of an image (not the radius)
         width = Angle(3.0 * reg_center.transform_to(center).separation(center), u.degree) * 2.
