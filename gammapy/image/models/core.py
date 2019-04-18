@@ -7,6 +7,8 @@ from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
 from ...utils.fitting import Parameter, Model
 from ...maps import Map
 from scipy.integrate import quad
+from scipy.special import erf
+
 
 __all__ = [
     "SkySpatialModel",
@@ -197,21 +199,24 @@ class SkyDisk(SkySpatialModel):
         :math:`lat_0`
     r_0 : `~astropy.coordinates.Angle`
         :math:`r_0`
+    edge : `~astropy.coordinates.Angle`
+        Width of the edge.
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "r_0"]
 
-    def __init__(self, lon_0, lat_0, r_0, frame="galactic"):
+    def __init__(self, lon_0, lat_0, r_0, edge="0.01 deg", frame="galactic"):
         self.frame = frame
         self.lon_0 = Parameter(
             "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
         )
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.r_0 = Parameter("r_0", Angle(r_0))
+        self.edge = Parameter("edge", Angle(edge), min=0.01, frozen=True)
 
-        super().__init__([self.lon_0, self.lat_0, self.r_0])
+        super().__init__([self.lon_0, self.lat_0, self.r_0, self.edge])
 
     @property
     def evaluation_radius(self):
@@ -226,13 +231,15 @@ class SkyDisk(SkySpatialModel):
         return self.parameters["r_0"].quantity
 
     @staticmethod
-    def evaluate(lon, lat, lon_0, lat_0, r_0):
+    def evaluate(lon, lat, lon_0, lat_0, r_0, edge):
         """Evaluate the model (static function)."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
         # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
         norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
-        return u.Quantity(norm.value * (sep <= r_0), "sr-1", copy=False)
+
+        in_disk = 0.5 * (1 - erf(((sep - r_0) / edge).to_value("")))
+        return u.Quantity(norm.value * in_disk, "sr-1", copy=False)
 
 
 class SkyEllipse(SkySpatialModel):
@@ -270,6 +277,8 @@ class SkyEllipse(SkySpatialModel):
         :math:`\theta`:
         Rotation angle of the major semiaxis.  The rotation angle increases clockwise
         (i.e., East of North) from the positive `lon` axis.
+    edge : `~astropy.coordinates.Angle`
+        Width of the edge.
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
 
@@ -306,7 +315,7 @@ class SkyEllipse(SkySpatialModel):
 
     __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "theta", "_offset_by"]
 
-    def __init__(self, lon_0, lat_0, semi_major, e, theta, frame="galactic"):
+    def __init__(self, lon_0, lat_0, semi_major, e, theta, edge="0.01 deg", frame="galactic"):
         try:
             from astropy.coordinates.angle_utilities import offset_by
 
@@ -322,8 +331,9 @@ class SkyEllipse(SkySpatialModel):
         self.semi_major = Parameter("semi_major", Angle(semi_major))
         self.e = Parameter("e", e, min=0, max=1)
         self.theta = Parameter("theta", Angle(theta))
+        self.edge = Parameter("edge", Angle(edge), frozen=True, min=0.01)
 
-        super().__init__([self.lon_0, self.lat_0, self.semi_major, self.e, self.theta])
+        super().__init__([self.lon_0, self.lat_0, self.semi_major, self.e, self.theta, self.edge])
 
     @property
     def evaluation_radius(self):
@@ -356,7 +366,7 @@ class SkyEllipse(SkySpatialModel):
             2 * quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, np.pi)[0]
         ) ** -1
 
-    def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, theta):
+    def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, theta, edge):
         """Evaluate the model (static function)."""
         # find the foci of the ellipse
         c = semi_major * e
@@ -365,7 +375,8 @@ class SkyEllipse(SkySpatialModel):
 
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
-        in_ellipse = sep_1 + sep_2 <= 2 * semi_major
+
+        in_ellipse = 0.5 * (1 - erf(((sep_1 + sep_2 - 2 * semi_major) / edge).to_value("")))
 
         norm = SkyEllipse.compute_norm(semi_major, e)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
