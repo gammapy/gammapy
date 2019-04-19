@@ -1153,7 +1153,7 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self):
+    def peek(self, **kwargs):
         """Plot flux points, best fit model and residuals.
         """
         from matplotlib.gridspec import GridSpec
@@ -1162,7 +1162,7 @@ class FluxPointsDataset(Dataset):
         gs = GridSpec(7, 1)
 
         ax_spectrum = plt.subplot(gs[:5, :])
-        self.plot_spectrum(ax=ax_spectrum)
+        self.plot_spectrum(ax=ax_spectrum, **kwargs)
 
         ax_spectrum.set_xticks([])
 
