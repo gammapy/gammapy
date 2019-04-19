@@ -200,17 +200,17 @@ class ReflectedRegionsFinder:
         geom = self.reference_map.geom
         _pixel_excluded = False
         if not self.exclusion_mask is None:
-            _mask_array = np.where(self.reference_map.data < 0.5)
-            _excluded_coords = geom.get_coord().apply_mask(_mask_array).skycoord
-            _excluded_pixcoords = PixCoord(*_excluded_coords.to_pixel(geom.wcs))
-            _pixel_excluded = len(_mask_array)>0
+            mask_array = np.where(self.reference_map.data < 0.5)
+            excluded_coords = geom.get_coord().apply_mask(mask_array).skycoord
+            excluded_pixcoords = PixCoord(*excluded_coords.to_pixel(geom.wcs))
+            _pixel_excluded = len(mask_array)>0
 
         while curr_angle < self._max_angle:
-            _test_reg = self._create_rotated_reg(curr_angle)
-            if _pixel_excluded is False or not np.any(_test_reg.contains(_excluded_pixcoords)):
-                _region = _test_reg.to_sky(geom.wcs)
-                log.debug("Placing reflected region\n{}".format(_region))
-                reflected_regions.append(_region)
+            test_reg = self._create_rotated_reg(curr_angle)
+            if _pixel_excluded is False or not np.any(test_reg.contains(excluded_pixcoords)):
+                region = test_reg.to_sky(geom.wcs)
+                log.debug("Placing reflected region\n{}".format(region))
+                reflected_regions.append(region)
                 curr_angle = curr_angle + self._min_ang
                 if self.max_region_number <= len(reflected_regions):
                     break
@@ -223,8 +223,8 @@ class ReflectedRegionsFinder:
         self.reflected_regions = reflected_regions
 
         # Make the OFF reference map
-        _mask = geom.region_mask(self.reflected_regions, inside=True)
-        self.off_reference_map = WcsNDMap(geom=geom, data=_mask)
+        mask = geom.region_mask(self.reflected_regions, inside=True)
+        self.off_reference_map = WcsNDMap(geom=geom, data=mask)
         # TODO: remove this lign after the correction of the Issue #2074
         self.off_reference_map.data = self.off_reference_map.data.astype(float)
 
