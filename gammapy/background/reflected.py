@@ -93,13 +93,11 @@ class ReflectedRegionsFinder:
             self.region, self.center, self.binsz
         )
         if self.exclusion_mask is not None:
-            _run_exclusion_mask = self.exclusion_mask.reproject(self.reference_map.geom)
-            _run_exclusion_mask.data[np.where(np.isnan(_run_exclusion_mask.data))] = 1
             coords = self.reference_map.geom.get_coord()
-            vals = _run_exclusion_mask.get_by_coord(coords)
-            self.reference_map.data = vals
+            vals = self.exclusion_mask.get_by_coord(coords)
+            self.reference_map.data += vals
         else:
-            self.reference_map.data = np.ones(self.reference_map.data.shape)
+            self.reference_map.data += 1
         self.setup()
         self.find_regions()
 
@@ -200,16 +198,12 @@ class ReflectedRegionsFinder:
         curr_angle = self._angle + self._min_ang + self.min_distance_input
         reflected_regions = []
         geom = self.reference_map.geom
-        _run_exclusion_mask = None
         _pixel_excluded = False
         if not self.exclusion_mask is None:
-            _run_exclusion_mask = self.exclusion_mask.reproject(self.reference_map.geom)
-            _run_exclusion_mask.data[np.where(np.isnan(_run_exclusion_mask.data))] = 1
-            _mask_array = np.where(_run_exclusion_mask.data < 0.99)
-            _excluded_coords = geom.get_coord().apply_mask(_mask_array).to_coordsys('CEL')
-            if len(_excluded_coords[0]) > 0 and len(_excluded_coords[1]) > 0 :
-                _excluded_pixcoords = PixCoord(*SkyCoord(*_excluded_coords, unit='deg').to_pixel(geom.wcs))
-                _pixel_excluded = True
+            _mask_array = np.where(self.reference_map.data < 0.5)
+            _excluded_coords = geom.get_coord().apply_mask(_mask_array).skycoord
+            _excluded_pixcoords = PixCoord(*_excluded_coords.to_pixel(geom.wcs))
+            _pixel_excluded = len(_mask_array)>0
 
         while curr_angle < self._max_angle:
             _test_reg = self._create_rotated_reg(curr_angle)
