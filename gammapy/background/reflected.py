@@ -198,19 +198,19 @@ class ReflectedRegionsFinder:
         curr_angle = self._angle + self._min_ang + self.min_distance_input
         reflected_regions = []
         geom = self.reference_map.geom
-        _pixel_excluded = False
-        if not self.exclusion_mask is None:
-            mask_array = np.where(self.reference_map.data < 0.5)
-            excluded_coords = geom.get_coord().apply_mask(mask_array).skycoord
-            excluded_pixcoords = PixCoord(*excluded_coords.to_pixel(geom.wcs))
-            _pixel_excluded = len(mask_array)>0
+
+        mask_array = np.where(self.reference_map.data < 0.5)
+        X, Y = geom.get_pix()
+        excluded_pixcoords = PixCoord(X[mask_array],Y[mask_array])
 
         while curr_angle < self._max_angle:
             test_reg = self._create_rotated_reg(curr_angle)
-            if _pixel_excluded is False or not np.any(test_reg.contains(excluded_pixcoords)):
+            if not np.any(test_reg.contains(excluded_pixcoords)):
                 region = test_reg.to_sky(geom.wcs)
-                log.debug("Placing reflected region\n{}".format(region))
                 reflected_regions.append(region)
+
+                log.debug("Placing reflected region\n{}".format(region))
+
                 curr_angle = curr_angle + self._min_ang
                 if self.max_region_number <= len(reflected_regions):
                     break
@@ -224,9 +224,7 @@ class ReflectedRegionsFinder:
 
         # Make the OFF reference map
         mask = geom.region_mask(self.reflected_regions, inside=True)
-        self.off_reference_map = WcsNDMap(geom=geom, data=mask)
-        # TODO: remove this lign after the correction of the Issue #2074
-        self.off_reference_map.data = self.off_reference_map.data.astype(float)
+        self.off_reference_map = WcsNDMap(geom=geom, data=mask.astype(float))
 
     def plot(self, fig=None, ax=None):
         """Standard debug plot.
@@ -266,17 +264,17 @@ class ReflectedRegionsFinder:
 
     def _create_rotated_reg(self, curr_angle):
         """ Compute a rotated region"""
-        _test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
+        test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
 
         # The function copy.deepcopy does not work for these regions classes
-        _regdict = { _ : getattr(self._pix_region, _) for _ in self._pix_region._repr_params}
-        _test_reg = self._pix_region.__class__(_test_pos, **_regdict)
+        regdict = { _ : getattr(self._pix_region, _) for _ in self._pix_region._repr_params}
+        test_reg = self._pix_region.__class__(test_pos, **regdict)
 
-        if hasattr(_test_reg, 'angle'):
-            _angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-            _test_reg.angle = _angle
+        if hasattr(test_reg, 'angle'):
+            angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
+            test_reg.angle = angle
 
-        return _test_reg
+        return test_reg
 
 
 class ReflectedRegionsBackgroundEstimator:
