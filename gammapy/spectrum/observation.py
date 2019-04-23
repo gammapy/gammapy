@@ -518,7 +518,7 @@ class SpectrumObservation:
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def to_spectrum_dataset(self, model=None):
+    def to_spectrum_dataset(self):
         """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
         from .dataset import SpectrumDatasetOnOff, SpectrumDataset
 
@@ -528,7 +528,6 @@ class SpectrumObservation:
         if self.off_vector is not None:
             # Build mask from quality vector
             dataset = SpectrumDatasetOnOff(
-                model=model,
                 counts_on=self.on_vector,
                 aeff=self.aeff,
                 counts_off=self.off_vector,
@@ -538,7 +537,6 @@ class SpectrumObservation:
             )
         else:
             dataset = SpectrumDataset(
-                model=model,
                 counts=self.on_vector,
                 aeff=self.aeff,
                 edisp=self.edisp,
@@ -737,9 +735,10 @@ class SpectrumObservationList(UserList):
         datasets = []
 
         for obs in self:
-            dataset = obs.to_spectrum_dataset(model)
+            dataset = obs.to_spectrum_dataset()
             if not forward_folded:
                 dataset.edisp = None
+            dataset.model = model
             datasets.append(dataset)
 
         if fit_range is not None:

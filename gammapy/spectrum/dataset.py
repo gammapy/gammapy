@@ -35,7 +35,7 @@ class SpectrumDataset(Dataset):
 
     def __init__(
         self,
-        model,
+        model=None,
         counts=None,
         livetime=None,
         mask=None,
@@ -46,30 +46,49 @@ class SpectrumDataset(Dataset):
         if mask is not None and mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
-        self.model = model
         self.counts = counts
         self.livetime = livetime
         self.mask = mask
         self.aeff = aeff
         self.edisp = edisp
         self.background = background
+        self.model = model
 
-        self.parameters = Parameters(self.model.parameters.parameters)
+    @property
+    def model(self):
+        return self._model
 
-        if edisp is None:
-            self.predictor = SpectrumEvaluator(
-                model=self.model,
-                livetime=self.livetime,
-                aeff=self.aeff,
-                e_true=self.counts.energy.bins,
-            )
+    @model.setter
+    def model(self, model):
+        self._model = model
+        if model is not None:
+            self._parameters = Parameters(self._model.parameters.parameters)
+            if self.edisp is None:
+                self._predictor = SpectrumEvaluator(
+                    model=self.model,
+                    livetime=self.livetime,
+                    aeff=self.aeff,
+                    e_true=self.counts.energy.bins,
+                )
+            else:
+                self._predictor = SpectrumEvaluator(
+                    model=self.model,
+                    aeff=self.aeff,
+                    edisp=self.edisp,
+                    livetime=self.livetime,
+                )
+
         else:
-            self.predictor = SpectrumEvaluator(
-                model=self.model,
-                aeff=self.aeff,
-                edisp=self.edisp,
-                livetime=self.livetime,
-            )
+            self._parameters = None
+            self._predictor = None
+
+    @property
+    def parameters(self):
+        if self._parameters is None:
+            raise AttributeError("No model set for Dataset")
+        else:
+            return self._parameters
+
 
     @property
     def data_shape(self):
@@ -78,7 +97,7 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
-        npred = self.predictor.compute_npred()
+        npred = self._predictor.compute_npred()
         if self.background:
             npred.data.data += self.background.data.data
         return npred

@@ -796,13 +796,11 @@ class FluxPointEstimator:
         if not isinstance(datasets, Datasets):
             datasets = Datasets(datasets)
 
-        datasets = datasets.copy()
-
         if not datasets.is_all_same_type and datasets.is_all_same_shape:
             raise ValueError("Flux point estimation requires a list of datasets"
                              " of the same type and data shape.")
 
-        self.datasets = datasets
+        self.datasets = datasets.copy()
         self.e_edges = e_edges
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0

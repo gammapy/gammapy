@@ -80,7 +80,8 @@ class TestFit:
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
         obs = SpectrumObservation(on_vector=self.src)
-        dataset = obs.to_spectrum_dataset(model=self.source_model)
+        dataset = obs.to_spectrum_dataset()
+        dataset.model = self.source_model
 
         assert np.sum(dataset.mask) == self.nbins
         e_min, e_max = dataset.energy_range
