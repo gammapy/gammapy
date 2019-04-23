@@ -10,8 +10,6 @@ from ...spectrum import (
     PHACountsSpectrum,
     SpectrumObservationList,
     SpectrumObservation,
-    SpectrumFit,
-    SpectrumFitResult,
     models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
@@ -79,37 +77,11 @@ class TestFit:
         assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
 
-    def test_wstat(self):
-        """WStat with on source and background spectrum"""
-        on_vector = self.src.copy()
-        on_vector.data.data += self.bkg.data.data
-
-        dataset = SpectrumDatasetOnOff(model=self.source_model, counts_on=on_vector, counts_off=self.off)
-
-        self.source_model.parameters.index = 1.12
-        fit = Fit([dataset])
-        result = fit.run()
-        pars = result.parameters
-        assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
-        assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
-        assert_allclose(result.total_stat, 30.022316, rtol=1e-3)
-
-    def test_joint(self):
-        """Test joint fit for obs with different energy binning"""
-        dataset_1 = SpectrumDataset(model=self.source_model, counts=self.src)
-
-        src_rebinned = self.src.rebin(2)
-        dataset_2 = SpectrumDataset(model=self.source_model, counts=src_rebinned)
-
-        fit = Fit([dataset_1, dataset_2])
-        result = fit.run()
-        pars = result.parameters
-        assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
-
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
         obs = SpectrumObservation(on_vector=self.src)
         dataset = obs.to_spectrum_dataset()
+        dataset.model = self.source_model
 
         assert np.sum(dataset.mask) == self.nbins
         e_min, e_max = dataset.energy_range
@@ -151,47 +123,6 @@ class TestSpectralFit:
             lambda_=0.1 / u.TeV,
         )
 
-
-    def test_basic_results(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
-        dataset.model = self.pwl
-
-        fit = Fit([dataset])
-        result = fit.run()
-
-        pars = result.parameters
-
-        assert_allclose(result.total_stat, 38.343, rtol=1e-3)
-        assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
-        assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
-        assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
-
-        npred = dataset.npred().data.data
-        assert_allclose(npred[60], 0.6102, rtol=1e-3)
-
-    def test_basic_errors(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
-        dataset.model = self.pwl
-
-        fit = Fit([dataset])
-        result = fit.run()
-
-        pars = result.parameters
-        assert_allclose(pars.error("index"), 0.1496, rtol=1e-3)
-        assert_allclose(pars.error("amplitude"), 6.423e-12, rtol=1e-3)
-
-    def test_compound(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
-        dataset.model = self.pwl * 2
-
-        fit = Fit([dataset])
-        result = fit.run()
-
-        pars = result.parameters
-        assert_allclose(pars["index"].value, 2.8166, rtol=1e-3)
-        p = pars["amplitude"]
-        assert p.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(p.value, 5.0714e-12, rtol=1e-3)
 
     def test_stats(self):
         dataset = self.obs_list[0].to_spectrum_dataset()
@@ -236,32 +167,6 @@ class TestSpectralFit:
             result.parameters["index"].value, 2.7961, atol=0.02
         )
 
-    def test_ecpl_fit(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
-        dataset.model = self.ecpl
-
-        fit = Fit([dataset])
-        result = fit.run()
-        actual = result.parameters["lambda_"].quantity
-        assert actual.unit == "TeV-1"
-        assert_allclose(actual.value, 0.145215, rtol=1e-2)
-
-    def test_joint_fit(self):
-        datasets = [_.to_spectrum_dataset() for _  in self.obs_list]
-
-        for dataset in datasets:
-            dataset.model = self.pwl
-
-        fit = Fit(datasets)
-        result = fit.run()
-
-        pars = result.parameters
-        assert_allclose(pars["index"].value, 2.7806, rtol=1e-3)
-
-        actual = pars["amplitude"].quantity
-        assert actual.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
-
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
 
@@ -275,22 +180,6 @@ class TestSpectralFit:
         assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
         assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
-
-    def test_run(self, tmpdir):
-        fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.run()
-
-        result = fit.result[0]
-        modelname = result.model.__class__.__name__
-        filename = tmpdir / "fit_result_{}.yaml".format(modelname)
-        result.to_yaml(filename)
-
-        read_result = SpectrumFitResult.from_yaml(tmpdir / "fit_result_PowerLaw.yaml")
-
-        desired = fit.result[0].model.evaluate_error(1 * u.TeV)
-        actual = read_result.model.evaluate_error(1 * u.TeV)
-        assert actual.unit == desired.unit
-        assert_allclose(actual.value, desired.value)
 
     @requires_dependency("sherpa")
     def test_sherpa_fit(self, tmpdir):

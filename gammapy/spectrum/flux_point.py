@@ -765,7 +765,7 @@ class FluxPointEstimator:
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
     model : `~gammapy.spectrum.models.SpectralModel`
-        Global model (usually output of `~gammapy.spectrum.SpectrumFit`)
+        Global best fit model.
     norm_min : float
         Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
@@ -793,13 +793,14 @@ class FluxPointEstimator:
         sigma_ul=2,
     ):
         # make a copy to not modify the input datasets
-        datasets = Datasets(datasets).copy()
+        if not isinstance(datasets, Datasets):
+            datasets = Datasets(datasets)
 
         if not datasets.is_all_same_type and datasets.is_all_same_shape:
             raise ValueError("Flux point estimation requires a list of datasets"
                              " of the same type and data shape.")
 
-        self.datasets = datasets
+        self.datasets = datasets.copy()
         self.e_edges = e_edges
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
@@ -1150,7 +1151,7 @@ class FluxPointsDataset(Dataset):
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self):
+    def peek(self, **kwargs):
         """Plot flux points, best fit model and residuals.
         """
         from matplotlib.gridspec import GridSpec
@@ -1159,7 +1160,7 @@ class FluxPointsDataset(Dataset):
         gs = GridSpec(7, 1)
 
         ax_spectrum = plt.subplot(gs[:5, :])
-        self.plot_spectrum(ax=ax_spectrum)
+        self.plot_spectrum(ax=ax_spectrum, **kwargs)
 
         ax_spectrum.set_xticks([])
 

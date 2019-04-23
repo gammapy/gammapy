@@ -520,20 +520,31 @@ class SpectrumObservation:
 
     def to_spectrum_dataset(self):
         """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
-        from .dataset import SpectrumDatasetOnOff
+        from .dataset import SpectrumDatasetOnOff, SpectrumDataset
 
-        # Build mask from quality vector
         quality = self.on_vector.quality
         mask = quality == 0
 
-        return SpectrumDatasetOnOff(
-            counts_on=self.on_vector,
-            aeff=self.aeff,
-            counts_off=self.off_vector,
-            edisp=self.edisp,
-            livetime=self.livetime,
-            mask=mask,
-        )
+        if self.off_vector is not None:
+            # Build mask from quality vector
+            dataset = SpectrumDatasetOnOff(
+                counts_on=self.on_vector,
+                aeff=self.aeff,
+                counts_off=self.off_vector,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
+        else:
+            dataset = SpectrumDataset(
+                counts=self.on_vector,
+                aeff=self.aeff,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
+
+        return dataset
 
 
 
@@ -703,6 +714,40 @@ class SpectrumObservationList(UserList):
             self[idx].peek()
 
         return interact(show_obs, idx=(0, max_, 1))
+
+
+    def to_spectrum_datasets(self, model=None, fit_range=None, forward_folded=True):
+        """Creates a list of SpectrumDatasetOnOff
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model to use for all datasets.
+        forward_folded : bool, default: True
+            Fold ``model`` with the IRFs given in ``obs_list``
+        fit_range : tuple of `~astropy.units.Quantity`
+            The intersection between the fit range and the observation thresholds will be used.
+            If you want to control which bins are taken into account in the fit for each
+            observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
+
+        """
+        from ..utils.fitting.datasets import Datasets
+        datasets = []
+
+        for obs in self:
+            dataset = obs.to_spectrum_dataset()
+            if not forward_folded:
+                dataset.edisp = None
+            dataset.model = model
+            datasets.append(dataset)
+
+        if fit_range is not None:
+            energy = dataset.counts_on.energy
+            mask = (energy.lo >= fit_range[0])  & (energy.hi <= fit_range[1])
+        else:
+            mask = None
+
+        return Datasets(datasets, mask=mask)
 
 
 class SpectrumObservationStacker:
