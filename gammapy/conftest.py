@@ -26,7 +26,7 @@ TESTED_VERSIONS[packagename] = version.version
 from astropy.tests.helper import enable_deprecations_as_exceptions
 
 # TODO: add numpy again once https://github.com/astropy/regions/pull/252 is addressed
-enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["numpy"])
+enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["numpy", "astropy"])
 
 # Declare for which packages version numbers should be displayed
 # when running the tests
