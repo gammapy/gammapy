@@ -39,46 +39,42 @@ once a set of random numbers is determined, it samples a set of events.
 
 The basic design of the class works as following:
 
+.. code::
+	
 	from gammapy.utils.distributions import InverseCDFSampler
-
 	cdf_sampler = InverseCDFSampler(pdf=npred_map.data, axis=None, random_state=random_state)
 
-where the gammapy.utils.random.get_random_state method is used.
+Where the `gammapy.utils.random.get_random_state` method is used. The class implements the following methods:
 
-
-The class implements the following methods:
-
+.. code::
+	
 	cdf_sampler = InverseCDFSampler()
-
 	cdf_sampler.sample_axis()
-
 	cdf_sampler.sample()
 
-
-that will allow us to sample alternatively along all the axes or a given axis of the input map.
+That will allow us to sample alternatively along all the axes or a given axis of the input map.
 
 
 MapEventSampler
 ===============
 
-The next fundamental step is the creation of a map of the predicted events. This can be performed, for a given exposure time,
- with the MapDataset class which takes as input a Skymodel(s) object. The predicted event map is then the input of the new 
-proposed class MapEventSampler(). The same approach can be applied to the background events. The source events will be simulated 
-as following:
+The next fundamental step is the creation of a map of the predicted events. This can be performed, for a given exposure time, with the `MapDataset` class which takes as input a Skymodel(s) object. The predicted event map is then the input of the new proposed class `MapEventSampler`. The same approach can be applied to the background events. The source events will be simulated as following:
 
-src = SkyModel()
-evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
-npred_map = evaluator.compute_npred()
+.. code::
+	
+	src = SkyModel()
+	evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
+	npred_map = evaluator.compute_npred()
 
-src_sampler = MapEventSampler(npred_map, psf_map, edisp_map)
-events_src = map_sampler.sample()
-# events_src is an astropy table
+	src_sampler = MapEventSampler(npred_map, psf_map, edisp_map)
+	events_src = map_sampler.sample()
+	# events_src is an astropy table
 
-bkg_map = Map()
-bkg_sampler = MapEventSampler(bkg_map, psf_map=None, edisp_map=None)
-events_bkg = bkg_sample.sample()
+	bkg_map = Map()
+	bkg_sampler = MapEventSampler(bkg_map, psf_map=None, edisp_map=None)
+	events_bkg = bkg_sample.sample()
 
-where the MapEventSampler() class can be used to generate alternatively source or background events.
+Where the `MapEventSampler` class can be used to generate alternatively source or background events.
 
 
 IRFMapSampler
@@ -90,15 +86,17 @@ the psf and the energy dispersion calculated for each event true position and tr
 positions are then listed into an astropy table. We propose two different options to accomplish this task, which should work 
 as follows:
 
-events = vstack([events_src_1, events_src_2, ..., events_src_N])
-irf_sampler = IRFSampler(events, psf_map, edisp_map)
-events_obs = irf_sampler.sample()
+.. code::
 
-# or
+	events = vstack([events_src_1, events_src_2, ..., events_src_N])
+	irf_sampler = IRFSampler(events, psf_map, edisp_map)
+	events_obs = irf_sampler.sample()
 
-irf_sampler = IRFSampler(psf_map, edisp_map)
-events = irf_sampler.sample_psf(events)
-events = irf_sampler.sample_edisp(events)
+	# or
+
+	irf_sampler = IRFSampler(psf_map, edisp_map)
+	events = irf_sampler.sample_psf(events)
+	events = irf_sampler.sample_edisp(events)
 
 In the first case, the IRF is applied to the stacking of all the simulated sources, with the IRFSampler() class which
 contains only the sample() method. In the second case, the IRFSampler reads the psf and energy maps only, and then 
@@ -111,6 +109,8 @@ MapDatasetEventSampler?
 
 Propose high level structure:
 
+.. code::
+    
     dataset_sampler = MapDatasetEventSampler(dataset)
     events = dataset_sampler.sample()
 
@@ -120,6 +120,8 @@ Propose high level structure:
 
 
 More detailed:
+
+.. code::
 
     events = []
 
