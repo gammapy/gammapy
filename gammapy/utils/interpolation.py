@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities"""
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import RegularGridInterpolator, interp1d
 from astropy import units as u
 
 
@@ -25,6 +25,8 @@ class ScaledRegularGridInterpolator:
     values_scale : {'lin', 'log', 'sqrt'}
         Interpolation scaling applied to values. If the values vary over many magnitudes
         a 'log' scaling is recommended.
+    axis : int or None
+        Axis along which to interpolate.
     **kwargs : dict
         Keyword arguments passed to `RegularGridInterpolator`.
     """
@@ -36,6 +38,7 @@ class ScaledRegularGridInterpolator:
         points_scale=None,
         values_scale="lin",
         extrapolate=True,
+        axis=None,
         **kwargs
     ):
 
@@ -47,14 +50,18 @@ class ScaledRegularGridInterpolator:
 
         points_scaled = tuple([scale(p) for p, scale in zip(points, self.scale_points)])
         values_scaled = self.scale(values)
+        self.axis = axis
 
         if extrapolate:
             kwargs.setdefault("bounds_error", False)
             kwargs.setdefault("fill_value", None)
 
-        self._interpolate = RegularGridInterpolator(
-            points=points_scaled, values=values_scaled, **kwargs
-        )
+        if axis is None:
+            self._interpolate = RegularGridInterpolator(
+                points=points_scaled, values=values_scaled, **kwargs
+            )
+        else:
+            self._interpolate = interp1d(points_scaled[0], values_scaled, axis=axis)
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
         """Interpolate data points.
@@ -71,11 +78,14 @@ class ScaledRegularGridInterpolator:
         """
         points = tuple([scale(p) for scale, p in zip(self.scale_points, points)])
 
-        points = np.broadcast_arrays(*points)
-        points_interp = np.stack([_.flat for _ in points]).T
-
-        values = self._interpolate(points_interp, method, **kwargs)
-        values = self.scale.inverse(values.reshape(points[0].shape))
+        if self.axis is None:
+            points = np.broadcast_arrays(*points)
+            points_interp = np.stack([_.flat for _ in points]).T
+            values = self._interpolate(points_interp, method, **kwargs)
+            values = self.scale.inverse(values.reshape(points[0].shape))
+        else:
+            values = self._interpolate(points[0])
+            values = self.scale.inverse(values)
 
         if clip:
             values = np.clip(values, 0, np.inf)
