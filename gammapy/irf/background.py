@@ -4,7 +4,8 @@ import numpy as np
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
-from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..maps import MapAxis
+from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
 
 __all__ = ["Background3D", "Background2D"]
@@ -62,18 +63,17 @@ class Background3D:
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-            BinnedDataAxis(
-                fov_lon_lo, fov_lon_hi, interpolation_mode="linear", name="fov_lon"
-            ),
-            BinnedDataAxis(
-                fov_lat_lo, fov_lat_hi, interpolation_mode="linear", name="fov_lat"
-            ),
-        ]
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+
+        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        fov_lon_edges = np.append(fov_lon_lo, fov_lon_hi[-1]).value * fov_lon_lo.unit
+        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="linear", name="fov_lon")
+
+        fov_lat_edges = np.append(fov_lat_lo, fov_lat_hi[-1]).value * fov_lat_lo.unit
+        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="linear", name="fov_lat")
+
+        self.data = NDDataArray(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -127,13 +127,24 @@ class Background3D:
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
+
+        detx_axis = self.data.axis("fov_lon")
+        detx = detx_axis.edges * detx_axis.unit
+
+        dety_axis = self.data.axis("fov_lat")
+        dety = dety_axis.edges * dety_axis.unit
+
+        energy_axis = self.data.axis("energy")
+        energy = energy_axis.edges * energy_axis.unit
+
+
         table = Table(meta=meta)
-        table["DETX_LO"] = self.data.axis("fov_lon").lo[np.newaxis]
-        table["DETX_HI"] = self.data.axis("fov_lon").hi[np.newaxis]
-        table["DETY_LO"] = self.data.axis("fov_lat").lo[np.newaxis]
-        table["DETY_HI"] = self.data.axis("fov_lat").hi[np.newaxis]
-        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
-        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        table["DETX_LO"] = detx[:-1][np.newaxis]
+        table["DETX_HI"] = detx[1:][np.newaxis]
+        table["DETY_LO"] = dety[:-1][np.newaxis]
+        table["DETY_HI"] = dety[1:][np.newaxis]
+        table["ENERG_LO"] = energy[:-1][np.newaxis]
+        table["ENERG_HI"] = energy[1:][np.newaxis]
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
@@ -203,11 +214,17 @@ class Background3D:
         idx_lat = self.data.axis("fov_lat").find_node("0 deg")[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
+        energy_axis = self.data.axis("energy")
+        energy = energy_axis.edges * energy_axis.unit
+
+        offset_axis = self.data.axis("energy")
+        offset = offset_axis.edges * offset_axis.unit
+
         return Background2D(
-            energy_lo=self.data.axis("energy").lo,
-            energy_hi=self.data.axis("energy").hi,
-            offset_lo=self.data.axis("fov_lon").lo[idx_lon:],
-            offset_hi=self.data.axis("fov_lon").hi[idx_lon:],
+            energy_lo=energy[:-1],
+            energy_hi=energy[1:],
+            offset_lo=offset[:-1],
+            offset_hi=offset[1:],
             data=data,
         )
 
@@ -243,15 +260,14 @@ class Background2D:
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-            BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
-            ),
-        ]
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+
+        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
+        offset_axis = MapAxis.from_edges(offset_edges, interp="linear", name="offset")
+
+        self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -304,10 +320,16 @@ class Background2D:
         meta = self.meta.copy()
         table = Table(meta=meta)
 
-        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
-        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
-        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
-        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        offset_axis = self.data.axis("offset")
+        energy_axis = self.data.axis("energy")
+
+        theta = offset_axis.edges * offset_axis.unit
+        energy = energy_axis.edges * energy_axis.unit
+
+        table["THETA_LO"] = theta[:-1][np.newaxis]
+        table["THETA_HI"] = theta[1:][np.newaxis]
+        table["ENERG_LO"] = energy[:-1][np.newaxis]
+        table["ENERG_HI"] = energy[1:][np.newaxis]
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
