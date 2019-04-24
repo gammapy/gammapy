@@ -45,7 +45,7 @@ class NDDataArray:
     def __str__(self):
         ss = "NDDataArray summary info\n"
         for axis in self.axes:
-            ss += array_stats_str(axis.nodes, axis.name)
+            ss += str(axis)
         ss += array_stats_str(self.data, "Data")
         return ss
 
@@ -89,7 +89,7 @@ class NDDataArray:
 
         for dim in np.arange(self.dim):
             axis = self.axes[dim]
-            if axis.nbins != data.shape[dim]:
+            if axis.nbin != data.shape[dim]:
                 msg = "Data shape does not match in dimension {d}\n"
                 msg += "Axis {n} : {sa}, Data {sd}"
                 raise ValueError(
@@ -114,7 +114,7 @@ class NDDataArray:
         node = []
         for axis in self.axes:
             lookup_val = Quantity(kwargs.pop(axis.name))
-            temp = axis.find_node(lookup_val)
+            temp = axis.coord_to_idx(lookup_val)
             node.append(temp)
         return node
 
@@ -144,7 +144,7 @@ class NDDataArray:
             # Extract values for each axis, default: nodes
             shape = [1] * len(self.axes)
             shape[idx] = -1
-            default = axis.nodes.reshape(tuple(shape))
+            default = axis.center.reshape(tuple(shape)) * axis.unit
             temp = Quantity(kwargs.pop(axis.name, default))
             values.append(np.atleast_1d(temp))
 
@@ -170,8 +170,8 @@ class NDDataArray:
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
 
-        points = [a.nodes for a in self.axes]
-        points_scale = [a.interpolation_mode for a in self.axes]
+        points = [(a.center * a.unit) for a in self.axes]
+        points_scale = [a.interp for a in self.axes]
         self._regular_grid_interp = ScaledRegularGridInterpolator(
             points, self.data, points_scale=points_scale, **interp_kwargs
         )

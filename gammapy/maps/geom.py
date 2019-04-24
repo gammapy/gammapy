@@ -401,6 +401,11 @@ class MapAxis:
         return not self.__eq__(other)
 
     @property
+    def interp(self):
+        """Interpolation scale of the axis."""
+        return self._interp
+
+    @property
     def name(self):
         """Name of the axis."""
         return self._name
