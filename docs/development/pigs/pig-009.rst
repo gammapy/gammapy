@@ -20,15 +20,15 @@ Array (CTA). It will allows us to simulate sources with different spectral and m
 the best configurations for each type of objects and the expected performances of CTA. We note that an event simulator is
 currently required by the CTA Science Tools. In addition, there will be the possibility to adopt it to simulate the next
 CTA Data Challenge (DC2). Therefore, we propose to create an event simulator which sample random events for given sources.
-It will need input maps where spatial morphology and spectral distributions are provided. Then the proposed simulator will
-be able to apply the PSF and energy dispersion, for each simulated observation, to correct position and energy of the sampled
-events. Source lightcurves will be also taken into account to simulate temporal variations. Furthermore, the sampler will
-possibly include the simulation of background events. The output of the simulator is an astropy table.
+It will need input maps where spatial morphology and spectral distributions are provided, and optionally also the time 
+variability will be given. Then the proposed simulator will be able to apply the PSF and energy dispersion, for each simulated observation, to correct position and energy of the sampled events. Source lightcurves will be also taken into account to 
+simulate temporal variations. Furthermore, the sampler will possibly include the simulation of background events. The output
+of the simulator is an astropy table. A link to a Jupyter event sampler prototype can be found at this URL: https://github.com/fabiopintore/notebooks-public/blob/master/gammapy-event-sampling/prototype.ipynb
 
 Proposal
 ========
 
-We propose to introduce the following classes to implement the simulator in Gammapy:
+We propose to introduce the following classes to implement the simulator in Gammapy.
 
 InverseCDFSampler
 =================
@@ -58,7 +58,10 @@ That will allow us to sample alternatively along all the axes or a given axis of
 MapEventSampler
 ===============
 
-The next fundamental step is the creation of a map of the predicted events. This can be performed, for a given exposure time, with the `MapDataset` class which takes as input a Skymodel(s) object. The predicted event map is then the input of the new proposed class `MapEventSampler`. The same approach can be applied to the background events. The source events will be simulated as following:
+The next fundamental step is the creation of a map of the predicted events. This can be performed, for a given exposure time, 
+with the `MapDataset` class which takes as input a `Skymodel` object. The predicted event map is then the input of the new 
+proposed class `MapEventSampler`. The same approach can be applied to the background events. The source events will be simulated 
+as following:
 
 .. code::
 	
@@ -66,22 +69,25 @@ The next fundamental step is the creation of a map of the predicted events. This
 	evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
 	npred_map = evaluator.compute_npred()
 
-	src_sampler = MapEventSampler(npred_map, psf_map, edisp_map)
+	src_sampler = MapEventSampler(npred_map, lightcurve) 
 	events_src = map_sampler.sample()
 	# events_src is an astropy table
 
 	bkg_map = Map()
-	bkg_sampler = MapEventSampler(bkg_map, psf_map=None, edisp_map=None)
+	bkg_sampler = MapEventSampler(npred_map, bkg_map, exposure)
 	events_bkg = bkg_sample.sample()
 
-Where the `MapEventSampler` class can be used to generate alternatively source or background events.
+Where the `MapEventSampler` class can be used to generate alternatively source or background events. It is important to note 
+that the `MapEventSampler` takes into account the temporal information (lightcurve) for the source, while for the background 
+the time of events arrival are sampled evenly along the whole exposure time. It remains to answer the question what to do when 
+the source lightcurve is shorter than the total exposure time: do we repeat the temporal information or do we just consider the remaining time as a flat lightcurve?
 
 
 IRFMapSampler
 =============
 
 We introduce a class that bundles the IRF psf and energy dispersion and applies them to the previously sampled event list. 
-In more detail, the class will take as input the MapEventSampler.sample() source object and then it evaluates a map of 
+In more detail, the class will take as input the `MapEventSampler.sample` source object and then it evaluates a map of 
 the psf and the energy dispersion calculated for each event true position and true energy. The reconstructed energies and 
 positions are then listed into an astropy table. We propose two different options to accomplish this task, which should work 
 as follows:
@@ -89,17 +95,17 @@ as follows:
 .. code::
 
 	events = vstack([events_src_1, events_src_2, ..., events_src_N])
-	irf_sampler = IRFSampler(events, psf_map, edisp_map)
+	irf_sampler = IRFMapSampler(events, psf_map, edisp_map)
 	events_obs = irf_sampler.sample()
 
 	# or
 
-	irf_sampler = IRFSampler(psf_map, edisp_map)
+	irf_sampler = IRFMapSampler(psf_map, edisp_map)
 	events = irf_sampler.sample_psf(events)
 	events = irf_sampler.sample_edisp(events)
 
-In the first case, the IRF is applied to the stacking of all the simulated sources, with the IRFSampler() class which
-contains only the sample() method. In the second case, the IRFSampler reads the psf and energy maps only, and then 
+In the first case, the IRF is applied to the stacking of all the simulated sources, with the `IRFSampler` class which
+contains only the `sample` method. In the second case, the `IRFSampler` reads the psf and energy maps only, and then 
 it contains two methods that apply separately the psf and edisp corrections to the events; for more than one simulated 
 source, a loop will be needed.
 
