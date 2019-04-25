@@ -236,12 +236,7 @@ class MapEvaluator:
     @lazyproperty
     def geom_reco(self):
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
-        edges = self.edisp.e_reco.bins
-        e_reco_axis = MapAxis.from_edges(
-            edges=edges,
-            name="energy",
-            interp=self.edisp.e_reco.interpolation_mode,
-        )
+        e_reco_axis = self.edisp.e_reco.copy()
         return self.geom_image.to_cube(axes=[e_reco_axis])
 
     @property
@@ -309,7 +304,7 @@ class MapEvaluator:
         """Return evaluator coords"""
         lon, lat = self.lon_lat
         if self.edisp:
-            energy = self.edisp.e_reco.nodes[:, np.newaxis, np.newaxis]
+            energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis] * self.edisp.e_reco.unit
         else:
             energy = self.energy_center
 
