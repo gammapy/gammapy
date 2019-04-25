@@ -110,12 +110,12 @@ class EnergyDispersion:
 
     @property
     def e_reco(self):
-        """Reconstructed energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)"""
+        """Reconstructed energy axis (`~gammapy.maps.MapAxis`)"""
         return self.data.axis("e_reco")
 
     @property
     def e_true(self):
-        """True energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)"""
+        """True energy axis (`~gammapy.maps.MapAxis`)"""
         return self.data.axis("e_true")
 
     @property
@@ -153,9 +153,9 @@ class EnergyDispersion:
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        e_true : `~astropy.units.Quantity`
             Bin edges of true energy axis
-        e_reco : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        e_reco : `~astropy.units.Quantity`
             Bin edges of reconstructed energy axis
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
@@ -769,15 +769,15 @@ class EnergyDispersion2D:
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        e_true : `~astropy.units.Quantity`
             Bin edges of true energy axis
-        migra : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        migra : `~astropy.units.Quantity`
             Bin edges of migra axis
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
         sigma : float or `~numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution
-        offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        offset : `~astropy.units.Quantity`
             Bin edges of offset
         pdf_threshold : float, optional
             Zero suppression threshold
