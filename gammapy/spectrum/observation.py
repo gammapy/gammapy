@@ -720,8 +720,8 @@ class SpectrumObservationList(UserList):
             datasets.append(dataset)
 
         if fit_range is not None:
-            energy = dataset.counts_on.energy
-            mask = (energy.lo >= fit_range[0])  & (energy.hi <= fit_range[1])
+            energy = dataset.counts_on.energy.edges * dataset.counts_on.energy.unit
+            mask = (energy[:-1] >= fit_range[0]) & (energy[1:] <= fit_range[1])
         else:
             mask = None
 
