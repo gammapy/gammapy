@@ -113,17 +113,17 @@ class SpectrumObservation:
     @property
     def e_reco(self):
         """Reconstruced energy bounds array."""
-        return EnergyBounds(self.on_vector.energy.bins)
+        return EnergyBounds(self.on_vector.energy.edges * self.on_vector.energy.unit)
 
     @property
     def e_true(self):
         """True energy bounds array."""
-        return EnergyBounds(self.aeff.energy.bins)
+        return EnergyBounds(self.aeff.energy.edges * self.aeff.energy.unit)
 
     @property
     def nbins(self):
         """Number of reconstruced energy bins"""
-        return self.on_vector.energy.nbins
+        return self.on_vector.energy.nbin
 
     @property
     def lo_threshold(self):
@@ -241,9 +241,9 @@ class SpectrumObservation:
         self.on_vector * self.total_stats.alpha because the latter returns an
         average value for alpha.
         """
-        energy = self.off_vector.energy
+        energy = self.off_vector.energy.edges * self.off_vector.energy.unit
         data = self.off_vector.data.data * self.alpha
-        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     @property
     def excess_vector(self):
@@ -251,9 +251,9 @@ class SpectrumObservation:
 
         excess = n_on = alpha * n_off
         """
-        energy = self.off_vector.energy
+        energy = self.off_vector.energy.edges * self.off_vector.unit
         data = self.on_vector.data.data - self.background_vector.data.data
-        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     @property
     def total_stats(self):
@@ -857,8 +857,8 @@ class SpectrumObservationStacker:
         """
         template = counts_spectrum_list[0].copy()
         energy = template.energy
-        stacked_data = np.zeros(energy.nbins)
-        stacked_quality = np.ones(energy.nbins)
+        stacked_data = np.zeros(energy.nbin)
+        stacked_quality = np.ones(energy.nbin)
         for spec in counts_spectrum_list:
             stacked_data += spec.counts_in_safe_range.value
             temp = np.logical_and(stacked_quality, spec.quality)
@@ -866,8 +866,8 @@ class SpectrumObservationStacker:
 
         return PHACountsSpectrum(
             data=stacked_data,
-            energy_lo=energy.lo,
-            energy_hi=energy.hi,
+            energy_lo=energy.edges[:-1] * energy.unit,
+            energy_hi=energy.edges[1:] * energy.unit,
             quality=stacked_quality,
         )
 

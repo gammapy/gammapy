@@ -152,11 +152,14 @@ class TestSpectralFit:
         dataset = self.obs_list[0].to_spectrum_dataset()
 
         # Bring aeff in RECO space
-        data = dataset.aeff.data.evaluate(energy=dataset.counts_on.energy.nodes)
+        energy = dataset.counts_on.energy.center * dataset.counts_on.energy.unit
+        data = dataset.aeff.data.evaluate(energy=energy)
+        e_edges = dataset.counts_on.energy.edges * dataset.counts_on.energy.unit
+
         dataset.aeff = EffectiveAreaTable(
             data=data,
-            energy_lo=dataset.counts_on.energy.lo,
-            energy_hi=dataset.counts_on.energy.hi,
+            energy_lo=e_edges[:-1],
+            energy_hi=e_edges[1:],
         )
         dataset.edisp = None
         dataset.model = self.pwl

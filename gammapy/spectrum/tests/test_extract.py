@@ -139,9 +139,9 @@ class TestSpectrumExtraction:
             testobs.on_vector.data.data,
             extraction.spectrum_observations[0].on_vector.data.data,
         )
-        assert_quantity_allclose(
-            testobs.on_vector.energy.nodes,
-            extraction.spectrum_observations[0].on_vector.energy.nodes,
+        assert_allclose(
+            testobs.on_vector.energy.center,
+            extraction.spectrum_observations[0].on_vector.energy.center,
         )
 
     @requires_dependency("sherpa")

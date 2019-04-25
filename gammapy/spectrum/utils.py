@@ -81,7 +81,7 @@ class SpectrumEvaluator:
                         ref_unit = unit
             except IndexError:
                 ref_unit = "TeV"
-            self.e_true = self.aeff.energy.bins.to(ref_unit)
+            self.e_true = (self.aeff.energy.edges * self.aeff.energy.unit).to(ref_unit)
         else:
             if self.e_true is None:
                 raise ValueError("No true energy binning given")
@@ -107,7 +107,7 @@ class SpectrumEvaluator:
 
         if self.edisp is not None:
             cts = self.edisp.apply(true_counts)
-            self.e_reco = self.edisp.e_reco.bins
+            self.e_reco = (self.edisp.e_reco.edges * self.edisp.e_reco.unit)
         else:
             cts = true_counts
             self.e_reco = self.e_true

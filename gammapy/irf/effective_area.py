@@ -209,8 +209,8 @@ class EffectiveAreaTable:
                 ("hduclas2", "SPECRESP"),
             ]
         )
-        table["ENERG_LO"] = self.energy.edges[:-1]
-        table["ENERG_HI"] = self.energy.edges[1:]
+        table["ENERG_LO"] = self.energy.edges[:-1] * self.energy.unit
+        table["ENERG_HI"] = self.energy.edges[1:] * self.energy.unit
         table["SPECRESP"] = self.evaluate_fill_nan()
         return table
 
