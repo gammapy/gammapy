@@ -186,7 +186,7 @@ class SigmaVEstimator:
             Dict with results as `~astropy.table.Table` objects for each channel.
         """
 
-        spatial_model = self.dataset.model.spatial_model
+        spatial_model = self.dataset.model.skymodels[0].spatial_model
         counts_map = WcsNDMap(
             self.dataset.counts.geom, np.random.poisson(self.dataset.npred().data)
         )
