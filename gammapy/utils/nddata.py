@@ -93,7 +93,7 @@ class NDDataArray:
                 msg = "Data shape does not match in dimension {d}\n"
                 msg += "Axis {n} : {sa}, Data {sd}"
                 raise ValueError(
-                    msg.format(d=dim, n=axis.name, sa=axis.nbins, sd=data.shape[dim])
+                    msg.format(d=dim, n=axis.name, sa=axis.nbin, sd=data.shape[dim])
                 )
         self._regular_grid_interp = None
         self._data = data

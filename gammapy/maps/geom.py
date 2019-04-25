@@ -349,7 +349,7 @@ class MapAxis:
             raise ValueError("MapAxis: node values must be sorted")
 
         if isinstance(nodes, u.Quantity):
-            unit = nodes.unit
+            unit = nodes.unit if nodes.unit is not None else ""
             nodes = nodes.value
         else:
             nodes = np.array(nodes)
