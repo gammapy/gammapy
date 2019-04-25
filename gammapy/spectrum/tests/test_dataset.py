@@ -265,7 +265,7 @@ class TestSimpleFit:
         fit = Fit([obs1, obs2])
         fit.run()
         pars = self.source_model.parameters
-        assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
+        assert_allclose(pars["index"].value, 1.920686, rtol=1e-3)
 
 
 @requires_data("gammapy-data")
