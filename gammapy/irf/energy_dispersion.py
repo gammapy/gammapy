@@ -289,7 +289,7 @@ class EnergyDispersion:
 
         return edisp
 
-    def to_hdulist(self, **kwargs):
+    def to_hdulist(self, use_sherpa=False, **kwargs):
         """Convert RMF to FITS HDU list format.
 
         Parameters
@@ -318,6 +318,10 @@ class EnergyDispersion:
         header = fits.Header()
         header.update(table.meta)
 
+        if use_sherpa:
+            table["ENERG_HI"] = table["ENERG_HI"].quantity.to("keV")
+            table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
+
         cols = table.columns
         c0 = fits.Column(
             name=cols[0].name, format="E", array=cols[0], unit="{}".format(cols[0].unit)
@@ -334,7 +338,12 @@ class EnergyDispersion:
             [c0, c1, c2, c3, c4, c5], header=header, name=name
         )
 
-        ebounds = energy_axis_to_ebounds(self.e_reco.edges * self.e_reco.unit)
+        energy = self.e_reco.edges * self.e_reco.unit
+
+        if use_sherpa:
+            energy = energy.to("keV")
+
+        ebounds = energy_axis_to_ebounds(energy)
         prim_hdu = fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds])
@@ -403,10 +412,10 @@ class EnergyDispersion:
 
         return table
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist().writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
 
     def get_resolution(self, e_true):
         """Get energy resolution for a given true energy.

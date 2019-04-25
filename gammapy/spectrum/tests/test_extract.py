@@ -155,7 +155,7 @@ class TestSpectrumExtraction:
         arf = sau.get_arf()
 
         actual = arf._arf._specresp
-        desired = extraction.spectrum_observations[0].aeff.data.data.value
+        desired = extraction.spectrum_observations[0].aeff.data.data.to_value("cm2")
         assert_allclose(actual, desired)
 
     def test_compute_energy_threshold(self, extraction):

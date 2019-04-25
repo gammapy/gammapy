@@ -413,35 +413,13 @@ class SpectrumObservation:
         arffile = self.on_vector.arffile
         rmffile = self.on_vector.rmffile
 
-        # Write in keV and cm2 for sherpa
-        if use_sherpa:
-            # TODO: Change this implementation.
-            # write should not change the object
-            # put this code in a separate method that makes a copy with the changes.
-            # then call `.write` on that here, or remove the option and let the user do it.
-            self.on_vector.energy.lo = self.on_vector.energy.lo.to("keV")
-            self.on_vector.energy.hi = self.on_vector.energy.hi.to("keV")
-            self.aeff.energy.lo = self.aeff.energy.lo.to("keV")
-            self.aeff.energy.hi = self.aeff.energy.hi.to("keV")
-            self.aeff.data.data = self.aeff.data.data.to("cm2")
-            if self.off_vector is not None:
-                self.off_vector.energy.lo = self.off_vector.energy.lo.to("keV")
-                self.off_vector.energy.hi = self.off_vector.energy.hi.to("keV")
-            if self.edisp is not None:
-                self.edisp.e_reco.lo = self.edisp.e_reco.lo.to("keV")
-                self.edisp.e_reco.hi = self.edisp.e_reco.hi.to("keV")
-                self.edisp.e_true.lo = self.edisp.e_true.lo.to("keV")
-                self.edisp.e_true.hi = self.edisp.e_true.hi.to("keV")
-                # Set data to itself to trigger reset of the interpolator
-                # TODO: Make NDData notice change of axis
-                self.edisp.data.data = self.edisp.data.data
+        self.on_vector.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
-        self.on_vector.write(outdir / phafile, overwrite=overwrite)
-        self.aeff.write(outdir / arffile, overwrite=overwrite)
         if self.off_vector is not None:
-            self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
+            self.off_vector.write(outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa)
         if self.edisp is not None:
-            self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
+            self.edisp.write(str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa)
 
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""

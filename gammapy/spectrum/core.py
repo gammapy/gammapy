@@ -93,7 +93,7 @@ class CountsSpectrum:
         meta = {"name": "COUNTS"}
         return Table([channel, counts], names=names, meta=meta)
 
-    def to_hdulist(self):
+    def to_hdulist(self, use_sherpa=False):
         """Convert to `~astropy.io.fits.HDUList`.
 
         This adds an ``EBOUNDS`` extension to the ``BinTableHDU`` produced by
@@ -102,13 +102,19 @@ class CountsSpectrum:
         table = self.to_table()
         name = table.meta["name"]
         hdu = fits.BinTableHDU(table, name=name)
-        ebounds = energy_axis_to_ebounds(self.energy.edges * self.energy.unit)
+
+        energy = self.energy.edges * self.energy.unit
+
+        if use_sherpa:
+            energy = energy.to("keV")
+
+        ebounds = energy_axis_to_ebounds(energy)
         return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist().writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
 
     def fill(self, events):
         """Fill with list of events.

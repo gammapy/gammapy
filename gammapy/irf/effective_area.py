@@ -209,21 +209,30 @@ class EffectiveAreaTable:
                 ("hduclas2", "SPECRESP"),
             ]
         )
-        table["ENERG_LO"] = self.energy.edges[:-1] * self.energy.unit
-        table["ENERG_HI"] = self.energy.edges[1:] * self.energy.unit
+
+        energy = self.energy.edges * self.energy.unit
+        table["ENERG_LO"] = energy[:-1]
+        table["ENERG_HI"] = energy[1:]
         table["SPECRESP"] = self.evaluate_fill_nan()
         return table
 
-    def to_hdulist(self, name=None):
+    def to_hdulist(self, name=None, use_sherpa=False):
         """Convert to `~astropy.io.fits.HDUList`."""
+        table = self.to_table()
+
+        if use_sherpa:
+            table["ENERG_HI"] = table["ENERG_HI"].quantity.to("keV")
+            table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
+            table["SPECRESP"] = table["SPECRESP"].quantity.to("cm2")
+
         return fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(self.to_table(), name=name)]
+            [fits.PrimaryHDU(), fits.BinTableHDU(table, name=name)]
         )
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist().writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
 
     def evaluate_fill_nan(self, **kwargs):
         """Modified evaluate function.
