@@ -68,10 +68,10 @@ class Background3D:
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
         fov_lon_edges = np.append(fov_lon_lo, fov_lon_hi[-1]).value * fov_lon_lo.unit
-        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="linear", name="fov_lon")
+        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
 
         fov_lat_edges = np.append(fov_lat_lo, fov_lat_hi[-1]).value * fov_lat_lo.unit
-        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="linear", name="fov_lat")
+        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
 
         self.data = NDDataArray(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
@@ -265,7 +265,7 @@ class Background2D:
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
         offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
-        offset_axis = MapAxis.from_edges(offset_edges, interp="linear", name="offset")
+        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()

@@ -367,10 +367,10 @@ class EffectiveAreaTable2D:
 
         # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
         if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
-            offset_axis = MapAxis.from_nodes(offset_lo, interp="linear", name="offset")
+            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
         else:
             offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
-            offset_axis = MapAxis.from_edges(offset_edges, interp="linear", name="offset")
+            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
