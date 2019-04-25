@@ -12,6 +12,7 @@ from ...utils.table import table_from_row_data
 from .spectra import DMAnnihilation
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
+import numpy as np
 import logging
 
 __all__ = ["JFactory", "SigmaVEstimator"]
