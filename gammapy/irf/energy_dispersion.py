@@ -138,8 +138,9 @@ class EnergyDispersion:
             High reco energy threshold
         """
         data = self.pdf_matrix.copy()
+        energy = self.e_reco.edges * self.e_reco.unit
         idx = np.where(
-            (self.e_reco.lo < lo_threshold) | (self.e_reco.hi > hi_threshold)
+            (energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold)
         )
         data[:, idx] = 0
         return data
@@ -728,8 +729,12 @@ class EnergyDispersion2D:
         migra_edges = np.append(migra_lo, migra_hi[-1])
         migra_axis = MapAxis.from_edges(migra_edges, interp="log", name="migra", unit="")
 
-        offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
-        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
+        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
+            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
+        else:
+            offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
+            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         axes = [e_true_axis, migra_axis, offset_axis]
 
@@ -1073,7 +1078,7 @@ class EnergyDispersion2D:
         energy_axes = self.data.axis("e_true")
         energy = energy_axes.edges * energy_axes.unit
 
-        migra = self.data.axis("e_true").edges
+        migra = self.data.axis("migra").edges
 
         theta_axes = self.data.axis("offset")
         theta = theta_axes.edges * theta_axes.unit

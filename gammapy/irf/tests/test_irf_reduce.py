@@ -120,8 +120,8 @@ def test_make_mean_edisp(data_store):
     e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
     rmf = make_mean_edisp(observations, position=position, e_true=e_true, e_reco=e_reco)
 
-    assert len(rmf.e_true.nodes) == 80
-    assert len(rmf.e_reco.nodes) == 15
+    assert len(rmf.e_true.center) == 80
+    assert len(rmf.e_reco.center) == 15
     assert_quantity_allclose(rmf.data.data[53, 8], 0.056, atol=2e-2)
 
     rmf2 = make_mean_edisp(
@@ -158,7 +158,7 @@ def test_apply_containment_fraction():
         * psf_table.psf_value.unit
     )
     edep_psf_table = EnergyDependentTablePSF(
-        aeff.energy.nodes, rad, psf_value=psf_values
+        aeff.energy.center * aeff.energy.unit, rad, psf_value=psf_values
     )
 
     new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))

@@ -162,13 +162,14 @@ def apply_containment_fraction(aeff, psf, radius):
     correct_aeff : `~gammapy.irf.EffectiveAreaTable`
         the output corrected 1D effective area
     """
-    center_energies = aeff.energy.nodes
+    energy_center = aeff.energy.center * aeff.energy.unit
+    energy_edges = aeff.energy.edges * aeff.energy.unit
 
-    containment = psf.containment(center_energies, radius)
+    containment = psf.containment(energy_center, radius)
 
     corrected_aeff = EffectiveAreaTable(
-        aeff.energy.lo,
-        aeff.energy.hi,
+        energy_lo=energy_edges[:-1],
+        energy_hi=energy_edges[1:],
         data=aeff.data.data * np.squeeze(containment),
         meta=aeff.meta,
     )
