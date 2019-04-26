@@ -89,7 +89,6 @@ class SpectrumDataset(Dataset):
         else:
             return self._parameters
 
-
     @property
     def data_shape(self):
         """Shape of the counts data"""
@@ -106,8 +105,7 @@ class SpectrumDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data.data, mu_on=self.npred().data.data)
 
-    def likelihood(self, parameters=None
-                   , mask=None):
+    def likelihood(self, parameters=None, mask=None):
         """Total likelihood given the current model parameters.
 
         Parameters
@@ -344,12 +342,11 @@ class SpectrumDatasetOnOff(Dataset):
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
-`
+
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
-
         """
         import matplotlib.pyplot as plt
 
@@ -361,11 +358,11 @@ class SpectrumDatasetOnOff(Dataset):
         e_min, e_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
         ax.axvline(e_min.to_value(self._e_unit), label="fit range", **kwargs)
-        ax.axvline(e_max.to_value(self._e_unit),  **kwargs)
+        ax.axvline(e_max.to_value(self._e_unit), **kwargs)
 
         ax.legend(numpoints=1)
         ax.set_title("")
-        return  ax
+        return ax
 
     def plot_residuals(self, ax=None):
         """Plot residuals.
@@ -374,12 +371,11 @@ class SpectrumDatasetOnOff(Dataset):
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
-`
+
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
-
         """
         import matplotlib.pyplot as plt
 
@@ -396,4 +392,3 @@ class SpectrumDatasetOnOff(Dataset):
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
         ax.set_ylabel("Residuals")
         return ax
-
