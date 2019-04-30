@@ -18,31 +18,31 @@ if __name__ == '__main__':
     mu_min = 0
     mu_max = 8
     cl = 0.90
-    
+
     x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x, endpoint=True)
     mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
-    
+
     print("Generating FC confidence belt for {} values of mu.".format(len(mu_bins)))
-    
+
     partial_func = partial(
         fc_find_acceptance_interval_gauss, sigma=sigma, x_bins=x_bins, alpha=cl
     )
-    
+
     results = ProgressBar.map(partial_func, mu_bins, multiprocess=True)
-    
+
     LowerLimitAna, UpperLimitAna = zip(*results)
-    
+
     LowerLimitAna = np.asarray(LowerLimitAna)
     UpperLimitAna = np.asarray(UpperLimitAna)
-    
+
     fc_fix_limits(LowerLimitAna, UpperLimitAna)
-    
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    
+
     plt.plot(LowerLimitAna, mu_bins, ls="-", color="red")
     plt.plot(UpperLimitAna, mu_bins, ls="-", color="red")
-    
+
     plt.grid(True)
     ax.xaxis.set_ticks(np.arange(-10, 10, 1))
     ax.xaxis.set_ticks(np.arange(-10, 10, 0.2), True)
