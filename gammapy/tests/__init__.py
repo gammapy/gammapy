@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-This packages contains affiliated package tests.
+Global tests for Gammapy (involving several sub-packages)
+could go in this folder.
 """

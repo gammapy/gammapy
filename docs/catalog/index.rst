@@ -1,8 +1,8 @@
 .. _catalog:
 
-***************************
-Catalog (`gammapy.catalog`)
-***************************
+*************************
+catalog - Source catalogs
+*************************
 
 .. currentmodule:: gammapy.catalog
 
@@ -12,27 +12,59 @@ Introduction
 `gammapy.catalog` provides utilities to work with source catalogs in general,
 and catalogs relevant for gamma-ray astronomy specifically.
 
-TODO: auto-generate that list of built-in catalogs during the Sphinx build.
+If you just want to browse catalog information, you can visit
+http://gamma-sky.net .
 
-The `gammapy.catalog.SourceCatalog` class is a thin wrapper around
-`astropy.table.Table` (stored as a ``table`` attribute) that adds
-source lookup by name or row index, returning a `gammapy.catalog.SourceCatalogObject`
-object that contains the `astropy.table.Row` information in a ``data``
-attribute of type `collections.OrderedDict`, but unlike Row is decoupled from
-the original table (a ``catalog_row_index`` entry has been added to the ``data`` dict).
+Available catalogs
+------------------
 
-Each specific catalog (e.g. `gammapy.catalog.SourceCatalog3FGL`) is implemented as a
-sub-class and can add functionality that's specific to that catalog, e.g. access
-to a spectrum object that can be plotted.
+Support for the following catalogs is available::
 
-Two command-line tools are provided to quickly query and browse catalog information:
+    Source catalog registry:
+       name                       description                      sources
+    --------- ---------------------------------------------------- -------
+         hgps H.E.S.S. Galactic plane survey (HGPS) source catalog      78
+    gamma-cat                 An open catalog of gamma-ray sources     166
+         3fgl                      LAT 4-year point source catalog    3034
+         1fhl      First Fermi-LAT Catalog of Sources above 10 GeV     514
+         2fhl                LAT second high-energy source catalog     360
+         3fhl                 LAT third high-energy source catalog    1556
+         2hwc               2HWC catalog from the HAWC observatory      40
 
-* ``gammapy-catalog-query`` -- Print catalog source info to the terminal and make plots.
-* ``gammapy-catalog-browse`` - A web app to browse catalog source info and make plots.
+More catalogs can be added to ``gammapy.catalog``, and users can also add
+support for their favourite catalog in their Python script or package, by
+following the examples how the built-in catalogs are implemented.
 
-`gammapy.catalog` also contains some code to analyse source catalogs
-(e.g. via `gammapy.catalog.FluxDistribution`), but that's very limited at this time.
-Contributions welcome!
+How it works
+------------
+
+This section provides some information how ``gammapy.catalog`` works. In
+principle, to use it, you don't have to know how it's implemented, and just
+follow the examples in the sections below. In practice, if you want to work with
+catalogs via ``gammapy.catalog`` or directly, it really helps if you spend a
+little time and learn about Astropy tables.
+
+Catalog data is stored as an `astropy.table.Table` object, with the information
+for each source in a `astropy.table.Row`. In ``gammapy.catalog`` we have
+implemented a base class `gammapy.catalog.SourceCatalog` that stores the
+`astropy.table.Table` in the ``table`` attribute, and a base
+`gammapy.catalog.SourceCatalogObject` class that can extract the
+`astropy.table.Row` data into a Python dictionary in the ``data`` attribute and
+then provides conveniences to work with the data for a given source.
+
+For every given concrete catalog, two classes ("catalog" and "source/object")
+are needed. E.g. for the Fermi-LAT 3FGL catalog, there are the
+`gammapy.catalog.SourceCatalog3FGL` and the
+`gammapy.catalog.SourceCatalogObject3FGL` classes.
+
+The ``SourceCatalog`` class mostly handles data file loading, as well as source
+access by integer row index or source name. The ``SourceCatalogObject`` class
+implements in ``__str__`` a pretty-printed version of ``source.data``, so that
+you can ``print(source)``, as well as factory methods to create Gammapy objects
+such as `gammapy.spectrum.models.SpectralModel` or
+``gammapy.image.models.SkySpatialModel`` or `gammapy.spectrum.FluxPoints`
+representing spatial and spectral models, or spectral points, which you can then
+print or plot or use for simulation and analysis.
 
 Getting Started
 ===============
@@ -52,16 +84,18 @@ You can access ``source_catalogs`` like a dict, i.e. load catalogs by name::
     >>> catalog = source_catalogs['3fgl']
     >>> catalog.table # To access the underlying astropy.table.Table
 
-Note that importing ``source_catalogs`` did not load catalogs from disk,
-they are lazy-loaded on access via ``[name]`` and then cached for the duration
-of your Python session.
+Note that importing ``source_catalogs`` did not load catalogs from disk, they
+are lazy-loaded on access via ``[name]`` and then cached for the duration of
+your Python session.
 
-You can get an object representing one source of interest by source name or by row index::
+You can get an object representing one source of interest by source name or by
+row index::
 
     >>> source = catalog['3FGL J0004.7-4740']  # access by source name
     >>> source = catalog[15]  # access by row index
 
-The ``source`` object contains all of the information in the ``data`` attribute::
+The ``source`` object contains all of the information in the ``data``
+attribute::
 
     >>> source.data['RAJ2000']
     1.1806999
@@ -70,13 +104,28 @@ The ``source`` object contains all of the information in the ``data`` attribute:
     >>> source.pprint()
     # print all info on this source in a readable format
 
-TODO: continue here describing how to access spectra, finder charts, ...
-once that's implemented.
+TODO: continue here describing how to access spectra, finder charts, ... once
+that's implemented.
 
-TODO: give one example, e.g. how to reproduce a log(N)-log(S) plot from a Fermi catalog paper.
+Using `gammapy.catalog`
+=======================
+
+For more advanced use cases please go to the tutorial notebooks:
+
+* :gp-notebook:`hgps`
+* :gp-notebook:`first_steps`
+* :gp-notebook:`sed_fitting_gammacat_fermi`
+
+The following pages describe ``gammapy.catalog`` in more detail:
+
+.. toctree::
+    :maxdepth: 1
+
+    gammacat
 
 Reference/API
 =============
 
 .. automodapi:: gammapy.catalog
     :no-inheritance-diagram:
+    :include-all-objects:

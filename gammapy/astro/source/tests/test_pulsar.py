@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
-from astropy.tests.helper import assert_quantity_allclose
-from ....utils.testing import requires_dependency
+from ....utils.testing import assert_quantity_allclose
 from ...source import Pulsar, SimplePulsar
 
 pulsar = Pulsar()
-time = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
+time = Quantity([1e2, 1e4, 1e6, 1e8], "yr")
 
 
 def get_atnf_catalog_sample():
@@ -25,24 +23,29 @@ def get_atnf_catalog_sample():
     21    J0024-7204T     305.890    -44.894   0.007588  2.94e-19  4.09e+08   1.51e+09  2.65e+34
     22    J0024-7204U     305.890    -44.905   0.004343  9.52e-20  7.23e+08   6.51e+08  4.59e+34
     28    J0026+6320      120.176      0.593   0.318358  1.50e-16  3.36e+07   2.21e+11  1.84e+32
-    """[1:-1]
-    return Table.read(data, format='ascii')
+    """
+    return Table.read(data, format="ascii")
 
 
 def test_SimplePulsar_atnf():
     """Test functions against ATNF pulsar catalog values"""
     atnf = get_atnf_catalog_sample()
-    P = Quantity(atnf['P0'], 's')
-    P_dot = Quantity(atnf['P1'], '')
-    simple_pulsar = SimplePulsar(P=P, P_dot=P_dot)
-    assert_allclose(simple_pulsar.tau.to('yr').value, atnf['AGE'], rtol=0.01)
-    assert_allclose(simple_pulsar.luminosity_spindown.to('erg s^-1').value, atnf['EDOT'], rtol=0.01)
-    assert_allclose(simple_pulsar.magnetic_field.to('gauss').value, atnf['BSURF'], rtol=0.01)
+    simple_pulsar = SimplePulsar(
+        P=Quantity(atnf["P0"], "s"), P_dot=Quantity(atnf["P1"], "")
+    )
+
+    assert_allclose(simple_pulsar.tau.to("yr").value, atnf["AGE"], rtol=0.01)
+
+    edot = simple_pulsar.luminosity_spindown.to("erg s^-1").value
+    assert_allclose(edot, atnf["EDOT"], rtol=0.01)
+
+    bsurf = simple_pulsar.magnetic_field.to("gauss").value
+    assert_allclose(bsurf, atnf["BSURF"], rtol=0.01)
 
 
 def test_Pulsar_period():
     """Test pulsar period"""
-    reference = Quantity([0.10000001, 0.10000123, 0.10012331, 0.11270709], 's')
+    reference = Quantity([0.10000001, 0.10000123, 0.10012331, 0.11270709], "s")
     assert_quantity_allclose(pulsar.period(time), reference)
 
 
@@ -54,25 +57,23 @@ def test_Pulsar_peridod_dot():
 
 def test_Pulsar_luminosity_spindown():
     """Test pulsar spin down luminosity"""
-    reference = [3.85531469e+31, 3.85536174e+31, 3.86006820e+31, 4.34521233e+31]
+    reference = [3.85531469e31, 3.85536174e31, 3.86006820e31, 4.34521233e31]
     assert_allclose(pulsar.luminosity_spindown(time).value, reference)
 
 
-@requires_dependency('scipy')
 def test_Pulsar_energy_integrated():
     """Test against numerical integration"""
     energies = []
     from scipy.integrate import quad
 
     def lumi(t):
-        t = Quantity(t, 's')
+        t = Quantity(t, "s")
         return pulsar.luminosity_spindown(t).value
 
     for t_ in time:
         energy = quad(lumi, 0, t_.cgs.value, epsrel=0.01)[0]
         energies.append(energy)
-    # The last value is quite inaccurate, because integration is over
-    # several decades
+    # The last value is quite inaccurate, because integration is over several decades
     assert_allclose(energies, pulsar.energy_integrated(time).value, rtol=0.2)
 
 

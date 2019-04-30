@@ -1,22 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
 __all__ = [
-    'coordinate_iau_format',
-    'ra_iau_format',
-    'dec_iau_format',
-    'skycoord_from_table',
-    'select_sky_box',
-    'select_sky_circle',
-    'to_ds9_region',
+    "coordinate_iau_format",
+    "ra_iau_format",
+    "dec_iau_format",
+    "skycoord_from_table",
+    "select_sky_box",
+    "select_sky_circle",
 ]
 
 
-def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
-                          prefix=''):
+def coordinate_iau_format(coordinate, ra_digits, dec_digits=None, prefix=""):
     """Coordinate format as an IAU source designation.
 
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
@@ -78,8 +75,8 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     >>> print(designations)
     ['HESS J0042.7+4116', 'HESS J0535.2-0523']
     """
-    if coordinate.frame.name == 'galactic':
-        coordinate = coordinate.transform_to('icrs')
+    if coordinate.frame.name == "galactic":
+        coordinate = coordinate.transform_to("icrs")
 
     if dec_digits is None:
         dec_digits = max(2, ra_digits - 1)
@@ -123,8 +120,8 @@ def ra_iau_format(ra, digits):
     strrepr : str
         IAU format string representation of the angle.
     """
-    if (not isinstance(digits, int)) and (digits >= 2):
-        raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
+    if not isinstance(digits, int) and (digits >= 2):
+        raise ValueError("Invalid digits: {}. Valid options: int >= 2".format(digits))
 
     if ra.isscalar:
         out = _ra_iau_format_scalar(ra, digits)
@@ -145,20 +142,20 @@ def _ra_iau_format_scalar(ra, digits):
     ra_s = ra.hms[2]
 
     if digits == 2:  # format: HH
-        ra_str = '{0:02d}'.format(ra_h)
+        ra_str = "{:02d}".format(ra_h)
     elif digits == 3:  # format: HHh
-        ra_str = '{0:03d}'.format(int(10 * ra.hour))
+        ra_str = "{:03d}".format(int(10 * ra.hour))
     elif digits == 4:  # format: HHMM
-        ra_str = '{0:02d}{1:02d}'.format(ra_h, ra_m)
+        ra_str = "{:02d}{:02d}".format(ra_h, ra_m)
     elif digits == 5:  # format : HHMM.m
-        ra_str = '{0:02d}{1:02d}.{2:01d}'.format(ra_h, ra_m, int(ra_s / 6))
+        ra_str = "{:02d}{:02d}.{:01d}".format(ra_h, ra_m, int(ra_s / 6))
     elif digits == 6:  # format: HHMMSS
-        ra_str = '{0:02d}{1:02d}{2:02d}'.format(ra_h, ra_m, int(ra_s))
+        ra_str = "{:02d}{:02d}{:02d}".format(ra_h, ra_m, int(ra_s))
     else:  # format: HHMMSS.s
         SS = int(ra_s)
         s_digits = digits - 6
         s = int(10 ** s_digits * (ra_s - SS))
-        fmt = '{0:02d}{1:02d}{2:02d}.{3:0' + str(s_digits) + 'd}'
+        fmt = "{0:02d}{1:02d}{2:02d}.{3:0" + str(s_digits) + "d}"
         ra_str = fmt.format(ra_h, ra_m, SS, s)
 
     return ra_str
@@ -193,7 +190,7 @@ def dec_iau_format(dec, digits):
         IAU format string representation of the angle.
     """
     if not isinstance(digits, int) and digits >= 2:
-        raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
+        raise ValueError("Invalid digits: {}. Valid options: int >= 2".format(digits))
 
     if dec.isscalar:
         out = _dec_iau_format_scalar(dec, digits)
@@ -209,26 +206,26 @@ def _dec_iau_format_scalar(dec, digits):
     # but the IAU spec requires to truncate instead.
     # That's why integers with the correct digits are computed and formatted
     # instead of formatting floats directly
-    dec_sign = '+' if dec.deg >= 0 else '-'
+    dec_sign = "+" if dec.deg >= 0 else "-"
     dec_d = int(abs(dec.dms[0]))
     dec_m = int(abs(dec.dms[1]))
     dec_s = abs(dec.dms[2])
 
     if digits == 2:  # format: +DD
-        dec_str = '{0}{1:02d}'.format(dec_sign, dec_d)
+        dec_str = "{}{:02d}".format(dec_sign, dec_d)
     elif digits == 3:  # format: +DDd
-        dec_str = '{0:+04d}'.format(int(10 * dec.deg))
+        dec_str = "{:+04d}".format(int(10 * dec.deg))
     elif digits == 4:  # format : +DDMM
-        dec_str = '{0}{1:02d}{2:02d}'.format(dec_sign, dec_d, dec_m)
+        dec_str = "{}{:02d}{:02d}".format(dec_sign, dec_d, dec_m)
     elif digits == 5:  # format: +DDMM.m
-        dec_str = '{0}{1:02d}{2:02d}.{3:01d}'.format(dec_sign, dec_d, dec_m, int(dec_s / 6))
+        dec_str = "{}{:02d}{:02d}.{:01d}".format(dec_sign, dec_d, dec_m, int(dec_s / 6))
     elif digits == 6:  # format: +DDMMSS
-        dec_str = '{0}{1:02d}{2:02d}.{3:02d}'.format(dec_sign, dec_d, dec_m, int(dec_s))
+        dec_str = "{}{:02d}{:02d}.{:02d}".format(dec_sign, dec_d, dec_m, int(dec_s))
     else:  # format: +DDMMSS.s
         SS = int(dec_s)
         s_digits = digits - 6
         s = int(10 ** s_digits * (dec_s - SS))
-        fmt = '{0}{1:02d}{2:02d}{3:02d}.{4:0' + str(s_digits) + 'd}'
+        fmt = "{}{:02d}{:02d}{:02d}.{:0" + str(s_digits) + "d}"
         dec_str = fmt.format(dec_sign, dec_d, dec_m, SS, s)
 
     return dec_str
@@ -243,24 +240,29 @@ def skycoord_from_table(table):
     TODO: I'm not sure if it's a good idea to use this because it's not always clear
     which positions are taken.
     """
+    try:
+        keys = table.colnames
+    except AttributeError:
+        keys = table.keys()
 
-    if set(['RAJ2000', 'DEJ2000']).issubset(table.colnames):
-        lon, lat, frame = 'RAJ2000', 'DEJ2000', 'icrs'
-    elif set(['RA', 'DEC']).issubset(table.colnames):
-        lon, lat, frame = 'RA', 'DEC', 'icrs'
-    elif set(['GLON', 'GLAT']).issubset(table.colnames):
-        lon, lat, frame = 'GLON', 'GLAT', 'galactic'
+    if {"RAJ2000", "DEJ2000"}.issubset(keys):
+        lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
+    elif {"RA", "DEC"}.issubset(keys):
+        lon, lat, frame = "RA", "DEC", "icrs"
+    elif {"GLON", "GLAT"}.issubset(keys):
+        lon, lat, frame = "GLON", "GLAT", "galactic"
+    elif {"glon", "glat"}.issubset(keys):
+        lon, lat, frame = "glon", "glat", "galactic"
     else:
-        raise KeyError('No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.')
+        raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
 
-    unit = table[lon].unit if table[lon].unit else 'deg'
-
+    unit = table[lon].unit.to_string() if table[lon].unit else "deg"
     skycoord = SkyCoord(table[lon], table[lat], unit=unit, frame=frame)
 
     return skycoord
 
 
-def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
+def select_sky_box(table, lon_lim, lat_lim, frame="icrs", inverted=False):
     """Select sky positions in a box.
 
     This function can be applied e.g. to event lists of source catalogs
@@ -301,8 +303,8 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     # SkyCoord automatically wraps lon angles at 360 deg, so in case
     # the lon range is wrapped at 180 deg, lon angles must be wrapped
     # also at 180 deg for the comparison to work
-    if any(l < Angle(0., 'deg') for l in lon_lim):
-        lon = lon.wrap_at(Angle(180, 'deg'))
+    if any(l < Angle(0.0, "deg") for l in lon_lim):
+        lon = lon.wrap_at(Angle(180, "deg"))
 
     lon_mask = (lon_lim[0] <= lon) & (lon < lon_lim[1])
     lat_mask = (lat_lim[0] <= lat) & (lat < lat_lim[1])
@@ -313,7 +315,7 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     return table[mask]
 
 
-def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=False):
+def select_sky_circle(table, lon_cen, lat_cen, radius, frame="icrs", inverted=False):
     """Select sky positions in a circle.
 
     This function can be applied e.g. to event lists of source catalogs
@@ -362,131 +364,3 @@ def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=Fa
         mask = np.invert(mask)
 
     return table[mask]
-
-
-def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=None,
-                  glat='GLAT', unc_glat=None, label=None, label_position='top',
-                  label_additional_info=None, label_distance=1.2, marker='diamond',
-                  dashed=False, width=3):
-    """
-    Write ds9 region file from catalog.
-
-    Currently works only for galactic coordinates.
-
-
-    Parameters
-    ----------
-    catalog : `~astropy.table.Table`
-        Catalog with position and size information.
-    glon : str ('GLON')
-        Catalog column containing galactic longitude position.
-    glat : str ('GLAT')
-        Catalog column containing galactic latitude position.
-    unc_glon : str (None)
-        Catalog column containing galactic longitude position uncertainty.
-    unc_glat : str (None)
-        Catalog column containing galactic latitude position uncertainty.
-    radius : str (None)
-        Catalog column containing extension information.
-    color : str ('green')
-        Valid ds9 color.
-    label : str (None)
-        Catalog column to use for the label.
-    label_position: str ('top')
-        Position of the region label. Either 'top' or 'bottom'.
-    label_distance: float (1.2)
-        Distance of the label from the regions center. Given
-        in multiple of the region's radius.
-    label_additional_info: dict
-        Additional info to be shown in the region label.
-    dashed : bool (False)
-        Dashed region line.
-    width : int
-        Width of the region line.
-
-    Examples
-    --------
-    This example reads Greens catalog from `gammapy.datasets` and writes it to a
-    ds9 region file.
-
-    >>> from gammapy.catalog import load_catalog_green
-    >>> green = load_catalog_green()
-    >>> green['MeanDiam'] /= 120.
-    >>> green_str = to_ds9_region(green, radius='MeanDiam',
-    >>>                           label='Source_Name', color='red')
-    >>> with open("region_green.reg", "w") as region_file:
-    >>>     region_file.write(green_str)
-
-    Returns
-    -------
-    region : str
-        DS9 region string.
-    """
-    region_string = ''
-
-    dash = '1' if dashed else '0'
-
-    format_ = ' color = {color} width = {width} dash = {dash}\n'.format(**locals())
-    if radius is not None:
-        shape = 'galactic;circle({0:.5f},{1:.5f},{2:.5f}) #'
-    else:
-        shape = 'galactic;point({0:.5f},{1:.5f})' + ' # point = {0}'.format(marker)
-    shape += format_
-
-    text = 'galactic;text({0:5f},{1:5f}) # text = {{{2}}} '
-    text += 'color = {0}\n'.format(color)
-
-    for row in catalog:
-        label_ = row[label] if label is not None else ''
-        if label_additional_info is not None:
-            text_add_ = ', '.join([__.format(row[_]) for __, _
-                                   in label_additional_info.items()])
-            label_ += '(' + text_add_ + ')'
-        if radius is not None:
-            shape_ = shape.format(row[glon], row[glat], row[radius])
-            text_ = text.format(row[glon], row[glat] + row[radius]
-                                * label_distance, label_)
-        else:
-            shape_ = shape.format(row[glon], row[glat])
-            text_ = text.format(row[glon], row[glat] + 0.05, label_)
-
-        region_string += shape_ + text_
-
-        if unc_glat and unc_glat is not None:
-            cross_ = _get_cross_ds9_region(row[glon], row[glat], row[unc_glon],
-                                           row[unc_glat], color, width)
-            region_string += cross_
-    return region_string
-
-
-def _get_cross_ds9_region(x, y, unc_x, unc_y, color, width, endbar=0.01):
-    """
-    Get ds9 region string for a cross that represents position uncertainties.
-
-    Parameters
-    ----------
-    x : float
-        Position in x direction.
-    y : float
-        Position in y direction.
-    unc_x : float
-        Uncertainty of the position in x direction.
-    unc_y : float
-        Uncertainty of the position in y direction.
-    color : str ('green')
-        Valid ds9 color.
-    width : float
-        Linewidth of the cross.
-    endbar : float (default = 0.01)
-        Length of the endbar in deg.
-    """
-    format_line = ' color = {0} width = {1}\n'.format(color, width)
-    line_ = ''
-    line = 'galactic;line({0:.5f},{1:.5f},{2:.5f},{3:.5f}) #'
-    line_ += line.format(x - unc_x, y, x + unc_x, y) + format_line
-    line_ += line.format(x, y - unc_y, x, y + unc_y) + format_line
-    line_ += line.format(x - unc_x, y - endbar, x - unc_x, y + endbar) + format_line
-    line_ += line.format(x + unc_x, y - endbar, x + unc_x, y + endbar) + format_line
-    line_ += line.format(x - endbar, y + unc_y, x + endbar, y + unc_y) + format_line
-    line_ += line.format(x - endbar, y - unc_y, x + endbar, y - unc_y) + format_line
-    return line_

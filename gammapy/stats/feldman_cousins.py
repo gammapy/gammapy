@@ -1,20 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Feldman Cousins algorithm to compute parameter confidence limits."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
-from astropy.extern.six.moves import range
-from astropy.extern.six import iteritems
+from scipy.stats import norm, poisson, rankdata
 
-__all__ = ['fc_find_acceptance_interval_gauss',
-           'fc_find_acceptance_interval_poisson',
-           'fc_construct_acceptance_intervals_pdfs',
-           'fc_get_limits',
-           'fc_fix_limits',
-           'fc_find_limit',
-           'fc_find_average_upper_limit',
-           'fc_construct_acceptance_intervals',
-           ]
+
+__all__ = [
+    "fc_find_acceptance_interval_gauss",
+    "fc_find_acceptance_interval_poisson",
+    "fc_construct_acceptance_intervals_pdfs",
+    "fc_get_limits",
+    "fc_fix_limits",
+    "fc_find_limit",
+    "fc_find_average_upper_limit",
+    "fc_construct_acceptance_intervals",
+]
 
 log = logging.getLogger(__name__)
 
@@ -29,13 +29,13 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
 
     Parameters
     ----------
-    mu : double
+    mu : float
         Mean of the Gaussian
-    sigma : double
+    sigma : float
         Width of the Gaussian
     x_bins : array-like
         Bins in x
-    alpha : double
+    alpha : float
         Desired confidence level
 
     Returns
@@ -43,9 +43,8 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     (x_min, x_max) : tuple of floats
         Acceptance interval
     """
-    from scipy import stats
 
-    dist = stats.norm(loc=mu, scale=sigma)
+    dist = norm(loc=mu, scale=sigma)
 
     x_bin_width = x_bins[1] - x_bins[0]
 
@@ -64,7 +63,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
         else:
             # Implementing the boundary condition at zero
             mu_best = max(0, x)
-            prob_mu_best = stats.norm.pdf(x, loc=mu_best, scale=sigma)
+            prob_mu_best = norm.pdf(x, loc=mu_best, scale=sigma)
             # probMuBest should never be zero. Check it just in case.
             if prob_mu_best == 0.0:
                 r.append(0.0)
@@ -75,10 +74,12 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     r = np.asarray(r)
 
     if sum(p) < alpha:
-        raise ValueError("X bins don't contain enough probability to reach "
-                         "desired confidence level for this mu!")
+        raise ValueError(
+            "X bins don't contain enough probability to reach "
+            "desired confidence level for this mu!"
+        )
 
-    rank = stats.rankdata(-r, method='dense')
+    rank = rankdata(-r, method="dense")
 
     index_array = np.arange(x_bins.size)
 
@@ -110,13 +111,13 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
 
     Parameters
     ----------
-    mu : double
+    mu : float
         Mean of the signal
-    background : double
+    background : float
         Mean of the background
     x_bins : array-like
         Bins in x
-    alpha : double
+    alpha : float
         Desired confidence level
 
     Returns
@@ -124,9 +125,7 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     (x_min, x_max) : tuple of floats
         Acceptance interval
     """
-    from scipy import stats
-
-    dist = stats.poisson(mu=mu + background)
+    dist = poisson(mu=mu + background)
 
     x_bin_width = x_bins[1] - x_bins[0]
 
@@ -137,7 +136,7 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
         p.append(dist.pmf(x))
         # Implementing the boundary condition at zero
         muBest = max(0, x - background)
-        probMuBest = stats.poisson.pmf(x, mu=muBest + background)
+        probMuBest = poisson.pmf(x, mu=muBest + background)
         # probMuBest should never be zero. Check it just in case.
         if probMuBest == 0.0:
             r.append(0.0)
@@ -148,10 +147,12 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     r = np.asarray(r)
 
     if sum(p) < alpha:
-        raise ValueError("X bins don't contain enough probability to reach "
-                         "desired confidence level for this mu!")
+        raise ValueError(
+            "X bins don't contain enough probability to reach "
+            "desired confidence level for this mu!"
+        )
 
-    rank = stats.rankdata(-r, method='dense')
+    rank = rankdata(-r, method="dense")
 
     index_array = np.arange(x_bins.size)
 
@@ -216,8 +217,12 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
     # Set the rank to 1 and add probability
     for i in range(number_mus):
         distributions_re_scaled[i][largest_entry[i]] = 1
-        summed_propability[i] += np.sum(np.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0))
-        distributions_scaled[i] = np.where(distributions_re_scaled[i] == 1, 1, distributions_scaled[i])
+        summed_propability[i] += np.sum(
+            np.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0)
+        )
+        distributions_scaled[i] = np.where(
+            distributions_re_scaled[i] == 1, 1, distributions_scaled[i]
+        )
 
     # Identify next largest entry not yet ranked. While there are entries
     # smaller than 1, some bins don't have a rank yet.
@@ -225,12 +230,18 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
         # For each mu, this is the largest rank attributed so far.
         largest_rank = np.amax(distributions_re_scaled, axis=1)
         # For each mu, this is the largest entry that is not yet a rank.
-        largest_entry = np.where(distributions_re_scaled < 1, distributions_re_scaled, -1)
+        largest_entry = np.where(
+            distributions_re_scaled < 1, distributions_re_scaled, -1
+        )
         # For each mu, this is the position of the largest entry that is not yet a rank.
         largest_entry_position = np.argmax(largest_entry, axis=1)
         # Invalidate indices where there is no maximum (every entry is already a rank)
-        largest_entry_position = [largest_entry_position[i] if largest_entry[i][largest_entry_position[i]] != -1 \
-                                      else -1 for i in range(len(largest_entry_position))]
+        largest_entry_position = [
+            largest_entry_position[i]
+            if largest_entry[i][largest_entry_position[i]] != -1
+            else -1
+            for i in range(len(largest_entry_position))
+        ]
         # Replace the largest entry with the highest rank so far plus one
         # Add the probability
         for i in range(number_mus):
@@ -238,7 +249,9 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
                 continue
             distributions_re_scaled[i][largest_entry_position[i]] = largest_rank[i] + 1
             if summed_propability[i] < alpha:
-                summed_propability[i] += distributions_scaled[i][largest_entry_position[i]]
+                summed_propability[i] += distributions_scaled[i][
+                    largest_entry_position[i]
+                ]
                 distributions_scaled[i][largest_entry_position[i]] = 1
             else:
                 distributions_scaled[i][largest_entry_position[i]] = 0
@@ -310,7 +323,6 @@ def fc_fix_limits(lower_limit, upper_limit):
     upper_limit : array-like
         Feldman Cousins upper limit x-coordinates
     """
-
     all_fixed = False
 
     while not all_fixed:
@@ -333,7 +345,7 @@ def fc_find_limit(x_value, x_values, y_values):
 
     Parameters
     ----------
-    x_value : double
+    x_value : float
         The measured x value for which the upper limit is wanted.
     x_values : array-like
         The x coordinates of the confidence belt.
@@ -342,10 +354,9 @@ def fc_find_limit(x_value, x_values, y_values):
 
     Returns
     -------
-    limit : double
+    limit : float
         The Feldman Cousins limit
     """
-
     if x_value > max(x_values):
         raise ValueError("Measured x outside of confidence belt!")
 
@@ -363,7 +374,7 @@ def fc_find_limit(x_value, x_values, y_values):
             return y_values[i + 1]
 
 
-def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
+def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins, prob_limit=1e-5):
     r"""
     Function to calculate the average upper limit for a confidence belt
 
@@ -380,21 +391,31 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
         Feldman Cousins upper limit x-coordinates
     mu_bins : array-like
         The bins used in mue direction.
+    prob_limit : float
+        Probability value at which x values are no longer considered for the
+        average limit.
 
     Returns
     -------
-    average_limit : double
+    average_limit : float
         Average upper limit
     """
-
-    avergage_limit = 0
+    average_limit = 0
     number_points = len(x_bins)
 
     for i in range(number_points):
-        limit = fc_find_limit(x_bins[i], upper_limit, mu_bins)
-        avergage_limit += matrix[0][i] * limit
+        # Bins with very low probability will not contribute to average limit
+        if matrix[0][i] < prob_limit:
+            continue
+        try:
+            limit = fc_find_limit(x_bins[i], upper_limit, mu_bins)
+        except:
+            log.warning("Warning: Calculation of average limit incomplete!")
+            log.warning("Add more bins in mu direction or decrease prob_limit.")
+            return average_limit
+        average_limit += matrix[0][i] * limit
 
-    return avergage_limit
+    return average_limit
 
 
 def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
@@ -416,7 +437,6 @@ def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
     acceptance_intervals : ndarray
         Acceptance intervals (1 means inside, 0 means outside)
     """
-
     distributions_scaled = []
 
     # Histogram gets rid of the last bin, so add one extra
@@ -424,11 +444,13 @@ def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
     new_bins = np.concatenate((bins, np.array([bins[-1] + bin_width])), axis=0)
 
     # Histogram and normalise each distribution so it is a real PDF
-    for mu, distribution in iter(sorted(iteritems(distribution_dict))):
+    for _, distribution in sorted(distribution_dict.items()):
         entries = np.histogram(distribution, bins=new_bins)[0]
         integral = float(sum(entries))
         distributions_scaled.append(entries / integral)
 
-    acceptance_intervals = fc_construct_acceptance_intervals_pdfs(distributions_scaled, alpha)
+    acceptance_intervals = fc_construct_acceptance_intervals_pdfs(
+        distributions_scaled, alpha
+    )
 
     return acceptance_intervals

@@ -1,35 +1,67 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-import itertools
+import pytest
 import numpy as np
-from astropy.units import Quantity
-from gammapy.spectrum import SpectrumObservation, SpectrumEnergyGroupMaker
-from gammapy.spectrum.models import PowerLaw
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.table import Table
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
-from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
-                          compute_differential_flux_points,
-                          _energy_lafferty_power_law, DifferentialFluxPoints,
-                          IntegralFluxPoints, FluxPointEstimator, FluxPoints)
-from ..flux_point import SEDLikelihoodProfile
-from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
+from ...catalog.fermi import SourceCatalog3FGL
+from ...utils.testing import (
+    requires_dependency,
+    requires_data,
+    assert_quantity_allclose,
+    mpl_plot_check,
+)
+from ...utils.fitting import Fit
+from ..models import PowerLaw, SpectralModel
+from ..flux_point import FluxPoints, FluxPointsDataset
 
-x_methods = ['table', 'lafferty', 'log_center']
-y_methods = ['power_law', 'model']
-indices = [0, 1, 2, 3]
-
-FLUX_POINTS_FILES = ['diff_flux_points.ecsv',
-                     'diff_flux_points.fits',
-                     'flux_points.ecsv',
-                     'flux_points.fits']
+FLUX_POINTS_FILES = [
+    "diff_flux_points.ecsv",
+    "diff_flux_points.fits",
+    "flux_points.ecsv",
+    "flux_points.fits",
+]
 
 
-@requires_dependency('scipy')
-def test_x_lafferty():
-    """Tests Lafferty & Wyatt x-point method.
+class LWTestModel(SpectralModel):
+    @staticmethod
+    def evaluate(x):
+        return 1e4 * np.exp(-6 * x)
+
+    def integral(self, xmin, xmax, **kwargs):
+        return -1.0 / 6 * 1e4 * (np.exp(-6 * xmax) - np.exp(-6 * xmin))
+
+    def inverse(self, y):
+        return -1.0 / 6 * np.log(y * 1e-4)
+
+
+class XSqrTestModel(SpectralModel):
+    @staticmethod
+    def evaluate(x):
+        return x ** 2
+
+    def integral(self, xmin, xmax, **kwargs):
+        return 1.0 / 3 * (xmax ** 3 - xmin ** 2)
+
+    def inverse(self, y):
+        return np.sqrt(y)
+
+
+class ExpTestModel(SpectralModel):
+    @staticmethod
+    def evaluate(x):
+        return np.exp(x * u.Unit("1 / TeV"))
+
+    def integral(self, xmin, xmax, **kwargs):
+        return np.exp(xmax * u.Unit("1 / TeV")) - np.exp(xmin * u.Unit("1 / TeV"))
+
+    def inverse(self, y):
+        return np.log(y * u.TeV) * u.TeV
+
+
+def test_e_ref_lafferty():
+    """
+    Tests Lafferty & Wyatt x-point method.
 
     Using input function g(x) = 10^4 exp(-6x) against
     check values from paper Lafferty & Wyatt. Nucl. Instr. and Meth. in Phys.
@@ -38,325 +70,221 @@ def test_x_lafferty():
     # These are the results from the paper
     desired = np.array([0.048, 0.190, 0.428, 0.762])
 
-    def f(x):
-        return (10 ** 4) * np.exp(-6 * x)
-
-    emins = np.array([0.0, 0.1, 0.3, 0.6])
-    emaxs = np.array([0.1, 0.3, 0.6, 1.0])
-    actual = _x_lafferty(xmin=emins, xmax=emaxs, function=f)
+    model = LWTestModel()
+    e_min = np.array([0.0, 0.1, 0.3, 0.6])
+    e_max = np.array([0.1, 0.3, 0.6, 1.0])
+    actual = FluxPoints._e_ref_lafferty(model, e_min, e_max)
     assert_allclose(actual, desired, atol=1e-3)
 
 
-def test_integration():
-    def function(x):
-        return x ** 2
-
-    xmin = np.array([-2])
-    xmax = np.array([2])
-
-    def indef_int(x):
-        return (x ** 3) / 3
-
-    # Calculate analytical result
-    desired = indef_int(xmax) - indef_int(xmin)
-    # Get numerical result
-    actual = _integrate(xmin, xmax, function, segments=1e3)
-    # Compare, bounds suitable for number of segments
-    assert_allclose(actual, desired, rtol=1e-2)
-
-
-@requires_dependency('scipy')
-def test_ydiff_excess_equals_expected():
+def test_dnde_from_flux():
     """Tests y-value normalization adjustment method.
     """
+    e_min = np.array([10, 20, 30, 40])
+    e_max = np.array([20, 30, 40, 50])
+    flux = np.array([42, 52, 62, 72])  # 'True' integral flux in this test bin
 
-    def model(x):
-        return x ** 2
-
-    xmin = np.array([10, 20, 30, 40])
-    xmax = np.array([20, 30, 40, 50])
-    yint = np.array([42, 52, 62, 72])  # 'True' integral flux in this test bin
     # Get values
-    x_values = np.array(_x_lafferty(xmin, xmax, model))
-    y_values = _ydiff_excess_equals_expected(yint, xmin, xmax, x_values, model)
+    model = XSqrTestModel()
+    e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
+    dnde = FluxPoints._dnde_from_flux(
+        flux, model, e_ref, e_min, e_max, pwl_approx=False
+    )
+
     # Set up test case comparison
-    y_model = model(np.array(x_values))
+    dnde_model = model(e_ref)
+
     # Test comparison result
-    desired = _integrate(xmin, xmax, model)
+    desired = model.integral(e_min, e_max)
     # Test output result
-    actual = y_model * (yint / y_values)
+    actual = flux * (dnde_model / dnde)
     # Compare
     assert_allclose(actual, desired, rtol=1e-6)
 
 
-@requires_dependency('scipy')
-@pytest.mark.parametrize('index, x_method, y_method',
-                         itertools.product(indices, ['lafferty', 'log_center'],
-                                           y_methods))
-def test_array_broadcasting(index, x_method, y_method):
-    """Tests for array broadcasting in for likely input scenarios.
+@pytest.mark.parametrize("method", ["table", "lafferty", "log_center"])
+def test_compute_flux_points_dnde_exp(method):
     """
-    # API for power_law case can differ from model case if table not used
-    # so both tested here
-    in_array = 0.9 * np.arange(6).reshape(3, 2)
-    values = dict(SPECTRAL_INDEX=[3 * in_array, 3., 3., 3.],
-                  ENERGY_MIN=[1., 0.1 * in_array, 1., 1.],
-                  ENERGY_MAX=[10., 10., 4 * in_array, 10.],
-                  INT_FLUX=[30., 30., 30., 10. * in_array])
-    # Define parameters
-    spectral_index = values['SPECTRAL_INDEX'][index]
-    energy_min = values['ENERGY_MIN'][index]
-    energy_max = values['ENERGY_MAX'][index]
-    int_flux = values['INT_FLUX'][index]
-    int_flux_err = 0.1 * int_flux
-    if y_method == 'power_law':
-        model = None
-    else:
-        def model(x):
-            return x ** 2
-
-    table = compute_differential_flux_points(x_method, y_method, model=model,
-                                             spectral_index=spectral_index,
-                                             energy_min=energy_min,
-                                             energy_max=energy_max,
-                                             int_flux=int_flux,
-                                             int_flux_err_hi=int_flux_err,
-                                             int_flux_err_lo=int_flux_err, )
-    # Check output sized
-    energy = table['ENERGY']
-    actual = len(energy)
-    desired = 6
-    assert_allclose(actual, desired)
-
-
-@requires_dependency('scipy')
-@pytest.mark.parametrize('x_method,y_method', itertools.product(x_methods,
-                                                                y_methods))
-def test_compute_differential_flux_points(x_method, y_method):
-    """Iterates through the 6 different combinations of input options.
-
     Tests against analytical result or result from gammapy.spectrum.powerlaw.
     """
-    # Define the test cases for all possible options
-    energy_min = np.array([1.0, 10.0])
-    energy_max = np.array([10.0, 100.0])
-    spectral_index = 2.0
+    model = ExpTestModel()
+
+    e_min = [1.0, 10.0] * u.TeV
+    e_max = [10.0, 100.0] * u.TeV
+
     table = Table()
-    table['ENERGY_MIN'] = energy_min
-    table['ENERGY_MAX'] = energy_max
-    table['ENERGY'] = np.array([2.0, 20.0])
-    if x_method == 'log_center':
-        energy = np.sqrt(energy_min * energy_max)
-    elif x_method == 'table':
-        energy = table['ENERGY'].data
+    table.meta["SED_TYPE"] = "flux"
+    table["e_min"] = e_min
+    table["e_max"] = e_max
 
-    # Arbitrary model (simple exponential case)
-    def diff_flux_model(x):
-        return np.exp(x)
+    flux = model.integral(e_min, e_max)
+    table["flux"] = flux
 
-    # Integral of model
-    def int_flux_model(E_min, E_max):
-        return np.exp(E_max) - np.exp(E_min)
+    if method == "log_center":
+        e_ref = np.sqrt(e_min * e_max)
+    elif method == "table":
+        e_ref = [2.0, 20.0] * u.TeV
+        table["e_ref"] = e_ref
+    elif method == "lafferty":
+        e_ref = FluxPoints._e_ref_lafferty(model, e_min, e_max)
 
-    if y_method == 'power_law':
-        if x_method == 'lafferty':
-            energy = _energy_lafferty_power_law(energy_min, energy_max,
-                                                spectral_index)
-            # Test that this is equal to analytically expected
-            # log center result
-            desired_energy = np.sqrt(energy_min * energy_max)
-            assert_allclose(energy, desired_energy, rtol=1e-6)
-        desired = power_law_evaluate(energy, 1, spectral_index, energy)
-        int_flux = power_law_integral_flux(desired, spectral_index, energy,
-                                           energy_min, energy_max)
-    elif y_method == 'model':
-        if x_method == 'lafferty':
-            energy = _x_lafferty(energy_min, energy_max, diff_flux_model)
-        desired = diff_flux_model(energy)
-        int_flux = int_flux_model(energy_min, energy_max)
-    int_flux_err = 0.1 * int_flux
-    table['INT_FLUX'] = int_flux
-    table['INT_FLUX_ERR_HI'] = int_flux_err
-    table['INT_FLUX_ERR_LO'] = -int_flux_err
+    result = FluxPoints(table).to_sed_type("dnde", model=model, method=method)
 
-    result_table = compute_differential_flux_points(x_method,
-                                                    y_method,
-                                                    table,
-                                                    diff_flux_model,
-                                                    spectral_index)
     # Test energy
-    actual_energy = result_table['ENERGY'].data
-    desired_energy = energy
-    assert_allclose(actual_energy, desired_energy, rtol=1e-3)
+    actual = result.e_ref
+    assert_quantity_allclose(actual, e_ref, rtol=1e-8)
+
     # Test flux
-    actual = result_table['DIFF_FLUX'].data
-    assert_allclose(actual, desired, rtol=1e-2)
-    # Test error
-    actual = result_table['DIFF_FLUX_ERR_HI'].data
-    desired = 0.1 * result_table['DIFF_FLUX'].data
-    assert_allclose(actual, desired, rtol=1e-3)
+    actual = result.table["dnde"].quantity
+    desired = model(e_ref)
+    assert_quantity_allclose(actual, desired, rtol=1e-8)
 
 
-@pytest.mark.xfail
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-def test_3fgl_flux_points():
-    """Test reading flux points from 3FGL and also conversion from int to diff points"""
-    from gammapy.catalog import source_catalogs
-    cat_3fgl = source_catalogs['3fgl']
-    source = cat_3fgl['3FGL J0018.9-8152']
-    index = source.data['Spectral_Index']
-
-    diff_points = source.flux_points
-    fluxes = diff_points['DIFF_FLUX'].quantity
-    energies = diff_points['ENERGY'].quantity
-    eflux = fluxes * energies ** 2
-
-    actual = eflux.to('erg cm-2 s-1').value
-    diff_desired = [2.25564e-12, 1.32382e-12, 9.54129e-13, 8.63484e-13, 1.25145e-12]
-
-    assert_allclose(actual, diff_desired, rtol=1e-4)
-
-    int_points = source.flux_points_integral
-    actual = int_points['INT_FLUX'].quantity.to('cm-2 s-1').value
-
-    int_desired = [9.45680e-09, 1.94538e-09, 4.00020e-10, 1.26891e-10, 7.24820e-11]
-
-    assert_allclose(actual, int_desired, rtol=1e-4)
-
-    diff2 = int_points.to_differential_flux_points(x_method='log_center',
-                                                   y_method='power_law',
-                                                   spectral_index=index)
-
-    actual = diff2['DIFF_FLUX'].quantity.to('TeV-1 cm-2 s-1').value
-    desired = fluxes.to('TeV-1 cm-2 s-1').value
-
-    # Todo : Is this precision good enough?
-    assert_allclose(actual, desired, rtol=1e-2)
-
-    # Compare errors from 3 method to get diff points
-    method1 = diff_points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 TeV-1').value
-    method2 = diff2['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 TeV-1').value
-    assert_allclose(method1, method2, rtol=1e-2)
-
-
-@requires_data('gammapy-extra')
-@requires_dependency('sherpa')
-@requires_dependency('scipy')
-class TestFluxEstimator:
-    def setup(self):
-        self.model = PowerLaw(
-            index=Quantity(2, ''),
-            amplitude=Quantity(1e-11, 'm-2 s-1 TeV-1'),
-            reference=Quantity(1, 'TeV'),
-        )
-
-        # TODO: simulate known spectrum instead of using this example:
-        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
-        self.obs = SpectrumObservation.read(filename)
-        self.seg = SpectrumEnergyGroupMaker(obs=self.obs)
-        ebounds = [0.3, 1.001, 3, 10.001, 30] * u.TeV
-        self.seg.compute_range_safe()
-        self.seg.compute_groups_fixed(ebounds=ebounds)
-
-        self.groups = self.seg.groups
-
-    def test_with_power_law(self):
-        # import logging
-        # logging.basicConfig(level=logging.DEBUG)
-
-        fpe = FluxPointEstimator(
-            obs=self.obs,
-            groups=self.groups,
-            model=self.model,
-        )
-
-        assert 'FluxPointEstimator' in str(fpe)
-
-        fpe.compute_points()
-        flux_points = fpe.flux_points
-        flux_points.pprint()
-        flux_points.info()
-
-        actual = flux_points['diff_flux'][2]
-        desired = Quantity(5.737510858664804e-09, 'm-2 s-1 TeV-1')
-        assert_quantity_allclose(actual, desired, rtol=1e-3)
-
-        actual = flux_points['diff_flux_err_hi'][2]
-        desired = Quantity(9.904468386098078e-10, 'm-2 s-1 TeV-1')
-        assert_quantity_allclose(actual, desired, rtol=1e-3)
-
-    def test_with_ecpl(self):
-        # TODO: implement
-        assert True
-
-
-@requires_data('gammapy-extra')
-class TestSEDLikelihoodProfile:
-    def setup(self):
-        self.sed = SEDLikelihoodProfile.read('$GAMMAPY_EXTRA/datasets/spectrum/'
-                                             'llsed_hights.fits')
-
-    def test_basics(self):
-        # print(self.sed)
-        assert 'SEDLikelihoodProfile' in str(self.sed)
-
-    @requires_dependency('matplotlib')
-    def test_plot(self):
-        ax = self.sed.plot()
-
-
-@pytest.fixture(params=FLUX_POINTS_FILES)
+@pytest.fixture(params=FLUX_POINTS_FILES, scope="session")
 def flux_points(request):
-    path = '$GAMMAPY_EXTRA/test_datasets/spectrum/flux_points/' + request.param
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/" + request.param
     return FluxPoints.read(path)
 
-@requires_dependency('yaml')
-@requires_data('gammapy-extra')
+
+@pytest.fixture(scope="session")
+def flux_points_likelihood():
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits"
+    return FluxPoints.read(path).to_sed_type("dnde")
+
+
+@requires_data("gammapy-data")
 class TestFluxPoints:
-
-    @requires_dependency('matplotlib')
-    def test_plot(self, flux_points):
-        import matplotlib.pyplot as plt
-        ax = plt.gca()
-        flux_points.plot(ax=ax)
-
     def test_info(self, flux_points):
         info = str(flux_points)
         assert flux_points.sed_type in info
 
     def test_e_ref(self, flux_points):
         actual = flux_points.e_ref
-        if flux_points.sed_type == 'dnde':
+        if flux_points.sed_type == "dnde":
             pass
-        elif flux_points.sed_type == 'flux':
+        elif flux_points.sed_type == "flux":
             desired = np.sqrt(flux_points.e_min * flux_points.e_max)
             assert_quantity_allclose(actual, desired)
 
     def test_e_min(self, flux_points):
-        if flux_points.sed_type == 'dnde':
+        if flux_points.sed_type == "dnde":
             pass
-        elif flux_points.sed_type == 'flux':
+        elif flux_points.sed_type == "flux":
             actual = flux_points.e_min
-            desired = 299530.9757217623 * u.MeV
+            desired = 299530.97 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
     def test_e_max(self, flux_points):
-        if flux_points.sed_type == 'dnde':
+        if flux_points.sed_type == "dnde":
             pass
-        elif flux_points.sed_type == 'flux':
+        elif flux_points.sed_type == "flux":
             actual = flux_points.e_max
-            desired = 399430.975721694 * u.MeV
+            desired = 399430.975 * u.MeV
             assert_quantity_allclose(actual.sum(), desired)
 
     def test_write_fits(self, tmpdir, flux_points):
-        filename = tmpdir / 'flux_points.fits'
+        filename = tmpdir / "flux_points.fits"
         flux_points.write(filename)
         actual = FluxPoints.read(filename)
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmpdir, flux_points):
-        filename = tmpdir / 'flux_points.ecsv'
+        filename = tmpdir / "flux_points.ecsv"
         flux_points.write(filename)
         actual = FluxPoints.read(filename)
         assert str(flux_points) == str(actual)
+
+    def test_drop_ul(self, flux_points):
+        flux_points = flux_points.drop_ul()
+        assert not np.any(flux_points.is_ul)
+
+    def test_stack(self, flux_points):
+        stacked = FluxPoints.stack([flux_points, flux_points])
+        assert len(stacked.table) == 2 * len(flux_points.table)
+        assert stacked.sed_type == flux_points.sed_type
+
+    @requires_dependency("matplotlib")
+    def test_plot(self, flux_points):
+        with mpl_plot_check():
+            flux_points.plot()
+
+    @requires_dependency("matplotlib")
+    def test_plot_likelihood(self, flux_points_likelihood):
+        with mpl_plot_check():
+            flux_points_likelihood.plot_likelihood()
+
+
+@requires_data("gammapy-data")
+def test_compute_flux_points_dnde_fermi():
+    """
+    Test compute_flux_points_dnde on fermi source.
+    """
+    fermi_3fgl = SourceCatalog3FGL()
+    source = fermi_3fgl["3FGL J0835.3-4510"]
+    flux_points = source.flux_points.to_sed_type(
+        "dnde", model=source.spectral_model, method="log_center", pwl_approx=True
+    )
+    for column in ["dnde", "dnde_errn", "dnde_errp", "dnde_ul"]:
+        actual = flux_points.table["e2" + column].quantity
+        desired = flux_points.table[column].quantity * flux_points.e_ref ** 2
+        assert_quantity_allclose(actual[:-1], desired[:-1], rtol=1e-1)
+
+
+@pytest.fixture()
+def fit():
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
+    data = FluxPoints.read(path)
+    data.table["e_ref"] = data.e_ref.to("TeV")
+
+    model = PowerLaw(index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV")
+    dataset = FluxPointsDataset(model, data)
+    return Fit(dataset)
+
+
+@requires_data("gammapy-data")
+class TestFluxPointFit:
+    @requires_dependency("iminuit")
+    def test_fit_pwl_minuit(self, fit):
+        optimize_opts = {"backend": "minuit"}
+        result = fit.run(optimize_opts=optimize_opts)
+        self.assert_result(result)
+
+    @requires_dependency("sherpa")
+    def test_fit_pwl_sherpa(self, fit):
+        result = fit.optimize(backend="sherpa", method="simplex")
+        self.assert_result(result)
+
+    @staticmethod
+    def assert_result(result):
+        assert result.success
+        assert_allclose(result.total_stat, 25.2059, rtol=1e-3)
+
+        index = result.parameters["index"]
+        assert_allclose(index.value, 2.216, rtol=1e-3)
+
+        amplitude = result.parameters["amplitude"]
+        assert_allclose(amplitude.value, 2.1616e-13, rtol=1e-3)
+
+        reference = result.parameters["reference"]
+        assert_allclose(reference.value, 1, rtol=1e-8)
+
+    @staticmethod
+    @requires_dependency("iminuit")
+    def test_likelihood_profile(fit):
+        optimize_opts = {"backend": "minuit"}
+
+        result = fit.run(optimize_opts=optimize_opts)
+
+        profile = fit.likelihood_profile("amplitude", nvalues=3, bounds=1)
+
+        ts_diff = profile["likelihood"] - result.total_stat
+        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+
+        value = result.parameters["amplitude"].value
+        err = result.parameters.error("amplitude")
+        values = np.array([value - err, value, value + err])
+
+        profile = fit.likelihood_profile("amplitude", values=values)
+
+        ts_diff = profile["likelihood"] - result.total_stat
+        assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)

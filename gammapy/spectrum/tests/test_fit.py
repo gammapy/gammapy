@@ -1,150 +1,207 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
 import numpy as np
-from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
-from ...datasets import gammapy_extra
+from ...utils.testing import requires_data, requires_dependency
+from ...utils.random import get_random_state
+from ...utils.fitting import Fit
+from ...irf import EffectiveAreaTable
 from ...spectrum import (
+    PHACountsSpectrum,
     SpectrumObservationList,
     SpectrumObservation,
-    SpectrumFit,
-    SpectrumFitResult,
     models,
-)
-from ...utils.testing import (
-    requires_dependency,
-    requires_data,
-    SHERPA_LT_4_8,
+    SpectrumDatasetOnOff,
+    SpectrumDataset,
 )
 
 
-@pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif('SHERPA_LT_4_8')
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
-class TestSpectralFit:
+@requires_dependency("sherpa")
+class TestFit:
+    """Test fit on counts spectra without any IRFs"""
 
     def setup(self):
-        self.obs_list = SpectrumObservationList.read(
-            '$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
-
-        self.pwl = models.PowerLaw(index=2 * u.Unit(''),
-                                   amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
-                                   reference=1 * u.TeV)
-
-        self.ecpl = models.ExponentialCutoffPowerLaw(
-            index=2 * u.Unit(''),
-            amplitude=10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
-            reference=1 * u.TeV,
-            lambda_=0.1 / u.TeV
+        self.nbins = 30
+        binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
+        self.source_model = models.PowerLaw(
+            index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
+        )
+        self.bkg_model = models.PowerLaw(
+            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
         )
 
-        # Example fit for one observation
-        self.fit = SpectrumFit(self.obs_list[0], self.pwl)
-        self.fit.fit()
-        self.result = self.fit.result[0]
+        self.alpha = 0.1
+        random_state = get_random_state(23)
+        npred = self.source_model.integral(binning[:-1], binning[1:])
+        source_counts = random_state.poisson(npred)
+        self.src = PHACountsSpectrum(
+            energy_lo=binning[:-1],
+            energy_hi=binning[1:],
+            data=source_counts,
+            backscal=1,
+        )
+        # Currently it's necessary to specify a lifetime
+        self.src.livetime = 1 * u.s
 
-    def test_basic_results(self):
-        assert self.fit.method_fit.name == 'simplex'
-        assert_allclose(self.result.statval, 34.19706702533566)
-        pars = self.result.model.parameters
-        assert_quantity_allclose(pars.index,
-                                 2.23957544167327)
-        assert_quantity_allclose(pars.amplitude,
-                                 2.018513315748709e-07 * u.Unit('m-2 s-1 TeV-1'))
-        par_errors = self.result.model_with_uncertainties.parameters
-        assert_allclose(par_errors.index.s, 0.09558428890966723)
-        assert_allclose(par_errors.amplitude.s, 2.2154024177186417e-08)
+        npred_bkg = self.bkg_model.integral(binning[:-1], binning[1:])
 
-    def test_npred(self):
-        actual = self.result.obs.predicted_counts(self.result.model).data.value
-        desired = self.result.npred
-        assert_allclose(actual, desired)
+        bkg_counts = random_state.poisson(npred_bkg)
+        off_counts = random_state.poisson(npred_bkg * 1.0 / self.alpha)
+        self.bkg = PHACountsSpectrum(
+            energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
+        )
+        self.off = PHACountsSpectrum(
+            energy_lo=binning[:-1],
+            energy_hi=binning[1:],
+            data=off_counts,
+            backscal=1.0 / self.alpha,
+        )
+
+    def test_cash(self):
+        """Simple CASH fit to the on vector"""
+        dataset = SpectrumDataset(model=self.source_model, counts=self.src)
+
+        npred = dataset.npred().data.data
+        assert_allclose(npred[5], 660.5171, rtol=1e-5)
+
+        stat_val = dataset.likelihood()
+        assert_allclose(stat_val, -107346.5291, rtol=1e-5)
+
+        self.source_model.parameters["index"].value = 1.12
+
+        fit = Fit([dataset])
+        result = fit.run()
+
+        # These values are check with sherpa fits, do not change
+        pars = result.parameters
+        assert_allclose(pars["index"].value, 1.995525, rtol=1e-3)
+        assert_allclose(pars["amplitude"].value, 100245.9, rtol=1e-3)
+
+    def test_fit_range(self):
+        """Test fit range without complication of thresholds"""
+        obs = SpectrumObservation(on_vector=self.src)
+        dataset = obs.to_spectrum_dataset()
+        dataset.model = self.source_model
+
+        assert np.sum(dataset.mask) == self.nbins
+        e_min, e_max = dataset.energy_range
+
+        assert_allclose(e_max.value, 10)
+        assert_allclose(e_min.value, 0.1)
+
+
+    def test_likelihood_profile(self):
+        dataset = SpectrumDataset(model=self.source_model, counts=self.src)
+        fit = Fit([dataset])
+        result = fit.run()
+        true_idx = result.parameters["index"].value
+        values = np.linspace(0.95 * true_idx, 1.05 * true_idx, 100)
+        profile = fit.likelihood_profile("index", values=values)
+        actual = values[np.argmin(profile["likelihood"])]
+        assert_allclose(actual, true_idx, rtol=0.01)
+
+
+@requires_dependency("iminuit")
+@requires_data("gammapy-data")
+class TestSpectralFit:
+    """Test fit in astrophysical scenario"""
+
+    def setup(self):
+        path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+        obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
+        obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
+        self.obs_list = SpectrumObservationList([obs1, obs2])
+
+        self.pwl = models.PowerLaw(
+            index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+        )
+
+        self.ecpl = models.ExponentialCutoffPowerLaw(
+            index=2,
+            amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+            reference=1 * u.TeV,
+            lambda_=0.1 / u.TeV,
+        )
+
 
     def test_stats(self):
-        stats = self.result.stats_per_bin()
-        actual = np.sum(stats)
-        desired = self.result.statval
+        dataset = self.obs_list[0].to_spectrum_dataset()
+        dataset.model = self.pwl
+
+        fit = Fit([dataset])
+        result = fit.run()
+
+        stats = dataset.likelihood_per_bin()
+        actual = np.sum(stats[dataset.mask])
+
+        desired = result.total_stat
         assert_allclose(actual, desired)
 
     def test_fit_range(self):
-        # Actual fit range can differ from threshold due to binning effects
-        # We take the lowest bin that is completely within threshold
-        # Sherpa quotes the lincenter of that bin as fitrange
-        obs = self.result.obs
-        thres_bin = obs.on_vector.energy.find_node(obs.lo_threshold)
-        desired = obs.on_vector.energy.lin_center()[thres_bin + 1]
-        actual = self.result.fit_range[0]
-        assert_quantity_allclose(actual, desired)
+        # Fit range not restriced fit range should be the thresholds
+        obs = self.obs_list[0]
+        desired = obs.on_vector.lo_threshold
 
-        # Restrict fit range
-        fit_range = [4, 20] * u.TeV
-        self.fit.fit_range = fit_range
-        self.fit.fit()
+        dataset = obs.to_spectrum_dataset()
+        actual = dataset.energy_range[0]
 
-        range_bin = obs.on_vector.energy.find_node(fit_range[1])
-        desired = obs.on_vector.energy.lin_center()[range_bin]
-        actual = self.fit.result[0].fit_range[1]
-        assert_quantity_allclose(actual, desired)
+        assert actual.unit == "keV"
+        assert_allclose(actual.value, desired.value)
 
-        # Make sure fit range is not extended below threshold
-        fit_range = [0.001, 10] * u.TeV
-        self.fit.fit_range = fit_range
-        self.fit.fit()
-        desired = obs.on_vector.energy.lin_center()[thres_bin + 1]
-        actual = self.fit.result[0].fit_range[0]
+    def test_no_edisp(self):
+        dataset = self.obs_list[0].to_spectrum_dataset()
 
-        assert_quantity_allclose(actual, desired)
+        # Bring aeff in RECO space
+        data = dataset.aeff.data.evaluate(energy=dataset.counts_on.energy.nodes)
+        dataset.aeff = EffectiveAreaTable(
+            data=data,
+            energy_lo=dataset.counts_on.energy.lo,
+            energy_hi=dataset.counts_on.energy.hi,
+        )
+        dataset.edisp = None
+        dataset.model = self.pwl
 
-    def test_fit_method(self):
-        self.fit.method_fit = "levmar"
-        assert self.fit.method_fit.name == "levmar"
-        self.fit.fit()
-        result = self.fit.result[0]
-        assert_quantity_allclose(result.model.parameters.index,
-                                 2.2395184727047788)
-
-    def test_ecpl_fit(self):
-        fit = SpectrumFit(self.obs_list[0], self.ecpl)
-        fit.fit()
-        assert_quantity_allclose(fit.result[0].model.parameters.lambda_,
-                                 0.028606845248390498 / u.TeV)
-
-    def test_joint_fit(self):
-        fit = SpectrumFit(self.obs_list, self.pwl)
-        fit.fit()
-        assert_quantity_allclose(fit.global_result.model.parameters.index,
-                                 2.207512847977245)
-        assert_quantity_allclose(fit.global_result.model.parameters.amplitude,
-                                 2.3755942722352085e-07 * u.Unit('m-2 s-1 TeV-1'))
+        fit = Fit([dataset])
+        result = fit.run()
+        assert_allclose(
+            result.parameters["index"].value, 2.7961, atol=0.02
+        )
 
     def test_stacked_fit(self):
         stacked_obs = self.obs_list.stack()
-        fit = SpectrumFit(stacked_obs, self.pwl)
-        fit.fit()
-        pars = fit.global_result.model.parameters
-        assert_quantity_allclose(pars.index, 2.2462501437579476)
-        assert_quantity_allclose(pars.amplitude,
-                                 2.5160334568171844e-11 * u.Unit('cm-2 s-1 TeV-1'))
 
+        dataset = stacked_obs.to_spectrum_dataset()
+        dataset.model = self.pwl
 
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
-def test_sherpa_fit(tmpdir):
-    # this is to make sure that the written PHA files work with sherpa
-    pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
+        fit = Fit([dataset])
+        result = fit.run()
+        pars = result.parameters
 
-    import sherpa.astro.ui as sau
-    from sherpa.models import PowLaw1D
-    sau.load_pha(pha1)
-    sau.set_stat('wstat')
-    model = PowLaw1D('powlaw1d.default')
-    model.ref = 1e9
-    model.ampl = 1
-    model.gamma = 2
-    sau.set_model(model * 1e-20)
-    sau.fit()
-    assert_allclose(model.pars[0].val, 2.0198, atol=1e-4)
-    assert_allclose(model.pars[2].val, 2.3564, atol=1e-4)
+        assert_allclose(pars["index"].value, 2.7767, rtol=1e-3)
+        assert u.Unit(pars["amplitude"].unit) == "cm-2 s-1 TeV-1"
+        assert_allclose(pars["amplitude"].value, 5.191e-11, rtol=1e-3)
+
+    @requires_dependency("sherpa")
+    def test_sherpa_fit(self, tmpdir):
+        # this is to make sure that the written PHA files work with sherpa
+        import sherpa.astro.ui as sau
+        from sherpa.models import PowLaw1D
+
+        # TODO: this works a little bit, but some info and warnings
+        # from Sherpa remain. Not sure what to do, OK as-is for now.
+        import logging
+
+        logging.getLogger("sherpa").setLevel("ERROR")
+
+        self.obs_list.write(tmpdir, use_sherpa=True)
+        filename = tmpdir / "pha_obs23523.fits"
+        sau.load_pha(str(filename))
+        sau.set_stat("wstat")
+        model = PowLaw1D("powlaw1d.default")
+        model.ref = 1e9
+        model.ampl = 1
+        model.gamma = 2
+        sau.set_model(model * 1e-20)
+        sau.fit()
+        assert_allclose(model.pars[0].val, 2.732, rtol=1e-3)
+        assert_allclose(model.pars[2].val, 4.647, rtol=1e-3)

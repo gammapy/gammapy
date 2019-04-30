@@ -1,0 +1,162 @@
+.. include:: ../../references.txt
+
+.. _pig-004:
+
+*********************************************
+PIG 4 - Setup for tutorial notebooks and data
+*********************************************
+
+* Author: José Enrique Ruiz, Christoph Deil
+* Created: May 16, 2018
+* Accepted: Oct 4, 2018
+* Status: accepted
+* Discussion:  `GH 1419`_
+
+Abstract
+========
+
+For the past years, we have had tutorial notebooks and example datasets in a
+second ``gammapy-extra`` repository, as well as others example datasets placed in
+differente repositories like ``gamma-cat`` and ``gammapy-fermi-lat-data``.
+The motivation was to keep the main ``gammapy`` code repository small. 
+But we always had problems with code, tutorials and data changing and versions 
+not being linked.
+
+We propose to move the notebooks to the ``gammapy`` repository so that code and 
+tutorials can be version-coupled, and to only use stable datasets in tutorials to 
+mostly save the versioning issues. The datasets will remain in ``gammapy-extra`` 
+repository. 
+
+To ship tutorials and datasets to users, we propose to add a ``gammapy download``
+command. The ``gammapy-extra`` repository will remain as a repository for 
+developers and as one place where datasets can be put, but it will not be mentioned 
+to users.
+
+What we have
+============
+
+We have the `gammapy`_ repository for code, and the `gammapy-extra`_ repository
+for tutorial notebooks, example datasets and a few other things.
+
+The ``gammapy`` repository currently is 12 MB and the ``gammapy-extra`` repository
+is 161 MB. In ``gammapy-extra/notebooks``, we have ~ 30 tutorial notebooks, each
+20 kB to 1 MB in size, i.e. a few MB in total. Most of the size comes from PNG
+output images in the notebooks, and they usually change on re-run, i.e. even
+though git compresses a bit, the repo grows by up to 1 MB every time a notebook
+is edited. The datasets we access from the tutorials are maybe 20 or 30 MB, a
+lot of the datasets we have there are old and should be cleaned up / removed.
+The reason the notebooks and datasets were split out from the code was to keep the 
+code repository small and avoid it growing to 100 MB or even 1 GB  over time.
+
+This separation of code vs. notebooks and datasets has been a problem in Gammapy
+for years.
+
+Given that Gammapy code changes (and probably always will, even if the pace will
+become slower and slower over the years), the tutorials have to be version-coupled to 
+the code. A related question is how tutorial notebooks, datasets used in tutorials and 
+other datasets not used in the tutorials are shipped to users.  Some related discussions
+may be found in the following references, see e.g. `GH 1237`_, `GH 1369`_, 
+`GH 700`_, `GH 431`_, `GH 405`_, `GH 228`_, `GH 1131`_ (probably missed a few).
+
+
+Proposal
+========
+
+This proposal is limited. It outlines a few key changes in the setup for
+notebooks and example data that mostly solve the versioning and shipping issue
+of tutorials and datasets. Other related issues that may appear will be faced
+iteratively with or without an extra PIG.
+
+To solve the versioning issue for notebooks, we propose to move the notebooks
+from ``gammapy-extra/notebooks`` to ``gammapy/notebooks``. We propose to store
+the notebooks in the repository without output cells filled. Removing output 
+cells before committing has the advantage that the files are small, and that 
+the diff in the pull request is also small and review becomes possible. 
+On the other hand, the output is not directly visible on Github. Note that in 
+any case, a rendered version of the notebooks will be available via the docs, 
+that is already in place.  We count on developer documentation and code review 
+to guarantee empty-output notebooks stored in ``gammapy/notebooks``, though we 
+can also explore `nbstripout`_ for a potential implementation of an automated 
+mechamism to remove outputs from notebooks in the Github repository.
+
+In the process of documentation building the notebooks will be texted and executed
+automatically, so the static HTML-formatted notebooks will contain output cells 
+rendered in the the documentation. On the contrary, links to Binder notebooks and 
+download links to .ipynb files will point to empty-output notebooks.
+
+To solve the versioning issue for datasets, we propose to only use stable
+example datasets. Examples are `gammapy-fermi-lat-data`_ or
+`gammapy-extra/datasets/cta-1dc`_ or the upcoming `HESS DL3 DR1`_ or
+``joint-crab`` datasets. Datasets can be in ``gammapy-extra`` or at any other
+URL, but even if they are in ``gammapy-extra``, they should not be ''live''
+datasets. If an issue is found or something is improved, a separate new dataset
+should be added, instead of changing the existing one. So versioning of example
+datasets is not needed. 
+
+To ship notebooks and example data to users, we propose to introduce a ``gammapy
+download`` command. This work and discussion how it should work in detail has
+started in `GH 1369`_. Roughly, the idea is that users will use ``gammapy
+download`` to download a version of the notebooks matching the version of the
+Gammapy code, by fetching the files from Github. A ``gammapy download tutorials``
+command will download all notebooks and the input datasets related. Not output 
+datasets from the notebooks will be downloaded. All files will be copied into a 
+``$CWD/gammapy-tutorials`` folder, the datasets placed in a ``datasets`` subfolder
+and the notebooks into a ``notebooks-x.x`` subfolder accounting for the version 
+downloaded. The management of  updating the ``gammapy-tutorials`` folder after a 
+local update of ``gammapy`` is left up to the user. 
+
+The URLs of the input files used by the notebooks should be noted in the
+``tutorials/notebooks.yaml`` file in the Gammapy repository, also accounting
+for the list of notebooks to download as tutorials. For the different stable releases, 
+the list of tutorials to download, their locations and datasets used are declared in 
+YAML files placed in the ``download/tutorials`` folder of the `gammapy-web`_ Github repository.
+The same happens for conda working environments of stable releases declared in files placed
+in the ``download/install`` folder of that repository. The datasets are not versioned and 
+are similarly declared in the ``download/data`` folder.
+
+As far as we can see, for testing and online Binder these changes don't introduce 
+significant improvements or new problems, though a Dockerfile in the ``gammapy`` repository 
+will be needed to have these notebooks running in Binder. This is a change that will just 
+affect developers and users on their local machines.
+
+Alternatives
+============
+
+One alternative would be to keep the notebooks in ``gammapy-extra``, and to
+couple the version with ``gammapy`` somehow, e.g. via a git submodule pointer,
+or via a config file in one of the repos or on gammapy.org with the version to
+be used. The mono repo approach seems simpler and better.
+
+For shipping the notebooks, one option is to include them in the source and
+binary distribution as package data, instead of downloading the from the web.
+For datasets this is not a good option, it would limit us to 10 - 30 MB max,
+i.e. we would get a split between some datasets distributed this way, and larger
+ones still via ``gammapy download``. Overall it doesn't seem useful; note that
+we also don't ship HTML documentation with the code, but separately.
+
+Decision
+========
+
+This PIG was extensively discussed on Github, as well as online and in-person meetings.
+It was then implemented in summer 2018, and we shipped the new setup with Gammapy v0.8
+and tried the development workflow for a few weeks. The solution works well so far
+and does solve the notebook and dataset issues that motivated the work.
+It was finally approved during the Gammapy coding sprint on Oct 4, 2018.
+
+
+.. _gammapy: https://github.com/gammapy/gammapy
+.. _gammapy-extra: https://github.com/gammapy/gammapy-extra
+.. _gammapy-fermi-lat-data: https://github.com/gammapy/gammapy-fermi-lat-data
+.. _gammapy-extra/datasets/cta-1dc: https://github.com/gammapy/gammapy-extra/tree/master/datasets/cta-1dc
+.. _HESS DL3 DR1: https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/
+.. _nbstripout: https://github.com/kynan/nbstripout
+.. _gammapy-web: https://github.com/gammapy/gammapy-webpage
+
+.. _GH 1419: https://github.com/gammapy/gammapy/pull/1419
+.. _GH 1369: https://github.com/gammapy/gammapy/pull/1369
+.. _GH 1237: https://github.com/gammapy/gammapy/issues/1237
+.. _GH 1131: https://github.com/gammapy/gammapy/issues/1131
+.. _GH 700: https://github.com/gammapy/gammapy/pull/700
+.. _GH 431: https://github.com/gammapy/gammapy/pull/431
+.. _GH 405: https://github.com/gammapy/gammapy/issues/405
+.. _GH 228: https://github.com/gammapy/gammapy/issues/288

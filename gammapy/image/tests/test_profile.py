@@ -1,100 +1,142 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency, requires_data
-from ...datasets import FermiGalacticCenter
-from ...image import SkyImage
-from ..profile import compute_binning, image_profile
+from astropy.table import Table
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
+from ...utils.testing import assert_quantity_allclose
+from ...utils.testing import requires_dependency, mpl_plot_check
+from ...maps import WcsNDMap, WcsGeom
+from ..profile import compute_binning, ImageProfile, ImageProfileEstimator
 
 
-@requires_dependency('pandas')
+@requires_dependency("pandas")
 def test_compute_binning():
     data = [1, 3, 2, 2, 4]
-    bin_edges = compute_binning(data, n_bins=3, method='equal width')
+    bin_edges = compute_binning(data, n_bins=3, method="equal width")
     assert_allclose(bin_edges, [1, 2, 3, 4])
 
-    bin_edges = compute_binning(data, n_bins=3, method='equal entries')
+    bin_edges = compute_binning(data, n_bins=3, method="equal entries")
     # TODO: create test-cases that have been verified by hand here!
     assert_allclose(bin_edges, [1, 2, 2.66666667, 4])
 
 
-@requires_data('gammapy-extra')
-def test_image_lat_profile():
-    """Tests GLAT profile with image of 1s of known size and shape."""
-    image = SkyImage.empty_like(FermiGalacticCenter.counts(), fill=1.)
-    coordinates = image.coordinates()
-    l = coordinates.data.lon
-    b = coordinates.data.lat
-    lons, lats = l.degree, b.degree
+@pytest.fixture(scope="session")
+def checkerboard_image():
+    nxpix, nypix = 10, 6
 
-    counts = SkyImage.empty_like(FermiGalacticCenter.counts(), fill=1.)
+    # set up data as a checkerboard of 0.5 and 1.5, so that the mean and sum
+    # are not compeletely trivial to compute
+    data = 1.5 * np.ones((nypix, nxpix))
+    data[slice(0, nypix + 1, 2), slice(0, nxpix + 1, 2)] = 0.5
+    data[slice(1, nypix + 1, 2), slice(1, nxpix + 1, 2)] = 0.5
 
-    mask = np.zeros_like(image.data)
-    # Select Full Image
-    lat = [lats.min(), lats.max()]
-    lon = [lons.min(), lons.max()]
-    # Pick minimum valid binning
-    binsz = 0.5
-    mask_array = np.zeros_like(image.data, dtype='bool')
-    # Test output
-    lat_profile1 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz, errors=True)
-    # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lat_profile1['BIN_VALUE'].data.astype(float),
-                    2000 * np.ones(39), rtol=1, atol=0.1)
-    assert_allclose(lat_profile1['BIN_ERR'].data,
-                    0.1 * lat_profile1['BIN_VALUE'].data)
-
-    lat_profile2 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
-                                 counts.to_image_hdu(), errors=True)
-    # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lat_profile2['BIN_ERR'].data,
-                    44.721359549995796 * np.ones(39), rtol=1, atol=0.1)
-
-    lat_profile3 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
-                                 counts.to_image_hdu(), mask_array, errors=True)
-
-    assert_allclose(lat_profile3['BIN_VALUE'].data, np.zeros(39))
+    geom = WcsGeom.create(npix=(nxpix, nypix), coordsys="GAL", binsz=0.02)
+    return WcsNDMap(geom=geom, data=data, unit="cm-2 s-1")
 
 
-@requires_data('gammapy-extra')
-def test_image_lon_profile():
-    """Tests GLON profile with image of 1s of known size and shape."""
-    image = FermiGalacticCenter.counts()
+@pytest.fixture(scope="session")
+def cosine_profile():
+    table = Table()
+    table["x_ref"] = np.linspace(-90, 90, 11) * u.deg
+    table["profile"] = np.cos(table["x_ref"].to("rad")) * u.Unit("cm-2 s-1")
+    table["profile_err"] = 0.1 * table["profile"]
+    return ImageProfile(table)
 
-    coordinates = SkyImage.from_image_hdu(image).coordinates()
-    lons = coordinates.galactic.l.wrap_at('180d')
-    lats = coordinates.galactic.b
-    lons = lons.degree
-    lats = lats.degree
-    image.data = np.ones_like(image.data)
 
-    counts = FermiGalacticCenter.counts()
-    counts.data = np.ones_like(counts.data)
+class TestImageProfileEstimator:
+    @staticmethod
+    def test_lat_profile_sum(checkerboard_image):
+        p = ImageProfileEstimator(axis="lat", method="sum")
+        profile = p.run(checkerboard_image)
 
-    mask = np.zeros_like(image.data)
-    # Select Full Image
-    lat = [lats.min(), lats.max()]
-    lon = [lons.min(), lons.max()]
-    # Pick minimum valid binning
-    binsz = 0.5
-    mask_array = np.zeros_like(image.data)
-    # Test output
-    lon_profile1 = image_profile('lon', image, lat, lon, binsz,
-                                 errors=True)
-    # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lon_profile1['BIN_VALUE'].data.astype(float),
-                    1000 * np.ones(79), rtol=1, atol=0.1)
-    assert_allclose(lon_profile1['BIN_ERR'].data,
-                    0.1 * lon_profile1['BIN_VALUE'].data)
+        desired = 10 * np.ones(6) * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
 
-    lon_profile2 = image_profile('lon', image, lat, lon, binsz,
-                                 counts, errors=True)
-    # atol 0.1 is sufficient to check if correct number of pixels are included
-    assert_allclose(lon_profile2['BIN_ERR'].data,
-                    31.622776601683793 * np.ones(79), rtol=1, atol=0.1)
+    @staticmethod
+    def test_lon_profile_sum(checkerboard_image):
+        p = ImageProfileEstimator(axis="lon", method="sum")
+        profile = p.run(checkerboard_image)
 
-    lon_profile3 = image_profile('lon', image, lat, lon, binsz, counts,
-                                 mask_array, errors=True)
+        desired = 6 * np.ones(10) * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
 
-    assert_allclose(lon_profile3['BIN_VALUE'].data, np.zeros(79))
+    @staticmethod
+    def test_radial_profile_sum(checkerboard_image):
+        center = SkyCoord(0, 0, unit="deg", frame="galactic")
+        p = ImageProfileEstimator(axis="radial", method="sum", center=center)
+        profile = p.run(checkerboard_image)
+
+        desired = [4.0, 8.0, 20.0, 12.0, 12.0] * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
+
+    @staticmethod
+    def test_lat_profile_mean(checkerboard_image):
+        p = ImageProfileEstimator(axis="lat", method="mean")
+        profile = p.run(checkerboard_image)
+
+        desired = np.ones(6) * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
+
+    @staticmethod
+    def test_lon_profile_mean(checkerboard_image):
+        p = ImageProfileEstimator(axis="lon", method="mean")
+        profile = p.run(checkerboard_image)
+
+        desired = np.ones(10) * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
+
+    @staticmethod
+    def test_x_edges_lat(checkerboard_image):
+        x_edges = Angle(np.linspace(-0.06, 0.06, 4), "deg")
+
+        p = ImageProfileEstimator(x_edges=x_edges, axis="lat", method="sum")
+        profile = p.run(checkerboard_image)
+
+        desired = 20 * np.ones(3) * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
+
+    @staticmethod
+    def test_x_edges_lon(checkerboard_image):
+        x_edges = Angle(np.linspace(-0.1, 0.1, 6), "deg")
+
+        p = ImageProfileEstimator(x_edges=x_edges, axis="lon", method="sum")
+        profile = p.run(checkerboard_image)
+
+        desired = 12 * np.ones(5) * u.Unit("cm-2 s-1")
+        assert_quantity_allclose(profile.profile, desired)
+
+
+class TestImageProfile:
+    @staticmethod
+    def test_normalize(cosine_profile):
+        normalized = cosine_profile.normalize(mode="integral")
+        profile = normalized.profile
+        assert_quantity_allclose(profile.sum(), 1 * u.Unit("cm-2 s-1"))
+
+        normalized = cosine_profile.normalize(mode="peak")
+        profile = normalized.profile
+        assert_quantity_allclose(profile.max(), 1 * u.Unit("cm-2 s-1"))
+
+    @staticmethod
+    def test_profile_x_edges(cosine_profile):
+        assert_quantity_allclose(cosine_profile.x_ref.sum(), 0 * u.deg)
+
+    @staticmethod
+    @pytest.mark.parametrize("kernel", ["gauss", "box"])
+    def test_smooth(cosine_profile, kernel):
+        # smoothing should preserve the mean
+        desired_mean = cosine_profile.profile.mean()
+        smoothed = cosine_profile.smooth(kernel, radius=3)
+
+        assert_quantity_allclose(smoothed.profile.mean(), desired_mean)
+
+        # smoothing should decrease errors
+        assert smoothed.profile_err.mean() < cosine_profile.profile_err.mean()
+
+    @staticmethod
+    @requires_dependency("matplotlib")
+    def test_peek(cosine_profile):
+        with mpl_plot_check():
+            cosine_profile.peek()

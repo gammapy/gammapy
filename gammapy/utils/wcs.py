@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """WCS related utility functions."""
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.wcs import WCS
 from astropy.coordinates import Angle
 
 __all__ = [
-    'linear_wcs_to_arrays',
-    'linear_arrays_to_wcs',
-    'get_wcs_ctype',
-    'get_resampled_wcs'
+    "linear_wcs_to_arrays",
+    "linear_arrays_to_wcs",
+    "get_wcs_ctype",
+    "get_resampled_wcs",
 ]
+
 
 def get_wcs_ctype(wcs):
     """
@@ -28,12 +28,13 @@ def get_wcs_ctype(wcs):
         `~astropy.coordinates.SkyCoord`
     """
     ctype = wcs.wcs.ctype
-    if 'GLON' in ctype[0] or 'GLON' in ctype[1]:
-        return 'galactic'
-    elif 'RA' in ctype[0] or 'RA' in ctype[1]:
-        return 'icrs'
+    if "GLON" in ctype[0] or "GLON" in ctype[1]:
+        return "galactic"
+    elif "RA" in ctype[0] or "RA" in ctype[1]:
+        return "icrs"
     else:
         raise TypeError("Can't determine WCS coordinate type.")
+
 
 def get_resampled_wcs(wcs, factor, downsampled):
     """
@@ -42,7 +43,7 @@ def get_resampled_wcs(wcs, factor, downsampled):
     wcs = wcs.deepcopy()
 
     if not downsampled:
-        factor = 1. / factor
+        factor = 1.0 / factor
 
     wcs.wcs.cdelt *= factor
     wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
@@ -76,8 +77,7 @@ def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):
     """
     # check number of dimensions
     if wcs.wcs.naxis != 2:
-        raise ValueError("Expected exactly 2 dimensions, got {}"
-                         .format(wcs.wcs.naxis))
+        raise ValueError("Expected exactly 2 dimensions, got {}".format(wcs.wcs.naxis))
 
     # check that wcs axes are linear
     # TODO: is there an easy way to do this?
@@ -100,11 +100,11 @@ def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):
 
     # set small values (compared to delta (i.e. step)) to 0
     for i in np.arange(len(bin_edges_x)):
-        if np.abs(bin_edges_x[i] / delta_x) < 1.e-10:
-            bin_edges_x[i] = Angle(0., unit_x)
+        if np.abs(bin_edges_x[i] / delta_x) < 1.0e-10:
+            bin_edges_x[i] = Angle(0.0, unit_x)
     for i in np.arange(len(bin_edges_y)):
-        if np.abs(bin_edges_y[i] / delta_y) < 1.e-10:
-            bin_edges_y[i] = Angle(0., unit_y)
+        if np.abs(bin_edges_y[i] / delta_y) < 1.0e-10:
+            bin_edges_y[i] = Angle(0.0, unit_y)
 
     return bin_edges_x, bin_edges_y
 
@@ -135,8 +135,9 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     unit_x = bin_edges_x.unit
     unit_y = bin_edges_y.unit
     if unit_x != unit_y:
-        ss_error = "Units of X ({0}) and Y ({1}) bins do not match!".format(
-            unit_x, unit_y)
+        ss_error = "Units of X ({}) and Y ({}) bins do not match!".format(
+            unit_x, unit_y
+        )
         ss_error += " Is this expected?"
         raise ValueError(ss_error)
 
@@ -152,11 +153,13 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     delta_y = (range_y[1] - range_y[0]) / nbins_y
     wcs.wcs.ctype = [name_x, name_y]
     wcs.wcs.cunit = [unit_x, unit_y]
-    wcs.wcs.cdelt = [delta_x.to(unit_x).value, delta_y.to(unit_y).value]
+    wcs.wcs.cdelt = [delta_x.to_value(unit_x), delta_y.to_value(unit_y)]
     # ref as lower left corner (start of (X, Y) bin coordinates)
     # coordinate start at pix = 0.5
     wcs.wcs.crpix = [0.5, 0.5]
-    wcs.wcs.crval = [(bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5) * delta_x).to(unit_x).value,
-                     (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5) * delta_y).to(unit_y).value]
+    wcs.wcs.crval = [
+        (bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5) * delta_x).to_value(unit_x),
+        (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5) * delta_y).to_value(unit_y),
+    ]
 
     return wcs

@@ -1,100 +1,107 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
+import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
 from ...data import DataStore, ObservationTableSummary, ObservationSummary
-from ...data import ObservationStats, ObservationStatsList, ObservationList
-from ...data import Target
-from ...utils.testing import requires_data, requires_dependency
+from ...data import ObservationStats
+from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...image import SkyMask
 
 
-def table_summary():
-    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-    target_pos = SkyCoord(83.633083, 22.0145, unit='deg')
-    return ObservationTableSummary(data_store.obs_table, target_pos)
-
-
-@requires_data('gammapy-extra')
+@requires_data("gammapy-data")
 class TestObservationSummaryTable:
-    def setup(self):
-        self.table_summary = table_summary()
+    @classmethod
+    def setup_class(cls):
+        data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+        obs_table = data_store.obs_table
+        obs_table = obs_table[obs_table["TARGET_NAME"] == "Crab"]
+        target_pos = SkyCoord(83.633083, 22.0145, unit="deg")
+        cls.table_summary = ObservationTableSummary(obs_table, target_pos)
 
     def test_str(self):
         text = str(self.table_summary)
-        assert 'Observation summary' in text
+        assert "Observation summary" in text
 
     def test_offset(self):
         offset = self.table_summary.offset
-        assert_allclose(offset.degree.mean(), 1., rtol=1.e-2)
-        assert_allclose(offset.degree.std(), 0.5, rtol=1.e-2)
+        assert len(offset) == 4
+        assert_allclose(offset.degree.mean(), 1.0, rtol=0.01)
+        assert_allclose(offset.degree.std(), 0.5, rtol=0.01)
 
-    @requires_dependency('matplotlib')
+    @requires_dependency("matplotlib")
     def test_plot_zenith(self):
-        self.table_summary.plot_zenith_distribution()
+        with mpl_plot_check():
+            self.table_summary.plot_zenith_distribution()
 
-    @requires_dependency('matplotlib')
+    @requires_dependency("matplotlib")
     def test_plot_offset(self):
-        self.table_summary.plot_offset_distribution()
+        with mpl_plot_check():
+            self.table_summary.plot_offset_distribution()
 
 
-def obs_summary():
-    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-    run_list = [23523, 23526, 23559, 23592]
-
-    pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
-    on_size = 0.3 * u.deg
-    on_region = CircleSkyRegion(pos, on_size)
-
-    target = Target(position=pos, on_region=on_region,
-                    name='Crab Nebula', tag='crab')
-
-    mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-
-    obs_list = ObservationList([datastore.obs(_) for _ in run_list])
-    obs_stats = ObservationStatsList()
-
-    for index, run in enumerate(obs_list):
-        bkg = ReflectedRegionsBackgroundEstimator.process(on_region=on_region,
-                                                          obs=run,
-                                                          exclusion=mask)
-
-        obs_stats.append(ObservationStats.from_target(run, target, bkg))
-
-    summary = ObservationSummary(obs_stats)
-
-    return summary
-
-
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-@requires_dependency('matplotlib')
+@requires_data("gammapy-data")
 class TestObservationSummary:
     """
     Test observation summary.
     """
 
-    def setup(self):
-        self.obs_summary = obs_summary()
+    @classmethod
+    def setup_class(cls):
+        datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+        obs_ids = [23523, 23526]
 
-    def test_plot_significance(self):
-        self.obs_summary.plot_significance_vs_livetime()
+        on_region = CircleSkyRegion(
+            SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame="icrs"), 0.3 * u.deg
+        )
 
-    def test_plot_excess(self):
-        self.obs_summary.plot_excess_vs_livetime()
+        obs_stats_list = []
+        for obs_id in obs_ids:
+            obs = datastore.obs(obs_id)
+            bkg = ReflectedRegionsBackgroundEstimator(
+                on_region=on_region, observations=[obs]
+            )
+            bkg.run()
+            bg_estimate = bkg.result[0]
 
-    def test_plot_background(self):
-        self.obs_summary.plot_background_vs_livetime()
+            obs_stats = ObservationStats.from_observation(obs, bg_estimate)
+            obs_stats_list.append(obs_stats)
 
-    def test_plot_gamma_rate(self):
-        self.obs_summary.plot_gamma_rate()
+        cls.obs_summary = ObservationSummary(obs_stats_list)
 
-    def test_plot_background_rate(self):
-        self.obs_summary.plot_background_rate()
+    @pytest.mark.xfail
+    def test_results(self):
+        # TODO: add test with assert on result numbers yet!!!
+        # from pprint import pprint
+        # pprint(self.obs_summary.__dict__)
+        assert 0
 
     def test_obs_str(self):
         text = str(self.obs_summary)
-        assert 'Observation summary' in text
+        assert "Observation summary" in text
+
+    @requires_dependency("matplotlib")
+    def test_plot_significance(self):
+        with mpl_plot_check():
+            self.obs_summary.plot_significance_vs_livetime()
+
+    @requires_dependency("matplotlib")
+    def test_plot_excess(self):
+        with mpl_plot_check():
+            self.obs_summary.plot_excess_vs_livetime()
+
+    @requires_dependency("matplotlib")
+    def test_plot_background(self):
+        with mpl_plot_check():
+            self.obs_summary.plot_background_vs_livetime()
+
+    @requires_dependency("matplotlib")
+    def test_plot_gamma_rate(self):
+        with mpl_plot_check():
+            self.obs_summary.plot_gamma_rate()
+
+    @requires_dependency("matplotlib")
+    def test_plot_background_rate(self):
+        with mpl_plot_check():
+            self.obs_summary.plot_background_rate()

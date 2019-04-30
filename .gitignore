@@ -1,5 +1,5 @@
 # Compiled files
-*.py[co]
+*.py[cod]
 *.a
 *.o
 *.so
@@ -14,12 +14,15 @@ __pycache__
 */cython_version.py
 htmlcov
 .coverage
+.coverage.subprocess
 
 # Sphinx
 _build
 
 # Pytest
 .cache
+v
+.pytest_cache
 
 # Packages/installer info
 *.egg
@@ -34,6 +37,7 @@ sdist
 develop-eggs
 .installed.cfg
 distribute-*.tar.gz
+.eggs
 
 # Other
 .*.swp
@@ -44,6 +48,7 @@ distribute-*.tar.gz
 # Mac OSX
 .DS_Store
 
+.vscode
 .idea
 .settings
 .pydevproject
@@ -51,8 +56,13 @@ distribute-*.tar.gz
 htmlcov
 MANIFEST
 
-*.ipynb
+# notebooks
 *.ipynb_checkpoints
+docs/_static/notebooks
+docs/notebooks
+tutorials/fit_result_LogParabola.yaml
+tutorials/hgps_data
+
 
 gammapy/gammapy.cfg
 
@@ -64,5 +74,7 @@ dev/crab
 
 # Data files and images are usually generated
 *.png
+!tutorials/images/*
 *.fits
+*.fits.gz
 *.root

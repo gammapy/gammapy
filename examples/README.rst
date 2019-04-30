@@ -12,6 +12,6 @@ It's useful to have an example or test script for debugging while implementing s
 All code and tests should eventually go in the Gammapy package.
 
 Note that we also have example scripts in the `docs` folder and example IPython notebooks
-in the `gammapy-extra` repo.
+in the `tutorials` folder.
 
-See info at: http://docs.gammapy.org/
+See info at: https://docs.gammapy.org/

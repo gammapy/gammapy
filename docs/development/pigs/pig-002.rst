@@ -1,0 +1,194 @@
+.. include:: ../../references.txt
+
+.. _pig-002:
+
+***********************************************
+PIG 2 - Organization of low-level analysis code
+***********************************************
+
+-----------------------------------
+The case of image and cube analysis
+-----------------------------------
+
+* Author: Régis Terrier & Christoph Deil
+* Created: January 12, 2018
+* Accepted: July 27, 2018
+* Status: accepted
+* Discussion: `GH 1277`_
+
+Abstract
+========
+
+This PIG discusses the general structure of the low level analysis subpackages
+of gammapy. Low level analysis is based on the gammapy building blocks from
+``gammapy.data``, ``gammapy.irf`` and ``gammapy.maps``. Low level analysis
+implements all the individual steps required to perform data reduction for IACT
+from DL3 inputs (event lists and IRFs) to DL4 data (spectra, maps and cubes) and
+their associated reduced IRFs. Low-level analysis should be structured in a very
+modular way to allow easy implementation of high-level analysis classes and
+scripts.
+
+
+General code style guidelines
+=============================
+
+Functions or methods should be no longer than few tens of lines of code. Above
+that it is better to use multiple functions to make testing easier and allow
+more modular usage. One line functions are usually not needed unless this is a
+very complex line.
+
+Similarly, classes should have 3-10 methods. 2 methods classes (e.g. only
+``__init__`` and ``__call__``) should usually be functions. Above 10-20
+methodes, the class should  be split into several classes/functions.
+
+It is important to keep the number of functions and classes needed by the user
+to a reasonnable level. Modularity is therefore very important, since it allows
+to easily implement high level interfaces that orchestrates the common analysis
+patterns.
+
+Algorithms and data should be clearly separated. The naming scheme used should
+allow easy identification of the nature of a piece of code. For instance,
+functions creating maps and or cube should be named make_map_xxx.
+
+Data analysis subpackages in gammapy
+====================================
+
+Low level analysis produces reduced datasets and IRFs from the general event
+lists and multidimensional IRFs of each observation or GTI.  The building blocks
+on which it relies are coded in gammapy.data (``EventList``, ``DataStore``,
+``DataStoreObservation`` etc), in gammapy.maps (in particular ``WcsNDMap`` used
+both for images and cubes), in gammapy.irf (e.g. ``EffectiveAreaTable2D``,
+``EnergyDispersion2D``, ``EnergyDependentTablePSF``, etc).
+
+Analysis subpackages are:
+
+* 1D or spectral analysis (in ``gammapy.spectrum``)
+* 2D and 3D (cube) analysis (in ``gammapy.cube``)
+* timing analysis (in ``gammapy.time``)
+
+
+Low level map and cube analysis
+===============================
+
+The low-level analysis cube package deals with the production of all maps/cubes
+and PSF kernels required to perform 2D and 3D modeling and fitting. This
+includes counts, exposure, acceptance and normalized background maps and cubes.
+These reduced data and IRFs are stored using the ``gammapy.maps.WcsNDMap`` class
+which describes multidimensional maps with their World Coordinate System (WCS)
+description and a set of non-spatial axis. The default map structure for most of
+the typical analysis will be 3 dimensional maps with an energy axis (with a
+single bin for 2D images).
+
+The low level analysis is performed on an observation per observation (or GTI)
+basis. This is required by the response and background rapid variations.
+Therefore, all basic functions operate on a single ``EventList`` or set of IRFs
+(i.e. ``EffectiveAreaTable2D``, ``EnergyDispersion2D``,
+``EnergyDependentTablePSF``). The iterative production of the individual reduced
+datasets and IRFs and their combination is realized by the higher level class.
+The individual observation products can be serialized, mostly for analysis
+debugging purposes or to avoid reprocessing large databases when new data are
+added.
+
+Depending on the type of analysis, different reduced IRFs are to be produced.
+The main difference lies in the type of energy considered: reconstructed or true
+(i.e. incident) energy. Counts, hadronic acceptance and background always use
+reconstructed (i.e. measured) energy. Exposure and PSF kernels will be defined
+in reconstructed energy for 2D analysis whereas they will be defined in true
+energies for 3D analysis with their own energy binning. A reduced energy
+dispersion will then be produced to convert from true to reconstructed energies
+and used later to predict counts.
+
+The maker functions and the products have to clearly state  what type of energy
+they are using to avoid any confusion. The serialization has to include a way to
+clearly differentiate the products. Some metadata, probably in the form of an
+``OrderedDict`` as in the case of ``astropy.table.Table`` could be used to do
+so.
+
+In order to perform likelihood analysis of maps and cubes, as well as to apply
+*ON-OFF* significance estimation techniques it is important to have integers
+values for counts and OFF maps produced by ring background estimation techniques
+(on an observation per observation basis). Therefore, we want to avoid
+reprojecting individual maps onto a global mosaic.
+
+The approach should be to define the general geometry of the target mosaic map
+and to perform cutouts for each observation. This can be done using for instance
+``astropy.Cutout2D``. The index range of the cutout in the general mosaic map
+should be kept for easy summation. This step is performed with:
+
+``make_map_cutout``
+    * *takes* a ``WcsNDMap`` and a maximum offset angle ``Angle`` or ``Quantity``
+    * *returns* the ``WcsGeom`` of the cutout and its ``slice``
+
+For individual observations/gti, the general arguments of all maker functions
+are:
+
+* Reference image and energy range. ``gammapy.maps.MapGeom``
+* Maximum offset angle. ``astropy.coordinates.Angle``
+
+The various maker functions are then:
+
+``make_map_counts``
+    * *takes* an ``EventList``
+    * *returns* a count map/cube
+``make_map_exposure_true_energy``
+    * *takes* a pointing direction, an ``EffectiveAreaTable2D`` and a livetime
+    * *returns* an exposure map/cube in true energy
+``make_map_exposure_reco_energy``
+    * *takes* a pointing direction, an ``EffectiveAreaTable2D``, an ``EnergyDispersion2D`` and a livetime
+    * *returns* an exposure map/cube in reco energy
+``make_map_hadron_acceptance``
+    * *takes* a pointing direction, a ``Background3D`` and a livetime
+    * *returns* an hadronic acceptance map, i.e. a predicted background map/cube.
+``make_map_FoV_background``
+    * *takes* maps/cube (``WcsNDMap``) of observed counts and hadron acceptance/predicted background and an exclusion map
+    * *returns* the map of background normalized on the observed counts in the whole FoV (excluding regions with significant gamma-ray emission).
+    * Different energy grouping schemes should be available to ensure a reasonable number of events are used for the normalization. This scheme and the number of events used for normalization should be included in the optional serialization.
+``make_map_ring_background``
+    * *takes* maps/cube (``WcsNDMap``) of observed counts and hadron acceptance/predicted background and exclusion map. It also takes a ``gammapy.background.AdaptiveRingBackgroundEstimator`` or a ``gammapy.background.RingBackgroundEstimator``
+    * *returns* the map of background normalized on the observed counts with a ring filter (excluding regions with significant gamma-ray emission). The background estimator object also contains the *OFF* map and the *ON* and *OFF* exposure maps.
+    * Most likely this technique is not meant to be used for too small energy bands, so that energy grouping is probably not relevant here.
+
+The general processing can then be performed by general classes or scripts,
+possibly config file driven. It should be sufficiently modular to allow for
+users to do their own scripts
+
+
+Existing code
+=============
+
+Currently, maps and cubes rely on the ``SkyImage`` and ``SkyCube`` classes.
+There are various scripts and classes existing currently in gammapy to produce
+maps and cubes (mostly developped by @adonath and @ljouvin).Image  processing
+can be performed with ``SingleObsImageMaker`` and ``StackedObsImageMaker``,
+while cube processing can be performed with ``SingleObsCubeMaker`` and
+``StackedObsCubeMaker``. For images, one can also use the
+``IACTBasicImageEstimator``. All this code relies on high level class which
+perform all the analysis sequentially (exposure, background, count maps etc).
+This approach is not modular and creates a lot of code duplication. Some
+cube-related analysis is required for images creating some cross-dependencies.
+
+The proposed scheme should be much more modular and allow user to use gammapy as
+a library to compose their own scripts and classes if needed. It should limit
+code duplication. In particular, it uses the more general ``gammapy.maps`` which
+allows to get rid of the cross dependencies of the image and cube package we
+have now.
+
+The existing code will remain in gammapy for the moment, with possibly some bugs
+fixed. The new code is largely independent so that the new development should
+bot break user scripts.
+
+Decision
+========
+
+This PIG was extensively discussed on Github, as well as in Gammapy weekly calls
+and at the Feb 2018 and July 2018 Gammapy meetings. Doing this move to new
+analysis code based on gammapy.maps was never controversial, bug API and
+implementation discussions were ongoing.
+
+On July 27, 2018, Regis and Christoph noticed that the description in this PIG
+had been mostly implemented in Gammapy master already, and that further progress
+would come from individual improvements, not a rewrite / update of this PIG with
+a complete design. So we decided to merge this PIG with status "approved" to
+have it on the record as part of the design and evolution process for Gammapy.
+
+.. _GH 1277: https://github.com/gammapy/gammapy/pull/1277

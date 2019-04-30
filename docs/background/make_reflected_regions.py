@@ -1,26 +1,58 @@
 """Example how to compute and plot reflected regions."""
+import matplotlib.pyplot as plt
+import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from gammapy.image import SkyMask
-from gammapy.background import find_reflected_regions
+from gammapy.maps import WcsNDMap
+from gammapy.background import ReflectedRegionsFinder
 
-mask = SkyMask.empty(name='Exclusion Mask', nxpix=801, nypix=701, binsz=0.01,
-                     coordsys='CEL', xref=83.2, yref=22.7)
-mask.fill_random_circles(n=8, min_rad=30, max_rad=80)
+# Exclude a rectangular region
+exclusion_mask = WcsNDMap.create(npix=(801, 701), binsz=0.01, skydir=(83.6, 23.0))
 
-pos = SkyCoord(80.2, 23.5, unit='deg')
-radius = Angle(0.4, 'deg')
-test_region = CircleSkyRegion(pos, radius)
-center = SkyCoord(82.8, 22.5, unit='deg')
-regions = find_reflected_regions(test_region, center, mask)
+coords = exclusion_mask.geom.get_coord().skycoord
+mask = (Angle("23d") < coords.dec) & (coords.dec < Angle("24d"))
+exclusion_mask.data = np.invert(mask)
 
-import matplotlib.pyplot as plt
+pos = SkyCoord(83.633, 22.014, unit="deg")
+radius = Angle(0.3, "deg")
+on_region = CircleSkyRegion(pos, radius)
+center = SkyCoord(83.633, 24, unit="deg")
 
-fig = plt.figure(figsize=(8, 5), dpi=80)
-ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=mask.wcs)
-mask.plot(ax, fig)
-for reg in regions:
-    reg.plot(ax, facecolor='red')
-test_region.plot(ax, facecolor='blue')
+# One can impose a minimal distance between ON region and first reflected regions
+finder = ReflectedRegionsFinder(
+    region=on_region,
+    center=center,
+    exclusion_mask=exclusion_mask,
+    min_distance_input="0.2 rad",
+)
+finder.run()
+
+fig1 = plt.figure(1)
+finder.plot(fig=fig1)
+
+# One can impose a minimal distance between two adjacent regions
+finder = ReflectedRegionsFinder(
+    region=on_region,
+    center=center,
+    exclusion_mask=exclusion_mask,
+    min_distance_input="0.2 rad",
+    min_distance="0.1 rad",
+)
+finder.run()
+fig2 = plt.figure(2)
+finder.plot(fig=fig2)
+
+# One can impose a maximal number of regions to be extracted
+finder = ReflectedRegionsFinder(
+    region=on_region,
+    center=center,
+    exclusion_mask=exclusion_mask,
+    min_distance_input="0.2 rad",
+    max_region_number=5,
+    min_distance="0.1 rad",
+)
+finder.run()
+fig3 = plt.figure(3)
+finder.plot(fig=fig3)
 
 plt.show()

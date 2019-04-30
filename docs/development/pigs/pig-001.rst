@@ -1,0 +1,207 @@
+.. include:: ../../references.txt
+
+.. _pig-001:
+
+**********************************
+PIG 1 - PIG purpose and guidelines
+**********************************
+
+* Author: Christoph Deil
+* Created: December 20, 2017
+* Accepted: January 9, 2018
+* Status: accepted
+* Discussion: `GH 1239`_
+
+Abstract
+========
+
+PIG stands for "proposal for improvement of Gammapy". This is PIG 1, describing
+the purpose of using PIGs as well as giving some guidelines on how PIGs are
+authored, discussed and reviewed.
+
+What is a PIG?
+==============
+
+This article is about the design document . For other uses, see `Pig
+(disambiguation)`_
+
+Proposals for improvement of Gammapy (PIGs) are short documents proposing a
+major addition or change to Gammapy.
+
+PIGs are like `APEs`_, `PEPs`_, `NEPs`_ and `JEPs`_, just for Gammapy. Using
+such enhancement proposals is common for large and long-term open-source Python
+projects.
+
+The primary goal of PIGs is to have an open and structured way of working on
+Gammapy, forcing the person making the change to think it through and motivate
+the proposal before taking action, and for others to have a chance to review and
+comment on the proposal. The PIGs will also serve as a record of major design
+decisions taken in Gammapy, which can be useful in the future when things are
+re-discussed or new proposals to do things differently arrive.
+
+We expect that we will not use PIGs very often, but we think they can be useful
+e.g. in the following cases:
+
+* Outline design for something that requires significant work,
+  e.g. on topics like "Modeling in Gammapy" or "High-level user interface in
+  Gammapy". These PIGs can be rather long, i.e. more than one page, explaining
+  the design in detail and even explaining which alternatives were considered
+  and why the proposed solution was preferred.
+* Have a conscious decision and make sure all interested parties are aware for
+  things that might be controversial and have long-term effects for Gammapy,
+  e.g. when to drop Python 2 support or defining a release cycle for Gammapy.
+  These PIGs can usually be very short, a page or less.
+
+Writing a PIG
+=============
+
+Anyone is welcome to write a PIG!
+
+PIGs are written as RST files in the ``docs/development/pigs`` folder in the
+main Gammapy repository, and submitted as pull requests.
+
+Most discussions concerning Gammapy will happen by talking to each other
+directly (calls or face-to-face), or online on the mailing list or Github. If
+you're not sure if you should write a PIG, please don't! Instead bring the topic
+up in discussions first with other Gammapy developers, or on the mailing list,
+to get some initial feedback. This will let you figure out if writing a PIG will
+be helpful or not to realise your proposal.
+
+When starting to write a PIG, we suggest you copy & paste & update the header at
+the top of this file, i.e. the title, bullet list with "Author" etc, up to the
+``Abstract`` section. A PIG must have a number. If you're not sure what the next
+free number is, put ``X`` and filename ``pig-XXX.rst`` as placeholders, make the
+pull request, and we'll let you know what number to put.
+
+Please make your proposal clearly and keep the initial proposal short. If more
+information is needed, people that will review it will ask for it.
+
+In term of content, we don't require a formal structure for a PIG. We do suggest
+that you start with an "Abstract" explaining the proposal in one or a few
+sentences, followed by a section motivating the change or addition. Then usually
+there will be a detailed description, and at the end or interspersed there will
+often be some comments about alternative options that have been discussed and
+explanation why proposed one was favoured. Usually a short "Decision" section
+will be added at the end of the document after discussion by the reviewers.
+
+If you're not sure how to structure your proposal, you could have a look at at
+the `APE template`_ or some well-written APEs_ or PEPs_. `APE 5`_, `APE 7`_ and
+`APE 13`_ are examples of "design documents", outlining major changes /
+extensions to existing code in Astropy. `APE 2`_ and `APE 10`_ are examples of
+"process" proposals, outlining a release cycle for Astropy and a timeline for
+dropping Python 2 support. `PEP 389`_ is a good example proposing an improvement
+in the Python standard library, in that case by adding a new module
+``argparse``, leaving the existing ``optparse`` alone for backward-compatibility
+reasons. In Gammapy many PIGs will also be about implementing better solutions
+and a major question will be whether to change and improve the existing
+implementation, or whether to just put a new one, and in that case what the plan
+concerning the old code is. `PEP 481`_ is an example of a "process" PEP,
+proposing to move CPython development to git and Github. For Gammapy, we might
+also have "process" PIGs in the future, e.g. concerning release cycle or package
+distribution or support for users and other projects relying on Gammapy. It's
+good to think these things through and write them down to make sure it's clear
+how things work and what the plan for the future is.
+
+Writing a PIG doesn't mean you have to implement it. That said, we expect that
+most PIGs will propose something that requires developments where someone has
+the intention to implement it within the near future (say within the next year).
+But it's not required, e.g. if you have a great idea or vision for Gammapy that
+requires a lot of development, without the manpower to execute the idea, writing
+a PIG could be a nice way to share this idea in some detail, with the hope that
+in collaboration with others it can eventually be realised.
+
+PIG review
+==========
+
+PIG review happens on the pull request on Github.
+
+When a PIG is put up, an announcement with a link to the pull request should be
+sent both to the Gammapy mailing list and the Gammapy coordinator list.
+
+Anyone is welcome to review it and is encouraged to share their thoughts in the
+discussion!
+
+Please note that Github hides inline comments after they have been edited, so we
+suggest that you use inline comments for minor points like spelling mistakes
+only. Put your main feedback as normal comments in the "Conversation" tab, so
+that for someone reading the discussion later they will see your comment
+directly.
+
+The final decision on any PIG is made by the Gammapy coordination committee. We
+expect that in most cases, the people participating in the PIG review will reach
+a consensus and the coordination committee will follow the outcome of the public
+discussion. But in unusual cases where disagreement remains, the coordination
+committee will talk to the people involved in the discussion with the goal to
+reach consensus or compromise, and then make the final decision.
+
+PIG status
+==========
+
+PIGs can have a status of:
+
+* "draft" - in draft status, either in the writing or discussion phase
+* "withdrawn" - withdrawn by the author
+* "accepted" - accepted by the coordination committee
+* "rejected" - rejected by the coordination committee
+
+When a PIG is put up for discussion as a pull request, it should have a status
+of "draft". Then once the discussion and review is done, the status will change
+to one of "withdrawn", "accepted" or "rejected". The reviewers should add a
+section "Decision" with a sentence or paragraph summarising the discussion and
+decision on this PIG. Then in any case, the PIG should be merged, even if it's
+status is "withdrawn" or "rejected".
+
+Final remarks
+=============
+
+This PIG leaves some points open. This is intentional. We want to keep the
+process flexible and first gain some experience. The goal of PIGs is to help the
+Gammapy developer team to be more efficient, not to have a rigid or bureaucratic
+process.
+
+Specifically the following points remain flexible:
+
+* When to merge a PIG? There can be cases where the PIG is merged quickly,
+  as an outline or design document, even if the actual implementation hasn't
+  been done yet. There can be other cases where the PIG pull request remains
+  open for a long time, because the proposal is too vague or requires
+  prototyping to be evaluated properly. Note that this is normal, e.g. Python
+  PEPs_ are usually only accepted once all development is done and a full
+  implementation exists.
+* Allow edits of existing PIGs? We don't say if PIGs are supposed to be fixed
+  or live documents. We expect that some will remain fixed, while others will be
+  edited after being merged. E.g. for this PIG 1 we expect that over the years
+  as we gain experience with the PIG process and see what works well and what
+  doesn't, that edits will be made with clarifications or even changes. Whether
+  to edit an existing PIG or whether to write a new follow-up PIG will be
+  discussed on a case by case basis.
+* What to do if the coordination committee doesn't agree on some PIG?
+  For now, we leave this question to the future. We expect that this scenario
+  might arise, it's normal that opinions on technical solutions or importance of
+  use cases or projects to support with Gammapy differ. We also expect that
+  Gammapy coordination committee members will be friendly people that can
+  collaborate and find a solution or at least compromise that works for
+  everyone.
+
+Decision
+========
+
+This PIG was discussed extensively in `GH 1239`_, resulting in several
+improvements and additions. Everyone thought it was one honking good idea -
+let's do more of those!
+
+.. _Pig (disambiguation): https://en.wikipedia.org/wiki/Pig_(disambiguation)
+.. _PEPs: https://www.python.org/dev/peps/pep-0001/
+.. _NEPs: https://docs.scipy.org/doc/numpy-dev/neps/index.html
+.. _APEs: https://github.com/astropy/astropy-APEs
+.. _JEPs: https://github.com/jupyter/enhancement-proposals
+.. _APE template: https://github.com/astropy/astropy-APEs/blob/master/APEtemplate.rst
+.. _APE 2: https://github.com/astropy/astropy-APEs/blob/master/APE2.rst
+.. _APE 5: https://github.com/astropy/astropy-APEs/blob/master/APE5.rst
+.. _APE 7: https://github.com/astropy/astropy-APEs/blob/master/APE7.rst
+.. _APE 10: https://github.com/astropy/astropy-APEs/blob/master/APE10.rst
+.. _APE 13: https://github.com/astropy/astropy-APEs/blob/master/APE13.rst
+.. _PEP 8: https://www.python.org/dev/peps/pep-0008/
+.. _PEP 389: https://www.python.org/dev/peps/pep-0389/
+.. _PEP 481: https://www.python.org/dev/peps/pep-0481/
+.. _GH 1239: https://github.com/gammapy/gammapy/pull/1239

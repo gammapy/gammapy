@@ -1,6 +1,6 @@
 
 * Code: https://github.com/gammapy/gammapy
-* Docs: http://docs.gammapy.org/
+* Docs: https://docs.gammapy.org/
 
 **Gammapy** is an open source (BSD licensed) gamma-ray astronomy Python package.
 

@@ -1,15 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-from collections import OrderedDict
-import numpy as np
-from astropy.extern.six.moves import UserList
 import astropy.units as u
 from ..stats import Stats, significance_on_off
 
-__all__ = [
-    'ObservationStats',
-    'ObservationStatsList',
-]
+__all__ = ["ObservationStats"]
 
 
 class ObservationStats(Stats):
@@ -30,103 +23,76 @@ class ObservationStats(Stats):
         Relative background exposure of the off region
     obs_id : int
         ID of the observation
-    livetime : float
+    livetime : `~astropy.units.Quantity`
         Livetime of the observation
-    alpha : float
-        Normalisation between the on and the off exposure
-    bg_rate : float
-        Background rate (/min)
-    gamma_rate : float
-        Gamma rate (/min)
     """
 
-    def __init__(self,
-                 n_on=None, n_off=None, a_on=None, a_off=None,
-                 obs_id=None, livetime=None, alpha=None,
-                 gamma_rate=None, bg_rate=None):
-        super(ObservationStats, self).__init__(
-            n_on=n_on,
-            n_off=n_off,
-            a_on=a_on,
-            a_off=a_off,
-        )
+    def __init__(
+        self, n_on=None, n_off=None, a_on=None, a_off=None, obs_id=None, livetime=None
+    ):
+        super().__init__(n_on=n_on, n_off=n_off, a_on=a_on, a_off=a_off)
 
         self.obs_id = obs_id
         self.livetime = livetime
-        self.alpha_obs = alpha or a_on / a_off
-        self.gamma_rate = gamma_rate or n_on / livetime
-        self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
+        if a_off > 0:
+            self.alpha_obs = a_on / a_off
+        else:
+            self.alpha_obs = 0
+
+        self.gamma_rate = self.excess / livetime
+        self.bg_rate = self.alpha_obs * n_off / livetime
 
     @classmethod
-    def from_target(cls, obs, target, bg_estimate):
-        """
-        Auxiliary constructor from an observation, a target, and a background
-        estimate
+    def from_observation(cls, observation, bg_estimate):
+        """Create from `~gammapy.data.DataStoreObservation`.
 
         Parameters
         ----------
-        obs : `~gammapy.data.DataStoreObservation`
+        observation : `~gammapy.data.DataStoreObservation`
             IACT data store observation
-        target : `~gammapy.data.Target`
-            Target
         bg_estimate : `~gammapy.background.BackgroundEstimate`
             Background estimate
         """
-        # TODO: add as property to DataStoreObservation
-        n_on = cls._get_on_events(obs, target)
+        n_on = len(bg_estimate.on_events.table)
         n_off = len(bg_estimate.off_events.table)
         a_on = bg_estimate.a_on
         a_off = bg_estimate.a_off
 
-        obs_id = obs.obs_id
-        livetime = obs.observation_live_time_duration
-        alpha = a_on / a_off
+        obs_id = observation.obs_id
+        livetime = observation.observation_live_time_duration
 
-        gamma_rate = n_on / livetime.to(u.min)
-        bg_rate = (alpha * n_off) / livetime.to(u.min)
-        stats = cls(n_on=n_on,
-                    n_off=n_off,
-                    a_on=a_on,
-                    a_off=a_off,
-                    obs_id=obs_id,
-                    livetime=livetime,
-                    alpha=alpha,
-                    gamma_rate=gamma_rate,
-                    bg_rate=bg_rate)
+        stats = cls(
+            n_on=n_on,
+            n_off=n_off,
+            a_on=a_on,
+            a_off=a_off,
+            obs_id=obs_id,
+            livetime=livetime,
+        )
         return stats
 
     @property
     def alpha(self):
-        """Override member function from `~gammapy.stats.Stats`
+        """Alpha (on / off exposure ratio)
+
+        Override member function from `~gammapy.stats.Stats`
         to take into account weighted alpha by number of Off events
         """
         return self.alpha_obs
 
     @property
     def sigma(self):
-        """Li-Ma significance for observation statistics (`float`)
-        """
-        sigma = significance_on_off(
-            self.n_on, self.n_off, self.alpha, method='lima')
-        return sigma
-
-    @staticmethod
-    def _get_on_events(obs, target):
-        """Number of ON events in the region of interest (`int`)
-        """
-        mask = target.on_region.contains(obs.events.radec)
-        return len(obs.events.table[mask])
+        """Li-Ma significance for observation statistics (float)."""
+        return significance_on_off(self.n_on, self.n_off, self.alpha, method="lima")
 
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from a list of
-        `~gammapy.data.ObservationStats` and returns a new instance
-        of `~gammapy.data.ObservationStats`
+        """Stack (concatenate) list of `~gammapy.data.ObservationStats`.
 
         Parameters
         ----------
         stats_list : list
-            List of observation statistics `~gammapy.data.ObservationStats`
+            List of `~gammapy.data.ObservationStats`
 
         Returns
         -------
@@ -139,98 +105,74 @@ class ObservationStats(Stats):
         a_on_backup = 0
         a_off = 0
         a_off_backup = 0
-        obs_id = list()
+        obs_id = []
         livetime = 0
-        alpha = 0
-        alpha_backup = 0
-        gamma_rate = 0
-        bg_rate = 0
         for stats in stats_list:
-            livetime += stats.livetime
-            n_on += stats.n_on
+            if stats.a_off > 0:
+                livetime += stats.livetime
+                n_on += stats.n_on
             n_off += stats.n_off
             a_on += stats.a_on * stats.n_off
             a_on_backup += stats.a_on * stats.livetime.value
             a_off += stats.a_off * stats.n_off
             a_off_backup += stats.a_off * stats.livetime.value
-            alpha += stats.alpha * stats.n_off
-            alpha_backup += stats.alpha * stats.livetime.value
             obs_id.append(stats.obs_id)
-            gamma_rate += stats.n_on - stats.alpha * stats.n_off
-            bg_rate += stats.n_off * stats.alpha
 
-        # if no off events the weighting of alpha is done
+        # if no off events the weighting of exposure is done
         # with the livetime
         if n_off == 0:
-            alpha = alpha_backup / livetime.value
             a_on = a_on_backup / livetime.value
             a_off = a_off_backup / livetime.value
         else:
             a_on /= n_off
             a_off /= n_off
-            alpha /= n_off
 
-        gamma_rate /= livetime.to(u.min)
-        bg_rate /= livetime.to(u.min)
-
-        total_stats = cls(
+        return cls(
             n_on=n_on,
             n_off=n_off,
             a_on=a_on,
             a_off=a_off,
             obs_id=obs_id,
             livetime=livetime,
-            alpha=alpha,
-            gamma_rate=gamma_rate,
-            bg_rate=bg_rate
         )
-        return total_stats
 
     def to_dict(self):
-        """Data as an `~collections.OrderedDict`.
+        """Data as a dict.
 
         This is useful for serialisation or putting the info in a table.
         """
-        data = OrderedDict()
-        data['obs_id'] = self.obs_id
-        data['livetime'] = self.livetime
-        data['n_on'] = self.n_on
-        data['n_off'] = self.n_off
-        data['a_on'] = self.a_on
-        data['a_off'] = self.a_off
-        data['alpha'] = self.alpha
-        data['background'] = self.background
-        data['excess'] = self.excess
-        data['sigma'] = self.sigma
-        data['gamma_rate'] = self.gamma_rate
-        data['bg_rate'] = self.bg_rate
-        return data
+        return {
+            "obs_id": self.obs_id,
+            "livetime": self.livetime.to("min"),
+            "n_on": self.n_on,
+            "n_off": self.n_off,
+            "a_on": self.a_on,
+            "a_off": self.a_off,
+            "alpha": self.alpha,
+            "background": self.background,
+            "excess": self.excess,
+            "sigma": self.sigma,
+            "gamma_rate": self.gamma_rate.to("1/min"),
+            "bg_rate": self.bg_rate.to("1/min"),
+        }
 
     def __str__(self):
-        """Observation statistics report (`str`)
-        """
-        ss = '*** Observation summary report ***\n'
+        ss = "*** Observation summary report ***\n"
         if type(self.obs_id) is list:
-            obs_str = '[{0}-{1}]'.format(self.obs_id[0], self.obs_id[-1])
+            obs_str = "[{}-{}]".format(self.obs_id[0], self.obs_id[-1])
         else:
-            obs_str = '{}'.format(self.obs_id)
-        ss += 'Observation Id: {}\n'.format(obs_str)
-        ss += 'Livetime: {:.3f}\n'.format(self.livetime.to(u.h))
-        ss += 'On events: {}\n'.format(self.n_on)
-        ss += 'Off events: {}\n'.format(self.n_off)
-        ss += 'Alpha: {:.3f}\n'.format(self.alpha)
-        ss += 'Bkg events in On region: {:.2f}\n'.format(self.background)
-        ss += 'Excess: {:.2f}\n'.format(self.excess)
-        ss += 'Excess / Background: {:.2f}\n'.format(np.divide(self.excess,
-                                                               self.background))
-        ss += 'Gamma rate: {:.2f}\n'.format(self.gamma_rate)
-        ss += 'Bkg rate: {:.2f}\n'.format(self.bg_rate)
-        ss += 'Sigma: {:.2f}\n'.format(self.sigma)
+            obs_str = "{}".format(self.obs_id)
+        ss += "Observation Id: {}\n".format(obs_str)
+        ss += "Livetime: {:.3f}\n".format(self.livetime.to(u.h))
+        ss += "On events: {}\n".format(self.n_on)
+        ss += "Off events: {}\n".format(self.n_off)
+        ss += "Alpha: {:.3f}\n".format(self.alpha)
+        ss += "Bkg events in On region: {:.2f}\n".format(self.background)
+        ss += "Excess: {:.2f}\n".format(self.excess)
+        if self.background > 0:
+            ss += "Excess / Background: {:.2f}\n".format(self.excess / self.background)
+        ss += "Gamma rate: {:.2f}\n".format(self.gamma_rate.to("1/min"))
+        ss += "Bkg rate: {:.2f}\n".format(self.bg_rate.to("1/min"))
+        ss += "Sigma: {:.2f}\n".format(self.sigma)
 
         return ss
-
-
-# TODO: implement something or remove!
-class ObservationStatsList(UserList):
-    """List of `~gammapy.data.ObservationStats`
-    """

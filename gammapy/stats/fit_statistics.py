@@ -3,15 +3,20 @@
 
 see :ref:`fit-statistics`
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
 __all__ = [
-    'cash', 'cstat', 'wstat', 'get_wstat_mu_bkg', 'get_wstat_gof_terms',
-    'lstat', 'pgstat',
-    'chi2', 'chi2constvar', 'chi2datavar',
-    'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
+    "cash",
+    "cstat",
+    "wstat",
+    "get_wstat_mu_bkg",
+    "get_wstat_gof_terms",
+    "chi2",
+    "chi2constvar",
+    "chi2datavar",
+    "chi2gehrels",
+    "chi2modvar",
+    "chi2xspecvar",
 ]
 
 N_ON_MIN = 1e-25
@@ -23,7 +28,7 @@ def cash(n_on, mu_on):
     The Cash statistic is defined as:
 
     .. math::
-        C = 2 \left( n_{on} - n_{on} \log \mu_{on} \right)
+        C = 2 \left( \mu_{on} - n_{on} \log \mu_{on} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
     For more information see :ref:`fit-statistics`
@@ -49,11 +54,10 @@ def cash(n_on, mu_on):
     * `Cash 1979, ApJ 228, 939
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
-    n_on = np.asanyarray(n_on, dtype=np.float64)
-    mu_on = np.asanyarray(mu_on, dtype=np.float64)
-
-    stat = 2 * (mu_on - n_on * np.log(mu_on))
-    stat = np.where(mu_on > 0, stat, 0)
+    # suppress zero division warnings, they are corrected below
+    with np.errstate(divide="ignore", invalid="ignore"):
+        stat = 2 * (mu_on - n_on * np.log(mu_on))
+        stat = np.where(mu_on > 0, stat, 0)
     return stat
 
 
@@ -140,7 +144,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     * `Habilitation M. de Naurois, p. 141
       <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
     * `XSPEC page on Poisson data with Poisson background
-      <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
+      <https://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
     # Note: This is equivalent to what's defined on the XSPEC page under the
     # following assumptions
@@ -158,16 +162,24 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     term1 = mu_sig + (1 + alpha) * mu_bkg
 
-    term2_ = - n_on * np.log(mu_sig + alpha * mu_bkg)
+    # suppress zero division warnings, they are corrected below
+    with np.errstate(divide="ignore", invalid="ignore"):
+        # This is a false positive error from pylint
+        # See https://github.com/PyCQA/pylint/issues/2436
+        term2_ = -n_on * np.log(
+            mu_sig + alpha * mu_bkg
+        )  # pylint:disable=invalid-unary-operand-type
     # Handle n_on == 0
-    # Need additional condtion that mu_sig + alpha * mu_bkg >= 0
-    # Otherwise 'correct' nan values are overwritten
-    condition = (n_on == 0) & ((mu_sig + alpha * mu_bkg) > 0)
+    condition = n_on == 0
     term2 = np.where(condition, 0, term2_)
 
-    term3_ = - n_off * np.log(mu_bkg)
+    # suppress zero division warnings, they are corrected below
+    with np.errstate(divide="ignore", invalid="ignore"):
+        # This is a false positive error from pylint
+        # See https://github.com/PyCQA/pylint/issues/2436
+        term3_ = -n_off * np.log(mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_off == 0
-    condition = (n_off == 0) & ((mu_sig + alpha * mu_bkg) > 0)
+    condition = n_off == 0
     term3 = np.where(condition, 0, term3_)
 
     stat = 2 * (term1 + term2 + term3)
@@ -183,6 +195,11 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
 
     see :ref:`wstat`.
     """
+    n_on = np.atleast_1d(np.asanyarray(n_on, dtype=np.float64))
+    n_off = np.atleast_1d(np.asanyarray(n_off, dtype=np.float64))
+    alpha = np.atleast_1d(np.asanyarray(alpha, dtype=np.float64))
+    mu_sig = np.atleast_1d(np.asanyarray(mu_sig, dtype=np.float64))
+
     # NOTE: Corner cases in the docs are all handled correcty by this formula
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
@@ -197,30 +214,16 @@ def get_wstat_gof_terms(n_on, n_off):
     see :ref:`wstat`.
     """
     term = np.zeros(len(n_on))
-    term1 = - n_on * (1 - np.log(n_on))
-    term2 = - n_off * (1 - np.log(n_off))
+
+    # suppress zero division warnings, they are corrected below
+    with np.errstate(divide="ignore", invalid="ignore"):
+        term1 = -n_on * (1 - np.log(n_on))
+        term2 = -n_off * (1 - np.log(n_off))
 
     term += np.where(n_on == 0, 0, term1)
     term += np.where(n_off == 0, 0, term2)
 
     return 2 * term
-
-
-def lstat():
-    r"""L statistic, for Poisson data with Poisson background (Bayesian).
-
-    Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-
-    """
-    pass
-
-
-def pgstat():
-    r"""PG statistic, for Poisson data with Gaussian background.
-
-    Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
-    """
-    pass
 
 
 def chi2(N_S, B, S, sigma2):

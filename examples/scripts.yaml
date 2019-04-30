@@ -1,0 +1,7 @@
+# This is a list of available example scripts.
+# It's used for downloading of scripts with gammapy download.
+# Let's keep it alphabetical.
+- name: example_2_gauss
+  url: https://raw.githubusercontent.com/gammapy/gammapy/master/examples/example_2_gauss.py
+  datasets:
+    - cta-1dc

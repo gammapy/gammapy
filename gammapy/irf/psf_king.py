@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
 from astropy.table import Table
@@ -9,16 +8,15 @@ from astropy.io import fits
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
-from ..utils.fits import table_to_fits_table
 from . import EnergyDependentTablePSF
 
-__all__ = ['PSFKing']
+__all__ = ["PSFKing"]
 
 log = logging.getLogger(__name__)
 
 
-class PSFKing(object):
-    """King profile analytical PSF depending on energy and theta.
+class PSFKing:
+    """King profile analytical PSF depending on energy and offset.
 
     This PSF parametrisation and FITS data format is described here: :ref:`gadf:psf_king`.
 
@@ -36,28 +34,36 @@ class PSFKing(object):
         PSF parameter (2D)
     """
 
-    def __init__(self, energy_lo, energy_hi, offset, gamma, sigma, energy_thresh_lo=Quantity(0.1, 'TeV'),
-                 energy_thresh_hi=Quantity(100, 'TeV')):
-        self.energy_lo = energy_lo.to('TeV')
-        self.energy_hi = energy_hi.to('TeV')
+    def __init__(
+        self,
+        energy_lo,
+        energy_hi,
+        offset,
+        gamma,
+        sigma,
+        energy_thresh_lo=Quantity(0.1, "TeV"),
+        energy_thresh_hi=Quantity(100, "TeV"),
+    ):
+        self.energy_lo = energy_lo.to("TeV")
+        self.energy_hi = energy_hi.to("TeV")
         self.offset = Angle(offset)
         ebounds = EnergyBounds.from_lower_and_upper_bounds(energy_lo, energy_hi)
         self.energy = ebounds.log_centers
         self.gamma = np.asanyarray(gamma)
         self.sigma = Angle(sigma)
 
-        self.energy_thresh_lo = energy_thresh_lo.to('TeV')
-        self.energy_thresh_hi = energy_thresh_hi.to('TeV')
+        self.energy_thresh_lo = Quantity(energy_thresh_lo).to("TeV")
+        self.energy_thresh_hi = Quantity(energy_thresh_hi).to("TeV")
 
     def info(self):
         """Print some basic info.
         """
         ss = "\nSummary PSFKing info\n"
         ss += "---------------------\n"
-        ss += array_stats_str(self.offset, 'offset')
-        ss += array_stats_str(self.energy, 'energy')
-        ss += array_stats_str(self.gamma, 'gamma')
-        ss += array_stats_str(self.sigma, 'sigma')
+        ss += array_stats_str(self.offset, "offset")
+        ss += array_stats_str(self.energy, "energy")
+        ss += array_stats_str(self.gamma, "gamma")
+        ss += array_stats_str(self.sigma, "sigma")
 
         # TODO: should quote containment values also
 
@@ -92,30 +98,29 @@ class PSFKing(object):
         table : `~astropy.table.Table`
             Table King PSF info.
         """
-        theta_lo = table['THETA_LO'].squeeze()
-        theta_hi = table['THETA_HI'].squeeze()
-        offset = (theta_hi + theta_lo) / 2
-        offset = Angle(offset, unit=table['THETA_LO'].unit)
+        offset_lo = table["THETA_LO"].quantity[0]
+        offset_hi = table["THETA_HI"].quantity[0]
+        offset = (offset_hi + offset_lo) / 2
+        offset = Angle(offset, unit=table["THETA_LO"].unit)
 
-        energy_lo = table['ENERG_LO'].squeeze()
-        energy_hi = table['ENERG_HI'].squeeze()
-        energy_lo = Energy(energy_lo, unit=table['ENERG_LO'].unit)
-        energy_hi = Energy(energy_hi, unit=table['ENERG_HI'].unit)
+        energy_lo = table["ENERG_LO"].quantity[0]
+        energy_hi = table["ENERG_HI"].quantity[0]
 
-        gamma = Quantity(table['GAMMA'].squeeze(), table['GAMMA'].unit)
-        sigma = Quantity(table['SIGMA'].squeeze(), table['SIGMA'].unit)
+        gamma = table["GAMMA"].quantity[0]
+        sigma = table["SIGMA"].quantity[0]
 
+        opts = {}
         try:
-            energy_thresh_lo = Quantity(table.meta['LO_THRES'], 'TeV')
-            energy_thresh_hi = Quantity(table.meta['HI_THRES'], 'TeV')
-            return cls(energy_lo, energy_hi, offset, gamma, sigma, energy_thresh_lo, energy_thresh_hi)
+            opts["energy_thresh_lo"] = Quantity(table.meta["LO_THRES"], "TeV")
+            opts["energy_thresh_hi"] = Quantity(table.meta["HI_THRES"], "TeV")
         except KeyError:
-            log.warning('No safe energy thresholds found. Setting to default')
-            return cls(energy_lo, energy_hi, offset, gamma, sigma)
+            pass
+
+        return cls(energy_lo, energy_hi, offset, gamma, sigma, **opts)
 
     def to_fits(self):
         """
-        Convert psf table data to FITS hdu list.
+        Convert PSF table data to FITS HDU list.
 
         Returns
         -------
@@ -123,21 +128,25 @@ class PSFKing(object):
             PSF in HDU list format.
         """
         # Set up data
-        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
-                 'SIGMA', 'GAMMA']
-        units = ['TeV', 'TeV', 'deg', 'deg',
-                 'deg', '']
-        data = [self.energy_lo, self.energy_hi, self.offset, self.offset,
-                self.sigma, self.gamma]
+        names = ["ENERG_LO", "ENERG_HI", "THETA_LO", "THETA_HI", "SIGMA", "GAMMA"]
+        units = ["TeV", "TeV", "deg", "deg", "deg", ""]
+        data = [
+            self.energy_lo,
+            self.energy_hi,
+            self.offset,
+            self.offset,
+            self.sigma,
+            self.gamma,
+        ]
 
         table = Table()
         for name_, data_, unit_ in zip(names, data, units):
             table[name_] = [data_]
             table[name_].unit = unit_
 
-        hdu = table_to_fits_table(table)
-        hdu.header['LO_THRES'] = self.energy_thresh_lo.value
-        hdu.header['HI_THRES'] = self.energy_thresh_hi.value
+        hdu = fits.BinTableHDU(table)
+        hdu.header["LO_THRES"] = self.energy_thresh_lo.value
+        hdu.header["HI_THRES"] = self.energy_thresh_hi.value
 
         return fits.HDUList([fits.PrimaryHDU(), hdu])
 
@@ -150,7 +159,9 @@ class PSFKing(object):
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):
-        """Evaluate formula from here: :ref:`gadf:psf_king`.
+        """Evaluate the PSF model.
+
+        Formula is given here: :ref:`gadf:psf_king`.
 
         Parameters
         ----------
@@ -163,29 +174,30 @@ class PSFKing(object):
 
         Returns
         -------
-        king function : `~astropy.units.Quantity`
-            formula from here: :ref:`gadf:psf_king`
+        psf_value : `~astropy.units.Quantity`
+            PSF value
         """
         r2 = r * r
         sigma2 = sigma * sigma
 
-        term1 = 1 / (2 * np.pi * sigma2)
-        term2 = 1 - 1 / gamma
-        term3 = (1 + r2 / (2 * gamma * sigma2)) ** (-gamma)
+        with np.errstate(divide="ignore"):
+            term1 = 1 / (2 * np.pi * sigma2)
+            term2 = 1 - 1 / gamma
+            term3 = (1 + r2 / (2 * gamma * sigma2)) ** (-gamma)
 
         return term1 * term2 * term3
 
-    def evaluate(self, energy=None, offset=None, interp_kwargs=None):
-        """Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
+    def evaluate(self, energy=None, offset=None):
+        """Evaluate analytic PSF parameters at a given energy and offset.
+
+        Uses nearest-neighbor interpolation.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             energy value
         offset : `~astropy.coordinates.Angle`
-            offset value
-        interp_kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+            Offset in the field of view
 
         Returns
         -------
@@ -211,15 +223,14 @@ class PSFKing(object):
         param["gamma"] = gamma
         return param
 
-    def to_table_psf(self, theta=None, offset=None, exposure=None):
-        """
-        Convert king PSF in table PSF.
+    def to_energy_dependent_table_psf(self, theta=None, rad=None, exposure=None):
+        """Convert to energy-dependent table PSF.
 
         Parameters
         ----------
         theta : `~astropy.coordinates.Angle`
             Offset in the field of view. Default theta = 0 deg
-        offset : `~astropy.coordinates.Angle`
+        rad : `~astropy.coordinates.Angle`
             Offset from PSF center used for evaluating the PSF on a grid.
             Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
         exposure : `~astropy.units.Quantity`
@@ -229,19 +240,21 @@ class PSFKing(object):
         Returns
         -------
         table_psf : `~gammapy.irf.EnergyDependentTablePSF`
-            Instance of `EnergyDependentTablePSF`.
+            Energy-dependent PSF
         """
         # self.energy is already the logcenter
         energies = self.energy
 
         # Defaults
-        theta = theta or Angle(0, 'deg')
-        offset = offset or Angle(np.arange(0, 1.5, 0.005), 'deg')
-        psf_value = Quantity(np.empty((len(energies), len(offset))), 'deg^-2')
+        theta = theta if theta is not None else Angle(0, "deg")
+        rad = rad if rad is not None else Angle(np.arange(0, 1.5, 0.005), "deg")
+        psf_value = Quantity(np.empty((len(energies), len(rad))), "deg^-2")
 
         for i, energy in enumerate(energies):
             param_king = self.evaluate(energy, theta)
-            psf_value[i] = Quantity(self.evaluate_direct(offset, param_king["gamma"], param_king["sigma"]), 'deg^-2')
+            val = self.evaluate_direct(rad, param_king["gamma"], param_king["sigma"])
+            psf_value[i] = Quantity(val, "deg^-2")
 
-        return EnergyDependentTablePSF(energy=energies, offset=offset,
-                                       exposure=exposure, psf_value=psf_value)
+        return EnergyDependentTablePSF(
+            energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
+        )

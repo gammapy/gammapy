@@ -30,4 +30,4 @@ stat_names = ('cash cstat chi2constvar chi2datavar chi2gehrels '
 for stat_name in stat_names:
     set_stat(stat_name)
     stat_value = calc_stat()
-    print('%20s %20.10f' % (stat_name, stat_value))
+    print('{:>20} {:20.10f}'.format(stat_name, stat_value))

@@ -1,26 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Pulsar source models"""
-from __future__ import absolute_import, division, print_function, unicode_literals
+"""Pulsar source models."""
 import numpy as np
 from astropy.units import Quantity
 from ...extern.validator import validate_physical_type
 
-__all__ = [
-    'Pulsar',
-    'SimplePulsar',
-]
+__all__ = ["Pulsar", "SimplePulsar"]
 
-DEFAULT_I = Quantity(1e45, 'g cm^2')
+DEFAULT_I = Quantity(1e45, "g cm2")
 """Pulsar default moment of inertia"""
 
-DEFAULT_R = Quantity(1e6, 'cm')
+DEFAULT_R = Quantity(1e6, "cm")
 """Pulsar default radius of the neutron star"""
 
-B_CONST = Quantity(3.2e19, 'gauss s^(-1/2)')
+B_CONST = Quantity(3.2e19, "gauss s^(-1/2)")
 """Pulsar default magnetic field constant"""
 
 
-class SimplePulsar(object):
+class SimplePulsar:
     """Magnetic dipole spin-down model for a pulsar.
 
     Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html
@@ -38,8 +34,8 @@ class SimplePulsar(object):
     """
 
     def __init__(self, P, P_dot, I=DEFAULT_I, R=DEFAULT_R):
-        validate_physical_type('P', P, 'time')
-        validate_physical_type('P_dot', P_dot, 'dimensionless')
+        validate_physical_type("P", P, "time")
+        validate_physical_type("P_dot", P_dot, "dimensionless")
         self.P = P
         self.P_dot = P_dot
         self.I = I
@@ -47,8 +43,7 @@ class SimplePulsar(object):
 
     @property
     def luminosity_spindown(self):
-        """
-        Spin-down luminosity (`~astropy.units.Quantity`)
+        """Spin-down luminosity (`~astropy.units.Quantity`).
 
         Notes
         -----
@@ -62,8 +57,7 @@ class SimplePulsar(object):
 
     @property
     def tau(self):
-        """
-        Characteristic age (`~astropy.units.Quantity`)
+        """Characteristic age (`~astropy.units.Quantity`).
 
         Notes
         -----
@@ -73,12 +67,11 @@ class SimplePulsar(object):
 
             \\tau = \\frac{P}{2\\dot{P}}
         """
-        return (self.P / (2 * self.P_dot)).to('yr')
+        return (self.P / (2 * self.P_dot)).to("yr")
 
     @property
     def magnetic_field(self):
-        """
-        Magnetic field strength at the polar cap (`~astropy.units.Quantity`)
+        """Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
 
         Notes
         -----
@@ -110,27 +103,34 @@ class Pulsar(SimplePulsar):
         Radius
     """
 
-    def __init__(self, P_0=Quantity(0.1, 's'), logB=10, n=3, I=DEFAULT_I,
-                 R=DEFAULT_R, age=None, L_0=None, morphology='Delta2D'):
+    def __init__(
+        self,
+        P_0=Quantity(0.1, "s"),
+        logB=10,
+        n=3,
+        I=DEFAULT_I,
+        R=DEFAULT_R,
+        age=None,
+        L_0=None,
+        morphology="Delta2D",
+    ):
         self.I = I
         self.R = R
         self.P_0 = P_0
         self.logB = logB
-        self.P_dot_0 = (Quantity(10 ** logB, 'gauss') / B_CONST) ** 2 / P_0
+        self.P_dot_0 = (Quantity(10 ** logB, "gauss") / B_CONST) ** 2 / P_0
         self.tau_0 = P_0 / (2 * self.P_dot_0)
         self.n = float(n)
-        self.beta = (n + 1.) / (n - 1.)
+        self.beta = (n + 1.0) / (n - 1.0)
         self.morphology = morphology
         if age is not None:
-            validate_physical_type('age', age, 'time')
+            validate_physical_type("age", age, "time")
             self.age = age
         if L_0 is None:
             self.L_0 = 4 * np.pi ** 2 * self.I * self.P_dot_0 / self.P_0 ** 3
 
     def luminosity_tev(self, t=None, fraction=0.1):
-        """
-        Gamma luminosity assumed to be a certain fraction of the spin-down
-        luminosity.
+        """Gamma-ray luminosity assumed to be a certain fraction of the spin-down luminosity.
 
         Parameters
         ----------
@@ -138,16 +138,15 @@ class Pulsar(SimplePulsar):
             Time after birth of the pulsar.
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         return self.luminosity_spindown(t) * fraction
 
     def luminosity_spindown(self, t=None):
-        """
-        Spin down luminosity  at age t.
+        """Spin down luminosity  at age t.
 
         Parameters
         ----------
@@ -163,16 +162,15 @@ class Pulsar(SimplePulsar):
             \\dot{L}(t) = \\dot{L}_0 \\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{n + 1}{n - 1}}
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         return self.L_0 * (1 + (t / self.tau_0)) ** self.beta
 
     def period(self, t=None):
-        """
-        Period at age t.
+        """Period at age t.
 
         Parameters
         ----------
@@ -188,16 +186,15 @@ class Pulsar(SimplePulsar):
             P(t) = P_0\\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{1}{n - 1}}
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         return self.P_0 * (1 + (t / self.tau_0)) ** self.beta
 
     def energy_integrated(self, t=None):
-        """
-        Total released energy at age t.
+        """Total released energy at age t.
 
         Time-integrated spin-down luminosity since birth.
 
@@ -216,16 +213,15 @@ class Pulsar(SimplePulsar):
 
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         return self.L_0 * self.tau_0 * (t / (t + self.tau_0))
 
     def period_dot(self, t=None):
-        """
-        Period derivative at age t.
+        """Period derivative at age t.
 
         P_dot for a given period and magnetic field B, assuming a dipole
         spin-down.
@@ -244,16 +240,15 @@ class Pulsar(SimplePulsar):
             \\dot{P}(t) = \\frac{B^2}{3.2 \\cdot 10^{19} P(t)}
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
-        return Quantity(10 ** self.logB, 'gauss') ** 2 / (self.period(t) * B_CONST ** 2)
+            raise ValueError("Need time variable or age attribute.")
+        return Quantity(10 ** self.logB, "gauss") ** 2 / (self.period(t) * B_CONST ** 2)
 
     def tau(self, t=None):
-        """
-        Characteristic age at real age t.
+        """Characteristic age at real age t.
 
         Parameters
         ----------
@@ -262,7 +257,7 @@ class Pulsar(SimplePulsar):
 
         Notes
         -----
-        The characteritic age is given by:
+        The characteristic age is given by:
 
         .. math::
 
@@ -270,16 +265,15 @@ class Pulsar(SimplePulsar):
 
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         return self.period(t) / 2 * self.period_dot(t)
 
     def magnetic_field(self, t=None):
-        """
-        Magnetic field strength at the polar cap. Assumed to be constant.
+        """Magnetic field strength at the polar cap. Assumed to be constant.
 
         Notes
         -----
@@ -290,9 +284,9 @@ class Pulsar(SimplePulsar):
             B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\textnormal(Gauss)]
         """
         if t is not None:
-            validate_physical_type('t', t, 'time')
-        elif hasattr(self, 'age'):
+            validate_physical_type("t", t, "time")
+        elif hasattr(self, "age"):
             t = self.age
         else:
-            raise ValueError('Need time variable or age attribute.')
+            raise ValueError("Need time variable or age attribute.")
         return B_CONST * np.sqrt(self.period(t) * self.period_dot(t))

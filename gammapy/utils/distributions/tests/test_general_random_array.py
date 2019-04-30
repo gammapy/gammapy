@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ....utils.distributions import GeneralRandomArray
 
 
 def plot_simple_1d():
     import matplotlib.pyplot as plt
+
     # A 1d example with 5 bins
     pdf = np.array([1, 1, 1, 1, 1])
     r = GeneralRandomArray(pdf)
@@ -23,6 +23,7 @@ def plot_1d():
     the true to the random distribution
     """
     import matplotlib.pyplot as plt
+
     # A vector of probabilities
     p = np.array([1, 3, 4, 2, 1])
     nbins = p.size
@@ -39,8 +40,8 @@ def plot_1d():
     counts_obs = np.histogram(samples, bins=nbins)[0]
     counts_obs_err = np.sqrt(counts_obs)
 
-    plt.errorbar(i, counts_obs, counts_obs_err, fmt='bo', label='observed counts')
-    plt.plot(counts_exp, 'ro', label='expected counts')
+    plt.errorbar(i, counts_obs, counts_obs_err, fmt="bo", label="observed counts")
+    plt.plot(counts_exp, "ro", label="expected counts")
     plt.legend()
     plt.xlim(-0.5, nbins - 0.5)
     plt.ylim(-0.1, counts_exp.max() * 1.5)
@@ -49,6 +50,7 @@ def plot_1d():
 
 def plot_simple_2d():
     import matplotlib.pyplot as plt
+
     # A 2d example with 6 bins
     pdf = np.array([1, 1, 1, 1, 1, 1])
     pdf.shape = 2, 3
@@ -56,7 +58,7 @@ def plot_simple_2d():
     indices = r.draw(1000)
     plt.figure()
     counts = np.histogramdd(indices, bins=(pdf.shape))[0]
-    plt.imshow(counts, interpolation='nearest')
+    plt.imshow(counts, interpolation="nearest")
     plt.colorbar()
     # plt.show()
 
@@ -69,12 +71,15 @@ def plot_2d_example():
     image representing a brightness distribution.
     """
     import matplotlib.pyplot as plt
+
     # Generate some 2D array for demonstration.
     # In reality this could e.g. be read from a FITS file.
     shape = (100, 200)
     y, x = np.indices(shape)
-    sigma = 10.
-    brightness_map = 1 + 3. * np.exp(-((x - 50) ** 2 + (y - 50) ** 2) / (2 * sigma ** 2))
+    sigma = 10.0
+    brightness_map = 1 + 3.0 * np.exp(
+        -((x - 50) ** 2 + (y - 50) ** 2) / (2 * sigma ** 2)
+    )
     # Generate random positions from this distribution
     r = GeneralRandomArray(brightness_map)
     photon_list = r.draw(1e5)
@@ -88,6 +93,6 @@ def plot_2d_example():
     # Plot the distributions
     for map in [brightness_map, count_map, ratio_map]:
         plt.figure()
-        plt.imshow(map, interpolation='nearest')
+        plt.imshow(map, interpolation="nearest")
         plt.colorbar()
     # plt.show()

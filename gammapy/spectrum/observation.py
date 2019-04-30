@@ -1,25 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
+from collections import UserList
+from pathlib import Path
 import numpy as np
-from copy import deepcopy
-from astropy.extern.six.moves import UserList
 from astropy.units import Quantity
-from astropy.table import Table
-from ..extern.pathlib import Path
 from ..utils.scripts import make_path
 from ..utils.energy import EnergyBounds
-from ..utils.fits import table_from_row_data
+from ..utils.table import table_from_row_data
 from ..data import ObservationStats
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..irf import IRFStacker
+from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from .core import CountsSpectrum, PHACountsSpectrum, PHACountsSpectrumList
-from .utils import calculate_predicted_counts
+from .utils import SpectrumEvaluator
 
 __all__ = [
-    'SpectrumStats',
-    'SpectrumObservation',
-    'SpectrumObservationList',
-    'SpectrumObservationStacker',
+    "SpectrumStats",
+    "SpectrumObservation",
+    "SpectrumObservationList",
+    "SpectrumObservationStacker",
 ]
 
 
@@ -31,31 +28,30 @@ class SpectrumStats(ObservationStats):
     """
 
     def __init__(self, **kwargs):
-        self.energy_min = kwargs.pop('energy_min', None)
-        self.energy_max = kwargs.pop('energy_max', None)
-        super(SpectrumStats, self).__init__(**kwargs)
+        self.energy_min = kwargs.pop("energy_min", Quantity(0, "TeV"))
+        self.energy_max = kwargs.pop("energy_max", Quantity(0, "TeV"))
+        super().__init__(**kwargs)
 
     def __str__(self):
-        ss = super(SpectrumStats, self).__str__()
-        ss += 'energy range: {:.2f} - {:.2f}'.format(self.energy_min, self.energy_max)
+        ss = super().__str__()
+        ss += "energy range: {:.2f} - {:.2f}".format(self.energy_min, self.energy_max)
         return ss
 
     def to_dict(self):
         """TODO: document"""
-        data = super(SpectrumStats, self).to_dict()
-        data['energy_min'] = self.energy_min
-        data['energy_max'] = self.energy_max
+        data = super().to_dict()
+        data["energy_min"] = self.energy_min
+        data["energy_max"] = self.energy_max
         return data
 
 
-class SpectrumObservation(object):
-    """1D spectral analysis storage class
+class SpectrumObservation:
+    """1D spectral analysis storage class.
 
-    This container holds the ingredients for 1D region based spectral analysis
-    TODO: describe PHA, ARF, etc.
+    This container holds the ingredients for 1D region based spectral analysis.
 
-    Meta data is stored in the ``on_vector`` attribute. This reflects the OGIP
-    convention.
+    Meta data is stored in the ``on_vector`` attribute.
+    This reflects the OGIP convention.
 
     Parameters
     ----------
@@ -70,19 +66,23 @@ class SpectrumObservation(object):
 
     Examples
     --------
-
     ::
+
         from gammapy.spectrum import SpectrumObservation
-        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+        filename = '$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits'
         obs = SpectrumObservation.read(filename)
         print(obs)
     """
 
-    def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
+    def __init__(self, on_vector, aeff=None, off_vector=None, edisp=None):
         self.on_vector = on_vector
         self.aeff = aeff
         self.off_vector = off_vector
         self.edisp = edisp
+
+    def __str__(self):
+        ss = self.total_stats_safe_range.__str__()
+        return ss
 
     @property
     def obs_id(self):
@@ -94,6 +94,11 @@ class SpectrumObservation(object):
         self.on_vector.obs_id = obs_id
         if self.off_vector is not None:
             self.off_vector.obs_id = obs_id
+
+    @property
+    def meta(self):
+        """Meta information"""
+        return self.on_vector.meta
 
     @property
     def livetime(self):
@@ -108,12 +113,12 @@ class SpectrumObservation(object):
     @property
     def e_reco(self):
         """Reconstruced energy bounds array."""
-        return EnergyBounds(self.on_vector.energy.data)
+        return EnergyBounds(self.on_vector.energy.bins)
 
     @property
     def e_true(self):
         """True energy bounds array."""
-        return EnergyBounds(self.aeff.energy.data)
+        return EnergyBounds(self.aeff.energy.bins)
 
     @property
     def nbins(self):
@@ -142,9 +147,93 @@ class SpectrumObservation(object):
         if self.off_vector is not None:
             self.off_vector.hi_threshold = threshold
 
+    def reset_thresholds(self):
+        """Reset energy thresholds (i.e. declare all energy bins valid)"""
+        self.on_vector.reset_thresholds()
+        if self.off_vector is not None:
+            self.off_vector.reset_thresholds()
+
+    def compute_energy_threshold(
+        self, method_lo="none", method_hi="none", reset=False, **kwargs
+    ):
+        """Compute and set the safe energy threshold.
+
+        Set the high and low energy threshold for each observation based on a
+        chosen method.
+
+        Available methods for setting the low energy threshold:
+
+        * area_max : Set energy threshold at x percent of the maximum effective
+          area (x given as kwargs['area_percent_lo'])
+
+        * energy_bias : Set energy threshold at energy where the energy bias
+          exceeds a value of x percent (given as kwargs['bias_percent_lo'])
+
+        * none : Do not apply a lower threshold
+
+        Available methods for setting the high energy threshold:
+
+        * area_max : Set energy threshold at x percent of the maximum effective
+          area (x given as kwargs['area_percent_hi'])
+
+        * energy_bias : Set energy threshold at energy where the energy bias
+          exceeds a value of x percent (given as kwargs['bias_percent_hi'])
+
+        * none : Do not apply a higher energy threshold
+
+        Parameters
+        ----------
+        method_lo : {'area_max', 'energy_bias', 'none'}
+            Method for defining the low energy threshold
+        method_hi : {'area_max', 'energy_bias', 'none'}
+            Method for defining the high energy threshold
+        reset : bool
+            Reset existing energy thresholds before setting the new ones
+            (default is `False`)
+        """
+        if reset:
+            self.reset_thresholds()
+
+        # It is important to update the low and high threshold for ON and OFF
+        # vector, otherwise Sherpa will not understand the files
+
+        # Low threshold
+        if method_lo == "area_max":
+            aeff_thres = kwargs["area_percent_lo"] / 100 * self.aeff.max_area
+            thres_lo = self.aeff.find_energy(aeff_thres)
+        elif method_lo == "energy_bias":
+            thres_lo = self.edisp.get_bias_energy(kwargs["bias_percent_lo"] / 100)
+        elif method_lo == "none":
+            thres_lo = self.e_true[0]
+        else:
+            raise ValueError("Invalid method_lo: {}".format(method_lo))
+
+        self.on_vector.lo_threshold = thres_lo
+        if self.off_vector is not None:
+            self.off_vector.lo_threshold = thres_lo
+
+        # High threshold
+        if method_hi == "area_max":
+            aeff_thres = kwargs["area_percent_hi"] / 100 * self.aeff.max_area
+            e_min = self.e_true[-1]
+            thres_hi = self.aeff.find_energy(aeff_thres, emin=e_min)
+        elif method_hi == "energy_bias":
+            e_min = self.e_true[-1]
+            thres_hi = self.edisp.get_bias_energy(
+                kwargs["bias_percent_hi"] / 100, emin=e_min
+            )
+        elif method_hi == "none":
+            thres_hi = self.e_true[-1]
+        else:
+            raise ValueError("Invalid method_hi: {}".format(method_hi))
+
+        self.on_vector.hi_threshold = thres_hi
+        if self.off_vector is not None:
+            self.off_vector.hi_threshold = thres_hi
+
     @property
     def background_vector(self):
-        """Background `~gammapy.spectrum.CountsSpectrum`
+        """Background `~gammapy.spectrum.CountsSpectrum`.
 
         bkg = alpha * n_off
 
@@ -153,8 +242,18 @@ class SpectrumObservation(object):
         average value for alpha.
         """
         energy = self.off_vector.energy
-        data = self.off_vector.data * self.alpha
-        return CountsSpectrum(data=data, energy=energy)
+        data = self.off_vector.data.data * self.alpha
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+
+    @property
+    def excess_vector(self):
+        """Excess `~gammapy.spectrum.CountsSpectrum`.
+
+        excess = n_on = alpha * n_off
+        """
+        energy = self.off_vector.energy
+        data = self.on_vector.data.data - self.background_vector.data.data
+        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
 
     @property
     def total_stats(self):
@@ -170,7 +269,7 @@ class SpectrumObservation(object):
         return self.stats_in_range(safe_bins[0], safe_bins[-1])
 
     def stats_in_range(self, bin_min, bin_max):
-        """Compute stats for a range of energy bins
+        """Compute stats for a range of energy bins.
 
         Parameters
         ----------
@@ -186,6 +285,7 @@ class SpectrumObservation(object):
         stats_list = [self.stats(ii) for ii in idx]
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
+        stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
         stacked_stats.obs_id = self.obs_id
         stacked_stats.energy_min = self.e_reco[bin_min]
         stacked_stats.energy_max = self.e_reco[bin_max + 1]
@@ -203,18 +303,18 @@ class SpectrumObservation(object):
         -------
         stats : `~gammapy.spectrum.SpectrumStats`
             Stats
-        """ 
+        """
         if self.off_vector is not None:
-            n_off = int(self.off_vector.data.value[idx])
+            n_off = int(self.off_vector.data.data.value[idx])
             a_off = self.off_vector._backscal_array[idx]
         else:
             n_off = 0
-            a_off = 1 # avoid zero division error
+            a_off = 1  # avoid zero division error
 
         return SpectrumStats(
             energy_min=self.e_reco[idx],
             energy_max=self.e_reco[idx + 1],
-            n_on=int(self.on_vector.data.value[idx]),
+            n_on=int(self.on_vector.data.data.value[idx]),
             n_off=n_off,
             a_on=self.on_vector._backscal_array[idx],
             a_off=a_off,
@@ -234,7 +334,7 @@ class SpectrumObservation(object):
         return table_from_row_data(rows=rows)
 
     def predicted_counts(self, model):
-        """Calculated npred given a model
+        """Calculated number of predicted counts given a model.
 
         Parameters
         ----------
@@ -246,11 +346,10 @@ class SpectrumObservation(object):
         npred : `~gammapy.spectrum.CountsSpectrum`
             Predicted counts
         """
-        return calculate_predicted_counts(model=model,
-                                          edisp=self.edisp,
-                                          aeff=self.aeff,
-                                          livetime=self.livetime,
-                                          e_reco=self.e_reco)
+        predictor = SpectrumEvaluator(
+            model=model, edisp=self.edisp, aeff=self.aeff, livetime=self.livetime
+        )
+        return predictor.compute_npred()
 
     @classmethod
     def read(cls, filename):
@@ -268,11 +367,13 @@ class SpectrumObservation(object):
         dirname = filename.parent
         on_vector = PHACountsSpectrum.read(filename)
         rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
+
         try:
             energy_dispersion = EnergyDispersion.read(str(dirname / rmf))
         except IOError:
             # TODO : Add logger and echo warning
             energy_dispersion = None
+
         try:
             off_vector = PHACountsSpectrum.read(str(dirname / bkg))
         except IOError:
@@ -280,13 +381,16 @@ class SpectrumObservation(object):
             off_vector = None
 
         effective_area = EffectiveAreaTable.read(str(dirname / arf))
-        return cls(on_vector=on_vector,
-                   aeff=effective_area,
-                   off_vector=off_vector,
-                   edisp=energy_dispersion)
 
-    def write(self, outdir=None, use_sherpa=False, overwrite=True):
-        """Write OGIP files
+        return cls(
+            on_vector=on_vector,
+            aeff=effective_area,
+            off_vector=off_vector,
+            edisp=energy_dispersion,
+        )
+
+    def write(self, outdir=None, use_sherpa=False, overwrite=False):
+        """Write OGIP files.
 
         If you want to use the written files with Sherpa you have to set the
         ``use_sherpa`` flag. Then all files will be written in units 'keV' and
@@ -294,14 +398,13 @@ class SpectrumObservation(object):
 
         Parameters
         ----------
-        outdir : `~gammapy.extern.pathlib.Path`
+        outdir : `pathlib.Path`
             output directory, default: pwd
         use_sherpa : bool, optional
             Write Sherpa compliant files, default: False
-        overwrite : bool, optional
-            Overwrite, default: True
+        overwrite : bool
+            Overwrite existing files?
         """
-
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
@@ -312,83 +415,98 @@ class SpectrumObservation(object):
 
         # Write in keV and cm2 for sherpa
         if use_sherpa:
-            self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
-            self.aeff.energy.data = self.aeff.energy.data.to('keV')
-            self.aeff.data = self.aeff.data.to('cm2')
+            # TODO: Change this implementation.
+            # write should not change the object
+            # put this code in a separate method that makes a copy with the changes.
+            # then call `.write` on that here, or remove the option and let the user do it.
+            self.on_vector.energy.lo = self.on_vector.energy.lo.to("keV")
+            self.on_vector.energy.hi = self.on_vector.energy.hi.to("keV")
+            self.aeff.energy.lo = self.aeff.energy.lo.to("keV")
+            self.aeff.energy.hi = self.aeff.energy.hi.to("keV")
+            self.aeff.data.data = self.aeff.data.data.to("cm2")
             if self.off_vector is not None:
-                self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+                self.off_vector.energy.lo = self.off_vector.energy.lo.to("keV")
+                self.off_vector.energy.hi = self.off_vector.energy.hi.to("keV")
             if self.edisp is not None:
-                self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
-                self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
+                self.edisp.e_reco.lo = self.edisp.e_reco.lo.to("keV")
+                self.edisp.e_reco.hi = self.edisp.e_reco.hi.to("keV")
+                self.edisp.e_true.lo = self.edisp.e_true.lo.to("keV")
+                self.edisp.e_true.hi = self.edisp.e_true.hi.to("keV")
                 # Set data to itself to trigger reset of the interpolator
                 # TODO: Make NDData notice change of axis
-                self.edisp.data = self.edisp.data
+                self.edisp.data.data = self.edisp.data.data
 
-        self.on_vector.write(outdir / phafile, clobber=overwrite)
-        self.aeff.write(outdir / arffile, clobber=overwrite)
+        self.on_vector.write(outdir / phafile, overwrite=overwrite)
+        self.aeff.write(outdir / arffile, overwrite=overwrite)
         if self.off_vector is not None:
-            self.off_vector.write(outdir / bkgfile, clobber=overwrite)
+            self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
         if self.edisp is not None:
-            self.edisp.write(str(outdir / rmffile), clobber=overwrite)
+            self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
 
-    def peek(self, figsize=(15, 15)):
+    def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
 
-        ax1.set_title('Counts')
-        energy_unit = 'TeV'
+        ax1.set_title("Counts")
+        energy_unit = "TeV"
         if self.off_vector is not None:
-            self.background_vector.plot_hist(ax=ax1,
-                                             label='alpha * n_off',
-                                             color='darkblue',
-                                             energy_unit=energy_unit)
-        self.on_vector.plot_hist(ax=ax1,
-                                 label='n_on',
-                                 color='darkred',
-                                 energy_unit=energy_unit,
-                                 show_energy=(self.hi_threshold, self.lo_threshold))
-        ax1.set_xlim(0.7 * self.lo_threshold.to(energy_unit).value,
-                     1.3 * self.hi_threshold.to(energy_unit).value)
+            self.background_vector.plot_hist(
+                ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
+            )
+        self.on_vector.plot_hist(
+            ax=ax1,
+            label="n_on",
+            color="darkred",
+            energy_unit=energy_unit,
+            show_energy=(self.hi_threshold, self.lo_threshold),
+        )
+        ax1.set_xlim(
+            0.7 * self.lo_threshold.to_value(energy_unit),
+            1.3 * self.hi_threshold.to_value(energy_unit),
+        )
         ax1.legend(numpoints=1)
 
-        ax2.set_title('Effective Area')
+        ax2.set_title("Effective Area")
         e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2,
-                       show_energy=(self.hi_threshold, self.lo_threshold))
-        ax2.set_xlim(0.7 * self.lo_threshold.to(e_unit).value,
-                     1.3 * self.hi_threshold.to(e_unit).value)
+        self.aeff.plot(ax=ax2, show_energy=(self.hi_threshold, self.lo_threshold))
+        ax2.set_xlim(
+            0.7 * self.lo_threshold.to_value(e_unit),
+            1.3 * self.hi_threshold.to_value(e_unit),
+        )
 
-        ax3.axis('off')
+        ax3.axis("off")
         if self.off_vector is not None:
-            ax3.text(0, 0.3, '{}'.format(self.total_stats_safe_range), fontsize=18)
+            ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
 
-        ax4.set_title('Energy Dispersion')
+        ax4.set_title("Energy Dispersion")
         if self.edisp is not None:
             self.edisp.plot_matrix(ax=ax4)
 
         # TODO: optimize layout
-        # plt.subplots_adjust(hspace = .2, left=.1)
-        return fig
+        plt.subplots_adjust(wspace=0.3)
 
     def to_sherpa(self):
-        """Create a `~sherpa.astro.data.DataPHA`
+        """Convert to `~sherpa.astro.data.DataPHA`.
 
-        associated background vectors and IRFs are also translated to sherpa
-        objects and appended to the PHA instance
+        Associated background vectors and IRFs are also translated to sherpa
+        objects and appended to the PHA instance.
         """
-        pha = self.on_vector.to_sherpa(name='pha_obs{}'.format(self.obs_id))
-        arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
+        pha = self.on_vector.to_sherpa(name="pha_obs{}".format(self.obs_id))
+        if self.aeff is not None:
+            arf = self.aeff.to_sherpa(name="arf_obs{}".format(self.obs_id))
+        else:
+            arf = None
         if self.edisp is not None:
-            rmf = self.edisp.to_sherpa(name='rmf_obs{}'.format(self.obs_id))
+            rmf = self.edisp.to_sherpa(name="rmf_obs{}".format(self.obs_id))
         else:
             rmf = None
 
         pha.set_response(arf, rmf)
 
         if self.off_vector is not None:
-            bkg = self.off_vector.to_sherpa(name='bkg_obs{}'.format(self.obs_id))
+            bkg = self.off_vector.to_sherpa(name="bkg_obs{}".format(self.obs_id))
             bkg.set_response(arf, rmf)
             pha.set_background(bkg, 1)
 
@@ -396,29 +514,51 @@ class SpectrumObservation(object):
         pha._set_initial_quantity()
         return pha
 
-    def __str__(self):
-        """String representation"""
-        ss = self.total_stats_safe_range.__str__()
-        return ss
-
-    def _check_binning(self, **kwargs):
-        """Check that ARF and RMF binnings are compatible
-        """
-        raise NotImplementedError
-
     def copy(self):
-        """A deep copy of self.
-        """
-        return deepcopy(self)
+        """A deep copy."""
+        return copy.deepcopy(self)
+
+    def to_spectrum_dataset(self):
+        """Creates a SpectrumDatasetOnOff from a SpectrumObservation object"""
+        from .dataset import SpectrumDatasetOnOff, SpectrumDataset
+
+        quality = self.on_vector.quality
+        mask = quality == 0
+
+        if self.off_vector is not None:
+            # Build mask from quality vector
+            dataset = SpectrumDatasetOnOff(
+                counts_on=self.on_vector,
+                aeff=self.aeff,
+                counts_off=self.off_vector,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
+        else:
+            dataset = SpectrumDataset(
+                counts=self.on_vector,
+                aeff=self.aeff,
+                edisp=self.edisp,
+                livetime=self.livetime,
+                mask=mask,
+            )
+
+        return dataset
+
 
 
 class SpectrumObservationList(UserList):
-    """
-    List of `~gammapy.spectrum.SpectrumObservation`.
-    """
+    """List of `~gammapy.spectrum.SpectrumObservation` objects."""
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += "\nNumber of observations: {}".format(len(self))
+        # ss += '\n{}'.format(self.obs_id)
+        return ss
 
     def obs(self, obs_id):
-        """Return one observation
+        """Return one observation.
 
         Parameters
         ----------
@@ -429,11 +569,6 @@ class SpectrumObservationList(UserList):
         idx = obs_id_list.index(obs_id)
         return self[idx]
 
-    def __str__(self):
-        ss = self.__class__.__name__
-        ss += '\n{}'.format(self.obs_id)
-        return ss
-
     @property
     def obs_id(self):
         """List of observations ids"""
@@ -442,8 +577,8 @@ class SpectrumObservationList(UserList):
     @property
     def total_livetime(self):
         """Summed livetime"""
-        livetimes = [o.livetime.to('s').value for o in self]
-        return Quantity(np.sum(livetimes), 's')
+        livetimes = [o.livetime.to_value("s") for o in self]
+        return Quantity(np.sum(livetimes), "s")
 
     @property
     def on_vector_list(self):
@@ -460,6 +595,28 @@ class SpectrumObservationList(UserList):
         stacker = SpectrumObservationStacker(obs_list=self)
         stacker.run()
         return stacker.stacked_obs
+
+    def safe_range(self, method="inclusive"):
+        """Safe energy range
+
+        This is the energy range in with any / all observations have their safe
+        threshold
+
+        Parameters
+        ----------
+        method : str, {'inclusive', 'exclusive'}
+            Maximum or minimum range
+        """
+        unit = "TeV"
+        lo = [obs.lo_threshold.to_value(unit) for obs in self]
+        hi = [obs.hi_threshold.to_value(unit) for obs in self]
+
+        if method == "inclusive":
+            return Quantity([min(lo), max(hi)], unit)
+        elif method == "exclusive":
+            return Quantity([max(lo), min(hi)], unit)
+        else:
+            raise ValueError("Invalid method: {}".format(method))
 
     def write(self, outdir=None, pha_typeII=False, **kwargs):
         """Create OGIP files
@@ -478,7 +635,7 @@ class SpectrumObservationList(UserList):
 
         Parameters
         ----------
-        outdir : str, `~gammapy.extern.pathlib.Path`, optional
+        outdir : str, `pathlib.Path`, optional
             Output directory, default: pwd
         pha_typeII : bool, default: False
             Collect PHA datasets into one file
@@ -490,12 +647,12 @@ class SpectrumObservationList(UserList):
                 obs.write(outdir=outdir, **kwargs)
         else:
             onlist = self.on_vector_list
-            onlist.write(outdir / 'pha2.fits', **kwargs)
+            onlist.write(outdir / "pha2.fits", **kwargs)
             offlist = self.off_vector_list
             # This filename is hardcoded since it is a column in the on list
-            offlist.write(outdir / 'bkg.fits', **kwargs)
-            arf_file = onlist.to_table().meta['ancrfile']
-            rmf_file = onlist.to_table().meta['respfile']
+            offlist.write(outdir / "bkg.fits", **kwargs)
+            arf_file = onlist.to_table().meta["ancrfile"]
+            rmf_file = onlist.to_table().meta["respfile"]
             self[0].aeff.write(outdir / arf_file, **kwargs)
             self[0].edisp.write(outdir / rmf_file, **kwargs)
 
@@ -513,7 +670,7 @@ class SpectrumObservationList(UserList):
 
         Parameters
         ----------
-        directory : `~gammapy.extern.pathlib.Path`
+        directory : `pathlib.Path`
             Directory holding the observations
         pha_typeII : bool, default: False
             Read PHA typeII file
@@ -524,27 +681,77 @@ class SpectrumObservationList(UserList):
         if not pha_typeII:
             # glob default order depends on OS, so we call sorted() explicitely to
             # get reproducable results
-            filelist = sorted(directory.glob('pha*.fits'))
+            filelist = sorted(directory.glob("pha*.fits"))
             for phafile in filelist:
                 obs = SpectrumObservation.read(phafile)
                 obs_list.append(obs)
         else:
             # NOTE: filenames for type II PHA files are hardcoded
-            on_vectors = PHACountsSpectrumList.read(directory / 'pha2.fits')
-            off_vectors = PHACountsSpectrumList.read(directory / 'bkg.fits')
-            aeff = EffectiveAreaTable.read(directory / 'arf.fits')
-            edisp = EnergyDispersion.read(directory / 'rmf.fits')
+            on_vectors = PHACountsSpectrumList.read(directory / "pha2.fits")
+            off_vectors = PHACountsSpectrumList.read(directory / "bkg.fits")
+            aeff = EffectiveAreaTable.read(directory / "arf.fits")
+            edisp = EnergyDispersion.read(directory / "rmf.fits")
 
             for on, off in zip(on_vectors, off_vectors):
-                obs = SpectrumObservation(on_vector=on, off_vector=off,
-                                          aeff=aeff, edisp=edisp)
+                obs = SpectrumObservation(
+                    on_vector=on, off_vector=off, aeff=aeff, edisp=edisp
+                )
                 obs_list.append(obs)
 
         return obs_list
 
+    def peek(self):
+        """Quickly look at observations
 
-class SpectrumObservationStacker(object):
-    r"""Stack `~gammapy.spectrum.SpectrumObervationList`
+        Uses IPython widgets.
+        TODO: Change to bokeh
+        """
+        from ipywidgets import interact
+
+        max_ = len(self) - 1
+
+        def show_obs(idx):
+            self[idx].peek()
+
+        return interact(show_obs, idx=(0, max_, 1))
+
+
+    def to_spectrum_datasets(self, model=None, fit_range=None, forward_folded=True):
+        """Creates a list of SpectrumDatasetOnOff
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model to use for all datasets.
+        forward_folded : bool, default: True
+            Fold ``model`` with the IRFs given in ``obs_list``
+        fit_range : tuple of `~astropy.units.Quantity`
+            The intersection between the fit range and the observation thresholds will be used.
+            If you want to control which bins are taken into account in the fit for each
+            observation, use :func:`~gammapy.spectrum.PHACountsSpectrum.quality`
+
+        """
+        from ..utils.fitting.datasets import Datasets
+        datasets = []
+
+        for obs in self:
+            dataset = obs.to_spectrum_dataset()
+            if not forward_folded:
+                dataset.edisp = None
+            dataset.model = model
+            datasets.append(dataset)
+
+        if fit_range is not None:
+            energy = dataset.counts_on.energy
+            mask = (energy.lo >= fit_range[0])  & (energy.hi <= fit_range[1])
+        else:
+            mask = None
+
+        return Datasets(datasets, mask=mask)
+
+
+class SpectrumObservationStacker:
+    r"""Stack observations in a `~gammapy.spectrum.SpectrumObservationList`.
 
     The stacking of :math:`j` observations is implemented as follows.
     :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
@@ -561,17 +768,16 @@ class SpectrumObservationStacker(object):
         \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
             \epsilon_{jk}
 
-        \overline{\alpha}_k = \frac{\sum_{j}\alpha_{jk} \cdot
-            \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}}{\overline{\mathrm {n_{off}}}}
+        \overline{\alpha}_k =
+        \frac{\overline{{b_{on}}}_k}{\overline{{b_{off}}}_k}
 
-        \overline{t} = \sum_{j} t_i
+        \overline{{b}_{on}}_k = 1
 
-        \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl}
-            \cdot t_j}{\overline{t}}
+        \overline{{b}_{off}}_k = \frac{1}{\sum_{j}\alpha_{jk} \cdot
+            \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}} \cdot \overline{\mathrm {n_{off}}}
 
-        \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl}
-            \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
-            \cdot t_j}
+    Please refer to the `~gammapy.irf.IRFStacker` for the description
+    of how the IRFs are stacked.
 
     Parameters
     ----------
@@ -581,7 +787,7 @@ class SpectrumObservationStacker(object):
     Examples
     --------
     >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
-    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha')
+    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_DATA/joint-crab/spectra/hess')
     >>> obs_stacker = SpectrumObservationStacker(obs_list)
     >>> obs_stacker.run()
     >>> print(obs_stacker.stacked_obs)
@@ -612,81 +818,96 @@ class SpectrumObservationStacker(object):
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += '\n{}'.format(self.obs_list)
+        ss += "\n{}".format(self.obs_list)
         return ss
 
     def run(self):
-        """Run all steps in the correct order"""
+        """Run all steps in the correct order."""
         self.stack_counts_vectors()
         self.stack_aeff()
         self.stack_edisp()
         self.stack_obs()
 
     def stack_counts_vectors(self):
-        """Stack on and off vector"""
+        """Stack on and off vectors."""
         self.stack_on_vector()
         self.stack_off_vector()
         self.stack_backscal()
         self.setup_counts_vectors()
 
     def stack_on_vector(self):
+        """Stack the on count vector."""
         on_vector_list = [o.on_vector for o in self.obs_list]
         self.stacked_on_vector = self.stack_counts_spectrum(on_vector_list)
 
     def stack_off_vector(self):
+        """Stack the off count vector."""
         off_vector_list = [o.off_vector for o in self.obs_list]
         self.stacked_off_vector = self.stack_counts_spectrum(off_vector_list)
 
     @staticmethod
     def stack_counts_spectrum(counts_spectrum_list):
-        """Stack `~gammapy.spectrum.PHACountsSpectrum`
+        """Stack `~gammapy.spectrum.PHACountsSpectrum`.
 
-        Bins outside the safe energy range are set to 0, attributes
-        are set to None.
+        * Bins outside the safe energy range are set to 0
+        * Attributes are set to None.
+        * The quality vector of the observations are combined with a logical or,
+          such that the low (high) threshold of the stacked obs is the minimum
+          low (maximum high) threshold of the observation list to be stacked.
         """
         template = counts_spectrum_list[0].copy()
         energy = template.energy
         stacked_data = np.zeros(energy.nbins)
-        stacked_quality = np.zeros(energy.nbins)
+        stacked_quality = np.ones(energy.nbins)
         for spec in counts_spectrum_list:
-            stacked_data += spec.counts_in_safe_range
-            stacked_quality = np.logical_or(stacked_quality,
-                                            spec.quality)
+            stacked_data += spec.counts_in_safe_range.value
+            temp = np.logical_and(stacked_quality, spec.quality)
+            stacked_quality = np.array(temp, dtype=int)
 
-        stacked_spectrum = PHACountsSpectrum(data=stacked_data,
-                                             energy=energy,
-                                             quality=stacked_quality)
-        return stacked_spectrum
+        return PHACountsSpectrum(
+            data=stacked_data,
+            energy_lo=energy.lo,
+            energy_hi=energy.hi,
+            quality=stacked_quality,
+        )
 
     def stack_backscal(self):
-        """Stack backscal for on and off vector
-        """
+        """Stack ``backscal`` for on and off vector."""
         nbins = self.obs_list[0].e_reco.nbins
-        bkscal_on = np.zeros(nbins)
+        bkscal_on = np.ones(nbins)
         bkscal_off = np.zeros(nbins)
 
-        for o in self.obs_list:
-            bkscal_on_data = o.on_vector._backscal_array.copy()
-            bkscal_on += bkscal_on_data * o.off_vector.counts_in_safe_range
+        alpha_sum = 0.0
 
-            bkscal_off_data = o.off_vector._backscal_array.copy()
-            bkscal_off += bkscal_off_data * o.off_vector.counts_in_safe_range
+        for obs in self.obs_list:
+            bkscal_on_data = obs.on_vector._backscal_array.copy()
+            bkscal_off_data = obs.off_vector._backscal_array.copy()
+            bkscal_off += (
+                bkscal_on_data / bkscal_off_data
+            ) * obs.off_vector.counts_in_safe_range.value
+            alpha_sum += (obs.alpha * obs.off_vector.counts_in_safe_range).sum()
 
-        stacked_bkscal_on = bkscal_on / self.stacked_off_vector.data.value
-        stacked_bkscal_off = bkscal_off / self.stacked_off_vector.data.value
+        with np.errstate(divide="ignore", invalid="ignore"):
+            stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
+            alpha_average = (
+                alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
+            )
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data
-        alpha_correction = - 1
-        idx = np.where(self.stacked_off_vector.data == 0)[0]
-        stacked_bkscal_on[idx] = alpha_correction
-        stacked_bkscal_off[idx] = alpha_correction
+        # use 1 for backscale of on_vector and 1 / alpha_average for backscale of off_vector
+        alpha_correction = 1
+        idx = np.where(self.stacked_off_vector.data.data == 0)[0]
+        bkscal_on[idx] = alpha_correction
+        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
+        # OFF counts of each run
+        stacked_bkscal_off[idx] = alpha_correction / alpha_average
 
-        self.stacked_bkscal_on = stacked_bkscal_on
+        self.stacked_bkscal_on = bkscal_on
         self.stacked_bkscal_off = stacked_bkscal_off
 
     def setup_counts_vectors(self):
-        """Add correct attributes to stacked counts vectors"""
+        """Add correct attributes to stacked counts vectors."""
         total_livetime = self.obs_list.total_livetime
         self.stacked_on_vector.livetime = total_livetime
         self.stacked_off_vector.livetime = total_livetime
@@ -696,49 +917,37 @@ class SpectrumObservationStacker(object):
         self.stacked_off_vector.obs_id = self.obs_list.obs_id
 
     def stack_aeff(self):
-        """Stack effective areas (weighted by livetime)
+        """Stack effective areas (weighted by livetime).
 
-        calls :func:`~gammapy.irf.IRFStacker.stack_aeff`
+        Calls `gammapy.irf.IRFStacker.stack_aeff`.
         """
-        list_arf = list()
-        list_livetime = list()
-        for o in self.obs_list:
-            list_arf.append(o.aeff)
-            list_livetime.append(o.livetime)
-        irf_stack = IRFStacker(list_aeff=list_arf, list_livetime=list_livetime)
-        irf_stack.stack_aeff()
-
-        self.stacked_aeff = irf_stack.stacked_aeff
+        irf_stacker = IRFStacker(
+            list_aeff=[obs.aeff for obs in self.obs_list],
+            list_livetime=[obs.livetime for obs in self.obs_list],
+        )
+        irf_stacker.stack_aeff()
+        self.stacked_aeff = irf_stacker.stacked_aeff
 
     def stack_edisp(self):
-        """Stack energy dispersion (weighted by exposure)
+        """Stack energy dispersion (weighted by exposure).
 
-        calls :func:`~gammapy.irf.IRFStacker.stack_edisp`
+        Calls `~gammapy.irf.IRFStacker.stack_edisp`
         """
-        list_arf = list()
-        list_edisp = list()
-        list_livetime = list()
-        list_elo_threshold = list()
-        list_ehi_threshold = list()
-        for o in self.obs_list:
-            list_arf.append(o.aeff)
-            list_livetime.append(o.livetime)
-            list_edisp.append(o.edisp)
-            list_elo_threshold.append(o.lo_threshold)
-            list_ehi_threshold.append(o.hi_threshold)
-        irf_stack = IRFStacker(list_aeff=list_arf,
-                               list_livetime=list_livetime,
-                               list_edisp=list_edisp,
-                               list_low_threshold=list_elo_threshold,
-                               list_high_threshold=list_ehi_threshold)
-        irf_stack.stack_edisp()
-        self.stacked_edisp = irf_stack.stacked_edisp
+        irf_stacker = IRFStacker(
+            list_aeff=[obs.aeff for obs in self.obs_list],
+            list_livetime=[obs.livetime for obs in self.obs_list],
+            list_edisp=[obs.edisp for obs in self.obs_list],
+            list_low_threshold=[obs.lo_threshold for obs in self.obs_list],
+            list_high_threshold=[obs.hi_threshold for obs in self.obs_list],
+        )
+        irf_stacker.stack_edisp()
+        self.stacked_edisp = irf_stacker.stacked_edisp
 
     def stack_obs(self):
         """Create stacked `~gammapy.spectrum.SpectrumObservation`"""
-        obs = SpectrumObservation(on_vector=self.stacked_on_vector,
-                                  off_vector=self.stacked_off_vector,
-                                  aeff=self.stacked_aeff,
-                                  edisp=self.stacked_edisp
-                                  )
-        self.stacked_obs = obs
+        self.stacked_obs = SpectrumObservation(
+            on_vector=self.stacked_on_vector,
+            off_vector=self.stacked_off_vector,
+            aeff=self.stacked_aeff,
+            edisp=self.stacked_edisp,
+        )

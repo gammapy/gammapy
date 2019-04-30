@@ -38,5 +38,5 @@ for stat_name, stat_class in stats:
         stat_error = stat_object.calc_staterror(0)
     except ValueError:
         stat_error = -999
-    print('%20s %20.10f' % (stat_name, stat_error))
+    print('{:>20} {:20.10f}'.format(stat_name, stat_error))
     # stat_object.calc_staterror(data=2, model=12, staterror=2)

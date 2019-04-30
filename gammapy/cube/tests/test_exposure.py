@@ -1,39 +1,78 @@
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
-import numpy as np
-from numpy.testing import assert_allclose, assert_equal
-from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
-from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
+from numpy.testing import assert_allclose
+from astropy.coordinates import SkyCoord
+from ...utils.testing import requires_data
+from ...maps import WcsGeom, HpxGeom, MapAxis, WcsNDMap
 from ...irf import EffectiveAreaTable2D
-from ...datasets import gammapy_extra
-from .. import exposure_cube
-from .. import SkyCube
+from ..exposure import make_map_exposure_true_energy, _map_spectrum_weight
+from ...spectrum.models import ConstantModel
+
+pytest.importorskip("healpy")
 
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_exposure_cube():
-    aeff_filename = gammapy_extra.filename(
-        'datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
-    ccube_filename = gammapy_extra.filename(
-        'datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits')
+@pytest.fixture(scope="session")
+def aeff():
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    return EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
-    pointing = SkyCoord(83.633, 21.514, unit='deg')
-    livetime = Quantity(1581.17, 's')
-    aeff2d = EffectiveAreaTable2D.read(aeff_filename)
-    count_cube = SkyCube.read(ccube_filename, format='fermi-counts')
-    offset_max = Angle(2.2, 'deg')
-    exp_cube = exposure_cube(pointing, livetime, aeff2d, count_cube,
-                             offset_max=offset_max)
-    exp_ref = Quantity(4.7e8, 'm2 s')
-    coordinates = exp_cube.sky_image_ref.coordinates()
-    offset = coordinates.separation(pointing)
 
-    assert np.shape(exp_cube.data)[1:] == np.shape(count_cube.data)[1:]
-    assert np.shape(exp_cube.data)[0] == np.shape(count_cube.data)[0]
-    assert exp_cube.wcs == count_cube.wcs
-    assert_quantity_allclose(np.nanmax(exp_cube.data), exp_ref, rtol=100)
-    assert exp_cube.data.unit == exp_ref.unit
-    assert exp_cube.data[:, offset > offset_max].sum() == 0
+def geom(map_type, ebounds):
+    axis = MapAxis.from_edges(ebounds, name="energy", unit="TeV", interp="log")
+    if map_type == "wcs":
+        return WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
+    elif map_type == "hpx":
+        return HpxGeom(256, axes=[axis])
+    else:
+        raise ValueError()
+
+
+@requires_data("gammapy-data")
+@pytest.mark.parametrize(
+    "pars",
+    [
+        {
+            "geom": geom(map_type="wcs", ebounds=[0.1, 1, 10]),
+            "shape": (2, 3, 4),
+            "sum": 8.103974e08,
+        },
+        {
+            "geom": geom(map_type="wcs", ebounds=[0.1, 10]),
+            "shape": (1, 3, 4),
+            "sum": 2.387916e08,
+        },
+        # TODO: make this work for HPX
+        # 'HpxGeom' object has no attribute 'separation'
+        # {
+        #     'geom': geom(map_type='hpx', ebounds=[0.1, 1, 10]),
+        #     'shape': '???',
+        #     'sum': '???',
+        # },
+    ],
+)
+def test_make_map_exposure_true_energy(aeff, pars):
+    m = make_map_exposure_true_energy(
+        pointing=SkyCoord(2, 1, unit="deg"),
+        livetime="42 s",
+        aeff=aeff,
+        geom=pars["geom"],
+    )
+
+    assert m.data.shape == pars["shape"]
+    assert m.unit == "m2 s"
+    assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
+
+
+def test_map_spectrum_weight():
+    axis = MapAxis.from_edges([0.1, 10, 1000], unit="TeV", name="energy")
+    expo_map = WcsNDMap.create(npix=10, binsz=1, axes=[axis], unit="m2 s")
+    expo_map.data += 1
+    spectrum = ConstantModel(42)
+
+    weighted_expo = _map_spectrum_weight(expo_map, spectrum)
+
+    assert weighted_expo.data.shape == (2, 10, 10)
+    assert weighted_expo.unit == "m2 s"
+    assert_allclose(weighted_expo.data.sum(), 100)

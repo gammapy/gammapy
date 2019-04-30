@@ -1,16 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-import sys
-from collections import OrderedDict
 from astropy.table import Table
 
-__all__ = [
-    'source_catalogs',
-    'SourceCatalogRegistry',
-]
+__all__ = ["source_catalogs", "SourceCatalogRegistry"]
 
 
-class SourceCatalogRegistry(object):
+class SourceCatalogRegistry:
     """Source catalog registry.
 
     Provides simple and efficient access to source catalogs
@@ -22,8 +16,8 @@ class SourceCatalogRegistry(object):
     """
 
     def __init__(self):
-        self._available_catalogs = OrderedDict()
-        self._loaded_catalogs = OrderedDict()
+        self._available_catalogs = {}
+        self._loaded_catalogs = {}
 
     @classmethod
     def builtins(cls):
@@ -32,57 +26,63 @@ class SourceCatalogRegistry(object):
         """
         source_catalogs = cls()
 
+        from .hess import SourceCatalogHGPS
+
+        source_catalogs.register("hgps", SourceCatalogHGPS)
+
+        from .gammacat import SourceCatalogGammaCat
+
+        source_catalogs.register("gamma-cat", SourceCatalogGammaCat)
+
         from .fermi import SourceCatalog3FGL
-        source_catalogs.register('3fgl', SourceCatalog3FGL)
+
+        source_catalogs.register("3fgl", SourceCatalog3FGL)
+
+        from .fermi import SourceCatalog1FHL
+
+        source_catalogs.register("1fhl", SourceCatalog1FHL)
 
         from .fermi import SourceCatalog2FHL
-        source_catalogs.register('2fhl', SourceCatalog2FHL)
 
-        import os
-        if 'HGPS_ANALYSIS' in os.environ:
-            from .hess import SourceCatalogHGPS
-            source_catalogs.register('hgps', SourceCatalogHGPS)
+        source_catalogs.register("2fhl", SourceCatalog2FHL)
 
-        if 'GAMMA_CAT' in os.environ:
-            from .gammacat import SourceCatalogGammaCat
-            source_catalogs.register('gamma-cat', SourceCatalogGammaCat)
+        from .fermi import SourceCatalog3FHL
+
+        source_catalogs.register("3fhl", SourceCatalog3FHL)
+
+        from .hawc import SourceCatalog2HWC
+
+        source_catalogs.register("2hwc", SourceCatalog2HWC)
 
         return source_catalogs
 
     @property
     def catalog_names(self):
+        """Catalog names (list of str)."""
         return list(self._available_catalogs.keys())
 
-    def register(self, name, factory, args=()):
+    def register(self, name, cls, args=()):
         """Register a source catalog.
 
-        It must be possible to load it via ``factory(*args)``.
+        It must be possible to load it via ``cls(*args)``.
         """
-        data = dict(factory=factory, args=args)
-        self._available_catalogs[name] = data
+        self._available_catalogs[name] = {"cls": cls, "args": args}
 
     def __getitem__(self, name):
         if name not in self._available_catalogs:
             msg = 'Unknown catalog: "{}". '.format(name)
-            msg += 'Available catalogs: {}'.format(self.catalog_names)
+            msg += "Available catalogs: {}".format(self.catalog_names)
             raise KeyError(msg)
 
         if name not in self._loaded_catalogs:
             cat = self._available_catalogs[name]
-            factory = cat['factory']
-            args = cat['args']
-            self._loaded_catalogs[name] = factory(*args)
+            self._loaded_catalogs[name] = cat["cls"](*cat["args"])
 
         return self._loaded_catalogs[name]
 
-    def info(self, file=None):
-        """Print summary info about catalogs.
-        """
-        if not file:
-            file = sys.stdout
-
-        print('Source catalog registry:', file=file)
-        # TODO: how can we print to file?
+    def info(self):
+        """Print summary info about catalogs."""
+        print("Source catalog registry:")
         self.info_table.pprint()
 
     @property
@@ -91,16 +91,18 @@ class SourceCatalogRegistry(object):
 
         Loads all catalogs.
         """
-        table = []
+        rows = []
         for name in self._available_catalogs.keys():
             cat = self[name]
-            data = dict()
-            data['Name'] = name
-            data['Description'] = cat.description
-            data['Sources'] = len(cat.table)
-            table.append(data)
-        table = Table(rows=table, names=['Name', 'Description', 'Sources'])
-        return table
+            rows.append(
+                {
+                    "name": name,
+                    "description": cat.description,
+                    "sources": len(cat.table),
+                }
+            )
+
+        return Table(rows=rows, names=["name", "description", "sources"])
 
 
 source_catalogs = SourceCatalogRegistry.builtins()

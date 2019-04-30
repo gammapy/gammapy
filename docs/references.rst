@@ -30,7 +30,7 @@ The best reference to TeV data analysis is Chapter 7 of Mathieu de Naurois's hab
 
 .. [Feldman1998] `Feldman & Cousins (1998) <http://adsabs.harvard.edu/abs/1998PhRvD..57.3873F>`_,
    "Unified approach to the classical statistical analysis of small signals"
-   
+
 .. [Lafferty1994] `Lafferty & Wyatt (1994) <http://adsabs.harvard.edu/abs/1995NIMPA.355..541L>`_,
    "Where to stick your data points: The treatment of measurements within wide bins"
 
@@ -62,58 +62,44 @@ Software references:
 
 .. [Knoedlseder2012] `Knödlseder et at. (2012) <http://adsabs.harvard.edu/abs/2012ASPC..461...65K>`_
    "GammaLib: A New Framework for the Analysis of Astronomical Gamma-Ray Data"
-   
-.. [FSSC2013] `Fermi LAT Collaboration (2013) <http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
+
+.. [FSSC2013] `Fermi LAT Collaboration (2013) <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
    "Science Tools: LAT Data Analysis Tools"
 
 .. [Mayer2015] `Michael Mayer (2015) <https://publishup.uni-potsdam.de/frontdoor/index/index/docId/7150>`_
    "Pulsar wind nebulae at high energies"
-
 
 .. _glossary:
 
 Glossary
 --------
 
-.. [CSV] comma-separated values; see also :ref:`CSV_files`.
 .. [MET] mission elapsed time; see also :ref:`MET_definition` in :ref:`time_handling`.
-.. [RST] restructured text; the markup format used for documentation and docstrings.
-         See `here <http://en.wikipedia.org/wiki/ReStructuredText>`__ and `here <http://sphinx-doc.org/rest.html>`__.
 
-Other related packages
-----------------------
+Other gamma-ray packages
+------------------------
 
-Besides Gammapy, there are two other major open-source analysis packages (that we are aware of)
-for multi-mission gamma-ray likelihood analysis:
+Here are some other software packages for gamma-ray astronomy:
 
 * `Gammalib`_ /`ctools`_ is a C++ package with Python wrapper, similar to the Fermi-LAT ScienceTools,
   that to a large degree uses the same input data formats as Gammapy.
 * `3ML`_ is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
   to deal with the data and IRFs and compute the likelihood for a given model.
-
-So there is some overlap of Gammapy with other efforts, but as mentioned in  :ref:`about-overview` the scope
-of Gammapy is larger. And also all packages are new and the implementations radically different, so that's
-a good thing when it comes to flexibility and the ability to cross-check results and methods.
-
-Make sure to also check out the following packages that contain very useful functionality for gamma-ray astronomy:
-
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `ctapipe`_ --- CTA Python pipeline experimental version
 * `FermiPy`_ --- Fermi-LAT science tools high-level Python interface by Matthew Wood
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `pointlike`_ -- Fermi-LAT science tools alternative by Toby Burnett
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
-* `Gamera`_, `Gappa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
+* `Gamera`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
 * `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry Light C<->Urve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
-
-Some other projects:
-
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
 * `photon_simulator`_ --- Python code to simulate X-ray observations
-* `pytevcat`_ --- A ROOT Python GUI interface for TeVCat
 * `pycrflux`_ --- Python module to plot cosmic-ray flux
+* Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
+  and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .
 
 Other useful packages
 ---------------------
@@ -124,5 +110,3 @@ here's a few other Python packages you might find useful / interesting:
 * See the list here: http://www.astropy.org/affiliated/
 * Pulsar timing package `PINT`_
 * `iminuit`_ fitter and `probfit`_ likelihood function builder.
-* Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
-  and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .

@@ -10,84 +10,100 @@ Spectral Fitting
 
 In the following you will see how to fit spectral data in OGIP format. The
 format is described at :ref:`gadf:ogip`. An example dataset is available in the
-`gammapy-extra repo <https://github.com/gammapy/gammapy-extra/tree/master/datasets/hess-crab4_pha>`_. For a description of the available fit statstics see :ref:`fit-statistics`.
+``$GAMMAPY_DATA`` repo. For a description of the available fit statstics see
+:ref:`fit-statistics`.
 
 Getting Started
 ===============
 
 The following example shows how to fit a power law simultaneously to two
-simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
+simulated crab runs using the `~gammapy.utils.fitting.Fit` class.
 
 .. code-block:: python
 
-    import astropy.units as u
-    from gammapy.spectrum import SpectrumObservation, SpectrumObservationList, SpectrumFit
+    from gammapy.spectrum import SpectrumDatasetOnOff
+    from gammapy.utils.fitting import Fit
     from gammapy.spectrum.models import PowerLaw
     import matplotlib.pyplot as plt
 
-    pha1 = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23592.fits"
-    pha2 = "$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits"
-    obs1 = SpectrumObservation.read(pha1)
-    obs2 = SpectrumObservation.read(pha2)
-    obs_list = SpectrumObservationList([obs1, obs2])
+    path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+    obs_1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+    obs_2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
 
-    model = PowerLaw(index = 2 * u.Unit(''),
-                     amplitude = 10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
-                     reference = 1 * u.TeV)
+    model = PowerLaw(
+        index=2,
+        amplitude='1e-12  cm-2 s-1 TeV-1',
+        reference='1 TeV',
+    )
 
-    fit = SpectrumFit(obs_list=obs_list, model=model)
-    fit.statistic = 'WStat'
-    fit.fit()
-    
-You can check the fit results by looking at
-`~gammapy.spectrum.SpectrumFitResult` that is attached to the
-`~gammapy.spectrum.SpectrumFit` for each observation.
+    obs_1.model = model
+    obs_2.model = model
 
+    fit = Fit([obs_1, obs_2])
+    result = fit.run()
+
+model.parameters.covariance = result.parameters.covariance
+You can check the fit results by looking at the result and model object:
 
 .. code-block:: python
 
-    >>> print(fit.global_result)
+    >>> print(result)
 
-    Fit result info 
-    --------------- 
-    Best Fit Model: PowerLaw
-    index : 2.12+/-0.05
-    reference : 1e+09
-    amplitude : (2.08+/-0.00)e-20 
-    --> Units: keV, cm, s
+        OptimizeResult
 
-    Statistic: 103.596 (wstat)
-    Covariance:
-    [u'index', u'amplitude']
-    [[  2.95033865e-03   3.08066478e-43]
-     [  3.08066478e-43   1.70801015e-82]]
-    Fit Range: [  0.49582929  82.70931131] TeV
+        backend    : minuit
+        method     : minuit
+        success    : True
+        nfev       : 115
+        total stat : 65.36
+        message    : Optimization terminated successfully.
+
+
+    >>> print(model)
+
+        PowerLaw
+
+        Parameters:
+
+               name     value     error        unit      min max frozen
+            --------- --------- --------- -------------- --- --- ------
+                index 2.781e+00 1.120e-01                nan nan  False
+            amplitude 5.201e-11 4.965e-12 cm-2 s-1 TeV-1 nan nan  False
+            reference 1.000e+00 0.000e+00            TeV nan nan   True
+
+        Covariance:
+
+               name     index   amplitude reference
+            --------- --------- --------- ---------
+                index 1.255e-02 3.578e-13 0.000e+00
+            amplitude 3.578e-13 2.465e-23 0.000e+00
+            reference 0.000e+00 0.000e+00 0.000e+00
 
 
 Interactive Sherpa Fit
 ======================
 
-If you want to do something specific that is not handled by the
-`~gammapy.spectrum.SpectrumFit` class you can always fit the PHA data directly
+If you want to do something specific you can always fit the PHA data directly
 using `Sherpa`_. The following example illustrates how to do this with the
 example dataset used above. It makes use of the Sherpa `datastack module
 <http://cxc.harvard.edu/sherpa/ahelp/datastack.html>`_.
 
 .. code-block:: python
 
-    from gammapy.datasets import gammapy_extra
+    from pathlib import Path
+    import os
     from sherpa.astro import datastack
     from sherpa.models import PowLaw1D
 
-    pha1 = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23592.fits')
-    pha2 = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits')
+    pha1 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23592.fits")
+    pha2 = str(Path(os.environ["GAMMAPY_DATA"]) / "joint-crab" / "spectra" / "hess" / "pha_obs23523.fits")
     phalist = ','.join([pha1, pha2])
 
     ds = datastack.DataStack()
     ds.load_pha(phalist)
 
     model = PowLaw1D('powlaw1d.default')
-    model.ampl = 1 
+    model.ampl = 1
     model.ref = 1e9
     model.gamma = 2
 
@@ -103,20 +119,20 @@ example dataset used above. It makes use of the Sherpa `datastack module
 
 This should give the following output
 
-.. code-block:: python
+.. code-block:: text
 
     Datasets              = 1, 2
     Method                = levmar
     Statistic             = wstat
-    Initial fit statistic = 218.385
-    Final fit statistic   = 103.596 at function evaluation 19
+    Initial fit statistic = 253.552
+    Final fit statistic   = 65.361 at function evaluation 25
     Data points           = 82
     Degrees of freedom    = 80
-    Probability [Q-value] = 0.0392206
-    Reduced statistic     = 1.29494
-    Change in statistic   = 114.79
-    powlaw1d.default.gamma   2.11641     
-    powlaw1d.default.ampl   2.08095     
+    Probability [Q-value] = 0.88159
+    Reduced statistic     = 0.817012
+    Change in statistic   = 188.191
+       powlaw1d.default.gamma   2.78053      +/- 0.121423
+       powlaw1d.default.ampl   5.20034      +/- 0.510299
     Datasets              = 1, 2
     Confidence Method     = covariance
     Iterative Fit Method  = None
@@ -125,7 +141,7 @@ This should give the following output
     covariance 1-sigma (68.2689%) bounds:
        Param            Best-Fit  Lower Bound  Upper Bound
        -----            --------  -----------  -----------
-       powlaw1d.default.gamma      2.11641   -0.0543186    0.0543186
-       powlaw1d.default.ampl      2.08095    -0.130691     0.130691
+       powlaw1d.default.gamma      2.78053    -0.112025     0.112025
+       powlaw1d.default.ampl      5.20034    -0.496564     0.496564
 
 

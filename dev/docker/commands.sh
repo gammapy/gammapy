@@ -30,7 +30,6 @@ export PATH=/home/travis/miniconda/bin:$PATH
 conda update --yes conda
 sudo apt-get update
 if [[ $SETUP_CMD == build_docs* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
-if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then export TRAVIS_PYTHON_VERSION=2.7.8; fi
 conda create --yes -n test -c astropy-ci-extras python=$TRAVIS_PYTHON_VERSION
 source activate test
 export CONDA_INSTALL="conda install -c astropy-ci-extras --yes python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION"
@@ -38,12 +37,11 @@ if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION pytest
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL pytest-xdist; fi
 if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == development ]]; then $PIP_INSTALL git+http://github.com/astropy/astropy.git#egg=astropy; fi
 if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == stable ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION astropy; fi
-if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL scipy scikit-image pandas; fi
+if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL scipy pandas; fi
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL uncertainties; fi
 if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
 if [[ $SETUP_CMD == build_docs* ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION Sphinx matplotlib scipy; fi
 if [[ $SETUP_CMD == build_docs* ]]; then $PIP_INSTALL linkchecker; fi
-if [[ $SETUP_CMD == build_docs* ]]; then $PIP_INSTALL aplpy; fi
 if [[ $SETUP_CMD == 'test --coverage' ]]; then $PIP_INSTALL coverage coveralls; fi
 python setup.py $SETUP_CMD
 if [[ $SETUP_CMD == build_docs* ]]; then linkchecker docs/_build/html; fi

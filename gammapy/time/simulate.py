@@ -1,15 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.time import TimeDelta
 from ..utils.random import get_random_state
 
-__all__ = [
-    'random_times',
-]
+__all__ = ["random_times"]
 
 
-def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
-                 return_diff=False, random_state='random-seed'):
+def random_times(
+    size,
+    rate,
+    dead_time=TimeDelta(0, format="sec"),
+    return_diff=False,
+    random_state="random-seed",
+):
     """Make random times assuming a Poisson process.
 
     This function can be used to test event time series,
@@ -41,7 +43,6 @@ def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
 
     Examples
     --------
-
     Example how to simulate 100 events at a rate of 10 Hz.
     As expected the last event occurs after about 10 seconds.
 
@@ -55,12 +56,12 @@ def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
     random_state = get_random_state(random_state)
 
     dead_time = TimeDelta(dead_time)
-    scale = (1 / rate).to('second').value
+    scale = (1 / rate).to("s").value
     time_delta = random_state.exponential(scale=scale, size=size)
-    time_delta += dead_time.to('second').value
+    time_delta += dead_time.to("s").value
 
     if return_diff:
-        return TimeDelta(time_delta, format='sec')
+        return TimeDelta(time_delta, format="sec")
     else:
         time = time_delta.cumsum()
-        return TimeDelta(time, format='sec')
+        return TimeDelta(time, format="sec")

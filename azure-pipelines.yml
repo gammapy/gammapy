@@ -1,0 +1,148 @@
+# This is the configuration file for Gammapy on Azure Pipelines
+
+variables:
+  GAMMAPY_EXTRA: $(Agent.HomeDirectory)/gammapy-extra
+  GAMMAPY_DATA: $(Agent.HomeDirectory)/gammapy-data
+
+jobs:
+
+- job: 'Test'
+
+  strategy:
+    matrix:
+      Python35:
+        imageName: 'ubuntu-16.04'
+        python.version: '3.5'
+      Windows35:
+        imageName: 'vs2017-win2016'
+        python.version: '3.5'
+      Windows37:
+        imageName: 'vs2017-win2016'
+        python.version: '3.7'
+
+  pool:
+    vmImage: $(imageName)
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy
+      pip install matplotlib reproject iminuit naima uncertainties
+    displayName: 'Install dependencies'
+
+  - script: |
+      pip install -e .
+      python -m gammapy info
+    displayName: 'Install Gammapy'
+
+  - script: |
+      gammapy download datasets --out=$(GAMMAPY_DATA)
+    displayName: 'Get GAMMAPY_DATA'
+
+  - script: |
+      # TODO: Is gammapy-extra even needed for docs build?
+      # TODO: find a way to have smaller test data download to get faster CI builds
+      # This currently downloads 294 MB, and the `datasets` folder in master has 133 MB
+      git clone --depth 1 -b master https://github.com/gammapy/gammapy-extra.git $(GAMMAPY_EXTRA)
+    displayName: 'Get GAMMAPY_EXTRA'
+
+  - script: |
+      pytest gammapy --junitxml=junit/test-results.xml
+    displayName: 'Run pytest'
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: '**/test-results.xml'
+      testRunTitle: 'Python $(python.version)'
+    condition: succeededOrFailed()
+
+- job: 'Lint'
+
+  pool:
+    vmImage: 'Ubuntu 16.04'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      architecture: 'x64'
+
+  - bash: echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+    displayName: Add conda to PATH
+
+  - script: |
+      conda env create --file environment-dev.yml
+      source activate gammapy-dev
+      pip install -e .
+      gammapy info
+    displayName: 'Create gammapy-dev conda environment'
+
+  - script: |
+      source activate gammapy-dev
+      make flake8
+      exit 0  # allow fail
+    displayName: 'Run flake8'
+
+  - script: |
+      source activate gammapy-dev
+      make pylint
+      exit 0  # allow fail
+    displayName: 'Run pylint'
+
+  - script: |
+      source activate gammapy-dev
+      make pydocstyle
+      exit 0  # allow fail
+    displayName: 'Run pydocstyle'
+
+
+- job: 'DevDocs'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      architecture: 'x64'
+
+  - bash: echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+    displayName: Add conda to PATH
+
+  - script: |
+      conda env create --file environment-dev.yml
+      source activate gammapy-dev
+      pip install -e .
+      gammapy info
+    displayName: 'Create gammapy-dev conda environment'
+
+  - script: |
+      source activate gammapy-dev
+      gammapy download datasets --out=$(GAMMAPY_DATA)
+    displayName: 'Get GAMMAPY_DATA'
+
+  - script: |
+      # TODO: Is gammapy-extra even needed for docs build?
+      # TODO: find a way to have smaller test data download to get faster CI builds
+      # This currently downloads 294 MB, and the `datasets` folder in master has 133 MB
+      git clone --depth 1 -b master https://github.com/gammapy/gammapy-extra.git $(GAMMAPY_EXTRA)
+    displayName: 'Get GAMMAPY_EXTRA'
+
+  - script: |
+      source activate gammapy-dev
+      python -m gammapy.utils.tutorials_process
+    displayName: 'Run tutorial Jupyter notebooks'
+
+  - script: |
+      source activate gammapy-dev
+      python setup.py build_docs
+    displayName: 'Run Sphinx documentation build'
+
+  - script: |
+      echo TODO
+    displayName: 'Push HTML to Github pages'

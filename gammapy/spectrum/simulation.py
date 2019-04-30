@@ -1,23 +1,21 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
+# Licensed under a 3 - clause BSD style license - see LICENSE.rst
+from collections import OrderedDict
 import logging
 from ..utils.random import get_random_state
-from .utils import calculate_predicted_counts
+from ..utils.energy import EnergyBounds
+from .utils import SpectrumEvaluator
 from .core import PHACountsSpectrum
 from .observation import SpectrumObservation, SpectrumObservationList
 
-__all__ = [
-    'SpectrumSimulation'
-]
+__all__ = ["SpectrumSimulation"]
 
 log = logging.getLogger(__name__)
 
 
-class SpectrumSimulation(object):
+class SpectrumSimulation:
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
-    For a usage example see :gp-extra-notebook`spectrum_simulation`
+    For a usage example see :gp-notebook:`spectrum_simulation`
 
     Parameters
     ----------
@@ -25,25 +23,33 @@ class SpectrumSimulation(object):
         Livetime
     source_model : `~gammapy.spectrum.models.SpectralModel`
         Source model
-    aeff : `~gammapy.irf.EffectiveAreaTable`
+    aeff : `~gammapy.irf.EffectiveAreaTable`, optional
         Effective Area
     edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy Dispersion
-    e_reco : `~astropy.units.Quantity`, optional
-        see :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+    e_true : `~astropy.units.Quantity`, optional
+        Desired energy axis of the prediced counts vector if no IRFs are given
     background_model : `~gammapy.spectrum.models.SpectralModel`, optional
         Background model
     alpha : float, optional
         Exposure ratio between source and background
     """
 
-    def __init__(self, livetime, source_model, aeff, edisp=None,
-                 e_reco=None, background_model=None, alpha=None):
+    def __init__(
+        self,
+        livetime,
+        source_model,
+        aeff=None,
+        edisp=None,
+        e_true=None,
+        background_model=None,
+        alpha=None,
+    ):
         self.livetime = livetime
         self.source_model = source_model
         self.aeff = aeff
         self.edisp = edisp
-        self.e_reco = e_reco or edisp.e_reco.data
+        self.e_true = e_true
         self.background_model = background_model
         self.alpha = alpha
 
@@ -54,35 +60,51 @@ class SpectrumSimulation(object):
 
     @property
     def npred_source(self):
-        """Predicted source `~gammapy.spectrum.CountsSpectrum`
+        """Predicted source `~gammapy.spectrum.CountsSpectrum`.
 
-        calls :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        Calls :func:`gammapy.spectrum.utils.SpectrumEvaluator`.
         """
-        npred = calculate_predicted_counts(livetime=self.livetime,
-                                           aeff=self.aeff,
-                                           edisp=self.edisp,
-                                           model=self.source_model,
-                                           e_reco=self.e_reco)
-        return npred
+        predictor = SpectrumEvaluator(
+            livetime=self.livetime,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            e_true=self.e_true,
+            model=self.source_model,
+        )
+        return predictor.compute_npred()
 
     @property
     def npred_background(self):
-        """Predicted background `~gammapy.spectrum.CountsSpectrum`
+        """Predicted background (`~gammapy.spectrum.CountsSpectrum`).
 
-        calls :func:`gammapy.spectrum.utils.calculate_predicted_counts`
+        Calls :func:`gammapy.spectrum.utils.SpectrumEvaluator`.
         """
-        npred = calculate_predicted_counts(livetime=self.livetime,
-                                           aeff=self.aeff,
-                                           edisp=self.edisp,
-                                           model=self.background_model,
-                                           e_reco=self.e_reco)
-        return npred
+        predictor = SpectrumEvaluator(
+            livetime=self.livetime,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            e_true=self.e_true,
+            model=self.background_model,
+        )
+        return predictor.compute_npred()
+
+    @property
+    def e_reco(self):
+        """Reconstructed energy binning."""
+        if self.edisp is not None:
+            temp = self.edisp.e_reco.bins
+        else:
+            if self.aeff is not None:
+                temp = self.aeff.energy.bins
+            else:
+                temp = self.e_true
+        return EnergyBounds(temp)
 
     def run(self, seed):
-        """Simulate `~gammapy.spectrum.SpectrumObservationList`
+        """Simulate `~gammapy.spectrum.SpectrumObservationList`.
 
-        The seeds will be set as observation id. Previously produced results
-        will be overwritten.
+        The seeds will be set as observation ID.
+        Previously produced results will be overwritten.
 
         Parameters
         ----------
@@ -100,13 +122,13 @@ class SpectrumSimulation(object):
             self.result.append(self.obs)
 
     def reset(self):
-        """Clear all results"""
+        """Clear all results."""
         self.result = SpectrumObservationList()
         self.obs = None
         self.on_vector = None
         self.off_vector = None
 
-    def simulate_obs(self, obs_id, seed='random-seed'):
+    def simulate_obs(self, obs_id, seed="random-seed"):
         """Simulate one `~gammapy.spectrum.SpectrumObservation`.
 
         The result is stored as ``obs`` attribute
@@ -122,60 +144,68 @@ class SpectrumSimulation(object):
         self.simulate_source_counts(random_state)
         if self.background_model is not None:
             self.simulate_background_counts(random_state)
-        obs = SpectrumObservation(on_vector=self.on_vector,
-                                  off_vector=self.off_vector,
-                                  aeff=self.aeff,
-                                  edisp=self.edisp)
+        obs = SpectrumObservation(
+            on_vector=self.on_vector,
+            off_vector=self.off_vector,
+            aeff=self.aeff,
+            edisp=self.edisp,
+        )
         obs.obs_id = obs_id
         self.obs = obs
 
     def simulate_source_counts(self, rand):
-        """Simulate source `~gammapy.spectrum.PHACountsSpectrum`
+        """Simulate source `~gammapy.spectrum.PHACountsSpectrum`.
 
         Source counts are added to the on vector.
 
         Parameters
         ----------
-        rand: `~numpy.random.RandomState`
+        rand : `~numpy.random.RandomState`
             random state
         """
-        on_counts = rand.poisson(self.npred_source.data.value)
+        on_counts = rand.poisson(self.npred_source.data.data.value)
 
-        counts_kwargs = dict(energy=self.e_reco,
-                             livetime=self.livetime,
-                             creator=self.__class__.__name__)
-
-        on_vector = PHACountsSpectrum(data=on_counts,
-                                      backscal=1,
-                                      **counts_kwargs)
-
+        on_vector = PHACountsSpectrum(
+            energy_lo=self.e_reco.lower_bounds,
+            energy_hi=self.e_reco.upper_bounds,
+            data=on_counts,
+            backscal=1,
+            meta=self._get_meta(),
+        )
+        on_vector.livetime = self.livetime
         self.on_vector = on_vector
 
     def simulate_background_counts(self, rand):
-        """Simulate background `~gammapy.spectrum.PHACountsSpectrum`
+        """Simulate background `~gammapy.spectrum.PHACountsSpectrum`.
 
-        Background counts are added to the on vector. Furthermore
-        background counts divided by alpha are added to the off vector.
+        Background counts are added to the on vector.
+        Furthermore background counts divided by alpha are added to the off vector.
 
-        TODO: At the moment the source IRFs are used. Make it possible to pass
-        dedicated background IRFs.
+        TODO: At the moment the source IRFs are used.
+        Make it possible to pass dedicated background IRFs.
 
         Parameters
         ----------
-        rand: `~numpy.random.RandomState`
+        rand : `~numpy.random.RandomState`
             random state
         """
-        bkg_counts = rand.poisson(self.npred_background.data.value)
-        off_counts = rand.poisson(self.npred_background.data.value / self.alpha)
+        bkg_counts = rand.poisson(self.npred_background.data.data.value)
+        off_counts = rand.poisson(self.npred_background.data.data.value / self.alpha)
 
         # Add background to on_vector
-        self.on_vector.data += bkg_counts * u.ct
+        self.on_vector.data.data += bkg_counts
 
         # Create off vector
-        off_vector = PHACountsSpectrum(energy=self.e_reco,
-                                       data=off_counts,
-                                       livetime=self.livetime,
-                                       backscal=1. / self.alpha,
-                                       is_bkg=True,
-                                       creator=self.__class__.__name__)
+        off_vector = PHACountsSpectrum(
+            energy_lo=self.e_reco.lower_bounds,
+            energy_hi=self.e_reco.upper_bounds,
+            data=off_counts,
+            backscal=1.0 / self.alpha,
+            is_bkg=True,
+            meta=self._get_meta(),
+        )
+        off_vector.livetime = self.livetime
         self.off_vector = off_vector
+
+    def _get_meta(self):
+        return OrderedDict([("CREATOR", self.__class__.__name__)])
