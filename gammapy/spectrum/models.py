@@ -5,6 +5,7 @@ import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
+import naima
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
@@ -1477,8 +1478,7 @@ class NaimaModel(SpectralModel):
     due to interactions with the ISM or with radiation and magnetic fields.
 
     One of the advantages provided by this class consists in the possibility of performing a maximum
-    likelihood spectral fit of the model's parameters
-    directly on observations (using the `gammapy.spectrum.SpectrumFit` class), as opposed to the MCMC
+    likelihood spectral fit of the model's parameters directly on observations, as opposed to the MCMC
     `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
     Naima. All the parameters defining the parent population of charged particles are stored as
     `~gammapy.utils.modeling.Parameter` and left free by default.
@@ -1550,9 +1550,6 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
-    import naima.models as naima_models
-    import naima.radiative as naima_radiative
-
     #TODO: prevent users from setting new attributes after init
 
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
@@ -1562,7 +1559,7 @@ class NaimaModel(SpectralModel):
         self.seed = seed
 
         # This ensures the support of naima.models.TableModel
-        if isinstance(self._particle_distribution, naima_models.TableModel):
+        if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
         else:
             param_names = self._particle_distribution.param_names
@@ -1594,7 +1591,7 @@ class NaimaModel(SpectralModel):
         """
         self.radiative_model = rm
 
-        if isinstance(rm, naima_radiative.BaseElectron):
+        if isinstance(rm, naima.radiative.BaseElectron):
             w = rm.compute_We(Eemin=Emin, Eemax=Emax)
         else:
             w = rm.compute_Wp(Epmin=Emin, Epmax=Emax)
