@@ -1468,58 +1468,154 @@ class AbsorbedSpectralModel(SpectralModel):
 
 
 class NaimaModel(SpectralModel):
-    r""""""
-    __slots__ = ["radiative_model", "distance"]
+    r"""A wrapper for `Naima <https://naima.readthedocs.io/en/latest/>`_ models
 
-    def __init__(self, radiative_model, distance=1.0 * u.kpc):
+    This class provides an interface with the models defined in the `naima.models` module.
+    The model accepts as a positional argument a Naima
+    `radiative model <https://naima.readthedocs.io/en/latest/radiative.html>`_ instance, used
+    to compute the non-thermal emission from populations of relativistic electrons or protons
+    due to interactions with the ISM or with radiation and magnetic fields.
+
+    One of the advantages provided by this class consists in the possibility of performing a maximum
+    likelihood spectral fit of the model's parameters
+    directly on observations (using the `gammapy.spectrum.SpectrumFit` class), as opposed to the MCMC
+    `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
+    Naima. All the parameters defining the parent population of charged particles are stored as
+    `~gammapy.utils.modeling.Parameter` and left free by default.
+    In case that the radiative model is `naima.radiative.Synchrotron`,
+    the magnetic field strength may also be fitted. Parameters can be freezed/unfreezed before the fit, and
+    maximum/minimum values can be set to limit the parameters space to the physically interesting region
+    (see the example below).
+
+    Parameters
+    ----------
+    radiative_model :
+        An instance of a radiative model defined in `~naima.models`
+    distance : `~astropy.units.Quantity`, optional
+        Distance to the source. If set to 0, the intrinsic differential
+        luminosity will be returned. Default is 1 kpc
+    seed : str or list of str, optional
+        Seed photon field(s) to be considered for the `radiative_model` flux computation,
+        in case of a `naima.models.InverseCompton` model. It can be a subset of the
+        `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
+        of photon fields
+
+    Examples
+    --------
+    Create and plot a spectral model that convolves an `ExponentialCutoffPowerLaw` electron distribution
+    with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
+
+    .. plot::
+        :include-source:
+
+        import naima
+        from gammapy.spectrum.models import NaimaModel
+        import astropy.units as u
+        import matplotlib.pyplot as plt
+
+
+        particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
+        radiative_model = naima.radiative.InverseCompton(
+            ECPL,
+            seed_photon_fields=[
+                "CMB",
+                ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3],
+            ],
+            Eemin=100 * u.GeV,
+        )
+
+        model = NaimaModel(radiative_model, distance=1.5 * u.kpc)
+
+        # Parameters are all left free by default. They can be freezed like this:
+        IC.e_0.frozen=True
+        IC.beta.frozen=True
+
+        # Plot the model
+        fig, ax = plt.subplots(figsize=(8, 6))
+
+        opts = {
+            "energy_range" : [10 * u.GeV, 80 * u.TeV],
+            "energy_power" : 2,
+            "flux_unit" : "erg-1 cm-2 s-1",
+        }
+
+        # Plot the total inverse Compton emission
+        model.plot(label='IC (total)', **opts)
+
+        # Plot the separate contributions from each seed photon field
+        for seed, ls in zip(['CMB','FIR'], ['-','--']):
+            model = NaimaModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
+                model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
+
+        plt.legend(loc='best')
+        plt.show()
+    """
+
+    #TODO: prevent users from setting new attributes after init
+
+    def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
         self.radiative_model = radiative_model
-        self.distance = Parameter("distance", distance)
+        self._particle_distribution = self.radiative_model.particle_distribution
+        self.distance = Parameter("distance", distance, frozen=True)
+        self.seed = seed
 
         parameters = []
-        parameters_dict = self.radiative_model.particle_distribution.__dict__
-        for (name, quantity) in parameters_dict.items():
-            if name[0] == "_" or name == "unit":
-                continue
-            parameters.append(Parameter(name, quantity))
+        try:
+            param_names = self._particle_distribution.param_names
+        except:
+            # This ensures the support of naima.models.TableModel
+            param_names = ["amplitude"]
+
+        for name in param_names:
+            value = getattr(self._particle_distribution, name)
+            setattr(self, name, Parameter(name, value))
+            parameters.append(getattr(self, name))
+
+        # In case of a synchrotron radiative model, append B to the fittable parameters
+        try:
+            B = getattr(self.radiative_model, "B")
+            setattr(self, "B", Parameter("B", B))
+            parameters.append(getattr(self, "B"))
+        except:
+            pass
 
         super().__init__(parameters)
 
-    def __call__(self, energy, seed=None, distance=None):
-        """Call evaluate method"""
-        kwargs = dict()
-        for par in self.parameters.parameters:
-            quantity = par.quantity
-            if quantity.unit.physical_type == "energy":
-                quantity = quantity.to(energy.unit)
-            kwargs[par.name] = quantity
+    def compute_W(self, Emin=None, Emax=None):
+        """Energy in elecrons or protons (depending on the model), between Emin and Emax.
+        If Emin and Emax are not passed, the total enery in elecrons/protons is returned.
 
-        if distance == None:
-            distance = self.distance.quantity
-        eval = self.evaluate(
-            energy.flatten(), self.radiative_model, seed, distance, kwargs
-        )
-
-        return eval.reshape(energy.shape)
-
-    def freeze(self, name, freeze=True):
-        """"""
+        Parameters
+        ----------
+        Emin : :class:`~astropy.units.Quantity`, float optional
+            Minimum particle energy for energy content calculation.
+        Emax : :class:`~astropy.units.Quantity`, float optional
+            Maximum particle energy for energy content calculation.
+        """
         try:
-            par_idx = self.parameters._get_idx(name)
+            w = self.radiative_model.compute_We(Eemin=Emin, Eemax=Emax)
         except:
-            raise AttributeError("Parameter {} not found".format(name))
+            w = self.radiative_model.compute_Wp(Epmin=Emin, Epmax=Emax)
 
-        self.parameters.parameters[par_idx].frozen = freeze
+        return w
 
-    @staticmethod
-    def evaluate(energy, radiative_model, seed, distance, kwargs):
-        """Evaluate the model (static function)."""
-        parameters_dict = radiative_model.particle_distribution.__dict__
-        for key, value in kwargs.items():
-            parameters_dict[key] = kwargs.get(key, value)
+    def evaluate(self, energy, **kwargs):
+        """Evaluate the model"""
+        for name, value in kwargs.items():
+            setattr(self._particle_distribution, name, value)
 
-        if seed == None:
-            dnde = radiative_model.flux(energy, distance=distance)
+        distance = self.distance.quantity
+
+        # Flattening the input energy list and later reshaping the flux list
+        # prevents some radiative models from displaying broadcasting problems.
+        if self.seed == None:
+            dnde = self.radiative_model.flux(energy.flatten(), distance=distance)
         else:
-            dnde = radiative_model.flux(energy, seed=seed, distance=distance)
+            dnde = self.radiative_model.flux(
+                energy.flatten(), seed=self.seed, distance=distance
+            )
 
-        return dnde.to("cm-2 s-1 TeV-1")
+        dnde = dnde.reshape(energy.shape)
+
+        unit = 1 / (energy.unit * u.cm ** 2 * u.s)
+        return dnde.to(unit)

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from naima import models, radiative
+import naima
 import astropy.units as u
 from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
@@ -196,8 +196,8 @@ except ImportError:
 
 # Add Naima models
 particle_distributions = [
-    models.PowerLaw(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5),
-    models.ExponentialCutoffBrokenPowerLaw(
+    naima.models.PowerLaw(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5),
+    naima.models.ExponentialCutoffBrokenPowerLaw(
         amplitude=2e33 / u.eV,
         e_0=10 * u.TeV,
         alpha_1=2.5,
@@ -205,12 +205,12 @@ particle_distributions = [
         e_break=900 * u.GeV,
         e_cutoff=10 * u.TeV,
     ),
-    models.LogParabola(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=1.3, beta=0.5),
+    naima.models.LogParabola(amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=1.3, beta=0.5),
 ]
 radiative_models = [
-    radiative.PionDecay(particle_distributions[0], nh=1 * u.cm ** -3),
-    radiative.InverseCompton(particle_distributions[1], seed_photon_fields=["CMB"]),
-    radiative.Synchrotron(particle_distributions[2], B=2 * u.G),
+    naima.radiative.PionDecay(particle_distributions[0], nh=1 * u.cm ** -3),
+    naima.radiative.InverseCompton(particle_distributions[1], seed_photon_fields=["CMB"]),
+    naima.radiative.Synchrotron(particle_distributions[2], B=2 * u.G),
 ]
 
 TEST_MODELS.append(
@@ -245,6 +245,7 @@ TEST_MODELS.append(
 
 
 @requires_dependency("uncertainties")
+@requires_dependency("naima")
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=[_["name"] for _ in TEST_MODELS])
 def test_models(spectrum):
     model = spectrum["model"]
