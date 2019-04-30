@@ -1550,6 +1550,7 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
+    import naima.radiative as naima_radiative
 
     #TODO: prevent users from setting new attributes after init
 
@@ -1572,12 +1573,10 @@ class NaimaModel(SpectralModel):
             parameters.append(getattr(self, name))
 
         # In case of a synchrotron radiative model, append B to the fittable parameters
-        try:
+        if 'B' in self.radiative_model.param_names:
             B = getattr(self.radiative_model, "B")
             setattr(self, "B", Parameter("B", B))
             parameters.append(getattr(self, "B"))
-        except:
-            pass
 
         super().__init__(parameters)
 
@@ -1592,10 +1591,12 @@ class NaimaModel(SpectralModel):
         Emax : :class:`~astropy.units.Quantity`, float optional
             Maximum particle energy for energy content calculation.
         """
-        try:
-            w = self.radiative_model.compute_We(Eemin=Emin, Eemax=Emax)
-        except:
-            w = self.radiative_model.compute_Wp(Epmin=Emin, Epmax=Emax)
+        self.radiative_model = rm
+
+        if isinstance(rm, naima_radiative.BaseElectron):
+            w = rm.compute_We(Eemin=Emin, Eemax=Emax)
+        elif isinstance(rm, naima_radiative.BaseProton):
+            w = rm.compute_Wp(Epmin=Emin, Epmax=Emax)
 
         return w
 
