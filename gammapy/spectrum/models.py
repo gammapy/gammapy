@@ -1550,6 +1550,7 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
+    import naima.models as naima_models
     import naima.radiative as naima_radiative
 
     #TODO: prevent users from setting new attributes after init
@@ -1560,13 +1561,13 @@ class NaimaModel(SpectralModel):
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
 
-        parameters = []
-        try:
-            param_names = self._particle_distribution.param_names
-        except:
-            # This ensures the support of naima.models.TableModel
+        # This ensures the support of naima.models.TableModel
+        if isinstance(self._particle_distribution, naima_models.TableModel):
             param_names = ["amplitude"]
+        else:
+            param_names = self._particle_distribution.param_names
 
+        parameters = []
         for name in param_names:
             value = getattr(self._particle_distribution, name)
             setattr(self, name, Parameter(name, value))
@@ -1595,7 +1596,7 @@ class NaimaModel(SpectralModel):
 
         if isinstance(rm, naima_radiative.BaseElectron):
             w = rm.compute_We(Eemin=Emin, Eemax=Emax)
-        elif isinstance(rm, naima_radiative.BaseProton):
+        else:
             w = rm.compute_Wp(Epmin=Emin, Epmax=Emax)
 
         return w
