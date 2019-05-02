@@ -340,7 +340,13 @@ class MapAxis:
     # TODO: Cache an interpolation object?
 
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
+
         self.name = name
+
+        if len(nodes) != len(np.unique(nodes)):
+            raise ValueError("MapAxis: node values must be unique")
+        if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
+            raise ValueError("MapAxis: node values must be sorted")
 
         if isinstance(nodes, u.Quantity):
             unit = nodes.unit
@@ -462,8 +468,6 @@ class MapAxis:
             nnode = nbin
         else:
             raise ValueError("Invalid node type: {!r}".format(node_type))
-        if lo_bnd == hi_bnd:
-            raise ValueError("MapAxis: Bound values must be unique")
 
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
@@ -495,10 +499,6 @@ class MapAxis:
         """
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
-        if len(nodes) != len(np.unique(nodes)):
-            raise ValueError("MapAxis: node values must be unique")
-        if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
-            raise ValueError("MapAxis: node values must be sorted")
 
         return cls(nodes, node_type="center", **kwargs)
 
@@ -520,10 +520,6 @@ class MapAxis:
         """
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
-        if len(edges) != len(np.unique(edges)):
-            raise ValueError("MapAxis: edge values must be unique")
-        if ~(np.all(edges == np.sort(edges)) or np.all(edges[::-1] == np.sort(edges))):
-            raise ValueError("MapAxis: edge values must be sorted")
 
         return cls(edges, node_type="edges", **kwargs)
 
