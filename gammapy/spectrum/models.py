@@ -1470,7 +1470,7 @@ class AbsorbedSpectralModel(SpectralModel):
 class NaimaModel(SpectralModel):
     r"""A wrapper for `Naima <https://naima.readthedocs.io/en/latest/>`_ models
 
-    This class provides an interface with the models defined in the `naima.models` module.
+    This class provides an interface with the models defined in the `~naima.models` module.
     The model accepts as a positional argument a Naima
     `radiative model <https://naima.readthedocs.io/en/latest/radiative.html>`_ instance, used
     to compute the non-thermal emission from populations of relativistic electrons or protons
@@ -1481,21 +1481,21 @@ class NaimaModel(SpectralModel):
     `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
     Naima. All the parameters defining the parent population of charged particles are stored as
     `~gammapy.utils.modeling.Parameter` and left free by default.
-    In case that the radiative model is `naima.radiative.Synchrotron`,
+    In case that the radiative model is `~naima.radiative.Synchrotron`,
     the magnetic field strength may also be fitted. Parameters can be freezed/unfreezed before the fit, and
     maximum/minimum values can be set to limit the parameters space to the physically interesting region
     (see the example below).
 
     Parameters
     ----------
-    radiative_model :
+    radiative_model : `~naima.models.BaseRadiative`
         An instance of a radiative model defined in `~naima.models`
     distance : `~astropy.units.Quantity`, optional
         Distance to the source. If set to 0, the intrinsic differential
         luminosity will be returned. Default is 1 kpc
     seed : str or list of str, optional
         Seed photon field(s) to be considered for the `radiative_model` flux computation,
-        in case of a `naima.models.InverseCompton` model. It can be a subset of the
+        in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
 
@@ -1515,7 +1515,7 @@ class NaimaModel(SpectralModel):
 
         particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
         radiative_model = naima.radiative.InverseCompton(
-            ECPL,
+            particle_distribution,
             seed_photon_fields=[
                 "CMB",
                 ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3],
@@ -1524,13 +1524,6 @@ class NaimaModel(SpectralModel):
         )
 
         model = NaimaModel(radiative_model, distance=1.5 * u.kpc)
-
-        # Parameters are all left free by default. They can be freezed like this:
-        IC.e_0.frozen=True
-        IC.beta.frozen=True
-
-        # Plot the model
-        fig, ax = plt.subplots(figsize=(8, 6))
 
         opts = {
             "energy_range" : [10 * u.GeV, 80 * u.TeV],
@@ -1544,7 +1537,7 @@ class NaimaModel(SpectralModel):
         # Plot the separate contributions from each seed photon field
         for seed, ls in zip(['CMB','FIR'], ['-','--']):
             model = NaimaModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
-                model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
+            model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
 
         plt.legend(loc='best')
         plt.show()
@@ -1579,25 +1572,6 @@ class NaimaModel(SpectralModel):
 
         super().__init__(parameters)
 
-    def compute_W(self, Emin=None, Emax=None):
-        """Energy in elecrons or protons (depending on the model), between Emin and Emax.
-        If Emin and Emax are not passed, the total enery in elecrons/protons is returned.
-
-        Parameters
-        ----------
-        Emin : :class:`~astropy.units.Quantity`, float optional
-            Minimum particle energy for energy content calculation.
-        Emax : :class:`~astropy.units.Quantity`, float optional
-            Maximum particle energy for energy content calculation.
-        """
-        self.radiative_model = rm
-
-        if isinstance(rm, naima.radiative.BaseElectron):
-            w = rm.compute_We(Eemin=Emin, Eemax=Emax)
-        else:
-            w = rm.compute_Wp(Epmin=Emin, Epmax=Emax)
-
-        return w
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model"""
