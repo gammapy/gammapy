@@ -98,7 +98,7 @@ method:
 .. code::
 
 	lightcurve = LightCurveTableModel() # or PhaseCurveTableModel()
-	src_sampler = MapEventSampler(npred_map, lightcurve)
+	src_sampler = MapEventSampler(npred_map, lightcurve, t_min=, t_max=)
 
     # draw total number of events
     n_events = src_sampler.npred_total()
@@ -111,7 +111,7 @@ If no lightcurve is provided a constant rate can be assumed e.g. for background 
 .. code::
 
 	bkg_map = BackgroundModel().map
-	bkg_sampler = MapEventSampler(bkg_map, t_min=, t_max=)
+	bkg_sampler = MapEventSampler(bkg_map, t_min=, t_max=) 
 	events_bkg = bkg_sample.sample()
 
 It remains to answer the question what to do when the source lightcurve is shorter than the total exposure time: do we
@@ -190,6 +190,11 @@ More detailed:
 
     events_total = vstack([events_reco, event_bkg])
 
+
+
+Unresolved questions: 
+- the dataset class does not take into account the time variability...issue
+- a class, at top, that bundles multiple observations (pointings, IRF, GIT...)
 
 
 
