@@ -13,11 +13,11 @@ PIG 8 - Datasets
 * Discussion:
 
 
-Introduction
-============
+Abstract
+========
 An essential feature of Gammapy for modeling gamma-ray data will be the possibility
 of joint-likelihood analyses. This includes the joint-likelhood fitting of a model
-across multiple observations, joint-likelihood fitting of IACT and Fermi-LAT
+across multiple IACT observations, joint-likelihood fitting of IACT and Fermi-LAT
 data, combined analysis of gamma-ray data with flux points or a combined spectral
 and cube analysis. Joint-likelihood also allows for combining different event types
 in a single analysis and timing analyses. For this reason we propose to introduce
@@ -158,14 +158,13 @@ For spectral analysis we propose to introduce a `SpectrumDataset`:
     dataset.likelihood(mask)
 
 The `SpectrumDatasets` with a parametric background model will be introduced first.
-The existing `SpectrumObservation` can be refactored later in a `SpectrumOnOffDataset`
-or `PHASpectrumDatasets`.
+The existing `SpectrumObservation` can be refactored later in a `SpectrumDatasetsOnOff`.
 
 
-`FluxPointDataset`
-------------------
+`FluxPointsDataset`
+-------------------
 
-For modeling of flux points we propose to introduce a `FluxPointDataset`:
+For modeling of flux points we propose to introduce a `FluxPointsDataset`:
 
 .. code::
 
@@ -182,11 +181,11 @@ For modeling of flux points we propose to introduce a `FluxPointDataset`:
     fit = Fit(dataset)
     fit.optimize()
 
-The `FluxPointDataset` should define at least the following methods:
+The `FluxPointsDataset` should define at least the following methods:
 
 .. code::
 
-    dataset = FluxPointDataset()
+    dataset = FluxPointsDataset()
 
     dataset.likelihood_per_bin()
     dataset.likelihood(mask)
@@ -195,10 +194,10 @@ The `FluxPointDataset` should define at least the following methods:
     dataset.flux_pred()
 
 The `FluxPoint` class also supports the `likelihood` format, which has to be implemented
-in a special way in the `FluxPointDataset`. The `likelihood` format stores the
+in a special way in the `FluxPointsDataset`. The `likelihood` format stores the
 likelihood of the flux point, depending on energy and amplitude. Given a predicted
 flux by the spectral model the likelihood can be directly interpolated. This could
-be supported by a specific option `FluxPointDataset(likelihood="template")` or similar.
+be supported by a specific option `FluxPointsDataset(likelihood="template")` or similar.
 
 
 `Datasets`
@@ -269,7 +268,7 @@ Combined spectral / flux points analysis:
     spectrum_dataset = SpectrumDataset(model=model)
 
     flux_points = FluxPoints.read()
-    flux_point_dataset = FluxPointDataset(flux_points=flux_points, model=model, likelihood="chi2")
+    flux_point_dataset = FluxPointsDataset(flux_points=flux_points, model=model, likelihood="chi2")
 
     datasets = Datasets([flux_point_dataset, spectrum_dataset])
 
@@ -355,9 +354,8 @@ Lazy loading of Datasets
 For the use-case of inspecting individual datasets (e.g. MapDataset per observation)
 it could be advantegeous to implement a lazy-loading or generator interface for
 `Datasets.read()`. Such that the individual datasets are only read from disk on
-requests and are not loaded in memory when calling `.read()`. We propose to handle
-this with a generic lazy-loading mechanism for `Map` objects, where the data is loaded
-on access of the `.data` attribute.
+requests and are not loaded in memory when calling `.read()`. We leave this question
+un-addressed in this PR but mention it for completeness.
 
 
 Simulation of `MapDataset`
@@ -378,7 +376,7 @@ as following:
     dataset.counts = dataset.simulate_counts(random_seed=0)
 
     fit = Fit(dataset)
-    fit.optmimize()
+    fit.optimize()
 
 
 List of Pull Requests
