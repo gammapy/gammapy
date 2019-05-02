@@ -329,7 +329,7 @@ class PSF3D:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction)
-                label = "{} deg, {:.1f}%".format(theta, 100 * fraction)
+                label = "{} deg, {:.1f}%".format(theta.deg, 100 * fraction)
                 ax.plot(energy.value, radius.value, label=label)
 
         ax.semilogx()
