@@ -1547,6 +1547,7 @@ class NaimaModel(SpectralModel):
     #TODO: prevent users from setting new attributes after init
 
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
+        import naima
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = Parameter("distance", distance, frozen=True)
