@@ -31,6 +31,7 @@ def test_mapaxis_init_from_edges(edges, interp):
     with pytest.raises(ValueError):
         MapAxis.from_edges([1])
         MapAxis.from_edges([0, 1, 1, 2])
+        MapAxis.from_edges([0, 1, 3, 2])
 
 
 @pytest.mark.parametrize(("nodes", "interp"), mapaxis_geoms)
@@ -41,6 +42,7 @@ def test_mapaxis_from_nodes(nodes, interp):
     with pytest.raises(ValueError):
         MapAxis.from_nodes([])
         MapAxis.from_nodes([0, 1, 1, 2])
+        MapAxis.from_nodes([0, 1, 3, 2])
 
 
 @pytest.mark.parametrize(("nodes", "interp"), mapaxis_geoms)
@@ -49,6 +51,8 @@ def test_mapaxis_from_bounds(nodes, interp):
     assert_allclose(axis.edges[0], nodes[0])
     assert_allclose(axis.edges[-1], nodes[-1])
     assert_allclose(axis.nbin, 3)
+    with pytest.raises(ValueError):
+        MapAxis.from_bounds(1, 1, 1)
 
 
 @pytest.mark.parametrize(("nodes", "interp", "node_type"), mapaxis_geoms_node_type)
@@ -288,9 +292,9 @@ def test_group_table_basic(energy_axis_ref):
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["normal", "normal"])
 
+
 @pytest.mark.parametrize(
-    "e_edges",
-    [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
+    "e_edges", [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV]
 )
 def test_group_table_edges(energy_axis_ref, e_edges):
     groups = energy_axis_ref.group_table(e_edges)

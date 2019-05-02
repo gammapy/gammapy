@@ -340,7 +340,13 @@ class MapAxis:
     # TODO: Cache an interpolation object?
 
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
+
         self.name = name
+
+        if len(nodes) != len(np.unique(nodes)):
+            raise ValueError("MapAxis: node values must be unique")
+        if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
+            raise ValueError("MapAxis: node values must be sorted")
 
         if isinstance(nodes, u.Quantity):
             unit = nodes.unit
@@ -493,8 +499,6 @@ class MapAxis:
         """
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
-        if len(nodes) != len(np.unique(nodes)):
-            raise ValueError("MapAxis: node values must be unique")
 
         return cls(nodes, node_type="center", **kwargs)
 
@@ -516,8 +520,6 @@ class MapAxis:
         """
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
-        if len(edges) != len(np.unique(edges)):
-            raise ValueError("MapAxis: edge values must be unique")
 
         return cls(edges, node_type="edges", **kwargs)
 
@@ -645,7 +647,6 @@ class MapAxis:
         """Copy `MapAxis` object"""
         return copy.deepcopy(self)
 
-
     def group_table(self, edges):
         """Compute bin groups table for the map axis, given coarser bin edges.
 
@@ -700,8 +701,9 @@ class MapAxis:
                 "idx_min": edge_idx_end + 1,
                 "idx_max": self.nbin - 1,
                 "{}_min".format(self.name): edge_ref_end,
-                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5) * self.unit,
-                }
+                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5)
+                * self.unit,
+            }
             groups.add_row(vals=overflow)
 
         group_idx = Column(np.arange(len(groups)))
