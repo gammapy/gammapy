@@ -40,24 +40,24 @@ InverseCDFSampler
 The first building block of the event simulator is a class that samples from a given probability function (PSF). For this
 we use the inverse CDF sampling method (https://en.wikipedia.org/wiki/Inverse_transform_sampling). In more detail, it
 calculates the cumulative distribution function and, once a set of random numbers is determined, it samples a set of events.
-The proposed implementation follows closely what's proposed here https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584:
+The proposed implementation follows closely what is described here https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584:
 
 The basic design of the class is as following:
 
 .. code::
-	
-	from gammapy.utils.distributions import InverseCDFSampler
+
+    from gammapy.utils.distributions import InverseCDFSampler
 
     pdf = np.array()
-	cdf_sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
+    cdf_sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
 
 Where the `gammapy.utils.random.get_random_state` method is used. The class implements mainly the `.sample()` method
 to draw samples from the given pdf:
 
 .. code::
-	
-	cdf_sampler = InverseCDFSampler()
-	samples = cdf_sampler.sample(size=100)
+
+    cdf_sampler = InverseCDFSampler()
+    samples = cdf_sampler.sample(size=100)
 
 The returned object is a `np.ndarray` containing the sampled indices.
 
@@ -67,8 +67,8 @@ by specifying the `axis` argument:
 
 .. code::
 
-	cdf_sampler = InverseCDFSampler(pdf=pdfs, axis=0)
-	samples = cdf_sampler.sample(size=1)
+    cdf_sampler = InverseCDFSampler(pdf=pdfs, axis=0)
+    samples = cdf_sampler.sample(size=1)
 
 
 The `InverseCDFSampler` could possibly implement a few helper functions to plot the CDF or PDF. The `InverseCDFSampler`
@@ -87,78 +87,76 @@ time dependence of the model, output data structures and sampling of the total n
 Starting from a predicted number of counts map (e.g. computed by the `MapEvaluator`):
 
 .. code::
-	
-	src = SkyModel()
-	evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
-	npred_map = evaluator.compute_npred()
+
+    src = SkyModel()
+    evaluator = MapEvaluator(src, exposure, psf=None, edisp=None)
+    npred_map = evaluator.compute_npred()
 
 The `MapEventSampler` takes this map and a lightcurve model as an input and allows to sample from it with the `.sample()`
 method:
 
 .. code::
 
-	lightcurve = LightCurveTableModel() # or PhaseCurveTableModel()
-	src_sampler = MapEventSampler(npred_map, lightcurve, t_min=, t_max=)
+    lightcurve = LightCurveTableModel() # or PhaseCurveTableModel()
+    src_sampler = MapEventSampler(npred_map, lightcurve, t_min=, t_max=)
 
     # draw total number of events
     n_events = src_sampler.npred_total()
 
-	# draw events as an astropy table
-	events_src = map_sampler.sample()
+    # draw events as an astropy table
+    events_src = map_sampler.sample()
 
 If no lightcurve is provided a constant rate can be assumed e.g. for background models:
 
 .. code::
 
-	bkg_map = BackgroundModel().map
-	bkg_sampler = MapEventSampler(bkg_map, t_min=, t_max=) 
-	events_bkg = bkg_sample.sample()
+    bkg_map = BackgroundModel().map
+    bkg_sampler = MapEventSampler(bkg_map, t_min=, t_max=)
+    events_bkg = bkg_sample.sample()
+
 
 It remains to answer the question what to do when the source lightcurve is shorter than the total exposure time: do we
-repeat the temporal information or do we just consider the remaining time as a flat or  lightcurve?
+repeat the temporal information or do we just consider the remaining time as a flat lightcurve?
 
 
 IRFMapSampler
 =============
 
-We introduce a class that bundles the IRF psf and energy dispersion and applies them to the previously sampled event list. 
-In more detail, the class will take as input the `MapEventSampler.sample` source object and then it evaluates a map of 
-the psf and the energy dispersion calculated for each event true position and true energy. The reconstructed energies and 
-positions are then listed into an astropy table. We propose two different options to accomplish this task, which should work 
-as follows:
+The handle correctly the spatially varying IRFs, we propose to introduce an `IRFMapSampler` class. Based on the `PSFMap`
+and `EDispMap` as an input it interpolates the "correct" IRF at the position of a given event and applies it. In more detail
+the class will calculate the psf and the energy dispersion for each event true position and true energy. The reconstructed
+energies and positions are then appended to the event list. The IRFs are assumed to be constant and not time-dependent.
+The time dependency will be handled higher level, by a loop over good time-intervals. The class would be used as following:
 
 .. code::
 
-	events = vstack([events_src_1, events_src_2, ..., events_src_N])
-	irf_sampler = IRFMapSampler(events, psf_map, edisp_map)
-	events_obs = irf_sampler.sample()
+    events = vstack([events_src_1, events_src_2, ..., events_src_N])
+    irf_sampler = IRFMapSampler(psf_map, edisp_map)
 
-	# or
+    events = irf_sampler.sample_psf(events)
+    events = irf_sampler.sample_edisp(events)
 
-	irf_sampler = IRFMapSampler(psf_map, edisp_map)
-	events = irf_sampler.sample_psf(events)
-	events = irf_sampler.sample_edisp(events)
-
-In the first case, the IRF is applied to the stacking of all the simulated sources, with the `IRFSampler` class which
-contains only the `sample` method. In the second case, the `IRFSampler` reads the psf and energy maps only, and then 
-it contains two methods that apply separately the psf and edisp corrections to the events; for more than one simulated 
-source, a loop will be needed.
-
+Alternatively the IRFs could be applied per model component and be handled in the `MapEventSampler`. However in this case
+the IRFs would not be applied correctly for e.g. very extended sources, because the IRF changes over region of the source.
+If we find the approach with the `IRFMapSampler` to be not performant enough or problematic in memory use, it can be still
+used as a simple fallback solution.
 
 MapDatasetEventSampler?
 =======================
 
-Propose high level structure:
+To combine the `MapEventSampler` and `IRFMapSampler` objects we finally propose to introduce a `MapDatasetEventSampler`,
+which executes the sampling from all source components, applies the IRFs, samples from the background model and returns
+a stacked, combined event list.
+
+This is the proposed high level API:
 
 .. code::
     
     dataset_sampler = MapDatasetEventSampler(dataset)
     events = dataset_sampler.sample()
 
-    # or alternatively
-
-    events = dataset.sample_events()
-
+This requires to add `t_min` and `t_max` information to `MapDataset` or maybe a `MapDataset.gti` attribute, defining the
+GTI for the given dataset. In addition it also requires to add a lightcurve model to the `SkyModel`.
 
 More detailed:
 
@@ -191,19 +189,30 @@ More detailed:
     events_total = vstack([events_reco, event_bkg])
 
 
-
-Unresolved questions: 
-- the dataset class does not take into account the time variability...issue
-- a class, at top, that bundles multiple observations (pointings, IRF, GIT...)
+Simulating multiple observations
+================================
+The question of simulating mutiple observations from e.g. an `ObservationTable` or `GTI` object as it is needed for
+simulating data for the CTA data challenge is not addressed in this PIG.
 
 
 
 Alternatives
 ============
+Instead of introducing a parallel class structure of sampler objects once could introduce `.sample()` methods on the
+existing related classes in Gammapy:
 
-Use the ctools sampler for data challenge?
-Use the ASTRI sampler and write in a format compatible with Gammapy? 
-Always use binned simulation?
+- `events_src = MapEvaluator.sample()` to sample from a source model
+- `events = EdispMap.sample(events=)` to apply the energy dispersion
+- `events = PsfMap.sample(events=)` to appy the PSF
+- `events = MapDataset.sample()` to combine all together.
+
+This has the advantage of a smaller API, but is less flexible.
+
+
+Binned Simulation
+-----------------
+As an alternative approach one could also use binned simulations by fluctuating the number of counts in each bin of a
+given map or spectrum. This is not a real alternative, but could be offered in addition and used depending on the use case.
 
 
 List of proposed pull requests
@@ -211,14 +220,13 @@ List of proposed pull requests
 
 This is a proposal for a list of pull requests implementing the proposed changes, ordered by priority:
 
-1. Introduce the InverseCDFSampler.
-2. Dismiss the ``general_random`` class in gammapy.utils.distributions.
-3. Implement the InverseCDFSampler into gammapy.utils.distributions (Gammapy v.0.12).
-4. Introduce the MapEventSampler class.
-5. Implement MapEventSampler into gammapy. ... (v.0.12).?
-6. Introduce the IRFSampler class.
-7. Implement IRFSampler into gammapy. ... (v.0.12). ?
-
+1. Rename `gammapy.utils.distributions` to `gammapy.utils.random` and move the current `gammapy.utils.random` there (v0.12).
+2. Remove the currently unused `GeneralRandomArray` class (v0.12)
+3. Implement the InverseCDFSampler in `gammapy.utils.random` in `inverse_cdf.py` and add tests.
+4. Remove the current `GeneralRandom` class and adapt `gammapy.astro.population.simulate` accordingly.
+5. Implement `MapEventSampler` class ... (v0.13, v0.14)?
+6. Implement IRFSampler into gammapy. ... (v0.13, v0.14)?
+7. Implement IRFSampler into gammapy. ... (v0.13, v0.14)?
 
 Decision
 ========
