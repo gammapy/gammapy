@@ -8,7 +8,8 @@ PIG 3 - Plan for dropping Python 2.7 support
 
 * Author: Christoph Deil & Matthew Wood
 * Created: Feb 1, 2018
-* Status: draft
+* Accepted: Nov 30, 2018
+* Status: accepted
 * Discussion: `GH 1278`_
 
 Abstract
@@ -133,7 +134,10 @@ hopefully not many) in the ``v0.10.x`` branch.
 Decision
 ========
 
-tbd
+This suggestion was extensively discussed in 2017 and 2018 with Gammapy users and developers.
+This proposal and PIG was widely announced (mailing list, Slack) and we didn't get a single
+request to extend Python 2 support longer than mentioned here. Approved on Nov 30, 2018
+by Gammapy coordination committee.
 
 .. _GH 1278: https://github.com/gammapy/gammapy/pull/1278
 .. _Numpy statement: https://docs.scipy.org/doc/numpy-1.14.1/neps/dropping-python2.7-proposal.html
