@@ -1,0 +1,64 @@
+.. include:: ../../references.txt
+
+.. _pig-010:
+
+****************
+PIG 10 - Regions
+****************
+
+* Author: Christoph Deil
+* Created: May 3, 2019
+* Status: draft
+* Discussion: `GH 2127`_
+
+Abstract
+========
+
+I propose to use `astropy-regions`_ to handle sky and pixel regions throughout
+Gammapy. We already use ``astropy-regions``, so why a PIG? There are a few
+decisions we need to make where to use sky and where to use pixel regions and
+where to support both. This affects the algorithms used (e.g. for reflected
+region background estimation) and the API (where a WCS or exclusion map is
+needed in functions and methods working with regions). Also `astropy-regions`_
+was started after Gammapy - so we have some code to work with sky cones and
+boxes that partially be removed, partially refactored to use
+``astropy-regions``. This PR lists the work to be done to get region-related
+code in shape for Gammapy v1.0, to be implemented in the coming months.
+
+Motivation
+==========
+
+tbd
+
+Details
+=======
+
+tbd
+
+Work plan
+=========
+
+I propose to implement this PIG though a series of small pull requests,
+roughly like this:
+
+- tbd
+
+Alternatives
+============
+
+tbd
+
+Decision
+========
+
+I suggest we merge this PR soon, once the questions of what we want in v1.0 are
+resolved. The purpose of this PIG is to get a good and agreed solution and to
+make it clear what work is needed. Leaving the PR / PIG decision open doesn't
+help.
+
+tbd
+
+.. _astropy-regions: https://astropy-regions.readthedocs.io
+.. _GH 2127: https://github.com/gammapy/gammapy/pull/2127
+.. _GH 2089: https://github.com/gammapy/gammapy/pull/2089
+.. _GH 1172: https://github.com/gammapy/gammapy/issues/1172
