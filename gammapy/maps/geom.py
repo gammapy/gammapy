@@ -420,6 +420,11 @@ class MapAxis:
         return self.pix_to_coord(pix)
 
     @property
+    def interp(self):
+        """Map axis interpolation mode"""
+        return self._interp
+
+    @property
     def nbin(self):
         """Return number of bins."""
         return self._nbin
