@@ -189,9 +189,9 @@ class ReflectedRegionsFinder:
         )
 
         if self._min_ang < 0:
-            print("ISSUE self._min_ang=", self._min_ang)
+            log.warn("ISSUE self._min_ang=", self._min_ang)
         if self.min_distance_input < 0:
-            print("ISSUE self.min_distance_input=", self.min_distance_input)
+            log.warn("ISSUE self.min_distance_input=", self.min_distance_input)
 
     def find_regions(self):
         """Find reflected regions."""
@@ -217,8 +217,7 @@ class ReflectedRegionsFinder:
             else:
                 curr_angle = curr_angle + self.angle_increment
 
-        print("Found {0} reflected regions for the Obs #{1}".format(len(reflected_regions), self.obs_id))
-        log.debug("Found {} reflected regions".format(len(reflected_regions)))
+        log.info("Found {0} reflected regions for the Obs #{1}".format(len(reflected_regions), self.obs_id))
 
         self.reflected_regions = reflected_regions
 
