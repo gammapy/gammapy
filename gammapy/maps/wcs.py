@@ -10,7 +10,6 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
 import astropy.units as u
 from regions import SkyRegion
-from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes, find_and_read_bands, axes_pix_to_coord
 from .utils import INVALID_INDEX
@@ -56,6 +55,20 @@ def cast_to_shape(param, shape, dtype):
         param[i] = p * np.ones(shape, dtype=dtype)
 
     return tuple(param)
+
+
+def get_resampled_wcs(wcs, factor, downsampled):
+    """
+    Get resampled WCS object.
+    """
+    wcs = wcs.deepcopy()
+
+    if not downsampled:
+        factor = 1.0 / factor
+
+    wcs.wcs.cdelt *= factor
+    wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
+    return wcs
 
 
 # TODO: remove this function, move code to the one caller below

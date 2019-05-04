@@ -33,16 +33,3 @@ def get_wcs_ctype(wcs):
     else:
         raise TypeError("Can't determine WCS coordinate type.")
 
-
-def get_resampled_wcs(wcs, factor, downsampled):
-    """
-    Get resampled WCS object.
-    """
-    wcs = wcs.deepcopy()
-
-    if not downsampled:
-        factor = 1.0 / factor
-
-    wcs.wcs.cdelt *= factor
-    wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
-    return wcs
