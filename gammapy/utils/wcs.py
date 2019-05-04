@@ -5,8 +5,6 @@ from astropy.wcs import WCS
 from astropy.coordinates import Angle
 
 __all__ = [
-    "linear_wcs_to_arrays",
-    "linear_arrays_to_wcs",
     "get_wcs_ctype",
     "get_resampled_wcs",
 ]
