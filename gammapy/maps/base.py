@@ -505,7 +505,7 @@ class Map(metaclass=MapMeta):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor, preserve_counts=True):
+    def downsample(self, factor, preserve_counts=True, axis=None):
         """Downsample the spatial dimension by a given factor.
 
         Parameters
@@ -516,6 +516,8 @@ class Map(metaclass=MapMeta):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
+        axis : str
+            Which axis to downsample. By default spatial axes are downsampled.
 
         Returns
         -------
@@ -525,7 +527,7 @@ class Map(metaclass=MapMeta):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor, order=0, preserve_counts=True):
+    def upsample(self, factor, order=0, preserve_counts=True, axis=None):
         """Upsample the spatial dimension by a given factor.
 
         Parameters
@@ -538,6 +540,9 @@ class Map(metaclass=MapMeta):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity).
+        axis : str
+            Which axis to upsample. By default spatial axes are upsampled.
+
 
         Returns
         -------

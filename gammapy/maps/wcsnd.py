@@ -380,10 +380,14 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def upsample(self, factor, preserve_counts=True, axis=None):
+    def upsample(self, factor, order=0, preserve_counts=True, axis=None):
         geom = self.geom.upsample(factor, axis=axis)
-        coords = geom.get_coord()
-        data = self.get_by_coord(coords=coords)
+        idx = geom.get_idx()
+        pix = (
+                  (idx[0] - 0.5 * (factor - 1)) / factor,
+                  (idx[1] - 0.5 * (factor - 1)) / factor,
+              ) + idx[2:]
+        data = map_coordinates(self.data.T, pix, order=order, mode="nearest")
 
         if preserve_counts:
             if axis is None:

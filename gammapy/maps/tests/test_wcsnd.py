@@ -451,9 +451,30 @@ def test_wcsndmap_upsample(npix, binsz, coordsys, proj, skydir, axes):
         npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
     )
     m = WcsNDMap(geom, unit="m2")
-    m2 = m.upsample(2, order=0, preserve_counts=True)
+    m2 = m.upsample(2, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
     assert m.unit == m2.unit
+
+
+def test_wcsndmap_upsample_axis():
+    axis = MapAxis.from_nodes([1, 2, 3, 4], name="test")
+    geom = WcsGeom.create(npix=(4, 4), axes=[axis])
+    m = WcsNDMap(geom, unit="m2")
+    m.data += 1
+
+    m2 = m.upsample(2, preserve_counts=True, axis="test")
+    assert m2.data.shape == (8, 4, 4)
+    assert_allclose(m.data.sum(), m2.data.sum())
+
+
+def test_wcsndmap_downsample_axis():
+    axis = MapAxis.from_nodes([1, 2, 3, 4], name="test")
+    geom = WcsGeom.create(npix=(4, 4), axes=[axis])
+    m = WcsNDMap(geom, unit="m2")
+    m.data += 1
+
+    m2 = m.downsample(2, preserve_counts=True, axis="test")
+    assert m2.data.shape == (2, 4, 4)
 
 
 def test_coadd_unit():
