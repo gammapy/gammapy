@@ -725,26 +725,37 @@ class WcsGeom(MapGeom):
         cdelt = copy.deepcopy(self._cdelt)
         return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
-    def downsample(self, factor):
+    def downsample(self, factor, axis=None):
+        if axis is None:
+            if np.any(np.mod(self.npix, factor) > 0):
+                raise ValueError(
+                    "Spatial shape not divisible by factor {!r} in all axes."
+                    " You need to pad prior to calling downsample.".format(factor)
+                )
 
-        if not np.all(np.mod(self.npix[0], factor) == 0) or not np.all(
-            np.mod(self.npix[1], factor) == 0
-        ):
-            raise ValueError(
-                "Data shape not divisible by factor {!r} in all axes."
-                " You need to pad prior to calling downsample.".format(factor)
-            )
+            npix = (self.npix[0] / factor, self.npix[1] / factor)
+            cdelt = (self._cdelt[0] * factor, self._cdelt[1] * factor)
+            wcs = get_resampled_wcs(self.wcs, factor, True)
+            return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
+        else:
+            axes = copy.deepcopy(self.axes)
+            idx = self.get_axis_index_by_name(axis)
+            axes[idx] = axes[idx].downsample(factor)
+            return self._init_copy(axes=axes)
 
-        npix = (self.npix[0] / factor, self.npix[1] / factor)
-        cdelt = (self._cdelt[0] * factor, self._cdelt[1] * factor)
-        wcs = get_resampled_wcs(self.wcs, factor, True)
-        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
-    def upsample(self, factor):
-        npix = (self.npix[0] * factor, self.npix[1] * factor)
-        cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
-        wcs = get_resampled_wcs(self.wcs, factor, False)
-        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
+    def upsample(self, factor, axis=None):
+        if axis is None:
+            npix = (self.npix[0] * factor, self.npix[1] * factor)
+            cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
+            wcs = get_resampled_wcs(self.wcs, factor, False)
+            return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
+        else:
+            axes = copy.deepcopy(self.axes)
+            idx = self.get_axis_index_by_name(axis)
+            axes[idx] = axes[idx].upsample(factor)
+            return self._init_copy(axes=axes)
+
 
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
