@@ -108,6 +108,10 @@ class ReflectedRegionsFinder:
 
         The size of the mask is chosen such that all reflected region are
         contained on the image.
+        To do so, the reference map width is taken to be 4 times the distance between
+        the target region center and the rotation point. This distance is larger than
+        the typical dimension of the region itself (otherwise the rotation point would
+        lie inside the region).
 
         Parameters
         ----------
