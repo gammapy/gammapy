@@ -1248,10 +1248,7 @@ class ScaleModel(SpectralModel):
     def __init__(self, model, norm=1):
         self.norm = Parameter("norm", norm, unit="")
         self.model = model
-
-        params = []
-        params.append(getattr(self, "norm"))
-        super().__init__(params)
+        super().__init__([self.norm])
 
     def evaluate(self, energy, norm):
         return norm * self.model(energy)
