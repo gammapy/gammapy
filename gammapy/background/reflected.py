@@ -170,13 +170,10 @@ class ReflectedRegionsFinder:
         pix_on_x = pix_idx[0][_mask]
         pix_on_y = pix_idx[1][_mask]
         newX, newY = (self._pix_center.x - pix_on_x), (self._pix_center.y - pix_on_y)
-        angles = np.arctan2(newY, newX) * u.rad
-        min_ang = np.max(angles)-np.min(angles)
+        angles = Angle(np.arctan2(newY, newX) * u.rad)
+        min_ang = np.max(angles.wrap_at(2*np.pi*u.rad))-np.min(angles.wrap_at(2*np.pi*u.rad))
         if min_ang.value > np.pi:
-            new_angles = np.zeros_like(angles)
-            new_angles[angles.value > 0] = angles[angles.value > 0] - np.pi*u.rad
-            new_angles[angles.value < 0] = angles[angles.value < 0] + np.pi*u.rad
-            min_ang = np.max(new_angles)-np.min(new_angles)
+            min_ang = np.max(angles.wrap_at(np.pi*u.rad))-np.min(angles.wrap_at(np.pi*u.rad))
 
         # Add required minimal distance between two off regions
         self._min_ang = min_ang + self.min_distance
