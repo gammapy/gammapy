@@ -161,8 +161,6 @@ class ReflectedRegionsFinder:
         # Make the ON reference map
         _mask = geom.region_mask([self.region], inside=True)
         self.on_reference_map = WcsNDMap(geom=geom, data=_mask)
-        # TODO: remove this lign after the correction of the Issue #2074
-        self.on_reference_map.data = self.on_reference_map.data.astype(float)
 
         # Starting angle of region
         self._angle = Angle(np.arctan2(dy, dx), "rad")
