@@ -738,6 +738,10 @@ class WcsGeom(MapGeom):
             wcs = get_resampled_wcs(self.wcs, factor, True)
             return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
         else:
+            if not self.is_regular:
+                raise NotImplementedError("Upsamling in non-spatial axes not"
+                                          " support for irregular geometries")
+
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
             axes[idx] = axes[idx].downsample(factor)
@@ -751,6 +755,9 @@ class WcsGeom(MapGeom):
             wcs = get_resampled_wcs(self.wcs, factor, False)
             return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
         else:
+            if not self.is_regular:
+                raise NotImplementedError("Upsamling in non-spatial axes not"
+                                          " support for irregular geometries")
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
             axes[idx] = axes[idx].upsample(factor)

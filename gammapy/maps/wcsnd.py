@@ -383,11 +383,18 @@ class WcsNDMap(WcsMap):
     def upsample(self, factor, order=0, preserve_counts=True, axis=None):
         geom = self.geom.upsample(factor, axis=axis)
         idx = geom.get_idx()
-        pix = (
-                  (idx[0] - 0.5 * (factor - 1)) / factor,
-                  (idx[1] - 0.5 * (factor - 1)) / factor,
-              ) + idx[2:]
-        data = map_coordinates(self.data.T, pix, order=order, mode="nearest")
+
+        if axis is None:
+            pix = (
+                      (idx[0] - 0.5 * (factor - 1)) / factor,
+                      (idx[1] - 0.5 * (factor - 1)) / factor,
+                  ) + idx[2:]
+        else:
+            pix = list(idx)
+            idx_ax = self.geom.get_axis_index_by_name(axis)
+            pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
+
+        data = map_coordinates(self.data.T, tuple(pix), order=order, mode="nearest")
 
         if preserve_counts:
             if axis is None:
@@ -405,13 +412,10 @@ class WcsNDMap(WcsMap):
             block_size = [1] * self.data.ndim
             idx = self.geom.get_axis_index_by_name(axis)
             block_size[-(idx + 1)] = factor
-        
-        data = block_reduce(self.data, tuple(block_size[::-1]), np.nansum)
-        if not preserve_counts:
-            if axis is None:
-                data /= factor ** 2
-            else:
-                data /= factor
+
+        func = np.nansum if preserve_counts else np.nanmean
+        data = block_reduce(self.data, tuple(block_size[::-1]), func=func)
+
         return self._init_copy(geom=geom, data=data)
 
     def plot(self, ax=None, fig=None, add_cbar=False, stretch="linear", **kwargs):

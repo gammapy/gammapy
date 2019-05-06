@@ -1460,13 +1460,15 @@ class MapGeom(metaclass=MapGeomMeta):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor):
+    def downsample(self, factor, axis):
         """Downsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
+        axis : str
+            Axis to downsample.
 
         Returns
         -------
@@ -1477,13 +1479,15 @@ class MapGeom(metaclass=MapGeomMeta):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor):
+    def upsample(self, factor, axis):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
+        axis : str
+            Axis to upsample.
 
         Returns
         -------
