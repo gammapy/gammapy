@@ -741,7 +741,7 @@ class FluxPoints:
 
 
 class FluxPointEstimator:
-    """Flux point estimator.
+    """Flux points estimator.
 
     Estimates flux points for a given list of spectral datasets, energies and
     spectral model.
@@ -764,8 +764,8 @@ class FluxPointEstimator:
         Spectrum datasets.
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    model : `~gammapy.spectrum.models.SpectralModel`
-        Global best fit model.
+    source : str
+        For which source in the model to compute the flux points.
     norm_min : float
         Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
@@ -784,7 +784,7 @@ class FluxPointEstimator:
         self,
         datasets,
         e_edges,
-        model,
+        source=None,
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -802,12 +802,23 @@ class FluxPointEstimator:
 
         self.datasets = datasets.copy()
         self.e_edges = e_edges
+
+        dataset = self.datasets.datasets[0]
+
+        if source is not None:
+            model = dataset.model[source].spectral_model
+        else:
+            model = dataset.model
+
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
 
         # set the model on all datasets
         for dataset in self.datasets.datasets:
-            dataset.model = self.model
+            if source is not None:
+                dataset.model[source].spectral_model = self.model
+            else:
+                dataset.model = self.model
 
         if norm_values is None:
             norm_values = np.logspace(
@@ -824,9 +835,12 @@ class FluxPointEstimator:
 
     @property
     def e_groups(self):
-        """"""
-        from ..maps import MapAxis
-        energy_axis = self.datasets.datasets[0].counts_on.energy
+        """Energy grouping table `~astropy.table.Table`"""
+        dataset = self.datasets.datasets[0]
+        try:
+            energy_axis = dataset.counts_on.energy
+        except AttributeError:
+            energy_axis = datasets.counts.geom.get_axis_by_name("energy")
         return energy_axis.group_table(self.e_edges)
 
     def __str__(self):

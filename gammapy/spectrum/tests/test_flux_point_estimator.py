@@ -30,7 +30,8 @@ def simulate_dataset(model):
 def create_fpe(model):
     dataset = simulate_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
-    return FluxPointEstimator(datasets=[dataset], model=model, e_edges=e_edges, norm_n_values=3)
+    dataset.model = model
+    return FluxPointEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3)
 
 
 @pytest.fixture(scope="session")
