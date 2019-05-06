@@ -778,6 +778,8 @@ class FluxPointEstimator:
         Sigma to use for asymmetric error computation.
     sigma_ul : int
         Sigma to use for upper limit computation.
+    reoptimize : bool
+        Re-optimize other free model parameters.
     """
 
     def __init__(
@@ -791,6 +793,7 @@ class FluxPointEstimator:
         norm_values=None,
         sigma=1,
         sigma_ul=2,
+        reoptimize=False,
     ):
         # make a copy to not modify the input datasets
         if not isinstance(datasets, Datasets):
@@ -820,6 +823,12 @@ class FluxPointEstimator:
             else:
                 dataset.model = self.model
 
+        if not reoptimize:
+            # freeze other parameters
+            for par in dataset.parameters:
+                if par is not self.model.norm:
+                    par.frozen = True
+
         if norm_values is None:
             norm_values = np.logspace(
                 np.log10(norm_min), np.log10(norm_max), norm_n_values
@@ -828,6 +837,7 @@ class FluxPointEstimator:
         self.norm_values = norm_values
         self.sigma = sigma
         self.sigma_ul = sigma_ul
+        self.reoptimize = reoptimize
 
     @property
     def ref_model(self):
@@ -1010,7 +1020,7 @@ class FluxPointEstimator:
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        result = self.fit.likelihood_profile("norm", values=self.norm_values)
+        result = self.fit.likelihood_profile("norm", values=self.norm_values, reoptimize=self.reoptimize)
         dloglike_scan = result["likelihood"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
