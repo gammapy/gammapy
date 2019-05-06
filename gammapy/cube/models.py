@@ -2,7 +2,7 @@
 import copy
 import numpy as np
 import astropy.units as u
-from ..utils.fitting import Parameter, Model
+from ..utils.fitting import Parameter, Model, Parameters
 from ..utils.scripts import make_path
 from ..maps import Map
 
@@ -36,7 +36,7 @@ class SkyModelBase(Model):
         return self.evaluate(lon, lat, energy)
 
 
-class SkyModels(SkyModelBase):
+class SkyModels:
     """Collection of `~gammapy.cube.models.SkyModel`
 
     Parameters
@@ -59,12 +59,14 @@ class SkyModels(SkyModelBase):
 
     def __init__(self, skymodels):
         self.skymodels = skymodels
-        parameters = []
 
-        for skymodel in skymodels:
+    @property
+    def parameters(self):
+        parameters = []
+        for skymodel in self.skymodels:
             for p in skymodel.parameters:
                 parameters.append(p)
-        super().__init__(parameters)
+        return Parameters(parameters)
 
     @classmethod
     def from_xml(cls, xml):
@@ -140,6 +142,13 @@ class SkyModels(SkyModelBase):
             raise NotImplementedError
         return SkyModels(skymodels)
 
+    def __getitem__(self, item):
+        for model in self.skymodels:
+            if model.name == item:
+                return model
+
+        raise KeyError("Model '{}' not in model list.")
+
 
 class SkyModel(SkyModelBase):
     """Sky model component.
@@ -162,7 +171,7 @@ class SkyModel(SkyModelBase):
 
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
-    def __init__(self, spatial_model, spectral_model, name="SkyModel"):
+    def __init__(self, spatial_model, spectral_model, name="source"):
         self.name = name
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
@@ -180,6 +189,15 @@ class SkyModel(SkyModelBase):
     def spectral_model(self):
         """`~gammapy.spectrum.models.SpectralModel`"""
         return self._spectral_model
+
+    @spectral_model.setter
+    def spectral_model(self, model):
+        """`~gammapy.spectrum.models.SpectralModel`"""
+        self._spectral_model = model
+        self._parameters = Parameters(
+            self.spatial_model.parameters.parameters
+            + self.spectral_model.parameters.parameters
+        )
 
     @property
     def position(self):
@@ -248,7 +266,8 @@ class SkyDiffuseCube(SkyModelBase):
 
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
-    def __init__(self, map, norm=1, meta=None, interp_kwargs=None):
+    def __init__(self, map, norm=1, meta=None, interp_kwargs=None, name="diffuse"):
+        self.name = name
         axis = map.geom.get_axis_by_name("energy")
 
         if axis.node_type != "center":
