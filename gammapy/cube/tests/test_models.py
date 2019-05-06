@@ -85,7 +85,9 @@ def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
 
 @pytest.fixture(scope="session")
 def sky_models(sky_model):
-    return SkyModels([sky_model, sky_model.copy()])
+    sky_model_2 = sky_model.copy()
+    sky_model_2.name = "source-2"
+    return SkyModels([sky_model, sky_model_2])
 
 
 def test_skymodel_addition(sky_model, sky_models, diffuse_model):
@@ -108,6 +110,10 @@ def test_skymodel_addition(sky_model, sky_models, diffuse_model):
     result = sky_models + sky_models
     assert isinstance(result, SkyModels)
     assert len(result.skymodels) == 4
+
+    result = sky_model + sky_models
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 3
 
 
 def test_background_model(background):
@@ -157,6 +163,17 @@ class TestSkyModels:
     def test_str(sky_models):
         assert "Component 0" in str(sky_models)
         assert "Component 1" in str(sky_models)
+
+    @staticmethod
+    def test_get_item(sky_models):
+        model = sky_models["source"]
+        assert model.name == "source"
+
+        model = sky_models["source-2"]
+        assert model.name == "source-2"
+
+        with pytest.raises(KeyError):
+            sky_models["spam"]
 
 
 class TestSkyModel:

@@ -147,7 +147,7 @@ class SkyModels:
             if model.name == item:
                 return model
 
-        raise KeyError("Model '{}' not in model list.")
+        raise KeyError("Model '{}' not in model list.".format(item))
 
 
 class SkyModel(SkyModelBase):
