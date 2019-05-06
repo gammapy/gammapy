@@ -272,6 +272,30 @@ def test_squash():
     assert_allclose(ax_sq.center, 1.5)
 
 
+def test_upsample():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3], unit="TeV", name="energy", node_type="edges", interp="lin"
+    )
+    axis_up =  axis.upsample(10)
+
+    assert_allclose(axis_up.nbin, 10 * axis.nbin)
+    assert_allclose(axis_up.edges[0], axis.edges[0])
+    assert_allclose(axis_up.edges[-1], axis.edges[-1])
+    assert axis_up.node_type == axis.node_type
+
+
+def test_downsample():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3, 4, 5, 6, 7, 8], unit="TeV", name="energy", node_type="edges", interp="lin"
+    )
+    axis_down =  axis.downsample(2)
+
+    assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
+
+
 @pytest.fixture(scope="session")
 def energy_axis_ref():
     edges = np.arange(1, 11) * u.TeV

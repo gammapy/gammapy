@@ -420,6 +420,11 @@ class MapAxis:
         return self.pix_to_coord(pix)
 
     @property
+    def interp(self):
+        """Map axis interpolation mode"""
+        return self._interp
+
+    @property
     def nbin(self):
         """Return number of bins."""
         return self._nbin
@@ -709,6 +714,60 @@ class MapAxis:
         group_idx = Column(np.arange(len(groups)))
         groups.add_column(group_idx, name="group_idx", index=0)
         return groups
+
+    def _up_down_sample(self, nbin):
+        if self.node_type == "edges":
+            nodes = self.edges
+        else:
+            nodes = self.center
+
+        lo_bnd, hi_bnd = nodes.min(), nodes.max()
+
+        return self.from_bounds(
+            lo_bnd=lo_bnd,
+            hi_bnd=hi_bnd,
+            nbin=nbin,
+            interp=self.interp,
+            node_type=self.node_type,
+            unit=self.unit,
+            name=self.name
+        )
+
+    def upsample(self, factor):
+        """Upsample map axis by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Usampled map axis.
+
+        """
+        nbin = self.nbin * factor
+        return self._up_down_sample(nbin)
+
+    def downsample(self, factor):
+        """Downsample map axis by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Downsampled map axis.
+
+        """
+        nbin = int(self.nbin / factor)
+        return self._up_down_sample(nbin)
 
 
 class MapCoord:
@@ -1401,13 +1460,15 @@ class MapGeom(metaclass=MapGeomMeta):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor):
+    def downsample(self, factor, axis):
         """Downsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
+        axis : str
+            Axis to downsample.
 
         Returns
         -------
@@ -1418,13 +1479,15 @@ class MapGeom(metaclass=MapGeomMeta):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor):
+    def upsample(self, factor, axis):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
+        axis : str
+            Axis to upsample.
 
         Returns
         -------
