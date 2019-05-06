@@ -739,8 +739,8 @@ class WcsGeom(MapGeom):
             return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
         else:
             if not self.is_regular:
-                raise NotImplementedError("Upsamling in non-spatial axes not"
-                                          " support for irregular geometries")
+                raise NotImplementedError("Upsampling in non-spatial axes not"
+                                          " supported for irregular geometries")
 
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
@@ -756,8 +756,8 @@ class WcsGeom(MapGeom):
             return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
         else:
             if not self.is_regular:
-                raise NotImplementedError("Upsamling in non-spatial axes not"
-                                          " support for irregular geometries")
+                raise NotImplementedError("Upsampling in non-spatial axes not"
+                                          " supported for irregular geometries")
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
             axes[idx] = axes[idx].upsample(factor)
