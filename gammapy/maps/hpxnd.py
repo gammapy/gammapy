@@ -343,12 +343,14 @@ class HpxNDMap(HpxMap):
                 idx = ax.coord_to_idx(coords[ax.name])
                 idx = np.clip(idx, 0, len(ax.center) - 2)
 
-                w = ax.center[idx + 1].value - ax.center[idx].value
+                w = ax.center[idx + 1] - ax.center[idx]
+                c = Quantity(coords[ax.name], ax.center.unit, copy=False).value
+
                 if i & (1 << j):
-                    wt *= (coords[ax.name] - ax.center[idx].value) / w
+                    wt *= (c - ax.center[idx].value) / w.value
                     pix_i += [idx + 1]
                 else:
-                    wt *= 1.0 - (coords[ax.name] - ax.center[idx].value) / w
+                    wt *= 1.0 - (c - ax.center[idx].value) / w.value
                     pix_i += [idx]
 
             if not self.geom.is_regular:

@@ -574,7 +574,7 @@ class MapAxis:
             Array of bin indices.
         """
         coord = u.Quantity(coord, self.unit, copy=False).value
-        return coord_to_idx(self.edges, coord, clip)
+        return coord_to_idx(self.edges.value, coord, clip)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -634,11 +634,11 @@ class MapAxis:
         vals = self.edges if self.node_type == "edges" else self.center
         str_ += fmt.format(
             "{} min".format(self.node_type),
-            "{:.1e} {}".format(vals.min(), str(self.unit)),
+            "{:.1e}".format(vals.min()),
         )
         str_ += fmt.format(
             "{} max".format(self.node_type),
-            "{:.1e} {}".format(vals.max(), str(self.unit)),
+            "{:.1e}".format(vals.max()),
         )
         str_ += fmt.format("interp", self._interp)
         return str_
