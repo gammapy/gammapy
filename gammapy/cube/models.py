@@ -58,6 +58,15 @@ class SkyModels:
     __slots__ = ["skymodels"]
 
     def __init__(self, skymodels):
+
+        existing_names = []
+
+        for model in skymodels:
+            if model.name in existing_names:
+                raise ValueError("SkyModel '{}' already exists, please choose"
+                                 " another name.".format(model.name))
+            existing_names.append(model.name)
+
         self.skymodels = skymodels
 
     @property
@@ -67,6 +76,11 @@ class SkyModels:
             for p in skymodel.parameters:
                 parameters.append(p)
         return Parameters(parameters)
+
+    @property
+    def names(self):
+        """Sky model names"""
+        return [_.name for _ in self.skymodels]
 
     @classmethod
     def from_xml(cls, xml):
@@ -148,6 +162,18 @@ class SkyModels:
                 return model
 
         raise KeyError("Model '{}' not in model list.".format(item))
+
+    def __setitem__(self, name, model):
+        if not name == model.name:
+            raise ValueError("Model name must be '{}'".format(name))
+
+        if name not in self.names:
+            raise KeyError("Model '{}' not in model list.".format(name))
+
+        for idx, _ in enumerate(self.skymodels):
+            if _.name == name:
+                self.skymodels[idx] = model
+
 
 
 class SkyModel(SkyModelBase):
@@ -242,6 +268,13 @@ class SkyModel(SkyModelBase):
         val_spatial = self.spatial_model(lon, lat)  # pylint:disable=not-callable
         val_spectral = self.spectral_model(energy)  # pylint:disable=not-callable
         return val_spatial * val_spectral
+
+    def copy(self, **kwargs):
+        """Copy SkyModel"""
+        kwargs.setdefault("spatial_model", self.spatial_model.copy())
+        kwargs.setdefault("spectral_model", self.spectral_model.copy())
+        kwargs.setdefault("name", self.name + "-copy")
+        return self.__class__(**kwargs)
 
 
 class SkyDiffuseCube(SkyModelBase):
