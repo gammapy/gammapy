@@ -386,10 +386,12 @@ class MapAxis:
         # TODO: implement an allclose method for MapAxis and call it here
         if self.edges.shape != other.edges.shape:
             return False
-
+        if self.unit.is_equivalent(other.unit) is False:
+            return False
         return (
-            np.allclose(self.edges, other.edges, atol=1e-6, rtol=1e-6)
-            and self.unit == other.unit
+            np.allclose(
+                self.edges.to(other.unit).value, other.edges.value, atol=1e-6, rtol=1e-6
+            )
             and self._node_type == other._node_type
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
@@ -411,13 +413,13 @@ class MapAxis:
     def edges(self):
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
-        return self.pix_to_coord(pix)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
     def center(self):
         """Return array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
-        return self.pix_to_coord(pix)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
     def interp(self):
@@ -579,7 +581,7 @@ class MapAxis:
             Array of bin indices.
         """
         coord = u.Quantity(coord, self.unit, copy=False).value
-        return coord_to_idx(self.edges, coord, clip)
+        return coord_to_idx(self.edges.value, coord, clip)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -594,7 +596,7 @@ class MapAxis:
         axis : `~MapAxis`
             Sliced axis object.
         """
-        center = self.center[idx]
+        center = self.center[idx].value
         idx = self.coord_to_idx(center)
         # For edge nodes we need to keep N+1 nodes
         if self._node_type == "edges":
@@ -620,8 +622,8 @@ class MapAxis:
         # TODO: Decide on handling node_type=center
         # See https://github.com/gammapy/gammapy/issues/1952
         return MapAxis.from_bounds(
-            lo_bnd=self.edges[0],
-            hi_bnd=self.edges[-1],
+            lo_bnd=self.edges[0].value,
+            hi_bnd=self.edges[-1].value,
             nbin=1,
             interp=self._interp,
             name=self._name,
@@ -637,14 +639,8 @@ class MapAxis:
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
         vals = self.edges if self.node_type == "edges" else self.center
-        str_ += fmt.format(
-            "{} min".format(self.node_type),
-            "{:.1e} {}".format(vals.min(), str(self.unit)),
-        )
-        str_ += fmt.format(
-            "{} max".format(self.node_type),
-            "{:.1e} {}".format(vals.max(), str(self.unit)),
-        )
+        str_ += fmt.format("{} min".format(self.node_type), "{:.1e}".format(vals.min()))
+        str_ += fmt.format("{} max".format(self.node_type), "{:.1e}".format(vals.max()))
         str_ += fmt.format("interp", self._interp)
         return str_
 
@@ -1599,8 +1595,8 @@ class MapGeom(metaclass=MapGeomMeta):
         edges = energy_axis.edges
 
         # set default values
-        emin = emin if emin is not None else edges[0] * energy_axis.unit
-        emax = emax if emax is not None else edges[-1] * energy_axis.unit
+        emin = emin if emin is not None else edges[0]
+        emax = emax if emax is not None else edges[-1]
 
         # create mask
         coords = self.get_coord()

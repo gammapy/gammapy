@@ -270,7 +270,6 @@ class HpxNDMap(HpxMap):
     def interp_by_coord(self, coords, interp=1):
         # inherited docstring
         coords = MapCoord.create(coords, coordsys=self.geom.coordsys)
-        coords = coords.match_axes_units(self.geom)
 
         order = interp_to_order(interp)
         if order == 1:
@@ -345,11 +344,13 @@ class HpxNDMap(HpxMap):
                 idx = np.clip(idx, 0, len(ax.center) - 2)
 
                 w = ax.center[idx + 1] - ax.center[idx]
+                c = Quantity(coords[ax.name], ax.center.unit, copy=False).value
+
                 if i & (1 << j):
-                    wt *= (coords[ax.name] - ax.center[idx]) / w
+                    wt *= (c - ax.center[idx].value) / w.value
                     pix_i += [idx + 1]
                 else:
-                    wt *= 1.0 - (coords[ax.name] - ax.center[idx]) / w
+                    wt *= 1.0 - (c - ax.center[idx].value) / w.value
                     pix_i += [idx]
 
             if not self.geom.is_regular:

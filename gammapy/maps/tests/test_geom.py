@@ -235,7 +235,6 @@ def test_mapcoord_repr():
 
 
 nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
-
 mapaxis_geoms_node_type_unit = [
     (nodes_array, "lin", "edges", "s", "TEST", True),
     (nodes_array, "log", "edges", "s", "test", False),
@@ -244,6 +243,7 @@ mapaxis_geoms_node_type_unit = [
     (nodes_array, "lin", "center", "s", "test", False),
     (nodes_array + 1e-9, "lin", "edges", "s", "test", True),
     (nodes_array + 1e-3, "lin", "edges", "s", "test", False),
+    (nodes_array / 3600.0, "lin", "edges", "hr", "TEST", True),
 ]
 
 
@@ -269,7 +269,7 @@ def test_squash():
     assert_allclose(ax_sq.nbin, 1)
     assert_allclose(axis.edges[0], ax_sq.edges[0])
     assert_allclose(axis.edges[-1], ax_sq.edges[1])
-    assert_allclose(ax_sq.center, 1.5)
+    assert_allclose(ax_sq.center, 1.5 * u.TeV)
 
 
 def test_upsample():

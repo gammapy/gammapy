@@ -34,11 +34,9 @@ def make_edisp_map(edisp, pointing, geom, max_offset, exposure_map=None):
     edispmap : `~gammapy.cube.EDispMap`
         the resulting EDisp map
     """
-    energy_axis = geom.get_axis_by_name("energy")
-    energy = energy_axis.center * energy_axis.unit
+    energy = geom.get_axis_by_name("energy").center
 
-    migra_axis = geom.get_axis_by_name("migra")
-    migra = u.Quantity(migra_axis.center, unit=migra_axis.unit)
+    migra = geom.get_axis_by_name("migra").center
 
     # Compute separations with pointing position
     separations = pointing.separation(geom.to_image().get_coord().skycoord)
@@ -252,7 +250,7 @@ class EDispMap:
             self.edisp_map.interp_by_pix(pix)
             * u.Unit(self.edisp_map.unit)  # * migra_step
         )
-        e_trues = self.edisp_map.geom.axes[1].center * self.edisp_map.geom.axes[1].unit
+        e_trues = self.edisp_map.geom.axes[1].center
         data = []
 
         for i, e_true in enumerate(e_trues):
@@ -280,9 +278,8 @@ class EDispMap:
 
         data = np.asarray(data)
         # EnergyDispersion uses edges of true energy bins
-        e_true_edges = (
-            self.edisp_map.geom.axes[1].edges * self.edisp_map.geom.axes[1].unit
-        )
+        e_true_edges = self.edisp_map.geom.axes[1].edges
+
         e_lo, e_hi = e_true_edges[:-1], e_true_edges[1:]
         ereco_lo, ereco_hi = (e_reco[:-1], e_reco[1:])
 
