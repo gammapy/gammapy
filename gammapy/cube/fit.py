@@ -238,9 +238,8 @@ class MapEvaluator:
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
         edges = self.edisp.e_reco.bins
         e_reco_axis = MapAxis.from_edges(
-            edges=edges.value,
+            edges=edges,
             name="energy",
-            unit=self.edisp.e_reco.unit,
             interp=self.edisp.e_reco.interpolation_mode,
         )
         return self.geom_image.to_cube(axes=[e_reco_axis])
