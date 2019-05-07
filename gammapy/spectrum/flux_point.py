@@ -816,19 +816,6 @@ class FluxPointEstimator:
         self.model = ScaleModel(model)
         self.model.parameters["norm"].min = 0
 
-        # set the model on all datasets
-        for dataset in self.datasets.datasets:
-            if source is not None:
-                dataset.model[source].spectral_model = self.model
-            else:
-                dataset.model = self.model
-
-        if not reoptimize:
-            # freeze other parameters
-            for par in dataset.parameters:
-                if par is not self.model.norm:
-                    par.frozen = True
-
         if norm_values is None:
             norm_values = np.logspace(
                 np.log10(norm_min), np.log10(norm_max), norm_n_values
@@ -838,6 +825,21 @@ class FluxPointEstimator:
         self.sigma = sigma
         self.sigma_ul = sigma_ul
         self.reoptimize = reoptimize
+        self.source = source
+
+    def _freeze_parameters(self):
+        # freeze other parameters
+        for par in self.datasets.parameters:
+            if par is not self.model.norm:
+                par.frozen = True
+
+    def _set_scale_model(self):
+        # set the model on all datasets
+        for dataset in self.datasets.datasets:
+            if self.source is not None:
+                dataset.model[self.source].spectral_model = self.model
+            else:
+                dataset.model = self.model
 
     @property
     def ref_model(self):
@@ -930,6 +932,12 @@ class FluxPointEstimator:
         )
 
         self.datasets.mask = self._energy_mask(e_group)
+
+        self._set_scale_model()
+
+        if not self.reoptimize:
+            self._freeze_parameters()
+
         result.update(self.estimate_norm())
 
         if not result.pop("success"):
