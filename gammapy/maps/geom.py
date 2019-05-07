@@ -386,10 +386,12 @@ class MapAxis:
         # TODO: implement an allclose method for MapAxis and call it here
         if self.edges.shape != other.edges.shape:
             return False
-
+        if self.unit.is_equivalent(other.unit) is False:
+            return False
         return (
-            np.allclose(self.edges.value, other.edges.value, atol=1e-6, rtol=1e-6)
-            and self.unit == other.unit
+            np.allclose(
+                self.edges.to(other.unit).value, other.edges.value, atol=1e-6, rtol=1e-6
+            )
             and self._node_type == other._node_type
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
@@ -632,14 +634,8 @@ class MapAxis:
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
         vals = self.edges if self.node_type == "edges" else self.center
-        str_ += fmt.format(
-            "{} min".format(self.node_type),
-            "{:.1e}".format(vals.min()),
-        )
-        str_ += fmt.format(
-            "{} max".format(self.node_type),
-            "{:.1e}".format(vals.max()),
-        )
+        str_ += fmt.format("{} min".format(self.node_type), "{:.1e}".format(vals.min()))
+        str_ += fmt.format("{} max".format(self.node_type), "{:.1e}".format(vals.max()))
         str_ += fmt.format("interp", self._interp)
         return str_
 
