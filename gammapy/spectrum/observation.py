@@ -113,12 +113,12 @@ class SpectrumObservation:
     @property
     def e_reco(self):
         """Reconstruced energy bounds array."""
-        return EnergyBounds(self.on_vector.energy.edges * self.on_vector.energy.unit)
+        return EnergyBounds(self.on_vector.energy.edges)
 
     @property
     def e_true(self):
         """True energy bounds array."""
-        return EnergyBounds(self.aeff.energy.edges * self.aeff.energy.unit)
+        return EnergyBounds(self.aeff.energy.edges)
 
     @property
     def nbins(self):
@@ -241,7 +241,7 @@ class SpectrumObservation:
         self.on_vector * self.total_stats.alpha because the latter returns an
         average value for alpha.
         """
-        energy = self.off_vector.energy.edges * self.off_vector.energy.unit
+        energy = self.off_vector.energy.edges
         data = self.off_vector.data.data * self.alpha
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
@@ -251,7 +251,7 @@ class SpectrumObservation:
 
         excess = n_on = alpha * n_off
         """
-        energy = self.off_vector.energy.edges * self.off_vector.unit
+        energy = self.off_vector.energy.edges
         data = self.on_vector.data.data - self.background_vector.data.data
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
@@ -720,7 +720,7 @@ class SpectrumObservationList(UserList):
             datasets.append(dataset)
 
         if fit_range is not None:
-            energy = dataset.counts_on.energy.edges * dataset.counts_on.energy.unit
+            energy = dataset.counts_on.energy.edges
             mask = (energy[:-1] >= fit_range[0]) & (energy[1:] <= fit_range[1])
         else:
             mask = None
@@ -844,8 +844,8 @@ class SpectrumObservationStacker:
 
         return PHACountsSpectrum(
             data=stacked_data,
-            energy_lo=energy.edges[:-1] * energy.unit,
-            energy_hi=energy.edges[1:] * energy.unit,
+            energy_lo=energy.edges[:-1],
+            energy_hi=energy.edges[1:],
             quality=stacked_quality,
         )
 

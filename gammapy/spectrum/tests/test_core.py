@@ -57,7 +57,7 @@ class TestCountsSpectrum:
         filename = tmpdir / "test.fits"
         self.spec.write(filename)
         spec2 = CountsSpectrum.read(filename)
-        assert_quantity_allclose(spec2.energy.edges * spec2.energy.unit, self.bins)
+        assert_quantity_allclose(spec2.energy.edges, self.bins)
 
     def test_rebin(self):
         rebinned_spec = self.spec.rebin(2)

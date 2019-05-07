@@ -92,10 +92,10 @@ class SpectrumSimulation:
     def e_reco(self):
         """Reconstructed energy binning."""
         if self.edisp is not None:
-            temp = self.edisp.e_reco.edges * self.edisp.e_reco.unit
+            temp = self.edisp.e_reco.edges
         else:
             if self.aeff is not None:
-                temp = self.aeff.energy.edges * self.aeff.energy.unit
+                temp = self.aeff.energy.edges
             else:
                 temp = self.e_true
         return EnergyBounds(temp)

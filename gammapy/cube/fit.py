@@ -304,7 +304,7 @@ class MapEvaluator:
         """Return evaluator coords"""
         lon, lat = self.lon_lat
         if self.edisp:
-            energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis] * self.edisp.e_reco.unit
+            energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis]
         else:
             energy = self.energy_center
 

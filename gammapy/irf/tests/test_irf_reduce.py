@@ -158,7 +158,7 @@ def test_apply_containment_fraction():
         * psf_table.psf_value.unit
     )
     edep_psf_table = EnergyDependentTablePSF(
-        aeff.energy.center * aeff.energy.unit, rad, psf_value=psf_values
+        aeff.energy.center, rad, psf_value=psf_values
     )
 
     new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))

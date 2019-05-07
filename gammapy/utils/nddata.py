@@ -144,7 +144,7 @@ class NDDataArray:
             # Extract values for each axis, default: nodes
             shape = [1] * len(self.axes)
             shape[idx] = -1
-            default = axis.center.reshape(tuple(shape)) * axis.unit
+            default = axis.center.reshape(tuple(shape))
             temp = Quantity(kwargs.pop(axis.name, default))
             values.append(np.atleast_1d(temp))
 
@@ -170,7 +170,7 @@ class NDDataArray:
         if interp_kwargs is None:
             interp_kwargs = self.interp_kwargs
 
-        points = [(a.center * a.unit) for a in self.axes]
+        points = [a.center for a in self.axes]
         points_scale = [a.interp for a in self.axes]
         self._regular_grid_interp = ScaledRegularGridInterpolator(
             points, self.data, points_scale=points_scale, **interp_kwargs

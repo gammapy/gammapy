@@ -128,15 +128,9 @@ class Background3D:
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
 
-        detx_axis = self.data.axis("fov_lon")
-        detx = detx_axis.edges * detx_axis.unit
-
-        dety_axis = self.data.axis("fov_lat")
-        dety = dety_axis.edges * dety_axis.unit
-
-        energy_axis = self.data.axis("energy")
-        energy = energy_axis.edges * energy_axis.unit
-
+        detx = self.data.axis("fov_lon").edges
+        dety = self.data.axis("fov_lat").edges
+        energy = self.data.axis("energy").edges
 
         table = Table(meta=meta)
         table["DETX_LO"] = detx[:-1][np.newaxis]
@@ -214,11 +208,8 @@ class Background3D:
         idx_lat = self.data.axis("fov_lat").find_node("0 deg")[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
-        energy_axis = self.data.axis("energy")
-        energy = energy_axis.edges * energy_axis.unit
-
-        offset_axis = self.data.axis("energy")
-        offset = offset_axis.edges * offset_axis.unit
+        energy = self.data.axis("energy").edges
+        offset = self.data.axis("energy").edges
 
         return Background2D(
             energy_lo=energy[:-1],
@@ -320,11 +311,8 @@ class Background2D:
         meta = self.meta.copy()
         table = Table(meta=meta)
 
-        offset_axis = self.data.axis("offset")
-        energy_axis = self.data.axis("energy")
-
-        theta = offset_axis.edges * offset_axis.unit
-        energy = energy_axis.edges * energy_axis.unit
+        theta = self.data.axis("offset").edges
+        energy = self.data.axis("energy").edges
 
         table["THETA_LO"] = theta[:-1][np.newaxis]
         table["THETA_HI"] = theta[1:][np.newaxis]

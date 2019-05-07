@@ -36,8 +36,8 @@ class SpectrumEvaluator:
         import astropy.units as u
         import matplotlib.pyplot as plt
 
-        e_true = np.logspace(-2,2.5,109) * u.TeV
-        e_reco = np.logspace(-2,2,73) * u.TeV
+        e_true = np.logspace(-2, 2.5, 109) * u.TeV
+        e_reco = np.logspace(-2, 2, 73) * u.TeV
 
         aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
         edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
@@ -81,7 +81,7 @@ class SpectrumEvaluator:
                         ref_unit = unit
             except IndexError:
                 ref_unit = "TeV"
-            self.e_true = (self.aeff.energy.edges * self.aeff.energy.unit).to(ref_unit)
+            self.e_true = self.aeff.energy.edges.to(ref_unit)
         else:
             if self.e_true is None:
                 raise ValueError("No true energy binning given")
@@ -107,7 +107,7 @@ class SpectrumEvaluator:
 
         if self.edisp is not None:
             cts = self.edisp.apply(true_counts)
-            self.e_reco = (self.edisp.e_reco.edges * self.edisp.e_reco.unit)
+            self.e_reco = self.edisp.e_reco.edges
         else:
             cts = true_counts
             self.e_reco = self.e_true

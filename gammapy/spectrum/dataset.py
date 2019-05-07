@@ -68,7 +68,7 @@ class SpectrumDataset(Dataset):
                     model=self.model,
                     livetime=self.livetime,
                     aeff=self.aeff,
-                    e_true=self.counts.energy.edges * self.counts.energy.unit,
+                    e_true=self.counts.energy.edges
                 )
             else:
                 self._predictor = SpectrumEvaluator(
@@ -140,13 +140,13 @@ class SpectrumDataset(Dataset):
         """
         random_state = get_random_state(random_state)
         data = random_state.poisson(self.npred().data.data)
-        energy = self.counts.energy.edges * self.counts.energy.unit
+        energy = self.counts.energy.edges
         return CountsSpectrum(energy[:-1], energy[1:], data)
 
     @property
     def energy_range(self):
         """Energy range defined by the mask"""
-        energy = self.counts.energy.edges * self.counts.energy.unit
+        energy = self.counts.energy.edges
         e_lo = energy[:-1][self.mask]
         e_hi = energy[1:][self.mask]
         return u.Quantity([e_lo.min(), e_hi.max()])
@@ -214,7 +214,7 @@ class SpectrumDatasetOnOff(Dataset):
                     model=self.model,
                     livetime=self.livetime,
                     aeff=self.aeff,
-                    e_true=self.counts_on.energy.edges * self.counts_on.energy.unit,
+                    e_true=self.counts_on.energy.edges
                 )
             else:
                 self._predictor = SpectrumEvaluator(
@@ -295,13 +295,13 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def energy_range(self):
         """Energy range defined by the mask"""
-        energy = self.counts_on.energy.edges * self.counts_on.energy.unit
+        energy = self.counts_on.energy.edges
         e_lo = energy[:-1][self.mask]
         e_hi = energy[1:][self.mask]
         return u.Quantity([e_lo.min(), e_hi.max()])
 
     def _as_counts_spectrum(self, data):
-        energy = self.counts_on.energy.edges * self.counts_on.energy.unit
+        energy = self.counts_on.energy.edges
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     def excess(self):

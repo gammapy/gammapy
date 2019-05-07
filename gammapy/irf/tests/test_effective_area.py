@@ -91,8 +91,8 @@ class TestEffectiveAreaTable:
         test_aeff = 0.6 * arf.max_area
         node_above = np.where(arf.data.data > test_aeff)[0][0]
         energy = arf.data.axis("energy")
-        ener_above = energy.center[node_above] * energy.unit
-        ener_below = energy.center[node_above - 1] * energy.unit
+        ener_above = energy.center[node_above]
+        ener_below = energy.center[node_above - 1]
         test_ener = arf.find_energy(test_aeff)
 
         assert ener_below < test_ener and test_ener < ener_above
@@ -156,5 +156,5 @@ class TestEffectiveAreaTable:
             data=data,
         )
         hdu = aeff.to_fits()
-        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy").edges[:-1])
+        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy").edges[:-1].value)
         assert hdu.header["TUNIT1"] == aeff.data.axis("energy").unit

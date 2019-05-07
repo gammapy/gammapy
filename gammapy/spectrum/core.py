@@ -103,7 +103,7 @@ class CountsSpectrum:
         name = table.meta["name"]
         hdu = fits.BinTableHDU(table, name=name)
 
-        energy = self.energy.edges * self.energy.unit
+        energy = self.energy.edges
 
         if use_sherpa:
             energy = energy.to("keV")
@@ -130,7 +130,7 @@ class CountsSpectrum:
             events = events.energy
 
         energy = events.to(self.energy.unit)
-        binned_val = np.histogram(energy.value, self.energy.edges * self.energy.unit)[0]
+        binned_val = np.histogram(energy.value, self.energy.edges)[0]
         self.data.data = binned_val
 
     @property
@@ -171,8 +171,8 @@ class CountsSpectrum:
 
         ax = plt.gca() if ax is None else ax
         counts = self.data.data.value
-        x = (self.energy.center * self.energy.unit).to_value(energy_unit)
-        bounds = (self.energy.edges * self.energy.unit).to_value(energy_unit)
+        x = self.energy.center.to_value(energy_unit)
+        bounds = self.energy.edges.to_value(energy_unit)
         xerr = [x - bounds[:-1], bounds[1:] - x]
         yerr = np.sqrt(counts) if show_poisson_errors else 0
         kwargs.setdefault("fmt", "")
@@ -206,8 +206,8 @@ class CountsSpectrum:
         kwargs.setdefault("lw", 2)
         kwargs.setdefault("histtype", "step")
         weights = self.data.data.value
-        bins = (self.energy.edges * self.energy.unit).to_value(energy_unit)
-        x = (self.energy.center * self.energy.unit).to_value(energy_unit)
+        bins = self.energy.edges.to_value(energy_unit)
+        x = self.energy.center.to_value(energy_unit)
         ax.hist(x, bins=bins, weights=weights, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(energy_unit)
@@ -242,17 +242,17 @@ class CountsSpectrum:
         rebinned_spectrum : `~gammapy.spectrum.CountsSpectrum`
             Rebinned spectrum
         """
+        from ..extern.skimage import block_reduce
+
         if len(self.data.data) % parameter != 0:
             raise ValueError(
                 "Invalid rebin parameter: {}, nbins: {}".format(
                     parameter, len(self.data.data)
                 )
             )
-        from ..extern.skimage import block_reduce
 
-        energy = self.energy.edges * self.energy.unit
         data = block_reduce(self.data.data, block_size=(parameter,))
-
+        energy = self.energy.edges
         return self.__class__(
             energy_lo=energy[:-1][0::parameter],
             energy_hi=energy[1:][parameter - 1::parameter],
@@ -373,22 +373,22 @@ class PHACountsSpectrum(CountsSpectrum):
     def lo_threshold(self):
         """Low energy threshold of the observation (lower bin edge)"""
         idx = self.bins_in_safe_range[0]
-        return self.energy.edges[:-1][idx] * self.energy.unit
+        return self.energy.edges[:-1][idx]
 
     @lo_threshold.setter
     def lo_threshold(self, thres):
-        idx = np.where((self.energy.edges[:-1] * self.energy.unit) < thres)[0]
+        idx = np.where((self.energy.edges[:-1]) < thres)[0]
         self.quality[idx] = 1
 
     @property
     def hi_threshold(self):
         """High energy threshold of the observation (upper bin edge)"""
         idx = self.bins_in_safe_range[-1]
-        return self.energy.edges[1:][idx] * self.energy.unit
+        return self.energy.edges[1:][idx]
 
     @hi_threshold.setter
     def hi_threshold(self, thres):
-        idx = np.where((self.energy.edges[:-1] * self.energy.unit) > thres)[0]
+        idx = np.where((self.energy.edges[:-1]) > thres)[0]
         if len(idx) != 0:
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
@@ -565,7 +565,7 @@ class PHACountsSpectrumList(list):
     def to_hdulist(self):
         """Convert to `~astropy.io.fits.HDUList`"""
         hdu = fits.BinTableHDU(self.to_table())
-        ebounds = energy_axis_to_ebounds(self[0].energy.edges * self[0].energy.unit)
+        ebounds = energy_axis_to_ebounds(self[0].energy.edges)
         return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
 
     def to_table(self):

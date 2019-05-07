@@ -36,7 +36,7 @@ class TestEnergyDispersion:
 
         # Test square matrix
         edisp = EnergyDispersion.from_diagonal_response(e_true)
-        assert_allclose(edisp.e_reco.edges, e_true.value)
+        assert_allclose(edisp.e_reco.edges.value, e_true.value)
         assert edisp.e_reco.unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
@@ -119,9 +119,9 @@ class TestEnergyDispersion2D:
         e_node = 12
         off_node = 3
         m_node = 5
-        offset = self.edisp.data.axis("offset").center[off_node] * self.edisp.data.axis("offset").unit
-        energy = self.edisp.data.axis("e_true").center[e_node] * self.edisp.data.axis("e_true").unit
-        migra = self.edisp.data.axis("migra").center[m_node] * self.edisp.data.axis("migra").unit
+        offset = self.edisp.data.axis("offset").center[off_node]
+        energy = self.edisp.data.axis("e_true").center[e_node]
+        migra = self.edisp.data.axis("migra").center[m_node]
         actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
         desired = self.edisp.data.data[e_node, m_node, off_node]
         assert_allclose(actual, desired, rtol=1e-06)
@@ -188,7 +188,7 @@ class TestEnergyDispersion2D:
 
         hdu = edisp.to_fits()
         energy = edisp.data.axis("e_true").edges
-        assert_equal(hdu.data["ENERG_LO"][0], energy[:-1])
+        assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
         assert hdu.header["TUNIT1"] == edisp.data.axis("e_true").unit
 
     @requires_dependency("matplotlib")

@@ -79,35 +79,35 @@ class TestIRFWrite:
 
         hdu = self.aeff.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
-            self.aeff.data.axes[0].edges[:-1] * self.aeff.data.axes[0].unit,
+            hdu.data[hdu.header["TTYPE1"]][0],
+            self.aeff.data.axes[0].edges[:-1].value,
         )
         hdu = self.aeff.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE5"]][0].T * u.Unit(hdu.header["TUNIT5"]),
-            self.aeff.data.data,
+            hdu.data[hdu.header["TTYPE5"]][0].T,
+            self.aeff.data.data.value,
         )
 
         hdu = self.edisp.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
-            self.edisp.data.axes[0].edges[:-1] * self.edisp.data.axes[0].unit,
+            hdu.data[hdu.header["TTYPE1"]][0],
+            self.edisp.data.axes[0].edges[:-1].value,
         )
         hdu = self.edisp.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE7"]][0].T * u.Unit(hdu.header["TUNIT7"]),
-            self.edisp.data.data,
+            hdu.data[hdu.header["TTYPE7"]][0].T,
+            self.edisp.data.data.value,
         )
 
         hdu = self.bkg.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
-            self.bkg.data.axes[1].edges[:-1] * self.bkg.data.axes[1].unit,
+            hdu.data[hdu.header["TTYPE1"]][0],
+            self.bkg.data.axes[1].edges[:-1].value,
         )
         hdu = self.bkg.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE7"]][0] * u.Unit(hdu.header["TUNIT7"]),
-            self.bkg.data.data,
+            hdu.data[hdu.header["TTYPE7"]][0],
+            self.bkg.data.data.value,
         )
 
     def test_writeread(self, tmpdir):
