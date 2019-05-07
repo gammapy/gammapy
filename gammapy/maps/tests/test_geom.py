@@ -269,7 +269,7 @@ def test_squash():
     assert_allclose(ax_sq.nbin, 1)
     assert_allclose(axis.edges[0], ax_sq.edges[0])
     assert_allclose(axis.edges[-1], ax_sq.edges[1])
-    assert_allclose(ax_sq.center, 1.5)
+    assert_allclose(ax_sq.center, 1.5 * u.TeV)
 
 
 @pytest.fixture(scope="session")

@@ -238,7 +238,7 @@ class MapEvaluator:
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
         edges = self.edisp.e_reco.bins
         e_reco_axis = MapAxis.from_edges(
-            edges=edges,
+            edges=edges.value,
             name="energy",
             unit=self.edisp.e_reco.unit,
             interp=self.edisp.e_reco.interpolation_mode,
@@ -254,15 +254,13 @@ class MapEvaluator:
     def energy_center(self):
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.get_axis_by_name("energy")
-        energy = energy_axis.center * energy_axis.unit
-        return energy[:, np.newaxis, np.newaxis]
+        return energy_axis.center[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_edges(self):
         """True energy axis bin edges (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.get_axis_by_name("energy")
-        energy = energy_axis.edges * energy_axis.unit
-        return energy[:, np.newaxis, np.newaxis]
+        return energy_axis.edges[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_bin_width(self):
@@ -316,7 +314,7 @@ class MapEvaluator:
         else:
             energy = self.energy_center
 
-        return {"lon": lon.value, "lat": lat.value, "energy": energy}
+        return {"lon": lon.value, "lat": lat.value, "energy": energy.value}
 
     @property
     def needs_update(self):

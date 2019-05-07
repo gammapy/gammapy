@@ -347,7 +347,7 @@ class BackgroundModel(Model):
     def energy_center(self):
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.map.geom.get_axis_by_name("energy")
-        energy = energy_axis.center * energy_axis.unit
+        energy = energy_axis.center
         return energy[:, np.newaxis, np.newaxis]
 
     def evaluate(self):

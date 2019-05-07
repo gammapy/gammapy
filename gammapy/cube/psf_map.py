@@ -36,8 +36,7 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy_axis = geom.get_axis_by_name("energy")
-    energy = energy_axis.center * energy_axis.unit
+    energy = geom.get_axis_by_name("energy").center
 
     rad_axis = geom.get_axis_by_name("theta")
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
@@ -240,8 +239,8 @@ class PSFMap:
             self.psf_map.interp_by_pix(pix) * u.Unit(self.psf_map.unit)
         )
 
-        energies = self.psf_map.geom.axes[1].center * self.psf_map.geom.axes[1].unit
-        rad = self.psf_map.geom.axes[0].center * self.psf_map.geom.axes[0].unit
+        energies = self.psf_map.geom.axes[1].center
+        rad = self.psf_map.geom.axes[0].center
 
         # Beware. Need to revert rad and energies to follow the TablePSF scheme.
         return EnergyDependentTablePSF(energy=energies, rad=rad, psf_value=psf_values.T)

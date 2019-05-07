@@ -58,8 +58,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
         fov_lon = pseudo_fov_coord.lon
         fov_lat = pseudo_fov_coord.lat
 
-    energy_axis = geom.get_axis_by_name("energy")
-    energies = energy_axis.edges * energy_axis.unit
+    energies = geom.get_axis_by_name("energy").edges
 
     bkg_de = bkg.evaluate_integrate(
         fov_lon=fov_lon,
