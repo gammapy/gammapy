@@ -5,7 +5,6 @@ import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
-import naima
 from ..utils.energy import EnergyBounds
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
@@ -1550,6 +1549,8 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
+    import naima
+
     #TODO: prevent users from setting new attributes after init
 
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
