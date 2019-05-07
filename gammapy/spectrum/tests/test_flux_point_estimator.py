@@ -121,16 +121,16 @@ class TestFluxPointEstimator:
         fp = fpe_map_pwl.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, [0.97922 , 0.94081 , 1.074426], rtol=1e-5)
+        assert_allclose(actual, [0.97922 , 0.94081 , 1.074426], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.069967, 0.052631, 0.093025], rtol=1e-4)
+        assert_allclose(actual, [0.069967, 0.052631, 0.093025], rtol=1e-3)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.165811, 27.121425, 22.040969], rtol=1e-5)
+        assert_allclose(actual, [16.165811, 27.121425, 22.040969], rtol=1e-3)
 
         actual = fp.table["norm_scan"][0]
-        assert_allclose(actual, [0.2, 1, 5], rtol=1e-5)
+        assert_allclose(actual, [0.2, 1, 5], rtol=1e-3)
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, [1.536460e+02, 8.756689e-02, 1.883420e+03], rtol=1e-5)
+        assert_allclose(actual, [1.536460e+02, 8.756689e-02, 1.883420e+03], rtol=1e-3)
