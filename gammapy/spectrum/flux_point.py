@@ -12,7 +12,7 @@ from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 
-__all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointsDataset"]
+__all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 
 log = logging.getLogger(__name__)
 
@@ -740,7 +740,7 @@ class FluxPoints:
         return ax
 
 
-class FluxPointEstimator:
+class FluxPointsEstimator:
     """Flux points estimator.
 
     Estimates flux points for a given list of spectral datasets, energies and

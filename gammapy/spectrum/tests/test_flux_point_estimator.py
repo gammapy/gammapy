@@ -8,7 +8,7 @@ from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable, load_cta_irfs
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
-from ..flux_point import FluxPointEstimator
+from ..flux_point import FluxPointsEstimator
 from ...cube import simulate_dataset
 from ...cube.models import SkyModel
 from ...image.models import SkyGaussian
@@ -36,7 +36,7 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.model = model
-    return FluxPointEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3)
+    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3)
 
 
 def simulate_map_dataset():
@@ -62,7 +62,7 @@ def simulate_map_dataset():
 def fpe_map_pwl():
     dataset = simulate_map_dataset()
     e_edges = [0.1, 1, 10, 100] * u.TeV
-    return FluxPointEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3, source="source")
+    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3, source="source")
 
 
 @pytest.fixture(scope="session")
@@ -75,10 +75,10 @@ def fpe_ecpl():
     return create_fpe(ExponentialCutoffPowerLaw(lambda_="1 TeV-1"))
 
 
-class TestFluxPointEstimator:
+class TestFluxPointsEstimator:
     @staticmethod
     def test_str(fpe_pwl):
-        assert "FluxPointEstimator" in str(fpe_pwl)
+        assert "FluxPointsEstimator" in str(fpe_pwl)
 
     @staticmethod
     @requires_dependency("iminuit")
