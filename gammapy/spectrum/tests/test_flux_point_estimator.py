@@ -3,15 +3,20 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
+from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_dependency
-from ...irf import EffectiveAreaTable
+from ...irf import EffectiveAreaTable, load_cta_irfs
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointEstimator
+from ...cube import simulate_dataset
+from ...cube.models import SkyModel
+from ...image.models import SkyGaussian
+from ...maps import MapAxis, WcsGeom
 
 
 # TODO: use pregenerate data instead
-def simulate_dataset(model):
+def simulate_spectrum_dataset(model):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     bkg_model = PowerLaw(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
@@ -28,10 +33,36 @@ def simulate_dataset(model):
 
 
 def create_fpe(model):
-    dataset = simulate_dataset(model)
+    dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.model = model
     return FluxPointEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3)
+
+
+def simulate_map_dataset():
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    irfs = load_cta_irfs(filename)
+
+    skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
+    edges = np.logspace(-1, 2, 15) * u.TeV
+    energy_axis = MapAxis.from_edges(edges=edges, name="energy")
+
+    geom = WcsGeom.create(skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], coordsys="GAL")
+
+    gauss = SkyGaussian("0 deg", "0 deg", "0.4 deg", frame="galactic")
+    pwl = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
+    skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
+    dataset = simulate_dataset(skymodel=skymodel, geom=geom, pointing=skydir, irfs=irfs, random_state=0)
+    return dataset
+
+
+@pytest.fixture(scope="session")
+def fpe_map_pwl():
+    dataset = simulate_map_dataset()
+    e_edges = [0.1, 1, 10, 100] * u.TeV
+    return FluxPointEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3, source="source")
 
 
 @pytest.fixture(scope="session")
@@ -82,3 +113,24 @@ class TestFluxPointEstimator:
     def test_run_ecpl(fpe_ecpl):
         fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.e_groups[1])
         assert_allclose(fp["norm"], 1, rtol=1e-1)
+
+
+    @staticmethod
+    @requires_dependency("iminuit")
+    def test_run_map_pwl(fpe_map_pwl):
+        fp = fpe_map_pwl.run(steps=["err", "norm-scan", "ts"])
+
+        actual = fp.table["norm"].data
+        assert_allclose(actual, [0.97922 , 0.94081 , 1.074426], rtol=1e-5)
+
+        actual = fp.table["norm_err"].data
+        assert_allclose(actual, [0.069967, 0.052631, 0.093025], rtol=1e-4)
+
+        actual = fp.table["sqrt_ts"].data
+        assert_allclose(actual, [16.165811, 27.121425, 22.040969], rtol=1e-5)
+
+        actual = fp.table["norm_scan"][0]
+        assert_allclose(actual, [0.2, 1, 5], rtol=1e-5)
+
+        actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
+        assert_allclose(actual, [1.536460e+02, 8.756689e-02, 1.883420e+03], rtol=1e-5)
