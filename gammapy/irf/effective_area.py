@@ -470,7 +470,7 @@ class EffectiveAreaTable2D:
 
         if offset is None:
             off_min, off_max = self.data.axis("offset").center[[0, -1]]
-            offset = np.linspace(off_min, off_max, 4)
+            offset = np.linspace(off_min.value, off_max.value, 4) * off_min.unit
 
         if energy is None:
             energy = self.data.axis("energy").center

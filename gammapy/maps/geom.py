@@ -748,8 +748,8 @@ class MapAxis:
         lo_bnd, hi_bnd = nodes.min(), nodes.max()
 
         return self.from_bounds(
-            lo_bnd=lo_bnd,
-            hi_bnd=hi_bnd,
+            lo_bnd=lo_bnd.value,
+            hi_bnd=hi_bnd.value,
             nbin=nbin,
             interp=self.interp,
             node_type=self.node_type,
