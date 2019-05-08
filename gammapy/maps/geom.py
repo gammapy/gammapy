@@ -649,9 +649,32 @@ class MapAxis:
         str_ += fmt.format("interp", self._interp)
         return str_
 
-    def copy(self):
-        """Copy `MapAxis` object"""
-        return copy.deepcopy(self)
+    def _init_copy(self, **kwargs):
+        """Init map instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getfullargspec(self.__init__).args
+        argnames.remove("self")
+
+        for arg in argnames:
+            value = getattr(self, "_" + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
+
+    def copy(self, **kwargs):
+        """Copy `MapAxis` instance and overwrite given attributes.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map axis constructor.
+
+        Returns
+        -------
+        copy : `MapAxis`
+            Copied map axis.
+        """
+        return self._init_copy(**kwargs)
 
     def group_table(self, edges):
         """Compute bin groups table for the map axis, given coarser bin edges.

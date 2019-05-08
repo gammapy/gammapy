@@ -236,7 +236,7 @@ class MapEvaluator:
     @lazyproperty
     def geom_reco(self):
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
-        e_reco_axis = self.edisp.e_reco.copy()
+        e_reco_axis = self.edisp.e_reco.copy(name="energy")
         return self.geom_image.to_cube(axes=[e_reco_axis])
 
     @property
