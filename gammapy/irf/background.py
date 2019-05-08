@@ -382,10 +382,33 @@ class Background2D:
         """
         raise NotImplementedError
 
-    def plot(self, **kwargs):
-        from .effective_area import EffectiveAreaTable2D
+    def plot(self, ax=None, add_cbar=True, **kwargs):
+        """Plot energy offset dependence of the background model.
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
 
-        return EffectiveAreaTable2D.plot(self, **kwargs)
+        ax = plt.gca() if ax is None else ax
+
+        x = self.data.axis("energy").edges
+        y = self.data.axis("offset").edges
+        z = self.data.data.T.value
+
+        kwargs.setdefault("cmap", "GnBu")
+        kwargs.setdefault("edgecolors", "face")
+
+        caxes = ax.pcolormesh(x, y, z, norm=LogNorm(), **kwargs)
+        ax.set_xscale("log")
+        ax.set_ylabel("Offset ({})".format(y.unit))
+        ax.set_xlabel("Energy ({})".format(x.unit))
+
+        xmin, xmax = x.value.min(), x.value.max()
+        ax.set_xlim(xmin, xmax)
+
+        if add_cbar:
+            label = "Background rate ({unit})".format(unit=self.data.data.unit)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
+
 
     def peek(self):
         from .effective_area import EffectiveAreaTable2D
