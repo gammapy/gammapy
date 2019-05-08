@@ -650,7 +650,7 @@ class MapAxis:
         return str_
 
     def _init_copy(self, **kwargs):
-        """Init map instance by copying missing init arguments from self.
+        """Init map axis instance by copying missing init arguments from self.
         """
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
@@ -1584,7 +1584,7 @@ class MapGeom(metaclass=MapGeomMeta):
         return names.index(name.upper())
 
     def _init_copy(self, **kwargs):
-        """Init map instance by copying missing init arguments from self.
+        """Init map geom instance by copying missing init arguments from self.
         """
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")

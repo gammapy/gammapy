@@ -204,12 +204,12 @@ class Background3D:
 
         This takes the values at Y = 0 and X >= 0.
         """
-        idx_lon = self.data.axis("fov_lon").find_node("0 deg")[0]
-        idx_lat = self.data.axis("fov_lat").find_node("0 deg")[0]
+        idx_lon = self.data.axis("fov_lon").coord_to_idx(0 * u.deg)[0]
+        idx_lat = self.data.axis("fov_lat").coord_to_idx(0 * u.deg)[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
         energy = self.data.axis("energy").edges
-        offset = self.data.axis("energy").edges
+        offset = self.data.axis("fov_lon").edges[idx_lon:]
 
         return Background2D(
             energy_lo=energy[:-1],

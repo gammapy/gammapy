@@ -49,6 +49,9 @@ def test_background_3d_basics(bkg_3d):
     assert data.shape == (2, 3, 3)
     assert data.unit == "s-1 MeV-1 sr-1"
 
+    bkg_2d = bkg_3d.to_2d()
+    assert bkg_2d.data.data.shape == (2, 3)
+
 
 def test_background_3d_read_write(tmpdir, bkg_3d):
     filename = str(tmpdir / "bkg3d.fits")
