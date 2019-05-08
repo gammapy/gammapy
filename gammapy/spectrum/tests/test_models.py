@@ -15,6 +15,7 @@ from ..models import (
     AbsorbedSpectralModel,
     Absorption,
     ConstantModel,
+    NaimaModel,
 )
 
 
@@ -307,3 +308,88 @@ def test_fermi_isotropic():
     assert_quantity_allclose(
         model(50 * u.GeV), 1.463 * u.Unit("1e-13 MeV-1 cm-2 s-1 sr-1"), rtol=1e-3
     )
+
+
+@requires_dependency("naima")
+class TestNaimaModel:
+    # Used to test model value at 2 TeV
+    energy = 2 * u.TeV
+
+    # Used to test model integral and energy flux
+    emin = 1 * u.TeV
+    emax = 10 * u.TeV
+
+    # Used to that if array evaluation works
+    e_array = [2, 10, 20] * u.TeV
+    e_array = e_array[:, np.newaxis, np.newaxis]
+
+    def test_pion_decay_(self):
+        import naima
+
+        particle_distribution = naima.models.PowerLaw(
+            amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+        )
+        radiative_model = naima.radiative.PionDecay(
+            particle_distribution, nh=1 * u.cm ** -3
+        )
+        model = NaimaModel(radiative_model)
+
+        val_at_2TeV = 9.725347355450884e-14 * u.Unit("cm-2 s-1 TeV-1")
+        integral_1_10TeV = 3.530537143620737e-13 * u.Unit("cm-2 s-1")
+        eflux_1_10TeV = 7.643559573105779e-13 * u.Unit("TeV cm-2 s-1")
+
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV)
+        assert_quantity_allclose(model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV)
+        assert_quantity_allclose(model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV)
+        val = model(self.e_array)
+        assert val.shape == self.e_array.shape
+
+    def test_ic(self):
+        import naima
+
+        particle_distribution = naima.models.ExponentialCutoffBrokenPowerLaw(
+            amplitude=2e33 / u.eV,
+            e_0=10 * u.TeV,
+            alpha_1=2.5,
+            alpha_2=2.7,
+            e_break=900 * u.GeV,
+            e_cutoff=10 * u.TeV,
+        )
+        radiative_model = naima.radiative.InverseCompton(
+            particle_distribution, seed_photon_fields=["CMB"]
+        )
+
+        model = NaimaModel(radiative_model)
+
+        val_at_2TeV = 4.347836316893546e-12 * u.Unit("cm-2 s-1 TeV-1")
+        integral_1_10TeV = 1.5958109911918303e-11 * u.Unit("cm-2 s-1")
+        eflux_1_10TeV = 2.851281562480875e-11 * u.Unit("TeV cm-2 s-1")
+
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV)
+        assert_quantity_allclose(model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV)
+        assert_quantity_allclose(model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV)
+        val = model(self.e_array)
+        assert val.shape == self.e_array.shape
+
+    def test_synchrotron(self):
+        import naima
+
+        particle_distribution = naima.models.LogParabola(
+            amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=1.3, beta=0.5
+        )
+        radiative_model = naima.radiative.Synchrotron(particle_distribution, B=2 * u.G)
+
+        model = NaimaModel(radiative_model)
+
+        val_at_2TeV = 1.0565840392550432e-24 * u.Unit("cm-2 s-1 TeV-1")
+        integral_1_10TeV = 4.4491861907713736e-13 * u.Unit("cm-2 s-1")
+        eflux_1_10TeV = 4.594120986691428e-13 * u.Unit("TeV cm-2 s-1")
+
+        value = model(self.energy)
+        assert_quantity_allclose(value, val_at_2TeV)
+        assert_quantity_allclose(model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV)
+        assert_quantity_allclose(model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV)
+        val = model(self.e_array)
+        assert val.shape == self.e_array.shape
