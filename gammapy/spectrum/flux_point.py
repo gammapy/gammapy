@@ -786,7 +786,7 @@ class FluxPointsEstimator:
         self,
         datasets,
         e_edges,
-        source=None,
+        source="",
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
@@ -808,9 +808,9 @@ class FluxPointsEstimator:
 
         dataset = self.datasets.datasets[0]
 
-        if source is not None:
+        try:
             model = dataset.model[source].spectral_model
-        else:
+        except TypeError:
             model = dataset.model
 
         self.model = ScaleModel(model)
@@ -836,9 +836,9 @@ class FluxPointsEstimator:
     def _set_scale_model(self):
         # set the model on all datasets
         for dataset in self.datasets.datasets:
-            if self.source is not None:
+            try:
                 dataset.model[self.source].spectral_model = self.model
-            else:
+            except TypeError:
                 dataset.model = self.model
 
     @property
@@ -852,7 +852,7 @@ class FluxPointsEstimator:
         try:
             energy_axis = dataset.counts_on.energy
         except AttributeError:
-            energy_axis = datasets.counts.geom.get_axis_by_name("energy")
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         return energy_axis.group_table(self.e_edges)
 
     def __str__(self):
