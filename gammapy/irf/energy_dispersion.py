@@ -7,6 +7,7 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
 from ..maps import MapAxis
+from ..maps.utils import edges_from_lo_hi
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray
@@ -69,10 +70,10 @@ class EnergyDispersion:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_true_edges = np.append(e_true_lo, e_true_hi[-1]).value * e_true_lo.unit
+        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
         e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
 
-        e_reco_edges = np.append(e_reco_lo, e_reco_hi[-1]).value * e_reco_lo.unit
+        e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
         e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="e_reco")
 
         self.data = NDDataArray(axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs)
@@ -732,17 +733,17 @@ class EnergyDispersion2D:
             interp_kwargs = self.default_interp_kwargs
 
 
-        e_true_edges = np.append(e_true_lo, e_true_hi[-1]).value * e_true_lo.unit
+        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
         e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
 
-        migra_edges = np.append(migra_lo, migra_hi[-1])
+        migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
         migra_axis = MapAxis.from_edges(migra_edges, interp="log", name="migra", unit="")
 
         # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
         if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
             offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
         else:
-            offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
+            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
             offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         axes = [e_true_axis, migra_axis, offset_axis]

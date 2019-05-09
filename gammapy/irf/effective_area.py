@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from ..utils.nddata import NDDataArray
 from ..maps import MapAxis
+from ..maps.utils import edges_from_lo_hi
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 
@@ -64,7 +65,7 @@ class EffectiveAreaTable:
 
     def __init__(self, energy_lo, energy_hi, data, meta=None):
 
-        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
@@ -371,14 +372,14 @@ class EffectiveAreaTable2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
         # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
         if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
             offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
         else:
-            offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
+            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
             offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)

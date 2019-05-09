@@ -5,6 +5,7 @@ from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
 from ..maps import MapAxis
+from ..maps.utils import edges_from_lo_hi
 from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
 
@@ -64,13 +65,13 @@ class Background3D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
-        fov_lon_edges = np.append(fov_lon_lo, fov_lon_hi[-1]).value * fov_lon_lo.unit
+        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
         fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
 
-        fov_lat_edges = np.append(fov_lat_lo, fov_lat_hi[-1]).value * fov_lat_lo.unit
+        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
         fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
 
         self.data = NDDataArray(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, interp_kwargs=interp_kwargs)
@@ -252,10 +253,10 @@ class Background2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
-        offset_edges = np.append(offset_lo, offset_hi[-1]).value * offset_lo.unit
+        offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
         offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
         self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)

@@ -7,6 +7,7 @@ from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
 from ..maps import  MapAxis
+from ..maps.utils import edges_from_lo_hi
 from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
 from ..utils.fits import energy_axis_to_ebounds, ebounds_to_energy_axis
@@ -52,7 +53,7 @@ class CountsSpectrum:
     """Default interpolation kwargs"""
 
     def __init__(self, energy_lo, energy_hi, data=None, interp_kwargs=None):
-        e_edges = np.append(energy_lo, energy_hi[-1]).value * energy_lo.unit
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
         if interp_kwargs is None:
