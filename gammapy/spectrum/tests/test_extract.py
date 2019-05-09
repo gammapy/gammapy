@@ -139,9 +139,9 @@ class TestSpectrumExtraction:
             testobs.on_vector.data.data,
             extraction.spectrum_observations[0].on_vector.data.data,
         )
-        assert_quantity_allclose(
-            testobs.on_vector.energy.nodes,
-            extraction.spectrum_observations[0].on_vector.energy.nodes,
+        assert_allclose(
+            testobs.on_vector.energy.center,
+            extraction.spectrum_observations[0].on_vector.energy.center,
         )
 
     @requires_dependency("sherpa")
@@ -155,7 +155,7 @@ class TestSpectrumExtraction:
         arf = sau.get_arf()
 
         actual = arf._arf._specresp
-        desired = extraction.spectrum_observations[0].aeff.data.data.value
+        desired = extraction.spectrum_observations[0].aeff.data.data.to_value("cm2")
         assert_allclose(actual, desired)
 
     def test_compute_energy_threshold(self, extraction):

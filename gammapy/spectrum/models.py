@@ -6,7 +6,6 @@ from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
 from ..utils.energy import EnergyBounds
-from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameter, Parameters, Model
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -1307,21 +1306,19 @@ class Absorption:
         # show plot
         plt.show()
     """
+    def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None):
+        self.data = data
 
-    __slots__ = ["energy_lo", "energy_hi", "param_lo", "param_hi", "data"]
+        # set values log centers
+        self.energy = np.sqrt(energy_lo * energy_hi)
+        self.param = (param_hi + param_lo) / 2
 
-    def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
-        axes = [
-            BinnedDataAxis(
-                param_lo, param_hi, interpolation_mode="linear", name="parameter"
-            ),
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-        ]
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("points_scale", ("log", "lin"))
 
-        self.data = NDDataArray(axes=axes, data=data)
-        self.data.default_interp_kwargs["fill_value"] = None
+        self._evaluate = ScaledRegularGridInterpolator(
+            points=(self.param, self.energy), values=data, **interp_kwargs
+        )
 
     @classmethod
     def read(cls, filename):
@@ -1406,16 +1403,13 @@ class Absorption:
         unit : str, (optional)
             desired value for energy axis
         """
-        energy_axis = self.data.axes[1]
-        energy = (energy_axis.log_center()).to(unit)
-
+        energy = self.energy.to(unit)
         values = self.evaluate(energy=energy, parameter=parameter)
-
         return TableModel(energy=energy, values=values, values_scale="lin")
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
-        return self.data.evaluate(energy=energy, parameter=parameter)
+        return self._evaluate((parameter, energy))
 
 
 class AbsorbedSpectralModel(SpectralModel):
@@ -1449,8 +1443,8 @@ class AbsorbedSpectralModel(SpectralModel):
             param_list.append(param)
 
         # Add parameter to the list
-        min_ = self.absorption.data.axes[0].lo[0]
-        max_ = self.absorption.data.axes[0].lo[-1]
+        min_ = self.absorption.param.min()
+        max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
         param_list.append(par)
         self._parameters = Parameters(param_list)

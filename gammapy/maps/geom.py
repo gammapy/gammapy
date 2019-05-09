@@ -349,7 +349,7 @@ class MapAxis:
             raise ValueError("MapAxis: node values must be sorted")
 
         if isinstance(nodes, u.Quantity):
-            unit = nodes.unit
+            unit = nodes.unit if nodes.unit is not None else ""
             nodes = nodes.value
         else:
             nodes = np.array(nodes)
@@ -399,6 +399,11 @@ class MapAxis:
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    @property
+    def interp(self):
+        """Interpolation scale of the axis."""
+        return self._interp
 
     @property
     def name(self):
@@ -644,9 +649,32 @@ class MapAxis:
         str_ += fmt.format("interp", self._interp)
         return str_
 
-    def copy(self):
-        """Copy `MapAxis` object"""
-        return copy.deepcopy(self)
+    def _init_copy(self, **kwargs):
+        """Init map axis instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getfullargspec(self.__init__).args
+        argnames.remove("self")
+
+        for arg in argnames:
+            value = getattr(self, "_" + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
+
+    def copy(self, **kwargs):
+        """Copy `MapAxis` instance and overwrite given attributes.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map axis constructor.
+
+        Returns
+        -------
+        copy : `MapAxis`
+            Copied map axis.
+        """
+        return self._init_copy(**kwargs)
 
     def group_table(self, edges):
         """Compute bin groups table for the map axis, given coarser bin edges.
@@ -720,8 +748,8 @@ class MapAxis:
         lo_bnd, hi_bnd = nodes.min(), nodes.max()
 
         return self.from_bounds(
-            lo_bnd=lo_bnd,
-            hi_bnd=hi_bnd,
+            lo_bnd=lo_bnd.value,
+            hi_bnd=hi_bnd.value,
             nbin=nbin,
             interp=self.interp,
             node_type=self.node_type,
@@ -1556,7 +1584,7 @@ class MapGeom(metaclass=MapGeomMeta):
         return names.index(name.upper())
 
     def _init_copy(self, **kwargs):
-        """Init map instance by copying missing init arguments from self.
+        """Init map geom instance by copying missing init arguments from self.
         """
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")

@@ -76,7 +76,7 @@ class TestSpectrumDataset:
         fake_spectrum = self.dataset.fake(314)
 
         assert isinstance(fake_spectrum, CountsSpectrum)
-        assert_allclose(fake_spectrum.energy.bins, self.dataset.counts.energy.bins)
+        assert_allclose(fake_spectrum.energy.edges, self.dataset.counts.energy.edges)
         assert fake_spectrum.data.data.sum() == 907331
 
 
@@ -153,9 +153,10 @@ class TestSpectrumDatasetOnOff:
             livetime=livetime,
         )
 
+        energy = (self.aeff.energy.edges * self.aeff.energy.unit)
         expected = (
             self.aeff.data.data[0]
-            * (self.aeff.energy.hi[-1] - self.aeff.energy.lo[0])
+            * (energy[-1] - energy[0])
             * const
             * livetime
         )
@@ -264,7 +265,7 @@ class TestSimpleFit:
         fit = Fit([obs1, obs2])
         fit.run()
         pars = self.source_model.parameters
-        assert_allclose(pars["index"].value, 1.996456, rtol=1e-3)
+        assert_allclose(pars["index"].value, 1.920686, rtol=1e-3)
 
 
 @requires_data("gammapy-data")

@@ -235,7 +235,7 @@ def test_lightcurve_estimator(spec_extraction):
     )
     table = lc.table
 
-    assert_allclose(table["flux"][0], 5.051995e-12, rtol=1e-3)
+    assert_allclose(table["flux"][0], 5.057778e-12, rtol=1e-3)
 
     # TODO: add test exercising e_reco selection
     # TODO: add asserts on all measured quantities

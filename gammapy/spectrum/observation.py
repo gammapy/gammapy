@@ -113,17 +113,17 @@ class SpectrumObservation:
     @property
     def e_reco(self):
         """Reconstruced energy bounds array."""
-        return EnergyBounds(self.on_vector.energy.bins)
+        return EnergyBounds(self.on_vector.energy.edges)
 
     @property
     def e_true(self):
         """True energy bounds array."""
-        return EnergyBounds(self.aeff.energy.bins)
+        return EnergyBounds(self.aeff.energy.edges)
 
     @property
     def nbins(self):
         """Number of reconstruced energy bins"""
-        return self.on_vector.energy.nbins
+        return self.on_vector.energy.nbin
 
     @property
     def lo_threshold(self):
@@ -241,9 +241,9 @@ class SpectrumObservation:
         self.on_vector * self.total_stats.alpha because the latter returns an
         average value for alpha.
         """
-        energy = self.off_vector.energy
+        energy = self.off_vector.energy.edges
         data = self.off_vector.data.data * self.alpha
-        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     @property
     def excess_vector(self):
@@ -251,9 +251,9 @@ class SpectrumObservation:
 
         excess = n_on = alpha * n_off
         """
-        energy = self.off_vector.energy
+        energy = self.off_vector.energy.edges
         data = self.on_vector.data.data - self.background_vector.data.data
-        return CountsSpectrum(data=data, energy_lo=energy.lo, energy_hi=energy.hi)
+        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     @property
     def total_stats(self):
@@ -413,35 +413,13 @@ class SpectrumObservation:
         arffile = self.on_vector.arffile
         rmffile = self.on_vector.rmffile
 
-        # Write in keV and cm2 for sherpa
-        if use_sherpa:
-            # TODO: Change this implementation.
-            # write should not change the object
-            # put this code in a separate method that makes a copy with the changes.
-            # then call `.write` on that here, or remove the option and let the user do it.
-            self.on_vector.energy.lo = self.on_vector.energy.lo.to("keV")
-            self.on_vector.energy.hi = self.on_vector.energy.hi.to("keV")
-            self.aeff.energy.lo = self.aeff.energy.lo.to("keV")
-            self.aeff.energy.hi = self.aeff.energy.hi.to("keV")
-            self.aeff.data.data = self.aeff.data.data.to("cm2")
-            if self.off_vector is not None:
-                self.off_vector.energy.lo = self.off_vector.energy.lo.to("keV")
-                self.off_vector.energy.hi = self.off_vector.energy.hi.to("keV")
-            if self.edisp is not None:
-                self.edisp.e_reco.lo = self.edisp.e_reco.lo.to("keV")
-                self.edisp.e_reco.hi = self.edisp.e_reco.hi.to("keV")
-                self.edisp.e_true.lo = self.edisp.e_true.lo.to("keV")
-                self.edisp.e_true.hi = self.edisp.e_true.hi.to("keV")
-                # Set data to itself to trigger reset of the interpolator
-                # TODO: Make NDData notice change of axis
-                self.edisp.data.data = self.edisp.data.data
+        self.on_vector.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
-        self.on_vector.write(outdir / phafile, overwrite=overwrite)
-        self.aeff.write(outdir / arffile, overwrite=overwrite)
         if self.off_vector is not None:
-            self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
+            self.off_vector.write(outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa)
         if self.edisp is not None:
-            self.edisp.write(str(outdir / rmffile), overwrite=overwrite)
+            self.edisp.write(str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa)
 
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
@@ -742,8 +720,8 @@ class SpectrumObservationList(UserList):
             datasets.append(dataset)
 
         if fit_range is not None:
-            energy = dataset.counts_on.energy
-            mask = (energy.lo >= fit_range[0])  & (energy.hi <= fit_range[1])
+            energy = dataset.counts_on.energy.edges
+            mask = (energy[:-1] >= fit_range[0]) & (energy[1:] <= fit_range[1])
         else:
             mask = None
 
@@ -857,8 +835,8 @@ class SpectrumObservationStacker:
         """
         template = counts_spectrum_list[0].copy()
         energy = template.energy
-        stacked_data = np.zeros(energy.nbins)
-        stacked_quality = np.ones(energy.nbins)
+        stacked_data = np.zeros(energy.nbin)
+        stacked_quality = np.ones(energy.nbin)
         for spec in counts_spectrum_list:
             stacked_data += spec.counts_in_safe_range.value
             temp = np.logical_and(stacked_quality, spec.quality)
@@ -866,8 +844,8 @@ class SpectrumObservationStacker:
 
         return PHACountsSpectrum(
             data=stacked_data,
-            energy_lo=energy.lo,
-            energy_hi=energy.hi,
+            energy_lo=energy.edges[:-1],
+            energy_hi=energy.edges[1:],
             quality=stacked_quality,
         )
 

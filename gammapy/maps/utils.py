@@ -168,3 +168,12 @@ def find_bintable_hdu(hdulist):
             return hdu
 
     raise AttributeError("No BinTable HDU found.")
+
+
+def edges_from_lo_hi(edges_lo, edges_hi):
+    edges = edges_lo.copy()
+    try:
+        edges = edges.insert(len(edges), edges_hi[-1])
+    except AttributeError:
+        edges = np.insert(edges, len(edges), edges_hi[-1])
+    return edges

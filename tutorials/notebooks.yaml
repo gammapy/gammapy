@@ -90,8 +90,6 @@
     - cta-1dc
   images:
     - gammapy_mcmc
-- name: nddata_demo
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/nddata_demo.ipynb
 - name: pulsar_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/pulsar_analysis.ipynb
   datasets:

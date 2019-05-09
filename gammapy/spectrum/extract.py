@@ -122,7 +122,7 @@ class SpectrumExtraction:
         if self.containment_correction:
             self.apply_containment_correction(observation, bkg)
         else:
-            self.containment = np.ones(self._aeff.energy.nbins)
+            self.containment = np.ones(self._aeff.energy.nbin)
 
         spectrum_observation = SpectrumObservation(
             on_vector=self._on_vector,
