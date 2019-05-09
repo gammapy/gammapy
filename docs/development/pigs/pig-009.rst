@@ -20,7 +20,7 @@ Array (CTA). It will allows us to simulate sources with different spectral and m
 the best configurations for each type of objects and the expected performance of CTA on this data. An event simulator is also listed
 as a requirement for the future CTA Science Tools. For this reason, we propose to implement a framework for event simulation
 in Gammapy. Based on finely binned input maps, containing the predicted number of counts for a given source with a defined
-morphological and spectral model it samples events using the inverse cumulative distribution (Inverse CDF). In addition
+morphological and spectral model, it samples events using the inverse cumulative distribution (Inverse CDF). In addition
 a light curve model can be taken into account. Then the proposed simulator will be able to apply the PSF and energy dispersion
 to each sampled event. Furthermore, the sampler will include the simulation of background events, again based on finely
 binned maps. The final output of the simulator is a stacked event list with source and background events for a given
@@ -62,7 +62,7 @@ to draw samples from the given pdf:
 The returned object is a `np.ndarray` containing the sampled indices.
 
 In addition the `InverseCDFSampler` should have the possibility to sample only along a given axis of the PDF. This features is
-required to handle sampling of multiple PDFs a the same time to avoid a Python loop over the PDFs. This will be supported
+required to handle sampling of multiple PDFs at the same time to avoid a Python loop over the PDFs. This will be supported
 by specifying the `axis` argument:
 
 .. code::
@@ -122,7 +122,7 @@ repeat the temporal information or do we just consider the remaining time as a f
 IRFMapSampler
 =============
 
-The handle correctly the spatially varying IRFs, we propose to introduce an `IRFMapSampler` class. Based on the `PSFMap`
+To handle correctly the spatially varying IRFs, we propose to introduce an `IRFMapSampler` class. Based on the `PSFMap`
 and `EDispMap` as an input it interpolates the "correct" IRF at the position of a given event and applies it. In more detail
 the class will calculate the psf and the energy dispersion for each event true position and true energy. The reconstructed
 energies and positions are then appended to the event list. The IRFs are assumed to be constant and not time-dependent.
@@ -203,7 +203,7 @@ existing related classes in Gammapy:
 
 - `events_src = MapEvaluator.sample()` to sample from a source model
 - `events = EdispMap.sample(events=)` to apply the energy dispersion
-- `events = PsfMap.sample(events=)` to appy the PSF
+- `events = PsfMap.sample(events=)` to apply the PSF
 - `events = MapDataset.sample()` to combine all together.
 
 This has the advantage of a smaller API, but is less flexible.
