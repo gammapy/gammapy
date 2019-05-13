@@ -4,11 +4,12 @@ from pathlib import Path
 from astropy import units as u
 from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
+from ..utils.scripts import make_path
 from ..utils.fitting import Dataset, Parameters
 from ..stats import wstat, cash
 from ..utils.random import get_random_state
-from .core import CountsSpectrum
-
+from .core import CountsSpectrum, PHACountsSpectrum
+from ..irf import EffectiveAreaTable, EnergyDispersion
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -441,3 +442,46 @@ class SpectrumDatasetOnOff(Dataset):
             self.counts_off.write(outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa)
         if self.edisp is not None:
             self.edisp.write(str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa)
+
+    @classmethod
+    def from_ogip_files(cls, filename):
+        """Read `~gammapy.spectrum.SpectrumDatasetOnOff` from OGIP files.
+
+        BKG file, ARF, and RMF must be set in the PHA header and be present in
+        the same folder.
+
+        Parameters
+        ----------
+        filename : str
+            OGIP PHA file to read
+        """
+        filename = make_path(filename)
+        dirname = filename.parent
+        on_vector = PHACountsSpectrum.read(filename)
+        rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
+
+        try:
+            energy_dispersion = EnergyDispersion.read(str(dirname / rmf))
+        except IOError:
+            # TODO : Add logger and echo warning
+            energy_dispersion = None
+
+        try:
+            off_vector = PHACountsSpectrum.read(str(dirname / bkg))
+        except IOError:
+            # TODO : Add logger and echo warning
+            off_vector = None
+
+        effective_area = EffectiveAreaTable.read(str(dirname / arf))
+
+        quality = on_vector.quality
+        mask = quality == 0
+
+        return cls(
+            counts_on=on_vector,
+            aeff=effective_area,
+            counts_off=off_vector,
+            edisp=energy_dispersion,
+            livetime=on_vector.livetime,
+            mask=mask,
+            )
