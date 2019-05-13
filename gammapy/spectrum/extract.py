@@ -240,10 +240,11 @@ class SpectrumExtraction:
         for obs in self.spectrum_observations:
             emin, emax = compute_energy_thresholds(obs.aeff, obs.edisp, **kwargs)
             # TODO: add proper energy range setter to SpectrumDataset
-            obs.on_vector.reset_thresholds()
+            # Is a reset required or not?
+#            obs.on_vector.reset_thresholds()
             obs.on_vector.lo_threshold = emin
             obs.on_vector.hi_threshold = emax
-            obs.off_vector.reset_thresholds()
+#            obs.off_vector.reset_thresholds()
             obs.off_vector.lo_threshold = emin
             obs.off_vector.hi_threshold = emax
 
