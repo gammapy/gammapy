@@ -248,7 +248,7 @@ class SpectrumExtraction:
             obs.off_vector.hi_threshold = emax
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
-        """Write results to disk.
+        """Write results to disk as OGIP format.
 
         Parameters
         ----------

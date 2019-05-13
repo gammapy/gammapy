@@ -207,6 +207,19 @@ class TestSpectrumDatasetOnOff:
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
 
+    def test_total_stats(self):
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            livetime=self.livetime,
+        )
+
+        assert dataset.total_stats.n_on == 4
+        assert dataset.total_stats.n_off == 40
+        assert dataset.total_stats.excess == 0
+
 @requires_dependency("iminuit")
 class TestSimpleFit:
     """Test fit on counts spectra without any IRFs"""
