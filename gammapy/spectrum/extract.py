@@ -4,8 +4,9 @@ import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
 from ..utils.scripts import make_path
-from ..irf import PSF3D, apply_containment_fraction
+from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
 from .core import PHACountsSpectrum
+from .dataset import SpectrumDatasetOnOff
 from .observation import SpectrumObservation, SpectrumObservationList
 
 __all__ = ["SpectrumExtraction"]
@@ -233,11 +234,16 @@ class SpectrumExtraction:
     def compute_energy_threshold(self, **kwargs):
         """Compute and set the safe energy threshold for all observations.
 
-        See `SpectrumObservation.compute_energy_threshold` for full
+        See `~gammapy.irf.compute_energy_thresholds` for full
         documentation about the options.
         """
         for obs in self.spectrum_observations:
-            obs.compute_energy_threshold(**kwargs)
+            emin, emax = compute_energy_thresholds(obs.aeff, obs.edisp, **kwargs)
+            # TODO: add proper energy range setter to SpectrumDataset
+            obs.on_vector.lo_threshold = emin
+            obs.on_vector.hi_threshold = emax
+            obs.off_vector.lo_threshold = emin
+            obs.off_vector.hi_threshold = emax
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk.
