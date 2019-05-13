@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from pathlib import Path
 from astropy import units as u
 from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
@@ -194,6 +195,20 @@ class SpectrumDatasetOnOff(Dataset):
         self.aeff = aeff
         self.edisp = edisp
         self.model = model
+
+    @property
+    def livetime(self):
+        return self._livetime
+
+    @livetime.setter
+    def livetime(self, livetime):
+        self._livetime = livetime
+        if self.counts_on is not None:
+            self.counts_on.livetime = livetime
+        # TODO : check if off might have different exposure
+        if self.counts_off is not None:
+            self.counts_off.livetime = livetime
+
 
     @property
     def alpha(self):
@@ -394,3 +409,35 @@ class SpectrumDatasetOnOff(Dataset):
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
         ax.set_ylabel("Residuals")
         return ax
+
+    def to_ogip_files(self, outdir=None, use_sherpa=False, overwrite=False):
+        """Write OGIP files.
+
+        If you want to use the written files with Sherpa you have to set the
+        ``use_sherpa`` flag. Then all files will be written in units 'keV' and
+        'cm2'.
+
+        Parameters
+        ----------
+        outdir : `pathlib.Path`
+            output directory, default: pwd
+        use_sherpa : bool, optional
+            Write Sherpa compliant files, default: False
+        overwrite : bool
+            Overwrite existing files?
+        """
+        outdir = Path.cwd() if outdir is None else Path(outdir)
+        outdir.mkdir(exist_ok=True, parents=True)
+
+        phafile = self.counts_on.phafile
+        bkgfile = self.counts_on.bkgfile
+        arffile = self.counts_on.arffile
+        rmffile = self.counts_on.rmffile
+
+        self.counts_on.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
+
+        if self.counts_off is not None:
+            self.counts_off.write(outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa)
+        if self.edisp is not None:
+            self.edisp.write(str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa)
