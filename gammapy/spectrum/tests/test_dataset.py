@@ -192,7 +192,7 @@ class TestSpectrumDatasetOnOff:
         with mpl_plot_check():
             dataset.peek()
 
-    def test_to_ogip_files(self, tmpdir):
+    def test_to_from_ogip_files(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
             counts_on=self.on_counts,
             counts_off=self.off_counts,
