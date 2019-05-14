@@ -9,9 +9,9 @@ from ..stats import wstat, cash
 from ..utils.random import get_random_state
 from .core import CountsSpectrum, PHACountsSpectrum
 from .observation import SpectrumStats
-from ..irf import EffectiveAreaTable, EnergyDispersion
+from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
-__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
+__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 
 
 class SpectrumDataset(Dataset):
@@ -535,6 +535,13 @@ class SpectrumDatasetOnOff(Dataset):
         """
         return self.stats_in_range(0, self.counts_on.energy.nbin - 1)
 
+    @property
+    def total_stats_safe_range(self):
+        """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
+        """
+        safe_bins = self.counts_on.bins_in_safe_range
+        return self.stats_in_range(safe_bins[0], safe_bins[-1])
+
     def stats_in_range(self, bin_min, bin_max):
         """Compute stats for a range of energy bins.
 
@@ -578,3 +585,209 @@ class SpectrumDatasetOnOff(Dataset):
         stacked_stats.energy_min = self.counts_on.energy.edges[bin_min]
         stacked_stats.energy_max = self.counts_on.energy.edges[bin_max + 1]
         return stacked_stats
+
+
+class SpectrumDatasetOnOffStacker:
+    r"""Stack a list of homogeneous datasets.
+
+    The stacking of :math:`j` datasets is implemented as follows.
+    :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
+    respectively.
+
+    .. math::
+
+        \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+            bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        \overline{\mathrm{n_{on}}}_k = \sum_{j} \mathrm{n_{on}}_{jk} \cdot
+            \epsilon_{jk}
+
+        \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
+            \epsilon_{jk}
+
+        \overline{\alpha}_k =
+        \frac{\overline{{b_{on}}}_k}{\overline{{b_{off}}}_k}
+
+        \overline{{b}_{on}}_k = 1
+
+        \overline{{b}_{off}}_k = \frac{1}{\sum_{j}\alpha_{jk} \cdot
+            \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}} \cdot \overline{\mathrm {n_{off}}}
+
+    Please refer to the `~gammapy.irf.IRFStacker` for the description
+    of how the IRFs are stacked.
+
+    Parameters
+    ----------
+    obs_list : list of `~gammapy.spectrum.SpectrumDatasetOnOff`
+        Observations to stack
+
+    Examples
+    --------
+    >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
+    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_DATA/joint-crab/spectra/hess')
+    >>> obs_stacker = SpectrumObservationStacker(obs_list)
+    >>> obs_stacker.run()
+    >>> print(obs_stacker.stacked_obs)
+    *** Observation summary report ***
+    Observation Id: [23523-23592]
+    Livetime: 0.879 h
+    On events: 279
+    Off events: 108
+    Alpha: 0.037
+    Bkg events in On region: 3.96
+    Excess: 275.04
+    Excess / Background: 69.40
+    Gamma rate: 0.14 1 / min
+    Bkg rate: 0.00 1 / min
+    Sigma: 37.60
+    energy range: 681292069.06 keV - 87992254356.91 keV
+    """
+
+    def __init__(self, obs_list):
+        self.obs_list = obs_list
+        self.stacked_on_vector = None
+        self.stacked_off_vector = None
+        self.stacked_aeff = None
+        self.stacked_edisp = None
+        self.stacked_bkscal_on = None
+        self.stacked_bkscal_off = None
+        self.stacked_obs = None
+
+    def __str__(self):
+        ss = self.__class__.__name__
+        ss += "\n{}".format(self.obs_list)
+        return ss
+
+    def run(self):
+        """Run all steps in the correct order."""
+        self.stack_counts_vectors()
+        self.stack_aeff()
+        self.stack_edisp()
+        self.stack_obs()
+
+    def stack_counts_vectors(self):
+        """Stack on and off vectors."""
+        self.stack_on_vector()
+        self.stack_off_vector()
+        self.stack_backscal()
+        self.setup_counts_vectors()
+
+    def stack_on_vector(self):
+        """Stack the on count vector."""
+        on_vector_list = [o.counts_on for o in self.obs_list]
+        self.stacked_on_vector = self.stack_counts_spectrum(on_vector_list)
+
+    def stack_off_vector(self):
+        """Stack the off count vector."""
+        off_vector_list = [o.counts_off for o in self.obs_list]
+        self.stacked_off_vector = self.stack_counts_spectrum(off_vector_list)
+
+    @staticmethod
+    def stack_counts_spectrum(counts_spectrum_list):
+        """Stack `~gammapy.spectrum.PHACountsSpectrum`.
+
+        * Bins outside the safe energy range are set to 0
+        * Attributes are set to None.
+        * The quality vector of the observations are combined with a logical or,
+          such that the low (high) threshold of the stacked obs is the minimum
+          low (maximum high) threshold of the observation list to be stacked.
+        """
+        template = counts_spectrum_list[0].copy()
+        energy = template.energy
+        stacked_data = np.zeros(energy.nbin)
+        stacked_quality = np.ones(energy.nbin)
+        for spec in counts_spectrum_list:
+            stacked_data += spec.counts_in_safe_range.value
+            temp = np.logical_and(stacked_quality, spec.quality)
+            stacked_quality = np.array(temp, dtype=int)
+
+        return PHACountsSpectrum(
+            data=stacked_data,
+            energy_lo=energy.edges[:-1],
+            energy_hi=energy.edges[1:],
+            quality=stacked_quality,
+        )
+
+    def stack_backscal(self):
+        """Stack ``backscal`` for on and off vector."""
+        nbins = self.obs_list[0].counts_on.energy.nbin
+        bkscal_on = np.ones(nbins)
+        bkscal_off = np.zeros(nbins)
+
+        alpha_sum = 0.0
+
+        for obs in self.obs_list:
+            bkscal_on_data = obs.counts_on._backscal_array.copy()
+            bkscal_off_data = obs.counts_off._backscal_array.copy()
+            bkscal_off += (
+                bkscal_on_data / bkscal_off_data
+            ) * obs.counts_off.counts_in_safe_range.value
+            alpha_sum += (obs.alpha * obs.counts_off.counts_in_safe_range).sum()
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
+            alpha_average = (
+                alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
+            )
+
+        # there should be no nan values in backscal_on or backscal_off
+        # this leads to problems when fitting the data
+        # use 1 for backscale of on_vector and 1 / alpha_average for backscale of off_vector
+        alpha_correction = 1
+        idx = np.where(self.stacked_off_vector.data.data == 0)[0]
+        bkscal_on[idx] = alpha_correction
+        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
+        # OFF counts of each run
+        stacked_bkscal_off[idx] = alpha_correction / alpha_average
+
+        self.stacked_bkscal_on = bkscal_on
+        self.stacked_bkscal_off = stacked_bkscal_off
+
+    def setup_counts_vectors(self):
+        """Add correct attributes to stacked counts vectors."""
+        livetimes = [obs.livetime.to_value("s") for obs in self.obs_list]
+        self.total_livetime = u.Quantity(np.sum(livetimes), "s")
+
+        self.stacked_on_vector.livetime = self.total_livetime
+        self.stacked_off_vector.livetime = self.total_livetime
+        self.stacked_on_vector.backscal = self.stacked_bkscal_on
+        self.stacked_off_vector.backscal = self.stacked_bkscal_off
+        self.stacked_on_vector.obs_id = [obs.obs_id for obs in self.obs_list]
+        self.stacked_off_vector.obs_id = [obs.obs_id for obs in self.obs_list]
+
+    def stack_aeff(self):
+        """Stack effective areas (weighted by livetime).
+
+        Calls `gammapy.irf.IRFStacker.stack_aeff`.
+        """
+        irf_stacker = IRFStacker(
+            list_aeff=[obs.aeff for obs in self.obs_list],
+            list_livetime=[obs.livetime for obs in self.obs_list],
+        )
+        irf_stacker.stack_aeff()
+        self.stacked_aeff = irf_stacker.stacked_aeff
+
+    def stack_edisp(self):
+        """Stack energy dispersion (weighted by exposure).
+
+        Calls `~gammapy.irf.IRFStacker.stack_edisp`
+        """
+        irf_stacker = IRFStacker(
+            list_aeff=[obs.aeff for obs in self.obs_list],
+            list_livetime=[obs.livetime for obs in self.obs_list],
+            list_edisp=[obs.edisp for obs in self.obs_list],
+            list_low_threshold=[obs.counts_on.lo_threshold for obs in self.obs_list],
+            list_high_threshold=[obs.counts_on.hi_threshold for obs in self.obs_list],
+        )
+        irf_stacker.stack_edisp()
+        self.stacked_edisp = irf_stacker.stacked_edisp
+
+    def stack_obs(self):
+        """Create stacked `~gammapy.spectrum.SpectrumDatasetOnOff`"""
+        self.stacked_obs = SpectrumDatasetOnOff(
+            counts_on=self.stacked_on_vector,
+            counts_off=self.stacked_off_vector,
+            aeff=self.stacked_aeff,
+            edisp=self.stacked_edisp,
+            livetime=self.total_livetime
+        )

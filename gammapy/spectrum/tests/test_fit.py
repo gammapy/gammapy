@@ -8,11 +8,10 @@ from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable
 from ...spectrum import (
     PHACountsSpectrum,
-    SpectrumObservationList,
-    SpectrumObservation,
     models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
+    SpectrumDatasetOnOffStacker
 )
 
 
@@ -79,8 +78,7 @@ class TestFit:
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
-        obs = SpectrumObservation(on_vector=self.src)
-        dataset = obs.to_spectrum_dataset()
+        dataset = SpectrumDatasetOnOff(counts_on=self.src)
         dataset.model = self.source_model
 
         assert np.sum(dataset.mask) == self.nbins
@@ -108,9 +106,9 @@ class TestSpectralFit:
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
-        obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
-        self.obs_list = SpectrumObservationList([obs1, obs2])
+        obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
+        obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
+        self.obs_list = [obs1, obs2]
 
         self.pwl = models.PowerLaw(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -125,7 +123,7 @@ class TestSpectralFit:
 
 
     def test_stats(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
+        dataset = self.obs_list[0]
         dataset.model = self.pwl
 
         fit = Fit([dataset])
@@ -140,16 +138,15 @@ class TestSpectralFit:
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
         obs = self.obs_list[0]
-        desired = obs.on_vector.lo_threshold
+        desired = obs.counts_on.lo_threshold
 
-        dataset = obs.to_spectrum_dataset()
-        actual = dataset.energy_range[0]
+        actual = obs.energy_range[0]
 
         assert actual.unit == "keV"
         assert_allclose(actual.value, desired.value)
 
     def test_no_edisp(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
+        dataset = self.obs_list[0]
 
         # Bring aeff in RECO space
         energy = dataset.counts_on.energy.center
@@ -171,9 +168,10 @@ class TestSpectralFit:
         )
 
     def test_stacked_fit(self):
-        stacked_obs = self.obs_list.stack()
+        obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
+        obs_stacker.run()
 
-        dataset = stacked_obs.to_spectrum_dataset()
+        dataset = obs_stacker.stacked_obs
         dataset.model = self.pwl
 
         fit = Fit([dataset])
@@ -196,7 +194,8 @@ class TestSpectralFit:
 
         logging.getLogger("sherpa").setLevel("ERROR")
 
-        self.obs_list.write(tmpdir, use_sherpa=True)
+        for obs in self.obs_list:
+            obs.to_ogip_files(tmpdir, use_sherpa=True)
         filename = tmpdir / "pha_obs23523.fits"
         sau.load_pha(str(filename))
         sau.set_stat("wstat")
