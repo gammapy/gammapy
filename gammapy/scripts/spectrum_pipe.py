@@ -127,9 +127,11 @@ class SpectrumAnalysisIACT:
 
         self.write(filename=filename)
 
-        stacked_obs = self.extraction.spectrum_observations.stack()
+        datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()
 
-        datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets(model=model)
+        for dataset in datasets_fp:
+            dataset.model = model
+
         self.flux_point_estimator = FluxPointsEstimator(
             e_edges=self.config["fp_binning"],
             datasets=datasets_fp,

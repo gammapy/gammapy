@@ -157,22 +157,8 @@ class SkyModels:
         return SkyModels(skymodels)
 
     def __getitem__(self, item):
-        for model in self.skymodels:
-            if model.name == item:
-                return model
-
-        raise KeyError("Model '{}' not in model list.".format(item))
-
-    def __setitem__(self, name, model):
-        if not name == model.name:
-            raise ValueError("Model name must be '{}'".format(name))
-
-        if name not in self.names:
-            raise KeyError("Model '{}' not in model list.".format(name))
-
-        for idx, _ in enumerate(self.skymodels):
-            if _.name == name:
-                self.skymodels[idx] = model
+        idx = self.names.index(item)
+        return self.skymodels[idx]
 
 
 

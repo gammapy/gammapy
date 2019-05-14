@@ -178,8 +178,9 @@ class TestSkyModels:
         model = sky_models["source-3"]
         assert model.name == "source-3"
 
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError) as error:
             sky_models["spam"]
+            assert "spam" in error.message
 
 
 class TestSkyModel:
