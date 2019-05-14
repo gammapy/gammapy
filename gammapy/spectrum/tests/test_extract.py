@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
-from ...spectrum import SpectrumExtraction, SpectrumObservation
+from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...maps import WcsGeom, WcsNDMap
 from ...data import DataStore
@@ -131,17 +131,17 @@ class TestSpectrumExtraction:
         """Test the run method and check if files are written correctly"""
         extraction.run()
         extraction.write(outdir=tmpdir, overwrite=True)
-        testobs = SpectrumObservation.read(tmpdir / "ogip_data" / "pha_obs23523.fits")
+        testobs = SpectrumDatasetOnOff.from_ogip_files(tmpdir / "ogip_data" / "pha_obs23523.fits")
         assert_quantity_allclose(
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.on_vector.data.data,
-            extraction.spectrum_observations[0].on_vector.data.data,
+            testobs.counts_on.data.data,
+            extraction.spectrum_observations[0].counts_on.data.data,
         )
         assert_allclose(
-            testobs.on_vector.energy.center,
-            extraction.spectrum_observations[0].on_vector.energy.center,
+            testobs.counts_on.energy.center,
+            extraction.spectrum_observations[0].counts_on.energy.center,
         )
 
     @requires_dependency("sherpa")

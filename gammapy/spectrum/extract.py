@@ -125,13 +125,21 @@ class SpectrumExtraction:
         else:
             self.containment = np.ones(self._aeff.energy.nbin)
 
-        spectrum_observation = SpectrumObservation(
-            on_vector=self._on_vector,
+#        spectrum_observation = SpectrumObservation(
+#            on_vector=self._on_vector,
+#            aeff=self._aeff,
+#            off_vector=self._off_vector,
+#            edisp=self._edisp,
+#        )
+        spectrum_observation = SpectrumDatasetOnOff(
+            counts_on=self._on_vector,
             aeff=self._aeff,
-            off_vector=self._off_vector,
+            counts_off=self._off_vector,
             edisp=self._edisp,
+            livetime=self._on_vector.livetime
         )
 
+        # TODO: this must be properly adapted to Dataset
         if self.use_recommended_erange:
             try:
                 spectrum_observation.hi_threshold = observation.aeff.high_threshold
@@ -245,10 +253,10 @@ class SpectrumExtraction:
                 obs.on_vector.reset_thresholds()
                 obs.off_vector.reset_thresholds()
 
-            obs.on_vector.lo_threshold = emin
-            obs.on_vector.hi_threshold = emax
-            obs.off_vector.lo_threshold = emin
-            obs.off_vector.hi_threshold = emax
+            obs.counts_on.lo_threshold = emin
+            obs.counts_on.hi_threshold = emax
+            obs.counts_off.lo_threshold = emin
+            obs.counts_off.hi_threshold = emax
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk as OGIP format.
@@ -267,8 +275,11 @@ class SpectrumExtraction:
         outdir = make_path(outdir)
         log.info("Writing OGIP files to {}".format(outdir / ogipdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.spectrum_observations.write(
-            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
-        )
-
+        outdir = make_path(outdir / ogipdir)
+        outdir.mkdir(exist_ok=True, parents=True)
+#        self.spectrum_observations.write(
+#            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
+#        )
+        for obs in self.spectrum_observations:
+            obs.to_ogip_files(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
         # TODO : add more debug plots etc. here
