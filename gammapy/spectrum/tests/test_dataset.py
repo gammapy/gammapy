@@ -202,7 +202,7 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(str(tmpdir)+'/'+self.on_counts.phafile)
+        newdataset = SpectrumDatasetOnOff.from_ogip_files( tmpdir / self.on_counts.phafile)
 
         assert_allclose(self.on_counts.data.data, newdataset.counts_on.data.data)
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
