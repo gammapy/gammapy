@@ -7,7 +7,6 @@ from ..utils.scripts import make_path
 from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
 from .core import PHACountsSpectrum
 from .dataset import SpectrumDatasetOnOff
-from .observation import SpectrumObservation, SpectrumObservationList
 
 __all__ = ["SpectrumExtraction"]
 
@@ -73,7 +72,7 @@ class SpectrumExtraction:
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
         self.use_recommended_erange = use_recommended_erange
-        self.spectrum_observations = SpectrumObservationList()
+        self.spectrum_observations = []
 
         self.containment = None
         self._on_vector = None
@@ -125,12 +124,6 @@ class SpectrumExtraction:
         else:
             self.containment = np.ones(self._aeff.energy.nbin)
 
-#        spectrum_observation = SpectrumObservation(
-#            on_vector=self._on_vector,
-#            aeff=self._aeff,
-#            off_vector=self._off_vector,
-#            edisp=self._edisp,
-#        )
         spectrum_observation = SpectrumDatasetOnOff(
             counts_on=self._on_vector,
             aeff=self._aeff,
