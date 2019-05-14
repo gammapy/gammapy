@@ -7,6 +7,7 @@ from ..spectrum import (
     FluxPointsEstimator,
     FluxPointsDataset,
     SpectrumExtraction,
+    SpectrumDatasetOnOffStacker,
 )
 from ..background import ReflectedRegionsBackgroundEstimator
 
@@ -133,11 +134,10 @@ class SpectrumAnalysisIACT:
 
         self.write(filename=filename)
 
-        datasets_fp = self.extraction.spectrum_observations
+        obs_stacker = SpectrumDatasetOnOffStacker(self.extraction.spectrum_observations)
+        obs_stacker.run()
 
-        for dataset in datasets_fp.datasets:
-            dataset.model = model
-
+        datasets_fp = obs_stacker.stacked_obs 
         self.flux_point_estimator = FluxPointsEstimator(
             e_edges=self.config["fp_binning"],
             datasets=datasets_fp,
