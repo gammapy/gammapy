@@ -129,7 +129,7 @@ class SpectrumAnalysisIACT:
 
         datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()
 
-        for dataset in datasets_fp:
+        for dataset in datasets_fp.datasets:
             dataset.model = model
 
         self.flux_point_estimator = FluxPointsEstimator(

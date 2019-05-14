@@ -814,7 +814,7 @@ class FluxPointsEstimator:
             model = dataset.model
 
         self.model = ScaleModel(model)
-        self.model.parameters["norm"].min = 0
+        self.model.norm.min = 0
 
         if norm_values is None:
             norm_values = np.logspace(
@@ -956,13 +956,14 @@ class FluxPointsEstimator:
             result.update(self.estimate_norm_errn_errp())
 
         if "ul" in steps:
-            result.update(self.estimate_norm_ul())
+            result.update(self.estimate_norm_ul(result))
 
         if "ts" in steps:
             result.update(self.estimate_norm_ts())
 
         if "norm-scan" in steps:
             result.update(self.estimate_norm_scan())
+
 
         return result
 
@@ -974,7 +975,7 @@ class FluxPointsEstimator:
         result : dict
             Dict with asymmetric errors for the flux point norm.
         """
-        result = self.fit.confidence(parameter="norm", sigma=self.sigma)
+        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma)
         return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
 
     def estimate_norm_err(self):
@@ -986,10 +987,10 @@ class FluxPointsEstimator:
             Dict with symmetric error for the flux point norm.
         """
         result = self.fit.covariance()
-        norm_err = result.parameters.error("norm")
+        norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
 
-    def estimate_norm_ul(self):
+    def estimate_norm_ul(self, result):
         """Estimate upper limit for a flux point.
 
         Returns
@@ -997,8 +998,8 @@ class FluxPointsEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
-        norm = self.model.parameters["norm"].value
-        result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
+        norm = self.model.norm.value
+        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma_ul)
         return {"norm_ul": result["errp"] + norm}
 
     def estimate_norm_ts(self):
@@ -1028,7 +1029,7 @@ class FluxPointsEstimator:
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        result = self.fit.likelihood_profile("norm", values=self.norm_values, reoptimize=self.reoptimize)
+        result = self.fit.likelihood_profile(self.model.norm, values=self.norm_values, reoptimize=self.reoptimize)
         dloglike_scan = result["likelihood"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
@@ -1047,7 +1048,7 @@ class FluxPointsEstimator:
         result = self.fit.optimize()
 
         if result.success:
-            norm = result.parameters["norm"].value
+            norm = self.model.norm.value
         else:
             norm = np.nan
 
