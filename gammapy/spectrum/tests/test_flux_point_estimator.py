@@ -36,7 +36,7 @@ def create_fpe(model):
     dataset = simulate_spectrum_dataset(model)
     e_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.model = model
-    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3)
+    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11)
 
 
 def simulate_map_dataset():
@@ -97,15 +97,15 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.067454, 0.061646, 0.188288], rtol=1e-5)
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-5)
+        assert_allclose(actual, [1.219995, 1.037478, 1.321045], rtol=1e-5)
 
         actual = fp.table["sqrt_ts"].data
         assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-5)
 
-        actual = fp.table["norm_scan"][0]
+        actual = fp.table["norm_scan"][0][[0, 5, -1]]
         assert_allclose(actual, [0.2, 1, 5], rtol=1e-5)
 
-        actual = fp.table["dloglike_scan"][0]
+        actual = fp.table["dloglike_scan"][0][[0, 5, -1]]
         assert_allclose(actual, [220.368653, 4.301011, 1881.626454], rtol=1e-5)
 
     @staticmethod

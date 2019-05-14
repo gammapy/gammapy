@@ -2,6 +2,7 @@
 import logging
 from collections import OrderedDict
 import numpy as np
+from scipy.optimize import brentq
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
@@ -57,7 +58,7 @@ DEFAULT_UNIT = OrderedDict(
 )
 
 
-def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
+def _interp_likelihood_profile(norm_scan, dloglike_scan):
     """Helper function to interpolate likelihood profiles"""
     # likelihood profiles are typically of parabolic shape, so we use a
     # sqrt scaling of the values and perform linear interpolation on the scaled
@@ -66,7 +67,22 @@ def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
     interp = ScaledRegularGridInterpolator(
         points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
     )
-    return interp((norm,))
+    return interp
+
+
+def compute_ul_scipy(norm_scan, dloglike_scan, sigma=2):
+    """Compute UL from likelihood profile"""
+    interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+    delta_ts = sigma ** 2
+
+    def f(x):
+        return interp((x,)) - delta_ts
+
+    idx = np.argmin(dloglike_scan)
+    norm_best_fit = norm_scan[idx]
+    ul = brentq(f, a=norm_best_fit, b=norm_scan[-1])
+
+    return ul
 
 
 class FluxPoints:
@@ -717,7 +733,8 @@ class FluxPoints:
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             dloglike_scan = row["dloglike_scan"] - row["loglike"]
-            z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
+            interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+            z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
@@ -955,15 +972,14 @@ class FluxPointsEstimator:
         if "errp-errn" in steps:
             result.update(self.estimate_norm_errn_errp())
 
-        if "ul" in steps:
-            result.update(self.estimate_norm_ul(result))
-
         if "ts" in steps:
             result.update(self.estimate_norm_ts())
 
         if "norm-scan" in steps:
             result.update(self.estimate_norm_scan())
 
+        if "ul" in steps:
+            result.update(self.estimate_norm_ul(result))
 
         return result
 
@@ -998,9 +1014,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
-        norm = self.model.norm.value
-        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma_ul)
-        return {"norm_ul": result["errp"] + norm}
+        dloglike_scan = result["dloglike_scan"] - result["loglike"]
+        norm_ul = compute_ul_scipy(result["norm_scan"], dloglike_scan, sigma=self.sigma_ul)
+        return {"norm_ul": norm_ul}
 
     def estimate_norm_ts(self):
         """Estimate ts and sqrt(ts) for the flux point.
