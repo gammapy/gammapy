@@ -460,11 +460,11 @@ class LightCurveEstimator:
         off = self.off_evt_list[t_index]
         on = self.on_evt_list[t_index]
         # introduce the e_reco binning here
-        e_reco = spec.e_reco
+        e_reco = spec.counts_on.energy.edges
         if energy_range is not None:
-            emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
+            emin = e_reco[e_reco.searchsorted(max(spec.counts_on.lo_threshold, energy_range[0]))]
             emax = e_reco[
-                e_reco.searchsorted(min(spec.hi_threshold, energy_range[1])) - 1
+                e_reco.searchsorted(min(spec.counts_on.hi_threshold, energy_range[1])) - 1
             ]
             # filter the event list with energy
             on = on.select_energy([emin, emax])
@@ -808,8 +808,8 @@ class LightCurveEstimator:
             e_idx = np.where(
                 np.logical_and.reduce(
                     (
-                        e_reco >= spec.lo_threshold,  # threshold
-                        e_reco <= spec.hi_threshold,  # threshold
+                        e_reco >= spec.counts_on.lo_threshold,  # threshold
+                        e_reco <= spec.counts_on.hi_threshold,  # threshold
                         e_reco >= energy_range[0],  # user
                         e_reco <= energy_range[-1],
                     )  # user
