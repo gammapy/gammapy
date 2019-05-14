@@ -231,7 +231,7 @@ class SpectrumExtraction:
         self.containment = new_aeff.data.data.value / self._aeff.data.data.value
         self._aeff = new_aeff
 
-    def compute_energy_threshold(self, **kwargs):
+    def compute_energy_threshold(self, reset=False, **kwargs):
         """Compute and set the safe energy threshold for all observations.
 
         See `~gammapy.irf.compute_energy_thresholds` for full
@@ -241,10 +241,12 @@ class SpectrumExtraction:
             emin, emax = compute_energy_thresholds(obs.aeff, obs.edisp, **kwargs)
             # TODO: add proper energy range setter to SpectrumDataset
             # Is a reset required or not?
-#            obs.on_vector.reset_thresholds()
+            if reset:
+                obs.on_vector.reset_thresholds()
+                obs.off_vector.reset_thresholds()
+
             obs.on_vector.lo_threshold = emin
             obs.on_vector.hi_threshold = emax
-#            obs.off_vector.reset_thresholds()
             obs.off_vector.lo_threshold = emin
             obs.off_vector.hi_threshold = emax
 
