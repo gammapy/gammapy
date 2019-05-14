@@ -222,18 +222,29 @@ class SpectrumDatasetOnOff(Dataset):
         else:
             self.fit_mask = mask
 
-    def set_fit_energy_range(self, emin, emax):
+    def set_fit_energy_range(self, emin = None, emax = None):
         """Set the energy range for the fit.
 
         Parameters
         ----------
         emin : `~astropy.units.Quantity`
-            Minimum energy
+            Minimum energy, default is None (i.e. set to minimal energy)
         emax : `~astropy.units.Quantity`
-            Maximum energy
+            Maximum energy, default is None (i.e. set to maximal energy)
         """
         energy = self.counts_on.energy.edges
-        self.mask = (energy[:-1] >= emin) & (energy[1:] <= emax)
+
+        if emin is None:
+            mask_lo = np.ones_like(energy, dtype='bool')
+        else:
+            mask_lo = (energy[:-1] >= emin)
+
+        if emax is None:
+            mask_hi = np.ones_like(energy, dtype='bool')
+        else:
+            mask_hi = (energy[1:] <= emax)
+
+        self.mask = mask_lo & mask_hi
 
     @property
     def alpha(self):

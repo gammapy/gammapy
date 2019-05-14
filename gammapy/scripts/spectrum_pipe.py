@@ -112,10 +112,12 @@ class SpectrumAnalysisIACT:
     def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
         fit_range = self.config["fit"].get("fit_range")
+        model = self.config["fit"]["model"]
 
-        if fit_range is not None:
-            for obs in self.extraction.spectrum_observations:
+        for obs in self.extraction.spectrum_observations:
+            if fit_range is not None:
                 obs.set_fit_energy_range(fit_range[0], fit_range[1])
+            obs.model = model
 
         self.fit = Fit(self.extraction.spectrum_observations)
         self.fit_result = self.fit.run(optimize_opts=optimize_opts)
@@ -131,7 +133,7 @@ class SpectrumAnalysisIACT:
 
         self.write(filename=filename)
 
-        datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()
+        datasets_fp = self.extraction.spectrum_observations
 
         for dataset in datasets_fp.datasets:
             dataset.model = model
