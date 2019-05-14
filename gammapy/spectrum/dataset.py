@@ -211,19 +211,29 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def mask(self):
         """The mask defined by the counts_on PHACountsSpectrum"""
-        return self.counts_on.quality == 0
+        return self.counts_on.quality == 0 & self.fit_mask
 
     @mask.setter
     def mask(self, mask):
-        if mask is not None:
-            if mask.dtype != np.dtype("bool"):
-                raise ValueError("mask data must have dtype bool")
-            else:
-                self.counts_on.reset_thresholds()
-                idx = np.where(~mask)[0]
-                self.counts_on.quality[idx]=1
+        if mask is None:
+            mask = np.ones_like(self.counts_on.quality, dtype='bool')
+        if mask.dtype != np.dtype("bool"):
+            raise ValueError("mask data must have dtype bool")
         else:
-            self.counts_on.reset_thresholds()
+            self.fit_mask = mask
+
+    def set_fit_energy_range(self, emin, emax):
+        """Set the energy range for the fit.
+
+        Parameters
+        ----------
+        emin : `~astropy.units.Quantity`
+            Minimum energy
+        emax : `~astropy.units.Quantity`
+            Maximum energy
+        """
+        energy = self.counts_on.energy.edges
+        self.mask = (energy[:-1] >= emin) & (energy[1:] <= emax)
 
     @property
     def alpha(self):
