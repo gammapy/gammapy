@@ -303,8 +303,8 @@ class TestSpectralFit:
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
-        obs2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
+        obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
+        obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
         self.pwl = PowerLaw(

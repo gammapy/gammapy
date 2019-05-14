@@ -139,11 +139,12 @@ class SpectrumExtraction:
             livetime=self._on_vector.livetime
         )
 
-        # TODO: this must be properly adapted to Dataset
         if self.use_recommended_erange:
             try:
-                spectrum_observation.hi_threshold = observation.aeff.high_threshold
-                spectrum_observation.lo_threshold = observation.aeff.low_threshold
+                spectrum_observation.counts_on.hi_threshold = observation.aeff.high_threshold
+                spectrum_observation.counts_off.hi_threshold = observation.aeff.high_threshold
+                spectrum_observation.counts_on.lo_threshold = observation.aeff.low_threshold
+                spectrum_observation.counts_off.lo_threshold = observation.aeff.low_threshold
             except KeyError:
                 log.warning("No thresholds defined for obs {}".format(observation))
 
@@ -247,7 +248,7 @@ class SpectrumExtraction:
         """
         for obs in self.spectrum_observations:
             emin, emax = compute_energy_thresholds(obs.aeff, obs.edisp, **kwargs)
-            # TODO: add proper energy range setter to SpectrumDataset
+            # TODO: add proper energy range setter to SpectrumDatasetOnOff
             # Is a reset required or not?
             if reset:
                 obs.on_vector.reset_thresholds()
@@ -272,14 +273,9 @@ class SpectrumExtraction:
         overwrite : bool
             Overwrite existing files?
         """
-        outdir = make_path(outdir)
-        log.info("Writing OGIP files to {}".format(outdir / ogipdir))
-        outdir.mkdir(exist_ok=True, parents=True)
         outdir = make_path(outdir / ogipdir)
+        log.info("Writing OGIP files to {}".format(outdir ))
         outdir.mkdir(exist_ok=True, parents=True)
-#        self.spectrum_observations.write(
-#            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
-#        )
         for obs in self.spectrum_observations:
             obs.to_ogip_files(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
         # TODO : add more debug plots etc. here

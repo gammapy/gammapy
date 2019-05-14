@@ -187,8 +187,6 @@ class SpectrumDatasetOnOff(Dataset):
         aeff=None,
         edisp=None,
     ):
-        if mask is not None and mask.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
 
         self.counts_on = counts_on
         self.counts_off = counts_off
@@ -211,6 +209,22 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             self.counts_off.livetime = livetime
 
+    @property
+    def mask(self):
+        """The mask defined by the counts_on PHACountsSpectrum"""
+        return self.counts_on.quality == 0
+
+    @mask.setter
+    def mask(self, mask):
+        if mask is not None:
+            if mask.dtype != np.dtype("bool"):
+                raise ValueError("mask data must have dtype bool")
+            else:
+                self.counts_on.reset_thresholds()
+                idx = np.where(~mask)[0]
+                self.counts_on.quality[idx]=1
+        else:
+            self.counts_on.reset_thresholds()
 
     @property
     def alpha(self):
@@ -306,12 +320,11 @@ class SpectrumDatasetOnOff(Dataset):
         filename : str
             OGIP PHA file to read
         """
-        observation = SpectrumObservation.read(filename)
-        return observation.to_spectrum_dataset()
+        raise NotImplementedError("To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files.")
 
     @property
     def energy_range(self):
-        """Energy range defined by the mask"""
+        """Energy range used for the fit"""
         energy = self.counts_on.energy.edges
         e_lo = energy[:-1][self.mask]
         e_hi = energy[1:][self.mask]
