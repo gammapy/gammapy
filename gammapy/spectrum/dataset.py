@@ -520,6 +520,13 @@ class SpectrumDatasetOnOff(Dataset):
             mask=mask,
             )
 
+    # TODO : do we keep this or should this become the Dataset name
+    # This was imported and adapted from the SpectrumObservation class
+    @property
+    def obs_id(self):
+        """The observation ID of the dataset"""
+        return self.counts_on.obs_id
+
     # TODO : do we keep SpectrumStats or do we adapt this part of code?
     # This was imported and adapted from the SpectrumObservation class
     @property
@@ -559,7 +566,7 @@ class SpectrumDatasetOnOff(Dataset):
                 n_off=n_off,
                 a_on=self.counts_on._backscal_array[ii],
                 a_off=a_off,
-                obs_id=self.counts_on.obs_id,
+                obs_id=self.obs_id,
                 livetime=self.livetime,
             )
             stats_list.append(stat)
