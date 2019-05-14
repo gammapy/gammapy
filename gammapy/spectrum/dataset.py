@@ -2,7 +2,6 @@
 import numpy as np
 from pathlib import Path
 from astropy import units as u
-from .observation import SpectrumObservation
 from .utils import SpectrumEvaluator
 from ..utils.scripts import make_path
 from ..utils.fitting import Dataset, Parameters
