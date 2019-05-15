@@ -116,6 +116,7 @@ def test_sky_ellipse():
 
 
 def test_sky_ellipse_edge():
+    pytest.importorskip("astropy", minversion="3.1.1")
     r_0 = 2 * u.deg
     model = SkyEllipse(lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, theta="0 deg")
     value_center = model(0 * u.deg, 0 * u.deg)
