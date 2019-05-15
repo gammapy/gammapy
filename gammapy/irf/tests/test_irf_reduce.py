@@ -9,8 +9,10 @@ from ..irf_reduce import (
     make_mean_psf,
     make_mean_edisp,
     apply_containment_fraction,
+    compute_energy_thresholds,
 )
 from ..effective_area import EffectiveAreaTable
+from ..energy_dispersion import EnergyDispersion
 from ..psf_table import EnergyDependentTablePSF, TablePSF
 from ...data import DataStore, Observations
 from ...utils.testing import requires_data, assert_quantity_allclose
@@ -165,3 +167,52 @@ def test_apply_containment_fraction():
 
     assert_allclose(new_aeff.data.data.value, 1.0, rtol=5e-4)
     assert new_aeff.data.data.unit == "m2"
+
+@requires_data("gammapy-data")
+def test_compute_thresholds_from_crab_data():
+    """Obs read from file"""
+    arffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/arf_obs23523.fits"
+    rmffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/rmf_obs23523.fits"
+
+    aeff = EffectiveAreaTable.read(arffile)
+    edisp = EnergyDispersion.read(rmffile)
+
+    thresh_lo, thresh_hi = compute_energy_thresholds(
+                aeff=aeff,
+                edisp=edisp,
+                method_lo="energy_bias",
+                method_hi="none",
+                bias_percent_lo=10,
+                bias_percent_hi=10,
+    )
+
+    assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
+    assert_allclose(thresh_hi.to("TeV").value, 100., rtol=1e-4)
+
+def test_compute_thresholds_from_parametrization():
+    energy = np.logspace(-2, 2., 100) * u.TeV
+    aeff = EffectiveAreaTable.from_parametrization(energy=energy)
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
+
+    thresh_lo, thresh_hi = compute_energy_thresholds(
+            aeff=aeff,
+            edisp=edisp,
+            method_lo="area_max",
+            method_hi="area_max",
+            area_percent_lo=10,
+            area_percent_hi=90,
+        )
+
+    assert_allclose(thresh_lo.to("TeV").value, 0.18557, rtol=1e-4)
+    assert_allclose(thresh_hi.to("TeV").value, 43.818, rtol=1e-4)
+
+    thresh_lo, thresh_hi = compute_energy_thresholds(
+            aeff=aeff,
+            edisp=edisp,
+            method_lo="area_max",
+            method_hi="area_max",
+            area_percent_lo=10,
+            area_percent_hi=70,
+        )
+
+    assert_allclose(thresh_hi.to("TeV").value, 100., rtol=1e-4)
