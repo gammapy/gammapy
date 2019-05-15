@@ -66,6 +66,13 @@ def fpe_map_pwl():
 
 
 @pytest.fixture(scope="session")
+def fpe_map_pwl_reoptimize():
+    dataset = simulate_map_dataset()
+    e_edges = [1, 10] * u.TeV
+    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_values=[1], reoptimize=True, source="source")
+
+
+@pytest.fixture(scope="session")
 def fpe_pwl():
     return create_fpe(PowerLaw())
 
@@ -134,3 +141,23 @@ class TestFluxPointsEstimator:
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
         assert_allclose(actual, [1.536460e+02, 8.756689e-02, 1.883420e+03], rtol=1e-3)
+
+    @staticmethod
+    @requires_dependency("iminuit")
+    def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
+        fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
+
+        actual = fp.table["norm"].data
+        assert_allclose(actual, 0.882532, rtol=1e-3)
+
+        actual = fp.table["norm_err"].data
+        assert_allclose(actual, 0.057878, rtol=1e-3)
+
+        actual = fp.table["sqrt_ts"].data
+        assert_allclose(actual, 26.580089, rtol=1e-3)
+
+        actual = fp.table["norm_scan"][0]
+        assert_allclose(actual, 1, rtol=1e-3)
+
+        actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
+        assert_allclose(actual, 3.847814, rtol=1e-3)
