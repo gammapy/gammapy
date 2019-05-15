@@ -209,9 +209,7 @@ def test_compute_thresholds_from_parametrization():
     thresh_lo, thresh_hi = compute_energy_thresholds(
             aeff=aeff,
             edisp=edisp,
-            method_lo="area_max",
             method_hi="area_max",
-            area_percent_lo=10,
             area_percent_hi=70,
         )
 
