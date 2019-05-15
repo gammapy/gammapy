@@ -7,7 +7,6 @@ from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
 from ...utils.fitting import Parameter, Model
 from ...maps import Map
 from scipy.integrate import quad
-from scipy.special import erf
 
 
 __all__ = [
@@ -23,6 +22,11 @@ __all__ = [
 
 
 log = logging.getLogger(__name__)
+
+
+def smooth_edge(x, width):
+    value = (x / width).to_value("")
+    return 0.5 - np.clip(value, -0.5, 0.5)
 
 
 class SkySpatialModel(Model):
@@ -189,7 +193,7 @@ class SkyDisk(SkySpatialModel):
                     0 & \text{for } \theta > r_0
                 \end{cases}
 
-    where :math:`\theta` is the sky separation
+    where :math:`\theta` is the sky separation.
 
     Parameters
     ----------
@@ -238,7 +242,7 @@ class SkyDisk(SkySpatialModel):
         # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
         norm = 1.0 / (2 * np.pi * (1 - np.cos(r_0)))
 
-        in_disk = 0.5 * (1 - erf(((sep - r_0) / edge).to_value("")))
+        in_disk = smooth_edge(sep - r_0, edge)
         return u.Quantity(norm.value * in_disk, "sr-1", copy=False)
 
 
@@ -376,7 +380,7 @@ class SkyEllipse(SkySpatialModel):
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
 
-        in_ellipse = 0.5 * (1 - erf(((sep_1 + sep_2 - 2 * semi_major) / edge).to_value("")))
+        in_ellipse = smooth_edge(sep_1 + sep_2 - 2 * semi_major, edge)
 
         norm = SkyEllipse.compute_norm(semi_major, e)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
