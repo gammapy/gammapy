@@ -137,7 +137,8 @@ class SpectrumAnalysisIACT:
         obs_stacker = SpectrumDatasetOnOffStacker(self.extraction.spectrum_observations)
         obs_stacker.run()
 
-        datasets_fp = obs_stacker.stacked_obs 
+        datasets_fp = obs_stacker.stacked_obs
+        datasets_fp.model = model
         self.flux_point_estimator = FluxPointsEstimator(
             e_edges=self.config["fp_binning"],
             datasets=datasets_fp,
