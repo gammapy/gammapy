@@ -195,7 +195,7 @@ class TestSpectralFit:
         logging.getLogger("sherpa").setLevel("ERROR")
 
         for obs in self.obs_list:
-            obs.to_ogip_files(tmpdir, use_sherpa=True)
+            obs.to_ogip_files(str(tmpdir), use_sherpa=True)
         filename = tmpdir / "pha_obs23523.fits"
         sau.load_pha(str(filename))
         sau.set_stat("wstat")
