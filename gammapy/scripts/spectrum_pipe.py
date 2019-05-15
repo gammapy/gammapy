@@ -4,7 +4,7 @@ import yaml
 from ..utils.scripts import make_path
 from ..utils.fitting import Fit
 from ..spectrum import (
-    FluxPointEstimator,
+    FluxPointsEstimator,
     FluxPointsDataset,
     SpectrumExtraction,
 )
@@ -127,12 +127,13 @@ class SpectrumAnalysisIACT:
 
         self.write(filename=filename)
 
-        stacked_obs = self.extraction.spectrum_observations.stack()
-
         datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()
-        self.flux_point_estimator = FluxPointEstimator(
+
+        for dataset in datasets_fp.datasets:
+            dataset.model = model
+
+        self.flux_point_estimator = FluxPointsEstimator(
             e_edges=self.config["fp_binning"],
-            model=model,
             datasets=datasets_fp,
         )
         fp = self.flux_point_estimator.run()

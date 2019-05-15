@@ -2,6 +2,7 @@
 import logging
 from collections import OrderedDict
 import numpy as np
+from scipy.optimize import brentq
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
@@ -12,7 +13,7 @@ from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
 
-__all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointsDataset"]
+__all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ DEFAULT_UNIT = OrderedDict(
 )
 
 
-def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
+def _interp_likelihood_profile(norm_scan, dloglike_scan):
     """Helper function to interpolate likelihood profiles"""
     # likelihood profiles are typically of parabolic shape, so we use a
     # sqrt scaling of the values and perform linear interpolation on the scaled
@@ -66,7 +67,22 @@ def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
     interp = ScaledRegularGridInterpolator(
         points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
     )
-    return interp((norm,))
+    return interp
+
+
+def compute_ul_scipy(norm_scan, dloglike_scan, sigma=2):
+    """Compute UL from likelihood profile"""
+    interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+    delta_ts = sigma ** 2
+
+    def f(x):
+        return interp((x,)) - delta_ts
+
+    idx = np.argmin(dloglike_scan)
+    norm_best_fit = norm_scan[idx]
+    ul = brentq(f, a=norm_best_fit, b=norm_scan[-1])
+
+    return ul
 
 
 class FluxPoints:
@@ -717,7 +733,8 @@ class FluxPoints:
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             dloglike_scan = row["dloglike_scan"] - row["loglike"]
-            z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
+            interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+            z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
@@ -740,8 +757,8 @@ class FluxPoints:
         return ax
 
 
-class FluxPointEstimator:
-    """Flux point estimator.
+class FluxPointsEstimator:
+    """Flux points estimator.
 
     Estimates flux points for a given list of spectral datasets, energies and
     spectral model.
@@ -764,8 +781,8 @@ class FluxPointEstimator:
         Spectrum datasets.
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    model : `~gammapy.spectrum.models.SpectralModel`
-        Global best fit model.
+    source : str
+        For which source in the model to compute the flux points.
     norm_min : float
         Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
@@ -778,19 +795,22 @@ class FluxPointEstimator:
         Sigma to use for asymmetric error computation.
     sigma_ul : int
         Sigma to use for upper limit computation.
+    reoptimize : bool
+        Re-optimize other free model parameters.
     """
 
     def __init__(
         self,
         datasets,
         e_edges,
-        model,
+        source="",
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
         norm_values=None,
         sigma=1,
         sigma_ul=2,
+        reoptimize=False,
     ):
         # make a copy to not modify the input datasets
         if not isinstance(datasets, Datasets):
@@ -802,12 +822,16 @@ class FluxPointEstimator:
 
         self.datasets = datasets.copy()
         self.e_edges = e_edges
-        self.model = ScaleModel(model)
-        self.model.parameters["norm"].min = 0
 
-        # set the model on all datasets
-        for dataset in self.datasets.datasets:
-            dataset.model = self.model
+        dataset = self.datasets.datasets[0]
+
+        try:
+            model = dataset.model[source].spectral_model
+        except TypeError:
+            model = dataset.model
+
+        self.model = ScaleModel(model)
+        self.model.norm.min = 0
 
         if norm_values is None:
             norm_values = np.logspace(
@@ -817,6 +841,22 @@ class FluxPointEstimator:
         self.norm_values = norm_values
         self.sigma = sigma
         self.sigma_ul = sigma_ul
+        self.reoptimize = reoptimize
+        self.source = source
+
+    def _freeze_parameters(self):
+        # freeze other parameters
+        for par in self.datasets.parameters:
+            if par is not self.model.norm:
+                par.frozen = True
+
+    def _set_scale_model(self):
+        # set the model on all datasets
+        for dataset in self.datasets.datasets:
+            try:
+                dataset.model[self.source].spectral_model = self.model
+            except TypeError:
+                dataset.model = self.model
 
     @property
     def ref_model(self):
@@ -824,9 +864,12 @@ class FluxPointEstimator:
 
     @property
     def e_groups(self):
-        """"""
-        from ..maps import MapAxis
-        energy_axis = self.datasets.datasets[0].counts_on.energy
+        """Energy grouping table `~astropy.table.Table`"""
+        dataset = self.datasets.datasets[0]
+        try:
+            energy_axis = dataset.counts_on.energy
+        except AttributeError:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         return energy_axis.group_table(self.e_edges)
 
     def __str__(self):
@@ -906,6 +949,12 @@ class FluxPointEstimator:
         )
 
         self.datasets.mask = self._energy_mask(e_group)
+
+        self._set_scale_model()
+
+        if not self.reoptimize:
+            self._freeze_parameters()
+
         result.update(self.estimate_norm())
 
         if not result.pop("success"):
@@ -923,14 +972,14 @@ class FluxPointEstimator:
         if "errp-errn" in steps:
             result.update(self.estimate_norm_errn_errp())
 
-        if "ul" in steps:
-            result.update(self.estimate_norm_ul())
-
         if "ts" in steps:
             result.update(self.estimate_norm_ts())
 
         if "norm-scan" in steps:
             result.update(self.estimate_norm_scan())
+
+        if "ul" in steps:
+            result.update(self.estimate_norm_ul(result))
 
         return result
 
@@ -942,7 +991,7 @@ class FluxPointEstimator:
         result : dict
             Dict with asymmetric errors for the flux point norm.
         """
-        result = self.fit.confidence(parameter="norm", sigma=self.sigma)
+        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma)
         return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
 
     def estimate_norm_err(self):
@@ -954,10 +1003,10 @@ class FluxPointEstimator:
             Dict with symmetric error for the flux point norm.
         """
         result = self.fit.covariance()
-        norm_err = result.parameters.error("norm")
+        norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
 
-    def estimate_norm_ul(self):
+    def estimate_norm_ul(self, result):
         """Estimate upper limit for a flux point.
 
         Returns
@@ -965,9 +1014,9 @@ class FluxPointEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
-        norm = self.model.parameters["norm"].value
-        result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
-        return {"norm_ul": result["errp"] + norm}
+        dloglike_scan = result["dloglike_scan"] - result["loglike"]
+        norm_ul = compute_ul_scipy(result["norm_scan"], dloglike_scan, sigma=self.sigma_ul)
+        return {"norm_ul": norm_ul}
 
     def estimate_norm_ts(self):
         """Estimate ts and sqrt(ts) for the flux point.
@@ -996,7 +1045,7 @@ class FluxPointEstimator:
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        result = self.fit.likelihood_profile("norm", values=self.norm_values)
+        result = self.fit.likelihood_profile(self.model.norm, values=self.norm_values, reoptimize=self.reoptimize)
         dloglike_scan = result["likelihood"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
@@ -1015,7 +1064,7 @@ class FluxPointEstimator:
         result = self.fit.optimize()
 
         if result.success:
-            norm = result.parameters["norm"].value
+            norm = self.model.norm.value
         else:
             norm = np.nan
 
