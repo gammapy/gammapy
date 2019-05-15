@@ -67,7 +67,7 @@ def covariance_iminuit(minuit):
     message, success = "Hesse terminated successfully.", True
     try:
         covariance_factors = minuit.np_covariance()
-    except TypeError:
+    except (TypeError, RuntimeError):
         N = len(minuit.args)
         covariance_factors = np.nan * np.ones((N, N))
         message, success = "Hesse failed", False

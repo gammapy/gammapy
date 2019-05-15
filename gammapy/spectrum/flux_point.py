@@ -979,7 +979,14 @@ class FluxPointsEstimator:
             result.update(self.estimate_norm_scan())
 
         if "ul" in steps:
-            result.update(self.estimate_norm_ul(result))
+            try:
+                result.update(self.estimate_norm_ul(result))
+            except ValueError:
+                log.warning(
+                    "UL estimation failed for flux point between {e_min:.3f} and {e_max:.3f},"
+                    " setting NaN.".format(e_min=e_min, e_max=e_max)
+                )
+                result.update({"norm_ul": np.nan})
 
         return result
 
