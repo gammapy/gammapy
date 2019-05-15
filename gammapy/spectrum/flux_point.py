@@ -1037,6 +1037,12 @@ class FluxPointsEstimator:
 
         # store best fit amplitude, set amplitude of fit model to zero
         self.model.norm.value = 0
+        self.model.norm.frozen = True
+
+        if self.reoptimize:
+            self.fit = Fit(self.datasets)
+            result = self.fit.optimize()
+
         loglike_null = self.datasets.likelihood()
 
         # compute sqrt TS
@@ -1066,6 +1072,7 @@ class FluxPointsEstimator:
         """
         # start optimization with norm=1
         self.model.norm.value = 1.0
+        self.model.norm.frozen = False
 
         self.fit = Fit(self.datasets)
         result = self.fit.optimize()

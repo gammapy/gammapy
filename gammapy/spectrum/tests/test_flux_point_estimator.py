@@ -69,6 +69,9 @@ def fpe_map_pwl():
 def fpe_map_pwl_reoptimize():
     dataset = simulate_map_dataset()
     e_edges = [1, 10] * u.TeV
+    dataset.parameters["lon_0"].frozen = True
+    dataset.parameters["lat_0"].frozen = True
+    dataset.parameters["index"].frozen = True
     return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_values=[1], reoptimize=True, source="source")
 
 
@@ -148,16 +151,16 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, 0.882532, rtol=1e-3)
+        assert_allclose(actual, 0.884621, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.057878, rtol=1e-3)
+        assert_allclose(actual, 0.058067, rtol=1e-3)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, 26.580089, rtol=1e-3)
+        assert_allclose(actual, 23.971251, rtol=1e-3)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, 1, rtol=1e-3)
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, 3.847814, rtol=1e-3)
+        assert_allclose(actual, 3.698882, rtol=1e-3)
