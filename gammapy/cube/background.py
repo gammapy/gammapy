@@ -8,7 +8,7 @@ from ..utils.coordinates import sky_to_fov
 __all__ = ["make_map_background_irf"]
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom):
+def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     """Compute background map from background IRFs.
 
     Parameters
@@ -41,6 +41,9 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     #  the pointing might change slightly over the observation duration
 
     # Get altaz coords for map
+    if oversampling:
+        geom = geom.upsample(factor=oversampling, axis="energy")
+
     map_coord = geom.to_image().get_coord()
     sky_coord = map_coord.skycoord
 
@@ -68,7 +71,12 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
 
     d_omega = geom.solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
-    return WcsNDMap(geom, data=data)
+    bkg_map = WcsNDMap(geom, data=data)
+
+    if oversampling:
+        bkg_map = bkg_map.downsample(factor=oversampling, axis="energy")
+
+    return bkg_map
 
 
 def _fov_background_norm(acceptance_map, counts_map, exclusion_mask=None):
