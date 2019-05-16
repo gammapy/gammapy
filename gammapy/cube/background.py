@@ -25,6 +25,8 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
+    oversampling: int
+        Oversampling factor in energy, used for the background model evaluation.
 
     Returns
     -------
@@ -41,7 +43,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     #  the pointing might change slightly over the observation duration
 
     # Get altaz coords for map
-    if oversampling:
+    if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis="energy")
 
     map_coord = geom.to_image().get_coord()
@@ -73,7 +75,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     data = (bkg_de * d_omega * ontime).to_value("")
     bkg_map = WcsNDMap(geom, data=data)
 
-    if oversampling:
+    if oversampling is not None:
         bkg_map = bkg_map.downsample(factor=oversampling, axis="energy")
 
     return bkg_map
