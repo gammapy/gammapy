@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from pathlib import Path
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
@@ -266,6 +267,7 @@ class SpectrumExtraction:
         overwrite : bool
             Overwrite existing files?
         """
+        outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir = make_path(outdir / ogipdir)
         log.info("Writing OGIP files to {}".format(outdir ))
         outdir.mkdir(exist_ok=True, parents=True)

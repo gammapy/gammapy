@@ -674,8 +674,8 @@ class SpectrumDatasetOnOffStacker:
     >>> from gammapy.spectrum import SpectrumDatasetOnOffStacker
     >>> obs_list = SpectrumObservationList.read('$GAMMAPY_DATA/joint-crab/spectra/hess')
     >>> obs_stacker = SpectrumObservationStacker(obs_list)
-    >>> obs_stacker.run()
-    >>> print(obs_stacker.stacked_obs)
+    >>> stacked.obs = obs_stacker.run()
+    >>> print(stacked_obs)
     *** Observation summary report ***
     Observation Id: [23523-23592]
     Livetime: 0.879 h
@@ -712,6 +712,7 @@ class SpectrumDatasetOnOffStacker:
         self.stack_aeff()
         self.stack_edisp()
         self.stack_obs()
+        return self.stacked_obs
 
     def stack_counts_vectors(self):
         """Stack on and off vectors."""
