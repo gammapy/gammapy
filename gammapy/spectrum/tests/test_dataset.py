@@ -181,17 +181,30 @@ class TestSpectrumDatasetOnOff:
 
     @requires_dependency("matplotlib")
     def test_peek(self):
-        model = PowerLaw()
         dataset = SpectrumDatasetOnOff(
             counts_on=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
-            model=model,
             livetime=self.livetime,
             edisp=self.edisp
         )
         with mpl_plot_check():
             dataset.peek()
+
+    @requires_dependency("matplotlib")
+    def test_plot_fit(self):
+        model = PowerLaw()
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            model=model,
+            aeff=self.aeff,
+            livetime=self.livetime,
+            edisp=self.edisp
+        )
+        with mpl_plot_check():
+            dataset.plot_fit()
+
 
     def test_to_from_ogip_files(self, tmpdir):
         dataset = SpectrumDatasetOnOff(

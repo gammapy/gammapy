@@ -364,7 +364,55 @@ class SpectrumDatasetOnOff(Dataset):
         residuals = self.npred().data.data - self.excess().data.data
         return self._as_counts_spectrum(residuals)
 
-    def peek(self):
+    def peek(self, figsize=(10, 10)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+
+        ax1.set_title("Counts")
+        energy_unit = "TeV"
+        if self.counts_off is not None:
+            energy = self.counts_off.energy.edges
+            data = self.counts_off.data.data * self.alpha
+            background_vector = CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
+            background_vector.plot_hist(
+                ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
+            )
+        self.counts_on.plot_hist(
+            ax=ax1,
+            label="n_on",
+            color="darkred",
+            energy_unit=energy_unit,
+            show_energy=(self.counts_on.hi_threshold, self.counts_on.lo_threshold),
+        )
+        ax1.set_xlim(
+            0.7 * self.counts_on.lo_threshold.to_value(energy_unit),
+            1.3 * self.counts_on.hi_threshold.to_value(energy_unit),
+        )
+        ax1.legend(numpoints=1)
+
+        ax2.set_title("Effective Area")
+        e_unit = self.aeff.energy.unit
+        self.aeff.plot(ax=ax2, show_energy=(self.counts_on.hi_threshold, self.counts_on.lo_threshold))
+        ax2.set_xlim(
+            0.7 * self.counts_on.lo_threshold.to_value(e_unit),
+            1.3 * self.counts_on.hi_threshold.to_value(e_unit),
+        )
+
+        ax3.axis("off")
+        if self.counts_off is not None:
+            ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
+
+        ax4.set_title("Energy Dispersion")
+        if self.edisp is not None:
+            self.edisp.plot_matrix(ax=ax4)
+
+        # TODO: optimize layout
+        plt.subplots_adjust(wspace=0.3)
+
+
+    def plot_fit(self):
         """Plot counts and residuals in two panels.
 
         Calls ``plot_counts`` and ``plot_residuals``.
@@ -623,7 +671,7 @@ class SpectrumDatasetOnOffStacker:
 
     Examples
     --------
-    >>> from gammapy.spectrum import SpectrumObservationList, SpectrumObservationStacker
+    >>> from gammapy.spectrum import SpectrumDatasetOnOffStacker
     >>> obs_list = SpectrumObservationList.read('$GAMMAPY_DATA/joint-crab/spectra/hess')
     >>> obs_stacker = SpectrumObservationStacker(obs_list)
     >>> obs_stacker.run()
