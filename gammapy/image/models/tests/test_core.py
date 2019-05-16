@@ -65,6 +65,13 @@ def test_sky_disk_edge():
     value_edge = model(r_0, 0 * u.deg)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
 
+    edge = model.edge.quantity
+    value_edge_pwidth = model(r_0 + edge / 2, 0 * u.deg)
+    assert_allclose((value_edge_pwidth / value_center).to_value(""), 0.05)
+
+    value_edge_nwidth = model(r_0 - edge / 2, 0 * u.deg)
+    assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
+
 
 def test_sky_ellipse():
     pytest.importorskip("astropy", minversion="3.1.1")
