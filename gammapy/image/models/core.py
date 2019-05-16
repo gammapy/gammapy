@@ -7,6 +7,7 @@ from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
 from ...utils.fitting import Parameter, Model
 from ...maps import Map
 from scipy.integrate import quad
+from scipy.special import erf
 
 
 __all__ = [
@@ -23,10 +24,12 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+EDGE_WIDTH_95 = 2.326174307353347
+
 
 def smooth_edge(x, width):
     value = (x / width).to_value("")
-    return 0.5 - np.clip(value, -0.5, 0.5)
+    return 0.5 * (1 - erf(value * EDGE_WIDTH_95))
 
 
 class SkySpatialModel(Model):
@@ -193,7 +196,8 @@ class SkyDisk(SkySpatialModel):
                     0 & \text{for } \theta > r_0
                 \end{cases}
 
-    where :math:`\theta` is the sky separation.
+    where :math:`\theta` is the sky separation. To improve fit convergence of the
+    model, the sharp edges is smoothed using `~scipy.special.erf`.
 
     Parameters
     ----------
@@ -204,7 +208,8 @@ class SkyDisk(SkySpatialModel):
     r_0 : `~astropy.coordinates.Angle`
         :math:`r_0`
     edge : `~astropy.coordinates.Angle`
-        Width of the edge.
+        Width of the edge. The width is defined as the range within the
+        smooth edges of the model drops from 95% to 5% of its amplitude.
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
     """
@@ -282,7 +287,8 @@ class SkyEllipse(SkySpatialModel):
         Rotation angle of the major semiaxis.  The rotation angle increases clockwise
         (i.e., East of North) from the positive `lon` axis.
     edge : `~astropy.coordinates.Angle`
-        Width of the edge.
+        Width of the edge. The width is defined as the range within the
+        smooth edges of the model drops from 95% to 5% of its amplitude.
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
 
