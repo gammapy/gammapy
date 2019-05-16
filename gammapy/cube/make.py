@@ -282,7 +282,7 @@ class MapMakerObs:
             ontime=self.observation.observation_time_duration,
             bkg=self.observation.bkg,
             geom=self.geom,
-            background_oversampling=self.background_oversampling
+            oversampling=self.background_oversampling
         )
         if self.fov_mask is not None:
             background.data[..., self.fov_mask] = 0
