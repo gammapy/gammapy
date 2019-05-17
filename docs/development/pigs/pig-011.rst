@@ -1,16 +1,16 @@
 .. include:: ../../references.txt
 
-.. _pig-xxx:
+.. _pig-011:
 
-**************************************************
-PIG X - PIG Improvement for Computing Light Curves
-**************************************************
+*********************
+PIG 11 - Light curves
+*********************
 
-* Author: David Fidalgo, ...
-* Created: July 02, 2018
+* Author: Christoph Deil, Régis Terrier, Axel Donath, David Fidalgo
+* Created: July 2, 2018
 * Accepted:
 * Status: draft
-* Discussion:
+* Discussion: `GH 1451`_
 
 Abstract
 ========
@@ -29,7 +29,6 @@ It is still under discussion if the LightCurve code should prepare new
 `gammapy.data.ObservationList` s for each light curve bin or modify a
 `~gammapy.data.GTI` table, which the background/spectrum classes would
 respect.
-
 
 Detailed Description
 ====================
@@ -173,10 +172,16 @@ A drawback of this approach would be the necessity of changes in the
 Even though i have not worked out any specifics of this approach yet, i think
 this would be a less elegant way. 
 
+Task list
+=========
+
+tbd
 
 Decision
 ========
 
+tbd
 
+.. _GH 1451: https://github.com/gammapy/gammapy/pull/1451
 .. _good time interval: http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/rates/ogip_93_003/ogip_93_003.html#tth_sEc6.3
 
