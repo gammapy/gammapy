@@ -199,6 +199,7 @@ class SkyDisk(SkySpatialModel):
     where :math:`\theta` is the sky separation. To improve fit convergence of the
     model, the sharp edges is smoothed using `~scipy.special.erf`.
 
+
     Parameters
     ----------
     lon_0 : `~astropy.coordinates.Longitude`
@@ -209,9 +210,45 @@ class SkyDisk(SkySpatialModel):
         :math:`r_0`
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
-        smooth edges of the model drops from 95% to 5% of its amplitude.
+        smooth edges of the model drops from 95% to 5% of its amplitude
+        (see illustration below).
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
+
+
+    Examples
+    --------
+    Here is an illustration of the definition of the edge parameter:
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        from astropy import units as u
+        from gammapy.image.models import SkyDisk
+
+        lons = np.linspace(0, 0.3, 500) * u.deg
+
+        r_0 = 0.2 * u.deg
+        edge = 0.1 * u.deg
+
+        disk = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0, edge=edge)
+        profile = disk(lons, 0 * u.deg)
+        plt.plot(lons, profile / profile.max(), alpha=0.5)
+        plt.xlabel("Longitude (deg)")
+        plt.ylabel("Profile (A.U.)")
+
+        edge_min, edge_max = (r_0 - edge / 2.).value, (r_0 + edge / 2.).value
+        plt.vlines([edge_min, edge_max], 0, 1, linestyles=["--"])
+        plt.annotate("", xy=(edge_min, 0.5), xytext=(edge_min + edge.value, 0.5),
+                     arrowprops=dict(arrowstyle="<->", lw=2))
+        plt.text(0.2, 0.52, "Edge width", ha="center", size=12)
+        plt.hlines([0.95], edge_min - 0.02, edge_min + 0.02, linestyles=["-"])
+        plt.text(edge_min + 0.02, 0.95, "95%", size=12, va="center")
+        plt.hlines([0.05], edge_max - 0.02, edge_max + 0.02, linestyles=["-"])
+        plt.text(edge_max - 0.02, 0.05, "5%", size=12, va="center", ha="right")
+        plt.show()
+
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "r_0"]
@@ -288,7 +325,8 @@ class SkyEllipse(SkySpatialModel):
         (i.e., East of North) from the positive `lon` axis.
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
-        smooth edges of the model drops from 95% to 5% of its amplitude.
+        smooth edges of the model drops from 95% to 5% of its amplitude
+        (see illustration for `SkyDisk`).
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
 
