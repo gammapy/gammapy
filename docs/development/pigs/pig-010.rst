@@ -9,7 +9,7 @@ PIG 10 - Regions
 * Author: Christoph Deil
 * Created: May 3, 2019
 * Status: draft
-* Discussion: `GH 2127`_
+* Discussion: `GH 2129`_
 
 Abstract
 ========
@@ -21,32 +21,106 @@ where to support both. This affects the algorithms used (e.g. for reflected
 region background estimation) and the API (where a WCS or exclusion map is
 needed in functions and methods working with regions). Also `astropy-regions`_
 was started after Gammapy - so we have some code to work with sky cones and
-boxes that partially be removed, partially refactored to use
+boxes that should partially be removed, partially refactored to use
 ``astropy-regions``. This PR lists the work to be done to get region-related
 code in shape for Gammapy v1.0, to be implemented in the coming months.
 
-Motivation
-==========
+Overview
+========
 
-tbd
+- Describe our use cases for regions
+  - Make mask from region
+  - Filter events or observation position or source catalog
+- Summarise proposal
 
 Details
 =======
 
-tbd
+This section 
 
-Work plan
-=========
+Table filter
+------------
 
-I propose to implement this PIG though a series of small pull requests,
-roughly like this:
+Currently have ``select_sky_box`` and ``select_sky_circle``
+https://github.com/gammapy/gammapy/blob/master/gammapy/catalog/utils.py
 
-- tbd
+Re-exposed on EventList and ObservationTable methods
+
+Replace with ``select_region`` or remove completely?
+
+Offer two methods to make selection masks, and also to apply the selection?
+
+Sky box
+-------
+
+TODO: aligned lon / lat sky box - needs extra region class?
+
+Spherical polygon
+-----------------
+
+One key feature that's currently still missing in ``astropy-regions`` is the
+implementation of the ``contains`` method of `regions.PolygonSkyRegion`_.
+
+This requires a spherical point in polygon algorithm, which probably is hard to
+implement. Discussion on this point is in `astropy-regions issue 46`.
+
+
+Reflected regions
+-----------------
+
+- One more the most complex pieces of code in Gammapy:
+  https://github.com/gammapy/gammapy/blob/master/gammapy/background/reflected.py
+- See https://github.com/gammapy/gammapy/pull/2089
+- What to do?
+
+Spectral regions
+----------------
+
+- Describe in this PIG or defer?
+- Currently have wild mix of ``energy_bounds`` vs ``energy_min, energy_max``
+  in the Gammapy API.
+- See `specutils`_ and `specutils.SpectralRegion`_
+
+Time regions
+------------
+
+- Describe in this PIG or defer?
+- Currently we have https://docs.gammapy.org/0.11/api/gammapy.data.GTI.html
+http://www.ivoa.net/documents/stmoc/20190515/NOTE-stmoc-1.0-20190515.pdf
+
+Masks
+-----
+
+- Use bool or int as `dtype`?
+- Define meaning of 0 and 1 (probably use as-is)
 
 Alternatives
 ============
 
-tbd
+- For spatial regions, there are other regions packages besides `astropy-regions`_,
+  and another one could be started (e.g. with more spherical regions and
+  built-in rotation somehow) or ``astropy-regions`` could be significantly
+  extended, but the motivation for that isn't clear.
+- There is the option to have spectral region or time region classes,
+  either in Gammapy or in other Astropy packages (such as specutils).
+  There could also be a generalised 
+- There is the option to wrap masks (for maps or spectra or anything)
+  in region classes, in case it is convenient to do so e.g. for API reasons.
+- Concerning the regions-related API in Gammapy there's many alternatives
+  possible, which are basically a matter of taste, i.e. whether to put more
+  stuff and more options for convenience, or a smaller and simpler API.
+  Functionality-wise all we need is there.
+
+Work plan
+=========
+
+I propose to implement this PIG though a series of small pull requests.
+
+- Implement ``regions.PolygonSkyRegion.contains`` (see details above)
+- Merge https://github.com/astropy/regions/pull/221 to make it easier to plot sky regions? Is it a good idea or will it cause problems with "real" sky regions?
+- Release regions v0.4 (Christoph, can happen any time).
+- "Finishing" regions and integrating it in Astropy core is desirable,
+  but unlikely to happen soon unless someone makes this their focus.
 
 Decision
 ========
@@ -62,3 +136,8 @@ tbd
 .. _GH 2127: https://github.com/gammapy/gammapy/pull/2127
 .. _GH 2089: https://github.com/gammapy/gammapy/pull/2089
 .. _GH 1172: https://github.com/gammapy/gammapy/issues/1172
+.. _spherical_geometry: https://github.com/spacetelescope/spherical_geometry
+.. _regions.PolygonSkyRegion: https://astropy-regions.readthedocs.io/en/latest/api/regions.PolygonSkyRegion.html
+.. _astropy-regions issue 46: https://github.com/astropy/regions/issues/46
+.. _specutils: https://specutils.readthedocs.io
+.. _specutils.SpectralRegion: https://specutils.readthedocs.io/en/latest/spectral_regions.html
