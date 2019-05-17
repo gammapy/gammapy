@@ -6,7 +6,7 @@
 PIG 10 - Regions
 ****************
 
-* Author: Christoph Deil
+* Author: Christoph Deil, Axel Donath, Régis Terrier
 * Created: May 3, 2019
 * Status: draft
 * Discussion: `GH 2129`_
@@ -34,6 +34,8 @@ addressed here.
 Introduction
 ============
 
+Pixel and sky regions. See section below: `Regions`_
+
 Spatial regions are used a lot in gamma-ray astronomy (and other domains of
 astronomy as well). Often a users chooses a region of interest, and then selects
 the observations or events or pixels for analysis. There are a few use cases to
@@ -42,16 +44,19 @@ view offset, or to compute "off" regions for background estimation for a given
 "on" region.
 
 However, the places where regions appear in the Gammapy code and API are very
-few and overall region handling is pretty simple. The reason for this is that
-Gammapy is mostly a binned analysis framework, so mainly regions are used to
-create masks, via the existing `gammapy.maps.WcsGeom.region_mask`_ method, and
-then only the pixel mask is used.
+few and overall region handling is pretty simple.
 
-The second place where regions appear is to select objects of interest for a
-given region. 
+The reason for this is that Gammapy is mostly a binned analysis framework, so
+mainly regions are used to create pixel masks, and then the analysis is
+mask-based, not involving region objects any more. See section below: `Masks`_.
+
+The second place where regions appear is to select objects of interest (events,
+observations, sources) for a given region. See section below: `Tables`_.
 
 Finally, reflected regions and PSF correction in 1D spectral analysis.
+See section below: `Rotated regions`_
 
+See section below: `Region strings`_
 
 Proposal
 ========
@@ -59,10 +64,62 @@ Proposal
 This section contains a detailed proposal concerning region-related code in
 Gammapy. The `Task list`_ at the end of this PIG references these descriptions.
 
-See :ref:`Task list`
+Regions
+-------
 
-Table filter
-------------
+One key feature that's currently still missing in ``astropy-regions`` is the
+implementation of the ``contains`` method of `regions.PolygonSkyRegion`_.
+
+This requires a spherical point in polygon algorithm, which probably is hard to
+implement. Discussion on this point is in `astropy-regions GH 46`_.
+
+- Implement ``regions.CircleSkyRegion.contains`` (see above)
+- Implement ``regions.PolygonSkyRegion.contains``, also use for rectangle? (see TODO)
+
+Merge `astropy-regions GH 221` to make it easier to plot sky regions? Is it a good idea or will it cause problems with "real" sky regions?
+
+Masks
+-----
+
+, via the existing
+`gammapy.maps.WcsGeom.region_mask`_ method, and then only the pixel mask is
+used.
+
+- Use bool or int as `dtype`?
+- Define meaning of 0 and 1 (probably use as-is)
+
+Sometimes binary masks are not enough. E.g. in ``scikit-image`` or
+``scipy.ndimage`` often "label images" are used, in cases where there are more
+than two disjoint regions ("in" and "out" as in a binary mask), e.g. 
+
+Image analysis
+--------------
+
+In `gammapy.image`_ there's currently a convenience functions and classes for 2D
+image analysis that aren't used anywhere in Gammapy. They could be removed,
+replaced with an example notebook how to do region-based with ``scipy.ndimage``
+and ``scikit-image`` and `photutils`_.
+
+Some are region-related, e.g. these:
+
+- https://docs.gammapy.org/0.11/api/gammapy.image.measure_containment.html
+- https://docs.gammapy.org/0.11/api/gammapy.image.ImageProfileEstimator.html
+- https://docs.gammapy.org/0.11/api/gammapy.image.ImageProfile.html
+
+Another commonly needed feature in gamma-ray astronomy is radial profiles:
+https://github.com/gammapy/gammapy/pull/2129#issuecomment-493415766
+Actually we had those at one point in Gammapy:
+https://github.com/gammapy/gammapy/blob/v0.7/gammapy/image/radial_profile.py
+
+TODO: discuss what to keep and write it down here.
+
+Christoph: I'd prefer to replace most of ``gammapy.image`` with documentation.
+This is stuff users can script with a few lines, and trying to pre-script it in
+Gammapy to be useful to many users is very hard. We're not doing users or us a
+favour to keep this in Gammapy at this point.
+
+Tables
+------
 
 Currently we have as examples `gammapy.data.EventList`_,
 `gammapy.data.ObservationTable`_ and `gammapy.catalog.SourceCatalog`_ which each
@@ -77,21 +134,7 @@ Replace with ``select_region`` or remove completely?
 
 Offer two methods to make selection masks, and also to apply the selection?
 
-Sky box
--------
-
 TODO: aligned lon / lat sky box - needs extra region class?
-
-Spherical polygon
------------------
-
-One key feature that's currently still missing in ``astropy-regions`` is the
-implementation of the ``contains`` method of `regions.PolygonSkyRegion`_.
-
-This requires a spherical point in polygon algorithm, which probably is hard to
-implement. Discussion on this point is in `astropy-regions GH 46`_.
-
-.. _pig-010_rotate:
 
 Rotated regions
 ---------------
@@ -104,16 +147,6 @@ Rotated regions
 Rotate for polygons was already implemented (see `astropy-regions GH 91`_),
 still there, even though it's currently unused.
 
-Masks
------
-
-- Use bool or int as `dtype`?
-- Define meaning of 0 and 1 (probably use as-is)
-
-Sometimes binary masks are not enough. E.g. in ``scikit-image`` or
-``scipy.ndimage`` often "label images" are used, in cases where there are more
-than two disjoint regions ("in" and "out" as in a binary mask), e.g. 
-
 Region strings
 --------------
 
@@ -121,8 +154,8 @@ TODO: describe possible support for region strings as input instead of as
 output. Will be required if we start storing regions in ``meta`` dicts of
 objects that we want to serialise, if we want a simple serialisation.
 
-Non-spatial regions
--------------------
+Outlook
+=======
 
 This PIG only describes some short-term improvements to spatial regions.
 Long-term, we might want to develop a more general solution for regions that
@@ -146,22 +179,37 @@ or if there are any use cases to couple time with the spatial and spectral
 regions, e.g. for a time-dependent safe energy threshold or user analysis
 option.
 
+These thoughts are related to the question in `GH 1805`_: "Introduce RegionGeom
+and RegionNDMap?" - Axel: do you want this for v1.0 or postpone? If v1.0, then
+do you want to flesh out a proposal here and now, or later in a separate PIG?
+
+In the HESS software, there is a region class that wraps a mask, and that is
+sometimes useful, specifically because in the HESS software exclusion regions
+are region objects, sometimes compound with a mask region and other regions like
+circles. It's clearly an option, easy to implement as a ``SkyRegion`` sub-class.
+But also causes problems, especially when it comes to serialisation. Thoughts?
+I'm OK to not add this for now, and just use ``Map`` objects for exclusion
+masks, and require that users create that before using Gammapy, in case they
+e.g. have a list of circles or whatever they want to use as exclusion region.
+
 Alternatives
 ============
 
-- For spatial regions, there are other regions packages besides `astropy-regions`_,
-  and another one could be started (e.g. with more spherical regions and
-  built-in rotation somehow) or ``astropy-regions`` could be significantly
-  extended, but the motivation for that isn't clear.
-- There is the option to have spectral region or time region classes,
-  either in Gammapy or in other Astropy packages (such as specutils).
-  There could also be a generalised 
-- There is the option to wrap masks (for maps or spectra or anything)
-  in region classes, in case it is convenient to do so e.g. for API reasons.
-- Concerning the regions-related API in Gammapy there's many alternatives
-  possible, which are basically a matter of taste, i.e. whether to put more
-  stuff and more options for convenience, or a smaller and simpler API.
-  Functionality-wise all we need is there.
+As mentioned in the abstract, the proposal to continue with `astropy-regions`_
+roughly as proposed here is probalby not controversial.
+
+As mentioned in the `Outlook`_, in the future we might want a more general
+solution, and there's the question whether a mask-backed region should be added.
+
+As mentioned in `Regions`_, there are a few options to define the semantics for
+contains and plot.
+
+As mentioned in `Rotated regions`_, an alternative could be to use sky regions
+instead of pixel regions, and to restrict to the sky regions that can be
+rotated, possibly polygonising others.
+
+As mentioned in `Tables`_, those methods aren't really needed, they are just a
+small convenience. If we prefer a smaller API, we could just delete them.
 
 Task list
 =========
@@ -170,42 +218,58 @@ I propose to implement this PIG though a series of small pull requests. Some are
 dependent on others, but for many also the order doesn't matter and overall the
 amount of work is limited.
 
-In ``astropy-regions``
-----------------------
+In astropy-regions
+------------------
 
-- Implement ``Pix.rotate(center, angle)`` in ``astropy-regions`` (see :ref:`pig-010_rotate`)
-- Implement ``regions.CircleSkyRegion.contains`` (see above)
-- Implement ``regions.PolygonSkyRegion.contains``, also use for rectangle? (see TODO)
-- Merge https://github.com/astropy/regions/pull/221 to make it easier to plot sky regions? Is it a good idea or will it cause problems with "real" sky regions?
-- Release regions v0.4 (we can do this whenever ready / as needed).
-- "Finishing" regions and integrating it in Astropy core is desirable,
-  but unlikely to happen soon unless someone makes this their focus.
+- Implement ``SkyRegion.contains(point)`` (see `Regions`_ above)
+- Implement ``SkyRegion.plot`` (see `Regions`_ above)
+- Implement ``PixRegion.rotate(center, angle)`` (see `Rotated regions`_ above)
+- Implement Region from string in ``astropy-regions`` or in Gammapy? (see `Region strings`_ above)
+- Remove unused dependency ``astropy-healpix`` in ``astropy-regions`` (TODO: add link to PR)
+- Release regions v0.4 as soon as this is done
+
+It's not clear when ``astropy-regions`` will land in Astropy core. For now,
+Gammapy would rely on ``regions>=0.4`` as an extra Astropy affiliated package.
+This is OK, and the situation is the same with `reproject`_ and also soon with
+`astropy-healpix`_ (see `GH 1167`_). We should continue to contribute to these
+three projects until they are complete and help get them in Astropy core some
+day.
 
 In Gammapy
 ----------
 
-- Replace sky circle and box select functions with generic region select (see TODO)
-- Try to merge `GH 2089`_, or close if it becomes too hard (see TODO)
-- Resolve `GH 1172`_
-- Require ``astropy-regions>=0.4`` and simplify ``reflected.py`` to use ``region.rotate``
-- Add support for region input as strings in Gammapy methods (see TODO)
-
+- Replace sky circle and box select with generic region select (see `Tables`_, resolves `GH 1172`_)
+- Try to finish and merge `GH 2089`_ (should fix `GH 2068`_) for v0.12?
+  Or abandon and close, and re-start with regions v0.4 (see `Rotated regions`_)?
+- When regions v0.4 is available: simplify ``reflected.py`` to use ``region.rotate`` (see `Rotated regions`_)
+- Add support for region input as strings in Gammapy methods? (see `Region strings`_)
 - Review and improve region-related tests, especially for complicated edge lon = 0 / 360 and the poles.
 - Review and improve region-related end-user docs. Possibly a dedicated notebook, maybe spread around.
 
+In the future we probably want to use region objects within the Gammapy data
+analysis more heavily. This could happen before v1.0 or after. There are some
+thoughts in `Region strings`_ and `Outlook`_ above, but working out a detailed
+solution is not in scope for this PIG.
+
+TODO: what about those? Need to be done for v1.0 or postpone?
+
+- "Support region_mask for multi-resolution maps" (`GH 1715`_)
+- "HPX up/down sample issue with partial skymaps" (`GH 1445`_)
+- "Introduce RegionGeom and RegionNDMap?" (`GH 1805`_)
 
 Decision
 ========
 
-I suggest we merge this PR soon, once the questions of what we want in v1.0 are
-resolved. The purpose of this PIG is to get a good and agreed solution and to
-make it clear what work is needed. Leaving the PR / PIG decision open doesn't
-help.
-
 tbd
+
+(This PIG describes the region-related design and planned work. I suggest we
+merge it soon as "the plan", leaving devs to work on the actual code and
+documentation. I think that's more useful than to keep the PIG open while this
+work is ongoing.)
 
 .. These explicit URLs to Gammapy classes are to avoid possible future breakage of
 .. the links in the PIG if those classes are removed or changed:
+
 .. _gammapy.data.GTI: https://docs.gammapy.org/0.11/api/gammapy.data.GTI.html
 .. _gammapy.maps.WcsGeom.region_mask: https://docs.gammapy.org/0.11/api/gammapy.maps.WcsGeom.html#gammapy.maps.WcsGeom.region_mask
 .. _gammapy.data.EventList: https://docs.gammapy.org/0.11/api/gammapy.data.EventList.html
@@ -214,8 +278,12 @@ tbd
 .. _select_sky_box: https://docs.gammapy.org/0.11/api/gammapy.catalog.select_sky_box.html
 .. _select_sky_circle: https://docs.gammapy.org/0.11/api/gammapy.catalog.select_sky_circle.html
 .. _skycoord_from_table: https://docs.gammapy.org/0.11/api/gammapy.catalog.skycoord_from_table.html
+.. _gammapy.image: https://docs.gammapy.org/0.11/image/index.html#reference-api
 
+.. _photutils: https://photutils.readthedocs.io
 .. _astropy-regions: https://astropy-regions.readthedocs.io
+.. _reproject: https://reproject.readthedocs.io
+.. _astropy-healpix: https://astropy-healpix.readthedocs.io
 .. _spherical_geometry: https://github.com/spacetelescope/spherical_geometry
 .. _regions.PolygonSkyRegion: https://astropy-regions.readthedocs.io/en/latest/api/regions.PolygonSkyRegion.html
 .. _specutils: https://specutils.readthedocs.io
@@ -224,7 +292,13 @@ tbd
 .. _GH 2129: https://github.com/gammapy/gammapy/pull/2129
 .. _GH 2089: https://github.com/gammapy/gammapy/pull/2089
 .. _GH 1172: https://github.com/gammapy/gammapy/issues/1172
+.. _GH 1167: https://github.com/gammapy/gammapy/pull/1167
+.. _GH 1715: https://github.com/gammapy/gammapy/issues/1715
+.. _GH 2068: https://github.com/gammapy/gammapy/issues/2068
+.. _GH 1445: https://github.com/gammapy/gammapy/issues/1445
+.. _GH 1805: https://github.com/gammapy/gammapy/issues/1805
 
 .. _astropy-regions GH 46: https://github.com/astropy/regions/issues/46
 .. _astropy-regions GH 91: https://github.com/astropy/regions/pull/91
+.. _astropy-regions GH 221: https://github.com/astropy/regions/pull/221
 .. _astropy-regions GH 228: https://github.com/astropy/regions/issues/228
