@@ -386,7 +386,7 @@ class SkyEllipse(SkySpatialModel):
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
 
-        in_ellipse = smooth_edge(sep_1 + sep_2 - 2 * semi_major, edge)
+        in_ellipse = smooth_edge(sep_1 + sep_2 - 2 * semi_major, 2 * edge)
 
         norm = SkyEllipse.compute_norm(semi_major, e)
         return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
