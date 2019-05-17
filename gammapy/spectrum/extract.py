@@ -135,10 +135,8 @@ class SpectrumExtraction:
 
         if self.use_recommended_erange:
             try:
-                spectrum_observation.counts_on.hi_threshold = observation.aeff.high_threshold
-                spectrum_observation.counts_off.hi_threshold = observation.aeff.high_threshold
-                spectrum_observation.counts_on.lo_threshold = observation.aeff.low_threshold
-                spectrum_observation.counts_off.lo_threshold = observation.aeff.low_threshold
+                spectrum_observation.hi_threshold = observation.aeff.high_threshold
+                spectrum_observation.lo_threshold = observation.aeff.low_threshold
             except KeyError:
                 log.warning("No thresholds defined for obs {}".format(observation))
 
@@ -245,13 +243,10 @@ class SpectrumExtraction:
             # TODO: add proper energy range setter to SpectrumDatasetOnOff
             # Is a reset required or not?
             if reset:
-                obs.on_vector.reset_thresholds()
-                obs.off_vector.reset_thresholds()
+                obs.reset_thresholds()
 
-            obs.counts_on.lo_threshold = emin
-            obs.counts_on.hi_threshold = emax
-            obs.counts_off.lo_threshold = emin
-            obs.counts_off.hi_threshold = emax
+            obs.lo_threshold = emin
+            obs.hi_threshold = emax
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk as OGIP format.

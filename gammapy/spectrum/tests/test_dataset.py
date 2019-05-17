@@ -447,9 +447,9 @@ class TestSpectrumDatasetOnOffStacker:
         self.obs_list = _read_hess_obs()
 
         # Change threshold to make stuff more interesting
-        self.obs_list[0].counts_on.lo_threshold = 1.2 * u.TeV
-        self.obs_list[0].counts_on.hi_threshold = 50 * u.TeV
-        self.obs_list[1].counts_on.hi_threshold = 20 * u.TeV
+        self.obs_list[0].lo_threshold = 1.2 * u.TeV
+        self.obs_list[0].hi_threshold = 50 * u.TeV
+        self.obs_list[1].hi_threshold = 20 * u.TeV
         self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
         self.obs_stacker.run()
 
@@ -463,11 +463,11 @@ class TestSpectrumDatasetOnOffStacker:
         assert summed_counts == stacked_counts
 
     def test_thresholds(self):
-        energy = self.obs_stacker.stacked_obs.counts_on.lo_threshold
+        energy = self.obs_stacker.stacked_obs.lo_threshold
         assert energy.unit == "keV"
         assert_allclose(energy.value, 8.912509e08, rtol=1e-3)
 
-        energy = self.obs_stacker.stacked_obs.counts_on.hi_threshold
+        energy = self.obs_stacker.stacked_obs.hi_threshold
         assert energy.unit == "keV"
         assert_allclose(energy.value, 4.466836e10, rtol=1e-3)
 
