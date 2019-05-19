@@ -27,11 +27,11 @@ env:
         - NUMPY_VERSION=1.15
         - ASTROPY_VERSION=stable
 
-        - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit=1.3.3'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa regions reproject pandoc ipython iminuit=1.3.3'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima regions reproject pandoc ipython iminuit=1.3.3'
+        - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima regions reproject pandoc ipython iminuit'
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit=1.3.3 regions reproject pandoc ipython jupyter'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
         - PIP_DEPENDENCIES='nbsphinx sphinx-click sphinx_rtd_theme pytest-astropy'
 
