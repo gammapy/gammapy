@@ -46,8 +46,6 @@ env:
 
         - ASTROPY_USE_SYSTEM_PYTEST=1
 
-    matrix:
-        - PYTHON_VERSION=3.5 SETUP_CMD='test' FETCH_GAMMAPY_DATA=false
 
 matrix:
 
@@ -73,7 +71,8 @@ matrix:
 
         # Run tests without GAMMAPY_EXTRA available
         - os: linux
-          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.7 SETUP_CMD='test -V'
+          env: FETCH_GAMMAPY_DATA=false PYTHON_VERSION=3.7 SETUP_CMD='test -V'
+               FETCH_GAMMAPY_EXTRA=false
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Build docs
