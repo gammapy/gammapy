@@ -3,6 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from ...utils.testing import requires_data
 from ...irf import load_cta_irfs
 from ...maps import WcsGeom, MapAxis
 from ...spectrum.models import PowerLaw
@@ -12,11 +13,11 @@ from ...cube import MapDataset
 from ..simulate import simulate_dataset
 
 
+@requires_data("gammapy-data")
 def test_simulate():
-    filename = (
+    irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
-    irfs = load_cta_irfs(filename)
 
     # Define sky model to simulate the data
     spatial_model = SkyGaussian(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg")

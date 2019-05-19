@@ -16,6 +16,7 @@ def test_primary_flux():
     assert_quantity_allclose(actual, desired)
 
 
+@requires_data("gammapy-data")
 def test_DMAnnihilation():
 
     channel = "b"
