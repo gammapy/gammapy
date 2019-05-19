@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, requires_data
 from ...irf import EffectiveAreaTable, load_cta_irfs
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
@@ -40,10 +40,9 @@ def create_fpe(model):
 
 
 def simulate_map_dataset():
-    filename = (
+    irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
-    irfs = load_cta_irfs(filename)
 
     skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
     edges = np.logspace(-1, 2, 15) * u.TeV
@@ -124,9 +123,9 @@ class TestFluxPointsEstimator:
         fp = fpe_ecpl.estimate_flux_point(fpe_ecpl.e_groups[1])
         assert_allclose(fp["norm"], 1, rtol=1e-1)
 
-
     @staticmethod
     @requires_dependency("iminuit")
+    @requires_data("gammapy-data")
     def test_run_map_pwl(fpe_map_pwl):
         fp = fpe_map_pwl.run(steps=["err", "norm-scan", "ts"])
 
@@ -147,6 +146,7 @@ class TestFluxPointsEstimator:
 
     @staticmethod
     @requires_dependency("iminuit")
+    @requires_data("gammapy-data")
     def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 
