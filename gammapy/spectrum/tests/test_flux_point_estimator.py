@@ -48,12 +48,16 @@ def simulate_map_dataset():
     edges = np.logspace(-1, 2, 15) * u.TeV
     energy_axis = MapAxis.from_edges(edges=edges, name="energy")
 
-    geom = WcsGeom.create(skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], coordsys="GAL")
+    geom = WcsGeom.create(
+        skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], coordsys="GAL"
+    )
 
     gauss = SkyGaussian("0 deg", "0 deg", "0.4 deg", frame="galactic")
     pwl = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
-    dataset = simulate_dataset(skymodel=skymodel, geom=geom, pointing=skydir, irfs=irfs, random_state=0)
+    dataset = simulate_dataset(
+        skymodel=skymodel, geom=geom, pointing=skydir, irfs=irfs, random_state=0
+    )
     return dataset
 
 
@@ -61,7 +65,9 @@ def simulate_map_dataset():
 def fpe_map_pwl():
     dataset = simulate_map_dataset()
     e_edges = [0.1, 1, 10, 100] * u.TeV
-    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=3, source="source")
+    return FluxPointsEstimator(
+        datasets=[dataset], e_edges=e_edges, norm_n_values=3, source="source"
+    )
 
 
 @pytest.fixture(scope="session")
@@ -71,7 +77,13 @@ def fpe_map_pwl_reoptimize():
     dataset.parameters["lon_0"].frozen = True
     dataset.parameters["lat_0"].frozen = True
     dataset.parameters["index"].frozen = True
-    return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_values=[1], reoptimize=True, source="source")
+    return FluxPointsEstimator(
+        datasets=[dataset],
+        e_edges=e_edges,
+        norm_values=[1],
+        reoptimize=True,
+        source="source",
+    )
 
 
 @pytest.fixture(scope="session")
@@ -130,19 +142,19 @@ class TestFluxPointsEstimator:
         fp = fpe_map_pwl.run(steps=["err", "norm-scan", "ts"])
 
         actual = fp.table["norm"].data
-        assert_allclose(actual, [0.97922 , 0.94081 , 1.074426], rtol=1e-3)
+        assert_allclose(actual, [0.97922, 0.94081, 1.074426], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.069967, 0.052631, 0.093025], rtol=1e-3)
+        assert_allclose(actual, [0.069963, 0.052605, 0.09297], rtol=1e-3)
 
         actual = fp.table["sqrt_ts"].data
-        assert_allclose(actual, [16.165811, 27.121425, 22.040969], rtol=1e-3)
+        assert_allclose(actual, [16.165806, 27.121415, 22.04104], rtol=1e-3)
 
         actual = fp.table["norm_scan"][0]
         assert_allclose(actual, [0.2, 1, 5], rtol=1e-3)
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
-        assert_allclose(actual, [1.536460e+02, 8.756689e-02, 1.883420e+03], rtol=1e-3)
+        assert_allclose(actual, [1.536452e02, 8.762343e-02, 1.883447e03], rtol=1e-3)
 
     @staticmethod
     @requires_dependency("iminuit")
