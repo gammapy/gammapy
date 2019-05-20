@@ -106,19 +106,22 @@ class TestFluxPointsEstimator:
     def test_run_pwl(fpe_pwl):
         fp = fpe_pwl.run()
         actual = fp.table["norm"].data
-        assert_allclose(actual, [1.080933, 0.910776, 0.922278], rtol=1e-5)
+        assert_allclose(actual, [1.081434, 0.91077 , 0.922176], rtol=1e-5)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, [0.066364, 0.061025, 0.179742], rtol=1e-5)
+        assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-5)
 
         actual = fp.table["norm_errn"].data
-        assert_allclose(actual, [0.065305, 0.060409, 0.17148], rtol=1e-5)
+        assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-5)
 
         actual = fp.table["norm_errp"].data
-        assert_allclose(actual, [0.067454, 0.061646, 0.188288], rtol=1e-5)
+        assert_allclose(actual, [0.06695 , 0.061652, 0.18839], rtol=1e-5)
+
+        actual = fp.table["counts"].data.squeeze()
+        assert_allclose(actual, [1490, 748, 43], rtol=1e-5)
 
         actual = fp.table["norm_ul"].data
-        assert_allclose(actual, [1.219995, 1.037478, 1.321045], rtol=1e-5)
+        assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-5)
 
         actual = fp.table["sqrt_ts"].data
         assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-5)
@@ -166,7 +169,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, 0.884621, rtol=1e-3)
 
         actual = fp.table["norm_err"].data
-        assert_allclose(actual, 0.058067, rtol=1e-3)
+        assert_allclose(actual, 0.058005, rtol=1e-3)
 
         actual = fp.table["sqrt_ts"].data
         assert_allclose(actual, 23.971251, rtol=1e-3)

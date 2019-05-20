@@ -832,6 +832,7 @@ class FluxPointsEstimator:
 
         self.model = ScaleModel(model)
         self.model.norm.min = 0
+        self.model.norm.max = 1e3
 
         if norm_values is None:
             norm_values = np.logspace(
@@ -843,6 +844,7 @@ class FluxPointsEstimator:
         self.sigma_ul = sigma_ul
         self.reoptimize = reoptimize
         self.source = source
+        self.fit = Fit(self.datasets)
 
     def _freeze_parameters(self):
         # freeze other parameters
@@ -964,29 +966,25 @@ class FluxPointsEstimator:
             )
 
         if steps == "all":
-            steps = ["err", "errp-errn", "ul", "ts", "norm-scan"]
+            steps = ["err", "errp-errn", "ul", "ts", "norm-scan", "counts"]
 
         if "err" in steps:
             result.update(self.estimate_norm_err())
 
+        if "counts" in steps:
+            result.update(self.estimate_counts())
+
         if "errp-errn" in steps:
             result.update(self.estimate_norm_errn_errp())
+
+        if "ul" in steps:
+            result.update(self.estimate_norm_ul())
 
         if "ts" in steps:
             result.update(self.estimate_norm_ts())
 
         if "norm-scan" in steps:
             result.update(self.estimate_norm_scan())
-
-        if "ul" in steps:
-            try:
-                result.update(self.estimate_norm_ul(result))
-            except ValueError:
-                log.warning(
-                    "UL estimation failed for flux point between {e_min:.3f} and {e_max:.3f},"
-                    " setting NaN.".format(e_min=e_min, e_max=e_max)
-                )
-                result.update({"norm_ul": np.nan})
 
         return result
 
@@ -1013,7 +1011,28 @@ class FluxPointsEstimator:
         norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
 
-    def estimate_norm_ul(self, result):
+    def estimate_counts(self):
+        """Estimate counts for the flux point
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with counts for the flux point.
+        """
+
+        counts = []
+
+        for dataset in self.datasets.datasets:
+            mask = self.datasets.mask & dataset.mask
+
+            try:
+                counts.append(dataset.counts.data[mask].sum())
+            except AttributeError:
+                counts.append(dataset.counts_on.data.data[mask].sum())
+
+        return {"counts":  np.array(counts)}
+
+    def estimate_norm_ul(self):
         """Estimate upper limit for a flux point.
 
         Returns
@@ -1021,9 +1040,19 @@ class FluxPointsEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
-        dloglike_scan = result["dloglike_scan"] - result["loglike"]
-        norm_ul = compute_ul_scipy(result["norm_scan"], dloglike_scan, sigma=self.sigma_ul)
-        return {"norm_ul": norm_ul}
+        norm = self.model.parameters["norm"]
+
+        # TODO: the minuit backend as convergence problems when the likelihood is not
+        #  of parabolic shape, which is the case, when there are zero counts in the
+        #  energy bin. For this case we change to the scipy backend.
+
+        counts = self.estimate_counts()["counts"]
+        if np.all(counts == 0):
+            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul, backend="scipy")
+        else:
+            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
+
+        return {"norm_ul": result["errp"] + norm.value}
 
     def estimate_norm_ts(self):
         """Estimate ts and sqrt(ts) for the flux point.
@@ -1040,8 +1069,7 @@ class FluxPointsEstimator:
         self.model.norm.frozen = True
 
         if self.reoptimize:
-            self.fit = Fit(self.datasets)
-            result = self.fit.optimize()
+            _ = self.fit.optimize()
 
         loglike_null = self.datasets.likelihood()
 
@@ -1074,7 +1102,6 @@ class FluxPointsEstimator:
         self.model.norm.value = 1.0
         self.model.norm.frozen = False
 
-        self.fit = Fit(self.datasets)
         result = self.fit.optimize()
 
         if result.success:
