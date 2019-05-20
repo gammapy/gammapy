@@ -4,7 +4,7 @@ from scipy.optimize import minimize, brentq
 from .likelihood import Likelihood
 
 
-__all__ = ["optimize_scipy", "covariance_scipy"]
+__all__ = ["optimize_scipy", "covariance_scipy", "confidence_scipy"]
 
 
 def optimize_scipy(parameters, function, **kwargs):
@@ -27,41 +27,80 @@ def optimize_scipy(parameters, function, **kwargs):
     return factors, info, optimizer
 
 
-def confidence_scipy(parameters, parameter, function, sigma, **kwargs):
+class TSDifference:
+    """Likelihood wrapper to compute TS differences"""
+    def __init__(self, function, parameters, parameter, ts_diff):
+        self.loglike_ref = function(parameters)
+        self.parameters = parameters
+        self.function = function
+        self.parameter = parameter
+        self.parameter.frozen = True
+        self.ts_diff = ts_diff
 
-    parameter.frozen = True
-    loglike = function()
-
-    def f(factor):
-        parameter.factor = factor
-        _ = optimize_scipy(parameters, function)
-        value = (function() - loglike) - sigma ** 2
+    def fcn(self, factor):
+        self.parameter.factor = factor
+        optimize_scipy(self.parameters, self.function)
+        value = self.function(self.parameters) - self.loglike_ref - self.ts_diff
         return value
+
+
+def _confidence_scipy_brentq(parameters, parameter, function, sigma, upper=True, **kwargs):
+    ts_diff = TSDifference(function, parameters, parameter, ts_diff=sigma ** 2)
 
     kwargs.setdefault("a", parameter.factor)
 
-    if np.isnan(parameter.factor_max):
-        b = parameter.factor + 1e2 * parameters.error(parameter) / parameter.scale
-    else:
-        b = parameter.factor_max
+    bound = parameter.factor_max if upper else parameter.factor_min
 
-    kwargs.setdefault("b", b)
-    kwargs.setdefault("rtol", 0.01)
+    if np.isnan(bound):
+        bound = parameter.factor
+        if upper:
+            bound += 1e2 * parameters.error(parameter) / parameter.scale
+        else:
+            bound -= 1e2 * parameters.error(parameter) / parameter.scale
+
+    kwargs.setdefault("b", bound)
+
+    message, success = "Confidence terminated successfully.", True
 
     try:
-        result = brentq(f, full_output=True, **kwargs)
+        result = brentq(ts_diff.fcn, full_output=True, **kwargs)
     except ValueError:
-        pass
+        message = ("Confidence estimation failed, because bracketing interval"
+                   " does not contain a unique solution. Try setting the interval by hand.")
+        success = False
 
-    message, success = "Scipy confidence terminated successfully.", True
+    suffix = "errp" if upper else "errn"
 
     return {
-        "success": success,
-        "message": message,
-        "errp": result[0],
-        "errn": 0,
-        "nfev": result[1].iterations,
+        "nfev_" + suffix: result[1].iterations,
+        suffix : np.abs(result[0] - kwargs["a"]),
+        "success_" + suffix: success,
+        "message_" + suffix: message,
+        "loglike_ref": ts_diff.loglike_ref
     }
+
+
+def confidence_scipy(parameters, parameter, function, sigma, **kwargs):
+    with parameters.restore_values:
+        result = _confidence_scipy_brentq(
+            parameters=parameters,
+            parameter=parameter,
+            function=function,
+            sigma=sigma,
+            upper=False,
+            **kwargs)
+
+    with parameters.restore_values:
+        result_errp = _confidence_scipy_brentq(
+            parameters=parameters,
+            parameter=parameter,
+            function=function,
+            sigma=sigma,
+            upper=True,
+            **kwargs)
+
+    result.update(result_errp)
+    return result
 
 
 # TODO: implement, e.g. with numdifftools.Hessian
