@@ -115,7 +115,7 @@ class ReflectedRegionsFinder:
 
         Parameters
         ----------
-        region : `~regions.CircleSkyRegion`
+        region : `~regions.SkyRegion`
             Region to rotate
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
@@ -174,7 +174,7 @@ class ReflectedRegionsFinder:
         pix_on_x = pix_idx[0][_mask]
         pix_on_y = pix_idx[1][_mask]
         newX, newY = (self._pix_center.x - pix_on_x), (self._pix_center.y - pix_on_y)
-        angles = Angle(np.arctan2(newY, newX) * u.rad)
+        angles = Angle(np.arctan2(newX, newY) * u.rad)
         min_ang = np.max(angles.wrap_at(2*np.pi*u.rad))-np.min(angles.wrap_at(2*np.pi*u.rad))
         if min_ang.value > np.pi:
             min_ang = np.max(angles.wrap_at(np.pi*u.rad))-np.min(angles.wrap_at(np.pi*u.rad))
@@ -327,14 +327,14 @@ class ReflectedRegionsBackgroundEstimator:
         geom = WcsGeom.create(skydir=center, width=10.*u.deg, binsz=Angle("0.01 deg"), coordsys="GAL", proj="TAN")
 
         region_pix = region.to_pixel(geom.wcs)
-        _ixmin = region_pix.bounding_box.ixmin
-        _ixmax = region_pix.bounding_box.ixmax
-        _iymin = region_pix.bounding_box.iymin
-        _iymax = region_pix.bounding_box.iymax
-        _min_point = PixCoord(_ixmin, _iymin).to_sky(geom.wcs)
-        _max_point = PixCoord(_ixmax, _iymax).to_sky(geom.wcs)
+        ixmin = region_pix.bounding_box.ixmin
+        ixmax = region_pix.bounding_box.ixmax
+        iymin = region_pix.bounding_box.iymin
+        iymax = region_pix.bounding_box.iymax
+        min_point = PixCoord(ixmin, iymin).to_sky(geom.wcs)
+        max_point = PixCoord(ixmax, iymax).to_sky(geom.wcs)
 
-        return np.round(_min_point.separation(_max_point), decimals=3)
+        return np.round(min_point.separation(max_point), decimals=3)
 
     def run(self):
         """Run all steps."""
