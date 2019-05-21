@@ -225,7 +225,7 @@ class Fit:
         E.g. `iminuit.Minuit.minos` supports a ``maxcall`` option.
 
 
-        For the scipy backend ``kwargs`` are forwared to `~scipy.optimize.brentq`. If the
+        For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
         confidence estimation fails, the bracketing interval can be adapted by modifying the
         the upper bound of the interval (`b`) value.
 
