@@ -12,7 +12,7 @@ A Python Package for Gamma-ray Astronomy.
     :target: http://www.astropy.org/
 
 .. image:: http://mybinder.org/badge.svg
-    :target: https://mybinder.org/v2/gh/gammapy/gammapy/78c75d572e5d3e73fbd59d7c02296966d24eb00e?urlpath=lab/tree/first_steps.ipynb
+    :target: https://mybinder.org/v2/gh/gammapy/gammapy/master?urlpath=lab/tree/first_steps.ipynb
 
 Status shields
 ++++++++++++++
