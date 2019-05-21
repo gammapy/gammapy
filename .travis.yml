@@ -27,11 +27,11 @@ env:
         - NUMPY_VERSION=1.15
         - ASTROPY_VERSION=stable
 
-        - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa regions reproject pandoc ipython iminuit'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima regions reproject pandoc ipython iminuit'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
-        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
+        - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties==3.0.* pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties==3.0.* pandas naima sherpa regions reproject pandoc ipython iminuit'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties==3.0.* pandas naima regions reproject pandoc ipython iminuit'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties==3.0.* pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties==3.0.* pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
         - PIP_DEPENDENCIES='nbsphinx sphinx-click sphinx_rtd_theme pytest-astropy'
 
@@ -103,7 +103,7 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.6 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
-               PIP_DEPENDENCIES='uncertainties git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy'
+               PIP_DEPENDENCIES='uncertainties==3.0.* git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy'
 
         # Test Fermipy master against gammapy master
         - os: linux
