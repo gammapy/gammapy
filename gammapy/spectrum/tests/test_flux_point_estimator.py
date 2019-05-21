@@ -29,7 +29,7 @@ def simulate_spectrum_dataset(model):
     )
     sim.run(seed=[0])
     obs = sim.result[0]
-    return obs.to_spectrum_dataset()
+    return obs
 
 
 def create_fpe(model):
