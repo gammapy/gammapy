@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from .. import Parameter, Parameters, optimize_iminuit
+from .. import Parameter, Parameters, optimize_iminuit, confidence_iminuit
 
 pytest.importorskip("iminuit")
 
@@ -88,3 +88,24 @@ def test_migrad_opts(pars):
     kwargs["migrad_opts"] = {"ncall": 20}
     factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars, **kwargs)
     assert info["nfev"] == 20
+
+
+def test_iminuit_confidence(pars):
+    factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars)
+
+    assert_allclose(fcn(pars), 0, atol=1e-5)
+
+    par = pars["x"]
+    par.min, par.max = 0, 10
+
+    result = confidence_iminuit(
+        minuit=minuit,
+        parameters=pars,
+        parameter=par,
+        sigma=1
+    )
+
+    assert result["success"]
+
+    assert_allclose(result["errp"], 0.2)
+    assert_allclose(result["errn"], 0.2)
