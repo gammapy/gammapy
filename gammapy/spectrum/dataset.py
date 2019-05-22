@@ -8,7 +8,7 @@ from ..utils.fitting import Dataset, Parameters
 from ..stats import wstat, cash
 from ..utils.random import get_random_state
 from .core import CountsSpectrum, PHACountsSpectrum
-from .observation import SpectrumStats
+from ..data import SpectrumStats
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
