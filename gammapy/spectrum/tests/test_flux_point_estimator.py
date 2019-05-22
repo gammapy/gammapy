@@ -63,10 +63,13 @@ def simulate_map_dataset():
 
 @pytest.fixture(scope="session")
 def fpe_map_pwl():
-    dataset = simulate_map_dataset()
+    dataset_1 = simulate_map_dataset()
+    dataset_2 = dataset_1.copy()
+    dataset_2.mask = np.zeros(dataset_2.data_shape).astype(bool)
+
     e_edges = [0.1, 1, 10, 100] * u.TeV
     return FluxPointsEstimator(
-        datasets=[dataset], e_edges=e_edges, norm_n_values=3, source="source"
+        datasets=[dataset_1, dataset_2], e_edges=e_edges, norm_n_values=3, source="source"
     )
 
 
@@ -142,13 +145,19 @@ class TestFluxPointsEstimator:
     @requires_dependency("iminuit")
     @requires_data("gammapy-data")
     def test_run_map_pwl(fpe_map_pwl):
-        fp = fpe_map_pwl.run(steps=["err", "norm-scan", "ts"])
+        fp = fpe_map_pwl.run()
 
         actual = fp.table["norm"].data
         assert_allclose(actual, [0.97922, 0.94081, 1.074426], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
         assert_allclose(actual, [0.069966, 0.052617, 0.092854], rtol=1e-2)
+
+        actual = fp.table["counts"].data
+        assert_allclose(actual, [[44445, 0], [1911, 0], [292, 0]], rtol=1e-2)
+
+        actual = fp.table["norm_ul"].data
+        assert_allclose(actual, [1.121379, 1.048815, 1.270037], rtol=1e-2)
 
         actual = fp.table["sqrt_ts"].data
         assert_allclose(actual, [16.165806, 27.121415, 22.04104], rtol=1e-2)
