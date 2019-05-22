@@ -13,6 +13,7 @@ from ...spectrum import (
     SpectrumDatasetOnOff,
     SpectrumDataset,
     CountsSpectrum,
+    SpectrumDatasetOnOffStacker,
 )
 
 
@@ -100,6 +101,8 @@ class TestSpectrumDatasetOnOff:
         self.off_counts = PHACountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
         )
+        self.on_counts.obs_id = 'test'
+        self.off_counts.obs_id = 'test'
 
         self.livetime = 1000 * u.s
 
@@ -178,19 +181,59 @@ class TestSpectrumDatasetOnOff:
 
     @requires_dependency("matplotlib")
     def test_peek(self):
-        model = PowerLaw()
         dataset = SpectrumDatasetOnOff(
             counts_on=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
-            model=model,
             livetime=self.livetime,
             edisp=self.edisp
         )
         with mpl_plot_check():
             dataset.peek()
 
+    @requires_dependency("matplotlib")
+    def test_plot_fit(self):
+        model = PowerLaw()
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            model=model,
+            aeff=self.aeff,
+            livetime=self.livetime,
+            edisp=self.edisp
+        )
+        with mpl_plot_check():
+            dataset.plot_fit()
 
+
+    def test_to_from_ogip_files(self, tmpdir):
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            livetime=self.livetime,
+        )
+        dataset.to_ogip_files(outdir=str(tmpdir), overwrite=True)
+        filename = tmpdir / self.on_counts.phafile
+        newdataset = SpectrumDatasetOnOff.from_ogip_files( str(filename) )
+
+        assert_allclose(self.on_counts.data.data, newdataset.counts_on.data.data)
+        assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
+        assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
+
+    def test_total_stats(self):
+        dataset = SpectrumDatasetOnOff(
+            counts_on=self.on_counts,
+            counts_off=self.off_counts,
+            aeff=self.aeff,
+            edisp=self.edisp,
+            livetime=self.livetime,
+        )
+
+        assert dataset.total_stats.n_on == 4
+        assert dataset.total_stats.n_off == 40
+        assert dataset.total_stats.excess == 0
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
@@ -275,8 +318,8 @@ class TestSpectralFit:
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
-        obs2 = SpectrumDatasetOnOff.read(path + "pha_obs23592.fits")
+        obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
+        obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
         self.pwl = PowerLaw(
@@ -353,3 +396,101 @@ class TestSpectralFit:
         actual = fit.datasets.parameters["amplitude"].quantity
         assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
+
+def _read_hess_obs():
+    path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+    obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
+    obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
+    return [obs1, obs2]
+
+@requires_dependency("sherpa")
+@requires_data("gammapy-data")
+def make_observation_list():
+    """obs with dummy IRF"""
+    nbin = 3
+    energy = np.logspace(-1, 1, nbin + 1) * u.TeV
+    livetime = 2 * u.h
+    data_on = np.arange(nbin)
+    dataoff_1 = np.ones(3)
+    dataoff_2 = np.ones(3) * 3
+    dataoff_1[1] = 0
+    dataoff_2[1] = 0
+    on_vector = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=data_on, backscal=1
+    )
+    off_vector1 = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_1, backscal=2
+    )
+    off_vector2 = PHACountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2, backscal=4
+    )
+    aeff = EffectiveAreaTable(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=np.ones(nbin) * 1e5 * u.m ** 2
+    )
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
+    on_vector.livetime = livetime
+    on_vector.obs_id = 2
+    obs1 = SpectrumDatasetOnOff(
+        counts_on=on_vector, counts_off=off_vector1, aeff=aeff, edisp=edisp, livetime=livetime
+    )
+    obs2 = SpectrumDatasetOnOff(
+        counts_on=on_vector, counts_off=off_vector2, aeff=aeff, edisp=edisp, livetime=livetime
+    )
+
+    obs_list = [obs1, obs2]
+    return obs_list
+
+
+@requires_data("gammapy-data")
+class TestSpectrumDatasetOnOffStacker:
+    def setup(self):
+        self.obs_list = _read_hess_obs()
+
+        # Change threshold to make stuff more interesting
+        self.obs_list[0].lo_threshold = 1.2 * u.TeV
+        self.obs_list[0].hi_threshold = 50 * u.TeV
+        self.obs_list[1].hi_threshold = 20 * u.TeV
+        self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
+        self.obs_stacker.run()
+
+    def test_basic(self):
+        assert "Stacker" in str(self.obs_stacker)
+        assert "stacked" in str(self.obs_stacker.stacked_obs.counts_on.phafile)
+        counts1 = self.obs_list[0].total_stats_safe_range.n_on
+        counts2 = self.obs_list[1].total_stats_safe_range.n_on
+        summed_counts = counts1 + counts2
+        stacked_counts = self.obs_stacker.stacked_obs.total_stats.n_on
+        assert summed_counts == stacked_counts
+
+    def test_thresholds(self):
+        energy = self.obs_stacker.stacked_obs.lo_threshold
+        assert energy.unit == "keV"
+        assert_allclose(energy.value, 8.912509e08, rtol=1e-3)
+
+        energy = self.obs_stacker.stacked_obs.hi_threshold
+        assert energy.unit == "keV"
+        assert_allclose(energy.value, 4.466836e10, rtol=1e-3)
+
+    def test_verify_npred(self):
+        """Veryfing npred is preserved during the stacking"""
+        pwl = PowerLaw(
+            index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
+        )
+        self.obs_stacker.stacked_obs.model = pwl
+        npred_stacked = self.obs_stacker.stacked_obs.npred().data.data
+        npred_summed = np.zeros_like(npred_stacked)
+
+        for obs in self.obs_list:
+            obs.model = pwl
+            npred_summed[obs.mask] += obs.npred().data.data[obs.mask]
+
+        assert_allclose(npred_stacked, npred_summed)
+
+    def test_stack_backscal(self):
+        """Verify backscal stacking """
+        obs_list = make_observation_list()
+        obs_stacker = SpectrumDatasetOnOffStacker(obs_list)
+        obs_stacker.run()
+        assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.0)
+        # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
+        assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
