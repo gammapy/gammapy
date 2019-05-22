@@ -149,6 +149,7 @@ class SpectrumSimulation:
             counts_off=self.off_vector,
             aeff=self.aeff,
             edisp=self.edisp,
+            livetime=self.livetime
         )
         obs.counts_on.obs_id = obs_id
         self.obs = obs
