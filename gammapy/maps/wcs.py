@@ -777,6 +777,10 @@ class WcsGeom(MapGeom):
         lon = coord.lon * np.pi / 180.0
         lat = coord.lat * np.pi / 180.0
 
+        # TODO: change this method to allow for non-orthogonal
+        # pixel sides in the small angle approximation
+        # Test with AIT projection example
+
         # Compute solid angle across centres of the pixels, approximating it
         # as a rectangle
         # First index is "y", second index is "x"
