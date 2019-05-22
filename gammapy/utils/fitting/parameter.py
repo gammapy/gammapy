@@ -528,6 +528,16 @@ class Parameters:
         """
         return restore_parameters_values(self)
 
+    @property
+    def frozen(self):
+        """Frozen parameters"""
+        return [par.frozen for par in self.parameters]
+
+    @frozen.setter
+    def frozen(self, value):
+        for par in self.parameters:
+            par.frozen = value
+
 
 class restore_parameters_values:
     def __init__(self, parameters):
