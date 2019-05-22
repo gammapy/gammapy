@@ -177,6 +177,7 @@ class ObservationStats(Stats):
 
         return ss
 
+
 class SpectrumStats(ObservationStats):
     """Spectrum stats.
 

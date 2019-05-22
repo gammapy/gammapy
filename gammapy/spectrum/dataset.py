@@ -70,7 +70,7 @@ class SpectrumDataset(Dataset):
                     model=self.model,
                     livetime=self.livetime,
                     aeff=self.aeff,
-                    e_true=self.counts.energy.edges
+                    e_true=self.counts.energy.edges,
                 )
             else:
                 self._predictor = SpectrumEvaluator(
@@ -244,13 +244,13 @@ class SpectrumDatasetOnOff(Dataset):
     @mask.setter
     def mask(self, mask):
         if mask is None:
-            mask = np.ones_like(self.counts_on.quality, dtype='bool')
+            mask = np.ones_like(self.counts_on.quality, dtype="bool")
         if mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         else:
             self.fit_mask = mask
 
-    def set_fit_energy_range(self, emin = None, emax = None):
+    def set_fit_energy_range(self, emin=None, emax=None):
         """Set the energy range for the fit.
 
         Parameters
@@ -263,14 +263,14 @@ class SpectrumDatasetOnOff(Dataset):
         energy = self.counts_on.energy.edges
 
         if emin is None:
-            mask_lo = np.ones_like(energy, dtype='bool')
+            mask_lo = np.ones_like(energy, dtype="bool")
         else:
-            mask_lo = (energy[:-1] >= emin)
+            mask_lo = energy[:-1] >= emin
 
         if emax is None:
-            mask_hi = np.ones_like(energy, dtype='bool')
+            mask_hi = np.ones_like(energy, dtype="bool")
         else:
-            mask_hi = (energy[1:] <= emax)
+            mask_hi = energy[1:] <= emax
 
         self.mask = mask_lo & mask_hi
 
@@ -293,7 +293,7 @@ class SpectrumDatasetOnOff(Dataset):
                     model=self.model,
                     livetime=self.livetime,
                     aeff=self.aeff,
-                    e_true=self.counts_on.energy.edges
+                    e_true=self.counts_on.energy.edges,
                 )
             else:
                 self._predictor = SpectrumEvaluator(
@@ -368,7 +368,9 @@ class SpectrumDatasetOnOff(Dataset):
         filename : str
             OGIP PHA file to read
         """
-        raise NotImplementedError("To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files.")
+        raise NotImplementedError(
+            "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
+        )
 
     @property
     def energy_range(self):
@@ -403,7 +405,9 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             energy = self.counts_off.energy.edges
             data = self.counts_off.data.data * self.alpha
-            background_vector = CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
+            background_vector = CountsSpectrum(
+                data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
+            )
             background_vector.plot_hist(
                 ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
             )
@@ -438,7 +442,6 @@ class SpectrumDatasetOnOff(Dataset):
 
         # TODO: optimize layout
         plt.subplots_adjust(wspace=0.3)
-
 
     def plot_fit(self):
         """Plot counts and residuals in two panels.
@@ -545,13 +548,19 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = self.counts_on.arffile
         rmffile = self.counts_on.rmffile
 
-        self.counts_on.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        self.counts_on.write(
+            outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa
+        )
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         if self.counts_off is not None:
-            self.counts_off.write(outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa)
+            self.counts_off.write(
+                outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
+            )
         if self.edisp is not None:
-            self.edisp.write(str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa)
+            self.edisp.write(
+                str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa
+            )
 
     @classmethod
     def from_ogip_files(cls, filename):
@@ -594,7 +603,7 @@ class SpectrumDatasetOnOff(Dataset):
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
             mask=mask,
-            )
+        )
 
     # TODO : do we keep this or should this become the Dataset name
     # This was imported and adapted from the SpectrumObservation class
@@ -642,7 +651,7 @@ class SpectrumDatasetOnOff(Dataset):
                 n_off = 0
                 a_off = 1  # avoid zero division error
 
-            stat=SpectrumStats(
+            stat = SpectrumStats(
                 energy_min=self.counts_on.energy.edges[ii],
                 energy_max=self.counts_on.energy.edges[ii + 1],
                 n_on=int(self.counts_on.data.data.value[ii]),
@@ -866,5 +875,5 @@ class SpectrumDatasetOnOffStacker:
             counts_off=self.stacked_off_vector,
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
-            livetime=self.total_livetime
+            livetime=self.total_livetime,
         )
