@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.optimize import minimize, brentq, RootResults
+from scipy.optimize import minimize, brentq
+from scipy.optimize.zeros import RootResults
 from .likelihood import Likelihood
 
 
