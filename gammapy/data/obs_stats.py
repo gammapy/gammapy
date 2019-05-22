@@ -203,7 +203,7 @@ class SpectrumStats(ObservationStats):
         return data
 
     @classmethod
-    def from_observation(cls, observation, bg_estimate, energy_range):
+    def from_observation_in_range(cls, observation, bg_estimate, energy_range):
         """Create from `~gammapy.data.DataStoreObservation`.
 
         Parameters

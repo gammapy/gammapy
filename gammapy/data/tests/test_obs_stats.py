@@ -122,7 +122,7 @@ def spectrum_stats(on_region, observations):
     bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, observations=obs)
     bg = bge.process(obs)
     e_range = [1 * u.TeV, 10 * u.TeV]
-    return SpectrumStats.from_observation(obs, bg, e_range)
+    return SpectrumStats.from_observation_in_range(obs, bg, e_range)
 
 
 @requires_data("gammapy-data")
