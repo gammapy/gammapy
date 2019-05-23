@@ -78,7 +78,7 @@ class TestFit:
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
-        dataset = SpectrumDatasetOnOff(counts_on=self.src)
+        dataset = SpectrumDatasetOnOff(counts=self.src)
         dataset.model = self.source_model
 
         assert np.sum(dataset.mask) == self.nbins
@@ -138,7 +138,7 @@ class TestSpectralFit:
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
         obs = self.obs_list[0]
-        desired = obs.counts_on.lo_threshold
+        desired = obs.counts.lo_threshold
 
         actual = obs.energy_range[0]
 
@@ -149,9 +149,9 @@ class TestSpectralFit:
         dataset = self.obs_list[0]
 
         # Bring aeff in RECO space
-        energy = dataset.counts_on.energy.center
+        energy = dataset.counts.energy.center
         data = dataset.aeff.data.evaluate(energy=energy)
-        e_edges = dataset.counts_on.energy.edges
+        e_edges = dataset.counts.energy.edges
 
         dataset.aeff = EffectiveAreaTable(
             data=data,

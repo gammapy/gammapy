@@ -126,7 +126,7 @@ class SpectrumExtraction:
             self.containment = np.ones(self._aeff.energy.nbin)
 
         spectrum_observation = SpectrumDatasetOnOff(
-            counts_on=self._on_vector,
+            counts=self._on_vector,
             aeff=self._aeff,
             counts_off=self._off_vector,
             edisp=self._edisp,

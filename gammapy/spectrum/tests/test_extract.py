@@ -136,12 +136,12 @@ class TestSpectrumExtraction:
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.counts_on.data.data,
-            extraction.spectrum_observations[0].counts_on.data.data,
+            testobs.counts.data.data,
+            extraction.spectrum_observations[0].counts.data.data,
         )
         assert_allclose(
-            testobs.counts_on.energy.center,
-            extraction.spectrum_observations[0].counts_on.energy.center,
+            testobs.counts.energy.center,
+            extraction.spectrum_observations[0].counts.energy.center,
         )
 
     @requires_dependency("sherpa")

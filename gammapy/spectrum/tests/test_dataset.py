@@ -108,7 +108,7 @@ class TestSpectrumDatasetOnOff:
 
     def test_init_no_model(self):
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
@@ -123,7 +123,7 @@ class TestSpectrumDatasetOnOff:
 
     def test_alpha(self):
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
@@ -135,7 +135,7 @@ class TestSpectrumDatasetOnOff:
 
     def test_data_shape(self):
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
@@ -149,7 +149,7 @@ class TestSpectrumDatasetOnOff:
         model = ConstantModel(const)
         livetime = 1 * u.s
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             model=model,
@@ -171,7 +171,7 @@ class TestSpectrumDatasetOnOff:
 
         with pytest.raises(ValueError):
             SpectrumDatasetOnOff(
-                counts_on=self.on_counts,
+                counts=self.on_counts,
                 counts_off=self.off_counts,
                 aeff=self.aeff,
                 edisp=self.edisp,
@@ -182,7 +182,7 @@ class TestSpectrumDatasetOnOff:
     @requires_dependency("matplotlib")
     def test_peek(self):
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             livetime=self.livetime,
@@ -195,7 +195,7 @@ class TestSpectrumDatasetOnOff:
     def test_plot_fit(self):
         model = PowerLaw()
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             model=model,
             aeff=self.aeff,
@@ -208,7 +208,7 @@ class TestSpectrumDatasetOnOff:
 
     def test_to_from_ogip_files(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
@@ -218,13 +218,13 @@ class TestSpectrumDatasetOnOff:
         filename = tmpdir / self.on_counts.phafile
         newdataset = SpectrumDatasetOnOff.from_ogip_files( str(filename) )
 
-        assert_allclose(self.on_counts.data.data, newdataset.counts_on.data.data)
+        assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
 
     def test_total_stats(self):
         dataset = SpectrumDatasetOnOff(
-            counts_on=self.on_counts,
+            counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
@@ -278,7 +278,7 @@ class TestSimpleFit:
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
         on_vector.data.data += self.bkg.data.data
-        obs = SpectrumDatasetOnOff(counts_on=on_vector, counts_off=self.off)
+        obs = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
         obs.model = self.source_model
 
         self.source_model.parameters.index = 1.12
@@ -295,14 +295,14 @@ class TestSimpleFit:
         """Test joint fit for obs with different energy binning"""
         on_vector = self.src.copy()
         on_vector.data.data += self.bkg.data.data
-        obs1 = SpectrumDatasetOnOff(counts_on=on_vector, counts_off=self.off)
+        obs1 = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
         obs1.model = self.source_model
 
         src_rebinned = self.src.rebin(2)
         bkg_rebinned = self.off.rebin(2)
         src_rebinned.data.data += self.bkg.rebin(2).data.data
 
-        obs2 = SpectrumDatasetOnOff(counts_on=src_rebinned, counts_off=bkg_rebinned)
+        obs2 = SpectrumDatasetOnOff(counts=src_rebinned, counts_off=bkg_rebinned)
         obs2.model = self.source_model
 
         fit = Fit([obs1, obs2])
@@ -431,10 +431,10 @@ def make_observation_list():
     on_vector.livetime = livetime
     on_vector.obs_id = 2
     obs1 = SpectrumDatasetOnOff(
-        counts_on=on_vector, counts_off=off_vector1, aeff=aeff, edisp=edisp, livetime=livetime
+        counts=on_vector, counts_off=off_vector1, aeff=aeff, edisp=edisp, livetime=livetime
     )
     obs2 = SpectrumDatasetOnOff(
-        counts_on=on_vector, counts_off=off_vector2, aeff=aeff, edisp=edisp, livetime=livetime
+        counts=on_vector, counts_off=off_vector2, aeff=aeff, edisp=edisp, livetime=livetime
     )
 
     obs_list = [obs1, obs2]
@@ -455,7 +455,7 @@ class TestSpectrumDatasetOnOffStacker:
 
     def test_basic(self):
         assert "Stacker" in str(self.obs_stacker)
-        assert "stacked" in str(self.obs_stacker.stacked_obs.counts_on.phafile)
+        assert "stacked" in str(self.obs_stacker.stacked_obs.counts.phafile)
         counts1 = self.obs_list[0].total_stats_safe_range.n_on
         counts2 = self.obs_list[1].total_stats_safe_range.n_on
         summed_counts = counts1 + counts2
