@@ -861,7 +861,7 @@ class FluxPointsEstimator:
         for counts, dataset in zip(counts_all, self.datasets.datasets):
             if isinstance(dataset, MapDataset) and counts == 0:
                 if dataset.background_model is not None:
-                    dataset.background_model.parameters.frozen = True
+                    dataset.background_model.parameters.freeze_all()
 
     def _set_scale_model(self):
         # set the model on all datasets
@@ -1043,7 +1043,7 @@ class FluxPointsEstimator:
                 mask &= dataset.mask
 
             if isinstance(dataset, SpectrumDatasetOnOff):
-                counts.append(dataset.counts_on.data.data[mask].sum())
+                counts.append(dataset.counts.data.data[mask].sum())
             else:
                 counts.append(dataset.counts.data[mask].sum())
 

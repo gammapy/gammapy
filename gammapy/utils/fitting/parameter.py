@@ -528,15 +528,10 @@ class Parameters:
         """
         return restore_parameters_values(self)
 
-    @property
-    def frozen(self):
-        """Frozen parameters"""
-        return [par.frozen for par in self.parameters]
-
-    @frozen.setter
-    def frozen(self, value):
+    def freeze_all(self):
+        """Freeze all parameters"""
         for par in self.parameters:
-            par.frozen = value
+            par.frozen = True
 
 
 class restore_parameters_values:
