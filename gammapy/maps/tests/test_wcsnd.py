@@ -351,30 +351,33 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
         assert_allclose(np.nansum(m.data), np.nansum(msum.data))
 
 
-@pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
-)
-def test_wcsndmap_reproject(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, skydir=skydir, coordsys=coordsys, axes=axes
-    )
-    m = WcsNDMap(geom, unit="m2")
+def test_wcsndmap_reproject():
+    skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
+    geom =  WcsGeom.create(npix=10, binsz=1.0, coordsys="GAL", proj="AIT", skydir=skydir)
+    geom_new = geom.downsample(2)
 
-    if geom.projection == "AIT" and geom.is_allsky:
-        pytest.xfail("Bug in reproject version <= 0.3.1")
+    data = np.arange(np.prod(geom.data_shape)).reshape(geom.data_shape)
+    m = WcsNDMap(data=data, geom=geom, unit="m2")
 
-    if geom.ndim > 3 or geom.npix[0].size > 1:
-        pytest.xfail("> 3 dimensions or multi-resolution geometries not supported")
+    m_reprojected = m.reproject(geom_new, order=1)
+    assert m.unit == m_reprojected.unit
 
-    geom0 = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, skydir=skydir, coordsys=coordsys, axes=axes
-    )
-    m0 = m.reproject(geom0, order=1)
+    assert_allclose(m_reprojected.data[0, 0], 5.5)
+    assert_allclose(m_reprojected.data[4, 4], 93.5)
 
-    assert_allclose(m.data, m0.data)
-    assert m0.unit == m.unit
+    energy_axis = MapAxis.from_bounds(0.1, 10, 2, name="energy", interp="log")
+    geom_3d = geom.to_cube([energy_axis])
 
-    # TODO : Reproject to a different spatial geometry
+    data = np.arange(np.prod(geom_3d.data_shape)).reshape(geom_3d.data_shape)
+    m = WcsNDMap(data=data, geom=geom_3d, unit="m2")
+
+    m_reprojected = m.reproject(geom_new, order=1)
+    assert m.unit == m_reprojected.unit
+
+    assert_allclose(m_reprojected.data[0, 0, 0], 5.5)
+    assert_allclose(m_reprojected.data[1, 4, 4], 193.5)
+
+    assert m_reprojected.geom.axes[0].name == "energy"
 
 
 @requires_dependency("healpy")
