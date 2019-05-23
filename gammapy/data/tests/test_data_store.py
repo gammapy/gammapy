@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from ...utils.testing import requires_data
-from ...data import DataStore, DataStoreMaker
+from ...data import DataStore
 
 
 @pytest.fixture(scope="session")
@@ -111,35 +111,45 @@ class TestDataStoreChecker:
 @requires_data("gammapy-data")
 class TestDataStoreMaker:
     def setup(self):
-        path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
-        self.data_store = DataStore.from_events_files([path])
+        paths = [
+            "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_{:06d}.fits".format(
+                obs_id
+            )
+            for obs_id in [110380, 111140, 111630, 111159]
+        ]
+        self.data_store = DataStore.from_events_files(paths)
+
+        # Useful for debugging:
+        # self.data_store.hdu_table.write("hdu-index.fits.gz", overwrite=True)
+        # self.data_store.obs_table.write("obs-index.fits.gz", overwrite=True)
 
     def test_obs_table(self):
         table = self.data_store.obs_table
-        assert len(table) == 1
+        assert table.__class__.__name__ == "ObservationTable"
+        assert len(table) == 4
         assert len(table.colnames) == 24
+
+        # TODO: implement https://github.com/gammapy/gammapy/issues/1218 and add tests here
+        # assert table.time_start[0].iso == "spam"
+        # assert table.time_start[-1].iso == "spam"
 
     def test_hdu_table(self):
         table = self.data_store.hdu_table
-        assert len(table) == 6
+        assert table.__class__.__name__ == "HDUIndexTable"
+        assert len(table) == 24
         hdu_class = ["events", "gti", "aeff_2d", "edisp_2d", "psf_3gauss", "bkg_3d"]
-        assert list(self.data_store.hdu_table["HDU_CLASS"]) == hdu_class
+        assert list(self.data_store.hdu_table["HDU_CLASS"]) == 4 * hdu_class
 
-    def test_get_observations(self):
+    def test_observation(self):
+        """Check that one observation can be accessed OK"""
         obs = self.data_store.obs(110380)
         assert obs.obs_id == 110380
 
-    # TODO: fix this case. Currently fails with this error:
-    # KeyError: "Keyword 'DATE_OBS' not found."
-    def test_datastore_from_events_docstring_example(self):
-        import os
-        from pathlib import Path
-        from gammapy.data import DataStore
+        assert obs.events.time[0].iso == "2021-01-21 12:00:03.045"
+        assert obs.gti.time_start[0].iso == "2021-01-21 12:00:00.000"
 
-        path = Path(os.environ["GAMMAPY_DATA"]) / "cta-1dc/data"
-        paths = list(path.rglob("*.fits"))
-        data_store = DataStore.from_events_files(paths)
-        observations = data_store.get_observations()
-
-        data_store.hdu_table.write("hdu-index.fits.gz")
-        data_store.obs_table.write("obs-index.fits.gz")
+        # TODO: set env CALDB = "$GAMMAPY_DATA/cta-1dc/caldb"
+        assert obs.aeff.__class__.__name__ == "EffectiveAreaTable2D"
+        assert obs.bkg.__class__.__name__ == "Background3D"
+        assert obs.edisp.__class__.__name__ == "EnergyDispersion2D"
+        assert obs.psf.__class__.__name__ == "EnergyDependentMultiGaussPSF"

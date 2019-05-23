@@ -12,7 +12,7 @@ from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTableChecker
 from .observations import DataStoreObservation, Observations, ObservationChecker
 
-__all__ = ["DataStore", "DataStoreMaker"]
+__all__ = ["DataStore"]
 
 log = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class DataStore:
 
         - ``TELESCOP`` (example: ``TELESCOP = CTA``)
         - ``CALDB`` (example: ``CALDB = 1dc``)
-        - ``IRF`` (example: ``IRF = Sourh_z20_50h``)
+        - ``IRF`` (example: ``IRF = South_z20_50h``)
 
         This method is useful specifically if you want to load data simulated
         with `ctobssim`_
@@ -187,10 +187,7 @@ class DataStore:
             data_store.hdu_table.write("hdu-index.fits.gz")
             data_store.obs_table.write("obs-index.fits.gz")
         """
-        maker = DataStoreMaker(paths)
-        hdu_table = maker.make_hdu_table()
-        obs_table = maker.make_obs_table()
-        return cls(hdu_table=hdu_table, obs_table=obs_table)
+        return DataStoreMaker(paths).run()
 
     @staticmethod
     def _find_file(filename, dir):
@@ -407,11 +404,13 @@ class DataStoreMaker:
 
         self.paths = [make_path(path) for path in paths]
 
-        # Caches for EVENTS and IRF file header information
-        # Used to avoid reading FITS headers multiple times,
-        # since the infos are used more than once
+        # Cache for EVENTS file header information, to avoid multiple reads
         self._events_info = {}
-        self._irf_info = {}
+
+    def run(self):
+        hdu_table = self.make_hdu_table()
+        obs_table = self.make_obs_table()
+        return DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
     def get_events_info(self, path):
         if path not in self._events_info:
@@ -424,12 +423,16 @@ class DataStoreMaker:
         return self.get_events_info(path)
 
     @staticmethod
-    def read_events_info(filename):
-        with fits.open(filename) as hdu_list:
+    def read_events_info(path):
+        log.debug("Reading {}".format(path))
+        with fits.open(str(path)) as hdu_list:
             header = hdu_list["EVENTS"].header
 
+        na_int, na_str = -1, "NOT AVAILABLE"
+
         info = {}
-        info["OBS_ID"] = header["OBS_ID"]
+        # Note: for some reason `header["OBS_ID"]` is sometimes `str`, maybe trailing whitespace
+        info["OBS_ID"] = int(header["OBS_ID"])
         info["RA_PNT"] = header["RA_PNT"]
         info["DEC_PNT"] = header["DEC_PNT"]
         pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
@@ -443,20 +446,20 @@ class DataStoreMaker:
         info["DEADC"] = header["DEADC"]
         info["TSTART"] = header["TSTART"]
         info["TSTOP"] = header["TSTOP"]
-        info["DATE-OBS"] = header["DATE_OBS"]
-        info["TIME-OBS"] = header["TIME_OBS"]
-        info["DATE-END"] = header["DATE_END"]
-        info["TIME-END"] = header["TIME_END"]
-        info["N_TELS"] = header["N_TELS"]
-        info["OBJECT"] = header["OBJECT"]
+        info["DATE-OBS"] = header.get("DATE_OBS", na_str)
+        info["TIME-OBS"] = header.get("TIME_OBS", na_str)
+        info["DATE-END"] = header.get("DATE_END", na_str)
+        info["TIME-END"] = header.get("TIME_END", na_str)
+        info["N_TELS"] = header.get("N_TELS", na_int)
+        info["OBJECT"] = header.get("OBJECT", na_str)
 
         # This is the info needed to link from EVENTS to IRFs
-        info["TELESCOP"] = header["TELESCOP"]
-        info["CALDB"] = header["CALDB"]
-        info["IRF"] = header["IRF"]
+        info["TELESCOP"] = header.get("TELESCOP", na_str)
+        info["CALDB"] = header.get("CALDB", na_str)
+        info["IRF"] = header.get("IRF", na_str)
 
         # Not part of the spec, but good to know from which file the info comes
-        info["EVENTS_FILENAME"] = filename
+        info["EVENTS_FILENAME"] = str(path)
         info["EVENT_COUNT"] = header["NAXIS2"]
 
         # gti = Table.read(filename, hdu='GTI')
@@ -472,7 +475,7 @@ class DataStoreMaker:
             rows.append(row)
 
         names = list(rows[0].keys())
-        table = Table(rows=rows, names=names)
+        table = ObservationTable(rows=rows, names=names)
 
         table["RA_PNT"].unit = "deg"
         table["DEC_PNT"].unit = "deg"
@@ -486,25 +489,22 @@ class DataStoreMaker:
         table["TSTART"].unit = "s"
         table["TSTOP"].unit = "s"
 
-        meta = table.meta
-
         # TODO: Values copied from one of the EVENTS headers
         # TODO: check consistency for all EVENTS files and handle inconsistent case
         # Transform times to first ref time? Or raise error for now?
         # Test by combining some HESS & CTA runs?
-        meta["MJDREFI"] = 51544
-        meta["MJDREFF"] = 5.0000000000e-01
-        meta["TIMEUNIT"] = "s"
-        meta["TIMESYS"] = "TT"
-        meta["TIMEREF"] = "LOCAL"
+        m = table.meta
+        m["MJDREFI"] = 51544
+        m["MJDREFF"] = 5.0000000000e-01
+        m["TIMEUNIT"] = "s"
+        m["TIMESYS"] = "TT"
+        m["TIMEREF"] = "LOCAL"
 
-        meta["HDUCLASS"] = "GADF"
-        meta[
-            "HDUDOC"
-        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
-        meta["HDUVERS"] = "0.2"
-        meta["HDUCLAS1"] = "INDEX"
-        meta["HDUCLAS2"] = "OBS"
+        m["HDUCLASS"] = "GADF"
+        m["HDUDOC"] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        m["HDUVERS"] = "0.2"
+        m["HDUCLAS1"] = "INDEX"
+        m["HDUCLAS2"] = "OBS"
 
         return table
 
@@ -516,73 +516,50 @@ class DataStoreMaker:
         names = list(rows[0].keys())
         # names = ['OBS_ID', 'HDU_TYPE', 'HDU_CLASS', 'FILE_DIR', 'FILE_NAME', 'HDU_NAME']
 
-        table = Table(rows=rows, names=names)
+        table = HDUIndexTable(rows=rows, names=names)
 
-        meta = table.meta
-        meta["HDUCLASS"] = "GADF"
-        meta[
-            "HDUDOC"
-        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
-        meta["HDUVERS"] = "0.2"
-        meta["HDUCLAS1"] = "INDEX"
-        meta["HDUCLAS2"] = "HDU"
+        m = table.meta
+        m["HDUCLASS"] = "GADF"
+        m["HDUDOC"] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        m["HDUVERS"] = "0.2"
+        m["HDUCLAS1"] = "INDEX"
+        m["HDUCLAS2"] = "HDU"
 
         return table
 
     def get_hdu_table_rows(self, path):
         events_info = self.get_events_info(path)
-        yield dict(
+
+        info = dict(
             OBS_ID=events_info["OBS_ID"],
-            HDU_TYPE="events",
-            HDU_CLASS="events",
             FILE_DIR=path.parent.as_posix(),
             FILE_NAME=path.name,
-            HDU_NAME="EVENTS",
         )
-        yield dict(
-            OBS_ID=events_info["OBS_ID"],
-            HDU_TYPE="gti",
-            HDU_CLASS="gti",
-            FILE_DIR=path.parent.as_posix(),
-            FILE_NAME=path.name,
-            HDU_NAME="GTI",
-        )
+        yield dict(HDU_TYPE="events", HDU_CLASS="events", HDU_NAME="EVENTS", **info)
+        yield dict(HDU_TYPE="gti", HDU_CLASS="gti", HDU_NAME="GTI", **info)
 
         caldb_irf = CalDBIRF.from_meta(events_info)
-        yield dict(
+        info = dict(
             OBS_ID=events_info["OBS_ID"],
-            HDU_TYPE="aeff",
-            HDU_CLASS="aeff_2d",
             FILE_DIR=caldb_irf.file_dir,
             FILE_NAME=caldb_irf.file_name,
-            HDU_NAME="EFFECTIVE AREA",
         )
         yield dict(
-            OBS_ID=events_info["OBS_ID"],
-            HDU_TYPE="edisp",
-            HDU_CLASS="edisp_2d",
-            FILE_DIR=caldb_irf.file_dir,
-            FILE_NAME=caldb_irf.file_name,
-            HDU_NAME="ENERGY DISPERSION",
+            HDU_TYPE="aeff", HDU_CLASS="aeff_2d", HDU_NAME="EFFECTIVE AREA", **info
         )
         yield dict(
-            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="edisp", HDU_CLASS="edisp_2d", HDU_NAME="ENERGY DISPERSION", **info
+        )
+        yield dict(
             HDU_TYPE="psf",
             HDU_CLASS="psf_3gauss",
-            FILE_DIR=caldb_irf.file_dir,
-            FILE_NAME=caldb_irf.file_name,
             HDU_NAME="POINT SPREAD FUNCTION",
+            **info
         )
-        yield dict(
-            OBS_ID=events_info["OBS_ID"],
-            HDU_TYPE="bkg",
-            HDU_CLASS="bkg_3d",
-            FILE_DIR=caldb_irf.file_dir,
-            FILE_NAME=caldb_irf.file_name,
-            HDU_NAME="BACKGROUND",
-        )
+        yield dict(HDU_TYPE="bkg", HDU_CLASS="bkg_3d", HDU_NAME="BACKGROUND", **info)
 
 
+# TODO: load IRF file, and infer HDU_CLASS from IRF file contents!
 class CalDBIRF:
     """Helper class to work with IRFs in CALDB format."""
 
