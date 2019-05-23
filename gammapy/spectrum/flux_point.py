@@ -860,7 +860,8 @@ class FluxPointsEstimator:
 
         for counts, dataset in zip(counts_all, self.datasets.datasets):
             if isinstance(dataset, MapDataset) and counts == 0:
-                dataset.background_model.parameters.frozen = True
+                if dataset.background_model is not None:
+                    dataset.background_model.parameters.frozen = True
 
     def _set_scale_model(self):
         # set the model on all datasets
@@ -980,7 +981,7 @@ class FluxPointsEstimator:
                 )
 
             if steps == "all":
-                steps = ["err", "errp-errn", "ul", "ts", "norm-scan", "counts"]
+                steps = ["err", "counts", "errp-errn", "ul", "ts", "norm-scan"]
 
             if "err" in steps:
                 result.update(self.estimate_norm_err())
@@ -1058,7 +1059,7 @@ class FluxPointsEstimator:
         """
         norm = self.model.parameters["norm"]
 
-        # TODO: the minuit backend as convergence problems when the likelihood is not
+        # TODO: the minuit backend has convergence problems when the likelihood is not
         #  of parabolic shape, which is the case, when there are zero counts in the
         #  energy bin. For this case we change to the scipy backend.
         counts = self.estimate_counts()["counts"]
