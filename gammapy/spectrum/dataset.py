@@ -162,7 +162,7 @@ class SpectrumDatasetOnOff(Dataset):
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
         Fit model
-    counts_on : `~gammapy.spectrum.PHACountsSpectrum`
+    counts : `~gammapy.spectrum.PHACountsSpectrum`
         ON Counts spectrum
     counts_off : `~gammapy.spectrum.PHACountsSpectrum`
         OFF Counts spectrum
@@ -179,7 +179,7 @@ class SpectrumDatasetOnOff(Dataset):
     def __init__(
         self,
         model=None,
-        counts_on=None,
+        counts=None,
         counts_off=None,
         livetime=None,
         mask=None,
@@ -187,7 +187,7 @@ class SpectrumDatasetOnOff(Dataset):
         edisp=None,
     ):
 
-        self.counts_on = counts_on
+        self.counts = counts
         self.counts_off = counts_off
         self.livetime = livetime
         self.mask = mask
@@ -202,8 +202,8 @@ class SpectrumDatasetOnOff(Dataset):
     @livetime.setter
     def livetime(self, livetime):
         self._livetime = livetime
-        if self.counts_on is not None:
-            self.counts_on.livetime = livetime
+        if self.counts is not None:
+            self.counts.livetime = livetime
         # TODO : check if off might have different exposure
         if self.counts_off is not None:
             self.counts_off.livetime = livetime
@@ -211,40 +211,40 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def lo_threshold(self):
         """Low energy threshold"""
-        return self.counts_on.lo_threshold
+        return self.counts.lo_threshold
 
     @lo_threshold.setter
     def lo_threshold(self, threshold):
-        self.counts_on.lo_threshold = threshold
+        self.counts.lo_threshold = threshold
         if self.counts_off is not None:
             self.counts_off.lo_threshold = threshold
 
     @property
     def hi_threshold(self):
         """High energy threshold"""
-        return self.counts_on.hi_threshold
+        return self.counts.hi_threshold
 
     @hi_threshold.setter
     def hi_threshold(self, threshold):
-        self.counts_on.hi_threshold = threshold
+        self.counts.hi_threshold = threshold
         if self.counts_off is not None:
             self.counts_off.hi_threshold = threshold
 
     def reset_thresholds(self):
         """Reset energy thresholds (i.e. declare all energy bins valid)"""
-        self.counts_on.reset_thresholds()
+        self.counts.reset_thresholds()
         if self.counts_off is not None:
             self.counts_off.reset_thresholds()
 
     @property
     def mask(self):
-        """The mask defined by the counts_on PHACountsSpectrum"""
-        return self.counts_on.quality == 0 & self.fit_mask
+        """The mask defined by the counts PHACountsSpectrum"""
+        return self.counts.quality == 0 & self.fit_mask
 
     @mask.setter
     def mask(self, mask):
         if mask is None:
-            mask = np.ones_like(self.counts_on.quality, dtype="bool")
+            mask = np.ones_like(self.counts.quality, dtype="bool")
         if mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         else:
@@ -260,7 +260,7 @@ class SpectrumDatasetOnOff(Dataset):
         emax : `~astropy.units.Quantity`
             Maximum energy, default is None (i.e. set to maximal energy)
         """
-        energy = self.counts_on.energy.edges
+        energy = self.counts.energy.edges
 
         if emin is None:
             mask_lo = np.ones_like(energy, dtype="bool")
@@ -277,7 +277,7 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        return self.counts_on.backscal / self.counts_off.backscal
+        return self.counts.backscal / self.counts_off.backscal
 
     @property
     def model(self):
@@ -293,7 +293,7 @@ class SpectrumDatasetOnOff(Dataset):
                     model=self.model,
                     livetime=self.livetime,
                     aeff=self.aeff,
-                    e_true=self.counts_on.energy.edges,
+                    e_true=self.counts.energy.edges,
                 )
             else:
                 self._predictor = SpectrumEvaluator(
@@ -317,7 +317,7 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts_on.data.data.shape
+        return self.counts.data.data.shape
 
     def npred(self):
         """Returns npred counts vector """
@@ -330,7 +330,7 @@ class SpectrumDatasetOnOff(Dataset):
         """Likelihood per bin given the current model parameters"""
         npred = self.npred()
         on_stat_ = wstat(
-            n_on=self.counts_on.data.data,
+            n_on=self.counts.data.data,
             n_off=self.counts_off.data.data,
             alpha=self.alpha,
             mu_sig=npred.data.data,
@@ -375,18 +375,18 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def energy_range(self):
         """Energy range used for the fit"""
-        energy = self.counts_on.energy.edges
+        energy = self.counts.energy.edges
         e_lo = energy[:-1][self.mask]
         e_hi = energy[1:][self.mask]
         return u.Quantity([e_lo.min(), e_hi.max()])
 
     def _as_counts_spectrum(self, data):
-        energy = self.counts_on.energy.edges
+        energy = self.counts.energy.edges
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     def excess(self):
-        """Excess (counts_on - alpha * counts_off)"""
-        excess = self.counts_on.data.data - self.alpha * self.counts_off.data.data
+        """Excess (counts - alpha * counts_off)"""
+        excess = self.counts.data.data - self.alpha * self.counts_off.data.data
         return self._as_counts_spectrum(excess)
 
     def residuals(self):
@@ -411,7 +411,7 @@ class SpectrumDatasetOnOff(Dataset):
             background_vector.plot_hist(
                 ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
             )
-        self.counts_on.plot_hist(
+        self.counts.plot_hist(
             ax=ax1,
             label="n_on",
             color="darkred",
@@ -464,7 +464,7 @@ class SpectrumDatasetOnOff(Dataset):
 
     @property
     def _e_unit(self):
-        return self.counts_on.energy.unit
+        return self.counts.energy.unit
 
     def plot_counts(self, ax=None):
         """Plot predicted and detected counts.
@@ -543,12 +543,12 @@ class SpectrumDatasetOnOff(Dataset):
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        phafile = self.counts_on.phafile
-        bkgfile = self.counts_on.bkgfile
-        arffile = self.counts_on.arffile
-        rmffile = self.counts_on.rmffile
+        phafile = self.counts.phafile
+        bkgfile = self.counts.bkgfile
+        arffile = self.counts.arffile
+        rmffile = self.counts.rmffile
 
-        self.counts_on.write(
+        self.counts.write(
             outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa
         )
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -597,7 +597,7 @@ class SpectrumDatasetOnOff(Dataset):
         mask = quality == 0
 
         return cls(
-            counts_on=on_vector,
+            counts=on_vector,
             aeff=effective_area,
             counts_off=off_vector,
             edisp=energy_dispersion,
@@ -610,7 +610,7 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def obs_id(self):
         """The observation ID of the dataset"""
-        return self.counts_on.obs_id
+        return self.counts.obs_id
 
     # TODO : do we keep SpectrumStats or do we adapt this part of code?
     # This was imported and adapted from the SpectrumObservation class
@@ -618,13 +618,13 @@ class SpectrumDatasetOnOff(Dataset):
     def total_stats(self):
         """Return total `~gammapy.spectrum.SpectrumStats`
         """
-        return self.stats_in_range(0, self.counts_on.energy.nbin - 1)
+        return self.stats_in_range(0, self.counts.energy.nbin - 1)
 
     @property
     def total_stats_safe_range(self):
         """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
         """
-        safe_bins = self.counts_on.bins_in_safe_range
+        safe_bins = self.counts.bins_in_safe_range
         return self.stats_in_range(safe_bins[0], safe_bins[-1])
 
     def stats_in_range(self, bin_min, bin_max):
@@ -652,11 +652,11 @@ class SpectrumDatasetOnOff(Dataset):
                 a_off = 1  # avoid zero division error
 
             stat = SpectrumStats(
-                energy_min=self.counts_on.energy.edges[ii],
-                energy_max=self.counts_on.energy.edges[ii + 1],
-                n_on=int(self.counts_on.data.data.value[ii]),
+                energy_min=self.counts.energy.edges[ii],
+                energy_max=self.counts.energy.edges[ii + 1],
+                n_on=int(self.counts.data.data.value[ii]),
                 n_off=n_off,
-                a_on=self.counts_on._backscal_array[ii],
+                a_on=self.counts._backscal_array[ii],
                 a_off=a_off,
                 obs_id=self.obs_id,
                 livetime=self.livetime,
@@ -666,9 +666,9 @@ class SpectrumDatasetOnOff(Dataset):
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
         stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
-        stacked_stats.obs_id = self.counts_on.obs_id
-        stacked_stats.energy_min = self.counts_on.energy.edges[bin_min]
-        stacked_stats.energy_max = self.counts_on.energy.edges[bin_max + 1]
+        stacked_stats.obs_id = self.counts.obs_id
+        stacked_stats.energy_min = self.counts.energy.edges[bin_min]
+        stacked_stats.energy_max = self.counts.energy.edges[bin_max + 1]
         return stacked_stats
 
 
@@ -760,7 +760,7 @@ class SpectrumDatasetOnOffStacker:
 
     def stack_on_vector(self):
         """Stack the on count vector."""
-        on_vector_list = [o.counts_on for o in self.obs_list]
+        on_vector_list = [o.counts for o in self.obs_list]
         self.stacked_on_vector = self.stack_counts_spectrum(on_vector_list)
 
     def stack_off_vector(self):
@@ -796,14 +796,14 @@ class SpectrumDatasetOnOffStacker:
 
     def stack_backscal(self):
         """Stack ``backscal`` for on and off vector."""
-        nbins = self.obs_list[0].counts_on.energy.nbin
+        nbins = self.obs_list[0].counts.energy.nbin
         bkscal_on = np.ones(nbins)
         bkscal_off = np.zeros(nbins)
 
         alpha_sum = 0.0
 
         for obs in self.obs_list:
-            bkscal_on_data = obs.counts_on._backscal_array.copy()
+            bkscal_on_data = obs.counts._backscal_array.copy()
             bkscal_off_data = obs.counts_off._backscal_array.copy()
             bkscal_off += (
                 bkscal_on_data / bkscal_off_data
@@ -871,7 +871,7 @@ class SpectrumDatasetOnOffStacker:
     def stack_obs(self):
         """Create stacked `~gammapy.spectrum.SpectrumDatasetOnOff`"""
         self.stacked_obs = SpectrumDatasetOnOff(
-            counts_on=self.stacked_on_vector,
+            counts=self.stacked_on_vector,
             counts_off=self.stacked_off_vector,
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,

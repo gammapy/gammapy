@@ -867,7 +867,7 @@ class FluxPointsEstimator:
         """Energy grouping table `~astropy.table.Table`"""
         dataset = self.datasets.datasets[0]
         try:
-            energy_axis = dataset.counts_on.energy
+            energy_axis = dataset.counts.energy
         except AttributeError:
             energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         return energy_axis.group_table(self.e_edges)

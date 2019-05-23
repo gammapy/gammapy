@@ -145,13 +145,13 @@ class SpectrumSimulation:
         if self.background_model is not None:
             self.simulate_background_counts(random_state)
         obs = SpectrumDatasetOnOff(
-            counts_on=self.on_vector,
+            counts=self.on_vector,
             counts_off=self.off_vector,
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime
         )
-        obs.counts_on.obs_id = obs_id
+        obs.counts.obs_id = obs_id
         self.obs = obs
 
     def simulate_source_counts(self, rand):
