@@ -94,7 +94,7 @@ class TestEnergyDispersion:
             self.edisp.peek()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp (see below)

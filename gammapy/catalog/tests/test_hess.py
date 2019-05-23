@@ -17,7 +17,7 @@ def cat():
     return SourceCatalogHGPS("$GAMMAPY_DATA/catalogs/hgps_catalog_v1.fits.gz")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalogHGPS:
     @staticmethod
     def test_source_table(cat):
@@ -48,7 +48,7 @@ class TestSourceCatalogHGPS:
         assert isinstance(cat.large_scale_component, SourceCatalogLargeScaleHGPS)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalogObjectHGPS:
     @pytest.fixture(scope="class")
     def source(self, cat):
@@ -247,7 +247,7 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(p["width"].value, 0.05)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalogObjectHGPSComponent:
     @pytest.fixture(scope="class")
     def component(self, cat):

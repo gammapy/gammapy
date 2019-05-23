@@ -68,7 +68,7 @@ SOURCES_3FHL = [
 ]
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFermi3FGLObject:
     @classmethod
     def setup_class(cls):
@@ -189,7 +189,7 @@ class TestFermi3FGLObject:
         assert str(self.cat["Crab"]) == str(self.cat[name])
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFermi1FHLObject:
     @classmethod
     def setup_class(cls):
@@ -220,7 +220,7 @@ class TestFermi1FHLObject:
         assert_quantity_allclose(actual, desired, rtol=1e-5)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFermi2FHLObject:
     @classmethod
     def setup_class(cls):
@@ -251,7 +251,7 @@ class TestFermi2FHLObject:
         assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFermi3FHLObject:
     @classmethod
     def setup_class(cls):
@@ -321,7 +321,7 @@ class TestFermi3FHLObject:
         assert str(self.cat["Crab Nebula"]) == str(self.cat[name])
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalog3FGL:
     @classmethod
     def setup_class(cls):
@@ -351,7 +351,7 @@ class TestSourceCatalog3FGL:
         assert len(selection.table) == 143
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalog1FHL:
     @classmethod
     def setup_class(cls):
@@ -371,7 +371,7 @@ class TestSourceCatalog1FHL:
         assert str(self.cat["Crab"]) == str(self.cat[name])
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalog2FHL:
     @classmethod
     def setup_class(cls):
@@ -391,7 +391,7 @@ class TestSourceCatalog2FHL:
         assert str(self.cat["Crab"]) == str(self.cat[name])
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalog3FHL:
     @classmethod
     def setup_class(cls):

@@ -14,13 +14,13 @@ def source_catalogs():
     return cats
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_info_table(source_catalogs):
     table = source_catalogs.info_table
     assert table.colnames == ["name", "description", "sources"]
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_getitem(source_catalogs):
     cat = source_catalogs["2fhl"]
     assert cat.name == "2fhl"

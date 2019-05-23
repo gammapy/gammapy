@@ -5,7 +5,7 @@ from ...maps import Map
 from ..main import cli
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_bin_image_main(tmpdir):
     """Run ``gammapy-bin-image`` and compare result to ``ctskymap``.
     """

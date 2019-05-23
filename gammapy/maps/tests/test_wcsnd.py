@@ -536,7 +536,7 @@ def test_convolve_vs_smooth():
     assert_allclose(actual.data, desired.data, rtol=1e-3)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_convolve_nd():
     energy_axis = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy"

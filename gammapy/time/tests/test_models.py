@@ -16,14 +16,14 @@ def phase_curve():
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_phasecurve_phase(phase_curve):
     time = 46300.0
     phase = phase_curve.phase(time)
     assert_allclose(phase, 0.7066006737999402)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_phasecurve_evaluate(phase_curve):
     time = 46300.0
     value = phase_curve.evaluate_norm_at_time(time)
@@ -42,19 +42,19 @@ def light_curve():
     return LightCurveTableModel.read(path)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
     assert "LightCurveTableModel" in ss
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_light_curve_evaluate_norm_at_time(light_curve):
     val = light_curve.evaluate_norm_at_time(46300)
     assert_allclose(val, 0.021192223042749835)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_light_curve_mean_norm_in_time_interval(light_curve):
     val = light_curve.mean_norm_in_time_interval(46300, 46301)
     assert_allclose(val, 0.021192284384617066)

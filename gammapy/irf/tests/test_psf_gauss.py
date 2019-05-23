@@ -64,7 +64,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEnergyDependentMultiGaussPSF:
     @pytest.fixture(scope="session")
     def psf(self):
@@ -126,7 +126,7 @@ class TestEnergyDependentMultiGaussPSF:
         assert_allclose(np.squeeze(desired), actual, atol=0.005)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_psf_cta_1dc():
     filename = (
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"

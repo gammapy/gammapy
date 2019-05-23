@@ -31,7 +31,7 @@ def geom(ebounds):
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
@@ -110,7 +110,7 @@ def test_map_maker(pars, observations, keepdims):
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_map_maker_ring(observations):
     ring_bkg = RingBackgroundEstimator(r_in="0.5 deg", width="0.4 deg")
     geomd = geom(ebounds=[0.1, 1, 10])

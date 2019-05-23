@@ -311,7 +311,7 @@ class TestSimpleFit:
         assert_allclose(pars["index"].value, 1.920686, rtol=1e-3)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @requires_dependency("iminuit")
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""

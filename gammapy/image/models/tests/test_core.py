@@ -164,7 +164,7 @@ def test_sky_diffuse_constant():
     assert radius is None
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_sky_diffuse_map():
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     model = SkyDiffuseMap.read(filename, normalize=False)
@@ -180,7 +180,7 @@ def test_sky_diffuse_map():
     assert model.frame == "fk5"
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)
