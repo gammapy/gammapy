@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from .. import Parameter, Parameters, optimize_iminuit, confidence_iminuit
 
@@ -44,6 +45,19 @@ def test_iminuit_basic(pars):
     assert_allclose(minuit.values["par_000_x"], 2, rtol=1e-3)
     assert_allclose(minuit.values["par_001_y"], 3, rtol=1e-3)
     assert_allclose(minuit.values["par_002_z"], 4, rtol=1e-3)
+
+
+def test_iminuit_stepsize(pars):
+    pars.apply_autoscale = False
+    pars.covariance = np.diag([0.2, 3e4, 4e-6]) ** 2
+
+    factors, info, minuit = optimize_iminuit(function=fcn, parameters=pars)
+
+    assert info["success"]
+    assert_allclose(fcn(pars), 0, atol=1e-5)
+    assert_allclose(pars["x"].value, 2, rtol=1e-3)
+    assert_allclose(pars["y"].value, 3e5, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4e-5, rtol=2e-2)
 
 
 def test_iminuit_frozen(pars):

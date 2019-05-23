@@ -218,7 +218,7 @@ class Fit:
         # TODO: decide what to return, and fill the info correctly!
         return CovarianceResult(backend=backend, method=method, parameters=parameters, success=info["success"], message=info["message"])
 
-    def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
+    def confidence(self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -237,6 +237,8 @@ class Fit:
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
+        reoptimize : bool
+            Re-optimize other parameters, when computing the confidence region.
         **kwargs : dict
             Keyword argument passed ot the confidence estimation method.
 
@@ -261,17 +263,11 @@ class Fit:
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                result = compute(parameters, parameter, self.datasets.likelihood, sigma, **kwargs)
+                result = compute(parameters, parameter, self.datasets.likelihood, sigma, reoptimize, **kwargs)
 
-        errp = parameter.scale * result["errp"]
-        errn = parameter.scale * result["errn"]
-
-        return {
-            "errp": errp,
-            "errn": errn,
-            "success": result["success"],
-            "nfev": result["nfev"],
-        }
+        result["errp"] *= parameter.scale
+        result["errn"] *= parameter.scale
+        return result
 
     def likelihood_profile(
         self,

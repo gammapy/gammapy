@@ -528,6 +528,11 @@ class Parameters:
         """
         return restore_parameters_values(self)
 
+    def freeze_all(self):
+        """Freeze all parameters"""
+        for par in self.parameters:
+            par.frozen = True
+
 
 class restore_parameters_values:
     def __init__(self, parameters):
