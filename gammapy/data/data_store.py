@@ -1,6 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import subprocess
+from pathlib import Path
+from astropy.io import fits
+from astropy.table import Table
+from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.testing import Checker
 from .obs_table import ObservationTable
@@ -8,7 +12,7 @@ from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTableChecker
 from .observations import DataStoreObservation, Observations, ObservationChecker
 
-__all__ = ["DataStore"]
+__all__ = ["DataStore", "DataStoreMaker"]
 
 log = logging.getLogger(__name__)
 
@@ -134,6 +138,59 @@ class DataStore:
             hdu_table_filename=hdu_table_filename,
             obs_table_filename=obs_table_filename,
         )
+
+    @classmethod
+    def from_events_files(cls, paths):
+        """Create from a list of event filenames.
+
+        HDU and observation index tables will be created from the EVENTS header.
+
+        IRFs are found only if you have a ``CALDB`` environment variable set,
+        and if the EVENTS files contain the following keys:
+
+        - ``TELESCOP`` (example: ``TELESCOP = CTA``)
+        - ``CALDB`` (example: ``CALDB = 1dc``)
+        - ``IRF`` (example: ``IRF = Sourh_z20_50h``)
+
+        This method is useful specifically if you want to load data simulated
+        with `ctobssim`_
+
+        .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
+
+        Examples
+        --------
+        This is how you can access a single event list::
+
+            from gammapy.data import DataStore
+            path = "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits"
+            data_store = DataStore.from_events_files([path])
+            observations = data_store.get_observations()
+
+        You can now analyse this data as usual (see any Gammapy tutorial).
+
+        If you have multiple event files, you have to make the list. Here's an example
+        using ``Path.glob`` to get a list of all events files in a given folder::
+
+            import os
+            from pathlib import Path
+            path = Path(os.environ["GAMMAPY_DATA"]) / "cta-1dc/data"
+            paths = list(path.rglob("*.fits"))
+            data_store = DataStore.from_events_files(paths)
+            observations = data_store.get_observations()
+
+        Note that you have a lot of flexibility to select the observations you want,
+        by having a few lines of custom code to prepare ``paths``, or to select a
+        subset via a method on the ``data_store`` or the ``observations`` objects.
+
+        If you want to generate HDU and observation index files, write the tables to disk::
+
+            data_store.hdu_table.write("hdu-index.fits.gz")
+            data_store.obs_table.write("obs-index.fits.gz")
+        """
+        maker = DataStoreMaker(paths)
+        hdu_table = maker.make_hdu_table()
+        obs_table = maker.make_obs_table()
+        return cls(hdu_table=hdu_table, obs_table=obs_table)
 
     @staticmethod
     def _find_file(filename, dir):
@@ -335,3 +392,216 @@ class DataStoreChecker(Checker):
         for obs_id in self.data_store.obs_table["OBS_ID"]:
             obs = self.data_store.obs(obs_id)
             yield from ObservationChecker(obs).run()
+
+
+class DataStoreMaker:
+    """Create data store index tables.
+
+    This is a multi-step process coded as a class.
+    Users will usually call this via `DataStore.from_events_files`.
+    """
+
+    def __init__(self, paths):
+        if isinstance(paths, (str, Path)):
+            raise TypeError("Need list of paths, not a single string or Path object.")
+
+        self.paths = [make_path(path) for path in paths]
+
+        # Caches for EVENTS and IRF file header information
+        # Used to avoid reading FITS headers multiple times,
+        # since the infos are used more than once
+        self._events_info = {}
+        self._irf_info = {}
+
+    def get_events_info(self, path):
+        if path not in self._events_info:
+            self._events_info[path] = self.read_events_info(path)
+
+        return self._events_info[path]
+
+    def get_obs_info(self, path):
+        # We could add or remove info here depending on what we want in the obs table
+        return self.get_events_info(path)
+
+    @staticmethod
+    def read_events_info(filename):
+        with fits.open(filename) as hdu_list:
+            header = hdu_list["EVENTS"].header
+
+        info = {}
+        info["OBS_ID"] = header["OBS_ID"]
+        info["RA_PNT"] = header["RA_PNT"]
+        info["DEC_PNT"] = header["DEC_PNT"]
+        pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
+        info["GLON_PNT"] = pos.l.deg
+        info["GLAT_PNT"] = pos.b.deg
+        info["ZEN_PNT"] = 90 - float(header["ALT_PNT"])
+        info["ALT_PNT"] = header["ALT_PNT"]
+        info["AZ_PNT"] = header["AZ_PNT"]
+        info["ONTIME"] = header["ONTIME"]
+        info["LIVETIME"] = header["LIVETIME"]
+        info["DEADC"] = header["DEADC"]
+        info["TSTART"] = header["TSTART"]
+        info["TSTOP"] = header["TSTOP"]
+        info["DATE-OBS"] = header["DATE_OBS"]
+        info["TIME-OBS"] = header["TIME_OBS"]
+        info["DATE-END"] = header["DATE_END"]
+        info["TIME-END"] = header["TIME_END"]
+        info["N_TELS"] = header["N_TELS"]
+        info["OBJECT"] = header["OBJECT"]
+
+        # This is the info needed to link from EVENTS to IRFs
+        info["TELESCOP"] = header["TELESCOP"]
+        info["CALDB"] = header["CALDB"]
+        info["IRF"] = header["IRF"]
+
+        # Not part of the spec, but good to know from which file the info comes
+        info["EVENTS_FILENAME"] = filename
+        info["EVENT_COUNT"] = header["NAXIS2"]
+
+        # gti = Table.read(filename, hdu='GTI')
+        # info['GTI_START'] = gti['START'][0]
+        # info['GTI_STOP'] = gti['STOP'][0]
+
+        return info
+
+    def make_obs_table(self):
+        rows = []
+        for path in self.paths:
+            row = self.get_obs_info(path)
+            rows.append(row)
+
+        names = list(rows[0].keys())
+        table = Table(rows=rows, names=names)
+
+        table["RA_PNT"].unit = "deg"
+        table["DEC_PNT"].unit = "deg"
+        table["GLON_PNT"].unit = "deg"
+        table["GLAT_PNT"].unit = "deg"
+        table["ZEN_PNT"].unit = "deg"
+        table["ALT_PNT"].unit = "deg"
+        table["AZ_PNT"].unit = "deg"
+        table["ONTIME"].unit = "s"
+        table["LIVETIME"].unit = "s"
+        table["TSTART"].unit = "s"
+        table["TSTOP"].unit = "s"
+
+        meta = table.meta
+
+        # TODO: Values copied from one of the EVENTS headers
+        # TODO: check consistency for all EVENTS files and handle inconsistent case
+        # Transform times to first ref time? Or raise error for now?
+        # Test by combining some HESS & CTA runs?
+        meta["MJDREFI"] = 51544
+        meta["MJDREFF"] = 5.0000000000e-01
+        meta["TIMEUNIT"] = "s"
+        meta["TIMESYS"] = "TT"
+        meta["TIMEREF"] = "LOCAL"
+
+        meta["HDUCLASS"] = "GADF"
+        meta[
+            "HDUDOC"
+        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        meta["HDUVERS"] = "0.2"
+        meta["HDUCLAS1"] = "INDEX"
+        meta["HDUCLAS2"] = "OBS"
+
+        return table
+
+    def make_hdu_table(self):
+        rows = []
+        for path in self.paths:
+            rows.extend(self.get_hdu_table_rows(path))
+
+        names = list(rows[0].keys())
+        # names = ['OBS_ID', 'HDU_TYPE', 'HDU_CLASS', 'FILE_DIR', 'FILE_NAME', 'HDU_NAME']
+
+        table = Table(rows=rows, names=names)
+
+        meta = table.meta
+        meta["HDUCLASS"] = "GADF"
+        meta[
+            "HDUDOC"
+        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        meta["HDUVERS"] = "0.2"
+        meta["HDUCLAS1"] = "INDEX"
+        meta["HDUCLAS2"] = "HDU"
+
+        return table
+
+    def get_hdu_table_rows(self, path):
+        events_info = self.get_events_info(path)
+        yield dict(
+            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="events",
+            HDU_CLASS="events",
+            FILE_DIR=path.parent.as_posix(),
+            FILE_NAME=path.name,
+            HDU_NAME="EVENTS",
+        )
+        yield dict(
+            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="gti",
+            HDU_CLASS="gti",
+            FILE_DIR=path.parent.as_posix(),
+            FILE_NAME=path.name,
+            HDU_NAME="GTI",
+        )
+
+        caldb_irf = CalDBIRF.from_meta(events_info)
+        yield dict(
+            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="aeff",
+            HDU_CLASS="aeff_2d",
+            FILE_DIR=caldb_irf.file_dir,
+            FILE_NAME=caldb_irf.file_name,
+            HDU_NAME="EFFECTIVE AREA",
+        )
+        yield dict(
+            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="edisp",
+            HDU_CLASS="edisp_2d",
+            FILE_DIR=caldb_irf.file_dir,
+            FILE_NAME=caldb_irf.file_name,
+            HDU_NAME="ENERGY DISPERSION",
+        )
+        yield dict(
+            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="psf",
+            HDU_CLASS="psf_3gauss",
+            FILE_DIR=caldb_irf.file_dir,
+            FILE_NAME=caldb_irf.file_name,
+            HDU_NAME="POINT SPREAD FUNCTION",
+        )
+        yield dict(
+            OBS_ID=events_info["OBS_ID"],
+            HDU_TYPE="bkg",
+            HDU_CLASS="bkg_3d",
+            FILE_DIR=caldb_irf.file_dir,
+            FILE_NAME=caldb_irf.file_name,
+            HDU_NAME="BACKGROUND",
+        )
+
+
+class CalDBIRF:
+    """Helper class to work with IRFs in CALDB format."""
+
+    def __init__(self, telescop, caldb, irf):
+        self.telescop = telescop
+        self.caldb = caldb
+        self.irf = irf
+
+    @classmethod
+    def from_meta(cls, meta):
+        return cls(telescop=meta["TELESCOP"], caldb=meta["CALDB"], irf=meta["IRF"])
+
+    def as_dict(self):
+        return {"telescop": self.telescop, "caldb": self.caldb, "irf": self.irf}
+
+    @property
+    def file_dir(self):
+        return "$CALDB/data/{telescop}/{caldb}/bcf/{irf}".format(**self.as_dict())
+
+    @property
+    def file_name(self):
+        return "irf_file.fits"
