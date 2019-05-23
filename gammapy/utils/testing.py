@@ -75,12 +75,18 @@ def requires_data(name):
 
         from gammapy.utils.testing import requires_data
 
-        @requires_data('gammapy-data')
+        @requires_data("gammapy-data")
         def test_using_data_files():
             filename = "$GAMMAPY_DATA/..."
             ...
     """
     import pytest
+
+    if not isinstance(name, str):
+        raise TypeError(
+            "You must call @requires_data with a name (str). "
+            'Usually this:  @requires_data("gammapy-data")'
+        )
 
     skip_it = not has_data(name)
 
