@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from ....utils.distributions import GeneralRandomArray
+from .. import GeneralRandomArray
 
 
 def plot_simple_1d():

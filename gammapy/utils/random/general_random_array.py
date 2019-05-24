@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of the GeneralRandomArray class"""
 import numpy as np
-from ...utils.random import get_random_state
+from .utils import get_random_state
 
 __all__ = ["GeneralRandomArray"]
 
