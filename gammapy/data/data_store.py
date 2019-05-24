@@ -236,13 +236,13 @@ class DataStore:
         """
         return DataStoreObservation(obs_id=int(obs_id), data_store=self)
 
-    def get_observations(self, obs_id, skip_missing=False):
+    def get_observations(self, obs_id=None, skip_missing=False):
         """Generate a `~gammapy.data.Observations`.
 
         Parameters
         ----------
         obs_id : list
-            Observation IDs.
+            Observation IDs (default of ``None`` means "all")
         skip_missing : bool, optional
             Skip missing observations, default: False
 
@@ -251,6 +251,9 @@ class DataStore:
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.DataStoreObservation`
         """
+        if obs_id is None:
+            obs_id = self.obs_table["OBS_ID"].data
+
         obs_list = []
         for _ in obs_id:
             try:

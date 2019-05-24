@@ -66,6 +66,10 @@ def test_datastore_get_observations(data_store):
     observations = data_store.get_observations([23523, 23592])
     assert observations[0].obs_id == 23523
 
+    # Test that default is all observations
+    observations = data_store.get_observations()
+    assert len(observations) == 105
+
     with pytest.raises(ValueError):
         data_store.get_observations([11111, 23592])
 
