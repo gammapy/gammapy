@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
 from gammapy.astro.population import radial_distributions
-from gammapy.utils.distributions import normalize
+from gammapy.utils.random import normalize
 
 radius = np.linspace(0, 20, 100) * u.kpc
 

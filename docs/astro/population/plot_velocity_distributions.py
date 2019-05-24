@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
 from gammapy.astro.population import velocity_distributions
-from gammapy.utils.distributions import normalize
+from gammapy.utils.random import normalize
 
 velocity = np.linspace(10, 3000, 200) * u.km / u.s
 
