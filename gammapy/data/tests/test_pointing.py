@@ -5,7 +5,7 @@ from ...utils.testing import requires_data, assert_time_allclose
 from ..pointing import FixedPointingInfo, PointingInfo
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFixedPointingInfo:
     @classmethod
     def setup_class(cls):
@@ -49,7 +49,7 @@ class TestFixedPointingInfo:
         assert pos.name == "altaz"
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestPointingInfo:
     @classmethod
     def setup_class(cls):

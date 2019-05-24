@@ -256,7 +256,7 @@ class TestSkyDiffuseCube:
         assert_allclose(q.value.mean(), 42)
 
     @staticmethod
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_read():
         model = SkyDiffuseCube.read(
             "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"

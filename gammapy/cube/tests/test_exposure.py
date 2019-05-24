@@ -29,7 +29,7 @@ def geom(map_type, ebounds):
         raise ValueError()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [

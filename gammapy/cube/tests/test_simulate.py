@@ -13,7 +13,7 @@ from ...cube import MapDataset
 from ..simulate import simulate_dataset
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_simulate():
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"

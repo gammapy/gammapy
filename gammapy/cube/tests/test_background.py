@@ -99,7 +99,7 @@ def geom(map_type, ebounds, skydir):
         raise ValueError()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
@@ -142,7 +142,7 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
     assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="constant"
@@ -156,7 +156,7 @@ def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
             assert_allclose(d[:, 1], d[0, 1])
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="symmetric"
@@ -166,7 +166,7 @@ def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
         assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="asymmetric"

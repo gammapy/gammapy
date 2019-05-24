@@ -236,7 +236,7 @@ def test_model_unit():
 
 
 @requires_dependency("matplotlib")
-@requires_data("gammapy-data")
+@requires_data()
 def test_table_model_from_file():
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
     absorption_z03 = TableModel.read_xspec_model(filename=filename, param=0.3)
@@ -244,7 +244,7 @@ def test_table_model_from_file():
         absorption_z03.plot(energy_range=(0.03, 10), energy_unit=u.TeV, flux_unit="")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_absorption():
     # absorption values for given redshift
     redshift = 0.117
@@ -301,7 +301,7 @@ def test_pwl_index_2_error():
     assert_quantity_allclose(eflux_err, 0.2302585e-12 * u.Unit("TeV cm-2 s-1"))
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_fermi_isotropic():
     filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
     model = TableModel.read_fermi_isotropic_model(filename)

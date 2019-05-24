@@ -427,7 +427,7 @@ def test_create_gti():
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_observation_table_checker():
     path = "$GAMMAPY_DATA/cta-1dc/index/gps/obs-index.fits.gz"
     obs_table = ObservationTable.read(path)

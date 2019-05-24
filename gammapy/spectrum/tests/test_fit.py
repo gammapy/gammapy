@@ -100,7 +100,7 @@ class TestFit:
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-data")
+@requires_data()
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""
 

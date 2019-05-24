@@ -19,7 +19,7 @@ class TestEffectiveAreaTable2D:
     # TODO: split this out into separate tests, especially the plotting
     # Add I/O test
     @staticmethod
-    @requires_data("gammapy-data")
+    @requires_data()
     def test(aeff):
         assert aeff.data.axis("energy").nbin == 96
         assert aeff.data.axis("offset").nbin == 6
@@ -58,7 +58,7 @@ class TestEffectiveAreaTable2D:
 
     @staticmethod
     @requires_dependency("matplotlib")
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_plot(aeff):
         with mpl_plot_check():
             aeff.plot()
@@ -73,7 +73,7 @@ class TestEffectiveAreaTable2D:
 class TestEffectiveAreaTable:
     @staticmethod
     @requires_dependency("matplotlib")
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_EffectiveAreaTable(tmpdir, aeff):
         arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 

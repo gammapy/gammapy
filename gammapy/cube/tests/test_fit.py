@@ -98,7 +98,7 @@ def counts(sky_model, exposure, background, psf, edisp):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-data")
+@requires_data()
 def test_map_fit(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 3)
     ebounds_true = np.logspace(-1.0, 1.0, 4)
@@ -189,7 +189,7 @@ def test_map_fit(sky_model):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-data")
+@requires_data()
 def test_map_fit_one_energy_bin(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 2)
     geom_r = geom(ebounds)

@@ -51,7 +51,7 @@ def bkg_estimator(observations, exclusion_mask, on_region):
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_find_reflected_regions(exclusion_mask, on_region):
     pointing = SkyCoord(83.2, 22.5, unit="deg")
     fregions = ReflectedRegionsFinder(
@@ -86,7 +86,7 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     assert len(regions) == 5
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestReflectedRegionBackgroundEstimator:
     def test_basic(self, bkg_estimator):
         assert "ReflectedRegionsBackgroundEstimator" in str(bkg_estimator)

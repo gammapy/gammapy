@@ -143,7 +143,7 @@ class TestFluxPointsEstimator:
 
     @staticmethod
     @requires_dependency("iminuit")
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_run_map_pwl(fpe_map_pwl):
         fp = fpe_map_pwl.run()
 
@@ -170,7 +170,7 @@ class TestFluxPointsEstimator:
 
     @staticmethod
     @requires_dependency("iminuit")
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
         fp = fpe_map_pwl_reoptimize.run(steps=["err", "norm-scan", "ts"])
 

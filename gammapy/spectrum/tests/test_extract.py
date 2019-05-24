@@ -64,7 +64,7 @@ def extraction(bkg_estimate, observations):
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSpectrumExtraction:
     @staticmethod
     @pytest.mark.parametrize(

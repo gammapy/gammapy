@@ -24,7 +24,7 @@ def data_store():
     return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
@@ -99,7 +99,7 @@ def test_make_psf(pars, data_store):
     assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_mean_psf(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 
@@ -110,7 +110,7 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_mean_edisp(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 
