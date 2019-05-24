@@ -158,7 +158,34 @@ For spectral analysis we propose to introduce a `SpectrumDataset`:
     dataset.likelihood(mask)
 
 The `SpectrumDatasets` with a parametric background model will be introduced first.
-The existing `SpectrumObservation` can be refactored later in a `SpectrumDatasetsOnOff`.
+
+
+`SpectrumDatasetOnOff`
+----------------------
+
+For ON / OFF based spectral analysis we propose to introduce a `SpectrumDatasetOnOff`:
+
+.. code ::
+
+    from gammapy.spectrum import SpectrumDatasetOnOff
+
+    model = SpectralModel()
+    edisp = EnergyDispersion.read()
+
+    counts = Spectrum.read()
+
+    dataset = SpectrumDataset(
+        counts=counts,
+        model=model,
+        background_model=background_model,
+        edisp=edisp,
+        )
+
+    dataset.npred()
+    dataset.likelihoop_per_bin()
+    dataset.likelihood()
+
+The existing `SpectrumObservation` will be refactored into the `SpectrumDatasetsOnOff` class.
 
 
 `FluxPointsDataset`
@@ -292,13 +319,15 @@ Dataset serialization
 ---------------------
 
 For convenience all dataset classes should support serialization, implemented
-via `.read()` and `.write()` methods. As the dataset as to orchestrate the
-serialization of mutiple objects, such as model, maps, flux-points etc. the best
-option is likely to introduce the serialization with a YAML based index file:
+via `.read()` and `.write()` methods. For now we only consider the serialization
+of the data of the datasets and not the of the model, which might always stay
+separate. As the dataset as to orchestrate the serialization of multiple objects,
+such as different kind of maps, flux-points etc. one option is to introduce the
+serialization with a YAML based index file:
 
 .. code ::
 
-    dataset = MapDataset.read("dataset.yaml") # lazy loading?
+    dataset = MapDataset.read("dataset.yaml")
     dataset.write("dataset.yaml")
 
 Where the index file points to the various files needed for initialization of the
@@ -312,11 +341,18 @@ dataset. Here is an example:
         exposure: "obs-123/exposure.fits"
         edisp: "obs-123/edisp.fits"
         psf: "obs-123/psf.fits"
-        model: "model.yaml"
         background-model: "obs-123/background.fits"
+        model: "model.yaml" # optionally
+
 
 Addtionally one could introduce a single FITS file serializiaton for quickly writing /
-reading datasets to disk.
+reading datasets to disk:
+
+.. code::
+
+    dataset = MapDataset.read("dataset.fits")
+    dataset.write("dataset.fits")
+
 
 The `Datasets` object could be serialized equivalently as a list of datasets:
 
@@ -377,6 +413,29 @@ as following:
 
     fit = Fit(dataset)
     fit.optimize()
+
+
+Mask and data range handling
+-----------------------------
+For a typical gamma-ray analysis there are two kinds of data ranges: the safe
+data range defined for each dataset e.g, by safe energy thresholds or offset cuts
+and the data range defined by the user for fitting, which are typically the same
+for all datasets. We propose to handle both ranges with separate masks `mask_safe`
+and `mask_fit` on the datasets. The main purpose is that safe data ranges are set
+in advance during data reduction and not modified later, while the fit mask
+can be modified by users to manually define the fit range or by algorithms
+e.g. flux point computation.
+
+Technically both data ranges are handled with a corresponding `mask_safe` and
+ `mask_fit` attribute:
+
+.. code::
+
+    dataset_1 = MapDataset(mask_safe=mask_safe, mask_fit=mask_fit)
+    dataset_2 = SpectrumDataset(mask_safe=mask_safe, mask_fit=mask_fit)
+
+For likelihood evaluation both mask are combined internally.
+
 
 
 List of Pull Requests
