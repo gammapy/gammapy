@@ -572,12 +572,11 @@ class CalDBIRF:
     def from_meta(cls, meta):
         return cls(telescop=meta["TELESCOP"], caldb=meta["CALDB"], irf=meta["IRF"])
 
-    def as_dict(self):
-        return {"telescop": self.telescop, "caldb": self.caldb, "irf": self.irf}
-
     @property
     def file_dir(self):
-        return "$CALDB/data/{telescop}/{caldb}/bcf/{irf}".format(**self.as_dict())
+        # In CTA 1DC the header key is "CTA", but the directory is lower-case "cta"
+        telescop = self.telescop.lower()
+        return "$CALDB/data/{}/{}/bcf/{}".format(telescop, self.caldb, self.irf)
 
     @property
     def file_name(self):

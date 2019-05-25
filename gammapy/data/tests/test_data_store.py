@@ -142,6 +142,8 @@ class TestDataStoreMaker:
         hdu_class = ["events", "gti", "aeff_2d", "edisp_2d", "psf_3gauss", "bkg_3d"]
         assert list(self.data_store.hdu_table["HDU_CLASS"]) == 4 * hdu_class
 
+        assert table["FILE_DIR"][2] == "$CALDB/data/cta/1dc/bcf/South_z20_50h"
+
     def test_observation(self, monkeypatch):
         """Check that one observation can be accessed OK"""
         obs = self.data_store.obs(110380)
