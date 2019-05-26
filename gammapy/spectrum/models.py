@@ -1303,7 +1303,10 @@ class Absorption:
         # show plot
         plt.show()
     """
-    def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None):
+
+    def __init__(
+        self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
+    ):
         self.data = data
 
         # set values log centers
@@ -1531,10 +1534,11 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
-    #TODO: prevent users from setting new attributes after init
+    # TODO: prevent users from setting new attributes after init
 
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
         import naima
+
         self.radiative_model = radiative_model
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = Parameter("distance", distance, frozen=True)
@@ -1553,13 +1557,19 @@ class NaimaModel(SpectralModel):
             parameters.append(getattr(self, name))
 
         # In case of a synchrotron radiative model, append B to the fittable parameters
-        if 'B' in self.radiative_model.param_names:
+        if "B" in self.radiative_model.param_names:
             B = getattr(self.radiative_model, "B")
             setattr(self, "B", Parameter("B", B))
             parameters.append(getattr(self, "B"))
 
         super().__init__(parameters)
 
+    def evaluate_error(self, energy):
+        # This method will need to be overridden here, since the radiative models in naima don't
+        # support the evaluation on energy values that is performed in the base class method
+        raise NotImplementedError(
+            "Error evaluation for naima models currently not supported."
+        )
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model"""
