@@ -1140,8 +1140,8 @@ class FluxPointsDataset(Dataset):
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
-    mask : `numpy.ndarray`
-        Mask to apply to the likelihood.
+    mask_fit : `numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
     likelihood : {"chi2", "chi2assym"}
         Likelihood function to use for the fit.
 
@@ -1166,10 +1166,10 @@ class FluxPointsDataset(Dataset):
         print(result.model)
     """
 
-    def __init__(self, model, data, mask=None, likelihood="chi2"):
+    def __init__(self, model, data, mask_fit=None, likelihood="chi2"):
         self.model = model
         self.data = data
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.parameters = model.parameters
 
         if likelihood in ["chi2", "chi2assym"]:
@@ -1226,14 +1226,14 @@ class FluxPointsDataset(Dataset):
         mask : `~numpy.ndarray`
             Mask to be combined with the dataset mask.
         """
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and mask is None:
             stat = self.likelihood_per_bin()
-        elif self.mask is None:
+        elif self.mask_fit is None:
             stat = self.likelihood_per_bin()[mask]
         elif mask is None:
-            stat = self.likelihood_per_bin()[self.mask]
+            stat = self.likelihood_per_bin()[self.mask_fit]
         else:
-            stat = self.likelihood_per_bin()[mask & self.mask]
+            stat = self.likelihood_per_bin()[mask & self.mask_fit]
 
         return np.nansum(stat, dtype=np.float64)
 
