@@ -1039,8 +1039,8 @@ class FluxPointsEstimator:
 
         for dataset in self.datasets.datasets:
             mask = self.datasets.mask.copy()
-            if dataset.mask is not None:
-                mask &= dataset.mask
+            if dataset.mask_fit is not None:
+                mask &= dataset.mask_fit
 
             if isinstance(dataset, SpectrumDatasetOnOff):
                 counts.append(dataset.counts.data.data[mask].sum())

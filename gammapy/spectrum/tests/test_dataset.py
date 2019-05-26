@@ -167,7 +167,7 @@ class TestSpectrumDatasetOnOff:
         assert_allclose(dataset.npred().data.data.sum(), expected.value)
 
     def test_incorrect_mask(self):
-        mask = np.ones(self.on_counts.data.data.shape, dtype="int")
+        mask_fit = np.ones(self.on_counts.data.data.shape, dtype="int")
 
         with pytest.raises(ValueError):
             SpectrumDatasetOnOff(
@@ -176,7 +176,7 @@ class TestSpectrumDatasetOnOff:
                 aeff=self.aeff,
                 edisp=self.edisp,
                 livetime=self.livetime,
-                mask=mask,
+                mask_fit=mask_fit,
             )
 
     @requires_dependency("matplotlib")
@@ -482,7 +482,7 @@ class TestSpectrumDatasetOnOffStacker:
 
         for obs in self.obs_list:
             obs.model = pwl
-            npred_summed[obs.mask] += obs.npred().data.data[obs.mask]
+            npred_summed[obs.mask_fit] += obs.npred().data.data[obs.mask_fit]
 
         assert_allclose(npred_stacked, npred_summed)
 
