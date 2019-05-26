@@ -961,7 +961,8 @@ class FluxPointsEstimator:
             ]
         )
 
-        self.datasets.mask = self._energy_mask(e_group)
+        for dataset in self.datasets.datasets:
+            dataset.mask_fit = self._energy_mask(e_group)
 
         self._set_scale_model()
 
@@ -1038,9 +1039,9 @@ class FluxPointsEstimator:
         counts = []
 
         for dataset in self.datasets.datasets:
-            mask = self.datasets.mask.copy()
-            if dataset.mask_fit is not None:
-                mask &= dataset.mask_fit
+            mask = dataset.mask_fit
+            if dataset.mask_safe is not None:
+                mask &= dataset.mask_safe
 
             if isinstance(dataset, SpectrumDatasetOnOff):
                 counts.append(dataset.counts.data.data[mask].sum())

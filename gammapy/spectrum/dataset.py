@@ -146,10 +146,10 @@ class SpectrumDataset(Dataset):
 
     @property
     def energy_range(self):
-        """Energy range defined by the mask"""
+        """Energy range defined by the safe mask"""
         energy = self.counts.energy.edges
-        e_lo = energy[:-1][self.mask]
-        e_hi = energy[1:][self.mask]
+        e_lo = energy[:-1][self.mask_safe]
+        e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])
 
 
@@ -196,6 +196,10 @@ class SpectrumDatasetOnOff(Dataset):
         self.aeff = aeff
         self.edisp = edisp
         self.model = model
+
+        if mask_safe is None:
+            mask_safe = np.logical_not(counts.quality)
+
         self.mask_safe = mask_safe
 
     @property
@@ -240,18 +244,18 @@ class SpectrumDatasetOnOff(Dataset):
             self.counts_off.reset_thresholds()
 
     @property
-    def mask_fit(self):
+    def mask_safe(self):
         """The mask defined by the counts PHACountsSpectrum"""
-        return self.counts.quality == 0 & self.fit_mask
+        return np.logical_not(self.counts.quality)
 
-    @mask_fit.setter
-    def mask_fit(self, mask):
+    @mask_safe.setter
+    def mask_safe(self, mask):
         if mask is None:
             mask = np.ones_like(self.counts.quality, dtype="bool")
         if mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         else:
-            self.fit_mask = mask
+            self.counts.quality = np.logical_not(mask)
 
     def set_fit_energy_range(self, emin=None, emax=None):
         """Set the energy range for the fit.
@@ -372,10 +376,10 @@ class SpectrumDatasetOnOff(Dataset):
 
     @property
     def energy_range(self):
-        """Energy range used for the fit"""
+        """Energy range defined by the safe mask."""
         energy = self.counts.energy.edges
-        e_lo = energy[:-1][self.mask_fit]
-        e_hi = energy[1:][self.mask_fit]
+        e_lo = energy[:-1][self.mask_safe]
+        e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])
 
     def _as_counts_spectrum(self, data):
@@ -591,8 +595,7 @@ class SpectrumDatasetOnOff(Dataset):
 
         effective_area = EffectiveAreaTable.read(str(dirname / arf))
 
-        quality = on_vector.quality
-        mask = quality == 0
+        mask = on_vector.quality == 0
 
         return cls(
             counts=on_vector,
@@ -600,7 +603,7 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off=off_vector,
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
-            mask_fit=mask,
+            mask_safe=mask,
         )
 
     # TODO : do we keep this or should this become the Dataset name

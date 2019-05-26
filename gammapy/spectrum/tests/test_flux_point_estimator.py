@@ -65,7 +65,7 @@ def simulate_map_dataset():
 def fpe_map_pwl():
     dataset_1 = simulate_map_dataset()
     dataset_2 = dataset_1.copy()
-    dataset_2.mask_fit = np.zeros(dataset_2.data_shape).astype(bool)
+    dataset_2.mask_safe = np.zeros(dataset_2.data_shape).astype(bool)
 
     e_edges = [0.1, 1, 10, 100] * u.TeV
     return FluxPointsEstimator(

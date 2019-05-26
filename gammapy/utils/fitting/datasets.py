@@ -22,7 +22,7 @@ class Dataset(abc.ABC):
     """
 
     @abc.abstractmethod
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood (float, sum over bins).
 
         TODO: fix interface.
@@ -46,21 +46,12 @@ class Datasets:
     ----------
     datasets : `Dataset` or list of `Dataset`
         List of `Dataset` objects ot be joined.
-    mask : `~numpy.ndarray`
-        Global fitting mask used for all datasets.
     """
 
-    def __init__(self, datasets, mask=None):
+    def __init__(self, datasets):
         if not isinstance(datasets, list):
             datasets = [datasets]
         self._datasets = datasets
-
-        if mask is not None and not self.is_all_same_shape:
-            raise ValueError(
-                "Cannot apply mask if datasets are not of the same type and shape."
-            )
-
-        self.mask = mask
 
     @lazyproperty
     def parameters(self):
@@ -98,7 +89,7 @@ class Datasets:
         # TODO: add parallel evaluation of likelihoods
         for dataset in self.datasets:
             total_likelihood += dataset.likelihood(
-                parameters=parameters, mask=self.mask
+                parameters=parameters
             )
         return total_likelihood
 
