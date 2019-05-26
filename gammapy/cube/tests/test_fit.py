@@ -77,7 +77,7 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def mask(geom, sky_model):
+def mask_fit(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
@@ -119,14 +119,14 @@ def test_map_fit(sky_model):
         sky_model, exposure_map, background_model_2, psf_map, edisp_map
     )
 
-    mask_map = mask(geom_r, sky_model)
+    mask_map = mask_fit(geom_r, sky_model)
     sky_model.parameters["sigma"].frozen = True
 
     dataset_1 = MapDataset(
         model=sky_model,
         counts=counts_map_1,
         exposure=exposure_map,
-        mask=mask_map,
+        mask_fit=mask_map,
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_1,
@@ -137,7 +137,7 @@ def test_map_fit(sky_model):
         model=sky_model,
         counts=counts_map_2,
         exposure=exposure_map,
-        mask=mask_map,
+        mask_fit=mask_map,
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_2,
@@ -200,7 +200,7 @@ def test_map_fit_one_energy_bin(sky_model):
     edisp_map = edisp(geom_r, geom_r)
     exposure_map = exposure(geom_r)
     counts_map = counts(sky_model, exposure_map, background_model, psf_map, edisp_map)
-    mask_map = mask(geom_r, sky_model)
+    mask_map = mask_fit(geom_r, sky_model)
 
     sky_model.parameters["index"].value = 3.0
     sky_model.parameters["index"].frozen = True
@@ -212,7 +212,7 @@ def test_map_fit_one_energy_bin(sky_model):
         model=sky_model,
         counts=counts_map,
         exposure=exposure_map,
-        mask=mask_map,
+        mask_fit=mask_map,
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model,
