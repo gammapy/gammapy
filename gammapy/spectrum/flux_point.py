@@ -1144,6 +1144,8 @@ class FluxPointsDataset(Dataset):
         Mask to apply to the likelihood for fitting.
     likelihood : {"chi2", "chi2assym"}
         Likelihood function to use for the fit.
+    mask_safe : `numpy.ndarray`
+        Mask defining the safe data range.
 
     Examples
     --------
@@ -1166,11 +1168,12 @@ class FluxPointsDataset(Dataset):
         print(result.model)
     """
 
-    def __init__(self, model, data, mask_fit=None, likelihood="chi2"):
+    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None):
         self.model = model
         self.data = data
         self.mask_fit = mask_fit
         self.parameters = model.parameters
+        self.mask_safe = mask_safe
 
         if likelihood in ["chi2", "chi2assym"]:
             self._likelihood = likelihood
@@ -1218,22 +1221,17 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters.
-
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
-        if self.mask_fit is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self.likelihood_per_bin()
         elif self.mask_fit is None:
-            stat = self.likelihood_per_bin()[mask]
-        elif mask is None:
+            stat = self.likelihood_per_bin()[self.mask_safe]
+        elif self.mask_safe is None:
             stat = self.likelihood_per_bin()[self.mask_fit]
         else:
-            stat = self.likelihood_per_bin()[mask & self.mask_fit]
+            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
 
         return np.nansum(stat, dtype=np.float64)
 
