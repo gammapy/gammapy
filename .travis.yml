@@ -164,7 +164,7 @@ script:
       fi
 
     - if [[ $SETUP_CMD == 'test-cov' ]]; then
-          pip install .;
+          pip install -e .;
       fi
 
     - $MAIN_CMD $SETUP_CMD
