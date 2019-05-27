@@ -28,8 +28,8 @@ class MapDataset(Dataset):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    mask : `~gammapy.maps.WcsNDMap`
-        Mask to apply to the likelihood.
+    mask_fit : `~numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
@@ -45,6 +45,8 @@ class MapDataset(Dataset):
         This mode is recommended for local optimization algorithms.
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
+    mask_safe : `~numpy.ndarray`
+        Mask defining the safe data range.
     """
 
     def __init__(
@@ -52,24 +54,26 @@ class MapDataset(Dataset):
         model,
         counts=None,
         exposure=None,
-        mask=None,
+        mask_fit=None,
         psf=None,
         edisp=None,
         background_model=None,
         likelihood="cash",
         evaluation_mode="local",
+        mask_safe=None,
     ):
-        if mask is not None and mask.data.dtype != np.dtype("bool"):
+        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
         self.model = model
         self.counts = counts
         self.exposure = exposure
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
+        self.mask_safe = mask_safe
 
         if likelihood == "cash":
             self._stat = cash
@@ -155,26 +159,22 @@ class MapDataset(Dataset):
     def _counts_data(self):
         return self.counts.data.astype(float)
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters.
 
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
         counts, npred = self._counts_data, self.npred().data
 
         # TODO: add mask handling to _stat_sum, so that the temp copy
         # created by the fancy indexing is avoided
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self._stat_sum(counts.ravel(), npred.ravel())
-        elif self.mask is None:
-            stat = self._stat_sum(counts[mask], npred[mask])
-        elif mask is None:
-            stat = self._stat_sum(counts[self.mask.data], npred[self.mask.data])
+        elif self.mask_fit is None:
+            stat = self._stat_sum(counts[self.mask_safe], npred[self.mask_safe])
+        elif self.mask_safe is None:
+            stat = self._stat_sum(counts[self.mask_fit], npred[self.mask_fit])
         else:
-            mask_joined = mask & self.mask.data
+            mask_joined = self.mask_safe & self.mask_fit
             stat = self._stat_sum(counts[mask_joined], npred[mask_joined])
 
         return stat

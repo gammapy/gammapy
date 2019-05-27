@@ -832,6 +832,8 @@ class FluxPointsEstimator:
         self.source = source
         self.fit = Fit(self.datasets)
 
+        self._set_scale_model()
+
     def _freeze_parameters(self):
         # freeze other parameters
         for par in self.datasets.parameters:
@@ -840,7 +842,6 @@ class FluxPointsEstimator:
 
     def _freeze_empty_background(self):
         from ..cube import MapDataset
-
         counts_all = self.estimate_counts()["counts"]
 
         for counts, dataset in zip(counts_all, self.datasets.datasets):
@@ -946,9 +947,21 @@ class FluxPointsEstimator:
             ]
         )
 
-        self.datasets.mask = self._energy_mask(e_group)
+        contribute_to_likelihood = False
 
-        self._set_scale_model()
+        for dataset in self.datasets.datasets:
+            dataset.mask_fit = self._energy_mask(e_group)
+            mask = dataset.mask_fit
+
+            if dataset.mask_safe is not None:
+                mask &= dataset.mask_safe
+
+            contribute_to_likelihood |= mask.any()
+
+        if not contribute_to_likelihood:
+            raise ValueError("No dataset contributes to the likelihood between"
+                             " {e_min:.3f} and {e_max:.3f}. Please adapt the "
+                             "flux point energy edges or check the dataset masks.".format(e_min=e_min, e_max=e_max))
 
         with self.datasets.parameters.restore_values:
 
@@ -1023,9 +1036,9 @@ class FluxPointsEstimator:
         counts = []
 
         for dataset in self.datasets.datasets:
-            mask = self.datasets.mask.copy()
-            if dataset.mask is not None:
-                mask &= dataset.mask
+            mask = dataset.mask_fit
+            if dataset.mask_safe is not None:
+                mask &= dataset.mask_safe
 
             if isinstance(dataset, SpectrumDatasetOnOff):
                 counts.append(dataset.counts.data.data[mask].sum())
@@ -1125,10 +1138,12 @@ class FluxPointsDataset(Dataset):
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
-    mask : `numpy.ndarray`
-        Mask to apply to the likelihood.
+    mask_fit : `numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
     likelihood : {"chi2", "chi2assym"}
         Likelihood function to use for the fit.
+    mask_safe : `numpy.ndarray`
+        Mask defining the safe data range.
 
     Examples
     --------
@@ -1151,11 +1166,12 @@ class FluxPointsDataset(Dataset):
         print(result.model)
     """
 
-    def __init__(self, model, data, mask=None, likelihood="chi2"):
+    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None):
         self.model = model
         self.data = data
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.parameters = model.parameters
+        self.mask_safe = mask_safe
 
         if likelihood in ["chi2", "chi2assym"]:
             self._likelihood = likelihood
@@ -1203,22 +1219,17 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters.
-
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self.likelihood_per_bin()
-        elif self.mask is None:
-            stat = self.likelihood_per_bin()[mask]
-        elif mask is None:
-            stat = self.likelihood_per_bin()[self.mask]
+        elif self.mask_fit is None:
+            stat = self.likelihood_per_bin()[self.mask_safe]
+        elif self.mask_safe is None:
+            stat = self.likelihood_per_bin()[self.mask_fit]
         else:
-            stat = self.likelihood_per_bin()[mask & self.mask]
+            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
 
         return np.nansum(stat, dtype=np.float64)
 

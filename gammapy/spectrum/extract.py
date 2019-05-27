@@ -240,13 +240,13 @@ class SpectrumExtraction:
         """
         for obs in self.spectrum_observations:
             emin, emax = compute_energy_thresholds(obs.aeff, obs.edisp, **kwargs)
-            # TODO: add proper energy range setter to SpectrumDatasetOnOff
-            # Is a reset required or not?
-            if reset:
-                obs.reset_thresholds()
+            mask_safe = obs.counts.energy_mask(emin=emin, emax=emax)
 
-            obs.lo_threshold = emin
-            obs.hi_threshold = emax
+            if obs.mask_safe is not None:
+                obs.mask_safe &= mask_safe
+            else:
+                obs.mask_safe = mask_safe
+
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk as OGIP format.

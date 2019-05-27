@@ -81,7 +81,7 @@ class TestFit:
         dataset = SpectrumDatasetOnOff(counts=self.src)
         dataset.model = self.source_model
 
-        assert np.sum(dataset.mask) == self.nbins
+        assert np.sum(dataset.mask_safe) == self.nbins
         e_min, e_max = dataset.energy_range
 
         assert_allclose(e_max.value, 10)
@@ -130,7 +130,7 @@ class TestSpectralFit:
         result = fit.run()
 
         stats = dataset.likelihood_per_bin()
-        actual = np.sum(stats[dataset.mask])
+        actual = np.sum(stats[dataset.mask_safe])
 
         desired = result.total_stat
         assert_allclose(actual, desired)

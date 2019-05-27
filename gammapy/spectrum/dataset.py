@@ -25,14 +25,16 @@ class SpectrumDataset(Dataset):
         Counts spectrum
     livetime : float
         Livetime
-    mask : `~numpy.ndarray`
-        Mask to apply to the likelihood.
+    mask_fit : `~numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     background : `~gammapy.spectrum.CountsSpectrum`
         Background to use for the fit.
+    mask_safe : `~numpy.ndarray`
+        Mask defining the safe data range.
     """
 
     def __init__(
@@ -40,21 +42,23 @@ class SpectrumDataset(Dataset):
         model=None,
         counts=None,
         livetime=None,
-        mask=None,
+        mask_fit=None,
         aeff=None,
         edisp=None,
         background=None,
+        mask_safe=None,
     ):
-        if mask is not None and mask.dtype != np.dtype("bool"):
+        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.counts = counts
         self.livetime = livetime
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.aeff = aeff
         self.edisp = edisp
         self.background = background
         self.model = model
+        self.mask_safe = mask_safe
 
     @property
     def model(self):
@@ -107,22 +111,17 @@ class SpectrumDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data.data, mu_on=self.npred().data.data)
 
-    def likelihood(self, parameters=None, mask=None):
+    def likelihood(self, parameters=None):
         """Total likelihood given the current model parameters.
-
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self.likelihood_per_bin()
-        elif self.mask is None:
-            stat = self.likelihood_per_bin()[mask]
-        elif mask is None:
-            stat = self.likelihood_per_bin()[self.mask]
+        elif self.mask_fit is None:
+            stat = self.likelihood_per_bin()[self.mask_safe]
+        elif self.mask_safe is None:
+            stat = self.likelihood_per_bin()[self.mask_fit]
         else:
-            stat = self.likelihood_per_bin()[mask & self.mask]
+            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
 
         return np.sum(stat, dtype=np.float64)
 
@@ -147,10 +146,10 @@ class SpectrumDataset(Dataset):
 
     @property
     def energy_range(self):
-        """Energy range defined by the mask"""
+        """Energy range defined by the safe mask"""
         energy = self.counts.energy.edges
-        e_lo = energy[:-1][self.mask]
-        e_hi = energy[1:][self.mask]
+        e_lo = energy[:-1][self.mask_safe]
+        e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])
 
 
@@ -168,12 +167,14 @@ class SpectrumDatasetOnOff(Dataset):
         OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
-    mask : numpy.array
-        Mask to apply to the likelihood.
+    mask_fit : `~numpy.array`
+        Mask to apply to the likelihood for fitting.
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
+    mask_safe : `~numpy.array`
+        Mask defining the safe data range.
     """
 
     def __init__(
@@ -182,18 +183,24 @@ class SpectrumDatasetOnOff(Dataset):
         counts=None,
         counts_off=None,
         livetime=None,
-        mask=None,
+        mask_fit=None,
         aeff=None,
         edisp=None,
+        mask_safe=None,
     ):
 
         self.counts = counts
         self.counts_off = counts_off
         self.livetime = livetime
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.aeff = aeff
         self.edisp = edisp
         self.model = model
+
+        if mask_safe is None:
+            mask_safe = np.logical_not(counts.quality)
+
+        self.mask_safe = mask_safe
 
     @property
     def livetime(self):
@@ -237,18 +244,18 @@ class SpectrumDatasetOnOff(Dataset):
             self.counts_off.reset_thresholds()
 
     @property
-    def mask(self):
+    def mask_safe(self):
         """The mask defined by the counts PHACountsSpectrum"""
-        return self.counts.quality == 0 & self.fit_mask
+        return np.logical_not(self.counts.quality)
 
-    @mask.setter
-    def mask(self, mask):
+    @mask_safe.setter
+    def mask_safe(self, mask):
         if mask is None:
             mask = np.ones_like(self.counts.quality, dtype="bool")
         if mask.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
         else:
-            self.fit_mask = mask
+            self.counts.quality = np.logical_not(mask)
 
     def set_fit_energy_range(self, emin=None, emax=None):
         """Set the energy range for the fit.
@@ -272,7 +279,7 @@ class SpectrumDatasetOnOff(Dataset):
         else:
             mask_hi = energy[1:] <= emax
 
-        self.mask = mask_lo & mask_hi
+        self.mask_fit = mask_lo & mask_hi
 
     @property
     def alpha(self):
@@ -337,22 +344,17 @@ class SpectrumDatasetOnOff(Dataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters.
-
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self.likelihood_per_bin()
-        elif self.mask is None:
-            stat = self.likelihood_per_bin()[mask]
-        elif mask is None:
-            stat = self.likelihood_per_bin()[self.mask]
+        elif self.mask_fit is None:
+            stat = self.likelihood_per_bin()[self.mask_safe]
+        elif self.mask_safe is None:
+            stat = self.likelihood_per_bin()[self.mask_fit]
         else:
-            stat = self.likelihood_per_bin()[mask & self.mask]
+            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
 
         return np.sum(stat, dtype=np.float64)
 
@@ -374,10 +376,10 @@ class SpectrumDatasetOnOff(Dataset):
 
     @property
     def energy_range(self):
-        """Energy range used for the fit"""
+        """Energy range defined by the safe mask."""
         energy = self.counts.energy.edges
-        e_lo = energy[:-1][self.mask]
-        e_hi = energy[1:][self.mask]
+        e_lo = energy[:-1][self.mask_safe]
+        e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])
 
     def _as_counts_spectrum(self, data):
@@ -593,8 +595,7 @@ class SpectrumDatasetOnOff(Dataset):
 
         effective_area = EffectiveAreaTable.read(str(dirname / arf))
 
-        quality = on_vector.quality
-        mask = quality == 0
+        mask = on_vector.quality == 0
 
         return cls(
             counts=on_vector,
@@ -602,7 +603,7 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off=off_vector,
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
-            mask=mask,
+            mask_safe=mask,
         )
 
     # TODO : do we keep this or should this become the Dataset name

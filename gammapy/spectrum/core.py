@@ -261,6 +261,23 @@ class CountsSpectrum:
         )
 
 
+    def energy_mask(self, emin=None, emax=None):
+        """Create a mask for a given energy range.
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`
+            Energy range
+        """
+        edges = self.energy.edges
+
+        # set default values
+        emin = emin if emin is not None else edges[0]
+        emax = emax if emax is not None else edges[-1]
+
+        return (edges[:-1] > emin) & (edges[1:] < emax)
+
+
 class PHACountsSpectrum(CountsSpectrum):
     """Counts spectrum corresponding to OGIP PHA format.
 
