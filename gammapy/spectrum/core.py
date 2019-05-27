@@ -13,7 +13,7 @@ from ..utils.scripts import make_path
 from ..utils.fits import energy_axis_to_ebounds, ebounds_to_energy_axis
 from ..data import EventList
 
-__all__ = ["CountsSpectrum", "PHACountsSpectrum", "PHACountsSpectrumList"]
+__all__ = ["CountsSpectrum", "PHACountsSpectrum"]
 
 log = logging.getLogger("__name__")
 
@@ -548,85 +548,3 @@ class PHACountsSpectrum(CountsSpectrum):
             staterror=None,
             grouping=None,
         )
-
-
-class PHACountsSpectrumList(list):
-    """List of `~gammapy.spectrum.PHACountsSpectrum` objects.
-
-    All spectra must have the same energy binning.
-    This represent the PHA type II data format.
-    See https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node8.html
-    """
-
-    def write(self, outdir, **kwargs):
-        """Write to file"""
-        outdir = make_path(outdir)
-        self.to_hdulist().writeto(str(outdir), **kwargs)
-
-    def to_hdulist(self):
-        """Convert to `~astropy.io.fits.HDUList`"""
-        hdu = fits.BinTableHDU(self.to_table())
-        ebounds = energy_axis_to_ebounds(self[0].energy.edges)
-        return fits.HDUList([fits.PrimaryHDU(), hdu, ebounds])
-
-    def to_table(self):
-        """Convert to `~astropy.table.Table`."""
-        is_bkg = self[0].is_bkg
-        nbins = self[0].energy.nbin
-        spec_num = np.empty([len(self), 1], dtype=np.int16)
-        channel = np.empty([len(self), nbins], dtype=np.int16)
-        counts = np.empty([len(self), nbins], dtype=np.int32)
-        quality = np.empty([len(self), nbins], dtype=np.int32)
-        backscal = np.empty([len(self), nbins], dtype=np.int32)
-        backfile = list()
-        for idx, pha in enumerate(self):
-            t = pha.to_table()
-            spec_num[idx] = pha.obs_id
-            channel[idx] = t["CHANNEL"].data
-            counts[idx] = t["COUNTS"].data
-            quality[idx] = t["QUALITY"].data
-            backscal[idx] = t["BACKSCAL"].data
-            backfile.append("bkg.fits[{}]".format(idx))
-
-        meta = self[0].to_table().meta
-        meta["hduclas4"] = "TYPE:II"
-        meta["ancrfile"] = "arf.fits"
-        meta["respfile"] = "rmf.fits"
-
-        data = [spec_num, channel, counts, quality, backscal]
-        names = ["SPEC_NUM", "CHANNEL", "COUNTS", "QUALITY", "BACKSCAL"]
-        table = Table(data, names=names, meta=meta)
-
-        if not is_bkg:
-            table.meta.pop("backfile")
-            table["BACKFILE"] = backfile
-
-        return table
-
-    @classmethod
-    def read(cls, filename):
-        """Read from file."""
-        filename = make_path(filename)
-        with fits.open(str(filename), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist)
-
-    @classmethod
-    def from_hdulist(cls, hdulist):
-        """Create from `~astropy.io.fits.HDUList`."""
-        energy = ebounds_to_energy_axis(hdulist[2])
-        kwargs = dict(energy_lo=energy[:-1], energy_hi=energy[1:])
-        if hdulist[1].header["HDUCLAS2"] == "BKG":
-            kwargs["is_bkg"] = True
-
-        counts_table = Table.read(hdulist[1])
-        speclist = cls()
-        for row in counts_table:
-            kwargs["data"] = row["COUNTS"]
-            kwargs["backscal"] = row["BACKSCAL"]
-            kwargs["quality"] = row["QUALITY"]
-            kwargs["livetime"] = hdulist[1].header["EXPOSURE"] * u.s
-            kwargs["obs_id"] = row["SPEC_NUM"]
-            spec = PHACountsSpectrum(**kwargs)
-            speclist.append(spec)
-
-        return speclist
