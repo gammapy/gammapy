@@ -54,6 +54,9 @@ def cash(n_on, mu_on):
     * `Cash 1979, ApJ 228, 939
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
+    n_on = np.asanyarray(n_on)
+    mu_on = np.asanyarray(mu_on)
+
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide="ignore", invalid="ignore"):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
