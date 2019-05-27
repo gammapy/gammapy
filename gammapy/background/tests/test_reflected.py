@@ -43,12 +43,14 @@ def observations():
 @pytest.fixture(scope="session")
 def bkg_estimator(observations, exclusion_mask, on_region):
     """Example background estimator for testing."""
-    return ReflectedRegionsBackgroundEstimator(
+    maker = ReflectedRegionsBackgroundEstimator(
         observations=observations,
         on_region=on_region,
         exclusion_mask=exclusion_mask,
         min_distance_input="0.2 deg",
     )
+    maker.run()
+    return maker
 
 
 @requires_data()
@@ -88,11 +90,11 @@ def test_find_reflected_regions(exclusion_mask, on_region):
 
 @requires_data()
 class TestReflectedRegionBackgroundEstimator:
+
     def test_basic(self, bkg_estimator):
         assert "ReflectedRegionsBackgroundEstimator" in str(bkg_estimator)
 
     def test_run(self, bkg_estimator):
-        bkg_estimator.run()
         assert len(bkg_estimator.result[1].off_region) == 11
         assert "Reflected" in str(bkg_estimator.result[1])
 
