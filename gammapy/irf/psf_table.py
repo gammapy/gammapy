@@ -80,8 +80,8 @@ class TablePSF:
         >>> import numpy as np
         >>> from astropy.coordinates import Angle
         >>> from gammapy.irf import TablePSF
-        >>> TablePSF.from_shape(shape='gauss', width='0.2 deg',
-        ...                     rad=Angle(np.linspace(0, 0.7, 100), 'deg'))
+        >>> rad = Angle(np.linspace(0, 0.7, 100), 'deg')
+        >>> psf = TablePSF.from_shape(shape='gauss', width='0.2 deg', rad=rad)
         """
         width = Angle(width)
         rad = Angle(rad)

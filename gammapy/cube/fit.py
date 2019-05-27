@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.nddata.utils import NoOverlapError
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
-from ..maps import Map, MapAxis
+from ..maps import Map
 from .models import SkyModel, SkyModels
 
 __all__ = ["MapEvaluator", "MapDataset"]

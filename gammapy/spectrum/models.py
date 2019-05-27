@@ -1580,7 +1580,7 @@ class NaimaModel(SpectralModel):
 
         # Flattening the input energy list and later reshaping the flux list
         # prevents some radiative models from displaying broadcasting problems.
-        if self.seed == None:
+        if self.seed is None:
             dnde = self.radiative_model.flux(energy.flatten(), distance=distance)
         else:
             dnde = self.radiative_model.flux(

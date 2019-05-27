@@ -33,7 +33,7 @@ env:
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
-        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy'
+        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy pytest-cov'
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
@@ -61,7 +61,7 @@ matrix:
 
         # The main build that's used for coverage measurement
         - os: linux
-          env: PYTHON_VERSION=3.7 SETUP_CMD='test -V --coverage'
+          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='test-cov'
 
         # Run tests without optional dependencies
         - os: linux
@@ -83,7 +83,7 @@ matrix:
         # Test conda build (which runs a bunch of useful tests after building the package)
         # See https://conda.io/docs/bdist_conda.html
         - os: linux
-          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='conda'
+          env: PYTHON_VERSION=3.7 SETUP_CMD='bdist_conda'
                PACKAGING_TEST=true
 
         # Older Python versions
@@ -117,7 +117,7 @@ matrix:
 
         # Test Jupyter notebooks
         - os: linux
-          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
     # You can move builds that temporarily fail because of some non-Gammapy here.
@@ -125,7 +125,7 @@ matrix:
     # copy the part from the `include` section above here.
 #    allow_failures:
 #        - os: linux
-#          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+#          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-nb'
 #               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
 
@@ -163,6 +163,10 @@ script:
           gammapy download datasets --out=$GAMMAPY_DATA;
       fi
 
+    - if [[ $SETUP_CMD == 'test-cov' ]]; then
+          pip install -e .;
+      fi
+
     - $MAIN_CMD $SETUP_CMD
 
     - if $TEST_FERMIPY; then
@@ -172,6 +176,6 @@ script:
       fi
 
 after_success:
-    - if [[ $SETUP_CMD == 'test -V --coverage' ]]; then
+    - if [[ $SETUP_CMD == 'test-cov' ]]; then
           coveralls --rcfile='gammapy/tests/coveragerc';
       fi

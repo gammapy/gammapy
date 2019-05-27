@@ -224,7 +224,7 @@ class SmartHDUList:
     >>> from gammapy.utils.fits import SmartHDUList
     >>> hdus = SmartHDUList.open('$GAMMAPY_DATA/catalogs/fermi/gll_psch_v08.fit.gz')
     >>> type(hdus.hdu_list)
-    astropy.io.fits.hdu.hdulist.HDUList
+    <class 'astropy.io.fits.hdu.hdulist.HDUList'>
 
     So of course, you can do the usual things via ``hdus.hdu_list``:
 

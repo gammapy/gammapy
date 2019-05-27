@@ -33,6 +33,7 @@ dependencies:
   - iminuit
   - pytest
   - pytest-cov
+  - pytest-xdist
   - sphinx
   - pandoc
   - pylint

@@ -9,7 +9,7 @@
 #
 # All configuration values have a default. Some values are defined in
 # the global Astropy configuration which is loaded here before anything else.
-# See astropy.sphinx.conf for which values are set there.
+# See sphinx_astropy.conf for which values are set there.
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,20 +26,10 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
-import os
-import sys
-
-try:
-    import astropy_helpers
-except ImportError:
-    # Building from inside the docs/ directory?
-    if os.path.basename(os.getcwd()) == "docs":
-        a_h_path = os.path.abspath(os.path.join("..", "astropy_helpers"))
-        if os.path.isdir(a_h_path):
-            sys.path.insert(1, a_h_path)
 
 # Load all of the global Astropy configuration
-from astropy_helpers.sphinx.conf import *
+from sphinx_astropy.conf import *
+
 
 # Load utils docs functions
 from gammapy.utils.docs import gammapy_sphinx_ext_activate

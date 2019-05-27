@@ -12,8 +12,6 @@ __all__ = ["NDDataArray", "sqrt_space"]
 class NDDataArray:
     """ND Data Array Base class
 
-    for usage examples see :gp-notebook:`nddata_demo`
-
     Parameters
     ----------
     axes : list
@@ -179,7 +177,9 @@ class NDDataArray:
 
 def sqrt_space(start, stop, num):
     """Return numbers spaced evenly on a square root scale.
+
     This function is similar to `numpy.linspace` and `numpy.logspace`.
+
     Parameters
     ----------
     start : float
@@ -188,16 +188,17 @@ def sqrt_space(start, stop, num):
         stop is the final value of the sequence
     num : int
         Number of samples to generate.
+
     Returns
     -------
     samples : `~numpy.ndarray`
         1D array with a square root scale
+
     Examples
     --------
+
     >>> from gammapy.utils.nddata import sqrt_space
-    >>> samples = sqrt_space(0, 2, 5)
-    array([ 0.        ,  1.        ,  1.41421356,  1.73205081,  2.        ])
+    >>> sqrt_space(0, 2, 5)
+    array([0.        , 1.        , 1.41421356, 1.73205081, 2.        ])
     """
-    samples2 = np.linspace(start ** 2, stop ** 2, num)
-    samples = np.sqrt(samples2)
-    return samples
+    return np.sqrt(np.linspace(start ** 2, stop ** 2, num))

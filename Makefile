@@ -5,44 +5,38 @@ CYTHON ?= cython
 
 help:
 	@echo ''
-	@echo ' Gammapy available make targets:'
+	@echo ' make targets:'
 	@echo ''
-	@echo '     help             Print this help message (the default)'
+	@echo '     help               Print this help message (the default)'
 	@echo ''
-	@echo '     docs-show        Open local HTML docs in browser'
-	@echo '     docs-all         Build documentation'
-	@echo '     clean            Remove generated files'
-	@echo '     clean-repo       Remove all untracked files and directories (use with care!)'
-	@echo '     cython           Compile cython files'
+	@echo '     clean              Remove generated files'
+	@echo '     clean-repo         Remove all untracked files and directories (use with care!)'
 	@echo ''
-	@echo '     trailing-spaces  Remove trailing spaces at the end of lines in *.py files'
-	@echo '     code-analysis    Run static code analysis (flake8 and pylint)'
-	@echo '     flake8           Run static code analysis (flake8)'
-	@echo '     pylint           Run static code analysis (pylint)'
-	@echo '     pydocstyle       Run docstring checks'
+	@echo '     test               Run pytest'
+	@echo '     test-cov           Run pytest with coverage'
+	@echo '     test-nb            Test tutorial notebooks'
+	@echo ''
+	@echo '     docs-sphinx        Build docs (Sphinx only)'
+	@echo '     docs-all           Build docs (including Jupyter notebooks)'
+	@echo '     docs-show          Open local HTML docs in browser'
+	@echo ''
+	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
+	@echo '     black              Run black code formatter'
+	@echo '     flake8             Run flake8 static code analysis'
+	@echo '     pylint             Run pylint static code analysis'
+	@echo '     pydocstyle         Run docstring checks'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
 	@echo ''
-	@echo ' Common `setup.py` commands:'
+	@echo ' setup.py commands:'
 	@echo ''
 	@echo '     python setup.py --help-commands'
 	@echo '     python setup.py install'
+	@echo '     python setup.py bdist_conda'
 	@echo '     python setup.py develop'
-	@echo '     python setup.py test -V'
-	@echo '     python setup.py test --help # to see available options'
-	@echo '     python setup.py build_docs # use `-l` for clean build'
 	@echo ''
-	@echo ' More info:'
-	@echo ''
-	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
-	@echo ' * Gammapy docs: https://docs.gammapy.org/'
-	@echo ''
-	@echo ' Environment:'
-	@echo ''
-	@echo '     GAMMAPY_DATA = $(GAMMAPY_DATA)'
-	@echo ''
-	@echo ' To get more info about your Gammapy installation and setup run this command'
+	@echo ' To get info about your Gammapy installation and setup run this command'
 	@echo ''
 	@echo '     gammapy info'
 	@echo ''
@@ -50,6 +44,22 @@ help:
 	@echo ' If it is not, then use this equivalent command:'
 	@echo ''
 	@echo '     python -m gammapy info'
+	@echo ''
+	@echo ' More info:'
+	@echo ''
+	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
+	@echo ' * Gammapy docs: https://docs.gammapy.org/'
+	@echo ''
+	@echo ' Most common commmands to hack on Gammapy:'
+	@echo ''
+	@echo '     make help          Print help message with all commands'
+	@echo '     pip install -e .   Install Gammapy in editable mode'
+	@echo '     gammapy info       Check install and versions'
+	@echo '     make clean         Remove auto-generated files'
+	@echo '     pytest             Run Gammapy tests (give folder or filename and options)'
+	@echo '     make test-cov      Run all tests and measure coverage'
+	@echo '     make docs          Build documentation locally'
+	@echo ''
 
 clean:
 	rm -rf build dist docs/_build docs/api temp/ docs/notebooks docs/_static/notebooks \
@@ -63,8 +73,28 @@ clean:
 clean-repo:
 	@git clean -f -x -d
 
-cython:
-	find $(PROJECT) -name "*.pyx" -exec $(CYTHON) {} \;
+test:
+	python -m pytest -v gammapy
+
+test-cov:
+	python -m pytest -v gammapy --cov=gammapy --cov-report=html --cov-config=gammapy/tests/coveragerc
+
+test-nb:
+	which python
+	pip install -e .
+	python -m gammapy.utils.tutorials_test
+
+docs-sphinx:
+	python setup.py build_docs
+
+docs-all:
+	which python
+	pip install -e .
+	python -m gammapy.utils.tutorials_process --src="$(src)" --release="$(release)" --nbs="$(nbs)"
+	python setup.py build_docs
+
+docs-show:
+	open docs/_build/html/index.html
 
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
@@ -104,20 +134,3 @@ pydocstyle:
 	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D205,D301,D400,D401,D403,D410
 
 # TODO: add test and code quality checks for `examples`
-
-docs-show:
-	open docs/_build/html/index.html
-
-docs-all:
-	which python
-	pip install -e .
-	python -m gammapy.utils.tutorials_process --src="$(src)" --release="$(release)" --nbs="$(nbs)"
-	python setup.py build_docs
-
-test-notebooks:
-	which python
-	pip install -e .
-	python -m gammapy.utils.tutorials_test
-
-conda:
-	python setup.py bdist_conda
