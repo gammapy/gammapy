@@ -709,10 +709,11 @@ class SpectrumDatasetOnOffStacker:
     Examples
     --------
     >>> from gammapy.spectrum import SpectrumDatasetOnOff, SpectrumDatasetOnOffStacker
-    >>> obs_ids=[23523, 23526, 23559, 23592]
+    >>> obs_ids = [23523, 23526, 23559, 23592]
     >>> datasets = []
-    >>> for obs in obsids:
-    >>>     ds = SpectrumDatasetOnOff.from_ogip_files('$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits'.format(obs))
+    >>> for obs in obs_ids:
+    >>>     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits"
+    >>>     ds = SpectrumDatasetOnOff.from_ogip_files(filename.format(obs))
     >>>     datasets.append(ds)
     >>> obs_stacker = SpectrumDatasetOnOffStacker(datasets)
     >>> stacked = obs_stacker.run()
