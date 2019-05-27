@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.coordinates import Angle
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency, mpl_plot_check
-from ...image import colormap_hess, colormap_milagro, MapPanelPlotter
+from ...utils.testing import requires_dependency, mpl_plot_check, requires_data
+from ...image import colormap_hess, colormap_milagro, MapPanelPlotter, illustrate_colormap
 from ...maps import Map
 
 
@@ -46,6 +46,8 @@ def test_colormap_milagro():
     _check_cmap_rgb_vals(vals, cmap)
 
 
+@requires_data()
+@requires_dependency("matplotlib")
 def test_map_panel_plotter():
     import matplotlib.pyplot as plt
 
@@ -55,3 +57,9 @@ def test_map_panel_plotter():
 
     with mpl_plot_check():
         plotter.plot(map_image)
+
+
+@requires_dependency("matplotlib")
+def test_illustrate_colormap():
+    with mpl_plot_check():
+        illustrate_colormap("afmhot")
