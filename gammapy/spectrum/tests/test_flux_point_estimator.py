@@ -188,3 +188,18 @@ class TestFluxPointsEstimator:
 
         actual = fp.table["dloglike_scan"][0] - fp.table["loglike"][0]
         assert_allclose(actual, 3.698882, rtol=1e-2)
+
+
+def test_no_likelihood_contribution():
+    dataset = simulate_spectrum_dataset(PowerLaw())
+    dataset.model = PowerLaw()
+    dataset.mask_safe = np.zeros(dataset.data_shape, dtype=bool)
+
+    fpe = FluxPointsEstimator([dataset], e_edges=[1, 10] * u.TeV)
+
+    with pytest.raises(ValueError) as e:
+        fpe.run()
+        assert "No dataset contributes" in e.args[0]
+
+
+

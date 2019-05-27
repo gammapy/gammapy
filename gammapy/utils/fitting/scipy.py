@@ -85,6 +85,10 @@ def _confidence_scipy_brentq(parameters, parameter, function, sigma, reoptimize,
 
 
 def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **kwargs):
+
+    if len(parameters.free_parameters) <= 1:
+        reoptimize = False
+
     with parameters.restore_values:
         result = _confidence_scipy_brentq(
             parameters=parameters,

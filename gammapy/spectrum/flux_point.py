@@ -847,6 +847,8 @@ class FluxPointsEstimator:
         self.source = source
         self.fit = Fit(self.datasets)
 
+        self._set_scale_model()
+
     def _freeze_parameters(self):
         # freeze other parameters
         for par in self.datasets.parameters:
@@ -855,7 +857,6 @@ class FluxPointsEstimator:
 
     def _freeze_empty_background(self):
         from ..cube import MapDataset
-
         counts_all = self.estimate_counts()["counts"]
 
         for counts, dataset in zip(counts_all, self.datasets.datasets):
@@ -961,10 +962,21 @@ class FluxPointsEstimator:
             ]
         )
 
+        contribute_to_likelihood = False
+
         for dataset in self.datasets.datasets:
             dataset.mask_fit = self._energy_mask(e_group)
+            mask = dataset.mask_fit
 
-        self._set_scale_model()
+            if dataset.mask_safe is not None:
+                mask &= dataset.mask_safe
+
+            contribute_to_likelihood |= mask.any()
+
+        if not contribute_to_likelihood:
+            raise ValueError("No dataset contributes to the likelihood between"
+                             " {e_min:.3f} and {e_max:.3f}. Please adapt the "
+                             "flux point energy edges or check the dataset masks.".format(e_min=e_min, e_max=e_max))
 
         with self.datasets.parameters.restore_values:
 
