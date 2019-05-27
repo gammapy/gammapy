@@ -3,7 +3,6 @@ import logging
 import subprocess
 from pathlib import Path
 from astropy.io import fits
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.testing import Checker

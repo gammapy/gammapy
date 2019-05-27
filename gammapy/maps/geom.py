@@ -427,11 +427,6 @@ class MapAxis:
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
-    def interp(self):
-        """Map axis interpolation mode"""
-        return self._interp
-
-    @property
     def nbin(self):
         """Return number of bins."""
         return self._nbin
