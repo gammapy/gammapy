@@ -177,5 +177,6 @@ script:
 
 after_success:
     - if [[ $SETUP_CMD == 'test-cov' ]]; then
+          pip install coveralls;
           coveralls --rcfile='gammapy/tests/coveragerc';
       fi
