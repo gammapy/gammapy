@@ -708,25 +708,17 @@ class SpectrumDatasetOnOffStacker:
 
     Examples
     --------
-    >>> from gammapy.spectrum import SpectrumDatasetOnOffStacker
-    >>> obs_list = SpectrumObservationList.read('$GAMMAPY_DATA/joint-crab/spectra/hess')
-    >>> obs_stacker = SpectrumObservationStacker(obs_list)
-    >>> stacked.obs = obs_stacker.run()
-    >>> print(stacked_obs)
-    *** Observation summary report ***
-    Observation Id: [23523-23592]
-    Livetime: 0.879 h
-    On events: 279
-    Off events: 108
-    Alpha: 0.037
-    Bkg events in On region: 3.96
-    Excess: 275.04
-    Excess / Background: 69.40
-    Gamma rate: 0.14 1 / min
-    Bkg rate: 0.00 1 / min
-    Sigma: 37.60
-    energy range: 681292069.06 keV - 87992254356.91 keV
-    """
+    >>> from gammapy.spectrum import SpectrumDatasetOnOff, SpectrumDatasetOnOffStacker
+    >>> obs_ids=[23523, 23526, 23559, 23592]
+    >>> datasets = []
+    >>> for obs in obsids:
+    >>>     ds = SpectrumDatasetOnOff.from_ogip_files('$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits'.format(obs))
+    >>>     datasets.append(ds)
+    >>> obs_stacker = SpectrumDatasetOnOffStacker(datasets)
+    >>> stacked = obs_stacker.run()
+    >>> print(stacked.livetime)
+    6313.8116406202325 s
+   """
 
     def __init__(self, obs_list):
         self.obs_list = obs_list
