@@ -198,7 +198,7 @@ def sqrt_space(start, stop, num):
     --------
 
     >>> from gammapy.utils.nddata import sqrt_space
-    >>> samples = sqrt_space(0, 2, 5)
-    array([ 0.        ,  1.        ,  1.41421356,  1.73205081,  2.        ])
+    >>> sqrt_space(0, 2, 5)
+    array([0.        , 1.        , 1.41421356, 1.73205081, 2.        ])
     """
     return np.sqrt(np.linspace(start ** 2, stop ** 2, num))
