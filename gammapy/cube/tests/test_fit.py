@@ -176,8 +176,11 @@ def test_map_fit(sky_model):
     assert_allclose(pars[9].value, 1, rtol=1e-2)
     assert_allclose(pars.error(pars[9]), 0.02104, rtol=1e-2)
 
-    # test global mask evaluation
-    fit.datasets.mask = geom_r.energy_mask(emin=1 * u.TeV)
+    # test mask_safe evaluation
+    mask_safe = geom_r.energy_mask(emin=1 * u.TeV)
+    dataset_1.mask_safe = mask_safe
+    dataset_2.mask_safe = mask_safe
+
     stat = fit.datasets.likelihood()
     assert_allclose(stat, 5895.205587)
 

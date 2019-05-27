@@ -8,7 +8,7 @@ from ..datasets import Datasets
 
 @pytest.fixture(scope="session")
 def datasets():
-    return Datasets([MyDataset(), MyDataset()], mask=np.array([True]))
+    return Datasets([MyDataset(), MyDataset()])
 
 
 class TestDatasets:
