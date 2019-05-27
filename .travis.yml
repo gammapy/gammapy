@@ -61,7 +61,7 @@ matrix:
 
         # The main build that's used for coverage measurement
         - os: linux
-          env: PYTHON_VERSION=3.7 SETUP_CMD='test -V --coverage'
+          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='test-cov'
 
         # Run tests without optional dependencies
         - os: linux
@@ -172,6 +172,6 @@ script:
       fi
 
 after_success:
-    - if [[ $SETUP_CMD == 'test -V --coverage' ]]; then
+    - if [[ $SETUP_CMD == 'test-cov' ]]; then
           coveralls --rcfile='gammapy/tests/coveragerc';
       fi
