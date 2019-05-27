@@ -1261,7 +1261,10 @@ class FluxPointsDataset(Dataset):
 
     @property
     def _e_range(self):
-        return u.Quantity([self.data.e_min.min(), self.data.e_max.max()])
+        try:
+            return u.Quantity([self.data.e_min.min(), self.data.e_max.max()])
+        except KeyError:
+            return u.Quantity([self.data.e_ref.min(), self.data.e_ref.max()])
 
     @property
     def _e_unit(self):
@@ -1291,7 +1294,8 @@ class FluxPointsDataset(Dataset):
         fp = self.data
 
         xerr = fp._plot_get_energy_err()
-        xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
+        if xerr is not None:
+            xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
 
         model = self.model(fp.e_ref)
         yerr = fp._plot_get_flux_err(fp.sed_type)
@@ -1354,7 +1358,9 @@ class FluxPointsDataset(Dataset):
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
-        self.model.plot_error(ax=ax, **plot_kwargs)
+
+        if self.model.parameters.covariance is not None:
+            self.model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
         ax.set_xlim(self._e_range.to_value(self._e_unit))
