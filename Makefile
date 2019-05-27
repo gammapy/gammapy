@@ -16,7 +16,7 @@ help:
 	@echo '     test-cov           Run pytest with coverage'
 	@echo '     test-nb            Test tutorial notebooks'
 	@echo ''
-	@echo '     docs               Build docs (Sphinx only)'
+	@echo '     docs-sphinx        Build docs (Sphinx only)'
 	@echo '     docs-all           Build docs (including Jupyter notebooks)'
 	@echo '     docs-show          Open local HTML docs in browser'
 	@echo ''
@@ -83,6 +83,9 @@ test-nb:
 	which python
 	pip install -e .
 	python -m gammapy.utils.tutorials_test
+
+docs-sphinx:
+	python setup.py build_docs
 
 docs-all:
 	which python
