@@ -71,21 +71,6 @@ def _interp_likelihood_profile(norm_scan, dloglike_scan):
     return interp
 
 
-def compute_ul_scipy(norm_scan, dloglike_scan, sigma=2):
-    """Compute UL from likelihood profile"""
-    interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
-    delta_ts = sigma ** 2
-
-    def f(x):
-        return interp((x,)) - delta_ts
-
-    idx = np.argmin(dloglike_scan)
-    norm_best_fit = norm_scan[idx]
-    ul = brentq(f, a=norm_best_fit, b=norm_scan[-1])
-
-    return ul
-
-
 class FluxPoints:
     """Flux points container.
 
