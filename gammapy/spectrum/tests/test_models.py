@@ -310,6 +310,13 @@ def test_fermi_isotropic():
     )
 
 
+def test_ecpl_intergrate():
+    # regresseion test to check the numerical integration for small energy bins
+    ecpl = ExponentialCutoffPowerLaw()
+    value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
+    assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
+
+
 @requires_dependency("naima")
 class TestNaimaModel:
     # Used to test model value at 2 TeV
