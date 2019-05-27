@@ -12,8 +12,6 @@ __all__ = ["NDDataArray", "sqrt_space"]
 class NDDataArray:
     """ND Data Array Base class
 
-    for usage examples see :gp-notebook:`nddata_demo`
-
     Parameters
     ----------
     axes : list
@@ -198,6 +196,7 @@ def sqrt_space(start, stop, num):
 
     Examples
     --------
+
     >>> from gammapy.utils.nddata import sqrt_space
     >>> samples = sqrt_space(0, 2, 5)
     array([ 0.        ,  1.        ,  1.41421356,  1.73205081,  2.        ])

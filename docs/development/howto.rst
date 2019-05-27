@@ -745,8 +745,6 @@ Gammapy has a class for generic n-dimensional data arrays,
 should use this class. The goal is to reuse code for interpolation
 and have an coherent I/O interface, mainly in `~gammapy.irf`.
 
-A usage example can be found in :gp-notebook:`nddata_demo`.
-
 Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
 setup your interpolator.
 

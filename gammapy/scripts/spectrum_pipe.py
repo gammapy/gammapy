@@ -21,8 +21,6 @@ class SpectrumAnalysisIACT:
 
     Observation selection must have happened before.
 
-    For a usage example see :gp-notebook:`spectrum_pipe`
-
     Config options:
 
     * outdir : `pathlib.Path`, str
