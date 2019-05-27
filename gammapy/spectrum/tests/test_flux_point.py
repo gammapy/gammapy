@@ -291,6 +291,7 @@ class TestFluxPointFit:
 
 
     @staticmethod
+    @requires_dependency("matplotlib")
     def test_fp_dataset_peek(fit):
         fp_dataset = fit.datasets.datasets[0]
 
