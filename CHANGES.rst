@@ -3,7 +3,86 @@
 0.12 (unreleased)
 -----------------
 
-- Planned for May 15, 2019
+Summary
++++++++
+
+- Released on May 30, 2019
+- 9 contributors
+- 2 months of work
+- 63 pull requests (not all listed below)
+
+**What's new**
+
+For Gammapy v0.12 we did our homework, cleaned-up the basement and emptied the
+trash bin. It is a smaller release that does not introduce many new features,
+but where we have put a lot of effort into integrating the ``gammapy.spectrum``
+submodule into the datasets framework we introduced in the previous Gammapy version.
+For this we replaced the former ``SpectrumObservation`` class by a new ``SpectrumDatasetOnOff``
+class, which now works with the general ``Fit`` and ``Datasets`` objects in
+``gammapy.utils.fitting``. This also enabled us to remove the ``SpectrumObservationList``
+and ``SpectrumFit`` abstractions. We adapted the ``SpectrumExtraction`` class accordingly.
+If you need help with transitioning your old spectral analysis scripts, please let us know.
+We also refactored the ``NDData`` class to use ``MapAxis`` to handle the data axes. This
+affects the ``CountsSpectrum`` and IRF classes in ``gammapy.irf``.
+
+In addition we changed the ``FluxPointEstimator`` to work with the new ``SpectrumDatasetOnOff``
+as well as the ``MapDataset``. Now it is possible to compute flux points for 1D
+as well 3D data with a uniform API. We added a new ``NaimaModel`` wrapper class, which allows
+to fit true physical, spectral models directly to counts based gamma-ray data. To improve
+the fit convergence of the ``SkyDisk`` and ``SkyEllipse`` models we introduced a new
+parameter defining the slope of the edge of these models.
+
+**Contributors:**
+
+In alphabetical order by first name:
+
+- Atreyee Sinha
+- Axel Donath
+- Christoph Deil
+- Dirk Lennarz
+- Debanjan Bose (new)
+- José Enrique Ruiz
+- Lars Mohrmann
+- Luca Giunti
+- Régis Terrier
+
+Pull Requests
++++++++++++++
+-
+- [#2171] Remove Poisson chi2 approximations (Christoph Deil)
+- [#2169] Remove warning astropy_helpers.sphinx.conf is deprecated (José Enrique Ruiz)
+- [#2166] Remove PHACountsSpectrumList class (Régis Terrier)
+- [#2163] Fix `integrate_spectrum` for small integration ranges (Axel Donath)
+- [#2160] Add default of "all" for DataStore.get_observations (Christoph Deil)
+- [#2157] Rename SpectrumDataset.counts_on attribute to SpectrumDataset.counts (Régis Terrier)
+- [#2154] Implement DataStoreMaker for IACT DL3 indexing (Christoph Deil)
+- [#2153] Remove SpectrumObservation and SpectrumObservationList classes (Régis Terrier)
+- [#2152] Improve FluxPointEstimator for joint likelihood datasets (Axel Donath)
+- [#2151] Add todo for improving wcs solid angle computation (Debanjan Bose)
+- [#2146] Implement scipy confidence method (Axel Donath)
+- [#2145] Make tests run without GAMMAPY_DATA (Christoph Deil)
+- [#2142] Implement oversampling option for background model evaluation (Axel Donath)
+- [#2141] Implement SkyDisk and SkyEllipse edge parameter (Axel Donath)
+- [#2140] Clean up spectral tutorials (Atreyee Sinha)
+- [#2139] Refactor SpectrumExtraction to use SpectrumDatasetOnOff (Régis Terrier)
+- [#2133] Replace `DataAxis` and `BinnedDataAxis`classes by `MapAxis` (Axel Donath)
+- [#2132] Change MapAxis.edges and MapAxis.center attributes to quantities (Atreyee Sinha)
+- [#2131] Implement flux point estimation for `MapDataset` (Axel Donath)
+- [#2130] Implement MapAxis.upsample() and MapAxis.downsample() methods (Axel Donath)
+- [#2128] Fix Feldman-Cousins examples (Dirk Lennarz)
+- [#2126] Fix sorting of node values in MapAxis (Atreyee Sinha)
+- [#2124] Implement NaimaModel wrapper class (Luca Giunti)
+- [#2123] Remove SpectrumFit class (Axel Donath)
+- [#2121] Move plotting helper functions from SpectrumFitResult to SpectrumDatasetOnOff (Axel Donath)
+- [#2119] Clean up Jupyter notebooks with PyCharm static code analysis (Christoph Deil)
+- [#2118] Remove tutorials/astropy_introduction.ipynb (Christoph Deil)
+- [#2115] Remove SpectrumResult object (Axel Donath)
+- [#2114] Refactor energy grouping (Axel Donath)
+- [#2112] Refactor FluxPointEstimator to use Datasets (Axel Donath)
+- [#2111] Implement SpectrumDatasetOnOff class (Régis Terrier)
+- [#2108] Fix `frame` attribute of SkyDiffuseCube and SkyDiffuseMap (Lars Mohrmann)
+- [#2106] Add `frame` attribute for SkyDiffuseMap (Lars Mohrmann)
+- [#2104] Implement sparse summed fit statistics in Cython (Axel Donath)
 
 
 .. _gammapy_0p11_release:
