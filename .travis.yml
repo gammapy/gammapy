@@ -163,6 +163,10 @@ script:
           gammapy download datasets --out=$GAMMAPY_DATA;
       fi
 
+    - if [[ $SETUP_CMD == 'test-cov' ]]; then
+          pip install .;
+      fi
+
     - $MAIN_CMD $SETUP_CMD
 
     - if $TEST_FERMIPY; then
