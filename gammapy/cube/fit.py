@@ -28,7 +28,7 @@ class MapDataset(Dataset):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    mask_fit : `~gammapy.maps.WcsNDMap`
+    mask_fit : `~numpy.ndarray`
         Mask to apply to the likelihood for fitting.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
@@ -62,7 +62,7 @@ class MapDataset(Dataset):
         evaluation_mode="local",
         mask_safe=None,
     ):
-        if mask_fit is not None and mask_fit.data.dtype != np.dtype("bool"):
+        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
@@ -172,9 +172,9 @@ class MapDataset(Dataset):
         elif self.mask_fit is None:
             stat = self._stat_sum(counts[self.mask_safe], npred[self.mask_safe])
         elif self.mask_safe is None:
-            stat = self._stat_sum(counts[self.mask_fit.data], npred[self.mask_fit.data])
+            stat = self._stat_sum(counts[self.mask_fit], npred[self.mask_fit])
         else:
-            mask_joined = self.mask_safe & self.mask_fit.data
+            mask_joined = self.mask_safe & self.mask_fit
             stat = self._stat_sum(counts[mask_joined], npred[mask_joined])
 
         return stat

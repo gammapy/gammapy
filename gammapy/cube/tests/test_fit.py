@@ -81,9 +81,7 @@ def mask_fit(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
-    data = geom.region_mask([circle])
-    return WcsNDMap(geom=geom, data=data)
-
+    return geom.region_mask([circle])
 
 def counts(sky_model, exposure, background, psf, edisp):
     """This computes the total npred"""
