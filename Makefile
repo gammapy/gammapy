@@ -84,6 +84,11 @@ test-nb:
 	pip install -e .
 	python -m gammapy.utils.tutorials_test
 
+test-scripts:
+	which python
+	pip install -e .
+	python -m gammapy.utils.scripts_test
+
 docs-sphinx:
 	python setup.py build_docs
 
