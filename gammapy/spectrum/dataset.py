@@ -111,7 +111,7 @@ class SpectrumDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data.data, mu_on=self.npred().data.data)
 
-    def likelihood(self, parameters=None):
+    def likelihood(self):
         """Total likelihood given the current model parameters.
         """
         if self.mask_fit is None and self.mask_safe is None:
@@ -344,7 +344,7 @@ class SpectrumDatasetOnOff(Dataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def likelihood(self, parameters):
+    def likelihood(self):
         """Total likelihood given the current model parameters.
         """
         if self.mask_fit is None and self.mask_safe is None:

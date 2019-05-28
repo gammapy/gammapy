@@ -10,26 +10,28 @@ from ...testing import requires_dependency
 pytest.importorskip("iminuit")
 
 
-class MyModel(Model):
-    """Dummy model class."""
-
+class MyDataset:
     def __init__(self):
         self.parameters = Parameters(
             [Parameter("x", 2), Parameter("y", 3e2), Parameter("z", 4e-2)]
         )
-
-
-class MyDataset:
-    def __init__(self):
-        self.model = MyModel()
-        self.parameters = self.model.parameters
         self.data_shape = (1,)
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self):
         # self._model.parameters = parameters
-        x, y, z = [p.value for p in self.model.parameters]
+        x, y, z = [p.value for p in self.parameters]
         x_opt, y_opt, z_opt = 2, 3e2, 4e-2
         return (x - x_opt) ** 2 + (y - y_opt) ** 2 + (z - z_opt) ** 2
+
+    def fcn(self):
+        x, y, z = [p.value for p in self.parameters]
+        x_opt, y_opt, z_opt = 2, 3e5, 4e-5
+        x_err, y_err, z_err = 0.2, 3e4, 4e-6
+        return (
+            ((x - x_opt) / x_err) ** 2
+            + ((y - y_opt) / y_err) ** 2
+            + ((z - z_opt) / z_err) ** 2
+    )
 
 
 @pytest.mark.parametrize("backend", ["minuit"])

@@ -4,17 +4,19 @@ from numpy.testing import assert_allclose
 from .. import Parameter, Parameters, optimize_scipy, confidence_scipy
 
 
-def fcn(parameters):
-    x = parameters["x"].value
-    y = parameters["y"].value
-    z = parameters["z"].value
-    x_opt, y_opt, z_opt = 2, 3e5, 4e-5
-    x_err, y_err, z_err = 0.2, 3e4, 4e-6
-    return (
-        ((x - x_opt) / x_err) ** 2
-        + ((y - y_opt) / y_err) ** 2
-        + ((z - z_opt) / z_err) ** 2
-    )
+class MyDataset:
+    def __init__(self, parameters):
+        self.parameters = parameters
+
+    def fcn(self):
+        x, y, z = [p.value for p in self.parameters]
+        x_opt, y_opt, z_opt = 2, 3e5, 4e-5
+        x_err, y_err, z_err = 0.2, 3e4, 4e-6
+        return (
+            ((x - x_opt) / x_err) ** 2
+            + ((y - y_opt) / y_err) ** 2
+            + ((z - z_opt) / z_err) ** 2
+        )
 
 
 @pytest.fixture()
@@ -27,12 +29,13 @@ def pars():
 
 @pytest.mark.parametrize("method", ["Nelder-Mead", "L-BFGS-B", "Powell", "BFGS"])
 def test_scipy_basic(pars, method):
+    ds = MyDataset(pars)
     factors, info, optimizer = optimize_scipy(
-        function=fcn, parameters=pars, method=method
+        function=ds.fcn, parameters=pars, method=method
     )
 
     assert info["success"]
-    assert_allclose(fcn(pars), 0, atol=1e-5)
+    assert_allclose(ds.fcn(), 0, atol=1e-5)
 
     # Check the result in parameters is OK
     assert_allclose(pars["x"].value, 2, rtol=1e-3)
@@ -42,10 +45,11 @@ def test_scipy_basic(pars, method):
 
 @pytest.mark.parametrize("method", ["Nelder-Mead", "L-BFGS-B", "Powell"])
 def test_scipy_frozen(pars, method):
+    ds = MyDataset(pars)
     pars["y"].frozen = True
 
     factors, info, optimizer = optimize_scipy(
-        function=fcn, parameters=pars, method=method
+        function=ds.fcn, parameters=pars, method=method
     )
 
     assert info["success"]
@@ -53,14 +57,15 @@ def test_scipy_frozen(pars, method):
     assert_allclose(pars["x"].value, 2, rtol=1e-4)
     assert_allclose(pars["y"].value, 3.1e5)
     assert_allclose(pars["z"].value, 4.0e-5, rtol=1e-4)
-    assert_allclose(fcn(pars), 0.1111111, rtol=1e-5)
+    assert_allclose(ds.fcn(), 0.1111111, rtol=1e-5)
 
 
 @pytest.mark.parametrize("method", ["L-BFGS-B"])
 def test_scipy_limits(pars, method):
+    ds = MyDataset(pars)
     pars["y"].min = 301000
 
-    factors, info, minuit = optimize_scipy(function=fcn, parameters=pars, method=method)
+    factors, info, minuit = optimize_scipy(function=ds.fcn, parameters=pars, method=method)
 
     assert info["success"]
 
@@ -70,14 +75,15 @@ def test_scipy_limits(pars, method):
 
 
 def test_scipy_confidence(pars):
-    factors, info, _ = optimize_scipy(function=fcn, parameters=pars)
+    ds = MyDataset(pars)
+    factors, info, _ = optimize_scipy(function=ds.fcn, parameters=pars)
 
-    assert_allclose(fcn(pars), 0, atol=1e-5)
+    assert_allclose(ds.fcn(), 0, atol=1e-5)
 
     par = pars["x"]
     par.min, par.max = 0, 10
 
-    result = confidence_scipy(function=fcn, parameters=pars, parameter=par, sigma=1)
+    result = confidence_scipy(function=ds.fcn, parameters=pars, parameter=par, sigma=1)
 
     assert result["success_errp"]
     assert result["success_errn"]

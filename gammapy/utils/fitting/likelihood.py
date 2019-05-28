@@ -29,4 +29,4 @@ class Likelihood:
 
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function(self.parameters)
+        return self.function()

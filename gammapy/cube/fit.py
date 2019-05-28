@@ -159,7 +159,7 @@ class MapDataset(Dataset):
     def _counts_data(self):
         return self.counts.data.astype(float)
 
-    def likelihood(self, parameters):
+    def likelihood(self):
         """Total likelihood given the current model parameters.
 
         """
