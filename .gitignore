@@ -13,7 +13,7 @@ __pycache__
 */version.py
 */cython_version.py
 htmlcov
-.coverage
+.coverage*
 .coverage.subprocess
 
 # Sphinx
