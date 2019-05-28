@@ -1437,17 +1437,14 @@ class AbsorbedSpectralModel(SpectralModel):
         self.parameter = parameter
         self.parameter_name = parameter_name
 
-        # initialise list parameters from spectral model
-        param_list = []
-        for param in spectral_model.parameters.parameters:
-            param_list.append(param)
-
-        # Add parameter to the list
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
-        param_list.append(par)
-        self._parameters = Parameters(param_list)
+
+        parameters = spectral_model.parameters.parameters.copy()
+        parameters.append(par)
+
+        super().__init__(parameters)
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
