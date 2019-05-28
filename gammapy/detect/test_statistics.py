@@ -274,15 +274,17 @@ class TSMapEstimator:
             )
 
         if downsampling_factor:
+            maps_downsampled = {}
+
             shape = maps["counts"].data.shape
             pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))[0]
 
-            for name in maps:
-                maps[name] = maps[name].pad(pad_width)
+            for name, map_ in maps.items():
                 preserve_counts = name in ["counts", "background", "exclusion"]
-                maps[name] = maps[name].downsample(
+                maps_downsampled[name] = map_.pad(pad_width).downsample(
                     downsampling_factor, preserve_counts=preserve_counts
                 )
+            maps = maps_downsampled
 
         if not isinstance(kernel, Kernel2D):
             kernel = CustomKernel(kernel)
