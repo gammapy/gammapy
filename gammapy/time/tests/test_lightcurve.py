@@ -137,28 +137,18 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
 @pytest.mark.parametrize(
     "time_format, output",
     [
-        (
-            "mjd",
-            (np.array([55198.0, 55201]), (np.array([1.0, 2.0]), np.array([1.0, 5.0]))),
-        ),
+        ("mjd", ([55198.0, 55201], ([1.0, 2.0], [1.0, 5.0]))),
         (
             "iso",
             (
-                np.array([datetime(2010, 1, 2), datetime(2010, 1, 5)]),
-                (
-                    np.array([timedelta(1), timedelta(2)]),
-                    np.array([timedelta(1), timedelta(5)]),
-                ),
+                [datetime(2010, 1, 2), datetime(2010, 1, 5)],
+                ([timedelta(1), timedelta(2)], [timedelta(1), timedelta(5)]),
             ),
         ),
-        ("unsupported", ValueError),
     ],
 )
 def test_lightcurve_plot_time(lc, time_format, output):
-    try:
-        t, terr = lc._get_times_and_errors(time_format)
-    except output:
-        return
+    t, terr = lc._get_times_and_errors(time_format)
     assert np.array_equal(t, output[0])
     assert np.array_equal(terr, output[1])
 
@@ -197,7 +187,6 @@ def spec_extraction():
 def test_lightcurve_estimator(spec_extraction):
     lc_estimator = LightCurveEstimator(spec_extraction)
 
-    # param
     intervals = []
     for obs in spec_extraction.observations:
         intervals.append([obs.events.time[0], obs.events.time[-1]])
