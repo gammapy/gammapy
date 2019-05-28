@@ -21,12 +21,14 @@ def test_acceptance_interval_gauss():
     n_step = 1000
     cl = 0.90
 
-    x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_step, endpoint=True)
+    x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_step,
+                         endpoint=True)
 
     # The test reverses a result from the Feldman and Cousins paper. According
-    # to Table X, for a measured value of 2.6 the 90% confidence interval should
-    # be 1.02 and 4.24. Reversed that means that for mu=1.02, the acceptance
-    # interval should end at 2.6 and for mu=4.24 should start at 2.6.
+    # to Table X, for a measured value of 2.6 the 90% confidence interval
+    # should be 1.02 and 4.24. Reversed, that means that for mu=1.02, the
+    # acceptance interval should end at 2.6 and for mu=4.24 should start at
+    # 2.6.
     (x_min, x_max) = fc_find_acceptance_interval_gauss(1.02, sigma, x_bins, cl)
     assert_allclose(x_max, 2.6, atol=0.1)
 
@@ -51,13 +53,15 @@ def test_acceptance_interval_poisson():
     x_bins = np.arange(0, n_bins_x)
 
     # The test reverses a result from the Feldman and Cousins paper. According
-    # to Table IV, for a measured value of 10 the 90% confidence interval should
-    # be 5.00 and 16.00. Reversed that means that for mu=5.0, the acceptance
-    # interval should end at 10 and for mu=16.00 should start at 10.
-    (x_min, x_max) = fc_find_acceptance_interval_poisson(5.00, background, x_bins, cl)
+    # to Table IV, for a measured value of 10 the 90% confidence interval
+    # should be 5.00 and 16.00. Reversed that means that for mu=5.0, the
+    # acceptance interval should end at 10 and for mu=16.00 should start at 10.
+    (x_min, x_max) = fc_find_acceptance_interval_poisson(5.00, background,
+                                                         x_bins, cl)
     assert_allclose(x_max, 10)
 
-    (x_min, x_max) = fc_find_acceptance_interval_poisson(16.00, background, x_bins, cl)
+    (x_min, x_max) = fc_find_acceptance_interval_poisson(16.00, background,
+                                                         x_bins, cl)
     assert_allclose(x_min, 10)
 
     # Pass too few x_bins to reach confidence level.
@@ -78,7 +82,8 @@ def test_numerical_confidence_interval_pdfs():
         mu_min, mu_max, int(mu_max / step_width_mu) + 1, endpoint=True
     )
 
-    matrix = [scipy.stats.poisson(mu + background).pmf(x_bins) for mu in mu_bins]
+    matrix = [scipy.stats.poisson(mu + background).pmf(x_bins)
+              for mu in mu_bins]
 
     acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
@@ -122,13 +127,21 @@ def test_numerical_confidence_interval_values():
     mu_max = 8
     cl = 0.90
 
-    x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x, endpoint=True)
+    x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x,
+                         endpoint=True)
     mu_bins = np.linspace(
         mu_min, mu_max, int(mu_max / step_width_mu) + 1, endpoint=True
     )
 
+    # Fix the random seed, so we know that for this set for random numbers
+    # the result reaches the tolerance requested. For an arbitrary random seed,
+    # a bigger sample of random numbers would be needed to ensure that the
+    # tolerance is met in all cases, which would increase the computation time.
+    np.random.seed(0)
+
     distribution_dict = {
-        mu: [scipy.stats.norm.rvs(loc=mu, scale=sigma, size=5000)] for mu in mu_bins
+        mu: [scipy.stats.norm.rvs(loc=mu, scale=sigma, size=2500)]
+        for mu in mu_bins
     }
 
     acceptance_intervals = fc_construct_acceptance_intervals(
