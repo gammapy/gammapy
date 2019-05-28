@@ -1062,7 +1062,7 @@ class FluxPointsEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
-        norm = self.model.parameters["norm"]
+        norm = self.model.norm
 
         # TODO: the minuit backend has convergence problems when the likelihood is not
         #  of parabolic shape, which is the case, when there are zero counts in the
@@ -1071,13 +1071,13 @@ class FluxPointsEstimator:
 
         if np.all(counts == 0):
             result = self.fit.confidence(
-                parameter="norm",
+                parameter=norm,
                 sigma=self.sigma_ul,
                 backend="scipy",
                 reoptimize=self.reoptimize,
             )
         else:
-            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
+            result = self.fit.confidence(parameter=norm, sigma=self.sigma_ul)
 
         return {"norm_ul": result["errp"] + norm.value}
 
