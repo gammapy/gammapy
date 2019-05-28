@@ -380,25 +380,41 @@ class WcsNDMap(WcsMap):
 
         return map_out
 
-    def upsample(self, factor, order=0, preserve_counts=True):
-        geom = self.geom.upsample(factor)
+    def upsample(self, factor, order=0, preserve_counts=True, axis=None):
+        geom = self.geom.upsample(factor, axis=axis)
         idx = geom.get_idx()
-        pix = (
-            (idx[0] - 0.5 * (factor - 1)) / factor,
-            (idx[1] - 0.5 * (factor - 1)) / factor,
-        ) + idx[2:]
-        data = map_coordinates(self.data.T, pix, order=order, mode="nearest")
+
+        if axis is None:
+            pix = (
+                (idx[0] - 0.5 * (factor - 1)) / factor,
+                (idx[1] - 0.5 * (factor - 1)) / factor,
+            ) + idx[2:]
+        else:
+            pix = list(idx)
+            idx_ax = self.geom.get_axis_index_by_name(axis)
+            pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
+
+        data = map_coordinates(self.data.T, tuple(pix), order=order, mode="nearest")
+
         if preserve_counts:
-            data /= factor ** 2
+            if axis is None:
+                data /= factor ** 2
+            else:
+                data /= factor
 
         return self._init_copy(geom=geom, data=data)
 
-    def downsample(self, factor, preserve_counts=True):
-        geom = self.geom.downsample(factor)
-        block_size = (factor, factor) + (1,) * len(self.geom.axes)
-        data = block_reduce(self.data, block_size[::-1], np.nansum)
-        if not preserve_counts:
-            data /= factor ** 2
+    def downsample(self, factor, preserve_counts=True, axis=None):
+        geom = self.geom.downsample(factor, axis=axis)
+        if axis is None:
+            block_size = (factor, factor) + (1,) * len(self.geom.axes)
+        else:
+            block_size = [1] * self.data.ndim
+            idx = self.geom.get_axis_index_by_name(axis)
+            block_size[-(idx + 1)] = factor
+
+        func = np.nansum if preserve_counts else np.nanmean
+        data = block_reduce(self.data, tuple(block_size[::-1]), func=func)
 
         return self._init_copy(geom=geom, data=data)
 

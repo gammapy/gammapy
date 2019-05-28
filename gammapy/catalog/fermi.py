@@ -363,7 +363,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model)
+        return SkyModel(spatial_model, spectral_model, name=self.name)
 
     @property
     def is_pointlike(self):
@@ -903,7 +903,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         """Source sky model (`~gammapy.cube.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
-        return SkyModel(spatial_model, spectral_model)
+        return SkyModel(spatial_model, spectral_model, name=self.name)
 
     @property
     def is_pointlike(self):

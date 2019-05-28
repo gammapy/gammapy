@@ -3,6 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from ...utils.testing import requires_data
 from ...irf import load_cta_irfs
 from ...maps import WcsGeom, MapAxis
 from ...spectrum.models import PowerLaw
@@ -12,11 +13,11 @@ from ...cube import MapDataset
 from ..simulate import simulate_dataset
 
 
+@requires_data()
 def test_simulate():
-    filename = (
+    irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
-    irfs = load_cta_irfs(filename)
 
     # Define sky model to simulate the data
     spatial_model = SkyGaussian(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg")
@@ -48,6 +49,6 @@ def test_simulate():
     assert dataset.counts.data.dtype is np.dtype("int")
     assert_allclose(dataset.counts.data[5, 20, 20], 5)
     assert_allclose(dataset.exposure.data[5, 20, 20], 16122681639.856329)
-    assert_allclose(dataset.background_model.map.data[5, 20, 20], 0.9765544250896915)
+    assert_allclose(dataset.background_model.map.data[5, 20, 20], 0.976554, rtol=1e-5)
     assert_allclose(dataset.psf.data[5, 32, 32], 0.044402823)
-    assert_allclose(dataset.edisp.data.data[10, 10], 0.6623215756621856)
+    assert_allclose(dataset.edisp.data.data[10, 10], 0.662208, rtol=1e-5)

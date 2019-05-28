@@ -8,7 +8,7 @@ from ..utils.coordinates import sky_to_fov
 __all__ = ["make_map_background_irf"]
 
 
-def make_map_background_irf(pointing, ontime, bkg, geom):
+def make_map_background_irf(pointing, ontime, bkg, geom, oversampling=None):
     """Compute background map from background IRFs.
 
     Parameters
@@ -25,6 +25,8 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
         Background rate model
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry
+    oversampling: int
+        Oversampling factor in energy, used for the background model evaluation.
 
     Returns
     -------
@@ -41,6 +43,9 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
     #  the pointing might change slightly over the observation duration
 
     # Get altaz coords for map
+    if oversampling is not None:
+        geom = geom.upsample(factor=oversampling, axis="energy")
+
     map_coord = geom.to_image().get_coord()
     sky_coord = map_coord.skycoord
 
@@ -58,8 +63,7 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
         fov_lon = pseudo_fov_coord.lon
         fov_lat = pseudo_fov_coord.lat
 
-    energy_axis = geom.get_axis_by_name("energy")
-    energies = energy_axis.edges * energy_axis.unit
+    energies = geom.get_axis_by_name("energy").edges
 
     bkg_de = bkg.evaluate_integrate(
         fov_lon=fov_lon,
@@ -69,7 +73,12 @@ def make_map_background_irf(pointing, ontime, bkg, geom):
 
     d_omega = geom.solid_angle()
     data = (bkg_de * d_omega * ontime).to_value("")
-    return WcsNDMap(geom, data=data)
+    bkg_map = WcsNDMap(geom, data=data)
+
+    if oversampling is not None:
+        bkg_map = bkg_map.downsample(factor=oversampling, axis="energy")
+
+    return bkg_map
 
 
 def _fov_background_norm(acceptance_map, counts_map, exclusion_mask=None):

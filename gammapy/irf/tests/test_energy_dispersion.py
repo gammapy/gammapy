@@ -36,8 +36,8 @@ class TestEnergyDispersion:
 
         # Test square matrix
         edisp = EnergyDispersion.from_diagonal_response(e_true)
-        assert_allclose(edisp.e_reco.bins.value, e_true.value)
-        assert edisp.e_reco.bins.unit == "TeV"
+        assert_allclose(edisp.e_reco.edges.value, e_true.value)
+        assert edisp.e_reco.unit == "TeV"
         assert_equal(edisp.pdf_matrix[0][0], 1)
         assert_equal(edisp.pdf_matrix[2][0], 0)
         assert edisp.pdf_matrix.sum() == 4
@@ -94,7 +94,7 @@ class TestEnergyDispersion:
             self.edisp.peek()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEnergyDispersion2D:
     def setup(self):
         # TODO: use from_gauss method to create know edisp (see below)
@@ -119,9 +119,9 @@ class TestEnergyDispersion2D:
         e_node = 12
         off_node = 3
         m_node = 5
-        offset = self.edisp.data.axis("offset").nodes[off_node]
-        energy = self.edisp.data.axis("e_true").nodes[e_node]
-        migra = self.edisp.data.axis("migra").nodes[m_node]
+        offset = self.edisp.data.axis("offset").center[off_node]
+        energy = self.edisp.data.axis("e_true").center[e_node]
+        migra = self.edisp.data.axis("migra").center[m_node]
         actual = self.edisp.data.evaluate(offset=offset, e_true=energy, migra=migra)
         desired = self.edisp.data.data[e_node, m_node, off_node]
         assert_allclose(actual, desired, rtol=1e-06)
@@ -141,16 +141,16 @@ class TestEnergyDispersion2D:
         # Check evaluation at all nodes
         actual = self.edisp.data.evaluate().shape
         desired = (
-            self.edisp.data.axis("e_true").nbins,
-            self.edisp.data.axis("migra").nbins,
-            self.edisp.data.axis("offset").nbins,
+            self.edisp.data.axis("e_true").nbin,
+            self.edisp.data.axis("migra").nbin,
+            self.edisp.data.axis("offset").nbin,
         )
         assert_equal(actual, desired)
 
     def test_get_response(self):
         pdf = self.edisp2.get_response(offset=0.7 * u.deg, e_true=1 * u.TeV)
         assert_allclose(pdf.sum(), 1)
-        assert_allclose(pdf.max(), 0.013025634736094305)
+        assert_allclose(pdf.max(), 0.0130256, rtol=1e-5)
 
     def test_exporter(self):
         # Check RMF exporter
@@ -187,8 +187,9 @@ class TestEnergyDispersion2D:
         )
 
         hdu = edisp.to_fits()
-        assert_equal(hdu.data["ENERG_LO"][0], edisp.data.axis("e_true").lo.value)
-        assert hdu.header["TUNIT1"] == edisp.data.axis("e_true").lo.unit
+        energy = edisp.data.axis("e_true").edges
+        assert_equal(hdu.data["ENERG_LO"][0], energy[:-1].value)
+        assert hdu.header["TUNIT1"] == edisp.data.axis("e_true").unit
 
     @requires_dependency("matplotlib")
     def test_plot_migration(self):

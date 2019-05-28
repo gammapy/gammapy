@@ -42,7 +42,7 @@ class TestTablePSF:
         assert_allclose(actual, radius.deg, rtol=1e-4)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEnergyDependentTablePSF:
     def setup(self):
         filename = "$GAMMAPY_DATA/tests/unbundled/fermi/psf.fits"

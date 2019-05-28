@@ -31,7 +31,7 @@ def geom(ebounds):
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
@@ -70,13 +70,19 @@ def geom(ebounds):
             "counts": 34366,
             "exposure": 5.971096e11,
             "exposure_image": 6.492968e10,
-            "background": 27986.945,
+            "background": 28758.129,
+            "background_oversampling": 2,
         },
     ],
 )
 @pytest.mark.parametrize("keepdims", [True, False])
 def test_map_maker(pars, observations, keepdims):
-    maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg")
+    maker = MapMaker(
+        geom=pars["geom"],
+        geom_true=pars["geom_true"],
+        offset_max="2 deg",
+        background_oversampling=pars.get("background_oversampling"),
+    )
 
     maps = maker.run(observations)
 
@@ -107,6 +113,7 @@ def test_map_maker(pars, observations, keepdims):
     assert_allclose(background.data.sum(), pars["background"], rtol=1e-5)
 
 
+@requires_data()
 def test_map_maker_ring(observations):
     ring_bkg = RingBackgroundEstimator(r_in="0.5 deg", width="0.4 deg")
     geomd = geom(ebounds=[0.1, 1, 10])

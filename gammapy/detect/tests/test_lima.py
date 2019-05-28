@@ -6,7 +6,7 @@ from ...detect import compute_lima_image, compute_lima_on_off_image
 from ...maps import Map
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_compute_lima_image():
     """
     Test Li & Ma image against TS image for Tophat kernel
@@ -22,7 +22,7 @@ def test_compute_lima_image():
     assert_allclose(result_lima["significance"].data[1, 1], 0.164, atol=1e-3)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_compute_lima_on_off_image():
     """
     Test Li & Ma image with snippet from the H.E.S.S. survey data.

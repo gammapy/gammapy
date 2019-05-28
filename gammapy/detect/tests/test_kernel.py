@@ -36,7 +36,7 @@ def kbe():
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_run_iteration(kbe, images):
     result = kbe.run_iteration(images)
     mask, background = result["exclusion"].data, result["background"].data
@@ -51,7 +51,7 @@ def test_run_iteration(kbe, images):
     assert_allclose(background, 42 * np.ones((10, 10)))
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_run(kbe, images):
     result = kbe.run(images)
     mask, background = result["exclusion"].data, result["background"].data
@@ -61,7 +61,7 @@ def test_run(kbe, images):
     assert len(kbe.images_stack) == 4
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_run_without_defaults(kbe, images):
     result = kbe.run({"counts": images["counts"]})
     mask, background = result["exclusion"].data, result["background"].data

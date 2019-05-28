@@ -19,10 +19,10 @@ class TestEffectiveAreaTable2D:
     # TODO: split this out into separate tests, especially the plotting
     # Add I/O test
     @staticmethod
-    @requires_data("gammapy-data")
+    @requires_data()
     def test(aeff):
-        assert aeff.data.axis("energy").nbins == 96
-        assert aeff.data.axis("offset").nbins == 6
+        assert aeff.data.axis("energy").nbin == 96
+        assert aeff.data.axis("offset").nbin == 6
         assert aeff.data.data.shape == (96, 6)
 
         assert aeff.data.axis("energy").unit == "TeV"
@@ -54,11 +54,11 @@ class TestEffectiveAreaTable2D:
         offset = 1.2 * u.deg
         actual = aeff.to_effective_area_table(offset=offset).data.data
         desired = aeff.data.evaluate(offset=offset)
-        assert_equal(actual.value, desired.value.squeeze())
+        assert_allclose(actual.value, desired.value.squeeze(), rtol=1e-9)
 
     @staticmethod
     @requires_dependency("matplotlib")
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_plot(aeff):
         with mpl_plot_check():
             aeff.plot()
@@ -73,7 +73,7 @@ class TestEffectiveAreaTable2D:
 class TestEffectiveAreaTable:
     @staticmethod
     @requires_dependency("matplotlib")
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_EffectiveAreaTable(tmpdir, aeff):
         arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 
@@ -91,8 +91,8 @@ class TestEffectiveAreaTable:
         test_aeff = 0.6 * arf.max_area
         node_above = np.where(arf.data.data > test_aeff)[0][0]
         energy = arf.data.axis("energy")
-        ener_above = energy.nodes[node_above]
-        ener_below = energy.nodes[node_above - 1]
+        ener_above = energy.center[node_above]
+        ener_below = energy.center[node_above - 1]
         test_ener = arf.find_energy(test_aeff)
 
         assert ener_below < test_ener and test_ener < ener_above
@@ -156,5 +156,5 @@ class TestEffectiveAreaTable:
             data=data,
         )
         hdu = aeff.to_fits()
-        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy").lo.value)
-        assert hdu.header["TUNIT1"] == aeff.data.axis("energy").lo.unit
+        assert_equal(hdu.data["ENERG_LO"][0], aeff.data.axis("energy").edges[:-1].value)
+        assert hdu.header["TUNIT1"] == aeff.data.axis("energy").unit

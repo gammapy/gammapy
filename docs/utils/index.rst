@@ -206,10 +206,6 @@ Reference/API
     :no-inheritance-diagram:
     :include-all-objects:
 
-.. automodapi:: gammapy.utils.wcs
-    :no-inheritance-diagram:
-    :include-all-objects:
-
 .. automodapi:: gammapy.utils.nddata
     :no-inheritance-diagram:
     :include-all-objects:

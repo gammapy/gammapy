@@ -67,7 +67,7 @@ def covariance_iminuit(minuit):
     message, success = "Hesse terminated successfully.", True
     try:
         covariance_factors = minuit.np_covariance()
-    except TypeError:
+    except (TypeError, RuntimeError):
         N = len(minuit.args)
         covariance_factors = np.nan * np.ones((N, N))
         message, success = "Hesse failed", False
@@ -155,6 +155,19 @@ def make_minuit_par_kwargs(parameters):
         min_ = None if np.isnan(par.factor_min) else par.factor_min
         max_ = None if np.isnan(par.factor_max) else par.factor_max
         kwargs["limit_{}".format(name)] = (min_, max_)
-        kwargs["error_{}".format(name)] = 1
+
+        if parameters.covariance is not None:
+            error = parameters.error(par) / par.scale
+        elif parameters.apply_autoscale:
+            error = 1
+        else:
+            error = 1
+            log.warning(
+                "Neither covariance matrix set nor auto-scaling of parameters activated."
+                "Assuming stepsize of 1, which could lead to convergence problems of the "
+                "Minuit optimizer."
+            )
+
+        kwargs["error_{}".format(name)] = error
 
     return kwargs

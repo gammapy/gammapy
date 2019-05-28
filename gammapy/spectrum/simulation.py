@@ -5,7 +5,7 @@ from ..utils.random import get_random_state
 from ..utils.energy import EnergyBounds
 from .utils import SpectrumEvaluator
 from .core import PHACountsSpectrum
-from .observation import SpectrumObservation, SpectrumObservationList
+from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["SpectrumSimulation"]
 
@@ -56,7 +56,7 @@ class SpectrumSimulation:
         self.on_vector = None
         self.off_vector = None
         self.obs = None
-        self.result = SpectrumObservationList()
+        self.result = []
 
     @property
     def npred_source(self):
@@ -92,16 +92,16 @@ class SpectrumSimulation:
     def e_reco(self):
         """Reconstructed energy binning."""
         if self.edisp is not None:
-            temp = self.edisp.e_reco.bins
+            temp = self.edisp.e_reco.edges
         else:
             if self.aeff is not None:
-                temp = self.aeff.energy.bins
+                temp = self.aeff.energy.edges
             else:
                 temp = self.e_true
         return EnergyBounds(temp)
 
     def run(self, seed):
-        """Simulate `~gammapy.spectrum.SpectrumObservationList`.
+        """Simulate list of `~gammapy.spectrum.SpectrumDatasetOnOff`.
 
         The seeds will be set as observation ID.
         Previously produced results will be overwritten.
@@ -123,7 +123,7 @@ class SpectrumSimulation:
 
     def reset(self):
         """Clear all results."""
-        self.result = SpectrumObservationList()
+        self.result = []
         self.obs = None
         self.on_vector = None
         self.off_vector = None
@@ -144,13 +144,14 @@ class SpectrumSimulation:
         self.simulate_source_counts(random_state)
         if self.background_model is not None:
             self.simulate_background_counts(random_state)
-        obs = SpectrumObservation(
-            on_vector=self.on_vector,
-            off_vector=self.off_vector,
+        obs = SpectrumDatasetOnOff(
+            counts=self.on_vector,
+            counts_off=self.off_vector,
             aeff=self.aeff,
             edisp=self.edisp,
+            livetime=self.livetime,
         )
-        obs.obs_id = obs_id
+        obs.counts.obs_id = obs_id
         self.obs = obs
 
     def simulate_source_counts(self, rand):

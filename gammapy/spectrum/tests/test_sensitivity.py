@@ -32,7 +32,7 @@ def sens():
     return sens
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_cta_sensitivity_estimator(sens):
     table = sens.results_table
 

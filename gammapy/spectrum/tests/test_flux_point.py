@@ -152,7 +152,7 @@ def flux_points_likelihood():
     return FluxPoints.read(path).to_sed_type("dnde")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFluxPoints:
     def test_info(self, flux_points):
         info = str(flux_points)
@@ -214,7 +214,7 @@ class TestFluxPoints:
             flux_points_likelihood.plot_likelihood()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_compute_flux_points_dnde_fermi():
     """
     Test compute_flux_points_dnde on fermi source.
@@ -241,7 +241,7 @@ def fit():
     return Fit(dataset)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestFluxPointFit:
     @requires_dependency("iminuit")
     def test_fit_pwl_minuit(self, fit):
@@ -288,3 +288,11 @@ class TestFluxPointFit:
 
         ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
+
+    @staticmethod
+    @requires_dependency("matplotlib")
+    def test_fp_dataset_peek(fit):
+        fp_dataset = fit.datasets.datasets[0]
+
+        with mpl_plot_check():
+            fp_dataset.peek()

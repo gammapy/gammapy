@@ -52,10 +52,8 @@ def background(geom):
 
 
 def edisp(geom, geom_etrue):
-    e_true_axis = geom_etrue.get_axis_by_name("energy")
-    e_reco_axis = geom.get_axis_by_name("energy")
-    e_true = e_true_axis.edges * e_true_axis.unit
-    e_reco = e_reco_axis.edges * e_reco_axis.unit
+    e_true = geom_etrue.get_axis_by_name("energy").edges
+    e_reco = geom.get_axis_by_name("energy").edges
     return EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
 
 
@@ -79,12 +77,11 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def mask(geom, sky_model):
+def mask_fit(geom, sky_model):
     p = sky_model.spatial_model.parameters
     center = SkyCoord(p["lon_0"].value, p["lat_0"].value, frame="galactic", unit="deg")
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
-    data = geom.region_mask([circle])
-    return WcsNDMap(geom=geom, data=data)
+    return geom.region_mask([circle])
 
 
 def counts(sky_model, exposure, background, psf, edisp):
@@ -100,7 +97,7 @@ def counts(sky_model, exposure, background, psf, edisp):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-data")
+@requires_data()
 def test_map_fit(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 3)
     ebounds_true = np.logspace(-1.0, 1.0, 4)
@@ -121,14 +118,14 @@ def test_map_fit(sky_model):
         sky_model, exposure_map, background_model_2, psf_map, edisp_map
     )
 
-    mask_map = mask(geom_r, sky_model)
+    mask_map = mask_fit(geom_r, sky_model)
     sky_model.parameters["sigma"].frozen = True
 
     dataset_1 = MapDataset(
         model=sky_model,
         counts=counts_map_1,
         exposure=exposure_map,
-        mask=mask_map,
+        mask_fit=mask_map,
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_1,
@@ -139,7 +136,7 @@ def test_map_fit(sky_model):
         model=sky_model,
         counts=counts_map_2,
         exposure=exposure_map,
-        mask=mask_map,
+        mask_fit=mask_map,
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model_2,
@@ -178,8 +175,11 @@ def test_map_fit(sky_model):
     assert_allclose(pars[9].value, 1, rtol=1e-2)
     assert_allclose(pars.error(pars[9]), 0.02104, rtol=1e-2)
 
-    # test global mask evaluation
-    fit.datasets.mask = geom_r.energy_mask(emin=1 * u.TeV)
+    # test mask_safe evaluation
+    mask_safe = geom_r.energy_mask(emin=1 * u.TeV)
+    dataset_1.mask_safe = mask_safe
+    dataset_2.mask_safe = mask_safe
+
     stat = fit.datasets.likelihood()
     assert_allclose(stat, 5895.205587)
 
@@ -191,7 +191,7 @@ def test_map_fit(sky_model):
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-data")
+@requires_data()
 def test_map_fit_one_energy_bin(sky_model):
     ebounds = np.logspace(-1.0, 1.0, 2)
     geom_r = geom(ebounds)
@@ -202,7 +202,7 @@ def test_map_fit_one_energy_bin(sky_model):
     edisp_map = edisp(geom_r, geom_r)
     exposure_map = exposure(geom_r)
     counts_map = counts(sky_model, exposure_map, background_model, psf_map, edisp_map)
-    mask_map = mask(geom_r, sky_model)
+    mask_map = mask_fit(geom_r, sky_model)
 
     sky_model.parameters["index"].value = 3.0
     sky_model.parameters["index"].frozen = True
@@ -214,7 +214,7 @@ def test_map_fit_one_energy_bin(sky_model):
         model=sky_model,
         counts=counts_map,
         exposure=exposure_map,
-        mask=mask_map,
+        mask_fit=mask_map,
         psf=psf_map,
         edisp=edisp_map,
         background_model=background_model,

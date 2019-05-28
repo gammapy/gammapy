@@ -340,10 +340,16 @@ class MapAxis:
     # TODO: Cache an interpolation object?
 
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
+
         self.name = name
 
+        if len(nodes) != len(np.unique(nodes)):
+            raise ValueError("MapAxis: node values must be unique")
+        if ~(np.all(nodes == np.sort(nodes)) or np.all(nodes[::-1] == np.sort(nodes))):
+            raise ValueError("MapAxis: node values must be sorted")
+
         if isinstance(nodes, u.Quantity):
-            unit = nodes.unit
+            unit = nodes.unit if nodes.unit is not None else ""
             nodes = nodes.value
         else:
             nodes = np.array(nodes)
@@ -380,10 +386,12 @@ class MapAxis:
         # TODO: implement an allclose method for MapAxis and call it here
         if self.edges.shape != other.edges.shape:
             return False
-
+        if self.unit.is_equivalent(other.unit) is False:
+            return False
         return (
-            np.allclose(self.edges, other.edges, atol=1e-6, rtol=1e-6)
-            and self.unit == other.unit
+            np.allclose(
+                self.edges.to(other.unit).value, other.edges.value, atol=1e-6, rtol=1e-6
+            )
             and self._node_type == other._node_type
             and self._interp == other._interp
             and self.name.upper() == other.name.upper()
@@ -391,6 +399,11 @@ class MapAxis:
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    @property
+    def interp(self):
+        """Interpolation scale of the axis."""
+        return self._interp
 
     @property
     def name(self):
@@ -405,13 +418,13 @@ class MapAxis:
     def edges(self):
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
-        return self.pix_to_coord(pix)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
     def center(self):
         """Return array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
-        return self.pix_to_coord(pix)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
     @property
     def nbin(self):
@@ -493,8 +506,6 @@ class MapAxis:
         """
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
-        if len(nodes) != len(np.unique(nodes)):
-            raise ValueError("MapAxis: node values must be unique")
 
         return cls(nodes, node_type="center", **kwargs)
 
@@ -516,8 +527,6 @@ class MapAxis:
         """
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
-        if len(edges) != len(np.unique(edges)):
-            raise ValueError("MapAxis: edge values must be unique")
 
         return cls(edges, node_type="edges", **kwargs)
 
@@ -572,7 +581,7 @@ class MapAxis:
             Array of bin indices.
         """
         coord = u.Quantity(coord, self.unit, copy=False).value
-        return coord_to_idx(self.edges, coord, clip)
+        return coord_to_idx(self.edges.value, coord, clip)
 
     def slice(self, idx):
         """Create a new axis object by extracting a slice from this axis.
@@ -587,7 +596,7 @@ class MapAxis:
         axis : `~MapAxis`
             Sliced axis object.
         """
-        center = self.center[idx]
+        center = self.center[idx].value
         idx = self.coord_to_idx(center)
         # For edge nodes we need to keep N+1 nodes
         if self._node_type == "edges":
@@ -613,8 +622,8 @@ class MapAxis:
         # TODO: Decide on handling node_type=center
         # See https://github.com/gammapy/gammapy/issues/1952
         return MapAxis.from_bounds(
-            lo_bnd=self.edges[0],
-            hi_bnd=self.edges[-1],
+            lo_bnd=self.edges[0].value,
+            hi_bnd=self.edges[-1].value,
             nbin=1,
             interp=self._interp,
             name=self._name,
@@ -630,21 +639,37 @@ class MapAxis:
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
         vals = self.edges if self.node_type == "edges" else self.center
-        str_ += fmt.format(
-            "{} min".format(self.node_type),
-            "{:.1e} {}".format(vals.min(), str(self.unit)),
-        )
-        str_ += fmt.format(
-            "{} max".format(self.node_type),
-            "{:.1e} {}".format(vals.max(), str(self.unit)),
-        )
+        str_ += fmt.format("{} min".format(self.node_type), "{:.1e}".format(vals.min()))
+        str_ += fmt.format("{} max".format(self.node_type), "{:.1e}".format(vals.max()))
         str_ += fmt.format("interp", self._interp)
         return str_
 
-    def copy(self):
-        """Copy `MapAxis` object"""
-        return copy.deepcopy(self)
+    def _init_copy(self, **kwargs):
+        """Init map axis instance by copying missing init arguments from self.
+        """
+        argnames = inspect.getfullargspec(self.__init__).args
+        argnames.remove("self")
 
+        for arg in argnames:
+            value = getattr(self, "_" + arg)
+            kwargs.setdefault(arg, copy.deepcopy(value))
+
+        return self.__class__(**kwargs)
+
+    def copy(self, **kwargs):
+        """Copy `MapAxis` instance and overwrite given attributes.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Keyword arguments to overwrite in the map axis constructor.
+
+        Returns
+        -------
+        copy : `MapAxis`
+            Copied map axis.
+        """
+        return self._init_copy(**kwargs)
 
     def group_table(self, edges):
         """Compute bin groups table for the map axis, given coarser bin edges.
@@ -700,13 +725,68 @@ class MapAxis:
                 "idx_min": edge_idx_end + 1,
                 "idx_max": self.nbin - 1,
                 "{}_min".format(self.name): edge_ref_end,
-                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5) * self.unit,
-                }
+                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5)
+                * self.unit,
+            }
             groups.add_row(vals=overflow)
 
         group_idx = Column(np.arange(len(groups)))
         groups.add_column(group_idx, name="group_idx", index=0)
         return groups
+
+    def _up_down_sample(self, nbin):
+        if self.node_type == "edges":
+            nodes = self.edges
+        else:
+            nodes = self.center
+
+        lo_bnd, hi_bnd = nodes.min(), nodes.max()
+
+        return self.from_bounds(
+            lo_bnd=lo_bnd.value,
+            hi_bnd=hi_bnd.value,
+            nbin=nbin,
+            interp=self.interp,
+            node_type=self.node_type,
+            unit=self.unit,
+            name=self.name,
+        )
+
+    def upsample(self, factor):
+        """Upsample map axis by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor.
+
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Usampled map axis.
+
+        """
+        nbin = self.nbin * factor
+        return self._up_down_sample(nbin)
+
+    def downsample(self, factor):
+        """Downsample map axis by a given factor.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor.
+
+
+        Returns
+        -------
+        axis : `MapAxis`
+            Downsampled map axis.
+
+        """
+        nbin = int(self.nbin / factor)
+        return self._up_down_sample(nbin)
 
 
 class MapCoord:
@@ -1399,13 +1479,15 @@ class MapGeom(metaclass=MapGeomMeta):
         pass
 
     @abc.abstractmethod
-    def downsample(self, factor):
+    def downsample(self, factor, axis):
         """Downsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
+        axis : str
+            Axis to downsample.
 
         Returns
         -------
@@ -1416,13 +1498,15 @@ class MapGeom(metaclass=MapGeomMeta):
         pass
 
     @abc.abstractmethod
-    def upsample(self, factor):
+    def upsample(self, factor, axis):
         """Upsample the spatial dimension of the geometry by a given factor.
 
         Parameters
         ----------
         factor : int
             Upsampling factor.
+        axis : str
+            Axis to upsample.
 
         Returns
         -------
@@ -1495,7 +1579,7 @@ class MapGeom(metaclass=MapGeomMeta):
         return names.index(name.upper())
 
     def _init_copy(self, **kwargs):
-        """Init map instance by copying missing init arguments from self.
+        """Init map geom instance by copying missing init arguments from self.
         """
         argnames = inspect.getfullargspec(self.__init__).args
         argnames.remove("self")
@@ -1534,8 +1618,8 @@ class MapGeom(metaclass=MapGeomMeta):
         edges = energy_axis.edges
 
         # set default values
-        emin = emin if emin is not None else edges[0] * energy_axis.unit
-        emax = emax if emax is not None else edges[-1] * energy_axis.unit
+        emin = emin if emin is not None else edges[0]
+        emax = emax if emax is not None else edges[-1]
 
         # create mask
         coords = self.get_coord()

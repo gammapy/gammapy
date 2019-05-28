@@ -5,7 +5,7 @@ import numpy as np
 from astropy.utils.misc import InheritDocstrings
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
-from .scipy import optimize_scipy, covariance_scipy
+from .scipy import optimize_scipy, covariance_scipy, confidence_scipy
 from .datasets import Datasets
 
 __all__ = ["Fit"]
@@ -42,7 +42,7 @@ class Registry:
         "confidence": {
             "minuit": confidence_iminuit,
             # "sherpa": confidence_sherpa,
-            # "scipy": confidence_scipy,
+            "scipy": confidence_scipy,
         },
     }
 
@@ -117,7 +117,6 @@ class Fit:
         # TODO: not sure how best to report the results
         # back or how to form the FitResult object.
         optimize_result._success = optimize_result.success and covariance_result.success
-        optimize_result._nfev += covariance_result.nfev
 
         return optimize_result
 
@@ -205,23 +204,38 @@ class Fit:
         # TODO: wrap MINUIT in a stateless backend
         with parameters.restore_values:
             if backend == "minuit":
+                method = "hesse"
                 if hasattr(self, "minuit"):
                     covariance_factors, info = compute(self.minuit)
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
+                method = ""
                 covariance_factors, info = compute(parameters, self.datasets.likelihood)
 
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(parameters=parameters, success=info["success"], nfev=0)
+        return CovarianceResult(
+            backend=backend,
+            method=method,
+            parameters=parameters,
+            success=info["success"],
+            message=info["message"],
+        )
 
-    def confidence(self, parameter, backend="minuit", sigma=1, **kwargs):
+    def confidence(
+        self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
+    ):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
         E.g. `iminuit.Minuit.minos` supports a ``maxcall`` option.
+
+
+        For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
+        confidence estimation fails, the bracketing interval can be adapted by modifying the
+        the upper bound of the interval (`b`) value.
 
         Parameters
         ----------
@@ -231,6 +245,10 @@ class Fit:
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
+        reoptimize : bool
+            Re-optimize other parameters, when computing the confidence region.
+        **kwargs : dict
+            Keyword argument passed ot the confidence estimation method.
 
         Returns
         -------
@@ -253,17 +271,18 @@ class Fit:
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                raise NotImplementedError()
+                result = compute(
+                    parameters,
+                    parameter,
+                    self.datasets.likelihood,
+                    sigma,
+                    reoptimize,
+                    **kwargs
+                )
 
-        errp = parameter.scale * result["errp"]
-        errn = parameter.scale * result["errn"]
-
-        return {
-            "errp": errp,
-            "errn": errn,
-            "success": result["success"],
-            "nfev": result["nfev"],
-        }
+        result["errp"] *= parameter.scale
+        result["errn"] *= parameter.scale
+        return result
 
     def likelihood_profile(
         self,
@@ -399,66 +418,20 @@ class Fit:
         }
 
 
-class CovarianceResult:
-    """Covariance result object."""
+class FitResult:
+    """Fit result base class"""
 
-    def __init__(self, parameters, success, nfev):
+    def __init__(self, parameters, backend, method, success, message):
         self._parameters = parameters
         self._success = success
-        self._nfev = nfev
-
-    @property
-    def parameters(self):
-        """Best fit parameters and convariance."""
-        return self._parameters
-
-    @property
-    def success(self):
-        """Fit success status flag."""
-        return self._success
-
-    @property
-    def nfev(self):
-        """Number of function evaluations."""
-        return self._nfev
-
-
-class OptimizeResult:
-    """Optmize result object."""
-
-    def __init__(self, parameters, success, nfev, total_stat, message, backend, method):
-        self._parameters = parameters
-        self._success = success
-        self._nfev = nfev
-        self._total_stat = total_stat
         self._message = message
         self._backend = backend
         self._method = method
 
     @property
     def parameters(self):
-        """Best fit model."""
+        """Optimizer backend used for the fit."""
         return self._parameters
-
-    @property
-    def success(self):
-        """Fit success status flag."""
-        return self._success
-
-    @property
-    def nfev(self):
-        """Number of function evaluations."""
-        return self._nfev
-
-    @property
-    def total_stat(self):
-        """Value of the fit statistic at minimum."""
-        return self._total_stat
-
-    @property
-    def message(self):
-        """Optimizer status message."""
-        return self._message
 
     @property
     def backend(self):
@@ -470,13 +443,52 @@ class OptimizeResult:
         """Optimizer method used for the fit."""
         return self._method
 
+    @property
+    def success(self):
+        """Fit success status flag."""
+        return self._success
+
+    @property
+    def message(self):
+        """Optimizer status message."""
+        return self._message
+
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
         str_ += "\tbackend    : {}\n".format(self.backend)
         str_ += "\tmethod     : {}\n".format(self.method)
         str_ += "\tsuccess    : {}\n".format(self.success)
+        str_ += "\tmessage    : {}\n".format(self.message)
+        return str_
+
+
+class CovarianceResult(FitResult):
+    """Covariance result object."""
+
+    pass
+
+
+class OptimizeResult(FitResult):
+    """Optimize result object."""
+
+    def __init__(self, nfev, total_stat, **kwargs):
+        self._nfev = nfev
+        self._total_stat = total_stat
+        super().__init__(**kwargs)
+
+    @property
+    def nfev(self):
+        """Number of function evaluations."""
+        return self._nfev
+
+    @property
+    def total_stat(self):
+        """Value of the fit statistic at minimum."""
+        return self._total_stat
+
+    def __repr__(self):
+        str_ = super().__repr__()
         str_ += "\tnfev       : {}\n".format(self.nfev)
         str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
-        str_ += "\tmessage    : {}\n".format(self.message)
         return str_

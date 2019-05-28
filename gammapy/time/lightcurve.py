@@ -460,7 +460,7 @@ class LightCurveEstimator:
         off = self.off_evt_list[t_index]
         on = self.on_evt_list[t_index]
         # introduce the e_reco binning here
-        e_reco = spec.e_reco
+        e_reco = spec.counts.energy.edges
         if energy_range is not None:
             emin = e_reco[e_reco.searchsorted(max(spec.lo_threshold, energy_range[0]))]
             emax = e_reco[

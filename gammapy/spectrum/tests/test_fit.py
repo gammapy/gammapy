@@ -8,11 +8,10 @@ from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable
 from ...spectrum import (
     PHACountsSpectrum,
-    SpectrumObservationList,
-    SpectrumObservation,
     models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
+    SpectrumDatasetOnOffStacker,
 )
 
 
@@ -79,16 +78,14 @@ class TestFit:
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
-        obs = SpectrumObservation(on_vector=self.src)
-        dataset = obs.to_spectrum_dataset()
+        dataset = SpectrumDatasetOnOff(counts=self.src)
         dataset.model = self.source_model
 
-        assert np.sum(dataset.mask) == self.nbins
+        assert np.sum(dataset.mask_safe) == self.nbins
         e_min, e_max = dataset.energy_range
 
         assert_allclose(e_max.value, 10)
         assert_allclose(e_min.value, 0.1)
-
 
     def test_likelihood_profile(self):
         dataset = SpectrumDataset(model=self.source_model, counts=self.src)
@@ -102,15 +99,15 @@ class TestFit:
 
 
 @requires_dependency("iminuit")
-@requires_data("gammapy-data")
+@requires_data()
 class TestSpectralFit:
     """Test fit in astrophysical scenario"""
 
     def setup(self):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
-        obs1 = SpectrumObservation.read(path + "pha_obs23523.fits")
-        obs2 = SpectrumObservation.read(path + "pha_obs23592.fits")
-        self.obs_list = SpectrumObservationList([obs1, obs2])
+        obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
+        obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
+        self.obs_list = [obs1, obs2]
 
         self.pwl = models.PowerLaw(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
@@ -123,16 +120,15 @@ class TestSpectralFit:
             lambda_=0.1 / u.TeV,
         )
 
-
     def test_stats(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
+        dataset = self.obs_list[0]
         dataset.model = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
 
         stats = dataset.likelihood_per_bin()
-        actual = np.sum(stats[dataset.mask])
+        actual = np.sum(stats[dataset.mask_safe])
 
         desired = result.total_stat
         assert_allclose(actual, desired)
@@ -140,37 +136,36 @@ class TestSpectralFit:
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
         obs = self.obs_list[0]
-        desired = obs.on_vector.lo_threshold
+        desired = obs.counts.lo_threshold
 
-        dataset = obs.to_spectrum_dataset()
-        actual = dataset.energy_range[0]
+        actual = obs.energy_range[0]
 
         assert actual.unit == "keV"
         assert_allclose(actual.value, desired.value)
 
     def test_no_edisp(self):
-        dataset = self.obs_list[0].to_spectrum_dataset()
+        dataset = self.obs_list[0]
 
         # Bring aeff in RECO space
-        data = dataset.aeff.data.evaluate(energy=dataset.counts_on.energy.nodes)
+        energy = dataset.counts.energy.center
+        data = dataset.aeff.data.evaluate(energy=energy)
+        e_edges = dataset.counts.energy.edges
+
         dataset.aeff = EffectiveAreaTable(
-            data=data,
-            energy_lo=dataset.counts_on.energy.lo,
-            energy_hi=dataset.counts_on.energy.hi,
+            data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
         )
         dataset.edisp = None
         dataset.model = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
-        assert_allclose(
-            result.parameters["index"].value, 2.7961, atol=0.02
-        )
+        assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
-        stacked_obs = self.obs_list.stack()
+        obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
+        obs_stacker.run()
 
-        dataset = stacked_obs.to_spectrum_dataset()
+        dataset = obs_stacker.stacked_obs
         dataset.model = self.pwl
 
         fit = Fit([dataset])
@@ -193,7 +188,8 @@ class TestSpectralFit:
 
         logging.getLogger("sherpa").setLevel("ERROR")
 
-        self.obs_list.write(tmpdir, use_sherpa=True)
+        for obs in self.obs_list:
+            obs.to_ogip_files(str(tmpdir), use_sherpa=True)
         filename = tmpdir / "pha_obs23523.fits"
         sau.load_pha(str(filename))
         sau.set_stat("wstat")

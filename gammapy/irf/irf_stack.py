@@ -68,7 +68,7 @@ class IRFStacker:
         """
         Compute mean effective area (`~gammapy.irf.EffectiveAreaTable`).
         """
-        nbins = self.list_aeff[0].energy.nbins
+        nbins = self.list_aeff[0].energy.nbin
         aefft = Quantity(np.zeros(nbins), "cm2 s")
         livetime_tot = np.sum(self.list_livetime)
 
@@ -78,18 +78,18 @@ class IRFStacker:
             aefft += aefft_current
 
         stacked_data = aefft / livetime_tot
+
+        energy = self.list_aeff[0].energy.edges
         self.stacked_aeff = EffectiveAreaTable(
-            energy_lo=self.list_aeff[0].energy.lo,
-            energy_hi=self.list_aeff[0].energy.hi,
-            data=stacked_data.to("cm2"),
+            energy_lo=energy[:-1], energy_hi=energy[1:], data=stacked_data.to("cm2")
         )
 
     def stack_edisp(self):
         """
         Compute mean energy dispersion (`~gammapy.irf.EnergyDispersion`).
         """
-        reco_bins = self.list_edisp[0].e_reco.nbins
-        true_bins = self.list_edisp[0].e_true.nbins
+        reco_bins = self.list_edisp[0].e_reco.nbin
+        true_bins = self.list_edisp[0].e_true.nbin
 
         aefft = Quantity(np.zeros(true_bins), "cm2 s")
         temp = np.zeros(shape=(reco_bins, true_bins))
@@ -108,10 +108,12 @@ class IRFStacker:
         with np.errstate(divide="ignore", invalid="ignore"):
             stacked_edisp = np.nan_to_num(aefftedisp / aefft)
 
+        e_true = self.list_edisp[0].e_true.edges
+        e_reco = self.list_edisp[0].e_reco.edges
         self.stacked_edisp = EnergyDispersion(
-            e_true_lo=self.list_edisp[0].e_true.lo,
-            e_true_hi=self.list_edisp[0].e_true.hi,
-            e_reco_lo=self.list_edisp[0].e_reco.lo,
-            e_reco_hi=self.list_edisp[0].e_reco.hi,
+            e_true_lo=e_true[:-1],
+            e_true_hi=e_true[1:],
+            e_reco_lo=e_reco[:-1],
+            e_reco_hi=e_reco[1:],
             data=stacked_edisp.transpose(),
         )

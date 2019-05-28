@@ -13,7 +13,7 @@ def data_store():
     return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_data_store_observation(data_store):
     """Test DataStoreObservation class"""
     obs = data_store.obs(23523)
@@ -31,7 +31,7 @@ def test_data_store_observation(data_store):
     assert_skycoord_allclose(obs.target_radec, c)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "time_interval, expected_times",
     [
@@ -60,8 +60,6 @@ def test_data_store_observation(data_store):
 )
 def test_observation_select_time(data_store, time_interval, expected_times):
     obs = data_store.obs(23523)
-    print(obs.events.time[-1])
-    print(obs.gti.time_stop[-1])
 
     new_obs = obs.select_time(time_interval)
 
@@ -78,7 +76,7 @@ def test_observation_select_time(data_store, time_interval, expected_times):
         assert len(new_obs.gti.table) == 0
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "time_interval, expected_times, expected_nr_of_obs",
     [
@@ -121,7 +119,7 @@ def test_observations_select_time(
         )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestObservationChecker:
     def setup(self):
         data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")

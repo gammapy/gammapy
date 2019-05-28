@@ -17,7 +17,7 @@ def input_maps():
     }
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_compute_ts_map(input_maps):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(5)
@@ -33,7 +33,7 @@ def test_compute_ts_map(input_maps):
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_compute_ts_map_downsampled(input_maps):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(2.5)
@@ -50,7 +50,7 @@ def test_compute_ts_map_downsampled(input_maps):
     assert_allclose(result["flux_ul"].data[99, 99], 1.10e-09, rtol=1e-2)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_large_kernel(input_maps):
     """Minimal test of compute_ts_image"""
     kernel = Gaussian2DKernel(100)

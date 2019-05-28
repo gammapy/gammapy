@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import sys
 from datetime import datetime, timedelta
 import pytest
 import numpy as np
@@ -194,7 +193,7 @@ def spec_extraction():
     return extraction
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_lightcurve_estimator(spec_extraction):
     lc_estimator = LightCurveEstimator(spec_extraction)
 
@@ -235,13 +234,13 @@ def test_lightcurve_estimator(spec_extraction):
     )
     table = lc.table
 
-    assert_allclose(table["flux"][0], 5.051995e-12, rtol=1e-3)
+    assert_allclose(table["flux"][0], 5.057778e-12, rtol=1e-3)
 
     # TODO: add test exercising e_reco selection
     # TODO: add asserts on all measured quantities
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_lightcurve_interval_maker(spec_extraction):
     table = LightCurveEstimator.make_time_intervals_fixes(500, spec_extraction)
     intervals = list(zip(table["t_start"], table["t_stop"]))
@@ -251,7 +250,7 @@ def test_lightcurve_interval_maker(spec_extraction):
     assert_allclose(t[1].value - t[0].value, 500 / (24 * 3600), rtol=1e-5)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_lightcurve_adaptative_interval_maker(spec_extraction):
     lc_estimator = LightCurveEstimator(spec_extraction)
     separator = [

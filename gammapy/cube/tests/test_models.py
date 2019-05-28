@@ -20,7 +20,7 @@ def sky_model():
     spectral_model = PowerLaw(
         index=2, amplitude="1e-11 cm-2 s-1 TeV-1", reference="1 TeV"
     )
-    return SkyModel(spatial_model, spectral_model)
+    return SkyModel(spatial_model, spectral_model, name="source-1")
 
 
 @pytest.fixture(scope="session")
@@ -85,10 +85,19 @@ def diffuse_evaluator(diffuse_model, exposure, psf, edisp):
 
 @pytest.fixture(scope="session")
 def sky_models(sky_model):
-    return SkyModels([sky_model, sky_model.copy()])
+    sky_model_2 = sky_model.copy(name="source-2")
+    sky_model_3 = sky_model.copy(name="source-3")
+    return SkyModels([sky_model_2, sky_model_3])
 
 
-def test_skymodel_addition(sky_model, sky_models, diffuse_model):
+@pytest.fixture(scope="session")
+def sky_models_2(sky_model):
+    sky_model_4 = sky_model.copy(name="source-4")
+    sky_model_5 = sky_model.copy(name="source-5")
+    return SkyModels([sky_model_4, sky_model_5])
+
+
+def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
     result = sky_model + sky_model.copy()
     assert isinstance(result, SkyModels)
     assert len(result.skymodels) == 2
@@ -105,9 +114,13 @@ def test_skymodel_addition(sky_model, sky_models, diffuse_model):
     assert isinstance(result, SkyModels)
     assert len(result.skymodels) == 3
 
-    result = sky_models + sky_models
+    result = sky_models + sky_models_2
     assert isinstance(result, SkyModels)
     assert len(result.skymodels) == 4
+
+    result = sky_model + sky_models
+    assert isinstance(result, SkyModels)
+    assert len(result.skymodels) == 3
 
 
 def test_background_model(background):
@@ -157,6 +170,18 @@ class TestSkyModels:
     def test_str(sky_models):
         assert "Component 0" in str(sky_models)
         assert "Component 1" in str(sky_models)
+
+    @staticmethod
+    def test_get_item(sky_models):
+        model = sky_models["source-2"]
+        assert model.name == "source-2"
+
+        model = sky_models["source-3"]
+        assert model.name == "source-3"
+
+        with pytest.raises(ValueError) as error:
+            sky_models["spam"]
+            assert "spam" in error.message
 
 
 class TestSkyModel:
@@ -232,7 +257,7 @@ class TestSkyDiffuseCube:
         assert_allclose(q.value.mean(), 42)
 
     @staticmethod
-    @requires_data("gammapy-data")
+    @requires_data()
     def test_read():
         model = SkyDiffuseCube.read(
             "$GAMMAPY_DATA/tests/unbundled/fermi/gll_iem_v02_cutout.fits"

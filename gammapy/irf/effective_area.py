@@ -4,7 +4,9 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..utils.nddata import NDDataArray
+from ..maps import MapAxis
+from ..maps.utils import edges_from_lo_hi
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 
@@ -62,13 +64,14 @@ class EffectiveAreaTable:
     """
 
     def __init__(self, energy_lo, energy_hi, data, meta=None):
-        axes = [
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            )
-        ]
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[energy_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     @property
@@ -99,12 +102,15 @@ class EffectiveAreaTable:
         kwargs.setdefault("lw", 2)
 
         if energy is None:
-            energy = self.energy.nodes
+            energy = self.energy.center
+
         eff_area = self.data.evaluate(energy=energy)
+
         xerr = (
-            energy.value - self.energy.lo.value,
-            self.energy.hi.value - energy.value,
+            (energy - self.energy.edges[:-1]).value,
+            (self.energy.edges[1:] - energy).value,
         )
+
         ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(self.energy.unit)
@@ -206,21 +212,28 @@ class EffectiveAreaTable:
                 ("hduclas2", "SPECRESP"),
             ]
         )
-        table["ENERG_LO"] = self.energy.lo
-        table["ENERG_HI"] = self.energy.hi
+
+        energy = self.energy.edges
+        table["ENERG_LO"] = energy[:-1]
+        table["ENERG_HI"] = energy[1:]
         table["SPECRESP"] = self.evaluate_fill_nan()
         return table
 
-    def to_hdulist(self, name=None):
+    def to_hdulist(self, name=None, use_sherpa=False):
         """Convert to `~astropy.io.fits.HDUList`."""
-        return fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(self.to_table(), name=name)]
-        )
+        table = self.to_table()
 
-    def write(self, filename, **kwargs):
+        if use_sherpa:
+            table["ENERG_HI"] = table["ENERG_HI"].quantity.to("keV")
+            table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
+            table["SPECRESP"] = table["SPECRESP"].quantity.to("cm2")
+
+        return fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table, name=name)])
+
+    def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist().writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
 
     def evaluate_fill_nan(self, **kwargs):
         """Modified evaluate function.
@@ -267,7 +280,7 @@ class EffectiveAreaTable:
         """
         from ..spectrum.models import TableModel
 
-        energy = self.energy.nodes
+        energy = self.energy.center
 
         if emin is None:
             emin = energy[0]
@@ -358,15 +371,20 @@ class EffectiveAreaTable2D:
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-            BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
-            ),
-        ]
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
+        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
+            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
+        else:
+            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
+            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+
+        self.data = NDDataArray(
+            axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -421,7 +439,7 @@ class EffectiveAreaTable2D:
             Energy axis bin edges
         """
         if energy is None:
-            energy = self.data.axis("energy").bins
+            energy = self.data.axis("energy").edges
 
         energy = EnergyBounds(energy)
         area = self.data.evaluate(offset=offset, energy=energy.log_centers)
@@ -454,11 +472,11 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            off_min, off_max = self.data.axis("offset").nodes[[0, -1]].value
-            offset = np.linspace(off_min, off_max, 4) * self.data.axis("offset").unit
+            off_min, off_max = self.data.axis("offset").center[[0, -1]]
+            offset = np.linspace(off_min.value, off_max.value, 4) * off_min.unit
 
         if energy is None:
-            energy = self.data.axis("energy").nodes
+            energy = self.data.axis("energy").center
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy=energy)
@@ -495,12 +513,11 @@ class EffectiveAreaTable2D:
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            e_min, e_max = np.log10(self.data.axis("energy").nodes[[0, -1]].value)
+            e_min, e_max = np.log10(self.data.axis("energy").center.value[[0, -1]])
             energy = np.logspace(e_min, e_max, 4) * self.data.axis("energy").unit
 
         if offset is None:
-            off_lo, off_hi = self.data.axis("offset").nodes[[0, -1]].to_value("deg")
-            offset = np.linspace(off_lo, off_hi, 100) * u.deg
+            offset = self.data.axis("offset").center
 
         for ee in energy:
             area = self.data.evaluate(offset=offset, energy=ee)
@@ -523,8 +540,8 @@ class EffectiveAreaTable2D:
 
         ax = plt.gca() if ax is None else ax
 
-        offset = self.data.axis("offset").bins
-        energy = self.data.axis("energy").bins
+        energy = self.data.axis("energy").edges
+        offset = self.data.axis("offset").edges
         aeff = self.data.evaluate(offset=offset, energy=energy[:, np.newaxis])
 
         vmin, vmax = np.nanmin(aeff.value), np.nanmax(aeff.value)
@@ -562,11 +579,15 @@ class EffectiveAreaTable2D:
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
+
+        energy = self.data.axis("energy").edges
+        theta = self.data.axis("offset").edges
+
         table = Table(meta=meta)
-        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
-        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
-        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
-        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
+        table["ENERG_LO"] = energy[:-1][np.newaxis]
+        table["ENERG_HI"] = energy[1:][np.newaxis]
+        table["THETA_LO"] = theta[:-1][np.newaxis]
+        table["THETA_HI"] = theta[1:][np.newaxis]
         table["EFFAREA"] = self.data.data.T[np.newaxis]
         return table
 

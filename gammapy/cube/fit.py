@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.nddata.utils import NoOverlapError
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
-from ..maps import Map, MapAxis
+from ..maps import Map
 from .models import SkyModel, SkyModels
 
 __all__ = ["MapEvaluator", "MapDataset"]
@@ -28,8 +28,8 @@ class MapDataset(Dataset):
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
         Exposure cube
-    mask : `~gammapy.maps.WcsNDMap`
-        Mask to apply to the likelihood.
+    mask_fit : `~numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
     psf : `~gammapy.cube.PSFKernel`
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
@@ -45,6 +45,8 @@ class MapDataset(Dataset):
         This mode is recommended for local optimization algorithms.
         The "global" evaluation mode evaluates the model components on the full map.
         This mode is recommended for global optimization algorithms.
+    mask_safe : `~numpy.ndarray`
+        Mask defining the safe data range.
     """
 
     def __init__(
@@ -52,24 +54,26 @@ class MapDataset(Dataset):
         model,
         counts=None,
         exposure=None,
-        mask=None,
+        mask_fit=None,
         psf=None,
         edisp=None,
         background_model=None,
         likelihood="cash",
         evaluation_mode="local",
+        mask_safe=None,
     ):
-        if mask is not None and mask.data.dtype != np.dtype("bool"):
+        if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
         self.model = model
         self.counts = counts
         self.exposure = exposure
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
+        self.mask_safe = mask_safe
 
         if likelihood == "cash":
             self._stat = cash
@@ -155,26 +159,22 @@ class MapDataset(Dataset):
     def _counts_data(self):
         return self.counts.data.astype(float)
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters.
 
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
         counts, npred = self._counts_data, self.npred().data
 
         # TODO: add mask handling to _stat_sum, so that the temp copy
         # created by the fancy indexing is avoided
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self._stat_sum(counts.ravel(), npred.ravel())
-        elif self.mask is None:
-            stat = self._stat_sum(counts[mask], npred[mask])
-        elif mask is None:
-            stat = self._stat_sum(counts[self.mask.data], npred[self.mask.data])
+        elif self.mask_fit is None:
+            stat = self._stat_sum(counts[self.mask_safe], npred[self.mask_safe])
+        elif self.mask_safe is None:
+            stat = self._stat_sum(counts[self.mask_fit], npred[self.mask_fit])
         else:
-            mask_joined = mask & self.mask.data
+            mask_joined = self.mask_safe & self.mask_fit
             stat = self._stat_sum(counts[mask_joined], npred[mask_joined])
 
         return stat
@@ -236,13 +236,7 @@ class MapEvaluator:
     @lazyproperty
     def geom_reco(self):
         """Reco energy map geometry (`~gammapy.maps.MapGeom`)"""
-        edges = self.edisp.e_reco.bins
-        e_reco_axis = MapAxis.from_edges(
-            edges=edges,
-            name="energy",
-            unit=self.edisp.e_reco.unit,
-            interp=self.edisp.e_reco.interpolation_mode,
-        )
+        e_reco_axis = self.edisp.e_reco.copy(name="energy")
         return self.geom_image.to_cube(axes=[e_reco_axis])
 
     @property
@@ -254,15 +248,13 @@ class MapEvaluator:
     def energy_center(self):
         """True energy axis bin centers (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.get_axis_by_name("energy")
-        energy = energy_axis.center * energy_axis.unit
-        return energy[:, np.newaxis, np.newaxis]
+        return energy_axis.center[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_edges(self):
         """True energy axis bin edges (`~astropy.units.Quantity`)"""
         energy_axis = self.geom.get_axis_by_name("energy")
-        energy = energy_axis.edges * energy_axis.unit
-        return energy[:, np.newaxis, np.newaxis]
+        return energy_axis.edges[:, np.newaxis, np.newaxis]
 
     @lazyproperty
     def energy_bin_width(self):
@@ -312,11 +304,11 @@ class MapEvaluator:
         """Return evaluator coords"""
         lon, lat = self.lon_lat
         if self.edisp:
-            energy = self.edisp.e_reco.nodes[:, np.newaxis, np.newaxis]
+            energy = self.edisp.e_reco.center[:, np.newaxis, np.newaxis]
         else:
             energy = self.energy_center
 
-        return {"lon": lon.value, "lat": lat.value, "energy": energy}
+        return {"lon": lon.value, "lat": lat.value, "energy": energy.value}
 
     @property
     def needs_update(self):

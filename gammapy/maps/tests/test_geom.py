@@ -31,6 +31,7 @@ def test_mapaxis_init_from_edges(edges, interp):
     with pytest.raises(ValueError):
         MapAxis.from_edges([1])
         MapAxis.from_edges([0, 1, 1, 2])
+        MapAxis.from_edges([0, 1, 3, 2])
 
 
 @pytest.mark.parametrize(("nodes", "interp"), mapaxis_geoms)
@@ -41,6 +42,7 @@ def test_mapaxis_from_nodes(nodes, interp):
     with pytest.raises(ValueError):
         MapAxis.from_nodes([])
         MapAxis.from_nodes([0, 1, 1, 2])
+        MapAxis.from_nodes([0, 1, 3, 2])
 
 
 @pytest.mark.parametrize(("nodes", "interp"), mapaxis_geoms)
@@ -49,6 +51,8 @@ def test_mapaxis_from_bounds(nodes, interp):
     assert_allclose(axis.edges[0], nodes[0])
     assert_allclose(axis.edges[-1], nodes[-1])
     assert_allclose(axis.nbin, 3)
+    with pytest.raises(ValueError):
+        MapAxis.from_bounds(1, 1, 1)
 
 
 @pytest.mark.parametrize(("nodes", "interp", "node_type"), mapaxis_geoms_node_type)
@@ -231,7 +235,6 @@ def test_mapcoord_repr():
 
 
 nodes_array = np.array([0.25, 0.75, 1.0, 2.0])
-
 mapaxis_geoms_node_type_unit = [
     (nodes_array, "lin", "edges", "s", "TEST", True),
     (nodes_array, "log", "edges", "s", "test", False),
@@ -240,6 +243,7 @@ mapaxis_geoms_node_type_unit = [
     (nodes_array, "lin", "center", "s", "test", False),
     (nodes_array + 1e-9, "lin", "edges", "s", "test", True),
     (nodes_array + 1e-3, "lin", "edges", "s", "test", False),
+    (nodes_array / 3600.0, "lin", "edges", "hr", "TEST", True),
 ]
 
 
@@ -265,7 +269,35 @@ def test_squash():
     assert_allclose(ax_sq.nbin, 1)
     assert_allclose(axis.edges[0], ax_sq.edges[0])
     assert_allclose(axis.edges[-1], ax_sq.edges[1])
-    assert_allclose(ax_sq.center, 1.5)
+    assert_allclose(ax_sq.center, 1.5 * u.TeV)
+
+
+def test_upsample():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3], unit="TeV", name="energy", node_type="edges", interp="lin"
+    )
+    axis_up = axis.upsample(10)
+
+    assert_allclose(axis_up.nbin, 10 * axis.nbin)
+    assert_allclose(axis_up.edges[0], axis.edges[0])
+    assert_allclose(axis_up.edges[-1], axis.edges[-1])
+    assert axis_up.node_type == axis.node_type
+
+
+def test_downsample():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="lin",
+    )
+    axis_down = axis.downsample(2)
+
+    assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
 
 
 @pytest.fixture(scope="session")
@@ -288,9 +320,9 @@ def test_group_table_basic(energy_axis_ref):
     bin_type = [_.strip() for _ in groups["bin_type"]]
     assert_equal(bin_type, ["normal", "normal"])
 
+
 @pytest.mark.parametrize(
-    "e_edges",
-    [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV],
+    "e_edges", [[1.8, 4.8, 7.2] * u.TeV, [2, 5, 7] * u.TeV, [2000, 5000, 7000] * u.GeV]
 )
 def test_group_table_edges(energy_axis_ref, e_edges):
     groups = energy_axis_ref.group_table(e_edges)

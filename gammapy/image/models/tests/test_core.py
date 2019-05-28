@@ -59,6 +59,21 @@ def test_sky_disk():
     assert_allclose(radius.value, r_0.value)
 
 
+def test_sky_disk_edge():
+    r_0 = 2 * u.deg
+    model = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0)
+    value_center = model(0 * u.deg, 0 * u.deg)
+    value_edge = model(r_0, 0 * u.deg)
+    assert_allclose((value_edge / value_center).to_value(""), 0.5)
+
+    edge = model.edge.quantity
+    value_edge_pwidth = model(r_0 + edge / 2, 0 * u.deg)
+    assert_allclose((value_edge_pwidth / value_center).to_value(""), 0.05)
+
+    value_edge_nwidth = model(r_0 - edge / 2, 0 * u.deg)
+    assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
+
+
 def test_sky_ellipse():
     pytest.importorskip("astropy", minversion="3.1.1")
     # test the normalization for an elongated ellipse near the Galactic Plane
@@ -108,6 +123,24 @@ def test_sky_ellipse():
     )
 
 
+def test_sky_ellipse_edge():
+    pytest.importorskip("astropy", minversion="3.1.1")
+    r_0 = 2 * u.deg
+    model = SkyEllipse(
+        lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, theta="0 deg"
+    )
+    value_center = model(0 * u.deg, 0 * u.deg)
+    value_edge = model(r_0, 0 * u.deg)
+    assert_allclose((value_edge / value_center).to_value(""), 0.5)
+
+    edge = model.edge.quantity
+    value_edge_pwidth = model(r_0 + edge / 2, 0 * u.deg)
+    assert_allclose((value_edge_pwidth / value_center).to_value(""), 0.05)
+
+    value_edge_nwidth = model(r_0 - edge / 2, 0 * u.deg)
+    assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
+
+
 def test_sky_shell():
     width = 2 * u.deg
     rad = 2 * u.deg
@@ -134,7 +167,7 @@ def test_sky_diffuse_constant():
     assert radius is None
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_sky_diffuse_map():
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     model = SkyDiffuseMap.read(filename, normalize=False)
@@ -150,7 +183,7 @@ def test_sky_diffuse_map():
     assert model.frame == "fk5"
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5)

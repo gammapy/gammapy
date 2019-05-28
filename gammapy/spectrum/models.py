@@ -6,7 +6,6 @@ from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
 from ..utils.energy import EnergyBounds
-from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameter, Parameters, Model
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -25,6 +24,7 @@ __all__ = [
     "TableModel",
     "AbsorbedSpectralModel",
     "Absorption",
+    "NaimaModel",
 ]
 
 
@@ -1248,10 +1248,7 @@ class ScaleModel(SpectralModel):
     def __init__(self, model, norm=1):
         self.norm = Parameter("norm", norm, unit="")
         self.model = model
-
-        params = []
-        params.append(getattr(self, "norm"))
-        super().__init__(params)
+        super().__init__([self.norm])
 
     def evaluate(self, energy, norm):
         return norm * self.model(energy)
@@ -1307,20 +1304,21 @@ class Absorption:
         plt.show()
     """
 
-    __slots__ = ["energy_lo", "energy_hi", "param_lo", "param_hi", "data"]
+    def __init__(
+        self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
+    ):
+        self.data = data
 
-    def __init__(self, energy_lo, energy_hi, param_lo, param_hi, data):
-        axes = [
-            BinnedDataAxis(
-                param_lo, param_hi, interpolation_mode="linear", name="parameter"
-            ),
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-        ]
+        # set values log centers
+        self.energy = np.sqrt(energy_lo * energy_hi)
+        self.param = (param_hi + param_lo) / 2
 
-        self.data = NDDataArray(axes=axes, data=data)
-        self.data.default_interp_kwargs["fill_value"] = None
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("points_scale", ("log", "lin"))
+
+        self._evaluate = ScaledRegularGridInterpolator(
+            points=(self.param, self.energy), values=data, **interp_kwargs
+        )
 
     @classmethod
     def read(cls, filename):
@@ -1405,16 +1403,13 @@ class Absorption:
         unit : str, (optional)
             desired value for energy axis
         """
-        energy_axis = self.data.axes[1]
-        energy = (energy_axis.log_center()).to(unit)
-
+        energy = self.energy.to(unit)
         values = self.evaluate(energy=energy, parameter=parameter)
-
         return TableModel(energy=energy, values=values, values_scale="lin")
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
-        return self.data.evaluate(energy=energy, parameter=parameter)
+        return self._evaluate((parameter, energy))
 
 
 class AbsorbedSpectralModel(SpectralModel):
@@ -1442,17 +1437,14 @@ class AbsorbedSpectralModel(SpectralModel):
         self.parameter = parameter
         self.parameter_name = parameter_name
 
-        # initialise list parameters from spectral model
-        param_list = []
-        for param in spectral_model.parameters.parameters:
-            param_list.append(param)
-
-        # Add parameter to the list
-        min_ = self.absorption.data.axes[0].lo[0]
-        max_ = self.absorption.data.axes[0].lo[-1]
+        min_ = self.absorption.param.min()
+        max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
-        param_list.append(par)
-        self._parameters = Parameters(param_list)
+
+        parameters = spectral_model.parameters.parameters.copy()
+        parameters.append(par)
+
+        super().__init__(parameters)
 
     def evaluate(self, energy, **kwargs):
         """Evaluate the model at a given energy."""
@@ -1464,3 +1456,135 @@ class AbsorbedSpectralModel(SpectralModel):
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption
+
+
+class NaimaModel(SpectralModel):
+    r"""A wrapper for Naima models
+
+    This class provides an interface with the models defined in the `~naima.models` module.
+    The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
+    radiative model instance, used to compute the non-thermal emission from populations of
+    relativistic electrons or protons due to interactions with the ISM or with radiation and magnetic fields.
+
+    One of the advantages provided by this class consists in the possibility of performing a maximum
+    likelihood spectral fit of the model's parameters directly on observations, as opposed to the MCMC
+    `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
+    Naima. All the parameters defining the parent population of charged particles are stored as
+    `~gammapy.utils.modeling.Parameter` and left free by default. In case that the radiative model is `
+    ~naima.radiative.Synchrotron`, the magnetic field strength may also be fitted. Parameters can be
+    freezed/unfreezed before the fit, and maximum/minimum values can be set to limit the parameters space to
+    the physically interesting region.
+
+    Parameters
+    ----------
+    radiative_model : `~naima.models.BaseRadiative`
+        An instance of a radiative model defined in `~naima.models`
+    distance : `~astropy.units.Quantity`, optional
+        Distance to the source. If set to 0, the intrinsic differential
+        luminosity will be returned. Default is 1 kpc
+    seed : str or list of str, optional
+        Seed photon field(s) to be considered for the `radiative_model` flux computation,
+        in case of a `~naima.models.InverseCompton` model. It can be a subset of the
+        `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
+        of photon fields
+
+    Examples
+    --------
+    Create and plot a spectral model that convolves an `ExponentialCutoffPowerLaw` electron distribution
+    with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
+
+    .. plot::
+        :include-source:
+
+        import naima
+        from gammapy.spectrum.models import NaimaModel
+        import astropy.units as u
+        import matplotlib.pyplot as plt
+
+
+        particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
+        radiative_model = naima.radiative.InverseCompton(
+            particle_distribution,
+            seed_photon_fields=[
+                "CMB",
+                ["FIR", 26.5 * u.K, 0.415 * u.eV / u.cm ** 3],
+            ],
+            Eemin=100 * u.GeV,
+        )
+
+        model = NaimaModel(radiative_model, distance=1.5 * u.kpc)
+
+        opts = {
+            "energy_range" : [10 * u.GeV, 80 * u.TeV],
+            "energy_power" : 2,
+            "flux_unit" : "erg-1 cm-2 s-1",
+        }
+
+        # Plot the total inverse Compton emission
+        model.plot(label='IC (total)', **opts)
+
+        # Plot the separate contributions from each seed photon field
+        for seed, ls in zip(['CMB','FIR'], ['-','--']):
+            model = NaimaModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
+            model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
+
+        plt.legend(loc='best')
+        plt.show()
+    """
+    # TODO: prevent users from setting new attributes after init
+
+    def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
+        import naima
+
+        self.radiative_model = radiative_model
+        self._particle_distribution = self.radiative_model.particle_distribution
+        self.distance = Parameter("distance", distance, frozen=True)
+        self.seed = seed
+
+        # This ensures the support of naima.models.TableModel
+        if isinstance(self._particle_distribution, naima.models.TableModel):
+            param_names = ["amplitude"]
+        else:
+            param_names = self._particle_distribution.param_names
+
+        parameters = []
+        for name in param_names:
+            value = getattr(self._particle_distribution, name)
+            setattr(self, name, Parameter(name, value))
+            parameters.append(getattr(self, name))
+
+        # In case of a synchrotron radiative model, append B to the fittable parameters
+        if "B" in self.radiative_model.param_names:
+            B = getattr(self.radiative_model, "B")
+            setattr(self, "B", Parameter("B", B))
+            parameters.append(getattr(self, "B"))
+
+        super().__init__(parameters)
+
+    def evaluate_error(self, energy):
+        # This method will need to be overridden here, since the radiative models in naima don't
+        # support the evaluation on energy values that is performed in the base class method
+        raise NotImplementedError(
+            "Error evaluation for naima models currently not supported."
+        )
+
+    def evaluate(self, energy, **kwargs):
+        """Evaluate the model"""
+        for name, value in kwargs.items():
+            setattr(self._particle_distribution, name, value)
+
+        distance = self.distance.quantity
+
+        # Flattening the input energy list and later reshaping the flux list
+        # prevents some radiative models from displaying broadcasting problems.
+        if self.seed is None:
+            dnde = self.radiative_model.flux(energy.flatten(), distance=distance)
+        else:
+            dnde = self.radiative_model.flux(
+                energy.flatten(), seed=self.seed, distance=distance
+            )
+
+        dnde = dnde.reshape(energy.shape)
+
+        unit = 1 / (energy.unit * u.cm ** 2 * u.s)
+        return dnde.to(unit)

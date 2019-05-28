@@ -4,9 +4,10 @@ import yaml
 from ..utils.scripts import make_path
 from ..utils.fitting import Fit
 from ..spectrum import (
-    FluxPointEstimator,
+    FluxPointsEstimator,
     FluxPointsDataset,
     SpectrumExtraction,
+    SpectrumDatasetOnOffStacker,
 )
 from ..background import ReflectedRegionsBackgroundEstimator
 
@@ -19,8 +20,6 @@ class SpectrumAnalysisIACT:
     """High-level analysis class to perform a full 1D IACT spectral analysis.
 
     Observation selection must have happened before.
-
-    For a usage example see :gp-notebook:`spectrum_pipe`
 
     Config options:
 
@@ -111,9 +110,15 @@ class SpectrumAnalysisIACT:
 
     def run_fit(self, optimize_opts=None):
         """Run all step for the spectrum fit."""
-        datasets_fit = self.extraction.spectrum_observations.to_spectrum_datasets(**self.config["fit"])
+        fit_range = self.config["fit"].get("fit_range")
+        model = self.config["fit"]["model"]
 
-        self.fit = Fit(datasets_fit)
+        for obs in self.extraction.spectrum_observations:
+            if fit_range is not None:
+                obs.set_fit_energy_range(fit_range[0], fit_range[1])
+            obs.model = model
+
+        self.fit = Fit(self.extraction.spectrum_observations)
         self.fit_result = self.fit.run(optimize_opts=optimize_opts)
 
         model = self.config["fit"]["model"]
@@ -127,13 +132,13 @@ class SpectrumAnalysisIACT:
 
         self.write(filename=filename)
 
-        stacked_obs = self.extraction.spectrum_observations.stack()
+        obs_stacker = SpectrumDatasetOnOffStacker(self.extraction.spectrum_observations)
+        obs_stacker.run()
 
-        datasets_fp = self.extraction.spectrum_observations.to_spectrum_datasets()
-        self.flux_point_estimator = FluxPointEstimator(
-            e_edges=self.config["fp_binning"],
-            model=model,
-            datasets=datasets_fp,
+        datasets_fp = obs_stacker.stacked_obs
+        datasets_fp.model = model
+        self.flux_point_estimator = FluxPointsEstimator(
+            e_edges=self.config["fp_binning"], datasets=datasets_fp
         )
         fp = self.flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
@@ -142,4 +147,6 @@ class SpectrumAnalysisIACT:
     @property
     def spectrum_result(self):
         """`~gammapy.spectrum.FluxPointsDataset`"""
-        return FluxPointsDataset(data=self.flux_points, model=self.fit.datasets.datasets[0].model)
+        return FluxPointsDataset(
+            data=self.flux_points, model=self.fit.datasets.datasets[0].model
+        )

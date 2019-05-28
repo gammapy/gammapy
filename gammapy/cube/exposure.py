@@ -29,7 +29,7 @@ def make_map_exposure_true_energy(pointing, livetime, aeff, geom):
         Exposure map
     """
     offset = geom.separation(pointing)
-    energy = geom.axes[0].center * geom.axes[0].unit
+    energy = geom.get_axis_by_name("energy").center
 
     exposure = aeff.data.evaluate(
         offset=offset, energy=energy[:, np.newaxis, np.newaxis]
@@ -71,9 +71,8 @@ def _map_spectrum_weight(map, spectrum=None):
 
     # Compute weights vector
     # Should we change to call spectrum.integrate ?
-    energy_axis = map.geom.get_axis_by_name("energy")
-    energy_center = energy_axis.center * energy_axis.unit
-    energy_edges = energy_axis.edges * energy_axis.unit
+    energy_center = map.geom.get_axis_by_name("energy").center
+    energy_edges = map.geom.get_axis_by_name("energy").edges
     energy_width = np.diff(energy_edges)
     weights = spectrum(energy_center) * energy_width
     weights /= weights.sum()

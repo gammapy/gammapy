@@ -3,6 +3,7 @@ import pytest
 from ..snrcat import SourceCatalogSNRcat
 
 
+@pytest.mark.skip(reason="see https://github.com/gammapy/gammapy/issues/2162")
 @pytest.mark.remote_data
 def test_load_catalog_snrcat(tmpdir):
     snrcat = SourceCatalogSNRcat()

@@ -32,8 +32,6 @@ Notebooks
    notebooks/hess.ipynb
    notebooks/detect_ts.ipynb
    notebooks/image_fitting_with_sherpa.ipynb
-   notebooks/spectrum_models.ipynb
-   notebooks/spectrum_pipe.ipynb
    notebooks/spectrum_analysis.ipynb
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
@@ -41,7 +39,6 @@ Notebooks
    notebooks/light_curve.ipynb
    notebooks/cta_sensitivity.ipynb
    notebooks/spectrum_simulation.ipynb
-   notebooks/spectrum_simulation_cta.ipynb
    notebooks/image_analysis.ipynb
 
 
@@ -75,10 +72,9 @@ To get started with H.E.S.S. data analysis see here:
 
 1-dimensional spectral analysis:
 
-- `Spectral models in Gammapy <notebooks/spectrum_models.html>`__ | *spectrum_models.ipynb*
-- `Spectral analysis with Gammapy (run pipeline) <notebooks/spectrum_pipe.html>`__ (H.E.S.S. data example) | *spectrum_pipe.ipynb*
-- `Spectral analysis with Gammapy (individual steps) <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
-- `Fitting gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
+- `Spectral simulation with Gammapy <notebooks/spectrum_simulation.html>`__ | *spectrum_simulation.ipynb*
+- `Spectral analysis with Gammapy  <notebooks/spectrum_analysis.html>`__ (H.E.S.S. data example) | *spectrum_analysis.ipynb*
+- `Fitting Gammapy spectra with sherpa <notebooks/spectrum_fitting_with_sherpa.html>`__ | *spectrum_fitting_with_sherpa.ipynb*
 - `Flux point fitting with Gammapy <notebooks/sed_fitting_gammacat_fermi.html>`__ | *sed_fitting_gammacat_fermi.ipynb*
 
 Time-dependent analysis:

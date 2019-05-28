@@ -9,8 +9,10 @@ from ..irf_reduce import (
     make_mean_psf,
     make_mean_edisp,
     apply_containment_fraction,
+    compute_energy_thresholds,
 )
 from ..effective_area import EffectiveAreaTable
+from ..energy_dispersion import EnergyDispersion
 from ..psf_table import EnergyDependentTablePSF, TablePSF
 from ...data import DataStore, Observations
 from ...utils.testing import requires_data, assert_quantity_allclose
@@ -22,7 +24,7 @@ def data_store():
     return DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
@@ -97,7 +99,7 @@ def test_make_psf(pars, data_store):
     assert_allclose(psf.psf_value.value[15, 50], pars["psf_value"], rtol=1e-3)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_mean_psf(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 
@@ -108,7 +110,7 @@ def test_make_mean_psf(data_store):
     assert_allclose(psf.psf_value.value[22, 22], 12206.1665)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_make_mean_edisp(data_store):
     position = SkyCoord(83.63, 22.01, unit="deg")
 
@@ -120,8 +122,8 @@ def test_make_mean_edisp(data_store):
     e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
     rmf = make_mean_edisp(observations, position=position, e_true=e_true, e_reco=e_reco)
 
-    assert len(rmf.e_true.nodes) == 80
-    assert len(rmf.e_reco.nodes) == 15
+    assert len(rmf.e_true.center) == 80
+    assert len(rmf.e_reco.center) == 15
     assert_quantity_allclose(rmf.data.data[53, 8], 0.056, atol=2e-2)
 
     rmf2 = make_mean_edisp(
@@ -158,10 +160,56 @@ def test_apply_containment_fraction():
         * psf_table.psf_value.unit
     )
     edep_psf_table = EnergyDependentTablePSF(
-        aeff.energy.nodes, rad, psf_value=psf_values
+        aeff.energy.center, rad, psf_value=psf_values
     )
 
     new_aeff = apply_containment_fraction(aeff, edep_psf_table, Angle("0.1 deg"))
 
     assert_allclose(new_aeff.data.data.value, 1.0, rtol=5e-4)
     assert new_aeff.data.data.unit == "m2"
+
+
+@requires_data("gammapy-data")
+def test_compute_thresholds_from_crab_data():
+    """Obs read from file"""
+    arffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/arf_obs23523.fits"
+    rmffile = "$GAMMAPY_DATA/joint-crab/spectra/hess/rmf_obs23523.fits"
+
+    aeff = EffectiveAreaTable.read(arffile)
+    edisp = EnergyDispersion.read(rmffile)
+
+    thresh_lo, thresh_hi = compute_energy_thresholds(
+        aeff=aeff,
+        edisp=edisp,
+        method_lo="energy_bias",
+        method_hi="none",
+        bias_percent_lo=10,
+        bias_percent_hi=10,
+    )
+
+    assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
+    assert_allclose(thresh_hi.to("TeV").value, 100.0, rtol=1e-4)
+
+
+def test_compute_thresholds_from_parametrization():
+    energy = np.logspace(-2, 2.0, 100) * u.TeV
+    aeff = EffectiveAreaTable.from_parametrization(energy=energy)
+    edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
+
+    thresh_lo, thresh_hi = compute_energy_thresholds(
+        aeff=aeff,
+        edisp=edisp,
+        method_lo="area_max",
+        method_hi="area_max",
+        area_percent_lo=10,
+        area_percent_hi=90,
+    )
+
+    assert_allclose(thresh_lo.to("TeV").value, 0.18557, rtol=1e-4)
+    assert_allclose(thresh_hi.to("TeV").value, 43.818, rtol=1e-4)
+
+    thresh_lo, thresh_hi = compute_energy_thresholds(
+        aeff=aeff, edisp=edisp, method_hi="area_max", area_percent_hi=70
+    )
+
+    assert_allclose(thresh_hi.to("TeV").value, 100.0, rtol=1e-4)

@@ -11,14 +11,14 @@ def hawc_2hwc():
     return SourceCatalog2HWC()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalog2HWC:
     def test_source_table(self, hawc_2hwc):
         assert hawc_2hwc.name == "2hwc"
         assert len(hawc_2hwc.table) == 40
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSourceCatalogObject2HWC:
     def test_data(self, hawc_2hwc):
         source = hawc_2hwc[0]

@@ -28,9 +28,18 @@ class MapMaker:
         If none, the same as geom is assumed
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
+    background_oversampling : int
+        Background oversampling factor in energy axis.
     """
 
-    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None):
+    def __init__(
+        self,
+        geom,
+        offset_max,
+        geom_true=None,
+        exclusion_mask=None,
+        background_oversampling=None,
+    ):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
 
@@ -41,6 +50,7 @@ class MapMaker:
         self.geom_true = geom_true if geom_true else geom
         self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
+        self.background_oversampling = background_oversampling
 
     def _get_empty_maps(self, selection):
         # Initialise zero-filled maps
@@ -115,6 +125,7 @@ class MapMaker:
             geom_true=cutout_geom_etrue,
             offset_max=self.offset_max,
             exclusion_mask=cutout_exclusion,
+            background_oversampling=self.background_oversampling,
         )
 
     @staticmethod
@@ -192,13 +203,20 @@ class MapMakerObs:
     """
 
     def __init__(
-        self, observation, geom, offset_max, geom_true=None, exclusion_mask=None
+        self,
+        observation,
+        geom,
+        offset_max,
+        geom_true=None,
+        exclusion_mask=None,
+        background_oversampling=None,
     ):
         self.observation = observation
         self.geom = geom
         self.geom_true = geom_true if geom_true else geom
         self.offset_max = offset_max
         self.exclusion_mask = exclusion_mask
+        self.background_oversampling = background_oversampling
         self.maps = {}
 
     def _fov_mask(self, coords):
@@ -276,6 +294,7 @@ class MapMakerObs:
             ontime=self.observation.observation_time_duration,
             bkg=self.observation.bkg,
             geom=self.geom,
+            oversampling=self.background_oversampling,
         )
         if self.fov_mask is not None:
             background.data[..., self.fov_mask] = 0

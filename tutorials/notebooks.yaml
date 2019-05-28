@@ -90,8 +90,6 @@
     - cta-1dc
   images:
     - gammapy_mcmc
-- name: nddata_demo
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/nddata_demo.ipynb
 - name: pulsar_analysis
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/pulsar_analysis.ipynb
   datasets:
@@ -119,19 +117,7 @@
   requires: sherpa
   datasets:
     - joint-crab
-- name: spectrum_models
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_models.ipynb
-- name: spectrum_pipe
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_pipe.ipynb
-  requires: iminuit
-  datasets:
-    - hess-dl3-dr1
-    - gamma-cat
 - name: spectrum_simulation
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation.ipynb
-  datasets:
-    - cta-1dc
-- name: spectrum_simulation_cta
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/spectrum_simulation_cta.ipynb
   datasets:
     - cta-1dc

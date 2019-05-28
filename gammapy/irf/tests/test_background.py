@@ -29,25 +29,28 @@ def bkg_3d():
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_background_3d_basics(bkg_3d):
     assert "NDDataArray summary info" in str(bkg_3d.data)
 
     axis = bkg_3d.data.axis("energy")
-    assert axis.nbins == 2
+    assert axis.nbin == 2
     assert axis.unit == "TeV"
 
     axis = bkg_3d.data.axis("fov_lon")
-    assert axis.nbins == 3
+    assert axis.nbin == 3
     assert axis.unit == "deg"
 
     axis = bkg_3d.data.axis("fov_lat")
-    assert axis.nbins == 3
+    assert axis.nbin == 3
     assert axis.unit == "deg"
 
     data = bkg_3d.data.data
     assert data.shape == (2, 3, 3)
     assert data.unit == "s-1 MeV-1 sr-1"
+
+    bkg_2d = bkg_3d.to_2d()
+    assert bkg_2d.data.data.shape == (2, 3)
 
 
 def test_background_3d_read_write(tmpdir, bkg_3d):
@@ -57,15 +60,15 @@ def test_background_3d_read_write(tmpdir, bkg_3d):
     bkg_3d_2 = Background3D.read(filename)
 
     axis = bkg_3d_2.data.axis("energy")
-    assert axis.nbins == 2
+    assert axis.nbin == 2
     assert axis.unit == "TeV"
 
     axis = bkg_3d_2.data.axis("fov_lon")
-    assert axis.nbins == 3
+    assert axis.nbin == 3
     assert axis.unit == "deg"
 
     axis = bkg_3d_2.data.axis("fov_lat")
-    assert axis.nbins == 3
+    assert axis.nbin == 3
     assert axis.unit == "deg"
 
     data = bkg_3d_2.data.data
@@ -185,11 +188,11 @@ def test_background_2d_read_write(tmpdir, bkg_2d):
     bkg_2d_2 = Background2D.read(filename)
 
     axis = bkg_2d_2.data.axis("energy")
-    assert axis.nbins == 2
+    assert axis.nbin == 2
     assert axis.unit == "TeV"
 
     axis = bkg_2d_2.data.axis("offset")
-    assert axis.nbins == 3
+    assert axis.nbin == 3
     assert axis.unit == "deg"
 
     data = bkg_2d_2.data.data

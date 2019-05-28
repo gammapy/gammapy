@@ -3,24 +3,25 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from ..nddata import NDDataArray, BinnedDataAxis, DataAxis, sqrt_space
+from ..nddata import NDDataArray
+from ...maps import MapAxis
 
 
 @pytest.fixture(scope="session")
 def axis_x():
-    return DataAxis([1, 3, 6], name="x")
+    return MapAxis.from_nodes([1, 3, 6], name="x")
 
 
 @pytest.fixture(scope="session")
 def axis_energy():
-    return BinnedDataAxis.logspace(
-        0.1, 1000, 2, unit=u.TeV, name="energy", interpolation_mode="log"
+    return MapAxis.from_bounds(
+        0.1, 1000, 2, unit=u.TeV, name="energy", interp="log", node_type="edges"
     )
 
 
 @pytest.fixture(scope="session")
 def axis_offset():
-    return DataAxis([0.2, 0.3, 0.4, 0.5] * u.deg, name="offset")
+    return MapAxis.from_nodes([0.2, 0.3, 0.4, 0.5] * u.deg, name="offset")
 
 
 @pytest.fixture(scope="session")
@@ -45,7 +46,8 @@ class TestNDDataArray:
     def test_init_error(self):
         with pytest.raises(ValueError):
             NDDataArray(
-                axes=[DataAxis([1, 3, 6], name="x")], data=np.arange(8).reshape(4, 2)
+                axes=[MapAxis.from_nodes([1, 3, 6], name="x")],
+                data=np.arange(8).reshape(4, 2),
             )
 
     def test_str(self, nddata_1d):
@@ -116,19 +118,3 @@ class TestNDDataArray:
         # evaluating on interpolation nodes should give back the interpolation values
         out = nddata_2d.evaluate()
         assert_allclose(out, nddata_2d.data)
-
-
-# TODO: implement tests!
-class TestDataAxis:
-    pass
-
-
-# TODO: implement tests!
-class TestBinnedDataAxis:
-    pass
-
-
-def test_sqrt_space():
-    values = sqrt_space(0, 2, 5)
-
-    assert_allclose(values, [0.0, 1.0, 1.41421356, 1.73205081, 2.0])

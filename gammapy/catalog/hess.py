@@ -547,13 +547,19 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spectral_model_comp = spectral_model.copy()
                 # weight amplitude of the component
                 spectral_model_comp.parameters["amplitude"].value *= weight
-                models.append(SkyModel(component.spatial_model, spectral_model_comp))
+                models.append(
+                    SkyModel(
+                        component.spatial_model,
+                        spectral_model_comp,
+                        name=component.name,
+                    )
+                )
 
             return SkyModels(models)
         else:
             spatial_model = self.spatial_model
             spectral_model = self.spectral_model(which=which)
-            return SkyModel(spatial_model, spectral_model)
+            return SkyModel(spatial_model, spectral_model, name=self.name)
 
     @property
     def flux_points(self):

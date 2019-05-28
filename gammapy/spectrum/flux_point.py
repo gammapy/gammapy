@@ -2,6 +2,7 @@
 import logging
 from collections import OrderedDict
 import numpy as np
+from scipy.optimize import brentq
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
@@ -11,8 +12,9 @@ from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
+from .dataset import SpectrumDatasetOnOff
 
-__all__ = ["FluxPoints", "FluxPointEstimator", "FluxPointsDataset"]
+__all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +59,7 @@ DEFAULT_UNIT = OrderedDict(
 )
 
 
-def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
+def _interp_likelihood_profile(norm_scan, dloglike_scan):
     """Helper function to interpolate likelihood profiles"""
     # likelihood profiles are typically of parabolic shape, so we use a
     # sqrt scaling of the values and perform linear interpolation on the scaled
@@ -66,7 +68,7 @@ def _interp_likelihood_profile(norm_scan, dloglike_scan, norm):
     interp = ScaledRegularGridInterpolator(
         points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
     )
-    return interp((norm,))
+    return interp
 
 
 class FluxPoints:
@@ -717,7 +719,8 @@ class FluxPoints:
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             dloglike_scan = row["dloglike_scan"] - row["loglike"]
-            z[idx] = _interp_likelihood_profile(norm_scan, dloglike_scan, norm)
+            interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+            z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
         kwargs.setdefault("vmin", -4)
@@ -740,8 +743,8 @@ class FluxPoints:
         return ax
 
 
-class FluxPointEstimator:
-    """Flux point estimator.
+class FluxPointsEstimator:
+    """Flux points estimator.
 
     Estimates flux points for a given list of spectral datasets, energies and
     spectral model.
@@ -764,8 +767,8 @@ class FluxPointEstimator:
         Spectrum datasets.
     e_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    model : `~gammapy.spectrum.models.SpectralModel`
-        Global best fit model.
+    source : str
+        For which source in the model to compute the flux points.
     norm_min : float
         Minimum value for the norm used for the likelihood profile evaluation.
     norm_max : float
@@ -778,36 +781,46 @@ class FluxPointEstimator:
         Sigma to use for asymmetric error computation.
     sigma_ul : int
         Sigma to use for upper limit computation.
+    reoptimize : bool
+        Re-optimize other free model parameters.
     """
 
     def __init__(
         self,
         datasets,
         e_edges,
-        model,
+        source="",
         norm_min=0.2,
         norm_max=5,
         norm_n_values=11,
         norm_values=None,
         sigma=1,
         sigma_ul=2,
+        reoptimize=False,
     ):
         # make a copy to not modify the input datasets
         if not isinstance(datasets, Datasets):
             datasets = Datasets(datasets)
 
         if not datasets.is_all_same_type and datasets.is_all_same_shape:
-            raise ValueError("Flux point estimation requires a list of datasets"
-                             " of the same type and data shape.")
+            raise ValueError(
+                "Flux point estimation requires a list of datasets"
+                " of the same type and data shape."
+            )
 
         self.datasets = datasets.copy()
         self.e_edges = e_edges
-        self.model = ScaleModel(model)
-        self.model.parameters["norm"].min = 0
 
-        # set the model on all datasets
-        for dataset in self.datasets.datasets:
-            dataset.model = self.model
+        dataset = self.datasets.datasets[0]
+
+        if isinstance(dataset, SpectrumDatasetOnOff):
+            model = dataset.model
+        else:
+            model = dataset.model[source].spectral_model
+
+        self.model = ScaleModel(model)
+        self.model.norm.min = 0
+        self.model.norm.max = 1e3
 
         if norm_values is None:
             norm_values = np.logspace(
@@ -817,6 +830,35 @@ class FluxPointEstimator:
         self.norm_values = norm_values
         self.sigma = sigma
         self.sigma_ul = sigma_ul
+        self.reoptimize = reoptimize
+        self.source = source
+        self.fit = Fit(self.datasets)
+
+        self._set_scale_model()
+
+    def _freeze_parameters(self):
+        # freeze other parameters
+        for par in self.datasets.parameters:
+            if par is not self.model.norm:
+                par.frozen = True
+
+    def _freeze_empty_background(self):
+        from ..cube import MapDataset
+
+        counts_all = self.estimate_counts()["counts"]
+
+        for counts, dataset in zip(counts_all, self.datasets.datasets):
+            if isinstance(dataset, MapDataset) and counts == 0:
+                if dataset.background_model is not None:
+                    dataset.background_model.parameters.freeze_all()
+
+    def _set_scale_model(self):
+        # set the model on all datasets
+        for dataset in self.datasets.datasets:
+            if isinstance(dataset, SpectrumDatasetOnOff):
+                dataset.model = self.model
+            else:
+                dataset.model[self.source].spectral_model = self.model
 
     @property
     def ref_model(self):
@@ -824,10 +866,12 @@ class FluxPointEstimator:
 
     @property
     def e_groups(self):
-        """"""
-        from ..maps import MapAxis
-        e_edges = self.datasets.datasets[0].counts_on.energy.bins
-        energy_axis = MapAxis.from_edges(e_edges, unit=e_edges.unit, name="energy")
+        """Energy grouping table `~astropy.table.Table`"""
+        dataset = self.datasets.datasets[0]
+        if isinstance(dataset, SpectrumDatasetOnOff):
+            energy_axis = dataset.counts.energy
+        else:
+            energy_axis = dataset.counts.geom.get_axis_by_name("energy")
         return energy_axis.group_table(self.e_edges)
 
     def __str__(self):
@@ -864,7 +908,7 @@ class FluxPointEstimator:
 
     def _energy_mask(self, e_group):
         energy_mask = np.zeros(self.datasets.datasets[0].data_shape)
-        energy_mask[e_group["idx_min"]:e_group["idx_max"] + 1] = 1
+        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -906,32 +950,61 @@ class FluxPointEstimator:
             ]
         )
 
-        self.datasets.mask = self._energy_mask(e_group)
-        result.update(self.estimate_norm())
+        contribute_to_likelihood = False
 
-        if not result.pop("success"):
-            log.warning(
-                "Fit failed for flux point between {e_min:.3f} and {e_max:.3f},"
-                " setting NaN.".format(e_min=e_min, e_max=e_max)
+        for dataset in self.datasets.datasets:
+            dataset.mask_fit = self._energy_mask(e_group)
+            mask = dataset.mask_fit
+
+            if dataset.mask_safe is not None:
+                mask &= dataset.mask_safe
+
+            contribute_to_likelihood |= mask.any()
+
+        if not contribute_to_likelihood:
+            raise ValueError(
+                "No dataset contributes to the likelihood between"
+                " {e_min:.3f} and {e_max:.3f}. Please adapt the "
+                "flux point energy edges or check the dataset masks.".format(
+                    e_min=e_min, e_max=e_max
+                )
             )
 
-        if steps == "all":
-            steps = ["err", "errp-errn", "ul", "ts", "norm-scan"]
+        with self.datasets.parameters.restore_values:
 
-        if "err" in steps:
-            result.update(self.estimate_norm_err())
+            self._freeze_empty_background()
 
-        if "errp-errn" in steps:
-            result.update(self.estimate_norm_errn_errp())
+            if not self.reoptimize:
+                self._freeze_parameters()
 
-        if "ul" in steps:
-            result.update(self.estimate_norm_ul())
+            result.update(self.estimate_norm())
 
-        if "ts" in steps:
-            result.update(self.estimate_norm_ts())
+            if not result.pop("success"):
+                log.warning(
+                    "Fit failed for flux point between {e_min:.3f} and {e_max:.3f},"
+                    " setting NaN.".format(e_min=e_min, e_max=e_max)
+                )
 
-        if "norm-scan" in steps:
-            result.update(self.estimate_norm_scan())
+            if steps == "all":
+                steps = ["err", "counts", "errp-errn", "ul", "ts", "norm-scan"]
+
+            if "err" in steps:
+                result.update(self.estimate_norm_err())
+
+            if "counts" in steps:
+                result.update(self.estimate_counts())
+
+            if "errp-errn" in steps:
+                result.update(self.estimate_norm_errn_errp())
+
+            if "ul" in steps:
+                result.update(self.estimate_norm_ul())
+
+            if "ts" in steps:
+                result.update(self.estimate_norm_ts())
+
+            if "norm-scan" in steps:
+                result.update(self.estimate_norm_scan())
 
         return result
 
@@ -943,7 +1016,7 @@ class FluxPointEstimator:
         result : dict
             Dict with asymmetric errors for the flux point norm.
         """
-        result = self.fit.confidence(parameter="norm", sigma=self.sigma)
+        result = self.fit.confidence(parameter=self.model.norm, sigma=self.sigma)
         return {"norm_errp": result["errp"], "norm_errn": result["errn"]}
 
     def estimate_norm_err(self):
@@ -955,8 +1028,31 @@ class FluxPointEstimator:
             Dict with symmetric error for the flux point norm.
         """
         result = self.fit.covariance()
-        norm_err = result.parameters.error("norm")
+        norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
+
+    def estimate_counts(self):
+        """Estimate counts for the flux point
+
+        Returns
+        -------
+        result : dict
+            Dict with an array with one entry per dataset with counts for the flux point.
+        """
+
+        counts = []
+
+        for dataset in self.datasets.datasets:
+            mask = dataset.mask_fit
+            if dataset.mask_safe is not None:
+                mask &= dataset.mask_safe
+
+            if isinstance(dataset, SpectrumDatasetOnOff):
+                counts.append(dataset.counts.data.data[mask].sum())
+            else:
+                counts.append(dataset.counts.data[mask].sum())
+
+        return {"counts": np.array(counts, dtype=int)}
 
     def estimate_norm_ul(self):
         """Estimate upper limit for a flux point.
@@ -966,9 +1062,24 @@ class FluxPointEstimator:
         result : dict
             Dict with upper limit for the flux point norm.
         """
-        norm = self.model.parameters["norm"].value
-        result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
-        return {"norm_ul": result["errp"] + norm}
+        norm = self.model.parameters["norm"]
+
+        # TODO: the minuit backend has convergence problems when the likelihood is not
+        #  of parabolic shape, which is the case, when there are zero counts in the
+        #  energy bin. For this case we change to the scipy backend.
+        counts = self.estimate_counts()["counts"]
+
+        if np.all(counts == 0):
+            result = self.fit.confidence(
+                parameter="norm",
+                sigma=self.sigma_ul,
+                backend="scipy",
+                reoptimize=self.reoptimize,
+            )
+        else:
+            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
+
+        return {"norm_ul": result["errp"] + norm.value}
 
     def estimate_norm_ts(self):
         """Estimate ts and sqrt(ts) for the flux point.
@@ -982,6 +1093,11 @@ class FluxPointEstimator:
 
         # store best fit amplitude, set amplitude of fit model to zero
         self.model.norm.value = 0
+        self.model.norm.frozen = True
+
+        if self.reoptimize:
+            _ = self.fit.optimize()
+
         loglike_null = self.datasets.likelihood()
 
         # compute sqrt TS
@@ -997,7 +1113,9 @@ class FluxPointEstimator:
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        result = self.fit.likelihood_profile("norm", values=self.norm_values)
+        result = self.fit.likelihood_profile(
+            self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
+        )
         dloglike_scan = result["likelihood"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
@@ -1011,17 +1129,16 @@ class FluxPointEstimator:
         """
         # start optimization with norm=1
         self.model.norm.value = 1.0
+        self.model.norm.frozen = False
 
-        self.fit = Fit(self.datasets)
         result = self.fit.optimize()
 
         if result.success:
-            norm = result.parameters["norm"].value
+            norm = self.model.norm.value
         else:
             norm = np.nan
 
         return {"norm": norm, "loglike": result.total_stat, "success": result.success}
-
 
 
 class FluxPointsDataset(Dataset):
@@ -1034,10 +1151,12 @@ class FluxPointsDataset(Dataset):
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
-    mask : `numpy.ndarray`
-        Mask to apply to the likelihood.
+    mask_fit : `numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
     likelihood : {"chi2", "chi2assym"}
         Likelihood function to use for the fit.
+    mask_safe : `numpy.ndarray`
+        Mask defining the safe data range.
 
     Examples
     --------
@@ -1060,11 +1179,12 @@ class FluxPointsDataset(Dataset):
         print(result.model)
     """
 
-    def __init__(self, model, data, mask=None, likelihood="chi2"):
+    def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None):
         self.model = model
         self.data = data
-        self.mask = mask
+        self.mask_fit = mask_fit
         self.parameters = model.parameters
+        self.mask_safe = mask_safe
 
         if likelihood in ["chi2", "chi2assym"]:
             self._likelihood = likelihood
@@ -1112,22 +1232,17 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self, parameters, mask=None):
+    def likelihood(self, parameters):
         """Total likelihood given the current model parameters.
-
-        Parameters
-        ----------
-        mask : `~numpy.ndarray`
-            Mask to be combined with the dataset mask.
         """
-        if self.mask is None and mask is None:
+        if self.mask_fit is None and self.mask_safe is None:
             stat = self.likelihood_per_bin()
-        elif self.mask is None:
-            stat = self.likelihood_per_bin()[mask]
-        elif mask is None:
-            stat = self.likelihood_per_bin()[self.mask]
+        elif self.mask_fit is None:
+            stat = self.likelihood_per_bin()[self.mask_safe]
+        elif self.mask_safe is None:
+            stat = self.likelihood_per_bin()[self.mask_fit]
         else:
-            stat = self.likelihood_per_bin()[mask & self.mask]
+            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
 
         return np.nansum(stat, dtype=np.float64)
 
@@ -1170,7 +1285,10 @@ class FluxPointsDataset(Dataset):
 
     @property
     def _e_range(self):
-        return u.Quantity([self.data.e_min.min(), self.data.e_max.max()])
+        try:
+            return u.Quantity([self.data.e_min.min(), self.data.e_max.max()])
+        except KeyError:
+            return u.Quantity([self.data.e_ref.min(), self.data.e_ref.max()])
 
     @property
     def _e_unit(self):
@@ -1200,7 +1318,8 @@ class FluxPointsDataset(Dataset):
         fp = self.data
 
         xerr = fp._plot_get_energy_err()
-        xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
+        if xerr is not None:
+            xerr = xerr[0].to_value(self._e_unit), xerr[1].to_value(self._e_unit)
 
         model = self.model(fp.e_ref)
         yerr = fp._plot_get_flux_err(fp.sed_type)
@@ -1263,7 +1382,9 @@ class FluxPointsDataset(Dataset):
 
         plot_kwargs.setdefault("color", ax.lines[-1].get_color())
         del plot_kwargs["label"]
-        self.model.plot_error(ax=ax, **plot_kwargs)
+
+        if self.model.parameters.covariance is not None:
+            self.model.plot_error(ax=ax, **plot_kwargs)
 
         # format axes
         ax.set_xlim(self._e_range.to_value(self._e_unit))

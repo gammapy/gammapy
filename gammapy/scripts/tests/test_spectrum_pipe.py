@@ -39,7 +39,7 @@ def config():
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @requires_dependency("sherpa")
 def test_spectrum_analysis_iact(tmpdir, config, observations):
     config["outdir"] = tmpdir

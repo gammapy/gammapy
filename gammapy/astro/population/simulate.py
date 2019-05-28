@@ -3,7 +3,7 @@
 import numpy as np
 from astropy.table import Table, Column
 from astropy.units import Quantity
-from astropy.coordinates import SkyCoord, spherical_to_cartesian
+from astropy.coordinates import SkyCoord
 from ...utils import coordinates as astrometry
 from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
 from ...utils.distributions import draw, pdf

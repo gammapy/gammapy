@@ -10,7 +10,7 @@ from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...background import ReflectedRegionsBackgroundEstimator
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestObservationSummaryTable:
     @classmethod
     def setup_class(cls):
@@ -41,7 +41,7 @@ class TestObservationSummaryTable:
             self.table_summary.plot_offset_distribution()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestObservationSummary:
     """
     Test observation summary.
@@ -73,8 +73,6 @@ class TestObservationSummary:
     @pytest.mark.xfail
     def test_results(self):
         # TODO: add test with assert on result numbers yet!!!
-        # from pprint import pprint
-        # pprint(self.obs_summary.__dict__)
         assert 0
 
     def test_obs_str(self):

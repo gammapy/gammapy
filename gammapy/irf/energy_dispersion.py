@@ -6,9 +6,11 @@ from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
+from ..maps import MapAxis
+from ..maps.utils import edges_from_lo_hi
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path
-from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..utils.nddata import NDDataArray
 from ..utils.fits import energy_axis_to_ebounds
 
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
@@ -67,15 +69,16 @@ class EnergyDispersion:
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                e_true_lo, e_true_hi, interpolation_mode="log", name="e_true"
-            ),
-            BinnedDataAxis(
-                e_reco_lo, e_reco_hi, interpolation_mode="log", name="e_reco"
-            ),
-        ]
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+
+        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
+        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
+
+        e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
+        e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="e_reco")
+
+        self.data = NDDataArray(
+            axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -100,22 +103,22 @@ class EnergyDispersion:
         convolved_data : array
             1-dim data array after multiplication with the energy dispersion matrix
         """
-        if len(data) != self.e_true.nbins:
+        if len(data) != self.e_true.nbin:
             raise ValueError(
                 "Input size {} does not match true energy axis {}".format(
-                    len(data), self.e_true.nbins
+                    len(data), self.e_true.nbin
                 )
             )
         return np.dot(data, self.data.data)
 
     @property
     def e_reco(self):
-        """Reconstructed energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)"""
+        """Reconstructed energy axis (`~gammapy.maps.MapAxis`)"""
         return self.data.axis("e_reco")
 
     @property
     def e_true(self):
-        """True energy axis (`~gammapy.utils.nddata.BinnedDataAxis`)"""
+        """True energy axis (`~gammapy.maps.MapAxis`)"""
         return self.data.axis("e_true")
 
     @property
@@ -138,9 +141,8 @@ class EnergyDispersion:
             High reco energy threshold
         """
         data = self.pdf_matrix.copy()
-        idx = np.where(
-            (self.e_reco.lo < lo_threshold) | (self.e_reco.hi > hi_threshold)
-        )
+        energy = self.e_reco.edges
+        idx = np.where((energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold))
         data[:, idx] = 0
         return data
 
@@ -152,9 +154,9 @@ class EnergyDispersion:
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        e_true : `~astropy.units.Quantity`
             Bin edges of true energy axis
-        e_reco : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        e_reco : `~astropy.units.Quantity`
             Bin edges of reconstructed energy axis
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
@@ -288,7 +290,7 @@ class EnergyDispersion:
 
         return edisp
 
-    def to_hdulist(self, **kwargs):
+    def to_hdulist(self, use_sherpa=False, **kwargs):
         """Convert RMF to FITS HDU list format.
 
         Parameters
@@ -317,6 +319,10 @@ class EnergyDispersion:
         header = fits.Header()
         header.update(table.meta)
 
+        if use_sherpa:
+            table["ENERG_HI"] = table["ENERG_HI"].quantity.to("keV")
+            table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
+
         cols = table.columns
         c0 = fits.Column(
             name=cols[0].name, format="E", array=cols[0], unit="{}".format(cols[0].unit)
@@ -333,7 +339,12 @@ class EnergyDispersion:
             [c0, c1, c2, c3, c4, c5], header=header, name=name
         )
 
-        ebounds = energy_axis_to_ebounds(self.e_reco.bins)
+        energy = self.e_reco.edges
+
+        if use_sherpa:
+            energy = energy.to("keV")
+
+        ebounds = energy_axis_to_ebounds(energy)
         prim_hdu = fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds])
@@ -378,8 +389,9 @@ class EnergyDispersion:
 
         table = Table()
 
-        table["ENERG_LO"] = self.e_true.lo
-        table["ENERG_HI"] = self.e_true.hi
+        energy = self.e_true.edges
+        table["ENERG_LO"] = energy[:-1]
+        table["ENERG_HI"] = energy[1:]
         table["N_GRP"] = n_grp
         table["F_CHAN"] = f_chan
         table["N_CHAN"] = n_chan
@@ -392,7 +404,7 @@ class EnergyDispersion:
                 ("hduclass", "OGIP"),
                 ("hduclas1", "RESPONSE"),
                 ("hduclas2", "RSP_MATRIX"),
-                ("detchans", self.e_reco.nbins),
+                ("detchans", self.e_reco.nbin),
                 ("numgrp", numgrp),
                 ("numelt", numelt),
                 ("tlmin4", 0),
@@ -401,10 +413,10 @@ class EnergyDispersion:
 
         return table
 
-    def write(self, filename, **kwargs):
+    def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
         filename = make_path(filename)
-        self.to_hdulist().writeto(str(filename), **kwargs)
+        self.to_hdulist(use_sherpa=use_sherpa).writeto(str(filename), **kwargs)
 
     def get_resolution(self, e_true):
         """Get energy resolution for a given true energy.
@@ -417,8 +429,8 @@ class EnergyDispersion:
             True energy
         """
         var = self._get_variance(e_true)
-        idx_true = self.e_true.find_node(e_true)
-        e_true_real = self.e_true.nodes[idx_true]
+        idx_true = self.e_true.coord_to_idx(e_true)
+        e_true_real = self.e_true.center[idx_true]
         return np.sqrt(var) / e_true_real
 
     def get_bias(self, e_true):
@@ -436,8 +448,8 @@ class EnergyDispersion:
             True energy
         """
         e_reco = self.get_mean(e_true)
-        idx_true = self.e_true.find_node(e_true)
-        e_true_real = self.e_true.nodes[idx_true]
+        idx_true = self.e_true.coord_to_idx(e_true)
+        e_true_real = self.e_true.center[idx_true]
         bias = (e_reco - e_true_real) / e_true_real
         return bias
 
@@ -464,7 +476,7 @@ class EnergyDispersion:
         """
         from ..spectrum.models import TableModel
 
-        e_true = self.e_true.nodes
+        e_true = self.e_true.center
         values = self.get_bias(e_true)
 
         if emin is None:
@@ -482,13 +494,13 @@ class EnergyDispersion:
     def get_mean(self, e_true):
         """Get mean reconstructed energy for a given true energy."""
         # find pdf for true energies
-        idx = self.e_true.find_node(e_true)
+        idx = self.e_true.coord_to_idx(e_true)
         pdf = self.data.data[idx]
 
         # compute sum along reconstructed energy
         # axis to determine the mean
         norm = np.sum(pdf, axis=-1)
-        temp = np.sum(pdf * self.e_reco.nodes, axis=-1)
+        temp = np.sum(pdf * self.e_reco.center, axis=-1)
 
         with np.errstate(invalid="ignore"):
             # corm can be zero
@@ -499,7 +511,7 @@ class EnergyDispersion:
     def _get_variance(self, e_true):
         """Get variance of log reconstructed energy."""
         # evaluate the pdf at given true energies
-        idx = self.e_true.find_node(e_true)
+        idx = self.e_true.coord_to_idx(e_true)
         pdf = self.data.data[idx]
 
         # compute mean
@@ -508,7 +520,7 @@ class EnergyDispersion:
         # create array of reconstructed-energy nodes
         # for each given true energy value
         # (first axis is reconstructed energy)
-        erec = self.e_reco.nodes
+        erec = self.e_reco.center
         erec = np.repeat(erec, max(np.sum(mean.shape), 1)).reshape(
             erec.shape + mean.shape
         )
@@ -556,6 +568,7 @@ class EnergyDispersion:
         n_chan = n_chan[good]
         n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
 
+        energy = self.e_reco.edges.to_value("keV")
         return DataRMF(
             name=name,
             energ_lo=table["ENERG_LO"].quantity.to_value("keV").astype(SherpaFloat),
@@ -564,9 +577,9 @@ class EnergyDispersion:
             n_grp=n_grp,
             n_chan=n_chan,
             f_chan=f_chan,
-            detchans=self.e_reco.nbins,
-            e_min=self.e_reco.lo.to_value("keV"),
-            e_max=self.e_reco.hi.to_value("keV"),
+            detchans=self.e_reco.nbin,
+            e_min=energy[:-1],
+            e_max=energy[1:],
             offset=0,
         )
 
@@ -596,8 +609,8 @@ class EnergyDispersion:
 
         ax = plt.gca() if ax is None else ax
 
-        e_true = self.e_true.bins
-        e_reco = self.e_reco.bins
+        e_true = self.e_true.edges
+        e_reco = self.e_reco.edges
         x = e_true.value
         y = e_reco.value
         z = self.pdf_matrix
@@ -633,8 +646,8 @@ class EnergyDispersion:
 
         ax = plt.gca() if ax is None else ax
 
-        x = self.e_true.nodes.to_value("TeV")
-        y = self.get_bias(self.e_true.nodes)
+        x = self.e_true.center.to_value("TeV")
+        y = self.get_bias(self.e_true.center)
 
         ax.plot(x, y, **kwargs)
         ax.set_xlabel(r"$E_\mathrm{{True}}$ [TeV]")
@@ -718,17 +731,24 @@ class EnergyDispersion2D:
     ):
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                e_true_lo, e_true_hi, interpolation_mode="log", name="e_true"
-            ),
-            BinnedDataAxis(
-                migra_lo, migra_hi, interpolation_mode="linear", name="migra"
-            ),
-            BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
-            ),
-        ]
+
+        e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
+        e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
+
+        migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
+        migra_axis = MapAxis.from_edges(
+            migra_edges, interp="log", name="migra", unit=""
+        )
+
+        # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
+        if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):
+            offset_axis = MapAxis.from_nodes(offset_lo, interp="lin", name="offset")
+        else:
+            offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
+            offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+
+        axes = [e_true_axis, migra_axis, offset_axis]
+
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
@@ -751,15 +771,15 @@ class EnergyDispersion2D:
 
         Parameters
         ----------
-        e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        e_true : `~astropy.units.Quantity`
             Bin edges of true energy axis
-        migra : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        migra : `~astropy.units.Quantity`
             Bin edges of migra axis
         bias : float or `~numpy.ndarray`
             Center of Gaussian energy dispersion, bias
         sigma : float or `~numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution
-        offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        offset : `~astropy.units.Quantity`
             Bin edges of offset
         pdf_threshold : float, optional
             Zero suppression threshold
@@ -865,8 +885,8 @@ class EnergyDispersion2D:
             Energy dispersion matrix
         """
         offset = Angle(offset)
-        e_true = self.data.axis("e_true").bins if e_true is None else e_true
-        e_reco = self.data.axis("e_true").bins if e_reco is None else e_reco
+        e_true = self.data.axis("e_true").edges if e_true is None else e_true
+        e_reco = self.data.axis("e_true").edges if e_reco is None else e_reco
         e_true = EnergyBounds(e_true)
         e_reco = EnergyBounds(e_reco)
 
@@ -914,10 +934,7 @@ class EnergyDispersion2D:
 
         if e_reco is None:
             # Default: e_reco nodes = migra nodes * e_true nodes
-            migra_axis = self.data.axis("migra")
-            e_reco = EnergyBounds.from_lower_and_upper_bounds(
-                migra_axis.lo * e_true, migra_axis.hi * e_true
-            )
+            e_reco = EnergyBounds(self.data.axis("migra").edges * e_true)
         else:
             # Translate given e_reco binning to migra at bin center
             e_reco = EnergyBounds(e_reco)
@@ -926,8 +943,8 @@ class EnergyDispersion2D:
         migra_e_reco = e_reco / e_true
 
         # Define a vector of migration with mig_step step
-        mrec_min = self.data.axis("migra").lo[0]
-        mrec_max = self.data.axis("migra").hi[-1]
+        mrec_min = self.data.axis("migra").edges[0]
+        mrec_max = self.data.axis("migra").edges[-1]
         mig_array = np.arange(mrec_min, mrec_max, migra_step)
 
         # Compute energy dispersion probability dP/dm for each element of migration array
@@ -979,7 +996,7 @@ class EnergyDispersion2D:
             e_true = Energy([0.1, 1, 10], "TeV")
         else:
             e_true = np.atleast_1d(Energy(e_true))
-        migra = self.data.axis("migra").nodes if migra is None else migra
+        migra = self.data.axis("migra").center if migra is None else migra
 
         for ener in e_true:
             for off in offset:
@@ -1023,8 +1040,8 @@ class EnergyDispersion2D:
         if offset is None:
             offset = Angle(1, "deg")
 
-        e_true = self.data.axis("e_true").bins
-        migra = self.data.axis("migra").bins
+        e_true = self.data.axis("e_true").edges
+        migra = self.data.axis("migra").edges
 
         x = e_true.value
         y = migra.value
@@ -1068,13 +1085,18 @@ class EnergyDispersion2D:
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
+
+        energy = self.data.axis("e_true").edges
+        migra = self.data.axis("migra").edges
+        theta = self.data.axis("offset").edges
+
         table = Table(meta=meta)
-        table["ENERG_LO"] = self.data.axis("e_true").lo[np.newaxis]
-        table["ENERG_HI"] = self.data.axis("e_true").hi[np.newaxis]
-        table["MIGRA_LO"] = self.data.axis("migra").hi[np.newaxis]
-        table["MIGRA_HI"] = self.data.axis("migra").hi[np.newaxis]
-        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
-        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
+        table["ENERG_LO"] = energy[:-1][np.newaxis]
+        table["ENERG_HI"] = energy[1:][np.newaxis]
+        table["MIGRA_LO"] = migra[:-1][np.newaxis]
+        table["MIGRA_HI"] = migra[1:][np.newaxis]
+        table["THETA_LO"] = theta[:-1][np.newaxis]
+        table["THETA_HI"] = theta[1:][np.newaxis]
         table["MATRIX"] = self.data.data.T[np.newaxis]
         return table
 

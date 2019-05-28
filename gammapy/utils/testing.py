@@ -66,7 +66,7 @@ def has_data(name):
         raise ValueError("Invalid name: {}".format(name))
 
 
-def requires_data(name):
+def requires_data(name="gammapy-data"):
     """Decorator to declare required data for tests.
 
     Examples
@@ -75,12 +75,18 @@ def requires_data(name):
 
         from gammapy.utils.testing import requires_data
 
-        @requires_data('gammapy-data')
+        @requires_data()
         def test_using_data_files():
             filename = "$GAMMAPY_DATA/..."
             ...
     """
     import pytest
+
+    if not isinstance(name, str):
+        raise TypeError(
+            "You must call @requires_data with a name (str). "
+            "Usually this:  @requires_data()"
+        )
 
     skip_it = not has_data(name)
 

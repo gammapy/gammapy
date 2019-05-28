@@ -5,7 +5,7 @@ from ..psf_3d import PSF3D
 from ..psf_check import PSF3DChecker
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestPSF3DChecker:
     def setup(self):
         filename = "$GAMMAPY_DATA/tests/hess-hap-hd-prod3/psf_table.fits.gz"

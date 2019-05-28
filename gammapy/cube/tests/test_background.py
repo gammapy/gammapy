@@ -99,7 +99,7 @@ def geom(map_type, ebounds, skydir):
         raise ValueError()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 @pytest.mark.parametrize(
     "pars",
     [
@@ -107,13 +107,13 @@ def geom(map_type, ebounds, skydir):
             "map_type": "wcs",
             "ebounds": [0.1, 1, 10],
             "shape": (2, 3, 4),
-            "sum": 940.167672,
+            "sum": 1061.348412,
         },
         {
             "map_type": "wcs",
             "ebounds": [0.1, 10],
             "shape": (1, 3, 4),
-            "sum": 1019.495516,
+            "sum": 1061.348412,
         },
         # TODO: make this work for HPX
         # 'HpxGeom' object has no attribute 'separation'
@@ -134,6 +134,7 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
             ebounds=pars["ebounds"],
             skydir=fixed_pointing_info.radec,
         ),
+        oversampling=10,
     )
 
     assert m.data.shape == pars["shape"]
@@ -141,6 +142,7 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
     assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
 
 
+@requires_data()
 def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="constant"
@@ -154,6 +156,7 @@ def test_make_map_background_irf_constant(fixed_pointing_info_aligned):
             assert_allclose(d[:, 1], d[0, 1])
 
 
+@requires_data()
 def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="symmetric"
@@ -163,6 +166,7 @@ def test_make_map_background_irf_sym(fixed_pointing_info_aligned):
         assert_allclose(d[0, 1], d[2, 1], rtol=1e-4)  # Symmetric along lat
 
 
+@requires_data()
 def test_make_map_background_irf_asym(fixed_pointing_info_aligned):
     m = make_map_background_irf_with_symmetry(
         fpi=fixed_pointing_info_aligned, symmetry="asymmetric"

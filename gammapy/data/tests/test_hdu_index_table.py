@@ -45,7 +45,7 @@ def test_hdu_index_table(hdu_index_table):
     assert hdu_index_table.summary().startswith("HDU index table")
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_hdu_index_table_hd_hap():
     """Test HESS HAP-HD data access."""
     hdu_index = HDUIndexTable.read("$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz")

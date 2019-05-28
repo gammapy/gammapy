@@ -5,7 +5,7 @@ from ....utils.testing import assert_quantity_allclose, requires_data
 from .. import PrimaryFlux, DMAnnihilation
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_primary_flux():
     with pytest.raises(ValueError):
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
@@ -16,6 +16,7 @@ def test_primary_flux():
     assert_quantity_allclose(actual, desired)
 
 
+@requires_data()
 def test_DMAnnihilation():
 
     channel = "b"

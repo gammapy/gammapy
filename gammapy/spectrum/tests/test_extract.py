@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
-from ...spectrum import SpectrumExtraction, SpectrumObservation
+from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...maps import WcsGeom, WcsNDMap
 from ...data import DataStore
@@ -64,7 +64,7 @@ def extraction(bkg_estimate, observations):
     )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestSpectrumExtraction:
     @staticmethod
     @pytest.mark.parametrize(
@@ -130,18 +130,20 @@ class TestSpectrumExtraction:
     def test_run(tmpdir, extraction):
         """Test the run method and check if files are written correctly"""
         extraction.run()
-        extraction.write(outdir=tmpdir, overwrite=True)
-        testobs = SpectrumObservation.read(tmpdir / "ogip_data" / "pha_obs23523.fits")
+        extraction.write(outdir=str(tmpdir), overwrite=True)
+        testobs = SpectrumDatasetOnOff.from_ogip_files(
+            str(tmpdir / "ogip_data" / "pha_obs23523.fits")
+        )
         assert_quantity_allclose(
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.on_vector.data.data,
-            extraction.spectrum_observations[0].on_vector.data.data,
+            testobs.counts.data.data,
+            extraction.spectrum_observations[0].counts.data.data,
         )
-        assert_quantity_allclose(
-            testobs.on_vector.energy.nodes,
-            extraction.spectrum_observations[0].on_vector.energy.nodes,
+        assert_allclose(
+            testobs.counts.energy.center,
+            extraction.spectrum_observations[0].counts.energy.center,
         )
 
     @requires_dependency("sherpa")
@@ -150,16 +152,16 @@ class TestSpectrumExtraction:
         import sherpa.astro.ui as sau
 
         extraction.run()
-        extraction.write(outdir=tmpdir, use_sherpa=True, overwrite=True)
+        extraction.write(outdir=str(tmpdir), use_sherpa=True, overwrite=True)
         sau.load_pha(str(tmpdir / "ogip_data" / "pha_obs23523.fits"))
         arf = sau.get_arf()
 
         actual = arf._arf._specresp
-        desired = extraction.spectrum_observations[0].aeff.data.data.value
+        desired = extraction.spectrum_observations[0].aeff.data.data.to_value("cm2")
         assert_allclose(actual, desired)
 
     def test_compute_energy_threshold(self, extraction):
         extraction.run()
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
-        actual = extraction.spectrum_observations[0].lo_threshold
+        actual = extraction.spectrum_observations[0].energy_range[0]
         assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)

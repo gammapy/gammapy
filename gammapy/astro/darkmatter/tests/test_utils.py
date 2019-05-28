@@ -17,7 +17,7 @@ def jfact(geom):
     return jfactory.compute_jfactor()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_dmfluxmap(jfact):
 
     emin = 0.1 * u.TeV

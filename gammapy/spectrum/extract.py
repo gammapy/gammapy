@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from pathlib import Path
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
 from ..utils.scripts import make_path
-from ..irf import PSF3D, apply_containment_fraction
+from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
 from .core import PHACountsSpectrum
-from .observation import SpectrumObservation, SpectrumObservationList
+from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["SpectrumExtraction"]
 
@@ -72,7 +73,7 @@ class SpectrumExtraction:
         self.containment_correction = containment_correction
         self.max_alpha = max_alpha
         self.use_recommended_erange = use_recommended_erange
-        self.spectrum_observations = SpectrumObservationList()
+        self.spectrum_observations = []
 
         self.containment = None
         self._on_vector = None
@@ -122,13 +123,14 @@ class SpectrumExtraction:
         if self.containment_correction:
             self.apply_containment_correction(observation, bkg)
         else:
-            self.containment = np.ones(self._aeff.energy.nbins)
+            self.containment = np.ones(self._aeff.energy.nbin)
 
-        spectrum_observation = SpectrumObservation(
-            on_vector=self._on_vector,
+        spectrum_observation = SpectrumDatasetOnOff(
+            counts=self._on_vector,
             aeff=self._aeff,
-            off_vector=self._off_vector,
+            counts_off=self._off_vector,
             edisp=self._edisp,
+            livetime=self._on_vector.livetime,
         )
 
         if self.use_recommended_erange:
@@ -230,17 +232,23 @@ class SpectrumExtraction:
         self.containment = new_aeff.data.data.value / self._aeff.data.data.value
         self._aeff = new_aeff
 
-    def compute_energy_threshold(self, **kwargs):
+    def compute_energy_threshold(self, reset=False, **kwargs):
         """Compute and set the safe energy threshold for all observations.
 
-        See `SpectrumObservation.compute_energy_threshold` for full
+        See `~gammapy.irf.compute_energy_thresholds` for full
         documentation about the options.
         """
         for obs in self.spectrum_observations:
-            obs.compute_energy_threshold(**kwargs)
+            emin, emax = compute_energy_thresholds(obs.aeff, obs.edisp, **kwargs)
+            mask_safe = obs.counts.energy_mask(emin=emin, emax=emax)
+
+            if obs.mask_safe is not None:
+                obs.mask_safe &= mask_safe
+            else:
+                obs.mask_safe = mask_safe
 
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
-        """Write results to disk.
+        """Write results to disk as OGIP format.
 
         Parameters
         ----------
@@ -253,11 +261,10 @@ class SpectrumExtraction:
         overwrite : bool
             Overwrite existing files?
         """
-        outdir = make_path(outdir)
-        log.info("Writing OGIP files to {}".format(outdir / ogipdir))
+        outdir = Path.cwd() if outdir is None else Path(outdir)
+        outdir = make_path(outdir / ogipdir)
+        log.info("Writing OGIP files to {}".format(outdir))
         outdir.mkdir(exist_ok=True, parents=True)
-        self.spectrum_observations.write(
-            outdir / ogipdir, use_sherpa=use_sherpa, overwrite=overwrite
-        )
-
+        for obs in self.spectrum_observations:
+            obs.to_ogip_files(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)
         # TODO : add more debug plots etc. here

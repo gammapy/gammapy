@@ -97,7 +97,6 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     """
     energy_axis = geom.get_axis_by_name("energy")
     energy_idx = geom.axes.index(energy_axis)
-    energy_unit = u.Unit(energy_axis.unit)
 
     # prepare map and compute distances to map center
     kernel_map, rads = _compute_kernel_separations(geom, factor)
@@ -105,7 +104,7 @@ def energy_dependent_table_psf_to_kernel_map(table_psf, geom, factor=4):
     # loop over images
     for img, idx in kernel_map.iter_by_image():
         # TODO: this is super complex. Find or invent a better way!
-        energy = energy_axis.center[idx[energy_idx]] * energy_unit
+        energy = energy_axis.center[idx[energy_idx]]
         vals = table_psf.evaluate(energy=energy, rad=rads).reshape(img.shape)
         img += vals.value / vals.sum().value
 
@@ -287,10 +286,8 @@ class PSFKernel:
             spectrum = PowerLaw(index=2.0)
 
         energy_axis = self.psf_kernel_map.geom.get_axis_by_name("energy")
-        energy_center = energy_axis.center * energy_axis.unit
-        energy_edges = energy_axis.edges * energy_axis.unit
-        energy_width = np.diff(energy_edges)
-        weights = spectrum(energy_center) * energy_width * exposures
+        energy_width = np.diff(energy_axis.edges)
+        weights = spectrum(energy_axis.center) * energy_width * exposures
         weights /= weights.sum()
 
         psf_weighted = self.psf_kernel_map.copy()

@@ -66,7 +66,7 @@ def simulate_dataset(
     )
 
     if "edisp" in irfs:
-        energy = geom.axes[0].edges * geom.axes[0].unit
+        energy = geom.axes[0].edges
         edisp = irfs["edisp"].to_energy_dispersion(offset, e_reco=energy, e_true=energy)
     else:
         edisp = None

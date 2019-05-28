@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from ..effective_area import EffectiveAreaTable2D
@@ -50,24 +50,24 @@ class TestIRFWrite:
         )
 
     def test_array_to_container(self):
-        assert_equal(self.aeff.data.data, self.aeff_data)
-        assert_equal(self.edisp.data.data, self.edisp_data)
-        assert_equal(self.bkg.data.data, self.bkg_data)
+        assert_allclose(self.aeff.data.data, self.aeff_data)
+        assert_allclose(self.edisp.data.data, self.edisp_data)
+        assert_allclose(self.bkg.data.data, self.bkg_data)
 
     def test_container_to_table(self):
-        assert_equal(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
-        assert_equal(self.edisp.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
-        assert_equal(self.bkg.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
+        assert_allclose(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
+        assert_allclose(self.edisp.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
+        assert_allclose(self.bkg.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
 
-        assert_equal(self.aeff.to_table()["EFFAREA"].quantity[0].T, self.aeff_data)
-        assert_equal(self.edisp.to_table()["MATRIX"].quantity[0].T, self.edisp_data)
-        assert_equal(self.bkg.to_table()["BKG"].quantity[0], self.bkg_data)
+        assert_allclose(self.aeff.to_table()["EFFAREA"].quantity[0].T, self.aeff_data)
+        assert_allclose(self.edisp.to_table()["MATRIX"].quantity[0].T, self.edisp_data)
+        assert_allclose(self.bkg.to_table()["BKG"].quantity[0], self.bkg_data)
 
         assert self.aeff.to_table()["EFFAREA"].quantity[0].unit == self.aeff_data.unit
         assert self.bkg.to_table()["BKG"].quantity[0].unit == self.bkg_data.unit
 
     def test_container_to_fits(self):
-        assert_equal(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
+        assert_allclose(self.aeff.to_table()["ENERG_LO"].quantity[0], self.energy_lo)
 
         assert self.aeff.to_fits().header["EXTNAME"] == "EFFECTIVE AREA"
         assert self.edisp.to_fits().header["EXTNAME"] == "ENERGY DISPERSION"
@@ -78,37 +78,25 @@ class TestIRFWrite:
         assert self.bkg.to_fits(name="TEST").header["EXTNAME"] == "TEST"
 
         hdu = self.aeff.to_fits()
-        assert_equal(
-            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
-            self.aeff.data.axes[0].lo,
+        assert_allclose(
+            hdu.data[hdu.header["TTYPE1"]][0], self.aeff.data.axes[0].edges[:-1].value
         )
         hdu = self.aeff.to_fits()
-        assert_equal(
-            hdu.data[hdu.header["TTYPE5"]][0].T * u.Unit(hdu.header["TUNIT5"]),
-            self.aeff.data.data,
-        )
+        assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data.data.value)
 
         hdu = self.edisp.to_fits()
-        assert_equal(
-            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
-            self.edisp.data.axes[0].lo,
+        assert_allclose(
+            hdu.data[hdu.header["TTYPE1"]][0], self.edisp.data.axes[0].edges[:-1].value
         )
         hdu = self.edisp.to_fits()
-        assert_equal(
-            hdu.data[hdu.header["TTYPE7"]][0].T * u.Unit(hdu.header["TUNIT7"]),
-            self.edisp.data.data,
-        )
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data.data.value)
 
         hdu = self.bkg.to_fits()
-        assert_equal(
-            hdu.data[hdu.header["TTYPE1"]][0] * u.Unit(hdu.header["TUNIT1"]),
-            self.bkg.data.axes[1].lo,
+        assert_allclose(
+            hdu.data[hdu.header["TTYPE1"]][0], self.bkg.data.axes[1].edges[:-1].value
         )
         hdu = self.bkg.to_fits()
-        assert_equal(
-            hdu.data[hdu.header["TTYPE7"]][0] * u.Unit(hdu.header["TUNIT7"]),
-            self.bkg.data.data,
-        )
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0], self.bkg.data.data.value)
 
     def test_writeread(self, tmpdir):
         filename = str(tmpdir / "testirf.fits")
@@ -122,10 +110,10 @@ class TestIRFWrite:
         ).writeto(filename)
 
         read_aeff = EffectiveAreaTable2D.read(filename=filename, hdu="EFFECTIVE AREA")
-        assert_equal(read_aeff.data.data, self.aeff_data)
+        assert_allclose(read_aeff.data.data, self.aeff_data)
 
         read_edisp = EnergyDispersion2D.read(filename=filename, hdu="ENERGY DISPERSION")
-        assert_equal(read_edisp.data.data, self.edisp_data)
+        assert_allclose(read_edisp.data.data, self.edisp_data)
 
         read_bkg = Background3D.read(filename=filename, hdu="BACKGROUND")
-        assert_equal(read_bkg.data.data, self.bkg_data)
+        assert_allclose(read_bkg.data.data, self.bkg_data)

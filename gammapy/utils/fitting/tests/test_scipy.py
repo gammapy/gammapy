@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from .. import Parameter, Parameters, optimize_scipy
+from .. import Parameter, Parameters, optimize_scipy, confidence_scipy
 
 
 def fcn(parameters):
@@ -67,3 +67,20 @@ def test_scipy_limits(pars, method):
     # Check the result in parameters is OK
     assert_allclose(pars["x"].value, 2, rtol=1e-2)
     assert_allclose(pars["y"].value, 301000, rtol=1e-3)
+
+
+def test_scipy_confidence(pars):
+    factors, info, _ = optimize_scipy(function=fcn, parameters=pars)
+
+    assert_allclose(fcn(pars), 0, atol=1e-5)
+
+    par = pars["x"]
+    par.min, par.max = 0, 10
+
+    result = confidence_scipy(function=fcn, parameters=pars, parameter=par, sigma=1)
+
+    assert result["success_errp"]
+    assert result["success_errn"]
+
+    assert_allclose(result["errp"], 0.2, rtol=1e-3)
+    assert_allclose(result["errn"], 0.2, rtol=1e-3)

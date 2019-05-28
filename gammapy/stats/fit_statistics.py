@@ -5,19 +5,7 @@ see :ref:`fit-statistics`
 """
 import numpy as np
 
-__all__ = [
-    "cash",
-    "cstat",
-    "wstat",
-    "get_wstat_mu_bkg",
-    "get_wstat_gof_terms",
-    "chi2",
-    "chi2constvar",
-    "chi2datavar",
-    "chi2gehrels",
-    "chi2modvar",
-    "chi2xspecvar",
-]
+__all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 N_ON_MIN = 1e-25
 
@@ -54,6 +42,9 @@ def cash(n_on, mu_on):
     * `Cash 1979, ApJ 228, 939
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
+    n_on = np.asanyarray(n_on)
+    mu_on = np.asanyarray(mu_on)
+
     # suppress zero division warnings, they are corrected below
     with np.errstate(divide="ignore", invalid="ignore"):
         stat = 2 * (mu_on - n_on * np.log(mu_on))
@@ -224,121 +215,3 @@ def get_wstat_gof_terms(n_on, n_off):
     term += np.where(n_off == 0, 0, term2)
 
     return 2 * term
-
-
-def chi2(N_S, B, S, sigma2):
-    r"""Chi-square statistic with user-specified variance.
-
-     .. math::
-
-         \chi^2 = \frac{(N_S - B - S) ^ 2}{\sigma ^ 2}
-
-    Parameters
-    ----------
-    N_S : array_like
-        Number of observed counts
-    B : array_like
-        Model background
-    S : array_like
-        Model signal
-    sigma2 : array_like
-        Variance
-
-    Returns
-    -------
-    stat : ndarray
-        Statistic per bin
-
-    References
-    ----------
-    * Sherpa stats page (http://cxc.cfa.harvard.edu/sherpa/statistics/#chisq)
-    """
-    N_S = np.asanyarray(N_S, dtype=np.float64)
-    B = np.asanyarray(B, dtype=np.float64)
-    S = np.asanyarray(S, dtype=np.float64)
-    sigma2 = np.asanyarray(sigma2, dtype=np.float64)
-
-    stat = (N_S - B - S) ** 2 / sigma2
-
-    return stat
-
-
-def chi2constvar(N_S, N_B, A_S, A_B):
-    r"""Chi-square statistic with constant variance.
-    """
-    N_S = np.asanyarray(N_S, dtype=np.float64)
-    N_B = np.asanyarray(N_B, dtype=np.float64)
-    A_S = np.asanyarray(A_S, dtype=np.float64)
-    A_B = np.asanyarray(A_B, dtype=np.float64)
-
-    alpha2 = (A_S / A_B) ** 2
-    # Need to mulitply with np.ones_like(N_S) here?
-    sigma2 = (N_S + alpha2 * N_B).mean()
-
-    stat = chi2(N_S, A_B, A_S, sigma2)
-
-    return stat
-
-
-def chi2datavar(N_S, N_B, A_S, A_B):
-    r"""Chi-square statistic with data variance.
-    """
-    N_S = np.asanyarray(N_S, dtype=np.float64)
-    N_B = np.asanyarray(N_B, dtype=np.float64)
-    A_S = np.asanyarray(A_S, dtype=np.float64)
-    A_B = np.asanyarray(A_B, dtype=np.float64)
-
-    alpha2 = (A_S / A_B) ** 2
-    sigma2 = N_S + alpha2 * N_B
-
-    stat = chi2(N_S, A_B, A_S, sigma2)
-
-    return stat
-
-
-def chi2gehrels(N_S, N_B, A_S, A_B):
-    r"""Chi-square statistic with Gehrel's variance.
-    """
-    N_S = np.asanyarray(N_S, dtype=np.float64)
-    N_B = np.asanyarray(N_B, dtype=np.float64)
-    A_S = np.asanyarray(A_S, dtype=np.float64)
-    A_B = np.asanyarray(A_B, dtype=np.float64)
-
-    alpha2 = (A_S / A_B) ** 2
-    sigma_S = 1 + np.sqrt(N_S + 0.75)
-    sigma_B = 1 + np.sqrt(N_B + 0.75)
-    sigma2 = sigma_S ** 2 + alpha2 * sigma_B ** 2
-
-    stat = chi2(N_S, A_B, A_S, sigma2)
-
-    return stat
-
-
-def chi2modvar(S, B, A_S, A_B):
-    r"""Chi-square statistic with model variance.
-    """
-    S = np.asanyarray(S, dtype=np.float64)
-    B = np.asanyarray(B, dtype=np.float64)
-    A_S = np.asanyarray(A_S, dtype=np.float64)
-    A_B = np.asanyarray(A_B, dtype=np.float64)
-
-    stat = chi2datavar(S, B, A_S, A_B)
-
-    return stat
-
-
-def chi2xspecvar(N_S, N_B, A_S, A_B):
-    r"""Chi-square statistic with XSPEC variance.
-    """
-    N_S = np.asanyarray(N_S, dtype=np.float64)
-    N_B = np.asanyarray(N_B, dtype=np.float64)
-    A_S = np.asanyarray(A_S, dtype=np.float64)
-    A_B = np.asanyarray(A_B, dtype=np.float64)
-
-    # TODO: is this correct?
-    mask = (N_S < 1) | (N_B < 1)
-    # _stat = np.empty_like(mask, dtype='float')
-    # _stat[mask] = 1
-    stat = np.where(mask, 1, chi2datavar(N_S, N_B, A_S, A_B))
-
-    return stat

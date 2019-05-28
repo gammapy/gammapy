@@ -10,7 +10,6 @@ from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
 import astropy.units as u
 from regions import SkyRegion
-from ..utils.wcs import get_resampled_wcs
 from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
 from .geom import get_shape, make_axes, find_and_read_bands, axes_pix_to_coord
 from .utils import INVALID_INDEX
@@ -56,6 +55,20 @@ def cast_to_shape(param, shape, dtype):
         param[i] = p * np.ones(shape, dtype=dtype)
 
     return tuple(param)
+
+
+def get_resampled_wcs(wcs, factor, downsampled):
+    """
+    Get resampled WCS object.
+    """
+    wcs = wcs.deepcopy()
+
+    if not downsampled:
+        factor = 1.0 / factor
+
+    wcs.wcs.cdelt *= factor
+    wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
+    return wcs
 
 
 # TODO: remove this function, move code to the one caller below
@@ -712,26 +725,46 @@ class WcsGeom(MapGeom):
         cdelt = copy.deepcopy(self._cdelt)
         return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
 
-    def downsample(self, factor):
+    def downsample(self, factor, axis=None):
+        if axis is None:
+            if np.any(np.mod(self.npix, factor) > 0):
+                raise ValueError(
+                    "Spatial shape not divisible by factor {!r} in all axes."
+                    " You need to pad prior to calling downsample.".format(factor)
+                )
 
-        if not np.all(np.mod(self.npix[0], factor) == 0) or not np.all(
-            np.mod(self.npix[1], factor) == 0
-        ):
-            raise ValueError(
-                "Data shape not divisible by factor {!r} in all axes."
-                " You need to pad prior to calling downsample.".format(factor)
-            )
+            npix = (self.npix[0] / factor, self.npix[1] / factor)
+            cdelt = (self._cdelt[0] * factor, self._cdelt[1] * factor)
+            wcs = get_resampled_wcs(self.wcs, factor, True)
+            return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
+        else:
+            if not self.is_regular:
+                raise NotImplementedError(
+                    "Upsampling in non-spatial axes not"
+                    " supported for irregular geometries"
+                )
 
-        npix = (self.npix[0] / factor, self.npix[1] / factor)
-        cdelt = (self._cdelt[0] * factor, self._cdelt[1] * factor)
-        wcs = get_resampled_wcs(self.wcs, factor, True)
-        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
+            axes = copy.deepcopy(self.axes)
+            idx = self.get_axis_index_by_name(axis)
+            axes[idx] = axes[idx].downsample(factor)
+            return self._init_copy(axes=axes)
 
-    def upsample(self, factor):
-        npix = (self.npix[0] * factor, self.npix[1] * factor)
-        cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
-        wcs = get_resampled_wcs(self.wcs, factor, False)
-        return self.__class__(wcs, npix, cdelt=cdelt, axes=copy.deepcopy(self.axes))
+    def upsample(self, factor, axis=None):
+        if axis is None:
+            npix = (self.npix[0] * factor, self.npix[1] * factor)
+            cdelt = (self._cdelt[0] / factor, self._cdelt[1] / factor)
+            wcs = get_resampled_wcs(self.wcs, factor, False)
+            return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
+        else:
+            if not self.is_regular:
+                raise NotImplementedError(
+                    "Upsampling in non-spatial axes not"
+                    " supported for irregular geometries"
+                )
+            axes = copy.deepcopy(self.axes)
+            idx = self.get_axis_index_by_name(axis)
+            axes[idx] = axes[idx].upsample(factor)
+            return self._init_copy(axes=axes)
 
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).
@@ -745,6 +778,10 @@ class WcsGeom(MapGeom):
         coord = self.get_coord(mode="edges")
         lon = coord.lon * np.pi / 180.0
         lat = coord.lat * np.pi / 180.0
+
+        # TODO: change this method to allow for non-orthogonal
+        # pixel sides in the small angle approximation
+        # Test with AIT projection example
 
         # Compute solid angle across centres of the pixels, approximating it
         # as a rectangle
@@ -889,7 +926,7 @@ class WcsGeom(MapGeom):
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
         str_ += "\tcenter     : {:.1f} deg, {:.1f} deg\n".format(lon, lat)
-        str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f} " "deg\n".format(
+        str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f}\n".format(
             width=self.width
         )
         return str_

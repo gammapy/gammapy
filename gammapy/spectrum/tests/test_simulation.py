@@ -34,31 +34,31 @@ class TestSpectrumSimulation:
 
     def test_without_background(self):
         self.sim.simulate_obs(seed=23, obs_id=23)
-        assert self.sim.obs.on_vector.total_counts == 160
+        assert self.sim.obs.counts.total_counts == 160
 
     def test_with_background(self):
         self.sim.background_model = self.background_model
         self.sim.alpha = self.alpha
         self.sim.simulate_obs(seed=23, obs_id=23)
-        assert self.sim.obs.on_vector.total_counts == 530
-        assert self.sim.obs.off_vector.total_counts == 1112
+        assert self.sim.obs.counts.total_counts == 530
+        assert self.sim.obs.counts_off.total_counts == 1112
 
     def test_observations_list(self):
         seeds = np.arange(5)
         self.sim.run(seed=seeds)
-        assert (self.sim.result.obs_id == seeds).all()
-        assert self.sim.result[0].on_vector.total_counts == 158
-        assert self.sim.result[1].on_vector.total_counts == 158
-        assert self.sim.result[2].on_vector.total_counts == 161
-        assert self.sim.result[3].on_vector.total_counts == 168
-        assert self.sim.result[4].on_vector.total_counts == 186
+        assert (np.array([_.obs_id for _ in self.sim.result]) == seeds).all()
+        assert self.sim.result[0].counts.total_counts == 158
+        assert self.sim.result[1].counts.total_counts == 158
+        assert self.sim.result[2].counts.total_counts == 161
+        assert self.sim.result[3].counts.total_counts == 168
+        assert self.sim.result[4].counts.total_counts == 186
 
     def test_without_edisp(self):
         sim = SpectrumSimulation(
             aeff=self.sim.aeff, source_model=self.sim.source_model, livetime=4 * u.h
         )
         sim.simulate_obs(seed=23, obs_id=23)
-        assert sim.obs.on_vector.total_counts == 161
+        assert sim.obs.counts.total_counts == 161
         # The test value is taken from the test with edisp
         assert_allclose(
             np.sum(sim.npred_source.data.data.value), 167.467572145, rtol=0.01
@@ -72,4 +72,4 @@ class TestSpectrumSimulation:
             source_model=self.source_model, livetime=4 * u.h, e_true=e_true
         )
         sim.simulate_obs(seed=23, obs_id=23)
-        assert sim.obs.on_vector.total_counts == 10509
+        assert sim.obs.counts.total_counts == 10509

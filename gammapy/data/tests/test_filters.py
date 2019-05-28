@@ -21,7 +21,7 @@ def observation():
     return ds.obs(20136)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_empty_observation_filter(observation):
     empty_obs_filter = ObservationFilter()
 
@@ -34,7 +34,7 @@ def test_empty_observation_filter(observation):
     assert filtered_gti == gti
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_filter_events(observation):
     custom_filter = {
         "type": "custom",
@@ -66,7 +66,7 @@ def test_filter_events(observation):
     assert np.all(region.center.separation(filtered_events.radec) < region_radius)
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_filter_gti(observation):
     time_filter = Time([53090.125, 53090.130], format="mjd", scale="tt")
 

@@ -172,6 +172,7 @@ class LightCurveTableModel(Model):
 
     def __init__(self, table):
         self.table = table
+        super().__init__()
 
     def __str__(self):
         ss = "LightCurveTableModel model summary:\n"

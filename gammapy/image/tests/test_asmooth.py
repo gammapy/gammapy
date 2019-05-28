@@ -17,7 +17,7 @@ def input_maps():
     }
 
 
-@requires_data("gammapy-data")
+@requires_data()
 def test_asmooth(input_maps):
     kernel = Tophat2DKernel
     scales = ASmooth.make_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg

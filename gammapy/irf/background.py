@@ -4,7 +4,9 @@ import numpy as np
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
-from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..maps import MapAxis
+from ..maps.utils import edges_from_lo_hi
+from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
 
 __all__ = ["Background3D", "Background2D"]
@@ -62,18 +64,21 @@ class Background3D:
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-            BinnedDataAxis(
-                fov_lon_lo, fov_lon_hi, interpolation_mode="linear", name="fov_lon"
-            ),
-            BinnedDataAxis(
-                fov_lat_lo, fov_lat_hi, interpolation_mode="linear", name="fov_lat"
-            ),
-        ]
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        fov_lon_edges = edges_from_lo_hi(fov_lon_lo, fov_lon_hi)
+        fov_lon_axis = MapAxis.from_edges(fov_lon_edges, interp="lin", name="fov_lon")
+
+        fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
+        fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
+
+        self.data = NDDataArray(
+            axes=[energy_axis, fov_lon_axis, fov_lat_axis],
+            data=data,
+            interp_kwargs=interp_kwargs,
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -127,13 +132,18 @@ class Background3D:
     def to_table(self):
         """Convert to `~astropy.table.Table`."""
         meta = self.meta.copy()
+
+        detx = self.data.axis("fov_lon").edges
+        dety = self.data.axis("fov_lat").edges
+        energy = self.data.axis("energy").edges
+
         table = Table(meta=meta)
-        table["DETX_LO"] = self.data.axis("fov_lon").lo[np.newaxis]
-        table["DETX_HI"] = self.data.axis("fov_lon").hi[np.newaxis]
-        table["DETY_LO"] = self.data.axis("fov_lat").lo[np.newaxis]
-        table["DETY_HI"] = self.data.axis("fov_lat").hi[np.newaxis]
-        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
-        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        table["DETX_LO"] = detx[:-1][np.newaxis]
+        table["DETX_HI"] = detx[1:][np.newaxis]
+        table["DETY_LO"] = dety[:-1][np.newaxis]
+        table["DETY_HI"] = dety[1:][np.newaxis]
+        table["ENERG_LO"] = energy[:-1][np.newaxis]
+        table["ENERG_HI"] = energy[1:][np.newaxis]
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
@@ -199,15 +209,18 @@ class Background3D:
 
         This takes the values at Y = 0 and X >= 0.
         """
-        idx_lon = self.data.axis("fov_lon").find_node("0 deg")[0]
-        idx_lat = self.data.axis("fov_lat").find_node("0 deg")[0]
+        idx_lon = self.data.axis("fov_lon").coord_to_idx(0 * u.deg)[0]
+        idx_lat = self.data.axis("fov_lat").coord_to_idx(0 * u.deg)[0]
         data = self.data.data[:, idx_lon:, idx_lat].copy()
 
+        energy = self.data.axis("energy").edges
+        offset = self.data.axis("fov_lon").edges[idx_lon:]
+
         return Background2D(
-            energy_lo=self.data.axis("energy").lo,
-            energy_hi=self.data.axis("energy").hi,
-            offset_lo=self.data.axis("fov_lon").lo[idx_lon:],
-            offset_hi=self.data.axis("fov_lon").hi[idx_lon:],
+            energy_lo=energy[:-1],
+            energy_hi=energy[1:],
+            offset_lo=offset[:-1],
+            offset_hi=offset[1:],
             data=data,
         )
 
@@ -243,15 +256,16 @@ class Background2D:
 
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
-        axes = [
-            BinnedDataAxis(
-                energy_lo, energy_hi, interpolation_mode="log", name="energy"
-            ),
-            BinnedDataAxis(
-                offset_lo, offset_hi, interpolation_mode="linear", name="offset"
-            ),
-        ]
-        self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
+
+        e_edges = edges_from_lo_hi(energy_lo, energy_hi)
+        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+
+        offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
+        offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
+
+        self.data = NDDataArray(
+            axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -304,10 +318,13 @@ class Background2D:
         meta = self.meta.copy()
         table = Table(meta=meta)
 
-        table["THETA_LO"] = self.data.axis("offset").lo[np.newaxis]
-        table["THETA_HI"] = self.data.axis("offset").hi[np.newaxis]
-        table["ENERG_LO"] = self.data.axis("energy").lo[np.newaxis]
-        table["ENERG_HI"] = self.data.axis("energy").hi[np.newaxis]
+        theta = self.data.axis("offset").edges
+        energy = self.data.axis("energy").edges
+
+        table["THETA_LO"] = theta[:-1][np.newaxis]
+        table["THETA_HI"] = theta[1:][np.newaxis]
+        table["ENERG_LO"] = energy[:-1][np.newaxis]
+        table["ENERG_HI"] = energy[1:][np.newaxis]
         table["BKG"] = self.data.data[np.newaxis]
         return table
 
@@ -372,10 +389,32 @@ class Background2D:
         """
         raise NotImplementedError
 
-    def plot(self, **kwargs):
-        from .effective_area import EffectiveAreaTable2D
+    def plot(self, ax=None, add_cbar=True, **kwargs):
+        """Plot energy offset dependence of the background model.
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import LogNorm
 
-        return EffectiveAreaTable2D.plot(self, **kwargs)
+        ax = plt.gca() if ax is None else ax
+
+        x = self.data.axis("energy").edges
+        y = self.data.axis("offset").edges
+        z = self.data.data.T.value
+
+        kwargs.setdefault("cmap", "GnBu")
+        kwargs.setdefault("edgecolors", "face")
+
+        caxes = ax.pcolormesh(x, y, z, norm=LogNorm(), **kwargs)
+        ax.set_xscale("log")
+        ax.set_ylabel("Offset ({})".format(y.unit))
+        ax.set_xlabel("Energy ({})".format(x.unit))
+
+        xmin, xmax = x.value.min(), x.value.max()
+        ax.set_xlim(xmin, xmax)
+
+        if add_cbar:
+            label = "Background rate ({unit})".format(unit=self.data.data.unit)
+            ax.figure.colorbar(caxes, ax=ax, label=label)
 
     def peek(self):
         from .effective_area import EffectiveAreaTable2D

@@ -30,14 +30,16 @@ dependencies:
   - healpy
   - reproject
   - sherpa
-  - iminuit>=1.3.2
+  - iminuit
   - pytest
   - pytest-cov
-  - sphinx
+  - pytest-xdist
+  - sphinx==1.8.5
   - pandoc
   - pylint
   - flake8
   - pip:
+    - sphinx-astropy
     - sphinx-rtd-theme
     - nbsphinx
     - sphinx-click

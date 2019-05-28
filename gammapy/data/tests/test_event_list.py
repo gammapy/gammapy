@@ -11,7 +11,7 @@ from ...data.event_list import EventListBase, EventList, EventListLAT
 from ...maps import WcsGeom, Map, MapAxis
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEventListBase:
     def setup(self):
         filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
@@ -28,7 +28,7 @@ class TestEventListBase:
         )
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEventListHESS:
     def setup(self):
         filename = (
@@ -98,7 +98,7 @@ class TestEventListHESS:
             self.events.peek()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEventListFermi:
     def setup(self):
         filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
@@ -114,7 +114,7 @@ class TestEventListFermi:
             self.events.plot_image()
 
 
-@requires_data("gammapy-data")
+@requires_data()
 class TestEventListChecker:
     def setup(self):
         self.event_list = EventList.read(
@@ -149,5 +149,4 @@ class TestEventSelection:
         )
         mask = Map.from_geom(geom, data=mask_data)
         new_list = self.evt_list.select_map_mask(mask)
-        print(new_list.table)
         assert len(new_list.table) == 2

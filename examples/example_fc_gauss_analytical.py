@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.stats import fc_find_acceptance_interval_gauss, fc_fix_limits
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     sigma = 1
     n_sigma = 10

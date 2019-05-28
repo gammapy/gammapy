@@ -83,8 +83,10 @@ class SparseArray:
 
     >>> v[0,0] = 1.0
     >>> print(v[0,0])
+    1.0
     >>> v[:,0] = 1.0
     >>> print(v[:,0])
+    [1. 1. 1. 1. 1. 1. 1. 1. 1. 1.]
     """
 
     def __init__(self, shape, idx=None, data=None, dtype=float, fill_value=0.0):
