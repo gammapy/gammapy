@@ -10,5 +10,5 @@ See https://docs.python.org/3/library/__main__.html
 import sys
 from .scripts.main import cli
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(cli())  # pylint:disable=no-value-for-parameter

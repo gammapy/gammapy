@@ -11,7 +11,7 @@ from ...spectrum import (
     models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
-    SpectrumDatasetOnOffStacker
+    SpectrumDatasetOnOffStacker,
 )
 
 
@@ -87,7 +87,6 @@ class TestFit:
         assert_allclose(e_max.value, 10)
         assert_allclose(e_min.value, 0.1)
 
-
     def test_likelihood_profile(self):
         dataset = SpectrumDataset(model=self.source_model, counts=self.src)
         fit = Fit([dataset])
@@ -121,7 +120,6 @@ class TestSpectralFit:
             lambda_=0.1 / u.TeV,
         )
 
-
     def test_stats(self):
         dataset = self.obs_list[0]
         dataset.model = self.pwl
@@ -154,18 +152,14 @@ class TestSpectralFit:
         e_edges = dataset.counts.energy.edges
 
         dataset.aeff = EffectiveAreaTable(
-            data=data,
-            energy_lo=e_edges[:-1],
-            energy_hi=e_edges[1:],
+            data=data, energy_lo=e_edges[:-1], energy_hi=e_edges[1:]
         )
         dataset.edisp = None
         dataset.model = self.pwl
 
         fit = Fit([dataset])
         result = fit.run()
-        assert_allclose(
-            result.parameters["index"].value, 2.7961, atol=0.02
-        )
+        assert_allclose(result.parameters["index"].value, 2.7961, atol=0.02)
 
     def test_stacked_fit(self):
         obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)

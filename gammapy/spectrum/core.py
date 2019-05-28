@@ -6,7 +6,7 @@ import numpy as np
 from astropy.table import Table
 from astropy.io import fits
 import astropy.units as u
-from ..maps import  MapAxis
+from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
 from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
@@ -59,7 +59,9 @@ class CountsSpectrum:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-        self.data = NDDataArray(axes=[energy_axis], data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[energy_axis], data=data, interp_kwargs=interp_kwargs
+        )
 
     @property
     def energy(self):
@@ -256,10 +258,9 @@ class CountsSpectrum:
         energy = self.energy.edges
         return self.__class__(
             energy_lo=energy[:-1][0::parameter],
-            energy_hi=energy[1:][parameter - 1::parameter],
-            data=data
+            energy_hi=energy[1:][parameter - 1 :: parameter],
+            data=data,
         )
-
 
     def energy_mask(self, emin=None, emax=None):
         """Create a mask for a given energy range.
@@ -441,7 +442,9 @@ class PHACountsSpectrum(CountsSpectrum):
             else:
                 retval.meta.backscal = retval.backscal[0] * np.ones(retval.energy.nbin)
 
-        retval.areascal = block_reduce(self.areascal, block_size=(parameter,), func=np.mean)
+        retval.areascal = block_reduce(
+            self.areascal, block_size=(parameter,), func=np.mean
+        )
         return retval
 
     @property

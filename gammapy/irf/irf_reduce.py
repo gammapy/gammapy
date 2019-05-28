@@ -4,7 +4,13 @@ import numpy as np
 from ..utils.energy import Energy
 from . import EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
 
-__all__ = ["make_psf", "make_mean_psf", "make_mean_edisp", "apply_containment_fraction", "compute_energy_thresholds"]
+__all__ = [
+    "make_psf",
+    "make_mean_psf",
+    "make_mean_edisp",
+    "apply_containment_fraction",
+    "compute_energy_thresholds",
+]
 
 log = logging.getLogger(__name__)
 
@@ -176,7 +182,9 @@ def apply_containment_fraction(aeff, psf, radius):
     return corrected_aeff
 
 
-def compute_energy_thresholds(aeff, edisp, method_lo="none", method_hi="none", **kwargs):
+def compute_energy_thresholds(
+    aeff, edisp, method_lo="none", method_hi="none", **kwargs
+):
     """Compute safe energy thresholds from 1D energy dispersion and effective area.
 
     Set the high and low energy threshold based on a chosen method.
@@ -233,13 +241,15 @@ def compute_energy_thresholds(aeff, edisp, method_lo="none", method_hi="none", *
         aeff_thres = kwargs["area_percent_hi"] / 100 * aeff.max_area
         e_max = aeff.energy.edges[-1]
         try:
-            thres_hi = aeff.find_energy(aeff_thres, emin=0.1*e_max, emax=e_max)
+            thres_hi = aeff.find_energy(aeff_thres, emin=0.1 * e_max, emax=e_max)
         except ValueError:
             thres_hi = e_max
     elif method_hi == "energy_bias":
         e_max = aeff.energy.edges[-1]
         try:
-            thres_hi = edisp.get_bias_energy(kwargs["bias_percent_hi"] / 100, emin=0.1*e_max, emax=e_max)
+            thres_hi = edisp.get_bias_energy(
+                kwargs["bias_percent_hi"] / 100, emin=0.1 * e_max, emax=e_max
+            )
         except ValueError:
             thres_hi = e_max
     elif method_hi == "none":

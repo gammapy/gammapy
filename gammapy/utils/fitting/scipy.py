@@ -30,6 +30,7 @@ def optimize_scipy(parameters, function, **kwargs):
 
 class TSDifference:
     """Likelihood wrapper to compute TS differences"""
+
     def __init__(self, function, parameters, parameter, reoptimize, ts_diff):
         self.loglike_ref = function(parameters)
         self.parameters = parameters
@@ -47,8 +48,12 @@ class TSDifference:
         return value
 
 
-def _confidence_scipy_brentq(parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs):
-    ts_diff = TSDifference(function, parameters, parameter, reoptimize, ts_diff=sigma ** 2)
+def _confidence_scipy_brentq(
+    parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
+):
+    ts_diff = TSDifference(
+        function, parameters, parameter, reoptimize, ts_diff=sigma ** 2
+    )
 
     kwargs.setdefault("a", parameter.factor)
 
@@ -68,19 +73,24 @@ def _confidence_scipy_brentq(parameters, parameter, function, sigma, reoptimize,
     try:
         result = brentq(ts_diff.fcn, full_output=True, **kwargs)
     except ValueError:
-        message = ("Confidence estimation failed, because bracketing interval"
-                   " does not contain a unique solution. Try setting the interval by hand.")
+        message = (
+            "Confidence estimation failed, because bracketing interval"
+            " does not contain a unique solution. Try setting the interval by hand."
+        )
         success = False
-        result = np.nan, RootResults(root=np.nan, iterations=0, function_calls=0, flag=0)
+        result = (
+            np.nan,
+            RootResults(root=np.nan, iterations=0, function_calls=0, flag=0),
+        )
 
     suffix = "errp" if upper else "errn"
 
     return {
         "nfev_" + suffix: result[1].iterations,
-        suffix : np.abs(result[0] - kwargs["a"]),
+        suffix: np.abs(result[0] - kwargs["a"]),
         "success_" + suffix: success,
         "message_" + suffix: message,
-        "loglike_ref": ts_diff.loglike_ref
+        "loglike_ref": ts_diff.loglike_ref,
     }
 
 
@@ -97,7 +107,8 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
             sigma=sigma,
             upper=False,
             reoptimize=reoptimize,
-            **kwargs)
+            **kwargs
+        )
 
     with parameters.restore_values:
         result_errp = _confidence_scipy_brentq(
@@ -107,7 +118,8 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
             sigma=sigma,
             upper=True,
             reoptimize=reoptimize,
-            **kwargs)
+            **kwargs
+        )
 
     result.update(result_errp)
     return result

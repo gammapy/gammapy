@@ -168,6 +168,7 @@ def test_apply_containment_fraction():
     assert_allclose(new_aeff.data.data.value, 1.0, rtol=5e-4)
     assert new_aeff.data.data.unit == "m2"
 
+
 @requires_data("gammapy-data")
 def test_compute_thresholds_from_crab_data():
     """Obs read from file"""
@@ -178,39 +179,37 @@ def test_compute_thresholds_from_crab_data():
     edisp = EnergyDispersion.read(rmffile)
 
     thresh_lo, thresh_hi = compute_energy_thresholds(
-                aeff=aeff,
-                edisp=edisp,
-                method_lo="energy_bias",
-                method_hi="none",
-                bias_percent_lo=10,
-                bias_percent_hi=10,
+        aeff=aeff,
+        edisp=edisp,
+        method_lo="energy_bias",
+        method_hi="none",
+        bias_percent_lo=10,
+        bias_percent_hi=10,
     )
 
     assert_allclose(thresh_lo.to("TeV").value, 0.9174, rtol=1e-4)
-    assert_allclose(thresh_hi.to("TeV").value, 100., rtol=1e-4)
+    assert_allclose(thresh_hi.to("TeV").value, 100.0, rtol=1e-4)
+
 
 def test_compute_thresholds_from_parametrization():
-    energy = np.logspace(-2, 2., 100) * u.TeV
+    energy = np.logspace(-2, 2.0, 100) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
 
     thresh_lo, thresh_hi = compute_energy_thresholds(
-            aeff=aeff,
-            edisp=edisp,
-            method_lo="area_max",
-            method_hi="area_max",
-            area_percent_lo=10,
-            area_percent_hi=90,
-        )
+        aeff=aeff,
+        edisp=edisp,
+        method_lo="area_max",
+        method_hi="area_max",
+        area_percent_lo=10,
+        area_percent_hi=90,
+    )
 
     assert_allclose(thresh_lo.to("TeV").value, 0.18557, rtol=1e-4)
     assert_allclose(thresh_hi.to("TeV").value, 43.818, rtol=1e-4)
 
     thresh_lo, thresh_hi = compute_energy_thresholds(
-            aeff=aeff,
-            edisp=edisp,
-            method_hi="area_max",
-            area_percent_hi=70,
-        )
+        aeff=aeff, edisp=edisp, method_hi="area_max", area_percent_hi=70
+    )
 
-    assert_allclose(thresh_hi.to("TeV").value, 100., rtol=1e-4)
+    assert_allclose(thresh_hi.to("TeV").value, 100.0, rtol=1e-4)

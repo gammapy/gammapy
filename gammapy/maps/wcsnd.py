@@ -386,9 +386,9 @@ class WcsNDMap(WcsMap):
 
         if axis is None:
             pix = (
-                      (idx[0] - 0.5 * (factor - 1)) / factor,
-                      (idx[1] - 0.5 * (factor - 1)) / factor,
-                  ) + idx[2:]
+                (idx[0] - 0.5 * (factor - 1)) / factor,
+                (idx[1] - 0.5 * (factor - 1)) / factor,
+            ) + idx[2:]
         else:
             pix = list(idx)
             idx_ax = self.geom.get_axis_index_by_name(axis)

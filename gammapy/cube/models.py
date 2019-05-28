@@ -63,8 +63,10 @@ class SkyModels:
 
         for model in skymodels:
             if model.name in existing_names:
-                raise ValueError("SkyModel '{}' already exists, please choose"
-                                 " another name.".format(model.name))
+                raise ValueError(
+                    "SkyModel '{}' already exists, please choose"
+                    " another name.".format(model.name)
+                )
             existing_names.append(model.name)
 
         self.skymodels = skymodels
@@ -159,7 +161,6 @@ class SkyModels:
     def __getitem__(self, item):
         idx = self.names.index(item)
         return self.skymodels[idx]
-
 
 
 class SkyModel(SkyModelBase):

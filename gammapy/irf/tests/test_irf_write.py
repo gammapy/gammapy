@@ -79,36 +79,24 @@ class TestIRFWrite:
 
         hdu = self.aeff.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0],
-            self.aeff.data.axes[0].edges[:-1].value,
+            hdu.data[hdu.header["TTYPE1"]][0], self.aeff.data.axes[0].edges[:-1].value
         )
         hdu = self.aeff.to_fits()
-        assert_allclose(
-            hdu.data[hdu.header["TTYPE5"]][0].T,
-            self.aeff.data.data.value,
-        )
+        assert_allclose(hdu.data[hdu.header["TTYPE5"]][0].T, self.aeff.data.data.value)
 
         hdu = self.edisp.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0],
-            self.edisp.data.axes[0].edges[:-1].value,
+            hdu.data[hdu.header["TTYPE1"]][0], self.edisp.data.axes[0].edges[:-1].value
         )
         hdu = self.edisp.to_fits()
-        assert_allclose(
-            hdu.data[hdu.header["TTYPE7"]][0].T,
-            self.edisp.data.data.value,
-        )
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0].T, self.edisp.data.data.value)
 
         hdu = self.bkg.to_fits()
         assert_allclose(
-            hdu.data[hdu.header["TTYPE1"]][0],
-            self.bkg.data.axes[1].edges[:-1].value,
+            hdu.data[hdu.header["TTYPE1"]][0], self.bkg.data.axes[1].edges[:-1].value
         )
         hdu = self.bkg.to_fits()
-        assert_allclose(
-            hdu.data[hdu.header["TTYPE7"]][0],
-            self.bkg.data.data.value,
-        )
+        assert_allclose(hdu.data[hdu.header["TTYPE7"]][0], self.bkg.data.data.value)
 
     def test_writeread(self, tmpdir):
         filename = str(tmpdir / "testirf.fits")

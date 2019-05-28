@@ -216,9 +216,17 @@ class Fit:
         parameters.set_covariance_factors(covariance_factors)
 
         # TODO: decide what to return, and fill the info correctly!
-        return CovarianceResult(backend=backend, method=method, parameters=parameters, success=info["success"], message=info["message"])
+        return CovarianceResult(
+            backend=backend,
+            method=method,
+            parameters=parameters,
+            success=info["success"],
+            message=info["message"],
+        )
 
-    def confidence(self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs):
+    def confidence(
+        self, parameter, backend="minuit", sigma=1, reoptimize=True, **kwargs
+    ):
         """Estimate confidence interval.
 
         Extra ``kwargs`` are passed to the backend.
@@ -263,7 +271,14 @@ class Fit:
                 else:
                     raise RuntimeError("To use minuit, you must first optimize.")
             else:
-                result = compute(parameters, parameter, self.datasets.likelihood, sigma, reoptimize, **kwargs)
+                result = compute(
+                    parameters,
+                    parameter,
+                    self.datasets.likelihood,
+                    sigma,
+                    reoptimize,
+                    **kwargs
+                )
 
         result["errp"] *= parameter.scale
         result["errn"] *= parameter.scale
@@ -405,6 +420,7 @@ class Fit:
 
 class FitResult:
     """Fit result base class"""
+
     def __init__(self, parameters, backend, method, success, message):
         self._parameters = parameters
         self._success = success
@@ -432,7 +448,6 @@ class FitResult:
         """Fit success status flag."""
         return self._success
 
-
     @property
     def message(self):
         """Optimizer status message."""
@@ -450,6 +465,7 @@ class FitResult:
 
 class CovarianceResult(FitResult):
     """Covariance result object."""
+
     pass
 
 

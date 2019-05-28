@@ -89,6 +89,7 @@ def sky_models(sky_model):
     sky_model_3 = sky_model.copy(name="source-3")
     return SkyModels([sky_model_2, sky_model_3])
 
+
 @pytest.fixture(scope="session")
 def sky_models_2(sky_model):
     sky_model_4 = sky_model.copy(name="source-4")

@@ -162,9 +162,11 @@ def make_minuit_par_kwargs(parameters):
             error = 1
         else:
             error = 1
-            log.warning("Neither covariance matrix set nor auto-scaling of parameters activated."
-                        "Assuming stepsize of 1, which could lead to convergence problems of the "
-                        "Minuit optimizer.")
+            log.warning(
+                "Neither covariance matrix set nor auto-scaling of parameters activated."
+                "Assuming stepsize of 1, which could lead to convergence problems of the "
+                "Minuit optimizer."
+            )
 
         kwargs["error_{}".format(name)] = error
 

@@ -749,7 +749,7 @@ class MapAxis:
             interp=self.interp,
             node_type=self.node_type,
             unit=self.unit,
-            name=self.name
+            name=self.name,
         )
 
     def upsample(self, factor):

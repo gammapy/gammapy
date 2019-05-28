@@ -85,7 +85,7 @@ def requires_data(name="gammapy-data"):
     if not isinstance(name, str):
         raise TypeError(
             "You must call @requires_data with a name (str). "
-            'Usually this:  @requires_data()'
+            "Usually this:  @requires_data()"
         )
 
     skip_it = not has_data(name)

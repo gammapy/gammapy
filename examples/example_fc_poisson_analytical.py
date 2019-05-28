@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.stats import fc_find_acceptance_interval_poisson, fc_fix_limits
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     background = 3.0
 
@@ -20,12 +20,17 @@ if __name__ == '__main__':
     cl = 0.90
 
     x_bins = np.arange(0, n_bins_x)
-    mu_bins = np.linspace(mu_min, mu_max, int(mu_max / step_width_mu) + 1, endpoint=True)
+    mu_bins = np.linspace(
+        mu_min, mu_max, int(mu_max / step_width_mu) + 1, endpoint=True
+    )
 
     print("Generating FC confidence belt for %s values of mu." % len(mu_bins))
 
     partial_func = partial(
-        fc_find_acceptance_interval_poisson, background=background, x_bins=x_bins, alpha=cl
+        fc_find_acceptance_interval_poisson,
+        background=background,
+        x_bins=x_bins,
+        alpha=cl,
     )
 
     results = ProgressBar.map(partial_func, mu_bins, multiprocess=True)

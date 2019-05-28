@@ -119,7 +119,10 @@ class TestPHACountsSpectrum:
         filename = tmpdir / "test2.fits"
         self.spec.write(filename)
         spec2 = PHACountsSpectrum.read(filename)
-        assert_quantity_allclose(spec2.energy.edges * spec2.energy.unit, self.spec.energy.edges * self.spec.energy.unit)
+        assert_quantity_allclose(
+            spec2.energy.edges * spec2.energy.unit,
+            self.spec.energy.edges * self.spec.energy.unit,
+        )
 
     def test_backscal_array(self, tmpdir):
         self.spec.backscal = np.arange(self.spec.energy.nbin)

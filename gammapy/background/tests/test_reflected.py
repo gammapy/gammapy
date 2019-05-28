@@ -90,7 +90,6 @@ def test_find_reflected_regions(exclusion_mask, on_region):
 
 @requires_data()
 class TestReflectedRegionBackgroundEstimator:
-
     def test_basic(self, bkg_estimator):
         assert "ReflectedRegionsBackgroundEstimator" in str(bkg_estimator)
 

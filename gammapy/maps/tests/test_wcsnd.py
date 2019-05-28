@@ -353,7 +353,7 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
 
 def test_wcsndmap_reproject():
     skydir = SkyCoord(110.0, 75.0, unit="deg", frame="icrs")
-    geom =  WcsGeom.create(npix=10, binsz=1.0, coordsys="GAL", proj="AIT", skydir=skydir)
+    geom = WcsGeom.create(npix=10, binsz=1.0, coordsys="GAL", proj="AIT", skydir=skydir)
     geom_new = geom.downsample(2)
 
     data = np.arange(np.prod(geom.data_shape)).reshape(geom.data_shape)

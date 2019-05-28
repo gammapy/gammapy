@@ -347,8 +347,12 @@ class TestNaimaModel:
 
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
-        assert_quantity_allclose(model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV)
-        assert_quantity_allclose(model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV)
+        assert_quantity_allclose(
+            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV
+        )
+        assert_quantity_allclose(
+            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV
+        )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
@@ -375,8 +379,12 @@ class TestNaimaModel:
 
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
-        assert_quantity_allclose(model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV)
-        assert_quantity_allclose(model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV)
+        assert_quantity_allclose(
+            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV
+        )
+        assert_quantity_allclose(
+            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV
+        )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape
 
@@ -396,7 +404,11 @@ class TestNaimaModel:
 
         value = model(self.energy)
         assert_quantity_allclose(value, val_at_2TeV)
-        assert_quantity_allclose(model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV)
-        assert_quantity_allclose(model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV)
+        assert_quantity_allclose(
+            model.integral(emin=self.emin, emax=self.emax), integral_1_10TeV
+        )
+        assert_quantity_allclose(
+            model.energy_flux(emin=self.emin, emax=self.emax), eflux_1_10TeV
+        )
         val = model(self.e_array)
         assert val.shape == self.e_array.shape

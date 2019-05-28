@@ -550,9 +550,7 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = self.counts.arffile
         rmffile = self.counts.rmffile
 
-        self.counts.write(
-            outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa
-        )
+        self.counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         if self.counts_off is not None:

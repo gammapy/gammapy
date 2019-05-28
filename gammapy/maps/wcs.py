@@ -739,14 +739,15 @@ class WcsGeom(MapGeom):
             return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
         else:
             if not self.is_regular:
-                raise NotImplementedError("Upsampling in non-spatial axes not"
-                                          " supported for irregular geometries")
+                raise NotImplementedError(
+                    "Upsampling in non-spatial axes not"
+                    " supported for irregular geometries"
+                )
 
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
             axes[idx] = axes[idx].downsample(factor)
             return self._init_copy(axes=axes)
-
 
     def upsample(self, factor, axis=None):
         if axis is None:
@@ -756,13 +757,14 @@ class WcsGeom(MapGeom):
             return self._init_copy(wcs=wcs, npix=npix, cdelt=cdelt)
         else:
             if not self.is_regular:
-                raise NotImplementedError("Upsampling in non-spatial axes not"
-                                          " supported for irregular geometries")
+                raise NotImplementedError(
+                    "Upsampling in non-spatial axes not"
+                    " supported for irregular geometries"
+                )
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
             axes[idx] = axes[idx].upsample(factor)
             return self._init_copy(axes=axes)
-
 
     def solid_angle(self):
         """Solid angle array (`~astropy.units.Quantity` in ``sr``).

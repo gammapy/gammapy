@@ -69,7 +69,9 @@ class EffectiveAreaTable:
         energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
         interp_kwargs = {"extrapolate": False, "bounds_error": False}
-        self.data = NDDataArray(axes=[energy_axis], data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[energy_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     @property
@@ -226,9 +228,7 @@ class EffectiveAreaTable:
             table["ENERG_LO"] = table["ENERG_LO"].quantity.to("keV")
             table["SPECRESP"] = table["SPECRESP"].quantity.to("cm2")
 
-        return fits.HDUList(
-            [fits.PrimaryHDU(), fits.BinTableHDU(table, name=name)]
-        )
+        return fits.HDUList([fits.PrimaryHDU(), fits.BinTableHDU(table, name=name)])
 
     def write(self, filename, use_sherpa=False, **kwargs):
         """Write to file."""
@@ -382,7 +382,9 @@ class EffectiveAreaTable2D:
             offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
             offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
-        self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):

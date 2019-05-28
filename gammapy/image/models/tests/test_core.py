@@ -58,6 +58,7 @@ def test_sky_disk():
     assert radius.unit == "deg"
     assert_allclose(radius.value, r_0.value)
 
+
 def test_sky_disk_edge():
     r_0 = 2 * u.deg
     model = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0)
@@ -125,7 +126,9 @@ def test_sky_ellipse():
 def test_sky_ellipse_edge():
     pytest.importorskip("astropy", minversion="3.1.1")
     r_0 = 2 * u.deg
-    model = SkyEllipse(lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, theta="0 deg")
+    model = SkyEllipse(
+        lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, theta="0 deg"
+    )
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(r_0, 0 * u.deg)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)

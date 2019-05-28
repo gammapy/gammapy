@@ -32,7 +32,14 @@ class MapMaker:
         Background oversampling factor in energy axis.
     """
 
-    def __init__(self, geom, offset_max, geom_true=None, exclusion_mask=None, background_oversampling=None):
+    def __init__(
+        self,
+        geom,
+        offset_max,
+        geom_true=None,
+        exclusion_mask=None,
+        background_oversampling=None,
+    ):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
 
@@ -196,8 +203,13 @@ class MapMakerObs:
     """
 
     def __init__(
-        self, observation, geom, offset_max, geom_true=None, exclusion_mask=None,
-            background_oversampling=None,
+        self,
+        observation,
+        geom,
+        offset_max,
+        geom_true=None,
+        exclusion_mask=None,
+        background_oversampling=None,
     ):
         self.observation = observation
         self.geom = geom
@@ -282,7 +294,7 @@ class MapMakerObs:
             ontime=self.observation.observation_time_duration,
             bkg=self.observation.bkg,
             geom=self.geom,
-            oversampling=self.background_oversampling
+            oversampling=self.background_oversampling,
         )
         if self.fov_mask is not None:
             background.data[..., self.fov_mask] = 0

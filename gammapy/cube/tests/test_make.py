@@ -77,9 +77,12 @@ def geom(ebounds):
 )
 @pytest.mark.parametrize("keepdims", [True, False])
 def test_map_maker(pars, observations, keepdims):
-    maker = MapMaker(geom=pars["geom"], geom_true=pars["geom_true"], offset_max="2 deg",
-                     background_oversampling=pars.get("background_oversampling"))
-
+    maker = MapMaker(
+        geom=pars["geom"],
+        geom_true=pars["geom_true"],
+        offset_max="2 deg",
+        background_oversampling=pars.get("background_oversampling"),
+    )
 
     maps = maker.run(observations)
 

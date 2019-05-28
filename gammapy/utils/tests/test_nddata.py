@@ -15,7 +15,7 @@ def axis_x():
 @pytest.fixture(scope="session")
 def axis_energy():
     return MapAxis.from_bounds(
-        0.1, 1000, 2, unit=u.TeV, name="energy", interp="log", node_type="edges",
+        0.1, 1000, 2, unit=u.TeV, name="energy", interp="log", node_type="edges"
     )
 
 
@@ -46,7 +46,8 @@ class TestNDDataArray:
     def test_init_error(self):
         with pytest.raises(ValueError):
             NDDataArray(
-                axes=[MapAxis.from_nodes([1, 3, 6], name="x")], data=np.arange(8).reshape(4, 2)
+                axes=[MapAxis.from_nodes([1, 3, 6], name="x")],
+                data=np.arange(8).reshape(4, 2),
             )
 
     def test_str(self, nddata_1d):
@@ -117,4 +118,3 @@ class TestNDDataArray:
         # evaluating on interpolation nodes should give back the interpolation values
         out = nddata_2d.evaluate()
         assert_allclose(out, nddata_2d.data)
-

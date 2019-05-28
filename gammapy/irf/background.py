@@ -74,7 +74,11 @@ class Background3D:
         fov_lat_edges = edges_from_lo_hi(fov_lat_lo, fov_lat_hi)
         fov_lat_axis = MapAxis.from_edges(fov_lat_edges, interp="lin", name="fov_lat")
 
-        self.data = NDDataArray(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[energy_axis, fov_lon_axis, fov_lat_axis],
+            data=data,
+            interp_kwargs=interp_kwargs,
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -259,7 +263,9 @@ class Background2D:
         offset_edges = edges_from_lo_hi(offset_lo, offset_hi)
         offset_axis = MapAxis.from_edges(offset_edges, interp="lin", name="offset")
 
-        self.data = NDDataArray(axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -409,7 +415,6 @@ class Background2D:
         if add_cbar:
             label = "Background rate ({unit})".format(unit=self.data.data.unit)
             ax.figure.colorbar(caxes, ax=ax, label=label)
-
 
     def peek(self):
         from .effective_area import EffectiveAreaTable2D

@@ -547,7 +547,13 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 spectral_model_comp = spectral_model.copy()
                 # weight amplitude of the component
                 spectral_model_comp.parameters["amplitude"].value *= weight
-                models.append(SkyModel(component.spatial_model, spectral_model_comp, name=component.name))
+                models.append(
+                    SkyModel(
+                        component.spatial_model,
+                        spectral_model_comp,
+                        name=component.name,
+                    )
+                )
 
             return SkyModels(models)
         else:

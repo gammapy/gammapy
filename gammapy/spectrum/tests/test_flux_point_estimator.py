@@ -69,7 +69,10 @@ def fpe_map_pwl():
 
     e_edges = [0.1, 1, 10, 100] * u.TeV
     return FluxPointsEstimator(
-        datasets=[dataset_1, dataset_2], e_edges=e_edges, norm_n_values=3, source="source"
+        datasets=[dataset_1, dataset_2],
+        e_edges=e_edges,
+        norm_n_values=3,
+        source="source",
     )
 
 
@@ -109,7 +112,7 @@ class TestFluxPointsEstimator:
     def test_run_pwl(fpe_pwl):
         fp = fpe_pwl.run()
         actual = fp.table["norm"].data
-        assert_allclose(actual, [1.081434, 0.91077 , 0.922176], rtol=1e-3)
+        assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
         actual = fp.table["norm_err"].data
         assert_allclose(actual, [0.066374, 0.061025, 0.179729], rtol=1e-2)
@@ -118,7 +121,7 @@ class TestFluxPointsEstimator:
         assert_allclose(actual, [0.065803, 0.060403, 0.171376], rtol=1e-2)
 
         actual = fp.table["norm_errp"].data
-        assert_allclose(actual, [0.06695 , 0.061652, 0.18839], rtol=1e-2)
+        assert_allclose(actual, [0.06695, 0.061652, 0.18839], rtol=1e-2)
 
         actual = fp.table["counts"].data.squeeze()
         assert_allclose(actual, [1490, 748, 43])
@@ -200,6 +203,3 @@ def test_no_likelihood_contribution():
     with pytest.raises(ValueError) as e:
         fpe.run()
         assert "No dataset contributes" in e.args[0]
-
-
-

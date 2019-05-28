@@ -289,7 +289,6 @@ class TestFluxPointFit:
         ts_diff = profile["likelihood"] - result.total_stat
         assert_allclose(ts_diff, [110.1, 0, 110.1], rtol=1e-2, atol=1e-7)
 
-
     @staticmethod
     @requires_dependency("matplotlib")
     def test_fp_dataset_peek(fit):
@@ -297,4 +296,3 @@ class TestFluxPointFit:
 
         with mpl_plot_check():
             fp_dataset.peek()
-

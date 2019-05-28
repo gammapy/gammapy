@@ -803,8 +803,10 @@ class FluxPointsEstimator:
             datasets = Datasets(datasets)
 
         if not datasets.is_all_same_type and datasets.is_all_same_shape:
-            raise ValueError("Flux point estimation requires a list of datasets"
-                             " of the same type and data shape.")
+            raise ValueError(
+                "Flux point estimation requires a list of datasets"
+                " of the same type and data shape."
+            )
 
         self.datasets = datasets.copy()
         self.e_edges = e_edges
@@ -842,6 +844,7 @@ class FluxPointsEstimator:
 
     def _freeze_empty_background(self):
         from ..cube import MapDataset
+
         counts_all = self.estimate_counts()["counts"]
 
         for counts, dataset in zip(counts_all, self.datasets.datasets):
@@ -905,7 +908,7 @@ class FluxPointsEstimator:
 
     def _energy_mask(self, e_group):
         energy_mask = np.zeros(self.datasets.datasets[0].data_shape)
-        energy_mask[e_group["idx_min"]:e_group["idx_max"] + 1] = 1
+        energy_mask[e_group["idx_min"] : e_group["idx_max"] + 1] = 1
         return energy_mask.astype(bool)
 
     def estimate_flux_point(self, e_group, steps="all"):
@@ -959,9 +962,13 @@ class FluxPointsEstimator:
             contribute_to_likelihood |= mask.any()
 
         if not contribute_to_likelihood:
-            raise ValueError("No dataset contributes to the likelihood between"
-                             " {e_min:.3f} and {e_max:.3f}. Please adapt the "
-                             "flux point energy edges or check the dataset masks.".format(e_min=e_min, e_max=e_max))
+            raise ValueError(
+                "No dataset contributes to the likelihood between"
+                " {e_min:.3f} and {e_max:.3f}. Please adapt the "
+                "flux point energy edges or check the dataset masks.".format(
+                    e_min=e_min, e_max=e_max
+                )
+            )
 
         with self.datasets.parameters.restore_values:
 
@@ -1045,7 +1052,7 @@ class FluxPointsEstimator:
             else:
                 counts.append(dataset.counts.data[mask].sum())
 
-        return {"counts":  np.array(counts, dtype=int)}
+        return {"counts": np.array(counts, dtype=int)}
 
     def estimate_norm_ul(self):
         """Estimate upper limit for a flux point.
@@ -1063,7 +1070,12 @@ class FluxPointsEstimator:
         counts = self.estimate_counts()["counts"]
 
         if np.all(counts == 0):
-            result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul, backend="scipy", reoptimize=self.reoptimize)
+            result = self.fit.confidence(
+                parameter="norm",
+                sigma=self.sigma_ul,
+                backend="scipy",
+                reoptimize=self.reoptimize,
+            )
         else:
             result = self.fit.confidence(parameter="norm", sigma=self.sigma_ul)
 
@@ -1101,7 +1113,9 @@ class FluxPointsEstimator:
         result : dict
             Dict with norm_scan and dloglike_scan for the flux point.
         """
-        result = self.fit.likelihood_profile(self.model.norm, values=self.norm_values, reoptimize=self.reoptimize)
+        result = self.fit.likelihood_profile(
+            self.model.norm, values=self.norm_values, reoptimize=self.reoptimize
+        )
         dloglike_scan = result["likelihood"]
         return {"norm_scan": result["values"], "dloglike_scan": dloglike_scan}
 
@@ -1125,7 +1139,6 @@ class FluxPointsEstimator:
             norm = np.nan
 
         return {"norm": norm, "loglike": result.total_stat, "success": result.success}
-
 
 
 class FluxPointsDataset(Dataset):

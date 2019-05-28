@@ -77,18 +77,10 @@ def test_scipy_confidence(pars):
     par = pars["x"]
     par.min, par.max = 0, 10
 
-    result = confidence_scipy(
-        function=fcn,
-        parameters=pars,
-        parameter=par,
-        sigma=1
-    )
+    result = confidence_scipy(function=fcn, parameters=pars, parameter=par, sigma=1)
 
     assert result["success_errp"]
     assert result["success_errn"]
 
     assert_allclose(result["errp"], 0.2, rtol=1e-3)
     assert_allclose(result["errn"], 0.2, rtol=1e-3)
-
-
-

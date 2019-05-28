@@ -81,9 +81,7 @@ class IRFStacker:
 
         energy = self.list_aeff[0].energy.edges
         self.stacked_aeff = EffectiveAreaTable(
-            energy_lo=energy[:-1],
-            energy_hi=energy[1:],
-            data=stacked_data.to("cm2"),
+            energy_lo=energy[:-1], energy_hi=energy[1:], data=stacked_data.to("cm2")
         )
 
     def stack_edisp(self):

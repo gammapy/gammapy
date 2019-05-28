@@ -83,6 +83,7 @@ def mask_fit(geom, sky_model):
     circle = CircleSkyRegion(center=center, radius=1 * u.deg)
     return geom.region_mask([circle])
 
+
 def counts(sky_model, exposure, background, psf, edisp):
     """This computes the total npred"""
     npred = MapDataset(

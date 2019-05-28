@@ -5,13 +5,7 @@ see :ref:`fit-statistics`
 """
 import numpy as np
 
-__all__ = [
-    "cash",
-    "cstat",
-    "wstat",
-    "get_wstat_mu_bkg",
-    "get_wstat_gof_terms",
-]
+__all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 N_ON_MIN = 1e-25
 

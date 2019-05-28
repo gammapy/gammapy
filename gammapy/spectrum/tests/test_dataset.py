@@ -101,8 +101,8 @@ class TestSpectrumDatasetOnOff:
         self.off_counts = PHACountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
         )
-        self.on_counts.obs_id = 'test'
-        self.off_counts.obs_id = 'test'
+        self.on_counts.obs_id = "test"
+        self.off_counts.obs_id = "test"
 
         self.livetime = 1000 * u.s
 
@@ -156,13 +156,8 @@ class TestSpectrumDatasetOnOff:
             livetime=livetime,
         )
 
-        energy = (self.aeff.energy.edges * self.aeff.energy.unit)
-        expected = (
-            self.aeff.data.data[0]
-            * (energy[-1] - energy[0])
-            * const
-            * livetime
-        )
+        energy = self.aeff.energy.edges * self.aeff.energy.unit
+        expected = self.aeff.data.data[0] * (energy[-1] - energy[0]) * const * livetime
 
         assert_allclose(dataset.npred().data.data.sum(), expected.value)
 
@@ -173,7 +168,7 @@ class TestSpectrumDatasetOnOff:
             counts_off=self.off_counts,
             aeff=self.aeff,
             livetime=self.livetime,
-            edisp=self.edisp
+            edisp=self.edisp,
         )
         with mpl_plot_check():
             dataset.peek()
@@ -187,11 +182,10 @@ class TestSpectrumDatasetOnOff:
             model=model,
             aeff=self.aeff,
             livetime=self.livetime,
-            edisp=self.edisp
+            edisp=self.edisp,
         )
         with mpl_plot_check():
             dataset.plot_fit()
-
 
     def test_to_from_ogip_files(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
@@ -203,7 +197,7 @@ class TestSpectrumDatasetOnOff:
         )
         dataset.to_ogip_files(outdir=str(tmpdir), overwrite=True)
         filename = tmpdir / self.on_counts.phafile
-        newdataset = SpectrumDatasetOnOff.from_ogip_files( str(filename) )
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(str(filename))
 
         assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
@@ -221,6 +215,7 @@ class TestSpectrumDatasetOnOff:
         assert dataset.total_stats.n_on == 4
         assert dataset.total_stats.n_off == 40
         assert dataset.total_stats.excess == 0
+
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
@@ -384,11 +379,13 @@ class TestSpectralFit:
         assert actual.unit == "cm-2 s-1 TeV-1"
         assert_allclose(actual.value, 5.200e-11, rtol=1e-3)
 
+
 def _read_hess_obs():
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
     obs1 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23523.fits")
     obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
     return [obs1, obs2]
+
 
 @requires_dependency("sherpa")
 @requires_data("gammapy-data")
@@ -418,10 +415,18 @@ def make_observation_list():
     on_vector.livetime = livetime
     on_vector.obs_id = 2
     obs1 = SpectrumDatasetOnOff(
-        counts=on_vector, counts_off=off_vector1, aeff=aeff, edisp=edisp, livetime=livetime
+        counts=on_vector,
+        counts_off=off_vector1,
+        aeff=aeff,
+        edisp=edisp,
+        livetime=livetime,
     )
     obs2 = SpectrumDatasetOnOff(
-        counts=on_vector, counts_off=off_vector2, aeff=aeff, edisp=edisp, livetime=livetime
+        counts=on_vector,
+        counts_off=off_vector2,
+        aeff=aeff,
+        edisp=edisp,
+        livetime=livetime,
     )
 
     obs_list = [obs1, obs2]

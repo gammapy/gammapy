@@ -130,7 +130,7 @@ class SpectrumExtraction:
             aeff=self._aeff,
             counts_off=self._off_vector,
             edisp=self._edisp,
-            livetime=self._on_vector.livetime
+            livetime=self._on_vector.livetime,
         )
 
         if self.use_recommended_erange:
@@ -247,7 +247,6 @@ class SpectrumExtraction:
             else:
                 obs.mask_safe = mask_safe
 
-
     def write(self, outdir, ogipdir="ogip_data", use_sherpa=False, overwrite=False):
         """Write results to disk as OGIP format.
 
@@ -264,7 +263,7 @@ class SpectrumExtraction:
         """
         outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir = make_path(outdir / ogipdir)
-        log.info("Writing OGIP files to {}".format(outdir ))
+        log.info("Writing OGIP files to {}".format(outdir))
         outdir.mkdir(exist_ok=True, parents=True)
         for obs in self.spectrum_observations:
             obs.to_ogip_files(outdir=outdir, use_sherpa=use_sherpa, overwrite=overwrite)

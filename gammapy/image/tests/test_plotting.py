@@ -2,7 +2,12 @@
 from astropy.coordinates import Angle
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, mpl_plot_check, requires_data
-from ...image import colormap_hess, colormap_milagro, MapPanelPlotter, illustrate_colormap
+from ...image import (
+    colormap_hess,
+    colormap_milagro,
+    MapPanelPlotter,
+    illustrate_colormap,
+)
 from ...maps import Map
 
 
@@ -52,7 +57,9 @@ def test_map_panel_plotter():
     import matplotlib.pyplot as plt
 
     fig = plt.figure()
-    plotter = MapPanelPlotter(figure=fig, xlim=Angle([-5, 5], "deg"), ylim=Angle([-2, 2], "deg"), npanels=2)
+    plotter = MapPanelPlotter(
+        figure=fig, xlim=Angle([-5, 5], "deg"), ylim=Angle([-2, 2], "deg"), npanels=2
+    )
     map_image = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
 
     with mpl_plot_check():

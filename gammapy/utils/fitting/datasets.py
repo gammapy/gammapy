@@ -88,9 +88,7 @@ class Datasets:
         total_likelihood = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self.datasets:
-            total_likelihood += dataset.likelihood(
-                parameters=parameters
-            )
+            total_likelihood += dataset.likelihood(parameters=parameters)
         return total_likelihood
 
     def __str__(self):

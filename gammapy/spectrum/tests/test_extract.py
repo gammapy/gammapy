@@ -131,7 +131,9 @@ class TestSpectrumExtraction:
         """Test the run method and check if files are written correctly"""
         extraction.run()
         extraction.write(outdir=str(tmpdir), overwrite=True)
-        testobs = SpectrumDatasetOnOff.from_ogip_files(str(tmpdir / "ogip_data" / "pha_obs23523.fits"))
+        testobs = SpectrumDatasetOnOff.from_ogip_files(
+            str(tmpdir / "ogip_data" / "pha_obs23523.fits")
+        )
         assert_quantity_allclose(
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )

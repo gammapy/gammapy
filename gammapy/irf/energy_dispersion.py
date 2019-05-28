@@ -76,7 +76,9 @@ class EnergyDispersion:
         e_reco_edges = edges_from_lo_hi(e_reco_lo, e_reco_hi)
         e_reco_axis = MapAxis.from_edges(e_reco_edges, interp="log", name="e_reco")
 
-        self.data = NDDataArray(axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs)
+        self.data = NDDataArray(
+            axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs
+        )
         self.meta = OrderedDict(meta) if meta else OrderedDict()
 
     def __str__(self):
@@ -140,9 +142,7 @@ class EnergyDispersion:
         """
         data = self.pdf_matrix.copy()
         energy = self.e_reco.edges
-        idx = np.where(
-            (energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold)
-        )
+        idx = np.where((energy[:-1] < lo_threshold) | (energy[1:] > hi_threshold))
         data[:, idx] = 0
         return data
 
@@ -732,12 +732,13 @@ class EnergyDispersion2D:
         if interp_kwargs is None:
             interp_kwargs = self.default_interp_kwargs
 
-
         e_true_edges = edges_from_lo_hi(e_true_lo, e_true_hi)
         e_true_axis = MapAxis.from_edges(e_true_edges, interp="log", name="e_true")
 
         migra_edges = edges_from_lo_hi(migra_lo, migra_hi)
-        migra_axis = MapAxis.from_edges(migra_edges, interp="log", name="migra", unit="")
+        migra_axis = MapAxis.from_edges(
+            migra_edges, interp="log", name="migra", unit=""
+        )
 
         # TODO: for some reason the H.E.S.S. DL3 files contain the same values for offset_hi and offset_lo
         if np.allclose(offset_lo.to_value("deg"), offset_hi.to_value("deg")):

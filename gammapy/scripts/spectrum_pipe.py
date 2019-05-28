@@ -138,8 +138,7 @@ class SpectrumAnalysisIACT:
         datasets_fp = obs_stacker.stacked_obs
         datasets_fp.model = model
         self.flux_point_estimator = FluxPointsEstimator(
-            e_edges=self.config["fp_binning"],
-            datasets=datasets_fp,
+            e_edges=self.config["fp_binning"], datasets=datasets_fp
         )
         fp = self.flux_point_estimator.run()
         fp.table["is_ul"] = fp.table["ts"] < 4
@@ -148,4 +147,6 @@ class SpectrumAnalysisIACT:
     @property
     def spectrum_result(self):
         """`~gammapy.spectrum.FluxPointsDataset`"""
-        return FluxPointsDataset(data=self.flux_points, model=self.fit.datasets.datasets[0].model)
+        return FluxPointsDataset(
+            data=self.flux_points, model=self.fit.datasets.datasets[0].model
+        )
