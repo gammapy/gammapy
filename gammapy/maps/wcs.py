@@ -924,7 +924,7 @@ class WcsGeom(MapGeom):
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
         str_ += "\tcenter     : {:.1f} deg, {:.1f} deg\n".format(lon, lat)
-        str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f} " "deg\n".format(
+        str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f}\n".format(
             width=self.width
         )
         return str_
