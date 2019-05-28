@@ -84,44 +84,26 @@ def get_test_cases():
     e_true = Quantity(np.logspace(-1, 2, 120), "TeV")
     e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
     return [
+        dict(model=PowerLaw(amplitude="1e2 TeV-1"), e_true=e_true, npred=999),
         dict(
-            model=PowerLaw(
-                index=2, reference=Quantity(1, "TeV"), amplitude=Quantity(1e2, "TeV-1")
-            ),
-            e_true=e_true,
-            npred=999,
-        ),
-        dict(
-            model=PowerLaw(
-                index=2,
-                reference=Quantity(1, "TeV"),
-                amplitude=Quantity(1e-11, "TeV-1 cm-2 s-1"),
-            ),
+            model=PowerLaw(amplitude="1e-11 TeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
-            livetime=Quantity(10, "h"),
-            npred=1448.059605038253,
+            livetime="10 h",
+            npred=1448.05960,
         ),
         dict(
-            model=PowerLaw(
-                index=2,
-                reference=Quantity(1, "GeV"),
-                amplitude=Quantity(1e-11, "GeV-1 cm-2 s-1"),
-            ),
+            model=PowerLaw(reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
-            livetime=Quantity(30, "h"),
-            npred=4.344178815114759,
+            livetime="30 h",
+            npred=4.34417881,
         ),
         dict(
-            model=PowerLaw(
-                index=2,
-                reference=Quantity(1, "TeV"),
-                amplitude=Quantity(1e-11, "TeV-1 cm-2 s-1"),
-            ),
+            model=PowerLaw(amplitude="1e-11 TeV-1 cm-2 s-1"),
             aeff=EffectiveAreaTable.from_parametrization(e_true),
             edisp=EnergyDispersion.from_gauss(
                 e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
             ),
-            livetime=Quantity(10, "h"),
+            livetime="10 h",
             npred=1437.450076,
         ),
         dict(
@@ -129,15 +111,16 @@ def get_test_cases():
                 energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
                 values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
             ),
-            npred=0.5545130625383198,
             e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+            npred=0.554513062,
         ),
     ]
 
 
 @pytest.mark.parametrize("case", get_test_cases())
 def test_counts_predictor(case):
-    desired = case.pop("npred")
-    predictor = SpectrumEvaluator(**case)
+    opts = case.copy()
+    del opts["npred"]
+    predictor = SpectrumEvaluator(**opts)
     actual = predictor.compute_npred().total_counts.value
-    assert_allclose(actual, desired)
+    assert_allclose(actual, case["npred"])
