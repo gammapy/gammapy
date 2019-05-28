@@ -151,26 +151,31 @@ class ComputePlan:
                 url = DEV_DATA_JSON_URL
 
             log.info("Reading {}".format(url))
-            txt = urlopen(url).read().decode("utf-8")
-            datasets = json.loads(txt)
-            datafound = {}
+            try:
+                txt = urlopen(url).read().decode("utf-8")
+                datasets = json.loads(txt)
+                datafound = {}
 
-            if not self.modetutorials:
-                datafound.update(dict(parse_datafiles(self.src, datasets)))
-                if self.src and not datafound:
-                    log.info("Dataset {} not found".format(self.src))
-                    sys.exit()
-            else:
-                for item in self.listfiles:
-                    record = self.listfiles[item]
-                    if "datasets" in record:
-                        if record["datasets"] != "":
-                            for ds in record["datasets"]:
-                                datafound.update(dict(parse_datafiles(ds, datasets)))
-                if not datafound:
-                    log.info("No datasets found")
-                    sys.exit()
-            self.listfiles = datafound
+                if not self.modetutorials:
+                    datafound.update(dict(parse_datafiles(self.src, datasets)))
+                    if self.src and not datafound:
+                        log.info("Dataset {} not found".format(self.src))
+                        sys.exit()
+                else:
+                    for item in self.listfiles:
+                        record = self.listfiles[item]
+                        if "datasets" in record:
+                            if record["datasets"] != "":
+                                for ds in record["datasets"]:
+                                    datafound.update(
+                                        dict(parse_datafiles(ds, datasets))
+                                    )
+                    if not datafound:
+                        log.info("No datasets found")
+                        sys.exit()
+                self.listfiles = datafound
+            except Exception as ex:
+                log.error(ex)
 
         return self.listfiles
 
@@ -182,24 +187,27 @@ class ComputePlan:
             url = DEV_NBS_YAML_URL
 
         log.info("Reading {}".format(url))
-        txt = urlopen(url).read().decode("utf-8")
+        try:
+            txt = urlopen(url).read().decode("utf-8")
 
-        for nb in yaml.safe_load(txt):
-            path = nb["name"] + ".ipynb"
-            label = "nb: " + nb["name"]
-            self.listfiles[label] = {}
-            self.listfiles[label]["url"] = nb["url"]
-            self.listfiles[label]["path"] = path
-            self.listfiles[label]["datasets"] = []
-            self.listfiles[label]["images"] = []
-            if "datasets" in nb:
-                if nb["datasets"]:
-                    for ds in nb["datasets"]:
-                        self.listfiles[label]["datasets"].append(ds)
-            if "images" in nb:
-                if nb["images"]:
-                    for im in nb["images"]:
-                        self.listfiles[label]["images"].append(im)
+            for nb in yaml.safe_load(txt):
+                path = nb["name"] + ".ipynb"
+                label = "nb: " + nb["name"]
+                self.listfiles[label] = {}
+                self.listfiles[label]["url"] = nb["url"]
+                self.listfiles[label]["path"] = path
+                self.listfiles[label]["datasets"] = []
+                self.listfiles[label]["images"] = []
+                if "datasets" in nb:
+                    if nb["datasets"]:
+                        for ds in nb["datasets"]:
+                            self.listfiles[label]["datasets"].append(ds)
+                if "images" in nb:
+                    if nb["images"]:
+                        for im in nb["images"]:
+                            self.listfiles[label]["images"].append(im)
+        except Exception as ex:
+            log.error(ex)
 
     def parse_scripts_yaml(self):
         if self.release:
@@ -209,19 +217,22 @@ class ComputePlan:
             url = DEV_SCRIPTS_YAML_URL
 
         log.info("Reading {}".format(url))
-        txt = urlopen(url).read().decode("utf-8")
+        try:
+            txt = urlopen(url).read().decode("utf-8")
 
-        for sc in yaml.safe_load(txt):
-            path = sc["name"] + ".py"
-            label = "sc: " + sc["name"]
-            self.listfiles[label] = {}
-            self.listfiles[label]["url"] = sc["url"]
-            self.listfiles[label]["path"] = path
-            self.listfiles[label]["datasets"] = []
-            if "datasets" in sc:
-                if sc["datasets"]:
-                    for ds in sc["datasets"]:
-                        self.listfiles[label]["datasets"].append(ds)
+            for sc in yaml.safe_load(txt):
+                path = sc["name"] + ".py"
+                label = "sc: " + sc["name"]
+                self.listfiles[label] = {}
+                self.listfiles[label]["url"] = sc["url"]
+                self.listfiles[label]["path"] = path
+                self.listfiles[label]["datasets"] = []
+                if "datasets" in sc:
+                    if sc["datasets"]:
+                        for ds in sc["datasets"]:
+                            self.listfiles[label]["datasets"].append(ds)
+        except Exception as ex:
+            log.error(ex)
 
 
 class ParallelDownload:
