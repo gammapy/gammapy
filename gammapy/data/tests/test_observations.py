@@ -60,8 +60,6 @@ def test_data_store_observation(data_store):
 )
 def test_observation_select_time(data_store, time_interval, expected_times):
     obs = data_store.obs(23523)
-    print(obs.events.time[-1])
-    print(obs.gti.time_stop[-1])
 
     new_obs = obs.select_time(time_interval)
 

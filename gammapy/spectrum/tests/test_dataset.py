@@ -119,7 +119,7 @@ class TestSpectrumDatasetOnOff:
             dataset.npred()
 
         with pytest.raises(AttributeError):
-            print(dataset.parameters)
+            p = dataset.parameters
 
     def test_alpha(self):
         dataset = SpectrumDatasetOnOff(

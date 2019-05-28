@@ -149,5 +149,4 @@ class TestEventSelection:
         )
         mask = Map.from_geom(geom, data=mask_data)
         new_list = self.evt_list.select_map_mask(mask)
-        print(new_list.table)
         assert len(new_list.table) == 2

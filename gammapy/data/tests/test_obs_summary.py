@@ -73,8 +73,6 @@ class TestObservationSummary:
     @pytest.mark.xfail
     def test_results(self):
         # TODO: add test with assert on result numbers yet!!!
-        # from pprint import pprint
-        # pprint(self.obs_summary.__dict__)
         assert 0
 
     def test_obs_str(self):
