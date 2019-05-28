@@ -9,6 +9,14 @@ omit =
    gammapy/_astropy_init.py
    gammapy/cython_version.py
 
+   # Exclude some code that's only executed by the
+   # notebook tests or docs build (not users)
+   # from the coverage measurement
+   gammapy/utils/tutorials_test.py
+   gammapy/utils/tutorials_process.py
+   gammapy/utils/docs.py
+   gammapy/scripts/jupyter.py
+
 [report]
 exclude_lines =
    # Have to re-enable the standard pragma
