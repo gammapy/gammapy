@@ -430,10 +430,9 @@ def add_observed_source_parameters(table):
     theta = np.pi / 2 * np.ones(len(table))  # Position angle?
     epsilon = np.zeros(len(table))  # Ellipticity?
 
-    S_SNR = astrometry.luminosity_to_flux(L_SNR, distance)
-    # Ld2_PSR = astrometry.luminosity_to_flux(L_PSR, distance)
+    S_SNR = L_SNR / (4 * np.pi * distance ** 2)
     Ld2_PSR = L_PSR / distance ** 2
-    S_PWN = astrometry.luminosity_to_flux(L_PWN, distance)
+    S_PWN = L_PWN / (4 * np.pi * distance ** 2)
 
     # Add columns
     table["ext_in_SNR"] = Column(ext_in_SNR, unit="deg")
@@ -504,7 +503,7 @@ def add_observed_parameters(table, obs_pos=None):
 
     try:
         luminosity = table["luminosity"]
-        flux = astrometry.luminosity_to_flux(luminosity, distance)
+        flux = luminosity / (4 * np.pi * distance ** 2)
         table["flux"] = Column(flux.value, unit=flux.unit, description="Source flux")
     except KeyError:
         pass

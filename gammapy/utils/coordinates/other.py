@@ -6,8 +6,6 @@ from astropy.units import Unit, Quantity
 __all__ = [
     "cartesian",
     "galactic",
-    "luminosity_to_flux",
-    "flux_to_luminosity",
     "radius_to_angle",
     "angle_to_radius",
     "velocity_glon_glat",
@@ -49,16 +47,6 @@ def galactic(x, y, z, obs_pos=None):
     return d, glon, glat
 
 
-def luminosity_to_flux(luminosity, distance):
-    """Distance is assumed to be in kpc"""
-    return luminosity / (4 * np.pi * distance ** 2)
-
-
-def flux_to_luminosity(flux, distance):
-    """Distance is assumed to be in kpc"""
-    return flux * 4 * np.pi * distance ** 2
-
-
 def radius_to_angle(radius, distance):
     """Radius (pc), distance(kpc), angle(deg)"""
     return np.arctan(radius / distance)
@@ -75,25 +63,15 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
 
     Parameters
     ----------
-    x : `~astropy.units.Quantity`
-        Position in x direction
-    y : `~astropy.units.Quantity`
-        Position in y direction
-    z : `~astropy.units.Quantity`
-        Position in z direction
-    vx : `~astropy.units.Quantity`
-        Velocity in x direction
-    vy : `~astropy.units.Quantity`
-        Velocity in y direction
-    vz : `~astropy.units.Quantity`
-        Velocity in z direction
+    x, y, z : `~astropy.units.Quantity`
+        Position in x, y, z direction
+    vx, vy, vz : `~astropy.units.Quantity`
+        Velocity in x, y, z direction
 
     Returns
     -------
-    v_glon : `~astropy.units.Quantity`
-        Projected velocity in Galactic longitude
-    v_glat : `~astropy.units.Quantity`
-        Projected velocity in Galactic latitude
+    v_glon, v_glat : `~astropy.units.Quantity`
+        Projected velocity in Galactic sky coordinates
     """
     y_prime = y + D_SUN_TO_GALACTIC_CENTER
     d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)
@@ -116,25 +94,15 @@ def motion_since_birth(v, age, theta, phi):
         Absolute value of the velocity
     age : `~astropy.units.Quantity`
         Age of the source.
-    theta : `~astropy.units.Quantity`
-        Angular direction of the velocity.
-    phi : `~astropy.units.Quantity`
+    theta, phi : `~astropy.units.Quantity`
         Angular direction of the velocity.
 
     Returns
     -------
-    dx : `~astropy.units.Quantity`
-        Displacement in x direction
-    dy : `~astropy.units.Quantity`
-        Displacement in y direction
-    dz : `~astropy.units.Quantity`
-        Displacement in z direction
-    vx : `~astropy.units.Quantity`
-        Velocity in x direction
-    vy : `~astropy.units.Quantity`
-        Velocity in y direction
-    vz : `~astropy.units.Quantity`
-        Velocity in z direction
+    dx, dy, dz : `~astropy.units.Quantity`
+        Displacement in x, y, z direction
+    vx, vy, vz : `~astropy.units.Quantity`
+        Velocity in x, y, z direction
     """
     vx = v * np.cos(phi) * np.sin(theta)
     vy = v * np.sin(phi) * np.sin(theta)
