@@ -27,7 +27,6 @@ __all__ = [
     "add_snr_parameters",
     "add_pulsar_parameters",
     "add_pwn_parameters",
-    "add_observed_source_parameters",
     "add_observed_parameters",
 ]
 
@@ -407,42 +406,6 @@ def add_pwn_parameters(table):
         unit="erg",
         description="PWN luminosity above 1 TeV",
     )
-    return table
-
-
-def add_observed_source_parameters(table):
-    """Add observed source parameters to the table."""
-    # Read relevant columns
-    distance = table["distance"]
-    r_in = table["r_in"]
-    r_out = table["r_out"]
-    r_out_PWN = table["r_out_PWN"]
-    L_SNR = table["L_SNR"]
-    L_PSR = table["L_PSR"]
-    L_PWN = table["L_PWN"]
-
-    # Compute properties
-    ext_in_SNR = astrometry.radius_to_angle(r_in, distance)
-    ext_out_SNR = astrometry.radius_to_angle(r_out, distance)
-    ext_out_PWN = astrometry.radius_to_angle(r_out_PWN, distance)
-
-    # Ellipse parameters not used for now
-    theta = np.pi / 2 * np.ones(len(table))  # Position angle?
-    epsilon = np.zeros(len(table))  # Ellipticity?
-
-    S_SNR = L_SNR / (4 * np.pi * distance ** 2)
-    Ld2_PSR = L_PSR / distance ** 2
-    S_PWN = L_PWN / (4 * np.pi * distance ** 2)
-
-    # Add columns
-    table["ext_in_SNR"] = Column(ext_in_SNR, unit="deg")
-    table["ext_out_SNR"] = Column(ext_out_SNR, unit="deg")
-    table["ext_out_PWN"] = Column(ext_out_PWN, unit="deg")
-    table["theta"] = Column(theta, unit="rad")
-    table["epsilon"] = Column(epsilon, unit="")
-    table["S_SNR"] = Column(S_SNR, unit="cm-2 s-1")
-    table["Ld2_PSR"] = Column(Ld2_PSR, unit="erg s-1 kpc-2")
-    table["S_PWN"] = Column(S_PWN, unit="cm-2 s-1")
     return table
 
 

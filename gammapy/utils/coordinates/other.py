@@ -6,8 +6,6 @@ from astropy.units import Unit, Quantity
 __all__ = [
     "cartesian",
     "galactic",
-    "radius_to_angle",
-    "angle_to_radius",
     "velocity_glon_glat",
     "motion_since_birth",
     "polar",
@@ -45,16 +43,6 @@ def galactic(x, y, z, obs_pos=None):
     glon = np.arctan2(x, y_prime).to("deg")
     glat = np.arcsin(z / d).to("deg")
     return d, glon, glat
-
-
-def radius_to_angle(radius, distance):
-    """Radius (pc), distance(kpc), angle(deg)"""
-    return np.arctan(radius / distance)
-
-
-def angle_to_radius(angle, distance):
-    """Radius (pc), distance(kpc), angle(deg)"""
-    return np.tan(angle * distance)
 
 
 def velocity_glon_glat(x, y, z, vx, vy, vz):

@@ -10,7 +10,6 @@ from ...population import (
     add_pulsar_parameters,
     add_pwn_parameters,
     add_observed_parameters,
-    add_observed_source_parameters,
 )
 
 
@@ -27,8 +26,9 @@ def test_make_catalog_random_positions_sphere():
     )
     assert len(table) == size
 
-    assert_allclose(table["GLON"][0], 153.259708)
-    assert_allclose(table["GLAT"][0], 62.312573)
+    d = table[0]
+    assert_allclose(d["GLON"], 153.259708)
+    assert_allclose(d["GLAT"], 62.312573)
 
 
 def test_make_base_catalog_galactic():
@@ -40,28 +40,12 @@ def test_make_base_catalog_galactic():
     """
     table = make_base_catalog_galactic(n_sources=10, random_state=0)
     assert len(table) == 10
-    assert table.colnames == [
-        "age",
-        "n_ISM",
-        "spiralarm",
-        "x_birth",
-        "y_birth",
-        "z_birth",
-        "x",
-        "y",
-        "z",
-        "vx",
-        "vy",
-        "vz",
-        "v_abs",
-    ]
+    assert len(table.colnames) == 13
 
     d = table[0]
-
     assert_allclose(d["age"], 548813.50392732478)
     assert_allclose(d["n_ISM"], 1.0)
     assert d["spiralarm"] == "Crux Scutum"
-
     assert_allclose(d["x_birth"], 0.58513884292018437)
     assert_allclose(d["y_birth"], -11.682838052120154)
     assert_allclose(d["z_birth"], 0.15710279448905115)
@@ -72,26 +56,6 @@ def test_make_base_catalog_galactic():
     assert_allclose(d["vy"], 42.543357869627776)
     assert_allclose(d["vz"], 345.43206179709432)
     assert_allclose(d["v_abs"], 348.06648135803658)
-
-
-def test_add_observed_parameters():
-    table = make_base_catalog_galactic(n_sources=10, random_state=0)
-    table = add_observed_parameters(table)
-
-    assert len(table) == 10
-    assert set(table.colnames).issuperset(
-        ["distance", "GLON", "GLAT", "VGLON", "VGLAT", "RA", "DEC"]
-    )
-
-    d = table[0]
-
-    assert_allclose(d["distance"], 3231.392591455106)
-    assert_allclose(d["GLON"], 169.54657778189639)
-    assert_allclose(d["GLAT"], 6.2356357665816162)
-    assert_allclose(d["VGLON"], 0.066778795313076678)
-    assert_allclose(d["VGLAT"], 5.6115948931932174)
-    assert_allclose(d["RA"], 86.308826288823127)
-    assert_allclose(d["DEC"], 41.090120056648828)
 
 
 def test_add_snr_parameters():
@@ -117,19 +81,9 @@ def test_add_pulsar_parameters():
     table = add_pulsar_parameters(table, random_state=0)
 
     assert len(table) == 2
-    assert table.colnames == [
-        "age",
-        "P0",
-        "P1",
-        "P0_birth",
-        "P1_birth",
-        "CharAge",
-        "Tau0",
-        "L_PSR",
-        "L0_PSR",
-        "logB",
-    ]
+    assert len(table.colnames) == 10
 
+    assert_allclose(table["age"], [100, 1000])
     assert_allclose(table["P0"], [0.322829453422, 0.51352778881])
     assert_allclose(table["P1"], [4.54295751161e-14, 6.98423128444e-13])
     assert_allclose(table["P0_birth"], [0.322254715288, 0.388110930459])
@@ -154,22 +108,37 @@ def test_add_pwn_parameters():
     assert_allclose(d["L_PWN"], 7.057857699785925e45)
 
 
+def test_add_observed_parameters():
+    table = make_base_catalog_galactic(n_sources=10, random_state=0)
+    table = add_observed_parameters(table)
+
+    assert len(table) == 10
+    assert len(table.colnames) == 20
+
+    d = table[0]
+    assert_allclose(d["distance"], 3231.392591455106)
+    assert_allclose(d["GLON"], 169.54657778189639)
+    assert_allclose(d["GLAT"], 6.2356357665816162)
+    assert_allclose(d["VGLON"], 0.066778795313076678)
+    assert_allclose(d["VGLAT"], 5.6115948931932174)
+    assert_allclose(d["RA"], 86.308826288823127)
+    assert_allclose(d["DEC"], 41.090120056648828)
+
+
 def test_chain_all():
-    """
-    Test that running the simulation functions in chain works
-    """
+    # Test that running the simulation functions in chain works
     table = make_base_catalog_galactic(n_sources=10, random_state=0)
     table = add_snr_parameters(table)
     table = add_pulsar_parameters(table, random_state=0)
     table = add_pwn_parameters(table)
     table = add_observed_parameters(table)
-    table = add_observed_source_parameters(table)
 
     # Note: the individual functions are tested above.
     # Here we just run them in a chain and do very basic asserts
     # on the output so that we make sure we notice changes.
     assert len(table) == 10
-    assert len(table.colnames) == 43
+    assert len(table.colnames) == 35
+
     d = table[0]
-    assert_allclose(d["r_out_PWN"], 0.5892196771927385, atol=1e-3)
+    assert_allclose(d["r_out_PWN"], 0.589219, atol=1e-3)
     assert_allclose(d["RA"], 86.308826288823127)
