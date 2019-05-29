@@ -3,8 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, brentq
 from scipy.optimize.zeros import RootResults
 from .likelihood import Likelihood
-from ..interpolation import ScaledRegularGridInterpolator
-
+from ..interpolation import interpolate_likelihood_profile
 
 __all__ = ["optimize_scipy", "covariance_scipy", "confidence_scipy", "likelihood_profile_ul_scipy"]
 
@@ -131,17 +130,6 @@ def covariance_scipy(parameters, function):
     raise NotImplementedError
 
 
-def _interp_likelihood_profile(value_scan, dloglike_scan, interp_scale="sqrt"):
-    """Helper function to interpolate likelihood profiles"""
-    # likelihood profiles are typically of parabolic shape, so we use a
-    # sqrt scaling of the values and perform linear interpolation on the scaled
-    # values
-    sign = np.sign(np.gradient(dloglike_scan))
-    interp = ScaledRegularGridInterpolator(
-        points=(value_scan,), values=sign * dloglike_scan, values_scale=interp_scale
-    )
-    return interp
-
 
 def likelihood_profile_ul_scipy(value_scan, dloglike_scan, delta_ts=4, interp_scale="sqrt", **kwargs):
     """Compute upper limit of a parameter from a likelihood profile.
@@ -166,7 +154,7 @@ def likelihood_profile_ul_scipy(value_scan, dloglike_scan, delta_ts=4, interp_sc
     ul : float
         Upper limit value.
     """
-    interp = _interp_likelihood_profile(value_scan, dloglike_scan, interp_scale=interp_scale)
+    interp = interpolate_likelihood_profile(value_scan, dloglike_scan, interp_scale=interp_scale)
 
     def f(x):
         return interp((x,)) - delta_ts

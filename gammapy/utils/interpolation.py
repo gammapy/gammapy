@@ -168,3 +168,33 @@ class LinearScale(InterpolationScale):
     @staticmethod
     def _inverse(values):
         return values
+
+
+def interpolate_likelihood_profile(value_scan, dloglike_scan, interp_scale="sqrt"):
+    """Helper function to interpolate likelihood profiles.
+
+    Parameters
+    ----------
+    value_scan : `~numpy.ndarray`
+        Array of parameter values.
+    dloglike_scan : `~numpy.ndarray`
+        Array of delta log-likelihood values, with respect to the minimum.
+    interp_scale : {"sqrt", "lin"}
+        Interpolation scale applied to the likelihood profile. If the profile is
+        of parabolic shape, a "sqrt" scaling is recommended. In other cases or
+        for fine sampled profiles a "lin" can also be used.
+
+    Returns
+    -------
+    interp : `ScaledRegularGridInterpolator`
+        Interpolator instance.
+
+    """
+    # likelihood profiles are typically of parabolic shape, so we use a
+    # sqrt scaling of the values and perform linear interpolation on the scaled
+    # values
+    sign = np.sign(np.gradient(dloglike_scan))
+    interp = ScaledRegularGridInterpolator(
+        points=(value_scan,), values=sign * dloglike_scan, values_scale=interp_scale
+    )
+    return interp

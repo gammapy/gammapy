@@ -2,13 +2,12 @@
 import logging
 from collections import OrderedDict
 import numpy as np
-from scipy.optimize import brentq
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
-from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.interpolation import interpolate_likelihood_profile
 from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
@@ -707,7 +706,7 @@ class FluxPoints:
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             dloglike_scan = row["dloglike_scan"] - row["loglike"]
-            interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+            interp = interpolate_likelihood_profile(norm_scan, dloglike_scan)
             z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
