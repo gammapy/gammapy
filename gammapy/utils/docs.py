@@ -118,6 +118,12 @@ def parse_notebooks(folder, url_docs, git_commit):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
+    if git_commit.startswith("v"):
+        release_number_docs = release_number_binder = git_commit.replace("v", "")
+    else:
+        release_number_binder = "master"
+        release_number_docs = "dev"
+
     DOWNLOAD_CELL = """
 <div class="alert alert-info">
 
@@ -139,7 +145,9 @@ def parse_notebooks(folder, url_docs, git_commit):
             nb_filename = str(nbpath).replace("notebooks/", "")
             py_filename = nb_filename.replace("ipynb", "py")
             ctx = dict(
-                nb_filename=nb_filename, py_filename=py_filename, git_commit=git_commit
+                nb_filename=nb_filename,
+                py_filename=py_filename,
+                release_number_binder=release_number_binder,
             )
             strcell = DOWNLOAD_CELL.format(**ctx)
             rawnb = nbformat.read(str(nbpath), as_version=nbformat.NO_CONVERT)
@@ -163,14 +171,16 @@ def parse_notebooks(folder, url_docs, git_commit):
         txt = nbpath.read_text(encoding="utf-8")
         if str(folder) == "notebooks":
             repl = r"..\/\1rst\2"
+            txt = re.sub(
+                pattern=url_docs + r"(.*?)html(\)|#)",
+                repl=repl,
+                string=txt,
+                flags=re.M | re.I,
+            )
         else:
-            repl = r"..\/..\/\1html\2"
-        txt = re.sub(
-            pattern=url_docs + r"(.*?)html(\)|#)",
-            repl=repl,
-            string=txt,
-            flags=re.M | re.I,
-        )
+            url_docs_release = url_docs.replace("dev", release_number_docs)
+            txt = txt.replace(url_docs, url_docs_release)
+
         nbpath.write_text(txt, encoding="utf-8")
 
 
