@@ -196,7 +196,6 @@ def sqrt_space(start, stop, num):
 
     Examples
     --------
-
     >>> from gammapy.utils.nddata import sqrt_space
     >>> sqrt_space(0, 2, 5)
     array([0.        , 1.        , 1.41421356, 1.73205081, 2.        ])

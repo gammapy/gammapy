@@ -1529,8 +1529,8 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
-    # TODO: prevent users from setting new attributes after init
 
+    # TODO: prevent users from setting new attributes after init
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
         import naima
 

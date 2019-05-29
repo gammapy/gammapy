@@ -327,7 +327,7 @@ class SpectrumDatasetOnOff(Dataset):
         return self.counts.data.data.shape
 
     def npred(self):
-        """Returns npred counts vector """
+        """Predicted counts vector."""
         if self._predictor is None:
             raise AttributeError("No model set for this Dataset")
         npred = self._predictor.compute_npred()
@@ -392,7 +392,7 @@ class SpectrumDatasetOnOff(Dataset):
         return self._as_counts_spectrum(excess)
 
     def residuals(self):
-        """Residuals (npred - excess). """
+        """Residuals (npred - excess)."""
         residuals = self.npred().data.data - self.excess().data.data
         return self._as_counts_spectrum(residuals)
 
@@ -717,7 +717,7 @@ class SpectrumDatasetOnOffStacker:
     >>> stacked = obs_stacker.run()
     >>> print(stacked.livetime)
     6313.8116406202325 s
-   """
+    """
 
     def __init__(self, obs_list):
         self.obs_list = obs_list
