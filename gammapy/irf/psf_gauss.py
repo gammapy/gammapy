@@ -7,7 +7,6 @@ from astropy.units import Quantity, Unit
 from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma
-from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
 from ..utils.scripts import make_path
@@ -71,33 +70,24 @@ class EnergyDependentMultiGaussPSF:
         theta,
         sigmas,
         norms,
-        energy_thresh_lo=Quantity(0.1, "TeV"),
-        energy_thresh_hi=Quantity(100, "TeV"),
+        energy_thresh_lo="0.1 TeV",
+        energy_thresh_hi="100 TeV",
     ):
-
-        # Validate input
-        validate_physical_type("energy_lo", energy_lo, "energy")
-        validate_physical_type("energy_hi", energy_hi, "energy")
-        validate_physical_type("theta", theta, "angle")
-        validate_physical_type("energy_thresh_lo", energy_thresh_lo, "energy")
-        validate_physical_type("energy_thresh_hi", energy_thresh_hi, "energy")
-
-        # Set attributes
-        self.energy_lo = energy_lo.to("TeV")
-        self.energy_hi = energy_hi.to("TeV")
+        self.energy_lo = Quantity(energy_lo, "TeV")
+        self.energy_hi = Quantity(energy_hi, "TeV")
         ebounds = EnergyBounds.from_lower_and_upper_bounds(
             self.energy_lo, self.energy_hi
         )
         self.energy = ebounds.log_centers
-        self.theta = theta.to("deg")
+        self.theta = Quantity(theta, "deg")
         sigmas[0][sigmas[0] == 0] = 1
         sigmas[1][sigmas[1] == 0] = 1
         sigmas[2][sigmas[2] == 0] = 1
         self.sigmas = sigmas
 
         self.norms = norms
-        self.energy_thresh_lo = energy_thresh_lo.to("TeV")
-        self.energy_thresh_hi = energy_thresh_hi.to("TeV")
+        self.energy_thresh_lo = Quantity(energy_thresh_lo, "TeV")
+        self.energy_thresh_hi = Quantity(energy_thresh_hi, "TeV")
 
         self._interp_norms = self._setup_interpolators(self.norms)
         self._interp_sigmas = self._setup_interpolators(self.sigmas)
