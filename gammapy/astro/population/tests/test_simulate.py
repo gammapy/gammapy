@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.table import Table
 import astropy.units as u
 from ...population import (
@@ -14,9 +14,25 @@ from ...population import (
 
 
 def test_make_catalog_random_positions_cube():
-    size = 100
-    table = make_catalog_random_positions_cube(size=size)
-    assert len(table) == size
+    table = make_catalog_random_positions_cube(random_state=0)
+
+    assert len(table) == 100
+    assert len(table.colnames) == 3
+    assert table["x"].unit == "pc"
+    assert table["y"].unit == "pc"
+    assert table["z"].unit == "pc"
+
+    d = table[0]
+    assert_allclose(d["x"], 0.9762700785464951)
+    assert_allclose(d["y"], 3.556330735924602)
+    assert_allclose(d["z"], -3.764082360117948)
+
+    table = make_catalog_random_positions_cube(dimension=2, random_state=0)
+    assert_equal(table["z"], 0)
+
+    table = make_catalog_random_positions_cube(dimension=1, random_state=0)
+    assert_equal(table["y"], 0)
+    assert_equal(table["z"], 0)
 
 
 def test_make_catalog_random_positions_sphere():

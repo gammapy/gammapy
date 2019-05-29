@@ -36,14 +36,16 @@ def make_catalog_random_positions_cube(
 ):
     """Make a catalog of sources randomly distributed on a line, square or cube.
 
-    TODO: is this useful enough for general use or should we hide it as an
-      internal method to generate test datasets?
+    This can be used to study basic source population distribution effects,
+    e.g. what the distance distribution looks like, or for a given luminosity
+    function what the resulting flux distributions are for different spatial
+    configurations.
 
     Parameters
     ----------
     size : int, optional
         Number of sources
-    dimension : int, optional
+    dimension : {1, 2, 3}
         Number of dimensions
     dmax : int, optional
         Maximum distance in pc.
@@ -59,18 +61,19 @@ def make_catalog_random_positions_cube(
     random_state = get_random_state(random_state)
 
     # Generate positions 1D, 2D, or 3D
-    if dimension == 3:
+    if dimension == 1:
         x = random_state.uniform(-dmax, dmax, size)
-        y = random_state.uniform(-dmax, dmax, size)
-        z = random_state.uniform(-dmax, dmax, size)
+        y, z = 0, 0
     elif dimension == 2:
         x = random_state.uniform(-dmax, dmax, size)
         y = random_state.uniform(-dmax, dmax, size)
-        z = np.zeros_like(x)
-    else:
+        z = 0
+    elif dimension == 3:
         x = random_state.uniform(-dmax, dmax, size)
-        y = np.zeros_like(x)
-        z = np.zeros_like(x)
+        y = random_state.uniform(-dmax, dmax, size)
+        z = random_state.uniform(-dmax, dmax, size)
+    else:
+        raise ValueError("Invalid dimension: {}. Allowed: {{1, 2, 3}}".format(dimension))
 
     table = Table()
     table["x"] = Column(x, unit="pc", description="Galactic cartesian coordinate")
