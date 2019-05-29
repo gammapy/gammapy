@@ -21,14 +21,28 @@ class Dataset(abc.ABC):
     - `gammapy.spectrum.FluxPointsDataset`
     """
 
-    @abc.abstractmethod
-    def likelihood(self):
-        """Total likelihood (float, sum over bins).
+    @property
+    def mask(self):
+        """Combined fit and safe mask"""
+        if self.mask_safe is not None and self.mask_fit is not None:
+            mask = self.mask_safe & self.mask_fit
+        elif self.mask_fit is not None:
+            mask = self.mask_fit
+        elif self.mask_safe is not None:
+            mask = self.mask_safe
+        else:
+            mask = None
+        return mask
 
-        TODO: fix interface.
-        Remove ``parameters`` and ``mask``, add update method?
+    def likelihood(self):
+        """Total likelihood given the current model parameters.
         """
-        pass
+        stat = self.likelihood_per_bin()
+
+        if self.mask is not None:
+            stat = stat[self.mask]
+
+        return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
     def likelihood_per_bin(self):
