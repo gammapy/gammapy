@@ -2,7 +2,13 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from .. import Parameter, Parameters, optimize_scipy, confidence_scipy, likelihood_profile_ul_scipy
+from .. import (
+    Parameter,
+    Parameters,
+    optimize_scipy,
+    confidence_scipy,
+    likelihood_profile_ul_scipy,
+)
 
 
 def fcn(parameters):
@@ -95,9 +101,3 @@ def test_likelihood_profile_ul_scipy():
 
     ul = likelihood_profile_ul_scipy(x, x, interp_scale="lin")
     assert_allclose(ul, 4)
-
-
-
-
-
-

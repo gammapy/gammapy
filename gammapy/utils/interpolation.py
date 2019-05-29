@@ -5,7 +5,11 @@ from scipy.interpolate import RegularGridInterpolator, interp1d
 from astropy import units as u
 
 
-__all__ = ["ScaledRegularGridInterpolator", "interpolation_scale"]
+__all__ = [
+    "ScaledRegularGridInterpolator",
+    "interpolation_scale",
+    "interpolate_likelihood_profile",
+]
 
 
 class ScaledRegularGridInterpolator:
