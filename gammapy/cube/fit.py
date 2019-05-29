@@ -165,17 +165,10 @@ class MapDataset(Dataset):
         """
         counts, npred = self._counts_data, self.npred().data
 
-        # TODO: add mask handling to _stat_sum, so that the temp copy
-        # created by the fancy indexing is avoided
-        if self.mask_fit is None and self.mask_safe is None:
-            stat = self._stat_sum(counts.ravel(), npred.ravel())
-        elif self.mask_fit is None:
-            stat = self._stat_sum(counts[self.mask_safe], npred[self.mask_safe])
-        elif self.mask_safe is None:
-            stat = self._stat_sum(counts[self.mask_fit], npred[self.mask_fit])
+        if self.mask is  not None:
+            stat = self._stat_sum(counts[self.mask], npred[self.mask])
         else:
-            mask_joined = self.mask_safe & self.mask_fit
-            stat = self._stat_sum(counts[mask_joined], npred[mask_joined])
+            stat = self._stat_sum(counts.ravel(), npred.ravel())
 
         return stat
 

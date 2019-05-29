@@ -1219,20 +1219,6 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self):
-        """Total likelihood given the current model parameters.
-        """
-        if self.mask_fit is None and self.mask_safe is None:
-            stat = self.likelihood_per_bin()
-        elif self.mask_fit is None:
-            stat = self.likelihood_per_bin()[self.mask_safe]
-        elif self.mask_safe is None:
-            stat = self.likelihood_per_bin()[self.mask_fit]
-        else:
-            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
-
-        return np.nansum(stat, dtype=np.float64)
-
     def residuals(self):
         """Compute flux point residuals
 

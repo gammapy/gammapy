@@ -111,20 +111,6 @@ class SpectrumDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data.data, mu_on=self.npred().data.data)
 
-    def likelihood(self):
-        """Total likelihood given the current model parameters.
-        """
-        if self.mask_fit is None and self.mask_safe is None:
-            stat = self.likelihood_per_bin()
-        elif self.mask_fit is None:
-            stat = self.likelihood_per_bin()[self.mask_safe]
-        elif self.mask_safe is None:
-            stat = self.likelihood_per_bin()[self.mask_fit]
-        else:
-            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
-
-        return np.sum(stat, dtype=np.float64)
-
     def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
 
@@ -344,19 +330,6 @@ class SpectrumDatasetOnOff(Dataset):
         )
         return np.nan_to_num(on_stat_)
 
-    def likelihood(self):
-        """Total likelihood given the current model parameters.
-        """
-        if self.mask_fit is None and self.mask_safe is None:
-            stat = self.likelihood_per_bin()
-        elif self.mask_fit is None:
-            stat = self.likelihood_per_bin()[self.mask_safe]
-        elif self.mask_safe is None:
-            stat = self.likelihood_per_bin()[self.mask_fit]
-        else:
-            stat = self.likelihood_per_bin()[self.mask_safe & self.mask_fit]
-
-        return np.sum(stat, dtype=np.float64)
 
     @classmethod
     def read(cls, filename):
