@@ -5,7 +5,6 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import astropy.constants as const
 from scipy.optimize import fsolve
-from ...extern.validator import validate_physical_type
 from ..source import Pulsar, SNRTrueloveMcKee
 
 __all__ = ["PWN"]
@@ -47,8 +46,7 @@ class PWN:
         self.eta_B = eta_B
         self.morphology = morphology
         if age is not None:
-            validate_physical_type("age", age, "time")
-            self.age = age
+            self.age = Quantity(age, "yr")
 
     def _radius_free_expansion(self, t):
         """Radius at age t during free expansion phase.
@@ -77,43 +75,33 @@ class PWN:
         # 4e3 years is a typical value that works for fsolve
         return Quantity(fsolve(time_coll, 4e3), "yr")
 
-    def radius(self, t=None):
+    def radius(self, t):
         """Radius of the PWN at age t.
+
+        During the free expansion phase the radius of the PWN evolves like:
+
+        .. math::
+            R_{PWN}(t) = 1.44\\text{pc}\\left(\\frac{E_{SN}^3\\dot{E}_0^2}
+            {M_{ej}^5}\\right)^{1/10}t^{6/5}
+
+        After the collision with the reverse shock of the SNR, the radius is
+        assumed to be constant (See `~gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`).
 
         Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
 
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-
-        Notes
-        -----
-        During the free expansion phase the radius of the PWN evolves like:
-
-        .. math::
-
-            R_{PWN}(t) = 1.44\\text{pc}\\left(\\frac{E_{SN}^3\\dot{E}_0^2}
-            {M_{ej}^5}\\right)^{1/10}t^{6/5}
-
-        After the collision with the reverse shock of the SNR, the radius is
-        assumed to be constant (See `~gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`)
-
+            Time after birth of the SNR
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
-        # Radius at time of collision
-        r_coll = self._radius_free_expansion(self._collision_time)
+        t = Quantity(t, "yr")
+        r_collision = self._radius_free_expansion(self._collision_time)
         r = np.where(
-            t < self._collision_time, self._radius_free_expansion(t).value, r_coll.value
+            t < self._collision_time, self._radius_free_expansion(t).value, r_collision.value
         )
         return Quantity(r, "cm")
 
-    def magnetic_field(self, t=None):
+    def magnetic_field(self, t):
         """Estimate of the magnetic field inside the PWN.
 
         By assuming that a certain fraction of the spin down energy is
@@ -123,28 +111,9 @@ class PWN:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
+            Time after birth of the SNR
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
-
+        t = Quantity(t, "yr")
         energy = self.pulsar.energy_integrated(t)
         volume = 4.0 / 3 * np.pi * self.radius(t) ** 3
         return np.sqrt(2 * const.mu0 * self.eta_B * energy / volume)
-
-    def luminosity_tev(self, t=None, fraction=0.1):
-        """TeV luminosity from a simple evolution model.
-
-        Assumes that the luminosity is just a fraction of the total energy content
-        of the pulsar. No cooling is considered and therefore the estimate is very bad.
-
-        Parameters
-        ----------
-        t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-        """
-        return fraction * self.pulsar.energy_integrated(t)

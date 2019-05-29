@@ -27,76 +27,78 @@ __all__ = [
     "add_snr_parameters",
     "add_pulsar_parameters",
     "add_pwn_parameters",
-    "add_observed_source_parameters",
     "add_observed_parameters",
 ]
 
 
 def make_catalog_random_positions_cube(
-    size=100, dimension=3, dmax=10, random_state="random-seed"
+    size=100, dimension=3, distance_max="1 pc", random_state="random-seed"
 ):
     """Make a catalog of sources randomly distributed on a line, square or cube.
 
-    TODO: is this useful enough for general use or should we hide it as an
-      internal method to generate test datasets?
-
-    Parameters
-    ----------
-    size : int, optional
-        Number of sources
-    dimension : int, optional
-        Number of dimensions
-    dmax : int, optional
-        Maximum distance in pc.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-        Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog with columns:
-    """
-    random_state = get_random_state(random_state)
-
-    # Generate positions 1D, 2D, or 3D
-    if dimension == 3:
-        x = random_state.uniform(-dmax, dmax, size)
-        y = random_state.uniform(-dmax, dmax, size)
-        z = random_state.uniform(-dmax, dmax, size)
-    elif dimension == 2:
-        x = random_state.uniform(-dmax, dmax, size)
-        y = random_state.uniform(-dmax, dmax, size)
-        z = np.zeros_like(x)
-    else:
-        x = random_state.uniform(-dmax, dmax, size)
-        y = np.zeros_like(x)
-        z = np.zeros_like(x)
-
-    table = Table()
-    table["x"] = Column(x, unit="pc", description="Galactic cartesian coordinate")
-    table["y"] = Column(y, unit="pc", description="Galactic cartesian coordinate")
-    table["z"] = Column(z, unit="pc", description="Galactic cartesian coordinate")
-
-    return table
-
-
-def make_catalog_random_positions_sphere(
-    size, center="Earth", distance=Quantity([0, 1], "Mpc"), random_state="random-seed"
-):
-    """Sample random source locations in a sphere.
-
-    This can be used to generate an isotropic source population
-    to represent extra-galactic sources.
+    This can be used to study basic source population distribution effects,
+    e.g. what the distance distribution looks like, or for a given luminosity
+    function what the resulting flux distributions are for different spatial
+    configurations.
 
     Parameters
     ----------
     size : int
         Number of sources
-    center : {'Earth', 'Milky Way'}
-        Sphere center
-    distance : `~astropy.units.Quantity` tuple
-        Distance min / max range.
+    dimension : {1, 2, 3}
+        Number of dimensions
+    distance_max : `~astropy.units.Quantity`
+        Maximum distance
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table with 3D position cartesian coordinates.
+        Columns: x (pc), y (pc), z (pc)
+    """
+    distance_max = Quantity(distance_max).to_value("pc")
+    random_state = get_random_state(random_state)
+
+    # Generate positions 1D, 2D, or 3D
+    if dimension == 1:
+        x = random_state.uniform(-distance_max, distance_max, size)
+        y, z = 0, 0
+    elif dimension == 2:
+        x = random_state.uniform(-distance_max, distance_max, size)
+        y = random_state.uniform(-distance_max, distance_max, size)
+        z = 0
+    elif dimension == 3:
+        x = random_state.uniform(-distance_max, distance_max, size)
+        y = random_state.uniform(-distance_max, distance_max, size)
+        z = random_state.uniform(-distance_max, distance_max, size)
+    else:
+        raise ValueError("Invalid dimension: {}".format(dimension))
+
+    table = Table()
+    table["x"] = Column(x, unit="pc", description="Cartesian coordinate")
+    table["y"] = Column(y, unit="pc", description="Cartesian coordinate")
+    table["z"] = Column(z, unit="pc", description="Cartesian coordinate")
+
+    return table
+
+
+def make_catalog_random_positions_sphere(
+    size=100, distance_min="0 pc", distance_max="1 pc", random_state="random-seed"
+):
+    """Sample random source locations in a sphere.
+
+    This can be used to generate an isotropic source population
+    in a sphere, e.g. to represent extra-galactic sources.
+
+    Parameters
+    ----------
+    size : int
+        Number of sources
+    distance_min, distance_max : `~astropy.units.Quantity`
+        Minimum and maximum distance
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -104,43 +106,21 @@ def make_catalog_random_positions_sphere(
     Returns
     -------
     catalog : `~astropy.table.Table`
-        Source catalog with columns:
-
-        - RAJ2000, DEJ2000 (deg)
-        - GLON, GLAT (deg)
-        - Distance (Mpc)
+        Table with 3D position spherical coordinates.
+        Columns: lon (deg), lat (deg), distance(pc)
     """
+    distance_min = Quantity(distance_min).to_value("pc")
+    distance_max = Quantity(distance_max).to_value("pc")
     random_state = get_random_state(random_state)
 
     lon, lat = sample_sphere(size, random_state=random_state)
-    radius = sample_sphere_distance(
-        distance[0], distance[1], size, random_state=random_state
-    )
-
-    pos = SkyCoord(lon, lat, distance=radius, frame="galactic")
-
-    if center == "Milky Way":
-        pass
-    elif center == "Earth":
-        # TODO: add shift Galactic center -> Earth
-        raise NotImplementedError
-    else:
-        msg = "Invalid center: {}\n".format(center)
-        msg += "Choose one of: Earth, Milky Way"
-        raise ValueError(msg)
+    distance = sample_sphere_distance(distance_min, distance_max, size, random_state)
 
     table = Table()
-    table.meta["center"] = center
 
-    icrs = pos.transform_to("icrs")
-    table["RAJ2000"] = icrs.ra.to("deg")
-    table["DEJ2000"] = icrs.dec.to("deg")
-
-    galactic = icrs.transform_to("galactic")
-    table["GLON"] = galactic.l.to("deg")
-    table["GLAT"] = galactic.b.to("deg")
-
-    table["Distance"] = icrs.distance.to("Mpc")
+    table["lon"] = Column(lon, unit="rad", description="Spherical coordinate")
+    table["lat"] = Column(lat, unit="rad", description="Spherical coordinate")
+    table["distance"] = Column(distance, unit="pc", description="Spherical coordinate")
 
     return table
 
@@ -149,9 +129,9 @@ def make_base_catalog_galactic(
     n_sources,
     rad_dis="YK04",
     vel_dis="H05",
-    max_age=Quantity(1e6, "yr"),
+    max_age="1e6 yr",
     spiralarms=True,
-    n_ISM=Quantity(1, "cm-3"),
+    n_ISM="1 cm-3",
     random_state="random-seed",
 ):
     """Make a catalog of Galactic sources, with basic source parameters.
@@ -167,17 +147,17 @@ def make_base_catalog_galactic(
     Parameters
     ----------
     n_sources : int
-        Number of sources to simulate.
+        Number of sources to simulate
     rad_dis : callable
-        Radial surface density distribution of sources.
+        Radial surface density distribution of sources
     vel_dis : callable
-        Proper motion velocity distribution of sources.
+        Proper motion velocity distribution of sources
     max_age : `~astropy.units.Quantity`
         Maximal age of the source
     spiralarms : bool
-        Include a spiralarm model in the catalog.
+        Include a spiralarm model in the catalog?
     n_ISM : `~astropy.units.Quantity`
-        Density of the interstellar medium.
+        Density of the interstellar medium
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -185,8 +165,10 @@ def make_base_catalog_galactic(
     Returns
     -------
     table : `~astropy.table.Table`
-        Catalog of simulated source positions and proper velocities.
+        Catalog of simulated source positions and proper velocities
     """
+    max_age = Quantity(max_age).to_value("yr")
+    n_ISM = Quantity(n_ISM).to("cm-3")
     random_state = get_random_state(random_state)
 
     if isinstance(rad_dis, str):
@@ -196,10 +178,10 @@ def make_base_catalog_galactic(
         vel_dis = velocity_distributions[vel_dis]
 
     # Draw random values for the age
-    age = random_state.uniform(0, max_age.to_value("yr"), n_sources)
+    age = random_state.uniform(0, max_age, n_sources)
     age = Quantity(age, "yr")
 
-    # Draw r and z values from the given distribution
+    # Draw spatial distribution
     r = draw(
         RMIN.to_value("kpc"),
         RMAX.to_value("kpc"),
@@ -209,6 +191,14 @@ def make_base_catalog_galactic(
     )
     r = Quantity(r, "kpc")
 
+    if spiralarms:
+        r, theta, spiralarm = FaucherSpiral()(r, random_state=random_state)
+    else:
+        theta = Quantity(random_state.uniform(0, 2 * np.pi, n_sources), "rad")
+        spiralarm = None
+
+    x, y = astrometry.cartesian(r, theta)
+
     z = draw(
         ZMIN.to_value("kpc"),
         ZMAX.to_value("kpc"),
@@ -217,16 +207,6 @@ def make_base_catalog_galactic(
         random_state=random_state,
     )
     z = Quantity(z, "kpc")
-
-    # Apply spiralarm modelling or not
-    if spiralarms:
-        r, theta, spiralarm = FaucherSpiral()(r, random_state=random_state)
-    else:
-        theta = Quantity(random_state.uniform(0, 2 * np.pi, n_sources), "rad")
-        spiralarm = None
-
-    # Compute cartesian coordinates
-    x, y = astrometry.cartesian(r, theta)
 
     # Draw values from velocity distribution
     v = draw(
@@ -250,55 +230,33 @@ def make_base_catalog_galactic(
     y_moved = y + dy
     z_moved = z + dz
 
-    # Set environment interstellar density
-    n_ISM = n_ISM * np.ones(n_sources)
-
     table = Table()
     table["age"] = Column(age, unit="yr", description="Age of the source")
-    table["n_ISM"] = Column(
-        n_ISM, unit="cm-3", description="Interstellar medium density"
-    )
+    table["n_ISM"] = Column(n_ISM, description="Interstellar medium density")
     if spiralarms:
         table["spiralarm"] = Column(spiralarm, description="Which spiralarm?")
 
-    table["x_birth"] = Column(
-        x, unit="kpc", description="Galactocentric x coordinate at birth"
-    )
-    table["y_birth"] = Column(
-        y, unit="kpc", description="Galactocentric y coordinate at birth"
-    )
-    table["z_birth"] = Column(
-        z, unit="kpc", description="Galactocentric z coordinate at birth"
-    )
+    table["x_birth"] = Column(x, description="Galactocentric x coordinate at birth")
+    table["y_birth"] = Column(y, description="Galactocentric y coordinate at birth")
+    table["z_birth"] = Column(z, description="Galactocentric z coordinate at birth")
 
-    table["x"] = Column(
-        x_moved.to("kpc"), unit="kpc", description="Galactocentric x coordinate"
-    )
-    table["y"] = Column(
-        y_moved.to("kpc"), unit="kpc", description="Galactocentric y coordinate"
-    )
-    table["z"] = Column(
-        z_moved.to("kpc"), unit="kpc", description="Galactocentric z coordinate"
-    )
+    table["x"] = Column(x_moved.to("kpc"), description="Galactocentric x coordinate")
+    table["y"] = Column(y_moved.to("kpc"), description="Galactocentric y coordinate")
+    table["z"] = Column(z_moved.to("kpc"), description="Galactocentric z coordinate")
 
-    table["vx"] = Column(
-        vx.to("km/s"), unit="km/s", description="Galactocentric velocity in x direction"
-    )
-    table["vy"] = Column(
-        vy.to("km/s"), unit="km/s", description="Galactocentric velocity in y direction"
-    )
-    table["vz"] = Column(
-        vz.to("km/s"), unit="km/s", description="Galactocentric velocity in z direction"
-    )
-    table["v_abs"] = Column(
-        v, unit="km/s", description="Galactocentric velocity (absolute)"
-    )
+    table["vx"] = Column(vx, description="Galactocentric velocity in x direction")
+    table["vy"] = Column(vy, description="Galactocentric velocity in y direction")
+    table["vz"] = Column(vz, description="Galactocentric velocity in z direction")
+    table["v_abs"] = Column(v, description="Galactocentric velocity (absolute)")
 
     return table
 
 
 def add_snr_parameters(table):
-    """Add SNR parameters to the table."""
+    """Add SNR parameters to the table.
+
+    TODO: document
+    """
     # Read relevant columns
     age = table["age"].quantity
     n_ISM = table["n_ISM"].quantity
@@ -311,10 +269,10 @@ def add_snr_parameters(table):
     L_SNR = snr.luminosity_tev(age)
 
     # Add columns to table
-    table["E_SN"] = Column(E_SN, unit="erg", description="SNR kinetic energy")
-    table["r_out"] = Column(r_out, unit="pc", description="SNR outer radius")
-    table["r_in"] = Column(r_in, unit="pc", description="SNR inner radius")
-    table["L_SNR"] = Column(L_SNR, unit="s-1", description="SNR luminosity")
+    table["E_SN"] = Column(E_SN, description="SNR kinetic energy")
+    table["r_out"] = Column(r_out.to("pc"), description="SNR outer radius")
+    table["r_in"] = Column(r_in.to("pc"), description="SNR inner radius")
+    table["L_SNR"] = Column(L_SNR, description="SNR photon rate above 1 TeV")
     return table
 
 
@@ -336,7 +294,6 @@ def add_pulsar_parameters(
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
-
     """
     random_state = get_random_state(random_state)
     # Read relevant columns
@@ -349,10 +306,11 @@ def add_pulsar_parameters(
     p0_birth = draw(0, 2, len(table), p_dist, random_state=random_state)
     p0_birth = Quantity(p0_birth, "s")
 
-    logB = random_state.normal(B_mean, B_stdv, len(table))
+    log10_b_psr = random_state.normal(B_mean, B_stdv, len(table))
+    b_psr = Quantity(10 ** log10_b_psr, "G")
 
     # Compute pulsar parameters
-    psr = Pulsar(p0_birth, logB)
+    psr = Pulsar(p0_birth, b_psr)
     p0 = psr.period(age)
     p1 = psr.period_dot(age)
     p1_birth = psr.P_dot_0
@@ -372,12 +330,15 @@ def add_pulsar_parameters(
     table["Tau0"] = Column(tau_0, unit="yr")
     table["L_PSR"] = Column(l_psr, unit="erg s-1")
     table["L0_PSR"] = Column(l0_psr, unit="erg s-1")
-    table["logB"] = Column(logB, unit="Gauss")
+    table["B_PSR"] = Column(b_psr, unit="Gauss", description="Pulsar magnetic field at the poles")
     return table
 
 
 def add_pwn_parameters(table):
-    """Add PWN parameters to the table."""
+    """Add PWN parameters to the table.
+
+    TODO: document
+    """
     # Some of the computations (specifically `pwn.radius`) aren't vectorised
     # across all parameters; so here we loop over source parameters explicitly
 
@@ -388,62 +349,19 @@ def add_pwn_parameters(table):
         E_SN = table["E_SN"].quantity[idx]
         n_ISM = table["n_ISM"].quantity[idx]
         P0_birth = table["P0_birth"].quantity[idx]
-        logB = table["logB"][idx]
+        b_psr = table["B_PSR"].quantity[idx]
 
         # Compute properties
-        pulsar = Pulsar(P0_birth, logB)
+        pulsar = Pulsar(P0_birth, b_psr)
         snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
         pwn = PWN(pulsar, snr)
         r_out_pwn = pwn.radius(age).to_value("pc")
-        L_PWN = pwn.luminosity_tev(age).to_value("erg")
-        results.append(dict(r_out_pwn=r_out_pwn, L_PWN=L_PWN))
+        results.append(dict(r_out_pwn=r_out_pwn))
 
     # Add columns to table
     table["r_out_PWN"] = Column(
         [_["r_out_pwn"] for _ in results], unit="pc", description="PWN outer radius"
     )
-    table["L_PWN"] = Column(
-        [_["L_PWN"] for _ in results],
-        unit="erg",
-        description="PWN luminosity above 1 TeV",
-    )
-    return table
-
-
-def add_observed_source_parameters(table):
-    """Add observed source parameters to the table."""
-    # Read relevant columns
-    distance = table["distance"]
-    r_in = table["r_in"]
-    r_out = table["r_out"]
-    r_out_PWN = table["r_out_PWN"]
-    L_SNR = table["L_SNR"]
-    L_PSR = table["L_PSR"]
-    L_PWN = table["L_PWN"]
-
-    # Compute properties
-    ext_in_SNR = astrometry.radius_to_angle(r_in, distance)
-    ext_out_SNR = astrometry.radius_to_angle(r_out, distance)
-    ext_out_PWN = astrometry.radius_to_angle(r_out_PWN, distance)
-
-    # Ellipse parameters not used for now
-    theta = np.pi / 2 * np.ones(len(table))  # Position angle?
-    epsilon = np.zeros(len(table))  # Ellipticity?
-
-    S_SNR = astrometry.luminosity_to_flux(L_SNR, distance)
-    # Ld2_PSR = astrometry.luminosity_to_flux(L_PSR, distance)
-    Ld2_PSR = L_PSR / distance ** 2
-    S_PWN = astrometry.luminosity_to_flux(L_PWN, distance)
-
-    # Add columns
-    table["ext_in_SNR"] = Column(ext_in_SNR, unit="deg")
-    table["ext_out_SNR"] = Column(ext_out_SNR, unit="deg")
-    table["ext_out_PWN"] = Column(ext_out_PWN, unit="deg")
-    table["theta"] = Column(theta, unit="rad")
-    table["epsilon"] = Column(epsilon, unit="")
-    table["S_SNR"] = Column(S_SNR, unit="cm-2 s-1")
-    table["Ld2_PSR"] = Column(Ld2_PSR, unit="erg s-1 kpc-2")
-    table["S_PWN"] = Column(S_PWN, unit="cm-2 s-1")
     return table
 
 
@@ -504,7 +422,7 @@ def add_observed_parameters(table, obs_pos=None):
 
     try:
         luminosity = table["luminosity"]
-        flux = astrometry.luminosity_to_flux(luminosity, distance)
+        flux = luminosity / (4 * np.pi * distance ** 2)
         table["flux"] = Column(flux.value, unit=flux.unit, description="Source flux")
     except KeyError:
         pass

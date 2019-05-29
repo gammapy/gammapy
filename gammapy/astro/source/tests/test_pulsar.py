@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
 from ....utils.testing import assert_quantity_allclose
@@ -78,6 +77,7 @@ def test_Pulsar_energy_integrated():
 
 
 def test_Pulsar_magnetic_field():
-    """Test against numerical integration"""
-    reference = np.ones_like(time.value) * (10 ** pulsar.logB)
-    assert_allclose(pulsar.magnetic_field(time).value, reference)
+    b = pulsar.magnetic_field(time)
+    assert b.unit == "G"
+    assert pulsar.B.unit == "G"
+    assert_allclose(b.value, pulsar.B.value)
