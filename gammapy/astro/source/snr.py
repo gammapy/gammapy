@@ -27,7 +27,7 @@ class SNR:
     m_ejecta : `~astropy.units.Quantity`
         Ejecta mass (g)
     t_stop : `~astropy.units.Quantity`
-        Post-shock temperature where gamma-ray emission stops.
+        Post-shock temperature where gamma-ray emission stops
     """
 
     def __init__(
@@ -59,7 +59,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
+            Time after birth of the SNR
 
         Notes
         -----
@@ -76,7 +76,6 @@ class SNR:
         .. math::
 
             r_{SNR}(t) \\approx \\left(\\frac{E_{SN}}{\\rho_{ISM}}\\right)^{1/5}t^{2/5}
-
         """
         if t is not None:
             validate_physical_type("t", t, "time")
@@ -97,8 +96,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-
+            Time after birth of the SNR
         """
         # proportional constant for the free expansion phase
         term_1 = (self.e_sn / Quantity(1e51, "erg")) ** (1.0 / 2)
@@ -111,8 +109,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-
+            Time after birth of the SNR
         """
         R_FE = self._radius_free_expansion(self.sedov_taylor_begin)
         return R_FE * (t / self.sedov_taylor_begin) ** (2.0 / 5)
@@ -123,8 +120,7 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-
+            Time after birth of the SNR
         """
         return self.radius(t) * (1 - fraction)
 
@@ -139,9 +135,9 @@ class SNR:
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
+            Time after birth of the SNR
         energy_min : `~astropy.units.Quantity`
-            Lower energy limit for the luminosity.
+            Lower energy limit for the luminosity
 
         Notes
         -----
@@ -153,7 +149,6 @@ class SNR:
             \\left(\\frac{E_{SN}}{10^{51} erg}\\right)
             \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24} g/cm^{3}} \\right)
             \\textnormal{ph} s^{-1}
-
         """
         if t is not None:
             validate_physical_type("t", t, "time")
@@ -190,7 +185,6 @@ class SNR:
             \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{-1/2}
             \\left(\\frac{M_{ej}}{M_{\\odot}}\\right)^{5/6}
             \\left(\\frac{\\rho_{ISM}}{10^{-24}g/cm^3}\\right)^{-1/3}
-
         """
         term1 = (self.e_sn / Quantity(1e51, "erg")) ** (-1.0 / 2)
         term2 = (self.m_ejecta / const.M_sun) ** (5.0 / 6)
@@ -212,7 +206,6 @@ class SNR:
             \\left(\\frac{m}{1.66\\cdot 10^{-24}g}\\right)^{5/6}
             \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{1/3}
             \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24}g/cm^3}\\right)^{-1/3}
-
         """
         term1 = 3 * const.m_p.cgs / (100 * const.k_B.cgs * self.t_stop)
         term2 = (self.e_sn / self.rho_ISM) ** (2.0 / 5)
@@ -242,7 +235,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
+            Time after birth of the SNR
 
         Notes
         -----
@@ -265,7 +258,6 @@ class SNRTrueloveMcKee(SNR):
 
             R_{ch} = M_{ej}^{1/3}\\rho_{ISM}^{-1/3} \\ \\
             \\textnormal{and} \\ \\ t_{ch} = E_{SN}^{-1/2}M_{ej}^{5/6}\\rho_{ISM}^{-1/3}
-
         """
         if t is not None:
             validate_physical_type("t", t, "time")
@@ -288,8 +280,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-
+            Time after birth of the SNR
         """
         return 1.12 * self.r_c * (t / self.t_c) ** (2.0 / 3)
 
@@ -299,7 +290,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
+            Time after birth of the SNR
         """
         term1 = self._radius_free_expansion(self.sedov_taylor_begin) ** (5.0 / 2)
         term2 = (2.026 * (self.e_sn / self.rho_ISM)) ** (1.0 / 2)
@@ -319,7 +310,7 @@ class SNRTrueloveMcKee(SNR):
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
+            Time after birth of the SNR
 
         Notes
         -----
