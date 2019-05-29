@@ -135,16 +135,3 @@ class PWN:
         energy = self.pulsar.energy_integrated(t)
         volume = 4.0 / 3 * np.pi * self.radius(t) ** 3
         return np.sqrt(2 * const.mu0 * self.eta_B * energy / volume)
-
-    def luminosity_tev(self, t=None, fraction=0.1):
-        """TeV luminosity from a simple evolution model.
-
-        Assumes that the luminosity is just a fraction of the total energy content
-        of the pulsar. No cooling is considered and therefore the estimate is very bad.
-
-        Parameters
-        ----------
-        t : `~astropy.units.Quantity`
-            Time after birth of the SNR.
-        """
-        return fraction * self.pulsar.energy_integrated(t)

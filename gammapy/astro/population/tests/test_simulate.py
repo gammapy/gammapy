@@ -147,14 +147,10 @@ def test_add_pwn_parameters():
     d = table[0]
 
     assert len(table) == 10
-    assert len(table.colnames) == 28
+    assert len(table.colnames) == 27
 
     assert table["r_out_PWN"].unit == "pc"
     assert_allclose(d["r_out_PWN"], 0.5892196771927385, atol=1e-3)
-    assert (
-        table["L_PWN"].unit == "erg"
-    )  # TODO: erg is not a luminosity unit. Incorrect?
-    assert_allclose(d["L_PWN"], 7.057857699785925e45)
 
 
 def test_add_observed_parameters():
@@ -194,7 +190,7 @@ def test_chain_all():
     # Here we just run them in a chain and do very basic asserts
     # on the output so that we make sure we notice changes.
     assert len(table) == 10
-    assert len(table.colnames) == 35
+    assert len(table.colnames) == 34
 
     assert table["r_out_PWN"].unit == "pc"
     assert_allclose(d["r_out_PWN"], 0.5891300402092443)

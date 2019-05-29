@@ -355,17 +355,11 @@ def add_pwn_parameters(table):
         snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
         pwn = PWN(pulsar, snr)
         r_out_pwn = pwn.radius(age).to_value("pc")
-        L_PWN = pwn.luminosity_tev(age).to_value("erg")
-        results.append(dict(r_out_pwn=r_out_pwn, L_PWN=L_PWN))
+        results.append(dict(r_out_pwn=r_out_pwn))
 
     # Add columns to table
     table["r_out_PWN"] = Column(
         [_["r_out_pwn"] for _ in results], unit="pc", description="PWN outer radius"
-    )
-    table["L_PWN"] = Column(
-        [_["L_PWN"] for _ in results],
-        unit="erg",
-        description="PWN luminosity above 1 TeV",
     )
     return table
 
