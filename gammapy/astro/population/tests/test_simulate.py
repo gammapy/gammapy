@@ -132,10 +132,8 @@ def test_add_pulsar_parameters():
     assert_allclose(table["L_PSR"], [5.37834069771e34, 8.25708734631e35])
     assert table["L0_PSR"].unit == "erg / s"
     assert_allclose(table["L0_PSR"], [5.36876555682e34, 6.24049160082e35])
-    assert (
-        table["logB"].unit == "G"
-    )  # TODO: logB should be dimensionless. Fix? Change to "B"?
-    assert_allclose(table["logB"], [12.5883058913, 13.2824912596])
+    assert table["B_PSR"].unit == "G"
+    assert_allclose(table["B_PSR"], [3.875305e+12, 1.916422e+13], rtol=1e-5)
 
 
 def test_add_pwn_parameters():

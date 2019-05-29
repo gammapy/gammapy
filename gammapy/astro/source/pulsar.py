@@ -93,8 +93,8 @@ class Pulsar(SimplePulsar):
     ----------
     P_0 : float
         Period at birth
-    logB : float
-        Logarithm of the magnetic field, which is constant
+    B : `~astropy.units.Quantity`
+        Magnetic field strength at the poles (Gauss)
     n : float
         Spin-down braking index
     I : float
@@ -106,7 +106,7 @@ class Pulsar(SimplePulsar):
     def __init__(
         self,
         P_0=Quantity(0.1, "s"),
-        logB=10,
+        B="1e10 G",
         n=3,
         I=DEFAULT_I,
         R=DEFAULT_R,
@@ -114,11 +114,12 @@ class Pulsar(SimplePulsar):
         L_0=None,
         morphology="Delta2D",
     ):
+        B = Quantity(B).to("G")
         self.I = I
         self.R = R
         self.P_0 = P_0
-        self.logB = logB
-        self.P_dot_0 = (Quantity(10 ** logB, "gauss") / B_CONST) ** 2 / P_0
+        self.B = B
+        self.P_dot_0 = (B / B_CONST) ** 2 / P_0
         self.tau_0 = P_0 / (2 * self.P_dot_0)
         self.n = float(n)
         self.beta = (n + 1.0) / (n - 1.0)
@@ -245,7 +246,8 @@ class Pulsar(SimplePulsar):
             t = self.age
         else:
             raise ValueError("Need time variable or age attribute.")
-        return Quantity(10 ** self.logB, "gauss") ** 2 / (self.period(t) * B_CONST ** 2)
+
+        return self.B ** 2 / (self.period(t) * B_CONST ** 2)
 
     def tau(self, t=None):
         """Characteristic age at real age t.

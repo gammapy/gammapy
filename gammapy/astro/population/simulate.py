@@ -306,10 +306,11 @@ def add_pulsar_parameters(
     p0_birth = draw(0, 2, len(table), p_dist, random_state=random_state)
     p0_birth = Quantity(p0_birth, "s")
 
-    logB = random_state.normal(B_mean, B_stdv, len(table))
+    log10_b_psr = random_state.normal(B_mean, B_stdv, len(table))
+    b_psr = Quantity(10 ** log10_b_psr, "G")
 
     # Compute pulsar parameters
-    psr = Pulsar(p0_birth, logB)
+    psr = Pulsar(p0_birth, b_psr)
     p0 = psr.period(age)
     p1 = psr.period_dot(age)
     p1_birth = psr.P_dot_0
@@ -329,7 +330,7 @@ def add_pulsar_parameters(
     table["Tau0"] = Column(tau_0, unit="yr")
     table["L_PSR"] = Column(l_psr, unit="erg s-1")
     table["L0_PSR"] = Column(l0_psr, unit="erg s-1")
-    table["logB"] = Column(logB, unit="Gauss")
+    table["B_PSR"] = Column(b_psr, unit="Gauss", description="Pulsar magnetic field at the poles")
     return table
 
 
@@ -348,10 +349,10 @@ def add_pwn_parameters(table):
         E_SN = table["E_SN"].quantity[idx]
         n_ISM = table["n_ISM"].quantity[idx]
         P0_birth = table["P0_birth"].quantity[idx]
-        logB = table["logB"][idx]
+        b_psr = table["B_PSR"].quantity[idx]
 
         # Compute properties
-        pulsar = Pulsar(P0_birth, logB)
+        pulsar = Pulsar(P0_birth, b_psr)
         snr = SNRTrueloveMcKee(e_sn=E_SN, n_ISM=n_ISM)
         pwn = PWN(pulsar, snr)
         r_out_pwn = pwn.radius(age).to_value("pc")
