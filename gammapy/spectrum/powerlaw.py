@@ -122,7 +122,6 @@ def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
     The analytical solution for the powerlaw case is given by:
 
     .. math::
-
         G(E_1, E_2) = I(\epsilon, \infty) \, \frac{1-\Gamma}
         {2-\Gamma} \, \frac{E_1^{2-\Gamma} - E_2^{2-\Gamma}}{\epsilon^{1-\Gamma}}
 

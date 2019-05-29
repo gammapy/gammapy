@@ -57,10 +57,7 @@ class SkySpatialModel(Model):
 class SkyPointSource(SkySpatialModel):
     r"""Point Source.
 
-    .. math::
-
-        \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
-
+    .. math:: \phi(lon, lat) = \delta{(lon - lon_0, lat - lat_0)}
 
     Parameters
     ----------
@@ -117,7 +114,6 @@ class SkyGaussian(SkySpatialModel):
     r"""Two-dimensional symmetric Gaussian model
 
     .. math::
-
         \phi(\text{lon}, \text{lat}) = N \times \text{exp}\left\{-\frac{1}{2}
             \frac{1-\text{cos}\theta}{1-\text{cos}\sigma}\right\}\,,
 
@@ -127,7 +123,6 @@ class SkyGaussian(SkySpatialModel):
     the sphere:
 
     .. math::
-
         N = \frac{1}{4\pi a\left[1-\text{exp}(-1/a)\right]}\,,\,\,\,\,
         a = 1-\text{cos}\sigma\,.
 
@@ -135,7 +130,6 @@ class SkyGaussian(SkySpatialModel):
     In the limit of small :math:`\theta` and :math:`\sigma`, this definition reduces to the usual form:
 
     .. math::
-
         \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
             \frac{\theta^2}{\sigma^2}\right)}
 
@@ -189,7 +183,6 @@ class SkyDisk(SkySpatialModel):
     r"""Constant radial disk model.
 
     .. math::
-
         \phi(lon, lat) = \frac{1}{2 \pi (1 - \cos{r_0}) } \cdot
                 \begin{cases}
                     1 & \text{for } \theta \leq r_0 \\
@@ -438,7 +431,6 @@ class SkyShell(SkySpatialModel):
     r"""Shell model.
 
     .. math::
-
         \phi(lon, lat) = \frac{3}{2 \pi (r_{out}^3 - r_{in}^3)} \cdot
                 \begin{cases}
                     \sqrt{r_{out}^2 - \theta^2} - \sqrt{r_{in}^2 - \theta^2} &

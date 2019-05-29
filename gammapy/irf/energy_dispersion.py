@@ -438,9 +438,7 @@ class EnergyDispersion:
 
         Bias is defined as
 
-        .. math::
-
-            \frac{E_{reco}-E_{true}}{E_{true}}
+        .. math:: \frac{E_{reco}-E_{true}}{E_{true}}
 
         Parameters
         ----------

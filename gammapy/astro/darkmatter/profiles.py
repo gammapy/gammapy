@@ -45,9 +45,7 @@ class DMProfile(abc.ABC):
         r"""Integrate squared dark matter profile numerically.
 
         .. math::
-
             F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^2 dr
-
 
         Parameters
         ----------
@@ -64,7 +62,6 @@ class NFWProfile(DMProfile):
     r"""NFW Profile.
 
     .. math::
-
         \rho(r) = \rho_s \frac{r_s}{r}\left(1 + \frac{r}{r_s}\right)^{-2}
 
     Parameters
@@ -99,7 +96,6 @@ class EinastoProfile(DMProfile):
     r"""Einasto Profile.
 
     .. math::
-
         \rho(r) = \rho_s \exp{
             \left(-\frac{2}{\alpha}\left[
             \left(\frac{r}{r_s}\right)^{\alpha} - 1\right] \right)}
@@ -146,9 +142,7 @@ class EinastoProfile(DMProfile):
 class IsothermalProfile(DMProfile):
     r"""Isothermal Profile.
 
-    .. math::
-
-        \rho(r) = \frac{\rho_s}{1 + (r/r_s)^2}
+    .. math:: \rho(r) = \frac{\rho_s}{1 + (r/r_s)^2}
 
     Parameters
     ----------
@@ -180,9 +174,7 @@ class IsothermalProfile(DMProfile):
 class BurkertProfile(DMProfile):
     r"""Burkert Profile.
 
-    .. math::
-
-        \rho(r) = \frac{\rho_s}{(1 + r/r_s)(1 + (r/r_s)^2)}
+    .. math:: \rho(r) = \frac{\rho_s}{(1 + r/r_s)(1 + (r/r_s)^2)}
 
     Parameters
     ----------
@@ -215,7 +207,6 @@ class MooreProfile(DMProfile):
     r"""Moore Profile.
 
     .. math::
-
         \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^{1.16}
         \left(1 + \frac{r}{r_s} \right)^{-1.84}
 
