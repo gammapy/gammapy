@@ -42,8 +42,7 @@ class SimplePulsar:
     def luminosity_spindown(self):
         """Spin-down luminosity (`~astropy.units.Quantity`).
 
-        .. math::
-            \\dot{L} = 4\\pi^2 I \\frac{\\dot{P}}{P^{3}}
+        .. math:: \\dot{L} = 4\\pi^2 I \\frac{\\dot{P}}{P^{3}}
         """
         return 4 * np.pi ** 2 * self.I * self.P_dot / self.P ** 3
 
@@ -51,8 +50,7 @@ class SimplePulsar:
     def tau(self):
         """Characteristic age (`~astropy.units.Quantity`).
 
-        .. math::
-            \\tau = \\frac{P}{2\\dot{P}}
+        .. math:: \\tau = \\frac{P}{2\\dot{P}}
         """
         return (self.P / (2 * self.P_dot)).to("yr")
 
@@ -60,8 +58,7 @@ class SimplePulsar:
     def magnetic_field(self):
         """Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
 
-        .. math::
-            B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\text(Gauss)]
+        .. math:: B = 3.2 \\cdot 10^{19} (P\\dot{P})^{1/2} \\text{ Gauss}
         """
         return B_CONST * np.sqrt(self.P * self.P_dot)
 
@@ -132,8 +129,7 @@ class Pulsar(SimplePulsar):
 
         Time-integrated spin-down luminosity since birth.
 
-        .. math::
-            E(t) = \\dot{L}_0 \\tau_0 \\frac{t}{t + \\tau_0}
+        .. math:: E(t) = \\dot{L}_0 \\tau_0 \\frac{t}{t + \\tau_0}
 
         Parameters
         ----------
@@ -163,8 +159,7 @@ class Pulsar(SimplePulsar):
         P_dot for a given period and magnetic field B, assuming a dipole
         spin-down.
 
-        .. math::
-            \\dot{P}(t) = \\frac{B^2}{3.2 \\cdot 10^{19} P(t)}
+        .. math:: \\dot{P}(t) = \\frac{B^2}{3.2 \\cdot 10^{19} P(t)}
 
         Parameters
         ----------
@@ -177,8 +172,7 @@ class Pulsar(SimplePulsar):
     def tau(self, t):
         """Characteristic age at real age t.
 
-        .. math::
-            \\tau = \\frac{P}{2\\dot{P}}
+        .. math:: \\tau = \\frac{P}{2\\dot{P}}
 
         Parameters
         ----------
@@ -192,7 +186,7 @@ class Pulsar(SimplePulsar):
         """Magnetic field at polar cap (assumed constant).
 
         .. math::
-            B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\text(Gauss)]
+            B = 3.2 \\cdot 10^{19} (P\\dot{P})^{1/2} \\text{ Gauss}
 
         Parameters
         ----------
