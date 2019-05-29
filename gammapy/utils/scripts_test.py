@@ -35,7 +35,7 @@ def script_test(path):
     """Check if example Python script is broken."""
     log.info("   ... EXECUTING {}".format(str(path)))
 
-    cmd = ["python", str(path)]
+    cmd = [sys.executable, str(path)]
     cp = subprocess.run(cmd, capture_output=True)
     if cp.returncode:
         log.info("   ... FAILED")
