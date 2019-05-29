@@ -2,7 +2,6 @@
 """Pulsar source models."""
 import numpy as np
 from astropy.units import Quantity
-from ...extern.validator import validate_physical_type
 
 __all__ = ["Pulsar", "SimplePulsar"]
 
@@ -34,9 +33,7 @@ class SimplePulsar:
     """
 
     def __init__(self, P, P_dot, I=DEFAULT_I, R=DEFAULT_R):
-        validate_physical_type("P", P, "time")
-        validate_physical_type("P_dot", P_dot, "dimensionless")
-        self.P = P
+        self.P = Quantity(P, "s")
         self.P_dot = P_dot
         self.I = I
         self.R = R
@@ -45,12 +42,7 @@ class SimplePulsar:
     def luminosity_spindown(self):
         """Spin-down luminosity (`~astropy.units.Quantity`).
 
-        Notes
-        -----
-        The spin-down luminosity is given by:
-
         .. math::
-
             \\dot{L} = 4\\pi^2 I \\frac{\\dot{P}}{P^{3}}
         """
         return 4 * np.pi ** 2 * self.I * self.P_dot / self.P ** 3
@@ -59,12 +51,7 @@ class SimplePulsar:
     def tau(self):
         """Characteristic age (`~astropy.units.Quantity`).
 
-        Notes
-        -----
-        The characteristic age is given by:
-
         .. math::
-
             \\tau = \\frac{P}{2\\dot{P}}
         """
         return (self.P / (2 * self.P_dot)).to("yr")
@@ -73,12 +60,7 @@ class SimplePulsar:
     def magnetic_field(self):
         """Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
 
-        Notes
-        -----
-        The magnetic field is given by:
-
         .. math::
-
             B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\textnormal(Gauss)]
         """
         return B_CONST * np.sqrt(self.P * self.P_dot)
@@ -105,7 +87,7 @@ class Pulsar(SimplePulsar):
 
     def __init__(
         self,
-        P_0=Quantity(0.1, "s"),
+        P_0="0.1 s",
         B="1e10 G",
         n=3,
         I=DEFAULT_I,
@@ -114,7 +96,9 @@ class Pulsar(SimplePulsar):
         L_0=None,
         morphology="Delta2D",
     ):
-        B = Quantity(B).to("G")
+        P_0 = Quantity(P_0, "s")
+        B = Quantity(B, "G")
+
         self.I = I
         self.R = R
         self.P_0 = P_0
@@ -125,154 +109,95 @@ class Pulsar(SimplePulsar):
         self.beta = (n + 1.0) / (n - 1.0)
         self.morphology = morphology
         if age is not None:
-            validate_physical_type("age", age, "time")
-            self.age = age
+            self.age = Quantity(age, "yr")
         if L_0 is None:
             self.L_0 = 4 * np.pi ** 2 * self.I * self.P_dot_0 / self.P_0 ** 3
 
-    def luminosity_spindown(self, t=None):
-        """Spin down luminosity  at age t.
+    def luminosity_spindown(self, t):
+        """Spin down luminosity.
+
+        .. math::
+            \\dot{L}(t) = \\dot{L}_0 \\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{n + 1}{n - 1}}
 
         Parameters
         ----------
         t : `~astropy.units.Quantity`
-            Time after birth of the pulsar.
-
-        Notes
-        -----
-        The spin-down luminosity is given by:
-
-        .. math::
-
-            \\dot{L}(t) = \\dot{L}_0 \\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{n + 1}{n - 1}}
+            Time after birth of the pulsar
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
+        t = Quantity(t, "yr")
         return self.L_0 * (1 + (t / self.tau_0)) ** self.beta
 
-    def period(self, t=None):
-        """Period at age t.
-
-        Parameters
-        ----------
-        t : `~astropy.units.Quantity`
-            Time after birth of the pulsar.
-
-        Notes
-        -----
-        The period is given by:
-
-        .. math::
-
-            P(t) = P_0\\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{1}{n - 1}}
-        """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
-        return self.P_0 * (1 + (t / self.tau_0)) ** self.beta
-
-    def energy_integrated(self, t=None):
-        """Total released energy at age t.
+    def energy_integrated(self, t):
+        """Total energy released by a given time.
 
         Time-integrated spin-down luminosity since birth.
 
+        .. math::
+            E(t) = \\dot{L}_0 \\tau_0 \\frac{t}{t + \\tau_0}
+
         Parameters
         ----------
         t : `~astropy.units.Quantity`
             Time after birth of the pulsar.
-
-        Notes
-        -----
-        The time integrated energy is given by:
-
-        .. math::
-
-            E(t) = \\dot{L}_0 \\tau_0 \\frac{t}{t + \\tau_0}
-
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
+        t = Quantity(t, "yr")
         return self.L_0 * self.tau_0 * (t / (t + self.tau_0))
 
-    def period_dot(self, t=None):
+    def period(self, t):
+        """Rotation period.
+
+        .. math::
+            P(t) = P_0\\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{1}{n - 1}}
+
+        Parameters
+        ----------
+        t : `~astropy.units.Quantity`
+            Time after birth of the pulsar
+        """
+        t = Quantity(t, "yr")
+        return self.P_0 * (1 + (t / self.tau_0)) ** self.beta
+
+    def period_dot(self, t):
         """Period derivative at age t.
 
         P_dot for a given period and magnetic field B, assuming a dipole
         spin-down.
 
+        .. math::
+            \\dot{P}(t) = \\frac{B^2}{3.2 \\cdot 10^{19} P(t)}
+
         Parameters
         ----------
         t : `~astropy.units.Quantity`
             Time after birth of the pulsar.
-
-        Notes
-        -----
-        The period derivative is given by:
-
-        .. math::
-
-            \\dot{P}(t) = \\frac{B^2}{3.2 \\cdot 10^{19} P(t)}
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
-
+        t = Quantity(t, "yr")
         return self.B ** 2 / (self.period(t) * B_CONST ** 2)
 
-    def tau(self, t=None):
+    def tau(self, t):
         """Characteristic age at real age t.
+
+        .. math::
+            \\tau = \\frac{P}{2\\dot{P}}
 
         Parameters
         ----------
         t : `~astropy.units.Quantity`
             Time after birth of the pulsar.
-
-        Notes
-        -----
-        The characteristic age is given by:
-
-        .. math::
-
-            \\tau = \\frac{P}{2\\dot{P}}
-
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
+        t = Quantity(t, "yr")
         return self.period(t) / 2 * self.period_dot(t)
 
-    def magnetic_field(self, t=None):
-        """Magnetic field strength at the polar cap. Assumed to be constant.
-
-        Notes
-        -----
-        The magnetic field is given by:
+    def magnetic_field(self, t):
+        """Magnetic field at polar cap (assumed constant).
 
         .. math::
-
             B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\textnormal(Gauss)]
+
+        Parameters
+        ----------
+        t : `~astropy.units.Quantity`
+            Time after birth of the pulsar.
         """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
+        t = Quantity(t, "yr")
         return B_CONST * np.sqrt(self.period(t) * self.period_dot(t))
