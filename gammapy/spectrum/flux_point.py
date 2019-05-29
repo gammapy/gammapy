@@ -2,13 +2,12 @@
 import logging
 from collections import OrderedDict
 import numpy as np
-from scipy.optimize import brentq
 from astropy.table import Table, vstack
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
-from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.interpolation import interpolate_likelihood_profile
 from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
 from .powerlaw import power_law_integral_flux
@@ -57,18 +56,6 @@ DEFAULT_UNIT = OrderedDict(
         ("eflux", u.Unit("erg cm-2 s-1")),
     ]
 )
-
-
-def _interp_likelihood_profile(norm_scan, dloglike_scan):
-    """Helper function to interpolate likelihood profiles"""
-    # likelihood profiles are typically of parabolic shape, so we use a
-    # sqrt scaling of the values and perform linear interpolation on the scaled
-    # values
-    sign = np.sign(np.gradient(dloglike_scan))
-    interp = ScaledRegularGridInterpolator(
-        points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
-    )
-    return interp
 
 
 class FluxPoints:
@@ -719,7 +706,7 @@ class FluxPoints:
             norm = (y_values / y_ref).to_value("")
             norm_scan = row["norm_scan"]
             dloglike_scan = row["dloglike_scan"] - row["loglike"]
-            interp = _interp_likelihood_profile(norm_scan, dloglike_scan)
+            interp = interpolate_likelihood_profile(norm_scan, dloglike_scan)
             z[idx] = interp((norm,))
 
         kwargs.setdefault("vmax", 0)
