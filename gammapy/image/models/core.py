@@ -228,7 +228,7 @@ class SkyDisk(SkySpatialModel):
         disk = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0, edge=edge)
         profile = disk(lons, 0 * u.deg)
         plt.plot(lons, profile / profile.max(), alpha=0.5)
-        plt.xlabel("Longitude (deg)")
+        plt.xlabel("Radius (deg)")
         plt.ylabel("Profile (A.U.)")
 
         edge_min, edge_max = (r_0 - edge / 2.).value, (r_0 + edge / 2.).value
