@@ -679,7 +679,6 @@ class SpectrumDatasetOnOffStacker:
     respectively.
 
     .. math::
-
         \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
             bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
 

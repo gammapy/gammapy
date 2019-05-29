@@ -118,8 +118,8 @@ class TSMapEstimator:
 
         TS = \\left \\{
                  \\begin{array}{ll}
-                   -TS & : \\textnormal{if} \\ F < 0 \\\\
-                   \\ \\ TS & : \\textnormal{else}
+                   -TS & : \\text{if} \\ F < 0 \\\\
+                   \\ \\ TS & : \\text{else}
                  \\end{array}
                \\right.
 
@@ -221,8 +221,8 @@ class TSMapEstimator:
         .. math::
             \sqrt{TS} = \left \{
             \begin{array}{ll}
-              -\sqrt{-TS} & : \textnormal{if} \ TS < 0 \\
-              \sqrt{TS} & : \textnormal{else}
+              -\sqrt{-TS} & : \text{if} \ TS < 0 \\
+              \sqrt{TS} & : \text{else}
             \end{array}
             \right.
 

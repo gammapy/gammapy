@@ -57,9 +57,10 @@ class SNR:
         The radius during the free expansion phase is given by:
 
         .. math::
-            r_{SNR}(t) \\approx 0.01 \\textnormal{}
+            r_{SNR}(t) \\approx 0.01
             \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{1/2}
             \\left(\\frac{M_{ej}}{M_{\\odot}}\\right)^{-1/2} t
+            \\text{ pc}
 
         The radius during the Sedov-Taylor phase evolves like:
 
@@ -125,7 +126,7 @@ class SNR:
             L_{\\gamma}(\\geq 1TeV) \\approx 10^{34} \\theta
             \\left(\\frac{E_{SN}}{10^{51} erg}\\right)
             \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24} g/cm^{3}} \\right)
-            \\textnormal{ph} s^{-1}
+            \\text{ s}^{-1}
 
         Reference: http://adsabs.harvard.edu/abs/1994A%26A...287..959D (Formula (7)).
 
@@ -162,10 +163,11 @@ class SNR:
         The time scale is given by:
 
         .. math::
-            t_{begin} \\approx 200 \\ \\textnormal{}
+            t_{begin} \\approx 200
             \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{-1/2}
             \\left(\\frac{M_{ej}}{M_{\\odot}}\\right)^{5/6}
             \\left(\\frac{\\rho_{ISM}}{10^{-24}g/cm^3}\\right)^{-1/3}
+            \\text{yr}
         """
         term1 = (self.e_sn / Quantity(1e51, "erg")) ** (-1.0 / 2)
         term2 = (self.m_ejecta / const.M_sun) ** (5.0 / 6)
@@ -182,10 +184,11 @@ class SNR:
         The time scale is given by:
 
         .. math::
-            t_{end} \\approx 43000 \\textnormal{ }
+            t_{end} \\approx 43000
             \\left(\\frac{m}{1.66\\cdot 10^{-24}g}\\right)^{5/6}
             \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{1/3}
             \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24}g/cm^3}\\right)^{-1/3}
+            \\text{yr}
         """
         term1 = 3 * const.m_p.cgs / (100 * const.k_B.cgs * self.t_stop)
         term2 = (self.e_sn / self.rho_ISM) ** (2.0 / 5)
@@ -227,7 +230,7 @@ class SNRTrueloveMcKee(SNR):
 
         .. math::
             R_{ch} = M_{ej}^{1/3}\\rho_{ISM}^{-1/3} \\ \\
-            \\textnormal{and} \\ \\ t_{ch} = E_{SN}^{-1/2}M_{ej}^{5/6}\\rho_{ISM}^{-1/3}
+            \\text{and} \\ \\ t_{ch} = E_{SN}^{-1/2}M_{ej}^{5/6}\\rho_{ISM}^{-1/3}
 
         Parameters
         ----------
