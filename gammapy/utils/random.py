@@ -96,45 +96,6 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state="random-see
     return lon, lat
 
 
-def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
-    """Sample random values from a power law distribution.
-
-    f(x) = x ** (-gamma) in the range x_min to x_max
-
-    It is assumed that *gamma* is the **differential** spectral index.
-
-    Reference: http://mathworld.wolfram.com/RandomNumber.html
-
-    Parameters
-    ----------
-    x_min : float
-        x range minimum
-    x_max : float
-        x range maximum
-    gamma : float
-        Power law index
-    size : int, optional
-        Number of samples to generate
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-        Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
-
-    Returns
-    -------
-    x : array
-        Array of samples from the distribution
-    """
-    random_state = get_random_state(random_state)
-
-    size = int(size)
-
-    exp = -gamma
-    base = random_state.uniform(x_min ** exp, x_max ** exp, size)
-    x = base ** (1 / exp)
-
-    return x
-
-
 def sample_sphere_distance(
     distance_min=0, distance_max=1, size=None, random_state="random-seed"
 ):
@@ -180,3 +141,42 @@ def sample_sphere_distance(
     distance = ((u - b) / a) ** (1.0 / 3)
 
     return distance
+
+
+def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
+    """Sample random values from a power law distribution.
+
+    f(x) = x ** (-gamma) in the range x_min to x_max
+
+    It is assumed that *gamma* is the **differential** spectral index.
+
+    Reference: http://mathworld.wolfram.com/RandomNumber.html
+
+    Parameters
+    ----------
+    x_min : float
+        x range minimum
+    x_max : float
+        x range maximum
+    gamma : float
+        Power law index
+    size : int, optional
+        Number of samples to generate
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
+
+    Returns
+    -------
+    x : array
+        Array of samples from the distribution
+    """
+    random_state = get_random_state(random_state)
+
+    size = int(size)
+
+    exp = -gamma
+    base = random_state.uniform(x_min ** exp, x_max ** exp, size)
+    x = base ** (1 / exp)
+
+    return x

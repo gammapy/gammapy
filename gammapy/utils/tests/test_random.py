@@ -97,13 +97,6 @@ def test_sample_sphere():
         ).any()
 
 
-def test_sample_powerlaw():
-    random_state = np.random.RandomState(seed=0)
-
-    x = sample_powerlaw(x_min=0.1, x_max=10, gamma=2, size=2, random_state=random_state)
-    assert_allclose(x, [0.14886601, 0.1873559])
-
-
 def test_sample_sphere_distance():
     random_state = np.random.RandomState(seed=0)
 
@@ -117,3 +110,10 @@ def test_sample_sphere_distance():
     )
     assert x.min() >= 0.1
     assert x.max() <= 42
+
+
+def test_sample_powerlaw():
+    random_state = np.random.RandomState(seed=0)
+
+    x = sample_powerlaw(x_min=0.1, x_max=10, gamma=2, size=2, random_state=random_state)
+    assert_allclose(x, [0.14886601, 0.1873559])
