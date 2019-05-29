@@ -3,9 +3,10 @@ import numpy as np
 from scipy.optimize import minimize, brentq
 from scipy.optimize.zeros import RootResults
 from .likelihood import Likelihood
+from ..interpolation import ScaledRegularGridInterpolator
 
 
-__all__ = ["optimize_scipy", "covariance_scipy", "confidence_scipy"]
+__all__ = ["optimize_scipy", "covariance_scipy", "confidence_scipy", "likelihood_profile_ul_scipy"]
 
 
 def optimize_scipy(parameters, function, **kwargs):
@@ -128,3 +129,50 @@ def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **
 # TODO: implement, e.g. with numdifftools.Hessian
 def covariance_scipy(parameters, function):
     raise NotImplementedError
+
+
+def _interp_likelihood_profile(value_scan, dloglike_scan, interp_scale="sqrt"):
+    """Helper function to interpolate likelihood profiles"""
+    # likelihood profiles are typically of parabolic shape, so we use a
+    # sqrt scaling of the values and perform linear interpolation on the scaled
+    # values
+    sign = np.sign(np.gradient(dloglike_scan))
+    interp = ScaledRegularGridInterpolator(
+        points=(value_scan,), values=sign * dloglike_scan, values_scale=interp_scale
+    )
+    return interp
+
+
+def likelihood_profile_ul_scipy(value_scan, dloglike_scan, delta_ts=4, interp_scale="sqrt", **kwargs):
+    """Compute upper limit of a parameter from a likelihood profile.
+
+    Parameters
+    ----------
+    value_scan : `~numpy.ndarray`
+        Array of parameter values.
+    dloglike_scan : `~numpy.ndarray`
+        Array of delta log-likelihood values, with respect to the minimum.
+    delta_ts : float
+        Difference in test statistics for the upper limit.
+    interp_scale : {"sqrt", "lin"}
+        Interpolation scale applied to the likelihood profile. If the profile is
+        of parabolic shape, a "sqrt" scaling is recommended. In other cases or
+        for fine sampled profiles a "lin" can also be used.
+    **kwargs : dict
+        Keyword arguments passed to `~scipy.optimize.brentq`.
+
+    Returns
+    -------
+    ul : float
+        Upper limit value.
+    """
+    interp = _interp_likelihood_profile(value_scan, dloglike_scan, interp_scale=interp_scale)
+
+    def f(x):
+        return interp((x,)) - delta_ts
+
+    idx = np.argmin(dloglike_scan)
+    norm_best_fit = value_scan[idx]
+    ul = brentq(f, a=norm_best_fit, b=value_scan[-1], **kwargs)
+
+    return ul

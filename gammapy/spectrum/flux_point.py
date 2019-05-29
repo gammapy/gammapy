@@ -59,18 +59,6 @@ DEFAULT_UNIT = OrderedDict(
 )
 
 
-def _interp_likelihood_profile(norm_scan, dloglike_scan):
-    """Helper function to interpolate likelihood profiles"""
-    # likelihood profiles are typically of parabolic shape, so we use a
-    # sqrt scaling of the values and perform linear interpolation on the scaled
-    # values
-    sign = np.sign(np.gradient(dloglike_scan))
-    interp = ScaledRegularGridInterpolator(
-        points=(norm_scan,), values=sign * dloglike_scan, values_scale="sqrt"
-    )
-    return interp
-
-
 class FluxPoints:
     """Flux points container.
 

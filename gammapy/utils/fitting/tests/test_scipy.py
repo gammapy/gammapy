@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
-from .. import Parameter, Parameters, optimize_scipy, confidence_scipy
+from .. import Parameter, Parameters, optimize_scipy, confidence_scipy, likelihood_profile_ul_scipy
 
 
 def fcn(parameters):
@@ -84,3 +85,19 @@ def test_scipy_confidence(pars):
 
     assert_allclose(result["errp"], 0.2, rtol=1e-3)
     assert_allclose(result["errn"], 0.2, rtol=1e-3)
+
+
+def test_likelihood_profile_ul_scipy():
+    x = np.linspace(-5, 5, 7)
+    y = x ** 2
+    ul = likelihood_profile_ul_scipy(x, y)
+    assert_allclose(ul, 2)
+
+    ul = likelihood_profile_ul_scipy(x, x, interp_scale="lin")
+    assert_allclose(ul, 4)
+
+
+
+
+
+
