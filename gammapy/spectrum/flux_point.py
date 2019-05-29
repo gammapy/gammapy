@@ -1151,7 +1151,7 @@ class FluxPointsDataset(Dataset):
 
         from astropy import units as u
         from gammapy.spectrum import FluxPoints, FluxPointsDataset
-        form gammapy.utils.fitting import Fit
+        from gammapy.utils.fitting import Fit
         from gammapy.spectrum.models import PowerLaw
 
         filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
@@ -1163,7 +1163,7 @@ class FluxPointsDataset(Dataset):
         fit = Fit(dataset)
         result = fit.run()
         print(result)
-        print(result.model)
+        print(result.parameters.to_table())
     """
 
     def __init__(self, model, data, mask_fit=None, likelihood="chi2", mask_safe=None):
@@ -1171,6 +1171,13 @@ class FluxPointsDataset(Dataset):
         self.data = data
         self.mask_fit = mask_fit
         self.parameters = model.parameters
+
+        if data.sed_type != "dnde":
+            raise ValueError("Currently only flux points of type 'dnde' are supported.")
+
+        if mask_safe is None:
+            mask_safe = np.isfinite(data.table["dnde"])
+
         self.mask_safe = mask_safe
 
         if likelihood in ["chi2", "chi2assym"]:

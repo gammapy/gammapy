@@ -42,7 +42,7 @@ class Dataset(abc.ABC):
         if self.mask is not None:
             stat = stat[self.mask]
 
-        return np.nansum(stat, dtype=np.float64)
+        return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
     def likelihood_per_bin(self):
