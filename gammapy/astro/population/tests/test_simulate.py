@@ -23,9 +23,9 @@ def test_make_catalog_random_positions_cube():
     assert table["z"].unit == "pc"
 
     d = table[0]
-    assert_allclose(d["x"], 0.9762700785464951)
-    assert_allclose(d["y"], 3.556330735924602)
-    assert_allclose(d["z"], -3.764082360117948)
+    assert_allclose(d["x"], 0.0976270078546495)
+    assert_allclose(d["y"], 0.3556330735924602)
+    assert_allclose(d["z"], -0.37640823601179485)
 
     table = make_catalog_random_positions_cube(dimension=2, random_state=0)
     assert_equal(table["z"], 0)
@@ -36,15 +36,18 @@ def test_make_catalog_random_positions_cube():
 
 
 def test_make_catalog_random_positions_sphere():
-    size = 100
-    table = make_catalog_random_positions_sphere(
-        size=size, center="Milky Way", random_state=27
-    )
-    assert len(table) == size
+    table = make_catalog_random_positions_sphere(random_state=0)
+
+    assert len(table) == 100
+    assert len(table.colnames) == 3
+    assert table["lon"].unit == "rad"
+    assert table["lat"].unit == "rad"
+    assert table["distance"].unit == "pc"
 
     d = table[0]
-    assert_allclose(d["GLON"], 153.259708)
-    assert_allclose(d["GLAT"], 62.312573)
+    assert_allclose(d["lon"], 3.4482969442579128)
+    assert_allclose(d["lat"], 0.36359133530192267)
+    assert_allclose(d["distance"], 0.6780943487897606)
 
 
 def test_make_base_catalog_galactic():

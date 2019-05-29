@@ -32,7 +32,7 @@ __all__ = [
 
 
 def make_catalog_random_positions_cube(
-    size=100, dimension=3, dmax=10, random_state="random-seed"
+    size=100, dimension=3, distance_max="1 pc", random_state="random-seed"
 ):
     """Make a catalog of sources randomly distributed on a line, square or cube.
 
@@ -43,62 +43,62 @@ def make_catalog_random_positions_cube(
 
     Parameters
     ----------
-    size : int, optional
+    size : int
         Number of sources
     dimension : {1, 2, 3}
         Number of dimensions
-    dmax : int, optional
-        Maximum distance in pc.
+    distance_max : `~astropy.units.Quantity`
+        Maximum distance
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
-    catalog : `~astropy.table.Table`
-        Source catalog with columns:
+    table : `~astropy.table.Table`
+        Table with 3D position cartesian coordinates.
+        Columns: x (pc), y (pc), z (pc)
     """
+    distance_max = Quantity(distance_max).to("pc").value
     random_state = get_random_state(random_state)
 
     # Generate positions 1D, 2D, or 3D
     if dimension == 1:
-        x = random_state.uniform(-dmax, dmax, size)
+        x = random_state.uniform(-distance_max, distance_max, size)
         y, z = 0, 0
     elif dimension == 2:
-        x = random_state.uniform(-dmax, dmax, size)
-        y = random_state.uniform(-dmax, dmax, size)
+        x = random_state.uniform(-distance_max, distance_max, size)
+        y = random_state.uniform(-distance_max, distance_max, size)
         z = 0
     elif dimension == 3:
-        x = random_state.uniform(-dmax, dmax, size)
-        y = random_state.uniform(-dmax, dmax, size)
-        z = random_state.uniform(-dmax, dmax, size)
+        x = random_state.uniform(-distance_max, distance_max, size)
+        y = random_state.uniform(-distance_max, distance_max, size)
+        z = random_state.uniform(-distance_max, distance_max, size)
     else:
-        raise ValueError("Invalid dimension: {}. Allowed: {{1, 2, 3}}".format(dimension))
+        raise ValueError("Invalid dimension: {}".format(dimension))
 
     table = Table()
-    table["x"] = Column(x, unit="pc", description="Galactic cartesian coordinate")
-    table["y"] = Column(y, unit="pc", description="Galactic cartesian coordinate")
-    table["z"] = Column(z, unit="pc", description="Galactic cartesian coordinate")
+    table["x"] = Column(x, unit="pc", description="Cartesian coordinate")
+    table["y"] = Column(y, unit="pc", description="Cartesian coordinate")
+    table["z"] = Column(z, unit="pc", description="Cartesian coordinate")
 
     return table
 
 
 def make_catalog_random_positions_sphere(
-    size, center="Earth", distance=Quantity([0, 1], "Mpc"), random_state="random-seed"
+    size=100, distance_min="0 pc", distance_max="1 pc", random_state="random-seed"
 ):
     """Sample random source locations in a sphere.
 
     This can be used to generate an isotropic source population
-    to represent extra-galactic sources.
+    in a sphere, e.g. to represent extra-galactic sources.
 
     Parameters
     ----------
     size : int
         Number of sources
-    center : {'Earth', 'Milky Way'}
-        Sphere center
-    distance : `~astropy.units.Quantity` tuple
-        Distance min / max range.
+    distance_min, distance_max : `~astropy.units.Quantity`
+        Minimum and maximum distance
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -106,43 +106,21 @@ def make_catalog_random_positions_sphere(
     Returns
     -------
     catalog : `~astropy.table.Table`
-        Source catalog with columns:
-
-        - RAJ2000, DEJ2000 (deg)
-        - GLON, GLAT (deg)
-        - Distance (Mpc)
+        Table with 3D position spherical coordinates.
+        Columns: lon (deg), lat (deg), distance(pc)
     """
+    distance_min = Quantity(distance_min)
+    distance_max = Quantity(distance_max)
     random_state = get_random_state(random_state)
 
     lon, lat = sample_sphere(size, random_state=random_state)
-    radius = sample_sphere_distance(
-        distance[0], distance[1], size, random_state=random_state
-    )
-
-    pos = SkyCoord(lon, lat, distance=radius, frame="galactic")
-
-    if center == "Milky Way":
-        pass
-    elif center == "Earth":
-        # TODO: add shift Galactic center -> Earth
-        raise NotImplementedError
-    else:
-        msg = "Invalid center: {}\n".format(center)
-        msg += "Choose one of: Earth, Milky Way"
-        raise ValueError(msg)
+    distance = sample_sphere_distance(distance_min, distance_max, size, random_state)
 
     table = Table()
-    table.meta["center"] = center
 
-    icrs = pos.transform_to("icrs")
-    table["RAJ2000"] = icrs.ra.to("deg")
-    table["DEJ2000"] = icrs.dec.to("deg")
-
-    galactic = icrs.transform_to("galactic")
-    table["GLON"] = galactic.l.to("deg")
-    table["GLAT"] = galactic.b.to("deg")
-
-    table["Distance"] = icrs.distance.to("Mpc")
+    table["lon"] = Column(lon, unit="rad", description="Spherical coordinate")
+    table["lat"] = Column(lat, unit="rad", description="Spherical coordinate")
+    table["distance"] = Column(distance, unit="pc", description="Spherical coordinate")
 
     return table
 
