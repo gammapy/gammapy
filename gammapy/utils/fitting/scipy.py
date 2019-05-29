@@ -32,7 +32,7 @@ class TSDifference:
     """Likelihood wrapper to compute TS differences"""
 
     def __init__(self, function, parameters, parameter, reoptimize, ts_diff):
-        self.loglike_ref = function(parameters)
+        self.loglike_ref = function()
         self.parameters = parameters
         self.function = function
         self.parameter = parameter
@@ -44,7 +44,7 @@ class TSDifference:
         self.parameter.factor = factor
         if self.reoptimize:
             optimize_scipy(self.parameters, self.function, method="L-BFGS-B")
-        value = self.function(self.parameters) - self.loglike_ref - self.ts_diff
+        value = self.function() - self.loglike_ref - self.ts_diff
         return value
 
 

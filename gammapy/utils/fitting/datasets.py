@@ -22,7 +22,7 @@ class Dataset(abc.ABC):
     """
 
     @abc.abstractmethod
-    def likelihood(self, parameters):
+    def likelihood(self):
         """Total likelihood (float, sum over bins).
 
         TODO: fix interface.
@@ -83,12 +83,12 @@ class Datasets:
         is_ref_shape = [dataset.data_shape == ref_shape for dataset in self.datasets]
         return np.all(is_ref_shape)
 
-    def likelihood(self, parameters=None):
+    def likelihood(self):
         """Compute joint likelihood"""
         total_likelihood = 0
         # TODO: add parallel evaluation of likelihoods
         for dataset in self.datasets:
-            total_likelihood += dataset.likelihood(parameters=parameters)
+            total_likelihood += dataset.likelihood()
         return total_likelihood
 
     def __str__(self):

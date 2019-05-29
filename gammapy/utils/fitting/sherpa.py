@@ -21,7 +21,7 @@ class SherpaLikelihood(Likelihood):
 
     def fcn(self, factors):
         self.parameters.set_parameter_factors(factors)
-        return self.function(self.parameters), 0
+        return self.function(), 0
 
 
 def optimize_sherpa(parameters, function, **kwargs):

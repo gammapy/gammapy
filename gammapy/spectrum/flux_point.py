@@ -1232,7 +1232,7 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def likelihood(self, parameters):
+    def likelihood(self):
         """Total likelihood given the current model parameters.
         """
         if self.mask_fit is None and self.mask_safe is None:
