@@ -59,7 +59,7 @@ def make_catalog_random_positions_cube(
         Table with 3D position cartesian coordinates.
         Columns: x (pc), y (pc), z (pc)
     """
-    distance_max = Quantity(distance_max).to("pc").value
+    distance_max = Quantity(distance_max).to_value("pc")
     random_state = get_random_state(random_state)
 
     # Generate positions 1D, 2D, or 3D
@@ -109,8 +109,8 @@ def make_catalog_random_positions_sphere(
         Table with 3D position spherical coordinates.
         Columns: lon (deg), lat (deg), distance(pc)
     """
-    distance_min = Quantity(distance_min)
-    distance_max = Quantity(distance_max)
+    distance_min = Quantity(distance_min).to_value("pc")
+    distance_max = Quantity(distance_max).to_value("pc")
     random_state = get_random_state(random_state)
 
     lon, lat = sample_sphere(size, random_state=random_state)
@@ -129,9 +129,9 @@ def make_base_catalog_galactic(
     n_sources,
     rad_dis="YK04",
     vel_dis="H05",
-    max_age=Quantity(1e6, "yr"),
+    max_age="1e6 yr",
     spiralarms=True,
-    n_ISM=Quantity(1, "cm-3"),
+    n_ISM="1 cm-3",
     random_state="random-seed",
 ):
     """Make a catalog of Galactic sources, with basic source parameters.
@@ -147,17 +147,17 @@ def make_base_catalog_galactic(
     Parameters
     ----------
     n_sources : int
-        Number of sources to simulate.
+        Number of sources to simulate
     rad_dis : callable
-        Radial surface density distribution of sources.
+        Radial surface density distribution of sources
     vel_dis : callable
-        Proper motion velocity distribution of sources.
+        Proper motion velocity distribution of sources
     max_age : `~astropy.units.Quantity`
         Maximal age of the source
     spiralarms : bool
-        Include a spiralarm model in the catalog.
+        Include a spiralarm model in the catalog?
     n_ISM : `~astropy.units.Quantity`
-        Density of the interstellar medium.
+        Density of the interstellar medium
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -165,8 +165,10 @@ def make_base_catalog_galactic(
     Returns
     -------
     table : `~astropy.table.Table`
-        Catalog of simulated source positions and proper velocities.
+        Catalog of simulated source positions and proper velocities
     """
+    max_age = Quantity(max_age).to_value("yr")
+    n_ISM = Quantity(n_ISM).to("cm-3")
     random_state = get_random_state(random_state)
 
     if isinstance(rad_dis, str):
@@ -176,10 +178,10 @@ def make_base_catalog_galactic(
         vel_dis = velocity_distributions[vel_dis]
 
     # Draw random values for the age
-    age = random_state.uniform(0, max_age.to_value("yr"), n_sources)
+    age = random_state.uniform(0, max_age, n_sources)
     age = Quantity(age, "yr")
 
-    # Draw r and z values from the given distribution
+    # Draw spatial distribution
     r = draw(
         RMIN.to_value("kpc"),
         RMAX.to_value("kpc"),
@@ -189,6 +191,14 @@ def make_base_catalog_galactic(
     )
     r = Quantity(r, "kpc")
 
+    if spiralarms:
+        r, theta, spiralarm = FaucherSpiral()(r, random_state=random_state)
+    else:
+        theta = Quantity(random_state.uniform(0, 2 * np.pi, n_sources), "rad")
+        spiralarm = None
+
+    x, y = astrometry.cartesian(r, theta)
+
     z = draw(
         ZMIN.to_value("kpc"),
         ZMAX.to_value("kpc"),
@@ -197,16 +207,6 @@ def make_base_catalog_galactic(
         random_state=random_state,
     )
     z = Quantity(z, "kpc")
-
-    # Apply spiralarm modelling or not
-    if spiralarms:
-        r, theta, spiralarm = FaucherSpiral()(r, random_state=random_state)
-    else:
-        theta = Quantity(random_state.uniform(0, 2 * np.pi, n_sources), "rad")
-        spiralarm = None
-
-    # Compute cartesian coordinates
-    x, y = astrometry.cartesian(r, theta)
 
     # Draw values from velocity distribution
     v = draw(
@@ -230,55 +230,33 @@ def make_base_catalog_galactic(
     y_moved = y + dy
     z_moved = z + dz
 
-    # Set environment interstellar density
-    n_ISM = n_ISM * np.ones(n_sources)
-
     table = Table()
     table["age"] = Column(age, unit="yr", description="Age of the source")
-    table["n_ISM"] = Column(
-        n_ISM, unit="cm-3", description="Interstellar medium density"
-    )
+    table["n_ISM"] = Column(n_ISM, description="Interstellar medium density")
     if spiralarms:
         table["spiralarm"] = Column(spiralarm, description="Which spiralarm?")
 
-    table["x_birth"] = Column(
-        x, unit="kpc", description="Galactocentric x coordinate at birth"
-    )
-    table["y_birth"] = Column(
-        y, unit="kpc", description="Galactocentric y coordinate at birth"
-    )
-    table["z_birth"] = Column(
-        z, unit="kpc", description="Galactocentric z coordinate at birth"
-    )
+    table["x_birth"] = Column(x, description="Galactocentric x coordinate at birth")
+    table["y_birth"] = Column(y, description="Galactocentric y coordinate at birth")
+    table["z_birth"] = Column(z, description="Galactocentric z coordinate at birth")
 
-    table["x"] = Column(
-        x_moved.to("kpc"), unit="kpc", description="Galactocentric x coordinate"
-    )
-    table["y"] = Column(
-        y_moved.to("kpc"), unit="kpc", description="Galactocentric y coordinate"
-    )
-    table["z"] = Column(
-        z_moved.to("kpc"), unit="kpc", description="Galactocentric z coordinate"
-    )
+    table["x"] = Column(x_moved.to("kpc"), description="Galactocentric x coordinate")
+    table["y"] = Column(y_moved.to("kpc"), description="Galactocentric y coordinate")
+    table["z"] = Column(z_moved.to("kpc"), description="Galactocentric z coordinate")
 
-    table["vx"] = Column(
-        vx.to("km/s"), unit="km/s", description="Galactocentric velocity in x direction"
-    )
-    table["vy"] = Column(
-        vy.to("km/s"), unit="km/s", description="Galactocentric velocity in y direction"
-    )
-    table["vz"] = Column(
-        vz.to("km/s"), unit="km/s", description="Galactocentric velocity in z direction"
-    )
-    table["v_abs"] = Column(
-        v, unit="km/s", description="Galactocentric velocity (absolute)"
-    )
+    table["vx"] = Column(vx, description="Galactocentric velocity in x direction")
+    table["vy"] = Column(vy, description="Galactocentric velocity in y direction")
+    table["vz"] = Column(vz, description="Galactocentric velocity in z direction")
+    table["v_abs"] = Column(v, description="Galactocentric velocity (absolute)")
 
     return table
 
 
 def add_snr_parameters(table):
-    """Add SNR parameters to the table."""
+    """Add SNR parameters to the table.
+
+    TODO: document
+    """
     # Read relevant columns
     age = table["age"].quantity
     n_ISM = table["n_ISM"].quantity
@@ -291,10 +269,10 @@ def add_snr_parameters(table):
     L_SNR = snr.luminosity_tev(age)
 
     # Add columns to table
-    table["E_SN"] = Column(E_SN, unit="erg", description="SNR kinetic energy")
-    table["r_out"] = Column(r_out, unit="pc", description="SNR outer radius")
-    table["r_in"] = Column(r_in, unit="pc", description="SNR inner radius")
-    table["L_SNR"] = Column(L_SNR, unit="s-1", description="SNR luminosity")
+    table["E_SN"] = Column(E_SN, description="SNR kinetic energy")
+    table["r_out"] = Column(r_out.to("pc"), description="SNR outer radius")
+    table["r_in"] = Column(r_in.to("pc"), description="SNR inner radius")
+    table["L_SNR"] = Column(L_SNR, description="SNR photon rate above 1 TeV")
     return table
 
 
@@ -316,7 +294,6 @@ def add_pulsar_parameters(
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
-
     """
     random_state = get_random_state(random_state)
     # Read relevant columns
@@ -357,7 +334,10 @@ def add_pulsar_parameters(
 
 
 def add_pwn_parameters(table):
-    """Add PWN parameters to the table."""
+    """Add PWN parameters to the table.
+
+    TODO: document
+    """
     # Some of the computations (specifically `pwn.radius`) aren't vectorised
     # across all parameters; so here we loop over source parameters explicitly
 
