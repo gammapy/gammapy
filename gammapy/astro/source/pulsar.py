@@ -130,22 +130,6 @@ class Pulsar(SimplePulsar):
         if L_0 is None:
             self.L_0 = 4 * np.pi ** 2 * self.I * self.P_dot_0 / self.P_0 ** 3
 
-    def luminosity_tev(self, t=None, fraction=0.1):
-        """Gamma-ray luminosity assumed to be a certain fraction of the spin-down luminosity.
-
-        Parameters
-        ----------
-        t : `~astropy.units.Quantity`
-            Time after birth of the pulsar.
-        """
-        if t is not None:
-            validate_physical_type("t", t, "time")
-        elif hasattr(self, "age"):
-            t = self.age
-        else:
-            raise ValueError("Need time variable or age attribute.")
-        return self.luminosity_spindown(t) * fraction
-
     def luminosity_spindown(self, t=None):
         """Spin down luminosity  at age t.
 
