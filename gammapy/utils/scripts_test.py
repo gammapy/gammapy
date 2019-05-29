@@ -5,7 +5,7 @@ import sys
 import logging
 from pathlib import Path
 from pkg_resources import working_set
-from subprocess import getstatusoutput
+import subprocess
 import yaml
 
 log = logging.getLogger(__name__)
@@ -35,11 +35,12 @@ def script_test(path):
     """Check if example Python script is broken."""
     log.info("   ... EXECUTING {}".format(str(path)))
 
-    cmd = "python {}".format(path)
-    status, output = getstatusoutput(cmd)
-    if status:
+    cmd = ["python", str(path)]
+    cp = subprocess.run(cmd, capture_output=True)
+    if cp.returncode:
         log.info("   ... FAILED")
-        log.info(output)
+        log.info("   ___ TRACEBACK")
+        log.info(cp.stderr.decode('utf-8')+"\n\n")
         return False
     else:
         log.info("   ... PASSED")
