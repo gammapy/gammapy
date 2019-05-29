@@ -98,7 +98,9 @@ class PWN:
         t = Quantity(t, "yr")
         r_collision = self._radius_free_expansion(self._collision_time)
         r = np.where(
-            t < self._collision_time, self._radius_free_expansion(t).value, r_collision.value
+            t < self._collision_time,
+            self._radius_free_expansion(t).value,
+            r_collision.value,
         )
         return Quantity(r, "cm")
 

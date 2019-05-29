@@ -9,7 +9,7 @@ from ...utils.testing import requires_data, requires_dependency
 from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
-from ...maps import MapAxis, WcsGeom, WcsNDMap, Map
+from ...maps import MapAxis, WcsGeom, Map
 from ...image.models import SkyGaussian
 from ...spectrum.models import PowerLaw
 from ..models import SkyModel, BackgroundModel

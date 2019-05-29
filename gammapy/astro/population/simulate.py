@@ -330,7 +330,9 @@ def add_pulsar_parameters(
     table["Tau0"] = Column(tau_0, unit="yr")
     table["L_PSR"] = Column(l_psr, unit="erg s-1")
     table["L0_PSR"] = Column(l0_psr, unit="erg s-1")
-    table["B_PSR"] = Column(b_psr, unit="Gauss", description="Pulsar magnetic field at the poles")
+    table["B_PSR"] = Column(
+        b_psr, unit="Gauss", description="Pulsar magnetic field at the poles"
+    )
     return table
 
 

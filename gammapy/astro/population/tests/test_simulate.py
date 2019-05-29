@@ -133,7 +133,7 @@ def test_add_pulsar_parameters():
     assert table["L0_PSR"].unit == "erg / s"
     assert_allclose(table["L0_PSR"], [5.36876555682e34, 6.24049160082e35])
     assert table["B_PSR"].unit == "G"
-    assert_allclose(table["B_PSR"], [3.875305e+12, 1.916422e+13], rtol=1e-5)
+    assert_allclose(table["B_PSR"], [3.875305e12, 1.916422e13], rtol=1e-5)
 
 
 def test_add_pwn_parameters():

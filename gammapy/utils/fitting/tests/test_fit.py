@@ -31,7 +31,7 @@ class MyDataset:
             ((x - x_opt) / x_err) ** 2
             + ((y - y_opt) / y_err) ** 2
             + ((z - z_opt) / z_err) ** 2
-    )
+        )
 
 
 @pytest.mark.parametrize("backend", ["minuit"])

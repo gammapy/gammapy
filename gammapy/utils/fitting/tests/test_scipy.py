@@ -72,7 +72,9 @@ def test_scipy_limits(pars, method):
     ds = MyDataset(pars)
     pars["y"].min = 301000
 
-    factors, info, minuit = optimize_scipy(function=ds.fcn, parameters=pars, method=method)
+    factors, info, minuit = optimize_scipy(
+        function=ds.fcn, parameters=pars, method=method
+    )
 
     assert info["success"]
 
