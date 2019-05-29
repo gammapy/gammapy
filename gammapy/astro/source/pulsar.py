@@ -61,7 +61,7 @@ class SimplePulsar:
         """Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
 
         .. math::
-            B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\textnormal(Gauss)]
+            B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\text(Gauss)]
         """
         return B_CONST * np.sqrt(self.P * self.P_dot)
 
@@ -192,7 +192,7 @@ class Pulsar(SimplePulsar):
         """Magnetic field at polar cap (assumed constant).
 
         .. math::
-            B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\textnormal(Gauss)]
+            B = 3.2\\cdot 10^{19} (P\\dot{P})^{1/2} [\\text(Gauss)]
 
         Parameters
         ----------
