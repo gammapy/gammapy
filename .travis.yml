@@ -120,6 +120,11 @@ matrix:
           env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
+        # Test example scripts
+        - os: linux
+          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-scripts'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+
     # You can move builds that temporarily fail because of some non-Gammapy here.
     # Please add a link to a GH issue that tracks the upstream issue.
     # copy the part from the `include` section above here.

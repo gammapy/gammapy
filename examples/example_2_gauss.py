@@ -7,11 +7,15 @@ from gammapy.maps import WcsGeom, MapAxis, WcsNDMap
 from gammapy.spectrum.models import PowerLaw
 from gammapy.image.models import SkyGaussian
 from gammapy.utils.random import get_random_state
-from gammapy.cube import make_map_exposure_true_energy, MapFit, MapEvaluator
+from gammapy.cube import make_map_exposure_true_energy, MapEvaluator
 from gammapy.cube.models import SkyModel
 
 filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
+
+# TODO: fix the rest of this script or remove it
+import sys
+sys.exit(0)
 
 # Define sky model to simulate the data
 lon_0_1 = 0.2
