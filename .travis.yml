@@ -122,7 +122,7 @@ matrix:
 
         # Test example scripts
         - os: linux
-          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-scripts'
+          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
     # You can move builds that temporarily fail because of some non-Gammapy here.
