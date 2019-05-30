@@ -358,7 +358,7 @@ class ReflectedRegionsBackgroundEstimator:
         fig, ax, cbar = self.finder.reference_map.plot(fig=fig, ax=ax)
 
         wcs = self.finder.reference_map.geom.wcs
-        on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(color="red")
+        on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(edgecolor="red")
         ax.add_patch(on_patch)
 
         result = self.result
@@ -379,7 +379,7 @@ class ReflectedRegionsBackgroundEstimator:
             off_regions = result[idx_].off_region
             for off in off_regions:
                 off_patch = off.to_pixel(wcs=wcs).as_artist(
-                    alpha=0.8, color=colors[idx_], label="Obs {}".format(obs.obs_id)
+                    alpha=0.8, edgecolor=colors[idx_], label="Obs {}".format(obs.obs_id)
                 )
                 handle = ax.add_patch(off_patch)
             if off_regions:
