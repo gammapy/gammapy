@@ -47,7 +47,7 @@ builtins._ASTROPY_PACKAGE_NAME_ = PACKAGENAME
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 # We use the format is `x.y` or `x.y.z` or `x.y.dev`
-VERSION = '0.12.dev'
+VERSION = '0.12'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
