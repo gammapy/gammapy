@@ -91,21 +91,24 @@ class ComputePlan:
     def getlocalfolder(self):
         namefolder = ""
 
-        if self.release == "":
-            self.version = version.version
-
         if self.option == "notebooks":
-            namefolder = "notebooks-" + self.version
+            if self.release:
+                namefolder = "notebooks-" + self.release
+            else:
+                namefolder = "notebooks" + version.version
 
         if self.option == "scripts":
-            namefolder = "scripts-" + self.version
+            if self.release:
+                namefolder = "scripts-" + self.release
+            else:
+                namefolder = "scripts" + version.version
 
         if self.option == "datasets":
             if self.modetutorials:
                 if self.release:
                     namefolder = "datasets-" + self.release
                 else:
-                    namefolder = "datasets"
+                    namefolder = "datasets-" + version.version
 
         if namefolder:
             self.outfolder = self.outfolder / namefolder
