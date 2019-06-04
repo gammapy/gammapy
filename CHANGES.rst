@@ -1,7 +1,7 @@
 .. _gammapy_0p13_release:
 
 0.13 (unreleased)
-----------------
+-----------------
 
 - Planned for July 15, 2019
 
