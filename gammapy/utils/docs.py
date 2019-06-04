@@ -129,7 +129,7 @@ def parse_notebooks(folder, url_docs, git_commit):
 
 **This is a fixed-text formatted version of a Jupyter notebook**
 
-- Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-webpage/{git_commit}?urlpath=lab/tree/{nb_filename})
+- Try online [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/gammapy/gammapy-webpage/{release_number_binder}?urlpath=lab/tree/{nb_filename})
 - You can contribute with your own notebooks in this
 [GitHub repository](https://github.com/gammapy/gammapy/tree/master/tutorials).
 - **Source files:**
