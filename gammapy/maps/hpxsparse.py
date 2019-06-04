@@ -149,12 +149,6 @@ class HpxSparseMap(HpxMap):
     def iter_by_image(self):
         raise NotImplementedError
 
-    def iter_by_pix(self):
-        raise NotImplementedError
-
-    def iter_by_coord(self):
-        raise NotImplementedError
-
     def sum_over_axes(self):
         raise NotImplementedError
 

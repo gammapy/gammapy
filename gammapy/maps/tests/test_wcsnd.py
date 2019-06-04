@@ -321,22 +321,6 @@ def test_wcsndmap_interp_by_coord_fill_value():
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
-def test_wcsndmap_iter(npix, binsz, coordsys, proj, skydir, axes):
-    geom = WcsGeom.create(
-        npix=npix, binsz=binsz, proj=proj, coordsys=coordsys, axes=axes
-    )
-    m = WcsNDMap(geom)
-    coords = m.geom.get_coord()
-    m.fill_by_coord(coords, coords[0])
-    for vals, pix in m.iter_by_pix(buffersize=100):
-        assert_allclose(vals, m.get_by_pix(pix))
-    for vals, coords in m.iter_by_coord(buffersize=100):
-        assert_allclose(vals, m.get_by_coord(coords))
-
-
-@pytest.mark.parametrize(
-    ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
-)
 @pytest.mark.parametrize("keepdims", [True, False])
 def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepdims):
     geom = WcsGeom.create(

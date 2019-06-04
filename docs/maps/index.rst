@@ -405,28 +405,8 @@ of the original map will be copied over to the projected map.
 
 .. _mapiter:
 
-Iterating on a Map
+Iterating by image
 ------------------
-
-Iterating over a map can be performed with the `~Map.iter_by_coord` and
-`~Map.iter_by_pix` methods.  These return an iterator that traverses the map
-returning (value, coordinate) pairs with map and pixel coordinates,
-respectively.  The optional ``buffersize`` argument can be used to split the
-iteration into chunks of a given size.  The following example illustrates how
-one can use this method to fill a map with a 2D Gaussian:
-
-.. code:: python
-
-    import numpy as np
-    from astropy.coordinates import SkyCoord
-    from gammapy.maps import Map
-
-    m = Map.create(binsz=0.05, map_type='wcs', width=10.0)
-    for val, coord in m.iter_by_coord(buffersize=10000):
-        skydir = SkyCoord(coord[0],coord[1], unit='deg')
-        sep = skydir.separation(m.geom.center_skydir).deg
-        new_val = np.exp(-sep**2/2.0)
-        m.set_by_coord(coord, new_val)
 
 For maps with non-spatial dimensions the `~Map.iter_by_image` method can be used
 to loop over image slices. The image plane index `idx` is returned in data order,
