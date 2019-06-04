@@ -57,8 +57,7 @@ def background(n_off, alpha):
 
 
 def background_error(n_off, alpha):
-    r"""Estimate standard error on background
-    in the on region from an off-region observation.
+    r"""Estimate standard error on background in the on region from an off-region observation.
 
     .. math::
           \Delta\mu_{bkg} = \alpha \times \sqrt{n_{off}}

@@ -95,27 +95,26 @@ def _s_to_p_direct(significance, one_sided=True):
 
 
 def probability_to_significance_normal_limit(probability):
-    """Convert tail probability to significance
-    in the limit of small p and large s.
+    """Tail probability to significance in small probability limit.
 
-    Reference: Equation (4) of
-    https://ui.adsabs.harvard.edu/abs/2007physics...2156C
+    Reference: https://ui.adsabs.harvard.edu/abs/2007physics...2156C, Equation (4)
+
     They say it is better than 1% for s > 1.6.
 
-    Asymptotically: s ~ sqrt(-log(p))
+    Asymptotically: :math:`s \sim \sqrt{-\log(p)}`
+
+    See also: `significance_to_probability_normal_limit`
     """
     u = -2 * np.log(probability * np.sqrt(2 * np.pi))
     return np.sqrt(u - np.log(u))
 
 
 def significance_to_probability_normal_limit(significance, guess=1e-100):
-    """Convert significance to tail probability
-    in the limit of small p and large s.
+    """Significance to tail probability in large significance limit.
 
-    See p_to_s_limit docstring
-    Note: s^2 = u - log(u) can't be solved analytically.
+    See also: `probability_to_significance_normal_limit`
     """
-
+    # Note: s^2 = u - log(u) can't be solved analytically.
     def f(probability):
         if probability > 0:
             return probability_to_significance_normal_limit(probability) - significance
