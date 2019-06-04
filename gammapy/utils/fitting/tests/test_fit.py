@@ -3,7 +3,6 @@
 import pytest
 from numpy.testing import assert_allclose
 from ..parameter import Parameter, Parameters
-from ..model import Model
 from ..fit import Fit
 from ...testing import requires_dependency
 

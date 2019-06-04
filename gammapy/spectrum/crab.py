@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from ..utils.fitting import Parameters
 from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
 
 __all__ = ["CrabSpectrum"]
