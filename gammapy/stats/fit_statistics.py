@@ -182,9 +182,9 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
 
 def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
-    """Calculate ``mu_bkg`` for wstat
+    """Background estimate ``mu_bkg`` for WSTAT.
 
-    see :ref:`wstat`.
+    See :ref:`wstat`.
     """
     n_on = np.atleast_1d(np.asanyarray(n_on, dtype=np.float64))
     n_off = np.atleast_1d(np.asanyarray(n_off, dtype=np.float64))
@@ -200,9 +200,9 @@ def get_wstat_mu_bkg(n_on, n_off, alpha, mu_sig):
 
 
 def get_wstat_gof_terms(n_on, n_off):
-    """Calculate goodness of fit terms for wstat
+    """Goodness of fit terms for WSTAT.
 
-    see :ref:`wstat`.
+    See :ref:`wstat`.
     """
     term = np.zeros(len(n_on))
 

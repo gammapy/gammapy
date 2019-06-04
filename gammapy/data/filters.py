@@ -47,7 +47,7 @@ class ObservationFilter:
         self.event_filters = event_filters or []
 
     def filter_events(self, events):
-        """Applies the filters to an event list
+        """Apply filters to an event list.
 
         Parameters
         ----------
@@ -68,7 +68,7 @@ class ObservationFilter:
         return filtered_events
 
     def filter_gti(self, gti):
-        """Applies the filters to a GTI table
+        """Apply filters to a GTI table.
 
         Parameters
         ----------
@@ -80,9 +80,7 @@ class ObservationFilter:
         filtered_gti : `~gammapy.data.GTI`
             The filtered GTI table
         """
-        filtered_gti = self._filter_by_time(gti)
-
-        return filtered_gti
+        return self._filter_by_time(gti)
 
     def _filter_by_time(self, data):
         """Returns a new time filtered data object.

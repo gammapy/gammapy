@@ -34,19 +34,19 @@ class ObservationTable(Table):
 
     @property
     def pointing_radec(self):
-        """Pointing positions as ICRS (`~astropy.coordinates.SkyCoord`)"""
+        """Pointing positions as ICRS (`~astropy.coordinates.SkyCoord`)."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
     def pointing_galactic(self):
-        """Pointing positions as Galactic (`~astropy.coordinates.SkyCoord`)"""
+        """Pointing positions as Galactic (`~astropy.coordinates.SkyCoord`)."""
         return SkyCoord(
             self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
         )
 
     @lazyproperty
     def _index_dict(self):
-        """Dict containing row index for all obs ids"""
+        """Dict containing row index for all obs ids."""
         # TODO: Switch to http://docs.astropy.org/en/latest/table/indexing.html once it is more stable
         temp = zip(self["OBS_ID"], np.arange(len(self)))
         return dict(temp)
@@ -82,7 +82,7 @@ class ObservationTable(Table):
         return self[self.get_obs_idx(obs_id)]
 
     def summary(self):
-        """Info string (str)"""
+        """Summary info string (str)."""
         obs_name = self.meta.get("OBSERVATORY_NAME", "N/A")
 
         return "\n".join(

@@ -338,10 +338,9 @@ def fc_fix_limits(lower_limit, upper_limit):
 
 
 def fc_find_limit(x_value, x_values, y_values):
-    r"""
-    Find the limit for a given x measurement
+    r"""Find the limit for a given x measurement.
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    See also: :ref:`feldman_cousins`
 
     Parameters
     ----------
@@ -375,10 +374,9 @@ def fc_find_limit(x_value, x_values, y_values):
 
 
 def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins, prob_limit=1e-5):
-    r"""
-    Function to calculate the average upper limit for a confidence belt
+    r"""Calculate the average upper limit for a confidence belt.
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    See also: :ref:`feldman_cousins`
 
     Parameters
     ----------

@@ -377,7 +377,6 @@ class MapAxis:
         self._nbin = nbin
 
     def __eq__(self, other):
-        """Test axis equality. Absolute and relative tolerances of 1e-6 are used"""
         if not isinstance(other, self.__class__):
             return NotImplemented
 
@@ -860,22 +859,22 @@ class MapCoord:
 
     @property
     def theta(self):
-        """Theta co-latitude angle in radians"""
+        """Theta co-latitude angle in radians."""
         return np.pi / 2.0 - np.radians(self.lat)
 
     @property
     def phi(self):
-        """Phi longitude angle in radians"""
+        """Phi longitude angle in radians."""
         return np.radians(self.lon)
 
     @property
     def coordsys(self):
-        """Coordinate system (str)"""
+        """Coordinate system (str)."""
         return self._coordsys
 
     @property
     def match_by_name(self):
-        """Boolean flag: axis lookup by name (True) or index (False)?"""
+        """Boolean flag: axis lookup by name (True) or index (False)."""
         return self._match_by_name
 
     @property

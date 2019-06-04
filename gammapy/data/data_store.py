@@ -374,7 +374,7 @@ class DataStoreChecker(Checker):
                 }
 
     def check_consistency(self):
-        """Consistency checks between multiple HDUs"""
+        """Check consistency between multiple HDUs."""
         # obs and HDU index should have the same OBS_ID
         obs_table_obs_id = set(self.data_store.obs_table["OBS_ID"])
         hdu_table_obs_id = set(self.data_store.hdu_table["OBS_ID"])

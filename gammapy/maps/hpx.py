@@ -308,8 +308,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
 
 
 def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
-    """TODO
-    """
+    """TODO: document."""
     import healpy as hp
 
     ipix_in = np.arange(12 * nside * nside)
@@ -1728,7 +1727,6 @@ class HpxGeom(MapGeom):
         return str_
 
     def __eq__(self, other):
-        """Test equality between two `~gammapy.maps.HpxGeom`"""
         if not isinstance(other, self.__class__):
             return NotImplemented
 
@@ -1778,27 +1776,27 @@ class HpxToWcsMapping:
 
     @property
     def hpx(self):
-        """The HEALPIX projection"""
+        """HEALPIX projection."""
         return self._hpx
 
     @property
     def wcs(self):
-        """The WCS projection"""
+        """WCS projection."""
         return self._wcs
 
     @property
     def ipix(self):
-        """An array(nx,ny) of the global HEALPIX pixel indices for each WCS pixel"""
+        """An array(nx,ny) of the global HEALPIX pixel indices for each WCS pixel."""
         return self._ipix
 
     @property
     def mult_val(self):
-        """An array(nx,ny) of 1/number of WCS pixels pointing at each HEALPIX pixel"""
+        """An array(nx,ny) of 1/number of WCS pixels pointing at each HEALPIX pixel."""
         return self._mult_val
 
     @property
     def npix(self):
-        """A tuple(nx,ny) of the shape of the WCS grid"""
+        """A tuple(nx,ny) of the shape of the WCS grid."""
         return self._npix
 
     @property
@@ -1808,7 +1806,7 @@ class HpxToWcsMapping:
 
     @property
     def valid(self):
-        """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPIX region?"""
+        """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPIX region."""
         return self._valid
 
     @classmethod

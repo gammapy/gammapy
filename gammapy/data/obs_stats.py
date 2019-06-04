@@ -73,7 +73,7 @@ class ObservationStats(Stats):
 
     @property
     def alpha(self):
-        """Alpha (on / off exposure ratio)
+        """Alpha (on / off exposure ratio).
 
         Override member function from `~gammapy.stats.Stats`
         to take into account weighted alpha by number of Off events
@@ -196,7 +196,7 @@ class SpectrumStats(ObservationStats):
         return ss
 
     def to_dict(self):
-        """TODO: document"""
+        """Convert to dict."""
         data = super().to_dict()
         data["energy_min"] = self.energy_min
         data["energy_max"] = self.energy_max

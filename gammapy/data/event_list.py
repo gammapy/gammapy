@@ -120,7 +120,7 @@ class EventListBase:
 
     @property
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)"""
+        """Time reference (`~astropy.time.Time`)."""
         return time_ref_from_dict(self.table.meta)
 
     @property
@@ -376,10 +376,11 @@ class EventListBase:
             separation = reg.center.separation(position)
             temp = np.where(separation < reg.radius)[0]
             mask = np.union1d(mask, temp)
+
         return mask
 
     def select_parameter(self, parameter, band):
-        """Select events with respect to a specified parameter
+        """Select events with respect to a specified parameter.
 
         Parameters
         ----------
@@ -657,12 +658,12 @@ class EventList(EventListBase):
 
     @property
     def altaz(self):
-        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
+        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)."""
         return self.radec.transform_to(self.altaz_frame)
 
     @property
     def altaz_from_table(self):
-        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
+        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)."""
         lon = self.table["AZ"]
         lat = self.table["ALT"]
         return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
@@ -749,7 +750,7 @@ class EventList(EventListBase):
 
 
 class EventListLAT(EventListBase):
-    """Event list for Fermi-LAT dataset
+    """Event list for Fermi-LAT dataset.
 
     Fermi-LAT data products
     https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html

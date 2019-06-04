@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Gammapy: A Python package for gamma-ray astronomy
+"""Gammapy: A Python package for gamma-ray astronomy.
 
 * Code: https://github.com/gammapy/gammapy
 * Docs: https://docs.gammapy.org/

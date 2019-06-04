@@ -285,7 +285,7 @@ class HDUIndexTable(Table):
         return list(np.unique(np.sort([_.strip() for _ in self["HDU_CLASS"]])))
 
     def summary(self):
-        """Summary report (str)"""
+        """Summary report (str)."""
         obs_id = self.obs_id_unique
         return "\n".join(
             [

@@ -60,24 +60,24 @@ class FixedPointingInfo:
 
     @lazyproperty
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)"""
+        """Time reference (`~astropy.time.Time`)."""
         return time_ref_from_dict(self.meta)
 
     @lazyproperty
     def time_start(self):
-        """Start time (`~astropy.time.Time`)"""
+        """Start time (`~astropy.time.Time`)."""
         t_start = Quantity(self.meta["TSTART"], "second")
         return self.time_ref + t_start
 
     @lazyproperty
     def time_stop(self):
-        """Stop time (`~astropy.time.Time`)"""
+        """Stop time (`~astropy.time.Time`)."""
         t_stop = Quantity(self.meta["TSTOP"], "second")
         return self.time_ref + t_stop
 
     @lazyproperty
     def obstime(self):
-        """Average observation time for the observation (`~astropy.time.Time`)"""
+        """Average observation time for the observation (`~astropy.time.Time`)."""
         return self.time_start + self.duration / 2
 
     @lazyproperty
@@ -180,7 +180,7 @@ class PointingInfo:
 
     @lazyproperty
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)"""
+        """Time reference (`~astropy.time.Time`)."""
         return time_ref_from_dict(self.table.meta)
 
     @lazyproperty
@@ -193,14 +193,14 @@ class PointingInfo:
 
     @lazyproperty
     def time(self):
-        """Time array (`~astropy.time.Time`)"""
+        """Time array (`~astropy.time.Time`)."""
         met = Quantity(self.table["TIME"].astype("float64"), "second")
         time = self.time_ref + met
         return time.tt
 
     @lazyproperty
     def radec(self):
-        """RA / DEC position from table (`~astropy.coordinates.SkyCoord`)"""
+        """RA / DEC position from table (`~astropy.coordinates.SkyCoord`)."""
         lon = self.table["RA_PNT"]
         lat = self.table["DEC_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame="icrs")
@@ -212,12 +212,12 @@ class PointingInfo:
 
     @lazyproperty
     def altaz(self):
-        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)"""
+        """ALT / AZ position computed from RA / DEC (`~astropy.coordinates.SkyCoord`)."""
         return self.radec.transform_to(self.altaz_frame)
 
     @lazyproperty
     def altaz_from_table(self):
-        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)"""
+        """ALT / AZ position from table (`~astropy.coordinates.SkyCoord`)."""
         lon = self.table["AZ_PNT"]
         lat = self.table["ALT_PNT"]
         return SkyCoord(lon, lat, unit="deg", frame=self.altaz_frame)
