@@ -330,7 +330,6 @@ class SpectrumDatasetOnOff(Dataset):
         )
         return np.nan_to_num(on_stat_)
 
-
     @classmethod
     def read(cls, filename):
         """Read from file

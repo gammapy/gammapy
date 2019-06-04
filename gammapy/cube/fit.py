@@ -165,7 +165,7 @@ class MapDataset(Dataset):
         """
         counts, npred = self._counts_data, self.npred().data
 
-        if self.mask is  not None:
+        if self.mask is not None:
             stat = self._stat_sum(counts[self.mask], npred[self.mask])
         else:
             stat = self._stat_sum(counts.ravel(), npred.ravel())

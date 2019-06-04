@@ -15,6 +15,7 @@ aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
 # TODO: fix the rest of this script or remove it
 import sys
+
 sys.exit(0)
 
 # Define sky model to simulate the data

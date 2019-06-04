@@ -40,7 +40,7 @@ def script_test(path):
     if cp.returncode:
         log.info("   ... FAILED")
         log.info("   ___ TRACEBACK")
-        log.info(cp.stderr.decode('utf-8')+"\n\n")
+        log.info(cp.stderr.decode("utf-8") + "\n\n")
         return False
     else:
         log.info("   ... PASSED")
