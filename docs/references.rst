@@ -60,8 +60,8 @@ Software references:
 .. [Robitaille2013] `Robitaille et al. (2013) <https://ui.adsabs.harvard.edu/abs/2013A%26A...558A..33A>`_
    "Astropy: A community Python package for astronomy"
 
-.. [Knoedlseder2012] `Knödlseder et at. (2012) <https://ui.adsabs.harvard.edu/abs/2012ASPC..461...65K>`_
-   "GammaLib: A New Framework for the Analysis of Astronomical Gamma-Ray Data"
+.. [Knoedlseder2016] `Knödlseder et at. (2016) <https://ui.adsabs.harvard.edu/abs/2016A%26A...593A...1K>`_
+   "GammaLib and ctools. A software framework for the analysis of astronomical gamma-ray data"
 
 .. [FSSC2013] `Fermi LAT Collaboration (2013) <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
    "Science Tools: LAT Data Analysis Tools"
