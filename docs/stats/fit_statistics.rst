@@ -44,7 +44,6 @@ signal region, but also a measurement :math:`n_{\mathrm{off}}` in a background
 region you can write down the likelihood formula as
 
 .. math::
-
     L (n_{\mathrm{on}}, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}},
     \mu_{\mathrm{bkg}}) = \frac{(\mu_{\mathrm{sig}}+\alpha
     \mu_{\mathrm{bkg}})^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
@@ -59,7 +58,6 @@ time the negative log likelihood and neglecting model independent and thus
 constant terms, we define the **WStat**.
 
 .. math::
-
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}}
     - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}})}
     - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}})}\big)
@@ -68,8 +66,7 @@ In the most general case, where :math:`\mu_{\mathrm{src}}` and
 :math:`\mu_{\mathrm{bkg}}` are free the minimum of :math:`W` is at
 
 .. math::
-
-    \mu_{\mathrm{sig}} = n_{\mathrm{on}} - \alpha\,n_{\mathrm{off}}   \\
+    \mu_{\mathrm{sig}} = n_{\mathrm{on}} - \alpha\,n_{\mathrm{off}} \\
     \mu_{\mathrm{bkg}} = n_{\mathrm{off}}
 
 
@@ -97,13 +94,11 @@ This yields a quadratic equation for :math:`\mu_{\mathrm{bkg}}`
 with the solution
 
 .. math::
-
     \mu_{\mathrm{bkg}} = \frac{C + D}{2\alpha(\alpha + 1)}
 
 where
 
 .. math::
-
     C = \alpha(n_{\mathrm{on}} + n_{\mathrm{off}}) - (\alpha+1)\mu_{\mathrm{sig}} \\
     D^2 = C^2 + 4 (\alpha+1)\alpha n_{\mathrm{off}} \mu_{\mathrm{sig}}
 
@@ -116,7 +111,6 @@ goodness of the fit. We consider the likelihood of the data
 :math:`n_{\mathrm{on}}` and :math:`n_{\mathrm{off}}`,
 
 .. math::
-
     L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}}, n_{\mathrm{off}}) =
     \frac{n_{\mathrm{on}}^{n_{\mathrm{on}}}}{n_{\mathrm{on}} !}
     \exp{(-n_{\mathrm{on}})}\times
@@ -126,7 +120,6 @@ goodness of the fit. We consider the likelihood of the data
 and add twice the log likelihood
 
 .. math::
-
      2 \log L (n_{\mathrm{on}}, n_{\mathrm{off}}; n_{\mathrm{on}},
      n_{\mathrm{off}}) = 2 (n_{\mathrm{on}} ( \log{(n_{\mathrm{on}})} - 1 ) +
      n_{\mathrm{off}} ( \log{(n_{\mathrm{off}})} - 1))
@@ -134,7 +127,6 @@ and add twice the log likelihood
 to WStat. In doing so, we are computing the likelihood ratio:
 
 .. math::
-
     -2 \log \frac{L(n_{\mathrm{on}},n_{\mathrm{off}},\alpha;
     \mu_{\mathrm{sig}},\mu_{\mathrm{bkg}})}
     {L(n_{\mathrm{on}},n_{\mathrm{off}};n_{\mathrm{on}},n_{\mathrm{off}})}
@@ -147,7 +139,6 @@ Final result
 ^^^^^^^^^^^^
 
 .. math::
-
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
     n_{\mathrm{on}} - n_{\mathrm{off}} - n_{\mathrm{on}}
     (\log{(\mu_{\mathrm{sig}} + \alpha \mu_{\mathrm{bkg}}) -
@@ -165,7 +156,6 @@ treated as follows.
 If :math:`n_{\mathrm{on}} = 0` the likelihood formulae read
 
 .. math::
-
     L (0, n_{\mathrm{off}}, \alpha; \mu_{\mathrm{sig}}, \mu_{\mathrm{bkg}}) =
     \exp{(-(\mu_{\mathrm{sig}}+\alpha \mu_{\mathrm{bkg}}))}\times
     \frac{(\mu_{\mathrm{bkg}})^{n_{\mathrm{off}}}}{n_{\mathrm{off}}
@@ -174,7 +164,6 @@ If :math:`n_{\mathrm{on}} = 0` the likelihood formulae read
 and
 
 .. math::
-
     L (0, n_{\mathrm{off}}; 0, n_{\mathrm{off}}) =
     \frac{n_{\mathrm{off}}^{n_{\mathrm{off}}}}{n_{\mathrm{off}} !}
     \exp{(-n_{\mathrm{off}})}
@@ -183,7 +172,6 @@ WStat is derived by taking 2 times the negative log likelihood and adding the
 goodness of fit term as ever
 
 .. math::
-
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
     n_{\mathrm{off}} - n_{\mathrm{off}} (\log{(\mu_{\mathrm{bkg}})} -
     \log{(n_{\mathrm{off}})})\big)
@@ -195,19 +183,16 @@ The analytical result for
 :math:`\mu_{\mathrm{bkg}}` in this case reads:
 
 .. math::
-
     \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{off}}}{\alpha + 1}
 
 When inserting this into the WStat we find the simplified expression.
 
 .. math::
-
     W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{off}} \log{(1 + \alpha)}\big)
 
 If :math:`n_{\mathrm{off}} = 0` Wstat becomes
 
 .. math::
-
     W = 2 \big(\mu_{\mathrm{sig}} + (1 + \alpha)\mu_{\mathrm{bkg}} -
     n_{\mathrm{on}} - n_{\mathrm{on}} (\log{(\mu_{\mathrm{sig}} + \alpha
     \mu_{\mathrm{bkg}}) - \log{(n_{\mathrm{on}})}})
@@ -215,7 +200,6 @@ If :math:`n_{\mathrm{off}} = 0` Wstat becomes
 and
 
 .. math::
-
     \mu_{\mathrm{bkg}} = \frac{n_{\mathrm{on}}}{1+\alpha} -
     \frac{\mu_{\mathrm{sig}}}{\alpha}
 
@@ -229,14 +213,12 @@ Therefore we distinct two cases. The physical one where
 is straightforward and gives
 
 .. math::
-
     W = -2\big(\mu_{\mathrm{sig}} \left(\frac{1}{\alpha}\right) +
     n_{\mathrm{on}} \log{\left(\frac{\alpha}{1 + \alpha}\right)\big)}
 
 For the unphysical case, we set :math:`\mu_{\mathrm{bkg}}=0` and arrive at
 
 .. math::
-
     W = 2\big(\mu_{\mathrm{sig}} + n_{\mathrm{on}}(\log{(n_{\mathrm{on}})} -
     \log{(\mu_{\mathrm{sig}})} - 1)\big)
 
@@ -285,7 +267,6 @@ All above formulae are equivalent to what is given on the `XSpec manual
 statistics page`_ with the substitutions:
 
 .. math::
-
     \mu_{\mathrm{sig}} = t_s \cdot m_i \\
     \mu_{\mathrm{bkg}} = t_b \cdot m_b \\
     \alpha = t_s / t_b  \\

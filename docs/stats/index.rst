@@ -86,7 +86,7 @@ Confidence Intervals
 
 Assume you measured 6 counts in a Poissonian counting experiment with an
 expected background :math:`b = 3`. Here's how you compute the 90% upper limit on
-the signal strength :math:`\\mu`:
+the signal strength :math:`\mu`:
 
 .. code-block:: python
 

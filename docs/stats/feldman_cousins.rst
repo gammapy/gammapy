@@ -11,14 +11,14 @@ distribution and is not limited to a Poisson process with background or a
 Gaussian with a boundary at the origin.
 
 The basic ingredient to `~gammapy.stats.fc_construct_acceptance_intervals_pdfs`
-is a matrix of :math:`P(X|\\mu)` (see e.g. equation (3.1) and (3.2) in
+is a matrix of :math:`P(X|\mu)` (see e.g. equation (3.1) and (3.2) in
 [Feldman1998]_). Every row is a probability density function (PDF) of x and the
-columns are built up by varying the signal strength :math:`\\mu`. The other
+columns are built up by varying the signal strength :math:`\mu`. The other
 parameter is the desired confidence level (C.L.). The function will return
 another matrix of acceptance intervals where 1 means the point is part of the
 acceptance interval and 0 means it is outside. This can be easily converted to
 upper and lower limits (`~gammapy.stats.fc_get_limits`), which simply connect
-the outside 1s for different :math:`\\mu` values. An upper or lower limit is
+the outside 1s for different :math:`\mu` values. An upper or lower limit is
 obtained by drawing a vertical line at the measured value and calculating the
 intersection (`~gammapy.stats.fc_find_limit`).
 
@@ -26,7 +26,7 @@ Examples
 --------
 
 Assume you have a Poisson background with known mean 3.0. We generate the matrix
-of :math:`P(X|\\mu)` like this
+of :math:`P(X|\mu)` like this
 
 .. code-block:: python
 
@@ -55,17 +55,17 @@ Let's say you measured x = 1, then the 90% upper limit would be:
 
 The following plot shows the confidence belt based on the Feldman and Cousins
 principle for a 90% confidence level for the unknown Poisson signal mean
-:math:`\\mu`. It is a reproduction of Fig. 7 from [Feldman1998]_. It should be
+:math:`\mu`. It is a reproduction of Fig. 7 from [Feldman1998]_. It should be
 noted that the plot in the paper is inconsistent with Table IV from the same
 paper: the lower limit is off by one bin to the left.
 
 .. plot:: stats/plot_fc_poisson.py
 
 Assume you have an experiment where the observable x is simply the measured
-value of :math:`\\mu` in an experiment with a Gaussian resolution with known
-width :math:`\\sigma`. The following plot shows the confidence belt based on the
+value of :math:`\mu` in an experiment with a Gaussian resolution with known
+width :math:`\sigma`. The following plot shows the confidence belt based on the
 Feldman and Cousins principle for a 90% confidence level for the mean of the
-Gaussian :math:`\\mu`, constrained to be non-negative. it reproduces Fig. 10
+Gaussian :math:`\mu`, constrained to be non-negative. it reproduces Fig. 10
 from [Feldman1998]_.
 
 .. plot:: stats/plot_fc_gauss.py
@@ -115,7 +115,7 @@ General Case
 ------------
 
 In the more general case, one may not know the underlying PDF of
-:math:`P(X|\\mu)`. One way would be to generate :math:`P(X|\\mu)` from Monte
+:math:`P(X|\mu)`. One way would be to generate :math:`P(X|\mu)` from Monte
 Carlo simulation. With a dictionary of mu values and lists of X values from
 Monte Carlo one can use `~gammapy.stats.fc_construct_acceptance_intervals` to
 construct the confidence belts.
