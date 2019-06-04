@@ -5,6 +5,10 @@
 
 - Planned for July 15, 2019
 
+The recommended conda environment for Gammapy v0.13 contains some version updates:
+Python 3.7, ipython 7.5, Scipy 1.3, Matplotlib 3.1, Astropy 3.1, healpy 1.12.
+These updates should be backward compatible, your scripts and notebooks should
+run and give the same outputs.
 
 .. _gammapy_0p12_release:
 
