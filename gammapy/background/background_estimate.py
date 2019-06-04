@@ -62,7 +62,7 @@ class BackgroundEstimate:
 
 
 def profile_background_estimate(pos, on_radius, inner_radius, outer_radius, events):
-    """Simple profile background estimation
+    """Simple profile background estimation.
 
     TODO : Replace with AnnulusSkyRegion
 

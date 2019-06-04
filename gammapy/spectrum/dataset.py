@@ -202,7 +202,7 @@ class SpectrumDatasetOnOff(Dataset):
 
     @property
     def lo_threshold(self):
-        """Low energy threshold"""
+        """Low energy threshold."""
         return self.counts.lo_threshold
 
     @lo_threshold.setter
@@ -213,7 +213,7 @@ class SpectrumDatasetOnOff(Dataset):
 
     @property
     def hi_threshold(self):
-        """High energy threshold"""
+        """High energy threshold."""
         return self.counts.hi_threshold
 
     @hi_threshold.setter
@@ -223,14 +223,14 @@ class SpectrumDatasetOnOff(Dataset):
             self.counts_off.hi_threshold = threshold
 
     def reset_thresholds(self):
-        """Reset energy thresholds (i.e. declare all energy bins valid)"""
+        """Reset energy thresholds (i.e. declare all energy bins valid)."""
         self.counts.reset_thresholds()
         if self.counts_off is not None:
             self.counts_off.reset_thresholds()
 
     @property
     def mask_safe(self):
-        """The mask defined by the counts PHACountsSpectrum"""
+        """Inverse of counts spectrum quality mask."""
         return np.logical_not(self.counts.quality)
 
     @mask_safe.setter
@@ -579,21 +579,19 @@ class SpectrumDatasetOnOff(Dataset):
     # This was imported and adapted from the SpectrumObservation class
     @property
     def obs_id(self):
-        """The observation ID of the dataset"""
+        """Observation ID of the dataset."""
         return self.counts.obs_id
 
     # TODO : do we keep SpectrumStats or do we adapt this part of code?
     # This was imported and adapted from the SpectrumObservation class
     @property
     def total_stats(self):
-        """Return total `~gammapy.spectrum.SpectrumStats`
-        """
+        """Total statistics (`~gammapy.spectrum.SpectrumStats`)."""
         return self.stats_in_range(0, self.counts.energy.nbin - 1)
 
     @property
     def total_stats_safe_range(self):
-        """Return total `~gammapy.spectrum.SpectrumStats` within the tresholds
-        """
+        """Total statistics in safe energy range (`~gammapy.spectrum.SpectrumStats`)."""
         safe_bins = self.counts.bins_in_safe_range
         return self.stats_in_range(safe_bins[0], safe_bins[-1])
 
@@ -831,7 +829,7 @@ class SpectrumDatasetOnOffStacker:
         self.stacked_edisp = irf_stacker.stacked_edisp
 
     def stack_obs(self):
-        """Create stacked `~gammapy.spectrum.SpectrumDatasetOnOff`"""
+        """Create stacked `~gammapy.spectrum.SpectrumDatasetOnOff`."""
         self.stacked_obs = SpectrumDatasetOnOff(
             counts=self.stacked_on_vector,
             counts_off=self.stacked_off_vector,

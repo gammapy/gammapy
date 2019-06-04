@@ -169,26 +169,26 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
 
 
 def power_law_g_from_f(e, f, de=1):
-    """Spectral index at a given energy e for a given function f(e)"""
+    """Spectral index at a given energy e for a given function f(e)."""
     e1, e2 = e, e + de
     f1, f2 = f(e1), f(e2)
     return power_law_g_from_points(e1, e2, f1, f2)
 
 
 def power_law_g_from_points(e1, e2, f1, f2):
-    """Spectral index for two given differential flux points"""
+    """Spectral index for two given differential flux points."""
     return -np.log(f2 / f1) / np.log(e2 / e1)
 
 
 def power_law_I_from_points(e1, e2, f1, f2):
-    """Integral flux in energy bin for power law"""
+    """Integral flux in energy bin for power law."""
     g = power_law_g_from_points(e1, e2, f1, f2)
     pl_int_flux = f1 * e1 / (-g + 1) * ((e2 / e1) ** (-g + 1) - 1)
     return pl_int_flux
 
 
 def power_law_f_from_points(e1, e2, f1, f2, e):
-    """Linear interpolation"""
+    """Linear interpolation."""
     logdy = np.log(f2 / f1)
     logdx = np.log(e2 / e1)
     logy = np.log(f1) + np.log(e / e1) * (logdy / logdx)

@@ -14,8 +14,7 @@ __all__ = ["PrimaryFlux", "DMAnnihilation"]
 class PrimaryFlux:
     """DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models by `Cirelli et al.
-    <http://www.marcocirelli.net/PPPC4DMID.html>`_. All available
+    Based on the precomputed models by Cirelli et al. (2016). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
     `~gammapy.spectrum.models.TableModel` for a chosen dark matter mass and
@@ -23,19 +22,20 @@ class PrimaryFlux:
 
     References
     ----------
-    * `2011JCAP...03..051 <hhttps://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * Cirelli et al (2016): http://www.marcocirelli.net/PPPC4DMID.html
     """
 
     channel_registry = {
         "eL": "eL",
         "eR": "eR",
         "e": "e",
-        "muL": "\\[Mu]L",
-        "muR": "\\[Mu]R",
-        "mu": "\\[Mu]",
-        "tauL": "\\[Tau]L",
-        "tauR": "\\[Tau]R",
-        "tau": "\\[Tau]",
+        "muL": r"\[Mu]L",
+        "muR": r"\[Mu]R",
+        "mu": r"\[Mu]",
+        "tauL": r"\[Tau]L",
+        "tauR": r"\[Tau]R",
+        "tau": r"\[Tau]",
         "q": "q",
         "c": "c",
         "b": "b",
@@ -47,14 +47,14 @@ class PrimaryFlux:
         "ZT": "ZT",
         "Z": "Z",
         "g": "g",
-        "gamma": "\\[Gamma]",
+        "gamma": r"\[Gamma]",
         "h": "h",
-        "nu_e": "\\[Nu]e",
-        "nu_mu": "\\[Nu]\\[Mu]",
-        "nu_tau": "\\[Nu]\\[Tau]",
+        "nu_e": r"\[Nu]e",
+        "nu_mu": r"\[Nu]\[Mu]",
+        "nu_tau": r"\[Nu]\[Tau]",
         "V->e": "V->e",
-        "V->mu": "V->\\[Mu]",
-        "V->tau": "V->\\[Tau]",
+        "V->mu": r"V->\[Mu]",
+        "V->tau": r"V->\[Tau]",
     }
 
     table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"

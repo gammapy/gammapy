@@ -91,7 +91,7 @@ class SpectrumExtraction:
             self.spectrum_observations.append(self.process(obs, bkg))
 
     def _alpha_ok(self, bkg):
-        """Check if observation fulfills alpha criterion"""
+        """Check if observation fulfills alpha criterion."""
         condition = bkg.a_off == 0 or bkg.a_on / bkg.a_off > self.max_alpha
         if condition:
             msg = "Skipping because {} / {} > {}"

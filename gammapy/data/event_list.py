@@ -600,7 +600,7 @@ class EventListBase:
 
 
 class EventList(EventListBase):
-    """Event list for IACT dataset
+    """Event list for IACT dataset.
 
     Data format specification: :ref:`gadf:iact-events`
 

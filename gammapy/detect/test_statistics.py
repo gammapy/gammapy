@@ -70,8 +70,7 @@ def f_cash(x, counts, background, model):
 
 
 class TSMapEstimator:
-    """
-    Compute TS map using different optimization methods.
+    r"""Compute TS map using different optimization methods.
 
 
     The map is computed fitting by a single parameter amplitude fit. The fit is
@@ -115,13 +114,12 @@ class TSMapEstimator:
     Negative :math:`TS` values are defined as following:
 
     .. math::
-
-        TS = \\left \\{
-                 \\begin{array}{ll}
-                   -TS & : \\text{if} \\ F < 0 \\\\
-                   \\ \\ TS & : \\text{else}
-                 \\end{array}
-               \\right.
+        TS = \left \{
+                 \begin{array}{ll}
+                   -TS \text{ if } F < 0 \\
+                    TS \text{ else}
+                 \end{array}
+               \right.
 
     Where :math:`F` is the fitted flux amplitude.
 

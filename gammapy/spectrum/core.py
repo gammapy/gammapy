@@ -69,7 +69,7 @@ class CountsSpectrum:
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
-        """Read OGIP format hdulist"""
+        """Read from HDU list in OGIP format."""
         counts_table = Table.read(hdulist[hdu1])
         counts = counts_table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
@@ -138,8 +138,7 @@ class CountsSpectrum:
 
     @property
     def total_counts(self):
-        """Total number of counts
-        """
+        """Total number of counts."""
         return self.data.data.sum()
 
     def plot(
@@ -344,7 +343,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def quality(self):
-        """Bins in safe energy range (1 = bad, 0 = good)"""
+        """Bins in safe energy range (1 = bad, 0 = good)."""
         return self._quality
 
     @quality.setter
@@ -353,7 +352,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def phafile(self):
-        """PHA file associated with the observation"""
+        """PHA file associated with the observation."""
         if isinstance(self.obs_id, list):
             filename = "pha_stacked.fits"
         else:
@@ -362,17 +361,17 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def arffile(self):
-        """ARF associated with the observation"""
+        """ARF associated with the observation."""
         return self.phafile.replace("pha", "arf")
 
     @property
     def rmffile(self):
-        """RMF associated with the observation"""
+        """RMF associated with the observation."""
         return self.phafile.replace("pha", "rmf")
 
     @property
     def bkgfile(self):
-        """Background PHA files associated with the observation"""
+        """Background PHA files associated with the observation."""
         return self.phafile.replace("pha", "bkg")
 
     @property
@@ -383,14 +382,14 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def counts_in_safe_range(self):
-        """Counts with bins outside safe range set to 0"""
+        """Counts with bins outside safe range set to 0."""
         data = self.data.data.copy()
         data[np.nonzero(self.quality)] = 0
         return data
 
     @property
     def lo_threshold(self):
-        """Low energy threshold of the observation (lower bin edge)"""
+        """Low energy threshold of the observation (lower bin edge)."""
         idx = self.bins_in_safe_range[0]
         return self.energy.edges[:-1][idx]
 
@@ -401,7 +400,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def hi_threshold(self):
-        """High energy threshold of the observation (upper bin edge)"""
+        """High energy threshold of the observation (upper bin edge)."""
         idx = self.bins_in_safe_range[-1]
         return self.energy.edges[1:][idx]
 
@@ -413,14 +412,14 @@ class PHACountsSpectrum(CountsSpectrum):
         self.quality[idx] = 1
 
     def reset_thresholds(self):
-        """Reset energy thresholds (i.e. declare all energy bins valid)"""
+        """Reset energy thresholds (declare all energy bins valid)."""
         self.quality = np.zeros_like(self.quality)
 
     def rebin(self, parameter):
         """Rebin.
 
         See `~gammapy.spectrum.CountsSpectrum`.
-        This function treats the quality vector correctly
+        This function treats the quality vector correctly.
         """
         from ..extern.skimage import block_reduce
 
@@ -449,7 +448,7 @@ class PHACountsSpectrum(CountsSpectrum):
 
     @property
     def _backscal_array(self):
-        """Helper function to always return backscal as an array"""
+        """Helper function to always return backscal as an array."""
         if np.isscalar(self.backscal):
             return np.ones(self.energy.nbin) * self.backscal
         else:

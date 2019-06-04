@@ -71,7 +71,7 @@ class SpectrumEvaluator:
         return self.apply_edisp(true_counts)
 
     def integrate_model(self):
-        """Integrate model in true energy space"""
+        """Integrate model in true energy space."""
         if self.aeff is not None:
             # TODO: True energy is converted to model amplitude unit. See issue 869
             ref_unit = None
@@ -118,10 +118,9 @@ class SpectrumEvaluator:
 
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
-    """
-    Integrate 1d function using the log-log trapezoidal rule. If scalar values
+    """Integrate 1d function using the log-log trapezoidal rule.
 
-    for xmin and xmax are passed an oversampled grid is generated using the
+    If scalar values for xmin and xmax are passed an oversampled grid is generated using the
     ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
     oversampling is performed and the integral is computed in the provided
     grid.

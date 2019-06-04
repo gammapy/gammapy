@@ -1019,14 +1019,13 @@ class FluxPointsEstimator:
         return {"norm_err": norm_err}
 
     def estimate_counts(self):
-        """Estimate counts for the flux point
+        """Estimate counts for the flux point.
 
         Returns
         -------
         result : dict
             Dict with an array with one entry per dataset with counts for the flux point.
         """
-
         counts = []
 
         for dataset in self.datasets.datasets:
@@ -1093,7 +1092,7 @@ class FluxPointsEstimator:
         return {"sqrt_ts": sqrt_ts, "ts": ts}
 
     def estimate_norm_scan(self):
-        """Estimate likelihood profile for the norm parameter
+        """Estimate likelihood profile for the norm parameter.
 
         Returns
         -------
@@ -1189,7 +1188,7 @@ class FluxPointsDataset(Dataset):
             )
 
     def data_shape(self):
-        """Shape of the flux points data"""
+        """Shape of the flux points data (tuple)."""
         return self.data.e_ref.shape
 
     @staticmethod
@@ -1198,9 +1197,7 @@ class FluxPointsDataset(Dataset):
 
     @staticmethod
     def _likelihood_chi2_assym(data, model, sigma_n, sigma_p):
-        """
-        Assymetric chi2 statistics for a list of flux points and model.
-        """
+        """Assymetric chi2 statistics for a list of flux points and model."""
         is_p = model > data
         sigma = sigma_n
         sigma[is_p] = sigma_p[is_p]
@@ -1211,7 +1208,7 @@ class FluxPointsDataset(Dataset):
         return self.model(self.data.e_ref)
 
     def likelihood_per_bin(self):
-        """Likelihood per bin given the current model parameters"""
+        """Likelihood per bin given the current model parameters."""
         model = self.flux_pred()
         data = self.data.table["dnde"].quantity
 
@@ -1227,14 +1224,9 @@ class FluxPointsDataset(Dataset):
             pass
 
     def residuals(self):
-        """Compute flux point residuals
+        """Compute flux point residuals (`~numpy.ndarray`).
 
-        Defined as `(data - model) / model`.
-
-        Returns
-        -------
-        residuals : `~numpy.ndarray`
-            Flux point residuals
+        Definition: ``(data - model) / model``
         """
         fp = self.data
         data = fp.table[fp.sed_type].quantity
@@ -1247,8 +1239,7 @@ class FluxPointsDataset(Dataset):
         return residuals
 
     def peek(self, **kwargs):
-        """Plot flux points, best fit model and residuals.
-        """
+        """Plot flux points, best fit model and residuals."""
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
 

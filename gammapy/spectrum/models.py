@@ -38,8 +38,7 @@ class SpectralModel(Model):
     """
 
     def __call__(self, energy):
-        """Call evaluate method of derived classes"""
-        kwargs = dict()
+        kwargs = {}
         for par in self.parameters.parameters:
             quantity = par.quantity
             if quantity.unit.physical_type == "energy":
@@ -434,7 +433,7 @@ class SpectralModel(Model):
 
 
 class ConstantModel(SpectralModel):
-    r"""Constant model
+    r"""Constant model.
 
     .. math:: \phi(E) = k
 
@@ -1067,7 +1066,7 @@ class LogParabola(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
-        """Construct LogParabola from :math:`log_{10}` parametrization"""
+        """Construct from :math:`log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
@@ -1153,7 +1152,7 @@ class TableModel(SpectralModel):
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
-        """Read XSPEC table model
+        """Read XSPEC table model.
 
         The input is a table containing absorbed values from a XSPEC model as a
         function of energy.
@@ -1180,13 +1179,12 @@ class TableModel(SpectralModel):
 
         # Check if parameter value is in range
         table_param = Table.read(filename, hdu="PARAMETERS")
-        param_min = table_param["MINIMUM"]
-        param_max = table_param["MAXIMUM"]
-        if param < param_min or param > param_max:
-            err = "Parameter out of range, param={}, param_min={}, param_max={}".format(
-                param, param_min, param_max
+        pmin = table_param["MINIMUM"]
+        pmax = table_param["MAXIMUM"]
+        if param < pmin or param > pmax:
+            raise ValueError(
+                "Out of range: param={}, min={}, max={}".format(param, pmin, pmax)
             )
-            raise ValueError(err)
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
@@ -1209,9 +1207,9 @@ class TableModel(SpectralModel):
 
     @classmethod
     def read_fermi_isotropic_model(cls, filename, **kwargs):
-        """Read Fermi isotropic diffuse model
+        """Read Fermi isotropic diffuse model.
 
-        see `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
+        See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
 
         Parameters
         ----------
@@ -1457,7 +1455,7 @@ class AbsorbedSpectralModel(SpectralModel):
 
 
 class NaimaModel(SpectralModel):
-    r"""A wrapper for Naima models
+    r"""A wrapper for Naima models.
 
     This class provides an interface with the models defined in the `~naima.models` module.
     The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
@@ -1567,7 +1565,7 @@ class NaimaModel(SpectralModel):
         )
 
     def evaluate(self, energy, **kwargs):
-        """Evaluate the model"""
+        """Evaluate the model."""
         for name, value in kwargs.items():
             setattr(self._particle_distribution, name, value)
 
