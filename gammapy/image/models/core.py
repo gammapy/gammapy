@@ -82,13 +82,9 @@ class SkyPointSource(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        """Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a Gaussian source, we fix it to :math:`0`.
+        """Evaluation radius (`~astropy.coordinates.Angle`).
 
-        Returns
-        -------
-        radius : `~astropy.units.Quantity`
-            Radius
+        Set as zero degrees.
         """
         return 0 * u.deg
 
@@ -159,13 +155,9 @@ class SkyGaussian(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a Gaussian source, we fix it to :math:`5\sigma`.
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
 
-        Returns
-        -------
-        radius : `~astropy.coordinates.Angle`
-           Radius in angular units
+        Set as :math:`5\sigma`.
         """
         return 5 * self.parameters["sigma"].quantity
 
@@ -259,13 +251,9 @@ class SkyDisk(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a Disk source, we fix it to :math:`r_0`.
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
 
-        Returns
-        -------
-        radius : `~astropy.coordinates.Angle`
-            Radius in angular units
+        Set to :math:`r_0`.
         """
         return self.parameters["r_0"].quantity
 
@@ -382,17 +370,11 @@ class SkyEllipse(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For an elliptical source, we fix it to the length of the semi-major axis.
+        """Evaluation radius (`~astropy.coordinates.Angle`).
 
-        Returns
-        -------
-        radius : `~astropy.coordinates.Angle`
-            Radius in angular units
-
+        Set to the length of the semi-major axis.
         """
-        radius = self.parameters["semi_major"].quantity
-        return radius
+        return self.parameters["semi_major"].quantity
 
     @staticmethod
     def compute_norm(semi_major, e):
@@ -474,14 +456,9 @@ class SkyShell(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
 
-        Given by :math:`r_\text{out}`.
-
-        Returns
-        -------
-        radius : `~astropy.coordinates.Angle`
-            Radius in angular units
+        Set to :math:`r_\text{out}`.
         """
         return self.parameters["radius"].quantity + self.parameters["width"].quantity
 
@@ -524,13 +501,9 @@ class SkyDiffuseConstant(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a constant diffuse model, we fix it to None.
+        """Evaluation radius (``None``).
 
-        Returns
-        -------
-        radius : `~astropy.coordinates.Angle`
-             None
+        Set to ``None``.
         """
         return None
 
@@ -583,13 +556,9 @@ class SkyDiffuseMap(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Returns the effective radius of the sky region where the model evaluates to non-zero.
-        For a DiffuseMap source, we fix it to half of the maximal dimension of the map.
+        """Evaluation radius (`~astropy.coordinates.Angle`).
 
-        Returns
-        -------
-        radius : `~astropy.coordinates.Angle`
-            Radius in angular units.
+        Set to half of the maximal dimension of the map.
         """
         return np.max(self.map.geom.width) / 2.0
 
