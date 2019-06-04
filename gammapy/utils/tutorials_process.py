@@ -23,12 +23,6 @@ def ignorefiles(d, files):
     ]
 
 
-def ignoreall(d, files):
-    return [
-        f for f in files if os.path.isfile(os.path.join(d, f)) and f[-6:] != ".ipynb"
-    ]
-
-
 def setup_sphinx_params(args):
     flagnotebooks = "True"
     setupfilename = "setup.cfg"
@@ -91,14 +85,11 @@ def build_notebooks(args):
     )
 
     # test /run
-    passed = True
     for path in path_temp.glob("*.ipynb"):
-        if not notebook_test(path):
-            passed = False
+        notebook_test(path)
 
     # convert into scripts
     # copy generated filled notebooks to doc
-    # if passed:
     try:
         import jupyter
 
@@ -110,7 +101,7 @@ def build_notebooks(args):
 
     if pathsrc == path_empty_nbs:
         # copytree is needed to copy subfolder images
-        copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignoreall)
+        copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignorefiles)
         for path in path_static_nbs.glob("*.ipynb"):
             subprocess.call(
                 [
@@ -142,11 +133,6 @@ def build_notebooks(args):
         pathdest = path_filled_nbs / notebookname
         copyfile(str(pathsrc), str(pathdest))
 
-    # else:
-    #    log.info("Tests have not passed.")
-    #    log.info("Tutorials not ready for documentation building process.")
-    #    rmtree(str(path_static_nbs), ignore_errors=True)
-
     # tear down
     rmtree(str(path_temp), ignore_errors=True)
 
@@ -172,8 +158,6 @@ def main():
     except Exception as ex:
         log.error(ex)
         sys.exit()
-    # if not args.release.startswith("v") and args.release != "master":
-    #    args.release = "v" + args.release
 
     setup_sphinx_params(args)
 
