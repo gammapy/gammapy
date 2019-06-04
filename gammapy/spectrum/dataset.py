@@ -140,8 +140,7 @@ class SpectrumDataset(Dataset):
 
 
 class SpectrumDatasetOnOff(Dataset):
-    """Compute spectral model fit statistic on a ON OFF Spectrum.
-
+    """Compute spectral model fit statistic on a on-off spectrum.
 
     Parameters
     ----------

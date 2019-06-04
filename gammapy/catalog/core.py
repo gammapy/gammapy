@@ -47,8 +47,9 @@ class SourceCatalogObject:
 
     @property
     def _data_python_dict(self):
-        """Convert ``data`` into a Python dict that only contains
-        Python data types, i.e. is readily JSON or YAML serialisable.
+        """Convert ``data`` to a Python dict with Python types.
+
+        The dict is readily JSON or YAML serializable.
         Quantity unit information is stripped.
 
         This is mainly used at the moment to pass the data to
@@ -224,8 +225,9 @@ class SourceCatalog:
 
     @property
     def _data_python_list(self):
-        """Convert catalog into a Python list that only contains
-        Python data types, i.e. is readily JSON or YAML serialisable.
+        """Convert catalog to a Python list with Python types.
+
+        The list is readily JSON or YAML serializable.
         Quantity unit information is stripped.
 
         This is mainly used at the moment to pass the data to

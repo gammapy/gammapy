@@ -12,8 +12,7 @@ __all__ = ["HpxNDMap"]
 
 
 class HpxNDMap(HpxMap):
-    """Representation of a N+2D map using HEALPix with two spatial
-    dimensions and N non-spatial dimensions.
+    """HEALPix map with any number of non-spatial dimensions.
 
     This class uses a N+1D numpy array to represent the sequence of
     HEALPix image planes.  Following the convention of WCS-based maps

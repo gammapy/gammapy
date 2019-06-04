@@ -25,8 +25,7 @@ log = logging.getLogger(__name__)
 
 
 class WcsNDMap(WcsMap):
-    """Representation of a N+2D map using WCS with two spatial dimensions
-    and N non-spatial dimensions.
+    """HEALPix map with any number of non-spatial dimensions.
 
     This class uses an ND numpy array to store map values. For maps with
     non-spatial dimensions and variable pixel size it will allocate an
@@ -323,9 +322,10 @@ class WcsNDMap(WcsMap):
             return self._pad_coadd(geom, pad_width, mode, cval, order)
 
     def _pad_np(self, geom, pad_width, mode, cval):
-        """Pad a map with `~np.pad`.  This method only works for regular
-        geometries but should be more efficient when working with
-        large maps.
+        """Pad a map using ``numpy.pad``.
+
+        This method only works for regular geometries but should be more
+        efficient when working with large maps.
         """
         kwargs = {}
         if mode == "constant":
@@ -520,9 +520,9 @@ class WcsNDMap(WcsMap):
         return ax
 
     def smooth(self, width, kernel="gauss", **kwargs):
-        """
-        Smooth the image (works on a 2D image and returns a copy).
+        """Smooth the map.
 
+        Iterates over 2D image planes, processing one at a time.
 
         Parameters
         ----------

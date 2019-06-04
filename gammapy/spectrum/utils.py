@@ -170,9 +170,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
 
 
 def _trapz_loglog(y, x, axis=-1, intervals=False):
-    """
-    Integrate along the given axis using the composite trapezoidal rule in
-    loglog space.
+    """Integrate using the composite trapezoidal rule in log-log space.
 
     Integrate `y` (`x`) along given axis in loglog space.
 

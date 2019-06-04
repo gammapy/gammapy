@@ -328,25 +328,22 @@ class Map(metaclass=MapMeta):
         hdulist.writeto(filename, overwrite=overwrite)
 
     def iter_by_image(self):
-        """Iterate over image planes of the map returning a tuple with the image
-        array and image plane index.
+        """Iterate over image planes of the map.
+
+        This is a generator yielding ``(data, idx)`` tuples,
+        where ``data`` is a `numpy.ndarray` view of the image plane data,
+        and ``idx`` is a tuple of int, the index of the image plane.
 
         The image plane index is in data order, so that the data array can be
         indexed directly. See :ref:`mapiter` for further information.
-
-        Returns
-        -------
-        val : `~numpy.ndarray`
-            Array of image plane values.
-        idx : tuple
-            Index of image plane.
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
     def iter_by_pix(self, buffersize=1):
-        """Iterate over elements of the map returning a tuple with values and
-        pixel coordinates.
+        """Iterate over elements of the map.
+
+        Generator yielding tuples with values and pixel coordinates.
 
         Parameters
         ----------
@@ -369,8 +366,9 @@ class Map(metaclass=MapMeta):
         )
 
     def iter_by_coord(self, buffersize=1):
-        """Iterate over elements of the map returning a tuple with values and
-        map coordinates.
+        """Iterate over elements of the map.
+
+        Generator yielding tuples with values and map coordinates.
 
         Parameters
         ----------
@@ -398,8 +396,9 @@ class Map(metaclass=MapMeta):
         pass
 
     def coadd(self, map_in):
-        """Add the contents of ``map_in`` to this map.  This method can be
-        used to combine maps containing integral quantities (e.g. counts)
+        """Add the contents of ``map_in`` to this map.
+
+        This method can be used to combine maps containing integral quantities (e.g. counts)
         or differential quantities if the maps have the same binning.
 
         Parameters
@@ -461,8 +460,7 @@ class Map(metaclass=MapMeta):
 
     @abc.abstractmethod
     def pad(self, pad_width, mode="constant", cval=0, order=1):
-        """Pad the spatial dimension of the map by extending the edge of the
-        map by the given number of pixels.
+        """Pad the spatial dimensions of the map.
 
         Parameters
         ----------
@@ -488,8 +486,7 @@ class Map(metaclass=MapMeta):
 
     @abc.abstractmethod
     def crop(self, crop_width):
-        """Crop the spatial dimension of the map by removing a number of
-        pixels from the edge of the map.
+        """Crop the spatial dimensions of the map.
 
         Parameters
         ----------

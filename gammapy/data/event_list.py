@@ -627,6 +627,7 @@ class EventList(EventListBase):
     @property
     def observation_time_duration(self):
         """Observation time duration in seconds (`~astropy.units.Quantity`).
+
         This is a keyword related to IACTs
         The wall time, including dead-time.
         """
@@ -635,6 +636,7 @@ class EventList(EventListBase):
     @property
     def observation_dead_time_fraction(self):
         """Dead-time fraction (float).
+
         This is a keyword related to IACTs
         Defined as dead-time over observation time.
 

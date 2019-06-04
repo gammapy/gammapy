@@ -8,10 +8,7 @@ __all__ = ["reproject_car_to_hpx", "reproject_car_to_wcs"]
 
 
 def _get_input_pix_celestial(wcs_in, wcs_out, shape_out):
-    """
-    Get the pixel coordinates of the pixels in an array of shape ``shape_out``
-    in the input WCS.
-    """
+    """Get the pixel coordinates of the pixels in an array of shape ``shape_out`` in the input WCS."""
     from reproject.wcs_utils import convert_world_coordinates
 
     # TODO: for now assuming that coordinates are spherical, not

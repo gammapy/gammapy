@@ -182,8 +182,7 @@ class Background3D:
     def evaluate_integrate(
         self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs
     ):
-        """Evaluate at given FOV position and energy edges by integrating over the energy
-        axes.
+        """Integrate in a given energy band.
 
         Parameters
         ----------
@@ -333,8 +332,10 @@ class Background2D:
         return fits.BinTableHDU(self.to_table(), name=name)
 
     def evaluate(self, fov_lon, fov_lat, energy_reco, method="linear", **kwargs):
-        """Evaluate at a given FOV position and energy. The fov_lon, fov_lat, energy_reco has to have the same shape
-        since this is a set of points on which you want to evaluate
+        """Evaluate at a given FOV position and energy.
+
+        The fov_lon, fov_lat, energy_reco has to have the same shape
+        since this is a set of points on which you want to evaluate.
 
         To have the same API than background 3D for the
         background evaluation, the offset is ``fov_altaz_lon``.

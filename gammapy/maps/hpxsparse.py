@@ -10,8 +10,7 @@ __all__ = ["HpxSparseMap"]
 
 
 class HpxSparseMap(HpxMap):
-    """Representation of a N+2D map using HEALPIX with two spatial
-    dimensions and N non-spatial dimensions.
+    """HEALPix sparse map with any number of non-spatial dimensions.
 
     This class uses a sparse matrix for HEALPix pixel values.
 

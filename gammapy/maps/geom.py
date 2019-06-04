@@ -169,8 +169,9 @@ def coordsys_to_frame(coordsys):
         raise ValueError("Unrecognized coordinate system: {!r}".format(coordsys))
 
 
+# TODO: remove (or improve)
 def skycoord_to_lonlat(skycoord, coordsys=None):
-    """
+    """Convert SkyCoord to lon, lat, frame.
 
     Returns
     -------
@@ -200,20 +201,19 @@ def lonlat_to_skycoord(lon, lat, coordsys):
 
 
 def pix_tuple_to_idx(pix):
-    """Convert a tuple of pixel coordinate arrays to a tuple of pixel
-    indices.
+    """Convert a tuple of pixel coordinate arrays to a tuple of pixel indices.
 
     Pixel coordinates are rounded to the closest integer value.
 
     Parameters
     ----------
     pix : tuple
-        Tuple of pixel coordinates with one element for each dimension.
+        Tuple of pixel coordinates with one element for each dimension
 
     Returns
     -------
     idx : `~numpy.ndarray`
-        Array of pixel indices.
+        Array of pixel indices
     """
     idx = []
     for p in pix:
@@ -229,14 +229,12 @@ def pix_tuple_to_idx(pix):
 
 
 def axes_pix_to_coord(axes, pix):
-    """Perform pixel to axis coordinates for a list of `~MapAxis`
-    objects.
+    """Perform pixel to axis coordinates for a list of `~MapAxis` objects.
 
     Parameters
     ----------
     axes : list
         List of `~MapAxis`.
-
     pix : tuple
         Tuple of pixel coordinates.
     """
@@ -877,9 +875,7 @@ class MapCoord:
 
     @property
     def match_by_name(self):
-        """Boolean flag indicating whether axis lookup should be performed by
-        name (True) or index (False).
-        """
+        """Boolean flag: axis lookup by name (True) or index (False)?"""
         return self._match_by_name
 
     @property
@@ -1316,8 +1312,9 @@ class MapGeom(metaclass=MapGeomMeta):
 
     @abc.abstractmethod
     def pix_to_idx(self, pix, clip=False):
-        """Convert pixel coordinates to pixel indices.  Returns -1 for pixel
-        coordinates that lie outside of the map.
+        """Convert pixel coordinates to pixel indices.
+
+        Returns -1 for pixel coordinates that lie outside of the map.
 
         Parameters
         ----------
@@ -1368,8 +1365,7 @@ class MapGeom(metaclass=MapGeomMeta):
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def slice_by_idx(self, slices):
-        """Create a new geometry by cutting in the non-spatial dimensions of
-        this geometry.
+        """Create a new geometry by slicing the non-spatial axes.
 
         Parameters
         ----------
@@ -1396,8 +1392,7 @@ class MapGeom(metaclass=MapGeomMeta):
 
     @abc.abstractmethod
     def to_image(self):
-        """Create a 2D geometry by dropping all non-spatial dimensions of this
-        geometry.
+        """Create 2D image geometry (drop non-spatial dimensions).
 
         Returns
         -------
@@ -1408,8 +1403,9 @@ class MapGeom(metaclass=MapGeomMeta):
 
     @abc.abstractmethod
     def to_cube(self, axes):
-        """Create a new geometry by appending a list of non-spatial axes to
-        the present geometry.  This will result in a new geometry with
+        """Append non-spatial axes to create a higher-dimensional geometry.
+
+        This will result in a new geometry with
         N+M dimensions where N is the number of current dimensions and
         M is the number of axes in the list.
 

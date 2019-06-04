@@ -88,9 +88,10 @@ def interp_to_order(interp):
 
 
 def unpack_seq(seq, n=1):
-    """Utility to unpack the first N values of a tuple or list.  Remaining
-    values are put into a single list which is the last element of the
-    return value.  This partially simulates the extended unpacking
+    """Utility to unpack the first N values of a tuple or list.
+
+    Remaining values are put into a single list which is the last element of the
+    return value. This partially simulates the extended unpacking
     functionality available in Python 3.
 
     Parameters

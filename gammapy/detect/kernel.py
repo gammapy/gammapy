@@ -181,9 +181,10 @@ class KernelBackgroundEstimator:
         return counts.copy(data=mask.astype("float"))
 
     def _estimate_background(self, counts, exclusion):
-        """
-        Estimate background by convolving the excluded counts image with
-        the background kernel and renormalizing the image.
+        """Estimate background image.
+
+        Method: convolve the excluded counts image with
+        the background kernel and re-normalise the image.
         """
         counts_excluded = counts.copy(data=counts.data * exclusion.data)
         vals = counts_excluded.convolve(self.kernel_bkg)

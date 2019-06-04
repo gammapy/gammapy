@@ -95,7 +95,7 @@ def _s_to_p_direct(significance, one_sided=True):
 
 
 def probability_to_significance_normal_limit(probability):
-    """Tail probability to significance in small probability limit.
+    r"""Tail probability to significance in small probability limit.
 
     Reference: https://ui.adsabs.harvard.edu/abs/2007physics...2156C, Equation (4)
 

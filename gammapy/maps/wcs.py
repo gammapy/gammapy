@@ -951,12 +951,12 @@ class WcsGeom(MapGeom):
 
 
 def pix2world(wcs, cdelt, crpix, pix):
-    """Perform pixel to world coordinate transformation for a WCS
-    projection with a given pixel size (CDELT) and reference pixel
-    (CRPIX).  This method can be used to perform WCS transformations
+    """Perform pixel to world coordinate transformation.
+
+    For a WCS projection with a given pixel size (CDELT) and reference pixel
+    (CRPIX). This method can be used to perform WCS transformations
     for projections with different pixelizations but the same
-    reference coordinate (CRVAL), projection type, and coordinate
-    system.
+    reference coordinate (CRVAL), projection type, and coordinate system.
 
     Parameters
     ----------

@@ -460,6 +460,7 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
 
 def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
     """Compute the indices of subpixels contained within superpixels.
+
     This function returns an output array with one additional
     dimension of size N for subpixel indices where N is the maximum
     number of subpixels for any pair of ``nside_superpix`` and
@@ -668,14 +669,12 @@ class HpxGeom(MapGeom):
             raise ValueError("Invalid region string: {!r}".format(region))
 
     def local_to_global(self, idx_local):
-        """Compute a local index (partial-sky) from a global (all-sky)
-        index.
+        """Compute a local index (partial-sky) from a global (all-sky) index.
 
         Returns
         -------
         idx_global : tuple
-            A tuple of pixel index vectors with global HEALPIX pixel
-            indices.
+            A tuple of pixel index vectors with global HEALPIX pixel indices
         """
         if self._ipix is None:
             return idx_local
@@ -915,8 +914,9 @@ class HpxGeom(MapGeom):
 
     @property
     def order(self):
-        """ORDER in each band (NSIDE = 2**ORDER).  Set to -1 for bands with
-        NSIDE that is not a power of 2.
+        """ORDER in each band (``NSIDE = 2 ** ORDER``).
+
+        Set to -1 for bands with NSIDE that is not a power of 2.
         """
         return self._order
 
@@ -1003,8 +1003,9 @@ class HpxGeom(MapGeom):
         return self.get_idx()
 
     def to_ud_graded(self, order):
-        """Upgrade or downgrade the resolution of this geometry to the given
-        order.  This method does not preserve the geometry footprint.
+        """Upgrade or downgrade the resolution to the given order.
+
+        This method does not preserve the geometry footprint.
 
         Returns
         -------
@@ -1025,8 +1026,7 @@ class HpxGeom(MapGeom):
         )
 
     def to_swapped(self):
-        """Make a copy of this geometry with a swapped ORDERING.  (NEST->RING
-        or vice versa)
+        """Geometry copy with swapped ORDERING (NEST->RING or vice versa).
 
         Returns
         -------
@@ -1803,22 +1803,17 @@ class HpxToWcsMapping:
 
     @property
     def lmap(self):
-        """An array(nx,ny) giving the mapping of the local HEALPIX pixel
-        indices for each WCS pixel.
-        """
+        """Array ``(nx, ny)`` mapping local HEALPIX pixel indices for each WCS pixel."""
         return self._lmap
 
     @property
     def valid(self):
-        """Array(nx,ny) of bools giving if each WCS pixel in inside the
-        HEALPIX region.
-        """
+        """Array ``(nx, ny)`` of bool: which WCS pixel in inside the HEALPIX region?"""
         return self._valid
 
     @classmethod
     def create(cls, hpx, wcs):
-        """Create an object that maps pixels from HEALPix geometry ``hpx`` to
-        WCS geometry ``wcs``.
+        """Create HEALPix to WCS geometry pixel mapping.
 
         Parameters
         ----------

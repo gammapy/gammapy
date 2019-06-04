@@ -21,9 +21,7 @@ class SourceCatalogRegistry:
 
     @classmethod
     def builtins(cls):
-        """Factory function that make a catalog registry and
-        registers the built-in catalogs.
-        """
+        """Create a catalog registry containing the built-in catalogs."""
         source_catalogs = cls()
 
         from .hess import SourceCatalogHGPS

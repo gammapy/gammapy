@@ -458,9 +458,9 @@ class ConstantModel(SpectralModel):
 
 
 class CompoundSpectralModel(SpectralModel):
-    """Represents the algebraic combination of two
-    `~gammapy.spectrum.models.SpectralModel`
+    """Arithmetic combination of two spectral models.
 
+    Itself again a spectral model.
     """
 
     def __init__(self, model1, model2, operator):
