@@ -13,7 +13,7 @@ class SNR:
 
     The model is based on the Sedov-Taylor solution for strong explosions.
 
-    Reference: http://adsabs.harvard.edu/abs/1950RSPSA.201..159T
+    Reference: https://ui.adsabs.harvard.edu/abs/1950RSPSA.201..159T
 
     Parameters
     ----------
@@ -128,7 +128,7 @@ class SNR:
             \left(\frac{\rho_{ISM}}{1.66\cdot 10^{-24} g/cm^{3}} \right)
             \text{ s}^{-1}
 
-        Reference: http://adsabs.harvard.edu/abs/1994A%26A...287..959D (Formula (7)).
+        Reference: https://ui.adsabs.harvard.edu/abs/1994A%26A...287..959D (Formula (7)).
 
         Parameters
         ----------
@@ -198,7 +198,7 @@ class SNR:
 class SNRTrueloveMcKee(SNR):
     """SNR model according to Truelove & McKee (1999).
 
-    Reference: http://adsabs.harvard.edu/abs/1999ApJS..120..299T
+    Reference: https://ui.adsabs.harvard.edu/abs/1999ApJS..120..299T
     """
 
     def __init__(self, *args, **kwargs):

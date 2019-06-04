@@ -72,10 +72,10 @@ class CrabSpectrum:
 
     The following references are available:
 
-    * 'meyer', http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
-    * 'hegra', http://adsabs.harvard.edu/abs/2000ApJ...539..317A
-    * 'hess_pl' and 'hess_ecpl': http://adsabs.harvard.edu/abs/2006A%26A...457..899A
-    * 'magic_lp' and 'magic_ecpl': http://adsabs.harvard.edu/abs/2015JHEAp...5...30A
+    * 'meyer', https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
+    * 'hegra', https://ui.adsabs.harvard.edu/abs/2000ApJ...539..317A
+    * 'hess_pl' and 'hess_ecpl': https://ui.adsabs.harvard.edu/abs/2006A%26A...457..899A
+    * 'magic_lp' and 'magic_ecpl': https://ui.adsabs.harvard.edu/abs/2015JHEAp...5...30A
 
     Parameters
     ----------

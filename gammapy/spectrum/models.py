@@ -1378,11 +1378,11 @@ class Absorption:
         References
         ----------
         .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",
-            `Link <http://adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
+            `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
         .. [2] Dominguez et al., " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
-            `Link <http://adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
+            `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
         .. [3] Finke et al., "Modeling the Extragalactic Background Light from Stars and Dust"
-            `Link <http://adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
+            `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
         """
         models = dict()
         models["franceschini"] = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"

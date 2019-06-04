@@ -31,7 +31,7 @@ class Paczynski1990(Fittable1DModel):
     .. math::
         f(r) = A r_{exp}^{-2} \exp \left(-\frac{r}{r_{exp}} \right)
 
-    Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
+    Reference: https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ class CaseBattacharya1998(Fittable1DModel):
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ \alpha \exp
         \left[ -\beta \left( \frac{ r - r_{\odot}}{r_{\odot}} \right) \right]
 
-    Reference: http://adsabs.harvard.edu//abs/1998ApJ...504..761C (Formula (14))
+    Reference: https://ui.adsabs.harvard.edu/abs/1998ApJ...504..761C (Formula (14))
 
     Parameters
     ----------
@@ -109,7 +109,7 @@ class YusifovKucuk2004(Fittable1DModel):
 
     Used by Faucher-Guigere and Kaspi. Density at ``r = 0`` is nonzero.
 
-    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (15))
+    Reference: https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (15))
 
     Parameters
     ----------
@@ -155,7 +155,7 @@ class YusifovKucuk2004B(Fittable1DModel):
 
     Derived empirically from OB-stars distribution.
 
-    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (17))
+    Reference: https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (17))
 
     Parameters
     ----------
@@ -194,7 +194,7 @@ class FaucherKaspi2006(Fittable1DModel):
         f(r) = A \frac{1}{\sqrt{2 \pi} \sigma} \exp
         \left(- \frac{(r - r_0)^2}{2 \sigma ^ 2}\right)
 
-    Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F (Appendix B)
+    Reference: https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F (Appendix B)
 
     Parameters
     ----------
@@ -234,7 +234,7 @@ class Lorimer2006(Fittable1DModel):
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ B \exp
         \left[ -C \left( \frac{r - r_{\odot}}{r_{\odot}} \right) \right]
 
-    Reference: http://adsabs.harvard.edu/abs/2006MNRAS.372..777L (Formula (10))
+    Reference: https://ui.adsabs.harvard.edu/abs/2006MNRAS.372..777L (Formula (10))
 
     Parameters
     ----------
@@ -386,7 +386,7 @@ class LogSpiral:
 class FaucherSpiral(LogSpiral):
     """Milky way spiral arm used in Faucher et al (2006).
 
-    Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
+    Reference: https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
 
     # Parameters
@@ -488,7 +488,7 @@ class FaucherSpiral(LogSpiral):
 class ValleeSpiral(LogSpiral):
     """Milky way spiral arm model from Vallee (2008).
 
-    Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
+    Reference: https://ui.adsabs.harvard.edu/abs/2008AJ....135.1301V
     """
 
     # Model parameters

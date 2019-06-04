@@ -127,7 +127,7 @@ class EffectiveAreaTable:
 
         Parametrizations of the effective areas of different Cherenkov
         telescopes taken from Appendix B of Abramowski et al. (2010), see
-        http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
+        https://ui.adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
 
         .. math::
             A_{eff}(E) = g_1 \left(\frac{E}{\mathrm{MeV}}\right)^{-g_2}\exp{\left(-\frac{g_3}{E}\right)}

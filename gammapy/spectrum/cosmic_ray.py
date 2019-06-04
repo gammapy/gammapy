@@ -37,7 +37,7 @@ def cosmic_ray_flux(energy, particle="proton"):
     """Cosmic ray flux at Earth.
 
     These are the spectra assumed in this CTA study:
-    Table 3 in http://adsabs.harvard.edu/abs/2013APh....43..171B
+    Table 3 in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
 
     The hadronic spectra are simple power-laws, the electron spectrum
     is the sum of  a power law and a log-normal component to model the

@@ -987,7 +987,7 @@ class SourceCatalog3FGL(SourceCatalog):
 
         The classes are described in Table 3 of the 3FGL paper:
 
-        http://adsabs.harvard.edu/abs/2015arXiv150102003T
+        https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
 
         Parameters
         ----------
@@ -1049,7 +1049,7 @@ class SourceCatalog3FGL(SourceCatalog):
 class SourceCatalog1FHL(SourceCatalog):
     """Fermi-LAT 1FHL source catalog.
 
-    Reference: http://adsabs.harvard.edu/abs/2013ApJS..209...34A
+    Reference: https://ui.adsabs.harvard.edu/abs/2013ApJS..209...34A
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject1FHL`.
     """
@@ -1081,7 +1081,7 @@ class SourceCatalog1FHL(SourceCatalog):
 class SourceCatalog2FHL(SourceCatalog):
     """Fermi-LAT 2FHL source catalog.
 
-    Reference: http://adsabs.harvard.edu/abs/2016ApJS..222....5A
+    Reference: https://ui.adsabs.harvard.edu/abs/2016ApJS..222....5A
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
@@ -1115,7 +1115,7 @@ class SourceCatalog2FHL(SourceCatalog):
 class SourceCatalog3FHL(SourceCatalog):
     """Fermi-LAT 3FHL source catalog.
 
-    Reference: http://adsabs.harvard.edu/abs/2017ApJS..232...18A
+    Reference: https://ui.adsabs.harvard.edu/abs/2017ApJS..232...18A
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """
@@ -1158,7 +1158,7 @@ class SourceCatalog3FHL(SourceCatalog):
 
         The classes are described in Table 3 of the 3FGL paper:
 
-        http://adsabs.harvard.edu/abs/2015arXiv150102003T
+        https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
 
         Parameters
         ----------

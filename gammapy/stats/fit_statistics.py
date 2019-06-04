@@ -40,7 +40,7 @@ def cash(n_on, mu_on):
     * `Sherpa help page on the Cash statistic
       <http://cxc.harvard.edu/sherpa/ahelp/cash.html>`_
     * `Cash 1979, ApJ 228, 939
-      <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
+      <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_on = np.asanyarray(n_on)
     mu_on = np.asanyarray(mu_on)
@@ -88,7 +88,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     * `Sherpa help page on the C statistic
       <http://cxc.harvard.edu/sherpa/ahelp/cash.html>`_
     * `Cash 1979, ApJ 228, 939
-      <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
+      <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
     mu_on = np.asanyarray(mu_on, dtype=np.float64)

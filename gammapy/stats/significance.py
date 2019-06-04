@@ -99,7 +99,7 @@ def probability_to_significance_normal_limit(probability):
     in the limit of small p and large s.
 
     Reference: Equation (4) of
-    http://adsabs.harvard.edu/abs/2007physics...2156C
+    https://ui.adsabs.harvard.edu/abs/2007physics...2156C
     They say it is better than 1% for s > 1.6.
 
     Asymptotically: s ~ sqrt(-log(p))

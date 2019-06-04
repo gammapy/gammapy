@@ -184,7 +184,7 @@ class DataStoreObservation:
         Dead-time is defined as the time during the observation
         where the detector didn't record events:
         https://en.wikipedia.org/wiki/Dead_time
-        https://adsabs.harvard.edu/abs/2004APh....22..285F
+        https://ui.adsabs.harvard.edu/abs/2004APh....22..285F
 
         The dead-time fraction is used in the live-time computation,
         which in turn is used in the exposure and flux computation.

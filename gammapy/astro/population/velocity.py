@@ -22,7 +22,7 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
         f(v) = A \sqrt{ \frac{2}{\pi}} \frac{v ^ 2}{\sigma ^ 3 }
                \exp \left(-\frac{v ^ 2}{2 \sigma ^ 2} \right)
 
-    Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
+    Reference: https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F
 
     Parameters
     ----------
@@ -54,7 +54,7 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
         \exp \left(-\frac{v^2}{2\sigma_1^2} \right) + \frac{1-w}{\sigma_2^3}
         \exp \left(-\frac{v^2}{2\sigma_2^2} \right) \right]
 
-    Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F (Formula (7))
+    Reference: https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F (Formula (7))
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ class Paczynski1990Velocity(Fittable1DModel):
     .. math::
         f(v) = A\frac{4}{\pi} \frac{1}{v_0 \left[1 + (v / v_0) ^ 2 \right] ^ 2}
 
-    Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (3))
+    Reference: https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (3))
 
     Parameters
     ----------

@@ -140,7 +140,7 @@ class LightCurve:
         ----------
         .. [Vaughan2003] "On characterizing the variability properties of X-ray light
            curves from active galaxies", Vaughan et al. (2003)
-           http://adsabs.harvard.edu/abs/2003MNRAS.345.1271V
+           https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V
         """
         flux = self.table["flux"].data.astype("float64")
         flux_err = self.table["flux_err"].data.astype("float64")
@@ -689,7 +689,7 @@ class LightCurveEstimator:
         """Compute light curve.
 
         Implementation follows what is done in:
-        http://adsabs.harvard.edu/abs/2010A%26A...520A..83H.
+        https://ui.adsabs.harvard.edu/abs/2010A%26A...520A..83H
 
         To be discussed: assumption that threshold energy in the
         same in reco and true energy.

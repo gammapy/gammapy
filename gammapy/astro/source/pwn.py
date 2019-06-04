@@ -51,7 +51,7 @@ class PWN:
     def _radius_free_expansion(self, t):
         """Radius at age t during free expansion phase.
 
-        Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
+        Reference: https://ui.adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
         """
         term1 = (self.snr.e_sn ** 3 * self.pulsar.L_0 ** 2) / (self.snr.m_ejecta ** 5)
         return (1.44 * term1 ** (1.0 / 10) * t ** (6.0 / 5)).cgs
@@ -88,7 +88,7 @@ class PWN:
         After the collision with the reverse shock of the SNR, the radius is
         assumed to be constant (See `~gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`).
 
-        Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
+        Reference: https://ui.adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
 
         Parameters
         ----------

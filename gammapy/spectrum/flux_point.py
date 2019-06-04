@@ -314,7 +314,7 @@ class FluxPoints:
     def to_sed_type(self, sed_type, method="log_center", model=None, pwl_approx=False):
         """Convert to a different SED type (return new `FluxPoints`).
 
-        See: http://adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
+        See: https://ui.adsabs.harvard.edu/abs/1995NIMPA.355..541L for details
         on the `'lafferty'` method.
 
         Parameters

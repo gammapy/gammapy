@@ -23,7 +23,7 @@ class PrimaryFlux:
 
     References
     ----------
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051 <hhttps://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     channel_registry = {
@@ -164,7 +164,7 @@ class DMAnnihilation(SpectralModel):
 
     References
     ----------
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     __slots__ = ["mass", "channel", "scale", "jfactor", "z", "k", "primary_flux"]

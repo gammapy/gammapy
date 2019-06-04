@@ -75,7 +75,7 @@ class CWT:
     References
     ----------
     R. Terrier et al (2001) "Wavelet analysis of EGRET data"
-    See http://adsabs.harvard.edu/abs/2001ICRC....7.2923T
+    See https://ui.adsabs.harvard.edu/abs/2001ICRC....7.2923T
     """
 
     def __init__(

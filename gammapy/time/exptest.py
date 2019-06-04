@@ -27,7 +27,7 @@ def exptest(time_delta):
     References
     ----------
     .. [1] Prahl (1999), "A fast unbinned test on event clustering in Poisson processes",
-       `Link <http://adsabs.harvard.edu/abs/1999astro.ph..9399P>`_
+       `Link <https://ui.adsabs.harvard.edu/abs/1999astro.ph..9399P>`_
     """
     mean_time = np.mean(time_delta)
     normalized_time_delta = time_delta / mean_time

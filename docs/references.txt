@@ -31,7 +31,7 @@
 .. _pip install instructions: https://pip.pypa.io/en/latest/installing.html#install-pip
 .. _conda: https://conda.io/docs/
 .. _conda cheat sheet: https://conda.io/docs/_downloads/conda-cheatsheet.pdf
-.. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
+.. _PyFACT: https://ui.adsabs.harvard.edu/abs/2012AIPC.1505..789R
 .. _healpy: https://healpy.readthedocs.io/en/latest/
 .. _HEALPix: https://en.wikipedia.org/wiki/HEALPix
 .. _PyYAML: https://pypi.org/project/PyYAML/

@@ -73,8 +73,8 @@ class NFWProfile(DMProfile):
 
     References
     ----------
-    * `1997ApJ...490..493 <http://adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `1997ApJ...490..493 <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -111,8 +111,8 @@ class EinastoProfile(DMProfile):
 
     References
     ----------
-    * `1965TrAlm...5...87E <http://adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `1965TrAlm...5...87E <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
@@ -151,8 +151,8 @@ class IsothermalProfile(DMProfile):
 
     References
     ----------
-    * `1991MNRAS.249..523B <http://adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `1991MNRAS.249..523B <https://ui.adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
@@ -183,8 +183,8 @@ class BurkertProfile(DMProfile):
 
     References
     ----------
-    * `1995ApJ...447L..25B <http://adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `1995ApJ...447L..25B <https://ui.adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
@@ -217,8 +217,8 @@ class MooreProfile(DMProfile):
 
     References
     ----------
-    * `2004MNRAS.353..624D <http://adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
-    * `2011JCAP...03..051 <http://adsabs.harvard.edu/abs/2011JCAP...03..051>`_
+    * `2004MNRAS.353..624D <https://ui.adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
+    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051>`_
     """
 
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc

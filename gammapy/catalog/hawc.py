@@ -152,7 +152,7 @@ class SourceCatalog2HWC(SourceCatalog):
     References
     ----------
     .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
-       On ADS: `2017ApJ...843...40A <http://adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
+       On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
     """
 
     name = "2hwc"

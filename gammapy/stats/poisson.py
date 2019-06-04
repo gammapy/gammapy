@@ -198,7 +198,7 @@ def significance(n_on, mu_bkg, method="lima", n_on_min=1):
     References
     ----------
     .. [1] Li and Ma, "Analysis methods for results in gamma-ray astronomy",
-       `Link <http://adsabs.harvard.edu/abs/1983ApJ...272..317L>`_
+       `Link <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L>`_
 
     See Also
     --------
@@ -283,7 +283,7 @@ def significance_on_off(n_on, n_off, alpha, method="lima"):
     References
     ----------
     .. [1] Li and Ma, "Analysis methods for results in gamma-ray astronomy",
-       `Link <http://adsabs.harvard.edu/abs/1983ApJ...272..317L>`_
+       `Link <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L>`_
 
     See Also
     --------
@@ -350,7 +350,7 @@ def _significance_direct(n_on, mu_bkg):
 def _significance_direct_on_off(n_on, n_off, alpha):
     """Compute significance directly via Poisson probability.
 
-    Reference: http://adsabs.harvard.edu/abs/1993NIMPA.328..570A
+    Reference: https://ui.adsabs.harvard.edu/abs/1993NIMPA.328..570A
 
     You can use this method for small n_on < 10.
     In this case the Li & Ma formula isn't correct any more.
@@ -375,7 +375,7 @@ def _significance_direct_on_off(n_on, n_off, alpha):
 def excess_ul_helene(excess, excess_error, significance):
     """Compute excess upper limit using the Helene method.
 
-    Reference: http://adsabs.harvard.edu/abs/1984NIMPA.228..120H
+    Reference: https://ui.adsabs.harvard.edu/abs/1984NIMPA.228..120H
 
     Parameters
     ----------
