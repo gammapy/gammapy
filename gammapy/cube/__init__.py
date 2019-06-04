@@ -9,3 +9,5 @@ from .edisp_map import *
 from .make import *
 from .fit import *
 from .simulate import *
+from .energy_axis import *
+
