@@ -40,25 +40,25 @@ class SimplePulsar:
 
     @property
     def luminosity_spindown(self):
-        """Spin-down luminosity (`~astropy.units.Quantity`).
+        r"""Spin-down luminosity (`~astropy.units.Quantity`).
 
-        .. math:: \\dot{L} = 4\\pi^2 I \\frac{\\dot{P}}{P^{3}}
+        .. math:: \dot{L} = 4\pi^2 I \frac{\dot{P}}{P^{3}}
         """
         return 4 * np.pi ** 2 * self.I * self.P_dot / self.P ** 3
 
     @property
     def tau(self):
-        """Characteristic age (`~astropy.units.Quantity`).
+        r"""Characteristic age (`~astropy.units.Quantity`).
 
-        .. math:: \\tau = \\frac{P}{2\\dot{P}}
+        .. math:: \tau = \frac{P}{2\dot{P}}
         """
         return (self.P / (2 * self.P_dot)).to("yr")
 
     @property
     def magnetic_field(self):
-        """Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
+        r"""Magnetic field strength at the polar cap (`~astropy.units.Quantity`).
 
-        .. math:: B = 3.2 \\cdot 10^{19} (P\\dot{P})^{1/2} \\text{ Gauss}
+        .. math:: B = 3.2 \cdot 10^{19} (P\dot{P})^{1/2} \text{ Gauss}
         """
         return B_CONST * np.sqrt(self.P * self.P_dot)
 
@@ -111,10 +111,10 @@ class Pulsar(SimplePulsar):
             self.L_0 = 4 * np.pi ** 2 * self.I * self.P_dot_0 / self.P_0 ** 3
 
     def luminosity_spindown(self, t):
-        """Spin down luminosity.
+        r"""Spin down luminosity.
 
         .. math::
-            \\dot{L}(t) = \\dot{L}_0 \\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{n + 1}{n - 1}}
+            \dot{L}(t) = \dot{L}_0 \left(1 + \frac{t}{\tau_0}\right)^{\frac{n + 1}{n - 1}}
 
         Parameters
         ----------
@@ -125,11 +125,11 @@ class Pulsar(SimplePulsar):
         return self.L_0 * (1 + (t / self.tau_0)) ** self.beta
 
     def energy_integrated(self, t):
-        """Total energy released by a given time.
+        r"""Total energy released by a given time.
 
         Time-integrated spin-down luminosity since birth.
 
-        .. math:: E(t) = \\dot{L}_0 \\tau_0 \\frac{t}{t + \\tau_0}
+        .. math:: E(t) = \dot{L}_0 \tau_0 \frac{t}{t + \tau_0}
 
         Parameters
         ----------
@@ -140,10 +140,10 @@ class Pulsar(SimplePulsar):
         return self.L_0 * self.tau_0 * (t / (t + self.tau_0))
 
     def period(self, t):
-        """Rotation period.
+        r"""Rotation period.
 
         .. math::
-            P(t) = P_0\\left(1 + \\frac{t}{\\tau_0}\\right)^{\\frac{1}{n - 1}}
+            P(t) = P_0 \left(1 + \frac{t}{\tau_0}\right)^{\frac{1}{n - 1}}
 
         Parameters
         ----------
@@ -154,12 +154,12 @@ class Pulsar(SimplePulsar):
         return self.P_0 * (1 + (t / self.tau_0)) ** self.beta
 
     def period_dot(self, t):
-        """Period derivative at age t.
+        r"""Period derivative at age t.
 
         P_dot for a given period and magnetic field B, assuming a dipole
         spin-down.
 
-        .. math:: \\dot{P}(t) = \\frac{B^2}{3.2 \\cdot 10^{19} P(t)}
+        .. math:: \dot{P}(t) = \frac{B^2}{3.2 \cdot 10^{19} P(t)}
 
         Parameters
         ----------
@@ -170,9 +170,9 @@ class Pulsar(SimplePulsar):
         return self.B ** 2 / (self.period(t) * B_CONST ** 2)
 
     def tau(self, t):
-        """Characteristic age at real age t.
+        r"""Characteristic age at real age t.
 
-        .. math:: \\tau = \\frac{P}{2\\dot{P}}
+        .. math:: \tau = \frac{P}{2\dot{P}}
 
         Parameters
         ----------
@@ -183,10 +183,10 @@ class Pulsar(SimplePulsar):
         return self.period(t) / 2 * self.period_dot(t)
 
     def magnetic_field(self, t):
-        """Magnetic field at polar cap (assumed constant).
+        r"""Magnetic field at polar cap (assumed constant).
 
         .. math::
-            B = 3.2 \\cdot 10^{19} (P\\dot{P})^{1/2} \\text{ Gauss}
+            B = 3.2 \cdot 10^{19} (P\dot{P})^{1/2} \text{ Gauss}
 
         Parameters
         ----------

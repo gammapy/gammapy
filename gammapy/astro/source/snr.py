@@ -52,20 +52,20 @@ class SNR:
             self.age = Quantity(age, "yr")
 
     def radius(self, t):
-        """Outer shell radius at age t.
+        r"""Outer shell radius at age t.
 
         The radius during the free expansion phase is given by:
 
         .. math::
-            r_{SNR}(t) \\approx 0.01
-            \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{1/2}
-            \\left(\\frac{M_{ej}}{M_{\\odot}}\\right)^{-1/2} t
-            \\text{ pc}
+            r_{SNR}(t) \approx 0.01
+            \left(\frac{E_{SN}}{10^{51}erg}\right)^{1/2}
+            \left(\frac{M_{ej}}{M_{\odot}}\right)^{-1/2} t
+            \text{ pc}
 
         The radius during the Sedov-Taylor phase evolves like:
 
         .. math::
-            r_{SNR}(t) \\approx \\left(\\frac{E_{SN}}{\\rho_{ISM}}\\right)^{1/5}t^{2/5}
+            r_{SNR}(t) \approx \left(\frac{E_{SN}}{\rho_{ISM}}\right)^{1/5}t^{2/5}
 
         Parameters
         ----------
@@ -115,7 +115,7 @@ class SNR:
         return self.radius(t) * (1 - fraction)
 
     def luminosity_tev(self, t, energy_min="1 TeV"):
-        """Gamma-ray luminosity above ``energy_min`` at age ``t``.
+        r"""Gamma-ray luminosity above ``energy_min`` at age ``t``.
 
         The luminosity is assumed constant in a given age interval and zero
         before and after. The assumed spectral index is 2.1.
@@ -123,10 +123,10 @@ class SNR:
         The gamma-ray luminosity above 1 TeV is given by:
 
         .. math::
-            L_{\\gamma}(\\geq 1TeV) \\approx 10^{34} \\theta
-            \\left(\\frac{E_{SN}}{10^{51} erg}\\right)
-            \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24} g/cm^{3}} \\right)
-            \\text{ s}^{-1}
+            L_{\gamma}(\geq 1TeV) \approx 10^{34} \theta
+            \left(\frac{E_{SN}}{10^{51} erg}\right)
+            \left(\frac{\rho_{ISM}}{1.66\cdot 10^{-24} g/cm^{3}} \right)
+            \text{ s}^{-1}
 
         Reference: http://adsabs.harvard.edu/abs/1994A%26A...287..959D (Formula (7)).
 
@@ -154,7 +154,7 @@ class SNR:
 
     @lazyproperty
     def sedov_taylor_begin(self):
-        """Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution begins.
+        r"""Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution begins.
 
         The beginning of the Sedov-Taylor phase of the SNR is defined by the condition,
         that the swept up mass of the surrounding medium equals the mass of the
@@ -163,11 +163,11 @@ class SNR:
         The time scale is given by:
 
         .. math::
-            t_{begin} \\approx 200
-            \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{-1/2}
-            \\left(\\frac{M_{ej}}{M_{\\odot}}\\right)^{5/6}
-            \\left(\\frac{\\rho_{ISM}}{10^{-24}g/cm^3}\\right)^{-1/3}
-            \\text{yr}
+            t_{begin} \approx 200
+            \left(\frac{E_{SN}}{10^{51}erg}\right)^{-1/2}
+            \left(\frac{M_{ej}}{M_{\odot}}\right)^{5/6}
+            \left(\frac{\rho_{ISM}}{10^{-24}g/cm^3}\right)^{-1/3}
+            \text{yr}
         """
         term1 = (self.e_sn / Quantity(1e51, "erg")) ** (-1.0 / 2)
         term2 = (self.m_ejecta / const.M_sun) ** (5.0 / 6)
@@ -176,7 +176,7 @@ class SNR:
 
     @lazyproperty
     def sedov_taylor_end(self):
-        """Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution ends.
+        r"""Characteristic time scale when the Sedov-Taylor phase of the SNR's evolution ends.
 
         The end of the Sedov-Taylor phase of the SNR is defined by the condition, that the
         temperature at the shock drops below T = 10^6 K.
@@ -184,11 +184,11 @@ class SNR:
         The time scale is given by:
 
         .. math::
-            t_{end} \\approx 43000
-            \\left(\\frac{m}{1.66\\cdot 10^{-24}g}\\right)^{5/6}
-            \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{1/3}
-            \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24}g/cm^3}\\right)^{-1/3}
-            \\text{yr}
+            t_{end} \approx 43000
+            \left(\frac{m}{1.66\cdot 10^{-24}g}\right)^{5/6}
+            \left(\frac{E_{SN}}{10^{51}erg}\right)^{1/3}
+            \left(\frac{\rho_{ISM}}{1.66\cdot 10^{-24}g/cm^3}\right)^{-1/3}
+            \text{yr}
         """
         term1 = 3 * const.m_p.cgs / (100 * const.k_B.cgs * self.t_stop)
         term2 = (self.e_sn / self.rho_ISM) ** (2.0 / 5)
@@ -213,24 +213,24 @@ class SNRTrueloveMcKee(SNR):
         )
 
     def radius(self, t):
-        """Outer shell radius at age t.
+        r"""Outer shell radius at age t.
 
         The radius during the free expansion phase is given by:
 
         .. math::
-            R_{SNR}(t) = 1.12R_{ch}\\left(\\frac{t}{t_{ch}}\\right)^{2/3}
+            R_{SNR}(t) = 1.12R_{ch}\left(\frac{t}{t_{ch}}\right)^{2/3}
 
         The radius during the Sedov-Taylor phase evolves like:
 
         .. math::
-            R_{SNR}(t) = \\left[R_{SNR, ST}^{5/2} + \\left(2.026\\frac{E_{SN}}
-            {\\rho_{ISM}}\\right)^{1/2}(t - t_{ST})\\right]^{2/5}
+            R_{SNR}(t) = \left[R_{SNR, ST}^{5/2} + \left(2.026\frac{E_{SN}}
+            {\rho_{ISM}}\right)^{1/2}(t - t_{ST})\right]^{2/5}
 
         Using the characteristic dimensions:
 
         .. math::
-            R_{ch} = M_{ej}^{1/3}\\rho_{ISM}^{-1/3} \\ \\
-            \\text{and} \\ \\ t_{ch} = E_{SN}^{-1/2}M_{ej}^{5/6}\\rho_{ISM}^{-1/3}
+            R_{ch} = M_{ej}^{1/3}\rho_{ISM}^{-1/3} \ \
+            \text{and} \ \ t_{ch} = E_{SN}^{-1/2}M_{ej}^{5/6}\rho_{ISM}^{-1/3}
 
         Parameters
         ----------
@@ -271,26 +271,26 @@ class SNRTrueloveMcKee(SNR):
 
     @lazyproperty
     def sedov_taylor_begin(self):
-        """Characteristic time scale when the Sedov-Taylor phase starts.
+        r"""Characteristic time scale when the Sedov-Taylor phase starts.
 
-        Given by :math:`t_{ST} \\approx 0.52 t_{ch}`.
+        Given by :math:`t_{ST} \approx 0.52 t_{ch}`.
         """
         return 0.52 * self.t_c
 
     def radius_reverse_shock(self, t):
-        """Reverse shock radius at age t.
+        r"""Reverse shock radius at age t.
 
         Initially the reverse shock co-evolves with the radius of the SNR:
 
         .. math::
-            R_{RS}(t) = \\frac{1}{1.19}r_{SNR}(t)
+            R_{RS}(t) = \frac{1}{1.19}r_{SNR}(t)
 
-        After a time :math:`t_{core} \\simeq 0.25t_{ch}` the reverse shock reaches
+        After a time :math:`t_{core} \simeq 0.25t_{ch}` the reverse shock reaches
         the core and then propagates as:
 
         .. math::
-            R_{RS}(t) = \\left[1.49 - 0.16 \\frac{t - t_{core}}{t_{ch}} - 0.46
-            \\ln \\left(\\frac{t}{t_{core}}\\right)\\right]\\frac{R_{ch}}{t_{ch}}t
+            R_{RS}(t) = \left[1.49 - 0.16 \frac{t - t_{core}}{t_{ch}} - 0.46
+            \ln \left(\frac{t}{t_{core}}\right)\right]\frac{R_{ch}}{t_{ch}}t
 
         Parameters
         ----------

@@ -26,10 +26,10 @@ ZMIN, ZMAX = Quantity([-0.5, 0.5], "kpc")
 
 
 class Paczynski1990(Fittable1DModel):
-    """Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
+    r"""Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
 
     .. math ::
-        f(r) = A r_{exp}^{-2} \\exp \\left(-\\frac{r}{r_{exp}} \\right)
+        f(r) = A r_{exp}^{-2} \exp \left(-\frac{r}{r_{exp}} \right)
 
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
 
@@ -60,11 +60,11 @@ class Paczynski1990(Fittable1DModel):
 
 
 class CaseBattacharya1998(Fittable1DModel):
-    """Radial distribution of the surface density of supernova remnants in the galaxy - Case & Battacharya 1998.
+    r"""Radial distribution of the surface density of supernova remnants in the galaxy - Case & Battacharya 1998.
 
     .. math ::
-        f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ \\alpha \\exp
-        \\left[ -\\beta \\left( \\frac{ r - r_{\\odot}}{r_{\\odot}} \\right) \\right]
+        f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ \alpha \exp
+        \left[ -\beta \left( \frac{ r - r_{\odot}}{r_{\odot}} \right) \right]
 
     Reference: http://adsabs.harvard.edu//abs/1998ApJ...504..761C (Formula (14))
 
@@ -101,11 +101,11 @@ class CaseBattacharya1998(Fittable1DModel):
 
 
 class YusifovKucuk2004(Fittable1DModel):
-    """Radial distribution of the surface density of pulsars in the galaxy - Yusifov & Kucuk 2004.
+    r"""Radial distribution of the surface density of pulsars in the galaxy - Yusifov & Kucuk 2004.
 
-    .. math ::
-        f(r) = A \\left ( \\frac{r + r_1}{r_{\\odot} + r_1} \\right )^a \\exp
-        \\left [-b \\left( \\frac{r - r_{\\odot}}{r_{\\odot} + r_1} \\right ) \\right ]
+    .. math::
+        f(r) = A \left ( \frac{r + r_1}{r_{\odot} + r_1} \right )^a \exp
+        \left [-b \left( \frac{r - r_{\odot}}{r_{\odot} + r_1} \right ) \right ]
 
     Used by Faucher-Guigere and Kaspi. Density at ``r = 0`` is nonzero.
 
@@ -147,11 +147,11 @@ class YusifovKucuk2004(Fittable1DModel):
 
 
 class YusifovKucuk2004B(Fittable1DModel):
-    """Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
+    r"""Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
 
     .. math ::
-        f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ a
-        \\exp \\left[ -b \\left( \\frac{r}{r_{\\odot}} \\right) \\right]
+        f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ a
+        \exp \left[ -b \left( \frac{r}{r_{\odot}} \right) \right]
 
     Derived empirically from OB-stars distribution.
 
@@ -228,11 +228,11 @@ class FaucherKaspi2006(Fittable1DModel):
 
 
 class Lorimer2006(Fittable1DModel):
-    """Radial distribution of the surface density of pulsars in the galaxy - Lorimer 2006.
+    r"""Radial distribution of the surface density of pulsars in the galaxy - Lorimer 2006.
 
-    .. math ::
-        f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ B \\exp
-        \\left[ -C \\left( \\frac{r - r_{\\odot}}{r_{\\odot}} \\right) \\right]
+    .. math::
+        f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ B \exp
+        \left[ -C \left( \frac{r - r_{\odot}}{r_{\odot}} \right) \right]
 
     Reference: http://adsabs.harvard.edu/abs/2006MNRAS.372..777L (Formula (10))
 
@@ -269,10 +269,10 @@ class Lorimer2006(Fittable1DModel):
 
 
 class Exponential(Fittable1DModel):
-    """Exponential distribution.
+    r"""Exponential distribution.
 
     .. math ::
-        f(z) = A \\exp \\left(- \\frac{|z|}{z_0} \\right)
+        f(z) = A \exp \left(- \frac{|z|}{z_0} \right)
 
     Usually used for height distribution above the Galactic plane,
     with 0.05 kpc as a commonly used birth height distribution.

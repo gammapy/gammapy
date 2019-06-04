@@ -16,11 +16,11 @@ VMIN, VMAX = Quantity([0, 4000], "km/s")
 
 
 class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
-    """Maxwellian pulsar velocity distribution.
+    r"""Maxwellian pulsar velocity distribution.
 
     .. math ::
-        f(v) = A \\sqrt{ \\frac{2}{\\pi}} \\frac{v ^ 2}{\\sigma ^ 3 }
-               \\exp \\left(-\\frac{v ^ 2}{2 \\sigma ^ 2} \\right)
+        f(v) = A \sqrt{ \frac{2}{\pi}} \frac{v ^ 2}{\sigma ^ 3 }
+               \exp \left(-\frac{v ^ 2}{2 \sigma ^ 2} \right)
 
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
 
@@ -47,12 +47,12 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
 
 
 class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
-    """Bimodal pulsar velocity distribution - Faucher & Kaspi (2006).
+    r"""Bimodal pulsar velocity distribution - Faucher & Kaspi (2006).
 
     .. math ::
-        f(v) = A\\sqrt{\\frac{2}{\\pi}} v^2 \\left[\\frac{w}{\\sigma_1^3}
-        \\exp \\left(-\\frac{v^2}{2\\sigma_1^2} \\right) + \\frac{1-w}{\\sigma_2^3}
-        \\exp \\left(-\\frac{v^2}{2\\sigma_2^2} \\right) \\right]
+        f(v) = A\sqrt{\frac{2}{\pi}} v^2 \left[\frac{w}{\sigma_1^3}
+        \exp \left(-\frac{v^2}{2\sigma_1^2} \right) + \frac{1-w}{\sigma_2^3}
+        \exp \left(-\frac{v^2}{2\sigma_2^2} \right) \right]
 
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F (Formula (7))
 
@@ -88,10 +88,10 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
 
 
 class Paczynski1990Velocity(Fittable1DModel):
-    """Distribution by Lyne 1982 and adopted by Paczynski and Faucher.
+    r"""Distribution by Lyne 1982 and adopted by Paczynski and Faucher.
 
     .. math ::
-        f(v) = A\\frac{4}{\\pi} \\frac{1}{v_0 \\left[1 + (v / v_0) ^ 2 \\right] ^ 2}
+        f(v) = A\frac{4}{\pi} \frac{1}{v_0 \left[1 + (v / v_0) ^ 2 \right] ^ 2}
 
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (3))
 

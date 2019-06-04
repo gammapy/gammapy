@@ -39,7 +39,7 @@ click.disable_unicode_literals_warning = True
     is_eager=True,
     help="Print version and exit.",
 )
-def cli(log_level, ignore_warnings):
+def cli(log_level, ignore_warnings):  # noqa: D301
     """Gammapy command line interface (CLI).
 
     Gammapy is a Python package for gamma-ray astronomy.
@@ -72,7 +72,7 @@ def cli_image():
 
 @cli.group("download", short_help="Download datasets and notebooks")
 @click.pass_context
-def cli_download(ctx):
+def cli_download(ctx):  # noqa: D301
     """Download notebooks, scripts and datasets.
 
     \b
@@ -110,7 +110,7 @@ def cli_download(ctx):
 @cli.group("jupyter", short_help="Perform actions on notebooks")
 @click.option("--src", default=".", help="Local folder or Jupyter notebook filename.")
 @click.pass_context
-def cli_jupyter(ctx, src):
+def cli_jupyter(ctx, src):  # noqa: D301
     """
     Perform a series of actions on Jupyter notebooks.
 

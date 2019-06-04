@@ -363,7 +363,7 @@ class MultiGauss2D:
 
 
 def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
-    """Compute image moments with uncertainties for sum of Gaussians.
+    r"""Compute image moments with uncertainties for sum of Gaussians.
 
     The moments are computed analytically, the formulae are documented below.
 
@@ -416,27 +416,26 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     The 0th moment (total flux) is given by:
 
     .. math::
-        F_{\\Sigma} = \\int_{-\\infty}^{\\infty}f_{\\Sigma}(x, y)dx dy =
-        \\sum_i^N F_i
+        F_{\Sigma} = \int_{-\infty}^{\infty}f_{\Sigma}(x, y)dx dy =
+        \sum_i^N F_i
 
     The 1st moments (position) are given by:
 
     .. math::
-        x_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}x
-        f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N x_iF_i
+        x_{\Sigma} = \frac{1}{F_{\Sigma}} \int_{-\infty}^{\infty}x
+        f_{\Sigma}(x, y)dx dy = \frac{1}{F_{\Sigma}}\sum_i^N x_iF_i
 
-        y_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}y
-        f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N y_iF_i
+        y_{\Sigma} = \frac{1}{F_{\Sigma}} \int_{-\infty}^{\infty}y
+        f_{\Sigma}(x, y)dx dy = \frac{1}{F_{\Sigma}}\sum_i^N y_iF_i
 
     The 2nd moments (extension) are given by:
 
     .. math::
-        \\sigma_{\\Sigma_x}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
-        \\cdot (\\sigma_i^2 + x_i^2) - x_{\\Sigma}^2
+        \sigma_{\Sigma_x}^2 = \frac{1}{F_{\Sigma}} \sum_i^N F_i
+        \cdot (\sigma_i^2 + x_i^2) - x_{\Sigma}^2
 
-        \\sigma_{\\Sigma_y}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
-        \\cdot (\\sigma_i^2 + y_i^2) - y_{\\Sigma}^2
-
+        \sigma_{\Sigma_y}^2 = \frac{1}{F_{\Sigma}} \sum_i^N F_i
+        \cdot (\sigma_i^2 + y_i^2) - y_{\Sigma}^2
     """
     import uncertainties
 

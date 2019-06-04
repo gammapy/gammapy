@@ -76,14 +76,14 @@ class PWN:
         return Quantity(fsolve(time_coll, 4e3), "yr")
 
     def radius(self, t):
-        """Radius of the PWN at age t.
+        r"""Radius of the PWN at age t.
 
         During the free expansion phase the radius of the PWN evolves like:
 
         .. math::
-            R_{PWN}(t) = 1.44 \\left(\\frac{E_{SN}^3\\dot{E}_0^2}
-            {M_{ej}^5}\\right)^{1/10}t^{6/5}
-            \\text{pc}
+            R_{PWN}(t) = 1.44 \left(\frac{E_{SN}^3\dot{E}_0^2}
+            {M_{ej}^5}\right)^{1/10}t^{6/5}
+            \text{pc}
 
         After the collision with the reverse shock of the SNR, the radius is
         assumed to be constant (See `~gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`).
