@@ -61,7 +61,6 @@ Steps to prepare for the release (e.g. a week before) to check that things are i
    Links are at https://github.com/gammapy/gammapy#status-shields
 #. Check that the changelog is complete, by going through the list of Github issues for the
    release milestone.
-#. Update MyBinder Dockerfile changing the Gammapy release number in three different lines. 
 
 Make release
 ------------
@@ -75,8 +74,9 @@ Steps for the day of the release:
 #. Update the Gammapy stable branch to point to the new tag
    as described `here <http://docs.astropy.org/en/latest/development/releasing.html>`__.
 #. Add the new version of docs in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
-#. Add the environment and tutorials YAML files in `gammapy-webpage` `Github repository <https://github.com/gammapy/gammapy-webpage>`__
-#. Edit the Binder link in README.rst file to point to the released version branch
+#. Add the environment and tutorials YAML files, as well as the JSON datasets file in `gammapy-webpage` `Github repository <https://github.com/gammapy/gammapy-webpage>`__
+#. Update the Binder Dockerfile in the `gammapy-webpage` Github repository, changing the Gammapy release number in four different
+   lines, and create the tag release accordingly in the `master` branch.
 #. Draft the release announcement as a new file in https://github.com/gammapy/gammapy/tree/master/dev/notes
    (usually by copy & pasting the announcement from the last release)
 #. Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
