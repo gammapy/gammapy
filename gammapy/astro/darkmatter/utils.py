@@ -29,9 +29,9 @@ class JFactory:
     def compute_differential_jfactor(self):
         r"""Compute differential J-Factor.
 
-        .. math ::
+        .. math::
             \frac{\mathrm d J}{\mathrm d \Omega} =
-           \int_{\mathrm{LoS}} \mathrm d r \rho(r)
+            \int_{\mathrm{LoS}} \mathrm d r \rho(r)
         """
         # TODO: Needs to be implemented more efficiently
         separation = self.geom.separation(self.geom.center_skydir)
@@ -44,7 +44,7 @@ class JFactory:
     def compute_jfactor(self):
         r"""Compute astrophysical J-Factor.
 
-        .. math ::
+        .. math::
             J(\Delta\Omega) =
            \int_{\Delta\Omega} \mathrm d \Omega^{\prime}
            \frac{\mathrm d J}{\mathrm d \Omega^{\prime}}

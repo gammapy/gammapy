@@ -23,7 +23,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     r"""
     Analytical acceptance interval for Gaussian with boundary at the origin.
 
-    .. math :: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
+    .. math:: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
 
     For more information see :ref:`documentation <feldman_cousins>`.
 
@@ -105,7 +105,7 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
 def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     r"""Analytical acceptance interval for Poisson process with background.
 
-    .. math :: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
+    .. math:: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
 
     For more information see :ref:`documentation <feldman_cousins>`.
 

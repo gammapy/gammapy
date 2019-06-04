@@ -28,7 +28,7 @@ ZMIN, ZMAX = Quantity([-0.5, 0.5], "kpc")
 class Paczynski1990(Fittable1DModel):
     r"""Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
 
-    .. math ::
+    .. math::
         f(r) = A r_{exp}^{-2} \exp \left(-\frac{r}{r_{exp}} \right)
 
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
@@ -62,7 +62,7 @@ class Paczynski1990(Fittable1DModel):
 class CaseBattacharya1998(Fittable1DModel):
     r"""Radial distribution of the surface density of supernova remnants in the galaxy - Case & Battacharya 1998.
 
-    .. math ::
+    .. math::
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ \alpha \exp
         \left[ -\beta \left( \frac{ r - r_{\odot}}{r_{\odot}} \right) \right]
 
@@ -149,7 +149,7 @@ class YusifovKucuk2004(Fittable1DModel):
 class YusifovKucuk2004B(Fittable1DModel):
     r"""Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
 
-    .. math ::
+    .. math::
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ a
         \exp \left[ -b \left( \frac{r}{r_{\odot}} \right) \right]
 
@@ -190,7 +190,7 @@ class YusifovKucuk2004B(Fittable1DModel):
 class FaucherKaspi2006(Fittable1DModel):
     r"""Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
 
-    .. math ::
+    .. math::
         f(r) = A \frac{1}{\sqrt{2 \pi} \sigma} \exp
         \left(- \frac{(r - r_0)^2}{2 \sigma ^ 2}\right)
 
@@ -271,7 +271,7 @@ class Lorimer2006(Fittable1DModel):
 class Exponential(Fittable1DModel):
     r"""Exponential distribution.
 
-    .. math ::
+    .. math::
         f(z) = A \exp \left(- \frac{|z|}{z_0} \right)
 
     Usually used for height distribution above the Galactic plane,
