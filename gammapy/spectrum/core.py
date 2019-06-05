@@ -396,7 +396,7 @@ class PHACountsSpectrum(CountsSpectrum):
     @lo_threshold.setter
     def lo_threshold(self, thres):
         idx = np.where((self.energy.edges[:-1]) < thres)[0]
-        self.quality[idx] = 1
+        self._quality[idx] = 1
 
     @property
     def hi_threshold(self):
@@ -409,7 +409,7 @@ class PHACountsSpectrum(CountsSpectrum):
         idx = np.where((self.energy.edges[:-1]) > thres)[0]
         if len(idx) != 0:
             idx = np.insert(idx, 0, idx[0] - 1)
-        self.quality[idx] = 1
+        self._quality[idx] = 1
 
     def reset_thresholds(self):
         """Reset energy thresholds (declare all energy bins valid)."""
