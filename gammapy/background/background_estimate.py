@@ -1,17 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from regions import CircleSkyRegion
 
 
-__all__ = ["BackgroundEstimate", "profile_background_estimate"]
+__all__ = ["BackgroundEstimate"]
 
 
 class BackgroundEstimate:
     """Container class for background estimate.
 
     This container holds the result from a region based background estimation
-    for one observation. Currently, it is filled by the functions
-    :func:`~gammapy.background.profile_background_estimate` and
-    the `~gammapy.background.ReflectedRegionsBackgroundEstimator`.
+    for one observation.
+
+    Created e.g. by `~gammapy.background.ReflectedRegionsBackgroundEstimator`.
 
     Parameters
     ----------
@@ -59,46 +58,3 @@ class BackgroundEstimate:
         ss += "\n {}".format(self.off_region)
         ss += "\n {}".format(self.off_events)
         return ss
-
-
-def profile_background_estimate(pos, on_radius, inner_radius, outer_radius, events):
-    """Simple profile background estimation.
-
-    TODO : Replace with AnnulusSkyRegion
-
-    Parameters
-    ----------
-    pos : `~astropy.coordinates.SkyCoord`
-        On region radius
-    on_radius : `~astropy.coordinates.Angle`
-        On region radius
-    inner_radius, outer_radius : `~astropy.coordinates.Angle`
-        Inner and outer ring radius
-    events : `~gammapy.data.EventList`
-        Event list
-
-    Returns
-    -------
-    bkg : `~gammapy.data.BackgroundEstimate`
-        Background estimate
-    """
-    on_region = CircleSkyRegion(center=pos, radius=on_radius)
-    on_events = events.select_circular_region(on_region)
-
-    off_region = dict(inner=inner_radius, outer=outer_radius)
-    off_events = events.select_sky_ring(pos, inner_radius, outer_radius)
-
-    # TODO: change to region areas here (e.g. in steratian?)
-    a_on = 1
-    a_off = (outer_radius ** 2 - inner_radius ** 2) / on_radius ** 2
-    # a_off = ring_area_factor(on_radius, inner_radius, outer_radius).value
-
-    return BackgroundEstimate(
-        on_region=on_region,
-        on_events=on_events,
-        off_region=off_region,
-        off_events=off_events,
-        a_on=a_on,
-        a_off=a_off,
-        method="ring",
-    )
