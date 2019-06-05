@@ -255,12 +255,12 @@ class SpectrumDatasetOnOff(Dataset):
         energy = self.counts.energy.edges
 
         if emin is None:
-            mask_lo = np.ones_like(energy, dtype="bool")
+            mask_lo = np.ones(len(energy)-1, dtype="bool")
         else:
             mask_lo = energy[:-1] >= emin
 
         if emax is None:
-            mask_hi = np.ones_like(energy, dtype="bool")
+            mask_hi = np.ones(len(energy)-1, dtype="bool")
         else:
             mask_hi = energy[1:] <= emax
 

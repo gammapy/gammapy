@@ -59,7 +59,7 @@ class TestSpectrumDataset:
         range = self.dataset.energy_range
         assert range.unit == u.TeV
         assert_allclose(range.to_value('TeV'), [0.1, 10.])
-        
+
     def test_cash(self):
         """Simple CASH fit to the on vector"""
 
@@ -132,8 +132,7 @@ class TestSpectrumDatasetOnOff:
 
         self.livetime = 1000 * u.s
 
-    def test_init_no_model(self):
-        dataset = SpectrumDatasetOnOff(
+        self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
@@ -141,34 +140,41 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
 
+
+    def test_init_no_model(self):
         with pytest.raises(AttributeError):
-            dataset.npred()
+            self.dataset.npred()
 
         with pytest.raises(AttributeError):
-            p = dataset.parameters
+            self.dataset.parameters
 
     def test_alpha(self):
-        dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
-            counts_off=self.off_counts,
-            aeff=self.aeff,
-            edisp=self.edisp,
-            livetime=self.livetime,
-        )
-
-        assert dataset.alpha.shape == (4,)
-        assert_allclose(dataset.alpha, 0.1)
+        assert self.dataset.alpha.shape == (4,)
+        assert_allclose(self.dataset.alpha, 0.1)
 
     def test_data_shape(self):
+        assert self.dataset.data_shape == self.on_counts.data.data.shape
+
+    def test_mask_safe_setter(self):
+        with pytest.raises(ValueError):
+            self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype='float')
+
+    def test_reset_thresholds(self):
+        cnts = self.on_counts.copy()
+        quality = np.ones(self.dataset.data_shape)
+        quality[1:-1] = 0
+        cnts.quality = quality
         dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
+            counts=cnts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
         )
 
-        assert dataset.data_shape == self.on_counts.data.data.shape
+        assert_allclose(dataset.lo_threshold.to_value('TeV'),cnts.energy.edges[1].to_value('TeV'))
+        dataset.reset_thresholds()
+        assert_allclose(dataset.lo_threshold.to_value('TeV'),cnts.energy.edges[0].to_value('TeV'))
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
@@ -242,6 +248,18 @@ class TestSpectrumDatasetOnOff:
         assert dataset.total_stats.n_off == 40
         assert dataset.total_stats.excess == 0
 
+    def test_set_fit_energy_range(self):
+        self.dataset.set_fit_energy_range(emin=0.3*u.TeV, emax=6*u.TeV)
+        assert_allclose(np.where(self.dataset.mask_fit)[0][0],1)
+        assert_allclose(np.where(self.dataset.mask_fit)[0][-1],2)
+
+        self.dataset.set_fit_energy_range(emax=6*u.TeV)
+        assert_allclose(np.where(self.dataset.mask_fit)[0][0],0)
+        assert_allclose(np.where(self.dataset.mask_fit)[0][-1],2)
+
+        self.dataset.set_fit_energy_range(emin=1*u.TeV)
+        assert_allclose(np.where(self.dataset.mask_fit)[0][0],2)
+        assert_allclose(np.where(self.dataset.mask_fit)[0][-1],3)
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
