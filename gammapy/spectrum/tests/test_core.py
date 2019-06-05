@@ -48,10 +48,13 @@ class TestCountsSpectrum:
     @requires_dependency("matplotlib")
     def test_plot(self):
         with mpl_plot_check():
-            self.spec.plot()
+            self.spec.plot(show_energy=1*u.TeV)
 
         with mpl_plot_check():
             self.spec.plot_hist()
+
+        with mpl_plot_check():
+            self.spec.peek()
 
     def test_io(self, tmpdir):
         filename = tmpdir / "test.fits"
@@ -124,7 +127,7 @@ class TestPHACountsSpectrum:
             self.spec.energy.edges * self.spec.energy.unit,
         )
 
-    def test_backscal_array(self, tmpdir):
+    def test_backscal_array(self):
         self.spec.backscal = np.arange(self.spec.energy.nbin)
         table = self.spec.to_table()
         assert table["BACKSCAL"][2] == 2
@@ -134,3 +137,12 @@ class TestPHACountsSpectrum:
         assert (spec_rebinned.quality == [1, 0, 0, 1]).all()
         assert_quantity_allclose(spec_rebinned.hi_threshold, 5.623413251903491 * u.TeV)
         assert_quantity_allclose(spec_rebinned.lo_threshold, 1.778279410038922 * u.TeV)
+
+    @requires_dependency("sherpa")
+    def test_to_sherpa(self):
+        sherpa_dataset = self.spec.to_sherpa("test")
+        assert_allclose(sherpa_dataset.counts, self.spec.data.data)
+
+    def test_reset_thresholds(self):
+        self.spec.reset_thresholds()
+        assert_allclose(self.spec.quality, 0.)
