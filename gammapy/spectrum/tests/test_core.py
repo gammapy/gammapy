@@ -145,4 +145,4 @@ class TestPHACountsSpectrum:
 
     def test_reset_thresholds(self):
         self.spec.reset_thresholds()
-        assert_allclose(self.spec.quality, np.zeros(8))
+        assert_allclose(self.spec.quality, 0.)
