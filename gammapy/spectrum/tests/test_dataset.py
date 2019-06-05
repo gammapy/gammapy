@@ -121,8 +121,10 @@ class TestSpectrumDatasetOnOff:
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
         self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
 
+        data = np.ones(elo.shape)
+        data[-1] = 0  # to test stats calculation with empty bins
         self.on_counts = PHACountsSpectrum(
-            elo, ehi, np.ones(elo.shape), backscal=np.ones(elo.shape)
+            elo, ehi, data , backscal=np.ones(elo.shape)
         )
         self.off_counts = PHACountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
@@ -235,6 +237,21 @@ class TestSpectrumDatasetOnOff:
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
 
+    def test_to_from_ogip_files_no_edisp(self, tmpdir):
+        dataset = SpectrumDatasetOnOff(
+            counts=self.on_counts,
+            aeff=self.aeff,
+            livetime=self.livetime,
+        )
+        dataset.to_ogip_files(outdir=str(tmpdir), overwrite=True)
+        filename = tmpdir / self.on_counts.phafile
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(str(filename))
+
+        assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
+        assert newdataset.counts_off == None
+        assert newdataset.edisp == None
+
+
     def test_total_stats(self):
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
@@ -244,9 +261,9 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
 
-        assert dataset.total_stats.n_on == 4
+        assert dataset.total_stats.n_on == 3
         assert dataset.total_stats.n_off == 40
-        assert dataset.total_stats.excess == 0
+        assert dataset.total_stats.excess == -1
 
     def test_set_fit_energy_range(self):
         self.dataset.set_fit_energy_range(emin=0.3*u.TeV, emax=6*u.TeV)
