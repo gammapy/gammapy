@@ -50,20 +50,9 @@ class EnergyAxis(MapAxis):
         return self.edges[1:]
 
     @property
-    def energy(self):
-        return self.edges
-
-    @property
     def boundaries(self):
         """Energy range."""
         return u.Quantity([self.edges[0].value, self.edges[-1].value], self.unit)
-
-    @property
-    def bands(self):
-        """Width of the energy bins."""
-        upper = self.energy_hi
-        lower = self.energy_lo
-        return upper - lower
 
     @classmethod
     def from_lower_and_upper_bounds(cls, lower, upper, unit=None, interp='log', is_e_true=False):
@@ -87,6 +76,7 @@ class EnergyAxis(MapAxis):
 
         if unit is None:
             unit = upper.unit
+
         lower = u.Quantity(lower, unit)
         upper = u.Quantity(upper, unit)
         energy = u.Quantity(np.append(lower.value, upper.value[-1]), unit)
