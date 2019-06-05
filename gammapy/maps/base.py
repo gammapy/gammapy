@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from .geom import pix_tuple_to_idx, MapCoord
-from .utils import unpack_seq, INVALID_VALUE
+from .utils import INVALID_VALUE
 from ..utils.scripts import make_path
 
 __all__ = ["Map"]
@@ -339,56 +339,6 @@ class Map(metaclass=MapMeta):
         """
         for idx in np.ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
-
-    def iter_by_pix(self, buffersize=1):
-        """Iterate over elements of the map.
-
-        Generator yielding tuples with values and pixel coordinates.
-
-        Parameters
-        ----------
-        buffersize : int
-            Set the size of the buffer.  The map will be returned in
-            chunks of the given size.
-
-        Returns
-        -------
-        val : `~numpy.ndarray`
-            Map values.
-        pix : tuple
-            Tuple of pixel coordinates.
-        """
-        pix = list(self.geom.get_idx(flat=True))
-        vals = self.data[np.isfinite(self.data)]
-        x = [vals] + pix
-        return unpack_seq(
-            np.nditer(x, flags=["external_loop", "buffered"], buffersize=buffersize)
-        )
-
-    def iter_by_coord(self, buffersize=1):
-        """Iterate over elements of the map.
-
-        Generator yielding tuples with values and map coordinates.
-
-        Parameters
-        ----------
-        buffersize : int
-            Set the size of the buffer.  The map will be returned in
-            chunks of the given size.
-
-        Returns
-        -------
-        val : `~numpy.ndarray`
-            Map values.
-        coords : tuple
-            Tuple of map coordinates.
-        """
-        coords = list(self.geom.get_coord(flat=True))
-        vals = self.data[np.isfinite(self.data)]
-        x = [vals] + coords
-        return unpack_seq(
-            np.nditer(x, flags=["external_loop", "buffered"], buffersize=buffersize)
-        )
 
     @abc.abstractmethod
     def sum_over_axes(self, keepdims=False):

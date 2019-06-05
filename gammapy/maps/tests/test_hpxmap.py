@@ -231,21 +231,6 @@ def test_hpxmap_fill_by_coord(nside, nested, coordsys, region, axes, sparse):
 @pytest.mark.parametrize(
     ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
 )
-def test_hpxmap_iter(nside, nested, coordsys, region, axes):
-    m = HpxNDMap(
-        HpxGeom(nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes)
-    )
-    coords = m.geom.get_coord(flat=True)
-    m.fill_by_coord(coords, coords[0])
-    for vals, pix in m.iter_by_pix(buffersize=100):
-        assert_allclose(vals, m.get_by_pix(pix))
-    for vals, coords in m.iter_by_coord(buffersize=100):
-        assert_allclose(vals, m.get_by_coord(coords))
-
-
-@pytest.mark.parametrize(
-    ("nside", "nested", "coordsys", "region", "axes"), hpx_test_geoms
-)
 def test_hpxmap_to_wcs(nside, nested, coordsys, region, axes):
     m = HpxNDMap(
         HpxGeom(nside=nside, nest=nested, coordsys=coordsys, region=region, axes=axes)
