@@ -53,6 +53,9 @@ class TestCountsSpectrum:
         with mpl_plot_check():
             self.spec.plot_hist()
 
+        with mpl_plot_check():
+            self.spec.peek()
+
     def test_io(self, tmpdir):
         filename = tmpdir / "test.fits"
         self.spec.write(filename)
