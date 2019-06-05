@@ -102,6 +102,7 @@ is transformed according to the given ``wcs``, and the radius is transformed
 using the local pixel scale at the center point for the given ``wcs``.
 
 ::
+
     class CircleSkyRegion(SkyRegion):
         def to_pixel(self, wcs):
             center, scale, _ = skycoord_to_pixel_scale_angle(self.center, wcs)
@@ -363,7 +364,6 @@ I'm OK to not add this for now, and just use ``Map`` objects for exclusion
 masks, and require that users create that before using Gammapy, in case they
 e.g. have a list of circles or whatever they want to use as exclusion region.
 
-
 Task list
 =========
 
@@ -374,11 +374,14 @@ amount of work is limited.
 - Add ``PixRegion.rotate(center, angle)`` in ``astropy-healpix``. See `Rotated regions`_ above.
 - Release ``astropy-healpix`` v0.4, then bump Gammapy dependency to that version.
 - Improve rotated region code and tests and docs in Gammapy.
-  This could mean a rebase and continuation of `GH 2089`_, or closing that and re-starting from master,
-  copying over the useful parts or cherry-picking useful commits from that branch.
+  This could mean a rebase and continuation of `GH 2089`_, or closing that and
+  re-starting from master, copying over the useful parts or cherry-picking
+  useful commits from that branch.
 - Add ``gammapy/utils/regions.py`` with two helper functions. See `Region arguments`_ above.
-- Use the helper functions throughout Gammapy. Should be 5-10 cases, could be several PRs. See `Region arguments`_ above.
-- Replace sky circle and box select with generic region select (see `Sky and pixel regions`_, resolves `GH 1172`_)
+- Use the helper functions throughout Gammapy. Should be 5-10 cases, could be
+  several PRs. See `Region arguments`_ above.
+- Replace sky circle and box select with generic region select (see `Sky and
+  pixel regions`_, resolves `GH 1172`_)
 
 Beyond those core tasks that really should be done for Gammapy v0.13, further
 improvements in ``astropy-healpix`` and Gammapy should be done, but are lower
@@ -392,21 +395,21 @@ priority:
 - "HPX up/down sample issue with partial skymaps" (`GH 1445`_)
 - "Introduce RegionGeom and RegionNDMap?" (`GH 1805`_)
 
-
 Alternatives
 ============
 
 - As mentioned in the abstract, the proposal to continue with `astropy-regions`_
-roughly as proposed here is probalby not controversial.
+  roughly as proposed here is probalby not controversial.
 - As mentioned in the `Outlook`_, in the future we might want a more general
-solution, and there's the question whether a mask-backed region should be added.
+  solution, and there's the question whether a mask-backed region should be
+  added.
 - As mentioned in `Sky and pixel regions`_, there are a few options to define the semantics for
-contains and plot.
+  contains and plot.
 - As mentioned in `Rotated regions`_, an alternative could be to use sky regions
-instead of pixel regions, and to restrict to the sky regions that can be
-rotated, possibly polygonising others.
+  instead of pixel regions, and to restrict to the sky regions that can be
+  rotated, possibly polygonising others.
 - As mentioned in `Sky and pixel regions`_, those methods aren't really needed, they are just a
-small convenience. If we prefer a smaller API, we could just delete them.
+  small convenience. If we prefer a smaller API, we could just delete them.
 
 Decision
 ========
