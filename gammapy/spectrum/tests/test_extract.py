@@ -189,7 +189,7 @@ def test_extract_cta_1dc_data(caplog):
                                  containment_correction=True)
     extract.run()
     assert 'No thresholds defined for obs Info for OBS_ID = 110380' in caplog.text
-    
+
     extract.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
     actual = extract.spectrum_observations[0].energy_range[0]
     assert_quantity_allclose(actual, 0.774263 * u.TeV, rtol=1e-3)
