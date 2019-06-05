@@ -56,9 +56,9 @@ class TestSpectrumDataset:
         assert self.dataset.data_shape[0] == self.nbins
 
     def test_energy_range(self):
-        range = self.dataset.energy_range
-        assert range.unit == u.TeV
-        assert_allclose(range.to_value('TeV'), [0.1, 10.])
+        energy_range = self.dataset.energy_range
+        assert energy_range.unit == u.TeV
+        assert_allclose(energy_range.to_value('TeV'), [0.1, 10.])
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
