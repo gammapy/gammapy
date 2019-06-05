@@ -48,7 +48,7 @@ class TestCountsSpectrum:
     @requires_dependency("matplotlib")
     def test_plot(self):
         with mpl_plot_check():
-            self.spec.plot()
+            self.spec.plot(show_energy=1*u.TeV)
 
         with mpl_plot_check():
             self.spec.plot_hist()
