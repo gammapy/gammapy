@@ -23,9 +23,10 @@ class EnergyAxis(MapAxis):
         true energy axis if True, reco energy otherwise , Default False
     """
 
-    def __init__(self, nodes, interp="log", node_type="edges", is_e_true=False):
-        unit = nodes.unit
-        nodes = nodes.value
+    def __init__(self, nodes, unit=None, interp="log", node_type="edges", is_e_true=False):
+        if unit is None:
+            unit = nodes.unit
+            nodes = nodes.value
 
         super().__init__(nodes=nodes, interp=interp, name="energy",
                          node_type=node_type, unit=unit)
@@ -107,7 +108,7 @@ class EnergyAxis(MapAxis):
             Number of bins
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
-        node_edges : str
+        node_type : str
             type of axis: 'edges' or 'center'
         is_e_true : bool
             true energy axis if True, reco energy otherwise , Default False
@@ -122,9 +123,12 @@ class EnergyAxis(MapAxis):
             emin = emin.to(unit)
 
         x_min, x_max = np.log10([emin.value, emax.value])
-        energy = u.Quantity(np.logspace(x_min, x_max, nbins + 1), unit)
+        if node_type == 'edges':
+            energy = u.Quantity(np.logspace(x_min, x_max, nbins + 1), unit)
+        else:
+            energy = u.Quantity(np.logspace(x_min, x_max, nbins ), unit)
 
-        return cls(nodes=energy, interp='log')
+        return cls(nodes=energy, interp='log', node_type=node_type)
 
     def find_energy_bin(self, energy):
         """Find the bins that contain the specified energy values.
@@ -150,7 +154,7 @@ class EnergyAxis(MapAxis):
         return bin_index
 
     def contains(self, energy):
-        """Check of energy is contained in boundaries.
+        """Check if energy is contained in boundaries.
 
         Parameters
         ----------
@@ -158,5 +162,5 @@ class EnergyAxis(MapAxis):
             Array of energies to test
         """
         # TODO: Check if center_nodes should be working this way.
-        return (energy > self.edges[0]) & (energy < self.edges[-1])
+        return (energy >= self.edges[0]) & (energy <= self.edges[-1])
 
