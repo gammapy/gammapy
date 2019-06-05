@@ -135,6 +135,11 @@ class TestPHACountsSpectrum:
         assert_quantity_allclose(spec_rebinned.hi_threshold, 5.623413251903491 * u.TeV)
         assert_quantity_allclose(spec_rebinned.lo_threshold, 1.778279410038922 * u.TeV)
 
+    @requires_dependency("sherpa")
+    def test_to_sherpa(self):
+        sherpa_dataset = self.spec.to_sherpa("test")
+        assert_allclose(sherpa_dataset.counts, self.spec.data.data)
+
     def test_reset_thresholds(self):
         self.spec.reset_thresholds()
         assert_allclose(self.spec.quality, np.zeros(8))
