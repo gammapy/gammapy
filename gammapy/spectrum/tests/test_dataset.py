@@ -52,6 +52,14 @@ class TestSpectrumDataset:
             self.source_model, self.src, self.livetime, None, None, None, self.bkg
         )
 
+    def test_data_shape(self):
+        assert self.dataset.data_shape[0] == self.nbins
+
+    def test_energy_range(self):
+        range = self.dataset.energy_range
+        assert range.unit == u.TeV
+        assert_allclose(range.to_value('TeV'), [0.1, 10.])
+        
     def test_cash(self):
         """Simple CASH fit to the on vector"""
 
@@ -80,6 +88,24 @@ class TestSpectrumDataset:
         assert_allclose(fake_spectrum.energy.edges, self.dataset.counts.energy.edges)
         assert fake_spectrum.data.data.sum() == 907331
 
+    def test_incorrect_mask(self):
+        mask_fit = np.ones(self.nbins, dtype=np.dtype('float'))
+        with pytest.raises(ValueError):
+            SpectrumDataset(
+                self.source_model, self.src, self.livetime, mask_fit, None, None, self.bkg
+            )
+
+    def test_set_model(self):
+        aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, 'HESS')
+        edisp = EnergyDispersion.from_diagonal_response(self.src.energy.edges, self.src.energy.edges)
+        dataset = SpectrumDataset(
+            None, self.src, self.livetime, None, aeff, edisp, self.bkg
+        )
+        with pytest.raises(AttributeError):
+            dataset.parameters
+
+        dataset.model = self.source_model
+        assert dataset.parameters[0] == self.source_model.parameters[0]
 
 class TestSpectrumDatasetOnOff:
     """ Test ON OFF SpectrumDataset"""

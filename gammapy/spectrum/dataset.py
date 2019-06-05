@@ -98,7 +98,7 @@ class SpectrumDataset(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.shape
+        return self.counts.data.data.shape
 
     def npred(self):
         """Returns npred map (model + background)"""
