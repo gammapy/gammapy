@@ -91,7 +91,6 @@ class Pulsar(SimplePulsar):
         R=DEFAULT_R,
         age=None,
         L_0=None,
-        morphology="Delta2D",
     ):
         P_0 = Quantity(P_0, "s")
         B = Quantity(B, "G")
@@ -104,7 +103,6 @@ class Pulsar(SimplePulsar):
         self.tau_0 = P_0 / (2 * self.P_dot_0)
         self.n = float(n)
         self.beta = (n + 1.0) / (n - 1.0)
-        self.morphology = morphology
         if age is not None:
             self.age = Quantity(age, "yr")
         if L_0 is None:
