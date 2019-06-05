@@ -59,3 +59,7 @@ def test_crab_spectrum(spec):
 
     index = crab_spectrum.model.spectral_index(energy)
     assert_quantity_allclose(index, spec["index"], rtol=1e-5)
+
+def test_invalid_format():
+    with pytest.raises(ValueError):
+        CrabSpectrum('spam')
