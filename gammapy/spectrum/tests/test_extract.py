@@ -168,7 +168,7 @@ class TestSpectrumExtraction:
         actual = extraction.spectrum_observations[0].energy_range[0]
         assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)
 
-
+@requires_data()
 def test_extract_cta_1dc_data(caplog):
     datastore = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     obs_ids = [110380, 111140]
