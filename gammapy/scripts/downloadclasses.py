@@ -145,9 +145,7 @@ class ComputePlan:
                     record = self.listfiles[item]
                     if record.get("datasets", ""):
                         for ds in record["datasets"]:
-                            datafound.update(
-                                dict(parse_datafiles(ds, datasets))
-                            )
+                            datafound.update(dict(parse_datafiles(ds, datasets)))
             self.listfiles = datafound
             if not datafound:
                 log.info("No datasets found")
@@ -182,7 +180,6 @@ class ComputePlan:
             if nb.get("images", ""):
                 for im in nb["images"]:
                     self.listfiles[label]["images"].append(im)
-
 
     def parse_scripts_yaml(self):
         url = DEV_SCRIPTS_YAML_URL
