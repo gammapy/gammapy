@@ -38,46 +38,43 @@ def get_file(ftuple):
 
 def parse_datafiles(datasearch, datasetslist):
     for dataset in datasetslist:
-        if datasearch == dataset["name"] or datasearch == "":
-            if dataset["files"]:
-                for ds in dataset["files"]:
-                    label = ds["path"]
-                    data = {"url": ds["url"], "path": ds["path"]}
-                    if "hashmd5" in ds:
-                        data["hashmd5"] = ds["hashmd5"]
-                    yield label, data
+        if (datasearch == dataset["name"] or datasearch == "") and dataset.get("files", ""):
+            for ds in dataset["files"]:
+                label = ds["path"]
+                data = {"url": ds["url"], "path": ds["path"]}
+                if "hashmd5" in ds:
+                    data["hashmd5"] = ds["hashmd5"]
+                yield label, data
 
 
 def parse_imagefiles(notebookslist):
     for item in notebookslist:
         record = notebookslist[item]
-        if "images" in record:
-            if record["images"]:
-                for im in record["images"]:
-                    label = "im: " + im
-                    path = "images/" + im + ".png"
-                    filename_img = record["url"][record["url"].rfind("/") :]
-                    url = record["url"].replace(filename_img, "")
-                    url = url + "/" + path
-                    data = {"url": url, "path": path}
-                    yield label, data
+        if record.get("images", ""):
+            for im in record["images"]:
+                label = "im: " + im
+                path = "images/" + im + ".png"
+                filename_img = record["url"][record["url"].rfind("/") :]
+                url = record["url"].replace(filename_img, "")
+                url = url + "/" + path
+                data = {"url": url, "path": path}
+                yield label, data
 
 
 class ComputePlan:
     """Generates the whole list of files to download"""
 
-    def __init__(self, src, outfolder, version, option, modetutorials=False):
+    def __init__(self, src, outfolder, release, option, modetutorials=False):
         self.src = src
         self.outfolder = Path(outfolder)
-        self.version = version
-        self.release = version
+        self.release = release
         self.option = option
         self.modetutorials = modetutorials
         self.listfiles = {}
         log.info("Looking for {}...".format(self.option))
 
     def getenvironment(self):
-        filename_env = "gammapy-" + self.version + "-environment.yml"
+        filename_env = "gammapy-" + self.release + "-environment.yml"
         url_file_env = BASE_URL + "/install/" + filename_env
         filepath_env = str(self.outfolder / filename_env)
         try:
@@ -89,153 +86,124 @@ class ComputePlan:
             exit()
 
     def getlocalfolder(self):
-        namefolder = ""
+        suffix = "-{}".format(self.release)
 
+        if self.release == "":
+            suffix += version.version
         if self.option == "notebooks":
-            if self.release:
-                namefolder = "notebooks-" + self.release
-            else:
-                namefolder = "notebooks" + version.version
-
+            return self.outfolder / "notebooks{}".format(suffix)
         if self.option == "scripts":
-            if self.release:
-                namefolder = "scripts-" + self.release
-            else:
-                namefolder = "scripts" + version.version
-
-        if self.option == "datasets":
-            if self.modetutorials:
-                if self.release:
-                    namefolder = "datasets-" + self.release
-                else:
-                    namefolder = "datasets-" + version.version
-
-        if namefolder:
-            self.outfolder = self.outfolder / namefolder
-
+            return self.outfolder / "scripts{}".format(suffix)
+        if self.option == "datasets" and self.modetutorials:
+            return self.outfolder / "datasets"
         return self.outfolder
+
+    def getonefile(self, keyrec, filetype):
+        if keyrec in self.listfiles:
+            record = self.listfiles[keyrec]
+            self.listfiles = {}
+            self.listfiles[keyrec] = record
+        else:
+            self.listfiles = {}
+            if not self.modetutorials:
+                log.warning("{} {} not found".format(filetype, self.src))
 
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
             if self.src != "":
-                keyrec = "nb: " + self.src
-                if keyrec in self.listfiles:
-                    record = self.listfiles[keyrec]
-                    self.listfiles = {}
-                    self.listfiles[keyrec] = record
-                else:
-                    self.listfiles = {}
-                    if not self.modetutorials:
-                        log.warning("Notebook {} not found".format(self.src))
+                self.getonefile("nb: " + self.src, "Notebook")
             self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
 
         if (self.option == "scripts" or self.modetutorials) and not self.listfiles:
             self.parse_scripts_yaml()
             if self.src != "":
-                keyrec = "sc: " + self.src
-                if keyrec in self.listfiles:
-                    record = self.listfiles[keyrec]
-                    self.listfiles = {}
-                    self.listfiles[keyrec] = record
-                else:
-                    self.listfiles = {}
-                    if not self.modetutorials:
-                        log.warning("Script {} not found".format(self.src))
+                self.getonefile("sc: " + self.src, "Script")
 
         if self.option == "datasets":
             if self.modetutorials and not self.listfiles:
                 sys.exit()
 
+            url = DEV_DATA_JSON_URL
             if self.release:
-                filename_datasets = "gammapy-" + self.version + "-data-index.json"
+                filename_datasets = "gammapy-" + self.release + "-data-index.json"
                 url = BASE_URL + "/data/" + filename_datasets
-            else:
-                url = DEV_DATA_JSON_URL
 
             log.info("Reading {}".format(url))
             try:
                 txt = urlopen(url).read().decode("utf-8")
-                datasets = json.loads(txt)
-                datafound = {}
-
-                if not self.modetutorials:
-                    datafound.update(dict(parse_datafiles(self.src, datasets)))
-                    if self.src and not datafound:
-                        log.info("Dataset {} not found".format(self.src))
-                        sys.exit()
-                else:
-                    for item in self.listfiles:
-                        record = self.listfiles[item]
-                        if "datasets" in record:
-                            if record["datasets"] != "":
-                                for ds in record["datasets"]:
-                                    datafound.update(
-                                        dict(parse_datafiles(ds, datasets))
-                                    )
-                    if not datafound:
-                        log.info("No datasets found")
-                        sys.exit()
-                self.listfiles = datafound
             except Exception as ex:
                 log.error(ex)
+                return False
+
+            datasets = json.loads(txt)
+            datafound = {}
+            if not self.modetutorials:
+                datafound.update(dict(parse_datafiles(self.src, datasets)))
+            else:
+                for item in self.listfiles:
+                    record = self.listfiles[item]
+                    if record.get("datasets", ""):
+                        for ds in record["datasets"]:
+                            datafound.update(dict(parse_datafiles(ds, datasets)))
+            self.listfiles = datafound
+            if not datafound:
+                log.info("No datasets found")
+                sys.exit()
 
         return self.listfiles
 
     def parse_notebooks_yaml(self):
+        url = DEV_NBS_YAML_URL
         if self.release:
-            filename_nbs = "gammapy-" + self.version + "-tutorials.yml"
+            filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
             url = BASE_URL + "/tutorials/" + filename_nbs
-        else:
-            url = DEV_NBS_YAML_URL
 
         log.info("Reading {}".format(url))
         try:
             txt = urlopen(url).read().decode("utf-8")
-
-            for nb in yaml.safe_load(txt):
-                path = nb["name"] + ".ipynb"
-                label = "nb: " + nb["name"]
-                self.listfiles[label] = {}
-                self.listfiles[label]["url"] = nb["url"]
-                self.listfiles[label]["path"] = path
-                self.listfiles[label]["datasets"] = []
-                self.listfiles[label]["images"] = []
-                if "datasets" in nb:
-                    if nb["datasets"]:
-                        for ds in nb["datasets"]:
-                            self.listfiles[label]["datasets"].append(ds)
-                if "images" in nb:
-                    if nb["images"]:
-                        for im in nb["images"]:
-                            self.listfiles[label]["images"].append(im)
         except Exception as ex:
             log.error(ex)
+            return False
+
+        for nb in yaml.safe_load(txt):
+            path = nb["name"] + ".ipynb"
+            label = "nb: " + nb["name"]
+            self.listfiles[label] = {}
+            self.listfiles[label]["url"] = nb["url"]
+            self.listfiles[label]["path"] = path
+            self.listfiles[label]["datasets"] = []
+            self.listfiles[label]["images"] = []
+            if nb.get("datasets", ""):
+                for ds in nb["datasets"]:
+                    self.listfiles[label]["datasets"].append(ds)
+            if nb.get("images", ""):
+                for im in nb["images"]:
+                    self.listfiles[label]["images"].append(im)
 
     def parse_scripts_yaml(self):
+        url = DEV_SCRIPTS_YAML_URL
         if self.release:
-            filename_scripts = "gammapy-" + self.version + "-scripts.yml"
+            filename_scripts = "gammapy-" + self.release + "-scripts.yml"
             url = BASE_URL + "/tutorials/" + filename_scripts
-        else:
-            url = DEV_SCRIPTS_YAML_URL
 
         log.info("Reading {}".format(url))
         try:
             txt = urlopen(url).read().decode("utf-8")
-
-            for sc in yaml.safe_load(txt):
-                path = sc["name"] + ".py"
-                label = "sc: " + sc["name"]
-                self.listfiles[label] = {}
-                self.listfiles[label]["url"] = sc["url"]
-                self.listfiles[label]["path"] = path
-                self.listfiles[label]["datasets"] = []
-                if "datasets" in sc:
-                    if sc["datasets"]:
-                        for ds in sc["datasets"]:
-                            self.listfiles[label]["datasets"].append(ds)
         except Exception as ex:
             log.error(ex)
+            return False
+
+        for sc in yaml.safe_load(txt):
+            path = sc["name"] + ".py"
+            label = "sc: " + sc["name"]
+            self.listfiles[label] = {}
+            self.listfiles[label]["url"] = sc["url"]
+            self.listfiles[label]["path"] = path
+            self.listfiles[label]["datasets"] = []
+            if sc.get("datasets", ""):
+                for ds in sc["datasets"]:
+                    self.listfiles[label]["datasets"].append(ds)
 
 
 class ParallelDownload:
@@ -268,28 +236,27 @@ class ParallelDownload:
         pool.join()
         pool.close()
 
-    def show_info(self):
+    def show_info_datasets(self):
         print("")
-        if self.option == "datasets":
-            GAMMAPY_DATA = Path.cwd() / self.outfolder
-            if self.modetutorials:
-                GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
-                if self.release:
-                    datafolder = "datasets-" + self.release
-                    GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / datafolder
-                    print(
-                        "*** Enter the following commands below to get started with this version of Gammapy"
-                    )
-                    print("cd {}".format(self.outfolder.parent))
-                    condaname = "gammapy-" + self.release
-                    envfilename = condaname + "-environment.yml"
-                    print("conda env create -f {}".format(envfilename))
-                    print("conda activate {}".format(condaname))
-                    print("jupyter lab")
-                    print("")
-            print("*** You might want to declare GAMMAPY_DATA env variable")
-            print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
-            print("")
+        GAMMAPY_DATA = Path.cwd() / self.outfolder
+        if self.modetutorials:
+            GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
+            if self.release:
+                datafolder = "datasets-" + self.release
+                GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / datafolder
+                print(
+                    "*** Enter the following commands below to get started with this version of Gammapy"
+                )
+                print("cd {}".format(self.outfolder.parent))
+                condaname = "gammapy-" + self.release
+                envfilename = condaname + "-environment.yml"
+                print("conda env create -f {}".format(envfilename))
+                print("conda activate {}".format(condaname))
+                print("jupyter lab")
+                print("")
+        print("*** You might want to declare GAMMAPY_DATA env variable")
+        print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
+        print("")
 
     def progressbar(self, args):
         self.bar += 1
