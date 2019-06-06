@@ -88,25 +88,18 @@ class ComputePlan:
             exit()
 
     def getlocalfolder(self):
-        namefolder = ""
         suffix = "-{}".format(self.release)
 
         if self.release == "":
             suffix += version.version
-
         if self.option == "notebooks":
-            namefolder = "notebooks" + suffix
-
+            return self.outfolder / "notebooks{}".format(suffix)
         if self.option == "scripts":
-            namefolder = "scripts" + suffix
-
+            return self.outfolder / "scripts{}".format(suffix)
         if self.option == "datasets" and self.modetutorials:
-            namefolder = "datasets"
-
-        if namefolder:
-            self.outfolder = self.outfolder / namefolder
-
+            return self.outfolder / "datasets"
         return self.outfolder
+
 
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
