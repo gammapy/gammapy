@@ -100,9 +100,8 @@ class ComputePlan:
         if self.option == "scripts":
             namefolder = "scripts" + suffix
 
-        if self.option == "datasets":
-            if self.modetutorials:
-                    namefolder = "datasets"
+        if self.option == "datasets" and self.modetutorials:
+            namefolder = "datasets"
 
         if namefolder:
             self.outfolder = self.outfolder / namefolder
@@ -141,11 +140,10 @@ class ComputePlan:
             if self.modetutorials and not self.listfiles:
                 sys.exit()
 
+            url = DEV_DATA_JSON_URL
             if self.release:
                 filename_datasets = "gammapy-" + self.release + "-data-index.json"
                 url = BASE_URL + "/data/" + filename_datasets
-            else:
-                url = DEV_DATA_JSON_URL
 
             log.info("Reading {}".format(url))
             try:
@@ -156,7 +154,6 @@ class ComputePlan:
 
             datasets = json.loads(txt)
             datafound = {}
-
             if not self.modetutorials:
                 datafound.update(dict(parse_datafiles(self.src, datasets)))
                 if self.src and not datafound:
@@ -179,11 +176,10 @@ class ComputePlan:
         return self.listfiles
 
     def parse_notebooks_yaml(self):
+        url = DEV_NBS_YAML_URL
         if self.release:
             filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
             url = BASE_URL + "/tutorials/" + filename_nbs
-        else:
-            url = DEV_NBS_YAML_URL
 
         log.info("Reading {}".format(url))
         try:
@@ -211,11 +207,10 @@ class ComputePlan:
 
 
     def parse_scripts_yaml(self):
+        url = DEV_SCRIPTS_YAML_URL
         if self.release:
             filename_scripts = "gammapy-" + self.release + "-scripts.yml"
             url = BASE_URL + "/tutorials/" + filename_scripts
-        else:
-            url = DEV_SCRIPTS_YAML_URL
 
         log.info("Reading {}".format(url))
         try:
