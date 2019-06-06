@@ -1,0 +1,104 @@
+.. include:: ../../references.txt
+
+.. _pig-011:
+
+**********************************************
+PIG 11 - Gammapy dependencies and distribution
+**********************************************
+
+* Author: Christoph Deil, Axel Donath, Régis Terrier
+* Created: June 6, 2019
+* Accepted: tbd
+* Status: draft
+* Discussion: `GH TODO`_
+
+Abstract
+========
+
+As preparation for the planned Gammapy v1.0 release this fall, we propose to
+clarify which Gammapy dependencies are required and which ones are optional. We
+also propose to increase the minimum required version for some dependencies.
+Finally, we propose some updates to the Gammapy supported distribution channels
+and installation instructions.
+
+This represents that plan for 2019 to be implemented before v1.0. Things are
+likely to evolve in the coming years, as Gammapy supports different projects,
+especially CTA.
+
+One reason to write a PIG for this (as opposed to just making these decisions
+among the Gammapy lead developers or coordination committee) is to create an
+opportunity for user feedback. Let us know what you think!
+
+Introduction
+============
+
+Dependencies
+============
+
+- list which dependencies are required and optional?
+- 
+
+Versions
+--------
+
+Drop Python 3.5 support
+-----------------------
+
+As already mentioned in `pig-003`_, we now suggest to drop support for Python
+3.5, already in the next release, Gammapy v0.13 in July 2019, for the following
+reasons:
+
+- We're not aware of any users that have to or even want to use Python 3.5, most
+people use Gammapy on Python 3.6 or 3.7 now via conda.
+- Reduce maintenance effort. conda-forge now only builds binaries for Python 3.6
+and 3.7, so testing and supporting Python 3.5 for our large continuous
+integration matrix will become more and more difficult in the coming months and
+years.
+- Allow the use of new language features, specifically f-strings and dict
+everywhere (instead of a mix of OrderedDict and dict)
+
+The first point is the most important one: the cost of supporting Python 3.5
+isn't very high: if you want or need it, let us know!
+
+tbd: decide on min version for other dependencies
+
+Distribution
+============
+
+Most Gammapy users use ``conda`` and binaries created via ``conda-forge``.
+Sufficient or do we want to support other distribution channels?
+
+Wheels
+------
+
+tbd
+
+Macports
+--------
+
+We suggest to drop support for Macports, i.e. deleted the `Installation with
+Macports`_ page from the installation instructions.
+
+As can be seen in the `Gammapy in Macports`_ history, the last update was to
+Gammapy v0.7 in March 2018, and not a single user has complained that Gammapy
+wasn't updated since.
+
+It could be that there is still interest and Macports users, and they e.g. only
+use it to install Python and our dependencies, and then on top of that install
+Gammapy with pip. If you use Macports and want ``port install py37-gammapy``,
+let us know!
+
+Others
+------
+
+- interest to add Homebrew packages?
+- interest to 
+
+Decision
+========
+
+tbd
+
+.. _GH TODO: https://github.com/gammapy/gammapy/pull/TODO
+.. _Installation with Macports: https://docs.gammapy.org/0.12/install/macports.html
+.. _Gammapy in Macports: https://github.com/macports/macports-ports/commits/master/python/py-gammapy/Portfile
