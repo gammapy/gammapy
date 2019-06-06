@@ -12,8 +12,9 @@ PIG 5 - Gammapy 1.0 Roadmap
 * Status: accepted
 * Discussion: `GH 1841`_
 
-Introduction
-============
+Abstract
+========
+
 This PIG describes the required short- and medium-term **development work up to
 the Gammapy 1.0** release. The anticipated time scale for this development effort
 is **9 - 12 months** and will be concluded by the Gammapy 1.0 release in fall 2019.
@@ -22,13 +23,11 @@ addressed in separate PIGs**.
 
 The content of this document was decided based upon user feedback from the first
 CTA data challenge (DC1), experience from analysing existing datasets as well as
-definition of use cases (see below). The content will be **updated in the comming month**
-and be adjusted to upcoming **requirements defined by CTA**. Current requirements
-defined by CTA are described observer access use cases (private link to slides_)
-and in the document written summarizing the SUSS workshop Dec. 2018 (private link to indico_).
-
-.. _slides: https://forge.in2p3.fr/login?back_url=https%3A%2F%2Fforge.in2p3.fr%2Fprojects%2Fobserver-access-use-cases%2Fwiki%2FScience_Tools_Use-Cases).
-.. _indico: https://indico.cta-observatory.org/event/2070/
+definition of use cases (see below). The content will be **updated in the
+comming month** and be adjusted to upcoming **requirements defined by CTA**.
+Current requirements defined by CTA are described observer access use cases
+(private link to slides_) and in the document written summarizing the SUSS
+workshop Dec. 2018 (private link to indico_).
 
 Releases
 ========
@@ -197,3 +196,5 @@ and changes. The Gammapy roadmap was accepted by the CC, after the deadline for
 comments elapsed January 31st.
 
 .. _GH 1841:  https://github.com/gammapy/gammapy/pull/1841
+.. _slides: https://forge.in2p3.fr/login?back_url=https%3A%2F%2Fforge.in2p3.fr%2Fprojects%2Fobserver-access-use-cases%2Fwiki%2FScience_Tools_Use-Cases).
+.. _indico: https://indico.cta-observatory.org/event/2070/
