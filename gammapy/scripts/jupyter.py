@@ -48,13 +48,15 @@ def execute_notebook(path, kernel="python3", loglevel=30):
         "{}".format(path),
     ]
 
-    if subprocess.call(cmd):
-        log.error("Error executing file {}".format(str(path)))
-        return False
-    else:
+    try:
+        cp = subprocess.run(cmd)
+        cp.check_returncode()
         t = time.time() - t
         log.info("   ... Executing duration: {:.1f} seconds".format(t))
         return True
+    except subprocess.CalledProcessError:
+        log.error("Error executing file {}".format(str(path)))
+        return False
 
 
 @click.command(name="strip")

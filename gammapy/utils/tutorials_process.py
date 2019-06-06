@@ -74,10 +74,10 @@ def build_notebooks(args):
         sys.exit()
 
     # strip and blackformat
-    subprocess.call(
+    subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "black"]
     )
-    subprocess.call(
+    subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "strip"]
     )
 
@@ -91,7 +91,7 @@ def build_notebooks(args):
         # copytree is needed to copy subfolder images
         copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignorefiles)
         for path in path_static_nbs.glob("*.ipynb"):
-            subprocess.call(
+            subprocess.run(
                 [
                     sys.executable,
                     "-m",
@@ -107,7 +107,7 @@ def build_notebooks(args):
         pathsrc = path_temp / notebookname
         pathdest = path_static_nbs / notebookname
         copyfile(str(pathsrc), str(pathdest))
-        subprocess.call(
+        subprocess.run(
             [
                 sys.executable,
                 "-m",

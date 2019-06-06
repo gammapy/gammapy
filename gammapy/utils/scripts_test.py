@@ -36,7 +36,7 @@ def script_test(path):
     log.info("   ... EXECUTING {}".format(str(path)))
 
     cmd = [sys.executable, str(path)]
-    cp = subprocess.run(cmd, capture_output=True)
+    cp = subprocess.run(cmd, stderr=subprocess.PIPE)
     if cp.returncode:
         log.info("   ... FAILED")
         log.info("   ___ TRACEBACK")
