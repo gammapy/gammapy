@@ -72,9 +72,9 @@ def test_cli_download_scripts(files_dir, config):
 def test_cli_download_tutorials(files_dir, config):
     option_out = "--out={}".format(files_dir)
     nboption_src = "--src={}".format(config["notebook"])
-    scoption_src = "--src={}".format(config["notebook"])
+    scoption_src = "--src={}".format(config["script"])
     option_release = "--release={}".format(config["release"])
-    dsdirname = "datasets-{}".format(config["release"])
+    dsdirname = "datasets"
     nbdirname = "notebooks-{}".format(config["release"])
     scdirname = "scripts-{}".format(config["release"])
     nbfilename = "{}.ipynb".format(config["notebook"])
