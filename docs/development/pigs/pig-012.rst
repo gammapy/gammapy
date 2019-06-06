@@ -1,0 +1,90 @@
+.. include:: ../../references.txt
+
+.. _pig-012:
+
+*****************************
+PIG 12 - High-level interface
+*****************************
+
+* Author: tbd
+* Created: June 6, 2019
+* Accepted: tbd
+* Status: draft
+* Discussion: `GH 2218`_
+
+Help!
+=====
+
+We (Christoph, Axel, Régis) are looking for an author for this PIG and lead for
+this task. Please comment on Github or get in touch via Slack! The requirements
+are to have an interest in this, and to have time to discuss and develop or
+review a first minimum prototype working solution for this in the coming weeks.
+
+Abstract
+========
+
+We haven't started yet on the `High level interface in the Gammapy roadmap`_
+project, but to have something for Gammapy v1.0 in October, we need to start
+this work very soon.
+
+The high-level interface should be easy to use and allow users to do the most
+common analysis tasks quickly. It would be built on top of the existing Gammapy
+code-base, first on it's own, but likely starting to develop it would inform
+improvements in code organisation throughout Gammapy.
+
+One good option is to develop some functionality for the existing `Gammapy
+command line interface`_, likely taking the Fermi tools and ctools as examples,
+but implementing them on top of Gammapy (without the evil PFILES).
+
+Another good option discussed (see roadmap or plan section in the
+gammapy.scripts docs page) include a config-file driven high-level interface
+like HAP in HESS or Fermipy.
+
+The long-term solution doesn't have to be an either-or, e.g. as can be seen with
+the Fermi tools and Fermipy, having two high-level interfaces is OK.
+
+Yet another thing we could try not described in those pages yet is to add
+something like ``gammapy analysis new`` that asks the user a few questions like
+"where is your data?", "what target do you want to analyse" etc, and then would
+generate config, Python or Notebook files for the user giving a working
+solution, which they then edit and tweak. There isn't much precedence for this
+workflow in science, but a lot of devops and programming tools work like that,
+it is a standard technique. One random example of such a tool is the `Angular
+CLI`_, specifically for notebooks there's `papermill`_ which we could use, and
+there's also `cookiecutter`_. Generating config or workflow files should be
+preferred, since eventually we'll likely need config files anyways, but
+generating Python code in py or ipynb files is also an option to get something.
+
+Introduction
+============
+
+- TODO: write short intro (one or two paragraphs, not more than half a page)
+
+Proposal
+========
+
+- TODO: pick one of the possible high-level interfaces that you think we should
+develop first and start by putting a few suggestions or question how exactly it
+should work.
+
+Task list
+=========
+
+- TODO: list concrete tasks (one per pull request) for the first steps
+
+Alternatives
+============
+
+- list the other possible solutions (see abstract)
+
+Decision
+========
+
+tbd
+
+.. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
+.. _High level interface in the Gammapy roadmap: https://docs.gammapy.org/0.12/development/pigs/pig-005.html#high-level-interface
+.. _Gammapy command line interface: https://docs.gammapy.org/0.12/scripts/index.html
+.. _Angular CLI: https://cli.angular.io/
+.. _papermill: https://github.com/nteract/papermill/
+.. _cookiecutter: https://cookiecutter.readthedocs.io
