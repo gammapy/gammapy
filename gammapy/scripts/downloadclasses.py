@@ -98,34 +98,27 @@ class ComputePlan:
             return self.outfolder / "datasets"
         return self.outfolder
 
+    def getonefile(self, keyrec, filetype):
+        if keyrec in self.listfiles:
+            record = self.listfiles[keyrec]
+            self.listfiles = {}
+            self.listfiles[keyrec] = record
+        else:
+            self.listfiles = {}
+            if not self.modetutorials:
+                log.warning("{} {} not found".format(filetype, self.src))
 
     def getfilelist(self):
         if self.option == "notebooks" or self.modetutorials:
             self.parse_notebooks_yaml()
             if self.src != "":
-                keyrec = "nb: " + self.src
-                if keyrec in self.listfiles:
-                    record = self.listfiles[keyrec]
-                    self.listfiles = {}
-                    self.listfiles[keyrec] = record
-                else:
-                    self.listfiles = {}
-                    if not self.modetutorials:
-                        log.warning("Notebook {} not found".format(self.src))
+                self.getonefile("nb: " + self.src, "Notebook")
             self.listfiles.update(dict(parse_imagefiles(self.listfiles)))
 
         if (self.option == "scripts" or self.modetutorials) and not self.listfiles:
             self.parse_scripts_yaml()
             if self.src != "":
-                keyrec = "sc: " + self.src
-                if keyrec in self.listfiles:
-                    record = self.listfiles[keyrec]
-                    self.listfiles = {}
-                    self.listfiles[keyrec] = record
-                else:
-                    self.listfiles = {}
-                    if not self.modetutorials:
-                        log.warning("Script {} not found".format(self.src))
+                self.getonefile("sc: " + self.src, "Script")
 
         if self.option == "datasets":
             if self.modetutorials and not self.listfiles:
