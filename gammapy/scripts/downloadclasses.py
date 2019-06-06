@@ -38,29 +38,27 @@ def get_file(ftuple):
 
 def parse_datafiles(datasearch, datasetslist):
     for dataset in datasetslist:
-        if datasearch == dataset["name"] or datasearch == "":
-            if dataset["files"]:
-                for ds in dataset["files"]:
-                    label = ds["path"]
-                    data = {"url": ds["url"], "path": ds["path"]}
-                    if "hashmd5" in ds:
-                        data["hashmd5"] = ds["hashmd5"]
-                    yield label, data
+        if (datasearch == dataset["name"] or datasearch == "") and dataset.get("files", ""):
+            for ds in dataset["files"]:
+                label = ds["path"]
+                data = {"url": ds["url"], "path": ds["path"]}
+                if "hashmd5" in ds:
+                    data["hashmd5"] = ds["hashmd5"]
+                yield label, data
 
 
 def parse_imagefiles(notebookslist):
     for item in notebookslist:
         record = notebookslist[item]
-        if "images" in record:
-            if record["images"]:
-                for im in record["images"]:
-                    label = "im: " + im
-                    path = "images/" + im + ".png"
-                    filename_img = record["url"][record["url"].rfind("/") :]
-                    url = record["url"].replace(filename_img, "")
-                    url = url + "/" + path
-                    data = {"url": url, "path": path}
-                    yield label, data
+        if record.get("images", ""):
+            for im in record["images"]:
+                label = "im: " + im
+                path = "images/" + im + ".png"
+                filename_img = record["url"][record["url"].rfind("/") :]
+                url = record["url"].replace(filename_img, "")
+                url = url + "/" + path
+                data = {"url": url, "path": path}
+                yield label, data
 
 
 class ComputePlan:
@@ -155,12 +153,11 @@ class ComputePlan:
             else:
                 for item in self.listfiles:
                     record = self.listfiles[item]
-                    if "datasets" in record:
-                        if record["datasets"] != "":
-                            for ds in record["datasets"]:
-                                datafound.update(
-                                    dict(parse_datafiles(ds, datasets))
-                                )
+                    if record.get("datasets", ""):
+                        for ds in record["datasets"]:
+                            datafound.update(
+                                dict(parse_datafiles(ds, datasets))
+                            )
                 if not datafound:
                     log.info("No datasets found")
                     sys.exit()
@@ -189,14 +186,12 @@ class ComputePlan:
             self.listfiles[label]["path"] = path
             self.listfiles[label]["datasets"] = []
             self.listfiles[label]["images"] = []
-            if "datasets" in nb:
-                if nb["datasets"]:
-                    for ds in nb["datasets"]:
-                        self.listfiles[label]["datasets"].append(ds)
-            if "images" in nb:
-                if nb["images"]:
-                    for im in nb["images"]:
-                        self.listfiles[label]["images"].append(im)
+            if nb.get("datasets", ""):
+                for ds in nb["datasets"]:
+                    self.listfiles[label]["datasets"].append(ds)
+            if nb.get("images", ""):
+                for im in nb["images"]:
+                    self.listfiles[label]["images"].append(im)
 
 
     def parse_scripts_yaml(self):
@@ -219,10 +214,9 @@ class ComputePlan:
             self.listfiles[label]["url"] = sc["url"]
             self.listfiles[label]["path"] = path
             self.listfiles[label]["datasets"] = []
-            if "datasets" in sc:
-                if sc["datasets"]:
-                    for ds in sc["datasets"]:
-                        self.listfiles[label]["datasets"].append(ds)
+            if sc.get("datasets", ""):
+                for ds in sc["datasets"]:
+                    self.listfiles[label]["datasets"].append(ds)
 
 
 class ParallelDownload:
