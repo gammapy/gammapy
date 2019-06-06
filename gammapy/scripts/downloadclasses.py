@@ -147,9 +147,6 @@ class ComputePlan:
             datafound = {}
             if not self.modetutorials:
                 datafound.update(dict(parse_datafiles(self.src, datasets)))
-                if self.src and not datafound:
-                    log.info("Dataset {} not found".format(self.src))
-                    sys.exit()
             else:
                 for item in self.listfiles:
                     record = self.listfiles[item]
@@ -158,10 +155,10 @@ class ComputePlan:
                             datafound.update(
                                 dict(parse_datafiles(ds, datasets))
                             )
-                if not datafound:
-                    log.info("No datasets found")
-                    sys.exit()
             self.listfiles = datafound
+            if not datafound:
+                log.info("No datasets found")
+                sys.exit()
 
         return self.listfiles
 
