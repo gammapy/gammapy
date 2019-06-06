@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
     help="Path where the versioned notebook files will be copied.",
     show_default=True,
 )
-@click.option("--release", default="", help="Gammapy release environment.")
+@click.option("--release", default="", help="Number of release - ex: 0.12)")
 @click.option("--modetutorials", default=False, hidden=True)
 def cli_download_notebooks(src, out, release, modetutorials):
     """Download notebooks"""
@@ -37,7 +37,7 @@ def cli_download_notebooks(src, out, release, modetutorials):
     help="Path where the versioned python scripts will be copied.",
     show_default=True,
 )
-@click.option("--release", default="", help="Gammapy release environment.")
+@click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=False, hidden=True)
 def cli_download_scripts(src, out, release, modetutorials):
     """Download scripts"""
@@ -53,7 +53,7 @@ def cli_download_scripts(src, out, release, modetutorials):
 
 @click.command(name="datasets")
 @click.option("--src", default="", help="Specific dataset to download.")
-@click.option("--release", default="", help="Gammapy release environment.")
+@click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option(
     "--out",
     default="gammapy-datasets",
@@ -80,7 +80,7 @@ def cli_download_datasets(src, out, release, modetutorials):
     help="Path where notebooks and datasets folders will be copied.",
     show_default=True,
 )
-@click.option("--release", default="", help="Gammapy release environment.")
+@click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=True, hidden=True)
 def cli_download_tutorials(ctx, src, out, release, modetutorials):
     """Download notebooks, scripts and datasets"""
