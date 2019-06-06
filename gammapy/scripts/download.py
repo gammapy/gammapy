@@ -26,7 +26,7 @@ def cli_download_notebooks(src, out, release, modetutorials):
         plan.getfilelist(), plan.getlocalfolder(), release, "notebooks", modetutorials
     )
     down.run()
-    down.show_info()
+    print("")
 
 
 @click.command(name="scripts")
@@ -48,7 +48,7 @@ def cli_download_scripts(src, out, release, modetutorials):
         plan.getfilelist(), plan.getlocalfolder(), release, "scripts", modetutorials
     )
     down.run()
-    down.show_info()
+    print("")
 
 
 @click.command(name="datasets")
@@ -68,7 +68,7 @@ def cli_download_datasets(src, out, release, modetutorials):
         plan.getfilelist(), plan.getlocalfolder(), release, "datasets", modetutorials
     )
     down.run()
-    down.show_info()
+    down.show_info_datasets()
 
 
 @click.command(name="tutorials")

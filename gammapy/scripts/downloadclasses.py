@@ -267,28 +267,27 @@ class ParallelDownload:
         pool.join()
         pool.close()
 
-    def show_info(self):
+    def show_info_datasets(self):
         print("")
-        if self.option == "datasets":
-            GAMMAPY_DATA = Path.cwd() / self.outfolder
-            if self.modetutorials:
-                GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
-                if self.release:
-                    datafolder = "datasets-" + self.release
-                    GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / datafolder
-                    print(
-                        "*** Enter the following commands below to get started with this version of Gammapy"
-                    )
-                    print("cd {}".format(self.outfolder.parent))
-                    condaname = "gammapy-" + self.release
-                    envfilename = condaname + "-environment.yml"
-                    print("conda env create -f {}".format(envfilename))
-                    print("conda activate {}".format(condaname))
-                    print("jupyter lab")
-                    print("")
-            print("*** You might want to declare GAMMAPY_DATA env variable")
-            print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
-            print("")
+        GAMMAPY_DATA = Path.cwd() / self.outfolder
+        if self.modetutorials:
+            GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / "datasets"
+            if self.release:
+                datafolder = "datasets-" + self.release
+                GAMMAPY_DATA = Path.cwd() / self.outfolder.parent / datafolder
+                print(
+                    "*** Enter the following commands below to get started with this version of Gammapy"
+                )
+                print("cd {}".format(self.outfolder.parent))
+                condaname = "gammapy-" + self.release
+                envfilename = condaname + "-environment.yml"
+                print("conda env create -f {}".format(envfilename))
+                print("conda activate {}".format(condaname))
+                print("jupyter lab")
+                print("")
+        print("*** You might want to declare GAMMAPY_DATA env variable")
+        print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
+        print("")
 
     def progressbar(self, args):
         self.bar += 1
