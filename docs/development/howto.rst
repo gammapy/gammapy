@@ -785,13 +785,12 @@ execute the build doc process with the ``src`` parameter with value the name of 
 considered notebook. i.e. ``make docs-all src=tutorials/my-notebook.ipynb``
 
 Each *fixed-text* Sphinx formatted notebook present in the documentation has its
-own link pointing to its specific space in Gammapy Binder. Since notebooks are
-evolving with Gammapy functionalities and documentation, it is possible to link
-the different versions of the notebooks to the same versions built in Gammapy Binder.
-For stable releases, it is useful to use the ``release`` parameter with the value
-of the release label tag used in Github. This value will be used to build the links
-to Binder for that specific stable release for each of the tutorials published in
-the :ref:`tutorials` section. i.e. ``make docs-all release=v0.8``
+own link pointing to its specific Binder space in the `gammapy-webpage` repository.
+Since notebooks are evolving with Gammapy features and documentation, the different
+versions of the notebooks are linked to the versioned Binder environments. In this
+sense, it is important to publish as stable docs those built with stable release
+versions of Gammapy so the links to Binder in the tutorials point to stable tagged
+Binder environments in the `gammapy-webpage` repository.
 
 Documentation guidelines
 ------------------------

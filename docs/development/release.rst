@@ -71,9 +71,9 @@ Steps for the day of the release:
 #. Follow the instructions how to release an Astropy affiliated package
    `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
 #. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
+#. Build the stable release documentation and publish it in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
 #. Update the Gammapy stable branch to point to the new tag
    as described `here <http://docs.astropy.org/en/latest/development/releasing.html>`__.
-#. Add the new version of docs in `gammapy-docs` `Github repository <https://github.com/gammapy/gammapy-docs>`__
 #. Add the environment and tutorials YAML files, as well as the JSON datasets file in `gammapy-webpage` `Github repository <https://github.com/gammapy/gammapy-webpage>`__
 #. Update the Binder Dockerfile in the `gammapy-webpage` Github repository, changing the Gammapy release number in four different
    lines, and create the tag release accordingly in the `master` branch.

@@ -29,15 +29,12 @@ def setup_sphinx_params(args):
     if not args.nbs:
         flagnotebooks = "False"
     build_notebooks_line = "build_notebooks = {}\n".format(flagnotebooks)
-    git_commit_line = "git_commit = {}\n".format(args.release)
 
     file_str = ""
     with open(setupfilename) as f:
         for line in f:
             if line.startswith("build_notebooks ="):
                 line = build_notebooks_line
-            if line.startswith("git_commit ="):
-                line = git_commit_line
             file_str += line
 
     with open(setupfilename, "w") as f:
@@ -133,14 +130,11 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", help="Tutorial notebook or folder to process")
-    parser.add_argument("--release", help="Release tag for Binder links")
     parser.add_argument("--nbs", help="Notebooks are considered in Sphinx")
     args = parser.parse_args()
 
     if not args.src:
         args.src = "tutorials"
-    if not args.release:
-        args.release = "master"
     if not args.nbs:
         args.nbs = "True"
 

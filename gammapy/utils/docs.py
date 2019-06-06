@@ -27,6 +27,7 @@ from docutils import nodes
 from sphinx.util import logging
 from nbformat.v4 import new_markdown_cell
 import nbformat
+from .. import version
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])
@@ -112,14 +113,14 @@ def gammapy_sphinx_ext_activate():
     roles.register_local_role("gp-notebook", LinkNotebook)
 
 
-def parse_notebooks(folder, url_docs, git_commit):
+def parse_notebooks(folder, url_docs):
     """
     Modifies raw and html-fixed notebooks so they will not have broken links
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
-    if git_commit.startswith("v"):
-        release_number_docs = release_number_binder = git_commit.replace("v", "")
+    if version.release:
+        release_number_docs = release_number_binder = version.version
     else:
         release_number_binder = "master"
         release_number_docs = "dev"
@@ -191,12 +192,11 @@ def gammapy_sphinx_notebooks(setup_cfg):
         return
 
     url_docs = setup_cfg["url_docs"]
-    git_commit = setup_cfg["git_commit"]
 
     # fix links
     filled_notebooks_folder = Path("notebooks")
     download_notebooks_folder = Path("_static") / "notebooks"
 
     if filled_notebooks_folder.is_dir():
-        parse_notebooks(filled_notebooks_folder, url_docs, git_commit)
-        parse_notebooks(download_notebooks_folder, url_docs, git_commit)
+        parse_notebooks(filled_notebooks_folder, url_docs)
+        parse_notebooks(download_notebooks_folder, url_docs)

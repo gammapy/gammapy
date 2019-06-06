@@ -93,7 +93,7 @@ docs-sphinx:
 docs-all:
 	which python
 	pip install -e .
-	python -m gammapy.utils.tutorials_process --src="$(src)" --release="$(release)" --nbs="$(nbs)"
+	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)"
 	python setup.py build_docs
 
 docs-show:
