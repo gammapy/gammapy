@@ -66,18 +66,17 @@ def parse_imagefiles(notebookslist):
 class ComputePlan:
     """Generates the whole list of files to download"""
 
-    def __init__(self, src, outfolder, version, option, modetutorials=False):
+    def __init__(self, src, outfolder, release, option, modetutorials=False):
         self.src = src
         self.outfolder = Path(outfolder)
-        self.version = version
-        self.release = version
+        self.release = release
         self.option = option
         self.modetutorials = modetutorials
         self.listfiles = {}
         log.info("Looking for {}...".format(self.option))
 
     def getenvironment(self):
-        filename_env = "gammapy-" + self.version + "-environment.yml"
+        filename_env = "gammapy-" + self.release + "-environment.yml"
         url_file_env = BASE_URL + "/install/" + filename_env
         filepath_env = str(self.outfolder / filename_env)
         try:
@@ -90,25 +89,20 @@ class ComputePlan:
 
     def getlocalfolder(self):
         namefolder = ""
+        suffix = "-{}".format(self.release)
+
+        if self.release == "":
+            suffix += version.version
 
         if self.option == "notebooks":
-            if self.release:
-                namefolder = "notebooks-" + self.release
-            else:
-                namefolder = "notebooks" + version.version
+            namefolder = "notebooks" + suffix
 
         if self.option == "scripts":
-            if self.release:
-                namefolder = "scripts-" + self.release
-            else:
-                namefolder = "scripts" + version.version
+            namefolder = "scripts" + suffix
 
         if self.option == "datasets":
             if self.modetutorials:
-                if self.release:
-                    namefolder = "datasets-" + self.release
-                else:
-                    namefolder = "datasets-" + version.version
+                    namefolder = "datasets"
 
         if namefolder:
             self.outfolder = self.outfolder / namefolder
@@ -148,7 +142,7 @@ class ComputePlan:
                 sys.exit()
 
             if self.release:
-                filename_datasets = "gammapy-" + self.version + "-data-index.json"
+                filename_datasets = "gammapy-" + self.release + "-data-index.json"
                 url = BASE_URL + "/data/" + filename_datasets
             else:
                 url = DEV_DATA_JSON_URL
@@ -184,7 +178,7 @@ class ComputePlan:
 
     def parse_notebooks_yaml(self):
         if self.release:
-            filename_nbs = "gammapy-" + self.version + "-tutorials.yml"
+            filename_nbs = "gammapy-" + self.release + "-tutorials.yml"
             url = BASE_URL + "/tutorials/" + filename_nbs
         else:
             url = DEV_NBS_YAML_URL
@@ -214,7 +208,7 @@ class ComputePlan:
 
     def parse_scripts_yaml(self):
         if self.release:
-            filename_scripts = "gammapy-" + self.version + "-scripts.yml"
+            filename_scripts = "gammapy-" + self.release + "-scripts.yml"
             url = BASE_URL + "/tutorials/" + filename_scripts
         else:
             url = DEV_SCRIPTS_YAML_URL
