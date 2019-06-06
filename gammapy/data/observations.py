@@ -437,7 +437,7 @@ class ObservationChecker(Checker):
         yield self._record(level="debug", msg="Starting psf check")
 
         try:
-            psf = self.observation.load("psf")
+            self.observation.load("psf")
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return

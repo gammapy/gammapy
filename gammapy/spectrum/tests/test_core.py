@@ -48,7 +48,7 @@ class TestCountsSpectrum:
     @requires_dependency("matplotlib")
     def test_plot(self):
         with mpl_plot_check():
-            self.spec.plot(show_energy=1*u.TeV)
+            self.spec.plot(show_energy=1 * u.TeV)
 
         with mpl_plot_check():
             self.spec.plot_hist()
@@ -145,4 +145,4 @@ class TestPHACountsSpectrum:
 
     def test_reset_thresholds(self):
         self.spec.reset_thresholds()
-        assert_allclose(self.spec.quality, 0.)
+        assert_allclose(self.spec.quality, 0.0)

@@ -83,14 +83,7 @@ class Pulsar(SimplePulsar):
     """
 
     def __init__(
-        self,
-        P_0="0.1 s",
-        B="1e10 G",
-        n=3,
-        I=DEFAULT_I,
-        R=DEFAULT_R,
-        age=None,
-        L_0=None,
+        self, P_0="0.1 s", B="1e10 G", n=3, I=DEFAULT_I, R=DEFAULT_R, age=None, L_0=None
     ):
         P_0 = Quantity(P_0, "s")
         B = Quantity(B, "G")
