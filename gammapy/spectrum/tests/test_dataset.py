@@ -147,8 +147,7 @@ class TestSpectrumDatasetOnOff:
         with pytest.raises(AttributeError):
             self.dataset.npred()
 
-        with pytest.raises(AttributeError):
-            self.dataset.parameters
+        assert hasattr(self.dataset, "parameters") == False
 
     def test_alpha(self):
         assert self.dataset.alpha.shape == (4,)
@@ -162,21 +161,21 @@ class TestSpectrumDatasetOnOff:
             self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype='float')
 
     def test_reset_thresholds(self):
-        cnts = self.on_counts.copy()
+        counts = self.on_counts.copy()
         quality = np.ones(self.dataset.data_shape)
         quality[1:-1] = 0
-        cnts.quality = quality
+        counts.quality = quality
         dataset = SpectrumDatasetOnOff(
-            counts=cnts,
+            counts=counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
         )
 
-        assert_allclose(dataset.lo_threshold.to_value('TeV'),cnts.energy.edges[1].to_value('TeV'))
+        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[1].to_value('TeV'))
         dataset.reset_thresholds()
-        assert_allclose(dataset.lo_threshold.to_value('TeV'),cnts.energy.edges[0].to_value('TeV'))
+        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[0].to_value('TeV'))
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
@@ -243,13 +242,13 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
         )
-        dataset.to_ogip_files(outdir=str(tmpdir), overwrite=True)
+        dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / self.on_counts.phafile
         newdataset = SpectrumDatasetOnOff.from_ogip_files(str(filename))
 
         assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
-        assert newdataset.counts_off == None
-        assert newdataset.edisp == None
+        assert newdataset.counts_off is None
+        assert newdataset.edisp is None
 
 
     def test_total_stats(self):
@@ -267,16 +266,16 @@ class TestSpectrumDatasetOnOff:
 
     def test_set_fit_energy_range(self):
         self.dataset.set_fit_energy_range(emin=0.3*u.TeV, emax=6*u.TeV)
-        assert_allclose(np.where(self.dataset.mask_fit)[0][0],1)
-        assert_allclose(np.where(self.dataset.mask_fit)[0][-1],2)
+        desired = [False, True, True, False]
+        assert_allclose(self.dataset.mask_fit, desired)
 
         self.dataset.set_fit_energy_range(emax=6*u.TeV)
-        assert_allclose(np.where(self.dataset.mask_fit)[0][0],0)
-        assert_allclose(np.where(self.dataset.mask_fit)[0][-1],2)
+        desired = [True, True, True, False]
+        assert_allclose(self.dataset.mask_fit,desired)
 
         self.dataset.set_fit_energy_range(emin=1*u.TeV)
-        assert_allclose(np.where(self.dataset.mask_fit)[0][0],2)
-        assert_allclose(np.where(self.dataset.mask_fit)[0][-1],3)
+        desired = [False, False, True, True]
+        assert_allclose(self.dataset.mask_fit,desired)
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
