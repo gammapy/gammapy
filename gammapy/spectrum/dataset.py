@@ -98,7 +98,7 @@ class SpectrumDataset(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.shape
+        return self.counts.data.data.shape
 
     def npred(self):
         """Returns npred map (model + background)"""
@@ -255,12 +255,12 @@ class SpectrumDatasetOnOff(Dataset):
         energy = self.counts.energy.edges
 
         if emin is None:
-            mask_lo = np.ones_like(energy, dtype="bool")
+            mask_lo = np.ones(len(energy)-1, dtype="bool")
         else:
             mask_lo = energy[:-1] >= emin
 
         if emax is None:
-            mask_hi = np.ones_like(energy, dtype="bool")
+            mask_hi = np.ones(len(energy)-1, dtype="bool")
         else:
             mask_hi = energy[1:] <= emax
 
@@ -513,7 +513,7 @@ class SpectrumDatasetOnOff(Dataset):
         overwrite : bool
             Overwrite existing files?
         """
-        outdir = Path.cwd() if outdir is None else Path(outdir)
+        outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
         phafile = self.counts.phafile

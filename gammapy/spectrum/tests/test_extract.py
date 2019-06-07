@@ -12,7 +12,6 @@ from ...background import ReflectedRegionsBackgroundEstimator
 from ...maps import WcsGeom, WcsNDMap
 from ...data import DataStore
 
-
 @pytest.fixture(scope="session")
 def exclusion_mask():
     """Example mask for testing."""
@@ -165,3 +164,29 @@ class TestSpectrumExtraction:
         extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
         actual = extraction.spectrum_observations[0].energy_range[0]
         assert_quantity_allclose(actual, 0.8799225 * u.TeV, rtol=1e-3)
+
+@requires_data()
+def test_extract_cta_1dc_data(caplog):
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
+    obs_ids = [110380, 111140]
+    observations = datastore.get_observations(obs_ids)
+
+    pos = SkyCoord(0.0, 0.0, unit="deg", frame="galactic")
+    radius = Angle(0.11, "deg")
+    on_region = CircleSkyRegion(pos, radius)
+
+    est = ReflectedRegionsBackgroundEstimator(
+        observations=observations,
+        on_region=on_region,
+        min_distance_input="0.2 deg",
+    )
+    est.run()
+    # This will test non PSF3D input as well as absence of default thresholds
+    extract = SpectrumExtraction(bkg_estimate=est.result, observations=observations,
+                                 containment_correction=True)
+    extract.run()
+
+    extract.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
+    actual = extract.spectrum_observations[0].energy_range[0]
+    assert_quantity_allclose(actual, 0.774263 * u.TeV, rtol=1e-3)
+

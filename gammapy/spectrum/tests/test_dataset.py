@@ -52,6 +52,14 @@ class TestSpectrumDataset:
             self.source_model, self.src, self.livetime, None, None, None, self.bkg
         )
 
+    def test_data_shape(self):
+        assert self.dataset.data_shape[0] == self.nbins
+
+    def test_energy_range(self):
+        energy_range = self.dataset.energy_range
+        assert energy_range.unit == u.TeV
+        assert_allclose(energy_range.to_value('TeV'), [0.1, 10.])
+
     def test_cash(self):
         """Simple CASH fit to the on vector"""
 
@@ -80,6 +88,24 @@ class TestSpectrumDataset:
         assert_allclose(fake_spectrum.energy.edges, self.dataset.counts.energy.edges)
         assert fake_spectrum.data.data.sum() == 907331
 
+    def test_incorrect_mask(self):
+        mask_fit = np.ones(self.nbins, dtype=np.dtype('float'))
+        with pytest.raises(ValueError):
+            SpectrumDataset(
+                self.source_model, self.src, self.livetime, mask_fit, None, None, self.bkg
+            )
+
+    def test_set_model(self):
+        aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, 'HESS')
+        edisp = EnergyDispersion.from_diagonal_response(self.src.energy.edges, self.src.energy.edges)
+        dataset = SpectrumDataset(
+            None, self.src, self.livetime, None, aeff, edisp, self.bkg
+        )
+        with pytest.raises(AttributeError):
+            dataset.parameters
+
+        dataset.model = self.source_model
+        assert dataset.parameters[0] == self.source_model.parameters[0]
 
 class TestSpectrumDatasetOnOff:
     """ Test ON OFF SpectrumDataset"""
@@ -95,8 +121,10 @@ class TestSpectrumDatasetOnOff:
         self.aeff = EffectiveAreaTable(etrue[:-1], etrue[1:], np.ones(9) * u.cm ** 2)
         self.edisp = EnergyDispersion.from_diagonal_response(etrue, ereco)
 
+        data = np.ones(elo.shape)
+        data[-1] = 0  # to test stats calculation with empty bins
         self.on_counts = PHACountsSpectrum(
-            elo, ehi, np.ones(elo.shape), backscal=np.ones(elo.shape)
+            elo, ehi, data , backscal=np.ones(elo.shape)
         )
         self.off_counts = PHACountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
@@ -106,8 +134,7 @@ class TestSpectrumDatasetOnOff:
 
         self.livetime = 1000 * u.s
 
-    def test_init_no_model(self):
-        dataset = SpectrumDatasetOnOff(
+        self.dataset = SpectrumDatasetOnOff(
             counts=self.on_counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
@@ -115,34 +142,40 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
 
-        with pytest.raises(AttributeError):
-            dataset.npred()
 
+    def test_init_no_model(self):
         with pytest.raises(AttributeError):
-            p = dataset.parameters
+            self.dataset.npred()
+
+        assert hasattr(self.dataset, "parameters") == False
 
     def test_alpha(self):
-        dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
-            counts_off=self.off_counts,
-            aeff=self.aeff,
-            edisp=self.edisp,
-            livetime=self.livetime,
-        )
-
-        assert dataset.alpha.shape == (4,)
-        assert_allclose(dataset.alpha, 0.1)
+        assert self.dataset.alpha.shape == (4,)
+        assert_allclose(self.dataset.alpha, 0.1)
 
     def test_data_shape(self):
+        assert self.dataset.data_shape == self.on_counts.data.data.shape
+
+    def test_mask_safe_setter(self):
+        with pytest.raises(ValueError):
+            self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype='float')
+
+    def test_reset_thresholds(self):
+        counts = self.on_counts.copy()
+        quality = np.ones(self.dataset.data_shape)
+        quality[1:-1] = 0
+        counts.quality = quality
         dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
+            counts=counts,
             counts_off=self.off_counts,
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
         )
 
-        assert dataset.data_shape == self.on_counts.data.data.shape
+        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[1].to_value('TeV'))
+        dataset.reset_thresholds()
+        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[0].to_value('TeV'))
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
@@ -195,13 +228,28 @@ class TestSpectrumDatasetOnOff:
             edisp=self.edisp,
             livetime=self.livetime,
         )
-        dataset.to_ogip_files(outdir=str(tmpdir), overwrite=True)
+        dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / self.on_counts.phafile
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(str(filename))
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
+
+    def test_to_from_ogip_files_no_edisp(self, tmpdir):
+        dataset = SpectrumDatasetOnOff(
+            counts=self.on_counts,
+            aeff=self.aeff,
+            livetime=self.livetime,
+        )
+        dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
+        filename = tmpdir / self.on_counts.phafile
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
+
+        assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
+        assert newdataset.counts_off is None
+        assert newdataset.edisp is None
+
 
     def test_total_stats(self):
         dataset = SpectrumDatasetOnOff(
@@ -212,10 +260,22 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
 
-        assert dataset.total_stats.n_on == 4
+        assert dataset.total_stats.n_on == 3
         assert dataset.total_stats.n_off == 40
-        assert dataset.total_stats.excess == 0
+        assert dataset.total_stats.excess == -1
 
+    def test_set_fit_energy_range(self):
+        self.dataset.set_fit_energy_range(emin=0.3*u.TeV, emax=6*u.TeV)
+        desired = [False, True, True, False]
+        assert_allclose(self.dataset.mask_fit, desired)
+
+        self.dataset.set_fit_energy_range(emax=6*u.TeV)
+        desired = [True, True, True, False]
+        assert_allclose(self.dataset.mask_fit,desired)
+
+        self.dataset.set_fit_energy_range(emin=1*u.TeV)
+        desired = [False, False, True, True]
+        assert_allclose(self.dataset.mask_fit,desired)
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
