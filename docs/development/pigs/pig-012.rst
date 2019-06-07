@@ -6,19 +6,11 @@
 PIG 12 - High-level interface
 *****************************
 
-* Author: tbd
+* Author: José Enrique Ruiz, Christoph Deil, Axel Donath, Regis Terrier
 * Created: June 6, 2019
 * Accepted: tbd
 * Status: draft
 * Discussion: `GH 2218`_
-
-Help!
-=====
-
-We (Christoph, Axel, Régis) are looking for an author for this PIG and lead for
-this task. Please comment on Github or get in touch via Slack! The requirements
-are to have an interest in this, and to have time to discuss and develop or
-review a first minimum prototype working solution for this in the coming weeks.
 
 Abstract
 ========
