@@ -31,7 +31,6 @@ def cli_jupyter_run(ctx, tutor, kernel):
 
 def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
-    t = time.time()
     cmd = [
         sys.executable,
         "-m",
@@ -47,16 +46,15 @@ def execute_notebook(path, kernel="python3", loglevel=30):
         "--execute",
         "{}".format(path),
     ]
-
-    try:
-        cp = subprocess.run(cmd)
-        cp.check_returncode()
-        t = time.time() - t
-        log.info("   ... Executing duration: {:.1f} seconds".format(t))
-        return True
-    except subprocess.CalledProcessError:
+    t = time.time()
+    completed_process = subprocess.run(cmd)
+    t = time.time() - t
+    if completed_process.returncode:
         log.error("Error executing file {}".format(str(path)))
         return False
+    else:
+        log.info("   ... Executing duration: {:.1f} seconds".format(t))
+        return True
 
 
 @click.command(name="strip")
