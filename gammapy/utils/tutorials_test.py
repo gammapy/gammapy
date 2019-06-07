@@ -5,6 +5,7 @@ import sys
 import logging
 from pathlib import Path
 from pkg_resources import working_set
+from shutil import copytree, rmtree
 import yaml
 from ..scripts.jupyter import notebook_test
 
@@ -42,6 +43,12 @@ def main():
 
     passed = True
 
+    # setup
+    path_temp = Path("temp")
+    path_empty_nbs = Path("tutorials")
+    rmtree(str(path_temp), ignore_errors=True)
+    copytree(str(path_empty_nbs), str(path_temp))
+
     for notebook in get_notebooks():
         if requirement_missing(notebook):
             log.info(
@@ -52,10 +59,13 @@ def main():
             continue
 
         filename = notebook["name"] + ".ipynb"
-        path = Path("tutorials") / filename
+        path = path_temp / filename
 
         if not notebook_test(path):
             passed = False
+
+    # tear down
+    rmtree(str(path_temp), ignore_errors=True)
 
     assert passed
 
