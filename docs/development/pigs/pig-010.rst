@@ -74,10 +74,11 @@ The places where regions appear in the Gammapy code and API are very few and
 overall region handling is pretty simple. Gammapy is mostly a binned analysis
 framework, so mainly regions are used to create pixel masks, and then the
 analysis is mask-based, not involving region objects any more (see section
-below: `Masks`_). The second place where regions appear is to select objects of
-interest (events, observations, sources) for a given region (see section below:
-`Tables`_). Finally, there is the use case of rotated regions for background
-estimation in  1D spectral analysis (see section below: `Rotated regions`_).
+below: `Images and masks`_). The second place where regions appear is to select
+objects of interest (events, observations, sources) for a given region (see
+section below: `Sky and pixel regions`_). Finally, there is the use case of
+rotated regions for background estimation in  1D spectral analysis (see section
+below: `Rotated regions`_).
 
 However, it turns out that working with regions is surprisingly tricky, because
 there are different ways to define the basic semantics and computations for
@@ -133,7 +134,7 @@ shapes such as wedges or already for rectangles, because their shape only
 becomes well-defined for a given projection. These things are not in scope for
 this PIG or needed for Gammapy for now, Gammapy simply doesn't have all-sky
 analysis support built in yet, although already now users could write Python
-scripts to do it using ``astropy-healpix`` and Gammapy.
+scripts to do it using a combination of HEALPix and WCS maps and Gammapy.
 
 Now that we know how `astropy-regions`_ works and how we plan to handle pixel
 and sky regions in Gammapy, let's move on to the detailed proposal and task list
@@ -236,6 +237,14 @@ exist, but avoiding it probably isn't possible, since it includes the
 other existing region format. So at this time, there are no plans to improve or
 unify that region format.
 
+We propose to change the current `gammapy.maps.WcsGeom.region_mask`_ input (and
+everywhere else) from a list of regions, to a single region. The same effect of
+a list of regions (meaning "union") can be achieved by creating a `Compound
+region`_. That should be as efficient computationally, and more flexible (e.g.
+one could also do "intersection" in the region definition). It might be useful
+to add a factory function in ``astropy-regions`` that makes the creation of such
+compound regions a bit simpler.
+
 Sky and pixel regions
 ---------------------
 
@@ -301,10 +310,11 @@ method, because if-else and specific case handling is needed for the operation.
 We propose to add a ``PixelRegion.rotate(center, angle)`` method for all regions
 in ``astropy-regions`` (or all that can be represented again as a pixel region
 object after rotating), and to only handle the case of pixel regions and a given
-exclusion mask and WCS in ``reflected.py``. For convenience, we could generate a
-dummy WCS as a local TAN projection to the pointing position, if the user
-doesn't need of have an exclusion mask. This is a common case e.g. for isolated
-point sources like AGN, where the rotated regions method is most commonly used.
+exclusion mask and WCS in ``reflected.py``. For convenience, a dummy WCS as a
+local TAN projection to the pointing position is used, if the user doesn't need
+of have an exclusion mask, as is already done in the current code. This is a
+common case e.g. for isolated point sources like AGN, where the rotated regions
+method is most commonly used.
 
 One complication is that in the current code, to have fewer off test regions,
 the algorithm takes a large step ``arctan(2*radius/offset)`` at the start and
@@ -359,9 +369,9 @@ or if there are any use cases to couple time with the spatial and spectral
 regions, e.g. for a time-dependent safe energy threshold or user analysis
 option.
 
-These thoughts are related to the question in `GH 1805`_: "Introduce RegionGeom
-and RegionNDMap?" - Axel: do you want this for v1.0 or postpone? If v1.0, then
-do you want to flesh out a proposal here and now, or later in a separate PIG?
+There is an issue `GH 1805`_ "Introduce RegionGeom and RegionNDMap?" with first
+thoughts in this direction. Discussion or working out a solution for that is
+beyond the scope of this PIG.
 
 In the HESS software, there is a region class that wraps a mask, and that is
 sometimes useful, specifically because in the HESS software exclusion regions
@@ -410,18 +420,14 @@ priority:
 Alternatives
 ============
 
-- As mentioned in the abstract, the proposal to continue with `astropy-regions`_
-  roughly as proposed here is probalby not controversial.
-- As mentioned in the `Outlook`_, in the future we might want a more general
-  solution, and there's the question whether a mask-backed region should be
-  added.
-- As mentioned in `Sky and pixel regions`_, there are a few options to define the semantics for
-  contains and plot.
-- As mentioned in `Rotated regions`_, an alternative could be to use sky regions
-  instead of pixel regions, and to restrict to the sky regions that can be
-  rotated, possibly polygonising others.
-- As mentioned in `Sky and pixel regions`_, those methods aren't really needed, they are just a
-  small convenience. If we prefer a smaller API, we could just delete them.
+As mentioned in `Sky and pixel regions`_ and `Rotated regions`_, we could use
+sky regions more instead of pixel regions, and restrict analysis to sky regions
+where contains or rotate is well defined, namely circles and polygons, and to
+polygonise other sky regions using some approximation, before passing them to
+Gammapy. 
+
+In the future we might want a more general solution, and there's the question
+whether a mask-backed region should be added (see `Outlook`_)
 
 Decision
 ========
@@ -455,6 +461,7 @@ tbd
 .. _regions.PolygonSkyRegion: https://astropy-regions.readthedocs.io/en/latest/api/regions.PolygonSkyRegion.html
 .. _specutils: https://specutils.readthedocs.io
 .. _specutils.SpectralRegion: https://specutils.readthedocs.io/en/latest/spectral_regions.html
+.. _Compound region: https://astropy-regions.readthedocs.io/en/latest/compound.html
 
 .. _GH 2129: https://github.com/gammapy/gammapy/pull/2129
 .. _GH 2089: https://github.com/gammapy/gammapy/pull/2089
