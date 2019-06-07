@@ -67,7 +67,8 @@ def main():
     # tear down
     rmtree(str(path_temp), ignore_errors=True)
 
-    assert passed
+    if not passed:
+        sys.exit("Some tests failed. Existing now.")
 
 
 if __name__ == "__main__":

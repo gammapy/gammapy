@@ -31,7 +31,6 @@ def cli_jupyter_run(ctx, tutor, kernel):
 
 def execute_notebook(path, kernel="python3", loglevel=30):
     """Execute a Jupyter notebook."""
-    t = time.time()
     cmd = [
         sys.executable,
         "-m",
@@ -47,12 +46,13 @@ def execute_notebook(path, kernel="python3", loglevel=30):
         "--execute",
         "{}".format(path),
     ]
-
-    if subprocess.call(cmd):
+    t = time.time()
+    completed_process = subprocess.run(cmd)
+    t = time.time() - t
+    if completed_process.returncode:
         log.error("Error executing file {}".format(str(path)))
         return False
     else:
-        t = time.time() - t
         log.info("   ... Executing duration: {:.1f} seconds".format(t))
         return True
 

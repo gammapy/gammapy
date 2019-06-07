@@ -36,7 +36,7 @@ def script_test(path):
     log.info("   ... EXECUTING {}".format(str(path)))
 
     cmd = [sys.executable, str(path)]
-    cp = subprocess.run(cmd, capture_output=True)
+    cp = subprocess.run(cmd, stderr=subprocess.PIPE)
     if cp.returncode:
         log.info("   ... FAILED")
         log.info("   ___ TRACEBACK")
@@ -73,7 +73,8 @@ def main():
         if not script_test(path):
             passed = False
 
-    assert passed
+    if not passed:
+        sys.exit("Some tests failed. Existing now.")
 
 
 if __name__ == "__main__":

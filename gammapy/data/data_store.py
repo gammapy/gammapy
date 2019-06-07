@@ -308,7 +308,7 @@ class DataStore:
             if not overwrite:
                 cmd += ["-n"]
             cmd += [str(loc.path()), str(targetdir)]
-            subprocess.call(cmd)
+            subprocess.run(cmd)
 
         filename = str(outdir / self.DEFAULT_HDU_TABLE)
         subhdutable.write(filename, format="fits", overwrite=overwrite)
