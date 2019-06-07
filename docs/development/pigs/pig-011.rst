@@ -10,7 +10,7 @@ PIG 11 - Gammapy dependencies and distribution
 * Created: June 6, 2019
 * Accepted: tbd
 * Status: draft
-* Discussion: `GH TODO`_
+* Discussion: `GH 2218`_
 
 Abstract
 ========
@@ -60,6 +60,9 @@ everywhere (instead of a mix of OrderedDict and dict)
 The first point is the most important one: the cost of supporting Python 3.5
 isn't very high: if you want or need it, let us know!
 
+Sunpy has already dropped Python 3.5 support in v1.0. Astropy still supports
+Python 3.5, they will move to 3.6+ with Astropy 4.0 in early 2010.
+
 tbd: decide on min version for other dependencies
 
 Distribution
@@ -71,7 +74,37 @@ Sufficient or do we want to support other distribution channels?
 Wheels
 ------
 
-tbd
+The wheel binary package format was introduced as a standard for Python packages
+in 2012 in `PEP 427`_. Most Python projects create and distribute wheels (see
+https://pythonwheels.com), including packages much more complex than Gammapy
+like Numpy, Scipy, Tensorflow.
+
+At this time, we don't plan to offer wheels for Gammapy, but to only distribute
+source distributions ``sdist`` at https://pypi.org/project/gammapy/ .
+
+The reason is that binary wheels need to be built for each supported platform,
+and they need to be distributed via PyPI, i.e. to create them a set of scripts
+or continuous delivery configuration has to be set up and maintained by the
+package maintainers. This is contrary and more difficult to achieve than binary
+conda packages, where conda-forge exists as a separate build infrastructure and
+tooling that starts by taking the ``sdist`` from PyPI and then uploading the
+conda packages to anaconda.org.
+
+At this point, nothing as simple as conda-forge has emerged for wheels, so
+different projects or small group of projects set up their own system, e.g
+https://github.com/MacPython/astropy-wheels for Astropy or
+https://iscinumpy.gitlab.io/post/azure-devops-python-wheels/ for iminuit and the
+scikit-hep packages.
+
+This hasn't happened for the Astropy affiliated packages (or all Python
+packages) and we in the Gammapy team don't have the expertise or time to
+contribute to that at this point. In the future, if a "wheel-forge" emerges, we
+can start supporting wheels for Gammapy.
+
+Actually, there is one platform where binary wheels for Gammapy and all
+dependencies exits already. If you ``pip install gammapy`` on Raspberry Pi,
+you'll get binary wheels thanks to this guy:
+https://www.raspberrypi.org/blog/piwheels/
 
 Macports
 --------
@@ -99,6 +132,7 @@ Decision
 
 tbd
 
-.. _GH TODO: https://github.com/gammapy/gammapy/pull/TODO
+.. _GH 2218: https://github.com/gammapy/gammapy/pull/TODO
 .. _Installation with Macports: https://docs.gammapy.org/0.12/install/macports.html
 .. _Gammapy in Macports: https://github.com/macports/macports-ports/commits/master/python/py-gammapy/Portfile
+.. _PEP 427: https://www.python.org/dev/peps/pep-0427/
