@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import logging
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -12,8 +11,6 @@ from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...maps import WcsGeom, WcsNDMap
 from ...data import DataStore
-
-log = logging.getLogger(__name__)
 
 @pytest.fixture(scope="session")
 def exclusion_mask():
@@ -188,7 +185,6 @@ def test_extract_cta_1dc_data(caplog):
     extract = SpectrumExtraction(bkg_estimate=est.result, observations=observations,
                                  containment_correction=True)
     extract.run()
-    assert 'No thresholds defined for obs Info for OBS_ID = 110380' in caplog.text
 
     extract.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
     actual = extract.spectrum_observations[0].energy_range[0]

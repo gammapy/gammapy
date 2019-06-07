@@ -228,9 +228,9 @@ class TestSpectrumDatasetOnOff:
             edisp=self.edisp,
             livetime=self.livetime,
         )
-        dataset.to_ogip_files(outdir=str(tmpdir), overwrite=True)
+        dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / self.on_counts.phafile
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(str(filename))
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
         assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
@@ -244,7 +244,7 @@ class TestSpectrumDatasetOnOff:
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / self.on_counts.phafile
-        newdataset = SpectrumDatasetOnOff.from_ogip_files(str(filename))
+        newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
         assert newdataset.counts_off is None

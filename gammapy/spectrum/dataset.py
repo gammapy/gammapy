@@ -513,7 +513,7 @@ class SpectrumDatasetOnOff(Dataset):
         overwrite : bool
             Overwrite existing files?
         """
-        outdir = Path.cwd() if outdir is None else Path(outdir)
+        outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
         phafile = self.counts.phafile
