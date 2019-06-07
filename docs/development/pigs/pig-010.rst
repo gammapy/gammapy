@@ -306,6 +306,14 @@ dummy WCS as a local TAN projection to the pointing position, if the user
 doesn't need of have an exclusion mask. This is a common case e.g. for isolated
 point sources like AGN, where the rotated regions method is most commonly used.
 
+One complication is that in the current code, to have fewer off test regions,
+the algorithm takes a large step ``arctan(2*radius/offset)`` at the start and
+after placing an off region. This requires a "radius", which is is not available
+for regions of a complex shape. We propose that this optimisation is only left
+for the circle case (which already has a specialised fast algorithm anyways
+using a distance mask), and for other regions for now the normal thing is done
+to test all positions in small angle increments.
+
 Images and masks
 ----------------
 
@@ -371,12 +379,16 @@ We propose to implement this PIG though a series of small pull requests. Some ar
 dependent on others, but for many also the order doesn't matter and overall the
 amount of work is limited.
 
-- Add ``PixRegion.rotate(center, angle)`` in ``astropy-healpix``. See `Rotated regions`_ above.
-- Release ``astropy-healpix`` v0.4, then bump Gammapy dependency to that version.
+- Add region copy method, needed for region rotate (see `astropy-regions GH 266`_)
+- Add region rotate method (see `astropy-regions GH 265`_ and `Rotated regions`_ above)
+- Release ``astropy-regions`` v0.5, then bump Gammapy dependency to that version.
 - Improve rotated region code and tests and docs in Gammapy.
   This could mean a rebase and continuation of `GH 2089`_, or closing that and
   re-starting from master, copying over the useful parts or cherry-picking
   useful commits from that branch.
+
+Other tasks, mostly independent from the previous ones, can happen in any order:
+
 - Add ``gammapy/utils/regions.py`` with two helper functions. See `Region arguments`_ above.
 - Use the helper functions throughout Gammapy. Should be 5-10 cases, could be
   several PRs. See `Region arguments`_ above.
@@ -458,3 +470,5 @@ tbd
 .. _astropy-regions GH 217: https://github.com/astropy/regions/issues/217
 .. _astropy-regions GH 221: https://github.com/astropy/regions/pull/221
 .. _astropy-regions GH 228: https://github.com/astropy/regions/issues/228
+.. _astropy-regions GH 265: https://github.com/astropy/regions/issues/265
+.. _astropy-regions GH 266: https://github.com/astropy/regions/issues/266
