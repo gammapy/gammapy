@@ -6,7 +6,7 @@
 PIG 11 - Gammapy dependencies and distribution
 **********************************************
 
-* Author: Christoph Deil, Axel Donath, Régis Terrier
+* Author: Christoph Deil, Axel Donath, Régis Terrier, Brigitta Sipocz
 * Created: June 6, 2019
 * Accepted: tbd
 * Status: draft
@@ -15,7 +15,7 @@ PIG 11 - Gammapy dependencies and distribution
 Abstract
 ========
 
-As preparation for the planned Gammapy v1.0 release this fall, we propose to
+As preparation for the planned Gammapy v1.0 release fall 2019, we propose to
 clarify which Gammapy dependencies are required and which ones are optional. We
 also propose to increase the minimum required version for some dependencies.
 Finally, we propose some updates to the Gammapy supported distribution channels
@@ -31,6 +31,42 @@ opportunity for user feedback. Let us know what you think!
 
 Introduction
 ============
+
+In recent years, the Python packaging and distribution system has improved a
+lot. Thanks to conda, we now have a way to ship up-to-date versions of Gammapy
+and all dependencies on all supported platforms, the number of installation
+issues reported by users has been very low in recent years.
+
+Given this situation, we feel it is OK to be a bit less conservative in the
+number of dependencies we use in Gammapy, as well as the minimum required
+versions we support than we have been in previous years. However, we still
+consider the choices made for Gammapy, and changes made in this PIG to be on the
+conservative side, e.g. we avoid the use of ``scikit-image`` because 
+
+Summary
+=======
+
+Here's a very short summary of the changes we propose:
+
+- Drop support for Python 3.5, require Python 3.6 or later
+- Drop support for Gammapy distribution via Macports
+- Document and support ``pip install gammapy[extra]``
+
+==========  ===============  ===============
+Dependency  Gammapy 0.12     Gammapy 0.13
+==========  ===============  ===============
+Python      3.5  (Sep 2015)  3.6  (Dec 2016)
+Numpy       1.10 (May 2016)  1.13 (Jun 2017)
+Scipy       0.15 (Jan 2015)  1.0  (Oct 2017)
+Astropy     2.0  (Jul 2017)  3.0? (Feb 2018)
+regions     0.3  (Sep 2018)  0.5? (Jul 2019)
+pyyaml
+click
+----------  ---------------  ---------------
+matplotlib  2.1 (Oct 2017)   same
+reproject
+==========  ===============  ===============
+
 
 Dependencies
 ============
@@ -61,9 +97,21 @@ The first point is the most important one: the cost of supporting Python 3.5
 isn't very high: if you want or need it, let us know!
 
 Sunpy has already dropped Python 3.5 support in v1.0. Astropy still supports
-Python 3.5, they will move to 3.6+ with Astropy 4.0 in early 2010.
+Python 3.5, they will move to 3.6+ with Astropy 4.0 in early 2020.
 
-tbd: decide on min version for other dependencies
+Numpy
+-----
+
+Scipy
+-----
+
+astropy-healpix
+---------------
+
+For HEALPix we propose to change from `healpy`_ to `astropy-healpix`_. An
+initial exploration whether ``astropy-healpix``_ has all the features we need
+has already been done in `GH 1167`_.
+
 
 Distribution
 ============
@@ -132,7 +180,11 @@ Decision
 
 tbd
 
-.. _GH 2218: https://github.com/gammapy/gammapy/pull/TODO
+.. _healpy: https://healpy.readthedocs.io
+.. _astropy-healpix: http://astropy-healpix.readthedocs.io/
+.. _GH 1167: https://github.com/gammapy/gammapy/pull/1167
+.. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
+.. _GH 1658: https://github.com/gammapy/gammapy/pull/1658
 .. _Installation with Macports: https://docs.gammapy.org/0.12/install/macports.html
 .. _Gammapy in Macports: https://github.com/macports/macports-ports/commits/master/python/py-gammapy/Portfile
 .. _PEP 427: https://www.python.org/dev/peps/pep-0427/
