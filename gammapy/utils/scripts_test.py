@@ -73,7 +73,8 @@ def main():
         if not script_test(path):
             passed = False
 
-    assert passed
+    if not passed:
+        sys.exit("Some tests failed. Existing now.")
 
 
 if __name__ == "__main__":
