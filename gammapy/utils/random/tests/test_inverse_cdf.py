@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy.table import Table
 from ..inverse_cdf import InverseCDFSampler
 import numpy as np
 from numpy.testing import assert_allclose
-import scipy, scipy.optimize, scipy.ndimage
+import scipy.optimize
 import scipy.stats as stats
 
 
