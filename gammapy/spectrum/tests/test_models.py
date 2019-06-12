@@ -6,6 +6,7 @@ from ...utils.energy import EnergyBounds
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ..models import (
+    SpectralModel,
     PowerLaw,
     PowerLaw2,
     ExponentialCutoffPowerLaw,
@@ -263,6 +264,18 @@ def test_model_plot():
     with mpl_plot_check():
         pwl.plot_error((1*u.TeV, 10*u.TeV))
 
+def test_to_from_dict():
+    spectrum = TEST_MODELS[0]
+    model = spectrum["model"]
+
+    model_dict = model.to_dict()
+    new_model = SpectralModel.from_dict(model_dict)
+
+    assert isinstance(new_model, PowerLaw)
+
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
 
 @requires_dependency("matplotlib")
 @requires_data()
