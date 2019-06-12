@@ -1,19 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-#
+
 import numpy as np
 from .utils import get_random_state
-
-
-#__all__ = [
-#    "normalize",
-#    "density",
-#    "draw",
-#    "pdf",
-#    "get_random_state",
-#    "sample_sphere",
-#    "sample_sphere_distance",
-#    "sample_powerlaw",
-#]
 
 
 class InverseCDFSampler:
