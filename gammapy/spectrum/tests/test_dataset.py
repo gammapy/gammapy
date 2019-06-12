@@ -500,7 +500,8 @@ class TestSpectrumDatasetOnOffStacker:
 
         # Change threshold to make stuff more interesting
         self.obs_list[0].mask_safe = self.obs_list[0].counts.energy_mask(emin=1.2 * u.TeV, emax=50 * u.TeV)
-        self.obs_list[1].mask_safe = self.obs_list[0].counts.energy_mask(emax=20 * u.TeV)
+
+        self.obs_list[1].mask_safe &= self.obs_list[0].counts.energy_mask(emax=20 * u.TeV)
 
         self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
         self.obs_stacker.run()
@@ -515,13 +516,14 @@ class TestSpectrumDatasetOnOffStacker:
         assert summed_counts == stacked_counts
 
     def test_thresholds(self):
-        energy = self.obs_stacker.stacked_obs.lo_threshold
-        assert energy.unit == "keV"
-        assert_allclose(energy.value, 8.912509e08, rtol=1e-3)
 
-        energy = self.obs_stacker.stacked_obs.hi_threshold
-        assert energy.unit == "keV"
-        assert_allclose(energy.value, 4.466836e10, rtol=1e-3)
+        e_min, e_max = self.obs_stacker.stacked_obs.energy_range
+
+        assert e_min.unit == "keV"
+        assert_allclose(e_min.value, 8.912509e08, rtol=1e-3)
+
+        assert e_max.unit == "keV"
+        assert_allclose(e_max.value, 4.466836e10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""

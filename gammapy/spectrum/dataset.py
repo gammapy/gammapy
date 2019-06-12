@@ -241,6 +241,8 @@ class SpectrumDatasetOnOff(Dataset):
             raise ValueError("mask data must have dtype bool")
         else:
             self.counts.quality = np.logical_not(mask)
+            if self.counts_off is not None:
+                self.counts_off.quality = np.logical_not(mask)
 
     def set_fit_energy_range(self, emin=None, emax=None):
         """Set the energy range for the fit.
