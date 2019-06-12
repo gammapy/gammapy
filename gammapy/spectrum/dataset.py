@@ -222,12 +222,6 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             self.counts_off.hi_threshold = threshold
 
-    def reset_thresholds(self):
-        """Reset energy thresholds (i.e. declare all energy bins valid)."""
-        self.counts.reset_thresholds()
-        if self.counts_off is not None:
-            self.counts_off.reset_thresholds()
-
     @property
     def mask_safe(self):
         """Inverse of counts spectrum quality mask."""

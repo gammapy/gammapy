@@ -160,23 +160,6 @@ class TestSpectrumDatasetOnOff:
         with pytest.raises(ValueError):
             self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype='float')
 
-    def test_reset_thresholds(self):
-        counts = self.on_counts.copy()
-        quality = np.ones(self.dataset.data_shape)
-        quality[1:-1] = 0
-        counts.quality = quality
-        dataset = SpectrumDatasetOnOff(
-            counts=counts,
-            counts_off=self.off_counts,
-            aeff=self.aeff,
-            edisp=self.edisp,
-            livetime=self.livetime,
-        )
-
-        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[1].to_value('TeV'))
-        dataset.reset_thresholds()
-        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[0].to_value('TeV'))
-
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
