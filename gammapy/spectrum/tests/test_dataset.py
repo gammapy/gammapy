@@ -499,9 +499,9 @@ class TestSpectrumDatasetOnOffStacker:
         self.obs_list = _read_hess_obs()
 
         # Change threshold to make stuff more interesting
-        self.obs_list[0].lo_threshold = 1.2 * u.TeV
-        self.obs_list[0].hi_threshold = 50 * u.TeV
-        self.obs_list[1].hi_threshold = 20 * u.TeV
+        self.obs_list[0].mask_safe = self.obs_list[0].counts.energy_mask(emin=1.2 * u.TeV, emax=50 * u.TeV)
+        self.obs_list[1].mask_safe = self.obs_list[0].counts.energy_mask(emax=20 * u.TeV)
+
         self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
         self.obs_stacker.run()
 
