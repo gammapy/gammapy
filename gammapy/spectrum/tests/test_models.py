@@ -126,6 +126,31 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(35.9999999999999, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(198.00000000000006, "TeV cm-2 s-1"),
     ),
+    dict(
+        name="powerlaw_index1",
+        model=PowerLaw(
+            index=1 * u.Unit(""),
+            amplitude=2 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(1.0, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(4.605170185, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(18., "TeV cm-2 s-1"),
+    ),
+    dict(
+        name="ecpl_2",
+        model=ExponentialCutoffPowerLaw(
+            index=2. * u.Unit(""),
+            amplitude=4 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            lambda_=0.1 / u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(0.81873075, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(2.83075297, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(6.41406327, "TeV cm-2 s-1"),
+        e_peak=np.nan*u.TeV,
+    ),
+
 ]
 
 # Add compound models
@@ -352,11 +377,12 @@ def test_fermi_isotropic():
     )
 
 
-def test_ecpl_intergrate():
-    # regresseion test to check the numerical integration for small energy bins
+def test_ecpl_integrate():
+    # regression test to check the numerical integration for small energy bins
     ecpl = ExponentialCutoffPowerLaw()
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
+
 
 
 @requires_dependency("naima")
