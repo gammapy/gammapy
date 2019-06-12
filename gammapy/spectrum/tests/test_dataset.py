@@ -264,18 +264,19 @@ class TestSpectrumDatasetOnOff:
         assert dataset.total_stats.n_off == 40
         assert dataset.total_stats.excess == -1
 
-    def test_set_fit_energy_range(self):
-        self.dataset.set_fit_energy_range(emin=0.3*u.TeV, emax=6*u.TeV)
+    def test_energy_mask(self):
+        mask = self.dataset.counts.energy_mask(emin=0.3*u.TeV, emax=6*u.TeV)
         desired = [False, True, True, False]
-        assert_allclose(self.dataset.mask_fit, desired)
+        assert_allclose(mask, desired)
 
-        self.dataset.set_fit_energy_range(emax=6*u.TeV)
+        mask = self.dataset.counts.energy_mask(emax=6*u.TeV)
         desired = [True, True, True, False]
-        assert_allclose(self.dataset.mask_fit,desired)
+        assert_allclose(mask, desired)
 
-        self.dataset.set_fit_energy_range(emin=1*u.TeV)
+        mask = self.dataset.counts.energy_mask(emin=1*u.TeV)
         desired = [False, False, True, True]
-        assert_allclose(self.dataset.mask_fit,desired)
+        assert_allclose(mask, desired)
+
 
 @requires_dependency("iminuit")
 class TestSimpleFit:

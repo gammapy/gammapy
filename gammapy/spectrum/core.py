@@ -275,7 +275,7 @@ class CountsSpectrum:
         emin = emin if emin is not None else edges[0]
         emax = emax if emax is not None else edges[-1]
 
-        return (edges[:-1] > emin) & (edges[1:] < emax)
+        return (edges[:-1] >= emin) & (edges[1:] <= emax)
 
 
 class PHACountsSpectrum(CountsSpectrum):
