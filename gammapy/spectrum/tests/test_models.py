@@ -246,6 +246,23 @@ def test_model_unit():
     value = pwl(500 * u.MeV)
     assert value.unit == "cm-2 s-1 TeV-1"
 
+@requires_dependency("matplotlib")
+@requires_dependency("uncertainties")
+def test_model_plot():
+    pars, errs = {}, {}
+    pars["amplitude"] = 1e-12 * u.Unit("TeV-1 cm-2 s-1")
+    pars["reference"] = 1 * u.Unit("TeV")
+    pars["index"] = 2 * u.Unit("")
+    errs["amplitude"] = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+
+    pwl = PowerLaw(**pars)
+    pwl.parameters.set_parameter_errors(errs)
+    with mpl_plot_check():
+        pwl.plot((1*u.TeV, 10*u.TeV))
+
+    with mpl_plot_check():
+        pwl.plot_error((1*u.TeV, 10*u.TeV))
+
 
 @requires_dependency("matplotlib")
 @requires_data()
