@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+#
 from ..inverse_cdf import InverseCDFSampler
 import numpy as np
 from numpy.testing import assert_allclose
