@@ -200,27 +200,6 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             self.counts_off.livetime = livetime
 
-    @property
-    def lo_threshold(self):
-        """Low energy threshold."""
-        return self.counts.lo_threshold
-
-    @lo_threshold.setter
-    def lo_threshold(self, threshold):
-        self.counts.lo_threshold = threshold
-        if self.counts_off is not None:
-            self.counts_off.lo_threshold = threshold
-
-    @property
-    def hi_threshold(self):
-        """High energy threshold."""
-        return self.counts.hi_threshold
-
-    @hi_threshold.setter
-    def hi_threshold(self, threshold):
-        self.counts.hi_threshold = threshold
-        if self.counts_off is not None:
-            self.counts_off.hi_threshold = threshold
 
     @property
     def mask_safe(self):
@@ -342,6 +321,7 @@ class SpectrumDatasetOnOff(Dataset):
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
+        e_min, e_max = self.energy_range
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
 
@@ -361,20 +341,20 @@ class SpectrumDatasetOnOff(Dataset):
             label="n_on",
             color="darkred",
             energy_unit=energy_unit,
-            show_energy=(self.hi_threshold, self.lo_threshold),
+            show_energy=(e_min, e_max),
         )
         ax1.set_xlim(
-            0.7 * self.lo_threshold.to_value(energy_unit),
-            1.3 * self.hi_threshold.to_value(energy_unit),
+            0.7 * e_min.to_value(energy_unit),
+            1.3 * e_max.to_value(energy_unit),
         )
         ax1.legend(numpoints=1)
 
         ax2.set_title("Effective Area")
         e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2, show_energy=(self.hi_threshold, self.lo_threshold))
+        self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
         ax2.set_xlim(
-            0.7 * self.lo_threshold.to_value(e_unit),
-            1.3 * self.hi_threshold.to_value(e_unit),
+            0.7 * e_min.to_value(e_unit),
+            1.3 * e_max.to_value(e_unit),
         )
 
         ax3.axis("off")
@@ -794,8 +774,8 @@ class SpectrumDatasetOnOffStacker:
             list_aeff=[obs.aeff for obs in self.obs_list],
             list_livetime=[obs.livetime for obs in self.obs_list],
             list_edisp=[obs.edisp for obs in self.obs_list],
-            list_low_threshold=[obs.lo_threshold for obs in self.obs_list],
-            list_high_threshold=[obs.hi_threshold for obs in self.obs_list],
+            list_low_threshold=[obs.energy_range[0] for obs in self.obs_list],
+            list_high_threshold=[obs.energy_range[1] for obs in self.obs_list],
         )
         irf_stacker.stack_edisp()
         self.stacked_edisp = irf_stacker.stacked_edisp
