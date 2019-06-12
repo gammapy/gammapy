@@ -177,6 +177,18 @@ TEST_MODELS.append(
         eflux_1_10TeV=TEST_MODELS[0]["eflux_1_10TeV"] * 0.5,
     )
 )
+
+TEST_MODELS.append(
+    dict(
+        name="compound6",
+        model=TEST_MODELS[7]["model"] + u.Quantity(4,'cm-2 s-1 TeV-1'),
+        val_at_2TeV=TEST_MODELS[7]["val_at_2TeV"]*2 ,
+        integral_1_10TeV=TEST_MODELS[7]["integral_1_10TeV"]*2,
+        eflux_1_10TeV=TEST_MODELS[7]["eflux_1_10TeV"]*2 ,
+    )
+)
+
+
 # The table model imports scipy.interpolate in `__init__`,
 # so we skip it if scipy is not available
 try:
@@ -214,7 +226,7 @@ def test_models(spectrum):
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
     # inverse for TableModel is not implemented
-    if not (isinstance(model, TableModel) or isinstance(model, ConstantModel)):
+    if not (isinstance(model, TableModel) or isinstance(model, ConstantModel) or spectrum["name"] == 'compound6'):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
 
     model.to_dict()
