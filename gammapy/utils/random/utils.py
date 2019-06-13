@@ -14,9 +14,8 @@ __all__ = [
     "normalize",
     "density",
     "draw",
-    "pdf"
+    "pdf",
 ]
-
 
 
 def normalize(func, x_min, x_max):
