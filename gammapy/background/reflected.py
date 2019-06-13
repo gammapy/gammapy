@@ -199,16 +199,16 @@ class ReflectedRegionsFinder:
         # Starting angle of region
         self._angle = Angle(np.arctan2(dy, dx), "rad")
 
-        # Minimum angle a circle has to be moved to not overlap with previous one
+        # Minimum angle a region has to be moved to not overlap with previous one
         pix_idx = geom.get_pix()
         pix_on_x = pix_idx[0][_mask]
         pix_on_y = pix_idx[1][_mask]
         newX, newY = (self._pix_center.x - pix_on_x), (self._pix_center.y - pix_on_y)
         angles = Angle(np.arctan2(newX, newY) * u.rad)
-        min_ang = np.max(angles.wrap_at(2*np.pi*u.rad))-np.min(angles.wrap_at(2*np.pi*u.rad))
+        min_ang = np.max(angles)-np.min(angles)
         if min_ang.value > np.pi:
-            min_ang = np.max(angles.wrap_at(np.pi*u.rad))-np.min(angles.wrap_at(np.pi*u.rad))
-
+            min_ang = np.max(angles.wrap_at(0*u.rad))-np.min(angles.wrap_at(0*u.rad))
+        print(min_ang.to_value('deg'))
         # Add required minimal distance between two off regions
         self._min_ang = min_ang + self.min_distance
 
@@ -339,7 +339,7 @@ class ReflectedRegionsBackgroundEstimator:
         min_point = PixCoord(ixmin, iymin).to_sky(geom.wcs)
         max_point = PixCoord(ixmax, iymax).to_sky(geom.wcs)
 
-        return np.round(min_point.separation(max_point), decimals=3)
+        return min_point.separation(max_point)
 
     def run(self):
         """Run all steps."""
