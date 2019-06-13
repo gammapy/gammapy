@@ -115,7 +115,7 @@ class SpectrumAnalysisIACT:
 
         for obs in self.extraction.spectrum_observations:
             if fit_range is not None:
-                obs.set_fit_energy_range(fit_range[0], fit_range[1])
+                obs.mask_fit = obs.counts.energy_mask(fit_range[0], fit_range[1])
             obs.model = model
 
         self.fit = Fit(self.extraction.spectrum_observations)

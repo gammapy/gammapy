@@ -135,8 +135,9 @@ class SpectrumExtraction:
 
         if self.use_recommended_erange:
             try:
-                spectrum_observation.hi_threshold = observation.aeff.high_threshold
-                spectrum_observation.lo_threshold = observation.aeff.low_threshold
+                e_max = observation.aeff.high_threshold
+                e_min = observation.aeff.low_threshold
+                spectrum_observation.mask_safe = spectrum_observation.counts.energy_mask(emin=e_min, emax=e_max)
             except KeyError:
                 log.warning("No thresholds defined for obs {}".format(observation))
 
@@ -232,7 +233,7 @@ class SpectrumExtraction:
         self.containment = new_aeff.data.data.value / self._aeff.data.data.value
         self._aeff = new_aeff
 
-    def compute_energy_threshold(self, reset=False, **kwargs):
+    def compute_energy_threshold(self, **kwargs):
         """Compute and set the safe energy threshold for all observations.
 
         See `~gammapy.irf.compute_energy_thresholds` for full

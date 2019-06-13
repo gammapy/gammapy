@@ -160,23 +160,6 @@ class TestSpectrumDatasetOnOff:
         with pytest.raises(ValueError):
             self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype='float')
 
-    def test_reset_thresholds(self):
-        counts = self.on_counts.copy()
-        quality = np.ones(self.dataset.data_shape)
-        quality[1:-1] = 0
-        counts.quality = quality
-        dataset = SpectrumDatasetOnOff(
-            counts=counts,
-            counts_off=self.off_counts,
-            aeff=self.aeff,
-            edisp=self.edisp,
-            livetime=self.livetime,
-        )
-
-        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[1].to_value('TeV'))
-        dataset.reset_thresholds()
-        assert_allclose(dataset.lo_threshold.to_value('TeV'),counts.energy.edges[0].to_value('TeV'))
-
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
@@ -264,18 +247,19 @@ class TestSpectrumDatasetOnOff:
         assert dataset.total_stats.n_off == 40
         assert dataset.total_stats.excess == -1
 
-    def test_set_fit_energy_range(self):
-        self.dataset.set_fit_energy_range(emin=0.3*u.TeV, emax=6*u.TeV)
+    def test_energy_mask(self):
+        mask = self.dataset.counts.energy_mask(emin=0.3*u.TeV, emax=6*u.TeV)
         desired = [False, True, True, False]
-        assert_allclose(self.dataset.mask_fit, desired)
+        assert_allclose(mask, desired)
 
-        self.dataset.set_fit_energy_range(emax=6*u.TeV)
+        mask = self.dataset.counts.energy_mask(emax=6*u.TeV)
         desired = [True, True, True, False]
-        assert_allclose(self.dataset.mask_fit,desired)
+        assert_allclose(mask, desired)
 
-        self.dataset.set_fit_energy_range(emin=1*u.TeV)
+        mask = self.dataset.counts.energy_mask(emin=1*u.TeV)
         desired = [False, False, True, True]
-        assert_allclose(self.dataset.mask_fit,desired)
+        assert_allclose(mask, desired)
+
 
 @requires_dependency("iminuit")
 class TestSimpleFit:
@@ -499,9 +483,10 @@ class TestSpectrumDatasetOnOffStacker:
         self.obs_list = _read_hess_obs()
 
         # Change threshold to make stuff more interesting
-        self.obs_list[0].lo_threshold = 1.2 * u.TeV
-        self.obs_list[0].hi_threshold = 50 * u.TeV
-        self.obs_list[1].hi_threshold = 20 * u.TeV
+        self.obs_list[0].mask_safe = self.obs_list[0].counts.energy_mask(emin=1.2 * u.TeV, emax=50 * u.TeV)
+
+        self.obs_list[1].mask_safe &= self.obs_list[0].counts.energy_mask(emax=20 * u.TeV)
+
         self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
         self.obs_stacker.run()
 
@@ -515,13 +500,14 @@ class TestSpectrumDatasetOnOffStacker:
         assert summed_counts == stacked_counts
 
     def test_thresholds(self):
-        energy = self.obs_stacker.stacked_obs.lo_threshold
-        assert energy.unit == "keV"
-        assert_allclose(energy.value, 8.912509e08, rtol=1e-3)
 
-        energy = self.obs_stacker.stacked_obs.hi_threshold
-        assert energy.unit == "keV"
-        assert_allclose(energy.value, 4.466836e10, rtol=1e-3)
+        e_min, e_max = self.obs_stacker.stacked_obs.energy_range
+
+        assert e_min.unit == "keV"
+        assert_allclose(e_min.value, 8.912509e08, rtol=1e-3)
+
+        assert e_max.unit == "keV"
+        assert_allclose(e_max.value, 4.466836e10, rtol=1e-3)
 
     def test_verify_npred(self):
         """Veryfing npred is preserved during the stacking"""
