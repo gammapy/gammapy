@@ -22,12 +22,27 @@ def test_uniform_dist_sampling():
     assert_allclose((np.mean(hist[0]) * 100./1000.), 1.0, atol=1e-4)
 
 def test_norm_dist_sampling():
-    n_sampled = 1000000
-    x = np.linspace(-10, 10, 1000)
+    n_sampled = 1000
+    x = np.linspace(-10, 10, n_sampled)
     sigma = 0.01
     sampler = InverseCDFSampler(gauss_dist(x=x, mu=0, sigma=sigma), random_state=0)
     idx = sampler.sample(int(n_sampled))
-    x_sampled = np.interp(idx, np.arange(1000), x)
+    x_sampled = np.interp(idx, np.arange(n_sampled), x)
     assert_allclose(np.mean(x_sampled), 0.0, atol=0.01)
     assert_allclose(np.std(x_sampled), 0.01, atol=0.005)
 
+def test_norm_dist_sampling():
+    n_sampled = 1000
+    range = 10
+    x = np.linspace(-1.*range, range, n_sampled)
+    sigma = 0.01
+
+    pdf = np.zeros((2,n_sampled),float)
+    pdf[0] = uniform_dist(n_sampled)
+    pdf[1] = gauss_dist(x=x, mu=0, sigma=sigma)
+    
+    sampler = InverseCDFSampler(pdf, random_state=0)
+    idx = sampler.sample_axis()
+    x_sampled = np.interp(idx, np.arange(n_sampled), x)
+    assert_allclose(np.mean(x_sampled), range, atol=1e-4)
+    
