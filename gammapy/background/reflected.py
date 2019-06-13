@@ -134,7 +134,7 @@ class ReflectedRegionsFinder:
             raise TypeError("Algorithm not yet adapted to this Region shape")
 
         # width is the full width of an image (not the radius)
-        width = Angle(3.0 * reg_center.transform_to(center).separation(center), u.degree) * 2.
+        width = 4 * reg_center.separation(center)
 
         if 'ra' in reg_center.representation_component_names:
             maskmap = WcsNDMap.create(
