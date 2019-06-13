@@ -233,7 +233,7 @@ class ReflectedRegionsFinder:
         excluded_pixcoords = PixCoord(X[mask_array],Y[mask_array])
 
         while curr_angle < self._max_angle:
-            test_reg = self._create_rotated_reg(curr_angle)
+            test_reg = _rotate_pix_region(self._pix_region, self._pix_center, curr_angle)
             if not np.any(test_reg.contains(excluded_pixcoords)):
                 region = test_reg.to_sky(geom.wcs)
                 reflected_regions.append(region)
@@ -279,29 +279,7 @@ class ReflectedRegionsFinder:
 
         return fig, ax
 
-    @staticmethod
-    def _compute_xy(pix_center, offset, angle):
-        """Compute x, y position for a given position angle and offset."""
-        dx = offset * np.cos(angle)
-        dy = offset * np.sin(angle)
-        x = pix_center.x + dx
-        y = pix_center.y + dy
-        return PixCoord(x=x, y=y)
-
-    def _create_rotated_reg(self, curr_angle):
-        """ Compute a rotated region"""
-#        test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
-        return _rotate_pix_region(self._pix_region, self._pix_center, curr_angle)
-#        test_reg = _region_copy(self._pix_region)
-#        test_reg.center = test_pos
-
-#        if hasattr(test_reg, 'angle'):
-#            angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-#            test_reg.angle = angle
-
-#        return test_reg
-
-
+ 
 class ReflectedRegionsBackgroundEstimator:
     """Reflected Regions background estimator.
 
