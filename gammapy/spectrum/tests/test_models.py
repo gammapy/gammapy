@@ -251,9 +251,9 @@ def test_models(spectrum):
     if "e_peak" in spectrum:
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
-    # inverse for TableModel is not implemented
-    if not (isinstance(model, TableModel) or isinstance(model, ConstantModel) or spectrum["name"] == 'compound6'):
-        assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.05)
+    # inverse for ConstantModel is irrelevant
+    if not (isinstance(model, ConstantModel) or spectrum["name"] == 'compound6'):
+        assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
     model.to_dict()
 
