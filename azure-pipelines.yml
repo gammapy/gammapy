@@ -1,7 +1,6 @@
 # This is the configuration file for Gammapy on Azure Pipelines
 
 variables:
-  GAMMAPY_EXTRA: $(Agent.HomeDirectory)/gammapy-extra
   GAMMAPY_DATA: $(Agent.HomeDirectory)/gammapy-data
 
 jobs:
@@ -32,7 +31,7 @@ jobs:
   - script: |
       python -m pip install --upgrade pip setuptools
       pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy
-      pip install matplotlib reproject iminuit naima uncertainties==3.0.*
+      pip install matplotlib reproject iminuit uncertainties==3.0.*
     displayName: 'Install dependencies'
 
   - script: |
@@ -43,13 +42,6 @@ jobs:
   - script: |
       gammapy download datasets --out=$(GAMMAPY_DATA)
     displayName: 'Get GAMMAPY_DATA'
-
-  - script: |
-      # TODO: Is gammapy-extra even needed for docs build?
-      # TODO: find a way to have smaller test data download to get faster CI builds
-      # This currently downloads 294 MB, and the `datasets` folder in master has 133 MB
-      git clone --depth 1 -b master https://github.com/gammapy/gammapy-extra.git $(GAMMAPY_EXTRA)
-    displayName: 'Get GAMMAPY_EXTRA'
 
   - script: |
       pytest gammapy --junitxml=junit/test-results.xml
@@ -125,13 +117,6 @@ jobs:
       source activate gammapy-dev
       gammapy download datasets --out=$(GAMMAPY_DATA)
     displayName: 'Get GAMMAPY_DATA'
-
-  - script: |
-      # TODO: Is gammapy-extra even needed for docs build?
-      # TODO: find a way to have smaller test data download to get faster CI builds
-      # This currently downloads 294 MB, and the `datasets` folder in master has 133 MB
-      git clone --depth 1 -b master https://github.com/gammapy/gammapy-extra.git $(GAMMAPY_EXTRA)
-    displayName: 'Get GAMMAPY_EXTRA'
 
   - script: |
       source activate gammapy-dev
