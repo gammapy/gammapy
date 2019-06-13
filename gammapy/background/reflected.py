@@ -13,6 +13,37 @@ __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
 
 log = logging.getLogger(__name__)
 
+# TODO: remove once copy() is supported by `~astropy.regions`
+def _region_copy(region):
+    """Returns a region copy"""
+    # The function copy.deepcopy does not work for these regions classes
+    regdict = {_: getattr(region, _) for _ in region._repr_params}
+    new_region = region.__class__(region.center, **regdict)
+    return new_region
+
+# TODO: remove once rotate() is supported by `~astropy.regions`
+def _rotate_pix_region(pix_region, pix_center, angle):
+    """Returns rotated source with given angle"""
+    new_region = _region_copy(pix_region)
+
+    dx = pix_region.center.x - pix_center.x
+    dy = pix_region.center.y - pix_center.y
+
+    # Offset of region in pix coordinates
+    offset = np.hypot(dx, dy)
+    # initial angle w.r.t. north
+    initial_angle = Angle(np.arctan2(dy, dx), "rad")
+
+    x = pix_center.x + offset * np.cos(angle)
+    y = pix_center.y + offset * np.sin(angle)
+    new_region.center = PixCoord(x=x, y=y)
+
+    if hasattr(new_region, 'angle'):
+        region_angle = angle - initial_angle + pix_region.angle.to('rad')
+        new_region.angle = region_angle
+
+    return new_region
+
 
 class ReflectedRegionsFinder:
     """Find reflected regions.
@@ -259,17 +290,16 @@ class ReflectedRegionsFinder:
 
     def _create_rotated_reg(self, curr_angle):
         """ Compute a rotated region"""
-        test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
+#        test_pos = self._compute_xy(self._pix_center, self._offset, curr_angle)
+        return _rotate_pix_region(self._pix_region, self._pix_center, curr_angle)
+#        test_reg = _region_copy(self._pix_region)
+#        test_reg.center = test_pos
 
-        # The function copy.deepcopy does not work for these regions classes
-        regdict = { _ : getattr(self._pix_region, _) for _ in self._pix_region._repr_params}
-        test_reg = self._pix_region.__class__(test_pos, **regdict)
+#        if hasattr(test_reg, 'angle'):
+#            angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
+#            test_reg.angle = angle
 
-        if hasattr(test_reg, 'angle'):
-            angle = curr_angle - self._angle + self._pix_region.angle.to('rad')
-            test_reg.angle = angle
-
-        return test_reg
+#        return test_reg
 
 
 class ReflectedRegionsBackgroundEstimator:
@@ -304,6 +334,7 @@ class ReflectedRegionsBackgroundEstimator:
             self.binsz = size
         else:
             self.binsz = binsz
+
         log.debug("ReflectedRegionsFinder Ref. Map: bins={}".format(self.binsz))
         self.finder = ReflectedRegionsFinder(region=on_region, center=None, binsz=Angle(self.binsz), **kwargs)
 
