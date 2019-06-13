@@ -10,7 +10,7 @@ PIG 12 - High-level interface
 * Created: June 6, 2019
 * Accepted: tbd
 * Status: draft
-* Discussion: `GH 2218`_
+* Discussion: `GH 2219`_
 
 Abstract
 ========
@@ -20,63 +20,122 @@ project, but to have something for Gammapy v1.0 in October, we need to start
 this work very soon.
 
 The high-level interface should be easy to use and allow users to do the most
-common analysis tasks quickly. It would be built on top of the existing Gammapy
-code-base, first on it's own, but likely starting to develop it would inform
-improvements in code organisation throughout Gammapy.
+common analysis tasks and workflows quickly. It would be built on top of the 
+existing Gammapy code-base, first on it's own, but likely starting to develop 
+it would inform improvements in code organisation throughout Gammapy.
 
-One good option is to develop some functionality for the existing `Gammapy
-command line interface`_, likely taking the Fermi tools and ctools as examples,
-but implementing them on top of Gammapy (without the evil PFILES).
+There are two main snf not exclusive options:
 
-Another good option discussed (see roadmap or plan section in the
-gammapy.scripts docs page) include a config-file driven high-level interface
-like HAP in HESS or Fermipy.
+ - Develop a set of simple CLI tools within the scope of the `Gammapy command line interface`_.
+ - Use a config-file driven approach to run a less flexible analysis via orchestrated workflows.
 
-The long-term solution doesn't have to be an either-or, e.g. as can be seen with
-the Fermi tools and Fermipy, having two high-level interfaces is OK.
+The first option is what `Fermitools`_ and `ctools`_ already use, where each 
+tool is simple/atomic enough to allow users to inspect the output results before
+taking a decission on how to run and set the parameter values for the next tool.
 
-Yet another thing we could try not described in those pages yet is to add
-something like ``gammapy analysis new`` that asks the user a few questions like
-"where is your data?", "what target do you want to analyse" etc, and then would
-generate config, Python or Notebook files for the user giving a working
-solution, which they then edit and tweak. There isn't much precedence for this
-workflow in science, but a lot of devops and programming tools work like that,
-it is a standard technique. One random example of such a tool is the `Angular
-CLI`_, specifically for notebooks there's `papermill`_ which we could use, and
-there's also `cookiecutter`_. Generating config or workflow files should be
-preferred, since eventually we'll likely need config files anyways, but
-generating Python code in py or ipynb files is also an option to get something.
+The second option is what is implemented in `Enrico`_, or HAP in HESS. It involves
+basic orchestrated analysis workflows using a set of input parameters that the
+user provides via a configuration file. We would need to define a structured 
+syntax for declaration and orchestration of parameters and tasks (probably using 
+YAML format) and also provide config files as templates for users. 
 
-Introduction
+Achieving a stable high-level interface with one or both of these options would
+allow us to continue improving the Gammapy code-base without breaking user-defined 
+workflows or reciped based on CLI tools. 
+
+What we have
 ============
 
-- TODO: write short intro (one or two paragraphs, not more than half a page)
+We have been using `Click`_ to develop a very small set of tools for an embryonic
+`Gammapy command line interface`_. Among the existing tools (``gammapy image``, 
+``gammapy info``, ``gammapy download``, ``gammapy jupyter``), only `gammapy image`_
+can be considered as potentially needed in a data analysis process. It actually
+creates a counts image from an event-list file and a image that serves as a reference
+geometry. Hence, we have a code set-up in ``gammapy.scripts`` that we can use to 
+extend the collection of CLI tools into a small list that will be used for data 
+analysis. These tools would expose a user-friendly interface following the 
+hierarchical structure of commands and groups provided by Click.
+
+We have a set of `Jupyter notebooks`_ and `Python scripts`_ as examples of tutorials
+and recipes demostrating the use of Gammapy. Though most (or all) of the Python 
+scripts need to be fixed and/or readapted to the latest Gammapy API, the notebooks 
+are continuously tested and are one of the pillars of the user documentation. We 
+also have some *high-level analysis* classes in the API that concatenate several
+atomic actions and provide rough estimated results for more complex processes. (i.e. 
+`SpectrumAnalysisIACT`_, `LightCurveEstimator`_) All these assets could serve as a 
+basis to dessign and prototype small set of config-file driven analysis workflows.
 
 Proposal
 ========
 
-- TODO: pick one of the possible high-level interfaces that you think we should
-develop first and start by putting a few suggestions or question how exactly it
-should work.
+**Develop a set of simple CLI tools within the scope of the Gammapy command line interface.**
+
+We could start prototyping with a small subset that could be extended as use-cases
+for analysis recipes are identified. Ideally we could end up with 10s of CLI tools 
+with in total around 100s of options/paramters, but for this PIG it would be good 
+enough having a small set using well established classes and code-structure to build 
+CLI tools and addressing several use cases.
+
+**Use a config-file driven approach to run a less flexible analysis via orchestrated workflows.**
+
+After analysis and definition of a small set of use cases, we would need to define 
+a structured syntax for declaration and orchestration of parameters and tasks, so 
+we can develop templates for config files, python scripts and notebooks to build and
+set the workflows. Users would need to declare values in the template config file,
+set-up the workflow with a CLI tool, and maybe tweek the filled scripts or notebooks
+if needed. The execution of the filled scripts could be done from the terminal with 
+``python`` command. Notebooks could be run following the standard process with a web
+browser or from the therminal with ``gammapy jupyter run``. We could use `papermill`_ 
+to fill the empty notebooks with values declared in the config file but also to execute 
+the notebook-based workflow.
 
 Task list
 =========
 
-- TODO: list concrete tasks (one per pull request) for the first steps
+ - Choose a small list of analysis tasks to provide as CLI analysis tools.
+ - Develop a CLI tool for each one of them following Click hierarchy of groups and subtasks.
+ - Choose a small set of use cases to provide as config-file driven workflows.  
+ - Define a structured syntax for the declaration and orchestration of parameters and tasks of these workflows. 
+ - Provide a Python script or Jupyter notebook template for each the use cases.
+ - Develop a CLI tool that will set-up and run the workflows using the config files to fill the templates.
 
 Alternatives
 ============
 
-- list the other possible solutions (see abstract)
+A different approach with config files is used in `Fermipy`_, where these files are 
+used in Python analysis scripts made by the user to build the workflow and run it 
+with the Python script. 
+
+The user may be guided in the declaration of values for the config file using an
+assistant CLI tool for config-file building, which asks for parameter values providing
+also defaults. This is done in `Enrico`_ with ``enrico_config`` and ``enrico_xml``, 
+where each workflow is set-up and run with its own CLI tool. 
+
+Also Python scripts and/or notebook files could be generated with an assistant CLI
+tool. Then, the usercould edit and tweak the config files, scripts or notebooks.
+There isn't much precedence for this workflow in science, but a lot of devops and 
+programming tools work like that, it is a standard technique. One random example of 
+such a tool is the `Angular CLI`_, or `cookiecutter`_. 
 
 Decision
 ========
 
 tbd
 
-.. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
+
+.. _GH 2219: https://github.com/gammapy/gammapy/pull/2219
 .. _High level interface in the Gammapy roadmap: https://docs.gammapy.org/0.12/development/pigs/pig-005.html#high-level-interface
 .. _Gammapy command line interface: https://docs.gammapy.org/0.12/scripts/index.html
+.. _gammapy image: https://docs.gammapy.org/0.12/scripts/index.html#example
+.. _ctools: http://cta.irap.omp.eu/ctools/users/reference_manual/index.html
+.. _Enrico: https://enrico.readthedocs.io/en/latest/configfile.html
+.. _Fermitools: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html
+.. _Fermipy: https://fermipy.readthedocs.io/en/latest/quickstart.html
+.. _Click: https://click.palletsprojects.com
+.. _Jupyter notebooks: https://docs.gammapy.org/0.12/tutorials.html
+.. _Python scripts: https://github.com/gammapy/gammapy/tree/master/examples
 .. _Angular CLI: https://cli.angular.io/
 .. _papermill: https://github.com/nteract/papermill/
 .. _cookiecutter: https://cookiecutter.readthedocs.io
+.. _SpectrumAnalysisIACT: https://docs.gammapy.org/0.12/api/gammapy.scripts.SpectrumAnalysisIACT.html
+.. _LightCurveEstimator: https://docs.gammapy.org/0.12/api/gammapy.time.LightCurveEstimator.html
