@@ -217,6 +217,7 @@ class ReflectedRegionsFinder:
             self._angle + Angle("360deg") - self._min_ang - self.min_distance_input
         )
 
+        # TODO: remove or change to a proper error
         if self._min_ang < 0:
             log.warn("ISSUE self._min_ang=", self._min_ang)
         if self.min_distance_input < 0:
@@ -234,11 +235,10 @@ class ReflectedRegionsFinder:
 
         while curr_angle < self._max_angle:
             test_reg = _rotate_pix_region(self._pix_region, self._pix_center, curr_angle)
+
             if not np.any(test_reg.contains(excluded_pixcoords)):
                 region = test_reg.to_sky(geom.wcs)
                 reflected_regions.append(region)
-
-                log.debug("Placing reflected region\n{}".format(region))
 
                 curr_angle = curr_angle + self._min_ang
                 if self.max_region_number <= len(reflected_regions):
@@ -279,7 +279,7 @@ class ReflectedRegionsFinder:
 
         return fig, ax
 
- 
+
 class ReflectedRegionsBackgroundEstimator:
     """Reflected Regions background estimator.
 
@@ -313,7 +313,6 @@ class ReflectedRegionsBackgroundEstimator:
         else:
             self.binsz = binsz
 
-        log.debug("ReflectedRegionsFinder Ref. Map: bins={}".format(self.binsz))
         self.finder = ReflectedRegionsFinder(region=on_region, center=None, binsz=Angle(self.binsz), **kwargs)
 
         self.exclusion_mask = kwargs.get("exclusion_mask")
