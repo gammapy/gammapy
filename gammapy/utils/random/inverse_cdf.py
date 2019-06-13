@@ -1,20 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
 import numpy as np
 from .utils import get_random_state
 
-
 class InverseCDFSampler:
-    """Inverse CDF sampler.
-       It determines a set of random numbers and calculate the cumulative distribution function.
+   """Inverse CDF sampler.
        
-        Parameters
-        ----------
-        pdf : `~`gammapy.maps.Map`
-        predicted source counts
-        
-        """
-    def __init__(self, pdf, axis=None, random_state=0):
+   It determines a set of random numbers and calculate the cumulative 
+   distribution function.
+   
+   Parameters
+   ----------
+   pdf : `~gammapy.maps.Map`
+        Map of the predicted source counts.
+   axis : integer
+        Axis along which sampling the indexes.
+   random_state : integer
+        Take a `numpy.random.RandomState` instance.
+   """
+   
+   def __init__(self, pdf, axis=None, random_state=0):
         self.random_state = get_random_state(random_state)
         self.axis = axis
         
@@ -30,7 +34,7 @@ class InverseCDFSampler:
             self.pdf = pdf[self.sortindex]  #sort the pdf array
             self.cdf = np.cumsum(self.pdf)  #evaluate the cumulative sum of the PDF array
 
-    def sample_axis(self):
+   def sample_axis(self):
         """Sample along a given axis.
         """
         choice = self.random_state.uniform(high=1, size=len(self.cdf))
@@ -41,18 +45,18 @@ class InverseCDFSampler:
         return index + self.random_state.uniform(low=-0.5, high=0.5,
                  size=len(self.cdf))
 
-    def sample(self, size):
+   def sample(self, size):
         """Draw sample from the given PDF.
 
         Parameters
         ----------
         size : int
-        Number of samples to draw.
+            Number of samples to draw.
 
         Returns
         -------
         index : tuple of `~numpy.ndarray`
-        Coordinates of the drawn sample
+            Coordinates of the drawn sample.
         """
         #pick numbers which are uniformly random over the cumulative distribution function
         choice = self.random_state.uniform(high=1, size=size)
