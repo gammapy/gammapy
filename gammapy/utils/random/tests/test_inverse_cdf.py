@@ -26,7 +26,9 @@ def test_uniform_dist_sampling():
     x_sampled = np.interp(idx, np.arange(n_sampled), x)
 
     assert_allclose(np.mean(x_sampled), 0.5 * (a + b), atol=0.01)
-    assert_allclose(np.std(x_sampled), np.sqrt(1/3 * (a ** 2 + a * b + b ** 2)), rtol=0.01)
+    assert_allclose(
+        np.std(x_sampled), np.sqrt(1 / 3 * (a ** 2 + a * b + b ** 2)), rtol=0.01
+    )
 
 
 def test_norm_dist_sampling():
