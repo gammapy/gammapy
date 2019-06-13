@@ -3,3 +3,4 @@
 """
 from .general_random import *
 from .utils import *
+from .inverse_cdf import *

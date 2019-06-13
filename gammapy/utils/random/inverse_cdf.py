@@ -26,20 +26,26 @@ class InverseCDFSampler:
             self.cdf = np.cumsum(pdf, axis=self.axis)
             self.cdf /= self.cdf[:, [-1]]
         else:
-            self.pdf_shape = pdf.shape  #gives the shape of the PDF array
+            self.pdf_shape = pdf.shape
             
-            pdf = pdf.ravel() / pdf.sum()  #flattens the array along one axis
-            self.sortindex = np.argsort(pdf, axis=None) #sorting of the elements and giving the indexes
+            pdf = pdf.ravel() / pdf.sum()
+            self.sortindex = np.argsort(pdf, axis=None)
             
-            self.pdf = pdf[self.sortindex]  #sort the pdf array
-            self.cdf = np.cumsum(self.pdf)  #evaluate the cumulative sum of the PDF array
+            self.pdf = pdf[self.sortindex]
+            self.cdf = np.cumsum(self.pdf)
 
    def sample_axis(self):
         """Sample along a given axis.
+
+        Returns
+        -------
+        index : tuple of `~numpy.ndarray`
+            Coordinates of the drawn sample.
+
         """
         choice = self.random_state.uniform(high=1, size=len(self.cdf))
 
-        #find the indices corresponding to this point on the CDF
+        # find the indices corresponding to this point on the CDF
         index = np.argmin(np.abs(choice.reshape(-1, 1) - self.cdf), axis=self.axis)
 
         return index + self.random_state.uniform(low=-0.5, high=0.5,
@@ -58,10 +64,10 @@ class InverseCDFSampler:
         index : tuple of `~numpy.ndarray`
             Coordinates of the drawn sample.
         """
-        #pick numbers which are uniformly random over the cumulative distribution function
+        # pick numbers which are uniformly random over the cumulative distribution function
         choice = self.random_state.uniform(high=1, size=size)
 
-        #find the indices corresponding to this point on the CDF
+        # find the indices corresponding to this point on the CDF
         index = np.searchsorted(self.cdf, choice)
         index = self.sortindex[index]
 
