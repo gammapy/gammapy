@@ -69,7 +69,7 @@ class ReflectedRegionsFinder:
         min_distance_input="0.1 rad",
         max_region_number=10000,
         exclusion_mask=None,
-        binsz="0.02 deg",
+        binsz="0.01 deg",
     ):
         self.region = region
         self.center = center
@@ -86,7 +86,7 @@ class ReflectedRegionsFinder:
         self.reference_map = None
         self.binsz = Angle(binsz)
 
-    def run(self, obs_id=-1):
+    def run(self):
         """Run all steps.
         """
         self.reference_map = self.make_reference_map(
@@ -103,7 +103,7 @@ class ReflectedRegionsFinder:
 
 
     @staticmethod
-    def make_reference_map(region, center, binsz):
+    def make_reference_map(region, center, binsz="0.01 deg"):
         """Create empty reference map.
 
         The size of the mask is chosen such that all reflected region are
@@ -120,7 +120,7 @@ class ReflectedRegionsFinder:
         center : `~astropy.coordinates.SkyCoord`
             Rotation point
         binsz : `~astropy.coordinates.Angle`
-            Reference map bin size. Default : 0.02 deg
+            Reference map bin size. Default : 0.01 deg
 
         Returns
         -------
@@ -142,7 +142,7 @@ class ReflectedRegionsFinder:
              )
         else:
             maskmap = WcsNDMap.create(
-                skydir=self.center, binsz=self.binsz, width=width, coordsys="GAL", proj="TAN"
+                skydir=center, binsz=binsz, width=width, coordsys="GAL", proj="TAN"
             )
 
         return maskmap
@@ -156,8 +156,7 @@ class ReflectedRegionsFinder:
         dy = self._pix_region.center.y - self._pix_center.y
 
         if self._pix_region.contains(self._pix_center):
-            log.warn("Obs #{} rejected! Pointing position within the ON region".format(self.obs_id))
-            return
+            raise ValueError("Pointing position within the ON region")
 
         # Offset of region in pix coordinates
         self._offset = np.hypot(dx, dy)
@@ -215,8 +214,6 @@ class ReflectedRegionsFinder:
                     break
             else:
                 curr_angle = curr_angle + self.angle_increment
-
-        log.info("Found {0} reflected regions for the Obs #{1}".format(len(reflected_regions), self.obs_id))
 
         self.reflected_regions = reflected_regions
 
@@ -350,12 +347,23 @@ class ReflectedRegionsBackgroundEstimator:
         """Estimate background for one observation."""
         log.debug("Processing observation {}".format(obs))
         self.finder.center = obs.pointing_radec
-        self.finder.run(obs.obs_id)
-        off_region = self.finder.reflected_regions
-        off_events = obs.events.select_map_mask(self.finder.off_reference_map)
+
+        try:
+            self.finder.run()
+            off_region = self.finder.reflected_regions
+            off_events = obs.events.select_map_mask(self.finder.off_reference_map)
+            a_off = len(off_region)
+            log.info("Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id))
+
+        except ValueError:
+            log.warning("Obs #{} rejected! Pointing position within the ON region".format(obs.obs_id))
+            off_region = []
+            off_events = []
+            a_off = 0
+
         on_events = obs.events.select_map_mask(self.finder.on_reference_map)
         a_on = 1
-        a_off = len(off_region)
+
         return BackgroundEstimate(
             on_region=self.on_region,
             on_events=on_events,
