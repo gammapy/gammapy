@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from regions import PixCoord
-from ..maps import WcsNDMap
+from ..maps import WcsNDMap, WcsGeom, Map
 from .background_estimate import BackgroundEstimate
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
@@ -395,24 +395,29 @@ class ReflectedRegionsBackgroundEstimator:
             raise NotImplementedError("Algorithm not yet adapted to this Region shape")
 
         if 'ra' in reg_center.representation_component_names:
-            _plotmap = WcsNDMap.create(
-                skydir=reg_center, binsz=self.binsz, width=10., coordsys="CEL", proj="TAN"
-             )
+            coordsys = 'CEL'
         else:
-            _plotmap = WcsNDMap.create(
-                skydir=reg_center, binsz=self.binsz, width=10., coordsys="GAL", proj="TAN"
-            )
-        _plotmap.data = np.ones(_plotmap.data.shape)
-        wcs = _plotmap.geom.wcs
+            coordsys = 'GAL'
+
+        pnt_radec = SkyCoord([_.pointing_radec for _ in self.observations])
+        width = np.max(5*self.on_region.center.separation(pnt_radec).to_value('deg'))
+
+        geom = WcsGeom.create(skydir=reg_center, binsz=self.binsz, width=width, coordsys=coordsys, proj="TAN")
+        plot_map = Map.from_geom(geom)
 
         if fig is None:
             fig = plt.figure(figsize=(7, 7))
-        fig, ax, cbar = _plotmap.plot(fig=fig, ax=ax)
-        if not (self.exclusion_mask is None):
-            self.exclusion_mask.reproject(_plotmap.geom).plot(fig=fig, ax=ax, cmap="gray")
 
-        wcs = self.finder.reference_map.geom.wcs
-        on_patch = self.on_region.to_pixel(wcs=wcs).as_artist(edgecolor="red")
+        if self.exclusion_mask is not None:
+            coords = geom.get_coord()
+            vals = self.exclusion_mask.get_by_coord(coords)
+            plot_map.data += vals
+        else:
+            plot_map.data += 1.
+
+        fig, ax, cbar = plot_map.plot(fig=fig, ax=ax)
+
+        on_patch = self.on_region.to_pixel(wcs=geom.wcs).as_artist(edgecolor="red")
         ax.add_patch(on_patch)
 
         result = self.result
@@ -432,14 +437,14 @@ class ReflectedRegionsBackgroundEstimator:
 
             off_regions = result[idx_].off_region
             for off in off_regions:
-                off_patch = off.to_pixel(wcs=wcs).as_artist(
+                off_patch = off.to_pixel(wcs=geom.wcs).as_artist(
                     alpha=0.8, edgecolor=colors[idx_], label="Obs {}".format(obs.obs_id)
                 )
                 handle = ax.add_patch(off_patch)
             if off_regions:
                 handles.append(handle)
 
-            xx, yy = obs.pointing_radec.to_pixel(wcs)
+            xx, yy = obs.pointing_radec.to_pixel(geom.wcs)
             ax.plot(
                 xx, yy,
                 marker="+",
