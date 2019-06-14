@@ -17,6 +17,7 @@ from ..models import (
     Absorption,
     ConstantModel,
     NaimaModel,
+    Gaussian,
 )
 
 
@@ -150,6 +151,14 @@ TEST_MODELS = [
         eflux_1_10TeV=u.Quantity(6.41406327, "TeV cm-2 s-1"),
         e_peak=np.nan * u.TeV,
     ),
+    dict(
+        name="Gaussian",
+        model=Gaussian(norm=2 / u.cm ** 2 / u.s, mean=4 * u.TeV, sigma=3 * u.TeV),
+        val_at_2TeV=u.Quantity(0.3321457437841875, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(1.6371892282407274, "cm-2 s-1"),
+        integral_infinity=u.Quantity(2, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(7.676635460998642, "TeV cm-2 s-1"),
+    ),
 ]
 
 # Add compound models
@@ -213,7 +222,6 @@ TEST_MODELS.append(
     )
 )
 
-
 # The table model imports scipy.interpolate in `__init__`,
 # so we skip it if scipy is not available
 try:
@@ -250,9 +258,21 @@ def test_models(spectrum):
     if "e_peak" in spectrum:
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
-    # inverse for ConstantModel is irrelevant
-    if not (isinstance(model, ConstantModel) or spectrum["name"] == "compound6"):
+    # inverse for ConstantModel is irrelevant.
+    # inverse for Gaussian has a degeneracy
+    if not (
+            isinstance(model, ConstantModel)
+            or spectrum["name"] == "compound6"
+            or spectrum["name"] == "Gaussian"
+    ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
+
+    if "integral_infinity" in spectrum:
+        emin = -10000 * u.TeV
+        emax = 10000 * u.TeV
+        assert_quantity_allclose(
+            model.integral(emin=emin, emax=emax), spectrum["integral_infinity"]
+        )
 
     model.to_dict()
 
