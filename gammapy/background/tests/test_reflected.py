@@ -13,6 +13,10 @@ from ...maps import WcsNDMap, WcsGeom
 from ...data import DataStore
 from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
 
+region_finder_param = [ (SkyCoord(83.2, 22.5, unit="deg"), 15, Angle("82.592 deg"), 17, 17),
+                        (SkyCoord(84.2, 22.5, unit="deg"), 17, Angle("83.636 deg"), 19, 19),
+                        (SkyCoord(83.2, 21.5, unit="deg"), 15, Angle("83.672 deg"), 17, 17),
+                        ]
 
 @pytest.fixture(scope="session")
 def exclusion_mask():
@@ -55,8 +59,9 @@ def bkg_estimator(observations, exclusion_mask, on_region):
 
 
 @requires_data()
-def test_find_reflected_regions(exclusion_mask, on_region):
-    pointing = SkyCoord(83.2, 22.5, unit="deg")
+@pytest.mark.parametrize(("pointing_pos, nreg1, reg3_ra, nreg2, nreg3"), region_finder_param)
+def test_find_reflected_regions(exclusion_mask, on_region, pointing_pos, nreg1, reg3_ra, nreg2, nreg3):
+    pointing = pointing_pos
     fregions = ReflectedRegionsFinder(
         center=pointing,
         region=on_region,
@@ -65,22 +70,21 @@ def test_find_reflected_regions(exclusion_mask, on_region):
     )
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 15
-    assert_quantity_allclose(regions[3].center.icrs.ra, Angle("82.592 deg"), rtol=1e-2)
+    assert len(regions) == nreg1
+    assert_quantity_allclose(regions[3].center.icrs.ra, reg3_ra, rtol=1e-2)
 
     # Test without exclusion
     fregions.exclusion_mask = None
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 17
+    assert len(regions) == nreg2
 
     # Test with too small exclusion
     small_mask = exclusion_mask.cutout(pointing, Angle("0.1 deg"))
     fregions.exclusion_mask = small_mask
     fregions.run()
     regions = fregions.reflected_regions
-    assert len(regions) == 17
-    assert_quantity_allclose(regions[14].center.icrs.ra, Angle("83.868 deg"), rtol=1e-2)
+    assert len(regions) == nreg3
 
     # Test with maximum number of regions
     fregions.max_region_number = 5

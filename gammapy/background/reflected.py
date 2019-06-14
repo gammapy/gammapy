@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle
 from astropy import units as u
-from regions import PixCoord, CirclePixelRegion, CircleAnnulusPixelRegion, \
-                     RectanglePixelRegion, RectangleAnnulusPixelRegion, \
-                     EllipsePixelRegion,EllipseAnnulusPixelRegion
-from ..maps import WcsNDMap, WcsGeom
+from regions import PixCoord
+from ..maps import WcsNDMap
 from .background_estimate import BackgroundEstimate
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
@@ -218,9 +216,14 @@ class ReflectedRegionsFinder:
         mask = geom.region_mask([self.region], inside=True)
         self.on_reference_map = WcsNDMap(geom=geom, data=mask)
 
+        # Extract all pixcoords in the geom
+        X,Y = geom.get_pix()
+        ONpixels = PixCoord(X[mask], Y[mask])
+
+        mask_array = np.where(self.reference_map.data < 0.5)
+        self.excluded_pixcoords = PixCoord(X[mask_array],Y[mask_array])
+
         # Minimum angle a region has to be moved to not overlap with previous one
-        pix_idx = geom.get_pix()
-        ONpixels = PixCoord(pix_idx[0][mask], pix_idx[1][mask])
         min_ang = self._region_angular_size(ONpixels, self._pix_center)
 
         # Add required minimal distance between two off regions
@@ -234,27 +237,20 @@ class ReflectedRegionsFinder:
         # TODO: remove or change to a proper error
         if self._min_ang < 0:
             log.warn("ISSUE self._min_ang=", self._min_ang)
-        if self.min_distance_input < 0:
-            log.warn("ISSUE self.min_distance_input=", self.min_distance_input)
 
     def find_regions(self):
         """Find reflected regions."""
         curr_angle = self._min_ang + self.min_distance_input
         reflected_regions = []
-        geom = self.reference_map.geom
-
-        mask_array = np.where(self.reference_map.data < 0.5)
-        X, Y = geom.get_pix()
-        excluded_pixcoords = PixCoord(X[mask_array],Y[mask_array])
 
         while curr_angle < self._max_angle:
             test_reg = _rotate_pix_region(self._pix_region, self._pix_center, curr_angle)
 
-            if not np.any(test_reg.contains(excluded_pixcoords)):
-                region = test_reg.to_sky(geom.wcs)
+            if not np.any(test_reg.contains(self.excluded_pixcoords)):
+                region = test_reg.to_sky(self.reference_map.geom.wcs)
                 reflected_regions.append(region)
 
-                curr_angle = curr_angle + self._min_ang
+                curr_angle += self._min_ang
                 if self.max_region_number <= len(reflected_regions):
                     break
             else:
@@ -263,8 +259,8 @@ class ReflectedRegionsFinder:
         self.reflected_regions = reflected_regions
 
         # Make the OFF reference map
-        mask = geom.region_mask(self.reflected_regions, inside=True)
-        self.off_reference_map = WcsNDMap(geom=geom, data=mask.astype(float))
+        mask = self.reference_map.geom.region_mask(self.reflected_regions, inside=True)
+        self.off_reference_map = WcsNDMap(geom=self.reference_map.geom, data=mask)
 
     def plot(self, fig=None, ax=None):
         """Standard debug plot.
@@ -311,7 +307,7 @@ class ReflectedRegionsBackgroundEstimator:
     observations : `~gammapy.data.Observations`
         Observations to process
     binsz : `~astropy.coordinates.Angle`
-        Optional, bin size of the maps used to compute the regions
+        Optional, bin size of the maps used to compute the regions, Default '0.01 deg'
     kwargs : dict
         Forwarded to `~gammapy.background.ReflectedRegionsFinder`
     """
@@ -320,12 +316,7 @@ class ReflectedRegionsBackgroundEstimator:
         self.on_region = on_region
         self.observations = observations
 
-        # Proper management of the bin size (as it has an impact on results)
-        size = self._get_bounding_size(on_region, observations[0].pointing_radec) / 10.
-        if size < binsz:
-            self.binsz = size
-        else:
-            self.binsz = binsz
+        self.binsz = binsz
 
         self.finder = ReflectedRegionsFinder(region=on_region, center=None, binsz=Angle(self.binsz), **kwargs)
 
@@ -338,22 +329,6 @@ class ReflectedRegionsBackgroundEstimator:
         s += "\n{}".format(self.observations)
         s += "\n{}".format(self.finder)
         return s
-
-    @staticmethod
-    def _get_bounding_size(region, center):
-        """Return the typical radius of the bounding size"""
-
-        geom = WcsGeom.create(skydir=center, width=10.*u.deg, binsz=Angle("0.01 deg"), coordsys="GAL", proj="TAN")
-
-        region_pix = region.to_pixel(geom.wcs)
-        ixmin = region_pix.bounding_box.ixmin
-        ixmax = region_pix.bounding_box.ixmax
-        iymin = region_pix.bounding_box.iymin
-        iymax = region_pix.bounding_box.iymax
-        min_point = PixCoord(ixmin, iymin).to_sky(geom.wcs)
-        max_point = PixCoord(ixmax, iymax).to_sky(geom.wcs)
-
-        return min_point.separation(max_point)
 
     def run(self):
         """Run all steps."""
