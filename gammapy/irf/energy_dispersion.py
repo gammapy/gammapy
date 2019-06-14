@@ -8,7 +8,7 @@ from astropy.units import Quantity
 from astropy.table import Table
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
-from ..utils.energy import EnergyBounds, Energy
+from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray
 from ..utils.fits import energy_axis_to_ebounds
@@ -928,7 +928,7 @@ class EnergyDispersion2D:
         rv : `~numpy.ndarray`
             Redistribution vector
         """
-        e_true = Energy(e_true)
+        e_true = Quantity(e_true)
 
         if e_reco is None:
             # Default: e_reco nodes = migra nodes * e_true nodes
@@ -991,9 +991,9 @@ class EnergyDispersion2D:
         else:
             offset = np.atleast_1d(Angle(offset))
         if e_true is None:
-            e_true = Energy([0.1, 1, 10], "TeV")
+            e_true = Quantity([0.1, 1, 10], "TeV")
         else:
-            e_true = np.atleast_1d(Energy(e_true))
+            e_true = np.atleast_1d(Quantity(e_true))
         migra = self.data.axis("migra").center if migra is None else migra
 
         for ener in e_true:

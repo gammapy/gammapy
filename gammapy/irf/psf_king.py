@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy, EnergyBounds
+from ..utils.energy import EnergyBounds
 from . import EnergyDependentTablePSF
 
 __all__ = ["PSFKing"]
@@ -205,7 +205,7 @@ class PSFKing:
             Interpolated value
         """
         param = dict()
-        energy = Energy(energy)
+        energy = Quantity(energy)
         offset = Angle(offset)
 
         # Find nearest energy value

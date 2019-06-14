@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from ..utils.energy import Energy
+from astropy import units as u
 from . import EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
 
 __all__ = [
@@ -94,8 +94,8 @@ def make_mean_edisp(
     position,
     e_true,
     e_reco,
-    low_reco_threshold=Energy(0.002, "TeV"),
-    high_reco_threshold=Energy(150, "TeV"),
+    low_reco_threshold="0.002 TeV",
+    high_reco_threshold="150 TeV",
 ):
     """Compute mean energy dispersion.
 
@@ -123,6 +123,9 @@ def make_mean_edisp(
     stacked_edisp : `~gammapy.irf.EnergyDispersion`
         Stacked EDISP for a set of observation
     """
+    low_reco_threshold = u.Quantity(low_reco_threshold)
+    high_reco_threshold = u.Quantity(high_reco_threshold)
+
     list_aeff = []
     list_edisp = []
     list_livetime = []
