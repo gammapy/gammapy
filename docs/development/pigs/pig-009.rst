@@ -32,8 +32,8 @@ although there are cases where it may be less precise. Instead, the rejection sa
 method can be highly precise but it is less efficient (for example should the distribution
 have narrow features). Implenting the latter in Gammapy would be problematic at this 
 moment, as in Python it would neeed for loops on each sampled model, implying a very 
-slow approach. However, we note also that the Inverse CDF method is the one used by 
-ASTRIsim, the simulator of the AGILE collaboration. 
+slow approach. However, we note also that the Inverse CDF method is used by `ASTRIsim` 
+(_astrisim), the simulator of the AGILE collaboration. 
 Furthermore, it is important to mention that Gammapy already implements a preliminary 
 binned simulation, for example for spectra or 3D-simulations (e.g. _spec and _three-D).
 
@@ -172,7 +172,7 @@ simple fallback solution.
 MapDatasetEventSampler
 =======================
 
-To combine the `MapEventSampler` and `IRFMapSampler` objects we finally propose 
+To combine the `MapEventSampler` and `IRFEventDistibutor` objects we finally propose 
 to introduce a `MapDatasetEventSampler`, which executes the sampling from all 
 source components, applies the IRFs, samples from the background model and 
 returns a stacked, combined event list.
@@ -259,13 +259,13 @@ ordered by priority:
    and add tests.
 4. Remove the current `GeneralRandom` class and adapt `gammapy.astro.population.simulate' 
    accordingly.
-5. Implement `MapEventSampler` class into `gammapy.utils.?' and named it 
-   `map_evesampler.py' and include some tests. (v0.13, v0.14)?
+5. Implement `MapEventSampler` class into `gammapy.utils.random' and named it 
+   `map_evesampler.py' and include some tests. (v0.13)
 6. Add tutorial on how to use the `MapEventSampler' applying it to both sources and background.
-7. Implement `IRFEventDistibutor' into `gammapy.cube' with the name `event_distributor.py'
-   and add some tests. (v0.13, v0.14)?
-8. Implement `MapDatasetEventSampler' into `gammapy.data'(?) and add some tests. (v0.13, v0.14)?
-9. Add tutorial for event simulations of different kinds of sources. (v0.13, v0.14)?
+7. Implement `IRFEventDistibutor' into `gammapy.utils.random' with the name `event_distributor.py'
+   and add some tests. (v0.13)
+8. Implement `MapDatasetEventSampler' into `gammapy.utils.random' and add some tests. (v0.13 or v0.14)
+9. Add tutorial for event simulations of different kinds of sources. (v0.13 or v0.14)
 
 
 Decision
@@ -279,5 +279,5 @@ Decision
 .. _gammalib: http://cta.irap.omp.eu/gammalib/doxygen/GModelSpatialRadialGauss_8cpp_source.html#l00325
 .. _spec: https://docs.gammapy.org/0.11/api/gammapy.spectrum.SpectrumSimulation.html
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
-
+.. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
 
