@@ -34,12 +34,12 @@ def _rotate_pix_region(pix_region, pix_center, angle):
     # initial angle w.r.t. north
     initial_angle = Angle(np.arctan2(dy, dx), "rad")
 
-    x = pix_center.x + offset * np.cos(angle)
-    y = pix_center.y + offset * np.sin(angle)
+    x = pix_center.x + offset * np.cos(angle + initial_angle)
+    y = pix_center.y + offset * np.sin(angle + initial_angle)
     new_region.center = PixCoord(x=x, y=y)
 
     if hasattr(new_region, 'angle'):
-        region_angle = angle - initial_angle + pix_region.angle.to('rad')
+        region_angle = angle + pix_region.angle.to('rad')
         new_region.angle = region_angle
 
     return new_region
@@ -178,43 +178,57 @@ class ReflectedRegionsFinder:
 
         return maskmap
 
+    @staticmethod
+    def _region_angular_size(pixels, center):
+        """Compute maximum angular size of a group of pixels as seen from center.
+
+        This assumes that the center lies outside the group of pixel
+
+        Parameters
+        ----------
+        pixels : `~astropy.regions.PixCoord`
+            the pixels coordinates
+        center : `~astropy.regions.PixCoord`
+            the center coordinate in pixels
+
+        Returns
+        -------
+        angular_size : `~astropy.coordinates.Angle`
+            the maximum angular size
+        """
+        newX, newY = center.x - pixels.x, center.y - pixels.y
+        angles = Angle(np.arctan2(newX, newY), 'rad')
+        angular_size = np.max(angles) - np.min(angles)
+
+        if angular_size.value > np.pi:
+            angular_size = np.max(angles.wrap_at(0 * u.rad)) - np.min(angles.wrap_at(0 * u.rad))
+
+        return angular_size
+
     def setup(self):
         """Compute parameters for reflected regions algorithm."""
         geom = self.reference_map.geom
         self._pix_region = self.region.to_pixel(geom.wcs)
         self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
-        dx = self._pix_region.center.x - self._pix_center.x
-        dy = self._pix_region.center.y - self._pix_center.y
 
         if self._pix_region.contains(self._pix_center):
             raise ValueError("Pointing position within the ON region")
 
-        # Offset of region in pix coordinates
-        self._offset = np.hypot(dx, dy)
-
         # Make the ON reference map
-        _mask = geom.region_mask([self.region], inside=True)
-        self.on_reference_map = WcsNDMap(geom=geom, data=_mask)
-
-        # Starting angle of region
-        self._angle = Angle(np.arctan2(dy, dx), "rad")
+        mask = geom.region_mask([self.region], inside=True)
+        self.on_reference_map = WcsNDMap(geom=geom, data=mask)
 
         # Minimum angle a region has to be moved to not overlap with previous one
         pix_idx = geom.get_pix()
-        pix_on_x = pix_idx[0][_mask]
-        pix_on_y = pix_idx[1][_mask]
-        newX, newY = (self._pix_center.x - pix_on_x), (self._pix_center.y - pix_on_y)
-        angles = Angle(np.arctan2(newX, newY) * u.rad)
-        min_ang = np.max(angles)-np.min(angles)
-        if min_ang.value > np.pi:
-            min_ang = np.max(angles.wrap_at(0*u.rad))-np.min(angles.wrap_at(0*u.rad))
-        print(min_ang.to_value('deg'))
+        ONpixels = PixCoord(pix_idx[0][mask], pix_idx[1][mask])
+        min_ang = self._region_angular_size(ONpixels, self._pix_center)
+
         # Add required minimal distance between two off regions
         self._min_ang = min_ang + self.min_distance
 
         # Maximum possible angle before regions is reached again
         self._max_angle = (
-            self._angle + Angle("360deg") - self._min_ang - self.min_distance_input
+             Angle("360deg") - self._min_ang - self.min_distance_input
         )
 
         # TODO: remove or change to a proper error
@@ -225,7 +239,7 @@ class ReflectedRegionsFinder:
 
     def find_regions(self):
         """Find reflected regions."""
-        curr_angle = self._angle + self._min_ang + self.min_distance_input
+        curr_angle = self._min_ang + self.min_distance_input
         reflected_regions = []
         geom = self.reference_map.geom
 
