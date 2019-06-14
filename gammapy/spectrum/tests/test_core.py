@@ -8,14 +8,14 @@ from ...utils.testing import (
     mpl_plot_check,
     assert_quantity_allclose,
 )
-from ...utils.energy import EnergyBounds
+from ...utils.energy import energy_logspace
 from .. import CountsSpectrum, PHACountsSpectrum
 
 
 class TestCountsSpectrum:
     def setup(self):
         self.counts = [0, 0, 2, 5, 17, 3]
-        self.bins = EnergyBounds.equal_log_spacing(1, 10, 6, "TeV")
+        self.bins = energy_logspace(1, 10, 7, "TeV")
         self.spec = CountsSpectrum(
             data=self.counts, energy_lo=self.bins[:-1], energy_hi=self.bins[1:]
         )
@@ -32,12 +32,12 @@ class TestCountsSpectrum:
         assert spec.data.data.unit.is_equivalent("")
 
     def test_wrong_init(self):
-        bins = EnergyBounds.equal_log_spacing(1, 10, 7, "TeV")
+        bins = energy_logspace(1, 10, 8, "TeV")
         with pytest.raises(ValueError):
             CountsSpectrum(
                 data=self.counts,
-                energy_lo=bins.lower_bounds,
-                energy_hi=bins.upper_bounds,
+                energy_lo=bins[:-1],
+                energy_hi=bins[1:],
             )
 
     def test_evaluate(self):
@@ -79,12 +79,12 @@ class TestCountsSpectrum:
 class TestPHACountsSpectrum:
     def setup(self):
         counts = [1, 2, 5, 6, 1, 7, 23, 2]
-        self.binning = EnergyBounds.equal_log_spacing(1, 10, 8, "TeV")
+        self.binning = energy_logspace(1, 10, 9, "TeV")
         quality = [1, 1, 1, 0, 0, 1, 1, 1]
         self.spec = PHACountsSpectrum(
             data=counts,
-            energy_lo=self.binning.lower_bounds,
-            energy_hi=self.binning.upper_bounds,
+            energy_lo=self.binning[:-1],
+            energy_hi=self.binning[1:],
             quality=quality,
         )
         self.spec.backscal = 0.3

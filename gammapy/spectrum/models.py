@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
-from ..utils.energy import EnergyBounds
+from ..utils.energy import energy_logspace
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameter, Parameters, Model
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -274,7 +274,7 @@ class SpectralModel(Model):
         ax = plt.gca() if ax is None else ax
 
         emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
+        energy = energy_logspace(emin, emax, n_points, energy_unit)
 
         # evaluate model
         flux = self(energy).to(flux_unit)
@@ -344,7 +344,7 @@ class SpectralModel(Model):
         kwargs.setdefault("linewidth", 0)
 
         emin, emax = energy_range
-        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
+        energy = energy_logspace(emin, emax, n_points, energy_unit)
 
         flux, flux_err = self.evaluate_error(energy).to(flux_unit)
 
@@ -1191,11 +1191,8 @@ class TableModel(SpectralModel):
         energy_lo = table_energy["ENERG_LO"]
         energy_hi = table_energy["ENERG_HI"]
 
-        # Hack while format is not fixed, energy values are in keV
-        energy_bounds = EnergyBounds.from_lower_and_upper_bounds(
-            lower=energy_lo, upper=energy_hi, unit=u.keV
-        )
-        energy = energy_bounds.log_centers
+        # set energy to log-centers
+        energy = np.sqrt(energy_lo * energy_hi)
 
         # Get spectrum values (no interpolation, take closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")

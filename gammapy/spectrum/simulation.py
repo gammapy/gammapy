@@ -2,7 +2,6 @@
 from collections import OrderedDict
 import logging
 from ..utils.random import get_random_state
-from ..utils.energy import EnergyBounds
 from .utils import SpectrumEvaluator
 from .core import PHACountsSpectrum
 from .dataset import SpectrumDatasetOnOff
@@ -98,7 +97,7 @@ class SpectrumSimulation:
                 temp = self.aeff.energy.edges
             else:
                 temp = self.e_true
-        return EnergyBounds(temp)
+        return temp
 
     def run(self, seed):
         """Simulate list of `~gammapy.spectrum.SpectrumDatasetOnOff`.
@@ -167,8 +166,8 @@ class SpectrumSimulation:
         on_counts = rand.poisson(self.npred_source.data.data.value)
 
         on_vector = PHACountsSpectrum(
-            energy_lo=self.e_reco.lower_bounds,
-            energy_hi=self.e_reco.upper_bounds,
+            energy_lo=self.e_reco[:-1],
+            energy_hi=self.e_reco[1:],
             data=on_counts,
             backscal=1,
             meta=self._get_meta(),
@@ -198,8 +197,8 @@ class SpectrumSimulation:
 
         # Create off vector
         off_vector = PHACountsSpectrum(
-            energy_lo=self.e_reco.lower_bounds,
-            energy_hi=self.e_reco.upper_bounds,
+            energy_lo=self.e_reco[:-1],
+            energy_hi=self.e_reco[1:],
             data=off_counts,
             backscal=1.0 / self.alpha,
             is_bkg=True,

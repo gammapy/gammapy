@@ -8,7 +8,6 @@ from astropy.units import Quantity
 from astropy.table import Table
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
-from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray
 from ..utils.fits import energy_axis_to_ebounds
@@ -260,14 +259,19 @@ class EnergyDispersion:
                     ] = l.field("MATRIX")[m_start : m_start + l.field("N_CHAN")[k]]
                     m_start += l.field("N_CHAN")[k]
 
-        e_reco = EnergyBounds.from_ebounds(ebounds_hdu)
-        e_true = EnergyBounds.from_rmf_matrix(matrix_hdu)
+        unit = ebounds_hdu.header.get("TUNIT2")
+        e_reco_lo = Quantity(ebounds_hdu.data["E_MIN"], unit=unit)
+        e_reco_hi = Quantity(ebounds_hdu.data["E_MAX"], unit=unit)
+
+        unit = matrix_hdu.header.get("TUNIT1")
+        e_true_lo = Quantity(matrix_hdu.data["ENERG_LO"], unit=unit)
+        e_true_hi = Quantity(matrix_hdu.data["ENERG_HI"], unit=unit)
 
         return cls(
-            e_true_lo=e_true.lower_bounds,
-            e_true_hi=e_true.upper_bounds,
-            e_reco_lo=e_reco.lower_bounds,
-            e_reco_hi=e_reco.upper_bounds,
+            e_true_lo=e_true_lo,
+            e_true_hi=e_true_hi,
+            e_reco_lo=e_reco_lo,
+            e_reco_hi=e_reco_hi,
             data=pdf_matrix,
         )
 
@@ -684,7 +688,7 @@ class EnergyDispersion2D:
     Read energy dispersion IRF from disk:
 
     >>> from gammapy.irf import EnergyDispersion2D
-    >>> from gammapy.utils.energy import EnergyBounds
+    >>> from gammapy.utils.energy import energy_logspace
     >>> filename = '$GAMMAPY_DATA/tests/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
     >>> edisp2d = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
     >>> print(edisp2d)
@@ -698,7 +702,7 @@ class EnergyDispersion2D:
     Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
     for a given field of view offset and energy binning:
 
-    >>> energy = EnergyBounds.equal_log_spacing(0.1,20,60, 'TeV')
+    >>> energy = energy_logspace(0.1,20,60, 'TeV')
     >>> edisp = edisp2d.to_energy_dispersion(offset='1.2 deg', e_reco=energy, e_true=energy)
     >>> print(edisp)
     EnergyDispersion
@@ -782,9 +786,9 @@ class EnergyDispersion2D:
         pdf_threshold : float, optional
             Zero suppression threshold
         """
-        e_true = EnergyBounds(e_true)
+        e_true = Quantity(e_true)
         # erf does not work with Quantities
-        true = e_true.log_centers.to_value("TeV")
+        true = np.sqrt(e_true[:-1] * e_true[1:]).to_value("TeV")
 
         true2d, migra2d = np.meshgrid(true, migra)
 
@@ -872,9 +876,9 @@ class EnergyDispersion2D:
         ----------
         offset : `~astropy.coordinates.Angle`
             Offset
-        e_true : `~gammapy.utils.energy.EnergyBounds`, None
+        e_true : `~astropy.units.Quantity`, None
             True energy axis
-        e_reco : `~gammapy.utils.energy.EnergyBounds`
+        e_reco : `~astropy.units.Quantity`
             Reconstructed energy axis
 
         Returns
@@ -885,11 +889,11 @@ class EnergyDispersion2D:
         offset = Angle(offset)
         e_true = self.data.axis("e_true").edges if e_true is None else e_true
         e_reco = self.data.axis("e_true").edges if e_reco is None else e_reco
-        e_true = EnergyBounds(e_true)
-        e_reco = EnergyBounds(e_reco)
+        e_true = Quantity(e_true)
+        e_reco = Quantity(e_reco)
 
         data = []
-        for energy in e_true.log_centers:
+        for energy in np.sqrt(e_true[1:] * e_true[:-1]):
             vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
             data.append(vec)
 
@@ -914,9 +918,9 @@ class EnergyDispersion2D:
 
         Parameters
         ----------
-        e_true : `~gammapy.utils.energy.Energy`
+        e_true : `~astropy.units.Quantity`
             True energy
-        e_reco : `~gammapy.utils.energy.EnergyBounds`, None
+        e_reco : `~astropy.units.Quantity`, None
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
@@ -932,10 +936,10 @@ class EnergyDispersion2D:
 
         if e_reco is None:
             # Default: e_reco nodes = migra nodes * e_true nodes
-            e_reco = EnergyBounds(self.data.axis("migra").edges * e_true)
+            e_reco = self.data.axis("migra").edges * e_true
         else:
             # Translate given e_reco binning to migra at bin center
-            e_reco = EnergyBounds(e_reco)
+            e_reco = Quantity(e_reco)
 
         # migration value of e_reco bounds
         migra_e_reco = e_reco / e_true

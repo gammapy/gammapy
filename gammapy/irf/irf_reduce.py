@@ -109,9 +109,9 @@ def make_mean_edisp(
         Observations for which to compute the EDISP
     position : `~astropy.coordinates.SkyCoord`
         Position at which to compute the EDISP
-    e_true : `~gammapy.utils.energy.EnergyBounds`
+    e_true : `~astropy.units.Quantity`
         True energy axis
-    e_reco : `~gammapy.utils.energy.EnergyBounds`
+    e_reco : `~astropy.units.Quantity`
         Reconstructed energy axis
     low_reco_threshold : `~gammapy.utils.energy.Energy`
         low energy threshold in reco energy, default 0.002 TeV

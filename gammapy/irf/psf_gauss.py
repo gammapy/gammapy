@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma
 from ..utils.array import array_stats_str
-from ..utils.energy import EnergyBounds, energy_logspace
+from ..utils.energy import energy_logspace
 from ..utils.scripts import make_path
 from ..utils.gauss import MultiGauss2D
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -75,10 +75,7 @@ class EnergyDependentMultiGaussPSF:
     ):
         self.energy_lo = Quantity(energy_lo, "TeV")
         self.energy_hi = Quantity(energy_hi, "TeV")
-        ebounds = EnergyBounds.from_lower_and_upper_bounds(
-            self.energy_lo, self.energy_hi
-        )
-        self.energy = ebounds.log_centers
+        self.energy = np.sqrt(self.energy_hi * self.energy_lo)
         self.theta = Quantity(theta, "deg")
         sigmas[0][sigmas[0] == 0] = 1
         sigmas[1][sigmas[1] == 0] = 1

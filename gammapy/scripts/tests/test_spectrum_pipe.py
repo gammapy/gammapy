@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
-from ...utils.energy import EnergyBounds
+from ...utils.energy import energy_logspace
 from ...utils.testing import requires_dependency, requires_data
 from ...spectrum.models import PowerLaw
 from ..spectrum_pipe import SpectrumAnalysisIACT
@@ -29,7 +29,7 @@ def config():
     pos = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
     radius = Angle(0.11, "deg")
     on_region = CircleSkyRegion(pos, radius)
-    fp_binning = EnergyBounds.equal_log_spacing(1, 50, 4, "TeV")
+    fp_binning = energy_logspace(1, 50, 5, "TeV")
     return dict(
         outdir=None,
         background=dict(on_region=on_region),

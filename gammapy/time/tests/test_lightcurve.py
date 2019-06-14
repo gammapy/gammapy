@@ -10,7 +10,7 @@ from astropy.table import Table, Column
 from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
-from ...utils.energy import EnergyBounds
+from ...utils.energy import energy_logspace
 from ...data import DataStore
 from ...spectrum import SpectrumExtraction
 from ...spectrum.models import PowerLaw
@@ -169,8 +169,8 @@ def spec_extraction():
     )
     bkg_estimator.run()
 
-    e_reco = EnergyBounds.equal_log_spacing(0.2, 100, 50, unit="TeV")  # fine binning
-    e_true = EnergyBounds.equal_log_spacing(0.05, 100, 200, unit="TeV")
+    e_reco = energy_logspace(0.2, 100, 51, unit="TeV")  # fine binning
+    e_true = energy_logspace(0.05, 100, 201, unit="TeV")
     extraction = SpectrumExtraction(
         observations=observations,
         bkg_estimate=bkg_estimator.result,

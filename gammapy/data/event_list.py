@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
-from ..utils.energy import EnergyBounds
+from ..utils.energy import energy_logspace
 from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
@@ -408,7 +408,7 @@ class EventListBase:
 
     def _default_plot_ebounds(self):
         energy = self.energy
-        return EnergyBounds.equal_log_spacing(energy.min(), energy.max(), 50)
+        return energy_logspace(energy.min(), energy.max(), 50)
 
     def _counts_spectrum(self, ebounds):
         from ..spectrum import CountsSpectrum

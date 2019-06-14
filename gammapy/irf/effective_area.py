@@ -7,7 +7,6 @@ from astropy.table import Table
 from ..utils.nddata import NDDataArray
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
-from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
@@ -139,7 +138,7 @@ class EffectiveAreaTable:
         instrument : {'HESS', 'HESS2', 'CTA'}
             Instrument name
         """
-        energy = EnergyBounds(energy)
+        energy = u.Quantity(energy)
         # Put the parameters g in a dictionary.
         # Units: g1 (cm^2), g2 (), g3 (MeV)
         # Note that whereas in the paper the parameter index is 1-based,
@@ -155,7 +154,7 @@ class EffectiveAreaTable:
             ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
-        xx = energy.log_centers.to_value("MeV")
+        xx = np.sqrt(energy[:-1] * energy[1:]).to_value("MeV")
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
@@ -165,7 +164,7 @@ class EffectiveAreaTable:
         data = u.Quantity(value, "cm2", copy=False)
 
         return cls(
-            energy_lo=energy.lower_bounds, energy_hi=energy.upper_bounds, data=data
+            energy_lo=energy[:-1], energy_hi=energy[1:], data=data
         )
 
     @classmethod
@@ -441,11 +440,11 @@ class EffectiveAreaTable2D:
         if energy is None:
             energy = self.data.axis("energy").edges
 
-        energy = EnergyBounds(energy)
-        area = self.data.evaluate(offset=offset, energy=energy.log_centers)
+        energy = u.Quantity(energy)
+        area = self.data.evaluate(offset=offset, energy=np.sqrt(energy[:-1] * energy[1:]))
 
         return EffectiveAreaTable(
-            energy_lo=energy.lower_bounds, energy_hi=energy.upper_bounds, data=area
+            energy_lo=energy[:-1], energy_hi=energy[1:], data=area
         )
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
