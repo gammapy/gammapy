@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord,Angle
+import matplotlib.pyplot as plt
 
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from  ....cube import MapEvaluator
@@ -20,6 +21,9 @@ def uniform_dist(x, a, b):
 
 def gauss_dist(x, mu, sigma):
     return stats.norm.pdf(x, mu, sigma)
+
+def po(x):
+    return x**(-1.*2)
 
 def source_model():
     position = SkyCoord(0.0, 0.0, frame='galactic', unit='deg')
@@ -107,13 +111,24 @@ def test_map_sampling():
     time_events = sampler.sample_timepred()
     evt = sampler.sample_events()
 
+    plt.hist(evt['e_true'], bins=np.logspace(0, 2, 10), density=True)
+    plt.plot(np.arange(1,100), po(np.arange(1,100)))
+    plt.loglog()
+    plt.show()
+
 
 def test_npred_total():
+    n_test = 1000
+    npred_tot = np.zeros(n_test,int)
     npred = source_model()
-
+    tot = np.sum(npred.data)
+    
     sampler = MapEventSampler(npred, random_state=0, tmin=0, tmax=30000)
-    npred_tot = sampler.npred_total()
 
+    for i in np.arange(0,n_test):
+        npred_tot[i] = sampler.npred_total()
+
+    assert_allclose(np.mean(npred_tot), tot, rtol=0.1)
 
 
 
