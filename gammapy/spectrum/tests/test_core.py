@@ -20,17 +20,6 @@ class TestCountsSpectrum:
             data=self.counts, energy_lo=self.bins[:-1], energy_hi=self.bins[1:]
         )
 
-    def test_init_wo_unit(self):
-        counts = [2, 5]
-        energy = [1, 2, 3] * u.TeV
-        spec = CountsSpectrum(data=counts, energy_lo=energy[:-1], energy_hi=energy[1:])
-        assert spec.data.data.unit.is_equivalent("")
-
-        counts = u.Quantity([2, 5])
-        spec = CountsSpectrum(data=counts, energy_lo=energy[:-1], energy_hi=energy[1:])
-
-        assert spec.data.data.unit.is_equivalent("")
-
     def test_wrong_init(self):
         bins = energy_logspace(1, 10, 8, "TeV")
         with pytest.raises(ValueError):
@@ -39,11 +28,6 @@ class TestCountsSpectrum:
                 energy_lo=bins[:-1],
                 energy_hi=bins[1:],
             )
-
-    def test_evaluate(self):
-        test_e = self.bins[2] + 0.1 * u.TeV
-        test_eval = self.spec.data.evaluate(energy=test_e)
-        assert_allclose(test_eval, self.counts[2])
 
     @requires_dependency("matplotlib")
     def test_plot(self):
@@ -71,7 +55,8 @@ class TestCountsSpectrum:
         with pytest.raises(ValueError):
             rebinned_spec = self.spec.rebin(4)
 
-        actual = rebinned_spec.data.evaluate(energy=[2, 3, 5] * u.TeV)
+        idx = rebinned_spec.energy.coord_to_idx([2, 3, 5] * u.TeV)
+        actual = rebinned_spec.data[idx]
         desired = [0, 7, 20]
         assert (actual == desired).all()
 
@@ -91,19 +76,6 @@ class TestPHACountsSpectrum:
         self.spec.obs_id = 42
         self.spec.livetime = 3 * u.h
 
-    def test_init_wo_unit(self):
-        counts = [2, 5]
-        energy = [1, 2, 3] * u.TeV
-        spec = PHACountsSpectrum(
-            data=counts, energy_lo=energy[:-1], energy_hi=energy[1:]
-        )
-        assert spec.data.data.unit.is_equivalent("")
-
-        counts = u.Quantity([2, 5])
-        spec = PHACountsSpectrum(
-            data=counts, energy_lo=energy[:-1], energy_hi=energy[1:]
-        )
-        assert spec.data.data.unit.is_equivalent("")
 
     def test_basic(self):
         assert "PHACountsSpectrum" in str(self.spec)

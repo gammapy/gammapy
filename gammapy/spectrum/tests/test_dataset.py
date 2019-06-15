@@ -69,7 +69,7 @@ class TestSpectrumDataset:
         assert result.success
         assert "minuit" in repr(result)
 
-        npred = self.dataset.npred().data.data.sum()
+        npred = self.dataset.npred().data.sum()
         assert_allclose(npred, self.npred.sum(), rtol=1e-3)
         assert_allclose(result.total_stat, -18087404.624, rtol=1e-3)
 
@@ -86,7 +86,7 @@ class TestSpectrumDataset:
 
         assert isinstance(fake_spectrum, CountsSpectrum)
         assert_allclose(fake_spectrum.energy.edges, self.dataset.counts.energy.edges)
-        assert fake_spectrum.data.data.sum() == 907331
+        assert fake_spectrum.data.sum() == 907331
 
     def test_incorrect_mask(self):
         mask_fit = np.ones(self.nbins, dtype=np.dtype('float'))
@@ -175,7 +175,7 @@ class TestSpectrumDatasetOnOff:
         energy = self.aeff.energy.edges * self.aeff.energy.unit
         expected = self.aeff.data.data[0] * (energy[-1] - energy[0]) * const * livetime
 
-        assert_allclose(dataset.npred().data.data.sum(), expected.value)
+        assert_allclose(dataset.npred().data.sum(), expected.value)
 
     @requires_dependency("matplotlib")
     def test_peek(self):
@@ -303,7 +303,7 @@ class TestSimpleFit:
     def test_wstat(self):
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
-        on_vector.data.data += self.bkg.data.data
+        on_vector.data += self.bkg.data
         obs = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
         obs.model = self.source_model
 
@@ -320,13 +320,13 @@ class TestSimpleFit:
     def test_joint(self):
         """Test joint fit for obs with different energy binning"""
         on_vector = self.src.copy()
-        on_vector.data.data += self.bkg.data.data
+        on_vector.data.data += self.bkg.data
         obs1 = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
         obs1.model = self.source_model
 
         src_rebinned = self.src.rebin(2)
         bkg_rebinned = self.off.rebin(2)
-        src_rebinned.data.data += self.bkg.rebin(2).data.data
+        src_rebinned.data.data += self.bkg.rebin(2).data
 
         obs2 = SpectrumDatasetOnOff(counts=src_rebinned, counts_off=bkg_rebinned)
         obs2.model = self.source_model
@@ -515,12 +515,12 @@ class TestSpectrumDatasetOnOffStacker:
             index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
         self.obs_stacker.stacked_obs.model = pwl
-        npred_stacked = self.obs_stacker.stacked_obs.npred().data.data
+        npred_stacked = self.obs_stacker.stacked_obs.npred().data
         npred_summed = np.zeros_like(npred_stacked)
 
         for obs in self.obs_list:
             obs.model = pwl
-            npred_summed[obs.mask_safe] += obs.npred().data.data[obs.mask_safe]
+            npred_summed[obs.mask_safe] += obs.npred().data[obs.mask_safe]
 
         assert_allclose(npred_stacked, npred_summed)
 
