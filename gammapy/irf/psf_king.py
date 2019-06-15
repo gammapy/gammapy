@@ -7,7 +7,6 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy, EnergyBounds
 from . import EnergyDependentTablePSF
 
 __all__ = ["PSFKing"]
@@ -47,8 +46,7 @@ class PSFKing:
         self.energy_lo = energy_lo.to("TeV")
         self.energy_hi = energy_hi.to("TeV")
         self.offset = Angle(offset)
-        ebounds = EnergyBounds.from_lower_and_upper_bounds(energy_lo, energy_hi)
-        self.energy = ebounds.log_centers
+        self.energy = np.sqrt(self.energy_lo * self.energy_hi)
         self.gamma = np.asanyarray(gamma)
         self.sigma = Angle(sigma)
 
@@ -205,7 +203,7 @@ class PSFKing:
             Interpolated value
         """
         param = dict()
-        energy = Energy(energy)
+        energy = Quantity(energy)
         offset = Angle(offset)
 
         # Find nearest energy value

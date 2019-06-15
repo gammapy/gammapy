@@ -16,7 +16,7 @@ from ..energy_dispersion import EnergyDispersion
 from ..psf_table import EnergyDependentTablePSF, TablePSF
 from ...data import DataStore, Observations
 from ...utils.testing import requires_data, assert_quantity_allclose
-from ...utils.energy import Energy, EnergyBounds
+from ...utils.energy import energy_logspace
 
 
 @pytest.fixture(scope="session")
@@ -40,7 +40,7 @@ def data_store():
             "psf_value": 4369.96391,
         },
         {
-            "energy": EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
+            "energy": energy_logspace(1, 10, 101, "TeV"),
             "rad": None,
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -62,7 +62,7 @@ def data_store():
             "psf_value": 25888.5047,
         },
         {
-            "energy": EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
+            "energy": energy_logspace(1, 10, 101, "TeV"),
             "rad": Angle(np.arange(0, 2, 0.002), "deg"),
             "energy_shape": (101,),
             "psf_energy": 1412.537545,
@@ -118,8 +118,8 @@ def test_make_mean_edisp(data_store):
     obs2 = data_store.obs(23592)
     observations = Observations([obs1, obs2])
 
-    e_true = EnergyBounds.equal_log_spacing(0.01, 150, 80, "TeV")
-    e_reco = EnergyBounds.equal_log_spacing(0.5, 100, 15, "TeV")
+    e_true = energy_logspace(0.01, 150, 81, "TeV")
+    e_reco = energy_logspace(0.5, 100, 16, "TeV")
     rmf = make_mean_edisp(observations, position=position, e_true=e_true, e_reco=e_reco)
 
     assert len(rmf.e_true.center) == 80
@@ -131,26 +131,26 @@ def test_make_mean_edisp(data_store):
         position=position,
         e_true=e_true,
         e_reco=e_reco,
-        low_reco_threshold=Energy(1, "TeV"),
-        high_reco_threshold=Energy(60, "TeV"),
+        low_reco_threshold="1 TeV",
+        high_reco_threshold="60 TeV",
     )
-    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(0.8, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco="0.8 TeV") != 0)[0]
     assert len(i2) == 0
-    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(61, "TeV")) != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco="61 TeV") != 0)[0]
     assert len(i2) == 0
-    i = np.where(rmf.data.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
-    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(1.5, "TeV")) != 0)[0]
+    i = np.where(rmf.data.evaluate(e_reco="1.5 TeV") != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco="1.5 TeV") != 0)[0]
     assert_equal(i, i2)
-    i = np.where(rmf.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
-    i2 = np.where(rmf2.data.evaluate(e_reco=Energy(40, "TeV")) != 0)[0]
+    i = np.where(rmf.data.evaluate(e_reco="40 TeV") != 0)[0]
+    i2 = np.where(rmf2.data.evaluate(e_reco="40 TeV") != 0)[0]
     assert_equal(i, i2)
 
 
 def test_apply_containment_fraction():
     n_edges_energy = 5
-    energy = EnergyBounds.equal_log_spacing(0.1, 10.0, nbins=n_edges_energy, unit="TeV")
+    energy = energy_logspace(0.1, 10.0, nbins=n_edges_energy + 1, unit="TeV")
     area = np.ones(n_edges_energy) * 4 * u.m ** 2
-    aeff = EffectiveAreaTable(energy.lower_bounds, energy.upper_bounds, data=area)
+    aeff = EffectiveAreaTable(energy[:-1], energy[1:], data=area)
 
     nrad = 100
     rad = Angle(np.linspace(0, 0.5, nrad), "deg")

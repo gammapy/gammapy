@@ -198,7 +198,7 @@ from astropy.table import Table
 from astropy.coordinates import Angle, EarthLocation
 from astropy.units import Quantity
 from .scripts import make_path
-from .energy import EnergyBounds
+
 
 __all__ = ["SmartHDUList", "energy_axis_to_ebounds", "earth_location_from_dict"]
 
@@ -425,14 +425,14 @@ def _fits_table_to_table(hdu):
 
 
 def energy_axis_to_ebounds(energy):
-    """Convert `~gammapy.utils.energy.EnergyBounds` to OGIP ``EBOUNDS`` extension.
+    """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
     See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
     """
-    energy = EnergyBounds(energy)
+    energy = Quantity(energy)
     table = Table()
 
-    table["CHANNEL"] = np.arange(energy.nbins, dtype=np.int16)
+    table["CHANNEL"] = np.arange(len(energy) - 1, dtype=np.int16)
     table["E_MIN"] = energy[:-1]
     table["E_MAX"] = energy[1:]
 
@@ -444,7 +444,7 @@ def energy_axis_to_ebounds(energy):
     header["INSTRUME"] = "DUMMY", "Instrument/detector"
     header["FILTER"] = "None", "Filter information"
     header["CHANTYPE"] = "PHA", "Type of channels (PHA, PI etc)"
-    header["DETCHANS"] = energy.nbins, "Total number of detector PHA channels"
+    header["DETCHANS"] = len(energy) - 1, "Total number of detector PHA channels"
     header["HDUCLASS"] = "OGIP", "Organisation devising file format"
     header["HDUCLAS1"] = "RESPONSE", "File relates to response of instrument"
     header["HDUCLAS2"] = "EBOUNDS", "This is an EBOUNDS extension"
@@ -454,13 +454,13 @@ def energy_axis_to_ebounds(energy):
 
 
 def ebounds_to_energy_axis(ebounds):
-    """Convert ``EBOUNDS`` extension to `~gammapy.utils.energy.EnergyBounds`
+    """Convert ``EBOUNDS`` extension to `~astropy.units.Quantity`
     """
     table = Table.read(ebounds)
     emin = table["E_MIN"].quantity
     emax = table["E_MAX"].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit
-    return EnergyBounds(energy)
+    return energy
 
 
 # TODO: add unit test

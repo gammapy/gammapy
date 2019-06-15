@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 import astropy.units as u
-from ...utils.energy import EnergyBounds
+from ...utils.energy import energy_logspace
 from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ..models import (
@@ -21,8 +21,8 @@ from ..models import (
 
 
 def table_model():
-    energy_edges = EnergyBounds.equal_log_spacing(0.1 * u.TeV, 100 * u.TeV, 1000)
-    energy = energy_edges.log_centers
+    energy_edges = energy_logspace(0.1 * u.TeV, 100 * u.TeV, 1000)
+    energy = np.sqrt(energy_edges[:-1] * energy_edges[1:])
 
     index = 2.3 * u.Unit("")
     amplitude = 4 / u.cm ** 2 / u.s / u.TeV

@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy, EnergyBounds
+from ..utils.energy import energy_logspace
 from ..utils.scripts import make_path
 from ..utils.gauss import MultiGauss2D
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -75,10 +75,7 @@ class EnergyDependentMultiGaussPSF:
     ):
         self.energy_lo = Quantity(energy_lo, "TeV")
         self.energy_hi = Quantity(energy_hi, "TeV")
-        ebounds = EnergyBounds.from_lower_and_upper_bounds(
-            self.energy_lo, self.energy_hi
-        )
-        self.energy = ebounds.log_centers
+        self.energy = np.sqrt(self.energy_hi * self.energy_lo)
         self.theta = Quantity(theta, "deg")
         sigmas[0][sigmas[0] == 0] = 1
         sigmas[1][sigmas[1] == 0] = 1
@@ -225,7 +222,7 @@ class EnergyDependentMultiGaussPSF:
         psf : `~gammapy.morphology.MultiGauss2D`
             Multigauss PSF object.
         """
-        energy = Energy(energy)
+        energy = Quantity(energy)
         theta = Quantity(theta)
 
         pars = {}
@@ -242,7 +239,7 @@ class EnergyDependentMultiGaussPSF:
         """Compute containment for all energy and theta values"""
         # This is a false positive from pylint
         # See https://github.com/PyCQA/pylint/issues/2435
-        energies = Energy(energy).flatten()  # pylint:disable=assignment-from-no-return
+        energies = Quantity(energy).flatten()  # pylint:disable=assignment-from-no-return
         thetas = Angle(theta).flatten()
         radius = np.empty((theta.size, energy.size))
 
@@ -330,7 +327,7 @@ class EnergyDependentMultiGaussPSF:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = Energy.equal_log_spacing(self.energy_lo[0], self.energy_hi[-1], 100)
+        energy = energy_logspace(self.energy_lo[0], self.energy_hi[-1], 100)
 
         for theta in thetas:
             for fraction in fractions:

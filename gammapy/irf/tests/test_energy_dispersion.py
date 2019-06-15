@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import Angle
 import astropy.units as u
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...utils.energy import EnergyBounds
+from ...utils.energy import energy_logspace
 from ...irf import EnergyDispersion, EnergyDispersion2D
 
 
@@ -155,8 +155,8 @@ class TestEnergyDispersion2D:
     def test_exporter(self):
         # Check RMF exporter
         offset = Angle(0.612, "deg")
-        e_reco = EnergyBounds.equal_log_spacing(1, 10, 6, "TeV")
-        e_true = EnergyBounds.equal_log_spacing(0.8, 5, 4, "TeV")
+        e_reco = energy_logspace(1, 10, 7, "TeV")
+        e_true = energy_logspace(0.8, 5, 5, "TeV")
         rmf = self.edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
         assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
         actual = rmf.pdf_matrix[2]

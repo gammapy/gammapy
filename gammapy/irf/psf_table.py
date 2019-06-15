@@ -10,7 +10,7 @@ from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.gauss import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy
+from ..utils.energy import energy_logspace
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF"]
 
@@ -434,7 +434,7 @@ class EnergyDependentTablePSF:
         exposure = TableModel(self.energy, self.exposure)
 
         e_min, e_max = energy_band
-        energy = Energy.equal_log_spacing(emin=e_min, emax=e_max, nbins=n_bins)
+        energy = energy_logspace(emin=e_min, emax=e_max, nbins=n_bins)
 
         weights = (spectrum * exposure)(energy)
         weights /= weights.sum()

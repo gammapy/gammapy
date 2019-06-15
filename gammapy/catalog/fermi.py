@@ -6,7 +6,6 @@ import astropy.units as u
 from astropy.table import Table, Column
 from astropy.time import Time
 from ..utils.scripts import make_path
-from ..utils.energy import EnergyBounds
 from ..utils.table import table_standardise_units_inplace
 from ..maps import Map
 from ..spectrum import FluxPoints
@@ -48,7 +47,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
 
-    _ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], "MeV")
+    _ebounds = u.Quantity([100, 300, 1000, 3000, 10000, 100000], "MeV")
     _ebounds_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
     energy_range = u.Quantity([100, 100000], "MeV")
     """Energy range of the catalog.
@@ -374,10 +373,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        e_ref = self._ebounds.log_centers
-        table["e_ref"] = e_ref
-        table["e_min"] = self._ebounds.lower_bounds
-        table["e_max"] = self._ebounds.upper_bounds
+
+        table["e_min"] = self._ebounds[:-1]
+        table["e_max"] = self._ebounds[1:]
 
         flux = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
@@ -462,7 +460,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
     Catalog is represented by `~gammapy.catalog.SourceCatalog1FHL`.
     """
 
-    _ebounds = EnergyBounds([10, 30, 100, 500], "GeV")
+    _ebounds = u.Quantity([10, 30, 100, 500], "GeV")
     _ebounds_suffix = ["10_30", "30_100", "100_500"]
     energy_range = u.Quantity([0.01, 0.5], "TeV")
     """Energy range of the Fermi 1FHL source catalog"""
@@ -499,8 +497,8 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
         """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds.lower_bounds
-        table["e_max"] = self._ebounds.upper_bounds
+        table["e_min"] = self._ebounds[:-1]
+        table["e_max"] = self._ebounds[1:]
         table["flux"] = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
         table["flux_errn"] = np.abs(flux_err[:, 0])
@@ -534,7 +532,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
     Catalog is represented by `~gammapy.catalog.SourceCatalog2FHL`.
     """
 
-    _ebounds = EnergyBounds([50, 171, 585, 2000], "GeV")
+    _ebounds = u.Quantity([50, 171, 585, 2000], "GeV")
     _ebounds_suffix = ["50_171", "171_585", "585_2000"]
     energy_range = u.Quantity([0.05, 2], "TeV")
     """Energy range of the Fermi 2FHL source catalog"""
@@ -571,8 +569,8 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         """Integral flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        table["e_min"] = self._ebounds.lower_bounds
-        table["e_max"] = self._ebounds.upper_bounds
+        table["e_min"] = self._ebounds[:-1]
+        table["e_max"] = self._ebounds[1:]
         table["flux"] = self._get_flux_values("Flux")
         flux_err = self._get_flux_values("Unc_Flux")
         table["flux_errn"] = np.abs(flux_err[:, 0])
@@ -611,7 +609,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
     energy_range = u.Quantity([0.01, 2], "TeV")
     """Energy range of the Fermi 1FHL source catalog"""
 
-    _ebounds = EnergyBounds([10, 20, 50, 150, 500, 2000], "GeV")
+    _ebounds = u.Quantity([10, 20, 50, 150, 500, 2000], "GeV")
 
     def __str__(self):
         return self.info()
@@ -832,10 +830,8 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
         """Flux points (`~gammapy.spectrum.FluxPoints`)."""
         table = Table()
         table.meta["SED_TYPE"] = "flux"
-        e_ref = self._ebounds.log_centers
-        table["e_ref"] = e_ref
-        table["e_min"] = self._ebounds.lower_bounds
-        table["e_max"] = self._ebounds.upper_bounds
+        table["e_min"] = self._ebounds[:-1]
+        table["e_max"] = self._ebounds[1:]
 
         flux = self.data["Flux_Band"]
         flux_err = self.data["Unc_Flux_Band"]

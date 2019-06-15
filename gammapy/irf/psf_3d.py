@@ -6,8 +6,8 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy
 from ..utils.scripts import make_path
+from ..utils.energy import energy_logspace
 from ..utils.interpolation import ScaledRegularGridInterpolator
 from .psf_table import TablePSF, EnergyDependentTablePSF
 
@@ -324,7 +324,7 @@ class PSF3D:
 
         ax = plt.gca() if ax is None else ax
 
-        energy = Energy.equal_log_spacing(self.energy_lo[0], self.energy_hi[-1], 100)
+        energy = energy_logspace(self.energy_lo[0], self.energy_hi[-1], 100)
 
         for theta in thetas:
             for fraction in fractions:

@@ -74,7 +74,7 @@ class CountsSpectrum:
         counts = counts_table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
         return cls(
-            data=counts, energy_lo=ebounds.lower_bounds, energy_hi=ebounds.upper_bounds
+            data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:]
         )
 
     @classmethod

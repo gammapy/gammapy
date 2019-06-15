@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.energy import EnergyBounds
+from ...utils.energy import energy_logspace
 from ...irf import EnergyDispersion, EffectiveAreaTable
 from .. import SpectrumExtraction, SpectrumSimulation
 from ..models import PowerLaw
@@ -65,7 +65,7 @@ class TestSpectrumSimulation:
         )
 
     def test_without_aeff(self):
-        e_true = EnergyBounds.equal_log_spacing(1, 10, 5, u.TeV)
+        e_true = energy_logspace(1, 10, 5, u.TeV)
         self.source_model.amplitude.unit = "TeV-1 s-1"
         self.source_model.amplitude.value = 1
         sim = SpectrumSimulation(
