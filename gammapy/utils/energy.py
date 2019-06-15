@@ -41,3 +41,14 @@ def energy_logspace(emin, emax, nbins, unit=None, per_decade=False):
     energy = np.logspace(x_min, x_max, nbins)
 
     return u.Quantity(energy, unit, copy=False)
+
+
+def energy_logcenter(e_edges):
+    """Compute energy log center.
+
+    Parameters
+    ----------
+    e_edges : `~astropy.units.Quantity`, float
+        Energy edges.
+    """
+    return np.sqrt(e_edges[:-1] * e_edges[1:])

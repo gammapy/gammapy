@@ -7,6 +7,7 @@ from astropy.table import Table
 from ..utils.nddata import NDDataArray
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
+from ..utils.energy import energy_logcenter
 from ..utils.scripts import make_path
 
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]
@@ -154,7 +155,7 @@ class EffectiveAreaTable:
             ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
-        xx = np.sqrt(energy[:-1] * energy[1:]).to_value("MeV")
+        xx = energy_logcenter(energy).to_value("MeV")
 
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
@@ -440,8 +441,8 @@ class EffectiveAreaTable2D:
         if energy is None:
             energy = self.data.axis("energy").edges
 
-        energy = u.Quantity(energy)
-        area = self.data.evaluate(offset=offset, energy=np.sqrt(energy[:-1] * energy[1:]))
+        energy = energy_logcenter(energy)
+        area = self.data.evaluate(offset=offset, energy=energy)
 
         return EffectiveAreaTable(
             energy_lo=energy[:-1], energy_hi=energy[1:], data=area

@@ -11,6 +11,7 @@ from ..maps.utils import edges_from_lo_hi
 from ..utils.scripts import make_path
 from ..utils.nddata import NDDataArray
 from ..utils.fits import energy_axis_to_ebounds
+from ..utils.energy import energy_logcenter
 
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 
@@ -788,7 +789,7 @@ class EnergyDispersion2D:
         """
         e_true = Quantity(e_true)
         # erf does not work with Quantities
-        true = np.sqrt(e_true[:-1] * e_true[1:]).to_value("TeV")
+        true = energy_logcenter(e_true).to_value("TeV")
 
         true2d, migra2d = np.meshgrid(true, migra)
 
@@ -889,11 +890,9 @@ class EnergyDispersion2D:
         offset = Angle(offset)
         e_true = self.data.axis("e_true").edges if e_true is None else e_true
         e_reco = self.data.axis("e_true").edges if e_reco is None else e_reco
-        e_true = Quantity(e_true)
-        e_reco = Quantity(e_reco)
 
         data = []
-        for energy in np.sqrt(e_true[1:] * e_true[:-1]):
+        for energy in energy_logcenter(e_true):
             vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
             data.append(vec)
 
