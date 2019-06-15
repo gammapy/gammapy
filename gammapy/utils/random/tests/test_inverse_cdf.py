@@ -13,17 +13,20 @@ from ....cube.models import SkyModel
 from ....image.models import SkyGaussian
 from ....maps import Map, MapAxis, WcsGeom
 from ....spectrum.models import PowerLaw
+from ....time.models import LightCurveTableModel as LC
 
 
 def uniform_dist(x, a, b):
     return np.select([x <= a, x >= b], [0, 0], 1 / (b - a))
-
 
 def gauss_dist(x, mu, sigma):
     return stats.norm.pdf(x, mu, sigma)
 
 def po(x):
     return x**(-1.*2)
+
+def rate(x):
+    return np.exp(-x/10000)
 
 def source_model():
     position = SkyCoord(0.0, 0.0, frame='galactic', unit='deg')
@@ -38,12 +41,11 @@ def source_model():
               coordsys="GAL", unit="cm2 s"
               )
 
-    livetime = 10 * u.hour
     spatial_model = SkyGaussian("0 deg", "0 deg", sigma="0.2 deg")
     spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    exposure.data = 1e10 * 1000 * np.ones(exposure.data.shape)
+    exposure.data = 1e10 * 10000 * np.ones(exposure.data.shape)
 
     evaluator = MapEvaluator(model=skymodel, exposure=exposure)
     
@@ -114,6 +116,25 @@ def test_map_sampling():
     plt.hist(evt['e_true'], bins=np.logspace(0, 2, 10), density=True)
     plt.plot(np.arange(1,100), po(np.arange(1,100)))
     plt.loglog()
+    plt.show()
+
+
+def test_time_sampling():
+    livetime = 10 * u.hour
+    time = np.linspace(0,livetime.to('s').value,int(livetime.to('s').value))
+    table = Table()
+    table['TIME'] = time
+    table['NORM'] = rate(time)
+    lc = LC(table)
+
+    npred = source_model()
+    
+    sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=0, tmax=80000)
+    events_src=sampler.sample_npred()
+    time_events = sampler.sample_timepred()
+    evt = sampler.sample_events()
+    
+    plt.hist(evt['time'], bins=100)
     plt.show()
 
 

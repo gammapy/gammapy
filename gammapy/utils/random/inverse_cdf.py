@@ -143,35 +143,42 @@ class MapEventSampler:
         -------
         ToA : array with times of the sampled events.
         """
- 
+        
         n_events = self.n_events
         if self.lc is not None:
-            start_lc = self.lc.table['time'].data[0]
-            stop_lc = self.lc.table['time'].data[-1]
-            if (self.tmin >= start_lc) and (self.tmax <= stop_lc):
-                time_range = np.where((self.lc.table['time'].data >= self.tmin) & (self.lc.table['time'].data <= self.tmax))
-                normalization = self.lc.table['normalization'].data[time_range]
-                time_sampler = InverseCDFSampler(normalization,random_state=self.random_state)
-                self.ToA = time_sampler.sample(n_events)[0]
+            start_lc = self.lc.table['TIME'].data[0]
+            stop_lc = self.lc.table['TIME'].data[-1]
+            dt = self.lc.table['TIME'].data[1] - self.lc.table['TIME'].data[0]
             
-            elif ((self.tmin >= start_lc) and (self.tmax > stop_lc) and (self.tmin < stop_lc)):
-                time_range = np.where((self.lc.table['time'].data >= self.tmin))
-                # we assume a constant source, with a mean source normalization in the choosen interval, when tmax > stop_lc
-                dt = self.lc.table['time'].data[1] - self.lc.table['time'].data[0]
-                mean_norm = (1. /(stop_lc-self.tmin) *
-                np.sum(self.lc.table['normalization'].data[time_range] * np.full(len(time_range[0]),dt)) )
-                normalization = np.append(self.lc.table['normalization'].data[time_range], np.full(int(self.tmax - stop_lc), mean_norm) )
-                time_sampler = InverseCDFSampler(normalization,random_state=self.random_state)
-                self.ToA = time_sampler.sample(n_events)[0]
-    
-            else:
+            if (self.tmax < start_lc) or (self.tmin > stop_lc):
+                # if the lc does not fit into the range [tmin,tmax]
                 self.ToA = self.tmin + self.random_state.uniform(high=(self.tmax-self.tmin), size=n_events)
 
-        else:
-            self.ToA = self.tmin + self.random_state.uniform(high=(self.tmax-self.tmin), size=n_events)
-        
-        return self.ToA
-            
+            else:
+                #define a time array in the range [t_min,t_max]
+                times = np.arange(self.tmin,self.tmax,dt)
+
+                #select the lc times in the time range [t_min,t_max]
+                common_idx = np.where((times>=start_lc) & (times<=stop_lc))
+                uncommon_idx = np.where((times<start_lc) | (times>stop_lc))
+                common_time = times[common_idx]
+                uncommon_time = times[uncommon_idx]
+                
+                #calculate the normalization in the common times and
+                #the mean lc normalization in the rest
+                norm = self.lc.evaluate_norm_at_time(common_time)
+                mean_norm = self.lc.mean_norm_in_time_interval(start_lc,stop_lc)
+
+                #define a new normalization array defined in the range [tmin,tmax]
+                normalization = np.full_like(times, mean_norm)
+                normalization[common_idx] = norm
+                
+                # sample the times
+                time_sampler = InverseCDFSampler(normalization,random_state=0)
+                self.ToA = time_sampler.sample(n_events)[0]
+
+            return self.ToA
+
     def sample_events(self):
         """It converts the given sampled event list into an astropy table.
             
