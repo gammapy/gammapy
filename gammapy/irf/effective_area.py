@@ -441,8 +441,7 @@ class EffectiveAreaTable2D:
         if energy is None:
             energy = self.data.axis("energy").edges
 
-        energy = energy_logcenter(energy)
-        area = self.data.evaluate(offset=offset, energy=energy)
+        area = self.data.evaluate(offset=offset, energy=energy_logcenter(energy))
 
         return EffectiveAreaTable(
             energy_lo=energy[:-1], energy_hi=energy[1:], data=area
