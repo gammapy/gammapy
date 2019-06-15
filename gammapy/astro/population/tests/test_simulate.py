@@ -62,27 +62,27 @@ def test_make_base_catalog_galactic():
     assert table["n_ISM"].unit == "cm-3"
     assert_allclose(d["n_ISM"], 1.0)
     assert table["spiralarm"].unit is None
-    assert d["spiralarm"] == "Perseus"
+    assert d["spiralarm"] == "Crux Scutum"
     assert table["x_birth"].unit == "kpc"
-    assert_allclose(d["x_birth"], -2.57846191600981)
+    assert_allclose(d["x_birth"], -5.856461, atol=1e-5)
     assert table["y_birth"].unit == "kpc"
-    assert_allclose(d["y_birth"], 10.010139593948578)
+    assert_allclose(d["y_birth"], 3.017292, atol=1e-5)
     assert table["z_birth"].unit == "kpc"
-    assert_allclose(d["z_birth"], -0.056572220998886355)
+    assert_allclose(d["z_birth"], 0.049088, atol=1e-5)
     assert table["x"].unit == "kpc"
-    assert_allclose(d["x"], -2.580778086904008)
+    assert_allclose(d["x"], -5.941061, atol=1e-5)
     assert table["y"].unit == "kpc"
-    assert_allclose(d["y"], 10.034018255267148)
+    assert_allclose(d["y"], 3.081642, atol=1e-5)
     assert table["z"].unit == "kpc"
-    assert_allclose(d["z"], 0.13731128103931922)
+    assert_allclose(d["z"], 0.023161, atol=1e-5)
     assert table["vx"].unit == "km/s"
-    assert_allclose(d["vx"], -4.1266001441394655)
+    assert_allclose(d["vx"], -150.727104, atol=1e-5)
     assert table["vy"].unit == "km/s"
-    assert_allclose(d["vy"], 42.543357869627776)
+    assert_allclose(d["vy"], 114.648494, atol=1e-5)
     assert table["vz"].unit == "km/s"
-    assert_allclose(d["vz"], 345.4320617970943)
+    assert_allclose(d["vz"], -46.193814, atol=1e-5)
     assert table["v_abs"].unit == "km/s"
-    assert_allclose(d["v_abs"], 348.06648135803658)
+    assert_allclose(d["v_abs"], 194.927693, atol=1e-5)
 
 
 def test_add_snr_parameters():
@@ -117,23 +117,23 @@ def test_add_pulsar_parameters():
     assert table["age"].unit == "yr"
     assert_allclose(table["age"], [100, 1000])
     assert table["P0"].unit == "s"
-    assert_allclose(table["P0"], [0.322829453422, 0.51352778881])
+    assert_allclose(table["P0"], [0.220778, 0.246389], atol=1e-5)
     assert table["P1"].unit == ""
-    assert_allclose(table["P1"], [4.54295751161e-14, 6.98423128444e-13])
+    assert_allclose(table["P1"], [6.310423e-13, 4.198294e-16], atol=1E-5)
     assert table["P0_birth"].unit == "s"
-    assert_allclose(table["P0_birth"], [0.322254715288, 0.388110930459])
+    assert_allclose(table["P0_birth"], [0.212418, 0.246336], atol=1e-5)
     assert table["P1_birth"].unit == ""
-    assert_allclose(table["P1_birth"], [4.55105983192e-14, 9.24116423053e-13])
+    assert_allclose(table["P1_birth"], [6.558773e-13, 4.199198e-16], atol=1e-5)
     assert table["CharAge"].unit == "yr"
-    assert_allclose(table["CharAge"], [2.32368825638e-22, 5.6826197937e-21])
+    assert_allclose(table["CharAge"], [2.207394e-21, 1.638930e-24], atol=1e-5)
     assert table["Tau0"].unit == "yr"
-    assert_allclose(table["Tau0"], [112189.64476, 6654.19039158])
+    assert_allclose(table["Tau0"], [5.131385e03, 9.294538e06], atol=1e-5)
     assert table["L_PSR"].unit == "erg / s"
-    assert_allclose(table["L_PSR"], [5.37834069771e34, 8.25708734631e35])
+    assert_allclose(table["L_PSR"], [2.807844e+36, 1.109265e+33], rtol=1e-5)
     assert table["L0_PSR"].unit == "erg / s"
-    assert_allclose(table["L0_PSR"], [5.36876555682e34, 6.24049160082e35])
+    assert_allclose(table["L0_PSR"], [2.701524e+36, 1.109026e+33], rtol=1e-5)
     assert table["B_PSR"].unit == "G"
-    assert_allclose(table["B_PSR"], [3.875305e12, 1.916422e13], rtol=1e-5)
+    assert_allclose(table["B_PSR"], [1.194420e+13, 3.254597e+11], rtol=1e-5)
 
 
 def test_add_pwn_parameters():
@@ -148,7 +148,7 @@ def test_add_pwn_parameters():
     assert len(table.colnames) == 27
 
     assert table["r_out_PWN"].unit == "pc"
-    assert_allclose(d["r_out_PWN"], 0.5892196771927385, atol=1e-3)
+    assert_allclose(d["r_out_PWN"], 1.378224, atol=1e-5)
 
 
 def test_add_observed_parameters():
@@ -160,19 +160,19 @@ def test_add_observed_parameters():
     assert len(table.colnames) == 20
 
     assert table["distance"].unit == "pc"
-    assert_allclose(d["distance"], 18713.340231191236)
+    assert_allclose(d["distance"], 13016.572756, atol=1e-5)
     assert table["GLON"].unit == "deg"
-    assert_allclose(d["GLON"], -7.9272056829002615)
+    assert_allclose(d["GLON"], -27.156565, atol=1e-5)
     assert table["GLAT"].unit == "deg"
-    assert_allclose(d["GLAT"], 0.42041812871409573)
+    assert_allclose(d["GLAT"], 0.101948, atol=1e-5)
     assert table["VGLON"].unit == "deg / Myr"
-    assert_allclose(d["VGLON"], -0.005574473038475241)
+    assert_allclose(d["VGLON"], 0.368166, atol=1e-5)
     assert table["VGLAT"].unit == "deg / Myr"
-    assert_allclose(d["VGLAT"], 1.0736832036530914)
+    assert_allclose(d["VGLAT"], -0.209514, atol=1e-5)
     assert table["RA"].unit == "deg"
-    assert_allclose(d["RA"], 260.9075160323843)
+    assert_allclose(d["RA"], 244.347149, atol=1e-5)
     assert table["DEC"].unit == "deg"
-    assert_allclose(d["DEC"], -35.371104990114816)
+    assert_allclose(d["DEC"], -50.410142, atol=1e-5)
 
 
 def test_chain_all():
@@ -191,6 +191,6 @@ def test_chain_all():
     assert len(table.colnames) == 34
 
     assert table["r_out_PWN"].unit == "pc"
-    assert_allclose(d["r_out_PWN"], 0.5891300402092443)
+    assert_allclose(d["r_out_PWN"], 1.378224, atol=1e-5)
     assert table["RA"].unit == "deg"
-    assert_allclose(d["RA"], 260.9075160323843)
+    assert_allclose(d["RA"], 244.347149, atol=1e-5)
