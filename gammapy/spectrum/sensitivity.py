@@ -78,7 +78,7 @@ class SensitivityEstimator:
         # then integrate bkg model and gamma over those energy bins.
         energy = self.rmf.e_reco.center
 
-        bkg_counts = (self.bkg.data.data.to("1/s") * self.livetime).value
+        bkg_counts = (self.bkg.quantity.to("1/s") * self.livetime).value
 
         excess_counts = excess_matching_significance_on_off(
             n_off=bkg_counts / self.alpha, alpha=self.alpha, significance=self.sigma
@@ -94,7 +94,7 @@ class SensitivityEstimator:
         predictor = SpectrumEvaluator(
             model, aeff=self.arf, edisp=self.rmf, livetime=self.livetime
         )
-        counts = predictor.compute_npred().data.data.value
+        counts = predictor.compute_npred().data
         phi_0 = excess_counts / counts
 
         dnde_model = model(energy=energy)

@@ -51,6 +51,9 @@ class CountsSpectrum:
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         self.energy = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
+        if data is None:
+            data = np.zeros(self.energy.nbin)
+
         self.data = np.array(data)
         if not self.energy.nbin == self.data.size:
             raise ValueError("Incompatible data and energy axis size.")
