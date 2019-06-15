@@ -61,7 +61,7 @@ class TestSpectrumSimulation:
         assert sim.obs.counts.total_counts == 161
         # The test value is taken from the test with edisp
         assert_allclose(
-            np.sum(sim.npred_source.data.data.value), 167.467572145, rtol=0.01
+            np.sum(sim.npred_source.data), 167.467572145, rtol=0.01
         )
 
     def test_without_aeff(self):

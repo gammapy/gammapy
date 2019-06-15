@@ -822,7 +822,7 @@ class LightCurveEstimator:
                 edisp=spec.edisp,
                 model=spectral_model,
             )
-            counts_predicted_excess = counts_predictor.compute_npred().data.data[
+            counts_predicted_excess = counts_predictor.compute_npred().data[
                 e_idx[:-1]
             ]
 
@@ -848,11 +848,11 @@ class LightCurveEstimator:
             if alpha_mean == 0.0:  # use backup if necessary
                 alpha_mean = alpha_mean_backup
 
-            flux = measured_excess / predicted_excess.value
+            flux = measured_excess / predicted_excess
             flux *= int_flux
 
             # Gaussian errors, TODO: should be improved
-            flux_err = int_flux / predicted_excess.value
+            flux_err = int_flux / predicted_excess
             delta_excess = excess_error(n_on=n_on, n_off=n_off, alpha=alpha_mean)
             flux_err *= delta_excess
 
@@ -863,7 +863,7 @@ class LightCurveEstimator:
             flux_ul = excess_ul_helene(
                 n_on - alpha_mean * n_off, delta_excess, ul_significance
             )
-            flux_ul *= int_flux / predicted_excess.value
+            flux_ul *= int_flux / predicted_excess
         else:
             flux = u.Quantity(0, "cm-2 s-1")
             flux_err = u.Quantity(0, "cm-2 s-1")
