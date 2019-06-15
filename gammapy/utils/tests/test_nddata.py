@@ -53,15 +53,6 @@ class TestNDDataArray:
     def test_str(self, nddata_1d):
         assert "x" in str(nddata_1d)
 
-    def test_find_node_1d(self, nddata_1d):
-        node = nddata_1d.find_node(x=4)
-        assert_equal(node, [1])
-
-    def test_find_node_2d(self, nddata_2d):
-        node = nddata_2d.find_node(energy=100 * u.TeV, offset=0.4 * u.deg)
-        assert_equal(node[0], [1])
-        assert_equal(node[1], [2])
-
     def test_evaluate_shape_1d(self, nddata_1d):
         # Scalar input
         out = nddata_1d.evaluate(x=1.5)

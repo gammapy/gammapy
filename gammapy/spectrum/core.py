@@ -119,8 +119,6 @@ class CountsSpectrum:
     def fill(self, events):
         """Fill with list of events.
 
-        TODO: Move to `~gammapy.utils.nddata.NDDataArray`
-
         Parameters
         ----------
         events : `~astropy.units.Quantity`, `gammapy.data.EventList`,
