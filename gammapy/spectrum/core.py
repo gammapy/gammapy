@@ -73,9 +73,7 @@ class CountsSpectrum:
         counts_table = Table.read(hdulist[hdu1])
         counts = counts_table["COUNTS"].data
         ebounds = ebounds_to_energy_axis(hdulist[hdu2])
-        return cls(
-            data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:]
-        )
+        return cls(data=counts, energy_lo=ebounds[:-1], energy_hi=ebounds[1:])
 
     @classmethod
     def read(cls, filename, hdu1="COUNTS", hdu2="EBOUNDS"):

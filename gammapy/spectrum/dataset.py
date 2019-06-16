@@ -200,7 +200,6 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             self.counts_off.livetime = livetime
 
-
     @property
     def mask_safe(self):
         """Inverse of counts spectrum quality mask."""
@@ -321,6 +320,7 @@ class SpectrumDatasetOnOff(Dataset):
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
+
         e_min, e_max = self.energy_range
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
@@ -344,18 +344,14 @@ class SpectrumDatasetOnOff(Dataset):
             show_energy=(e_min, e_max),
         )
         ax1.set_xlim(
-            0.7 * e_min.to_value(energy_unit),
-            1.3 * e_max.to_value(energy_unit),
+            0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
         )
         ax1.legend(numpoints=1)
 
         ax2.set_title("Effective Area")
         e_unit = self.aeff.energy.unit
         self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
-        ax2.set_xlim(
-            0.7 * e_min.to_value(e_unit),
-            1.3 * e_max.to_value(e_unit),
-        )
+        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
 
         ax3.axis("off")
         if self.counts_off is not None:

@@ -135,12 +135,12 @@ TEST_MODELS = [
         ),
         val_at_2TeV=u.Quantity(1.0, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(4.605170185, "cm-2 s-1"),
-        eflux_1_10TeV=u.Quantity(18., "TeV cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(18.0, "TeV cm-2 s-1"),
     ),
     dict(
         name="ecpl_2",
         model=ExponentialCutoffPowerLaw(
-            index=2. * u.Unit(""),
+            index=2.0 * u.Unit(""),
             amplitude=4 / u.cm ** 2 / u.s / u.TeV,
             reference=1 * u.TeV,
             lambda_=0.1 / u.TeV,
@@ -148,9 +148,8 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.81873075, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(2.83075297, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(6.41406327, "TeV cm-2 s-1"),
-        e_peak=np.nan*u.TeV,
+        e_peak=np.nan * u.TeV,
     ),
-
 ]
 
 # Add compound models
@@ -207,10 +206,10 @@ TEST_MODELS.append(
 TEST_MODELS.append(
     dict(
         name="compound6",
-        model=TEST_MODELS[7]["model"] + u.Quantity(4,'cm-2 s-1 TeV-1'),
-        val_at_2TeV=TEST_MODELS[7]["val_at_2TeV"]*2 ,
-        integral_1_10TeV=TEST_MODELS[7]["integral_1_10TeV"]*2,
-        eflux_1_10TeV=TEST_MODELS[7]["eflux_1_10TeV"]*2 ,
+        model=TEST_MODELS[7]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
+        val_at_2TeV=TEST_MODELS[7]["val_at_2TeV"] * 2,
+        integral_1_10TeV=TEST_MODELS[7]["integral_1_10TeV"] * 2,
+        eflux_1_10TeV=TEST_MODELS[7]["eflux_1_10TeV"] * 2,
     )
 )
 
@@ -252,7 +251,7 @@ def test_models(spectrum):
         assert_quantity_allclose(model.e_peak, spectrum["e_peak"], rtol=1e-2)
 
     # inverse for ConstantModel is irrelevant
-    if not (isinstance(model, ConstantModel) or spectrum["name"] == 'compound6'):
+    if not (isinstance(model, ConstantModel) or spectrum["name"] == "compound6"):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
     model.to_dict()
@@ -272,6 +271,7 @@ def test_model_unit():
     value = pwl(500 * u.MeV)
     assert value.unit == "cm-2 s-1 TeV-1"
 
+
 @requires_dependency("matplotlib")
 @requires_dependency("uncertainties")
 def test_model_plot():
@@ -284,10 +284,11 @@ def test_model_plot():
     pwl = PowerLaw(**pars)
     pwl.parameters.set_parameter_errors(errs)
     with mpl_plot_check():
-        pwl.plot((1*u.TeV, 10*u.TeV))
+        pwl.plot((1 * u.TeV, 10 * u.TeV))
 
     with mpl_plot_check():
-        pwl.plot_error((1*u.TeV, 10*u.TeV))
+        pwl.plot_error((1 * u.TeV, 10 * u.TeV))
+
 
 def test_to_from_dict():
     spectrum = TEST_MODELS[0]
@@ -301,6 +302,7 @@ def test_to_from_dict():
     actual = [par.value for par in new_model.parameters]
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
+
 
 @requires_dependency("matplotlib")
 @requires_data()
@@ -382,7 +384,6 @@ def test_ecpl_integrate():
     ecpl = ExponentialCutoffPowerLaw()
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
-
 
 
 @requires_dependency("naima")

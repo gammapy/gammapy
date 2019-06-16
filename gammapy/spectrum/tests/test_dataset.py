@@ -58,7 +58,7 @@ class TestSpectrumDataset:
     def test_energy_range(self):
         energy_range = self.dataset.energy_range
         assert energy_range.unit == u.TeV
-        assert_allclose(energy_range.to_value('TeV'), [0.1, 10.])
+        assert_allclose(energy_range.to_value("TeV"), [0.1, 10.0])
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
@@ -89,15 +89,23 @@ class TestSpectrumDataset:
         assert fake_spectrum.data.data.sum() == 907331
 
     def test_incorrect_mask(self):
-        mask_fit = np.ones(self.nbins, dtype=np.dtype('float'))
+        mask_fit = np.ones(self.nbins, dtype=np.dtype("float"))
         with pytest.raises(ValueError):
             SpectrumDataset(
-                self.source_model, self.src, self.livetime, mask_fit, None, None, self.bkg
+                self.source_model,
+                self.src,
+                self.livetime,
+                mask_fit,
+                None,
+                None,
+                self.bkg,
             )
 
     def test_set_model(self):
-        aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, 'HESS')
-        edisp = EnergyDispersion.from_diagonal_response(self.src.energy.edges, self.src.energy.edges)
+        aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
+        edisp = EnergyDispersion.from_diagonal_response(
+            self.src.energy.edges, self.src.energy.edges
+        )
         dataset = SpectrumDataset(
             None, self.src, self.livetime, None, aeff, edisp, self.bkg
         )
@@ -106,6 +114,7 @@ class TestSpectrumDataset:
 
         dataset.model = self.source_model
         assert dataset.parameters[0] == self.source_model.parameters[0]
+
 
 class TestSpectrumDatasetOnOff:
     """ Test ON OFF SpectrumDataset"""
@@ -123,9 +132,7 @@ class TestSpectrumDatasetOnOff:
 
         data = np.ones(elo.shape)
         data[-1] = 0  # to test stats calculation with empty bins
-        self.on_counts = PHACountsSpectrum(
-            elo, ehi, data , backscal=np.ones(elo.shape)
-        )
+        self.on_counts = PHACountsSpectrum(elo, ehi, data, backscal=np.ones(elo.shape))
         self.off_counts = PHACountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
         )
@@ -142,7 +149,6 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
 
-
     def test_init_no_model(self):
         with pytest.raises(AttributeError):
             self.dataset.npred()
@@ -158,7 +164,7 @@ class TestSpectrumDatasetOnOff:
 
     def test_mask_safe_setter(self):
         with pytest.raises(ValueError):
-            self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype='float')
+            self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype="float")
 
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
@@ -221,9 +227,7 @@ class TestSpectrumDatasetOnOff:
 
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
-            aeff=self.aeff,
-            livetime=self.livetime,
+            counts=self.on_counts, aeff=self.aeff, livetime=self.livetime
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / self.on_counts.phafile
@@ -232,7 +236,6 @@ class TestSpectrumDatasetOnOff:
         assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
-
 
     def test_total_stats(self):
         dataset = SpectrumDatasetOnOff(
@@ -248,15 +251,15 @@ class TestSpectrumDatasetOnOff:
         assert dataset.total_stats.excess == -1
 
     def test_energy_mask(self):
-        mask = self.dataset.counts.energy_mask(emin=0.3*u.TeV, emax=6*u.TeV)
+        mask = self.dataset.counts.energy_mask(emin=0.3 * u.TeV, emax=6 * u.TeV)
         desired = [False, True, True, False]
         assert_allclose(mask, desired)
 
-        mask = self.dataset.counts.energy_mask(emax=6*u.TeV)
+        mask = self.dataset.counts.energy_mask(emax=6 * u.TeV)
         desired = [True, True, True, False]
         assert_allclose(mask, desired)
 
-        mask = self.dataset.counts.energy_mask(emin=1*u.TeV)
+        mask = self.dataset.counts.energy_mask(emin=1 * u.TeV)
         desired = [False, False, True, True]
         assert_allclose(mask, desired)
 
@@ -483,9 +486,13 @@ class TestSpectrumDatasetOnOffStacker:
         self.obs_list = _read_hess_obs()
 
         # Change threshold to make stuff more interesting
-        self.obs_list[0].mask_safe = self.obs_list[0].counts.energy_mask(emin=1.2 * u.TeV, emax=50 * u.TeV)
+        self.obs_list[0].mask_safe = self.obs_list[0].counts.energy_mask(
+            emin=1.2 * u.TeV, emax=50 * u.TeV
+        )
 
-        self.obs_list[1].mask_safe &= self.obs_list[0].counts.energy_mask(emax=20 * u.TeV)
+        self.obs_list[1].mask_safe &= self.obs_list[0].counts.energy_mask(
+            emax=20 * u.TeV
+        )
 
         self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
         self.obs_stacker.run()

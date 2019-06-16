@@ -137,7 +137,9 @@ class SpectrumExtraction:
             try:
                 e_max = observation.aeff.high_threshold
                 e_min = observation.aeff.low_threshold
-                spectrum_observation.mask_safe = spectrum_observation.counts.energy_mask(emin=e_min, emax=e_max)
+                spectrum_observation.mask_safe = spectrum_observation.counts.energy_mask(
+                    emin=e_min, emax=e_max
+                )
             except KeyError:
                 log.warning("No thresholds defined for obs {}".format(observation))
 

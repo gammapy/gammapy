@@ -38,7 +38,9 @@ def get_file(ftuple):
 
 def parse_datafiles(datasearch, datasetslist):
     for dataset in datasetslist:
-        if (datasearch == dataset["name"] or datasearch == "") and dataset.get("files", ""):
+        if (datasearch == dataset["name"] or datasearch == "") and dataset.get(
+            "files", ""
+        ):
             for ds in dataset["files"]:
                 label = ds["path"]
                 data = {"url": ds["url"], "path": ds["path"]}

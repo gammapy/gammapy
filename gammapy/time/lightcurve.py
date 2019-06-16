@@ -462,7 +462,9 @@ class LightCurveEstimator:
         if energy_range is not None:
             energy_range_spec = spec.energy_range
 
-            emin = e_reco[e_reco.searchsorted(max(energy_range_spec[0], energy_range[0]))]
+            emin = e_reco[
+                e_reco.searchsorted(max(energy_range_spec[0], energy_range[0]))
+            ]
             emax = e_reco[
                 e_reco.searchsorted(min(energy_range_spec[1], energy_range[1])) - 1
             ]

@@ -119,7 +119,7 @@ def test_add_pulsar_parameters():
     assert table["P0"].unit == "s"
     assert_allclose(table["P0"], [0.220778, 0.246389], atol=1e-5)
     assert table["P1"].unit == ""
-    assert_allclose(table["P1"], [6.310423e-13, 4.198294e-16], atol=1E-5)
+    assert_allclose(table["P1"], [6.310423e-13, 4.198294e-16], atol=1e-5)
     assert table["P0_birth"].unit == "s"
     assert_allclose(table["P0_birth"], [0.212418, 0.246336], atol=1e-5)
     assert table["P1_birth"].unit == ""
@@ -129,11 +129,11 @@ def test_add_pulsar_parameters():
     assert table["Tau0"].unit == "yr"
     assert_allclose(table["Tau0"], [5.131385e03, 9.294538e06], atol=1e-5)
     assert table["L_PSR"].unit == "erg / s"
-    assert_allclose(table["L_PSR"], [2.807844e+36, 1.109265e+33], rtol=1e-5)
+    assert_allclose(table["L_PSR"], [2.807844e36, 1.109265e33], rtol=1e-5)
     assert table["L0_PSR"].unit == "erg / s"
-    assert_allclose(table["L0_PSR"], [2.701524e+36, 1.109026e+33], rtol=1e-5)
+    assert_allclose(table["L0_PSR"], [2.701524e36, 1.109026e33], rtol=1e-5)
     assert table["B_PSR"].unit == "G"
-    assert_allclose(table["B_PSR"], [1.194420e+13, 3.254597e+11], rtol=1e-5)
+    assert_allclose(table["B_PSR"], [1.194420e13, 3.254597e11], rtol=1e-5)
 
 
 def test_add_pwn_parameters():

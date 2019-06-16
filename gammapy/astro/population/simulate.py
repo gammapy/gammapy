@@ -6,7 +6,13 @@ from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 from ...utils import coordinates as astrometry
 from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
-from ...utils.random import sample_sphere, sample_sphere_distance, get_random_state, draw, pdf
+from ...utils.random import (
+    sample_sphere,
+    sample_sphere_distance,
+    get_random_state,
+    draw,
+    pdf,
+)
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population.spatial import (
     Exponential,

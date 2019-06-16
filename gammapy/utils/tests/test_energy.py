@@ -23,9 +23,3 @@ def test_energy_locenter():
     e_center = energy_logcenter(e_edges=e_edges)
     assert e_center.unit == "TeV"
     assert_allclose(e_center.value, [0.1, 10])
-
-
-
-
-
-

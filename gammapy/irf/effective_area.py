@@ -164,9 +164,7 @@ class EffectiveAreaTable:
         value = g1 * xx ** (-g2) * np.exp(g3 / xx)
         data = u.Quantity(value, "cm2", copy=False)
 
-        return cls(
-            energy_lo=energy[:-1], energy_hi=energy[1:], data=data
-        )
+        return cls(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
 
     @classmethod
     def from_table(cls, table):

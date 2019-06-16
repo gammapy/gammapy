@@ -34,11 +34,7 @@ class TestCountsSpectrum:
     def test_wrong_init(self):
         bins = energy_logspace(1, 10, 8, "TeV")
         with pytest.raises(ValueError):
-            CountsSpectrum(
-                data=self.counts,
-                energy_lo=bins[:-1],
-                energy_hi=bins[1:],
-            )
+            CountsSpectrum(data=self.counts, energy_lo=bins[:-1], energy_hi=bins[1:])
 
     def test_evaluate(self):
         test_e = self.bins[2] + 0.1 * u.TeV
