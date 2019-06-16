@@ -975,7 +975,7 @@ class EnergyDispersion2D:
             Axis
         offset : `~astropy.coordinates.Angle`, optional
             Offset
-        e_true : `~gammapy.utils.energy.Energy`, optional
+        e_true : `~astropy.utils.Quantity`, optional
             True energy
         migra : `~numpy.array`, list, optional
             Migration nodes
@@ -993,10 +993,12 @@ class EnergyDispersion2D:
             offset = Angle([1], "deg")
         else:
             offset = np.atleast_1d(Angle(offset))
+
         if e_true is None:
             e_true = Quantity([0.1, 1, 10], "TeV")
         else:
             e_true = np.atleast_1d(Quantity(e_true))
+
         migra = self.data.axis("migra").center if migra is None else migra
 
         for ener in e_true:

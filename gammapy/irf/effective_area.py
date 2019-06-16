@@ -499,7 +499,7 @@ class EffectiveAreaTable2D:
             Axis
         offset : `~astropy.coordinates.Angle`
             Offset axis
-        energy : `~gammapy.utils.energy.Energy`
+        energy : `~astropy.units.Quantity`
             Energy
 
         Returns

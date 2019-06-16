@@ -1,22 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import numpy as np
 from astropy import units as u
 
-__all__ = ["energy_logspace"]
-
-log = logging.getLogger(__name__)
+__all__ = ["energy_logspace", "energy_logcenter"]
 
 
 def energy_logspace(emin, emax, nbins, unit=None, per_decade=False):
-    """Create Energy with equal log-spacing (`~gammapy.utils.energy.Energy`).
+    """Create energy with equal log-spacing (`~astropy.units.Quantity`).
 
     Parameters
     ----------
-    emin : `~astropy.units.Quantity`, float
-        Lowest energy bin
-    emax : `~astropy.units.Quantity`, float
-        Highest energy bin
+    emin, emax : `~astropy.units.Quantity`, float
+        Energy range
     nbins : int
         Number of bins
     unit : `~astropy.units.UnitBase`, str

@@ -113,10 +113,10 @@ def make_mean_edisp(
         True energy axis
     e_reco : `~astropy.units.Quantity`
         Reconstructed energy axis
-    low_reco_threshold : `~gammapy.utils.energy.Energy`
-        low energy threshold in reco energy, default 0.002 TeV
-    high_reco_threshold : `~gammapy.utils.energy.Energy`
-        high energy threshold in reco energy , default 150 TeV
+    low_reco_threshold : `~astropy.units.Quantity`
+        low energy threshold in reco energy
+    high_reco_threshold : `~astropy.units.Quantity`
+        high energy threshold in reco energy
 
     Returns
     -------
