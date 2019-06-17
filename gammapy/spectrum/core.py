@@ -463,6 +463,7 @@ class PHACountsSpectrum(CountsSpectrum):
         quality = None
         areascal = None
         backscal = None
+
         if "QUALITY" in counts_table.colnames:
             quality = counts_table["QUALITY"].data
         if "AREASCAL" in counts_table.colnames:

@@ -188,19 +188,6 @@ class SpectrumDatasetOnOff(Dataset):
         self.mask_safe = mask_safe
 
     @property
-    def livetime(self):
-        return self._livetime
-
-    @livetime.setter
-    def livetime(self, livetime):
-        self._livetime = livetime
-        if self.counts is not None:
-            self.counts.livetime = livetime
-        # TODO : check if off might have different exposure
-        if self.counts_off is not None:
-            self.counts_off.livetime = livetime
-
-    @property
     def mask_safe(self):
         """Inverse of counts spectrum quality mask."""
         return np.logical_not(self.counts.quality)
@@ -473,10 +460,12 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = phafile.replace("pha", "arf")
         rmffile = phafile.replace("pha", "rmf")
 
+        self.counts.livetime = self.livetime
         self.counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         if self.counts_off is not None:
+            self.counts_off.livetime = self.livetime
             self.counts_off.write(
                 outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
             )
@@ -499,7 +488,9 @@ class SpectrumDatasetOnOff(Dataset):
         """
         filename = make_path(filename)
         dirname = filename.parent
+
         on_vector = PHACountsSpectrum.read(filename)
+
         phafile = filename.name
 
         try:
