@@ -48,9 +48,9 @@ def source_model():
     exposure.data = 1e10 * 10000 * np.ones(exposure.data.shape)
 
     evaluator = MapEvaluator(model=skymodel, exposure=exposure)
-    
+
     npred = evaluator.compute_npred()
-    
+
     return npred
 
 
