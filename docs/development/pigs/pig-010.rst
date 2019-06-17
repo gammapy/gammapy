@@ -288,7 +288,7 @@ Rotated regions
 ---------------
 
 Rotated regions are used for background estimation in 1D spectral analysis in
-gamma-ray astronomy (see `Berge2007`_). The rotation is done arount the pointing
+gamma-ray astronomy (see [Berge2007]_). The rotation is done arount the pointing
 position of the IACT telescope array. This method is also called "reflected
 regions", but really that's a bad name, reflecting would only give one region on
 the other side; what is done is rotating the regions.
