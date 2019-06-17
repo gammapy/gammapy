@@ -460,13 +460,16 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = phafile.replace("pha", "arf")
         rmffile = phafile.replace("pha", "rmf")
 
-        self.counts.livetime = self.livetime
-        self.counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        counts = self.counts.copy()
+        counts.livetime = self.livetime
+        counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         if self.counts_off is not None:
-            self.counts_off.livetime = self.livetime
-            self.counts_off.write(
+            counts_off = self.counts_off.copy()
+            counts_off.livetime = self.livetime
+            counts_off.write(
                 outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
             )
         if self.edisp is not None:
@@ -674,8 +677,7 @@ class SpectrumDatasetOnOffStacker:
         off_vector_list = [o.counts_off for o in self.obs_list]
         self.stacked_off_vector = self.stack_counts_spectrum(off_vector_list)
 
-    @staticmethod
-    def stack_counts_spectrum(counts_spectrum_list):
+    def stack_counts_spectrum(self, counts_spectrum_list):
         """Stack `~gammapy.spectrum.PHACountsSpectrum`.
 
         * Bins outside the safe energy range are set to 0
@@ -688,9 +690,9 @@ class SpectrumDatasetOnOffStacker:
         energy = template.energy
         stacked_data = np.zeros(energy.nbin)
         stacked_quality = np.ones(energy.nbin)
-        for spec in counts_spectrum_list:
+        for spec, obs in zip(counts_spectrum_list, self.obs_list):
             stacked_data += spec.counts_in_safe_range.data
-            temp = np.logical_and(stacked_quality, spec.quality)
+            temp = np.logical_and(stacked_quality, ~obs.mask_safe)
             stacked_quality = np.array(temp, dtype=int)
 
         return PHACountsSpectrum(
