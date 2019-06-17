@@ -134,7 +134,7 @@ def test_time_sampling():
     time_events = sampler.sample_timepred()
     evt = sampler.sample_events()
     print(events_src, time_events)
-    
+
     plt.hist(evt['time'], bins=100)
     plt.show()
 

@@ -160,8 +160,8 @@ class MapEventSampler:
 
                 #select the lc times in the time range [t_min,t_max]
                 common_idx = np.where((times>=start_lc) & (times<=stop_lc))
-                uncommon_idx = np.where((times<start_lc) | (times>stop_lc))
                 common_time = times[common_idx]
+#                uncommon_idx = np.where((times<start_lc) | (times>stop_lc))
 #                uncommon_time = times[uncommon_idx]
 
                 #calculate the normalization in the common times and
