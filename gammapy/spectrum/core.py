@@ -429,7 +429,6 @@ class PHACountsSpectrum(CountsSpectrum):
         meta["exposure"] = self.livetime.to_value("s")
         meta["obs_id"] = self.obs_id
 
-
         if isinstance(self.obs_id, list):
             phafile = "pha_stacked.fits"
         else:
@@ -491,37 +490,3 @@ class PHACountsSpectrum(CountsSpectrum):
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
-
-    def to_sherpa(self, name):
-        """Convert to `sherpa.astro.data.DataPHA`.
-
-        Parameters
-        ----------
-        name : str
-            Instance name
-        """
-        from sherpa.utils import SherpaFloat
-        from sherpa.astro.data import DataPHA
-
-        table = self.to_table()
-
-        # Workaround to avoid https://github.com/sherpa/sherpa/issues/248
-        if np.isscalar(self.backscal):
-            backscal = self.backscal
-        else:
-            backscal = self.backscal.copy()
-            if np.allclose(backscal.mean(), backscal):
-                backscal = backscal[0]
-
-        return DataPHA(
-            name=name,
-            channel=(table["CHANNEL"].data + 1).astype(SherpaFloat),
-            counts=table["COUNTS"].data.astype(SherpaFloat),
-            quality=table["QUALITY"].data,
-            exposure=self.livetime.to_value("s"),
-            backscal=backscal,
-            areascal=self.areascal,
-            syserror=None,
-            staterror=None,
-            grouping=None,
-        )
