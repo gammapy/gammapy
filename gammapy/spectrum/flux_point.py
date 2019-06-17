@@ -1033,10 +1033,7 @@ class FluxPointsEstimator:
             if dataset.mask_safe is not None:
                 mask &= dataset.mask_safe
 
-            if isinstance(dataset, SpectrumDatasetOnOff):
-                counts.append(dataset.counts.data.data[mask].sum())
-            else:
-                counts.append(dataset.counts.data[mask].sum())
+            counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
 

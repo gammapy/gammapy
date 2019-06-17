@@ -122,5 +122,5 @@ def test_counts_predictor(case):
     opts = case.copy()
     del opts["npred"]
     predictor = SpectrumEvaluator(**opts)
-    actual = predictor.compute_npred().total_counts.value
+    actual = predictor.compute_npred().total_counts
     assert_allclose(actual, case["npred"])

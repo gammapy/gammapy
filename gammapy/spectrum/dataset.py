@@ -98,18 +98,18 @@ class SpectrumDataset(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.data.shape
+        return self.counts.data.shape
 
     def npred(self):
         """Returns npred map (model + background)"""
         npred = self._predictor.compute_npred()
         if self.background:
-            npred.data.data += self.background.data.data
+            npred.data += self.background.data
         return npred
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        return cash(n_on=self.counts.data.data, mu_on=self.npred().data.data)
+        return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
@@ -126,7 +126,7 @@ class SpectrumDataset(Dataset):
             the fake count spectrum
         """
         random_state = get_random_state(random_state)
-        data = random_state.poisson(self.npred().data.data)
+        data = random_state.poisson(self.npred().data)
         energy = self.counts.energy.edges
         return CountsSpectrum(energy[:-1], energy[1:], data)
 
@@ -259,7 +259,7 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.data.shape
+        return self.counts.data.shape
 
     def npred(self):
         """Predicted counts vector."""
@@ -272,10 +272,10 @@ class SpectrumDatasetOnOff(Dataset):
         """Likelihood per bin given the current model parameters"""
         npred = self.npred()
         on_stat_ = wstat(
-            n_on=self.counts.data.data,
-            n_off=self.counts_off.data.data,
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
             alpha=self.alpha,
-            mu_sig=npred.data.data,
+            mu_sig=npred.data,
         )
         return np.nan_to_num(on_stat_)
 
@@ -309,12 +309,12 @@ class SpectrumDatasetOnOff(Dataset):
 
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
-        excess = self.counts.data.data - self.alpha * self.counts_off.data.data
+        excess = self.counts.data - self.alpha * self.counts_off.data
         return self._as_counts_spectrum(excess)
 
     def residuals(self):
         """Residuals (npred - excess)."""
-        residuals = self.npred().data.data - self.excess().data.data
+        residuals = self.npred().data - self.excess().data
         return self._as_counts_spectrum(residuals)
 
     def peek(self, figsize=(10, 10)):
@@ -329,7 +329,7 @@ class SpectrumDatasetOnOff(Dataset):
         energy_unit = "TeV"
         if self.counts_off is not None:
             energy = self.counts_off.energy.edges
-            data = self.counts_off.data.data * self.alpha
+            data = self.counts_off.data * self.alpha
             background_vector = CountsSpectrum(
                 data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
             )
@@ -438,7 +438,7 @@ class SpectrumDatasetOnOff(Dataset):
         residuals.plot(ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit)
         ax.axhline(0, color="black", lw=0.5)
 
-        ymax = 1.2 * max(residuals.data.data.value)
+        ymax = 1.2 * max(residuals.data)
         ax.set_ylim(-ymax, ymax)
 
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
@@ -561,7 +561,7 @@ class SpectrumDatasetOnOff(Dataset):
 
         for ii in idx:
             if self.counts_off is not None:
-                n_off = int(self.counts_off.data.data.value[ii])
+                n_off = int(self.counts_off.data[ii])
                 a_off = self.counts_off._backscal_array[ii]
             else:
                 n_off = 0
@@ -570,7 +570,7 @@ class SpectrumDatasetOnOff(Dataset):
             stat = SpectrumStats(
                 energy_min=self.counts.energy.edges[ii],
                 energy_max=self.counts.energy.edges[ii + 1],
-                n_on=int(self.counts.data.data.value[ii]),
+                n_on=int(self.counts.data[ii]),
                 n_off=n_off,
                 a_on=self.counts._backscal_array[ii],
                 a_off=a_off,
@@ -691,7 +691,7 @@ class SpectrumDatasetOnOffStacker:
         stacked_data = np.zeros(energy.nbin)
         stacked_quality = np.ones(energy.nbin)
         for spec in counts_spectrum_list:
-            stacked_data += spec.counts_in_safe_range.value
+            stacked_data += spec.counts_in_safe_range.data
             temp = np.logical_and(stacked_quality, spec.quality)
             stacked_quality = np.array(temp, dtype=int)
 
@@ -715,11 +715,11 @@ class SpectrumDatasetOnOffStacker:
             bkscal_off_data = obs.counts_off._backscal_array.copy()
             bkscal_off += (
                 bkscal_on_data / bkscal_off_data
-            ) * obs.counts_off.counts_in_safe_range.value
+            ) * obs.counts_off.counts_in_safe_range
             alpha_sum += (obs.alpha * obs.counts_off.counts_in_safe_range).sum()
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            stacked_bkscal_off = self.stacked_off_vector.data.data.value / bkscal_off
+            stacked_bkscal_off = self.stacked_off_vector.data / bkscal_off
             alpha_average = (
                 alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
             )
@@ -728,7 +728,7 @@ class SpectrumDatasetOnOffStacker:
         # this leads to problems when fitting the data
         # use 1 for backscale of on_vector and 1 / alpha_average for backscale of off_vector
         alpha_correction = 1
-        idx = np.where(self.stacked_off_vector.data.data == 0)[0]
+        idx = np.where(self.stacked_off_vector.data == 0)[0]
         bkscal_on[idx] = alpha_correction
         # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
         # OFF counts of each run

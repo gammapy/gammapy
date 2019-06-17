@@ -101,20 +101,6 @@ class NDDataArray:
         """Dimension (number of axes)"""
         return len(self.axes)
 
-    def find_node(self, **kwargs):
-        """Find next node
-
-        Parameters
-        ----------
-        kwargs : dict
-            Keys are the axis names, Values the evaluation points
-        """
-        node = []
-        for axis in self.axes:
-            lookup_val = Quantity(kwargs.pop(axis.name))
-            temp = axis.coord_to_idx(lookup_val)
-            node.append(temp)
-        return node
 
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array

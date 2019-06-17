@@ -21,9 +21,9 @@ def sens():
     ereco = np.logspace(0, 1, 5) * u.TeV
     rmf = EnergyDispersion.from_diagonal_response(etrue, ereco)
 
-    bkg_array = np.ones(4) / u.s
-    bkg_array[-1] = 1e-3 / u.s
-    bkg = CountsSpectrum(energy_lo=ereco[:-1], energy_hi=ereco[1:], data=bkg_array)
+    bkg_array = np.ones(4)
+    bkg_array[-1] = 1e-3
+    bkg = CountsSpectrum(energy_lo=ereco[:-1], energy_hi=ereco[1:], data=bkg_array, unit="s-1")
 
     sens = SensitivityEstimator(
         arf=arf, rmf=rmf, bkg=bkg, livetime=1 * u.h, index=2, gamma_min=20, alpha=0.2

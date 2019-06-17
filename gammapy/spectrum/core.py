@@ -8,7 +8,6 @@ from astropy.io import fits
 import astropy.units as u
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
-from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
 from ..utils.fits import energy_axis_to_ebounds, ebounds_to_energy_axis
 from ..data import EventList
@@ -27,8 +26,10 @@ class CountsSpectrum:
         Lower bin edges of energy axis
     energy_hi : `~astropy.units.Quantity`
         Upper bin edges of energy axis
-    data : `~astropy.units.Quantity`, array-like
-        Counts
+    data : `~numpy.ndarray`
+        Spectrum data.
+    unit : str or `~astropy.units.Unit`
+        Data unit
 
     Examples
     --------
@@ -48,24 +49,22 @@ class CountsSpectrum:
         )
         spec.plot(show_poisson_errors=True)
     """
-
-    default_interp_kwargs = dict(bounds_error=False, method="nearest")
-    """Default interpolation kwargs"""
-
-    def __init__(self, energy_lo, energy_hi, data=None, interp_kwargs=None):
+    def __init__(self, energy_lo, energy_hi, data=None, unit=""):
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
-        energy_axis = MapAxis.from_edges(e_edges, interp="log", name="energy")
+        self.energy = MapAxis.from_edges(e_edges, interp="log", name="energy")
 
-        if interp_kwargs is None:
-            interp_kwargs = self.default_interp_kwargs
+        if data is None:
+            data = np.zeros(self.energy.nbin)
 
-        self.data = NDDataArray(
-            axes=[energy_axis], data=data, interp_kwargs=interp_kwargs
-        )
+        self.data = np.array(data)
+        if not self.energy.nbin == self.data.size:
+            raise ValueError("Incompatible data and energy axis size.")
+
+        self.unit = u.Unit(unit)
 
     @property
-    def energy(self):
-        return self.data.axis("energy")
+    def quantity(self):
+        return self.data * self.unit
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
@@ -88,7 +87,7 @@ class CountsSpectrum:
         Data format specification: :ref:`gadf:ogip-pha`
         """
         channel = np.arange(self.energy.nbin, dtype=np.int16)
-        counts = np.array(self.data.data.value, dtype=np.int32)
+        counts = np.array(self.data, dtype=np.int32)
 
         names = ["CHANNEL", "COUNTS"]
         meta = {"name": "COUNTS"}
@@ -120,8 +119,6 @@ class CountsSpectrum:
     def fill(self, events):
         """Fill with list of events.
 
-        TODO: Move to `~gammapy.utils.nddata.NDDataArray`
-
         Parameters
         ----------
         events : `~astropy.units.Quantity`, `gammapy.data.EventList`,
@@ -132,12 +129,12 @@ class CountsSpectrum:
 
         energy = events.to(self.energy.unit)
         binned_val = np.histogram(energy.value, self.energy.edges)[0]
-        self.data.data = binned_val
+        self.data = binned_val
 
     @property
     def total_counts(self):
         """Total number of counts."""
-        return self.data.data.sum()
+        return self.data.sum()
 
     def plot(
         self,
@@ -170,7 +167,7 @@ class CountsSpectrum:
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-        counts = self.data.data.value
+        counts = self.data
         x = self.energy.center.to_value(energy_unit)
         bounds = self.energy.edges.to_value(energy_unit)
         xerr = [x - bounds[:-1], bounds[1:] - x]
@@ -179,11 +176,11 @@ class CountsSpectrum:
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(energy_unit)
-            ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value), linestyles="dashed")
+            ax.vlines(ener_val, 0, 1.1 * max(self.data), linestyles="dashed")
         ax.set_xlabel("Energy [{}]".format(energy_unit))
         ax.set_ylabel("Counts")
         ax.set_xscale("log")
-        ax.set_ylim(0, 1.2 * max(self.data.data.value))
+        ax.set_ylim(0, 1.2 * max(self.data))
         return ax
 
     def plot_hist(self, ax=None, energy_unit="TeV", show_energy=None, **kwargs):
@@ -205,13 +202,13 @@ class CountsSpectrum:
         ax = plt.gca() if ax is None else ax
         kwargs.setdefault("lw", 2)
         kwargs.setdefault("histtype", "step")
-        weights = self.data.data.value
+        weights = self.data
         bins = self.energy.edges.to_value(energy_unit)
         x = self.energy.center.to_value(energy_unit)
         ax.hist(x, bins=bins, weights=weights, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(energy_unit)
-            ax.vlines(ener_val, 0, 1.1 * max(self.data.data.value), linestyles="dashed")
+            ax.vlines(ener_val, 0, 1.1 * max(self.data), linestyles="dashed")
         ax.set_xlabel("Energy [{}]".format(energy_unit))
         ax.set_ylabel("Counts")
         ax.set_xscale("log")
@@ -229,33 +226,25 @@ class CountsSpectrum:
         """A deep copy of self."""
         return copy.deepcopy(self)
 
-    def rebin(self, parameter):
-        """Rebin.
+    def downsample(self, factor):
+        """Downsample spectrum.
 
         Parameters
         ----------
-        parameter : int
-            Number of bins to merge
+        factor : int
+            Downsampling factor.
 
         Returns
         -------
-        rebinned_spectrum : `~gammapy.spectrum.CountsSpectrum`
-            Rebinned spectrum
+        spectrum : `~gammapy.spectrum.CountsSpectrum`
+            Downsampled spectrum.
         """
         from ..extern.skimage import block_reduce
-
-        if len(self.data.data) % parameter != 0:
-            raise ValueError(
-                "Invalid rebin parameter: {}, nbins: {}".format(
-                    parameter, len(self.data.data)
-                )
-            )
-
-        data = block_reduce(self.data.data, block_size=(parameter,))
-        energy = self.energy.edges
+        data = block_reduce(self.data, block_size=(factor,))
+        energy = self.energy.downsample(factor).edges
         return self.__class__(
-            energy_lo=energy[:-1][0::parameter],
-            energy_hi=energy[1:][parameter - 1 :: parameter],
+            energy_lo=energy[:-1],
+            energy_hi=energy[1:],
             data=data,
         )
 
@@ -372,7 +361,7 @@ class PHACountsSpectrum(CountsSpectrum):
     @property
     def counts_in_safe_range(self):
         """Counts with bins outside safe range set to 0."""
-        data = self.data.data.copy()
+        data = self.data.copy()
         data[np.nonzero(self.quality)] = 0
         return data
 
@@ -412,14 +401,14 @@ class PHACountsSpectrum(CountsSpectrum):
         """
         from ..extern.skimage import block_reduce
 
-        retval = super().rebin(parameter)
+        retval = super().downsample(parameter)
 
         quality_summed = block_reduce(np.array(self.quality), block_size=(parameter,))
 
         # Exclude groups where not all bins are within the safe threshold
         condition = quality_summed == parameter
         quality_rebinned = np.where(
-            condition, np.ones(len(retval.data.data)), np.zeros(len(retval.data.data))
+            condition, np.ones(len(retval.data)), np.zeros(len(retval.data))
         )
         retval.quality = np.array(quality_rebinned, dtype=int)
 

@@ -60,7 +60,7 @@ class TestFit:
         """Simple CASH fit to the on vector"""
         dataset = SpectrumDataset(model=self.source_model, counts=self.src)
 
-        npred = dataset.npred().data.data
+        npred = dataset.npred().data
         assert_allclose(npred[5], 660.5171, rtol=1e-5)
 
         stat_val = dataset.likelihood()
