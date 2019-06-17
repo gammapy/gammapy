@@ -55,11 +55,12 @@ Here's a very short summary of the changes we propose:
 ==========  ===============  ===============
 Dependency  Gammapy 0.12     Gammapy 0.13
 ==========  ===============  ===============
+astropy-healpix
 Python      3.5  (Sep 2015)  3.6  (Dec 2016)
 Numpy       1.10 (May 2016)  1.13 (Jun 2017)
 Scipy       0.15 (Jan 2015)  1.0  (Oct 2017)
 Astropy     2.0  (Jul 2017)  3.0? (Feb 2018)
-regions     0.3  (Sep 2018)  0.5? (Jul 2019)
+regions     0.3  (Sep 2018)  0.4  (Jun 2019)
 pyyaml
 click
 ----------  ---------------  ---------------
@@ -144,10 +145,8 @@ https://github.com/MacPython/astropy-wheels for Astropy or
 https://iscinumpy.gitlab.io/post/azure-devops-python-wheels/ for iminuit and the
 scikit-hep packages.
 
-This hasn't happened for the Astropy affiliated packages (or all Python
-packages) and we in the Gammapy team don't have the expertise or time to
-contribute to that at this point. In the future, if a "wheel-forge" emerges, we
-can start supporting wheels for Gammapy.
+TODO: change this section to suggest to build wheels via `astropy wheel-forge`_
+and support that for now.
 
 Actually, there is one platform where binary wheels for Gammapy and all
 dependencies exits already. If you ``pip install gammapy`` on Raspberry Pi,
@@ -181,6 +180,7 @@ Decision
 tbd
 
 .. _healpy: https://healpy.readthedocs.io
+.. _astropy wheel-forge: https://github.com/astropy/wheel-forge
 .. _astropy-healpix: http://astropy-healpix.readthedocs.io/
 .. _GH 1167: https://github.com/gammapy/gammapy/pull/1167
 .. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
