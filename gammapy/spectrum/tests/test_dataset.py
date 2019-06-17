@@ -218,7 +218,7 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        filename = tmpdir / self.on_counts.phafile
+        filename = tmpdir / "pha_obstest.fits"
         newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
@@ -230,7 +230,7 @@ class TestSpectrumDatasetOnOff:
             counts=self.on_counts, aeff=self.aeff, livetime=self.livetime
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        filename = tmpdir / self.on_counts.phafile
+        filename = tmpdir / "pha_obstest.fits"
         newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
@@ -499,7 +499,6 @@ class TestSpectrumDatasetOnOffStacker:
 
     def test_basic(self):
         assert "Stacker" in str(self.obs_stacker)
-        assert "stacked" in str(self.obs_stacker.stacked_obs.counts.phafile)
         counts1 = self.obs_list[0].total_stats_safe_range.n_on
         counts2 = self.obs_list[1].total_stats_safe_range.n_on
         summed_counts = counts1 + counts2

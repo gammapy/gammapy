@@ -464,10 +464,14 @@ class SpectrumDatasetOnOff(Dataset):
         outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        phafile = self.counts.phafile
-        bkgfile = self.counts.bkgfile
-        arffile = self.counts.arffile
-        rmffile = self.counts.rmffile
+        if isinstance(self.obs_id, list):
+            phafile = "pha_stacked.fits"
+        else:
+            phafile = "pha_obs{}.fits".format(self.obs_id)
+
+        bkgfile = phafile.replace("pha", "bkg")
+        arffile = phafile.replace("pha", "arf")
+        rmffile = phafile.replace("pha", "rmf")
 
         self.counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -496,21 +500,24 @@ class SpectrumDatasetOnOff(Dataset):
         filename = make_path(filename)
         dirname = filename.parent
         on_vector = PHACountsSpectrum.read(filename)
-        rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
+        phafile = filename.name
 
         try:
-            energy_dispersion = EnergyDispersion.read(str(dirname / rmf))
+            rmffile = phafile.replace("pha", "rmf")
+            energy_dispersion = EnergyDispersion.read(str(dirname / rmffile))
         except IOError:
             # TODO : Add logger and echo warning
             energy_dispersion = None
 
         try:
-            off_vector = PHACountsSpectrum.read(str(dirname / bkg))
+            bkgfile = phafile.replace("pha", "bkg")
+            off_vector = PHACountsSpectrum.read(str(dirname / bkgfile))
         except IOError:
             # TODO : Add logger and echo warning
             off_vector = None
 
-        effective_area = EffectiveAreaTable.read(str(dirname / arf))
+        arffile = phafile.replace("pha", "arf")
+        effective_area = EffectiveAreaTable.read(str(dirname / arffile))
 
         mask = on_vector.quality == 0
 

@@ -325,30 +325,6 @@ class PHACountsSpectrum(CountsSpectrum):
         self.meta = meta or OrderedDict()
 
     @property
-    def phafile(self):
-        """PHA file associated with the observation."""
-        if isinstance(self.obs_id, list):
-            filename = "pha_stacked.fits"
-        else:
-            filename = "pha_obs{}.fits".format(self.obs_id)
-        return filename
-
-    @property
-    def arffile(self):
-        """ARF associated with the observation."""
-        return self.phafile.replace("pha", "arf")
-
-    @property
-    def rmffile(self):
-        """RMF associated with the observation."""
-        return self.phafile.replace("pha", "rmf")
-
-    @property
-    def bkgfile(self):
-        """Background PHA files associated with the observation."""
-        return self.phafile.replace("pha", "bkg")
-
-    @property
     def bins_in_safe_range(self):
         """Indices of bins within the energy thresholds"""
         idx = np.where(np.array(self.quality) == 0)[0]
@@ -453,12 +429,20 @@ class PHACountsSpectrum(CountsSpectrum):
         meta["exposure"] = self.livetime.to_value("s")
         meta["obs_id"] = self.obs_id
 
-        if not self.is_bkg:
-            if self.rmffile is not None:
-                meta["respfile"] = self.rmffile
 
-            meta["backfile"] = self.bkgfile
-            meta["ancrfile"] = self.arffile
+        if isinstance(self.obs_id, list):
+            phafile = "pha_stacked.fits"
+        else:
+            phafile = "pha_obs{}.fits".format(self.obs_id)
+
+        bkgfile = phafile.replace("pha", "bkg")
+        arffile = phafile.replace("pha", "arf")
+        rmffile = phafile.replace("pha", "rmf")
+
+        if not self.is_bkg:
+            meta["respfile"] = rmffile
+            meta["backfile"] = bkgfile
+            meta["ancrfile"] = arffile
             meta["hduclas2"] = "TOTAL"
         else:
             meta["hduclas2"] = "BKG"
