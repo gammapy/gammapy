@@ -133,6 +133,7 @@ def test_time_sampling():
     events_src=sampler.sample_npred()
     time_events = sampler.sample_timepred()
     evt = sampler.sample_events()
+    print(events_src, time_events)
     
     plt.hist(evt['time'], bins=100)
     plt.show()
@@ -143,7 +144,7 @@ def test_npred_total():
     npred_tot = np.zeros(n_test,int)
     npred = source_model()
     tot = np.sum(npred.data)
-    
+
     sampler = MapEventSampler(npred, random_state=0, tmin=0, tmax=30000)
 
     for i in np.arange(0,n_test):
