@@ -392,7 +392,7 @@ amount of work is limited.
 
 - Add region copy method, needed for region rotate (see `astropy-regions GH 266`_)
 - Add region rotate method (see `astropy-regions GH 265`_ and `Rotated regions`_ above)
-- Release ``astropy-regions`` v0.5, then bump Gammapy dependency to that version.
+- Release ``astropy-regions`` v0.4, then bump Gammapy dependency to that version.
 - Improve rotated region code and tests and docs in Gammapy.
   This could mean a rebase and continuation of `GH 2089`_, or closing that and
   re-starting from master, copying over the useful parts or cherry-picking
