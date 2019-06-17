@@ -361,10 +361,6 @@ class PHACountsSpectrum(CountsSpectrum):
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
 
-    def reset_thresholds(self):
-        """Reset energy thresholds (declare all energy bins valid)."""
-        self.quality = np.zeros_like(self.quality)
-
     def rebin(self, parameter):
         """Rebin.
 
