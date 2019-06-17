@@ -1,13 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
+from numpy.testing import assert_equal, assert_almost_equal
 from scipy.integrate import quad, dblquad
-from astropy.modeling.models import Gaussian2D
-from astropy.convolution import discretize_model
-from ..testing import requires_dependency
-from ...maps import WcsNDMap
-from ...image import measure_image_moments
-from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
+from ..gauss import Gauss2DPDF, MultiGauss2D
 
 
 class TestGauss2DPDF:
@@ -115,49 +110,3 @@ class TestMultiGauss2D:
         # Check that convolve did not change the original
         assert_equal(m.sigmas, [3])
         assert_equal(m.norms, [5])
-
-
-@requires_dependency("uncertainties")
-def test_gaussian_sum_moments():
-    """Check analytical against numerical solution.
-    """
-    binsz = 0.02
-
-    # We define three components with different flux, position and size in pixel coordinates
-    F_1, F_2, F_3 = 100, 200, 300
-    sigma_1, sigma_2, sigma_3 = 15, 10, 5
-    x_1, x_2, x_3 = 100, 120, 70
-    y_1, y_2, y_3 = 100, 90, 120
-
-    # Convert into non-normalized amplitude for astropy model
-    def A(F, sigma):
-        return F * 1 / (2 * np.pi * sigma ** 2)
-
-    # Define and evaluate models
-    f_1 = Gaussian2D(A(F_1, sigma_1), x_1, y_1, sigma_1, sigma_1)
-    f_2 = Gaussian2D(A(F_2, sigma_2), x_2, y_2, sigma_2, sigma_2)
-    f_3 = Gaussian2D(A(F_3, sigma_3), x_3, y_3, sigma_3, sigma_3)
-
-    F_1_image = discretize_model(f_1, (0, 201), (0, 201))
-    F_2_image = discretize_model(f_2, (0, 201), (0, 201))
-    F_3_image = discretize_model(f_3, (0, 201), (0, 201))
-
-    image = WcsNDMap.create(npix=(201, 201), binsz=binsz)
-    image.data = F_1_image + F_2_image + F_3_image
-    moments_num = measure_image_moments(image)
-
-    # Right now the flux doesn't have a unit
-    moments_num = [moments_num[0]] + [_.value for _ in moments_num[1:]]
-
-    # Compute analytical values
-    cov_matrix = np.zeros((12, 12))
-    F = [F_1, F_2, F_3]
-    sigma = np.array([sigma_1, sigma_2, sigma_3]) * binsz
-    x, y = image.geom.wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], 0)
-    x = np.where(x > 180, x - 360, x)
-
-    moments_ana, uncertainties = gaussian_sum_moments(
-        F, sigma, x, y, cov_matrix, shift=0
-    )
-    assert_allclose(moments_ana, moments_num, 1e-6)
-    assert_allclose(uncertainties, 0)
