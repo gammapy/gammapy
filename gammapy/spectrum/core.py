@@ -292,8 +292,6 @@ class PHACountsSpectrum(CountsSpectrum):
         Observation identifier, optional
     livetime : `~astropy.units.Quantity`, optional
         Observation livetime
-    offset : `~astropy.units.Quantity`, optional
-        Field of view offset
     meta : dict, optional
         Meta information
     """
@@ -309,7 +307,6 @@ class PHACountsSpectrum(CountsSpectrum):
         is_bkg=False,
         obs_id=None,
         livetime=None,
-        offset=None,
         meta=None,
     ):
         super().__init__(energy_lo, energy_hi, data)
@@ -325,7 +322,6 @@ class PHACountsSpectrum(CountsSpectrum):
         self.is_bkg = is_bkg
         self.obs_id = obs_id
         self.livetime = livetime
-        self.offset = offset
         self.meta = meta or OrderedDict()
 
     @property

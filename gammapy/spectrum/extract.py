@@ -118,7 +118,7 @@ class SpectrumExtraction:
         log.info("Process observation\n {}".format(observation))
         self.make_empty_vectors(observation, bkg)
         self.extract_counts(bkg)
-        self.extract_irfs(observation)
+        self.extract_irfs(observation, bkg)
 
         if self.containment_correction:
             self.apply_containment_correction(observation, bkg)
@@ -130,7 +130,7 @@ class SpectrumExtraction:
             aeff=self._aeff,
             counts_off=self._off_vector,
             edisp=self._edisp,
-            livetime=self._on_vector.livetime,
+            livetime=observation.observation_live_time_duration,
         )
 
         if self.use_recommended_erange:
@@ -166,7 +166,6 @@ class SpectrumExtraction:
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             backscal=bkg.a_on,
-            offset=offset,
             livetime=observation.observation_live_time_duration,
             obs_id=observation.obs_id,
         )
@@ -187,7 +186,7 @@ class SpectrumExtraction:
         self._on_vector.fill(bkg.on_events)
         self._off_vector.fill(bkg.off_events)
 
-    def extract_irfs(self, observation):
+    def extract_irfs(self, observation, bkg):
         """Extract IRFs.
 
         Parameters
@@ -196,7 +195,7 @@ class SpectrumExtraction:
             Observation
         """
         log.info("Extract IRFs")
-        offset = self._on_vector.offset
+        offset = observation.pointing_radec.separation(bkg.on_region.center)
         self._aeff = observation.aeff.to_effective_area_table(
             offset, energy=self.e_true
         )
@@ -223,7 +222,7 @@ class SpectrumExtraction:
         log.info("Apply containment correction")
         # First need psf
         angles = np.linspace(0.0, 1.5, 150) * u.deg
-        offset = self._on_vector.offset
+        offset = observation.pointing_radec.separation(bkg.on_region.center)
         if isinstance(observation.psf, PSF3D):
             psf = observation.psf.to_energy_dependent_table_psf(theta=offset)
         else:
