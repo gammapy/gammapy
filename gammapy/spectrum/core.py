@@ -228,33 +228,25 @@ class CountsSpectrum:
         """A deep copy of self."""
         return copy.deepcopy(self)
 
-    def rebin(self, parameter):
-        """Rebin.
+    def downsample(self, factor):
+        """Downsample spectrum.
 
         Parameters
         ----------
-        parameter : int
-            Number of bins to merge
+        factor : int
+            Downsampling factor.
 
         Returns
         -------
-        rebinned_spectrum : `~gammapy.spectrum.CountsSpectrum`
-            Rebinned spectrum
+        spectrum : `~gammapy.spectrum.CountsSpectrum`
+            Downsampled spectrum.
         """
         from ..extern.skimage import block_reduce
-
-        if len(self.data) % parameter != 0:
-            raise ValueError(
-                "Invalid rebin parameter: {}, nbins: {}".format(
-                    parameter, len(self.data)
-                )
-            )
-
-        data = block_reduce(self.data, block_size=(parameter,))
-        energy = self.energy.edges
+        data = block_reduce(self.data, block_size=(factor,))
+        energy = self.energy.downsample(factor).edges
         return self.__class__(
-            energy_lo=energy[:-1][0::parameter],
-            energy_hi=energy[1:][parameter - 1 :: parameter],
+            energy_lo=energy[:-1],
+            energy_hi=energy[1:],
             data=data,
         )
 
@@ -411,7 +403,7 @@ class PHACountsSpectrum(CountsSpectrum):
         """
         from ..extern.skimage import block_reduce
 
-        retval = super().rebin(parameter)
+        retval = super().downsample(parameter)
 
         quality_summed = block_reduce(np.array(self.quality), block_size=(parameter,))
 

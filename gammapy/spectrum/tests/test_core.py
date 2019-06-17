@@ -46,14 +46,11 @@ class TestCountsSpectrum:
         spec2 = CountsSpectrum.read(filename)
         assert_quantity_allclose(spec2.energy.edges, self.bins)
 
-    def test_rebin(self):
-        rebinned_spec = self.spec.rebin(2)
+    def test_downsample(self):
+        rebinned_spec = self.spec.downsample(2)
         assert rebinned_spec.energy.nbin == self.spec.energy.nbin / 2
         assert rebinned_spec.data.data.shape[0] == self.spec.data.data.shape[0] / 2
         assert rebinned_spec.total_counts == self.spec.total_counts
-
-        with pytest.raises(ValueError):
-            rebinned_spec = self.spec.rebin(4)
 
         idx = rebinned_spec.energy.coord_to_idx([2, 3, 5] * u.TeV)
         actual = rebinned_spec.data[idx]
