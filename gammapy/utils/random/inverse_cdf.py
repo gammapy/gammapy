@@ -137,7 +137,7 @@ class MapEventSampler:
         return self.coords
         
     def sample_timepred(self):
-        """ Calculate the times of arrival of the sampled source events 
+        """ Calculate the times of arrival of the sampled source events.
 
         Returns
         -------
@@ -162,8 +162,8 @@ class MapEventSampler:
                 common_idx = np.where((times>=start_lc) & (times<=stop_lc))
                 uncommon_idx = np.where((times<start_lc) | (times>stop_lc))
                 common_time = times[common_idx]
-                uncommon_time = times[uncommon_idx]
-                
+#                uncommon_time = times[uncommon_idx]
+
                 #calculate the normalization in the common times and
                 #the mean lc normalization in the rest
                 norm = self.lc.evaluate_norm_at_time(common_time)
@@ -198,7 +198,7 @@ class MapEventSampler:
         events['e_true'] = self.coords[2] * u.TeV
         try:
            events['time'] = self.ToA * u.s
-        except:
+        except Exception:
             print("<<Warning: no event times have been sampled. \n>>")
         return events
 

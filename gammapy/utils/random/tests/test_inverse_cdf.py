@@ -4,14 +4,14 @@ import scipy.stats as stats
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
-from astropy.coordinates import SkyCoord,Angle
+from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
 
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from  ....cube import MapEvaluator
 from ....cube.models import SkyModel
 from ....image.models import SkyGaussian
-from ....maps import Map, MapAxis, WcsGeom
+from ....maps import Map, MapAxis
 from ....spectrum.models import PowerLaw
 from ....time.models import LightCurveTableModel as LC
 
@@ -107,10 +107,10 @@ def test_norm_dist_sampling():
 
 def test_map_sampling():
     npred = source_model()
-
     sampler = MapEventSampler(npred, random_state=0, tmin=0, tmax=30000)
     events_src=sampler.sample_npred()
     time_events = sampler.sample_timepred()
+    print(events_src, time_events)
     evt = sampler.sample_events()
 
     plt.hist(evt['e_true'], bins=np.logspace(0, 2, 10), density=True)
