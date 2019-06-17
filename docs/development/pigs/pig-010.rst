@@ -8,7 +8,8 @@ PIG 10 - Regions
 
 * Author: Christoph Deil, Axel Donath, Régis Terrier
 * Created: May 3, 2019
-* Status: draft
+* Accepted: June 17, 2019
+* Status: accepted
 * Discussion: `GH 2129`_
 
 Abstract
@@ -432,7 +433,9 @@ whether a mask-backed region should be added (see `Outlook`_)
 Decision
 ========
 
-tbd
+The PIG was discussed in `GH 2129`_ and the weekly Gammapy developer calls. A
+final review announced on the Gammapy and CC mailing list did not yield any
+additional comments. Therefore the PIG was accepted on June 17, 2019.
 
 .. These explicit URLs to Gammapy classes are to avoid possible future breakage of
 .. the links in the PIG if those classes are removed or changed:
