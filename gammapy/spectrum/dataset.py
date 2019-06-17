@@ -181,10 +181,6 @@ class SpectrumDatasetOnOff(Dataset):
         self.aeff = aeff
         self.edisp = edisp
         self.model = model
-
-        if mask_safe is None:
-            mask_safe = np.logical_not(counts.quality)
-
         self.mask_safe = mask_safe
 
     @property
@@ -499,7 +495,7 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = phafile.replace("pha", "arf")
         effective_area = EffectiveAreaTable.read(str(dirname / arffile))
 
-        mask_safe = on_vector.quality == 0
+        mask_safe = np.logical_not(on_vector.quality)
 
         return cls(
             counts=on_vector,
@@ -770,4 +766,5 @@ class SpectrumDatasetOnOffStacker:
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
             livetime=self.total_livetime,
+            mask_safe=np.logical_not(self.stacked_on_vector.quality)
         )

@@ -212,6 +212,7 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
+            mask_safe=np.logical_not(self.on_counts.quality)
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -223,7 +224,8 @@ class TestSpectrumDatasetOnOff:
 
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts, aeff=self.aeff, livetime=self.livetime
+            counts=self.on_counts, aeff=self.aeff, livetime=self.livetime,
+            mask_safe=np.logical_not(self.on_counts.quality)
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -463,6 +465,7 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
+        mask_safe=np.logical_not(on_vector.quality)
     )
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
@@ -470,6 +473,7 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
+        mask_safe=np.logical_not(on_vector.quality)
     )
 
     obs_list = [obs1, obs2]
