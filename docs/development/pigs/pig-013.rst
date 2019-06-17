@@ -1,9 +1,9 @@
 .. include:: ../../references.txt
 
-.. _pig-011:
+.. _pig-013:
 
 **********************************************
-PIG 11 - Gammapy dependencies and distribution
+PIG 13 - Gammapy dependencies and distribution
 **********************************************
 
 * Author: Christoph Deil, Axel Donath, Régis Terrier, Brigitta Sipocz
