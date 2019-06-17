@@ -188,22 +188,6 @@ class SpectrumDatasetOnOff(Dataset):
         self.mask_safe = mask_safe
 
     @property
-    def mask_safe(self):
-        """Inverse of counts spectrum quality mask."""
-        return np.logical_not(self.counts.quality)
-
-    @mask_safe.setter
-    def mask_safe(self, mask):
-        if mask is None:
-            mask = np.ones_like(self.counts.quality, dtype="bool")
-        if mask.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
-        else:
-            self.counts.quality = np.logical_not(mask)
-            if self.counts_off is not None:
-                self.counts_off.quality = np.logical_not(mask)
-
-    @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
         return self.counts.backscal / self.counts_off.backscal
@@ -462,6 +446,7 @@ class SpectrumDatasetOnOff(Dataset):
 
         counts = self.counts.copy()
         counts.livetime = self.livetime
+        counts.quality = np.logical_not(self.mask_safe)
         counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -469,6 +454,7 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             counts_off = self.counts_off.copy()
             counts_off.livetime = self.livetime
+            counts_off.quality = np.logical_not(self.mask_safe)
             counts_off.write(
                 outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
             )
@@ -513,7 +499,7 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = phafile.replace("pha", "arf")
         effective_area = EffectiveAreaTable.read(str(dirname / arffile))
 
-        mask = on_vector.quality == 0
+        mask_safe = on_vector.quality == 0
 
         return cls(
             counts=on_vector,
@@ -521,7 +507,7 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off=off_vector,
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
-            mask_safe=mask,
+            mask_safe=mask_safe,
         )
 
     # TODO : do we keep this or should this become the Dataset name

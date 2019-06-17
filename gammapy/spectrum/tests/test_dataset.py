@@ -162,10 +162,6 @@ class TestSpectrumDatasetOnOff:
     def test_data_shape(self):
         assert self.dataset.data_shape == self.on_counts.data.shape
 
-    def test_mask_safe_setter(self):
-        with pytest.raises(ValueError):
-            self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype="float")
-
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
