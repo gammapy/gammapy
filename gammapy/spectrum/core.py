@@ -26,8 +26,10 @@ class CountsSpectrum:
         Lower bin edges of energy axis
     energy_hi : `~astropy.units.Quantity`
         Upper bin edges of energy axis
-    data : `~astropy.units.Quantity`, array-like
-        Counts
+    data : `~numpy.ndarray`
+        Spectrum data.
+    unit : str or `~astropy.units.Unit`
+        Data unit
 
     Examples
     --------
