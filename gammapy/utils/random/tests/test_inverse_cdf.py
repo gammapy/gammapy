@@ -128,7 +128,7 @@ def test_time_sampling():
     lc = LC(table)
 
     npred = source_model()
-    
+
     sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=0, tmax=80000)
     events_src=sampler.sample_npred()
     time_events = sampler.sample_timepred()
