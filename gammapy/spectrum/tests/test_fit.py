@@ -78,7 +78,7 @@ class TestFit:
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
-        dataset = SpectrumDatasetOnOff(counts=self.src)
+        dataset = SpectrumDatasetOnOff(counts=self.src, mask_safe=np.logical_not(self.src.quality))
         dataset.model = self.source_model
 
         assert np.sum(dataset.mask_safe) == self.nbins
@@ -88,7 +88,7 @@ class TestFit:
         assert_allclose(e_min.value, 0.1)
 
     def test_likelihood_profile(self):
-        dataset = SpectrumDataset(model=self.source_model, counts=self.src)
+        dataset = SpectrumDataset(model=self.source_model, counts=self.src, mask_safe=np.logical_not(self.src.quality))
         fit = Fit([dataset])
         result = fit.run()
         true_idx = result.parameters["index"].value
