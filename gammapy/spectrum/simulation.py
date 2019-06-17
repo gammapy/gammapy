@@ -193,7 +193,7 @@ class SpectrumSimulation:
         off_counts = rand.poisson(self.npred_background.data / self.alpha)
 
         # Add background to on_vector
-        self.on_vector.data.data += bkg_counts
+        self.on_vector.data += bkg_counts
 
         # Create off vector
         off_vector = PHACountsSpectrum(

@@ -154,7 +154,7 @@ class TestSpectrumDatasetOnOff:
         assert_allclose(self.dataset.alpha, 0.1)
 
     def test_data_shape(self):
-        assert self.dataset.data_shape == self.on_counts.data.data.shape
+        assert self.dataset.data_shape == self.on_counts.data.shape
 
     def test_mask_safe_setter(self):
         with pytest.raises(ValueError):
@@ -215,8 +215,8 @@ class TestSpectrumDatasetOnOff:
         filename = tmpdir / self.on_counts.phafile
         newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
-        assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
-        assert_allclose(self.off_counts.data.data, newdataset.counts_off.data.data)
+        assert_allclose(self.on_counts.data, newdataset.counts.data)
+        assert_allclose(self.off_counts.data, newdataset.counts_off.data)
         assert_allclose(self.edisp.pdf_matrix, newdataset.edisp.pdf_matrix)
 
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
@@ -229,7 +229,7 @@ class TestSpectrumDatasetOnOff:
         filename = tmpdir / self.on_counts.phafile
         newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
-        assert_allclose(self.on_counts.data.data, newdataset.counts.data.data)
+        assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
 
@@ -320,13 +320,13 @@ class TestSimpleFit:
     def test_joint(self):
         """Test joint fit for obs with different energy binning"""
         on_vector = self.src.copy()
-        on_vector.data.data += self.bkg.data
+        on_vector.data += self.bkg.data
         obs1 = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
         obs1.model = self.source_model
 
         src_rebinned = self.src.rebin(2)
         bkg_rebinned = self.off.rebin(2)
-        src_rebinned.data.data += self.bkg.rebin(2).data
+        src_rebinned.data += self.bkg.rebin(2).data
 
         obs2 = SpectrumDatasetOnOff(counts=src_rebinned, counts_off=bkg_rebinned)
         obs2.model = self.source_model
@@ -379,7 +379,7 @@ class TestSpectralFit:
         assert_allclose(pars["index"].value, 2.817, rtol=1e-3)
         assert pars["amplitude"].unit == "cm-2 s-1 TeV-1"
         assert_allclose(pars["amplitude"].value, 5.142e-11, rtol=1e-3)
-        assert_allclose(self.obs_list[0].npred().data.data[60], 0.6102, rtol=1e-3)
+        assert_allclose(self.obs_list[0].npred().data[60], 0.6102, rtol=1e-3)
         pars.to_table()
 
     def test_basic_errors(self):

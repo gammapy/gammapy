@@ -260,7 +260,7 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.data.shape
+        return self.counts.data.shape
 
     def npred(self):
         """Predicted counts vector."""

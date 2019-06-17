@@ -49,7 +49,7 @@ class TestCountsSpectrum:
     def test_downsample(self):
         rebinned_spec = self.spec.downsample(2)
         assert rebinned_spec.energy.nbin == self.spec.energy.nbin / 2
-        assert rebinned_spec.data.data.shape[0] == self.spec.data.data.shape[0] / 2
+        assert rebinned_spec.data.shape[0] == self.spec.data.shape[0] / 2
         assert rebinned_spec.total_counts == self.spec.total_counts
 
         idx = rebinned_spec.energy.coord_to_idx([2, 3, 5] * u.TeV)
@@ -110,7 +110,7 @@ class TestPHACountsSpectrum:
     @requires_dependency("sherpa")
     def test_to_sherpa(self):
         sherpa_dataset = self.spec.to_sherpa("test")
-        assert_allclose(sherpa_dataset.counts, self.spec.data.data)
+        assert_allclose(sherpa_dataset.counts, self.spec.data)
 
     def test_reset_thresholds(self):
         self.spec.reset_thresholds()

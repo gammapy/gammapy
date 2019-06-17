@@ -410,7 +410,7 @@ class PHACountsSpectrum(CountsSpectrum):
         # Exclude groups where not all bins are within the safe threshold
         condition = quality_summed == parameter
         quality_rebinned = np.where(
-            condition, np.ones(len(retval.data.data)), np.zeros(len(retval.data.data))
+            condition, np.ones(len(retval.data)), np.zeros(len(retval.data))
         )
         retval.quality = np.array(quality_rebinned, dtype=int)
 
