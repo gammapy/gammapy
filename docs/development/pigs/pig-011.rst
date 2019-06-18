@@ -114,10 +114,15 @@ Storing the results and timing studies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The results are returned as a `gammapy.time.LightCurve` instance (the current
-container class for light curves) that essentially holds the integrated flux +
-errors and the time_min/time_max of each time bin. Other useful quantities which
-are not stored right now, could be energy_min/energy_max of the integral flux.
-This container class already provides some methods to study variability.
+container class for light curves) that, so far, essentially holds the integrated flux +
+errors and the time_min/time_max of each time bin. There are many other quantities
+which could be stored, such as the energy range of the flux, the number of excess
+events in the time bin considered, etc. In particular, for lightcurves with spectral
+variability studies, columns for other model parameters and associated errors would
+be necessary.
+The current container class already provides some methods to study variability, such as
+chi-square test, fractional variance estimation. But these methods are more general
+than the specific case of gammapy.
 
 This container is based on an `astropy.table.Table` object. It could therefore
 be improved by using the `astropy_timeseries.BinnedTimeSeries` object which
