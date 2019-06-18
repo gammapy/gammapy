@@ -16,17 +16,21 @@ Abstract
 ========
 
 In this PIG we want to discuss a restructuring of the way light curves are
-computed in Gammapy. In general we propose to perform a spectral analysis in
-each of the time bins of the light curve to obtain the integral flux. For this
-purpose the new :class:`LightCurveEstimator` class should essentially be a
+computed and stored in Gammapy. Lightcurves in gamma-ray astronomy are the
+result of a series of fits in each time bin. Lightcurve extraction covers
+therefore both the data reduction and the data modeling steps. The lightcurve
+estimation will therefore have these two steps.
+Here, we propose to perform the data reduction step in each of the time bins
+and store the result in the form of a `Datasets` (`MapDataset` or
+`SpectrumOnOffDataset` depending on the selected approach).
+Each individual `Dataset` is then modeled and fitted to extract the
+source flux and its errors in each time bin. The result is then stored in a
+`LightCurve` object .
+For this purpose, the new :class:`LightCurveEstimator` class should essentially be a
 wrapper around the *standard* spectrum analysis of Gammapy using pipeline
 classes (e.g. `gammapy.scripts.SpectrumAnalysisIACT`). A further input should of
 course be the time intervals of the light curve, whose computation will be done
 outside of the new `LightCurve` classes.
-
-It is still under discussion if the LightCurve code should prepare new
-`gammapy.data.ObservationList` s for each light curve bin or modify a
-`~gammapy.data.GTI` table, which the background/spectrum classes would respect.
 
 Detailed Description
 ====================
@@ -34,7 +38,8 @@ Detailed Description
 Background / What we have now
 -----------------------------
 
-The current :class:`gammapy.time.LightCurveEstimator` class takes as input a
+The current :class:`gammapy.time.LightCurveEstimator` class assumes that a
+part of the data reduction process has already been applied at it takes as input a
 :class:`gammapy.spectrum.SpectrumExtraction` instance for which a list of
 :class:`gammapy.background.BackgroundEstimate` is required. Apart from the time
 intervals, the user also has to provide a `gammapy.spectrum.SpectralModel` that
@@ -45,12 +50,10 @@ sample. A tutorial notebook of this approach can be found `here
 <http://docs.gammapy.org/dev/notebooks/light_curve.html>`_.
 
 Drawbacks of this approach are:
- * the user has to estimate the spectral parameters beforehand, that is before
-   computing a light curve;
+ * there is no clear separation of the data reduction and modeling steps
+ * only 1D On-Off spectral analysis is supported and lacks supports for
+`MapDataset` based analysis.
  * changes in the spectral shape between the time bins are not supported.
-
-The current `~gammapy.time.LightCurveEstimator` does not support a 3D cube
-analysis so far.
 
 
 Outline of the new implementation in 1D
@@ -133,6 +136,10 @@ errors and the time_min/time_max of each time bin. Other useful quantities which
 are not stored right now, could be energy_min/energy_max of the integral flux.
 This container class already provides some methods to study variability.
 
+This container is based on an `astropy.table.Table` object. It could therefore
+be improved by using the `astropy_timeseries.BinnedTimeSeries` object which
+itself inherits from `Table` and provides support for row selection with time,
+rebinning and more complex methods like Lomd-Scargle periodograms.
 
 Outline of the implementation in 3D
 -----------------------------------
