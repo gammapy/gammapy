@@ -56,6 +56,55 @@ Drawbacks of this approach are:
  * changes in the spectral shape between the time bins are not supported.
 
 
+General organization of the new approach
+----------------------------------------
+
+Time bin preparation
+^^^^^^^^^^^^^^^^^^^
+
+Independently of the actual data reduction technique chosen, the user should
+first provide a list/table of time intervals for which she/he
+wants to compute the source flux. The computation of this list/table will be
+done outside of the light curve estimation class.
+
+We could provide helper functions to prepare the time bins. So that, typically,
+a user would execute the following code::
+
+    from astropy.time import Time
+    time_start = Time("2006-07-29 20:00:00.000")
+    time_stop = Time("2006-07-30 06:00:00.00")
+    time_step = 5.0 * u.min
+    time_bins = constant_time_bins(time_start, time_stop, time_step)
+
+Alternatively, we could rely on `astropy.timeseries` if we force the dependency to astropy v>3.2.
+This would look like::
+
+    from astropy.timeseries import BinnedTimeSeries
+    times = BinnedTimeSeries(time_bin_start="2006-07-29 20:00:00.000",
+                           time_bin_size=5 * u.min)
+    print(times.time_bin_start)
+    print(times.time_bin_end)
+
+Data reduction
+^^^^^^^^^^^^^^
+
+
+Storing the results and timing studies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The results are returned as a `gammapy.time.LightCurve` instance (the current
+container class for light curves) that essentially holds the integrated flux +
+errors and the time_min/time_max of each time bin. Other useful quantities which
+are not stored right now, could be energy_min/energy_max of the integral flux.
+This container class already provides some methods to study variability.
+
+This container is based on an `astropy.table.Table` object. It could therefore
+be improved by using the `astropy_timeseries.BinnedTimeSeries` object which
+itself inherits from `Table` and provides support for row selection with time,
+rebinning and more complex methods for detailed timing studies such as Lomb-Scargle
+periodograms.
+
+
 Outline of the new implementation in 1D
 ---------------------------------------
 
@@ -127,19 +176,6 @@ fit and scale a fixed spectrum to the excess counts, should be built in the
 pipeline classes. The resulting spectrum of the time bin is then integrated in
 an energy range specified by the user.
 
-Storing the results
-^^^^^^^^^^^^^^^^^^^
-
-Te results are returned as a `gammapy.time.LightCurve` instance (the current
-container class for light curves) that essentially holds the integrated flux +
-errors and the time_min/time_max of each time bin. Other useful quantities which
-are not stored right now, could be energy_min/energy_max of the integral flux.
-This container class already provides some methods to study variability.
-
-This container is based on an `astropy.table.Table` object. It could therefore
-be improved by using the `astropy_timeseries.BinnedTimeSeries` object which
-itself inherits from `Table` and provides support for row selection with time,
-rebinning and more complex methods like Lomd-Scargle periodograms.
 
 Outline of the implementation in 3D
 -----------------------------------
