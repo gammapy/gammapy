@@ -88,6 +88,27 @@ This would look like::
 Data reduction
 ^^^^^^^^^^^^^^
 
+Once the time bins are determined, the user will have to select the relevant
+`Observations` from the `Datastore`, with, if needed, the application of some
+`ObservationFilter` to the `EventList`. The `Observations` are then passed along
+the time bins to the light curve estimation class `LightCurveEstimator`. The
+latter could take a `geom` argument that will define the data reduction
+geometry (and in particular, if the data reduction is 3D or 1D). In the absence, of a
+`RegionGeom` we could simply expect a reco energy and true energy `MapAxis`.
+
+Because of the OFF determination, spectral and `Map` based data reduction cannot be performed
+in a completely similar manner. We detail possible approaches below.
+
+Both approaches will result in a `Datasets` object consisting of `MapDataset`
+or `SpectrumDatasetOnOff` with identical geometries for each time bin.
+The `Dataset` must therefore carry the time information. Minimally, with a meta
+information `time_start`, `time_stop`. Ideally, the `Dataset` should contain
+ the `GTI` table of the filtered `Eventlist` that were used for its production.
+
+Data Fitting
+^^^^^^^^^^^^
+
+TBD
 
 Storing the results and timing studies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -105,8 +126,16 @@ rebinning and more complex methods for detailed timing studies such as Lomb-Scar
 periodograms.
 
 
+Outline of the implementation in 3D
+-----------------------------------
+
+TBD
+
+
 Outline of the new implementation in 1D
 ---------------------------------------
+
+TBC
 
 In the new approach we want to overcome the two drawbacks mentioned above and
 provide a maximum degree of flexibility to the user when computing the light
@@ -137,33 +166,6 @@ integral flux the way it is done now, by scaling the expected counts with
 respect to the excess events, which should be much faster.
 
 
-Preparing the ObservationList for each time bin
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The general idea is to write a new `~gammapy.data.ObservationList` for each time
-bin to disk, so that they can be easily read-in by the DataStore class with, for
-example, its `.from_dir()` method. This would avoid memory issues for large data
-sets and the user also gets the possibility to easily repeat a spectral analysis
-in one of the light curve bins. For this procedure
-`~gammapy.data.ObservationList` should get a method like
-`.write_to_disk(outdir)`, or the `~gammapy.data.DataStore` object should get a
-method `.write_list_to_disk(obslist, outdir)` (invocation vs inspection).
-
-Depending on the modifications planned for the `gammapy.data.data_store` module,
-one could also think about providing the user with the option to do everything
-in-memory, which could especially be useful for playing around/testing.
-
-The preparation of the new `~gammapy.data.ObservationList` for each time bin
-would then basically consist of 3 steps:
- * The `LightCurveEstimator` class figures out which observation belongs to
-   which light curve bin and creates a new `~gammapy.data.ObservationList` with
-   these observations for each time bin;
- * The new `~gammapy.data.ObservationList` are written to disk in a new folder
-   structure specified by the user;
- * The LightCurve class modifies the event lists of the first and last (in 
-   time) observation in the respective `~gammapy.data.ObservationList` and
-   updates their `observation_live_time_duration` (what about the `GTI` s?).
-
 
 Calling the spectral pipeline for each time bin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -177,11 +179,7 @@ pipeline classes. The resulting spectrum of the time bin is then integrated in
 an energy range specified by the user.
 
 
-Outline of the implementation in 3D
------------------------------------
 
-We still have not looked into this implementation. Maybe we should first workout
-the 1D case and adopt the hopefully well-oiled solution to the 3D case.
 
 Discussion / Alternatives
 =========================
