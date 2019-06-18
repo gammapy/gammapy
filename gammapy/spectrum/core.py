@@ -292,8 +292,6 @@ class PHACountsSpectrum(CountsSpectrum):
         Observation identifier, optional
     livetime : `~astropy.units.Quantity`, optional
         Observation livetime
-    offset : `~astropy.units.Quantity`, optional
-        Field of view offset
     meta : dict, optional
         Meta information
     """
@@ -309,7 +307,6 @@ class PHACountsSpectrum(CountsSpectrum):
         is_bkg=False,
         obs_id=None,
         livetime=None,
-        offset=None,
         meta=None,
     ):
         super().__init__(energy_lo, energy_hi, data)
@@ -325,32 +322,7 @@ class PHACountsSpectrum(CountsSpectrum):
         self.is_bkg = is_bkg
         self.obs_id = obs_id
         self.livetime = livetime
-        self.offset = offset
         self.meta = meta or OrderedDict()
-
-    @property
-    def phafile(self):
-        """PHA file associated with the observation."""
-        if isinstance(self.obs_id, list):
-            filename = "pha_stacked.fits"
-        else:
-            filename = "pha_obs{}.fits".format(self.obs_id)
-        return filename
-
-    @property
-    def arffile(self):
-        """ARF associated with the observation."""
-        return self.phafile.replace("pha", "arf")
-
-    @property
-    def rmffile(self):
-        """RMF associated with the observation."""
-        return self.phafile.replace("pha", "rmf")
-
-    @property
-    def bkgfile(self):
-        """Background PHA files associated with the observation."""
-        return self.phafile.replace("pha", "bkg")
 
     @property
     def bins_in_safe_range(self):
@@ -388,10 +360,6 @@ class PHACountsSpectrum(CountsSpectrum):
         if len(idx) != 0:
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
-
-    def reset_thresholds(self):
-        """Reset energy thresholds (declare all energy bins valid)."""
-        self.quality = np.zeros_like(self.quality)
 
     def rebin(self, parameter):
         """Rebin.
@@ -457,12 +425,19 @@ class PHACountsSpectrum(CountsSpectrum):
         meta["exposure"] = self.livetime.to_value("s")
         meta["obs_id"] = self.obs_id
 
-        if not self.is_bkg:
-            if self.rmffile is not None:
-                meta["respfile"] = self.rmffile
+        if isinstance(self.obs_id, list):
+            phafile = "pha_stacked.fits"
+        else:
+            phafile = "pha_obs{}.fits".format(self.obs_id)
 
-            meta["backfile"] = self.bkgfile
-            meta["ancrfile"] = self.arffile
+        bkgfile = phafile.replace("pha", "bkg")
+        arffile = phafile.replace("pha", "arf")
+        rmffile = phafile.replace("pha", "rmf")
+
+        if not self.is_bkg:
+            meta["respfile"] = rmffile
+            meta["backfile"] = bkgfile
+            meta["ancrfile"] = arffile
             meta["hduclas2"] = "TOTAL"
         else:
             meta["hduclas2"] = "BKG"
@@ -484,6 +459,7 @@ class PHACountsSpectrum(CountsSpectrum):
         quality = None
         areascal = None
         backscal = None
+
         if "QUALITY" in counts_table.colnames:
             quality = counts_table["QUALITY"].data
         if "AREASCAL" in counts_table.colnames:
@@ -511,37 +487,3 @@ class PHACountsSpectrum(CountsSpectrum):
         filename = make_path(filename)
         with fits.open(str(filename), memmap=False) as hdulist:
             return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
-
-    def to_sherpa(self, name):
-        """Convert to `sherpa.astro.data.DataPHA`.
-
-        Parameters
-        ----------
-        name : str
-            Instance name
-        """
-        from sherpa.utils import SherpaFloat
-        from sherpa.astro.data import DataPHA
-
-        table = self.to_table()
-
-        # Workaround to avoid https://github.com/sherpa/sherpa/issues/248
-        if np.isscalar(self.backscal):
-            backscal = self.backscal
-        else:
-            backscal = self.backscal.copy()
-            if np.allclose(backscal.mean(), backscal):
-                backscal = backscal[0]
-
-        return DataPHA(
-            name=name,
-            channel=(table["CHANNEL"].data + 1).astype(SherpaFloat),
-            counts=table["COUNTS"].data.astype(SherpaFloat),
-            quality=table["QUALITY"].data,
-            exposure=self.livetime.to_value("s"),
-            backscal=backscal,
-            areascal=self.areascal,
-            syserror=None,
-            staterror=None,
-            grouping=None,
-        )

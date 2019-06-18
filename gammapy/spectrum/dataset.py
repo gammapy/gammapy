@@ -181,40 +181,7 @@ class SpectrumDatasetOnOff(Dataset):
         self.aeff = aeff
         self.edisp = edisp
         self.model = model
-
-        if mask_safe is None:
-            mask_safe = np.logical_not(counts.quality)
-
         self.mask_safe = mask_safe
-
-    @property
-    def livetime(self):
-        return self._livetime
-
-    @livetime.setter
-    def livetime(self, livetime):
-        self._livetime = livetime
-        if self.counts is not None:
-            self.counts.livetime = livetime
-        # TODO : check if off might have different exposure
-        if self.counts_off is not None:
-            self.counts_off.livetime = livetime
-
-    @property
-    def mask_safe(self):
-        """Inverse of counts spectrum quality mask."""
-        return np.logical_not(self.counts.quality)
-
-    @mask_safe.setter
-    def mask_safe(self, mask):
-        if mask is None:
-            mask = np.ones_like(self.counts.quality, dtype="bool")
-        if mask.dtype != np.dtype("bool"):
-            raise ValueError("mask data must have dtype bool")
-        else:
-            self.counts.quality = np.logical_not(mask)
-            if self.counts_off is not None:
-                self.counts_off.quality = np.logical_not(mask)
 
     @property
     def alpha(self):
@@ -464,16 +431,27 @@ class SpectrumDatasetOnOff(Dataset):
         outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
-        phafile = self.counts.phafile
-        bkgfile = self.counts.bkgfile
-        arffile = self.counts.arffile
-        rmffile = self.counts.rmffile
+        if isinstance(self.obs_id, list):
+            phafile = "pha_stacked.fits"
+        else:
+            phafile = "pha_obs{}.fits".format(self.obs_id)
 
-        self.counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        bkgfile = phafile.replace("pha", "bkg")
+        arffile = phafile.replace("pha", "arf")
+        rmffile = phafile.replace("pha", "rmf")
+
+        counts = self.counts.copy()
+        counts.livetime = self.livetime
+        counts.quality = np.logical_not(self.mask_safe)
+        counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         if self.counts_off is not None:
-            self.counts_off.write(
+            counts_off = self.counts_off.copy()
+            counts_off.livetime = self.livetime
+            counts_off.quality = np.logical_not(self.mask_safe)
+            counts_off.write(
                 outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
             )
         if self.edisp is not None:
@@ -495,24 +473,29 @@ class SpectrumDatasetOnOff(Dataset):
         """
         filename = make_path(filename)
         dirname = filename.parent
+
         on_vector = PHACountsSpectrum.read(filename)
-        rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
+
+        phafile = filename.name
 
         try:
-            energy_dispersion = EnergyDispersion.read(str(dirname / rmf))
+            rmffile = phafile.replace("pha", "rmf")
+            energy_dispersion = EnergyDispersion.read(str(dirname / rmffile))
         except IOError:
             # TODO : Add logger and echo warning
             energy_dispersion = None
 
         try:
-            off_vector = PHACountsSpectrum.read(str(dirname / bkg))
+            bkgfile = phafile.replace("pha", "bkg")
+            off_vector = PHACountsSpectrum.read(str(dirname / bkgfile))
         except IOError:
             # TODO : Add logger and echo warning
             off_vector = None
 
-        effective_area = EffectiveAreaTable.read(str(dirname / arf))
+        arffile = phafile.replace("pha", "arf")
+        effective_area = EffectiveAreaTable.read(str(dirname / arffile))
 
-        mask = on_vector.quality == 0
+        mask_safe = np.logical_not(on_vector.quality)
 
         return cls(
             counts=on_vector,
@@ -520,7 +503,7 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off=off_vector,
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
-            mask_safe=mask,
+            mask_safe=mask_safe,
         )
 
     # TODO : do we keep this or should this become the Dataset name
@@ -676,8 +659,7 @@ class SpectrumDatasetOnOffStacker:
         off_vector_list = [o.counts_off for o in self.obs_list]
         self.stacked_off_vector = self.stack_counts_spectrum(off_vector_list)
 
-    @staticmethod
-    def stack_counts_spectrum(counts_spectrum_list):
+    def stack_counts_spectrum(self, counts_spectrum_list):
         """Stack `~gammapy.spectrum.PHACountsSpectrum`.
 
         * Bins outside the safe energy range are set to 0
@@ -690,9 +672,9 @@ class SpectrumDatasetOnOffStacker:
         energy = template.energy
         stacked_data = np.zeros(energy.nbin)
         stacked_quality = np.ones(energy.nbin)
-        for spec in counts_spectrum_list:
+        for spec, obs in zip(counts_spectrum_list, self.obs_list):
             stacked_data += spec.counts_in_safe_range.data
-            temp = np.logical_and(stacked_quality, spec.quality)
+            temp = np.logical_and(stacked_quality, ~obs.mask_safe)
             stacked_quality = np.array(temp, dtype=int)
 
         return PHACountsSpectrum(
@@ -784,4 +766,5 @@ class SpectrumDatasetOnOffStacker:
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
             livetime=self.total_livetime,
+            mask_safe=np.logical_not(self.stacked_on_vector.quality)
         )

@@ -162,10 +162,6 @@ class TestSpectrumDatasetOnOff:
     def test_data_shape(self):
         assert self.dataset.data_shape == self.on_counts.data.shape
 
-    def test_mask_safe_setter(self):
-        with pytest.raises(ValueError):
-            self.dataset.mask_safe = np.ones(self.dataset.data_shape, dtype="float")
-
     def test_npred_no_edisp(self):
         const = 1 / u.TeV / u.cm ** 2 / u.s
         model = ConstantModel(const)
@@ -216,9 +212,10 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
+            mask_safe=np.logical_not(self.on_counts.quality)
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        filename = tmpdir / self.on_counts.phafile
+        filename = tmpdir / "pha_obstest.fits"
         newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
@@ -227,10 +224,11 @@ class TestSpectrumDatasetOnOff:
 
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts, aeff=self.aeff, livetime=self.livetime
+            counts=self.on_counts, aeff=self.aeff, livetime=self.livetime,
+            mask_safe=np.logical_not(self.on_counts.quality)
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
-        filename = tmpdir / self.on_counts.phafile
+        filename = tmpdir / "pha_obstest.fits"
         newdataset = SpectrumDatasetOnOff.from_ogip_files(filename)
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
@@ -467,6 +465,7 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
+        mask_safe=np.logical_not(on_vector.quality)
     )
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
@@ -474,6 +473,7 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
+        mask_safe=np.logical_not(on_vector.quality)
     )
 
     obs_list = [obs1, obs2]
@@ -499,7 +499,6 @@ class TestSpectrumDatasetOnOffStacker:
 
     def test_basic(self):
         assert "Stacker" in str(self.obs_stacker)
-        assert "stacked" in str(self.obs_stacker.stacked_obs.counts.phafile)
         counts1 = self.obs_list[0].total_stats_safe_range.n_on
         counts2 = self.obs_list[1].total_stats_safe_range.n_on
         summed_counts = counts1 + counts2
