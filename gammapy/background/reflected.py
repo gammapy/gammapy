@@ -189,10 +189,11 @@ class ReflectedRegionsFinder:
         X, Y = geom.get_pix()
         ONpixels = PixCoord(X[mask], Y[mask])
 
+        # find excluded PixCoords
         mask_array = np.where(self.reference_map.data < 0.5)
         self.excluded_pixcoords = PixCoord(X[mask_array], Y[mask_array])
 
-        # Minimum angle a region has to be moved to not overlap with previous one
+       # Minimum angle a region has to be moved to not overlap with previous one
         min_ang = self._region_angular_size(ONpixels, self._pix_center)
 
         # Add required minimal distance between two off regions
@@ -233,7 +234,7 @@ class ReflectedRegionsFinder:
 
         See example here: :ref:'regions_reflected'.
         """
-        fig, ax, cbar = self.reference_map.plot(fig=fig, ax=ax, cmap="gray")
+        fig, ax, cbar = self.reference_map.plot(fig=fig, ax=ax, cmap="gray", vmin=0, vmax=1)
         wcs = self.reference_map.geom.wcs
 
         on_patch = self.region.to_pixel(wcs=wcs).as_artist(color="red", alpha=0.6)
