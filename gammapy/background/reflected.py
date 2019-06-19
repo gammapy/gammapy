@@ -385,7 +385,7 @@ class ReflectedRegionsBackgroundEstimator:
         else:
             plot_map.data += 1.0
 
-        fig, ax, cbar = plot_map.plot(fig=fig, ax=ax)
+        fig, ax, cbar = plot_map.plot(fig=fig, ax=ax, vmin=0, vmax=1)
 
         on_patch = self.on_region.to_pixel(wcs=geom.wcs).as_artist(edgecolor="red")
         ax.add_patch(on_patch)

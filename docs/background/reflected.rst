@@ -8,6 +8,9 @@ Reflected regions background
 
 .. currentmodule:: gammapy.background
 
+Overview
+--------
+
 This technique is used in classical Cherenkov astronomy for the 1D spectral extraction.
 A region on the sky, the ON region, is chosen to select events around the studied source
 position. In the absence of a solid template of the residual hadronic background, a classical
@@ -23,6 +26,9 @@ observations is performed by the `~gammapy.background.ReflectedBackgroundEstimat
 The latter uses the `~gammapy.background.ReflectedRegionsFinder` to create reflected
 regions for a given circular on region and exclusion mask.
 
+Using regions
+-------------
+
 The ON region is a `~regions.SkyRegion`. It is typically a circle (`~regions.CircleSkyRegion`)
 for pontlike source analysis, but can be a more complex region such as a `~regions.CircleAnnulusSkyRegion`
 a `~regions.EllipseSkyRegion`, a `~regions.RectangleSkyRegion` etc.
@@ -31,6 +37,9 @@ The following example shows how to create such regions:
 
 .. plot:: background/create_region.py
     :include-source:
+
+The reflected region finder
+---------------------------
 
 The following example illustrates how to create reflected regions for a given
 circular on region and exclusion mask using the `~gammapy.background.ReflectedRegionsFinder`.
@@ -42,6 +51,9 @@ maximum number of reflected regions.
 .. plot:: background/make_reflected_regions.py
     :include-source:
 
+Using the reflected background estimator
+----------------------------------------
+
 In practice, the user does not usually need to directly interact with the
 `~gammapy.background.ReflectedRegionsFinder`. This actually is done via the
 `~gammapy.background.ReflectedBackgroundEstimator`, which extracts the ON and OFF events
@@ -50,3 +62,10 @@ The last example shows how to run it on a few observations with a rectangular re
 
 .. plot:: background/make_rectangular_reflected_background.py
     :include-source:
+
+:ref:`tutorials` that show an example using ``gammapy.background.ReflectedBackgroundEstimator``
+to perform a spectral extraction and fitting:
+
+* :gp-notebook:`spectrum_analysis`
+
+
