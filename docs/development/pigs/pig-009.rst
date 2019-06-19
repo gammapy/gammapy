@@ -221,8 +221,6 @@ More detailed:
 
 Convenience API
 ===============
----ADD a few more words about the possibility that the users do not to import a IRF
-class but they can directly use the `MapEventSampler'.---
 Additional methods to the `MapEventSampler' can be included to take into account
 the PSF and Edisp corrections. This may be done as follows:
 
