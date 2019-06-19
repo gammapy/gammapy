@@ -28,11 +28,25 @@ for pontlike source analysis, but can be a more complex region such as a `~regio
 a `~regions.EllipseSkyRegion`, a `~regions.RectangleSkyRegion` etc.
 
 The following example shows how to create such regions:
-.. plot:: background/create_regions.py
+
+.. plot:: background/create_region.py
     :include-source:
 
 The following example illustrates how to create reflected regions for a given
 circular on region and exclusion mask using the `~gammapy.background.ReflectedRegionsFinder`.
+In particular, it shows how to change the minimal distance between the ON region and the
+reflected regions. This is useful to limit contamination by events leaking out the ON region.
+It also shows how to change the minimum distance between adjacent regions as well as the
+maximum number of reflected regions.
 
 .. plot:: background/make_reflected_regions.py
+    :include-source:
+
+In practice, the user does not usually need to directly interact with the
+`~gammapy.background.ReflectedRegionsFinder`. This actually is done via the
+`~gammapy.background.ReflectedBackgroundEstimator`, which extracts the ON and OFF events
+for an `~gammapy.data.Observations` object.
+The last example shows how to run it on a few observations with a rectangular region.
+
+.. plot:: background/make_rectangular_reflected_background.py
     :include-source:
