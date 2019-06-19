@@ -96,9 +96,3 @@ class TestPHACountsSpectrum:
         self.spec.backscal = np.arange(self.spec.energy.nbin)
         table = self.spec.to_table()
         assert table["BACKSCAL"][2] == 2
-
-    def test_rebin(self):
-        spec_rebinned = self.spec.rebin(2)
-        assert (spec_rebinned.quality == [1, 0, 0, 1]).all()
-        assert_quantity_allclose(spec_rebinned.hi_threshold, 5.623413251903491 * u.TeV)
-        assert_quantity_allclose(spec_rebinned.lo_threshold, 1.778279410038922 * u.TeV)

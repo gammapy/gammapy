@@ -147,6 +147,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
+            backscale=np.ones(elo.shape),
+            backscale_off=np.ones(elo.shape) * 10,
         )
 
     def test_init_no_model(self):
@@ -187,6 +189,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
+            backscale=1,
+            backscale_off=10
         )
         with mpl_plot_check():
             dataset.peek()
@@ -201,6 +205,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
+            backscale=1,
+            backscale_off=10
         )
         with mpl_plot_check():
             dataset.plot_fit()
@@ -212,7 +218,9 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
-            mask_safe=np.logical_not(self.on_counts.quality)
+            mask_safe=np.logical_not(self.on_counts.quality),
+            backscale=1,
+            backscale_off=10,
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -225,7 +233,8 @@ class TestSpectrumDatasetOnOff:
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts, aeff=self.aeff, livetime=self.livetime,
-            mask_safe=np.logical_not(self.on_counts.quality)
+            mask_safe=np.logical_not(self.on_counts.quality),
+            backscale=1
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -305,7 +314,7 @@ class TestSimpleFit:
         """WStat with on source and background spectrum"""
         on_vector = self.src.copy()
         on_vector.data += self.bkg.data
-        obs = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
+        obs = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off, backscale=1, backscale_off=1/self.alpha)
         obs.model = self.source_model
 
         self.source_model.parameters.index = 1.12
@@ -317,25 +326,6 @@ class TestSimpleFit:
         assert_allclose(pars["index"].value, 1.997342, rtol=1e-3)
         assert_allclose(pars["amplitude"].value, 100245.187067, rtol=1e-3)
         assert_allclose(result.total_stat, 30.022316, rtol=1e-3)
-
-    def test_joint(self):
-        """Test joint fit for obs with different energy binning"""
-        on_vector = self.src.copy()
-        on_vector.data += self.bkg.data
-        obs1 = SpectrumDatasetOnOff(counts=on_vector, counts_off=self.off)
-        obs1.model = self.source_model
-
-        src_rebinned = self.src.rebin(2)
-        bkg_rebinned = self.off.rebin(2)
-        src_rebinned.data += self.bkg.rebin(2).data
-
-        obs2 = SpectrumDatasetOnOff(counts=src_rebinned, counts_off=bkg_rebinned)
-        obs2.model = self.source_model
-
-        fit = Fit([obs1, obs2])
-        fit.run()
-        pars = self.source_model.parameters
-        assert_allclose(pars["index"].value, 1.920686, rtol=1e-3)
 
 
 @requires_data()
@@ -465,7 +455,10 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
-        mask_safe=np.logical_not(on_vector.quality)
+        mask_safe=np.logical_not(on_vector.quality),
+        backscale=1,
+        backscale_off=2,
+
     )
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
@@ -473,7 +466,9 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
-        mask_safe=np.logical_not(on_vector.quality)
+        mask_safe=np.logical_not(on_vector.quality),
+        backscale=1,
+        backscale_off=4
     )
 
     obs_list = [obs1, obs2]

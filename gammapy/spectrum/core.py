@@ -361,37 +361,6 @@ class PHACountsSpectrum(CountsSpectrum):
             idx = np.insert(idx, 0, idx[0] - 1)
         self.quality[idx] = 1
 
-    def rebin(self, parameter):
-        """Rebin.
-
-        See `~gammapy.spectrum.CountsSpectrum`.
-        This function treats the quality vector correctly.
-        """
-        from ..extern.skimage import block_reduce
-
-        retval = super().downsample(parameter)
-
-        quality_summed = block_reduce(np.array(self.quality), block_size=(parameter,))
-
-        # Exclude groups where not all bins are within the safe threshold
-        condition = quality_summed == parameter
-        quality_rebinned = np.where(
-            condition, np.ones(len(retval.data)), np.zeros(len(retval.data))
-        )
-        retval.quality = np.array(quality_rebinned, dtype=int)
-
-        # if backscal is not the same in all channels cannot merge
-        if not np.isscalar(retval.backscal):
-            if not np.isclose(np.diff(retval.backscal), 0).all():
-                raise ValueError("Cannot merge energy dependent backscal")
-            else:
-                retval.meta.backscal = retval.backscal[0] * np.ones(retval.energy.nbin)
-
-        retval.areascal = block_reduce(
-            self.areascal, block_size=(parameter,), func=np.mean
-        )
-        return retval
-
     @property
     def _backscal_array(self):
         """Helper function to always return backscal as an array."""

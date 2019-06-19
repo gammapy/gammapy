@@ -172,6 +172,8 @@ class SpectrumDatasetOnOff(Dataset):
         aeff=None,
         edisp=None,
         mask_safe=None,
+        backscale=None,
+        backscale_off=None,
     ):
 
         self.counts = counts
@@ -183,10 +185,19 @@ class SpectrumDatasetOnOff(Dataset):
         self.model = model
         self.mask_safe = mask_safe
 
+        if np.isscalar(backscale):
+            backscale = np.ones(self.counts.energy.nbin) * backscale
+
+        if np.isscalar(backscale_off):
+            backscale_off = np.ones(self.counts.energy.nbin) * backscale_off
+
+        self.backscale = backscale
+        self.backscale_off = backscale_off
+
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        return self.counts.backscal / self.counts_off.backscal
+        return self.backscale / self.backscale_off
 
     @property
     def model(self):
@@ -443,6 +454,7 @@ class SpectrumDatasetOnOff(Dataset):
         counts = self.counts.copy()
         counts.livetime = self.livetime
         counts.quality = np.logical_not(self.mask_safe)
+        counts.backscal = self.backscale
         counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -451,6 +463,7 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off = self.counts_off.copy()
             counts_off.livetime = self.livetime
             counts_off.quality = np.logical_not(self.mask_safe)
+            counts_off.backscal = self.backscale_off
             counts_off.write(
                 outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
             )
@@ -488,9 +501,10 @@ class SpectrumDatasetOnOff(Dataset):
         try:
             bkgfile = phafile.replace("pha", "bkg")
             off_vector = PHACountsSpectrum.read(str(dirname / bkgfile))
+            backscale_off = off_vector.backscal
         except IOError:
             # TODO : Add logger and echo warning
-            off_vector = None
+            off_vector, backscale_off = None, None
 
         arffile = phafile.replace("pha", "arf")
         effective_area = EffectiveAreaTable.read(str(dirname / arffile))
@@ -504,6 +518,8 @@ class SpectrumDatasetOnOff(Dataset):
             edisp=energy_dispersion,
             livetime=on_vector.livetime,
             mask_safe=mask_safe,
+            backscale=on_vector.backscal,
+            backscale_off=backscale_off,
         )
 
     # TODO : do we keep this or should this become the Dataset name
@@ -766,5 +782,7 @@ class SpectrumDatasetOnOffStacker:
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
             livetime=self.total_livetime,
-            mask_safe=np.logical_not(self.stacked_on_vector.quality)
+            mask_safe=np.logical_not(self.stacked_on_vector.quality),
+            backscale=self.stacked_on_vector.backscal,
+            backscale_off=self.stacked_off_vector.backscal,
         )

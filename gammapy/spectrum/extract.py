@@ -131,6 +131,8 @@ class SpectrumExtraction:
             counts_off=self._off_vector,
             edisp=self._edisp,
             livetime=observation.observation_live_time_duration,
+            backscale=self._on_vector.backscal,
+            backscale_off=self._off_vector.backscal,
         )
 
         if self.use_recommended_erange:
