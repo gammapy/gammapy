@@ -133,6 +133,7 @@ class SpectrumExtraction:
             livetime=observation.observation_live_time_duration,
             backscale=self._on_vector.backscal,
             backscale_off=self._off_vector.backscal,
+            obs_id=observation.obs_id
         )
 
         if self.use_recommended_erange:

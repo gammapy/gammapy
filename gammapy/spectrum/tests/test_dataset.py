@@ -136,8 +136,6 @@ class TestSpectrumDatasetOnOff:
         self.off_counts = PHACountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
         )
-        self.on_counts.obs_id = "test"
-        self.off_counts.obs_id = "test"
 
         self.livetime = 1000 * u.s
 
@@ -149,6 +147,7 @@ class TestSpectrumDatasetOnOff:
             livetime=self.livetime,
             backscale=np.ones(elo.shape),
             backscale_off=np.ones(elo.shape) * 10,
+            obs_id="test"
         )
 
     def test_init_no_model(self):
@@ -221,6 +220,7 @@ class TestSpectrumDatasetOnOff:
             mask_safe=np.logical_not(self.on_counts.quality),
             backscale=1,
             backscale_off=10,
+            obs_id="test"
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -234,7 +234,7 @@ class TestSpectrumDatasetOnOff:
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts, aeff=self.aeff, livetime=self.livetime,
             mask_safe=np.logical_not(self.on_counts.quality),
-            backscale=1
+            backscale=1, obs_id="test"
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
         filename = tmpdir / "pha_obstest.fits"
@@ -450,7 +450,6 @@ def make_observation_list():
     )
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
     on_vector.livetime = livetime
-    on_vector.obs_id = 2
     obs1 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector1,
@@ -460,6 +459,7 @@ def make_observation_list():
         mask_safe=np.logical_not(on_vector.quality),
         backscale=1,
         backscale_off=2,
+        obs_id=2
 
     )
     obs2 = SpectrumDatasetOnOff(
@@ -470,7 +470,8 @@ def make_observation_list():
         livetime=livetime,
         mask_safe=np.logical_not(on_vector.quality),
         backscale=1,
-        backscale_off=4
+        backscale_off=4,
+        obs_id=2
     )
 
     obs_list = [obs1, obs2]

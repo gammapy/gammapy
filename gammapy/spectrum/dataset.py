@@ -174,6 +174,7 @@ class SpectrumDatasetOnOff(Dataset):
         mask_safe=None,
         backscale=None,
         backscale_off=None,
+        obs_id=None,
     ):
 
         self.counts = counts
@@ -193,6 +194,7 @@ class SpectrumDatasetOnOff(Dataset):
 
         self.backscale = backscale
         self.backscale_off = backscale_off
+        self.obs_id = obs_id
 
     @property
     def alpha(self):
@@ -520,14 +522,8 @@ class SpectrumDatasetOnOff(Dataset):
             mask_safe=mask_safe,
             backscale=on_vector.backscal,
             backscale_off=backscale_off,
+            obs_id=on_vector.obs_id
         )
-
-    # TODO : do we keep this or should this become the Dataset name
-    # This was imported and adapted from the SpectrumObservation class
-    @property
-    def obs_id(self):
-        """Observation ID of the dataset."""
-        return self.counts.obs_id
 
     # TODO : do we keep SpectrumStats or do we adapt this part of code?
     # This was imported and adapted from the SpectrumObservation class
@@ -739,8 +735,6 @@ class SpectrumDatasetOnOffStacker:
         self.stacked_off_vector.livetime = self.total_livetime
         self.stacked_on_vector.backscal = self.stacked_bkscal_on
         self.stacked_off_vector.backscal = self.stacked_bkscal_off
-        self.stacked_on_vector.obs_id = [obs.obs_id for obs in self.obs_list]
-        self.stacked_off_vector.obs_id = [obs.obs_id for obs in self.obs_list]
 
     def stack_aeff(self):
         """Stack effective areas (weighted by livetime).
@@ -780,4 +774,5 @@ class SpectrumDatasetOnOffStacker:
             mask_safe=np.logical_not(self.stacked_quality),
             backscale=self.stacked_on_vector.backscal,
             backscale_off=self.stacked_off_vector.backscal,
+            obs_id=[obs.obs_id for obs in self.obs_list]
         )

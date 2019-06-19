@@ -155,8 +155,8 @@ class SpectrumSimulation:
             livetime=self.livetime,
             backscale=self.on_vector.backscal,
             backscale_off=backscale_off,
+            obs_id=obs_id
         )
-        obs.counts.obs_id = obs_id
         self.obs = obs
 
     def simulate_source_counts(self, rand):
