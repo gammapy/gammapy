@@ -694,11 +694,11 @@ class SpectrumDatasetOnOffStacker:
             temp = np.logical_and(stacked_quality, ~obs.mask_safe)
             stacked_quality = np.array(temp, dtype=int)
 
+        self.stacked_quality = stacked_quality
         return PHACountsSpectrum(
             data=stacked_data,
             energy_lo=energy.edges[:-1],
             energy_hi=energy.edges[1:],
-            quality=stacked_quality,
         )
 
     def stack_backscal(self):
@@ -777,7 +777,7 @@ class SpectrumDatasetOnOffStacker:
             aeff=self.stacked_aeff,
             edisp=self.stacked_edisp,
             livetime=self.total_livetime,
-            mask_safe=np.logical_not(self.stacked_on_vector.quality),
+            mask_safe=np.logical_not(self.stacked_quality),
             backscale=self.stacked_on_vector.backscal,
             backscale_off=self.stacked_off_vector.backscal,
         )
