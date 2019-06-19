@@ -539,7 +539,8 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def total_stats_safe_range(self):
         """Total statistics in safe energy range (`~gammapy.spectrum.SpectrumStats`)."""
-        safe_bins = self.counts.bins_in_safe_range
+        mask = self.mask_safe if self.mask_safe is not None else np.ones(self.counts.energy.nbin)
+        safe_bins = np.where(np.array(mask) == 1)[0]
         return self.stats_in_range(safe_bins[0], safe_bins[-1])
 
     def stats_in_range(self, bin_min, bin_max):
@@ -561,7 +562,7 @@ class SpectrumDatasetOnOff(Dataset):
         for ii in idx:
             if self.counts_off is not None:
                 n_off = int(self.counts_off.data[ii])
-                a_off = self.counts_off._backscal_array[ii]
+                a_off = self.backscale_off[ii]
             else:
                 n_off = 0
                 a_off = 1  # avoid zero division error
@@ -571,7 +572,7 @@ class SpectrumDatasetOnOff(Dataset):
                 energy_max=self.counts.energy.edges[ii + 1],
                 n_on=int(self.counts.data[ii]),
                 n_off=n_off,
-                a_on=self.counts._backscal_array[ii],
+                a_on=self.backscale[ii],
                 a_off=a_off,
                 obs_id=self.obs_id,
                 livetime=self.livetime,
@@ -689,7 +690,7 @@ class SpectrumDatasetOnOffStacker:
         stacked_data = np.zeros(energy.nbin)
         stacked_quality = np.ones(energy.nbin)
         for spec, obs in zip(counts_spectrum_list, self.obs_list):
-            stacked_data += spec.counts_in_safe_range.data
+            stacked_data[obs.mask_safe] += spec.data[obs.mask_safe]
             temp = np.logical_and(stacked_quality, ~obs.mask_safe)
             stacked_quality = np.array(temp, dtype=int)
 
@@ -709,18 +710,12 @@ class SpectrumDatasetOnOffStacker:
         alpha_sum = 0.0
 
         for obs in self.obs_list:
-            bkscal_on_data = obs.counts._backscal_array.copy()
-            bkscal_off_data = obs.counts_off._backscal_array.copy()
-            bkscal_off += (
-                bkscal_on_data / bkscal_off_data
-            ) * obs.counts_off.counts_in_safe_range
-            alpha_sum += (obs.alpha * obs.counts_off.counts_in_safe_range).sum()
+            bkscal_off[obs.mask_safe] += (obs.alpha * obs.counts_off.data)[obs.mask_safe]
+            alpha_sum += (obs.alpha * obs.counts_off.data)[obs.mask_safe].sum()
 
         with np.errstate(divide="ignore", invalid="ignore"):
             stacked_bkscal_off = self.stacked_off_vector.data / bkscal_off
-            alpha_average = (
-                alpha_sum / self.stacked_off_vector.counts_in_safe_range.sum()
-            )
+            alpha_average = (alpha_sum / self.stacked_off_vector.data[obs.mask_safe].sum())
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data

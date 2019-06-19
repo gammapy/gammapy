@@ -251,6 +251,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
+            backscale=self.on_counts.backscal,
+            backscale_off=self.off_counts.backscal,
         )
 
         assert dataset.total_stats.n_on == 3
