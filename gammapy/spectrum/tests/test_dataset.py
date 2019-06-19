@@ -132,9 +132,9 @@ class TestSpectrumDatasetOnOff:
 
         data = np.ones(elo.shape)
         data[-1] = 0  # to test stats calculation with empty bins
-        self.on_counts = PHACountsSpectrum(elo, ehi, data, backscal=np.ones(elo.shape))
+        self.on_counts = PHACountsSpectrum(elo, ehi, data)
         self.off_counts = PHACountsSpectrum(
-            elo, ehi, np.ones(elo.shape) * 10, backscal=np.ones(elo.shape) * 10
+            elo, ehi, np.ones(elo.shape) * 10,
         )
 
         self.livetime = 1000 * u.s
@@ -251,8 +251,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
-            backscale=self.on_counts.backscal,
-            backscale_off=self.off_counts.backscal,
+            backscale=1,
+            backscale_off=10,
         )
 
         assert dataset.total_stats.n_on == 3
@@ -293,7 +293,6 @@ class TestSimpleFit:
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=source_counts,
-            backscal=1,
         )
         # Currently it's necessary to specify a lifetime
         self.src.livetime = 1 * u.s
@@ -309,7 +308,6 @@ class TestSimpleFit:
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=off_counts,
-            backscal=1.0 / self.alpha,
         )
 
     def test_wstat(self):

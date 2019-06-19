@@ -168,9 +168,6 @@ class SpectrumExtraction:
         self._on_vector = PHACountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
-            backscal=bkg.a_on,
-            livetime=observation.observation_live_time_duration,
-            obs_id=observation.obs_id,
         )
 
         self._off_vector = self._on_vector.copy()

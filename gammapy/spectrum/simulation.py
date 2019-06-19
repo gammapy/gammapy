@@ -143,7 +143,7 @@ class SpectrumSimulation:
         self.simulate_source_counts(random_state)
         if self.background_model is not None:
             self.simulate_background_counts(random_state)
-            backscale_off = self.off_vector.backscal
+            backscale_off = 1 / self.alpha
         else:
             backscale_off = None
 
@@ -153,7 +153,7 @@ class SpectrumSimulation:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
-            backscale=self.on_vector.backscal,
+            backscale=1,
             backscale_off=backscale_off,
             obs_id=obs_id
         )
@@ -175,8 +175,6 @@ class SpectrumSimulation:
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             data=on_counts,
-            backscal=1,
-            meta=self._get_meta(),
         )
         on_vector.livetime = self.livetime
         self.on_vector = on_vector
@@ -206,12 +204,6 @@ class SpectrumSimulation:
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             data=off_counts,
-            backscal=1.0 / self.alpha,
-            is_bkg=True,
-            meta=self._get_meta(),
         )
         off_vector.livetime = self.livetime
         self.off_vector = off_vector
-
-    def _get_meta(self):
-        return OrderedDict([("CREATOR", self.__class__.__name__)])

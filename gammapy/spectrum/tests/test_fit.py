@@ -37,7 +37,6 @@ class TestFit:
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=source_counts,
-            backscal=1,
         )
         # Currently it's necessary to specify a lifetime
         self.src.livetime = 1 * u.s
@@ -53,7 +52,6 @@ class TestFit:
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=off_counts,
-            backscal=1.0 / self.alpha,
         )
 
     def test_cash(self):

@@ -457,6 +457,7 @@ class SpectrumDatasetOnOff(Dataset):
         counts.livetime = self.livetime
         counts.quality = np.logical_not(self.mask_safe)
         counts.backscal = self.backscale
+        counts.obs_id = self.obs_id
         counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
@@ -466,6 +467,7 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off.livetime = self.livetime
             counts_off.quality = np.logical_not(self.mask_safe)
             counts_off.backscal = self.backscale_off
+            counts_off.obs_id = self.obs_id
             counts_off.write(
                 outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
             )
