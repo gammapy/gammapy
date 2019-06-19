@@ -206,15 +206,15 @@ def test_lightcurve_estimator(spec_extraction):
 
     assert_quantity_allclose(len(table), 2)
 
-    assert_allclose(table["flux"][0], 4.309371e-11, rtol=1e-3)
-    assert_allclose(table["flux"][-1], 3.543012e-11, rtol=1e-3)
+    assert_allclose(table["flux"][0], 4.28741e-11, rtol=5e-3)
+    assert_allclose(table["flux"][-1], 3.46309e-11, rtol=5e-3)
 
-    assert_allclose(table["flux_err"][0], 4.135581e-12, rtol=1e-3)
-    assert_allclose(table["flux_err"][-1], 3.654781e-12, rtol=1e-3)
+    assert_allclose(table["flux_err"][0], 4.135581e-12, rtol=5e-3)
+    assert_allclose(table["flux_err"][-1], 3.623353e-12, rtol=5e-3)
 
     # TODO: change dataset and also add LC point with weak signal
     # or even negative excess that is an UL
-    assert_allclose(table["flux_ul"][0], 5.550045e-11, rtol=1e-3)
+    assert_allclose(table["flux_ul"][0], 5.550045e-11, rtol=5e-3)
     assert not table["is_ul"][0]
 
     # same but with threshold equal to 2 TeV
@@ -223,7 +223,7 @@ def test_lightcurve_estimator(spec_extraction):
     )
     table = lc.table
 
-    assert_allclose(table["flux"][0], 5.057778e-12, rtol=1e-3)
+    assert_allclose(table["flux"][0], 5.057778e-12, rtol=5e-3)
 
     # TODO: add test exercising e_reco selection
     # TODO: add asserts on all measured quantities
@@ -255,7 +255,7 @@ def test_lightcurve_adaptative_interval_maker(spec_extraction):
     assert_allclose(table["significance"] >= 3, True)
     assert_allclose(table["t_start"][5].value, 53343.927374, rtol=1e-10)
     assert_allclose(table["alpha"][5], 0.0833333, rtol=1e-5)
-    assert len(table) == 57
+    assert len(table) == 55
     assert_allclose(table["t_start"][0].value, 53343.922392, rtol=1e-10)
     assert_allclose(table["t_stop"][-1].value, 53343.973528, rtol=1e-10)
     val = (table["t_start"] < separator[0]) & (table["t_stop"] > separator[0])
