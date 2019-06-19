@@ -11,37 +11,6 @@ __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
 
 log = logging.getLogger(__name__)
 
-# TODO: remove once copy() is supported by `~astropy.regions`
-def _region_copy(region):
-    """Returns a region copy"""
-    # The function copy.deepcopy does not work for these regions classes
-    regdict = {_: getattr(region, _) for _ in region._repr_params}
-    new_region = region.__class__(region.center, **regdict)
-    return new_region
-
-# TODO: remove once rotate() is supported by `~astropy.regions`
-def _rotate_pix_region(pix_region, pix_center, angle):
-    """Returns rotated source with given angle"""
-    new_region = _region_copy(pix_region)
-
-    dx = pix_region.center.x - pix_center.x
-    dy = pix_region.center.y - pix_center.y
-
-    # Offset of region in pix coordinates
-    offset = np.hypot(dx, dy)
-    # initial angle w.r.t. north
-    initial_angle = Angle(np.arctan2(dy, dx), "rad")
-
-    x = pix_center.x + offset * np.cos(angle + initial_angle)
-    y = pix_center.y + offset * np.sin(angle + initial_angle)
-    new_region.center = PixCoord(x=x, y=y)
-
-    if hasattr(new_region, 'angle'):
-        region_angle = angle + pix_region.angle.to('rad')
-        new_region.angle = region_angle
-
-    return new_region
-
 
 class ReflectedRegionsFinder:
     """Find reflected regions.
@@ -61,7 +30,7 @@ class ReflectedRegionsFinder:
     angle_increment : `~astropy.coordinates.Angle`, optional
         Rotation angle applied when a region falls in an excluded region.
     min_distance : `~astropy.coordinates.Angle`, optional
-        Minimal distance between to reflected regions
+        Minimal distance between two consecutive reflected regions
     min_distance_input : `~astropy.coordinates.Angle`, optional
         Minimal distance from input region
     max_region_number : int, optional
@@ -130,17 +99,19 @@ class ReflectedRegionsFinder:
         self.setup()
         self.find_regions()
 
-
     @staticmethod
     def make_reference_map(region, center, binsz="0.01 deg"):
         """Create empty reference map.
 
-        The size of the mask is chosen such that all reflected region are
+        The size of the map is chosen such that all reflected regions are
         contained on the image.
         To do so, the reference map width is taken to be 4 times the distance between
         the target region center and the rotation point. This distance is larger than
         the typical dimension of the region itself (otherwise the rotation point would
         lie inside the region).
+
+        The WCS of the map is the TAN projection at the `center` in the coordinate
+        system used by the `region` center.
 
         Parameters
         ----------
@@ -158,23 +129,19 @@ class ReflectedRegionsFinder:
         """
 
         try:
-            reg_center = region.center
+            if "ra" in region.center.representation_component_names:
+                coordsys = "CEL"
+            else:
+                coordsys = "GAL"
         except:
             raise TypeError("Algorithm not yet adapted to this Region shape")
 
         # width is the full width of an image (not the radius)
-        width = 4 * reg_center.separation(center)
+        width = 4 * region.center.separation(center)
 
-        if 'ra' in reg_center.representation_component_names:
-            maskmap = WcsNDMap.create(
-                skydir=center, binsz=binsz, width=width, coordsys="CEL", proj="TAN"
-             )
-        else:
-            maskmap = WcsNDMap.create(
-                skydir=center, binsz=binsz, width=width, coordsys="GAL", proj="TAN"
-            )
-
-        return maskmap
+        return WcsNDMap.create(
+            skydir=center, binsz=binsz, width=width, coordsys=coordsys, proj="TAN"
+        )
 
     @staticmethod
     def _region_angular_size(pixels, center):
@@ -195,11 +162,13 @@ class ReflectedRegionsFinder:
             the maximum angular size
         """
         newX, newY = center.x - pixels.x, center.y - pixels.y
-        angles = Angle(np.arctan2(newX, newY), 'rad')
+        angles = Angle(np.arctan2(newX, newY), "rad")
         angular_size = np.max(angles) - np.min(angles)
 
         if angular_size.value > np.pi:
-            angular_size = np.max(angles.wrap_at(0 * u.rad)) - np.min(angles.wrap_at(0 * u.rad))
+            angular_size = np.max(angles.wrap_at(0 * u.rad)) - np.min(
+                angles.wrap_at(0 * u.rad)
+            )
 
         return angular_size
 
@@ -217,11 +186,11 @@ class ReflectedRegionsFinder:
         self.on_reference_map = WcsNDMap(geom=geom, data=mask)
 
         # Extract all pixcoords in the geom
-        X,Y = geom.get_pix()
+        X, Y = geom.get_pix()
         ONpixels = PixCoord(X[mask], Y[mask])
 
         mask_array = np.where(self.reference_map.data < 0.5)
-        self.excluded_pixcoords = PixCoord(X[mask_array],Y[mask_array])
+        self.excluded_pixcoords = PixCoord(X[mask_array], Y[mask_array])
 
         # Minimum angle a region has to be moved to not overlap with previous one
         min_ang = self._region_angular_size(ONpixels, self._pix_center)
@@ -230,9 +199,7 @@ class ReflectedRegionsFinder:
         self._min_ang = min_ang + self.min_distance
 
         # Maximum possible angle before regions is reached again
-        self._max_angle = (
-             Angle("360deg") - self._min_ang - self.min_distance_input
-        )
+        self._max_angle = Angle("360deg") - self._min_ang - self.min_distance_input
 
         # TODO: remove or change to a proper error
         if self._min_ang < 0:
@@ -244,8 +211,7 @@ class ReflectedRegionsFinder:
         reflected_regions = []
 
         while curr_angle < self._max_angle:
-            test_reg = _rotate_pix_region(self._pix_region, self._pix_center, curr_angle)
-
+            test_reg = self._pix_region.rotate(self._pix_center, curr_angle)
             if not np.any(test_reg.contains(self.excluded_pixcoords)):
                 region = test_reg.to_sky(self.reference_map.geom.wcs)
                 reflected_regions.append(region)
@@ -279,13 +245,7 @@ class ReflectedRegionsFinder:
             ax.add_patch(off_patch)
 
             xx, yy = self.center.to_pixel(wcs)
-            ax.plot(
-                xx, yy,
-                marker="+",
-                color="green",
-                markersize=20,
-                linewidth=5,
-            )
+            ax.plot(xx, yy, marker="+", color="green", markersize=20, linewidth=5)
 
         return fig, ax
 
@@ -312,13 +272,15 @@ class ReflectedRegionsBackgroundEstimator:
         Forwarded to `~gammapy.background.ReflectedRegionsFinder`
     """
 
-    def __init__(self, on_region, observations, binsz=0.01*u.deg, **kwargs):
+    def __init__(self, on_region, observations, binsz=0.01 * u.deg, **kwargs):
         self.on_region = on_region
         self.observations = observations
 
         self.binsz = binsz
 
-        self.finder = ReflectedRegionsFinder(region=on_region, center=None, binsz=Angle(self.binsz), **kwargs)
+        self.finder = ReflectedRegionsFinder(
+            region=on_region, center=None, binsz=Angle(self.binsz), **kwargs
+        )
 
         self.exclusion_mask = kwargs.get("exclusion_mask")
         self.result = None
@@ -350,10 +312,16 @@ class ReflectedRegionsBackgroundEstimator:
             off_region = self.finder.reflected_regions
             off_events = obs.events.select_map_mask(self.finder.off_reference_map)
             a_off = len(off_region)
-            log.info("Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id))
+            log.info(
+                "Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id)
+            )
 
         except ValueError:
-            log.warning("Obs #{} rejected! Pointing position within the ON region".format(obs.obs_id))
+            log.warning(
+                "Obs #{} rejected! Pointing position within the ON region".format(
+                    obs.obs_id
+                )
+            )
             off_region = []
             off_events = []
             a_off = 0
@@ -389,20 +357,21 @@ class ReflectedRegionsBackgroundEstimator:
         """
         import matplotlib.pyplot as plt
 
-        try:
-            reg_center = self.on_region.center
-        except:
-            raise NotImplementedError("Algorithm not yet adapted to this Region shape")
-
-        if 'ra' in reg_center.representation_component_names:
-            coordsys = 'CEL'
+        if "ra" in self.on_region.center.representation_component_names:
+            coordsys = "CEL"
         else:
-            coordsys = 'GAL'
+            coordsys = "GAL"
 
         pnt_radec = SkyCoord([_.pointing_radec for _ in self.observations])
-        width = np.max(5*self.on_region.center.separation(pnt_radec).to_value('deg'))
+        width = np.max(5 * self.on_region.center.separation(pnt_radec).to_value("deg"))
 
-        geom = WcsGeom.create(skydir=reg_center, binsz=self.binsz, width=width, coordsys=coordsys, proj="TAN")
+        geom = WcsGeom.create(
+            skydir=self.on_region.center,
+            binsz=self.binsz,
+            width=width,
+            coordsys=coordsys,
+            proj="TAN",
+        )
         plot_map = Map.from_geom(geom)
 
         if fig is None:
@@ -413,7 +382,7 @@ class ReflectedRegionsBackgroundEstimator:
             vals = self.exclusion_mask.get_by_coord(coords)
             plot_map.data += vals
         else:
-            plot_map.data += 1.
+            plot_map.data += 1.0
 
         fig, ax, cbar = plot_map.plot(fig=fig, ax=ax)
 
@@ -445,13 +414,7 @@ class ReflectedRegionsBackgroundEstimator:
                 handles.append(handle)
 
             xx, yy = obs.pointing_radec.to_pixel(geom.wcs)
-            ax.plot(
-                xx, yy,
-                marker="+",
-                color=colors[idx_],
-                markersize=20,
-                linewidth=5,
-            )
+            ax.plot(xx, yy, marker="+", color=colors[idx_], markersize=20, linewidth=5)
 
         if add_legend:
             ax.legend(handles=handles)
