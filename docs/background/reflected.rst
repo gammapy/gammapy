@@ -63,7 +63,7 @@ The last example shows how to run it on a few observations with a rectangular re
 .. plot:: background/make_rectangular_reflected_background.py
     :include-source:
 
-:ref:`tutorials` that show an example using ``gammapy.background.ReflectedBackgroundEstimator``
+The following notebook shows an example using ``gammapy.background.ReflectedBackgroundEstimator``
 to perform a spectral extraction and fitting:
 
 * :gp-notebook:`spectrum_analysis`
