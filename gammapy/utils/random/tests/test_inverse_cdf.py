@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord
-import matplotlib.pyplot as plt
 
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from  ....cube import MapEvaluator
