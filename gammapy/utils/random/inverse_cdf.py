@@ -97,12 +97,12 @@ class MapEventSampler:
             Passed to `~gammapy.utils.random.get_random_state`.
     lc : `~gammapy.time.models.LightCurveTableModel`
             Input light-curve of the source, given with columns labelled
-            as "time" and "normalization" (arbitrary units): the bin time
+            as "time" (in seconds) and "normalization" (arbitrary units): the bin time
             HAS to be costant.
     tmin : float
-            Start time of the sampling, in seconds.
+            Start time of the sampling, defined in seconds.
     tmax : float
-            Stop time of the sampling, in seconds.
+            Stop time of the sampling, defined in seconds.
     """
 
     def __init__(self, npred_map, random_state=0,
@@ -122,10 +122,10 @@ class MapEventSampler:
                         Number of predicted events.
         """
 
-        return random_state.poisson(np.sum(self.npred_map.data))
+        return self.random_state.poisson(np.sum(self.npred_map.data))
 
     def sample_npred(self):
-        """ Calculate energy and coordinates of the sampled source events.
+        """ Calculate energy and Galactic coordinates of the sampled source events.
             
         Returns
         -------
@@ -183,4 +183,3 @@ class MapEventSampler:
             events['TIME'] = self.sample_timepred() * u.s
         
         return events
-

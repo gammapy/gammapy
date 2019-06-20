@@ -107,19 +107,7 @@ def test_norm_dist_sampling():
 
 def test_map_sampling():
     npred = source_model()
-    sampler = MapEventSampler(npred, random_state=0, tmin=0, tmax=30000)
-    events_src=sampler.sample_npred()
-    time_events = sampler.sample_timepred()
-    print(events_src, time_events)
-    evt = sampler.sample_events()
 
-    plt.hist(evt['e_true'], bins=np.logspace(0, 2, 10), density=True)
-    plt.plot(np.arange(1,100), po(np.arange(1,100)))
-    plt.loglog()
-    plt.show()
-
-
-def test_time_sampling():
     livetime = 10 * u.hour
     time = np.linspace(0,livetime.to('s').value,int(livetime.to('s').value))
     table = Table()
@@ -127,39 +115,16 @@ def test_time_sampling():
     table['NORM'] = rate(time)
     lc = LC(table)
 
-    npred = source_model()
+    tmin=9
+    tmax=30000
+    sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
+    ntot = sampler.npred_total()
+    sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
+    events=sampler.sample_events()
 
-    sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=0, tmax=80000)
-    events_src=sampler.sample_npred()
-    time_events = sampler.sample_timepred()
-    evt = sampler.sample_events()
-    print(events_src, time_events)
+    c = position = SkyCoord(events['lon_true'], events['lat_true'], frame='galactic', unit='deg')
+    npred.geom.center_skydir.separation(c)
 
-    plt.hist(evt['time'], bins=100)
-    plt.show()
-
-
-def test_npred_total():
-    n_test = 1000
-    npred_tot = np.zeros(n_test,int)
-    npred = source_model()
-    tot = np.sum(npred.data)
-
-    sampler = MapEventSampler(npred, random_state=0, tmin=0, tmax=30000)
-
-    for i in np.arange(0,n_test):
-        npred_tot[i] = sampler.npred_total()
-
-    assert_allclose(np.mean(npred_tot), tot, rtol=0.1)
-
-
-
-
-
-
-
-
-
-
-
-
+    assert_allclose(ntot, len(events), 0.001)
+    assert max(events['TIME'])<tmax
+    assert max(npred.geom.center_skydir.separation(c)) < npred.geom.width[0]
