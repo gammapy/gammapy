@@ -446,6 +446,7 @@ class SpectrumDatasetOnOff(Dataset):
         overwrite : bool
             Overwrite existing files?
         """
+        # TODO: refactor and reduce amount of code duplication
         outdir = Path.cwd() if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
@@ -460,7 +461,8 @@ class SpectrumDatasetOnOff(Dataset):
 
         counts_table = self.counts.to_table()
         counts_table["QUALITY"] = np.logical_not(self.mask_safe)
-        counts_table["BACKSCALE"] = self.backscale
+        counts_table["BACKSCAL"] = self.backscale
+        counts_table["AREASCAL"] = np.ones(self.backscale.size)
         meta = self._ogip_meta()
 
         meta["respfile"] = rmffile
@@ -480,7 +482,8 @@ class SpectrumDatasetOnOff(Dataset):
         if self.counts_off is not None:
             counts_off_table = self.counts_off.to_table()
             counts_off_table["QUALITY"] = np.logical_not(self.mask_safe)
-            counts_off_table["BACKSCALE"] = self.backscale
+            counts_off_table["BACKSCAL"] = self.backscale_off
+            counts_off_table["AREASCAL"] = np.ones(self.backscale.size)
             meta = self._ogip_meta()
             meta["hduclas2"] = "BKG"
 

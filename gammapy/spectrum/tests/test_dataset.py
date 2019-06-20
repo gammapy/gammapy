@@ -446,7 +446,7 @@ def make_observation_list():
         energy_lo=energy[:-1], energy_hi=energy[1:], data=np.ones(nbin) * 1e5 * u.m ** 2
     )
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
-    on_vector.livetime = livetime
+
     obs1 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector1,
