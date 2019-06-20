@@ -9,7 +9,6 @@ from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...utils.fitting import Fit
 from ..models import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
 from ...spectrum import (
-    PHACountsSpectrum,
     SpectrumDatasetOnOff,
     SpectrumDataset,
     CountsSpectrum,
@@ -132,8 +131,8 @@ class TestSpectrumDatasetOnOff:
 
         data = np.ones(elo.shape)
         data[-1] = 0  # to test stats calculation with empty bins
-        self.on_counts = PHACountsSpectrum(elo, ehi, data)
-        self.off_counts = PHACountsSpectrum(
+        self.on_counts = CountsSpectrum(elo, ehi, data)
+        self.off_counts = CountsSpectrum(
             elo, ehi, np.ones(elo.shape) * 10,
         )
 
@@ -217,7 +216,7 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
-            mask_safe=np.logical_not(self.on_counts.quality),
+            mask_safe=np.ones(self.on_counts.energy.nbin, dtype=bool),
             backscale=1,
             backscale_off=10,
             obs_id="test"
@@ -233,7 +232,7 @@ class TestSpectrumDatasetOnOff:
     def test_to_from_ogip_files_no_edisp(self, tmpdir):
         dataset = SpectrumDatasetOnOff(
             counts=self.on_counts, aeff=self.aeff, livetime=self.livetime,
-            mask_safe=np.logical_not(self.on_counts.quality),
+            mask_safe=np.ones(self.on_counts.energy.nbin, dtype=bool),
             backscale=1, obs_id="test"
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
@@ -289,7 +288,7 @@ class TestSimpleFit:
         random_state = get_random_state(23)
         npred = self.source_model.integral(binning[:-1], binning[1:])
         source_counts = random_state.poisson(npred)
-        self.src = PHACountsSpectrum(
+        self.src = CountsSpectrum(
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=source_counts,
@@ -301,10 +300,10 @@ class TestSimpleFit:
 
         bkg_counts = random_state.poisson(npred_bkg)
         off_counts = random_state.poisson(npred_bkg * 1.0 / self.alpha)
-        self.bkg = PHACountsSpectrum(
+        self.bkg = CountsSpectrum(
             energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
         )
-        self.off = PHACountsSpectrum(
+        self.off = CountsSpectrum(
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=off_counts,
@@ -434,14 +433,14 @@ def make_observation_list():
     dataoff_2 = np.ones(3) * 3
     dataoff_1[1] = 0
     dataoff_2[1] = 0
-    on_vector = PHACountsSpectrum(
-        energy_lo=energy[:-1], energy_hi=energy[1:], data=data_on, backscal=1
+    on_vector = CountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=data_on,
     )
-    off_vector1 = PHACountsSpectrum(
-        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_1, backscal=2
+    off_vector1 = CountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_1,
     )
-    off_vector2 = PHACountsSpectrum(
-        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2, backscal=4
+    off_vector2 = CountsSpectrum(
+        energy_lo=energy[:-1], energy_hi=energy[1:], data=dataoff_2,
     )
     aeff = EffectiveAreaTable(
         energy_lo=energy[:-1], energy_hi=energy[1:], data=np.ones(nbin) * 1e5 * u.m ** 2
@@ -454,7 +453,7 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
-        mask_safe=np.logical_not(on_vector.quality),
+        mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
         backscale=1,
         backscale_off=2,
         obs_id=2
@@ -466,7 +465,7 @@ def make_observation_list():
         aeff=aeff,
         edisp=edisp,
         livetime=livetime,
-        mask_safe=np.logical_not(on_vector.quality),
+        mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
         backscale=1,
         backscale_off=4,
         obs_id=2

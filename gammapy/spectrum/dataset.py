@@ -1,15 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from collections import OrderedDict
 import numpy as np
 from pathlib import Path
 from astropy import units as u
+from astropy.table import Table
+from astropy.io import fits
 from .utils import SpectrumEvaluator
 from ..utils.scripts import make_path
 from ..utils.fitting import Dataset, Parameters
+from ..utils.fits import energy_axis_to_ebounds
 from ..stats import wstat, cash
 from ..utils.random import get_random_state
-from .core import CountsSpectrum, PHACountsSpectrum
+from .core import CountsSpectrum
 from ..data import SpectrumStats
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 
@@ -146,9 +151,9 @@ class SpectrumDatasetOnOff(Dataset):
     ----------
     model : `~gammapy.spectrum.models.SpectralModel`
         Fit model
-    counts : `~gammapy.spectrum.PHACountsSpectrum`
+    counts : `~gammapy.spectrum.CountsSpectrum`
         ON Counts spectrum
-    counts_off : `~gammapy.spectrum.PHACountsSpectrum`
+    counts_off : `~gammapy.spectrum.CountsSpectrum`
         OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
@@ -453,28 +458,70 @@ class SpectrumDatasetOnOff(Dataset):
         arffile = phafile.replace("pha", "arf")
         rmffile = phafile.replace("pha", "rmf")
 
-        counts = self.counts.copy()
-        counts.livetime = self.livetime
-        counts.quality = np.logical_not(self.mask_safe)
-        counts.backscal = self.backscale
-        counts.obs_id = self.obs_id
-        counts.write(outdir / phafile, overwrite=overwrite, use_sherpa=use_sherpa)
+        counts_table = self.counts.to_table()
+        counts_table["QUALITY"] = np.logical_not(self.mask_safe)
+        counts_table["BACKSCALE"] = self.backscale
+        meta = self._ogip_meta()
+
+        meta["respfile"] = rmffile
+        meta["backfile"] = bkgfile
+        meta["ancrfile"] = arffile
+        meta["hduclas2"] = "TOTAL"
+        counts_table.meta = meta
+
+        name = counts_table.meta["name"]
+        hdu = fits.BinTableHDU(counts_table, name=name)
+        hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
+
+        hdulist.writeto(str(outdir / phafile), overwrite=overwrite)
 
         self.aeff.write(outdir / arffile, overwrite=overwrite, use_sherpa=use_sherpa)
 
         if self.counts_off is not None:
-            counts_off = self.counts_off.copy()
-            counts_off.livetime = self.livetime
-            counts_off.quality = np.logical_not(self.mask_safe)
-            counts_off.backscal = self.backscale_off
-            counts_off.obs_id = self.obs_id
-            counts_off.write(
-                outdir / bkgfile, overwrite=overwrite, use_sherpa=use_sherpa
-            )
+            counts_off_table = self.counts_off.to_table()
+            counts_off_table["QUALITY"] = np.logical_not(self.mask_safe)
+            counts_off_table["BACKSCALE"] = self.backscale
+            meta = self._ogip_meta()
+            meta["hduclas2"] = "BKG"
+
+            counts_off_table.meta = meta
+            name = counts_off_table.meta["name"]
+            hdu = fits.BinTableHDU(counts_off_table, name=name)
+            hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
+            hdulist.writeto(str(outdir / bkgfile), overwrite=overwrite)
+
         if self.edisp is not None:
             self.edisp.write(
                 str(outdir / rmffile), overwrite=overwrite, use_sherpa=use_sherpa
             )
+
+    def _ebounds_hdu(self, use_sherpa):
+        energy = self.counts.energy.edges
+
+        if use_sherpa:
+            energy = energy.to("keV")
+
+        return energy_axis_to_ebounds(energy)
+
+    def _ogip_meta(self):
+        """Meta info for the OGIP data format"""
+        meta = OrderedDict()
+        meta["name"] = "SPECTRUM"
+        meta["hduclass"] = "OGIP"
+        meta["hduclas1"] = "SPECTRUM"
+        meta["corrscal"] = ""
+        meta["chantype"] = "PHA"
+        meta["detchans"] = self.counts.energy.nbin
+        meta["filter"] = "None"
+        meta["corrfile"] = ""
+        meta["poisserr"] = True
+        meta["hduclas3"] = "COUNT"
+        meta["hduclas4"] = "TYPE:1"
+        meta["lo_thres"] = self.energy_range[0].to_value("TeV")
+        meta["hi_thres"] = self.energy_range[1].to_value("TeV")
+        meta["exposure"] = self.livetime.to_value("s")
+        meta["obs_id"] = self.obs_id
+        return meta
 
     @classmethod
     def from_ogip_files(cls, filename):
@@ -491,7 +538,14 @@ class SpectrumDatasetOnOff(Dataset):
         filename = make_path(filename)
         dirname = filename.parent
 
-        on_vector = PHACountsSpectrum.read(filename)
+        with fits.open(str(filename), memmap=False) as hdulist:
+            data = _read_ogip_hdulist(hdulist)
+
+        counts = CountsSpectrum(
+            energy_hi=data["energy_hi"],
+            energy_lo=data["energy_lo"],
+            data=data["data"]
+        )
 
         phafile = filename.name
 
@@ -504,27 +558,36 @@ class SpectrumDatasetOnOff(Dataset):
 
         try:
             bkgfile = phafile.replace("pha", "bkg")
-            off_vector = PHACountsSpectrum.read(str(dirname / bkgfile))
-            backscale_off = off_vector.backscal
+            filename = str(dirname / bkgfile)
+
+            with fits.open(str(filename), memmap=False) as hdulist:
+                data_bkg = _read_ogip_hdulist(hdulist)
+                counts_off = CountsSpectrum(
+                    energy_hi=data_bkg["energy_hi"],
+                    energy_lo=data_bkg["energy_lo"],
+                    data=data_bkg["data"]
+                )
+
+                backscale_off = data_bkg["backscal"]
         except IOError:
             # TODO : Add logger and echo warning
-            off_vector, backscale_off = None, None
+            counts_off, backscale_off = None, None
 
         arffile = phafile.replace("pha", "arf")
-        effective_area = EffectiveAreaTable.read(str(dirname / arffile))
+        aeff = EffectiveAreaTable.read(str(dirname / arffile))
 
-        mask_safe = np.logical_not(on_vector.quality)
+        mask_safe = np.logical_not(data["quality"])
 
         return cls(
-            counts=on_vector,
-            aeff=effective_area,
-            counts_off=off_vector,
+            counts=counts,
+            aeff=aeff,
+            counts_off=counts_off,
             edisp=energy_dispersion,
-            livetime=on_vector.livetime,
+            livetime=data["livetime"],
             mask_safe=mask_safe,
-            backscale=on_vector.backscal,
+            backscale=data["backscal"],
             backscale_off=backscale_off,
-            obs_id=on_vector.obs_id
+            obs_id=data["obs_id"]
         )
 
     # TODO : do we keep SpectrumStats or do we adapt this part of code?
@@ -580,10 +643,43 @@ class SpectrumDatasetOnOff(Dataset):
         stacked_stats = SpectrumStats.stack(stats_list)
         stacked_stats.livetime = self.livetime
         stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
-        stacked_stats.obs_id = self.counts.obs_id
+        stacked_stats.obs_id = self.obs_id
         stacked_stats.energy_min = self.counts.energy.edges[bin_min]
         stacked_stats.energy_max = self.counts.energy.edges[bin_max + 1]
         return stacked_stats
+
+
+def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
+    """Create from `~astropy.io.fits.HDUList`."""
+    counts_table = Table.read(hdulist[hdu1])
+    ebounds = Table.read(hdulist[hdu2])
+    emin = ebounds["E_MIN"].quantity
+    emax = ebounds["E_MAX"].quantity
+
+    # Check if column are present in the header
+    quality = None
+    areascal = None
+    backscal = None
+
+    if "QUALITY" in counts_table.colnames:
+        quality = counts_table["QUALITY"].data
+    if "AREASCAL" in counts_table.colnames:
+        areascal = counts_table["AREASCAL"].data
+    if "BACKSCAL" in counts_table.colnames:
+        backscal = counts_table["BACKSCAL"].data
+
+    return dict(
+        data=counts_table["COUNTS"],
+        backscal=backscal,
+        energy_lo=emin,
+        energy_hi=emax,
+        quality=quality,
+        areascal=areascal,
+        livetime=counts_table.meta["EXPOSURE"] * u.s,
+        obs_id=counts_table.meta["OBS_ID"],
+        is_bkg=False,
+    )
+
 
 
 class SpectrumDatasetOnOffStacker:
@@ -675,7 +771,7 @@ class SpectrumDatasetOnOffStacker:
         self.stacked_off_vector = self.stack_counts_spectrum(off_vector_list)
 
     def stack_counts_spectrum(self, counts_spectrum_list):
-        """Stack `~gammapy.spectrum.PHACountsSpectrum`.
+        """Stack `~gammapy.spectrum.CountsSpectrum`.
 
         * Bins outside the safe energy range are set to 0
         * Attributes are set to None.
@@ -693,7 +789,7 @@ class SpectrumDatasetOnOffStacker:
             stacked_quality = np.array(temp, dtype=int)
 
         self.stacked_quality = stacked_quality
-        return PHACountsSpectrum(
+        return CountsSpectrum(
             data=stacked_data,
             energy_lo=energy.edges[:-1],
             energy_hi=energy.edges[1:],

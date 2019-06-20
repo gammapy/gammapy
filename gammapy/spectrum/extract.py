@@ -6,7 +6,7 @@ import astropy.units as u
 from regions import CircleSkyRegion
 from ..utils.scripts import make_path
 from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
-from .core import PHACountsSpectrum
+from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["SpectrumExtraction"]
@@ -131,8 +131,8 @@ class SpectrumExtraction:
             counts_off=self._off_vector,
             edisp=self._edisp,
             livetime=observation.observation_live_time_duration,
-            backscale=self._on_vector.backscal,
-            backscale_off=self._off_vector.backscal,
+            backscale=1,
+            backscale_off=bkg.a_off,
             obs_id=observation.obs_id
         )
 
@@ -165,14 +165,12 @@ class SpectrumExtraction:
         offset = observation.pointing_radec.separation(bkg.on_region.center)
         log.info("Offset : {}\n".format(offset))
 
-        self._on_vector = PHACountsSpectrum(
+        self._on_vector = CountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
         )
 
         self._off_vector = self._on_vector.copy()
-        self._off_vector.is_bkg = True
-        self._off_vector.backscal = bkg.a_off
 
     def extract_counts(self, bkg):
         """Fill on and off vector for one observation.
