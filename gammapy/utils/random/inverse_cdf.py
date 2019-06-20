@@ -16,11 +16,12 @@ class InverseCDFSampler:
    ----------
    pdf : `~gammapy.maps.Map`
         Map of the predicted source counts.
-   axis : integer
+   axis : int
         Axis along which sampling the indexes.
-   random_state : integer
-        Take a `numpy.random.RandomState` instance.
-   """
+   random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.   
+    """
 
     def __init__(self, pdf, axis=None, random_state=0):
         self.random_state = get_random_state(random_state)
@@ -91,14 +92,17 @@ class MapEventSampler:
 
     npred_map : `~gammapy.maps.Map`
             Predicted number of counts map.
-    random_state : integer
-            Take a `numpy.random.RandomState` instance.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
     lc : `~gammapy.time.models.LightCurveTableModel`
             Input light-curve of the source, given with columns labelled
             as "time" and "normalization" (arbitrary units): the bin time
             HAS to be costant.
-    tmin : start time of the sampling, in seconds.
-    tmax : stop time of the sampling, in seconds.
+    tmin : float
+            Start time of the sampling, in seconds.
+    tmax : float
+            Stop time of the sampling, in seconds.
     """
 
     def __init__(self, npred_map, random_state=0,
@@ -114,17 +118,19 @@ class MapEventSampler:
             
         Returns
         -------
-        random_state.poisson() : Number of predicted events.
+        random_state.poisson() : int
+                        Number of predicted events.
         """
 
-        return self.random_state.poisson(np.sum(self.npred_map.data))
+        return random_state.poisson(np.sum(self.npred_map.data))
 
     def sample_npred(self):
         """ Calculate energy and coordinates of the sampled source events.
             
         Returns
         -------
-        coords : array with coordinates and energies of the sampled events.
+        coords : `~numpy.ndarray`
+                Array with coordinates and energies of the sampled events.
         """
 
         self.n_events = self.npred_total()
@@ -132,73 +138,49 @@ class MapEventSampler:
         cdf_sampler = InverseCDFSampler(self.npred_map.data, random_state=self.random_state)
         
         pix_coords = cdf_sampler.sample(self.n_events)
-        self.coords = self.npred_map.geom.pix_to_coord(pix_coords[::-1])
+        coords = self.npred_map.geom.pix_to_coord(pix_coords[::-1])
 
-        return self.coords
+        return coords
         
     def sample_timepred(self):
         """ Calculate the times of arrival of the sampled source events.
 
         Returns
         -------
-        ToA : array with times of the sampled events.
+        ToA : `~numpy.array`
+            array with times of the sampled events.
         """
         
         n_events = self.n_events
-        if self.lc is not None:
-            start_lc = self.lc.table['TIME'].data[0]
-            stop_lc = self.lc.table['TIME'].data[-1]
-            dt = self.lc.table['TIME'].data[1] - self.lc.table['TIME'].data[0]
-            
-            if (self.tmax < start_lc) or (self.tmin > stop_lc):
-                # if the lc does not fit into the range [tmin,tmax]
-                self.ToA = self.tmin + self.random_state.uniform(high=(self.tmax-self.tmin), size=n_events)
+        if (self.lc is not None) and (self.tmax>0):
+            n_tbin = self.tmax - self.tmin
+            t = np.linspace(self.tmin,self.tmax,n_tbin)
+            normalization = self.lc._interpolator(t,ext=3)
+            time_sampler = InverseCDFSampler(normalization, random_state=self.random_state)
+            ToA = time_sampler.sample(n_events)[0]
 
-            else:
-                #define a time array in the range [t_min,t_max]
-                times = np.arange(self.tmin,self.tmax,dt)
+        else:
+            ToA = self.tmin + self.random_state.uniform(high=(self.tmax-self.tmin), size=n_events)
 
-                #select the lc times in the time range [t_min,t_max]
-                common_idx = np.where((times>=start_lc) & (times<=stop_lc))
-                common_time = times[common_idx]
-#                uncommon_idx = np.where((times<start_lc) | (times>stop_lc))
-#                uncommon_time = times[uncommon_idx]
-
-                #calculate the normalization in the common times and
-                #the mean lc normalization in the rest
-                norm = self.lc.evaluate_norm_at_time(common_time)
-                mean_norm = self.lc.mean_norm_in_time_interval(start_lc,stop_lc)
-
-                #define a new normalization array defined in the range [tmin,tmax]
-                normalization = np.full_like(times, mean_norm)
-                normalization[common_idx] = norm
-                
-                # sample the times
-                time_sampler = InverseCDFSampler(normalization,random_state=0)
-                self.ToA = time_sampler.sample(n_events)[0]
-
-            return self.ToA
+        return ToA
 
     def sample_events(self):
         """It converts the given sampled event list into an astropy table.
             
-        Parameters
-        ----------
-        coords : output of sample_npred()
-        ToA : output of sample_timepred()
-
         Returns
         -------
-        events : event list in an astropy table format.
+        events : `~astropy.table`
+            Sampled event list in an astropy table format.
         """
 
+        coords = self.sample_npred()
+
         events = Table()
-        events['lon_true'] = self.coords[0] * u.deg
-        events['lat_true'] = self.coords[1] * u.deg
-        events['e_true'] = self.coords[2] * u.TeV
-        try:
-           events['time'] = self.ToA * u.s
-        except Exception:
-            print("<<Warning: no event times have been sampled. \n>>")
+        events['lon_true'] = coords[0] * u.deg
+        events['lat_true'] = coords[1] * u.deg
+        events['e_true'] = coords[2] * u.TeV
+        if ((self.lc is not None) and (self.tmax>0)) or (self.tmax>0):
+            events['TIME'] = self.sample_timepred() * u.s
+        
         return events
 
