@@ -153,11 +153,11 @@ TEST_MODELS = [
     ),
     dict(
         name="Gaussian",
-        model=Gaussian(norm=2 / u.cm ** 2 / u.s, mean=4 * u.TeV, sigma=3 * u.TeV),
-        val_at_2TeV=u.Quantity(0.3321457437841875, "cm-2 s-1 TeV-1"),
-        integral_1_10TeV=u.Quantity(1.6371892282407274, "cm-2 s-1"),
-        integral_infinity=u.Quantity(2, "cm-2 s-1"),
-        eflux_1_10TeV=u.Quantity(7.676635460998642, "TeV cm-2 s-1"),
+        model=Gaussian(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=3 * u.TeV),
+        val_at_2TeV=u.Quantity(0.5319230405352436, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(2.5069131170025862, "cm-2 s-1"),
+        integral_infinity=u.Quantity(4, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(9.40567313403552, "TeV cm-2 s-1"),
     ),
 ]
 

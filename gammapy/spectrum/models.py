@@ -1642,8 +1642,7 @@ class Gaussian(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = \frac{N_0}{2} \left( erf(\frac{E_{max}-
-            \bar{E}}{\sqrt{2} \sigma}) - erf(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma}) \right)
+            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
 
 
         Parameters
@@ -1665,9 +1664,10 @@ class Gaussian(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left( \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma}) -
-            exp(\frac{E_{max} - \bar{E}}{\sqrt{2} \sigma}) \right) \\ + \frac{N_0 * \bar{E}}{2}
-             \left( erf(\frac{E_{max}-\bar{E}}{\sqrt{2} \sigma}) - erf(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma}) \right)
+            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
+            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
+             \right]_{E_{min}}^{E_{max}}
+
 
         Parameters
         ----------
@@ -1682,4 +1682,5 @@ class Gaussian(SpectralModel):
         a = pars["norm"].quantity * pars["sigma"].quantity / np.sqrt(2 * np.pi)
         b = pars["norm"].quantity * pars["mean"].quantity / 2
         return a * (np.exp(-u_min ** 2) - np.exp(-u_max ** 2)) + b * (
-                erf(u_max) - erf(u_min))
+                erf(u_max) - erf(u_min)
+        )
