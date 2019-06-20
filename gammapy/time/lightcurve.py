@@ -801,7 +801,7 @@ class LightCurveEstimator:
             livetime_to_add *= 1.0 - obs.observation_dead_time_fraction
 
             # Compute excess
-            obs_measured_excess = n_on_obs - spec.alpha * n_off_obs
+            obs_measured_excess = n_on_obs - spec.alpha[0] * n_off_obs
 
             # Compute the expected excess in the range given by the user
             # but must respect the energy threshold of the observation
@@ -832,8 +832,8 @@ class LightCurveEstimator:
 
             # compute effective normalisation between ON/OFF (for the interval)
             livetime += livetime_to_add
-            alpha_mean += spec.alpha * n_off_obs
-            alpha_mean_backup += spec.alpha * livetime_to_add
+            alpha_mean += spec.alpha[0] * n_off_obs
+            alpha_mean_backup += spec.alpha[0] * livetime_to_add
             measured_excess += obs_measured_excess
             predicted_excess += obs_predicted_excess
             n_on += n_on_obs
@@ -850,8 +850,7 @@ class LightCurveEstimator:
             if alpha_mean == 0.0:  # use backup if necessary
                 alpha_mean = alpha_mean_backup
 
-            flux = measured_excess / predicted_excess
-            flux *= int_flux
+            flux = (measured_excess / predicted_excess) * int_flux
 
             # Gaussian errors, TODO: should be improved
             flux_err = int_flux / predicted_excess
