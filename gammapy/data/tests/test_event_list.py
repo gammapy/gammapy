@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...data.event_list import EventListBase, EventList, EventListLAT
@@ -138,7 +138,7 @@ class TestEventSelection:
         center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
         on_region1 = CircleSkyRegion(center1, radius=1.0 * u.deg)
         center2 = SkyCoord(0.0, 10.0, frame="icrs", unit="deg")
-        on_region2 = CircleSkyRegion(center2, radius=0.5 * u.deg)
+        on_region2 = RectangleSkyRegion(center2, width=0.5 * u.deg, height=0.3*u.deg)
         self.on_regions = [on_region1, on_region2]
 
     def test_region_select(self):
