@@ -1650,10 +1650,10 @@ class SpectralGaussian(SpectralModel):
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
         pars = self.parameters
-        u_min = (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
-        u_max = (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        u_min = (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity).to_value('')
+        u_max = (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity).to_value('')
 
-        return pars["norm"].quantity / (2) * (erf(u_max.to_value('')) - erf(u_min.to_value('')))
+        return pars["norm"].quantity / (2) * (erf(u_max) - erf(u_min))
 
     def energy_flux(self, emin, emax):
         r"""Compute energy flux in given energy range analytically.
@@ -1672,10 +1672,8 @@ class SpectralGaussian(SpectralModel):
         from scipy.special import erf
 
         pars = self.parameters
-        u_min = (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
-        u_max = (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
+        u_min = (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity).to_value('')
+        u_max = (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity).to_value('')
         a = pars["norm"].quantity * pars["sigma"].quantity / np.sqrt(2 * np.pi)
         b = pars["norm"].quantity * pars["mean"].quantity / 2
-        return a * (np.exp(-u_min.to_value('') ** 2) - np.exp(-u_max.to_value('') ** 2)) + b * (
-                erf(u_max) - erf(u_min)
-        )
+        return a * (np.exp(-u_min ** 2) - np.exp(-u_max ** 2)) + b * (erf(u_max) - erf(u_min))
