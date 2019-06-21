@@ -178,9 +178,6 @@ class ReflectedRegionsFinder:
         self._pix_region = self.region.to_pixel(geom.wcs)
         self._pix_center = PixCoord.from_sky(self.center, geom.wcs)
 
-        if self._pix_region.contains(self._pix_center):
-            raise ValueError("Pointing position within the ON region")
-
         # Make the ON reference map
         mask = geom.region_mask([self.region], inside=True)
         self.on_reference_map = WcsNDMap(geom=geom, data=mask)
@@ -194,7 +191,10 @@ class ReflectedRegionsFinder:
         self.excluded_pixcoords = PixCoord(X[mask_array], Y[mask_array])
 
        # Minimum angle a region has to be moved to not overlap with previous one
-        min_ang = self._region_angular_size(ONpixels, self._pix_center)
+        if not self._pix_region.contains(self._pix_center):
+            min_ang = self._region_angular_size(ONpixels, self._pix_center)
+        else:
+            min_ang = 2*np.pi*u.rad  # No BKG regions are to be found
 
         # Add required minimal distance between two off regions
         self._min_ang = min_ang + self.min_distance
@@ -308,27 +308,16 @@ class ReflectedRegionsBackgroundEstimator:
         log.debug("Processing observation {}".format(obs))
         self.finder.center = obs.pointing_radec
 
-        try:
-            self.finder.run()
-            off_region = self.finder.reflected_regions
-            off_events = obs.events.select_map_mask(self.finder.off_reference_map)
-            a_off = len(off_region)
-            log.info(
-                "Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id)
-            )
-
-        except ValueError:
-            log.warning(
-                "Obs #{} rejected! Pointing position within the ON region".format(
-                    obs.obs_id
-                )
-            )
-            off_region = []
-            off_events = []
-            a_off = 0
-
+        self.finder.run()
         on_events = obs.events.select_map_mask(self.finder.on_reference_map)
+        off_region = self.finder.reflected_regions
+        off_events = obs.events.select_map_mask(self.finder.off_reference_map)
         a_on = 1
+        a_off = len(off_region)
+
+        log.info(
+                "Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id)
+        )
 
         return BackgroundEstimate(
             on_region=self.on_region,
