@@ -379,6 +379,45 @@ class EventListBase:
 
         return mask
 
+    def select_region(self, region, wcs):
+        """Select events in circular regions.
+
+        Parameters
+        ----------
+        region : `~regions.SkyRegion` or list of `~regions.SkyRegion`
+            (List of) sky region(s)
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        if not isinstance(region, list):
+            region = list([region])
+        mask = self.filter_region(region, wcs)
+        return self.select_row_subset(mask)
+
+    def filter_region(self, region, wcs):
+        """Create selection mask for event in given circular regions.
+
+        Parameters
+        ----------
+        region : list of `~regions.SkyRegion`
+            List of sky regions
+
+        Returns
+        -------
+        index_array : `numpy.ndarray`
+            Index array of selected events
+        """
+        position = self.radec
+        mask = np.array([], dtype=int)
+        for reg in region:
+            temp = np.where(reg.contains(position, wcs))[0]
+            mask = np.union1d(mask, temp)
+
+        return mask
+
     def select_parameter(self, parameter, band):
         """Select events with respect to a specified parameter.
 

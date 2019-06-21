@@ -135,8 +135,19 @@ class TestEventSelection:
         evt_table = Table([ra, dec, energy], names=["RA", "DEC", "ENERGY"])
         self.evt_list = EventListBase(evt_table)
 
-        center = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
-        self.on_region = CircleSkyRegion(center, radius=1.0 * u.deg)
+        center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
+        on_region1 = CircleSkyRegion(center1, radius=1.0 * u.deg)
+        center2 = SkyCoord(0.0, 10.0, frame="icrs", unit="deg")
+        on_region2 = CircleSkyRegion(center2, radius=0.5 * u.deg)
+        self.on_regions = [on_region1, on_region2]
+
+    def test_region_select(self):
+        geom = WcsGeom.create(skydir=(0, 0), binsz=0.2, width=4.0 * u.deg, proj="TAN")
+        new_list = self.evt_list.select_region(self.on_regions[0], geom.wcs)
+        assert len(new_list.table) == 2
+
+        new_list = self.evt_list.select_region(self.on_regions, geom.wcs)
+        assert len(new_list.table) == 3
 
     def test_map_select(self):
         axis = MapAxis.from_edges((0.5, 2.0), unit="TeV", name="ENERGY")
@@ -144,9 +155,7 @@ class TestEventSelection:
             skydir=(0, 0), binsz=0.2, width=4.0 * u.deg, proj="TAN", axes=[axis]
         )
 
-        mask_data = geom.region_mask(regions=[self.on_region], inside=True).astype(
-            float
-        )
+        mask_data = geom.region_mask(regions=[self.on_regions[0]], inside=True)
         mask = Map.from_geom(geom, data=mask_data)
         new_list = self.evt_list.select_map_mask(mask)
         assert len(new_list.table) == 2
