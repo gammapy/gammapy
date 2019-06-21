@@ -25,6 +25,7 @@ __all__ = [
     "AbsorbedSpectralModel",
     "Absorption",
     "NaimaModel",
+    "SpectralGaussian",
 ]
 
 
@@ -226,14 +227,14 @@ class SpectralModel(Model):
         return model
 
     def plot(
-        self,
-        energy_range,
-        ax=None,
-        energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
-        energy_power=0,
-        n_points=100,
-        **kwargs
+            self,
+            energy_range,
+            ax=None,
+            energy_unit="TeV",
+            flux_unit="cm-2 s-1 TeV-1",
+            energy_power=0,
+            n_points=100,
+            **kwargs
     ):
         """Plot spectral model curve.
 
@@ -287,14 +288,14 @@ class SpectralModel(Model):
         return ax
 
     def plot_error(
-        self,
-        energy_range,
-        ax=None,
-        energy_unit="TeV",
-        flux_unit="cm-2 s-1 TeV-1",
-        energy_power=0,
-        n_points=100,
-        **kwargs
+            self,
+            energy_range,
+            ax=None,
+            energy_unit="TeV",
+            flux_unit="cm-2 s-1 TeV-1",
+            energy_power=0,
+            n_points=100,
+            **kwargs
     ):
         """Plot spectral model error band.
 
@@ -419,7 +420,6 @@ class SpectralModel(Model):
 
         energies = []
         for val in np.atleast_1d(value):
-
             def f(x):
                 # scale by 1e12 to achieve better precision
                 energy = u.Quantity(x, eunit, copy=False)
@@ -467,7 +467,7 @@ class CompoundSpectralModel(SpectralModel):
         self.model2 = model2
         self.operator = operator
         parameters = (
-            self.model1.parameters.parameters + self.model2.parameters.parameters
+                self.model1.parameters.parameters + self.model2.parameters.parameters
         )
         super().__init__(parameters)
 
@@ -623,7 +623,7 @@ class PowerLaw(SpectralModel):
             return temp * np.log(emax / emin)
         else:
             prefactor = (
-                pars["amplitude"].quantity * pars["reference"].quantity ** 2 / val
+                    pars["amplitude"].quantity * pars["reference"].quantity ** 2 / val
             )
             upper = (emax / pars["reference"].quantity) ** val
             lower = (emin / pars["reference"].quantity) ** val
@@ -711,7 +711,7 @@ class PowerLaw2(SpectralModel):
     __slots__ = ["index", "amplitude", "emin", "emax"]
 
     def __init__(
-        self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
+            self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
     ):
         self.amplitude = Parameter("amplitude", amplitude)
         self.index = Parameter("index", index)
@@ -839,11 +839,11 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     __slots__ = ["index", "amplitude", "reference", "lambda_"]
 
     def __init__(
-        self,
-        index=1.5,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        lambda_="0.1 TeV-1",
+            self,
+            index=1.5,
+            amplitude="1e-12 cm-2 s-1 TeV-1",
+            reference="1 TeV",
+            lambda_="0.1 TeV-1",
     ):
         self.index = Parameter("index", index)
         self.amplitude = Parameter("amplitude", amplitude)
@@ -918,11 +918,11 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     __slots__ = ["index", "amplitude", "reference", "ecut"]
 
     def __init__(
-        self,
-        index=1.5,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        ecut="10 TeV",
+            self,
+            index=1.5,
+            amplitude="1e-12 cm-2 s-1 TeV-1",
+            reference="1 TeV",
+            ecut="10 TeV",
     ):
         self.index = Parameter("index", index)
         self.amplitude = Parameter("amplitude", amplitude)
@@ -981,12 +981,12 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "ecut"]
 
     def __init__(
-        self,
-        index_1=1.5,
-        index_2=2,
-        amplitude="1e-12 cm-2 s-1 TeV-1",
-        reference="1 TeV",
-        ecut="10 TeV",
+            self,
+            index_1=1.5,
+            index_2=2,
+            amplitude="1e-12 cm-2 s-1 TeV-1",
+            reference="1 TeV",
+            ecut="10 TeV",
     ):
         self.index_1 = Parameter("index_1", index_1)
         self.index_2 = Parameter("index_2", index_2)
@@ -1055,7 +1055,7 @@ class LogParabola(SpectralModel):
     __slots__ = ["amplitude", "reference", "alpha", "beta"]
 
     def __init__(
-        self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
+            self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
     ):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
@@ -1133,7 +1133,7 @@ class TableModel(SpectralModel):
     __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
 
     def __init__(
-        self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
+            self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
     ):
         self.norm = Parameter("norm", norm, unit="")
         self.energy = energy
@@ -1298,7 +1298,7 @@ class Absorption:
     """
 
     def __init__(
-        self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
+            self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
     ):
         self.data = data
 
@@ -1423,7 +1423,7 @@ class AbsorbedSpectralModel(SpectralModel):
     __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
 
     def __init__(
-        self, spectral_model, absorption, parameter, parameter_name="redshift"
+            self, spectral_model, absorption, parameter, parameter_name="redshift"
     ):
         self.spectral_model = spectral_model
         self.absorption = absorption
@@ -1581,3 +1581,99 @@ class NaimaModel(SpectralModel):
 
         unit = 1 / (energy.unit * u.cm ** 2 * u.s)
         return dnde.to(unit)
+
+
+class SpectralGaussian(SpectralModel):
+    r"""Gaussian spectral model.
+
+    .. math::
+
+        \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{\left( E-\bar{E} \right)^2 }{2 \sigma^2} }
+
+
+
+    Parameters
+    ----------
+    norm : `~astropy.units.Quantity`
+        :math:`N_0`
+    mean : `~astropy.units.Quantity`
+        :math:`\bar{E}`
+    sigma : `~astropy.units.Quantity`
+        :math:`\sigma`
+
+
+    Examples
+    --------
+    This is how to plot the default `Gaussian` spectral model:
+
+    .. code:: python
+
+        from astropy import units as u
+        from gammapy.spectrum.models import SpectralGaussian
+
+        gaussian = SpectralGaussian()
+        gaussian.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
+    """
+
+    def __init__(
+            self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2 * u.TeV
+    ):
+        self.norm = Parameter("norm", norm)
+        self.mean = Parameter("mean", mean)
+        self.sigma = Parameter("sigma", sigma)
+
+        super().__init__([self.norm, self.mean, self.sigma])
+
+    @staticmethod
+    def evaluate(energy, norm, mean, sigma):
+        return (
+                norm
+                / (sigma * np.sqrt(2 * np.pi))
+                * np.exp((energy - mean) ** 2 / (2 * sigma ** 2))
+        )
+
+    def integral(self, emin, emax, **kwargs):
+        r"""Integrate Gaussian analytically.
+
+        .. math::
+            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
+
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range
+        """
+        from scipy.special import erf
+
+        # kwargs are passed to this function but not used
+        # this is to get a consistent API with SpectralModel.integral()
+        pars = self.parameters
+        u_min = ((emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)).to_value('')
+        u_max = ((emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)).to_value('')
+
+        return pars["norm"].quantity / (2) * (erf(u_max) - erf(u_min))
+
+    def energy_flux(self, emin, emax):
+        r"""Compute energy flux in given energy range analytically.
+
+        .. math::
+            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
+            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
+             \right]_{E_{min}}^{E_{max}}
+
+
+        Parameters
+        ----------
+        emin, emax : `~astropy.units.Quantity`
+            Lower and upper bound of integration range.
+        """
+        from scipy.special import erf
+
+        pars = self.parameters
+        u_min = ((emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)).to_value('')
+        u_max = ((emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)).to_value('')
+        a = pars["norm"].quantity * pars["sigma"].quantity / np.sqrt(2 * np.pi)
+        b = pars["norm"].quantity * pars["mean"].quantity / 2
+        return a * (np.exp(-u_min ** 2) - np.exp(-u_max ** 2)) + b * (erf(u_max) - erf(u_min))
