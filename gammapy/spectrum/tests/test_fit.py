@@ -7,7 +7,7 @@ from ...utils.random import get_random_state
 from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable
 from ...spectrum import (
-    PHACountsSpectrum,
+    CountsSpectrum,
     models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
@@ -33,11 +33,10 @@ class TestFit:
         random_state = get_random_state(23)
         npred = self.source_model.integral(binning[:-1], binning[1:])
         source_counts = random_state.poisson(npred)
-        self.src = PHACountsSpectrum(
+        self.src = CountsSpectrum(
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=source_counts,
-            backscal=1,
         )
         # Currently it's necessary to specify a lifetime
         self.src.livetime = 1 * u.s
@@ -46,14 +45,13 @@ class TestFit:
 
         bkg_counts = random_state.poisson(npred_bkg)
         off_counts = random_state.poisson(npred_bkg * 1.0 / self.alpha)
-        self.bkg = PHACountsSpectrum(
+        self.bkg = CountsSpectrum(
             energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
         )
-        self.off = PHACountsSpectrum(
+        self.off = CountsSpectrum(
             energy_lo=binning[:-1],
             energy_hi=binning[1:],
             data=off_counts,
-            backscal=1.0 / self.alpha,
         )
 
     def test_cash(self):
@@ -78,7 +76,7 @@ class TestFit:
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
-        dataset = SpectrumDatasetOnOff(counts=self.src, mask_safe=np.logical_not(self.src.quality))
+        dataset = SpectrumDatasetOnOff(counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool))
         dataset.model = self.source_model
 
         assert np.sum(dataset.mask_safe) == self.nbins
@@ -88,7 +86,7 @@ class TestFit:
         assert_allclose(e_min.value, 0.1)
 
     def test_likelihood_profile(self):
-        dataset = SpectrumDataset(model=self.source_model, counts=self.src, mask_safe=np.logical_not(self.src.quality))
+        dataset = SpectrumDataset(model=self.source_model, counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool))
         fit = Fit([dataset])
         result = fit.run()
         true_idx = result.parameters["index"].value
@@ -136,12 +134,10 @@ class TestSpectralFit:
     def test_fit_range(self):
         # Fit range not restriced fit range should be the thresholds
         obs = self.obs_list[0]
-        desired = obs.counts.lo_threshold
-
         actual = obs.energy_range[0]
 
         assert actual.unit == "keV"
-        assert_allclose(actual.value, desired.value)
+        assert_allclose(actual.value, 8.912509e+08)
 
     def test_no_edisp(self):
         dataset = self.obs_list[0]
@@ -190,6 +186,7 @@ class TestSpectralFit:
 
         for obs in self.obs_list:
             obs.to_ogip_files(str(tmpdir), use_sherpa=True)
+
         filename = tmpdir / "pha_obs23523.fits"
         sau.load_pha(str(filename))
         sau.set_stat("wstat")

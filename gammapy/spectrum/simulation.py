@@ -3,7 +3,7 @@ from collections import OrderedDict
 import logging
 from ..utils.random import get_random_state
 from .utils import SpectrumEvaluator
-from .core import PHACountsSpectrum
+from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["SpectrumSimulation"]
@@ -143,18 +143,24 @@ class SpectrumSimulation:
         self.simulate_source_counts(random_state)
         if self.background_model is not None:
             self.simulate_background_counts(random_state)
+            backscale_off = 1 / self.alpha
+        else:
+            backscale_off = None
+
         obs = SpectrumDatasetOnOff(
             counts=self.on_vector,
             counts_off=self.off_vector,
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
+            backscale=1,
+            backscale_off=backscale_off,
+            obs_id=obs_id
         )
-        obs.counts.obs_id = obs_id
         self.obs = obs
 
     def simulate_source_counts(self, rand):
-        """Simulate source `~gammapy.spectrum.PHACountsSpectrum`.
+        """Simulate source `~gammapy.spectrum.CountsSpectrum`.
 
         Source counts are added to the on vector.
 
@@ -165,18 +171,16 @@ class SpectrumSimulation:
         """
         on_counts = rand.poisson(self.npred_source.data)
 
-        on_vector = PHACountsSpectrum(
+        on_vector = CountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             data=on_counts,
-            backscal=1,
-            meta=self._get_meta(),
         )
         on_vector.livetime = self.livetime
         self.on_vector = on_vector
 
     def simulate_background_counts(self, rand):
-        """Simulate background `~gammapy.spectrum.PHACountsSpectrum`.
+        """Simulate background `~gammapy.spectrum.CountsSpectrum`.
 
         Background counts are added to the on vector.
         Furthermore background counts divided by alpha are added to the off vector.
@@ -196,16 +200,10 @@ class SpectrumSimulation:
         self.on_vector.data += bkg_counts
 
         # Create off vector
-        off_vector = PHACountsSpectrum(
+        off_vector = CountsSpectrum(
             energy_lo=self.e_reco[:-1],
             energy_hi=self.e_reco[1:],
             data=off_counts,
-            backscal=1.0 / self.alpha,
-            is_bkg=True,
-            meta=self._get_meta(),
         )
         off_vector.livetime = self.livetime
         self.off_vector = off_vector
-
-    def _get_meta(self):
-        return OrderedDict([("CREATOR", self.__class__.__name__)])

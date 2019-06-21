@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from numpy.testing import assert_allclose
-import numpy as np
 import astropy.units as u
 from ...utils.testing import (
     requires_dependency,
@@ -9,7 +7,7 @@ from ...utils.testing import (
     assert_quantity_allclose,
 )
 from ...utils.energy import energy_logspace
-from .. import CountsSpectrum, PHACountsSpectrum
+from .. import CountsSpectrum
 
 
 class TestCountsSpectrum:
@@ -52,53 +50,3 @@ class TestCountsSpectrum:
         actual = rebinned_spec.data[idx]
         desired = [0, 7, 20]
         assert (actual == desired).all()
-
-
-class TestPHACountsSpectrum:
-    def setup(self):
-        counts = [1, 2, 5, 6, 1, 7, 23, 2]
-        self.binning = energy_logspace(1, 10, 9, "TeV")
-        quality = [1, 1, 1, 0, 0, 1, 1, 1]
-        self.spec = PHACountsSpectrum(
-            data=counts,
-            energy_lo=self.binning[:-1],
-            energy_hi=self.binning[1:],
-            quality=quality,
-        )
-        self.spec.backscal = 0.3
-        self.spec.obs_id = 42
-        self.spec.livetime = 3 * u.h
-
-
-    def test_basic(self):
-        assert "PHACountsSpectrum" in str(self.spec)
-        assert_quantity_allclose(self.spec.lo_threshold, self.binning[3])
-        assert_quantity_allclose(self.spec.hi_threshold, self.binning[5])
-
-    def test_thresholds(self):
-        self.spec.quality = np.zeros(self.spec.energy.nbin, dtype=int)
-        self.spec.lo_threshold = 1.5 * u.TeV
-        self.spec.hi_threshold = 4.5 * u.TeV
-        assert (self.spec.quality == [1, 1, 0, 0, 0, 1, 1, 1]).all()
-        assert_quantity_allclose(self.spec.lo_threshold, 1.778279410038922 * u.TeV)
-        assert_quantity_allclose(self.spec.hi_threshold, 4.216965034285822 * u.TeV)
-
-    def test_io(self, tmpdir):
-        filename = tmpdir / "test2.fits"
-        self.spec.write(filename)
-        spec2 = PHACountsSpectrum.read(filename)
-        assert_quantity_allclose(
-            spec2.energy.edges * spec2.energy.unit,
-            self.spec.energy.edges * self.spec.energy.unit,
-        )
-
-    def test_backscal_array(self):
-        self.spec.backscal = np.arange(self.spec.energy.nbin)
-        table = self.spec.to_table()
-        assert table["BACKSCAL"][2] == 2
-
-    def test_rebin(self):
-        spec_rebinned = self.spec.rebin(2)
-        assert (spec_rebinned.quality == [1, 0, 0, 1]).all()
-        assert_quantity_allclose(spec_rebinned.hi_threshold, 5.623413251903491 * u.TeV)
-        assert_quantity_allclose(spec_rebinned.lo_threshold, 1.778279410038922 * u.TeV)
