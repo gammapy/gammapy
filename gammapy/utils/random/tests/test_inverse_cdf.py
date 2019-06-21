@@ -122,7 +122,6 @@ def test_map_sampling():
     events=sampler.sample_events()
 
     position = SkyCoord(events['lon_true'], events['lat_true'], frame='galactic', unit='deg')
-    npred.geom.center_skydir.separation(c)
 
     assert_allclose(ntot, len(events), 0.001)
     assert max(events['TIME'])<tmax
