@@ -17,7 +17,7 @@ from ..models import (
     Absorption,
     ConstantModel,
     NaimaModel,
-    Gaussian,
+    SpectralGaussian,
 )
 
 
@@ -152,12 +152,14 @@ TEST_MODELS = [
         e_peak=np.nan * u.TeV,
     ),
     dict(
-        name="Gaussian",
-        model=Gaussian(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=3 * u.TeV),
-        val_at_2TeV=u.Quantity(0.5319230405352436, "cm-2 s-1 TeV-1"),
-        integral_1_10TeV=u.Quantity(2.5069131170025862, "cm-2 s-1"),
+        name="SpectralGaussian",
+        model=SpectralGaussian(
+            norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
+        ),
+        val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(3.9999988533937123, "cm-2 s-1"),
         integral_infinity=u.Quantity(4, "cm-2 s-1"),
-        eflux_1_10TeV=u.Quantity(9.40567313403552, "TeV cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(7.999998896163037, "TeV cm-2 s-1"),
     ),
 ]
 
@@ -240,6 +242,7 @@ except ImportError:
 
 
 @requires_dependency("uncertainties")
+@requires_dependency("scipy")
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=[_["name"] for _ in TEST_MODELS])
 def test_models(spectrum):
     model = spectrum["model"]
@@ -261,14 +264,14 @@ def test_models(spectrum):
     # inverse for ConstantModel is irrelevant.
     # inverse for Gaussian has a degeneracy
     if not (
-            isinstance(model, ConstantModel)
-            or spectrum["name"] == "compound6"
-            or spectrum["name"] == "Gaussian"
+        isinstance(model, ConstantModel)
+        or spectrum["name"] == "compound6"
+        or spectrum["name"] == "SpectralGaussian"
     ):
         assert_quantity_allclose(model.inverse(value), 2 * u.TeV, rtol=0.01)
 
     if "integral_infinity" in spectrum:
-        emin = -10000 * u.TeV
+        emin = 0 * u.TeV
         emax = 10000 * u.TeV
         assert_quantity_allclose(
             model.integral(emin=emin, emax=emax), spectrum["integral_infinity"]
