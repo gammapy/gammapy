@@ -388,7 +388,7 @@ class EventListBase:
         region : `~regions.SkyRegion` or str
             Sky region or string defining a sky region
         wcs : `~astropy.wcs.WCS`
-            The world coordinate system transformation to assume
+            World coordinate system transformation
 
         Returns
         -------
@@ -406,18 +406,15 @@ class EventListBase:
         region : `~regions.SkyRegion` or str
             Sky region or string defining a sky region
         wcs : `~astropy.wcs.WCS`
-            The world coordinate system transformation to assume
+            World coordinate system transformation
 
         Returns
         -------
-        index_array : `numpy.ndarray`
-            Index array of selected events
+        mask : `numpy.ndarray`
+            Boolean mask which rows contain events in the region
         """
         region = make_region(region)
-        position = self.radec
-        mask = np.where(region.contains(position, wcs))[0]
-
-        return mask
+        return region.contains(self.radec, wcs)
 
     def select_parameter(self, parameter, band):
         """Select events with respect to a specified parameter.
