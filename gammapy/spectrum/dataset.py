@@ -490,7 +490,9 @@ class SpectrumDatasetOnOff(Dataset):
             counts_off_table.meta = meta
             name = counts_off_table.meta["name"]
             hdu = fits.BinTableHDU(counts_off_table, name=name)
-            hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)])
+            hdulist = fits.HDUList(
+                [fits.PrimaryHDU(), hdu, self._ebounds_hdu(use_sherpa)]
+            )
             hdulist.writeto(str(outdir / bkgfile), overwrite=overwrite)
 
         if self.edisp is not None:
@@ -545,9 +547,7 @@ class SpectrumDatasetOnOff(Dataset):
             data = _read_ogip_hdulist(hdulist)
 
         counts = CountsSpectrum(
-            energy_hi=data["energy_hi"],
-            energy_lo=data["energy_lo"],
-            data=data["data"]
+            energy_hi=data["energy_hi"], energy_lo=data["energy_lo"], data=data["data"]
         )
 
         phafile = filename.name
@@ -568,7 +568,7 @@ class SpectrumDatasetOnOff(Dataset):
                 counts_off = CountsSpectrum(
                     energy_hi=data_bkg["energy_hi"],
                     energy_lo=data_bkg["energy_lo"],
-                    data=data_bkg["data"]
+                    data=data_bkg["data"],
                 )
 
                 backscale_off = data_bkg["backscal"]
@@ -590,7 +590,7 @@ class SpectrumDatasetOnOff(Dataset):
             mask_safe=mask_safe,
             backscale=data["backscal"],
             backscale_off=backscale_off,
-            obs_id=data["obs_id"]
+            obs_id=data["obs_id"],
         )
 
     # TODO : do we keep SpectrumStats or do we adapt this part of code?
@@ -603,7 +603,11 @@ class SpectrumDatasetOnOff(Dataset):
     @property
     def total_stats_safe_range(self):
         """Total statistics in safe energy range (`~gammapy.spectrum.SpectrumStats`)."""
-        mask = self.mask_safe if self.mask_safe is not None else np.ones(self.counts.energy.nbin)
+        mask = (
+            self.mask_safe
+            if self.mask_safe is not None
+            else np.ones(self.counts.energy.nbin)
+        )
         safe_bins = np.where(np.array(mask) == 1)[0]
         return self.stats_in_range(safe_bins[0], safe_bins[-1])
 
@@ -682,7 +686,6 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
         obs_id=counts_table.meta["OBS_ID"],
         is_bkg=False,
     )
-
 
 
 class SpectrumDatasetOnOffStacker:
@@ -793,9 +796,7 @@ class SpectrumDatasetOnOffStacker:
 
         self.stacked_quality = stacked_quality
         return CountsSpectrum(
-            data=stacked_data,
-            energy_lo=energy.edges[:-1],
-            energy_hi=energy.edges[1:],
+            data=stacked_data, energy_lo=energy.edges[:-1], energy_hi=energy.edges[1:]
         )
 
     def stack_backscal(self):
@@ -807,12 +808,16 @@ class SpectrumDatasetOnOffStacker:
         alpha_sum = 0.0
 
         for obs in self.obs_list:
-            bkscal_off[obs.mask_safe] += (obs.alpha * obs.counts_off.data)[obs.mask_safe]
+            bkscal_off[obs.mask_safe] += (obs.alpha * obs.counts_off.data)[
+                obs.mask_safe
+            ]
             alpha_sum += (obs.alpha * obs.counts_off.data)[obs.mask_safe].sum()
 
         with np.errstate(divide="ignore", invalid="ignore"):
             stacked_bkscal_off = self.stacked_off_vector.data / bkscal_off
-            alpha_average = (alpha_sum / self.stacked_off_vector.data[obs.mask_safe].sum())
+            alpha_average = (
+                alpha_sum / self.stacked_off_vector.data[obs.mask_safe].sum()
+            )
 
         # there should be no nan values in backscal_on or backscal_off
         # this leads to problems when fitting the data
@@ -875,5 +880,5 @@ class SpectrumDatasetOnOffStacker:
             mask_safe=np.logical_not(self.stacked_quality),
             backscale=self.stacked_on_vector.backscal,
             backscale_off=self.stacked_off_vector.backscal,
-            obs_id=[obs.obs_id for obs in self.obs_list]
+            obs_id=[obs.obs_id for obs in self.obs_list],
         )

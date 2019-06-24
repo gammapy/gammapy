@@ -138,7 +138,7 @@ class TestEventSelection:
         center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
         on_region1 = CircleSkyRegion(center1, radius=1.0 * u.deg)
         center2 = SkyCoord(0.0, 10.0, frame="icrs", unit="deg")
-        on_region2 = RectangleSkyRegion(center2, width=0.5 * u.deg, height=0.3*u.deg)
+        on_region2 = RectangleSkyRegion(center2, width=0.5 * u.deg, height=0.3 * u.deg)
         self.on_regions = [on_region1, on_region2]
 
     def test_region_select(self):
@@ -150,10 +150,9 @@ class TestEventSelection:
         new_list = self.evt_list.select_region(union_region, geom.wcs)
         assert len(new_list.table) == 3
 
-        region_string = 'fk5;box(0,10, 0.25, 0.15)'
+        region_string = "fk5;box(0,10, 0.25, 0.15)"
         new_list = self.evt_list.select_region(region_string, geom.wcs)
         assert len(new_list.table) == 1
-
 
     def test_map_select(self):
         axis = MapAxis.from_edges((0.5, 2.0), unit="TeV", name="ENERGY")

@@ -155,7 +155,7 @@ class SpectrumSimulation:
             livetime=self.livetime,
             backscale=1,
             backscale_off=backscale_off,
-            obs_id=obs_id
+            obs_id=obs_id,
         )
         self.obs = obs
 
@@ -172,9 +172,7 @@ class SpectrumSimulation:
         on_counts = rand.poisson(self.npred_source.data)
 
         on_vector = CountsSpectrum(
-            energy_lo=self.e_reco[:-1],
-            energy_hi=self.e_reco[1:],
-            data=on_counts,
+            energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:], data=on_counts
         )
         on_vector.livetime = self.livetime
         self.on_vector = on_vector
@@ -201,9 +199,7 @@ class SpectrumSimulation:
 
         # Create off vector
         off_vector = CountsSpectrum(
-            energy_lo=self.e_reco[:-1],
-            energy_hi=self.e_reco[1:],
-            data=off_counts,
+            energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:], data=off_counts
         )
         off_vector.livetime = self.livetime
         self.off_vector = off_vector

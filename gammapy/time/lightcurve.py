@@ -824,9 +824,7 @@ class LightCurveEstimator:
                 edisp=spec.edisp,
                 model=spectral_model,
             )
-            counts_predicted_excess = counts_predictor.compute_npred().data[
-                e_idx[:-1]
-            ]
+            counts_predicted_excess = counts_predictor.compute_npred().data[e_idx[:-1]]
 
             obs_predicted_excess = np.sum(counts_predicted_excess)
 

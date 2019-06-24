@@ -138,8 +138,7 @@ class TestSpectrumExtraction:
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.counts.data,
-            extraction.spectrum_observations[0].counts.data,
+            testobs.counts.data, extraction.spectrum_observations[0].counts.data
         )
         assert_allclose(
             testobs.counts.energy.center,

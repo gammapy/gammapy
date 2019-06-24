@@ -33,6 +33,7 @@ def test_make_region():
     with pytest.raises(TypeError):
         make_pixel_region([reg])
 
+
 def test_make_pixel_region():
     wcs = WcsGeom.create().wcs
 

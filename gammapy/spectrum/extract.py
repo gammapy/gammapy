@@ -133,7 +133,7 @@ class SpectrumExtraction:
             livetime=observation.observation_live_time_duration,
             backscale=1,
             backscale_off=bkg.a_off,
-            obs_id=observation.obs_id
+            obs_id=observation.obs_id,
         )
 
         if self.use_recommended_erange:
@@ -166,8 +166,7 @@ class SpectrumExtraction:
         log.info("Offset : {}\n".format(offset))
 
         self._on_vector = CountsSpectrum(
-            energy_lo=self.e_reco[:-1],
-            energy_hi=self.e_reco[1:],
+            energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
         )
 
         self._off_vector = self._on_vector.copy()

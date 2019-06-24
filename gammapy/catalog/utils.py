@@ -3,11 +3,8 @@
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
-__all__ = [
-    "skycoord_from_table",
-    "select_sky_box",
-    "select_sky_circle",
-]
+__all__ = ["skycoord_from_table", "select_sky_box", "select_sky_circle"]
+
 
 def skycoord_from_table(table):
     """Make `~astropy.coordinates.SkyCoord` from lon, lat columns in `~astropy.table.Table`.

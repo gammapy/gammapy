@@ -23,7 +23,9 @@ def sens():
 
     bkg_array = np.ones(4)
     bkg_array[-1] = 1e-3
-    bkg = CountsSpectrum(energy_lo=ereco[:-1], energy_hi=ereco[1:], data=bkg_array, unit="s-1")
+    bkg = CountsSpectrum(
+        energy_lo=ereco[:-1], energy_hi=ereco[1:], data=bkg_array, unit="s-1"
+    )
 
     sens = SensitivityEstimator(
         arf=arf, rmf=rmf, bkg=bkg, livetime=1 * u.h, index=2, gamma_min=20, alpha=0.2

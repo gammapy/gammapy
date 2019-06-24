@@ -101,7 +101,6 @@ class NDDataArray:
         """Dimension (number of axes)"""
         return len(self.axes)
 
-
     def evaluate(self, method=None, **kwargs):
         """Evaluate NDData Array
 

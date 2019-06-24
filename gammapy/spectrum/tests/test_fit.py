@@ -34,9 +34,7 @@ class TestFit:
         npred = self.source_model.integral(binning[:-1], binning[1:])
         source_counts = random_state.poisson(npred)
         self.src = CountsSpectrum(
-            energy_lo=binning[:-1],
-            energy_hi=binning[1:],
-            data=source_counts,
+            energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
         )
         # Currently it's necessary to specify a lifetime
         self.src.livetime = 1 * u.s
@@ -49,9 +47,7 @@ class TestFit:
             energy_lo=binning[:-1], energy_hi=binning[1:], data=bkg_counts
         )
         self.off = CountsSpectrum(
-            energy_lo=binning[:-1],
-            energy_hi=binning[1:],
-            data=off_counts,
+            energy_lo=binning[:-1], energy_hi=binning[1:], data=off_counts
         )
 
     def test_cash(self):
@@ -76,7 +72,9 @@ class TestFit:
 
     def test_fit_range(self):
         """Test fit range without complication of thresholds"""
-        dataset = SpectrumDatasetOnOff(counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool))
+        dataset = SpectrumDatasetOnOff(
+            counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool)
+        )
         dataset.model = self.source_model
 
         assert np.sum(dataset.mask_safe) == self.nbins
@@ -86,7 +84,11 @@ class TestFit:
         assert_allclose(e_min.value, 0.1)
 
     def test_likelihood_profile(self):
-        dataset = SpectrumDataset(model=self.source_model, counts=self.src, mask_safe=np.ones(self.src.energy.nbin, dtype=bool))
+        dataset = SpectrumDataset(
+            model=self.source_model,
+            counts=self.src,
+            mask_safe=np.ones(self.src.energy.nbin, dtype=bool),
+        )
         fit = Fit([dataset])
         result = fit.run()
         true_idx = result.parameters["index"].value
@@ -137,7 +139,7 @@ class TestSpectralFit:
         actual = obs.energy_range[0]
 
         assert actual.unit == "keV"
-        assert_allclose(actual.value, 8.912509e+08)
+        assert_allclose(actual.value, 8.912509e08)
 
     def test_no_edisp(self):
         dataset = self.obs_list[0]
