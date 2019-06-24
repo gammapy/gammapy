@@ -146,8 +146,14 @@ class TestEventSelection:
         new_list = self.evt_list.select_region(self.on_regions[0], geom.wcs)
         assert len(new_list.table) == 2
 
-        new_list = self.evt_list.select_region(self.on_regions, geom.wcs)
+        union_region = self.on_regions[0].union(self.on_regions[1])
+        new_list = self.evt_list.select_region(union_region, geom.wcs)
         assert len(new_list.table) == 3
+
+        region_string = 'fk5;box(0,10, 0.25, 0.15)'
+        new_list = self.evt_list.select_region(region_string, geom.wcs)
+        assert len(new_list.table) == 1
+
 
     def test_map_select(self):
         axis = MapAxis.from_edges((0.5, 2.0), unit="TeV", name="ENERGY")
