@@ -381,14 +381,14 @@ class EventListBase:
         return mask
 
     def select_region(self, region, wcs):
-        """Select events in circular regions.
+        """Select events in given region.
 
         Parameters
         ----------
         region : `~regions.SkyRegion` or str
             Sky region or string defining a sky region
         wcs : `~astropy.wcs.WCS`
-            the world coordinate system transformation to assume
+            The world coordinate system transformation to assume
 
         Returns
         -------
@@ -399,14 +399,14 @@ class EventListBase:
         return self.select_row_subset(mask)
 
     def filter_region(self, region, wcs):
-        """Create selection mask for event in given circular regions.
+        """Create selection mask for event in given region.
 
         Parameters
         ----------
         region : `~regions.SkyRegion` or str
             Sky region or string defining a sky region
         wcs : `~astropy.wcs.WCS`
-            the world coordinate system transformation to assume
+            The world coordinate system transformation to assume
 
         Returns
         -------
