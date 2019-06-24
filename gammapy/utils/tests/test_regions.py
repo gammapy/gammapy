@@ -30,6 +30,8 @@ def test_make_region():
     reg2 = make_region(reg)
     assert reg is reg2
 
+    with pytest.raises(TypeError):
+        make_pixel_region([reg])
 
 def test_make_pixel_region():
     wcs = WcsGeom.create().wcs
