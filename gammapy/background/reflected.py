@@ -309,11 +309,19 @@ class ReflectedRegionsBackgroundEstimator:
         self.finder.center = obs.pointing_radec
 
         self.finder.run()
-        on_events = obs.events.select_map_mask(self.finder.on_reference_map)
-        off_region = self.finder.reflected_regions
-        off_events = obs.events.select_map_mask(self.finder.off_reference_map)
+        wcs = self.finder.reference_map.geom.wcs
+        on_events = obs.events.select_region(self.on_region, wcs)
         a_on = 1
+
+        off_region = self.finder.reflected_regions
         a_off = len(off_region)
+        if a_off == 0:
+            off_events = None
+        else:
+            off_regions = off_region[0]
+            for reg in off_region[1:]:
+                off_regions = off_regions.union(reg)
+            off_events = obs.events.select_region(off_regions, wcs)
 
         log.info(
                 "Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id)
