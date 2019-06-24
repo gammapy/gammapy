@@ -4,7 +4,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...data.event_list import EventListBase, EventList, EventListLAT
@@ -135,8 +135,25 @@ class TestEventSelection:
         evt_table = Table([ra, dec, energy], names=["RA", "DEC", "ENERGY"])
         self.evt_list = EventListBase(evt_table)
 
-        center = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
-        self.on_region = CircleSkyRegion(center, radius=1.0 * u.deg)
+        center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
+        on_region1 = CircleSkyRegion(center1, radius=1.0 * u.deg)
+        center2 = SkyCoord(0.0, 10.0, frame="icrs", unit="deg")
+        on_region2 = RectangleSkyRegion(center2, width=0.5 * u.deg, height=0.3*u.deg)
+        self.on_regions = [on_region1, on_region2]
+
+    def test_region_select(self):
+        geom = WcsGeom.create(skydir=(0, 0), binsz=0.2, width=4.0 * u.deg, proj="TAN")
+        new_list = self.evt_list.select_region(self.on_regions[0], geom.wcs)
+        assert len(new_list.table) == 2
+
+        union_region = self.on_regions[0].union(self.on_regions[1])
+        new_list = self.evt_list.select_region(union_region, geom.wcs)
+        assert len(new_list.table) == 3
+
+        region_string = 'fk5;box(0,10, 0.25, 0.15)'
+        new_list = self.evt_list.select_region(region_string, geom.wcs)
+        assert len(new_list.table) == 1
+
 
     def test_map_select(self):
         axis = MapAxis.from_edges((0.5, 2.0), unit="TeV", name="ENERGY")
@@ -144,9 +161,7 @@ class TestEventSelection:
             skydir=(0, 0), binsz=0.2, width=4.0 * u.deg, proj="TAN", axes=[axis]
         )
 
-        mask_data = geom.region_mask(regions=[self.on_region], inside=True).astype(
-            float
-        )
+        mask_data = geom.region_mask(regions=[self.on_regions[0]], inside=True)
         mask = Map.from_geom(geom, data=mask_data)
         new_list = self.evt_list.select_map_mask(mask)
         assert len(new_list.table) == 2

@@ -16,7 +16,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
-from regions import DS9Parser, SkyRegion, PixelRegion
+from regions import DS9Parser, SkyRegion, PixelRegion, Region
 
 __all__ = ["make_region", "make_pixel_region"]
 
@@ -61,8 +61,10 @@ def make_region(region):
         # It could be extended to cover more things,
         # like e.g. compound regions, exclusion regions, ....
         return DS9Parser(region).shapes[0].to_region()
-    else:
+    elif isinstance(region, Region):
         return region
+    else:
+        raise TypeError("Invalid type: {!r}".format(region))
 
 
 def make_pixel_region(region, wcs=None):
