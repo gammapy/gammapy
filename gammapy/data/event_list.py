@@ -12,6 +12,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.testing import Checker
+from ..utils.regions import make_region
 
 __all__ = ["EventListBase", "EventList", "EventListLAT"]
 
@@ -384,16 +385,16 @@ class EventListBase:
 
         Parameters
         ----------
-        region : `~regions.SkyRegion` or list of `~regions.SkyRegion`
-            (List of) sky region(s)
+        region : `~regions.SkyRegion` or str
+            Sky region or string defining a sky region
+        wcs : `~astropy.wcs.WCS`
+            the world coordinate system transformation to assume
 
         Returns
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-        if not isinstance(region, list):
-            region = list([region])
         mask = self.filter_region(region, wcs)
         return self.select_row_subset(mask)
 
@@ -402,19 +403,19 @@ class EventListBase:
 
         Parameters
         ----------
-        region : list of `~regions.SkyRegion`
-            List of sky regions
+        region : `~regions.SkyRegion` or str
+            Sky region or string defining a sky region
+        wcs : `~astropy.wcs.WCS`
+            the world coordinate system transformation to assume
 
         Returns
         -------
         index_array : `numpy.ndarray`
             Index array of selected events
         """
+        region = make_region(region)
         position = self.radec
-        mask = np.array([], dtype=int)
-        for reg in region:
-            temp = np.where(reg.contains(position, wcs))[0]
-            mask = np.union1d(mask, temp)
+        mask = np.where(region.contains(position, wcs))[0]
 
         return mask
 
