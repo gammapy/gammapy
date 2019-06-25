@@ -225,10 +225,6 @@ class ReflectedRegionsFinder:
 
         self.reflected_regions = reflected_regions
 
-        # Make the OFF reference map
-        mask = self.reference_map.geom.region_mask(self.reflected_regions, inside=True)
-        self.off_reference_map = WcsNDMap(geom=self.reference_map.geom, data=mask)
-
     def plot(self, fig=None, ax=None):
         """Standard debug plot.
 
@@ -315,8 +311,9 @@ class ReflectedRegionsBackgroundEstimator:
 
         off_region = self.finder.reflected_regions
         a_off = len(off_region)
+
         if a_off == 0:
-            off_events = None
+            off_events = obs.events.select_row_subset([])
         else:
             off_regions = off_region[0]
             for reg in off_region[1:]:
@@ -360,7 +357,7 @@ class ReflectedRegionsBackgroundEstimator:
         else:
             coordsys = "GAL"
 
-        pnt_radec = SkyCoord([_.pointing_radec for _ in self.observations])
+        pnt_radec = SkyCoord([_.pointing_radec for _ in self.observations.list])
         width = np.max(5 * self.on_region.center.separation(pnt_radec).to_value("deg"))
 
         geom = WcsGeom.create(
