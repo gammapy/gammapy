@@ -96,20 +96,25 @@ class MapEventSampler:
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
     lc : `~gammapy.time.models.LightCurveTableModel`
-            Input light-curve of the source, given with columns labelled
+            Input light-curve model of the source, given with columns labelled
             as "time" (in seconds) and "normalization" (arbitrary units): the bin time
             HAS to be costant.
+    phase_lc : `~gammapy.time.models.PhaseCurveTableModel`
+            Input phase-curve model of the source, given with columns labelled
+            as "Phase" and "normalization" (arbitrary units): the bin time
+            HAS to be costant.
     tmin : float
-            Start time of the sampling, defined in seconds.
+            Start time of the sampling, given in seconds.
     tmax : float
-            Stop time of the sampling, defined in seconds.
+            Stop time of the sampling, given in seconds.
     """
 
     def __init__(self, npred_map, random_state=0,
-                  lc = None, tmin=0, tmax=3600):
+                  lc = None, phase_lc=None, tmin=0, tmax=3600):
         self.random_state = get_random_state(random_state)
         self.npred_map = npred_map
         self.lc = lc
+        self.phase_lc = phase_lc
         self.tmin=tmin
         self.tmax=tmax
     
@@ -156,6 +161,13 @@ class MapEventSampler:
             n_tbin = self.tmax - self.tmin
             t = np.linspace(self.tmin,self.tmax,n_tbin)
             normalization = self.lc._interpolator(t,ext=3)
+            time_sampler = InverseCDFSampler(normalization, random_state=self.random_state)
+            ToA = time_sampler.sample(n_events)[0]
+
+        if (self.phase_lc is not None) and (self.tmax>0):
+            n_tbin = self.tmax - self.tmin
+            t = np.linspace(self.tmin,self.tmax,n_tbin)
+            normalization = self.phase_lc.evaluate_norm_at_time(t)
             time_sampler = InverseCDFSampler(normalization, random_state=self.random_state)
             ToA = time_sampler.sample(n_events)[0]
 
