@@ -202,10 +202,6 @@ class ReflectedRegionsFinder:
         # Maximum possible angle before regions is reached again
         self._max_angle = Angle("360deg") - self._min_ang - self.min_distance_input
 
-        # TODO: remove or change to a proper error
-        if self._min_ang < 0:
-            log.warn("ISSUE self._min_ang=", self._min_ang)
-
     def find_regions(self):
         """Find reflected regions."""
         curr_angle = self._min_ang + self.min_distance_input
