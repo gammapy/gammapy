@@ -207,6 +207,9 @@ columns to the event table: `EVENT_ID` and `MC_ID`. Where `EVENT_ID` is a unique
 number to identify the event, while `MC_ID` as unique ID (number or string) to
 identify the model component, the event was sampled from.
 
+The `MapDatasetSampler` should also fill the mandatory header information
+for event list files decribed on `gamma-astro-data-formats`_.
+
 
 Simulating multiple observations
 ================================
@@ -238,17 +241,14 @@ ordered by priority:
 1. Rename `gammapy.utils.distributions' to `gammapy.utils.random' and move the 
    current `gammapy.utils.random' there (v0.12).
 2. Remove the currently unused `GeneralRandomArray` class (v0.12)
-3. Implement the InverseCDFSampler in `gammapy.utils.random' in `inverse_cdf.py' 
+3. Implement the InverseCDFSampler in `gammapy.utils.random' in `inverse_cdf.py'
    and add tests.
-4. Remove the current `GeneralRandom` class and adapt `gammapy.astro.population.simulate' 
+4. Remove the current `GeneralRandom` class and adapt `gammapy.astro.population.simulate'
    accordingly.
-5. Implement `MapEventSampler` class into `gammapy.utils.random' and name it
-   `map_evesampler.py' and include some tests. (v0.13)
-6. Add tutorial on how to use the `MapEventSampler' applying it to both sources and background.
-7. Implement `IRFEventDistibutor' into `gammapy.utils.random' with the name `event_distributor.py'
-   and add some tests. (v0.13)
-8. Implement `MapDatasetEventSampler' into `gammapy.utils.random' and add some tests. (v0.13 or v0.14)
-9. Add tutorial for event simulations of different kinds of sources. (v0.13 or v0.14)
+5. Implement the `MapEventSampler` class and corresponding tests in `gammapy.utils.random' (v0.13)
+6. Implement `IRFEventDistibutor' class and corresponding tests in `gammapy.utils.random'  (v0.13)
+7. Implement `MapDatasetEventSampler' class and test in `gammapy.utils.random' (v0.14)
+8. Add tutorial for event simulations of different kinds of sources. (v0.14)
 
 
 Decision
@@ -263,4 +263,5 @@ Decision
 .. _spec: https://docs.gammapy.org/0.11/api/gammapy.spectrum.SpectrumSimulation.html
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
 .. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
+.. _gamma-astro-data-formats: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
 
