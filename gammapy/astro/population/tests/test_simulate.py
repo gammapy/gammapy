@@ -148,7 +148,7 @@ def test_add_pwn_parameters():
     assert len(table.colnames) == 27
 
     assert table["r_out_PWN"].unit == "pc"
-    assert_allclose(d["r_out_PWN"], 1.378224, atol=1e-5)
+    assert_allclose(d["r_out_PWN"], 1.378224, atol=1e-4)
 
 
 def test_add_observed_parameters():
@@ -191,6 +191,6 @@ def test_chain_all():
     assert len(table.colnames) == 34
 
     assert table["r_out_PWN"].unit == "pc"
-    assert_allclose(d["r_out_PWN"], 1.378224, atol=1e-5)
+    assert_allclose(d["r_out_PWN"], 1.378224, atol=1e-4)
     assert table["RA"].unit == "deg"
     assert_allclose(d["RA"], 244.347149, atol=1e-5)
