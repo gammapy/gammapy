@@ -73,8 +73,8 @@ class TestSpectrumExtraction:
             (
                 dict(containment_correction=False),
                 dict(
-                    n_on=193,
-                    sigma=21.22,
+                    n_on=192,
+                    sigma=21.1404,
                     aeff=580254.9 * u.m ** 2,
                     edisp=0.236176,
                     containment=1,
@@ -83,8 +83,8 @@ class TestSpectrumExtraction:
             (
                 dict(containment_correction=True),
                 dict(
-                    n_on=193,
-                    sigma=21.22,
+                    n_on=192,
+                    sigma=21.1404,
                     aeff=361924.746081 * u.m ** 2,
                     edisp=0.236176,
                     containment=0.643835,
