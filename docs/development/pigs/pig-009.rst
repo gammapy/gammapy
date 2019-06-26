@@ -2,9 +2,9 @@
 
 .. _pig-009:
 
-***********************
-PIG 9 - Event Sampler
-***********************
+**********************
+PIG 9 - Event Sampling
+**********************
 
 * Author: Fabio Pintore, Andrea Giuliani, Axel Donath
 * Created: May 03, 2019
@@ -13,54 +13,67 @@ PIG 9 - Event Sampler
 * Discussion:  
 
 Abstract
-============
+========
 
-An event sampler for gamma events is of high importance in exploiting the potential
-of the future Cherenkov Telescope Array (CTA). It will allows us to simulate sources 
-with different spectral and morphological properties and e.g. investigate the best
-configurations for its observation and the expected performance of CTA on this
-data. An event sampler is also listed as a requirement for the future CTA Science 
-Tools. For this reason, we propose to implement a framework for event simulation in 
-Gammapy. Based on finely binned input maps, containing the predicted number of counts
-for a given source with a defined morphological and spectral model, it samples events 
-using the inverse cumulative distribution (inverse CDF).
+An event sampler for gamma events is an important part of the science tools
+of the future Cherenkov Telescope Array (CTA) observatory. It will allow users
+to simulate sources with different spectral, morphological and temporal properties
+and predict the performance of CTA on the simulated data e.g. to support observation
+proposals or study the sensitivity of future observations. For this reason, we
+propose to implement a framework for event simulation in Gammapy.
 
-The proposed framework not only samples the spectral and morphology properties, but it
-will also offer the possibility to sample from temporal models such as light and phase
-curves. The proposed framework will also be able to apply the PSF and energy dispersion
-to each sampled event to simulate the effect of the instrument response functions on the
-observed events. Furthermore, the sampler will include the simulation of background events,
-again based on finely binned maps. The final output of the sampler is a stacked event list
-with source and background events for a given observation.
+The proposed framework consists of individual building blocks, represented by
+classes, that can be chained together to achieve a full simulation of an event
+list corresponding to a given observation. This includes the simulation of source
+events, background events, effects of instrument response functions (IRF) and
+arrival times. As underlying method for the actual event sampling we propose to
+use inverse CDF sampling (inverseCDF_) with finely binned discrete source,
+background, and temporal models.
 
-A working prototype of the event sample can be found in Prototype_ .
+A working prototype of the proposed method and API can be found in Prototype_ .
+
+
+Inverse CDF Sampling
+====================
+Inverse CDF sampling (inverseCDF_) is an established method to sample from discrete
+probability mass functions. However it is not the method of choice for other existing
+event samplers such as the the Fermi-LAT Science Tools (gtobsim) or CTOOLS (ctobssim).
+The latter uses a combination of analytical sampling for models, where a solution
+is known (e.g. power-laws) and the rejection sampling method, where the sampling
+has to be done numerically (see an example here gammalib_).
+
+As rejection sampling can directly sample from continuous probability density
+functions, it is expected to yield very precise results. However an enveloping
+distribution is needed, which should be adapted to the target distribution
+to be efficient (see also `rejection sampling in Python`_ for an example implementation),
+otherwise a lot of computation time is spend in rejecting drawn samples.
+
+For this reason we favour the inverse CDF sampling method, as a simple to implement
+and general sampling method.
+The precision of the inverse CDF sampling method can be controlled by the resolution
+of the input probability mass function (PMF) and is in practice only limited by the
+available memory. We will study the required bin-size of the PMFs to reach sufficient
+precision. If we find the inverse CDF sampling method to be not precise enough,
+it is still possible to achieve better precision with and combination of
+analytical and rejection sampling.
+
+The inverse CDF method is also successfully used by `ASTRIsim` (_astrisim), the event
+simulator of the AGILE collaboration.
+
 
 Proposal
 ========
-
-
-The inverse CDF (inverseCDF_) approach is different from the one adopted by the FERMI tools and e.g.
-CTOOLS/Ctobssim, as they make use of the rejection sampling method (see an example here _gammalib).
-Generally, when facing with discrete distribution, the Inverse CDF method is very efficient
-although there are cases where it may be less precise. Instead, the rejection sampling
-method can be highly precise but it is less efficient (for example should the distribution
-have narrow features). Implementing the latter in Gammapy would be problematic this
-moment, because it would require loops over sampled events, but could be realized efficiently
-e.g. using cython or numba. However, we note also that the Inverse CDF method is used by
-`ASTRIsim` (_astrisim), the simulator of the AGILE collaboration. For completeness we
-mention that Gammapy already implements a preliminary binned simulation, for example for
-spectra or 3D-simulations (e.g. _spec and _three-D).
-
 
 We propose to introduce the following classes to implement the event sampler framework
 in Gammapy.
 
 InverseCDFSampler
-=================
+-----------------
 
 The first building block of the event sampler is a class that samples from a given 
-probability mass function (PMF). For this we use the inverse CDF sampling method .
-The proposed implementation follows closely what is described here_:
+probability mass function (PMF). The proposed implementation follows closely what
+is described here_:
+
 
 The basic design of the class is as following:
 
@@ -92,16 +105,14 @@ be supported by specifying the `axis` argument:
     samples = cdf_sampler.sample(size=1)
 
 
-The `InverseCDFSampler` could possibly implement a few helper functions to plot 
-the CDF or PDF. The `InverseCDFSampler` class will replace the current 
+The `InverseCDFSampler` could addtionally implement a few helper functions to plot
+the CDF and PDF. The `InverseCDFSampler` class will replace the current
 `GeneralRandom` and `GeneralRandomArray` classes in `gammapy.utils.distributions`. 
-Possibly the `InverseCDFSampler` needs to support transforming PDFs e.g. log 
-transformations of power-laws to maintain accuracy. The need for this is currently
-unclear.
+
 
 
 MapEventSampler
-===============
+---------------
 
 To support sampling from the predicted number of counts maps for source as well 
 as background maps, we propose to introduce a `MapEventSampler` class. The 
@@ -146,14 +157,13 @@ as `DETX` and `DETY` could be added.
 
 
 IRFEventDistributor
-===================
+-------------------
 
-We also propose a class to handle correctly the spatially varying IRFs, we suggest
-to introduce an `IRFEventDistibutor` class. Based on the `PSFMap` and `EDispMap` 
+We also propose a class to handle correctly the spatially varying IRFs: the
+`IRFEventDistibutor` class. Based on the `PSFMap` and `EDispMap`
 as an input it interpolates the "correct" IRF at the position of a given event and
 applies it. In more detail the class will calculate the psf and the energy dispersion 
-for each event true position and true energy. The reconstructed energies and 
-positions are then appended to the event list. The IRFs are assumed to be constant
+for each event true position and true energy. The IRFs are assumed to be constant
 and not time-dependent. The time dependency will be handled higher level, by a loop
 over good time-intervals (GTIs). The class would be used as following:
 
@@ -172,12 +182,12 @@ of the source. If we find the approach with the `IRFEventDistibutor` to be not
 performant enough or problematic in memory use, it can be still used as a
 simple fallback solution.
 
-The `IRFEventDistributor` add the following columns to the event table:
+The `IRFEventDistributor` adds the following columns to the event table:
 `RA`, `DEC` and `ENERGY`.
 
 
 MapDatasetEventSampler
-======================
+----------------------
 
 To combine the `MapEventSampler` and `IRFEventDistibutor` objects we finally propose 
 to introduce a `MapDatasetEventSampler`, which executes the sampling from all 
@@ -204,8 +214,8 @@ information has to added from the outside:
 
 The `MapEventSampler` finally returns an `EventList` object and adds the following
 columns to the event table: `EVENT_ID` and `MC_ID`. Where `EVENT_ID` is a unique
-number to identify the event, while `MC_ID` as unique ID (number or string) to
-identify the model component, the event was sampled from.
+number to identify the event, while `MC_ID` is a unique ID (number or string) to
+identify the model component the event was sampled from.
 
 The `MapDatasetSampler` should also fill the mandatory header information
 for event list files decribed on `gamma-astro-data-formats`_.
@@ -213,9 +223,11 @@ for event list files decribed on `gamma-astro-data-formats`_.
 
 Simulating multiple observations
 ================================
-The question of simulating multiple observations from e.g. an `ObservationTable`
-and `GTI` object as it is needed for simulating data for the CTA data challenge
-is not addressed in this PIG.
+The question of the API to simulate multiple observations from e.g. an `ObservationTable`
+or `GTI` object as it is needed for simulating data for the CTA data challenge
+is not addressed in this PIG. With the `MapDatasetEventSampler` the fundamental
+class to simulate events corresponding to a given observation and / or GTI is in
+place.
 
 
 Performance and precision evaluation
@@ -228,8 +240,27 @@ model parameters. This pipeline should also monitor the required cpu and memory 
 This first prototype can be used to evaluate the optimal bin-size (with the best
 compromise between performance and precision) for the simulations and to verify
 the over-all correctness of the simulated data. Later this prototype can be
-developed further into a full simulation / fitting continuous integration
-system.
+developed further into a full simulation / fitting continuous integration system.
+
+
+Alternatives
+============
+So far Gammapy only supports binned likelihood analysis and technically most use-
+cases for the event sampling could be solved with binned simulations. A binned
+simulation can be basically achieved by a call to `numpy.random.poisson()` based
+on the predicted number of counts map. This is conceptionally simpler as well as
+computationally more efficient then a sampling of event lists. However, to support
+the full data access and data reduction process for simulations, event lists are
+required. In future Gammapy possibly also supports event based analysis methods
+(unbinned likelihood, but also e.g. clustering algorithms), that also require event
+lists. For this reason binned simulations cannot present a full equivalent
+solution to event sampling.
+
+For the event sampling Gammapy could rely on external tools, such as gammalib
+or the IDL based Astri event sampler. As event sampling is a requirement for
+CTA science tools and the implementation effort is limited we favor to re-implement
+the event sampling in Gammapy. It also serves as a proof of concept of efficient
+event sampling in Python.
 
 
 List of proposed pull requests
@@ -255,7 +286,7 @@ Decision
 ========
 
 
-
+.. _`rejection sampling in Python`: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
 .. _Prototype: https://github.com/fabiopintore/notebooks-public/blob/master/gammapy-event-sampling/prototype.ipynb
 .. _inverseCDF: https://en.wikipedia.org/wiki/Inverse_transform_sampling
 .. _here: https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584
