@@ -135,18 +135,18 @@ def test_minos_contour():
     dataset = MyDataset()
     fit = Fit(dataset)
     fit.optimize(backend="minuit")
-    result = fit.minos_contour("x", "y")
+    result = fit.minos_contour("y", "z")
 
     assert result["success"] is True
 
     x = result["x"]
     assert_allclose(len(x), 10)
-    assert_allclose(x[0], 1, rtol=1e-5)
-    assert_allclose(x[-1], 1.499963, rtol=1e-5)
+    assert_allclose(x[0], 299, rtol=1e-5)
+    assert_allclose(x[-1], 299.133975, rtol=1e-5)
     y = result["y"]
     assert_allclose(len(y), 10)
-    assert_allclose(y[0], 300, rtol=1e-5)
-    assert_allclose(y[-1], 300.866004, rtol=1e-5)
+    assert_allclose(y[0], 0.04, rtol=1e-5)
+    assert_allclose(y[-1], 0.54, rtol=1e-5)
 
     # Check that original value state wasn't changed
-    assert_allclose(dataset.parameters["x"].value, 2)
+    assert_allclose(dataset.parameters["y"].value, 300)
