@@ -2,7 +2,7 @@
 import pytest
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
-from regions import CircleSkyRegion, EllipseAnnulusSkyRegion
+from regions import CircleSkyRegion, EllipseAnnulusSkyRegion, RectangleSkyRegion, EllipseSkyRegion
 from ...utils.testing import (
     requires_data,
     requires_dependency,
@@ -102,6 +102,47 @@ def test_find_reflected_regions(exclusion_mask, on_region, pointing_pos, nreg1, 
     fregions.run()
     regions = fregions.reflected_regions
     assert len(regions) == 5
+
+region_center = SkyCoord(0.5,0.,unit="deg")
+other_region_finder_param = [
+    (RectangleSkyRegion(region_center, Angle("0.5 deg"), Angle("0.5 deg"), angle=Angle("0 deg")), 3),
+    (RectangleSkyRegion(region_center, Angle("0.5 deg"), Angle("1.0 deg"), angle=Angle("0 deg")), 1),
+    (RectangleSkyRegion(region_center, Angle("0.5 deg"), Angle("1.0 deg"), angle=Angle("90 deg")), 0),
+    (EllipseSkyRegion(region_center, Angle("0.1 deg"), Angle("1.0 deg"), angle=Angle("0 deg")), 2),
+    (EllipseSkyRegion(region_center, Angle("0.1 deg"), Angle("1.0 deg"), angle=Angle("60 deg")), 3),
+    (EllipseSkyRegion(region_center, Angle("0.1 deg"), Angle("1.0 deg"), angle=Angle("90 deg")), 0)
+]
+
+@pytest.mark.parametrize(("region, nreg"), other_region_finder_param)
+def test_non_circular_regions(region, nreg):
+    pointing = SkyCoord(0.,0., unit="deg")
+
+    fregions = ReflectedRegionsFinder(
+        center=pointing,
+        region=region,
+        min_distance_input="0 deg",
+    )
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == nreg
+
+
+def bad_on_region(exclusion_mask, on_region):
+    pointing = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
+    fregions = ReflectedRegionsFinder(
+        center=pointing,
+        region=on_region,
+        exclusion_mask=exclusion_mask,
+        min_distance_input="0 deg",
+    )
+    fregions.run()
+    regions = fregions.reflected_regions
+    assert len(regions) == 0
+
+    # try plotting
+    with mpl_plot_check():
+        fregions.plot()
+
 
 @requires_data()
 class TestReflectedRegionBackgroundEstimator:

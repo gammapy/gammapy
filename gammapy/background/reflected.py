@@ -17,7 +17,12 @@ class ReflectedRegionsFinder:
 
     This class is responsible for placing :ref:`region_reflected` for a given
     input region and pointing position. It converts to pixel coordinates
-    internally. At the moment it works only for circles. If you want to make a
+    internally assuming a tangent projection at center position.
+
+    If the center lies inside the input region, no reflected regions
+    can be found.
+
+    If you want to make a
     background estimate for an IACT observation using the reflected regions
     method, see also `~gammapy.background.ReflectedRegionsBackgroundEstimator`
 
@@ -96,11 +101,16 @@ class ReflectedRegionsFinder:
             self.reference_map.data += vals
         else:
             self.reference_map.data += 1
-        self.setup()
-        self.find_regions()
+
+        # Check if center is contained in region
+        if self.region.contains(self.center, self.reference_map.geom.wcs):
+            self.reflected_regions = []
+        else:
+            self.setup()
+            self.find_regions()
 
     @staticmethod
-    def make_reference_map(region, center, binsz="0.01 deg"):
+    def make_reference_map(region, center, binsz="0.01 deg", min_width="0.3 deg"):
         """Create empty reference map.
 
         The size of the map is chosen such that all reflected regions are
@@ -108,7 +118,8 @@ class ReflectedRegionsFinder:
         To do so, the reference map width is taken to be 4 times the distance between
         the target region center and the rotation point. This distance is larger than
         the typical dimension of the region itself (otherwise the rotation point would
-        lie inside the region).
+        lie inside the region). A minimal width value is added by default in case the
+        region center and the rotation center are too close.
 
         The WCS of the map is the TAN projection at the `center` in the coordinate
         system used by the `region` center.
@@ -121,6 +132,8 @@ class ReflectedRegionsFinder:
             Rotation point
         binsz : `~astropy.coordinates.Angle`
             Reference map bin size. Default : 0.01 deg
+        min_width : `~astropy.coordinates.Angle`
+            Minimal map width. Default : 0.3 deg
 
         Returns
         -------
@@ -137,7 +150,7 @@ class ReflectedRegionsFinder:
             raise TypeError("Algorithm not yet adapted to this Region shape")
 
         # width is the full width of an image (not the radius)
-        width = 4 * region.center.separation(center)
+        width = 4 * region.center.separation(center) + Angle(min_width)
 
         return WcsNDMap.create(
             skydir=center, binsz=binsz, width=width, coordsys=coordsys, proj="TAN"
@@ -180,7 +193,7 @@ class ReflectedRegionsFinder:
 
         # Make the ON reference map
         mask = geom.region_mask([self.region], inside=True)
-        self.on_reference_map = WcsNDMap(geom=geom, data=mask)
+#        on_reference_map = WcsNDMap(geom=geom, data=mask)
 
         # Extract all pixcoords in the geom
         X, Y = geom.get_pix()
@@ -191,10 +204,7 @@ class ReflectedRegionsFinder:
         self.excluded_pixcoords = PixCoord(X[mask_array], Y[mask_array])
 
        # Minimum angle a region has to be moved to not overlap with previous one
-        if not self._pix_region.contains(self._pix_center):
-            min_ang = self._region_angular_size(ONpixels, self._pix_center)
-        else:
-            min_ang = 2*np.pi*u.rad  # No BKG regions are to be found
+        min_ang = self._region_angular_size(ONpixels, self._pix_center)
 
         # Add required minimal distance between two off regions
         self._min_ang = min_ang + self.min_distance
@@ -252,7 +262,6 @@ class ReflectedRegionsBackgroundEstimator:
 
     For a usage example see :gp-notebook:`spectrum_analysis`
 
-    TODO: make the reference map (to make the mask used to select events)
     Parameters
     ----------
     on_region : `~regions.SkyRegion`
