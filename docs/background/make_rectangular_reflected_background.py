@@ -1,6 +1,5 @@
 """Example how to compute and plot reflected regions."""
 import matplotlib.pyplot as plt
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion
@@ -15,15 +14,13 @@ observations = data_store.get_observations(obs_ids)
 crab_position = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")
 
 # The ON region center is defined in the icrs frame. The angle is defined w.r.t. to its axis.
-on_region = RectangleSkyRegion(center=crab_position,
-                                    width=0.5 * u.deg, height=0.4 * u.deg,
-                                    angle=0 * u.deg)
+on_region = RectangleSkyRegion(
+    center=crab_position, width=0.5 * u.deg, height=0.4 * u.deg, angle=0 * u.deg
+)
 
 
 background_estimator = ReflectedRegionsBackgroundEstimator(
-    observations=observations,
-    on_region=on_region,
-    min_distance=0.1 * u.rad,
+    observations=observations, on_region=on_region, min_distance=0.1 * u.rad
 )
 
 background_estimator.run()
@@ -34,14 +31,15 @@ print(background_estimator.result[0])
 background_estimator.plot()
 
 # Now we change the ON region, and use a center defined in the galactic frame
-on_region_galactic = RectangleSkyRegion(center=crab_position.galactic,
-                                    width=0.5 * u.deg, height=0.4 * u.deg,
-                                    angle=0 * u.deg)
+on_region_galactic = RectangleSkyRegion(
+    center=crab_position.galactic,
+    width=0.5 * u.deg,
+    height=0.4 * u.deg,
+    angle=0 * u.deg,
+)
 
 background_estimator = ReflectedRegionsBackgroundEstimator(
-    observations=observations,
-    on_region=on_region_galactic,
-    min_distance=0.1 * u.rad,
+    observations=observations, on_region=on_region_galactic, min_distance=0.1 * u.rad
 )
 
 background_estimator.run()
