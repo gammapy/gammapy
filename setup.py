@@ -108,7 +108,7 @@ setup(
       'numpy>=1.10',
       'astropy>=2.0',
       'scipy>=0.15',
-      'regions>=0.3',
+      'regions>=0.4',
       'pyyaml',
       'click',
     ],

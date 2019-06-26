@@ -87,11 +87,11 @@ class TestObservationStats:
     def test_to_dict(stats):
         data = stats.to_dict()
         assert data["n_on"] == 425
-        assert data["n_off"] == 395
+        assert data["n_off"] == 406
         assert_allclose(data["alpha"], 0.333, rtol=1e-2)
-        assert_allclose(data["sigma"], 16.430, rtol=1e-3)
-        assert_allclose(data["gamma_rate"].value, 11.127, rtol=1e-3)
-        assert_allclose(data["bg_rate"].value, 4.995, rtol=1e-3)
+        assert_allclose(data["sigma"], 16.136, rtol=1e-3)
+        assert_allclose(data["gamma_rate"].value, 10.988, rtol=1e-3)
+        assert_allclose(data["bg_rate"].value, 5.1335, rtol=1e-3)
         assert_allclose(data["livetime"].value, 26.362, rtol=1e-3)
 
     @staticmethod
@@ -103,16 +103,16 @@ class TestObservationStats:
     def test_stack(stats_stacked):
         data = stats_stacked.to_dict()
         assert data["n_on"] == 900
-        assert data["n_off"] == 766
+        assert data["n_off"] == 798
         assert_allclose(data["alpha"], 0.333, rtol=1e-2)
-        assert_allclose(data["sigma"], 25.244, rtol=1e-3)
+        assert_allclose(data["sigma"], 24.6307, rtol=1e-3)
 
     @staticmethod
     def test_stack_bad_on(stats_stacked_bad_on_region):
         data = stats_stacked_bad_on_region.to_dict()
         assert data["n_on"] == 156
-        assert data["n_off"] == 1006
-        assert_allclose(data["alpha"], 0.125, rtol=1e-3)
+        assert data["n_off"] == 1114
+        assert_allclose(data["alpha"], 0.1111, rtol=1e-3)
         assert_allclose(data["livetime"].value, 26.211, rtol=1e-3)
 
 
