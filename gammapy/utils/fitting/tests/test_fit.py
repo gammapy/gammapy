@@ -133,6 +133,7 @@ def test_likelihood_profile_reoptimize():
 
 def test_minos_contour():
     dataset = MyDataset()
+    dataset.parameters["x"].frozen = True
     fit = Fit(dataset)
     fit.optimize(backend="minuit")
     result = fit.minos_contour("y", "z")
