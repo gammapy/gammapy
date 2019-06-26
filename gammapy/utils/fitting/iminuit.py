@@ -99,11 +99,13 @@ def confidence_iminuit(minuit, parameters, parameter, sigma, maxcall=0):
 
 
 def mncontour(minuit, parameters, x, y, numpoints, sigma):
-    idx = parameters._get_idx(x)
-    x = _make_parname(idx, parameters[idx])
+    par_x = parameters[x]
+    idx_x = parameters.free_parameters.index(par_x)
+    x = _make_parname(idx_x, par_x)
 
-    idx = parameters._get_idx(y)
-    y = _make_parname(idx, parameters[idx])
+    par_y = parameters[y]
+    idx_y = parameters.free_parameters.index(par_y)
+    y = _make_parname(idx_y, par_y)
 
     x_info, y_info, contour = minuit.mncontour(x, y, numpoints, sigma)
     contour = np.array(contour)
