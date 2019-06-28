@@ -179,7 +179,7 @@ class MapDataset(Dataset):
         return stat
 
     def to_hdulist(self):
-        """Create HDUList.
+        """Convert map dataset to list of HDUs.
 
         Returns
         -------
@@ -206,18 +206,18 @@ class MapDataset(Dataset):
             hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf")[exclude_primary]
 
         if self.mask_safe is not None:
-            mask_safe_map = Map.from_geom(self.counts.geom, data=self.mask_safe)
+            mask_safe_map = Map.from_geom(self.counts.geom, data=self.mask_safe.astype(int))
             hdulist += mask_safe_map.to_hdulist(hdu="mask-safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_map = Map.from_geom(self.counts.geom, data=self.mask_fit)
+            mask_fit_map = Map.from_geom(self.counts.geom, data=self.mask_fit.astype(int))
             hdulist += mask_fit_map.to_hdulist(hdu="mask-fit")[exclude_primary]
 
         return hdulist
 
     @classmethod
     def from_hdulist(cls, hdulist):
-        """
+        """Create map dataset from list of HDUs.
 
         Parameters
         ----------
@@ -244,18 +244,18 @@ class MapDataset(Dataset):
             psf_map = Map.from_hdulist(hdulist, hdu="psf")
             init_kwargs["psf"] = PSFKernel(psf_map)
 
-        if "MASK_SAFE" in hdulist:
+        if "MASK-SAFE" in hdulist:
             mask_safe_map = Map.from_hdulist(hdulist, hdu="mask-safe")
-            init_kwargs["mask_safe"] = mask_safe_map.data
+            init_kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
 
-        if "MASK_FIT" in hdulist:
+        if "MASK-FIT" in hdulist:
             mask_fit_map = Map.from_hdulist(hdulist, hdu="mask-fit")
-            init_kwargs["mask_fit"] = mask_fit_map.data
+            init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
 
         return cls(**init_kwargs)
 
     def write(self, filename, overwrite=False):
-        """Write dataset to file.
+        """Write map dataset to file.
 
         Parameters
         ----------
