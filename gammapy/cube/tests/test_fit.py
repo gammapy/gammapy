@@ -109,6 +109,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, **kwargs):
     )
 
 
+@requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom , geom_etrue)
     dataset.counts = dataset.npred()
