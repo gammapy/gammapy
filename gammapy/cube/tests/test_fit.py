@@ -115,6 +115,23 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
 
+    hdulist = dataset.to_hdulist()
+
+    assert "COUNTS" in hdulist
+    assert "COUNTS_BANDS" in hdulist
+    assert "EXPOSURE" in hdulist
+    assert "EXPOSURE_BANDS" in hdulist
+    assert "BACKGROUND" in hdulist
+    assert "BACKGROUND_BANDS" in hdulist
+    assert "PSF" in hdulist
+    assert "PSF_BANDS" in hdulist
+    assert "EDISP" in hdulist
+    assert "EDISP_EBOUNDS" in hdulist
+    assert "MASK_FIT" in hdulist
+    assert "MASK_FIT_BANDS" in hdulist
+    assert "MASK_SAFE" in hdulist
+    assert "MASK_SAFE_BANDS" in hdulist
+
     dataset.write(tmpdir / "test.fits")
 
     dataset_new = MapDataset.read(tmpdir / "test.fits")

@@ -207,11 +207,11 @@ class MapDataset(Dataset):
 
         if self.mask_safe is not None:
             mask_safe_map = Map.from_geom(self.counts.geom, data=self.mask_safe.astype(int))
-            hdulist += mask_safe_map.to_hdulist(hdu="mask-safe")[exclude_primary]
+            hdulist += mask_safe_map.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
             mask_fit_map = Map.from_geom(self.counts.geom, data=self.mask_fit.astype(int))
-            hdulist += mask_fit_map.to_hdulist(hdu="mask-fit")[exclude_primary]
+            hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         return hdulist
 
@@ -243,12 +243,12 @@ class MapDataset(Dataset):
             psf_map = Map.from_hdulist(hdulist, hdu="psf")
             init_kwargs["psf"] = PSFKernel(psf_map)
 
-        if "MASK-SAFE" in hdulist:
-            mask_safe_map = Map.from_hdulist(hdulist, hdu="mask-safe")
+        if "MASK_SAFE" in hdulist:
+            mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
             init_kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
 
-        if "MASK-FIT" in hdulist:
-            mask_fit_map = Map.from_hdulist(hdulist, hdu="mask-fit")
+        if "MASK_FIT" in hdulist:
+            mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
             init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
 
         return cls(**init_kwargs)
