@@ -38,9 +38,7 @@ class ObservationFilter:
     >>> my_obs = DataStoreObservation(obs_id=111630, data_store=ds, obs_filter=my_obs_filter)
     """
 
-    EVENT_FILTER_TYPES = dict(
-        sky_region="select_region", custom="select_parameter"
-    )
+    EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")
 
     def __init__(self, time_filter=None, event_filters=None):
         self.time_filter = time_filter

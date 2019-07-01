@@ -16,14 +16,14 @@ from ..observers import observatory_locations
 
 
 def make_test_observation_table(
-        observatory_name="hess",
-        n_obs=10,
-        az_range=Angle([0, 360], "deg"),
-        alt_range=Angle([45, 90], "deg"),
-        date_range=(Time("2010-01-01"), Time("2015-01-01")),
-        use_abs_time=False,
-        n_tels_range=(3, 4),
-        random_state="random-seed",
+    observatory_name="hess",
+    n_obs=10,
+    az_range=Angle([0, 360], "deg"),
+    alt_range=Angle([45, 90], "deg"),
+    date_range=(Time("2010-01-01"), Time("2015-01-01")),
+    use_abs_time=False,
+    n_tels_range=(3, 4),
+    random_state="random-seed",
 ):
     """Make a test observation table.
     Create an observation table following a specific pattern.
@@ -238,8 +238,8 @@ def test_select_parameter_box():
     selected_obs_table = obs_table.select_observations(selection)
     assert len(selected_obs_table) == 7
     assert (
-            (value_range[0] > selected_obs_table[variable])
-            | (selected_obs_table[variable] >= value_range[1])
+        (value_range[0] > selected_obs_table[variable])
+        | (selected_obs_table[variable] >= value_range[1])
     ).all()
 
     # test box selection in alt

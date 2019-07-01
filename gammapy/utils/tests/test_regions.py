@@ -61,8 +61,7 @@ def test_make_pixel_region():
 class TestSphericalCircleSkyRegion:
     def setup(self):
         self.region = SphericalCircleSkyRegion(
-            center=SkyCoord(10 * u.deg, 20 * u.deg),
-            radius=10 * u.deg,
+            center=SkyCoord(10 * u.deg, 20 * u.deg), radius=10 * u.deg
         )
 
     def test_contains(self):
