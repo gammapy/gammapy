@@ -187,7 +187,7 @@ class MapDataset(Dataset):
             Map dataset list of HDUs.
         """
         # TODO: what todo about the model and background model parameters?
-        exclude_primary = slice(1, 3)
+        exclude_primary = slice(1, None)
 
         hdu_primary = fits.PrimaryHDU()
         hdulist = fits.HDUList([hdu_primary])
@@ -228,7 +228,6 @@ class MapDataset(Dataset):
         -------
         dataset : `MapDataset`
             Map dataset.
-
         """
         init_kwargs = {}
         init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
@@ -281,7 +280,6 @@ class MapDataset(Dataset):
         -------
         dataset : `MapDataset`
             Map dataset.
-
         """
         filename = make_path(filename)
         hdulist = fits.open(str(filename))

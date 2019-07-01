@@ -120,6 +120,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset_new = MapDataset.read(tmpdir / "test.fits")
 
     assert dataset_new.model is None
+    assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(dataset.background_model.map.data, dataset_new.background_model.map.data)
@@ -128,6 +129,16 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
     assert_allclose(dataset.mask_fit, dataset_new.mask_fit)
     assert_allclose(dataset.mask_safe, dataset_new.mask_safe)
+
+    assert dataset.counts.geom == dataset_new.counts.geom
+    assert dataset.exposure.geom == dataset_new.exposure.geom
+    assert dataset.background_model.map.geom == dataset_new.background_model.map.geom
+
+    assert_allclose(dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value)
+    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
+
+    assert_allclose(dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value)
+    assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
 
 
 @requires_dependency("iminuit")
@@ -142,8 +153,8 @@ def test_map_fit(sky_model, geom, geom_etrue):
 
     sky_model.parameters["sigma"].frozen = True
 
-    dataset_1.background_model.norm.value = 0.4
-    dataset_2.background_model.norm.value = 0.9
+    dataset_1.background_model.norm.value = 0.49
+    dataset_2.background_model.norm.value = 0.99
 
     fit = Fit([dataset_1, dataset_2])
     result = fit.run()
@@ -192,13 +203,11 @@ def test_map_fit(sky_model, geom, geom_etrue):
 @requires_data()
 def test_map_fit_one_energy_bin(sky_model, geom_image):
     dataset = get_map_dataset(sky_model, geom_image, geom_image)
-
+    sky_model.spectral_model.index.value = 3.0
+    sky_model.spectral_model.index.frozen = True
     dataset.background_model.norm.value = 0.5
 
     dataset.counts = dataset.npred()
-
-    sky_model.parameters["index"].value = 3.0
-    sky_model.parameters["index"].frozen = True
 
     # Move a bit away from the best-fit point, to make sure the optimiser runs
     sky_model.parameters["sigma"].value = 0.21
