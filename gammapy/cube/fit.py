@@ -196,14 +196,20 @@ class MapDataset(Dataset):
         hdulist += self.background_model.map.to_hdulist(hdu="background")[exclude_primary]
 
         if self.edisp is not None:
-            hdus = self.edisp.to_hdulist()
-            hdus["MATRIX"].name = "edisp"
-            hdus["EBOUNDS"].name = "edisp_ebounds"
-            hdulist.append(hdus["EDISP"])
-            hdulist.append(hdus["EDISP_EBOUNDS"])
+            if isinstance(self.edisp, EnergyDispersion):
+                hdus = self.edisp.to_hdulist()
+                hdus["MATRIX"].name = "edisp_matrix"
+                hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
+                hdulist.append(hdus["EDISP_MATRIX"])
+                hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
+            else:
+                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")
 
         if self.psf is not None:
-            hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf")[exclude_primary]
+            if isinstance(self.psf, PSFKernel):
+                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[exclude_primary]
+            else:
+                hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
 
         if self.mask_safe is not None:
             mask_safe_map = Map.from_geom(self.counts.geom, data=self.mask_safe.astype(int))
@@ -236,11 +242,11 @@ class MapDataset(Dataset):
         background_map = Map.from_hdulist(hdulist, hdu="background")
         init_kwargs["background_model"] = BackgroundModel(background_map)
 
-        if "EDISP" in hdulist:
-            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(hdulist, hdu1="EDISP", hdu2="EDISP_EBOUNDS")
+        if "EDISP_MATRIX" in hdulist:
+            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS")
 
-        if "PSF" in hdulist:
-            psf_map = Map.from_hdulist(hdulist, hdu="psf")
+        if "PSF_KERNEL" in hdulist:
+            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
             init_kwargs["psf"] = PSFKernel(psf_map)
 
         if "MASK_SAFE" in hdulist:

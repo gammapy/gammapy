@@ -123,10 +123,10 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert "EXPOSURE_BANDS" in hdulist
     assert "BACKGROUND" in hdulist
     assert "BACKGROUND_BANDS" in hdulist
-    assert "PSF" in hdulist
-    assert "PSF_BANDS" in hdulist
-    assert "EDISP" in hdulist
-    assert "EDISP_EBOUNDS" in hdulist
+    assert "PSF_KERNEL" in hdulist
+    assert "PSF_KERNEL_BANDS" in hdulist
+    assert "EDISP_MATRIX" in hdulist
+    assert "EDISP_MATRIX_EBOUNDS" in hdulist
     assert "MASK_FIT" in hdulist
     assert "MASK_FIT_BANDS" in hdulist
     assert "MASK_SAFE" in hdulist
