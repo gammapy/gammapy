@@ -6,7 +6,7 @@
 PIG 11 - Light curves
 *********************
 
-* Author: Christoph Deil, Régis Terrier, Axel Donath, David Fidalgo
+* Author: Régis Terrier, Christoph Deil, Axel Donath, David Fidalgo
 * Created: July 2, 2018
 * Accepted:
 * Status: draft
@@ -17,23 +17,50 @@ Abstract
 
 In this PIG we want to discuss a restructuring of the way light curves are
 computed and stored in Gammapy. Lightcurves in gamma-ray astronomy are the
-result of a series of fits in each time bin. Lightcurve extraction covers
-therefore both the data reduction and the data modeling steps. The lightcurve
-estimation will therefore have these two steps.
+result of a series of fits of the source flux in each time bin. Lightcurve
+extraction covers therefore both the data reduction and the data modeling steps.
+The lightcurve estimation will therefore have these two steps.
+
 Here, we propose to perform the data reduction step in each of the time bins
 and store the result in the form of a ``Datasets`` (``MapDataset`` or
 ``SpectrumOnOffDataset`` depending on the selected approach).
 Each individual ``Dataset`` is then modeled and fitted to extract the
 source flux and its errors in each time bin. The result is then stored in a
-``LightCurve`` object .
-For this purpose, the new :class:``LightCurveEstimator`` class should essentially be a
-wrapper around the *standard* spectrum analysis of Gammapy using pipeline
-classes (e.g. ``gammapy.scripts.SpectrumAnalysisIACT``). A further input should of
-course be the time intervals of the light curve, whose computation will be done
-outside of the new ``LightCurve`` classes.
+``LightCurve`` object which contains a ``Table`` of the fit results.
 
-Detailed Description
-====================
+For this purpose, we propose to introduce two new classes to perform the data
+reduction first and then then the fitting. The time dependent data reduction
+could be a specific case of the high level pipeline, when a list of time bins
+is passed with the configuration ``dict``. The data fitting should be performed
+by the new :class:``LightCurveEstimator`` class, which  should essentially be a
+wrapper around the ``gammapy.spectrum.FluxPointEstimator`` class that does the same
+thing for spectrum and map datasets.
+
+Introduction
+============
+
+Lightcurves in gamma-ray astronomy
+----------------------------------
+
+In photon counting experiments, lightcurves are often simply obtained by counting
+events in a given energy range in a set of time bins. In ground based gamma-ray
+astronomy, things are usually more complex.
+
+The response and the instrumental background of the instruments can strongly vary
+over time on a night scale, e.g. because the source elevation changes or on longer time
+scales given the possible changes of the atmosphere transparency or the instrument
+efficiency.
+
+Another complexity comes from the astrophysical background which can often pollute a source
+and needs to be properly removed to extract the intrinsic source flux at any given time.
+
+For these reasons, gamma-ray lightcurve are usually the results of a fit of model on
+the data performed on a number of time bins to extract the source flux in these time
+bins.
+
+This is more limited than e.g. time resolved spectral analysis. Although the latter share
+many similarities with the lightcurve extraction, it is a more complex task which
+we do not cover here.
 
 Background / What we have now
 -----------------------------
@@ -56,11 +83,21 @@ Drawbacks of this approach are:
  * changes in the spectral shape between the time bins are not supported.
 
 
+Proposal
+========
+
 General organization of the new approach
 ----------------------------------------
 
+The approach will be split into 3 main phases:
+ * Time bin preparation
+ * Data reduction in time bins to produce a list of ``Dataset``
+ * Light curve estimation to fit a model on the resulting ``Datasets``
+The end product should contain enough information to perform some rebinning and apply
+high level timing techniques.
+
 Time bin preparation
-^^^^^^^^^^^^^^^^^^^
+--------------------
 
 Independently of the actual data reduction technique chosen, the user should
 first provide a list/table of time intervals for which she/he
@@ -86,18 +123,19 @@ This would look like::
     print(times.time_bin_end)
 
 Data reduction
-^^^^^^^^^^^^^^
+--------------
 
 Once the time bins are determined, the user will have to select the relevant
-``Observations`` from the ``Datastore``, with, if needed, the application of some
-``ObservationFilter`` to the ``EventList``. The ``Observations`` are then passed along
-the time bins to the light curve estimation class ``LightCurveEstimator``. The
-latter could take a ``geom`` argument that will define the data reduction
-geometry (and in particular, if the data reduction is 3D or 1D). In the absence, of a
-``RegionGeom`` we could simply expect a reco energy and true energy ``MapAxis``.
+``Observations`` from the ``Datastore``. The ``Observations`` are then filtered
+and grouped according to the time bins using the ``ObservationFilter`` and passed
+to the light curve extraction function or class.
+The latter could take a ``geom`` or a ``region`` argument that will define the data
+reduction geometry (and in particular, if the data reduction is 3D or 1D). In the
+absence, of a ``RegionGeom`` we could simply expect a reco energy and true energy
+``MapAxis``.
 
-Because of the OFF determination, spectral and ``Map`` based data reduction cannot be performed
-in a completely similar manner. We detail possible approaches below.
+Because of the OFF determination, spectral and ``Map`` based data reduction cannot
+be performed in a completely similar manner. We detail possible approaches below.
 
 Both approaches will result in a ``Datasets`` object consisting of ``MapDataset``
 or ``SpectrumDatasetOnOff`` with identical geometries for each time bin.
@@ -105,13 +143,35 @@ The ``Dataset`` must therefore carry the time information. Minimally, with a met
 information ``time_start``, ``time_stop``. Ideally, the ``Dataset`` should contain
  the ``GTI`` table of the filtered ``Eventlist`` that were used for its production.
 
-Data Fitting
-^^^^^^^^^^^^
+
+Outline of the implementation in 3D
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TBD
 
-Storing the results and timing studies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Outline of the new implementation in 1D
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TBC
+
+
+Data Fitting
+------------
+
+The data fitting is the step were the ``Datasets`` are converted into a lightcurve
+based on a model of the emission. The amplitude of the source model is fitted while
+other parameters are usually, but not necessarily, fixed.
+
+The fitting is very similar to the extraction of ``FluxPoints`` in the spectral analysis
+and does not strongly depend on the type of ``Datasets`` considered. The new
+:class:``LightCurveEstimator`` class should therefore be able to take as input both
+``SpectrumDatasetOnOff`` and ``MapDataset``, in a similar fashion as the current
+``FluxPointEstimator``.
+
+
+Storing the results and further studies
+---------------------------------------
 
 The results are returned as a ``gammapy.time.LightCurve`` instance (the current
 container class for light curves) that, so far, essentially holds the integrated flux +
@@ -129,61 +189,6 @@ be improved by using the ``astropy_timeseries.BinnedTimeSeries`` object which
 itself inherits from ``Table`` and provides support for row selection with time,
 rebinning and more complex methods for detailed timing studies such as Lomb-Scargle
 periodograms.
-
-
-Outline of the implementation in 3D
------------------------------------
-
-TBD
-
-
-Outline of the new implementation in 1D
----------------------------------------
-
-TBC
-
-In the new approach we want to overcome the two drawbacks mentioned above and
-provide a maximum degree of flexibility to the user when computing the light
-curve.
-
-First, the user should provide a list/table of time intervals for which she/he
-wants to compute the integral flux. The computation of this list/table will be
-done outside of the `LightCurve` class, e.g. we could think about extending the
-`gammapy.data.gti` class to provide some utilities for this.
-
-With this list/table the new `LightCurveEstimator` should then prepare/create a
-new `~gammapy.data.ObservatioList` for each time bin, in which the events have
-already been filtered properly and the
-`DataStoreObservation.observation_live_time_duration` were updated accordingly.
-These new `~gammapy.data.ObservationList` can then be passed on to the
-*standard* spectrum analysis with the `gammapy.background` and
-`gammapy.spectrum` modules.
-
-This analysis pipeline should be done outside of the LightCurve class, for
-example by `gammapy.scripts.SpectrumAnalysisIACT`. The arguments for this
-pipeline should be provided in form of a *config dict* or possibly a txt file.
-One could think about providing a list of *config dict* or txt files to have
-more flexibility when performing the pipeline in each of the time bins.
-
-Instead of performing a spectral fit in each time bin, the user should also have
-the option to provide a fixed spectral shape, omit the fit and compute the
-integral flux the way it is done now, by scaling the expected counts with
-respect to the excess events, which should be much faster.
-
-
-
-Calling the spectral pipeline for each time bin
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-After preparing the observations and writing them to disk, a loop over the light
-curve bins should create a `~gammapy.data.DataStore` object ->
-`~gammapy.data.ObservationList` and pass it on to the spectral pipeline (e.g.
-`gammapy.scripts.SpectrumAnalysisIACT`). Maybe the option to omit the spectral
-fit and scale a fixed spectrum to the excess counts, should be built in the
-pipeline classes. The resulting spectrum of the time bin is then integrated in
-an energy range specified by the user.
-
-
 
 
 Discussion / Alternatives
@@ -208,7 +213,9 @@ elegant way.
 Task list
 =========
 
-tbd
+ * Add `TSTART` and `TSTOP` meta info on the ``Dataset`` as well as the `GTI` table.
+ * Refactor the ``Lightcurve`` class
+ * Implement the new ``LightCurveEstimator`` class
 
 Decision
 ========
