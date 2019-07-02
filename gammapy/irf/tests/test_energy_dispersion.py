@@ -56,9 +56,9 @@ class TestEnergyDispersion:
         assert_allclose(actual[0], 1.8612999017723058, atol=1e-3)
 
         counts = np.arange(len(self.e_true) - 4)
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError) as excinfo:
             self.edisp.apply(counts)
-        assert str(len(counts)) in str(exc.value)
+        assert "Input size 97 does not match true energy axis 100" == str(excinfo.value)
         assert_allclose(actual[0], 1.8612999017723058, atol=1e-3)
 
     def test_get_bias(self):
