@@ -149,12 +149,12 @@ would be of use to anyone, so we defaulted to this proposal.
 
 For Astropy, we could keep support for version 2.0, but there are many small new
 features, fixes and performance improvements in 3.0, 3.1 and 3.2 (see `Astropy
-whatsnew`_) that will make our life easier, for example much improved Quantity-support for
-functions in Numpy and Scipy, support for the FITS time standard and better
-support for Time columns in Table, the new ``astropy.uncertainty`` package which
-we could use (see :ref:`pig-14`_), the ``SkyCoord.directional_offset_by`` method
-for field of view coordinates, common WCS API, the new ``astropy.timeseries``,
-ASDF.
+whatsnew`_) that will make our life easier, for example much improved
+Quantity-support for functions in Numpy and Scipy, support for the FITS time
+standard and better support for Time columns in Table, the new
+``astropy.uncertainty`` package which we could use (see :ref:`pig-14`_), the
+``SkyCoord.directional_offset_by`` method for field of view coordinates, common
+WCS API, the new ``astropy.timeseries``, ASDF.
 
 A major motivation to update to very recent versions is that the ``regions``
 package is still under development (see :ref:`pig-010`_). In Gammapy 0.13 we
