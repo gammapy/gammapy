@@ -77,7 +77,6 @@ class SpectrumEvaluator:
         true_counts = self.apply_aeff(integral_flux)
         return self.apply_edisp(true_counts)
 
-
     def apply_aeff(self, integral_flux):
         if self.aeff is not None:
             cts = integral_flux * self.aeff.data.data

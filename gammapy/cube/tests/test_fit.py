@@ -111,7 +111,7 @@ def get_map_dataset(sky_model, geom, geom_etrue, **kwargs):
 
 @requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
-    dataset = get_map_dataset(sky_model, geom , geom_etrue)
+    dataset = get_map_dataset(sky_model, geom, geom_etrue)
     dataset.counts = dataset.npred()
     dataset.mask_safe = dataset.mask_fit
 
@@ -146,7 +146,9 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert dataset_new.mask.dtype == bool
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
-    assert_allclose(dataset.background_model.map.data, dataset_new.background_model.map.data)
+    assert_allclose(
+        dataset.background_model.map.data, dataset_new.background_model.map.data
+    )
     assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
     assert_allclose(dataset.psf.data, dataset_new.psf.data)
     assert_allclose(dataset.exposure.data, dataset_new.exposure.data)
@@ -157,10 +159,14 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert dataset.exposure.geom == dataset_new.exposure.geom
     assert dataset.background_model.map.geom == dataset_new.background_model.map.geom
 
-    assert_allclose(dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value)
+    assert_allclose(
+        dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value
+    )
     assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
 
-    assert_allclose(dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value)
+    assert_allclose(
+        dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value
+    )
     assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
 
 
@@ -171,7 +177,9 @@ def test_map_fit(sky_model, geom, geom_etrue):
     dataset_1.background_model.norm.value = 0.5
     dataset_1.counts = dataset_1.npred()
 
-    dataset_2 = get_map_dataset(sky_model, geom, geom_etrue, evaluation_mode="global", likelihood="cstat")
+    dataset_2 = get_map_dataset(
+        sky_model, geom, geom_etrue, evaluation_mode="global", likelihood="cstat"
+    )
     dataset_2.counts = dataset_2.npred()
 
     sky_model.parameters["sigma"].frozen = True

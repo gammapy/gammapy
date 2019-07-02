@@ -105,7 +105,9 @@ class MapDataset(Dataset):
             evaluators = []
 
             for component in model.skymodels:
-                evaluator = MapEvaluator(component, evaluation_mode=self.evaluation_mode)
+                evaluator = MapEvaluator(
+                    component, evaluation_mode=self.evaluation_mode
+                )
                 evaluators.append(evaluator)
 
             self._evaluators = evaluators
@@ -193,7 +195,9 @@ class MapDataset(Dataset):
         hdulist = fits.HDUList([hdu_primary])
         hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
         hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
-        hdulist += self.background_model.map.to_hdulist(hdu="background")[exclude_primary]
+        hdulist += self.background_model.map.to_hdulist(hdu="background")[
+            exclude_primary
+        ]
 
         if self.edisp is not None:
             if isinstance(self.edisp, EnergyDispersion):
@@ -207,16 +211,22 @@ class MapDataset(Dataset):
 
         if self.psf is not None:
             if isinstance(self.psf, PSFKernel):
-                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[exclude_primary]
+                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[
+                    exclude_primary
+                ]
             else:
                 hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
 
         if self.mask_safe is not None:
-            mask_safe_map = Map.from_geom(self.counts.geom, data=self.mask_safe.astype(int))
+            mask_safe_map = Map.from_geom(
+                self.counts.geom, data=self.mask_safe.astype(int)
+            )
             hdulist += mask_safe_map.to_hdulist(hdu="mask_safe")[exclude_primary]
 
         if self.mask_fit is not None:
-            mask_fit_map = Map.from_geom(self.counts.geom, data=self.mask_fit.astype(int))
+            mask_fit_map = Map.from_geom(
+                self.counts.geom, data=self.mask_fit.astype(int)
+            )
             hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
 
         return hdulist
@@ -243,7 +253,9 @@ class MapDataset(Dataset):
         init_kwargs["background_model"] = BackgroundModel(background_map)
 
         if "EDISP_MATRIX" in hdulist:
-            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS")
+            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
+                hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS"
+            )
 
         if "PSF_KERNEL" in hdulist:
             psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")

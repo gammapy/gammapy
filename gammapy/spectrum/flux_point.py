@@ -408,7 +408,11 @@ class FluxPoints:
         if pwl_approx:
             index = model.spectral_index(e_ref)
             flux_model = PowerLaw.evaluate_integral(
-                emin=e_min, emax=e_max, index=index, reference=e_ref, amplitude=dnde_model
+                emin=e_min,
+                emax=e_max,
+                index=index,
+                reference=e_ref,
+                amplitude=dnde_model,
             )
         else:
             flux_model = model.integral(e_min, e_max, intervals=True)
