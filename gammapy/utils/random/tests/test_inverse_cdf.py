@@ -46,7 +46,7 @@ def test_norm_dist_sampling():
     assert_allclose(np.std(x_sampled), sigma, atol=0.005)
 
 
-def test_norm_dist_sampling():
+def test_axis_sampling():
     n_sampled = 1000
     x = np.linspace(-2, 2, n_sampled)
 
