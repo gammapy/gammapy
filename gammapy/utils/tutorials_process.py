@@ -73,7 +73,6 @@ def build_notebooks(args):
         log.info("Notebook file does not exist.")
         sys.exit()
 
-    # strip and blackformat
     subprocess.run(
         [sys.executable, "-m", "gammapy", "jupyter", "--src", "temp", "black"]
     )
@@ -99,7 +98,7 @@ def build_notebooks(args):
                     "nbconvert",
                     "--to",
                     "script",
-                    "{}".format(str(path)),
+                    str(path),
                 ]
             )
         copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
@@ -115,7 +114,7 @@ def build_notebooks(args):
                 "nbconvert",
                 "--to",
                 "script",
-                "{}".format(str(pathdest)),
+                str(pathdest),
             ]
         )
         pathdest = path_filled_nbs / notebookname
