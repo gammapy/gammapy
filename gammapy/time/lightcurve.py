@@ -348,7 +348,7 @@ class LightCurve:
 class LightCurveEstimator:
     """Light curve estimator.
 
-    For a usage example see :gp-notebook:`light_curve`.
+    For a usage example see :gp-notebook:`light_curve`
 
     Parameters
     ----------
