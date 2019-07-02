@@ -116,21 +116,27 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset.mask_safe = dataset.mask_fit
 
     hdulist = dataset.to_hdulist()
+    actual = [hdu.name for hdu in hdulist]
 
-    assert "COUNTS" in hdulist
-    assert "COUNTS_BANDS" in hdulist
-    assert "EXPOSURE" in hdulist
-    assert "EXPOSURE_BANDS" in hdulist
-    assert "BACKGROUND" in hdulist
-    assert "BACKGROUND_BANDS" in hdulist
-    assert "PSF_KERNEL" in hdulist
-    assert "PSF_KERNEL_BANDS" in hdulist
-    assert "EDISP_MATRIX" in hdulist
-    assert "EDISP_MATRIX_EBOUNDS" in hdulist
-    assert "MASK_FIT" in hdulist
-    assert "MASK_FIT_BANDS" in hdulist
-    assert "MASK_SAFE" in hdulist
-    assert "MASK_SAFE_BANDS" in hdulist
+    desired = [
+        "PRIMARY",
+        "COUNTS",
+        "COUNTS_BANDS",
+        "EXPOSURE",
+        "EXPOSURE_BANDS",
+        "BACKGROUND",
+        "BACKGROUND_BANDS",
+        "EDISP_MATRIX",
+        "EDISP_MATRIX_EBOUNDS",
+        "PSF_KERNEL",
+        "PSF_KERNEL_BANDS",
+        "MASK_SAFE",
+        "MASK_SAFE_BANDS",
+        "MASK_FIT",
+        "MASK_FIT_BANDS",
+    ]
+
+    assert actual == desired
 
     dataset.write(tmpdir / "test.fits")
 
