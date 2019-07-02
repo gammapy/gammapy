@@ -23,6 +23,8 @@ SOURCES = [
         "n_flux_points": 24,
         "is_pointlike": False,
         "spatial_model": "SkyGaussian",
+        "ra": 128.287003,
+        "dec": -45.189999,
     },
     {
         "name": "HESS J1848-018",
@@ -36,6 +38,8 @@ SOURCES = [
         "n_flux_points": 11,
         "is_pointlike": False,
         "spatial_model": "SkyGaussian",
+        "ra": 282.119995,
+        "dec": -1.792,
     },
     {
         "name": "HESS J1813-178",
@@ -49,6 +53,8 @@ SOURCES = [
         "n_flux_points": 13,
         "is_pointlike": False,
         "spatial_model": "SkyGaussian",
+        "ra": 273.362915,
+        "dec": -17.84889,
     },
 ]
 
@@ -64,6 +70,9 @@ class TestSourceCatalogGammaCat:
     def test_source_table(self, gammacat):
         assert gammacat.name == "gamma-cat"
         assert len(gammacat.table) == 162
+
+    def test_positions(self, gammacat):
+        assert len(gammacat.positions) == 162
 
     def test_w28_alias_names(self, gammacat):
         names = [
@@ -164,6 +173,15 @@ class TestSourceCatalogObjectGammaCat:
         flux_points = source.flux_points
 
         assert len(flux_points.table) == ref["n_flux_points"]
+
+    @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
+    def test_position(self, gammacat, ref):
+        source = gammacat[ref["name"]]
+
+        position = source.position
+
+        assert_allclose(position.ra.deg, ref["ra"], atol=1e-3)
+        assert_allclose(position.dec.deg, ref["dec"], atol=1e-3)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spatial_model(self, gammacat, ref):

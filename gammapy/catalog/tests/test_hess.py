@@ -25,6 +25,10 @@ class TestSourceCatalogHGPS:
         assert len(cat.table) == 78
 
     @staticmethod
+    def test_positions(cat):
+        assert len(cat.positions) == 78
+
+    @staticmethod
     def test_table_components(cat):
         assert len(cat.table_components) == 98
 
@@ -94,6 +98,12 @@ class TestSourceCatalogObjectHGPS:
         source = cat["HESS J1713-397"]
         assert source.data["Spatial_Model"] == "Shell"
         assert "Source name          : HESS J1713-397" in str(source)
+
+    @staticmethod
+    def test_position(source):
+        position = source.position
+        assert_allclose(position.ra.deg, 280.95162964)
+        assert_allclose(position.dec.deg, -3.55410194)
 
     @staticmethod
     def test_components(source):

@@ -66,7 +66,6 @@ class TestSourceCatalog:
         with pytest.raises(ValueError):
             self.cat[int]
 
-    # TODO: add test for this for each catalog
     def test_positions(self):
         positions = self.cat.positions
         assert len(positions) == 3
@@ -93,7 +92,6 @@ class TestSourceCatalogObject:
         assert isinstance(d["DEC"], Quantity)
         assert_quantity_allclose(d["DEC"], Quantity(2, "deg"))
 
-    # TODO: add test for this for each catalog
     def test_position(self):
         position = self.source.position
         assert_allclose(position.ra.deg, 43.3)
