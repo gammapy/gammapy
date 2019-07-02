@@ -8,10 +8,12 @@ That package is still work in progress and not fully developed and
 stable, so need to establish a bit what works and what doesn't.
 """
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 import regions
 from ...maps import WcsGeom
-from ..regions import make_region, make_pixel_region
+from ..regions import make_region, make_pixel_region, SphericalCircleSkyRegion
 
 
 def test_make_region():
@@ -54,3 +56,15 @@ def test_make_pixel_region():
 
     with pytest.raises(TypeError):
         make_pixel_region(99)
+
+
+class TestSphericalCircleSkyRegion:
+    def setup(self):
+        self.region = SphericalCircleSkyRegion(
+            center=SkyCoord(10 * u.deg, 20 * u.deg), radius=10 * u.deg
+        )
+
+    def test_contains(self):
+        coord = SkyCoord([20.1, 22] * u.deg, 20 * u.deg)
+        mask = self.region.contains(coord)
+        assert_equal(mask, [True, False])

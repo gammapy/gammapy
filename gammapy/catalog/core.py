@@ -3,10 +3,10 @@
 from collections import OrderedDict
 import copy
 import numpy as np
+from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from ..utils.array import _is_int
-from ..utils.table import table_row_to_dict
-from .utils import skycoord_from_table
+from ..utils.table import table_row_to_dict, table_from_row_data
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 
@@ -72,7 +72,8 @@ class SourceCatalogObject:
     @property
     def position(self):
         """Source position (`~astropy.coordinates.SkyCoord`)."""
-        return skycoord_from_table(self.data)
+        table = table_from_row_data([self.data])
+        return _skycoord_from_table(table)[0]
 
 
 class SourceCatalog:
@@ -238,8 +239,30 @@ class SourceCatalog:
     @property
     def positions(self):
         """Source positions (`~astropy.coordinates.SkyCoord`)."""
-        return skycoord_from_table(self.table)
+        return _skycoord_from_table(self.table)
 
     def copy(self):
         """Copy catalog"""
         return copy.deepcopy(self)
+
+
+def _skycoord_from_table(table):
+    try:
+        keys = table.colnames
+    except AttributeError:
+        keys = table.keys()
+
+    if {"RAJ2000", "DEJ2000"}.issubset(keys):
+        lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
+    elif {"RA", "DEC"}.issubset(keys):
+        lon, lat, frame = "RA", "DEC", "icrs"
+    elif {"GLON", "GLAT"}.issubset(keys):
+        lon, lat, frame = "GLON", "GLAT", "galactic"
+    elif {"glon", "glat"}.issubset(keys):
+        lon, lat, frame = "glon", "glat", "galactic"
+    else:
+        raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
+
+    unit = table[lon].unit.to_string() if table[lon].unit else "deg"
+
+    return SkyCoord(table[lon], table[lat], unit=unit, frame=frame)

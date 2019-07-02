@@ -74,7 +74,7 @@ class PhaseBackgroundEstimator:
 
     def process(self, obs):
         """Estimate background for one observation."""
-        all_events = obs.events.select_circular_region(self.on_region)
+        all_events = obs.events.select_region(self.on_region)
 
         self.on_phase = self._check_intervals(self.on_phase)
         self.off_phase = self._check_intervals(self.off_phase)

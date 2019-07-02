@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
 from astropy.units import Quantity
 from astropy import units as u
-from regions import CircleSkyRegion
+from ...utils.regions import SphericalCircleSkyRegion
 from ...data import DataStore, ObservationFilter, EventListBase, GTI
 from ...utils.testing import requires_data, assert_time_allclose
 
@@ -43,13 +43,13 @@ def test_filter_events(observation):
 
     target_position = SkyCoord(ra=229.2, dec=-58.3, unit="deg", frame="icrs")
     region_radius = Angle("0.2 deg")
-    region = CircleSkyRegion(center=target_position, radius=region_radius)
-    circular_region_filter = {"type": "circular_region", "opts": {"region": region}}
+    region = SphericalCircleSkyRegion(center=target_position, radius=region_radius)
+    region_filter = {"type": "sky_region", "opts": {"region": region}}
 
     time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
 
     obs_filter = ObservationFilter(
-        event_filters=[custom_filter, circular_region_filter], time_filter=time_filter
+        event_filters=[custom_filter, region_filter], time_filter=time_filter
     )
 
     events = observation.events

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from astropy.coordinates import SkyCoord, Angle
-from regions import CircleSkyRegion
+from ...utils.regions import SphericalCircleSkyRegion
 from ...utils.testing import requires_data
 from ...data import DataStore, EventList
 from .. import BackgroundEstimate, PhaseBackgroundEstimator
@@ -12,7 +12,7 @@ def on_region():
     """Example on_region for testing."""
     pos = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
     radius = Angle(0.2, "deg")
-    return CircleSkyRegion(pos, radius)
+    return SphericalCircleSkyRegion(pos, radius)
 
 
 @pytest.fixture(scope="session")
@@ -46,7 +46,7 @@ def test_run(phase_bkg_estimator):
 
 @requires_data()
 def test_filter_events(observations, on_region):
-    all_events = observations[0].events.select_circular_region(on_region)
+    all_events = observations[0].events.select_region(on_region)
     ev1 = PhaseBackgroundEstimator.filter_events(all_events, (0, 0.3))
     assert isinstance(ev1, EventList)
     ev2 = PhaseBackgroundEstimator.filter_events(all_events, (0.3, 1))
