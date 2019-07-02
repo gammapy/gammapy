@@ -1,5 +1,4 @@
 # Licensed under a 3 - clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import logging
 from ..utils.random import get_random_state
 from .utils import SpectrumEvaluator

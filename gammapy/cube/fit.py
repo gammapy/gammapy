@@ -8,7 +8,7 @@ from astropy.io import fits
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
-from ..maps import Map, MapAxis
+from ..maps import Map
 from ..irf import EnergyDispersion
 from .models import SkyModel, SkyModels, BackgroundModel
 from .psf_kernel import PSFKernel

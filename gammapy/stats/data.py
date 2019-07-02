@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """On-off bin stats computations."""
-import numpy as np
-from ..utils.random import get_random_state
 
 __all__ = ["Stats"]
 
