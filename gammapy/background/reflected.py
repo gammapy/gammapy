@@ -200,7 +200,7 @@ class ReflectedRegionsFinder:
         ONpixels = PixCoord(X[mask], Y[mask])
 
         # find excluded PixCoords
-        mask = self.reference_map.data < 0.5
+        mask = self.reference_map.data == 0
         self.excluded_pixcoords = PixCoord(X[mask], Y[mask])
 
         # Minimum angle a region has to be moved to not overlap with previous one
@@ -241,12 +241,12 @@ class ReflectedRegionsFinder:
         )
         wcs = self.reference_map.geom.wcs
 
-        on_patch = self.region.to_pixel(wcs=wcs).as_artist(color="red", alpha=0.6)
+        on_patch = self.region.to_pixel(wcs=wcs).as_artist(edgecolor="red", alpha=0.6)
         ax.add_patch(on_patch)
 
         for off in self.reflected_regions:
             tmp = off.to_pixel(wcs=wcs)
-            off_patch = tmp.as_artist(color="blue", alpha=0.6)
+            off_patch = tmp.as_artist(edgecolor="blue", alpha=0.6)
             ax.add_patch(off_patch)
 
             xx, yy = self.center.to_pixel(wcs)
