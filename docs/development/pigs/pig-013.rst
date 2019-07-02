@@ -17,23 +17,32 @@ Abstract
 
 This is a proposal to make some updates concerning Gammapy dependencies and
 supported distribution channels, to be introduced in Gammapy v0.14, and then to
-be used in Gammapy v1.0 and likely without much changes moving forward.
+be used in Gammapy v1.0.
 
-Given that we have a good way to ship recent versions of Gammapy and all
-dependencies to users on all platforms, we suggest to drop support for Python
-3.5 or later, and to increase the minimum supported version of our dependencies.
-This PIG also contains a table clarifying which Gammapy dependencies are
-required and which are optional, and what the minimum supported version for each
-dependency is (older versions often will work, but are not tested by us).
+Concerning Gammapy dependencies, given that we have a good way to ship
+reproducible execution environments and recent versions of Gammapy and all
+dependencies to users on all platforms via `conda`_ and `pip`_, we suggest to
+drop support for Python 3.5, and to increase the minimum supported version of
+our dependencies. Below we give tables and comments that clarify which Gammapy
+dependencies are required and which are optional, and what the minimum supported
+version for each dependency is. Older versions often will work, but are not
+tested by us.
 
-Concerning distribution, we suggest to try to build and distribute Python binary
-wheels to get a fast ``pip install gammapy``, and if it works well and the extra
-maintenance effor is low, to support that distribution channel for Gammapy v1.0
-and moving forward. We suggest to remove support for distribution via Macports.
+Concerning Gammapy distribution, we suggest to try to build and distribute
+Python binary wheels for Gammapy, regions, reproject and astropy-healpix for
+Linux, macOS and Windows, and to create a pip ``requirements.txt`` file that is
+equivalent to the conda ``environment.yml` file we already have. This will make
+the installation instructions for ``pip`` and ``conda`` equivalent, in both
+cases environments in the user's home directory are used and installation is
+very easy and fast, no C compiler or admin privileges needed on the user
+machine. We suggest to remove the extensive installation instruction page for
+Macports from the Gammapy docs, and to not include Macports, HomeBrew or Linux
+distributions in the distribution channels that are maintained by the Gammapy
+team.
 
-One reason to write a PIG for this (as opposed to just making these decisions
-among the Gammapy lead developers or coordination committee) is to create an
-opportunity for user feedback. Let us know what you need and want!
+The main reason to write a PIG for this is to give everyone an opportunity to
+give feedback. We will announce this on the Gammapy user list, but not run a
+dedicated user survey. Let us know what you need and want!
 
 Introduction
 ============
@@ -43,38 +52,49 @@ lot. Thanks to conda, we now have a way to ship up-to-date versions of Gammapy
 and all dependencies on all supported platforms, the number of installation
 issues reported by users has been very low in recent years.
 
+Required and optional dependencies
+----------------------------------
+
 Given this situation, we feel that it is OK to drop support for old versions
-(most notably Python 2.7, see :ref:`pig-013`), and to change a few Gammapy
-dependencies from "optional" to "required". The difference is that a required
-dependency is in the ``install_requires`` list in ``setup.py``, which means that
-``pip install gammapy`` will install it, whereas optional dependencies are not
-listed there, and ``pip install gammapy`` will not automatically install them.
-Another distinction is that required dependencies are imported at the top of
-Gammapy modules, which means that import of some Gammapy sub-package such as
-e.g. ``import gammapy.detect`` will often fail should that dependency not be
+(most notably Python 2.7, see :ref:`pig-003`), and to change a few Gammapy
+dependencies from "optional" to "required".
+
+Technically, the difference is that a required dependency is in the
+``install_requires`` list in ``setup.py``, which means that ``pip install
+gammapy`` will install it, whereas optional dependencies are not listed there,
+and ``pip install gammapy`` will not automatically install them. Another
+distinction is that required dependencies are imported at the top of Gammapy
+modules, which means that import of some Gammapy sub-package such as e.g.
+``import gammapy.detect`` will often fail should that dependency not be
 installed (which usually doesn't happen, unless users do uncommon things like
 e.g. ``pip uninstall scipy`` after ``pip install gammapy``, that would lead to a
 non-working Gammapy installation). Initially we only had Numpy and Astropy as
 required dependencies, by now we have added Scipy (in `GH 1863`_), PyYAML, click
-and regions as required dependencies.
+and regions as required dependencies. Still, we are careful and conservative
+concerning dependencies. E.g. we removed the use of `scikit-image`_ (in  `GH
+1658`_) because really ``scipy.ndimage`` contains everything we need, and also
+e.g. ``h5py`` and ``pandas`` and ``ROOT`` and a few other optional dependencies
+that were only used in one or two functions in prototype code were removed (see
+e.g. `GH 1586`_).
 
-In Gammapy, we are careful and conservative concerning dependencies. E.g. we
-removed the use of `scikit-image`_ (in  `GH 1658`_) because really
-``scipy.ndimage`` contains everything we need, and also e.g. ``h5py`` and
-``pandas`` and ``ROOT`` and a few other optional dependencies that were only
-used in one or two functions in prototype code were removed (see e.g. `GH
-1586`_).
+Most users don't know or care about ``setuptools`` and ``install_requires``,
+what they want is a Python environment that contains everything needed to run
+analyses with Gammapy. For this we have the pre-defined conda and pip environent
+specifications (see below). Those contain many optional dependencies, but they
+don't contain everything some users might want to use. E.g. ``matplotlib`` and
+``jupyter`` and ``sherpa`` is included there, but ``pandas`` or ``pint`` for
+pulsar analysis isn't. Users can use ``conda`` or ``pip`` to install what they
+need in addition, the assumption is that those package managers work very well
+already, and keep getting better.
 
-In the following sections, we summarise what we have now (as of June 2019, in
-Gammapy v0.12), and changes we propose to be made immediately after the Gammapy
-v0.13 release in late July 2019, which will ship to users in Gammapy v0.14 in
-September 2019.
+Motivation
+----------
 
 As mentioned already in :ref:`pig-013`, there is always a benefit and a cost to
 supporting old versions. In a few sections below we highlight some of the
 benefits and costs for different dependencies specifically, but generally we
-feel that the benefits of the changes proposed here are significant (much
-reduced testing and maintenance effort, some new features become available),
+feel that the benefits of the changes proposed here are significant. Much
+reduced testing and maintenance effort, some new features become available,
 while the benefits of keeping support for older versions is very small, since
 most Gammapy users use the recommended conda environment, which already ships
 very modern and recent stack and is mostly unchanged. Especially the
@@ -84,12 +104,22 @@ if we decide to require very recent versions of those packages (from summer
 2019), the motivation to support very old versions of other dependencies (most
 notably Astropy, but also e.g. Numpy or Scipy or Matplotlib) is very small.
 
+conda does provide a complete solution to ship Gammapy to users on all
+platforms. E.g. for the Fermi tools it's the only supported distribution
+channel. The addition of binary wheels for pip should be considered an
+experiment. This is the standard way to distribute Python packages, and some
+users prefer it over conda, and work on this has already started by the Astropy
+folks, so we'd like to try it out. We might or might not support this for the
+coming years.
+
 Required dependencies
 =====================
 
 We propose to update the Gammapy required dependencies as shown in the following
 table (the release dates for the packages are shown in parentheses are were
-obtained from https://pypi.org/).
+obtained from https://pypi.org/). A definition of required dependency is given
+above in the introduction, notes on each required dependency are given below
+after the table.
 
 ===============  ===============  ===============
 Dependency       Gammapy 0.12     Gammapy 0.14
@@ -103,40 +133,48 @@ pyyaml           unclear          3.13 (Jul 2018)
 click            unclear          7.0  (Sep 2018)
 ===============  ===============  ===============
 
-Notes:
+We already mentioned the possibility to drop Python 3.5 support in
+:ref:`pig-003`. One reason is that Anaconda and conda-forge (our main
+distribution channel, used in our testing continuous integration setup) only
+contains Python 2.7, 3.6 and 3.7 at this point (and 3.8 added in fall 2018),
+i.e. testing on Python 3.5 is already extra effort. Also, Python 3.6 allows us
+to use f-strings and just dict instead of a mix of dict and OrderedDict like we
+have now, it's nice for developers. E.g. Sunpy or ctapipe already require Python
+3.6 or later.
 
-- We already mentioned the possibility to drop Python 3.5 support in
-  :ref:`pig-003`. One reason is that Anaconda and conda-forge (our main
-  distribution channel, used in our testing continuous integration setup) only
-  contains Python 2.7, 3.6 and 3.7 at this point (and 3.8 added in fall 2018),
-  i.e. testing on Python 3.5 is already extra effort. Also, Python 3.6 allows us
-  to use f-strings and just dict instead of a mix of dict and OrderedDict like
-  we have now, it's nice for developers. E.g. Sunpy or ctapipe already require
-  Python 3.6 or later.
-- This update is to very recent versions for dependencies. We could keep support
-  for older versions, e.g. Numpy 1.13 (Jun 2017), Scipy 1.0  (Oct 2017) and
-  Astropy 3.0 (Feb 2018) or even older. But it wasn't clear to us if doing so
-  would be of use to anyone, so we defaulted to this propsal.
-- For Astropy, we could keep support for version 2.0, but there are many small
-  new features, fixes and performance improvements in 3.0, 3.1 and 3.2 (see
-  `Astropy whatsnew`_) that will make our life easier: much improved
-  Quantity-support for functions in Numpy and Scipy, support for the FITS time
-  standard and better support for Time columns in Table, the new
-  ``astropy.uncertainty`` package which we could use (see :ref:`pig-14`_), the
-  ``SkyCoord.directional_offset_by`` method for field of view coordinates,
-  common WCS API, the new ``astropy.timeseries``, ASDF, ...
-- A major motivation to update to very recent versions is
-  that the ``regions`` package is still under development (see :ref:`pig-010`_).
-  In Gammapy 0.13 we require regions 0.4, and we plan to make a regions 0.5
-  release with further features and fixes in July, and to require that for
-  Gammapy 0.14.
-- For ``pyyaml`` and ``click`` we never had a version specified so far or a
-  version-dependent issue reported, i.e. any version from recent years worked.
-  Still, to have well-defined testing and support, we choose minimum required
-  versions from 2018 here.
+This update is to very recent versions for dependencies. We could keep support
+for older versions, e.g. Numpy 1.13 (Jun 2017), Scipy 1.0  (Oct 2017) and
+Astropy 3.0 (Feb 2018) or even older. But it wasn't clear to us if doing so
+would be of use to anyone, so we defaulted to this proposal.
+
+For Astropy, we could keep support for version 2.0, but there are many small new
+features, fixes and performance improvements in 3.0, 3.1 and 3.2 (see `Astropy
+whatsnew`_) that will make our life easier, for example much improved Quantity-support for
+functions in Numpy and Scipy, support for the FITS time standard and better
+support for Time columns in Table, the new ``astropy.uncertainty`` package which
+we could use (see :ref:`pig-14`_), the ``SkyCoord.directional_offset_by`` method
+for field of view coordinates, common WCS API, the new ``astropy.timeseries``,
+ASDF.
+
+A major motivation to update to very recent versions is that the ``regions``
+package is still under development (see :ref:`pig-010`_). In Gammapy 0.13 we
+require regions 0.4, and we plan to make a regions 0.5 release with further
+features and fixes in July, and to require that for Gammapy 0.14.
+
+The ``pyyaml`` package is the most-used YAML package for Python, used e.g. also
+in Astropy core for ECSV or ASDF I/O. The ``click`` package was chosen to
+implement the ``gammapy`` command line interface. For ``pyyaml`` and ``click``
+we never had a version specified so far or a version-dependent issue reported,
+i.e. any version from recent years worked. Still, to have well-defined testing
+and support, we choose minimum required versions from 2018 here.
 
 Optional dependencies
 =====================
+
+TODO: define optional dependency: imported in Gammapy code or tutorials, but not
+contained when ``conda install gammapy`` or ``pip install gammapy``, only in the
+env specs. Technical implication: imports must be delayed and
+``requires_dependency`` in tests.
 
 Refer to `GH 1245`_ by Kai "Required packages not mentioned".
 
@@ -204,7 +242,7 @@ https://www.raspberrypi.org/blog/piwheels/
 Macports
 --------
 
-We suggest to drop support for Macports, i.e. deleted the `Installation with
+We suggest to drop support for Macports, i.e. delete the `Installation with
 Macports`_ page from the installation instructions.
 
 As can be seen in the `Gammapy in Macports`_ history, the last update was to
@@ -233,6 +271,12 @@ Alternatives
 
 Task list
 =========
+
+In the following sections, we summarise what we have now (as of June 2019, in
+Gammapy v0.12), and changes we propose to be made immediately after the Gammapy
+v0.13 release in late July 2019, which will ship to users in Gammapy v0.14 in
+September 2019.
+
 
 Decision
 ========
