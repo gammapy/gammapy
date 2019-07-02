@@ -4,10 +4,15 @@ import numpy as np
 from astropy.utils import lazyproperty
 import astropy.units as u
 from astropy.nddata.utils import NoOverlapError
+from astropy.io import fits
+from ..utils.scripts import make_path
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
-from ..maps import Map
-from .models import SkyModel, SkyModels
+from ..maps import Map, MapAxis
+from ..irf import EnergyDispersion
+from .models import SkyModel, SkyModels, BackgroundModel
+from .psf_kernel import PSFKernel
+
 
 __all__ = ["MapEvaluator", "MapDataset"]
 
@@ -51,7 +56,7 @@ class MapDataset(Dataset):
 
     def __init__(
         self,
-        model,
+        model=None,
         counts=None,
         exposure=None,
         mask_fit=None,
@@ -96,13 +101,14 @@ class MapDataset(Dataset):
 
         self._model = model
 
-        evaluators = []
+        if model is not None:
+            evaluators = []
 
-        for component in model.skymodels:
-            evaluator = MapEvaluator(component, evaluation_mode=self.evaluation_mode)
-            evaluators.append(evaluator)
+            for component in model.skymodels:
+                evaluator = MapEvaluator(component, evaluation_mode=self.evaluation_mode)
+                evaluators.append(evaluator)
 
-        self._evaluators = evaluators
+            self._evaluators = evaluators
 
     @property
     def parameters(self):
@@ -171,6 +177,119 @@ class MapDataset(Dataset):
             stat = self._stat_sum(counts.ravel(), npred.ravel())
 
         return stat
+
+    def to_hdulist(self):
+        """Convert map dataset to list of HDUs.
+
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            Map dataset list of HDUs.
+        """
+        # TODO: what todo about the model and background model parameters?
+        exclude_primary = slice(1, None)
+
+        hdu_primary = fits.PrimaryHDU()
+        hdulist = fits.HDUList([hdu_primary])
+        hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
+        hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
+        hdulist += self.background_model.map.to_hdulist(hdu="background")[exclude_primary]
+
+        if self.edisp is not None:
+            if isinstance(self.edisp, EnergyDispersion):
+                hdus = self.edisp.to_hdulist()
+                hdus["MATRIX"].name = "edisp_matrix"
+                hdus["EBOUNDS"].name = "edisp_matrix_ebounds"
+                hdulist.append(hdus["EDISP_MATRIX"])
+                hdulist.append(hdus["EDISP_MATRIX_EBOUNDS"])
+            else:
+                hdulist += self.edisp.edisp_map.to_hdulist(hdu="EDISP")
+
+        if self.psf is not None:
+            if isinstance(self.psf, PSFKernel):
+                hdulist += self.psf.psf_kernel_map.to_hdulist(hdu="psf_kernel")[exclude_primary]
+            else:
+                hdulist += self.psf.psf_map.to_hdulist(hdu="psf")[exclude_primary]
+
+        if self.mask_safe is not None:
+            mask_safe_map = Map.from_geom(self.counts.geom, data=self.mask_safe.astype(int))
+            hdulist += mask_safe_map.to_hdulist(hdu="mask_safe")[exclude_primary]
+
+        if self.mask_fit is not None:
+            mask_fit_map = Map.from_geom(self.counts.geom, data=self.mask_fit.astype(int))
+            hdulist += mask_fit_map.to_hdulist(hdu="mask_fit")[exclude_primary]
+
+        return hdulist
+
+    @classmethod
+    def from_hdulist(cls, hdulist):
+        """Create map dataset from list of HDUs.
+
+        Parameters
+        ----------
+        hdulist : `~astropy.io.fits.HDUList`
+            List of HDUs.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset.
+        """
+        init_kwargs = {}
+        init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
+        init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+
+        background_map = Map.from_hdulist(hdulist, hdu="background")
+        init_kwargs["background_model"] = BackgroundModel(background_map)
+
+        if "EDISP_MATRIX" in hdulist:
+            init_kwargs["edisp"] = EnergyDispersion.from_hdulist(hdulist, hdu1="EDISP_MATRIX", hdu2="EDISP_MATRIX_EBOUNDS")
+
+        if "PSF_KERNEL" in hdulist:
+            psf_map = Map.from_hdulist(hdulist, hdu="psf_kernel")
+            init_kwargs["psf"] = PSFKernel(psf_map)
+
+        if "MASK_SAFE" in hdulist:
+            mask_safe_map = Map.from_hdulist(hdulist, hdu="mask_safe")
+            init_kwargs["mask_safe"] = mask_safe_map.data.astype(bool)
+
+        if "MASK_FIT" in hdulist:
+            mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
+            init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
+
+        return cls(**init_kwargs)
+
+    def write(self, filename, overwrite=False):
+        """Write map dataset to file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to write to.
+        overwrite : bool
+            Overwrite file if it exists.
+        """
+        filename = make_path(filename)
+        hdulist = self.to_hdulist()
+        hdulist.writeto(str(filename), overwrite=overwrite)
+
+    @classmethod
+    def read(cls, filename):
+        """Read map dataset from file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to read from.
+
+        Returns
+        -------
+        dataset : `MapDataset`
+            Map dataset.
+        """
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename))
+        return cls.from_hdulist(hdulist)
 
 
 class MapEvaluator:
