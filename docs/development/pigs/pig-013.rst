@@ -239,9 +239,16 @@ However, we suggest to stick to ``gammapy`` as a package with a very small set
 of dependencies, and then use the environment specifications to create the stack
 and execution environment that most users want, not metapackages for now.
 
-TODO: now I'm having second thoughts. Maybe we should go the pip & conda metapackages route?
-- Example of project that does this: https://pysal.org/install
+TODO: now I'm having second thoughts. Maybe we should go the conda metapackages
+route and for pip either ``extras_require`` or a metapackage?
+
+More examples;
+- Metapackages for pip and conda: https://pysal.org/install
 - Relevant link: https://docs.conda.io/projects/conda-build/en/latest/resources/commands/conda-metapackage.html
+- Looks like Sunpy uses ``extras_require``, see https://docs.sunpy.org/en/stable/guide/installation/advanced.html#sunpy-s-requirements
+- Looks like Glue uses ``extras_require`` for pip (see http://docs.glueviz.org/en/stable/installation/pip.html),
+  but then for conda has a metapackage ``glueviz`` https://github.com/conda-forge/glueviz-feedstock/blob/master/recipe/meta.yaml
+  which depends on ``glue-core``.
 
 Packages
 --------
