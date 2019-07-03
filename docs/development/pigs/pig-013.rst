@@ -239,6 +239,10 @@ However, we suggest to stick to ``gammapy`` as a package with a very small set
 of dependencies, and then use the environment specifications to create the stack
 and execution environment that most users want, not metapackages for now.
 
+TODO: now I'm having second thoughts. Maybe we should go the pip & conda metapackages route?
+- Example of project that does this: https://pysal.org/install
+- Relevant link: https://docs.conda.io/projects/conda-build/en/latest/resources/commands/conda-metapackage.html
+
 Packages
 --------
 
@@ -347,7 +351,12 @@ Others
 Outlook
 =======
 
-A number of 
+Possible somewhat related future discussion and work, not in scope for this PIG:
+
+- Simplify Gammapy packaging code, possibly get rid of ``astropy-helpers`` completely.
+  See  https://github.com/astropy/astropy-APEs/pull/52
+- Change git and release workflow (stable branches, bugfix backports) after v1.0
+  Better continuous integration, possibly set up continuous delivery.
 
 Alternatives
 ============
