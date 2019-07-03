@@ -250,12 +250,14 @@ def _skycoord_from_table(table):
     try:
         keys = table.colnames
     except AttributeError:
-        keys = table.keys()
+        keys = list(table.keys())
 
     if {"RAJ2000", "DEJ2000"}.issubset(keys):
         lon, lat, frame = "RAJ2000", "DEJ2000", "icrs"
     elif {"RA", "DEC"}.issubset(keys):
         lon, lat, frame = "RA", "DEC", "icrs"
+    elif {"ra", "dec"}.issubset(keys):
+        lon, lat, frame = "ra", "dec", "icrs"
     elif {"GLON", "GLAT"}.issubset(keys):
         lon, lat, frame = "GLON", "GLAT", "galactic"
     elif {"glon", "glat"}.issubset(keys):
