@@ -308,15 +308,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """Exposure ratio between signal and background regions"""
         return self.backscale / self.backscale_off
 
-    @property
-    def parameters(self):
-        if self._parameters is None:
-            raise AttributeError("No model set for Dataset")
-        else:
-            return self._parameters
-
-    def npred(self):
-        """Predicted counts vector."""
+    def npred_sig(self):
+        """Predicted counts from source model (`CountsSpectrum`)."""
         if self._predictor is None:
             raise AttributeError("No model set for this Dataset")
         npred = self._predictor.compute_npred()
@@ -324,12 +317,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
-        npred = self.npred()
+        mu_sig = self.npred_sig().data
         on_stat_ = wstat(
             n_on=self.counts.data,
             n_off=self.counts_off.data,
             alpha=self.alpha,
-            mu_sig=npred.data,
+            mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
 
@@ -359,15 +352,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         ax1.set_title("Counts")
         energy_unit = "TeV"
+
         if self.counts_off is not None:
-            energy = self.counts_off.energy.edges
-            data = self.counts_off.data * self.alpha
-            background_vector = CountsSpectrum(
-                data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
-            )
-            background_vector.plot_hist(
+            self.background.plot_hist(
                 ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
             )
+
         self.counts.plot_hist(
             ax=ax1,
             label="n_on",
@@ -375,6 +365,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             energy_unit=energy_unit,
             show_energy=(e_min, e_max),
         )
+
         ax1.set_xlim(
             0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
         )
@@ -386,6 +377,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
 
         ax3.axis("off")
+
         if self.counts_off is not None:
             ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
 

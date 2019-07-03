@@ -175,7 +175,7 @@ class TestSpectrumDatasetOnOff:
         energy = self.aeff.energy.edges * self.aeff.energy.unit
         expected = self.aeff.data.data[0] * (energy[-1] - energy[0]) * const * livetime
 
-        assert_allclose(dataset.npred().data.sum(), expected.value)
+        assert_allclose(dataset.npred_sig().data.sum(), expected.value)
 
     @requires_dependency("matplotlib")
     def test_peek(self):
