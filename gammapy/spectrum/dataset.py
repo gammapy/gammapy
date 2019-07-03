@@ -116,6 +116,20 @@ class SpectrumDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
+    def _as_counts_spectrum(self, data):
+        energy = self.counts.energy.edges
+        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
+
+    def excess(self):
+        """Excess (counts - alpha * counts_off)"""
+        excess = self.counts.data - self.background.data
+        return self._as_counts_spectrum(excess)
+
+    def residuals(self):
+        """Residuals (npred - excess)."""
+        residuals = self.npred().data - self.excess().data
+        return self._as_counts_spectrum(residuals)
+
     def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
 
@@ -142,212 +156,6 @@ class SpectrumDataset(Dataset):
         e_lo = energy[:-1][self.mask_safe]
         e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])
-
-
-class SpectrumDatasetOnOff(Dataset):
-    """Compute spectral model fit statistic on a on-off spectrum.
-
-    Parameters
-    ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
-        Fit model
-    counts : `~gammapy.spectrum.CountsSpectrum`
-        ON Counts spectrum
-    counts_off : `~gammapy.spectrum.CountsSpectrum`
-        OFF Counts spectrum
-    livetime : `~astropy.units.Quantity`
-        Livetime
-    mask_fit : `~numpy.array`
-        Mask to apply to the likelihood for fitting.
-    aeff : `~gammapy.irf.EffectiveAreaTable`
-        Effective area
-    edisp : `~gammapy.irf.EnergyDispersion`
-        Energy dispersion
-    mask_safe : `~numpy.array`
-        Mask defining the safe data range.
-    """
-
-    def __init__(
-        self,
-        model=None,
-        counts=None,
-        counts_off=None,
-        livetime=None,
-        mask_fit=None,
-        aeff=None,
-        edisp=None,
-        mask_safe=None,
-        backscale=None,
-        backscale_off=None,
-        obs_id=None,
-    ):
-
-        self.counts = counts
-        self.counts_off = counts_off
-        self.livetime = livetime
-        self.mask_fit = mask_fit
-        self.aeff = aeff
-        self.edisp = edisp
-        self.model = model
-        self.mask_safe = mask_safe
-
-        if np.isscalar(backscale):
-            backscale = np.ones(self.counts.energy.nbin) * backscale
-
-        if np.isscalar(backscale_off):
-            backscale_off = np.ones(self.counts.energy.nbin) * backscale_off
-
-        self.backscale = backscale
-        self.backscale_off = backscale_off
-        self.obs_id = obs_id
-
-    @property
-    def alpha(self):
-        """Exposure ratio between signal and background regions"""
-        return self.backscale / self.backscale_off
-
-    @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, model):
-        self._model = model
-        if model is not None:
-            self._parameters = Parameters(self._model.parameters.parameters)
-            if self.edisp is None:
-                self._predictor = SpectrumEvaluator(
-                    model=self.model,
-                    livetime=self.livetime,
-                    aeff=self.aeff,
-                    e_true=self.counts.energy.edges,
-                )
-            else:
-                self._predictor = SpectrumEvaluator(
-                    model=self.model,
-                    aeff=self.aeff,
-                    edisp=self.edisp,
-                    livetime=self.livetime,
-                )
-
-        else:
-            self._parameters = None
-            self._predictor = None
-
-    @property
-    def parameters(self):
-        if self._parameters is None:
-            raise AttributeError("No model set for Dataset")
-        else:
-            return self._parameters
-
-    @property
-    def data_shape(self):
-        """Shape of the counts data"""
-        return self.counts.data.shape
-
-    def npred(self):
-        """Predicted counts vector."""
-        if self._predictor is None:
-            raise AttributeError("No model set for this Dataset")
-        npred = self._predictor.compute_npred()
-        return npred
-
-    def likelihood_per_bin(self):
-        """Likelihood per bin given the current model parameters"""
-        npred = self.npred()
-        on_stat_ = wstat(
-            n_on=self.counts.data,
-            n_off=self.counts_off.data,
-            alpha=self.alpha,
-            mu_sig=npred.data,
-        )
-        return np.nan_to_num(on_stat_)
-
-    @classmethod
-    def read(cls, filename):
-        """Read from file
-
-        For now, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names
-        must be set in the PHA header and be present in the same folder
-
-        Parameters
-        ----------
-        filename : str
-            OGIP PHA file to read
-        """
-        raise NotImplementedError(
-            "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
-        )
-
-    @property
-    def energy_range(self):
-        """Energy range defined by the safe mask."""
-        energy = self.counts.energy.edges
-        e_lo = energy[:-1][self.mask_safe]
-        e_hi = energy[1:][self.mask_safe]
-        return u.Quantity([e_lo.min(), e_hi.max()])
-
-    def _as_counts_spectrum(self, data):
-        energy = self.counts.energy.edges
-        return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
-
-    def excess(self):
-        """Excess (counts - alpha * counts_off)"""
-        excess = self.counts.data - self.alpha * self.counts_off.data
-        return self._as_counts_spectrum(excess)
-
-    def residuals(self):
-        """Residuals (npred - excess)."""
-        residuals = self.npred().data - self.excess().data
-        return self._as_counts_spectrum(residuals)
-
-    def peek(self, figsize=(10, 10)):
-        """Quick-look summary plots."""
-        import matplotlib.pyplot as plt
-
-        e_min, e_max = self.energy_range
-
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
-
-        ax1.set_title("Counts")
-        energy_unit = "TeV"
-        if self.counts_off is not None:
-            energy = self.counts_off.energy.edges
-            data = self.counts_off.data * self.alpha
-            background_vector = CountsSpectrum(
-                data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
-            )
-            background_vector.plot_hist(
-                ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
-            )
-        self.counts.plot_hist(
-            ax=ax1,
-            label="n_on",
-            color="darkred",
-            energy_unit=energy_unit,
-            show_energy=(e_min, e_max),
-        )
-        ax1.set_xlim(
-            0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
-        )
-        ax1.legend(numpoints=1)
-
-        ax2.set_title("Effective Area")
-        e_unit = self.aeff.energy.unit
-        self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
-        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
-
-        ax3.axis("off")
-        if self.counts_off is not None:
-            ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
-
-        ax4.set_title("Energy Dispersion")
-        if self.edisp is not None:
-            self.edisp.plot_matrix(ax=ax4)
-
-        # TODO: optimize layout
-        plt.subplots_adjust(wspace=0.3)
 
     def plot_fit(self):
         """Plot counts and residuals in two panels.
@@ -429,6 +237,164 @@ class SpectrumDatasetOnOff(Dataset):
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
         ax.set_ylabel("Residuals")
         return ax
+
+
+
+class SpectrumDatasetOnOff(SpectrumDataset):
+    """Compute spectral model fit statistic on a on-off spectrum.
+
+    Parameters
+    ----------
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Fit model
+    counts : `~gammapy.spectrum.CountsSpectrum`
+        ON Counts spectrum
+    counts_off : `~gammapy.spectrum.CountsSpectrum`
+        OFF Counts spectrum
+    livetime : `~astropy.units.Quantity`
+        Livetime
+    mask_fit : `~numpy.array`
+        Mask to apply to the likelihood for fitting.
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        Effective area
+    edisp : `~gammapy.irf.EnergyDispersion`
+        Energy dispersion
+    mask_safe : `~numpy.array`
+        Mask defining the safe data range.
+    """
+
+    def __init__(
+        self,
+        model=None,
+        counts=None,
+        counts_off=None,
+        livetime=None,
+        mask_fit=None,
+        aeff=None,
+        edisp=None,
+        mask_safe=None,
+        backscale=None,
+        backscale_off=None,
+        obs_id=None,
+    ):
+
+        self.counts = counts
+        self.counts_off = counts_off
+        self.livetime = livetime
+        self.mask_fit = mask_fit
+        self.aeff = aeff
+        self.edisp = edisp
+        self.model = model
+        self.mask_safe = mask_safe
+
+        if np.isscalar(backscale):
+            backscale = np.ones(counts.energy.nbin) * backscale
+
+        if np.isscalar(backscale_off):
+            backscale_off = np.ones(counts.energy.nbin) * backscale_off
+
+        self.backscale = backscale
+        self.backscale_off = backscale_off
+        self.obs_id = obs_id
+
+    @property
+    def background(self):
+        """"""
+        background = self.alpha * self.counts_off.data
+        return self._as_counts_spectrum(background)
+
+    @property
+    def alpha(self):
+        """Exposure ratio between signal and background regions"""
+        return self.backscale / self.backscale_off
+
+    @property
+    def parameters(self):
+        if self._parameters is None:
+            raise AttributeError("No model set for Dataset")
+        else:
+            return self._parameters
+
+    def npred(self):
+        """Predicted counts vector."""
+        if self._predictor is None:
+            raise AttributeError("No model set for this Dataset")
+        npred = self._predictor.compute_npred()
+        return npred
+
+    def likelihood_per_bin(self):
+        """Likelihood per bin given the current model parameters"""
+        npred = self.npred()
+        on_stat_ = wstat(
+            n_on=self.counts.data,
+            n_off=self.counts_off.data,
+            alpha=self.alpha,
+            mu_sig=npred.data,
+        )
+        return np.nan_to_num(on_stat_)
+
+    @classmethod
+    def read(cls, filename):
+        """Read from file
+
+        For now, filename is assumed to the name of a PHA file where BKG file, ARF, and RMF names
+        must be set in the PHA header and be present in the same folder
+
+        Parameters
+        ----------
+        filename : str
+            OGIP PHA file to read
+        """
+        raise NotImplementedError(
+            "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
+        )
+
+    def peek(self, figsize=(10, 10)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+
+        e_min, e_max = self.energy_range
+
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+
+        ax1.set_title("Counts")
+        energy_unit = "TeV"
+        if self.counts_off is not None:
+            energy = self.counts_off.energy.edges
+            data = self.counts_off.data * self.alpha
+            background_vector = CountsSpectrum(
+                data=data, energy_lo=energy[:-1], energy_hi=energy[1:]
+            )
+            background_vector.plot_hist(
+                ax=ax1, label="alpha * n_off", color="darkblue", energy_unit=energy_unit
+            )
+        self.counts.plot_hist(
+            ax=ax1,
+            label="n_on",
+            color="darkred",
+            energy_unit=energy_unit,
+            show_energy=(e_min, e_max),
+        )
+        ax1.set_xlim(
+            0.7 * e_min.to_value(energy_unit), 1.3 * e_max.to_value(energy_unit)
+        )
+        ax1.legend(numpoints=1)
+
+        ax2.set_title("Effective Area")
+        e_unit = self.aeff.energy.unit
+        self.aeff.plot(ax=ax2, show_energy=(e_min, e_max))
+        ax2.set_xlim(0.7 * e_min.to_value(e_unit), 1.3 * e_max.to_value(e_unit))
+
+        ax3.axis("off")
+        if self.counts_off is not None:
+            ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
+
+        ax4.set_title("Energy Dispersion")
+        if self.edisp is not None:
+            self.edisp.plot_matrix(ax=ax4)
+
+        # TODO: optimize layout
+        plt.subplots_adjust(wspace=0.3)
 
     def to_ogip_files(self, outdir=None, use_sherpa=False, overwrite=False):
         """Write OGIP files.
