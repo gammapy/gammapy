@@ -31,7 +31,7 @@ tested by us.
 Concerning Gammapy distribution, we suggest to try to build and distribute
 Python binary wheels for Gammapy, regions, reproject and astropy-healpix for
 Linux, macOS and Windows, and to create a pip ``requirements.txt`` file that is
-equivalent to the conda ``environment.yml` file we already have. This will make
+equivalent to the conda ``environment.yml`` file we already have. This will make
 the installation instructions for ``pip`` and ``conda`` equivalent, in both
 cases environments in the user's home directory are used and installation is
 very easy and fast, no C compiler or admin privileges needed on the user
@@ -201,7 +201,7 @@ concern. So one proposal we make here is to remove the ``extras_require`` key in
 ``setup.py`` for Gammapy.
 
 In addition to the conda environment, we propose to add an equivalent `pip
-requirements`_ file from now on, i.e. in addition to
+requirements file`_ from now on, i.e. in addition to
 ``gammapy-0.14-environment.yml`` we would make a
 ``gammapy-0.14-requirements.txt`` file so that users that prefer Python virtual
 envs and pip will be able to install Gammapy with the set of recommended
@@ -226,14 +226,18 @@ be stored in a FITS file, i.e. most users will not need it. Another way to
 achieve this is to use a metapackage, which is a collection of other packages,
 very similar to ``requirements.txt``, just as a Python package on PyPI. E.g.
 https://pypi.org/project/jupyter/ is a metapackage, but overall this is not
-widely used by Python projects. For Gammapy it would mean we'd have to change to
-a different package name, e.g. ``gammapy-core``, to make room for ``gammapy`` to
-be the metapackage, or to add a metapackage with a name like e.g.
-``gammapy-recommended`` or ``gammapy-env`` or something like that. While this is
-a nice solution, we  suggest to stick to ``gammapy`` as a package with a very
-small set of dependencies, and then use the environment specifications to create
-the stack and execution environment that most users want, not metapackages for
-now.
+widely used by Python projects. For conda it's also possible to create basically
+a metapackage, this was done e.g. in `fermitools conda meta.yaml`_ for the Fermi
+tools. For Gammapy it would mean we'd have to change to a different package
+name, e.g. ``gammapy-core``, to make room for ``gammapy`` to be the metapackage,
+or to add a metapackage with a name like e.g. ``gammapy-recommended`` or
+``gammapy-all`` or ``gammapy-tools`` or some name in that vein. This has the
+advantage that the env spec is distributed via a channel (anaconda.org or
+pypi.org) that conda or pip know about natively, i.e. it's non necessary any
+more to start the process by downloading the env spec file from gammapy.org.
+However, we suggest to stick to ``gammapy`` as a package with a very small set
+of dependencies, and then use the environment specifications to create the stack
+and execution environment that most users want, not metapackages for now.
 
 Packages
 --------
@@ -379,3 +383,4 @@ tbd
 .. _PEP 427: https://www.python.org/dev/peps/pep-0427/
 .. _pip requirements file: https://pip.pypa.io/en/stable/user_guide/#requirements-files
 .. _extras_require in Gammapy setup.py: https://github.com/gammapy/gammapy/blob/fe8ca7d6caac77b8a31efc8bec3b21d09aacf6c1/setup.py#L115-L127
+.. _fermitools conda meta.yaml: https://github.com/fermi-lat/Fermitools-conda/blob/master/meta.yaml
