@@ -171,24 +171,104 @@ and support, we choose minimum required versions from 2018 here.
 Optional dependencies
 =====================
 
-TODO: define optional dependency: imported in Gammapy code or tutorials, but not
-contained when ``conda install gammapy`` or ``pip install gammapy``, only in the
-env specs. Technical implication: imports must be delayed and
-``requires_dependency`` in tests.
+Environments
+------------
 
-Refer to `GH 1245`_ by Kai "Required packages not mentioned".
+The philosophy of Gammapy is to build on top of and collaborate with the
+scientific Python stack, and to mostly avoid re-implementing functionality that
+already exists. There are well over 100,000 Python packages available on
+pypi.org, and well over 1000 astronomy packages. The beauty of Python is that
+users can just install and import what they need and combine Gammapy with other
+packages to implement their analysis, not everything needs to be built into
+Gammapy.
+
+So what exactly is an optional dependency of Gammapy and what isn't? Here we
+consider packages as optional dependencies if they are imported within Gammapy
+itself, or used in one of our tutorials. We already have an overview of which
+packages those are, since this is basically the packages we added to our conda
+environment files like `gammapy-0.12-environment.yml`_ which are the recommended
+way to install and use Gammapy.
+
+So far we had also put `extras_require in Gammapy setup.py`_ to define
+``analysis`` and ``plotting`` extras that could be installed via ``pip install
+gammapy[analysis]`` or ``pip install gammapy[plotting]`` or ``pip install
+gammapy[analysis,plotting]``, but that was never documented in the installation
+instructions or advertised to users. We think that the single environment
+specification is sufficient for Gammapy - it gives users a recommended set of
+packages so that everything in Gammapy or any tutorial works, and the list of
+packages there is not too long so that e.g. installation time or size would be a
+concern. So one proposal we make here is to remove the ``extras_require`` key in
+``setup.py`` for Gammapy.
+
+In addition to the conda environment, we propose to add an equivalent `pip
+requirements`_ file from now on, i.e. in addition to
+``gammapy-0.14-environment.yml`` we would make a
+``gammapy-0.14-requirements.txt`` file so that users that prefer Python virtual
+envs and pip will be able to install Gammapy with the set of recommended
+dependencies like this::
+
+    python -m venv gammapy-0.14
+    source gammapy-0.14/bin/activate
+
+    curl -O https://gammapy.org/download/install/gammapy-0.14-requirements.txt
+    pip install -r gammapy-0.14-requirements.txt
+
+In previous discussions (e.g. `GH 1245`_) it was argued that it would be nice if
+``conda install gammapy`` and ``pip install gammapy`` installed basically
+everything that is commonly needed, i.e. included the optional dependencies. One
+way to do this would be to make all dependencies required, which we don't want
+to do because it would make it harder for other packages or projects to install
+a smaller subset. This is often annoying, e.g. currently ``naima`` lists
+``h5py`` as a dependency in ``install_requires`` in ``setup.py``, which means
+that any project that depends on Naima will install the big HDF5 library, even
+though it's only used in an example to store something which could just as well
+be stored in a FITS file, i.e. most users will not need it. Another way to
+achieve this is to use a metapackage, which is a collection of other packages,
+very similar to ``requirements.txt``, just as a Python package on PyPI. E.g.
+https://pypi.org/project/jupyter/ is a metapackage, but overall this is not
+widely used by Python projects. For Gammapy it would mean we'd have to change to
+a different package name, e.g. ``gammapy-core``, to make room for ``gammapy`` to
+be the metapackage, or to add a metapackage with a name like e.g.
+``gammapy-recommended`` or ``gammapy-env`` or something like that. While this is
+a nice solution, we  suggest to stick to ``gammapy`` as a package with a very
+small set of dependencies, and then use the environment specifications to create
+the stack and execution environment that most users want, not metapackages for
+now.
+
+Packages
+--------
+
+Here's the list of optional dependencies for Gammapy:
 
 ===============  ===============  ===============
 Dependency       Gammapy 0.12     Gammapy 0.14
 ===============  ===============  ===============
-healpy           1.11?            --
+ipython=7.5      7.3              7.5
+jupyter          1.0              1.0?
+jupyterlab       0.35             
+healpy           1.11             --
 astropy-healpix  --               0.5 (Jul 2019)
 matplotlib       2.1 (Oct 2017)   3.0 (Sep 2018)
 reproject
+
+  - pyyaml=5.1
+  - click=7.0
+  - numpy=1.16
+  - scipy=1.3
+  - pandas=0.24
+  - matplotlib=3.1
+  - astropy=3.1
+  - regions=0.3
+  - reproject=0.4
+  - uncertainties=3.1
+  - iminuit=1.3
+  - sherpa=4.11
+  - healpy=1.12
+  - naima=0.8
 ==============  ===============  ===============
 
-- Document and support ``pip install gammapy[extra]``
-
+We will document what they are and what they are used for in the Gammapy
+documentation, here we just add comments for some cases.
 
 astropy-healpix
 ---------------
@@ -293,6 +373,9 @@ tbd
 .. _GH 1863: https://github.com/gammapy/gammapy/pull/1863
 .. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
 .. _GH 1658: https://github.com/gammapy/gammapy/pull/1658
+.. _gammapy-0.12-environment.yml: https://github.com/gammapy/gammapy-webpage/blob/gh-pages/download/install/gammapy-0.12-environment.yml
 .. _Installation with Macports: https://docs.gammapy.org/0.12/install/macports.html
 .. _Gammapy in Macports: https://github.com/macports/macports-ports/commits/master/python/py-gammapy/Portfile
 .. _PEP 427: https://www.python.org/dev/peps/pep-0427/
+.. _pip requirements file: https://pip.pypa.io/en/stable/user_guide/#requirements-files
+.. _extras_require in Gammapy setup.py: https://github.com/gammapy/gammapy/blob/fe8ca7d6caac77b8a31efc8bec3b21d09aacf6c1/setup.py#L115-L127
