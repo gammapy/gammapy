@@ -104,14 +104,15 @@ first provide a list/table of time intervals for which she/he
 wants to compute the source flux. The computation of this list/table will be
 done outside of the light curve estimation class.
 
-We could provide helper functions to prepare the time bins. So that, typically,
-a user would execute the following code::
+While we could provide helper functions to prepare the time bins. ``astropy.time.Time``
+is relatively easy to use, so that a user would execute code similar to the following
+example::
 
     from astropy.time import Time
     time_start = Time("2006-07-29 20:00:00.000")
-    time_stop = Time("2006-07-30 06:00:00.00")
     time_step = 5.0 * u.min
-    time_bins = constant_time_bins(time_start, time_stop, time_step)
+    nstep = 120
+    time_bins = time_start + time_step * np.arange(nstep)
 
 Data reduction
 --------------
@@ -133,6 +134,10 @@ or ``SpectrumDatasetOnOff`` with identical geometries for each time bin.
 The ``Dataset`` must therefore carry the time information. Minimally, with a meta
 information ``time_start``, ``time_stop``. Ideally, the ``Dataset`` should contain
  the ``GTI`` table of the filtered ``Eventlist`` that were used for its production.
+
+OVerall, the use could use the following code::
+
+    from gammapy.time import LightCurveExtractor
 
 
 Outline of the implementation in 3D
