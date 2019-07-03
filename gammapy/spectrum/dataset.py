@@ -20,7 +20,11 @@ __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStack
 
 
 class SpectrumDataset(Dataset):
-    """Compute spectral model fit statistic on a CountsSpectrum.
+    """Spectrum dataset for likelihood fitting.
+
+    The spectrum dataset bundles reduced counts data, with a spectral model,
+    background model and instrument response function to compute the fit-statistic
+    given the current model and data.
 
     Parameters
     ----------
@@ -28,10 +32,8 @@ class SpectrumDataset(Dataset):
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
-    livetime : float
+    livetime : `~astropy.units.Quantity`
         Livetime
-    mask_fit : `~numpy.ndarray`
-        Mask to apply to the likelihood for fitting.
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
     edisp : `~gammapy.irf.EnergyDispersion`
@@ -40,6 +42,13 @@ class SpectrumDataset(Dataset):
         Background to use for the fit.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
+    mask_fit : `~numpy.ndarray`
+        Mask to apply to the likelihood for fitting.
+
+    See Also
+    --------
+    SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
+
     """
 
     def __init__(
@@ -47,11 +56,12 @@ class SpectrumDataset(Dataset):
         model=None,
         counts=None,
         livetime=None,
-        mask_fit=None,
         aeff=None,
         edisp=None,
         background=None,
         mask_safe=None,
+        mask_fit=None,
+        obs_id=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -64,6 +74,7 @@ class SpectrumDataset(Dataset):
         self.background = background
         self.model = model
         self.mask_safe = mask_safe
+        self.obs_id = obs_id
 
     @property
     def model(self):
@@ -74,21 +85,13 @@ class SpectrumDataset(Dataset):
         self._model = model
         if model is not None:
             self._parameters = Parameters(self._model.parameters.parameters)
-            if self.edisp is None:
-                self._predictor = SpectrumEvaluator(
-                    model=self.model,
-                    livetime=self.livetime,
-                    aeff=self.aeff,
-                    e_true=self.counts.energy.edges,
-                )
-            else:
-                self._predictor = SpectrumEvaluator(
-                    model=self.model,
-                    aeff=self.aeff,
-                    edisp=self.edisp,
-                    livetime=self.livetime,
-                )
-
+            self._predictor = SpectrumEvaluator(
+                model=self.model,
+                livetime=self.livetime,
+                aeff=self.aeff,
+                e_true=self.counts.energy.edges,
+                edisp=self.edisp
+            )
         else:
             self._parameters = None
             self._predictor = None
@@ -241,7 +244,12 @@ class SpectrumDataset(Dataset):
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
-    """Compute spectral model fit statistic on a on-off spectrum.
+    """Spectrum dataset for on-off likelihood fitting.
+
+    The on-off spectrum dataset bundles reduced counts data, off counts data,
+    with a spectral model, relative background efficiency and instrument
+    response functions to compute the fit-statistic given the current model
+    and data.
 
     Parameters
     ----------
@@ -253,14 +261,23 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         OFF Counts spectrum
     livetime : `~astropy.units.Quantity`
         Livetime
-    mask_fit : `~numpy.array`
-        Mask to apply to the likelihood for fitting.
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
     mask_safe : `~numpy.array`
         Mask defining the safe data range.
+    mask_fit : `~numpy.array`
+        Mask to apply to the likelihood for fitting.
+    backscale : `~numpy.array` or float
+        Relative background efficiency in
+    obs_id : int or list of int
+        Observation id(s) corresponding to the (stacked) dataset.
+
+    See Also
+    --------
+    SpectrumDataset, FluxPointsDataset, MapDataset
+
     """
 
     def __init__(

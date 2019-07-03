@@ -48,7 +48,7 @@ class TestSpectrumDataset:
             energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
         )
         self.dataset = SpectrumDataset(
-            self.source_model, self.src, self.livetime, None, None, None, self.bkg
+            model=self.source_model, counts=self.src, livetime=self.livetime, background=self.bkg
         )
 
     def test_data_shape(self):
@@ -91,13 +91,11 @@ class TestSpectrumDataset:
         mask_fit = np.ones(self.nbins, dtype=np.dtype("float"))
         with pytest.raises(ValueError):
             SpectrumDataset(
-                self.source_model,
-                self.src,
-                self.livetime,
-                mask_fit,
-                None,
-                None,
-                self.bkg,
+                model=self.source_model,
+                counts=self.src,
+                livetime=self.livetime,
+                mask_fit=mask_fit,
+                background=self.bkg,
             )
 
     def test_set_model(self):
