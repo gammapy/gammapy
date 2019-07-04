@@ -568,6 +568,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         )
 
 
+
 def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
     """Create from `~astropy.io.fits.HDUList`."""
     counts_table = Table.read(hdulist[hdu1])
