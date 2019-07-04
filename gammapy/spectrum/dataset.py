@@ -11,6 +11,7 @@ from ..utils.fitting import Dataset, Parameters
 from ..utils.fits import energy_axis_to_ebounds
 from ..stats import wstat, cash
 from ..utils.random import get_random_state
+from ..data import ObservationStats
 from .core import CountsSpectrum
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
@@ -241,7 +242,6 @@ class SpectrumDataset(Dataset):
         return ax
 
 
-
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
 
@@ -395,7 +395,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         ax3.axis("off")
 
         if self.counts_off is not None:
-            ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
+            stats = ObservationStats(**self._info_dict(in_safe_energy_range=True))
+            ax3.text(0, 0.2, "{}".format(stats), fontsize=12)
 
         ax4.set_title("Energy Dispersion")
         if self.edisp is not None:
@@ -567,6 +568,27 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             obs_id=data["obs_id"],
         )
 
+    # TODO: decide on a design for dataset info tables / dicts and make it part
+    #  of the public API
+    def _info_dict(self, in_safe_energy_range=False):
+        """Info dict"""
+        info = dict()
+        mask = self.mask_safe if in_safe_energy_range else slice(None)
+
+        # TODO: handle energy dependent a_on / a_off
+        info["a_on"] = self.backscale[0]
+        info["n_on"] = self.counts.data[mask].sum()
+
+        if self.counts_off is not None:
+            info["n_off"] = self.counts_off.data[mask].sum()
+            info["a_off"] = self.backscale_off[0]
+        else:
+            info["n_off"] = 0
+            info["a_off"] = 1
+
+        info["livetime"] = self.livetime
+        info["obs_id"] = self.obs_id
+        return info
 
 
 def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):

@@ -242,21 +242,6 @@ class TestSpectrumDatasetOnOff:
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
 
-    def test_total_stats(self):
-        dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
-            counts_off=self.off_counts,
-            aeff=self.aeff,
-            edisp=self.edisp,
-            livetime=self.livetime,
-            backscale=1,
-            backscale_off=10,
-        )
-
-        assert dataset.counts.data.sum() == 3
-        assert dataset.counts_off.data == 40
-        assert dataset.excess().data.sum() == -1
-
     def test_energy_mask(self):
         mask = self.dataset.counts.energy_mask(emin=0.3 * u.TeV, emax=6 * u.TeV)
         desired = [False, True, True, False]

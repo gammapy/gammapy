@@ -10,7 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...maps import WcsGeom, WcsNDMap
-from ...data import DataStore
+from ...data import DataStore, ObservationStats
 
 
 @pytest.fixture(scope="session")
@@ -109,8 +109,9 @@ class TestSpectrumExtraction:
         containment_actual = extraction.containment[60]
 
         # TODO: Introduce assert_stats_allclose
-        n_on_actual = obs.total_stats.n_on
-        sigma_actual = obs.total_stats.sigma
+        stats = ObservationStats(**obs._info_dict())
+        n_on_actual = stats.n_on
+        sigma_actual = stats.sigma
 
         assert n_on_actual == results["n_on"]
         assert_allclose(sigma_actual, results["sigma"], atol=1e-2)

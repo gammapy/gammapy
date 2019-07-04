@@ -4,7 +4,7 @@ import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from regions import CircleSkyRegion
-from ...data import DataStore, Observations, ObservationStats, SpectrumStats
+from ...data import DataStore, Observations, ObservationStats
 from ...utils.testing import requires_data
 from ...background import ReflectedRegionsBackgroundEstimator
 
