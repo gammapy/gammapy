@@ -2,7 +2,7 @@
 import astropy.units as u
 from ..stats import Stats, significance_on_off
 
-__all__ = ["ObservationStats", "SpectrumStats"]
+__all__ = ["ObservationStats"]
 
 
 class ObservationStats(Stats):
@@ -176,61 +176,3 @@ class ObservationStats(Stats):
         ss += "Sigma: {:.2f}\n".format(self.sigma)
 
         return ss
-
-
-class SpectrumStats(ObservationStats):
-    """Spectrum stats.
-
-    Extends `~gammapy.data.ObservationStats` with spectrum
-    specific information (energy bin info at the moment).
-    """
-
-    def __init__(self, **kwargs):
-        self.energy_min = kwargs.pop("energy_min", u.Quantity(0, "TeV"))
-        self.energy_max = kwargs.pop("energy_max", u.Quantity(0, "TeV"))
-        super().__init__(**kwargs)
-
-    def __str__(self):
-        ss = super().__str__()
-        ss += "energy range: {:.2f} - {:.2f}".format(self.energy_min, self.energy_max)
-        return ss
-
-    def to_dict(self):
-        """Convert to dict."""
-        data = super().to_dict()
-        data["energy_min"] = self.energy_min
-        data["energy_max"] = self.energy_max
-        return data
-
-    @classmethod
-    def from_observation_in_range(cls, observation, bg_estimate, energy_range):
-        """Create from `~gammapy.data.DataStoreObservation`.
-
-        Parameters
-        ----------
-        observation : `~gammapy.data.DataStoreObservation`
-            IACT data store observation
-        bg_estimate : `~gammapy.background.BackgroundEstimate`
-            Background estimate
-        energy_range : tuple of `~astropy.units.Quantity`
-            minimum and maximum energy
-        """
-        n_on = len(bg_estimate.off_events.select_energy(energy_range).table)
-        n_off = len(bg_estimate.off_events.select_energy(energy_range).table)
-        a_on = bg_estimate.a_on
-        a_off = bg_estimate.a_off
-
-        obs_id = observation.obs_id
-        livetime = observation.observation_live_time_duration
-
-        stats = cls(
-            n_on=n_on,
-            n_off=n_off,
-            a_on=a_on,
-            a_off=a_off,
-            obs_id=obs_id,
-            livetime=livetime,
-            energy_min=energy_range[0],
-            energy_max=energy_range[1],
-        )
-        return stats

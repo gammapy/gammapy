@@ -11,8 +11,8 @@ from ..utils.fitting import Dataset, Parameters
 from ..utils.fits import energy_axis_to_ebounds
 from ..stats import wstat, cash
 from ..utils.random import get_random_state
+from ..data import ObservationStats
 from .core import CountsSpectrum
-from ..data import SpectrumStats
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
 
@@ -123,14 +123,15 @@ class SpectrumDataset(Dataset):
         energy = self.counts.energy.edges
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
+    @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
 
     def residuals(self):
-        """Residuals (npred - excess)."""
-        residuals = self.npred().data - self.excess().data
+        """Residuals (npred_sig - excess)."""
+        residuals = self.npred().data - self.excess.data
         return self._as_counts_spectrum(residuals)
 
     def fake(self, random_state="random-seed"):
@@ -201,7 +202,7 @@ class SpectrumDataset(Dataset):
         ax = plt.gca() if ax is None else ax
 
         self.npred().plot(ax=ax, label="mu_src", energy_unit=self._e_unit)
-        self.excess().plot(ax=ax, label="Excess", fmt=".", energy_unit=self._e_unit)
+        self.excess.plot(ax=ax, label="Excess", fmt=".", energy_unit=self._e_unit)
 
         e_min, e_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
@@ -240,7 +241,6 @@ class SpectrumDataset(Dataset):
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
         ax.set_ylabel("Residuals")
         return ax
-
 
 
 class SpectrumDatasetOnOff(SpectrumDataset):
@@ -396,7 +396,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         ax3.axis("off")
 
         if self.counts_off is not None:
-            ax3.text(0, 0.2, "{}".format(self.total_stats_safe_range), fontsize=12)
+            stats = ObservationStats(**self._info_dict(in_safe_energy_range=True))
+            ax3.text(0, 0.2, "{}".format(stats), fontsize=12)
 
         ax4.set_title("Energy Dispersion")
         if self.edisp is not None:
@@ -568,67 +569,27 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             obs_id=data["obs_id"],
         )
 
-    # TODO : do we keep SpectrumStats or do we adapt this part of code?
-    # This was imported and adapted from the SpectrumObservation class
-    @property
-    def total_stats(self):
-        """Total statistics (`~gammapy.spectrum.SpectrumStats`)."""
-        return self.stats_in_range(0, self.counts.energy.nbin - 1)
+    # TODO: decide on a design for dataset info tables / dicts and make it part
+    #  of the public API
+    def _info_dict(self, in_safe_energy_range=False):
+        """Info dict"""
+        info = dict()
+        mask = self.mask_safe if in_safe_energy_range else slice(None)
 
-    @property
-    def total_stats_safe_range(self):
-        """Total statistics in safe energy range (`~gammapy.spectrum.SpectrumStats`)."""
-        mask = (
-            self.mask_safe
-            if self.mask_safe is not None
-            else np.ones(self.counts.energy.nbin)
-        )
-        safe_bins = np.where(np.array(mask) == 1)[0]
-        return self.stats_in_range(safe_bins[0], safe_bins[-1])
+        # TODO: handle energy dependent a_on / a_off
+        info["a_on"] = self.backscale[0]
+        info["n_on"] = self.counts.data[mask].sum()
 
-    def stats_in_range(self, bin_min, bin_max):
-        """Compute stats for a range of energy bins.
+        if self.counts_off is not None:
+            info["n_off"] = self.counts_off.data[mask].sum()
+            info["a_off"] = self.backscale_off[0]
+        else:
+            info["n_off"] = 0
+            info["a_off"] = 1
 
-        Parameters
-        ----------
-        bin_min, bin_max: int
-            Bins to include
-
-        Returns
-        -------
-        stats : `~gammapy.spectrum.SpectrumStats`
-            Stacked stats
-        """
-        idx = np.arange(bin_min, bin_max + 1)
-        stats_list = []
-
-        for ii in idx:
-            if self.counts_off is not None:
-                n_off = int(self.counts_off.data[ii])
-                a_off = self.backscale_off[ii]
-            else:
-                n_off = 0
-                a_off = 1  # avoid zero division error
-
-            stat = SpectrumStats(
-                energy_min=self.counts.energy.edges[ii],
-                energy_max=self.counts.energy.edges[ii + 1],
-                n_on=int(self.counts.data[ii]),
-                n_off=n_off,
-                a_on=self.backscale[ii],
-                a_off=a_off,
-                obs_id=self.obs_id,
-                livetime=self.livetime,
-            )
-            stats_list.append(stat)
-
-        stacked_stats = SpectrumStats.stack(stats_list)
-        stacked_stats.livetime = self.livetime
-        stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
-        stacked_stats.obs_id = self.obs_id
-        stacked_stats.energy_min = self.counts.energy.edges[bin_min]
-        stacked_stats.energy_max = self.counts.energy.edges[bin_max + 1]
-        return stacked_stats
+        info["livetime"] = self.livetime
+        info["obs_id"] = self.obs_id
+        return info
 
 
 def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):

@@ -242,21 +242,6 @@ class TestSpectrumDatasetOnOff:
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
 
-    def test_total_stats(self):
-        dataset = SpectrumDatasetOnOff(
-            counts=self.on_counts,
-            counts_off=self.off_counts,
-            aeff=self.aeff,
-            edisp=self.edisp,
-            livetime=self.livetime,
-            backscale=1,
-            backscale_off=10,
-        )
-
-        assert dataset.total_stats.n_on == 3
-        assert dataset.total_stats.n_off == 40
-        assert dataset.total_stats.excess == -1
-
     def test_energy_mask(self):
         mask = self.dataset.counts.energy_mask(emin=0.3 * u.TeV, emax=6 * u.TeV)
         desired = [False, True, True, False]
@@ -493,10 +478,15 @@ class TestSpectrumDatasetOnOffStacker:
 
     def test_basic(self):
         assert "Stacker" in str(self.obs_stacker)
-        counts1 = self.obs_list[0].total_stats_safe_range.n_on
-        counts2 = self.obs_list[1].total_stats_safe_range.n_on
+        obs_1, obs_2 = self.obs_list
+
+        counts1 = obs_1.counts.data[obs_1.mask_safe].sum()
+        counts2 = obs_2.counts.data[obs_2.mask_safe].sum()
         summed_counts = counts1 + counts2
-        stacked_counts = self.obs_stacker.stacked_obs.total_stats.n_on
+
+        obs_stacked = self.obs_stacker.stacked_obs
+        stacked_counts = obs_stacked.counts.data.sum()
+
         assert summed_counts == stacked_counts
 
     def test_thresholds(self):
