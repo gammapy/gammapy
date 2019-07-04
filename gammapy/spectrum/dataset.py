@@ -12,7 +12,6 @@ from ..utils.fits import energy_axis_to_ebounds
 from ..stats import wstat, cash
 from ..utils.random import get_random_state
 from .core import CountsSpectrum
-from ..data import SpectrumStats
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
 
@@ -567,68 +566,6 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             backscale_off=backscale_off,
             obs_id=data["obs_id"],
         )
-
-    # TODO : do we keep SpectrumStats or do we adapt this part of code?
-    # This was imported and adapted from the SpectrumObservation class
-    @property
-    def total_stats(self):
-        """Total statistics (`~gammapy.spectrum.SpectrumStats`)."""
-        return self.stats_in_range(0, self.counts.energy.nbin - 1)
-
-    @property
-    def total_stats_safe_range(self):
-        """Total statistics in safe energy range (`~gammapy.spectrum.SpectrumStats`)."""
-        mask = (
-            self.mask_safe
-            if self.mask_safe is not None
-            else np.ones(self.counts.energy.nbin)
-        )
-        safe_bins = np.where(np.array(mask) == 1)[0]
-        return self.stats_in_range(safe_bins[0], safe_bins[-1])
-
-    def stats_in_range(self, bin_min, bin_max):
-        """Compute stats for a range of energy bins.
-
-        Parameters
-        ----------
-        bin_min, bin_max: int
-            Bins to include
-
-        Returns
-        -------
-        stats : `~gammapy.spectrum.SpectrumStats`
-            Stacked stats
-        """
-        idx = np.arange(bin_min, bin_max + 1)
-        stats_list = []
-
-        for ii in idx:
-            if self.counts_off is not None:
-                n_off = int(self.counts_off.data[ii])
-                a_off = self.backscale_off[ii]
-            else:
-                n_off = 0
-                a_off = 1  # avoid zero division error
-
-            stat = SpectrumStats(
-                energy_min=self.counts.energy.edges[ii],
-                energy_max=self.counts.energy.edges[ii + 1],
-                n_on=int(self.counts.data[ii]),
-                n_off=n_off,
-                a_on=self.backscale[ii],
-                a_off=a_off,
-                obs_id=self.obs_id,
-                livetime=self.livetime,
-            )
-            stats_list.append(stat)
-
-        stacked_stats = SpectrumStats.stack(stats_list)
-        stacked_stats.livetime = self.livetime
-        stacked_stats.gamma_rate = stacked_stats.excess / stacked_stats.livetime
-        stacked_stats.obs_id = self.obs_id
-        stacked_stats.energy_min = self.counts.energy.edges[bin_min]
-        stacked_stats.energy_max = self.counts.energy.edges[bin_max + 1]
-        return stacked_stats
 
 
 def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):

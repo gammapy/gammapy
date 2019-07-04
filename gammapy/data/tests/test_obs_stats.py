@@ -114,27 +114,3 @@ class TestObservationStats:
         assert data["n_off"] == 1114
         assert_allclose(data["alpha"], 0.1111, rtol=1e-3)
         assert_allclose(data["livetime"].value, 26.211, rtol=1e-3)
-
-
-@pytest.fixture(scope="session")
-def spectrum_stats(on_region, observations):
-    obs = observations[0]
-    bge = ReflectedRegionsBackgroundEstimator(on_region=on_region, observations=obs)
-    bg = bge.process(obs)
-    e_range = [1 * u.TeV, 10 * u.TeV]
-    return SpectrumStats.from_observation_in_range(obs, bg, e_range)
-
-
-@requires_data("gammapy-data")
-class TestSpectrumStats:
-    @staticmethod
-    def test_str(spectrum_stats):
-        text = str(spectrum_stats)
-        assert "Observation summary report" in text
-        assert "energy range" in text
-
-    @staticmethod
-    def test_to_dict(spectrum_stats):
-        data = spectrum_stats.to_dict()
-        assert data["energy_min"] == 1 * u.TeV
-        assert data["energy_max"] == 10 * u.TeV
