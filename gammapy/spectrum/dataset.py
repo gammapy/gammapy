@@ -123,14 +123,15 @@ class SpectrumDataset(Dataset):
         energy = self.counts.energy.edges
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
+    @property
     def excess(self):
         """Excess (counts - alpha * counts_off)"""
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
 
     def residuals(self):
-        """Residuals (npred - excess)."""
-        residuals = self.npred().data - self.excess().data
+        """Residuals (npred_sig - excess)."""
+        residuals = self.npred().data - self.excess.data
         return self._as_counts_spectrum(residuals)
 
     def fake(self, random_state="random-seed"):
@@ -201,7 +202,7 @@ class SpectrumDataset(Dataset):
         ax = plt.gca() if ax is None else ax
 
         self.npred().plot(ax=ax, label="mu_src", energy_unit=self._e_unit)
-        self.excess().plot(ax=ax, label="Excess", fmt=".", energy_unit=self._e_unit)
+        self.excess.plot(ax=ax, label="Excess", fmt=".", energy_unit=self._e_unit)
 
         e_min, e_max = self.energy_range
         kwargs = {"color": "black", "linestyle": "dashed"}
