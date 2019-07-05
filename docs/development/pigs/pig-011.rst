@@ -93,6 +93,7 @@ The approach will be split into 3 main phases:
  * Time bin preparation
  * Data reduction in time bins to produce a list of ``Dataset``
  * Light curve estimation to fit a model on the resulting ``Datasets``
+
 The end product should contain enough information to perform some rebinning and apply
 high level timing techniques without rerunning the whole data reduction and fitting steps.
 
@@ -139,7 +140,7 @@ Both approaches will result in a ``Datasets`` object consisting of ``MapDataset`
 or ``SpectrumDatasetOnOff`` with identical geometries for each time bin.
 The ``Dataset`` must therefore carry the time information. Minimally, with a meta
 information ``time_start``, ``time_stop``. Ideally, the ``Dataset`` should contain
- the ``GTI`` table of the filtered ``Eventlist`` that were used for its production.
+the ``GTI`` table of the filtered ``Eventlist`` that were used for its production.
 
 Outline of the implementation in 3D
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -253,7 +254,7 @@ Discussion / Alternatives
 =========================
 
 Time bins
-^^^^^^^^^
+---------
 
 To work with time bins, we could also rely on ``astropy.timeseries`` if we force the dependency to astropy v>3.2.
 This would look like:
@@ -268,12 +269,14 @@ This would look like:
 
 
 Lightcurve
-^^^^^^^^^^
+----------
+
 The ``Lightcurve`` contains  an ``astropy.table.Table`` object. It could
 be improved by using the ``astropy_timeseries.BinnedTimeSeries`` object which
 itself inherits from ``QTable`` and provides support for row selection with time,
 rebinning and more complex methods for detailed timing studies such as Lomb-Scargle
 periodograms.
+
 
 Task list
 =========
