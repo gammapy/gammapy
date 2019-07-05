@@ -2,9 +2,6 @@
 Period detection and plotting
 *****************************
 
-.. currentmodule:: gammapt.time.period
-.. currentmodule:: gammapy.time.plot_periodogram
-
 Introduction
 ============
 

@@ -8,7 +8,7 @@ import numpy as np
 from scipy.stats import norm, poisson
 from scipy.special import erf
 from scipy.optimize import fsolve
-from .significance import significance_to_probability_normal
+from .normal import significance_to_probability_normal
 
 __all__ = [
     "background",
