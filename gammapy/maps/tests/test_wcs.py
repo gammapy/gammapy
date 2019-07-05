@@ -186,9 +186,15 @@ def test_wcsgeom_solid_angle_ait():
     # Pixels that don't correspond to locations on ths sky
     # should have solid angles set to NaN
     ait_geom = WcsGeom.create(
-        skydir=(0, 0), npix=(10, 4), binsz=50, coordsys="GAL", proj="AIT"
+        skydir=(0, 0), width=(360, 180), binsz=20, coordsys="GAL", proj="AIT"
     )
-    solid_angle = ait_geom.solid_angle()
+    solid_angle = ait_geom.solid_angle().to_value("deg2")
+
+    assert_allclose(solid_angle[4, 1], 401.0819)
+    assert_allclose(solid_angle[4, 16], 401.0819)
+    assert_allclose(solid_angle[1, 8], 628.668307)
+    assert_allclose(solid_angle[7, 8], 287.576426)
+
     assert np.isnan(solid_angle[0, 0])
 
 
