@@ -281,7 +281,7 @@ Task list
  * Add `TSTART` and `TSTOP` meta info on the ``Dataset`` as well as the `GTI` table.
  * Introduce `GTI.union()` method to merge `Datasets`.
  * Refactor the ``Lightcurve`` class to add a number of new content in the `Table` e.g.
-a `fit_stat_scan` column.
+    - a `fit_stat_scan` column.
  * Implement the new ``LightCurveEstimator`` class
 
 Decision
