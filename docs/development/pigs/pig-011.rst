@@ -204,8 +204,8 @@ Inside ``SpectrumLightCurveMaker`` one would then perform the following operatio
         return LC_datasets
 
 The main missing ingredient here is a function to apply to the ``ReflectedRegionsBackgroundMaker``
-results. It should apply the time filter to the `BackgroundEstimate.on_events` and modify the `a_on`
-and `a_off` accordingly.
+results. It should apply the time filter to the ``BackgroundEstimate.on_events`` and modify the
+``BackgroundEstimate.a_on`` and ``BackgroundEstimate.a_off`` accordingly.
 
 Data Fitting
 ------------
