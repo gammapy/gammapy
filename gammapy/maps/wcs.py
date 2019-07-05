@@ -152,6 +152,32 @@ def _make_image_header(
     return header
 
 
+def area_spherical_triangle_angle(a, b, C):
+    """Compute the area of a spherical triangle.
+
+    The formula is based on the spherical excess theorem, see
+    https://en.wikipedia.org/wiki/Spherical_trigonometry#Area_and_spherical_excess
+
+
+    Parameters
+    ----------
+    a : `~numpy.ndarray`
+        One side of the triangle.
+    b : `~numpy.ndarray`
+        Second side of the triangle.
+    C : `~numpy.ndarray`
+        Angle enclosed by a and b
+
+    Returns
+    -------
+    area : `~numpy.ndarray`
+        Area of the spherical triangle.
+    """
+    top = np.tan(0.5 * a) * np.tan(0.5 * b) * np.sin(C)
+    bottom = 1 + np.tan(0.5 * a) * np.tan(0.5 * b) * np.cos(C)
+    return 2 * np.arctan2(top, bottom)
+
+
 class WcsGeom(MapGeom):
     """Geometry class for WCS maps.
 
@@ -775,33 +801,29 @@ class WcsGeom(MapGeom):
 
             WcsGeom.to_image().solid_angle()
         """
-        coord = self.get_coord(mode="edges")
-        lon = coord.lon * np.pi / 180.0
-        lat = coord.lat * np.pi / 180.0
+        coord = self.get_coord(mode="edges").skycoord
 
-        # TODO: change this method to allow for non-orthogonal
-        # pixel sides in the small angle approximation
-        # Test with AIT projection example
+        # define pixel corners
+        low_left = coord[..., :-1, :-1]
+        low_right = coord[..., 1:, :-1]
+        up_left = coord[..., :-1, 1:]
+        up_right = coord[..., 1:, 1:]
 
-        # Compute solid angle across centres of the pixels, approximating it
-        # as a rectangle
-        # First index is "y", second index is "x"
-        # TODO: Calculate actual solid angle between two great circles? Here are two references
-        # suggesting more precise methods:
-        # https://mail.python.org/pipermail/astropy/2013-December/002632.html
-        # https://cta-redmine.irap.omp.eu/issues/1017
-        lon_centres = (lon[..., :-1, :-1] + lon[..., 1:, 1:]) / 2
-        lat_centres = (lat[..., :-1, :-1] + lat[..., 1:, 1:]) / 2
+        # compute side lengths
+        low = low_left.separation(low_right)
+        left = low_left.separation(up_left)
+        up = up_left.separation(up_right)
+        right = low_right.separation(up_right)
 
-        ymid_xlo = lon[..., :-1, :-1], lat_centres
-        ymid_xhi = lon[..., :-1, 1:], lat_centres
-        ylo_xmid = lon_centres, lat[..., :-1, 1:]
-        yhi_xmid = lon_centres, lat[..., 1:, :-1]
+        # compute enclosed angles
+        angle_low_right = low_right.position_angle(up_right) - low_right.position_angle(low_left)
+        angle_up_left = up_left.position_angle(up_right) - low_left.position_angle(up_left)
 
-        dx = angular_separation(*(ymid_xlo + ymid_xhi))
-        dy = angular_separation(*(ylo_xmid + yhi_xmid))
+        area_low_right = area_spherical_triangle_angle(low.rad, right.rad, angle_low_right.rad)
+        area_up_left = area_spherical_triangle_angle(up.rad, left.rad, angle_up_left.rad)
 
-        return u.Quantity(dx * dy, "sr", copy=False)
+        return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
+
 
     def separation(self, center):
         """Compute sky separation wrt a given center.
