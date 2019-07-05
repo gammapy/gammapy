@@ -9,7 +9,7 @@ PIG 16 - Gammapy package structure
 * Author: Christoph Deil, Axel Donath, Régis Terrier
 * Created: July 5, 2019
 * Status: draft
-* Discussion: `GH tbd`_
+* Discussion: `GH 2274`_
 
 Abstract
 ========
@@ -38,6 +38,21 @@ The current Gammapy package structure (as of v0.12, probably the same in v0.13):
 This illustrates the namespaces where the Gammapy API is exposed. the number of
 Python files is much larger (about 100) and not so important.
 
+``gammapy.astro`` and ``gammapy.catalog`` are independent from the rest of
+Gammapy in the sense that they are not imported or used from elsewhere. Still,
+they are useful, and they do import many things from Gammapy, e.g. the spectral
+and spatial model classes. We will clean them up a bit, but they will remain
+mostly as-is in Gammapy. Splitting them out isn't a good idea at this point, not
+clear where they would go, and maintaining multiple repos is much harder than
+one repo and their code would break immediately, since the Gammapy API isn't stable
+yet.
+
+Also ``gammapy.detect`` and ``gammapy.time`` are mostly high-level and not used
+from anywhere else (except possibly from ``gammapy.scripts`` soon. Therefore we
+will not say much about them in this PIG.
+
+The main question here is how to structure the code for data, IRFs, maps and spectra
+into sub-packages.
 
 Proposal
 ========
@@ -132,5 +147,4 @@ Decision
 tbd
 
 
-.. _GH tbd: https://github.com/gammapy/gammapy/pull/tbd
-^
+.. _GH 2274: https://github.com/gammapy/gammapy/pull/2274
