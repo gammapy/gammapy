@@ -152,32 +152,6 @@ def _make_image_header(
     return header
 
 
-def area_spherical_triangle_angle(a, b, C):
-    """Compute the area of a spherical triangle.
-
-    The formula is based on the spherical excess theorem, see
-    https://en.wikipedia.org/wiki/Spherical_trigonometry#Area_and_spherical_excess
-
-
-    Parameters
-    ----------
-    a : `~numpy.ndarray`
-        One side of the triangle.
-    b : `~numpy.ndarray`
-        Second side of the triangle.
-    C : `~numpy.ndarray`
-        Angle enclosed by a and b
-
-    Returns
-    -------
-    area : `~numpy.ndarray`
-        Area of the spherical triangle.
-    """
-    top = np.tan(0.5 * a) * np.tan(0.5 * b) * np.sin(C)
-    bottom = 1 + np.tan(0.5 * a) * np.tan(0.5 * b) * np.cos(C)
-    return 2 * np.arctan2(top, bottom)
-
-
 class WcsGeom(MapGeom):
     """Geometry class for WCS maps.
 
@@ -819,11 +793,11 @@ class WcsGeom(MapGeom):
         angle_low_right = low_right.position_angle(up_right) - low_right.position_angle(low_left)
         angle_up_left = up_left.position_angle(up_right) - low_left.position_angle(up_left)
 
-        area_low_right = area_spherical_triangle_angle(low.rad, right.rad, angle_low_right.rad)
-        area_up_left = area_spherical_triangle_angle(up.rad, left.rad, angle_up_left.rad)
+        # compute area assuming a planar triangle
+        area_low_right = 0.5 * low.rad * right.rad * np.sin(angle_low_right.rad)
+        area_up_left = 0.5 * up.rad * left.rad * np.sin(angle_up_left.rad)
 
         return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
-
 
     def separation(self, center):
         """Compute sky separation wrt a given center.

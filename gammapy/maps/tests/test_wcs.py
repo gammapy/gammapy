@@ -190,10 +190,10 @@ def test_wcsgeom_solid_angle_ait():
     )
     solid_angle = ait_geom.solid_angle().to_value("deg2")
 
-    assert_allclose(solid_angle[4, 1], 401.0819)
-    assert_allclose(solid_angle[4, 16], 401.0819)
-    assert_allclose(solid_angle[1, 8], 628.668307)
-    assert_allclose(solid_angle[7, 8], 287.576426)
+    assert_allclose(solid_angle[4, 1], 397.04838)
+    assert_allclose(solid_angle[4, 16], 397.751841)
+    assert_allclose(solid_angle[1, 8], 381.556269)
+    assert_allclose(solid_angle[7, 8], 398.34725)
 
     assert np.isnan(solid_angle[0, 0])
 
