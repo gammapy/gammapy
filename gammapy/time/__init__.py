@@ -4,4 +4,3 @@ from .simulate import *
 from .lightcurve import *
 from .events import *
 from .period import *
-from .plot_periodogram import *
