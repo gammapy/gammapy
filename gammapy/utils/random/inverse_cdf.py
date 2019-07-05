@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.table import Table
+from astropy.time import Time
 from astropy import units as u
+from astropy.utils import lazyproperty
 
 from .utils import get_random_state
 
@@ -90,36 +92,38 @@ class MapEventSampler:
 
     Parameters
     ----------
-
     npred_map : `~gammapy.maps.Map`
             Predicted number of counts map.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
-    lc : `~gammapy.time.models.LightCurveTableModel`
-            Input light-curve model of the source, given with columns labelled
-            as "time" (in seconds) and "normalization" (arbitrary units): the bin time
+    lc : `~gammapy.time.models.LightCurveTableModel` or `~gammapy.time.models.PhaseCurveTableModel`
+            Input light (or phase)-curve model of the source, given with columns labelled
+            as "time" (or "phase)" and "normalization" (arbitrary units): the bin step
             HAS to be costant.
-    phase_lc : `~gammapy.time.models.PhaseCurveTableModel`
-            Input phase-curve model of the source, given with columns labelled
-            as "Phase" and "normalization" (arbitrary units): the bin time
-            HAS to be costant.
-    tmin : float
-            Start time of the sampling, given in seconds.
-    tmax : float
-            Stop time of the sampling, given in seconds.
+    tmin : `astropy.units.Quantity` object.
+            Start time of the sampling.
+    tmax : `astropy.units.Quantity` object.
+            Stop time of the sampling.
     """
 
     def __init__(
-        self, npred_map, random_state=0, lc=None, phase_lc=None, tmin=0, tmax=3600
+        self, npred_map, tmin, tmax, random_state=0, lc=None, phase_lc=None, dt_bin=None
     ):
+
+        #        t_ref = Time('2019-01-01 00:00:00', scale='utc') #hardcoded reference epoch
+
         self.random_state = get_random_state(random_state)
         self.npred_map = npred_map
         self.lc = lc
         self.phase_lc = phase_lc
-        self.tmin = tmin
-        self.tmax = tmax
+        self.tmin = tmin.to(u.s)
+        self.tmax = tmax.to(u.s)
 
+        if dt_bin == None:
+            self.dt_bin = self.tmax.value - self.tmin.value
+
+    @lazyproperty
     def npred_total(self):
         """ Calculate the total number of the sampled predicted events.
             
@@ -136,21 +140,22 @@ class MapEventSampler:
             
         Returns
         -------
-        coords : `~numpy.ndarray`
-                Array with coordinates and energies of the sampled events.
+        coords : `~gammapy.maps.MapCoord` object.
+                Sequence of coordinates and energies of the sampled events.
         """
 
-        self.n_events = self.npred_total()
+        #        self.n_events = self.npred_total()
 
         cdf_sampler = InverseCDFSampler(
             self.npred_map.data, random_state=self.random_state
         )
 
-        pix_coords = cdf_sampler.sample(self.n_events)
+        pix_coords = cdf_sampler.sample(self.npred_total)
         coords = self.npred_map.geom.pix_to_coord(pix_coords[::-1])
 
         return coords
 
+    @lazyproperty
     def sample_timepred(self):
         """ Calculate the times of arrival of the sampled source events.
 
@@ -160,28 +165,18 @@ class MapEventSampler:
             array with times of the sampled events.
         """
 
-        n_events = self.n_events
-        if (self.lc is not None) and (self.tmax > 0):
-            n_tbin = self.tmax - self.tmin
-            t = np.linspace(self.tmin, self.tmax, n_tbin)
-            normalization = self.lc._interpolator(t, ext=3)
+        #        n_events = self.n_events
+        if self.lc is not None:
+            t = np.linspace(self.tmin.value, self.tmax.value, self.dt_bin)
+            normalization = self.lc.evaluate_norm_at_time(t)
             time_sampler = InverseCDFSampler(
                 normalization, random_state=self.random_state
             )
-            ToA = time_sampler.sample(n_events)[0]
-
-        if (self.phase_lc is not None) and (self.tmax > 0):
-            n_tbin = self.tmax - self.tmin
-            t = np.linspace(self.tmin, self.tmax, n_tbin)
-            normalization = self.phase_lc.evaluate_norm_at_time(t)
-            time_sampler = InverseCDFSampler(
-                normalization, random_state=self.random_state
-            )
-            ToA = time_sampler.sample(n_events)[0]
+            ToA = time_sampler.sample(self.npred_total)[0]
 
         else:
-            ToA = self.tmin + self.random_state.uniform(
-                high=(self.tmax - self.tmin), size=n_events
+            ToA = self.tmin.value + self.random_state.uniform(
+                high=(self.tmax.value - self.tmin.value), size=self.npred_total
             )
 
         return ToA
@@ -198,10 +193,9 @@ class MapEventSampler:
         coords = self.sample_npred()
 
         events = Table()
-        events["lon_true"] = coords[0] * u.deg
-        events["lat_true"] = coords[1] * u.deg
-        events["e_true"] = coords[2] * u.TeV
-        if ((self.lc is not None) and (self.tmax > 0)) or (self.tmax > 0):
-            events["TIME"] = self.sample_timepred() * u.s
+        events["RA_TRUE"] = coords[0] * u.deg
+        events["DEC_TRUE"] = coords[1] * u.deg
+        events["ENERGY_TRUE"] = coords[2] * u.TeV
+        events["TIME"] = self.sample_timepred * u.s
 
         return events

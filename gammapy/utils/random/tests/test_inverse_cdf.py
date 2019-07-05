@@ -121,17 +121,17 @@ def test_map_sampling():
     table["NORM"] = rate(time)
     lc = LC(table)
 
-    tmin = 9
-    tmax = 30000
+    tmin = 9 * u.s
+    tmax = 30000 * u.s
     sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
-    ntot = sampler.npred_total()
+    ntot = sampler.npred_total
     sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
     events = sampler.sample_events()
 
     position = SkyCoord(
-        events["lon_true"], events["lat_true"], frame="galactic", unit="deg"
+        events["RA_TRUE"], events["DEC_TRUE"], frame="galactic", unit="deg"
     )
 
     assert_allclose(ntot, len(events), 0.001)
-    assert max(events["TIME"]) < tmax
+    assert max(events["TIME"]) < tmax.value
     assert max(npred.geom.center_skydir.separation(position)) < npred.geom.width[0]

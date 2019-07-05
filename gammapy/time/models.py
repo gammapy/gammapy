@@ -206,19 +206,26 @@ class LightCurveTableModel(Model):
     def _time(self):
         return self._time_ref + self.table["TIME"].data * u.s
 
-    def evaluate_norm_at_time(self, time):
+    def evaluate_norm_at_time(self, time, ext_mode=3):
         """Evaluate for a given time.
 
         Parameters
         ----------
         time : array_like
             Time since the ``reference`` time.
+        ext_mode : int or str, optional
+            Controls the extrapolation mode for elements not in the interval defined by the knot sequence.
+            if ext=0 or ‘extrapolate’, return the extrapolated value.
+            if ext=1 or ‘zeros’, return 0
+            if ext=2 or ‘raise’, raise a ValueError
+            if ext=3 of ‘const’, return the boundary value.
+            The default value is 0.
 
         Returns
         -------
         norm : array_like
         """
-        return self._interpolator(time)
+        return self._interpolator(time, ext=ext_mode)
 
     def mean_norm_in_time_interval(self, time_min, time_max):
         """Compute mean ``norm`` in a given time interval.
