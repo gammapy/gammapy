@@ -2,7 +2,6 @@
 """Dark matter spectra."""
 import numpy as np
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.table import Table
 from ...utils.scripts import make_path
 from ...utils.fitting import Parameter
@@ -90,9 +89,9 @@ class PrimaryFlux:
     @mDM.setter
     def mDM(self, mDM):
         mDM_vals = self.table["mDM"].data
-        mDM_ = Quantity(mDM).to_value("GeV")
+        mDM_ = u.Quantity(mDM).to_value("GeV")
         interp_idx = np.argmin(np.abs(mDM_vals - mDM_))
-        self._mDM = Quantity(mDM_vals[interp_idx], "GeV")
+        self._mDM = u.Quantity(mDM_vals[interp_idx], "GeV")
 
     @property
     def allowed_channels(self):
@@ -143,7 +142,7 @@ class DMAnnihilation(SpectralModel):
         Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`
     scale : float
         Scale parameter for model fitting
-    jfact : `~astropy.units.Quantity`
+    jfactor : `~astropy.units.Quantity`
         Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used
     z: float
         Redshift value
