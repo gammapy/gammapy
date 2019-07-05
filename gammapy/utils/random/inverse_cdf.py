@@ -5,10 +5,7 @@ from astropy import units as u
 
 from .utils import get_random_state
 
-__all__ = [
-           "InverseCDFSampler",
-           "MapEventSampler",
-]
+__all__ = ["InverseCDFSampler", "MapEventSampler"]
 
 
 class InverseCDFSampler:
@@ -88,7 +85,6 @@ class InverseCDFSampler:
         return index
 
 
-
 class MapEventSampler:
     """Map event sampler.
 
@@ -114,15 +110,16 @@ class MapEventSampler:
             Stop time of the sampling, given in seconds.
     """
 
-    def __init__(self, npred_map, random_state=0,
-                  lc = None, phase_lc=None, tmin=0, tmax=3600):
+    def __init__(
+        self, npred_map, random_state=0, lc=None, phase_lc=None, tmin=0, tmax=3600
+    ):
         self.random_state = get_random_state(random_state)
         self.npred_map = npred_map
         self.lc = lc
         self.phase_lc = phase_lc
-        self.tmin=tmin
-        self.tmax=tmax
-    
+        self.tmin = tmin
+        self.tmax = tmax
+
     def npred_total(self):
         """ Calculate the total number of the sampled predicted events.
             
@@ -144,14 +141,16 @@ class MapEventSampler:
         """
 
         self.n_events = self.npred_total()
-        
-        cdf_sampler = InverseCDFSampler(self.npred_map.data, random_state=self.random_state)
-        
+
+        cdf_sampler = InverseCDFSampler(
+            self.npred_map.data, random_state=self.random_state
+        )
+
         pix_coords = cdf_sampler.sample(self.n_events)
         coords = self.npred_map.geom.pix_to_coord(pix_coords[::-1])
 
         return coords
-        
+
     def sample_timepred(self):
         """ Calculate the times of arrival of the sampled source events.
 
@@ -160,24 +159,30 @@ class MapEventSampler:
         ToA : `~numpy.array`
             array with times of the sampled events.
         """
-        
+
         n_events = self.n_events
-        if (self.lc is not None) and (self.tmax>0):
+        if (self.lc is not None) and (self.tmax > 0):
             n_tbin = self.tmax - self.tmin
-            t = np.linspace(self.tmin,self.tmax,n_tbin)
-            normalization = self.lc._interpolator(t,ext=3)
-            time_sampler = InverseCDFSampler(normalization, random_state=self.random_state)
+            t = np.linspace(self.tmin, self.tmax, n_tbin)
+            normalization = self.lc._interpolator(t, ext=3)
+            time_sampler = InverseCDFSampler(
+                normalization, random_state=self.random_state
+            )
             ToA = time_sampler.sample(n_events)[0]
 
-        if (self.phase_lc is not None) and (self.tmax>0):
+        if (self.phase_lc is not None) and (self.tmax > 0):
             n_tbin = self.tmax - self.tmin
-            t = np.linspace(self.tmin,self.tmax,n_tbin)
+            t = np.linspace(self.tmin, self.tmax, n_tbin)
             normalization = self.phase_lc.evaluate_norm_at_time(t)
-            time_sampler = InverseCDFSampler(normalization, random_state=self.random_state)
+            time_sampler = InverseCDFSampler(
+                normalization, random_state=self.random_state
+            )
             ToA = time_sampler.sample(n_events)[0]
 
         else:
-            ToA = self.tmin + self.random_state.uniform(high=(self.tmax-self.tmin), size=n_events)
+            ToA = self.tmin + self.random_state.uniform(
+                high=(self.tmax - self.tmin), size=n_events
+            )
 
         return ToA
 
@@ -193,10 +198,10 @@ class MapEventSampler:
         coords = self.sample_npred()
 
         events = Table()
-        events['lon_true'] = coords[0] * u.deg
-        events['lat_true'] = coords[1] * u.deg
-        events['e_true'] = coords[2] * u.TeV
-        if ((self.lc is not None) and (self.tmax>0)) or (self.tmax>0):
-            events['TIME'] = self.sample_timepred() * u.s
-        
+        events["lon_true"] = coords[0] * u.deg
+        events["lat_true"] = coords[1] * u.deg
+        events["e_true"] = coords[2] * u.TeV
+        if ((self.lc is not None) and (self.tmax > 0)) or (self.tmax > 0):
+            events["TIME"] = self.sample_timepred() * u.s
+
         return events

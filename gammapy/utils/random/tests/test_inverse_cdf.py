@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.coordinates import SkyCoord
 
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
-from  ....cube import MapEvaluator
+from ....cube import MapEvaluator
 from ....cube.models import SkyModel
 from ....image.models import SkyGaussian
 from ....maps import Map, MapAxis
@@ -18,27 +18,34 @@ from ....time.models import LightCurveTableModel as LC
 def uniform_dist(x, a, b):
     return np.select([x <= a, x >= b], [0, 0], 1 / (b - a))
 
+
 def gauss_dist(x, mu, sigma):
     return stats.norm.pdf(x, mu, sigma)
 
+
 def po(x):
-    return x**(-1.*2)
+    return x ** (-1.0 * 2)
+
 
 def rate(x):
-    return np.exp(-x/10000)
+    return np.exp(-x / 10000)
+
 
 def source_model():
-    position = SkyCoord(0.0, 0.0, frame='galactic', unit='deg')
-    energy_axis = MapAxis.from_bounds(1, 100, nbin=30, unit="TeV", name="energy", interp="log")
+    position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=30, unit="TeV", name="energy", interp="log"
+    )
 
     exposure = Map.create(
-              binsz=0.02,
-              map_type='wcs',
-              skydir=position,
-              width="5 deg",
-              axes=[energy_axis],
-              coordsys="GAL", unit="cm2 s"
-              )
+        binsz=0.02,
+        map_type="wcs",
+        skydir=position,
+        width="5 deg",
+        axes=[energy_axis],
+        coordsys="GAL",
+        unit="cm2 s",
+    )
 
     spatial_model = SkyGaussian("0 deg", "0 deg", sigma="0.2 deg")
     spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
@@ -108,21 +115,23 @@ def test_map_sampling():
     npred = source_model()
 
     livetime = 10 * u.hour
-    time = np.linspace(0,livetime.to('s').value,int(livetime.to('s').value))
+    time = np.linspace(0, livetime.to("s").value, int(livetime.to("s").value))
     table = Table()
-    table['TIME'] = time
-    table['NORM'] = rate(time)
+    table["TIME"] = time
+    table["NORM"] = rate(time)
     lc = LC(table)
 
-    tmin=9
-    tmax=30000
+    tmin = 9
+    tmax = 30000
     sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
     ntot = sampler.npred_total()
     sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
-    events=sampler.sample_events()
+    events = sampler.sample_events()
 
-    position = SkyCoord(events['lon_true'], events['lat_true'], frame='galactic', unit='deg')
+    position = SkyCoord(
+        events["lon_true"], events["lat_true"], frame="galactic", unit="deg"
+    )
 
     assert_allclose(ntot, len(events), 0.001)
-    assert max(events['TIME'])<tmax
+    assert max(events["TIME"]) < tmax
     assert max(npred.geom.center_skydir.separation(position)) < npred.geom.width[0]
