@@ -121,17 +121,17 @@ obtained from https://pypi.org/). A definition of required dependency is given
 above in the introduction, notes on each required dependency are given below
 after the table.
 
-===============  ===============  ===============
-Dependency       Gammapy 0.12     Gammapy 0.14
-===============  ===============  ===============
-Python           3.5  (Sep 2015)  3.6  (Dec 2016)
-Numpy            1.10 (May 2016)  1.16 (Jan 2019)
-Scipy            0.15 (Jan 2015)  1.2  (Dec 2018)
-Astropy          2.0  (Jul 2017)  3.2  (Jun 2019)
-regions          0.3  (Sep 2018)  0.5  (Jul 2019)
-pyyaml           unclear          3.13 (Jul 2018)
-click            unclear          7.0  (Sep 2018)
-===============  ===============  ===============
+===============  ================  ================
+Dependency       Gammapy 0.12      Gammapy 0.14
+===============  ================  ================
+Python           3.5   (Sep 2015)  3.6   (Dec 2016)
+Numpy            1.10  (May 2016)  1.16  (Jan 2019)
+Scipy            0.15  (Jan 2015)  1.2   (Dec 2018)
+Astropy          2.0   (Jul 2017)  3.2   (Jun 2019)
+regions          0.3   (Sep 2018)  0.5   (Jul 2019)
+pyyaml           unclear           3.13  (Jul 2018)
+click            unclear           7.0   (Sep 2018)
+===============  ================  ================
 
 We already mentioned the possibility to drop Python 3.5 support in
 :ref:`pig-003`. One reason is that Anaconda and conda-forge (our main
@@ -171,7 +171,74 @@ and support, we choose minimum required versions from 2018 here.
 Optional dependencies
 =====================
 
-Environments
+We propose to update the Gammapy optional dependencies as shown in the following
+table (the release dates for the packages are shown in parentheses are were
+obtained from https://pypi.org/). An explanation of optional dependency is given
+above in the introduction, and the sections on distribution and outlook below
+contain further information concerning the set of recommended optional
+dependencies for Gammapy.
+
+===============  ================  ================
+Dependency       Gammapy 0.12     Gammapy 0.14
+===============  ================  ================
+ipython=7.5      7.3   (Feb 2019)  7.6   (Jun 2019)
+jupyter          1.0   (n/a)       1.0   (n/a)
+jupyterlab       0.35  (Oct 2018)  1.0   (Jun 2019)             
+matplotlib       2.1   (Oct 2017)  3.0   (Sep 2018)
+pandas           0.24  (Jan 2019)  --
+healpy           1.11              --
+astropy-healpix  --                0.5   (Jul 2019)
+reproject        0.4   (Jan 2018)  0.5   (Jun 2019)
+uncertainties    3.0   (Aug 2016)  3.1   (May 2019)
+iminuit          1.3   (Jul 2018)  1.3.7 (Jun 2019)
+sherpa           4.11  (Feb 2019)  4.11  (Feb 2019)
+naima            0.8   (Dec 2016)  0.8.3 (Nov 2018)
+emcee            --                2.2   (Jul 2016)
+corner           --                2.0   (May 2016)
+===============  ================  ================
+
+We will document what they are and what they are used for in the Gammapy
+documentation, here we just add comments for some cases.
+
+The versions given for ``ipython``, ``jupyter`` and ``jupyterlab`` are what we
+ship in the default conda environment. While Gammapy is usually used
+interactively from these tools, they aren't dependencies that we import and use
+within Gammapy, so really Gammapy could also be used with any ipython version
+that still works, i.e. going back several years. ``jupyter`` is something called
+a metapackage, a Python package that doesn't contain any code, just lists
+several other packages as dependencies, that's why the version number and
+release date there doesn't apply.
+
+``emcee`` is a small and simple MCMC sampling package that's commonly used in
+astronomy. ``corner`` is a tiny Python package to visualise ``emcee`` results
+with ``matplotlib``. In v0.12 we already introduced a tutorial notebook showing
+how to use Gammapy with ``emcee`` to do a Bayesian analysis, but we forgot to
+add it to the recommended conda environment. We propose to continue prototyping MCMC s
+
+While ``pandas`` is very widely used in the scientific Python space, we
+consistently use Astropy tables, that's why we suggest to remove it from the
+list of optional dependencies of Gammapy.
+
+With ``iminuit``, 1.3.7 is the first version that ships binary wheels.
+
+TODO: for ``reproject`` it's not clear if we actually use or need it. Probably
+``map.reproject`` exactly duplicates the functionality of ``map.interp``, except
+that ``reproject`` additionally offers the possibility to reproject using a
+flux-preserving algorithm. We should check exactly what we have and need and
+then decide whether to keep or drop ``reproject`` as a dependency.
+
+astropy-healpix
+---------------
+
+For HEALPix we propose to change from `healpy`_ to `astropy-healpix`_. An
+initial exploration whether ``astropy-healpix`` has all the features we need
+has already been done in `GH 1167`_.
+
+
+Distribution
+============
+
+Introduction
 ------------
 
 The philosophy of Gammapy is to build on top of and collaborate with the
@@ -250,53 +317,8 @@ More examples;
   but then for conda has a metapackage ``glueviz`` https://github.com/conda-forge/glueviz-feedstock/blob/master/recipe/meta.yaml
   which depends on ``glue-core``.
 
-Packages
---------
-
-Here's the list of optional dependencies for Gammapy:
-
-===============  ===============  ===============
-Dependency       Gammapy 0.12     Gammapy 0.14
-===============  ===============  ===============
-ipython=7.5      7.3              7.5
-jupyter          1.0              1.0?
-jupyterlab       0.35             
-healpy           1.11             --
-astropy-healpix  --               0.5 (Jul 2019)
-matplotlib       2.1 (Oct 2017)   3.0 (Sep 2018)
-reproject
-
-  - pyyaml=5.1
-  - click=7.0
-  - numpy=1.16
-  - scipy=1.3
-  - pandas=0.24
-  - matplotlib=3.1
-  - astropy=3.1
-  - regions=0.3
-  - reproject=0.4
-  - uncertainties=3.1
-  - iminuit=1.3
-  - sherpa=4.11
-  - healpy=1.12
-  - naima=0.8
-==============  ===============  ===============
-
-We will document what they are and what they are used for in the Gammapy
-documentation, here we just add comments for some cases.
-
-astropy-healpix
----------------
-
-For HEALPix we propose to change from `healpy`_ to `astropy-healpix`_. An
-initial exploration whether ``astropy-healpix`` has all the features we need
-has already been done in `GH 1167`_.
-
-
-Distribution
-============
-
-- Drop support for Gammapy distribution via Macports
+conda
+-----
 
 Most Gammapy users use ``conda`` and binaries created via ``conda-forge``.
 Sufficient or do we want to support other distribution channels?
@@ -352,14 +374,15 @@ let us know!
 Others
 ------
 
-- interest to add Homebrew packages?
-- interest to 
+Mention HomeBrew, Docker, Linux distros
 
 Outlook
 =======
 
 Possible somewhat related future discussion and work, not in scope for this PIG:
 
+- Adopt new packages and technologies for new features or improved performance,
+  e.g. ``numba``, ``dask``, ``jax``, ``ray``, ``tensorflow-probability``, ...
 - Simplify Gammapy packaging code, possibly get rid of ``astropy-helpers`` completely.
   See  https://github.com/astropy/astropy-APEs/pull/52
 - Change git and release workflow (stable branches, bugfix backports) after v1.0
@@ -368,6 +391,14 @@ Possible somewhat related future discussion and work, not in scope for this PIG:
 Alternatives
 ============
 
+- We could just keep doing what we are now: support more older versions, use healpy,
+  keep support for Macports
+- We don't have to add more support for pip and produce binary wheels,
+  conda could remain our one recommended and fully supported distribution channel
+- We could use a conda metapackage (and possibly pip metapackage) instead of
+  environment specification files via gammapy.org
+- We could package for HomeBrew which now works on Linux and Mac
+- We could produce Docker images
 
 Task list
 =========
