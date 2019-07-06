@@ -101,24 +101,28 @@ class MapEventSampler:
             Input light (or phase)-curve model of the source, given with columns labelled
             as "time" (or "phase)" and "normalization" (arbitrary units): the bin step
             HAS to be costant.
-    tmin : `astropy.units.Quantity` object.
+    tmin : `astropy.units.Quantity` or `astropy.time.TIME` object.
             Start time of the sampling.
-    tmax : `astropy.units.Quantity` object.
+    tmax : `astropy.units.Quantity` or `astropy.time.TIME` object.
             Stop time of the sampling.
     """
 
-    def __init__(
-        self, npred_map, tmin, tmax, random_state=0, lc=None, phase_lc=None, dt_bin=None
-    ):
-
-        #        t_ref = Time('2019-01-01 00:00:00', scale='utc') #hardcoded reference epoch
+    def __init__(self, npred_map, tmin, tmax, random_state=0, lc=None, dt_bin=None):
 
         self.random_state = get_random_state(random_state)
         self.npred_map = npred_map
         self.lc = lc
-        self.phase_lc = phase_lc
-        self.tmin = tmin.to(u.s)
-        self.tmax = tmax.to(u.s)
+
+        if isinstance(tmin, Time) and isinstance(tmax, Time):
+            t_ref = Time(
+                "2019-01-01 00:00:00", scale="utc"
+            )  # hardcoded reference epoch
+            self.tmin = ((tmin.decimalyear - t_ref.decimalyear) * u.year).to(u.s)
+            self.tmax = ((tmax.decimalyear - t_ref.decimalyear) * u.year).to(u.s)
+
+        else:
+            self.tmin = tmin.to(u.s)
+            self.tmax = tmax.to(u.s)
 
         if dt_bin == None:
             self.dt_bin = self.tmax.value - self.tmin.value
