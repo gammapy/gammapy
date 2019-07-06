@@ -7,7 +7,7 @@ from astropy.utils import lazyproperty
 
 from .utils import get_random_state
 
-__all__ = ["InverseCDFSampler", "MapEventSampler"]
+__all__ = ["InverseCDFSampler", "MapEventSampler", "IRFEventDistributor"]
 
 
 class InverseCDFSampler:
@@ -148,8 +148,6 @@ class MapEventSampler:
                 Sequence of coordinates and energies of the sampled events.
         """
 
-        #        self.n_events = self.npred_total()
-
         cdf_sampler = InverseCDFSampler(
             self.npred_map.data, random_state=self.random_state
         )
@@ -169,7 +167,6 @@ class MapEventSampler:
             array with times of the sampled events.
         """
 
-        #        n_events = self.n_events
         if self.lc is not None:
             t = np.linspace(self.tmin.value, self.tmax.value, self.dt_bin)
             normalization = self.lc.evaluate_norm_at_time(t)
