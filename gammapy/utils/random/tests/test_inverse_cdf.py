@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.time import Time
 
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from ....cube import MapEvaluator
@@ -12,7 +13,7 @@ from ....cube.models import SkyModel
 from ....image.models import SkyGaussian
 from ....maps import Map, MapAxis
 from ....spectrum.models import PowerLaw
-from ....time.models import LightCurveTableModel as LC
+from ....time.models import LightCurveTableModel
 
 
 def uniform_dist(x, a, b):
@@ -119,19 +120,20 @@ def test_map_sampling():
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
-    lc = LC(table)
+    temporal_model = LightCurveTableModel(table)
 
-    tmin = 9 * u.s
-    tmax = 30000 * u.s
-    sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
-    ntot = sampler.npred_total
-    sampler = MapEventSampler(npred, random_state=0, lc=lc, tmin=tmin, tmax=tmax)
-    events = sampler.sample_events()
+    t_min = Time("2010-01-01T00:00:00")
+    t_max = Time("2010-01-01T08:00:00")
+
+    sampler = MapEventSampler(npred, t_min=t_min, t_max=t_max,  temporal_model=temporal_model, random_state=0, t_delta="10 min")
+    events = sampler.sample_events(n_events=2)
 
     position = SkyCoord(
         events["RA_TRUE"], events["DEC_TRUE"], frame="galactic", unit="deg"
     )
 
-    assert_allclose(ntot, len(events), 0.001)
-    assert max(events["TIME"]) < tmax.value
-    assert max(npred.geom.center_skydir.separation(position)) < npred.geom.width[0]
+    assert len(events) == 2
+    assert_allclose(events["TIME"].data, [175.035023, 8417.336952])
+    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255])
+    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696])
+    assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)

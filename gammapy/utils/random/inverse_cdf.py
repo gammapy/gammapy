@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
 from astropy.time import Time
@@ -7,7 +8,7 @@ from astropy.utils import lazyproperty
 
 from .utils import get_random_state
 
-__all__ = ["InverseCDFSampler", "MapEventSampler", "IRFEventDistributor"]
+__all__ = ["InverseCDFSampler", "MapEventSampler"]
 
 
 class InverseCDFSampler:
@@ -94,109 +95,122 @@ class MapEventSampler:
     ----------
     npred_map : `~gammapy.maps.Map`
             Predicted number of counts map.
+    t_min : `astropy.time.Time` object.
+            Start time of the sampling.
+    t_max : `astropy.time.Time` object.
+            Stop time of the sampling.
+    t_delta : `~astropy.units.Quantity`
+            Time step used for sampling of the temporal model.
+    temporal_model : `~gammapy.time.models.LightCurveTableModel` or `~gammapy.time.models.PhaseCurveTableModel`
+            Input light (or phase)-curve model of the source, given with columns labelled
+            as "time" (or "phase)" and "normalization" (arbitrary units).
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
-    lc : `~gammapy.time.models.LightCurveTableModel` or `~gammapy.time.models.PhaseCurveTableModel`
-            Input light (or phase)-curve model of the source, given with columns labelled
-            as "time" (or "phase)" and "normalization" (arbitrary units): the bin step
-            HAS to be costant.
-    tmin : `astropy.units.Quantity` or `astropy.time.TIME` object.
-            Start time of the sampling.
-    tmax : `astropy.units.Quantity` or `astropy.time.TIME` object.
-            Stop time of the sampling.
     """
 
-    def __init__(self, npred_map, tmin, tmax, random_state=0, lc=None, dt_bin=None):
-
-        self.random_state = get_random_state(random_state)
+    def __init__(self, npred_map, t_min, t_max, t_delta="1 s", temporal_model=None, random_state=0):
         self.npred_map = npred_map
-        self.lc = lc
-
-        if isinstance(tmin, Time) and isinstance(tmax, Time):
-            t_ref = Time(
-                "2019-01-01 00:00:00", scale="utc"
-            )  # hardcoded reference epoch
-            self.tmin = ((tmin.decimalyear - t_ref.decimalyear) * u.year).to(u.s)
-            self.tmax = ((tmax.decimalyear - t_ref.decimalyear) * u.year).to(u.s)
-
-        else:
-            self.tmin = tmin.to(u.s)
-            self.tmax = tmax.to(u.s)
-
-        if dt_bin == None:
-            self.dt_bin = self.tmax.value - self.tmin.value
+        self.temporal_model = temporal_model
+        self.t_min = Time(t_min)
+        self.t_max = Time(t_max)
+        self.t_delta = u.Quantity(t_delta)
+        self.random_state = get_random_state(random_state)
 
     @lazyproperty
     def npred_total(self):
-        """ Calculate the total number of the sampled predicted events.
-            
+        """Sample the total number of predicted events.
+
         Returns
         -------
-        random_state.poisson() : int
-                        Number of predicted events.
+        npred_total : int
+            Number of predicted events.
         """
 
         return self.random_state.poisson(np.sum(self.npred_map.data))
 
-    def sample_npred(self):
-        """ Calculate energy and Galactic coordinates of the sampled source events.
+    def sample_position_energy(self, n_events=None):
+        """Sample position and energy of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
             
         Returns
         -------
         coords : `~gammapy.maps.MapCoord` object.
-                Sequence of coordinates and energies of the sampled events.
+            Sequence of coordinates and energies of the sampled events.
         """
+        from ...maps import MapCoord
+        n_events = self.npred_total if n_events is None else n_events
 
-        cdf_sampler = InverseCDFSampler(
+        sampler = InverseCDFSampler(
             self.npred_map.data, random_state=self.random_state
         )
 
-        pix_coords = cdf_sampler.sample(self.npred_total)
-        coords = self.npred_map.geom.pix_to_coord(pix_coords[::-1])
+        coords_pix = sampler.sample(n_events)
+        coords = self.npred_map.geom.pix_to_coord(coords_pix[::-1])
 
-        return coords
+        # TODO: pix_to_coord should return a MapCoord object
+        geom = self.npred_map.geom
+        axes_names = ["lon", "lat"] + [ax.name for ax in geom.axes]
+        cdict = OrderedDict(zip(axes_names, coords))
+        cdict["energy"] *= geom.get_axis_by_name("energy").unit
+        return MapCoord.create(cdict, coordsys=geom.coordsys)
 
-    @lazyproperty
-    def sample_timepred(self):
-        """ Calculate the times of arrival of the sampled source events.
+    def sample_time(self, n_events=None):
+        """Sample arrival times of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
 
         Returns
         -------
-        ToA : `~numpy.array`
-            array with times of the sampled events.
+        time : `~astropy.units.Quantity`
+            Array with times of the sampled events.
         """
+        n_events = self.npred_total if n_events is None else n_events
 
-        if self.lc is not None:
-            t = np.linspace(self.tmin.value, self.tmax.value, self.dt_bin)
-            normalization = self.lc.evaluate_norm_at_time(t)
-            time_sampler = InverseCDFSampler(
-                normalization, random_state=self.random_state
+        ontime = self.t_max - self.t_min
+
+        if self.temporal_model is not None:
+            t = np.arange(0, ontime.sec, self.t_delta.to_value("s")) * u.second
+            pdf = self.temporal_model.evaluate_norm_at_time(t)
+
+            sampler = InverseCDFSampler(
+                pdf=pdf, random_state=self.random_state
             )
-            ToA = time_sampler.sample(self.npred_total)[0]
-
+            time_pix = sampler.sample(n_events)[0]
+            time = np.interp(time_pix, np.arange(len(t)), t.to_value("s")) * u.second
         else:
-            ToA = self.tmin.value + self.random_state.uniform(
-                high=(self.tmax.value - self.tmin.value), size=self.npred_total
-            )
+            time = self.random_state.uniform(high=ontime.sec, size=n_events) * u.second
 
-        return ToA
+        return time
 
-    def sample_events(self):
+    def sample_events(self, n_events=None):
         """It converts the given sampled event list into an astropy table.
-            
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+
+
         Returns
         -------
         events : `~astropy.table`
             Sampled event list in an astropy table format.
         """
 
-        coords = self.sample_npred()
+        coords = self.sample_position_energy(n_events)
+        skycoord = coords.skycoord
 
         events = Table()
-        events["RA_TRUE"] = coords[0] * u.deg
-        events["DEC_TRUE"] = coords[1] * u.deg
-        events["ENERGY_TRUE"] = coords[2] * u.TeV
-        events["TIME"] = self.sample_timepred * u.s
-
+        events["RA_TRUE"] = skycoord.icrs.ra
+        events["DEC_TRUE"] = skycoord.icrs.dec
+        events["ENERGY_TRUE"] = coords["energy"]
+        events["TIME"] = self.sample_time(n_events)
         return events
