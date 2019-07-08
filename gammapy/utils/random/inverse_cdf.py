@@ -95,9 +95,9 @@ class MapEventSampler:
     ----------
     npred_map : `~gammapy.maps.Map`
             Predicted number of counts map.
-    t_min : `astropy.time.Time` object.
+    t_min : `~astropy.time.Time`
             Start time of the sampling.
-    t_max : `astropy.time.Time` object.
+    t_max : `~astropy.time.Time`
             Stop time of the sampling.
     t_delta : `~astropy.units.Quantity`
             Time step used for sampling of the temporal model.
@@ -108,6 +108,7 @@ class MapEventSampler:
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
     """
+    time_unit = u.second
 
     def __init__(self, npred_map, t_min, t_max, t_delta="1 s", temporal_model=None, random_state=0):
         self.npred_map = npred_map
@@ -159,6 +160,20 @@ class MapEventSampler:
         cdict["energy"] *= geom.get_axis_by_name("energy").unit
         return MapCoord.create(cdict, coordsys=geom.coordsys)
 
+    @property
+    def ontime(self):
+        """On time (`~astropy.units.Quantity`)"""
+        ontime = self.t_max - self.t_min
+        return u.Quantity(ontime.sec, "s")
+
+    def _get_time_meta(self):
+        """Time meta information (`OrderedDict`)"""
+        # TODO: extend the meta information according to
+        #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
+        meta = OrderedDict()
+        meta["ONTIME"] = np.round(self.ontime.to_value("s"), 1)
+        return meta
+
     def sample_time(self, n_events=None):
         """Sample arrival times of events.
 
@@ -173,20 +188,23 @@ class MapEventSampler:
             Array with times of the sampled events.
         """
         n_events = self.npred_total if n_events is None else n_events
+        t_stop = self.ontime.to_value(self.time_unit)
 
-        ontime = self.t_max - self.t_min
-
+        # TODO: the separate time unit handling is unfortunate, but the quantity support for np.arange and np.interp
+        #  is still incomplete, refactor once we change to recent numpy and astropy versions
         if self.temporal_model is not None:
-            t = np.arange(0, ontime.sec, self.t_delta.to_value("s")) * u.second
-            pdf = self.temporal_model.evaluate_norm_at_time(t)
+            t_step = self.t_delta.to_value(self.time_unit)
+            t = np.arange(0, t_stop, t_step)
+
+            pdf = self.temporal_model.evaluate_norm_at_time(t * self.time_unit)
 
             sampler = InverseCDFSampler(
                 pdf=pdf, random_state=self.random_state
             )
             time_pix = sampler.sample(n_events)[0]
-            time = np.interp(time_pix, np.arange(len(t)), t.to_value("s")) * u.second
+            time = np.interp(time_pix, np.arange(len(t)), t) * self.time_unit
         else:
-            time = self.random_state.uniform(high=ontime.sec, size=n_events) * u.second
+            time = self.random_state.uniform(high=t_stop, size=n_events) * self.time_unit
 
         return time
 
@@ -213,4 +231,5 @@ class MapEventSampler:
         events["DEC_TRUE"] = skycoord.icrs.dec
         events["ENERGY_TRUE"] = coords["energy"]
         events["TIME"] = self.sample_time(n_events)
+        events.meta.update(self._get_time_meta())
         return events

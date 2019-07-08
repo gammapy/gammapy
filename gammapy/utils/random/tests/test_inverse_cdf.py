@@ -28,11 +28,12 @@ def po(x):
     return x ** (-1.0 * 2)
 
 
-def rate(x):
-    return np.exp(-x / 10000)
+def rate(x, c="1e4 s"):
+    c = u.Quantity(c)
+    return np.exp(-x / c)
 
 
-def source_model():
+def get_npred_map():
     position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
     energy_axis = MapAxis.from_bounds(
         1, 100, nbin=30, unit="TeV", name="energy", interp="log"
@@ -52,12 +53,10 @@ def source_model():
     spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-    exposure.data = 1e10 * 10000 * np.ones(exposure.data.shape)
-
+    exposure.data = 1e14 * np.ones(exposure.data.shape)
     evaluator = MapEvaluator(model=skymodel, exposure=exposure)
 
     npred = evaluator.compute_npred()
-
     return npred
 
 
@@ -113,10 +112,9 @@ def test_norm_dist_sampling():
 
 
 def test_map_sampling():
-    npred = source_model()
+    npred = get_npred_map()
+    time = np.arange(0, 10, 0.06) * u.hour
 
-    livetime = 10 * u.hour
-    time = np.linspace(0, livetime.to("s").value, int(livetime.to("s").value))
     table = Table()
     table["TIME"] = time
     table["NORM"] = rate(time)
@@ -128,12 +126,10 @@ def test_map_sampling():
     sampler = MapEventSampler(npred, t_min=t_min, t_max=t_max,  temporal_model=temporal_model, random_state=0, t_delta="10 min")
     events = sampler.sample_events(n_events=2)
 
-    position = SkyCoord(
-        events["RA_TRUE"], events["DEC_TRUE"], frame="galactic", unit="deg"
-    )
-
     assert len(events) == 2
-    assert_allclose(events["TIME"].data, [175.035023, 8417.336952])
-    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255])
-    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696])
+    assert_allclose(events["TIME"].data, [175.035023, 4217.336952], rtol=1e-5)
+    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
     assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
+
+    assert_allclose(events.meta["ONTIME"], 8 * 3600)
