@@ -78,9 +78,7 @@ sample. A tutorial notebook of this approach can be found `here
 
 Drawbacks of this approach are:
  * there is no clear separation of the data reduction and modeling steps
- * only 1D On-Off spectral analysis is supported and lacks supports for
-``MapDataset`` based analysis.
- * changes in the spectral shape between the time bins are not supported.
+ * only 1D On-Off spectral analysis is supported and lacks supports for ``MapDataset`` based analysis.
 
 
 Proposal
@@ -169,11 +167,11 @@ Inside ``MapLightCurveMaker`` one would then perform the following operations:
         LC_datasets = []
 
         for time in time_bins:
-            # Here we simply get the observations in a time bin
             obs = observations.select_time(time)
 
             maker = MapMaker(geom, offset_max = 2*u.deg)
             res = maker.run(obs)
+
             LC_datasets.append(res)
 
         return LC_datasets
@@ -210,10 +208,13 @@ Inside ``SpectrumLightCurveMaker`` one would then perform the following operatio
         for time in time_bins:
             # Here we simply get the observations in a time bin
             obs = observations.select_time(time)
+
             # The event filtering has to be performed on the background events
             bkg_estimates = bkg_estimator.select_time_on(time)
+
             spec = Spectrum_Extraction(obs, bkg_estimates)
             spec.run()
+
             LC_datasets.append(spec.spectrum_observations)
 
         return LC_datasets
