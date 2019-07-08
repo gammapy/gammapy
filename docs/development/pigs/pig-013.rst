@@ -176,7 +176,7 @@ contain further information concerning the set of recommended optional
 dependencies for Gammapy.
 
 ===============  ================  ================
-Dependency       Gammapy 0.12     Gammapy 0.14
+Dependency       Gammapy 0.12      Gammapy 0.14
 ===============  ================  ================
 ipython=7.5      7.3   (Feb 2019)  7.6   (Jun 2019)
 jupyter          1.0   (n/a)       1.0   (n/a)
@@ -397,37 +397,27 @@ be made, which will ship to users in Gammapy v0.14 in September 2019:
 - Maybe: update Gammapy packaging and dev tools to follow new recommendations in `APE 17`_.
   There's some advantages to doing this first, to make it easier to define the
   new CI test matrix, but this could also come later.
-
 - Update continuous integration test matrix to test against the minimum required
-versions as specified here (and also newer versions in addition) (`GH 2270`_).
-Maybe move completely from travis-ci to Azure?
-
+  versions as specified here (and also newer versions in addition) (`GH 2270`_).
+  Maybe move completely from travis-ci to Azure?
 - Drop Python 3.5 support and modernise codebase (e.g. use f-strings and use
-dict instead of OrderedDict).
-
+  dict instead of OrderedDict).
 - Review Gammapy codebase and remove workarounds for old Python, Numpy, Astropy,
-... versions.
-
+  ... versions.
 - Update ``extras_require`` in ``setup.py``. Try moving the spec out of
-``setup.py`` to ``setup.cfg`` or ``pyproject.toml``.
-
+  ``setup.py`` to ``setup.cfg`` or ``pyproject.toml``.
 - Review, restructure and update all Gammapy installation instructions
-
 - Change ``astropy-healpix`` to the CDS implementation, release a stable version and
-check conda and pip binaries (`astropy-healpix GH 128`_)
-
+  check conda and pip binaries (`astropy-healpix GH 128`_)
 - Change Gammapy from ``healpy`` to ``astropy-healpix`` (`GH 1167`_)
-
 - Maybe: rewrite spectral model error evaluation code to not use the
-``uncertainties`` package (`PIG 14`_)
-
+  ``uncertainties`` package (`PIG 14`_)
 - Add binary wheels for gammapy, regions, reproject and astropy-healpix on PyPI,
-then add Gammapy CI build testing ``pip install gammapy[all]``
-
+  then add Gammapy CI build testing ``pip install gammapy[all]``
 - After releasing Gammapy v0.14, update Gammapy ``conda-forge`` recipe, and do
-extensive testing before announcing to users. Maybe define some Dockerfiles that
-install from scratch from the user's perspective, to be used for post-release
-checks?
+  extensive testing before announcing to users. Maybe define some Dockerfiles
+  that install from scratch from the user's perspective, to be used for
+  post-release checks?
 
 
 Decision
