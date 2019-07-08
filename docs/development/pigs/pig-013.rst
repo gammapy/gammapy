@@ -30,15 +30,15 @@ tested by us.
 
 Concerning Gammapy distribution, we suggest to try to build and distribute
 Python binary wheels for Gammapy, regions, reproject and astropy-healpix for
-Linux, macOS and Windows, and to create a pip ``requirements.txt`` file that is
-equivalent to the conda ``environment.yml`` file we already have. This will make
-the installation instructions for ``pip`` and ``conda`` equivalent, in both
-cases environments in the user's home directory are used and installation is
-very easy and fast, no C compiler or admin privileges needed on the user
-machine. We suggest to remove the extensive installation instruction page for
-Macports from the Gammapy docs, and to not include Macports, HomeBrew or Linux
-distributions in the distribution channels that are maintained by the Gammapy
-team.
+Linux, macOS and Windows, so that users don't need a compiler and installation
+is fast. We suggest to define a list of dependencies "all" in ``extras_require``
+via setuptools, so that ``pip install gammapy[all]`` is mostly equivalent to
+installing the recommended conda environment, whereas ``pip install gammapy``
+only installs the few required dependencies, as it already did so far,
+equivalent to ``conda install gammapy``. We suggest to remove the extensive
+installation instruction page for Macports from the Gammapy docs, and to not
+include Macports, HomeBrew or Linux distributions in the distribution channels
+that are maintained by the Gammapy team.
 
 The main reason to write a PIG for this is to give everyone an opportunity to
 give feedback. We will announce this on the Gammapy user list, but not run a
@@ -70,8 +70,8 @@ installed (which usually doesn't happen, unless users do uncommon things like
 e.g. ``pip uninstall scipy`` after ``pip install gammapy``, that would lead to a
 non-working Gammapy installation). Initially we only had Numpy and Astropy as
 required dependencies, by now we have added Scipy (in `GH 1863`_), PyYAML, click
-and regions as required dependencies. Still, we are careful and conservative
-concerning dependencies. E.g. we removed the use of `scikit-image`_ (in  `GH
+and regions as required dependencies. We are still very careful and conservative
+concerning dependencies, e.g. we removed the use of `scikit-image`_ (in  `GH
 1658`_) because really ``scipy.ndimage`` contains everything we need, and also
 e.g. ``h5py`` and ``pandas`` and ``ROOT`` and a few other optional dependencies
 that were only used in one or two functions in prototype code were removed (see
@@ -79,13 +79,9 @@ e.g. `GH 1586`_).
 
 Most users don't know or care about ``setuptools`` and ``install_requires``,
 what they want is a Python environment that contains everything needed to run
-analyses with Gammapy. For this we have the pre-defined conda and pip environent
-specifications (see below). Those contain many optional dependencies, but they
-don't contain everything some users might want to use. E.g. ``matplotlib`` and
-``jupyter`` and ``sherpa`` is included there, but ``pandas`` or ``pint`` for
-pulsar analysis isn't. Users can use ``conda`` or ``pip`` to install what they
-need in addition, the assumption is that those package managers work very well
-already, and keep getting better.
+analyses with Gammapy, including e.g. ``matplotlib``, ``iminuit``, HEALPix
+support, ``ipython`` and ``jupyter``. For this we have a solution to install
+Gammapy and a set of "recommended" optional dependencies, described below.
 
 Motivation
 ----------
@@ -94,23 +90,24 @@ As mentioned already in :ref:`pig-013`, there is always a benefit and a cost to
 supporting old versions. In a few sections below we highlight some of the
 benefits and costs for different dependencies specifically, but generally we
 feel that the benefits of the changes proposed here are significant. Much
-reduced testing and maintenance effort, some new features become available,
-while the benefits of keeping support for older versions is very small, since
-most Gammapy users use the recommended conda environment, which already ships
-very modern and recent stack and is mostly unchanged. Especially the
-``astropy-regions`` and ``astropy-healpix`` packages are still under active
-development, and supporting old versions from 2018 or 2017 would be painful, and
-if we decide to require very recent versions of those packages (from summer
-2019), the motivation to support very old versions of other dependencies (most
-notably Astropy, but also e.g. Numpy or Scipy or Matplotlib) is very small.
+reduced testing and maintenance effort, new features and fixes and performance
+improvements in dependencies become available, while the benefits of keeping
+support for older versions is very small, since most Gammapy users use the
+recommended conda environment, which already ships very modern and recent stack
+and is mostly unchanged in this proposal. Especially the ``astropy-regions`` and
+``astropy-healpix`` packages are still under active development, and supporting
+old versions from 2018 or 2017 would be painful, and if we decide to require
+very recent versions of those packages (from releases in summer 2019), the
+motivation to support very old versions of other dependencies (most notably
+Astropy, but also e.g. Numpy or Scipy or Matplotlib) is small.
 
 conda does provide a complete solution to ship Gammapy to users on all
 platforms. E.g. for the Fermi tools it's the only supported distribution
-channel. The addition of binary wheels for pip should be considered an
-experiment. This is the standard way to distribute Python packages, and some
-users prefer it over conda, and work on this has already started by the Astropy
-folks, so we'd like to try it out. We might or might not support this for the
-coming years.
+channel. The addition of binary wheels for pip described below should be
+considered an experiment. This is the standard way to distribute Python
+packages, and some users prefer it over conda, and work on this has already
+started by the Astropy folks, so we'd like to try it out. We might or might not
+support this for the coming years.
 
 Required dependencies
 =====================
@@ -197,8 +194,36 @@ emcee            --                2.2   (Jul 2016)
 corner           --                2.0   (May 2016)
 ===============  ================  ================
 
-We will document what they are and what they are used for in the Gammapy
-documentation, here we just add comments for some cases.
+We will document for each dependency what it is and where we use it in the
+Gammapy documentation, here we just add comments for some cases.
+
+astropy-healpix
+---------------
+
+For HEALPix we propose to change from `healpy`_ to `astropy-healpix`_. An
+initial exploration whether ``astropy-healpix`` has all the features we need has
+already been done in `GH 1167`_, and the answer was yes, except for some
+precision issues near the poles in ``astropy-healpix``, and differences in disk
+query results. Work is ongoing in ``astropy-healpix`` to fix these issues, the
+plan is to base it on a new HEALPix implementation developed at CDS (see
+`astropy-healpix GH 128`_). The hope is that this becomes available by September
+2019, and then we switch to ``astropy-healpix`` for Gammapy v0.14. We note that
+this new implementation is written in Rust and building it for now requires a
+Rust compiler, although if binaries are available, users and even Gammapy
+developers will not need a Rust compiler, they just install the
+``astropy-healpix`` binary. Long-term, we might want to port this Rust
+implementation to C or Cython, which would make ``astropy-healpix`` equivalent
+to most other C extensions in Astropy (WCSLIB, FITS, ERFA) and affiliated
+packages (reproject, regions).
+
+uncertainties
+-------------
+
+The question whether to keep using ``uncertainties`` or whether to replace it
+with something else is not discussed here, but in `PIG 14`_.
+
+Other
+-----
 
 The versions given for ``ipython``, ``jupyter`` and ``jupyterlab`` are what we
 ship in the default conda environment. While Gammapy is usually used
@@ -213,148 +238,89 @@ release date there doesn't apply.
 astronomy. ``corner`` is a tiny Python package to visualise ``emcee`` results
 with ``matplotlib``. In v0.12 we already introduced a tutorial notebook showing
 how to use Gammapy with ``emcee`` to do a Bayesian analysis, but we forgot to
-add it to the recommended conda environment. We propose to continue prototyping MCMC s
+add it to the recommended conda environment. We propose to continue prototyping
+MCMC sampling analyses in ``gammapy.utils.fitting`` (see `PIG 14`_) using
+``emcee`` for now, and long-term to consider refactoring to use other more
+performant sampling algorithms, e.g. Hamiltonian MCMC.
 
 While ``pandas`` is very widely used in the scientific Python space, we
 consistently use Astropy tables, that's why we suggest to remove it from the
 list of optional dependencies of Gammapy.
 
-With ``iminuit``, 1.3.7 is the first version that ships binary wheels.
+With ``iminuit``, 1.3.7 is the first version that ships binary wheels. Since
+building ``iminuit`` requires a C++ compiler and takes a minute, we require that
+version, so that users get binaries.
 
-TODO: for ``reproject`` it's not clear if we actually use or need it. Probably
-``map.reproject`` exactly duplicates the functionality of ``map.interp``, except
-that ``reproject`` additionally offers the possibility to reproject using a
-flux-preserving algorithm. We should check exactly what we have and need and
-then decide whether to keep or drop ``reproject`` as a dependency.
-
-astropy-healpix
----------------
-
-For HEALPix we propose to change from `healpy`_ to `astropy-healpix`_. An
-initial exploration whether ``astropy-healpix`` has all the features we need
-has already been done in `GH 1167`_.
-
+``reproject`` is only wrapped in one method, ``WCSNDMap.reproject``, and not
+used within Gammapy. It duplicates the ``WCSNDMap.interp`` functionality, the
+extra feature it provides is a flux-preserving mode. We should either improve
+the tests and documentation for this, or maybe consider to remove ``reproject``
+completely, replacing it by a comment and usage example how to apply
+``reproject`` in the documentation.
 
 Distribution
 ============
 
-Introduction
-------------
+Install with required or all dependencies
+-----------------------------------------
 
-The philosophy of Gammapy is to build on top of and collaborate with the
-scientific Python stack, and to mostly avoid re-implementing functionality that
-already exists. There are well over 100,000 Python packages available on
-pypi.org, and well over 1000 astronomy packages. The beauty of Python is that
-users can just install and import what they need and combine Gammapy with other
-packages to implement their analysis, not everything needs to be built into
-Gammapy.
+For Gammapy, we currently have, and would like to continue to support installing
+Gammapy either only with required dependencies, or with all dependencies. We
+think that this is useful, e.g. if someone wants to use ``gammapy.maps`` as part
+of an analysis pipeline, they might not need or want to install JupyterLab. But
+most users want an easy way to get the full functionality, without having to
+type pip or conda ``install gammapy jupyter jupyterlab matplotlib iminuit naima
+...``, i.e. the list of "all" or "recommended" dependencies needs to be given
+somewhere.
 
-So what exactly is an optional dependency of Gammapy and what isn't? Here we
-consider packages as optional dependencies if they are imported within Gammapy
-itself, or used in one of our tutorials. We already have an overview of which
-packages those are, since this is basically the packages we added to our conda
-environment files like `gammapy-0.12-environment.yml`_ which are the recommended
-way to install and use Gammapy.
-
-So far we had also put `extras_require in Gammapy setup.py`_ to define
-``analysis`` and ``plotting`` extras that could be installed via ``pip install
-gammapy[analysis]`` or ``pip install gammapy[plotting]`` or ``pip install
-gammapy[analysis,plotting]``, but that was never documented in the installation
-instructions or advertised to users. We think that the single environment
-specification is sufficient for Gammapy - it gives users a recommended set of
-packages so that everything in Gammapy or any tutorial works, and the list of
-packages there is not too long so that e.g. installation time or size would be a
-concern. So one proposal we make here is to remove the ``extras_require`` key in
-``setup.py`` for Gammapy.
-
-In addition to the conda environment, we propose to add an equivalent `pip
-requirements file`_ from now on, i.e. in addition to
-``gammapy-0.14-environment.yml`` we would make a
-``gammapy-0.14-requirements.txt`` file so that users that prefer Python virtual
-envs and pip will be able to install Gammapy with the set of recommended
-dependencies like this::
-
-    python -m venv gammapy-0.14
-    source gammapy-0.14/bin/activate
-
-    curl -O https://gammapy.org/download/install/gammapy-0.14-requirements.txt
-    pip install -r gammapy-0.14-requirements.txt
-
-In previous discussions (e.g. `GH 1245`_) it was argued that it would be nice if
-``conda install gammapy`` and ``pip install gammapy`` installed basically
-everything that is commonly needed, i.e. included the optional dependencies. One
-way to do this would be to make all dependencies required, which we don't want
-to do because it would make it harder for other packages or projects to install
-a smaller subset. This is often annoying, e.g. currently ``naima`` lists
-``h5py`` as a dependency in ``install_requires`` in ``setup.py``, which means
-that any project that depends on Naima will install the big HDF5 library, even
-though it's only used in an example to store something which could just as well
-be stored in a FITS file, i.e. most users will not need it. Another way to
-achieve this is to use a metapackage, which is a collection of other packages,
-very similar to ``requirements.txt``, just as a Python package on PyPI. E.g.
-https://pypi.org/project/jupyter/ is a metapackage, but overall this is not
-widely used by Python projects. For conda it's also possible to create basically
-a metapackage, this was done e.g. in `fermitools conda meta.yaml`_ for the Fermi
-tools. For Gammapy it would mean we'd have to change to a different package
-name, e.g. ``gammapy-core``, to make room for ``gammapy`` to be the metapackage,
-or to add a metapackage with a name like e.g. ``gammapy-recommended`` or
-``gammapy-all`` or ``gammapy-tools`` or some name in that vein. This has the
-advantage that the env spec is distributed via a channel (anaconda.org or
-pypi.org) that conda or pip know about natively, i.e. it's non necessary any
-more to start the process by downloading the env spec file from gammapy.org.
-However, we suggest to stick to ``gammapy`` as a package with a very small set
-of dependencies, and then use the environment specifications to create the stack
-and execution environment that most users want, not metapackages for now.
-
-TODO: now I'm having second thoughts. Maybe we should go the conda metapackages
-route and for pip either ``extras_require`` or a metapackage?
-
-More examples;
-- Metapackages for pip and conda: https://pysal.org/install
-- Relevant link: https://docs.conda.io/projects/conda-build/en/latest/resources/commands/conda-metapackage.html
-- Looks like Sunpy uses ``extras_require``, see https://docs.sunpy.org/en/stable/guide/installation/advanced.html#sunpy-s-requirements
-- Looks like Glue uses ``extras_require`` for pip (see http://docs.glueviz.org/en/stable/installation/pip.html),
-  but then for conda has a metapackage ``glueviz`` https://github.com/conda-forge/glueviz-feedstock/blob/master/recipe/meta.yaml
-  which depends on ``glue-core``.
+Currently we have both ``pip install gammapy`` and ``conda install gammapy``
+only install the required dependencies. We suggest to keep it like that.
+Changing those packages to contain "all" dependencies would mean that we'd have
+to introduce new ``gammapy-core`` packages for the core install case. It seems
+better to instead consider improving the "all" case in other ways (see sections
+below).
 
 conda
 -----
 
-Most Gammapy users use ``conda`` and binaries created via ``conda-forge``.
-Sufficient or do we want to support other distribution channels?
+For conda, we suggest to stick to the solution we have now for the "all"
+included environment, which is to create for each release an environment
+specification file like `gammapy-0.12-environment.yml`_ and to distribute that
+via gammapy.org.
 
-Wheels
-------
+There is a good alternative (also mentioned below in the alternatives section),
+which is to create a `conda metapackage`_ instead, which is what several other
+projects do (see e.g. `fermitools conda meta.yaml`_, `glueviz conda meta.yaml`_
+or `pysal`_). It's not clear to us if that is easier or harder to maintain, and
+also for users if it's easier or harder to understand what version they get, and
+how to update. Thus we default here to "keep what we have", unless during PIG
+review comments arrive that make it clear that the metapackage is better.
 
-The wheel binary package format was introduced as a standard for Python packages
-in 2012 in `PEP 427`_. Most Python projects create and distribute wheels (see
+pip
+---
+
+Currently ``pip install gammapy`` will install the required dependencies, and we
+propose to keep that part as-is.
+
+For the "all" dependencies use case - we propose to add an "all" key under
+`extras_require in Gammapy setup.py`_ wo that users will be able to ``pip
+install gammapy[all]``.
+
+This is how e.g. Sunpy does it, see the `sunpy pip installation instructions`_
+and their ``setup.py`` and ``setup.cfg``.
+
+For this install to work well (without a compiler and fast), binary wheels have
+to be available for Gammapy and all it's dependencies. The wheel binary package
+format was introduced as a standard for Python packages in 2012 in `PEP 427`_.
+Most Python projects create and distribute wheels (see
 https://pythonwheels.com), including packages much more complex than Gammapy
 like Numpy, Scipy, Tensorflow.
 
-At this time, we don't plan to offer wheels for Gammapy, but to only distribute
-source distributions ``sdist`` at https://pypi.org/project/gammapy/ .
-
-The reason is that binary wheels need to be built for each supported platform,
-and they need to be distributed via PyPI, i.e. to create them a set of scripts
-or continuous delivery configuration has to be set up and maintained by the
-package maintainers. This is contrary and more difficult to achieve than binary
-conda packages, where conda-forge exists as a separate build infrastructure and
-tooling that starts by taking the ``sdist`` from PyPI and then uploading the
-conda packages to anaconda.org.
-
-At this point, nothing as simple as conda-forge has emerged for wheels, so
-different projects or small group of projects set up their own system, e.g
-https://github.com/MacPython/astropy-wheels for Astropy or
-https://iscinumpy.gitlab.io/post/azure-devops-python-wheels/ for iminuit and the
-scikit-hep packages.
-
-TODO: change this section to suggest to build wheels via `astropy wheel-forge`_
-and support that for now.
-
-Actually, there is one platform where binary wheels for Gammapy and all
-dependencies exits already. If you ``pip install gammapy`` on Raspberry Pi,
-you'll get binary wheels thanks to this guy:
-https://www.raspberrypi.org/blog/piwheels/
+We propose to contribute to the new `astropy wheel-forge`_ effort a bit, and to
+build and upload binary wheels for Gammapy, regions, reproject and
+astropy-healpix for the supporting operating systems: Linux, macOS and Windows.
+Depending on how well this works, we would advertise pip install to users (like
+how Sunpy does it), or not mention it for now.
 
 Macports
 --------
@@ -374,39 +340,94 @@ let us know!
 Others
 ------
 
-Mention HomeBrew, Docker, Linux distros
+At this point, we have no plans to add and maintain Gammapy in HomeBrew (a
+popular macOS and Linux package manager), or to provide Docker images.
+
+For Linux distributions like e.g. Debian, we plan to give installation
+instructions where Python and some dependencies are system-installed, and then
+on top of that the rest is pip-installed. This will be a way for advanced users
+to install Gammapy, and depends on how well the binary wheels work, for now the
+one recommended way to install it on any platform will be conda.
 
 Outlook
 =======
 
-Possible somewhat related future discussion and work, not in scope for this PIG:
+This PIG describes only the status and very short term plan for Gammapy v0.14
+and v1.0! We expect that things will evolve in the coming years to follow the
+advancements in Python scientific computing, the scope of Gammapy and it's user
+community, and the skills and manpower of the Gammapy developer team. E.g. we
+might start using ``numba`` or ``dask`` or ``ray`` in the near future, or if
+Tensorflow continues to mature and improve in the coming years (see ``jax`` and
+``tensorflow-probability``), that could be considered for Gammapy.
 
-- Adopt new packages and technologies for new features or improved performance,
-  e.g. ``numba``, ``dask``, ``jax``, ``ray``, ``tensorflow-probability``, ...
-- Simplify Gammapy packaging code, possibly get rid of ``astropy-helpers`` completely.
-  See  https://github.com/astropy/astropy-APEs/pull/52
-- Change git and release workflow (stable branches, bugfix backports) after v1.0
-  Better continuous integration, possibly set up continuous delivery.
+It is not described here, but very likely after implementing this PIG we will
+follow up by improving Gammapy testing (`GH 2270`_) and modernise the Gammapy
+packaging following the recommendations in `APE 17`_, and we might also change
+the Gammapy git and release workflow to have stable branches with backports
+after v1.0.
 
 Alternatives
 ============
 
-- We could just keep doing what we are now: support more older versions, use healpy,
-  keep support for Macports
-- We don't have to add more support for pip and produce binary wheels,
-  conda could remain our one recommended and fully supported distribution channel
-- We could use a conda metapackage (and possibly pip metapackage) instead of
-  environment specification files via gammapy.org
-- We could package for HomeBrew which now works on Linux and Mac
-- We could produce Docker images
+Since we have a working setup already, we could do nothing, which seems nice at
+first, but really means continued time sink and suffering by the Gammapy
+maintainers of the continuous integration testing system and the release
+manager.
+
+The parts here that require a lot of work are ``astropy-healpix``,
+``uncertainties`` and the binary wheels. If any of those parts gets stuck or we
+don't have the manpower to do it, they can be done later, they aren't blockers
+for v1.0.
+
+For conda, we should strongly consider introducing a ``gammapy-all`` metapackage
+instead of the current ``gammapy-environment.yml`` shipped via ``gammapy.org``.
+That's what e.g. the Fermi tools and glueviz and others do, and they like that
+solution. This could be done any time, that change is independent of the rest of
+the changes described here.
+
+We could support other ways to ship Gammapy, e.g. Homebrew (works on MacOS and
+also Linux now), or Docker images (works anywhere).
 
 Task list
 =========
 
-In the following sections, we summarise what we have now (as of June 2019, in
-Gammapy v0.12), and changes we propose to be made immediately after the Gammapy
-v0.13 release in late July 2019, which will ship to users in Gammapy v0.14 in
-September 2019.
+Following the Gammapy v0.13 release in July 2019, the following changes should
+be made, which will ship to users in Gammapy v0.14 in September 2019:
+
+- Maybe: update Gammapy packaging and dev tools to follow new recommendations in `APE 17`_.
+  There's some advantages to doing this first, to make it easier to define the
+  new CI test matrix, but this could also come later.
+
+- Update continuous integration test matrix to test against the minimum required
+versions as specified here (and also newer versions in addition) (`GH 2270`_).
+Maybe move completely from travis-ci to Azure?
+
+- Drop Python 3.5 support and modernise codebase (e.g. use f-strings and use
+dict instead of OrderedDict).
+
+- Review Gammapy codebase and remove workarounds for old Python, Numpy, Astropy,
+... versions.
+
+- Update ``extras_require`` in ``setup.py``. Try moving the spec out of
+``setup.py`` to ``setup.cfg`` or ``pyproject.toml``.
+
+- Review, restructure and update all Gammapy installation instructions
+
+- Change ``astropy-healpix`` to the CDS implementation, release a stable version and
+check conda and pip binaries (`astropy-healpix GH 128`_)
+
+- Change Gammapy from ``healpy`` to ``astropy-healpix`` (`GH 1167`_)
+
+- Maybe: rewrite spectral model error evaluation code to not use the
+``uncertainties`` package (`PIG 14`_)
+
+- Add binary wheels for gammapy, regions, reproject and astropy-healpix on PyPI,
+then add Gammapy CI build testing ``pip install gammapy[all]``
+
+- After releasing Gammapy v0.14, update Gammapy ``conda-forge`` recipe, and do
+extensive testing before announcing to users. Maybe define some Dockerfiles that
+install from scratch from the user's perspective, to be used for post-release
+checks?
 
 
 Decision
@@ -414,20 +435,27 @@ Decision
 
 tbd
 
-.. _Astropy whatsnew: https://docs.astropy.org/en/stable/whatsnew/
-.. _astropy wheel-forge: https://github.com/astropy/wheel-forge
-.. _astropy-healpix: http://astropy-healpix.readthedocs.io/
 .. _GH 1167: https://github.com/gammapy/gammapy/pull/1167
 .. _GH 1245: https://github.com/gammapy/gammapy/issues/1245
 .. _GH 1586: https://github.com/gammapy/gammapy/pull/1586
 .. _GH 1658: https://github.com/gammapy/gammapy/pull/1658
 .. _GH 1863: https://github.com/gammapy/gammapy/pull/1863
 .. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
-.. _GH 1658: https://github.com/gammapy/gammapy/pull/1658
+.. _GH 2270: https://github.com/gammapy/gammapy/issues/2270
+.. _PIG 14: https://github.com/gammapy/gammapy/pull/2255
+.. _APE 17: https://github.com/astropy/astropy-APEs/pull/52
+.. _PEP 427: https://www.python.org/dev/peps/pep-0427/
+.. _astropy-healpix GH 128: https://github.com/astropy/astropy-healpix/issues/128
+.. _Astropy whatsnew: https://docs.astropy.org/en/stable/whatsnew/
+.. _astropy wheel-forge: https://github.com/astropy/wheel-forge
+.. _astropy-healpix: http://astropy-healpix.readthedocs.io/
 .. _gammapy-0.12-environment.yml: https://github.com/gammapy/gammapy-webpage/blob/gh-pages/download/install/gammapy-0.12-environment.yml
 .. _Installation with Macports: https://docs.gammapy.org/0.12/install/macports.html
 .. _Gammapy in Macports: https://github.com/macports/macports-ports/commits/master/python/py-gammapy/Portfile
-.. _PEP 427: https://www.python.org/dev/peps/pep-0427/
 .. _pip requirements file: https://pip.pypa.io/en/stable/user_guide/#requirements-files
 .. _extras_require in Gammapy setup.py: https://github.com/gammapy/gammapy/blob/fe8ca7d6caac77b8a31efc8bec3b21d09aacf6c1/setup.py#L115-L127
+.. _conda metapackage: https://docs.conda.io/projects/conda-build/en/latest/resources/commands/conda-metapackage.html
 .. _fermitools conda meta.yaml: https://github.com/fermi-lat/Fermitools-conda/blob/master/meta.yaml
+.. _glueviz conda meta.yaml: https://github.com/conda-forge/glueviz-feedstock/blob/master/recipe/meta.yaml
+.. _pysal: https://pysal.org/install
+.. _sunpy pip installation instructions: https://docs.sunpy.org/en/stable/guide/installation/advanced.html
