@@ -128,8 +128,8 @@ def test_map_sampling():
 
     assert len(events) == 2
     assert_allclose(events["TIME"].data, [175.035023, 4217.336952], rtol=1e-5)
-    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
-    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
+    assert_allclose(events["RA_TRUE"].data, [266.638497, 266.578664], rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"].data, [-28.930393, -28.815534], rtol=1e-5)
     assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
 
     assert_allclose(events.meta["ONTIME"], 8 * 3600)

@@ -107,13 +107,13 @@ def geom(map_type, ebounds, skydir):
             "map_type": "wcs",
             "ebounds": [0.1, 1, 10],
             "shape": (2, 3, 4),
-            "sum": 1061.348412,
+            "sum": 1050.930197,
         },
         {
             "map_type": "wcs",
             "ebounds": [0.1, 10],
             "shape": (1, 3, 4),
-            "sum": 1061.348412,
+            "sum": 1050.9301972,
         },
         # TODO: make this work for HPX
         # 'HpxGeom' object has no attribute 'separation'

@@ -794,8 +794,8 @@ class WcsGeom(MapGeom):
         angle_up_left = up_left.position_angle(up_right) - low_left.position_angle(up_left)
 
         # compute area assuming a planar triangle
-        area_low_right = 0.5 * low.rad * right.rad * np.sin(angle_low_right.rad)
-        area_up_left = 0.5 * up.rad * left.rad * np.sin(angle_up_left.rad)
+        area_low_right = 0.5 * low * right * np.sin(angle_low_right)
+        area_up_left = 0.5 * up * left * np.sin(angle_up_left)
 
         return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
 
