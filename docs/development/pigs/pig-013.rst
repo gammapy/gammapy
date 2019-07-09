@@ -183,7 +183,7 @@ dependencies for Gammapy.
 ===============  ================  ================
 Dependency       Gammapy 0.12      Gammapy 0.14
 ===============  ================  ================
-ipython=7.5      7.3   (Feb 2019)  7.6   (Jun 2019)
+ipython          7.3   (Feb 2019)  7.6   (Jun 2019)
 jupyter          1.0   (n/a)       1.0   (n/a)
 jupyterlab       0.35  (Oct 2018)  1.0   (Jun 2019)             
 matplotlib       2.1   (Oct 2017)  3.0   (Sep 2018)
