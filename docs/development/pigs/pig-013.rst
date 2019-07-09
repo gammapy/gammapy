@@ -230,7 +230,22 @@ with something else is not discussed here, but in `PIG 14`_.
 Cython and Numba
 ----------------
 
-tbd
+We propose to keep using Cython, and to only re-consider to use Numba later.
+
+Both Cython and Numba are nice options to speed up performance-critical
+functions. For the past years we have been using Cython in Gammapy, but not
+Numba yet. ctapipe recently introduced Numba. Really in Gammapy only 1% of the
+code is in Cython, and that could be rewritten just using Numpy, we currently
+don't really need it. However, the assumption is that we will need either Cython
+or Numba long-term for the few % of performance-critical code in Gammapy where
+Python & Numpy is not enough. 
+
+The way forward concerning performance is to first implement key features in
+Gammapy and a clean design, then measure on real-world use cases (see `GH
+2275`_), and then to start to improve performance. For v0.14 and v1.0 we here
+decide to stick with Cython (and to not allow Numba, and to not re-write our 1%
+Cython code using just Numpy), and then after that and possible after a Numba
+1.0 release, we'll re-consider it.
 
 Other
 -----
@@ -283,8 +298,8 @@ type pip or conda ``install gammapy jupyter jupyterlab matplotlib iminuit naima
 ...``, i.e. the list of "all" or "recommended" dependencies needs to be given
 somewhere.
 
-Currently we have both ``pip install gammapy`` and ``conda install gammapy``
-only install the required dependencies. We suggest to keep it like that.
+Currently we have both ``pip install gammapy`` and ``conda install gammapy`` to
+install only the required dependencies. We suggest to keep it like that.
 Changing those packages to contain "all" dependencies would mean that we'd have
 to introduce new ``gammapy-core`` packages for the core install case. It seems
 better to instead consider improving the "all" case in other ways (see sections
@@ -370,11 +385,12 @@ might start using ``numba`` or ``dask`` or ``ray`` in the near future, or if
 Tensorflow continues to mature and improve in the coming years (see ``jax`` and
 ``tensorflow-probability``), that could be considered for Gammapy.
 
-It is not described here, but very likely after implementing this PIG we will
-follow up by improving Gammapy testing (`GH 2270`_) and modernise the Gammapy
-packaging following the recommendations in `APE 17`_, and we might also change
-the Gammapy git and release workflow to have stable branches with backports
-after v1.0.
+After implementing this PIG we will follow up by improving Gammapy testing (`GH
+2270`_) and by modernising the Gammapy packaging following the recommendations
+in `APE 17`_. We plan to improve the test matrix to ensure that all supported
+versions of dependencies work, and also that distribution works, by packaging
+Gammapy and installing it with pip and conda and then executing the tests. This
+is not considered controversial and thus not described in detail in this PIG.
 
 Alternatives
 ============
@@ -427,7 +443,6 @@ be made, which will ship to users in Gammapy v0.14 in September 2019:
   new CI test matrix, but this could also come later.
 - Update continuous integration test matrix to test against the minimum required
   versions as specified here (and also newer versions in addition) (`GH 2270`_).
-  Maybe move completely from travis-ci to Azure?
 - Drop Python 3.5 support and modernise codebase (e.g. use f-strings and use
   dict instead of OrderedDict).
 - Review Gammapy codebase and remove workarounds for old Python, Numpy, Astropy,
@@ -438,8 +453,6 @@ be made, which will ship to users in Gammapy v0.14 in September 2019:
 - Change ``astropy-healpix`` to the CDS implementation, release a stable version and
   check conda and pip binaries (`astropy-healpix GH 128`_)
 - Change Gammapy from ``healpy`` to ``astropy-healpix`` (`GH 1167`_)
-- Maybe: rewrite spectral model error evaluation code to not use the
-  ``uncertainties`` package (`PIG 14`_)
 - Add binary wheels for gammapy, regions, reproject and astropy-healpix on PyPI,
   then add Gammapy CI build testing ``pip install gammapy[all]``
 - After releasing Gammapy v0.14, update Gammapy ``conda-forge`` recipe, and do
@@ -460,6 +473,7 @@ tbd
 .. _GH 1863: https://github.com/gammapy/gammapy/pull/1863
 .. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
 .. _GH 2270: https://github.com/gammapy/gammapy/issues/2270
+.. _GH 2275: https://github.com/gammapy/gammapy/issues/2275
 .. _PIG 12: https://github.com/gammapy/gammapy/pull/2219
 .. _PIG 14: https://github.com/gammapy/gammapy/pull/2255
 .. _APE 17: https://github.com/astropy/astropy-APEs/pull/52
