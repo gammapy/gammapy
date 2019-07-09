@@ -775,33 +775,29 @@ class WcsGeom(MapGeom):
 
             WcsGeom.to_image().solid_angle()
         """
-        coord = self.get_coord(mode="edges")
-        lon = coord.lon * np.pi / 180.0
-        lat = coord.lat * np.pi / 180.0
+        coord = self.get_coord(mode="edges").skycoord
 
-        # TODO: change this method to allow for non-orthogonal
-        # pixel sides in the small angle approximation
-        # Test with AIT projection example
+        # define pixel corners
+        low_left = coord[..., :-1, :-1]
+        low_right = coord[..., 1:, :-1]
+        up_left = coord[..., :-1, 1:]
+        up_right = coord[..., 1:, 1:]
 
-        # Compute solid angle across centres of the pixels, approximating it
-        # as a rectangle
-        # First index is "y", second index is "x"
-        # TODO: Calculate actual solid angle between two great circles? Here are two references
-        # suggesting more precise methods:
-        # https://mail.python.org/pipermail/astropy/2013-December/002632.html
-        # https://cta-redmine.irap.omp.eu/issues/1017
-        lon_centres = (lon[..., :-1, :-1] + lon[..., 1:, 1:]) / 2
-        lat_centres = (lat[..., :-1, :-1] + lat[..., 1:, 1:]) / 2
+        # compute side lengths
+        low = low_left.separation(low_right)
+        left = low_left.separation(up_left)
+        up = up_left.separation(up_right)
+        right = low_right.separation(up_right)
 
-        ymid_xlo = lon[..., :-1, :-1], lat_centres
-        ymid_xhi = lon[..., :-1, 1:], lat_centres
-        ylo_xmid = lon_centres, lat[..., :-1, 1:]
-        yhi_xmid = lon_centres, lat[..., 1:, :-1]
+        # compute enclosed angles
+        angle_low_right = low_right.position_angle(up_right) - low_right.position_angle(low_left)
+        angle_up_left = up_left.position_angle(up_right) - low_left.position_angle(up_left)
 
-        dx = angular_separation(*(ymid_xlo + ymid_xhi))
-        dy = angular_separation(*(ylo_xmid + yhi_xmid))
+        # compute area assuming a planar triangle
+        area_low_right = 0.5 * low * right * np.sin(angle_low_right)
+        area_up_left = 0.5 * up * left * np.sin(angle_up_left)
 
-        return u.Quantity(dx * dy, "sr", copy=False)
+        return u.Quantity(area_low_right + area_up_left, "sr", copy=False)
 
     def separation(self, center):
         """Compute sky separation wrt a given center.
