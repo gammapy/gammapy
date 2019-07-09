@@ -32,13 +32,11 @@ Concerning Gammapy distribution, we suggest to try to build and distribute
 Python binary wheels for Gammapy, regions, reproject and astropy-healpix for
 Linux, macOS and Windows, so that users don't need a compiler and installation
 is fast. We suggest to define a list of dependencies "all" in ``extras_require``
-via setuptools, so that ``pip install gammapy[all]`` is mostly equivalent to
-installing the recommended conda environment, whereas ``pip install gammapy``
-only installs the few required dependencies, as it already did so far,
-equivalent to ``conda install gammapy``. We suggest to remove the extensive
-installation instruction page for Macports from the Gammapy docs, and to not
-include Macports, HomeBrew or Linux distributions in the distribution channels
-that are maintained by the Gammapy team.
+via setuptools, so that ``pip install gammapy[all]`` installs the optional
+Gammapy dependencies. We suggest to remove the extensive installation
+instruction page for Macports from the Gammapy docs, and to not include
+Macports, HomeBrew or Linux distributions in the distribution channels that are
+maintained by the Gammapy team.
 
 The main reason to write a PIG for this is to give everyone an opportunity to
 give feedback. We will announce this on the Gammapy user list, but not run a
@@ -49,8 +47,9 @@ Introduction
 
 In recent years, the Python packaging and distribution system has improved a
 lot. Thanks to conda, we now have a way to ship up-to-date versions of Gammapy
-and all dependencies on all supported platforms, the number of installation
-issues reported by users has been very low in recent years.
+and all its dependencies in a dedicated environment for each version on all
+supported platforms, and the number of installation issues reported by users has
+been very low in recent years.
 
 Required and optional dependencies
 ----------------------------------
@@ -134,10 +133,9 @@ We already mentioned the possibility to drop Python 3.5 support in
 :ref:`pig-003`. One reason is that Anaconda and conda-forge (our main
 distribution channel, used in our testing continuous integration setup) only
 contains Python 2.7, 3.6 and 3.7 at this point (and 3.8 added in fall 2018),
-i.e. testing on Python 3.5 is already extra effort. Also, Python 3.6 allows us
-to use f-strings and just dict instead of a mix of dict and OrderedDict like we
-have now, it's nice for developers. E.g. Sunpy or ctapipe already require Python
-3.6 or later.
+i.e. testing on Python 3.5 is already extra effort. Also, Python 3.6 contains
+some nice new features that developers can use. E.g. Sunpy or ctapipe already
+require Python 3.6 or later.
 
 This update is to very recent versions for dependencies. We could keep support
 for older versions, e.g. Numpy 1.13 (Jun 2017), Scipy 1.0  (Oct 2017) and
@@ -158,12 +156,19 @@ package is still under development (see :ref:`pig-010`_). In Gammapy 0.13 we
 require regions 0.4, and we plan to make a regions 0.5 release with further
 features and fixes in July, and to require that for Gammapy 0.14.
 
-The ``pyyaml`` package is the most-used YAML package for Python, used e.g. also
-in Astropy core for ECSV or ASDF I/O. The ``click`` package was chosen to
-implement the ``gammapy`` command line interface. For ``pyyaml`` and ``click``
-we never had a version specified so far or a version-dependent issue reported,
-i.e. any version from recent years worked. Still, to have well-defined testing
-and support, we choose minimum required versions from 2018 here.
+We currently have ``pyyaml`` as required dependency for YAML I/O. We don't use
+it much yet within Gammapy, only for one or two helper methods to serialise fit
+results, and for ECSV table I/O, e.g. for spectral points. However, we have been
+considering for a while to develop a YAML-based model serialisation or
+YAML-based config files, and then YAML will be needed for most Gammapy users and
+makes sense as a required dependency. There is a possible alternative we could
+use, ``ruamel_yaml``, which is discussed in the alternatives section below.
+
+The current Gammapy command line interface is using ``click``. Whether to keep
+this or whether to use something else will be discussed in `PIG 12`_. For now,
+we propose to keep things as-is, and only specify a minimum version that we'll
+test, although in practice we didn't have any version-dependent issues with
+``click`` in the past years.
 
 Optional dependencies
 =====================
@@ -221,6 +226,11 @@ uncertainties
 
 The question whether to keep using ``uncertainties`` or whether to replace it
 with something else is not discussed here, but in `PIG 14`_.
+
+Cython and Numba
+----------------
+
+tbd
 
 Other
 -----
@@ -388,6 +398,24 @@ the changes described here.
 We could support other ways to ship Gammapy, e.g. Homebrew (works on MacOS and
 also Linux now), or Docker images (works anywhere).
 
+For YAML support, the ``ruamel_yaml`` package is an alternative we could use
+instead of ``pyyaml``. ``ruamel_yaml`` is a fork of ``pyyaml`` from a few years
+ago, that has added support for YAML spec version 1.2 (``pyyaml`` only supports
+YAML spec version 1.1). In practice the differences are very small, but one
+annoyance is that with pyyaml ``4.2e3`` gets parsed as a string, and one has to
+write ``4.2e+3`` to get the expected float type, when manually writing YAML.
+``ruamel_yaml`` also has support for round-tripping including comments, which is
+something that might be nice to have for Gammapy (e.g. to auto-generate or
+programatically modify YAML config or model files). An important project using
+``ruamel_yaml`` is ``conda``. The reason we prefer ``pyyaml`` is that it's been
+stable for the past decade and we assume will be for the next, whereas with
+``ruamel_yaml`` it's less clear how stable it is: they recently introduced a new
+high-level API and plan to deprecate the old one, and are still pre v1.0. Even
+more importantly: Astropy uses ``pyyaml`` heavily, e.g. for ECSV and ASDF I/O.
+So if we adopted ``ruamel_yaml`` for Gammapy, then we'd effectively get both
+YAML packages as dependencies, doubling the chances for something to break in
+the coming years.
+
 Task list
 =========
 
@@ -432,6 +460,7 @@ tbd
 .. _GH 1863: https://github.com/gammapy/gammapy/pull/1863
 .. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
 .. _GH 2270: https://github.com/gammapy/gammapy/issues/2270
+.. _PIG 12: https://github.com/gammapy/gammapy/pull/2219
 .. _PIG 14: https://github.com/gammapy/gammapy/pull/2255
 .. _APE 17: https://github.com/astropy/astropy-APEs/pull/52
 .. _PEP 427: https://www.python.org/dev/peps/pep-0427/
