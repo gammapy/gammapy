@@ -96,7 +96,7 @@ matrix:
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         - os: linux
-          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Sherpa dev, this may take a longer time
