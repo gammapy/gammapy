@@ -3,7 +3,7 @@ import numpy as np
 from astropy import units as u
 from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralModel
 
-__all__ = ["CrabSpectrum"]
+__all__ = ["create_crab_spectral_model"]
 
 # HESS publication: 2006A&A...457..899A
 hess_pl = {
@@ -63,8 +63,8 @@ class MeyerCrabModel(SpectralModel):
         return flux / energy ** 2
 
 
-class CrabSpectrum:
-    """Crab nebula spectral model.
+def create_crab_spectral_model(reference="meyer"):
+    """Create the Crab nebula spectral model depending of the reference given.
 
     The Crab nebula is often used as a standard candle in gamma-ray astronomy.
     Fluxes and sensitivities are often quoted relative to the Crab spectrum.
@@ -86,18 +86,18 @@ class CrabSpectrum:
     Let's first import what we need::
 
         import astropy.units as u
-        from gammapy.spectrum import CrabSpectrum
+        from gammapy.spectrum import create_crab_spectral_model
         from gammapy.spectrum.models import PowerLaw
 
     Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 
-        crab_hess_ecpl = CrabSpectrum('hess_ecpl')
-        crab_hess_ecpl.model.plot([1, 100] * u.TeV)
+        crab_hess_ecpl = create_crab_spectral_model('hess_ecpl')
+        crab_hess_ecpl.plot([1, 100] * u.TeV)
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 
         >>> pwl = PowerLaw(index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV)
-        >>> crab = CrabSpectrum('hess_pl').model
+        >>> crab = create_crab_spectral_model('hess_pl')
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')
         >>> print(dnde_cu)
@@ -112,26 +112,28 @@ class CrabSpectrum:
         3.5350582166 %
     """
 
-    references = ["meyer", "hegra", "hess_pl", "hess_ecpl", "magic_lp", "magic_ecpl"]
-    """Available references (see class docstring)."""
+    if reference == "meyer":
+        model = MeyerCrabModel()
+    elif reference == "hegra":
+        model = PowerLaw(**hegra)
+    elif reference == "hess_pl":
+        model = PowerLaw(**hess_pl)
+    elif reference == "hess_ecpl":
+        model = ExponentialCutoffPowerLaw(**hess_ecpl)
+    elif reference == "magic_lp":
+        model = LogParabola(**magic_lp)
+    elif reference == "magic_ecpl":
+        model = ExponentialCutoffPowerLaw(**magic_ecpl)
+    else:
+        fmt = "Invalid reference: {!r}. Choices: {!r}"
+        references = [
+            "meyer",
+            "hegra",
+            "hess_pl",
+            "hess_ecpl",
+            "magic_lp",
+            "magic_ecpl",
+        ]
+        raise ValueError(fmt.format(reference, references))
 
-    def __init__(self, reference="meyer"):
-
-        if reference == "meyer":
-            model = MeyerCrabModel()
-        elif reference == "hegra":
-            model = PowerLaw(**hegra)
-        elif reference == "hess_pl":
-            model = PowerLaw(**hess_pl)
-        elif reference == "hess_ecpl":
-            model = ExponentialCutoffPowerLaw(**hess_ecpl)
-        elif reference == "magic_lp":
-            model = LogParabola(**magic_lp)
-        elif reference == "magic_ecpl":
-            model = ExponentialCutoffPowerLaw(**magic_ecpl)
-        else:
-            fmt = "Invalid reference: {!r}. Choices: {!r}"
-            raise ValueError(fmt.format(reference, self.references))
-
-        self.model = model
-        self.reference = reference
+    return model
