@@ -136,8 +136,46 @@ class GTI:
 
         return self.__class__(gti_within)
 
+    def _interval_union(self, time_interval):
+        """Performs union of interval with GTI
+
+        Parameters
+        ----------
+        time_interval : `astropy.time.Time`
+            Start and stop time of the interval
+
+        Returns
+        -------
+        gti : `GTI`
+            Copy of the GTI table with interval union.
+        """
+
+        # Find GTIs that overlap with time interval
+        mask = self.time_start < time_interval[1]
+        mask &= self.time_stop > time_interval[0]
+
+        # If there is an overlap determine the new interval, otherwise add a new one
+        if not np.all(mask == False):
+            new_min = np.minimum(np.min(self.time_start[mask]), time_interval[0])
+            new_max = np.maximum(np.max(self.time_stop[mask]), time_interval[1])
+        else:
+            new_min = time_interval[0]
+            new_max = time_interval[1]
+
+        start_met = time_relative_to_ref(new_min, self.table.meta)
+        stop_met = time_relative_to_ref(new_max, self.table.meta)
+
+        # Add new interval to the list of GTIs that do not overlap the input interval
+        new_tab = self.table[~mask]
+        new_tab.add_row([start_met.value, stop_met.value])
+
+        new_tab.sort("START")
+        return self.__class__(new_tab)
+
     def union(self, gti):
         """Performs union of two GTIs tables.
+
+        Overlapping intervals will be merged
 
         Parameters
         ----------
@@ -149,26 +187,7 @@ class GTI:
         union : `~gammapy.data.GTI`
             The merged GTI table
         """
+        new_gti = self.__class__(self.table)
         for time_interval in zip(gti.time_start, gti.time_stop):
-            # Find GTIs that overlap with time interval
-            mask = self.time_start < time_interval[1]
-            mask &= self.time_stop > time_interval[0]
-
-            # If there is an overlap determine the new interval, otherwise add a new one
-            if not np.all(mask == False):
-                new_min = np.minimum(np.min(self.time_start[mask]), time_interval[0])
-                new_max = np.maximum(np.max(self.time_stop[mask]), time_interval[1])
-            else:
-                new_min = time_interval[0]
-                new_max = time_interval[1]
-
-            start_met = time_relative_to_ref(new_min, self.table.meta)
-            stop_met = time_relative_to_ref(new_max, self.table.meta)
-
-            new_tab = self.table[~mask]
-            new_tab.add_row([start_met.value, stop_met.value])
-        
-        new_tab.sort('START')
-        return self.__class__(new_tab)
-
-
+            new_gti = new_gti._interval_union(time_interval)
+        return new_gti
