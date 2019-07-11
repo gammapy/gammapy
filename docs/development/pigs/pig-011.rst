@@ -254,15 +254,15 @@ periodograms.
 Task list
 =========
 
-  * Add `TSTART` and `TSTOP` meta info on the ``Dataset`` as well as the `GTI` table.
-  * Introduce `GTI.union()` method to merge `Datasets`.
-  * Refactor the ``Lightcurve`` class to add a number of new content in the `Table` e.g.:
+- Add `TSTART` and `TSTOP` meta info on the ``Dataset`` as well as the `GTI` table.
+- Introduce `GTI.union()` method to merge `Datasets`.
+- Refactor the ``Lightcurve`` class to add a number of new content in the `Table` e.g.:
 
-    - a `fit_stat_scan` column.
-    - rebinning methods
+  - a `fit_stat_scan` column.
+  - rebinning methods
 
-  * Implement the new ``LightCurveEstimator`` class
-  * Provide a notebook showing data reduction  and fitting examples for both 3D and 1D cases
+- Implement the new ``LightCurveEstimator`` class
+- Provide a notebook showing data reduction  and fitting examples for both 3D and 1D cases
 
 Decision
 ========
