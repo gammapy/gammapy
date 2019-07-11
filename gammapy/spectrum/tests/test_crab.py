@@ -2,7 +2,7 @@
 import pytest
 import astropy.units as u
 from ...utils.testing import assert_quantity_allclose
-from ...spectrum import CrabSpectrum
+from ...spectrum import create_crab_spectral_model
 
 CRAB_SPECTRA = [
     dict(
@@ -49,18 +49,18 @@ def test_crab_spectrum(spec):
     energy = 2 * u.TeV
     emin, emax = [1, 1e3] * u.TeV
 
-    crab_spectrum = CrabSpectrum(spec["name"])
+    crab_spectrum = create_crab_spectral_model(reference=spec["name"])
 
-    dnde = crab_spectrum.model(energy)
+    dnde = crab_spectrum(energy)
     assert_quantity_allclose(dnde, spec["dnde"])
 
-    flux = crab_spectrum.model.integral(emin, emax)
+    flux = crab_spectrum.integral(emin, emax)
     assert_quantity_allclose(flux, spec["flux"])
 
-    index = crab_spectrum.model.spectral_index(energy)
+    index = crab_spectrum.spectral_index(energy)
     assert_quantity_allclose(index, spec["index"], rtol=1e-5)
 
 
 def test_invalid_format():
     with pytest.raises(ValueError):
-        CrabSpectrum("spam")
+        create_crab_spectral_model("spam")
