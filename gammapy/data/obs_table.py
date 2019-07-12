@@ -106,27 +106,6 @@ class ObservationTable(Table):
             ]
         )
 
-    def select_linspace_subset(self, num):
-        """Select subset of observations.
-
-        This is mostly useful for testing, if you want to make
-        the analysis run faster.
-
-        Parameters
-        ----------
-        num : int
-            Number of samples to select.
-
-        Returns
-        -------
-        table : `ObservationTable`
-            Subset observation table (a copy).
-        """
-        indices = np.linspace(start=0, stop=len(self), num=num, endpoint=False)
-        # Round down to nearest integer
-        indices = indices.astype("int")
-        return self[indices]
-
     def select_range(self, selection_variable, value_range, inverted=False):
         """Make an observation table, applying some selection.
 
