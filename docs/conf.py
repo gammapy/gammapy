@@ -26,6 +26,7 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
+from pkg_resources import get_distribution
 
 # Load all of the global Astropy configuration
 from sphinx_astropy.conf import *
@@ -98,21 +99,12 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg["package_name"]
+project = setup_cfg["name"]
 author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-
-__import__(setup_cfg["package_name"])
-package = sys.modules[setup_cfg["package_name"]]
-
-# The short X.Y version.
-version = package.__version__.split("-", 1)[0]
-# The full version, including alpha/beta/rc tags.
-release = package.__version__
+version = get_distribution(project).version
+release = version
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -209,24 +201,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
-
-# -- Options for the edit_on_github extension ----------------------------------------
-
-if eval(setup_cfg.get("edit_on_github")):
-    extensions += ["astropy.sphinx.ext.edit_on_github"]
-
-    versionmod = __import__(setup_cfg["package_name"] + ".version")
-    edit_on_github_project = setup_cfg["github_project"]
-    if versionmod.version.release:
-        edit_on_github_branch = "v" + versionmod.version.version
-    else:
-        edit_on_github_branch = "master"
-
-    edit_on_github_source_root = ""
-    edit_on_github_doc_root = "docs"
-
-
-github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
 # -- Other options --
 

@@ -15,23 +15,21 @@ from Cython.Build import cythonize
 from distutils.extension import Extension
 import numpy as np
 
-include_path = [np.get_include()]
 
-# TODO: simplify this with a helper function?
-ext_modules = [
-    Extension(
-        "gammapy.detect._test_statistics_cython",
-        ["gammapy/detect/_test_statistics_cython.pyx"],
-        include_path,
-    ),
-    Extension("gammapy.maps._sparse", ["gammapy/maps/_sparse.pyx"], include_path),
-    Extension(
-        "gammapy.stats.fit_statistics_cython",
-        ["gammapy/stats/fit_statistics_cython.pyx"],
-        include_path,
-    ),
+def make_cython_extension(filename):
+    return Extension(
+        filename.strip(".pyx").replace("/", "."),
+        [filename],
+        include_dirs=[np.get_include()],
+    )
+
+
+cython_files = [
+    "gammapy/detect/_test_statistics_cython.pyx",
+    "gammapy/maps/_sparse.pyx",
+    "gammapy/stats/fit_statistics_cython.pyx",
 ]
 
-ext_modules = cythonize(ext_modules)
+ext_modules = cythonize([make_cython_extension(_) for _ in cython_files])
 
 setuptools.setup(use_scm_version=True, ext_modules=ext_modules)

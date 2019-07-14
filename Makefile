@@ -92,13 +92,13 @@ clean-nb:
 	python -m gammapy jupyter --src=tutorials strip
     
 docs-sphinx:
-	python setup.py build_docs
+	python -m sphinx docs docs/_build/html -W -b html
 
 docs-all:
 	which python
 	pip install -e .
 	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)"
-	python setup.py build_docs
+	python -m sphinx docs docs/_build/html -W -b html
 
 docs-show:
 	open docs/_build/html/index.html
