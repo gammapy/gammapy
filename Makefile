@@ -110,20 +110,20 @@ trailing-spaces:
 
 black:
 	black $(PROJECT)/ examples/ docs/ \
-	--exclude="_astropy_init.py|version.py|extern/|docs/_static|docs/_build" \
+	--exclude="extern/|docs/_static|docs/_build" \
 	--line-length 88
 
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
-    --exclude=gammapy/extern,gammapy/conftest.py,gammapy/_astropy_init.py,__init__.py \
+    --exclude=gammapy/extern,gammapy/conftest.py,__init__.py \
     --ignore=E501
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
 	pylint -E $(PROJECT)/ \
-	--ignore=_astropy_init.py,gammapy/extern \
+	--ignore=gammapy/extern \
 	-d E0611,E1101,E1103 \
 	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
 
