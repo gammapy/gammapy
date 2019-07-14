@@ -7,7 +7,7 @@ import logging
 import importlib
 from collections import OrderedDict
 import click
-from .. import version
+from .. import __version__
 
 log = logging.getLogger(__name__)
 
@@ -92,9 +92,9 @@ def get_info_version():
     except:
         path = "unknown"
     info["path"] = path
-    info["version"] = version.version
-    if not version.release:
-        info["githash"] = version.githash
+
+    info["version"] = __version__
+
     return info
 
 

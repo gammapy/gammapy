@@ -20,7 +20,7 @@ include_path = [np.get_include()]
 # TODO: simplify this with a helper function?
 ext_modules = [
     Extension(
-        "gammapy.detect._test_statistics",
+        "gammapy.detect._test_statistics_cython",
         ["gammapy/detect/_test_statistics_cython.pyx"],
         include_path,
     ),

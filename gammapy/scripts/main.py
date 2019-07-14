@@ -4,7 +4,7 @@ import logging
 import sys
 from pathlib import Path
 import click
-from .. import version
+from .. import __version__
 
 
 # We implement the --version following the example from here:
@@ -12,7 +12,7 @@ from .. import version
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    print("gammapy version {}".format(version.version))
+    print("gammapy version {}".format(__version__))
     ctx.exit()
 
 

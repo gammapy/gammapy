@@ -27,7 +27,7 @@ from docutils import nodes
 from sphinx.util import logging
 from nbformat.v4 import new_markdown_cell
 import nbformat
-from .. import version
+from .. import __version__
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])
@@ -119,8 +119,8 @@ def parse_notebooks(folder, url_docs):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
-    if version.release:
-        release_number_docs = release_number_binder = version.version
+    if __version__.release:
+        release_number_docs = release_number_binder = __version__.version
     else:
         release_number_binder = "master"
         release_number_docs = "dev"
