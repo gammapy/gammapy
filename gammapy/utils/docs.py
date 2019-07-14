@@ -119,11 +119,11 @@ def parse_notebooks(folder, url_docs):
     to other files in the documentation. Adds a box to the sphinx formatted
     notebooks with info and links to the *.ipynb and *.py files.
     """
-    if __version__.release:
-        release_number_docs = release_number_binder = __version__.version
-    else:
+    if "dev" in __version__:
         release_number_binder = "master"
         release_number_docs = "dev"
+    else:
+        release_number_docs = release_number_binder = __version__
 
     DOWNLOAD_CELL = """
 <div class="alert alert-info">
