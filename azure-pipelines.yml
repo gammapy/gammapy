@@ -125,7 +125,7 @@ jobs:
 
   - script: |
       source activate gammapy-dev
-      python setup.py build_docs
+      make docs-sphinx
     displayName: 'Run Sphinx documentation build'
 
   - script: |

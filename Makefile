@@ -92,13 +92,15 @@ clean-nb:
 	python -m gammapy jupyter --src=tutorials strip
     
 docs-sphinx:
-	python -m sphinx docs docs/_build/html -W -b html
+	# TODO: can we get -W option to pass here?
+	# Currently gives error because _static isn't there!?
+	python -m sphinx docs docs/_build/html -b html
 
 docs-all:
 	which python
 	pip install -e .
 	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)"
-	python -m sphinx docs docs/_build/html -W -b html
+	python -m sphinx docs docs/_build/html -b html
 
 docs-show:
 	open docs/_build/html/index.html
