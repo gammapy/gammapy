@@ -33,6 +33,14 @@ the following sub-packages (e.g. `gammapy.spectrum`):
  `utils`          --- Utility functions and classes
 """
 
+from pkg_resources import get_distribution, DistributionNotFound
+
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass
+
 
 def song(karaoke=False):
     """

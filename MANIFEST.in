@@ -2,10 +2,9 @@ include README.rst
 include LONG_DESCRIPTION.rst
 include CHANGES.rst
 include environment-dev.yml
-include gammapy/tests/coveragerc
 
-include ah_bootstrap.py
 include setup.cfg
+include pyproject.toml
 
 recursive-include gammapy *.pyx *.pxd *.c *.h
 recursive-include docs *
@@ -18,9 +17,5 @@ prune docs/_build
 prune docs/api
 prune docs/notebooks
 prune docs/_static/notebooks
-
-recursive-include astropy_helpers *
-exclude astropy_helpers/.git
-exclude astropy_helpers/.gitignore
 
 global-exclude *.pyc *.o

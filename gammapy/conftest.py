@@ -3,8 +3,6 @@
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
 import os
-from . import version
-
 from astropy.version import version as astropy_version
 
 if astropy_version < "3.0":
@@ -18,9 +16,6 @@ else:
     # variables that are used for configuration.
     from astropy.tests.plugins.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 
-
-packagename = os.path.basename(os.path.dirname(__file__))
-TESTED_VERSIONS[packagename] = version.version
 
 # Treat all DeprecationWarnings as exceptions
 from astropy.tests.helper import enable_deprecations_as_exceptions

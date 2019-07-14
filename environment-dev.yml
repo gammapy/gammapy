@@ -39,6 +39,7 @@ dependencies:
   - pylint
   - flake8
   - pip:
+    - setuptools-scm
     - sphinx-astropy
     - sphinx-rtd-theme
     - nbsphinx
