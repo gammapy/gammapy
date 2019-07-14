@@ -80,7 +80,7 @@ class ComputePlan:
         suffix = "-{}".format(self.release)
 
         if self.release == "":
-            suffix += __version__.version
+            suffix += __version__
         if self.option == "notebooks":
             return self.outfolder / "notebooks{}".format(suffix)
         if self.option == "scripts":

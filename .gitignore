@@ -63,7 +63,7 @@ docs/_static/notebooks
 docs/notebooks
 tutorials/fit_result_LogParabola.yaml
 tutorials/hgps_data
-
+gammapy-datasets
 
 gammapy/gammapy.cfg
 
