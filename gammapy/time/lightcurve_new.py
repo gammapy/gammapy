@@ -6,6 +6,7 @@ from astropy.time import Time
 from scipy.interpolate import interp1d
 from scipy.stats import chisquare
 from ..utils.fitting import Fit
+from ..utils.interpolation import interpolate_likelihood_profile
 
 __all__ = ["LightCurve", "LightCurveEstimator"]
 
@@ -27,14 +28,15 @@ class LightCurve:
         return "{}(len={})".format(self.__class__.__name__, len(self.table))
 
 
-
     @property
     def time_bin_start(self):
         return self.table['time_bin_start']
 
+
     @property
     def time_bin_end(self):
         return self.table['time_bin_end']
+
 
     @property
     def time_bin_center(self):
@@ -45,12 +47,11 @@ class LightCurve:
         return centers
 
 
-
-    def chisq(self, col_name, ignore_ul=True):
+    def chisq(self, col_name='amplitude', ignore_ul=True):
         """Chi square test for variability.
         :param col_name: The column to test for variability
         :param ignore_ul: bool, optional
-            Ignore the upper limit value
+            Ignore the upper limit values while doing computation
         :return: The chisq of a straight line fit and the pval
         """
         value = self.table[col_name].value
@@ -60,7 +61,7 @@ class LightCurve:
         return chi2, pval
 
 
-    def fvar(self, col_name, ignore_ul=False):
+    def fvar(self, col_name='amplitude', ignore_ul=False):
         """Compute fractional variability
          The fractional excess variance :math:`F_{var}`, an intrinsic
         variability estimator, is given by
@@ -113,6 +114,26 @@ class LightCurve:
 
         return fvar, fvar_err
 
+
+    def compute_ul(self, col_name="amplitude", sigma_limit=5):
+        """
+        To compute upper limits from the likelihood scans.
+        Adds a column on the Table
+        """
+        ul = []
+        for arow in self.table:
+            l_profile = arow[col_name+'_likelihood_profile']
+            if arow['is_ul']:
+                lim = sigma_limit * 0.5 + np.min(l_profile['dloglike_scan'])
+                arr = np.where(l_profile['dloglike_scan'] < lim)
+                func = interp1d(l_profile['dloglike_scan'][arr[-1], arr[-1]+1],
+                                l_profile["amplitude_scan"][arr[-1], arr[-1]+1])
+                ul.append(func(lim))
+            else:
+                ul.append(np.nan)
+        self.table[str(sigma_limit)+"_upper_limits"]=ul
+
+
     def plot(self, col_name, ax=None, **kwargs):
         import matplotlib.pyplot as plt
         if col_name == "likelihood_profile":
@@ -138,7 +159,7 @@ class LightCurve:
 
         return ax
 
-    def plot_likelihood(self, ax=None, add_cbar=True):
+    def plot_likelihood(self, col_name='amplitude', ax=None, add_cbar=True):
         """To plot the likelihood profile as a density plot
 
         Parameters
@@ -159,27 +180,20 @@ class LightCurve:
         if ax is None:
             ax = plt.gca()
 
-        y_unit = self.table['amplitude'].unit
-        y_values = lightcurve.table['likelihood_profile'][0]['dloglike_scan']
-        if y_values is None:
-            ref_values = self.table["ref_" + self.sed_type].quantity
-            y_values = np.logspace(
-                np.log10(0.2 * ref_values.value.min()),
-                np.log10(5 * ref_values.value.max()),
-                500,
-            )
-            y_values = u.Quantity(y_values, y_unit, copy=False)
+        y_unit = self.table[col_name].unit
+        y_values = self.table[col_name+'_likelihood_profile'][0]['dloglike_scan']
 
-        x = self.e_edges.to(energy_unit)
+        x = self.time_bin_start
 
-        # Compute likelihood "image" one energy bin at a time
-        # by interpolating e2dnde at the log bin centers
+        # Compute likelihood "image" one time bin at a time
+
         z = np.empty((len(self.table), len(y_values)))
         for idx, row in enumerate(self.table):
             y_ref = self.table["ref_" + self.sed_type].quantity[idx]
             norm = (y_values / y_ref).to_value("")
-            norm_scan = row["norm_scan"]
-            dloglike_scan = row["dloglike_scan"] - row["loglike"]
+            norm_scan = row[col_name+'_scan']
+            loglike_min = np.min(row["dloglike_scan"])
+            dloglike_scan = row["dloglike_scan"] - loglike_min
             interp = interpolate_likelihood_profile(norm_scan, dloglike_scan)
             z[idx] = interp((norm,))
 
@@ -192,10 +206,10 @@ class LightCurve:
         # clipped values are set to NaN so that they appear white on the plot
         z[-z < kwargs["vmin"]] = np.nan
         caxes = ax.pcolormesh(x, y_values, -z.T, **kwargs)
-        ax.set_xscale("log", nonposx="clip")
-        ax.set_yscale("log", nonposy="clip")
-        ax.set_xlabel("Energy ({})".format(energy_unit))
-        ax.set_ylabel("{} ({})".format(self.sed_type, y_values.unit))
+        ax.set_xscale("linear", nonposx="clip")
+        ax.set_yscale("linear", nonposy="clip")
+        ax.set_xlabel("Time ({})")
+        ax.set_ylabel("{} ({})")
 
         if add_cbar:
             label = "delta log-likelihood"
@@ -203,23 +217,6 @@ class LightCurve:
 
         return ax
 
-    def compute_ul(self, col_name="amplitude", sigma_limit=5):
-        """
-        To compute upper limits from the likelihood scans.
-        Adds a column on the Table
-        """
-        ul = []
-        for arow in self.table:
-            l_profile = arow['likelihood_profile']
-            if arow['is_ul']:
-                lim = sigma_limit * 0.5 + np.min(l_profile['dloglike_scan'])
-                arr = np.where(l_profile['dloglike_scan'] < lim)
-                func = interp1d(l_profile['dloglike_scan'][arr[-1], arr[-1]+1],
-                                l_profile["amplitude_scan"][arr[-1], arr[-1]+1])
-                ul.append(func(lim))
-            else:
-                ul.append(np.nan)
-        self.table["upper_limits"]=ul
 
 
     def _get_fluxes_and_errors(self, unit="cm-2 s-1"):
