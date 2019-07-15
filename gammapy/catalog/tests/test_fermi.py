@@ -86,6 +86,11 @@ class TestFermi3FGLObject:
     def test_data(self):
         assert_allclose(self.source.data["Signif_Avg"], 30.669872283935547)
 
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 83.637199, atol=1e-3)
+        assert_allclose(position.dec.deg, 22.024099, atol=1e-3)
+
     def test_str(self):
         ss = str(self.source)
         assert "Source name          : 3FGL J0534.5+2201" in ss
@@ -201,6 +206,11 @@ class TestFermi1FHLObject:
     def test_name(self):
         assert self.source.name == self.source_name
 
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 83.628098, atol=1e-3)
+        assert_allclose(position.dec.deg, 22.0191, atol=1e-3)
+
     def test_spectral_model(self):
         model = self.source.spectral_model
         energy = u.Quantity(100, "GeV")
@@ -231,6 +241,11 @@ class TestFermi2FHLObject:
 
     def test_name(self):
         assert self.source.name == self.source_name
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 83.634102, atol=1e-3)
+        assert_allclose(position.dec.deg, 22.0215, atol=1e-3)
 
     def test_spectral_model(self):
         model = self.source.spectral_model
@@ -285,6 +300,11 @@ class TestFermi3FHLObject:
         assert isinstance(data["Flux_Band"], list)
         assert isinstance(data["Flux_Band"][0], float)
         assert_allclose(data["Flux_Band"][0], 5.1698894054652555e-09)
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 83.634834, atol=1e-3)
+        assert_allclose(position.dec.deg, 22.019203, atol=1e-3)
 
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_3FHL, ids=lambda _: _["name"])

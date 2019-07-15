@@ -6,9 +6,11 @@ from astropy.units import Unit, Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.utils import lazyproperty
+
 from ..utils.scripts import make_path
 from ..utils.time import time_relative_to_ref
 from ..utils.testing import Checker
+from ..utils.regions import SphericalCircleSkyRegion
 from .gti import GTI
 
 __all__ = ["ObservationTable"]
@@ -104,27 +106,6 @@ class ObservationTable(Table):
             ]
         )
 
-    def select_linspace_subset(self, num):
-        """Select subset of observations.
-
-        This is mostly useful for testing, if you want to make
-        the analysis run faster.
-
-        Parameters
-        ----------
-        num : int
-            Number of samples to select.
-
-        Returns
-        -------
-        table : `ObservationTable`
-            Subset observation table (a copy).
-        """
-        indices = np.linspace(start=0, stop=len(self), num=num, endpoint=False)
-        # Round down to nearest integer
-        indices = indices.astype("int")
-        return self[indices]
-
     def select_range(self, selection_variable, value_range, inverted=False):
         """Make an observation table, applying some selection.
 
@@ -219,7 +200,7 @@ class ObservationTable(Table):
         There are 3 main kinds of selection criteria, according to the
         value of the **type** keyword in the **selection** dictionary:
 
-        - sky regions (boxes or circles)
+        - sky regions
 
         - time intervals (min, max)
 
@@ -230,21 +211,9 @@ class ObservationTable(Table):
         Allowed selection criteria are interpreted using the following
         keywords in the **selection** dictionary under the **type** key.
 
-        - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
-          on sky coordinates
-
-            - ``sky_box`` is a squared region delimited by the **lon** and
-              **lat** keywords: both tuples of format (min, max); uses
-              `~gammapy.catalog.select_sky_box`
-
-            - ``sky_circle`` is a circular region centered in the coordinate
-              marked by the **lon** and **lat** keywords, and radius **radius**;
-              uses `~gammapy.catalog.select_sky_circle`
-
-          in each case, the coordinate system can be specified by the **frame**
-          keyword (built-in Astropy coordinate frames are supported, e.g.
-          ``icrs`` or ``galactic``); an aditional border can be defined using
-          the **border** keyword
+        - ``sky_circle`` is a circular region centered in the coordinate
+           marked by the **lon** and **lat** keywords, and radius **radius**;
+           uses `~gammapy.catalog.select_sky_circle`
 
         - ``time_box`` is a 1D selection criterion acting on the observation
           start time (**TSTART**); the interval is set via the
@@ -277,12 +246,6 @@ class ObservationTable(Table):
 
         Examples
         --------
-        >>> selection = dict(type='sky_box', frame='icrs',
-        ...                  lon=Angle([150, 300], 'deg'),
-        ...                  lat=Angle([-50, 0], 'deg'),
-        ...                  border=Angle(2, 'deg'))
-        >>> selected_obs_table = obs_table.select_observations(selection)
-
         >>> selection = dict(type='sky_circle', frame='galactic',
         ...                  lon=Angle(0, 'deg'),
         ...                  lat=Angle(0, 'deg'),
@@ -306,48 +269,30 @@ class ObservationTable(Table):
         ...                  value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
-        from ..catalog import select_sky_box, select_sky_circle
-
         if "inverted" not in selection.keys():
             selection["inverted"] = False
 
         if selection["type"] == "sky_circle":
-            lon = selection["lon"]
-            lat = selection["lat"]
-            radius = selection["radius"] + selection["border"]
-            return select_sky_circle(
-                self,
-                lon_cen=lon,
-                lat_cen=lat,
-                radius=radius,
-                frame=selection["frame"],
-                inverted=selection["inverted"],
+            lon = Angle(selection["lon"], "deg")
+            lat = Angle(selection["lat"], "deg")
+            radius = Angle(selection["radius"])
+            border = Angle(selection["border"])
+            region = SphericalCircleSkyRegion(
+                center=SkyCoord(lon, lat, frame=selection["frame"]),
+                radius=radius + border,
             )
-
-        elif selection["type"] == "sky_box":
-            lon = selection["lon"]
-            lat = selection["lat"]
-            border = selection["border"]
-            lon = Angle([lon[0] - border, lon[1] + border])
-            lat = Angle([lat[0] - border, lat[1] + border])
-            return select_sky_box(
-                self,
-                lon_lim=lon,
-                lat_lim=lat,
-                frame=selection["frame"],
-                inverted=selection["inverted"],
-            )
-
+            mask = region.contains(self.pointing_radec)
+            if selection["inverted"]:
+                mask = np.invert(mask)
+            return self[mask]
         elif selection["type"] == "time_box":
             return self.select_time_range(
                 "TSTART", selection["time_range"], selection["inverted"]
             )
-
         elif selection["type"] == "par_box":
             return self.select_range(
                 selection["variable"], selection["value_range"], selection["inverted"]
             )
-
         else:
             raise ValueError("Invalid selection type: {}".format(selection["type"]))
 

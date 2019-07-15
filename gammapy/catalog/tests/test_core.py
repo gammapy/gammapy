@@ -12,7 +12,7 @@ from ..core import SourceCatalog
 def make_test_catalog():
     table = Table()
     table["Source_Name"] = ["a", "bb", "ccc"]
-    table["RA"] = Column([42.2, 43.3, 44.4])
+    table["RA"] = Column([42.2, 43.3, 44.4], unit="deg")
     table["DEC"] = Column([1, 2, 3], unit="deg")
 
     catalog = SourceCatalog(table)
@@ -85,8 +85,14 @@ class TestSourceCatalogObject:
     def test_data(self):
         d = self.source.data
         assert isinstance(d, OrderedDict)
-        assert isinstance(d["RA"], float)
-        assert_allclose(d["RA"], 43.3)
+
+        assert isinstance(d["RA"], Quantity)
+        assert_quantity_allclose(d["RA"], Quantity(43.3, "deg"))
 
         assert isinstance(d["DEC"], Quantity)
         assert_quantity_allclose(d["DEC"], Quantity(2, "deg"))
+
+    def test_position(self):
+        position = self.source.position
+        assert_allclose(position.ra.deg, 43.3)
+        assert_allclose(position.dec.deg, 2)

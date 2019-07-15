@@ -57,16 +57,12 @@ class TestSmartHDUList:
 
         # Call the method incorrectly, and assert that ValueError is raised:
 
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError):
             g()
-        assert (
-            str(exc.value)
-            == "Must give either `hdu` or `hdu_type`. Got `None` for both."
-        )
 
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError) as excinfo:
             g(hdu_type="bad value")
-        assert str(exc.value) == "Invalid hdu_type=bad value"
+        assert "Invalid hdu_type=bad value" == str(excinfo.value)
 
         # Query for non-existent HDUs, and assert that KeyError is raised:
 

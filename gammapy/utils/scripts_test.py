@@ -60,11 +60,7 @@ def main():
 
     for script in get_scripts():
         if requirement_missing(script):
-            log.info(
-                "Skipping script {} because requirement is missing.".format(
-                    script["name"]
-                )
-            )
+            log.info("Skipping script (missing requirement): {}".format(script["name"]))
             continue
 
         filename = script["name"] + ".py"

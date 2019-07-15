@@ -62,33 +62,20 @@ class SpectrumEvaluator:
         self.aeff = aeff
         self.edisp = edisp
         self.livetime = livetime
+
+        if aeff is not None:
+            e_true = self.aeff.energy.edges
+
         self.e_true = e_true
         self.e_reco = None
 
     def compute_npred(self):
-        integral_flux = self.integrate_model()
-        true_counts = self.apply_aeff(integral_flux)
-        return self.apply_edisp(true_counts)
-
-    def integrate_model(self):
-        """Integrate model in true energy space."""
-        if self.aeff is not None:
-            # TODO: True energy is converted to model amplitude unit. See issue 869
-            ref_unit = None
-            try:
-                for unit in self.model.parameters["amplitude"].quantity.unit.bases:
-                    if unit.is_equivalent("eV"):
-                        ref_unit = unit
-            except IndexError:
-                ref_unit = "TeV"
-            self.e_true = self.aeff.energy.edges.to(ref_unit)
-        else:
-            if self.e_true is None:
-                raise ValueError("No true energy binning given")
-
-        return self.model.integral(
+        integral_flux = self.model.integral(
             emin=self.e_true[:-1], emax=self.e_true[1:], intervals=True
         )
+
+        true_counts = self.apply_aeff(integral_flux)
+        return self.apply_edisp(true_counts)
 
     def apply_aeff(self, integral_flux):
         if self.aeff is not None:

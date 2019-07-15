@@ -56,6 +56,6 @@ def test_large_kernel(input_maps):
     kernel = Gaussian2DKernel(100)
     ts_estimator = TSMapEstimator()
 
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(ValueError) as excinfo:
         ts_estimator.run(input_maps, kernel=kernel)
-        assert "Kernel shape larger" in str(err.value)
+    assert "Kernel shape larger" in str(excinfo.value)

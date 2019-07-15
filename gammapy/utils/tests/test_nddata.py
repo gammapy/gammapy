@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
+from numpy.testing import assert_allclose
 import astropy.units as u
 from ..nddata import NDDataArray
 from ...maps import MapAxis

@@ -48,6 +48,7 @@ class CountsSpectrum:
         )
         spec.plot(show_poisson_errors=True)
     """
+
     def __init__(self, energy_lo, energy_hi, data=None, unit=""):
         e_edges = edges_from_lo_hi(energy_lo, energy_hi)
         self.energy = MapAxis.from_edges(e_edges, interp="log", name="energy")
@@ -239,13 +240,10 @@ class CountsSpectrum:
             Downsampled spectrum.
         """
         from ..extern.skimage import block_reduce
+
         data = block_reduce(self.data, block_size=(factor,))
         energy = self.energy.downsample(factor).edges
-        return self.__class__(
-            energy_lo=energy[:-1],
-            energy_hi=energy[1:],
-            data=data,
-        )
+        return self.__class__(energy_lo=energy[:-1], energy_hi=energy[1:], data=data)
 
     def energy_mask(self, emin=None, emax=None):
         """Create a mask for a given energy range.

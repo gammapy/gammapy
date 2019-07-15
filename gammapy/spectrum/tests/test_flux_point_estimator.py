@@ -200,6 +200,6 @@ def test_no_likelihood_contribution():
 
     fpe = FluxPointsEstimator([dataset], e_edges=[1, 10] * u.TeV)
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError) as excinfo:
         fpe.run()
-        assert "No dataset contributes" in e.args[0]
+    assert "No dataset contributes" in str(excinfo.value)

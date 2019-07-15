@@ -13,6 +13,8 @@ class SensitivityEstimator:
 
     Uses a 1D spectral analysis and on / off measurement.
 
+    For a usage example see :gp-notebook:`cta_sensitivity`
+
     Parameters
     ----------
     arf : `~gammapy.irf.EffectiveAreaTable`
@@ -33,8 +35,6 @@ class SensitivityEstimator:
         Minimum number of gamma-rays
     bkg_sys : float, optional
         Fraction of Background systematics relative to the number of ON counts
-
-    An example can be found in :gp-notebook:`cta_sensitivity` .
 
     Notes
     -----

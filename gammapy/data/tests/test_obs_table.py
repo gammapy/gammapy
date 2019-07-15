@@ -11,7 +11,6 @@ from ...utils.testing import (
 )
 from ...utils.time import time_ref_from_dict, time_relative_to_ref
 from ...utils.random import sample_sphere, get_random_state
-from ...catalog import skycoord_from_table
 from ..obs_table import ObservationTable, ObservationTableChecker
 from ..observers import observatory_locations
 
@@ -192,8 +191,8 @@ def make_test_observation_table(
     altaz_frame = AltAz(obstime=obstime, location=location)
     alt_az_coord = SkyCoord(az, alt, frame=altaz_frame)
     sky_coord = alt_az_coord.transform_to("icrs")
-    obs_table["RA"] = sky_coord.ra
-    obs_table["DEC"] = sky_coord.dec
+    obs_table["RA_PNT"] = sky_coord.ra
+    obs_table["DEC_PNT"] = sky_coord.dec
 
     # positions
 
@@ -208,77 +207,6 @@ def make_test_observation_table(
     obs_table["MUONEFF"] = muoneff
 
     return obs_table
-
-
-def common_sky_region_select_test_routines(obs_table, selection):
-    """Common routines for the tests of sky_box/sky_circle selection of obs tables."""
-    type = selection["type"]
-
-    if type not in ["sky_box", "sky_circle"]:
-        raise ValueError("Invalid type: {}".format(type))
-
-    if type == "sky_box":
-        lon_range_eff = (
-            selection["lon"][0] - selection["border"],
-            selection["lon"][1] + selection["border"],
-        )
-        lat_range_eff = (
-            selection["lat"][0] - selection["border"],
-            selection["lat"][1] + selection["border"],
-        )
-    elif type == "sky_circle":
-        lon_cen = selection["lon"]
-        lat_cen = selection["lat"]
-        center = SkyCoord(lon_cen, lat_cen, frame=selection["frame"])
-        radius_eff = selection["radius"] + selection["border"]
-
-    do_wrapping = False
-    # not needed in the case of sky_circle
-    if type == "sky_box" and any(l < Angle(0.0, "deg") for l in lon_range_eff):
-        do_wrapping = True
-
-    # test on the selection
-    selected_obs_table = obs_table.select_observations(selection)
-    skycoord = skycoord_from_table(selected_obs_table)
-    if type == "sky_box":
-        skycoord = skycoord.transform_to(selection["frame"])
-        lon = skycoord.data.lon
-        lat = skycoord.data.lat
-        if do_wrapping:
-            lon = lon.wrap_at(Angle(180, "deg"))
-        assert (
-            (lon_range_eff[0] < lon)
-            & (lon < lon_range_eff[1])
-            & (lat_range_eff[0] < lat)
-            & (lat < lat_range_eff[1])
-        ).all()
-    elif type == "sky_circle":
-        ang_distance = skycoord.separation(center)
-        assert (ang_distance < radius_eff).all()
-
-    # test on the inverted selection
-    selection["inverted"] = True
-    inv_selected_obs_table = obs_table.select_observations(selection)
-    skycoord = skycoord_from_table(inv_selected_obs_table)
-    if type == "sky_box":
-        skycoord = skycoord.transform_to(selection["frame"])
-        lon = skycoord.data.lon
-        lat = skycoord.data.lat
-        if do_wrapping:
-            lon = lon.wrap_at(Angle(180, "deg"))
-        assert (
-            (lon_range_eff[0] >= lon)
-            | (lon >= lon_range_eff[1])
-            | (lat_range_eff[0] >= lat)
-            | (lat >= lat_range_eff[1])
-        ).all()
-    elif type == "sky_circle":
-        ang_distance = skycoord.separation(center)
-        assert (ang_distance >= radius_eff).all()
-
-    # the sum of number of entries in both selections should be the total
-    # number of entries
-    assert len(selected_obs_table) + len(inv_selected_obs_table) == len(obs_table)
 
 
 def test_basics():
@@ -346,61 +274,19 @@ def test_select_time_box():
 
 
 def test_select_sky_regions():
-    # create random observation table with many entries
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
 
-    # test sky box selection in gal coordinates
-    lon_range = Angle([-100.0, 50.0], "deg")
-    lat_range = Angle([-25.0, 25.0], "deg")
-    frame = "galactic"
-    border = Angle(2.0, "deg")
-    selection = dict(
-        type="sky_box", frame=frame, lon=lon_range, lat=lat_range, border=border
-    )
-    common_sky_region_select_test_routines(obs_table, selection)
-
-    # test sky box selection in radec coordinates
-    lon_range = Angle([150.0, 300.0], "deg")
-    lat_range = Angle([-50.0, 0.0], "deg")
-    frame = "icrs"
-    border = Angle(2.0, "deg")
-    selection = dict(
-        type="sky_box", frame=frame, lon=lon_range, lat=lat_range, border=border
-    )
-    common_sky_region_select_test_routines(obs_table, selection)
-
-    # test sky circle selection in gal coordinates
-    lon_cen = Angle(0.0, "deg")
-    lat_cen = Angle(0.0, "deg")
-    radius = Angle(50.0, "deg")
-    frame = "galactic"
-    border = Angle(2.0, "deg")
     selection = dict(
         type="sky_circle",
-        frame=frame,
-        lon=lon_cen,
-        lat=lat_cen,
-        radius=radius,
-        border=border,
+        frame="galactic",
+        lon="0 deg",
+        lat="0 deg",
+        radius="50 deg",
+        border="2 deg",
     )
-    common_sky_region_select_test_routines(obs_table, selection)
-
-    # test sky circle selection in radec coordinates
-    lon_cen = Angle(130.0, "deg")
-    lat_cen = Angle(-40.0, "deg")
-    radius = Angle(50.0, "deg")
-    frame = "icrs"
-    border = Angle(2.0, "deg")
-    selection = dict(
-        type="sky_circle",
-        frame=frame,
-        lon=lon_cen,
-        lat=lat_cen,
-        radius=radius,
-        border=border,
-    )
-    common_sky_region_select_test_routines(obs_table, selection)
+    obs_table = obs_table.select_observations(selection)
+    assert len(obs_table) == 32
 
 
 def test_create_gti():

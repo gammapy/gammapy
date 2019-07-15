@@ -47,7 +47,6 @@ Documentation pages with more detailed information:
 .. toctree::
     :maxdepth: 1
 
-    models
     plotting
 
 Reference/API

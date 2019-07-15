@@ -96,7 +96,7 @@ matrix:
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         - os: linux
-          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Sherpa dev, this may take a longer time
@@ -110,10 +110,12 @@ matrix:
           env: PYTHON_VERSION=3.6 SETUP_CMD='install'
                TEST_FERMIPY=true
 
-        # Test with other numpy versions
-        - os: linux
-          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.10 ASTROPY_VERSION=lts
-               SETUP_CMD='test -V'
+# Skip this test because of https://travis-ci.org/gammapy/gammapy/jobs/553230683#L4172
+# and we drop support for these old numpy version soon anyway.
+#        # Test with other numpy versions
+#        - os: linux
+#          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.10 ASTROPY_VERSION=lts
+#               SETUP_CMD='test -V'
 
         # Test Jupyter notebooks
         - os: linux
@@ -122,7 +124,7 @@ matrix:
 
         # Test example scripts
         - os: linux
-          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='test-scripts'
+          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
     # You can move builds that temporarily fail because of some non-Gammapy here.

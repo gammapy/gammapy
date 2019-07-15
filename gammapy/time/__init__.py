@@ -3,5 +3,5 @@
 from .simulate import *
 from .lightcurve_new import *
 from .exptest import *
+from .events import *
 from .period import *
-from .plot_periodogram import *

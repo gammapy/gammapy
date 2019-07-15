@@ -179,9 +179,10 @@ class TestSkyModels:
         model = sky_models["source-3"]
         assert model.name == "source-3"
 
-        with pytest.raises(ValueError) as error:
+        with pytest.raises(ValueError) as excinfo:
             sky_models["spam"]
-            assert "spam" in error.message
+
+        assert "'spam' is not in list" == str(excinfo.value)
 
 
 class TestSkyModel:
@@ -385,7 +386,7 @@ class TestSkyModelMapEvaluator:
     def test_compute_flux(evaluator):
         out = evaluator.compute_flux().to_value("cm-2 s-1")
         assert out.shape == (3, 4, 5)
-        assert_allclose(out.sum(), 1.291427605881036e-12, rtol=1e-5)
+        assert_allclose(out.sum(), 1.291414e-12, rtol=1e-5)
         assert_allclose(out[0, 0, 0], 4.630845e-14, rtol=1e-5)
 
     @staticmethod
@@ -403,7 +404,7 @@ class TestSkyModelMapEvaluator:
         npred = evaluator.apply_exposure(flux)
         out = evaluator.apply_edisp(npred)
         assert out.data.shape == (2, 4, 5)
-        assert_allclose(out.data.sum(), 3.2758538225058153e-06, rtol=1e-5)
+        assert_allclose(out.data.sum(), 3.27582e-06, rtol=1e-5)
         assert_allclose(out.data[0, 0, 0], 4.630845e-08, rtol=1e-5)
 
     @staticmethod

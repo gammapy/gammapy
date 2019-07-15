@@ -12,6 +12,7 @@ from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
 from ..utils.testing import Checker
+from ..utils.regions import make_region
 
 __all__ = ["EventListBase", "EventList", "EventListLAT"]
 
@@ -283,101 +284,24 @@ class EventListBase:
         mask &= time < time_interval[1]
         return self.select_row_subset(mask)
 
-    def select_sky_cone(self, center, radius):
-        """Select events in sky circle.
+    def select_region(self, region, wcs=None):
+        """Select events in given region.
 
         Parameters
         ----------
-        center : `~astropy.coordinates.SkyCoord`
-            Sky circle center
-        radius : `~astropy.coordinates.Angle`
-            Sky circle radius
+        region : `~regions.SkyRegion` or str
+            Sky region or string defining a sky region
+        wcs : `~astropy.wcs.WCS`
+            World coordinate system transformation
 
         Returns
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-        position = self.radec
-        separation = center.separation(position)
-        mask = separation < radius
+        region = make_region(region)
+        mask = region.contains(self.radec, wcs)
         return self.select_row_subset(mask)
-
-    def select_sky_ring(self, center, inner_radius, outer_radius):
-        """Select events in ring region on the sky.
-
-        Parameters
-        ----------
-        center : `~astropy.coordinates.SkyCoord`
-            Sky ring center
-        inner_radius, outer_radius : `~astropy.coordinates.Angle`
-            Sky ring inner and outer radius
-
-        Returns
-        -------
-        event_list : `EventList`
-            Copy of event list with selection applied.
-        """
-        position = self.radec
-        separation = center.separation(position)
-        mask1 = inner_radius < separation
-        mask2 = separation < outer_radius
-        mask = mask1 * mask2
-        return self.select_row_subset(mask)
-
-    def select_sky_box(self, lon_lim, lat_lim, frame="icrs"):
-        """Select events in sky box.
-
-        TODO: move `gammapy.catalog.select_sky_box` to gammapy.utils.
-        """
-        from ..catalog import select_sky_box
-
-        selected = select_sky_box(self.table, lon_lim, lat_lim, frame)
-        return self.__class__(selected)
-
-    def select_circular_region(self, region):
-        """Select events in circular regions.
-
-        TODO: Extend to support generic regions
-
-        Parameters
-        ----------
-        region : `~regions.CircleSkyRegion` or list of `~regions.CircleSkyRegion`
-            (List of) sky region(s)
-
-        Returns
-        -------
-        event_list : `EventList`
-            Copy of event list with selection applied.
-        """
-        if not isinstance(region, list):
-            region = list([region])
-        mask = self.filter_circular_region(region)
-        return self.select_row_subset(mask)
-
-    def filter_circular_region(self, region):
-        """Create selection mask for event in given circular regions.
-
-        TODO: Extend to support generic regions
-
-        Parameters
-        ----------
-        region : list of `~regions.SkyRegion`
-            List of sky regions
-
-        Returns
-        -------
-        index_array : `numpy.ndarray`
-            Index array of selected events
-        """
-        position = self.radec
-        mask = np.array([], dtype=int)
-        for reg in region:
-            separation = reg.center.separation(position)
-            temp = np.where(separation < reg.radius)[0]
-            mask = np.union1d(mask, temp)
-
-        return mask
 
     def select_parameter(self, parameter, band):
         """Select events with respect to a specified parameter.

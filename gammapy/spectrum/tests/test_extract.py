@@ -10,7 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff
 from ...background import ReflectedRegionsBackgroundEstimator
 from ...maps import WcsGeom, WcsNDMap
-from ...data import DataStore
+from ...data import DataStore, ObservationStats
 
 
 @pytest.fixture(scope="session")
@@ -74,7 +74,7 @@ class TestSpectrumExtraction:
                 dict(containment_correction=False),
                 dict(
                     n_on=192,
-                    sigma=20.866044,
+                    sigma=21.1404,
                     aeff=580254.9 * u.m ** 2,
                     edisp=0.236176,
                     containment=1,
@@ -84,7 +84,7 @@ class TestSpectrumExtraction:
                 dict(containment_correction=True),
                 dict(
                     n_on=192,
-                    sigma=20.866044,
+                    sigma=21.1404,
                     aeff=361924.746081 * u.m ** 2,
                     edisp=0.236176,
                     containment=0.643835,
@@ -109,8 +109,9 @@ class TestSpectrumExtraction:
         containment_actual = extraction.containment[60]
 
         # TODO: Introduce assert_stats_allclose
-        n_on_actual = obs.total_stats.n_on
-        sigma_actual = obs.total_stats.sigma
+        stats = ObservationStats(**obs._info_dict())
+        n_on_actual = stats.n_on
+        sigma_actual = stats.sigma
 
         assert n_on_actual == results["n_on"]
         assert_allclose(sigma_actual, results["sigma"], atol=1e-2)
@@ -138,8 +139,7 @@ class TestSpectrumExtraction:
             testobs.aeff.data.data, extraction.spectrum_observations[0].aeff.data.data
         )
         assert_quantity_allclose(
-            testobs.counts.data,
-            extraction.spectrum_observations[0].counts.data,
+            testobs.counts.data, extraction.spectrum_observations[0].counts.data
         )
         assert_allclose(
             testobs.counts.energy.center,

@@ -10,7 +10,6 @@ from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.interpolation import interpolate_likelihood_profile
 from ..utils.fitting import Dataset, Datasets, Fit
 from .models import PowerLaw, ScaleModel
-from .powerlaw import power_law_integral_flux
 from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
@@ -408,8 +407,12 @@ class FluxPoints:
 
         if pwl_approx:
             index = model.spectral_index(e_ref)
-            flux_model = power_law_integral_flux(
-                f=dnde_model, g=index, e=e_ref, e1=e_min, e2=e_max
+            flux_model = PowerLaw.evaluate_integral(
+                emin=e_min,
+                emax=e_max,
+                index=index,
+                reference=e_ref,
+                amplitude=dnde_model,
             )
         else:
             flux_model = model.integral(e_min, e_max, intervals=True)

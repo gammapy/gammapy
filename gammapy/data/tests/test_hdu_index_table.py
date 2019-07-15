@@ -82,27 +82,27 @@ def test_hdu_index_table_hd_hap():
 
     # A few invalid queries
 
-    with pytest.raises(IndexError) as exc:
+    with pytest.raises(IndexError) as excinfo:
         hdu_index.hdu_location(obs_id=42, hdu_class="psf_3gauss")
     msg = "No entry available with OBS_ID = 42"
-    assert exc.value.args[0] == msg
+    assert str(excinfo.value) == msg
 
-    with pytest.raises(IndexError) as exc:
+    with pytest.raises(IndexError) as excinfo:
         hdu_index.hdu_location(obs_id=23523, hdu_type="bkg")
     msg = "No HDU found matching: OBS_ID = 23523, HDU_TYPE = bkg, HDU_CLASS = None"
-    assert exc.value.args[0] == msg
+    assert str(excinfo.value) == msg
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excinfo:
         hdu_index.hdu_location(obs_id=23523)
     msg = "You have to specify `hdu_type` or `hdu_class`."
-    assert exc.value.args[0] == msg
+    assert str(excinfo.value) == msg
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excinfo:
         hdu_index.hdu_location(obs_id=23523, hdu_type="invalid")
     msg = "Invalid hdu_type: invalid. Valid values are: ['events', 'gti', 'aeff', 'edisp', 'psf', 'bkg']"
-    assert exc.value.args[0] == msg
+    assert str(excinfo.value) == msg
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError) as excinfo:
         hdu_index.hdu_location(obs_id=23523, hdu_class="invalid")
     msg = "Invalid hdu_class: invalid. Valid values are: ['events', 'gti', 'aeff_2d', 'edisp_2d', 'psf_table', 'psf_3gauss', 'psf_king', 'bkg_2d', 'bkg_3d']"
-    assert exc.value.args[0] == msg
+    assert str(excinfo.value) == msg
