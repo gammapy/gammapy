@@ -126,38 +126,55 @@ class LightCurve:
             if arow['is_ul']:
                 lim = sigma_limit * 0.5 + np.min(l_profile['dloglike_scan'])
                 arr = np.where(l_profile['dloglike_scan'] < lim)
-                func = interp1d(l_profile['dloglike_scan'][arr[-1], arr[-1]+1],
-                                l_profile["amplitude_scan"][arr[-1], arr[-1]+1])
+                func = interp1d([l_profile['dloglike_scan'][arr[-1]], l_profile['dloglike_scan'][arr[-1]+1]],
+                    [l_profile["amplitude_scan"][arr[-1]], l_profile["amplitude_scan"][arr[-1]+1]])
                 ul.append(func(lim))
             else:
                 ul.append(np.nan)
-        self.table[str(sigma_limit)+"_upper_limits"]=ul
+        self.table[col_name+"_upper_limits_"]=ul
 
 
-    def plot(self, col_name, ax=None, **kwargs):
-        import matplotlib.pyplot as plt
-        if col_name == "likelihood_profile":
-            self.plot_likelihood()
-            return
+    def compute_asymmetric_errors(self, col_name="amplitude", sigma=1):
+        """
+        :param col_name="amplitude",
+        :param sigma: the confidence limit to compute errors
+        :return: the lower and upper limits of the parameter
+        """
 
-        col_err = col_name + "_err"
-        #TODO : implement the plotting upper limits
-        y = self.table[col_name].value
-        y_err = self.table[col_err].value
-        # optional y_err asymmetric
-        x = [_.mjd for _ in self.time_bin_center]
-        x_low = np.subtract(x, [_.mjd for _ in self.time_bin_start])
-        x_high = np.subtract([_.mjd  for _ in self.time_bin_end], x)
+        y_low = []
+        y_high = []
+        for arow in self.table:
+            l_profile = arow[col_name+'_likelihood_profile']
+            lim = 0.5 + np.min(l_profile['dloglike_scan'])
+            arr = np.where(l_profile['dloglike_scan'] < lim)
+            func1 = interp1d([l_profile['dloglike_scan'][arr[-1]], l_profile['dloglike_scan'][arr[-1]+1]],
+                             [l_profile["amplitude_scan"][arr[-1]], l_profile["amplitude_scan"][arr[-1]+1]])
+            y_high.append(func1(lim))
 
-        if ax is None:
-            ax = plt.gca()
+            func2 = interp1d([l_profile['dloglike_scan'][arr[0]], l_profile['dloglike_scan'][arr[0]-1]],
+                        [l_profile["amplitude_scan"][arr[0]], l_profile["amplitude_scan"][arr[0]-1]])
+            y_low.append(func2(lim))
 
-        kwargs.setdefault("marker", "o")
-        kwargs.setdefault("ls", "None")
+        self.table[col_name+"_asymmetric_error"] = [y_low,y_high]
+        return y_low, y_high
 
-        ax.errorbar(x=x, y=y, xerr=[x_low, x_high], yerr=y_err, **kwargs)
 
-        return ax
+    def rebin(self, nbins, min_sig):
+        """To group the bins using the likelihood profile scan
+
+        Parameters:
+        -------
+        nbins: int
+            The maximum number of bins to group
+        min_sig: float
+            The min sig to achieve for each group
+        Either of the 2 must be specified
+
+        Returns a new binned table
+        """
+
+        pass
+
 
     def plot_likelihood(self, col_name='amplitude', ax=None, add_cbar=True):
         """To plot the likelihood profile as a density plot
@@ -180,105 +197,60 @@ class LightCurve:
         if ax is None:
             ax = plt.gca()
 
-        y_unit = self.table[col_name].unit
-        y_values = self.table[col_name+'_likelihood_profile'][0]['dloglike_scan']
+        pass
 
-        x = self.time_bin_start
 
-        # Compute likelihood "image" one time bin at a time
+    def plot(self, col_name, error_asymmetric = False, plot_upperlimit=False, ax=None, **kwargs):
+        """
 
-        z = np.empty((len(self.table), len(y_values)))
-        for idx, row in enumerate(self.table):
-            y_ref = self.table["ref_" + self.sed_type].quantity[idx]
-            norm = (y_values / y_ref).to_value("")
-            norm_scan = row[col_name+'_scan']
-            loglike_min = np.min(row["dloglike_scan"])
-            dloglike_scan = row["dloglike_scan"] - loglike_min
-            interp = interpolate_likelihood_profile(norm_scan, dloglike_scan)
-            z[idx] = interp((norm,))
+        :param col_name: The parameter to be plotted
+        :param error_asymmetric: bool,
+            If the error on the parameter is asymmetric.
+            If True, asymmetric errors will be computed from the likelihood profile
+        :param ax: matplotlib axes
+        :param kwargs: matplotlib kwargs
+        :return:
+        """
+        import matplotlib.pyplot as plt
 
-        kwargs.setdefault("vmax", 0)
-        kwargs.setdefault("vmin", -4)
-        kwargs.setdefault("zorder", 0)
-        kwargs.setdefault("cmap", "Blues")
-        kwargs.setdefault("linewidths", 0)
+        col_err = col_name + "_err"
+        y = self.table[col_name].value
 
-        # clipped values are set to NaN so that they appear white on the plot
-        z[-z < kwargs["vmin"]] = np.nan
-        caxes = ax.pcolormesh(x, y_values, -z.T, **kwargs)
-        ax.set_xscale("linear", nonposx="clip")
-        ax.set_yscale("linear", nonposy="clip")
-        ax.set_xlabel("Time ({})")
-        ax.set_ylabel("{} ({})")
+        if error_asymmetric:
+            colas = col_name+"_asymmetric_error"
+            if colas.issubset(self.table.columns): #check if the values are already computed
+                y_low, y_high = self.table[colas]
+            else:
+                y_low, y_high = self.compute_asymmetric_errors()
+                y_low = np.subtract(y, y_low)
+                y_high = np.subtract(y_high, y)
 
-        if add_cbar:
-            label = "delta log-likelihood"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+        else:
+            y_err = self.table[col_err].value
+            y_low = y_err
+            y_high = y_err
+
+        x = [_.mjd for _ in self.time_bin_center]
+        x_low = np.subtract(x, [_.mjd for _ in self.time_bin_start])
+        x_high = np.subtract([_.mjd for _ in self.time_bin_end], x)
+
+        is_ul = self.table['is_ul']
+        if plot_upperlimit:
+            col = col_name+"_upper_limits"
+            if colas.issubset(self.table.columns):  # check if the values are already computed
+                y[is_ul] = self.table[col][is_ul]
+            else:
+                raise ValueError("Upper limits not computed")
+
+        if ax is None:
+            ax = plt.gca()
+
+        kwargs.setdefault("marker", "o")
+        kwargs.setdefault("ls", "None")
+
+        ax.errorbar(x=x, y=y, xerr=[x_low, x_high], yerr=[y_low, y_high], uplims=is_ul, **kwargs)
 
         return ax
-
-
-
-    def _get_fluxes_and_errors(self, unit="cm-2 s-1"):
-        """Extract fluxes and corresponding errors
-
-        Helper function for the plot method.
-
-        Parameters
-        ----------
-        unit : str, `~astropy.units.Unit`, optional
-            Unit of the returned flux and errors values
-
-        Returns
-        -------
-        y : `numpy.ndarray`
-            Flux values
-        (yn, yp) : tuple of `numpy.ndarray`
-            Flux error values
-        """
-        y = self.table["flux"].quantity.to(unit)
-
-        if all(k in self.table.colnames for k in ["flux_errp", "flux_errn"]):
-            yp = self.table["flux_errp"].quantity.to(unit)
-            yn = self.table["flux_errn"].quantity.to(unit)
-        elif "flux_err" in self.table.colnames:
-            yp = self.table["flux_err"].quantity.to(unit)
-            yn = self.table["flux_err"].quantity.to(unit)
-        else:
-            yp, yn = np.zeros_like(y), np.zeros_like(y)
-
-        return y.value, (yn.value, yp.value)
-
-    def _get_uls(self, unit="cm-2 s-1"):
-        """Extract upper limits for the given column
-
-        Helper function for the plot method.
-
-        Parameters
-        ----------
-        unit : str, `~astropy.units.Unit`, optional
-            Unit of the returned flux upper limit values
-
-        Returns
-        -------
-        is_ul : `numpy.ndarray`
-            Is flux point is an upper limit? (boolean array)
-        yul : `numpy.ndarray`
-            Flux upper limit values
-        """
-        try:
-            is_ul = self.table["is_ul"].data.astype("bool")
-        except KeyError:
-            is_ul = np.zeros_like(self.table["flux"]).data.astype("bool")
-
-        if is_ul.any():
-            yul = self.table["flux_ul"].quantity.to(unit)
-        else:
-            yul = np.zeros_like(self.table["flux"]).quantity
-            yul[:] = np.nan
-
-        return is_ul, yul.value
-
 
 
 class LightCurveEstimator:
