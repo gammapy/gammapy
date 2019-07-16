@@ -120,7 +120,8 @@ class SpectrumDatasetMakerObs:
                     emin=e_min, emax=e_max
                 )
             except KeyError:
-                log.warning("No thresholds defined for obs {}".format(self.observation))
+                # TODO : use log
+                print("No thresholds defined for obs {}".format(self.observation))
 
         return self.dataset
 
