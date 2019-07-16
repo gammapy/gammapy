@@ -109,6 +109,37 @@ def get_map_dataset(sky_model, geom, geom_etrue, **kwargs):
     )
 
 
+def test_map_dataset_str(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit
+    assert "Total counts" in str(dataset)
+    assert "Total background counts" in str(dataset)
+    assert "Exposure" in str(dataset)
+    assert "EnergyDispersion" in str(dataset)
+    assert "PSF" in str(dataset)
+    assert "Total points" in str(dataset)
+    assert "Points used for the fit" in str(dataset)
+    assert "Excluded for safe energy range" in str(dataset)
+    assert "Excluded by user" in str(dataset)
+    assert "Model" in str(dataset)
+    assert "N parameters" in str(dataset)
+    assert "N free parameters" in str(dataset)
+    assert "List of parameters" in str(dataset)
+    assert "lon_0" in str(dataset)
+    assert "lat_0" in str(dataset)
+    assert "sigma" in str(dataset)
+    assert "index" in str(dataset)
+    assert "amplitude" in str(dataset)
+    assert "reference" in str(dataset)
+    assert "norm" in str(dataset)
+    assert "tilt" in str(dataset)
+    assert "reference" in str(dataset)
+    assert "Total predicted counts" in str(dataset)
+    assert "Likelihood" in str(dataset)
+    assert "Likelihood value" in str(dataset)
+
+
 @requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
@@ -141,7 +172,6 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset.write(tmpdir / "test.fits")
 
     dataset_new = MapDataset.read(tmpdir / "test.fits")
-
     assert dataset_new.model is None
     assert dataset_new.mask.dtype == bool
 

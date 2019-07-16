@@ -15,7 +15,6 @@ from ..data import ObservationStats
 from .core import CountsSpectrum
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
-
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 
 
@@ -76,6 +75,109 @@ class SpectrumDataset(Dataset):
         self.mask_safe = mask_safe
         self.obs_id = obs_id
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = "{}: \n".format(self.__class__.__name__)
+        str_ += "\n"
+        if self.counts is None:
+            str_ += "\t{:32}:   {} \n".format("Total counts", "0")
+        else:
+            str_ += "\t{:32}:   {} \n".format(
+                "Total counts", int(np.sum(self.counts.data))
+            )
+        if self.background is None:
+            str_ += "\t{:32}:   {} \n".format("Total background counts", "0")
+        else:
+            str_ += "\t{:32}:   {} \n".format(
+                "Total background counts", int(np.sum(self.background.data))
+            )
+        if self.aeff is None:
+            str_ += "\t{:32}:   {} \n".format("Effective Area", "No")
+        else:
+            str_ += "\t{:32}:\n".format("Effective Area")
+            str_ += "\t\t{:24}:   {:.2e}\n".format(
+                "Min value", np.min(self.aeff.data.data)
+            )
+            str_ += "\t\t{:24}:   {:.2e}\n".format(
+                "Max value", np.max(self.aeff.data.data)
+            )
+        if self.edisp is None:
+            str_ += "\t{:32}:   {} \n".format("EnergyDispersion", "No")
+        else:
+            str_ += "\t{:32} \n".format("EnergyDispersion")
+            str_ += "\t\t{:24}:   {}\n".format(
+                "Resolution at 1 TeV", self.edisp.get_resolution(1 * u.TeV)[0]
+            )
+            str_ += "\t\t{:24}:   {:.2f}\n".format(
+                "Bias at 1 TeV", self.edisp.get_bias(1 * u.TeV)[0]
+            )
+        if self.model is None:
+            str_ += "\t{:32}:   {} \n".format("Model", "No Model")
+        else:
+            if self.counts is None:
+                str_ += "\t{:32}:   {} \n".format("Total points", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Total points", len(self.counts.data.ravel())
+                )
+            if self.mask is None:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Points used for the fit", len(self.counts.data.ravel())
+                )
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Points used for the fit", len(np.where(self.mask)[0])
+                )
+            if self.mask_safe is None:
+                str_ += "\t{:32}:   {} \n".format("Excluded for safe energy range", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Excluded for safe energy range",
+                    len(np.where(self.mask_safe == False)[0]),
+                )
+            if self.mask_fit is None:
+                str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Excluded by user", len(np.where(self.mask_fit == False)[0])
+                )
+            str_ += "\t{:32}:   {}\n".format("Model", self.model.__class__.__name__)
+            str_ += "\t{:32}:   {}\n".format(
+                "N parameters", len(self.parameters.parameters)
+            )
+            str_ += "\t{:32}:   {}\n".format(
+                "N free parameters", len(self.parameters.free_parameters)
+            )
+            str_ += "\tList of parameters\n"
+            for par in self.parameters.parameters:
+                if par.frozen:
+                    if par.name == "amplitude":
+                        str_ += "\t \t {:14} (Frozen):   {:.2e} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                    else:
+                        str_ += "\t \t {:14} (Frozen):   {:.2f} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                else:
+                    if par.name == "amplitude":
+                        str_ += "\t \t {:23}:   {:.2e} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                    else:
+                        str_ += "\t \t {:23}:   {:.2f} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+            str_ += "\t{:32}:   {:.2f}\n".format(
+                "Total predicted counts", np.sum(self.npred().data)
+            )
+            str_ += "\t{:32}:   {}\n".format("Likelihood type", "cash")
+            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
+        return str_
+
     @property
     def model(self):
         return self._model
@@ -90,7 +192,7 @@ class SpectrumDataset(Dataset):
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self.counts.energy.edges,
-                edisp=self.edisp
+                edisp=self.edisp,
             )
         else:
             self._parameters = None
@@ -313,6 +415,19 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.backscale = backscale
         self.backscale_off = backscale_off
         self.obs_id = obs_id
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = super().__str__()
+        str_ = str_.replace("cash", "wstat")
+        if self.backscale is None:
+            str_ += "\t{:32}:   {}\n".format("Backscale:", "0")
+        else:
+            str_ += "\t{:32}:   {}\n".format("Backscale Mean:", np.mean(self.backscale))
+        return str_
 
     @property
     def background(self):

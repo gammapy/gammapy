@@ -231,14 +231,34 @@ def test_compute_flux_points_dnde_fermi():
 
 
 @pytest.fixture()
-def fit():
+def fit(dataset):
+    return Fit(dataset)
+
+
+@pytest.fixture()
+def dataset():
     path = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
     data = FluxPoints.read(path)
     data.table["e_ref"] = data.e_ref.to("TeV")
-
     model = PowerLaw(index=2.3, amplitude="2e-13 cm-2 s-1 TeV-1", reference="1 TeV")
     dataset = FluxPointsDataset(model, data)
-    return Fit(dataset)
+    return dataset
+
+
+def test_FluxPointsDataset_str(dataset):
+    assert "Total flux points" in str(dataset)
+    assert "Points used for the fit" in str(dataset)
+    assert "Excluded for safe energy range" in str(dataset)
+    assert "Excluded by user" in str(dataset)
+    assert "Model Name" in str(dataset)
+    assert "N parameters" in str(dataset)
+    assert "N free parameters" in str(dataset)
+    assert "List of parameters" in str(dataset)
+    assert "index" in str(dataset)
+    assert "amplitude" in str(dataset)
+    assert "reference" in str(dataset)
+    assert "Likelihood type" in str(dataset)
+    assert "Likelihood value" in str(dataset)
 
 
 @requires_data()

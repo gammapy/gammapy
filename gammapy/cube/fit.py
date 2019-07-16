@@ -13,11 +13,9 @@ from ..irf import EnergyDispersion
 from .models import SkyModel, SkyModels, BackgroundModel
 from .psf_kernel import PSFKernel
 
-
 __all__ = ["MapEvaluator", "MapDataset"]
 
 log = logging.getLogger(__name__)
-
 
 CUTOUT_MARGIN = 0.1 * u.deg
 
@@ -71,6 +69,7 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
+        self.likelihood_type = likelihood
         self.model = model
         self.counts = counts
         self.exposure = exposure
@@ -88,6 +87,135 @@ class MapDataset(Dataset):
             self._stat_sum = cstat_sum_cython
         else:
             raise ValueError("Invalid likelihood: {!r}".format(likelihood))
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        def __repr__(self):
+            str_ = self.__class__.__name__
+            return str_
+
+    def __str__(self):
+        str_ = "{}: \n".format(self.__class__.__name__)
+        str_ += "\n"
+        if self.counts is None:
+            str_ += "\t{:32}:   {} \n".format("Total counts", "0")
+        else:
+            str_ += "\t{:32}:   {} \n".format(
+                "Total counts", int(np.sum(self.counts.data))
+            )
+        if self.background_model is None:
+            str_ += "\t{:32}:   {} \n".format("Total background counts", "0")
+        else:
+            str_ += "\t{:32}:   {} \n".format(
+                "Total background counts", int(np.sum(self.background_model.map.data))
+            )
+        if self.exposure is None:
+            str_ += "\t{:32}:   {} \n".format("Exposure", "No")
+        else:
+            str_ += "\t{:32}:\n".format("Exposure")
+            str_ += "\t\t{:24}:   {:.2e}\n".format(
+                "Min value", np.min(self.exposure.data)
+            )
+            str_ += "\t\t{:24}:   {:.2e}\n".format(
+                "Max value", np.max(self.exposure.data)
+            )
+        if self.edisp is None:
+            str_ += "\t{:32}:   {} \n".format("EnergyDispersion", "No")
+        else:
+            str_ += "\t{:32} \n".format("EnergyDispersion")
+            str_ += "\t\t{:24}:   {}\n".format(
+                "Resolution at 1 TeV", self.edisp.get_resolution(1 * u.TeV)[0]
+            )
+            str_ += "\t\t{:24}:   {:.2f}\n".format(
+                "Bias at 1 TeV", self.edisp.get_bias(1 * u.TeV)[0]
+            )
+        if self.psf is None:
+            str_ += "\t{:32}:   {} \n".format("PSF", "No")
+        else:
+            str_ += "\t{:32}:   {}: {} {} * {} {} \n".format(
+                "PSF",
+                "Size of the kernel",
+                self.psf.psf_kernel_map.geom.width[0, 0].value,
+                self.psf.psf_kernel_map.geom.width.unit,
+                self.psf.psf_kernel_map.geom.width[1, 0].value,
+                self.psf.psf_kernel_map.geom.width.unit,
+            )
+        if self.model is None:
+            str_ += "\t{:32}:   {} \n".format("Model", "No Model")
+        else:
+            if self.counts is None:
+                str_ += "\t{:32}:   {} \n".format("Total points", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Total points", len(self.counts.data.ravel())
+                )
+            if self.mask is None:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Points used for the fit", len(self.counts.data.ravel())
+                )
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Points used for the fit", len(np.where(self.mask)[0])
+                )
+            if self.mask_safe is None:
+                str_ += "\t{:32}:   {} \n".format("Excluded for safe energy range", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Excluded for safe energy range",
+                    len(np.where(self.mask_safe == False)[0]),
+                )
+            if self.mask_fit is None:
+                str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Excluded by user", len(np.where(self.mask_fit == False)[0])
+                )
+            str_ += "\t{:32}:   {} \n".format(
+                "Number of Model", len(self.model.skymodels)
+            )
+            for i_model, model in enumerate(self.model.skymodels):
+                str_ += "\tModel {}: \n".format(i_model + 1)
+                str_ += "\t\t{:24}:   {}\n".format(
+                    "Spatial component", model.spatial_model.__class__.__name__
+                )
+                str_ += "\t\t{:24}:   {}\n".format(
+                    "Spectal component", model.spectral_model.__class__.__name__
+                )
+            str_ += "\t{:32}:   {}\n".format(
+                "N parameters", len(self.parameters.parameters)
+            )
+            str_ += "\t{:32}:   {}\n".format(
+                "N free parameters", len(self.parameters.free_parameters)
+            )
+            str_ += "\tList of parameters\n"
+            for par in self.parameters.parameters:
+                if par.frozen:
+                    if par.name == "amplitude":
+                        str_ += "\t \t {:14} (Frozen):   {:.2e} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                    else:
+                        str_ += "\t \t {:14} (Frozen):   {:.2f} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                else:
+                    if par.name == "amplitude":
+                        str_ += "\t \t {:23}:   {:.2e} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                    else:
+                        str_ += "\t \t {:23}:   {:.2f} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+            str_ += "\t{:32}:   {:.2f}\n".format(
+                "Total predicted counts", np.sum(self.npred().data)
+            )
+            str_ += "\t{:32}:   {}\n".format("Likelihood type", self.likelihood_type)
+            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
+        return str_
 
     @property
     def model(self):
