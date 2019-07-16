@@ -49,7 +49,7 @@ def test_cosmic_ray_spectrum(spec):
     flux = cr_spectrum.integral(emin, emax)
     assert_quantity_allclose(flux, spec["flux"])
 
-    if (spec["name"] != "electron"):
+    if spec["name"] != "electron":
         index = cr_spectrum.spectral_index(energy)
         assert_quantity_allclose(index, spec["index"], rtol=1e-5)
 
