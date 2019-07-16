@@ -1720,13 +1720,15 @@ class SpectralGaussian(SpectralModel):
 
 
 class SpectralLogGaussian(SpectralModel):
-    r"""Gaussian spectral model.
+    r"""Gaussian Log spectral model.
 
     .. math::
 
-        \phi(E) = \frac{N_0}{E \, \sigma \sqrt{2\pi}}  \exp{ \frac{\left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
+        \phi(E) = \frac{N_0}{E \, \sigma \sqrt{2\pi}}
+         \exp{ \frac{\left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
 
-    This model was used in this CTA study for the electron spectrum: Table 3 in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
+    This model was used in this CTA study for the electron spectrum: Table 3
+     in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
 
 
     Parameters
@@ -1741,7 +1743,8 @@ class SpectralLogGaussian(SpectralModel):
 
     Examples
     --------
-    This is how to plot the default `Gaussian` spectral model:
+    This is how to plot a Gaussian Log spectral model. Very similar from the `SpectralGaussian` model but the Gaussian
+    is based on the logarithm of the energy
 
     .. code:: python
 

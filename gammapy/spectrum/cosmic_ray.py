@@ -34,51 +34,38 @@ def cosmic_ray_spectrum(particle="proton"):
         Cosmic ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
 
-    proton = {
-        "amplitude": 0.096 * u.Unit("1 / (m2 s TeV sr)"),
-        "index": 2.70,
-        "reference": 1 * u.TeV,
-    }
-
-    N = {
-        "amplitude": 0.0719 * u.Unit("1 / (m2 s TeV sr)"),
-        "index": 2.64,
-        "reference": 1 * u.TeV,
-    }
-
-    Si = {
-        "amplitude": 0.0284 * u.Unit("1 / (m2 s TeV sr)"),
-        "index": 2.66,
-        "reference": 1 * u.TeV,
-    }
-
-    Fe = {
-        "amplitude": 0.0134 * u.Unit("1 / (m2 s TeV sr)"),
-        "index": 2.63,
-        "reference": 1 * u.TeV,
-    }
-
-    electron_power_law = {
-        "amplitude": 6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
-        "index": 3.21,
-        "reference": 1 * u.TeV,
-    }
-    electron_lognormal = {
-        "norm": 3.19e-3 * u.Unit("1 / (m2 s sr)"),
-        "mean": 0.107 * u.TeV,
-        "sigma": 0.776,
-    }
-
     if particle == "proton":
-        model = PowerLaw(**proton)
+        model = PowerLaw(
+            amplitude=0.096 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.70,
+            reference=1 * u.TeV,
+        )
     elif particle == "N":
-        model = PowerLaw(**N)
+        model = PowerLaw(
+            amplitude=0.0719 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.64,
+            reference=1 * u.TeV,
+        )
     elif particle == "Si":
-        model = PowerLaw(**Si)
+        model = PowerLaw(
+            amplitude=0.0284 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.66,
+            reference=1 * u.TeV,
+        )
     elif particle == "Fe":
-        model = PowerLaw(**Fe)
+        model = PowerLaw(
+            amplitude=0.0134 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.63,
+            reference=1 * u.TeV,
+        )
     elif particle == "electron":
-        model = PowerLaw(**electron_power_law) + SpectralLogGaussian(**electron_lognormal)
+        model = PowerLaw(
+            amplitude=6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
+            index=3.21,
+            reference=1 * u.TeV,
+        ) + SpectralLogGaussian(
+            norm=3.19e-3 * u.Unit("1 / (m2 s sr)"), mean=0.107 * u.TeV, sigma=0.776
+        )
     else:
         raise ValueError("Invalid argument for particle: {}".format(particle))
 

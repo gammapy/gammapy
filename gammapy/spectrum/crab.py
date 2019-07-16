@@ -5,46 +5,6 @@ from .models import PowerLaw, LogParabola, ExponentialCutoffPowerLaw, SpectralMo
 
 __all__ = ["create_crab_spectral_model"]
 
-# HESS publication: 2006A&A...457..899A
-hess_pl = {
-    "amplitude": 3.45e-11 * u.Unit("1 / (cm2 s TeV)"),
-    "index": 2.63,
-    "reference": 1 * u.TeV,
-}
-
-hess_ecpl = {
-    "amplitude": 3.76e-11 * u.Unit("1 / (cm2 s TeV)"),
-    "index": 2.39,
-    "lambda_": 1 / (14.3 * u.TeV),
-    "reference": 1 * u.TeV,
-}
-
-# HEGRA publication : 2004ApJ...614..897A
-hegra = {
-    "amplitude": 2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
-    "index": 2.62,
-    "reference": 1 * u.TeV,
-}
-
-# MAGIC publication: 2015JHEAp...5...30A
-# note that in the paper the beta of the LogParabola is given as negative in
-# Table 1 (pag. 33), but should be positive to match gammapy LogParabola expression
-# Also MAGIC uses log10 in the LogParabola expression, gammapy uses ln, hence
-# the conversion factor
-magic_lp = {
-    "amplitude": 3.23e-11 * u.Unit("1 / (cm2 s TeV)"),
-    "alpha": 2.47,
-    "beta": 0.24 / np.log(10),
-    "reference": 1 * u.TeV,
-}
-
-magic_ecpl = {
-    "amplitude": 3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
-    "index": 2.21,
-    "lambda_": 1 / (6.0 * u.TeV),
-    "reference": 1 * u.TeV,
-}
-
 
 class MeyerCrabModel(SpectralModel):
     """Meyer 2010 log polynomial Crab spectral model.
@@ -115,15 +75,39 @@ def create_crab_spectral_model(reference="meyer"):
     if reference == "meyer":
         model = MeyerCrabModel()
     elif reference == "hegra":
-        model = PowerLaw(**hegra)
+        model = PowerLaw(
+            amplitude=2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
+            index=2.62,
+            reference=1 * u.TeV,
+        )
     elif reference == "hess_pl":
-        model = PowerLaw(**hess_pl)
+        # HESS publication: 2006A&A...457..899A
+        model = PowerLaw(
+            amplitude=3.45e-11 * u.Unit("1 / (cm2 s TeV)"),
+            index=2.63,
+            reference=1 * u.TeV,
+        )
     elif reference == "hess_ecpl":
-        model = ExponentialCutoffPowerLaw(**hess_ecpl)
+        model = ExponentialCutoffPowerLaw(
+            amplitude=3.76e-11 * u.Unit("1 / (cm2 s TeV)"),
+            index=2.39,
+            lambda_=1 / (14.3 * u.TeV),
+            reference=1 * u.TeV,
+        )
     elif reference == "magic_lp":
-        model = LogParabola(**magic_lp)
+        model = LogParabola(
+            amplitude=3.23e-11 * u.Unit("1 / (cm2 s TeV)"),
+            alpha=2.47,
+            beta=0.24 / np.log(10),
+            reference=1 * u.TeV,
+        )
     elif reference == "magic_ecpl":
-        model = ExponentialCutoffPowerLaw(**magic_ecpl)
+        model = ExponentialCutoffPowerLaw(
+            amplitude=3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
+            index=2.21,
+            lambda_=1 / (6.0 * u.TeV),
+            reference=1 * u.TeV,
+        )
     else:
         fmt = "Invalid reference: {!r}. Choices: {!r}"
         references = [
