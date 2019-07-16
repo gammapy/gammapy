@@ -58,12 +58,12 @@ def cosmic_ray_spectrum(particle="proton"):
         "reference": 1 * u.TeV,
     }
 
-    electron_PWL = {
+    electron_power_law = {
         "amplitude": 6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
         "index": 3.21,
         "reference": 1 * u.TeV,
     }
-    electron_LogNormal = {
+    electron_lognormal = {
         "norm": 3.19e-3 * u.Unit("1 / (m2 s sr)"),
         "mean": 0.107 * u.TeV,
         "sigma": 0.776,
@@ -78,9 +78,7 @@ def cosmic_ray_spectrum(particle="proton"):
     elif particle == "Fe":
         model = PowerLaw(**Fe)
     elif particle == "electron":
-        model = PowerLaw(**electron_PWL) + SpectralLogGaussian(**electron_LogNormal)
-        # model = SpectralLogGaussian(**electron_LogNormal)
-        # model = PowerLaw(**electron_PWL)
+        model = PowerLaw(**electron_power_law) + SpectralLogGaussian(**electron_lognormal)
     else:
         raise ValueError("Invalid argument for particle: {}".format(particle))
 
