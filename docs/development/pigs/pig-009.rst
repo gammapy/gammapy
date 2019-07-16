@@ -9,8 +9,8 @@ PIG 9 - Event Sampling
 * Author: Fabio Pintore, Andrea Giuliani, Axel Donath
 * Created: May 03, 2019
 * Accepted: 
-* Status: 
-* Discussion:  
+* Status: Draft
+* Discussion: `PR 2136`_
 
 Abstract
 ========
@@ -27,8 +27,10 @@ classes, that can be chained together to achieve a full simulation of an event
 list corresponding to a given observation. This includes the simulation of source
 events, background events, effects of instrument response functions (IRF) and
 arrival times. As underlying method for the actual event sampling we propose to
-use inverse CDF sampling (inverseCDF_) with finely binned discrete source,
-background, and temporal models.
+use inverse cumulative distribution function (CDF) sampling (inverseCDF_) with finely 
+binned discrete source and background. Temporal models will be also taken into account
+and treated separately in a 1D analysis, assuming that the temporal depence of the 
+input source models factorizes.
 
 A working prototype of the proposed method and API can be found in Prototype_ .
 
@@ -39,7 +41,7 @@ Inverse CDF sampling (inverseCDF_) is an established method to sample from discr
 probability mass functions. However it is not the method of choice for other existing
 event samplers such as the the Fermi-LAT Science Tools (gtobsim) or CTOOLS (ctobssim).
 The latter uses a combination of analytical sampling for models, where a solution
-is known (e.g. power-laws) and the rejection sampling method, where the sampling
+is known (e.g. power-laws) and the rejection sampling method (rej_sampl_), where the sampling
 has to be done numerically (see an example here gammalib_).
 
 As rejection sampling can directly sample from continuous probability density
@@ -295,4 +297,5 @@ Decision
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
 .. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
 .. _gamma-astro-data-formats: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
-
+.. _rej_sampl: https://en.wikipedia.org/wiki/Rejection_sampling
+.. _PR_2136:https://github.com/gammapy/gammapy/pull/2136
