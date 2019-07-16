@@ -131,8 +131,8 @@ class SpectrumExtraction:
             counts_off=self._off_vector,
             edisp=self._edisp,
             livetime=observation.observation_live_time_duration,
-            backscale=1,
-            backscale_off=bkg.a_off,
+            acceptance=1,
+            acceptance_off=bkg.a_off,
             obs_id=observation.obs_id,
         )
 

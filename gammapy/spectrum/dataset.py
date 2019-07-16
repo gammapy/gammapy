@@ -290,8 +290,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         aeff=None,
         edisp=None,
         mask_safe=None,
-        backscale=None,
-        backscale_off=None,
+        acceptance=None,
+        acceptance_off=None,
         obs_id=None,
     ):
 
@@ -304,14 +304,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.model = model
         self.mask_safe = mask_safe
 
-        if np.isscalar(backscale):
-            backscale = np.ones(counts.energy.nbin) * backscale
+        if np.isscalar(acceptance):
+            acceptance = np.ones(counts.energy.nbin) * acceptance
 
-        if np.isscalar(backscale_off):
-            backscale_off = np.ones(counts.energy.nbin) * backscale_off
+        if np.isscalar(acceptance_off):
+            acceptance_off = np.ones(counts.energy.nbin) * acceptance_off
 
-        self.backscale = backscale
-        self.backscale_off = backscale_off
+        self.acceptance = acceptance
+        self.acceptance_off = acceptance_off
         self.obs_id = obs_id
 
     @property
@@ -323,7 +323,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        return self.backscale / self.backscale_off
+        return self.acceptance / self.acceptance_off
 
     def npred_sig(self):
         """Predicted counts from source model (`CountsSpectrum`)."""
@@ -437,8 +437,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         counts_table = self.counts.to_table()
         counts_table["QUALITY"] = np.logical_not(self.mask_safe)
-        counts_table["BACKSCAL"] = self.backscale
-        counts_table["AREASCAL"] = np.ones(self.backscale.size)
+        counts_table["BACKSCAL"] = self.acceptance
+        counts_table["AREASCAL"] = np.ones(self.acceptance.size)
         meta = self._ogip_meta()
 
         meta["respfile"] = rmffile
@@ -458,8 +458,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if self.counts_off is not None:
             counts_off_table = self.counts_off.to_table()
             counts_off_table["QUALITY"] = np.logical_not(self.mask_safe)
-            counts_off_table["BACKSCAL"] = self.backscale_off
-            counts_off_table["AREASCAL"] = np.ones(self.backscale.size)
+            counts_off_table["BACKSCAL"] = self.acceptance_off
+            counts_off_table["AREASCAL"] = np.ones(self.acceptance.size)
             meta = self._ogip_meta()
             meta["hduclas2"] = "BKG"
 
@@ -547,10 +547,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                     data=data_bkg["data"],
                 )
 
-                backscale_off = data_bkg["backscal"]
+                acceptance_off = data_bkg["backscal"]
         except IOError:
             # TODO : Add logger and echo warning
-            counts_off, backscale_off = None, None
+            counts_off, acceptance_off = None, None
 
         arffile = phafile.replace("pha", "arf")
         aeff = EffectiveAreaTable.read(str(dirname / arffile))
@@ -564,8 +564,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             edisp=energy_dispersion,
             livetime=data["livetime"],
             mask_safe=mask_safe,
-            backscale=data["backscal"],
-            backscale_off=backscale_off,
+            acceptance=data["backscal"],
+            acceptance_off=acceptance_off,
             obs_id=data["obs_id"],
         )
 
@@ -577,12 +577,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         mask = self.mask_safe if in_safe_energy_range else slice(None)
 
         # TODO: handle energy dependent a_on / a_off
-        info["a_on"] = self.backscale[0]
+        info["a_on"] = self.acceptance[0]
         info["n_on"] = self.counts.data[mask].sum()
 
         if self.counts_off is not None:
             info["n_off"] = self.counts_off.data[mask].sum()
-            info["a_off"] = self.backscale_off[0]
+            info["a_off"] = self.acceptance_off[0]
         else:
             info["n_off"] = 0
             info["a_off"] = 1
@@ -814,7 +814,7 @@ class SpectrumDatasetOnOffStacker:
             edisp=self.stacked_edisp,
             livetime=self.total_livetime,
             mask_safe=np.logical_not(self.stacked_quality),
-            backscale=self.stacked_on_vector.backscal,
-            backscale_off=self.stacked_off_vector.backscal,
+            acceptance=self.stacked_on_vector.backscal,
+            acceptance_off=self.stacked_off_vector.backscal,
             obs_id=[obs.obs_id for obs in self.obs_list],
         )
