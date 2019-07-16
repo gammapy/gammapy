@@ -6,7 +6,7 @@ http://lpsc.in2p3.fr/cosmic-rays-db/
 """
 
 from astropy import units as u
-from .models import PowerLaw
+from .models import PowerLaw, SpectralLogGaussian
 
 __all__ = ["cosmic_ray_spectrum"]
 
@@ -58,13 +58,15 @@ def cosmic_ray_spectrum(particle="proton"):
         "reference": 1 * u.TeV,
     }
 
-    electron = {
+    electron_PWL = {
         "amplitude": 6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
         "index": 3.21,
         "reference": 1 * u.TeV,
-        "L": 3.19e-3,
-        "E_p": 0.107,
-        "w": 0.776,
+    }
+    electron_LogNormal = {
+        "norm": 3.19e-3 * u.Unit("1 / (m2 s sr)"),
+        "mean": 0.107 * u.TeV,
+        "sigma": 0.776,
     }
 
     if particle == "proton":
@@ -75,8 +77,10 @@ def cosmic_ray_spectrum(particle="proton"):
         model = PowerLaw(**Si)
     elif particle == "Fe":
         model = PowerLaw(**Fe)
-    #    elif particle == "electron":
-    #        return _electron_spectrum(energy, **pars["electron"])
+    elif particle == "electron":
+        model = PowerLaw(**electron_PWL) + SpectralLogGaussian(**electron_LogNormal)
+        # model = SpectralLogGaussian(**electron_LogNormal)
+        # model = PowerLaw(**electron_PWL)
     else:
         raise ValueError("Invalid argument for particle: {}".format(particle))
 

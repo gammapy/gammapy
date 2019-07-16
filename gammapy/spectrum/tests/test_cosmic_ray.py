@@ -28,6 +28,11 @@ Cosmic_rays_SPECTRA = [
         flux=u.Quantity(0.008220752990527653, "m-2 s-1 sr-1"),
         index=2.63,
     ),
+    dict(
+        name="electron",
+        dnde=u.Quantity(8.0665368e-06, "m-2 s-1 TeV-1 sr-1"),
+        flux=u.Quantity(3.733755e-05, "m-2 s-1 sr-1"),
+    ),
 ]
 
 
@@ -44,8 +49,9 @@ def test_cosmic_ray_spectrum(spec):
     flux = cr_spectrum.integral(emin, emax)
     assert_quantity_allclose(flux, spec["flux"])
 
-    index = cr_spectrum.spectral_index(energy)
-    assert_quantity_allclose(index, spec["index"], rtol=1e-5)
+    if (spec["name"] != "electron"):
+        index = cr_spectrum.spectral_index(energy)
+        assert_quantity_allclose(index, spec["index"], rtol=1e-5)
 
 
 def test_invalid_format():
