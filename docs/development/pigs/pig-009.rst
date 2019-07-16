@@ -35,7 +35,7 @@ input source models factorizes.
 A working prototype of the proposed method and API can be found in Prototype_ .
 
 
-Inverse CDF Sampling
+Sampling methods
 ====================
 Inverse CDF sampling (inverseCDF_) is an established method to sample from discrete
 probability mass functions. However it is not the method of choice for other existing
@@ -107,10 +107,12 @@ be supported by specifying the `axis` argument:
     samples = cdf_sampler.sample(size=1)
 
 
-The `InverseCDFSampler` could addtionally implement a few helper functions to plot
+The `InverseCDFSampler` could additionally implement a few helper functions to plot
 the CDF and PDF. The `InverseCDFSampler` class will replace the current
 `GeneralRandom` and `GeneralRandomArray` classes in `gammapy.utils.distributions`. 
-
+It is important to note that the sampling with binned data put the events at the 
+center of the bin, implying that they do not have a smooth distribution. However,
+this issue is overcame once the point spread function (PSF) is applied to the data.
 
 
 MapEventSampler
@@ -121,7 +123,8 @@ as background maps, we propose to introduce a `MapEventSampler` class. The
 responsibility of this class is to handle the physical coordinate transformations, 
 time dependence of the model, output data structures and sampling of the total 
 number of observed events.
-Starting from a predicted number of counts map (e.g. computed by the `MapEvaluator`):
+Starting from a predicted number of counts map, obtained through dedicated Gammapy
+classes already existing:
 
 .. code::
 
