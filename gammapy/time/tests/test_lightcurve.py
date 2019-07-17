@@ -13,7 +13,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import energy_logspace
 from ...data import DataStore
 from ...spectrum import SpectrumExtraction
-from ...spectrum.models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
 from ..lightcurve import LightCurve, LightCurveEstimator
 

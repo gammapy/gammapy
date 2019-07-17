@@ -2,10 +2,10 @@
 import pytest
 import numpy as np
 import astropy.units as u
-from ...utils.energy import energy_logspace
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ..models import (
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.testing import assert_quantity_allclose
+from gammapy.utils.testing import requires_dependency, requires_data, mpl_plot_check
+from gammapy.modeling.models.spectrum.core import (
     SpectralModel,
     PowerLaw,
     PowerLaw2,
@@ -171,7 +171,7 @@ TEST_MODELS = [
     ),
 ]
 
-# Add compound models
+# Add compound image
 TEST_MODELS.append(
     dict(
         name="compound1",

@@ -29,7 +29,7 @@ def simulate_dataset(
 
     Parameters
     ----------
-    skymodel : `~gammapy.cube.models.SkyModel`
+    skymodel : `~gammapy.cube.image.SkyModel`
         Background model map
     geom : `~gammapy.maps.WcsGeom`
         Geometry object for the observation

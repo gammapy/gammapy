@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ...utils.energy import energy_logspace
 from ...utils.testing import requires_dependency, requires_data
-from ...spectrum.models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from ..spectrum_pipe import SpectrumAnalysisIACT
 from ...data import DataStore
 

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Pulsar wind nebula (PWN) source models."""
+"""Pulsar wind nebula (PWN) source image."""
 import numpy as np
 from astropy.units import Quantity
 from astropy.utils import lazyproperty

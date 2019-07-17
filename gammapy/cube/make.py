@@ -134,7 +134,7 @@ class MapMaker:
 
         Parameters
         ----------
-        spectrum : `~gammapy.spectrum.models.SpectralModel`
+        spectrum : `~gammapy.spectrum.image.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
         keepdims : bool, optional
@@ -165,7 +165,7 @@ class MapMaker:
         ----------
         observations : `~gammapy.data.Observations`
             Observations to process
-        spectrum : `~gammapy.spectrum.models.SpectralModel`
+        spectrum : `~gammapy.spectrum.image.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
         keepdims : bool, optional
@@ -444,7 +444,7 @@ class MapMakerRing(MapMaker):
         ----------
         observations : `~gammapy.data.Observations`
             Observations to process
-        spectrum : `~gammapy.spectrum.models.SpectralModel`, optional
+        spectrum : `~gammapy.spectrum.image.SpectralModel`, optional
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
         keepdims : bool, optional

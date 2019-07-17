@@ -4,8 +4,8 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
-from ...utils.fitting import Parameter, Model
-from ...maps import Map
+from gammapy.utils.fitting import Parameter, Model
+from gammapy.maps import Map
 from scipy.integrate import quad
 from scipy.special import erf
 
@@ -210,7 +210,7 @@ class SkyDisk(SkySpatialModel):
 
         import matplotlib.pyplot as plt
         from astropy import units as u
-        from gammapy.image.models import SkyDisk
+        from gammapy.image.image import SkyDisk
 
         lons = np.linspace(0, 0.3, 500) * u.deg
 
@@ -319,7 +319,7 @@ class SkyEllipse(SkySpatialModel):
         import numpy as np
         import matplotlib.pyplot as plt
         import astropy.units as u
-        from gammapy.image.models.core import SkyEllipse
+        from gammapy.image.image.core import SkyEllipse
         from gammapy.maps import Map, WcsGeom
 
         model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "30 deg")
@@ -515,7 +515,7 @@ class SkyDiffuseConstant(SkySpatialModel):
 class SkyDiffuseMap(SkySpatialModel):
     """Spatial sky map template model (2D).
 
-    This is for a 2D image. Use `~gammapy.cube.models.SkyDiffuseCube` for 3D cubes with
+    This is for a 2D image. Use `~gammapy.cube.image.SkyDiffuseCube` for 3D cubes with
     an energy axis.
 
     Parameters

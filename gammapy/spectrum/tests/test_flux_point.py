@@ -12,7 +12,7 @@ from ...utils.testing import (
     mpl_plot_check,
 )
 from ...utils.fitting import Fit
-from ..models import PowerLaw, SpectralModel
+from gammapy.modeling.models.spectrum.core import PowerLaw, SpectralModel
 from ..flux_point import FluxPoints, FluxPointsDataset
 
 FLUX_POINTS_FILES = [

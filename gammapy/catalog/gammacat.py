@@ -12,8 +12,8 @@ from astropy import units as u
 from astropy.table import Table
 from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
-from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
-from ..image.models import SkyPointSource, SkyGaussian, SkyShell
+from gammapy.modeling.models.spectrum.core import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
+from gammapy.modeling.models.image import SkyPointSource, SkyGaussian, SkyShell
 from ..cube.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -269,7 +269,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
+        """Source spectral model (`~gammapy.spectrum.image.SpectralModel`).
 
         Parameter errors are statistical errors only.
         """
@@ -315,7 +315,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SkySpatialModel`).
+        """Source spatial model (`~gammapy.image.image.SkySpatialModel`).
 
         TODO: add parameter errors!
         """
@@ -354,7 +354,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.cube.image.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
@@ -460,9 +460,9 @@ class SourceCatalogGammaCat(SourceCatalog):
         )
 
     def to_sky_models(self):
-        """Convert to a `~gammapy.cube.models.SkyModels`.
+        """Convert to a `~gammapy.cube.image.SkyModels`.
 
-        TODO: add an option whether to skip or raise on missing models or data.
+        TODO: add an option whether to skip or raise on missing image or data.
         """
         source_list = []
 
@@ -486,7 +486,7 @@ class GammaCatDataCollection:
 
     Holds a `GammaCatResourceIndex` to locate resources,
     but also more info about gamma-cat, as well as methods to create
-    Gammapy objects (spectral models, flux points, lightcurves) from the datasets.
+    Gammapy objects (spectral image, flux points, lightcurves) from the datasets.
     """
 
     def __init__(self, data_index):

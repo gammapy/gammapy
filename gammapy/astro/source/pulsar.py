@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Pulsar source models."""
+"""Pulsar source image."""
 import numpy as np
 from astropy.units import Quantity
 

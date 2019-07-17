@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Table
 import astropy.units as u
-from ..models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from ..flux_point import FluxPoints
 
 

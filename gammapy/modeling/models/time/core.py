@@ -4,9 +4,9 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.utils import lazyproperty
 from astropy import units as u
 from astropy.table import Table
-from ..utils.scripts import make_path
-from ..utils.time import time_ref_from_dict
-from ..utils.fitting import Parameter, Model
+from gammapy.utils.scripts import make_path
+from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.fitting import Parameter, Model
 
 __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 
@@ -46,7 +46,7 @@ class PhaseCurveTableModel(Model):
 
         from astropy.table import Table
         from gammapy.utils.scripts import make_path
-        from gammapy.time.models import PhaseCurveTableModel
+        from gammapy.time.image import PhaseCurveTableModel
         filename = make_path('$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits')
         table = Table.read(str(filename))
         phase_curve = PhaseCurveTableModel(table, time_0=43366.275, phase_0=0.0, f0=4.367575e-7, f1=0.0, f2=0.0)
@@ -147,9 +147,9 @@ class LightCurveTableModel(Model):
     --------
     Read an example light curve object:
 
-    >>> from gammapy.time.models import LightCurveTableModel
-    >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
-    >>> light_curve = LightCurveTableModel.read(path)
+    >>> from gammapy.time.image import LightCurveTableModel
+    >>> path = image
+    >>> light_cimage LightCurveTableModel.read(path)
 
     Show basic information about the lightcurve:
 

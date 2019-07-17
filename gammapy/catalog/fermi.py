@@ -9,14 +9,14 @@ from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_inplace
 from ..maps import Map
 from ..spectrum import FluxPoints
-from ..spectrum.models import (
+from gammapy.modeling.models.spectrum.core import (
     PowerLaw,
     PowerLaw2,
     ExponentialCutoffPowerLaw3FGL,
     PLSuperExpCutoff3FGL,
     LogParabola,
 )
-from ..image.models import SkyPointSource, SkyGaussian, SkyDisk, SkyDiffuseMap
+from gammapy.modeling.models.image import SkyPointSource, SkyGaussian, SkyDisk, SkyDiffuseMap
 from ..cube.models import SkyModel
 from ..time import LightCurve
 from .core import SourceCatalog, SourceCatalogObject
@@ -282,7 +282,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.spectrum.image.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
         pars, errs = {}, {}
@@ -325,7 +325,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spatial_model(self):
         """
-        Source spatial model (`~gammapy.image.models.SkySpatialModel`).
+        Source spatial model (`~gammapy.image.image.SkySpatialModel`).
         """
         d = self.data
 
@@ -359,7 +359,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.cube.image.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
@@ -514,7 +514,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model `~gammapy.spectrum.models.SpectralModel`."""
+        """Best fit spectral model `~gammapy.spectrum.image.SpectralModel`."""
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux"]
         pars["emin"], pars["emax"] = self.energy_range
@@ -586,7 +586,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.spectrum.image.SpectralModel`)."""
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux50"]
         pars["emin"], pars["emax"] = self.energy_range
@@ -800,7 +800,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.spectrum.image.SpectralModel`)."""
         d = self.data
         spec_type = self.data["SpectrumType"].strip()
 
@@ -863,7 +863,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SkySpatialModel`)."""
+        """Source spatial model (`~gammapy.image.image.SkySpatialModel`)."""
         d = self.data
 
         pars = {}
@@ -896,7 +896,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.cube.image.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)

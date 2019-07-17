@@ -9,7 +9,7 @@ from ..utils.scripts import make_path
 from ..utils.table import table_standardise_units_copy, table_from_row_data
 from ..utils.interpolation import interpolate_likelihood_profile
 from ..utils.fitting import Dataset, Datasets, Fit
-from .models import PowerLaw, ScaleModel
+from gammapy.modeling.models.spectrum.core import PowerLaw, ScaleModel
 from .dataset import SpectrumDatasetOnOff
 
 __all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
@@ -97,7 +97,7 @@ class FluxPoints:
         from astropy import units as u
         from astropy.table import Table
         from gammapy.spectrum import FluxPoints
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.spectrum.image import PowerLaw
 
         table = Table()
         pwl = PowerLaw()
@@ -320,7 +320,7 @@ class FluxPoints:
         ----------
         sed_type : {'dnde'}
              SED type to convert to.
-        model : `~gammapy.spectrum.models.SpectralModel`
+        model : `~gammapy.spectrum.image.SpectralModel`
             Spectral model assumption.  Note that the value of the amplitude parameter
             does not matter. Still it is recommended to use something with the right
             scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
@@ -343,7 +343,7 @@ class FluxPoints:
         Examples
         --------
         >>> from gammapy.spectrum import FluxPoints
-        >>> from gammapy.spectrum.models import PowerLaw
+        >>> from gammapy.spectrum.image import PowerLaw
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> model = PowerLaw(index=2.2)
@@ -1133,7 +1133,7 @@ class FluxPointsDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.spectrum.image.SpectralModel`
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
@@ -1151,7 +1151,7 @@ class FluxPointsDataset(Dataset):
         from astropy import units as u
         from gammapy.spectrum import FluxPoints, FluxPointsDataset
         from gammapy.utils.fitting import Fit
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.spectrum.image import PowerLaw
 
         filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)

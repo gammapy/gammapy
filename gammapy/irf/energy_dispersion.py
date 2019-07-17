@@ -477,7 +477,7 @@ class EnergyDispersion:
         bias_energy : `~astropy.unit.Quantity`
             Reconstructed energy corresponding to the given bias.
         """
-        from ..spectrum.models import TableModel
+        from gammapy.modeling.models.spectrum.core import TableModel
 
         e_true = self.e_true.center
         values = self.get_bias(e_true)

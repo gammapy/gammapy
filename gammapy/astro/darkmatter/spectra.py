@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.table import Table
 from ...utils.scripts import make_path
 from ...utils.fitting import Parameter
-from ...spectrum.models import SpectralModel, TableModel
+from gammapy.modeling.models.spectrum.core import SpectralModel, TableModel
 
 __all__ = ["PrimaryFlux", "DMAnnihilation"]
 
@@ -13,10 +13,10 @@ __all__ = ["PrimaryFlux", "DMAnnihilation"]
 class PrimaryFlux:
     """DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models by Cirelli et al. (2016). All available
+    Based on the precomputed image by Cirelli et al. (2016). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
-    `~gammapy.spectrum.models.TableModel` for a chosen dark matter mass and
+    `~gammapy.spectrum.image.TableModel` for a chosen dark matter mass and
     annihilation channel.
 
     References
@@ -114,7 +114,7 @@ class PrimaryFlux:
 
     @property
     def table_model(self):
-        """Spectrum as `~gammapy.spectrum.models.TableModel`."""
+        """Spectrum as `~gammapy.spectrum.image.TableModel`."""
         subtable = self.table[self.table["mDM"] == self.mDM.value]
         energies = (10 ** subtable["Log[10,x]"]) * self.mDM
         channel_name = self.channel_registry[self.channel]
@@ -143,7 +143,7 @@ class DMAnnihilation(SpectralModel):
     scale : float
         Scale parameter for model fitting
     jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.image.models.SkyPointSource` spatial model is used
+        Integrated J-Factor needed when `~gammapy.image.image.SkyPointSource` spatial model is used
     z: float
         Redshift value
     k: int

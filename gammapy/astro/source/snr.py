@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Supernova remnant (SNR) source models."""
+"""Supernova remnant (SNR) source image."""
 import numpy as np
 from astropy.units import Quantity
 import astropy.constants as const

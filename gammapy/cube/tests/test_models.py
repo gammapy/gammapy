@@ -8,8 +8,8 @@ from ...maps import MapAxis, WcsGeom, Map
 from ...irf.energy_dispersion import EnergyDispersion
 from ...cube.psf_kernel import PSFKernel
 from ...cube.models import SkyDiffuseCube, BackgroundModel, BackgroundModels
-from ...image.models import SkyGaussian
-from ...spectrum.models import PowerLaw
+from gammapy.modeling.models.image import SkyGaussian
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from ..fit import MapEvaluator
 from ..models import SkyModel, SkyModels
 

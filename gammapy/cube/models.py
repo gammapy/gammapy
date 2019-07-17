@@ -37,19 +37,19 @@ class SkyModelBase(Model):
 
 
 class SkyModels:
-    """Collection of `~gammapy.cube.models.SkyModel`
+    """Collection of `~gammapy.cube.image.SkyModel`
 
     Parameters
     ----------
-    skymodels : list of `~gammapy.cube.models.SkyModel`
-        Sky models
+    skymodels : list of `~gammapy.cube.image.SkyModel`
+        Sky image
 
     Examples
     --------
     Read from an XML file::
 
         from gammapy.cube import SkyModels
-        filename = '$GAMMAPY_DATA/tests/models/fermi_model.xml'
+        filename = '$GAMMAPY_DATA/tests/image/fermi_model.xml'
         sourcelib = SkyModels.read(filename)
     """
 
@@ -95,7 +95,7 @@ class SkyModels:
     def read(cls, filename):
         """Read from XML file.
 
-        The XML definition of some models is uncompatible with the models
+        The XML definition of some image is uncompatible with the image
         currently implemented in gammapy. Therefore the following modifications
         happen to the XML model definition
 
@@ -174,9 +174,9 @@ class SkyModel(SkyModelBase):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.image.models.SkySpatialModel`
+    spatial_model : `~gammapy.image.image.SkySpatialModel`
         Spatial model (must be normalised to integrate to 1)
-    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+    spectral_model : `~gammapy.spectrum.image.SpectralModel`
         Spectral model
     name : str
         Model identifier
@@ -195,17 +195,17 @@ class SkyModel(SkyModelBase):
 
     @property
     def spatial_model(self):
-        """`~gammapy.image.models.SkySpatialModel`"""
+        """`~gammapy.image.image.SkySpatialModel`"""
         return self._spatial_model
 
     @property
     def spectral_model(self):
-        """`~gammapy.spectrum.models.SpectralModel`"""
+        """`~gammapy.spectrum.image.SpectralModel`"""
         return self._spectral_model
 
     @spectral_model.setter
     def spectral_model(self, model):
-        """`~gammapy.spectrum.models.SpectralModel`"""
+        """`~gammapy.spectrum.image.SpectralModel`"""
         self._spectral_model = model
         self._parameters = Parameters(
             self.spatial_model.parameters.parameters
@@ -267,7 +267,7 @@ class SkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis. Use `~gammapy.image.models.SkyDiffuseMap`
+    This is for a 3D map with an energy axis. Use `~gammapy.image.image.SkyDiffuseMap`
     for 2D maps.
 
     Parameters
@@ -408,11 +408,11 @@ class BackgroundModel(Model):
     def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, **kwargs):
         """Create background model from sky model by applying IRFs.
 
-        Typically used for diffuse Galactic or constant emission models.
+        Typically used for diffuse Galactic or constant emission image.
 
         Parameters
         ----------
-        skymodel : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyDiffuseCube`
+        skymodel : `~gammapy.cube.image.SkyModel` or `~gammapy.cube.image.SkyDiffuseCube`
             Sky model
         exposure : `~gammapy.maps.Map`
             Exposure map
@@ -441,12 +441,12 @@ class BackgroundModel(Model):
 
 
 class BackgroundModels(Model):
-    """Background models.
+    """Background image.
 
     Parameters
     ----------
     models : list of `BackgroundModel`
-        List of background models.
+        List of background image.
     """
 
     __slots__ = ["models", "_parameters"]
@@ -460,7 +460,7 @@ class BackgroundModels(Model):
         super().__init__(parameters)
 
     def evaluate(self):
-        """Evaluate background models."""
+        """Evaluate background image."""
         for idx, model in enumerate(self.models):
             if idx == 0:
                 vals = model.evaluate()

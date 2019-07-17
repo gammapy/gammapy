@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Simple models for cosmic ray spectra at Earth.
+"""Simple image for cosmic ray spectra at Earth.
 
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
 
 from astropy import units as u
-from .models import PowerLaw, SpectralLogGaussian
+from gammapy.modeling.models.spectrum.core import PowerLaw, SpectralLogGaussian
 
 __all__ = ["cosmic_ray_spectrum"]
 

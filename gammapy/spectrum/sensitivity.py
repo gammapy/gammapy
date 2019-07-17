@@ -2,7 +2,7 @@
 from astropy.table import Table, Column
 import astropy.units as u
 from ..stats import excess_matching_significance_on_off
-from .models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from .utils import SpectrumEvaluator
 
 __all__ = ["SensitivityEstimator"]

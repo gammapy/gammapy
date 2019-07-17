@@ -7,7 +7,7 @@ from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.random import get_random_state
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...utils.fitting import Fit
-from ..models import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
 from ...spectrum import (
     SpectrumDatasetOnOff,
     SpectrumDataset,

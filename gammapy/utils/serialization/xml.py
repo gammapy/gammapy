@@ -12,8 +12,8 @@ import astropy.units as u
 from ...extern import xmltodict
 from ..fitting import Parameter, Parameters
 from ...maps import Map
-from ...image import models as spatial
-from ...spectrum import models as spectral
+from gammapy.modeling.models import image as spatial
+from gammapy.modeling.models.spectrum import core as spectral
 from ...cube.models import SkyModels, SkyModel
 
 log = logging.getLogger(__name__)
@@ -140,7 +140,7 @@ model_registry["spectral"]["Constant"] = model_registry["spectral"]["ConstantVal
 
 
 class UnknownModelError(ValueError):
-    """Error when encountering unknown models."""
+    """Error when encountering unknown image."""
 
 
 class UnknownParameterError(ValueError):
@@ -149,7 +149,7 @@ class UnknownParameterError(ValueError):
 
 def xml_to_sky_models(xml):
     """
-    Convert XML to `~gammapy.cube.models.SkyModelList`
+    Convert XML to `~gammapy.cube.image.SkyModelList`
     """
     full_dict = xmltodict.parse(xml)
     skymodels = list()
@@ -163,12 +163,12 @@ def xml_to_sky_models(xml):
 
 def xml_to_skymodel(xml):
     """
-    Convert XML to `~gammapy.cube.models.SkyModel`
+    Convert XML to `~gammapy.cube.image.SkyModel`
     """
     type_ = xml["@type"]
     # TODO: Support ctools radial acceptance
     if type_ == "RadialAcceptance":
-        log.warning("Radial acceptance models are not supported")
+        log.warning("Radial acceptance image are not supported")
         return None
 
     name = xml["@name"]
@@ -179,8 +179,8 @@ def xml_to_skymodel(xml):
 
 def xml_to_model(xml, which):
     """
-    Convert XML to `~gammapy.image.models.SkySpatialModel` or
-    `~gammapy.spectrum.models.SpectralModel`
+    Convert XML to `~gammapy.image.image.SkySpatialModel` or
+    `~gammapy.spectrum.image.SpectralModel`
     """
     type_ = xml["@type"]
 
@@ -210,7 +210,7 @@ def xml_to_model(xml, which):
         model = model(**kwargs)
         model.parameters = parameters
 
-        # Special case models for which the XML definition does not map one to
+        # Special case image for which the XML definition does not map one to
         # one to the gammapy model definition
         if type_ == "PowerLaw":
             model.parameters["index"].value *= -1
@@ -263,7 +263,7 @@ def xml_to_parameters(xml, which, type_):
 
 def sky_models_to_xml(sourcelib):
     """
-    Convert `~gammapy.cube.models.SkyModels` to XML
+    Convert `~gammapy.cube.image.SkyModels` to XML
     """
     xml = '<?xml version="1.0" encoding="utf-8"?>\n'
     xml += '<source_library title="source library">\n'
@@ -276,7 +276,7 @@ def sky_models_to_xml(sourcelib):
 
 def skymodel_to_xml(skymodel):
     """
-    Convert `~gammapy.cube.models.SkyModel` to XML
+    Convert `~gammapy.cube.image.SkyModel` to XML
     """
     if "Diffuse" in str(skymodel):
         type_ = "DiffuseSource"
@@ -294,8 +294,8 @@ def skymodel_to_xml(skymodel):
 
 def model_to_xml(model, which):
     """
-    Convert `~gammapy.image.models.SkySpatialModel` or
-    `~gammapy.spectrum.models.SpectralModel` to XML
+    Convert `~gammapy.image.image.SkySpatialModel` or
+    `~gammapy.spectrum.image.SpectralModel` to XML
     """
     tag = "spatialModel" if which == "spatial" else "spectrum"
 

@@ -6,7 +6,7 @@ import astropy.units as u
 from ..utils.gauss import Gauss2DPDF
 from ..maps import Map, WcsGeom
 from ..irf import TablePSF
-from ..spectrum.models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 
 __all__ = ["PSFKernel"]
 
@@ -273,7 +273,7 @@ class PSFKernel:
         ----------
         exposures : `~numpy.ndarray`
             An array of exposures for the same true energies as the PSF kernel
-        spectrum : `~gammapy.spectrum.models.SpectralModel`
+        spectrum : `~gammapy.spectrum.image.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
 

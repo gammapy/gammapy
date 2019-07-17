@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Spectral models for Gammapy."""
+"""Spectral image for Gammapy."""
 import operator
 import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
-from ..utils.energy import energy_logspace
-from ..utils.scripts import make_path
-from ..utils.fitting import Parameter, Parameters, Model
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from .utils import integrate_spectrum
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.scripts import make_path
+from gammapy.utils.fitting import Parameter, Parameters, Model
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.spectrum.utils import integrate_spectrum
 
 __all__ = [
     "SpectralModel",
@@ -37,7 +37,7 @@ class SpectralModel(Model):
     Derived classes should store their parameters as
     `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
-    `~gammapy.spectrum.models.PowerLaw`.
+    `~gammapy.spectrum.image.PowerLaw`.
     """
 
     def __call__(self, energy):
@@ -245,7 +245,7 @@ class SpectralModel(Model):
         By default a log-log scaling of the axes is used, if you want to change
         the y axis scaling to linear you can use::
 
-            from gammapy.spectrum.models import ExponentialCutoffPowerLaw
+            from gammapy.spectrum.image import ExponentialCutoffPowerLaw
             from astropy import units as u
 
             pwl = ExponentialCutoffPowerLaw()
@@ -460,7 +460,7 @@ class ConstantModel(SpectralModel):
 
 
 class CompoundSpectralModel(SpectralModel):
-    """Arithmetic combination of two spectral models.
+    """Arithmetic combination of two spectral image.
 
     Itself again a spectral model.
     """
@@ -516,7 +516,7 @@ class PowerLaw(SpectralModel):
     This is how to plot the default `PowerLaw` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.spectrum.image import PowerLaw
 
         pwl = PowerLaw()
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -731,7 +731,7 @@ class PowerLaw2(SpectralModel):
     This is how to plot the default `PowerLaw2` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PowerLaw2
+        from gammapy.spectrum.image import PowerLaw2
 
         pwl2 = PowerLaw2()
         pwl2.plot(energy_range=[0.1, 100] * u.TeV)
@@ -859,7 +859,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     This is how to plot the default `ExponentialCutoffPowerLaw` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import ExponentialCutoffPowerLaw
+        from gammapy.spectrum.image import ExponentialCutoffPowerLaw
 
         ecpl = ExponentialCutoffPowerLaw()
         ecpl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -938,7 +938,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
+        from gammapy.spectrum.image import ExponentialCutoffPowerLaw3FGL
 
         ecpl_3fgl = ExponentialCutoffPowerLaw3FGL()
         ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1001,7 +1001,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     This is how to plot the default `PLSuperExpCutoff3FGL` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PLSuperExpCutoff3FGL
+        from gammapy.spectrum.image import PLSuperExpCutoff3FGL
 
         secpl_3fgl = PLSuperExpCutoff3FGL()
         secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1057,7 +1057,7 @@ class LogParabola(SpectralModel):
     The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
     package>`_ package, however, uses :math:`log_{10}`. If you have
     parametrization based on :math:`log_{10}` you can use the
-    :func:`~gammapy.spectrum.models.LogParabola.from_log10` method.
+    :func:`~gammapy.spectrum.image.LogParabola.from_log10` method.
 
     Parameters
     ----------
@@ -1075,7 +1075,7 @@ class LogParabola(SpectralModel):
     This is how to plot the default `LogParabola` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import LogParabola
+        from gammapy.spectrum.image import LogParabola
 
         log_parabola = LogParabola()
         log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1138,7 +1138,7 @@ class TableModel(SpectralModel):
     energy array.
 
     Class implementation follows closely what has been done in
-    `naima.models.TableModel`
+    `naima.image.TableModel`
 
     Parameters
     ----------
@@ -1201,7 +1201,7 @@ class TableModel(SpectralModel):
         --------
         Fill table from an EBL model (Franceschini, 2008)
 
-        >>> from gammapy.spectrum.models import TableModel
+        >>> from gammapy.spectrum.image import TableModel
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
         """
@@ -1236,7 +1236,7 @@ class TableModel(SpectralModel):
     def read_fermi_isotropic_model(cls, filename, **kwargs):
         """Read Fermi isotropic diffuse model.
 
-        See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
+        See `LAT Background image <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
 
         Parameters
         ----------
@@ -1278,7 +1278,7 @@ class ScaleModel(SpectralModel):
 
 
 class Absorption:
-    r"""Gamma-ray absorption models.
+    r"""Gamma-ray absorption image.
 
     Parameters
     ----------
@@ -1291,14 +1291,14 @@ class Absorption:
 
     Examples
     --------
-    Create and plot EBL absorption models for a redshift of 0.5:
+    Create and plot EBL absorption image for a redshift of 0.5:
 
     .. plot::
         :include-source:
 
         import matplotlib.pyplot as plt
         import astropy.units as u
-        from gammapy.spectrum.models import Absorption
+        from gammapy.spectrum.image import Absorption
 
         # Load tables for z=0.5
         redshift = 0.5
@@ -1319,7 +1319,7 @@ class Absorption:
         ax.set_xlim(energy_range.value)  # we get ride of units
         ax.set_ylim([1.e-4, 2.])
         ax.set_yscale('log')
-        ax.set_title('EBL models (z=' + str(redshift) + ')')
+        ax.set_title('EBL image (z=' + str(redshift) + ')')
         plt.grid(which='both')
         plt.legend(loc='best') # legend
 
@@ -1393,7 +1393,7 @@ class Absorption:
 
     @classmethod
     def read_builtin(cls, name):
-        """Read one of the built-in absorption models.
+        """Read one of the built-in absorption image.
 
         Parameters
         ----------
@@ -1417,7 +1417,7 @@ class Absorption:
         return cls.read(models[name])
 
     def table_model(self, parameter, unit="TeV"):
-        """Table model for a given parameter (`~gammapy.spectrum.models.TableModel`).
+        """Table model for a given parameter (`~gammapy.spectrum.image.TableModel`).
 
         Parameters
         ----------
@@ -1440,9 +1440,9 @@ class AbsorbedSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+    spectral_model : `~gammapy.spectrum.image.SpectralModel`
         Spectral model.
-    absorption : `~gammapy.spectrum.models.Absorption`
+    absorption : `~gammapy.spectrum.image.Absorption`
         Absorption model.
     parameter : float
         parameter value for absorption model
@@ -1482,9 +1482,9 @@ class AbsorbedSpectralModel(SpectralModel):
 
 
 class NaimaModel(SpectralModel):
-    r"""A wrapper for Naima models.
+    r"""A wrapper for Naima image.
 
-    This class provides an interface with the models defined in the `~naima.models` module.
+    This class provides an interface with the image defined in the `~naima.image` module.
     The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
     radiative model instance, used to compute the non-thermal emission from populations of
     relativistic electrons or protons due to interactions with the ISM or with radiation and magnetic fields.
@@ -1500,14 +1500,14 @@ class NaimaModel(SpectralModel):
 
     Parameters
     ----------
-    radiative_model : `~naima.models.BaseRadiative`
-        An instance of a radiative model defined in `~naima.models`
+    radiative_model : `~naima.image.BaseRadiative`
+        An instance of a radiative model defined in `~naima.image`
     distance : `~astropy.units.Quantity`, optional
         Distance to the source. If set to 0, the intrinsic differential
         luminosity will be returned. Default is 1 kpc
     seed : str or list of str, optional
         Seed photon field(s) to be considered for the `radiative_model` flux computation,
-        in case of a `~naima.models.InverseCompton` model. It can be a subset of the
+        in case of a `~naima.image.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
 
@@ -1520,12 +1520,12 @@ class NaimaModel(SpectralModel):
         :include-source:
 
         import naima
-        from gammapy.spectrum.models import NaimaModel
+        from gammapy.spectrum.image import NaimaModel
         import astropy.units as u
         import matplotlib.pyplot as plt
 
 
-        particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
+        particle_distribution = naima.image.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
         radiative_model = naima.radiative.InverseCompton(
             particle_distribution,
             seed_photon_fields=[
@@ -1564,7 +1564,7 @@ class NaimaModel(SpectralModel):
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
 
-        # This ensures the support of naima.models.TableModel
+        # This ensures the support of naima.image.TableModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
         else:
@@ -1585,10 +1585,10 @@ class NaimaModel(SpectralModel):
         super().__init__(parameters)
 
     def evaluate_error(self, energy):
-        # This method will need to be overridden here, since the radiative models in naima don't
+        # This method will need to be overridden here, since the radiative image in naima don't
         # support the evaluation on energy values that is performed in the base class method
         raise NotImplementedError(
-            "Error evaluation for naima models currently not supported."
+            "Error evaluation for naima image currently not supported."
         )
 
     def evaluate(self, energy, **kwargs):
@@ -1599,7 +1599,7 @@ class NaimaModel(SpectralModel):
         distance = self.distance.quantity
 
         # Flattening the input energy list and later reshaping the flux list
-        # prevents some radiative models from displaying broadcasting problems.
+        # prevents some radiative image from displaying broadcasting problems.
         if self.seed is None:
             dnde = self.radiative_model.flux(energy.flatten(), distance=distance)
         else:
@@ -1639,7 +1639,7 @@ class SpectralGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.spectrum.models import SpectralGaussian
+        from gammapy.spectrum.image import SpectralGaussian
 
         gaussian = SpectralGaussian()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1749,7 +1749,7 @@ class SpectralLogGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.spectrum.models import SpectralLogGaussian
+        from gammapy.spectrum.image import SpectralLogGaussian
 
         gaussian = SpectralLogGaussian()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)

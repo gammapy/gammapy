@@ -6,7 +6,7 @@ from astropy import units as u
 from astropy.time import Time
 from ...utils.testing import assert_quantity_allclose, assert_time_allclose
 from ...utils.testing import requires_data, requires_dependency
-from ...spectrum.models import (
+from gammapy.modeling.models.spectrum.core import (
     PowerLaw,
     LogParabola,
     ExponentialCutoffPowerLaw3FGL,

@@ -520,7 +520,7 @@ class Parameters:
         --------
         ::
 
-            from gammapy.spectrum.models import PowerLaw
+            from gammapy.spectrum.image import PowerLaw
             pwl = PowerLaw(index=2)
             with pwl.parameters.restore_values:
                 pwl.parameters["index"].value = 3

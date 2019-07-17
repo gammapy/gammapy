@@ -10,8 +10,8 @@ from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
 from ...maps import MapAxis, WcsGeom, Map
-from ...image.models import SkyGaussian
-from ...spectrum.models import PowerLaw
+from gammapy.modeling.models.image import SkyGaussian
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from ..models import SkyModel, BackgroundModel
 from .. import MapDataset, make_map_exposure_true_energy, PSFKernel
 

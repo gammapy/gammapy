@@ -702,7 +702,7 @@ class LightCurveEstimator:
         ----------
         time_intervals : list of `~astropy.time.Time`
             List of time intervals
-        spectral_model : `~gammapy.spectrum.models.SpectralModel`
+        spectral_model : `~gammapy.spectrum.image.SpectralModel`
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)
@@ -738,7 +738,7 @@ class LightCurveEstimator:
         ----------
         time_interval : `~astropy.time.Time`
             Time interval (2-element array, or a tuple of Time objects)
-        spectral_model : `~gammapy.spectrum.models.SpectralModel`
+        spectral_model : `~gammapy.spectrum.image.SpectralModel`
             Spectral model
         energy_range : `~astropy.units.Quantity`
             True energy range to evaluate integrated flux (true energy)

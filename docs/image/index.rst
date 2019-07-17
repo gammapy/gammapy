@@ -55,7 +55,3 @@ Reference/API
 .. automodapi:: gammapy.image
     :no-inheritance-diagram:
     :include-all-objects:
-
-.. automodapi:: gammapy.image.models
-    :no-inheritance-diagram:
-    :include-all-objects:

@@ -27,8 +27,8 @@ class MapDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyModels`
-        Source sky models.
+    model : `~gammapy.cube.image.SkyModel` or `~gammapy.cube.image.SkyModels`
+        Source sky image.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
     exposure : `~gammapy.maps.WcsNDMap`
@@ -39,8 +39,8 @@ class MapDataset(Dataset):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background_model : `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModels`
-        Background models to use for the fit.
+    background_model : `~gammapy.cube.image.BackgroundModel` or `~gammapy.cube.image.BackgroundModels`
+        Background image to use for the fit.
     likelihood : {"cash", "cstat"}
         Likelihood function to use for the fit.
     evaluation_mode : {"local", "global"}
@@ -317,7 +317,7 @@ class MapEvaluator:
 
     Parameters
     ----------
-    model : `~gammapy.cube.models.SkyModel`
+    model : `~gammapy.cube.image.SkyModel`
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map

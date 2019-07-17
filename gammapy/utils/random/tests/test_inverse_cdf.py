@@ -10,10 +10,10 @@ from astropy.time import Time
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from ....cube import MapEvaluator
 from ....cube.models import SkyModel
-from ....image.models import SkyGaussian
+from gammapy.modeling.models.image import SkyGaussian
 from ....maps import Map, MapAxis
-from ....spectrum.models import PowerLaw
-from ....time.models import LightCurveTableModel
+from gammapy.modeling.models.spectrum.core import PowerLaw
+from gammapy.modeling.models.time.core import LightCurveTableModel
 
 
 def uniform_dist(x, a, b):

@@ -114,7 +114,7 @@ class Gauss2DPDF:
 
         Returns
         -------
-        gauss_convolve : `~gammapy.image.models.Gauss2DPDF`
+        gauss_convolve : `~gammapy.image.image.Gauss2DPDF`
             Convolution of both Gaussians.
         """
         sigma = np.asarray(sigma, dtype=np.float64)
@@ -240,7 +240,7 @@ class MultiGauss2D:
 
         Returns
         -------
-        norm_multigauss : `~gammapy.image.models.MultiGauss2D`
+        norm_multigauss : `~gammapy.image.image.MultiGauss2D`
            normalized function
         """
         sum = self.integral
@@ -345,7 +345,7 @@ class MultiGauss2D:
 
         Returns
         -------
-        new_multi_gauss_2d : `~gammapy.image.models.MultiGauss2D`
+        new_multi_gauss_2d : `~gammapy.image.image.MultiGauss2D`
             Convolution as new MultiGauss2D
         """
         sigma = np.asarray(sigma, dtype=np.float64)

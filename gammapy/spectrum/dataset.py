@@ -28,7 +28,7 @@ class SpectrumDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.spectrum.image.SpectralModel`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
@@ -253,7 +253,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.spectrum.image.SpectralModel`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         ON Counts spectrum

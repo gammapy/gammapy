@@ -19,7 +19,7 @@ class SpectrumSimulation:
     ----------
     livetime : `~astropy.units.Quantity`
         Livetime
-    source_model : `~gammapy.spectrum.models.SpectralModel`
+    source_model : `~gammapy.spectrum.image.SpectralModel`
         Source model
     aeff : `~gammapy.irf.EffectiveAreaTable`, optional
         Effective Area
@@ -27,7 +27,7 @@ class SpectrumSimulation:
         Energy Dispersion
     e_true : `~astropy.units.Quantity`, optional
         Desired energy axis of the prediced counts vector if no IRFs are given
-    background_model : `~gammapy.spectrum.models.SpectralModel`, optional
+    background_model : `~gammapy.spectrum.image.SpectralModel`, optional
         Background model
     alpha : float, optional
         Exposure ratio between source and background

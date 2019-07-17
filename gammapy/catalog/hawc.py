@@ -3,7 +3,7 @@
 import numpy as np
 from astropy.table import Table
 from ..utils.scripts import make_path
-from ..spectrum.models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = ["SourceCatalog2HWC", "SourceCatalogObject2HWC"]
@@ -116,14 +116,14 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
     @property
     def spectral_models(self):
-        """Spectral models (either one or two).
+        """Spectral image (either one or two).
 
         The HAWC catalog has one or two spectral measurements for each source.
 
         Returns
         -------
-        models : list
-            List of `~gammapy.spectrum.models.SpectralModel`
+        image : list
+            List of `~gammapy.spectrum.image.SpectralModel`
         """
         models = [self._get_spectral_model(0)]
 
@@ -132,7 +132,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
 
         return models
 
-    # TODO: add spatial models
+    # TODO: add spatial image
 
     # TODO: add sky model property
 

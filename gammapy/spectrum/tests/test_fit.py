@@ -8,11 +8,11 @@ from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable
 from ...spectrum import (
     CountsSpectrum,
-    models,
     SpectrumDatasetOnOff,
     SpectrumDataset,
     SpectrumDatasetOnOffStacker,
 )
+from gammapy.modeling.models.spectrum import core
 
 
 @requires_dependency("sherpa")
@@ -22,10 +22,10 @@ class TestFit:
     def setup(self):
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = models.PowerLaw(
+        self.source_model = core.PowerLaw(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = models.PowerLaw(
+        self.bkg_model = core.PowerLaw(
             index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
         )
 
@@ -109,11 +109,11 @@ class TestSpectralFit:
         obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
-        self.pwl = models.PowerLaw(
+        self.pwl = core.PowerLaw(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
-        self.ecpl = models.ExponentialCutoffPowerLaw(
+        self.ecpl = core.ExponentialCutoffPowerLaw(
             index=2,
             amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,

@@ -276,7 +276,7 @@ class EffectiveAreaTable:
         energy : `~astropy.units.Quantity`
             Energy corresponding to the given aeff.
         """
-        from ..spectrum.models import TableModel
+        from gammapy.modeling.models.spectrum.core import TableModel
 
         energy = self.energy.center
 

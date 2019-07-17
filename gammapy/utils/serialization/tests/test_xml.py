@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from ...testing import requires_data
-from ....spectrum import models as spectral
-from ....image import models as spatial
+from gammapy.modeling.models.spectrum import core as spectral
+from gammapy.modeling.models import image as spatial
 from ....cube.models import SkyModels
 from ...serialization import xml_to_sky_models, UnknownModelError
 
@@ -118,8 +118,8 @@ def test_complex():
 @pytest.mark.parametrize(
     "filename",
     [
-        "$GAMMAPY_DATA/tests/models/fermi_model.xml",
-        "$GAMMAPY_DATA/tests/models/shell.xml",
+        "$GAMMAPY_DATA/tests/image/fermi_model.xml",
+        "$GAMMAPY_DATA/tests/image/shell.xml",
     ],
 )
 def test_models(filename, tmpdir):
@@ -138,7 +138,7 @@ def test_models(filename, tmpdir):
 @pytest.mark.xfail(reason="Need to improve XML read")
 @requires_data()
 def test_sky_models_old_xml_file():
-    filename = "$GAMMAPY_DATA/tests/models/shell.xml"
+    filename = "$GAMMAPY_DATA/tests/image/shell.xml"
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 2
@@ -154,7 +154,7 @@ def test_sky_models_old_xml_file():
 @pytest.mark.xfail(reason="Need to improve XML read")
 @requires_data()
 def test_sky_models_new_xml_file():
-    filename = "$GAMMAPY_DATA/tests/models/ctadc_skymodel_gps_sources_bright.xml"
+    filename = "$GAMMAPY_DATA/tests/image/ctadc_skymodel_gps_sources_bright.xml"
     sources = SkyModels.read(filename)
 
     assert len(sources.source_list) == 47

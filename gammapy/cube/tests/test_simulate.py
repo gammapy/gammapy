@@ -6,8 +6,8 @@ import astropy.units as u
 from ...utils.testing import requires_data
 from ...irf import load_cta_irfs
 from ...maps import WcsGeom, MapAxis
-from ...spectrum.models import PowerLaw
-from ...image.models import SkyGaussian
+from gammapy.modeling.models.spectrum.core import PowerLaw
+from gammapy.modeling.models.image import SkyGaussian
 from ...cube.models import SkyModel, SkyModels
 from ...cube import MapDataset
 from ..simulate import simulate_dataset

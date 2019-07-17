@@ -5,7 +5,7 @@ import astropy.units as u
 from ...utils.energy import energy_logspace
 from ...irf import EnergyDispersion, EffectiveAreaTable
 from .. import SpectrumExtraction, SpectrumSimulation
-from ..models import PowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw
 
 
 class TestSpectrumSimulation:

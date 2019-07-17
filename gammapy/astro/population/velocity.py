@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Pulsar velocity distribution models."""
+"""Pulsar velocity distribution image."""
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity

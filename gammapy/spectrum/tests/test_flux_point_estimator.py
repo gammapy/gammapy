@@ -6,12 +6,12 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EffectiveAreaTable, load_cta_irfs
-from ..models import PowerLaw, ExponentialCutoffPowerLaw
+from gammapy.modeling.models.spectrum.core import PowerLaw, ExponentialCutoffPowerLaw
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointsEstimator
 from ...cube import simulate_dataset
 from ...cube.models import SkyModel
-from ...image.models import SkyGaussian
+from gammapy.modeling.models.image import SkyGaussian
 from ...maps import MapAxis, WcsGeom
 
 

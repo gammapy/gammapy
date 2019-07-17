@@ -8,7 +8,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.testing import requires_dependency
 from ...irf import EffectiveAreaTable, EnergyDispersion
 from ...spectrum import integrate_spectrum, SpectrumEvaluator
-from ..models import ExponentialCutoffPowerLaw, PowerLaw, TableModel, PowerLaw2
+from gammapy.modeling.models.spectrum.core import ExponentialCutoffPowerLaw, PowerLaw, TableModel, PowerLaw2
 
 
 def test_integrate_spectrum():
