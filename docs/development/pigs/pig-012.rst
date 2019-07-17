@@ -27,47 +27,115 @@ code-base without breaking user-defined workflows or recipes based on this API.
 Proposal
 ========
 
+Design and develop a High-level interface API
+---------------------------------------------
 
-**Develop a High-level interface API.**
-
-We will develop a High-level interface Python API using a param-value configuration file 
+We will develop a High-level interface Python API which uses a param-value configuration file 
 defined by the user. This API would be used in Python scripts, notebooks or in IPython 
 sessions to perform simple and most common IACT analysis.
 
 We see then two main not exclusive options on how to use the High Level Interface API:
 
- - Within an IPython session or notebook using a main object to perform specific tasks in an analysis process
- - In a Python script or notebook declaring the orchestration of these tasks for an automatized process 
+- Within an IPython session or notebook using a manager object to perform specific tasks in an analysis process
+- In a Python script or notebook declaring the orchestration of these tasks for an automatized process 
 
-This High Level Interface API is similar to what it is done in `Fermipy`_, including
+This High-level interface API is similar to what it is done in `Fermipy`_, including
 also the options to save and recover session states, as well as serialization of intermediate
-data products. It is flexible enough to allow the user to work with the API at any stage of the
-analysis process, and not only from start to end.  
+data products and logging. It is flexible enough to allow the user to work with the API at any stage of the
+analysis process, and not only from the very start to the very end.  
 
-More details will be incorporated to this PIG from these notebooks:
+**Use cases**
 
- - `PIG 12 examples`_
- - `PIG 12 demo`_
+The use cases covered are in the scope of a single analysis and model, not parameterised variations, within a single region (e.g. 10 deg region with 5 sources).
+
+The main use cases for analysis forseen are:
+
+- 3D map analysis
+- 2D map analysis (same as 3D?)
+- 1D spec analysis
+
+TODO
+
+    Making an SED is still part of one Analysis, because many SED methods require the full model and all energy data. 
+    Making a lightcurve could be part of one Analysis (like it is in Fermi), or could be a higher-level, creating on Analysis and running it for each time bin. This exercise of pro / con is left to the LC PIG. Christoph expects that datasets serialisation is much simpler if LC / time bins isn't part of serialisation for one analysis, i.e. it would be something higher-level.
+    Source detection with iteratively adding sources is not the responsibility of Analysis. It's higher-level, could use Analysis or not, not discussed here.
+
+**Configuration file**
+
+.. code::
+
+    analysis:
+        process:
+            # add options to allow either in-memory or disk-based processing
+            out_folder: "."  # default is current working directory
+            store_per_obs: {true, false}
+        reduce:
+            type: {"1D, "3D"}
+            stacked: {true, false}
+            background: {"irf", "reflected", "ring"}
+            roi: max_offset
+            exclusion: exclusion.fits
+        fit:
+            energy_min, energy_max
+        logging:
+            level: debug
+
+    dataspace:
+        spatial: center, width, binsz
+        energy: min, max, nbins
+        time: min, max
+        # PSF RAD and EDISP MIGRA not exposed for now
+        # Per-obs energy_safe and roi_max ?
+
+    model:
+        # Model configuration will mostly be designed in different PIG
+        sources:
+            source_1: spectrum: powerlaw, spatial: shell
+            diffuse: gal_diffuse.fits
+        background:
+            IRF
+
+**API overall structure**
+
+- The Analysis class
+
+- The Tools classes
+
+- Control dispatching among manager and tools
+
+**Serialisation**
+
+**Session workflow**
+      
+
+**More info**
+
+Details discussed at the first stage of the design may be found in these notebooks:
+
+- `PIG 12 examples`_
+- `PIG 12 demo`_
  
-**Explore the use of papermill to run workflows driven by parametrized notebooks.**
+ 
+Explore the use of papermill to run workflows driven by parametrized notebooks
+------------------------------------------------------------------------------
 
 Only in the case there's still time after development of the High-level interface API, we could
 explore the use of `papermill`_ to run workflows defined in a notebook using the values of
-the paramter-value configuration file of the High-level interface API. The notebooks could
+the paramter-value configuration file defined for the High-level interface API. The notebooks could
 be provided as skeleton-templates for specific use cases or built by the user. This option 
-provides a a rich-text formatted report of the analysis process execution.
+would provide a rich-text formatted report of the analysis process execution.
 
 
 Task list
 =========
 
- - Prototype manager class, agents, tools, etc. in the a High-level interface API.
- - Define a syntax for the declaration of parameter-value pairs needed in the analysis process. 
- - Develop a small set of CLI helpers tools to i.e. dump a template config file, launch a data processing and/or analysis. 
- - Choose a small set of use cases to translate into workflows driven by a Python script an/or interactive IPython session.
- - Provide a Python script and/or notebook using the High-level interface API for each of the use cases above.
- - Choose a small set of use cases to translate into workflows driven by parametrized notebooks executed with `papermill`_
- - Provide a parametrized Jupyter notebook template for each the use cases above.
+- Prototype manager class, agents, tools, etc. in the a High-level interface API.
+- Define a syntax for the declaration of parameter-value pairs needed in the analysis process. 
+- Develop a small set of CLI helpers tools to i.e. dump a template config file, launch a data processing and/or analysis. 
+- Choose a small set of use cases to translate into workflows driven by a Python script an/or interactive IPython session.
+- Provide a Python script and/or notebook using the High-level interface API for each of the use cases above.
+- Choose a small set of use cases to translate into workflows driven by parametrized notebooks executed with `papermill`_
+- Provide a parametrized Jupyter notebook template for each the use cases above.
  
  
 What we have
