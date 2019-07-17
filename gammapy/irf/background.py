@@ -198,7 +198,7 @@ class Background3D:
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        from ..spectrum.utils import _trapz_loglog
+        from gammapy.modeling.models.spectrum.utils import _trapz_loglog
 
         data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
         return _trapz_loglog(data, energy_reco, axis=0, intervals=True)
@@ -378,7 +378,7 @@ class Background2D:
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        from ..spectrum.utils import _trapz_loglog
+        from gammapy.modeling.models.spectrum.utils import _trapz_loglog
 
         data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
         return _trapz_loglog(data, energy_reco, axis=0, intervals=True)

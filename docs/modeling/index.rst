@@ -1,4 +1,4 @@
-.. _time:
+.. _modeling:
 
 *******************************
 modeling - Modeling and fitting

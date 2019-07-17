@@ -9,7 +9,7 @@ from gammapy.utils.energy import energy_logspace
 from gammapy.utils.scripts import make_path
 from gammapy.utils.fitting import Parameter, Parameters, Model
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
-from gammapy.spectrum.utils import integrate_spectrum
+from gammapy.modeling.models.spectrum.utils import integrate_spectrum
 
 __all__ = [
     "SpectralModel",

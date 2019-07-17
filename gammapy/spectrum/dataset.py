@@ -5,7 +5,7 @@ from pathlib import Path
 from astropy import units as u
 from astropy.table import Table
 from astropy.io import fits
-from .utils import SpectrumEvaluator
+from gammapy.spectrum.core import SpectrumEvaluator
 from ..utils.scripts import make_path
 from ..utils.fitting import Dataset, Parameters
 from ..utils.fits import energy_axis_to_ebounds

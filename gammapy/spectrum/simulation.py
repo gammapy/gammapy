@@ -1,7 +1,7 @@
 # Licensed under a 3 - clause BSD style license - see LICENSE.rst
 import logging
 from ..utils.random import get_random_state
-from .utils import SpectrumEvaluator
+from gammapy.spectrum.core import SpectrumEvaluator
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
