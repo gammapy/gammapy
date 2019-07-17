@@ -39,7 +39,9 @@ Sampling methods
 ====================
 Inverse CDF sampling (inverseCDF_) is an established method to sample from discrete
 probability mass functions. However it is not the method of choice for other existing
-event samplers such as the the Fermi-LAT Science Tools (gtobsim) or CTOOLS (ctobssim).
+event samplers such as the the Fermi-LAT Science Tools (gtobsim) and CTOOLS (ctobssim).
+The inverse CDF method is also successfully used by `ASTRIsim` (_astrisim), the event
+simulator of the AGILE collaboration.
 The latter uses a combination of analytical sampling for models, where a solution
 is known (e.g. power-laws) and the rejection sampling method (rej_sampl_), where the sampling
 has to be done numerically (see an example here gammalib_).
@@ -59,9 +61,6 @@ precision. If we find the inverse CDF sampling method to be not precise enough,
 it is still possible to achieve better precision adopting the rejection sampling. This
 will not have an impact on the structure of the event-sampler as the few lines of code
 that usi the inverseCDF will be replaced by those of the rejection sample.
-
-The inverse CDF method is also successfully used by `ASTRIsim` (_astrisim), the event
-simulator of the AGILE collaboration.
 
 
 Proposal
