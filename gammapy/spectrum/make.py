@@ -2,7 +2,12 @@
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion, PixCoord
-from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
+from ..irf import (
+    PSF3D,
+    apply_containment_fraction,
+    compute_energy_thresholds,
+    EffectiveAreaTable,
+)
 from .core import CountsSpectrum
 from .dataset import SpectrumDataset
 from ..background import ReflectedRegionsFinder
@@ -71,8 +76,8 @@ class SpectrumDatasetMakerObs:
             self.on_region, self.observation.pointing_radec, binsz=self.binsz
         )
 
-    def make_cutout(self):
-        """Make a cutout encompassing the ON region"""
+    def prepare_maps(self):
+        """Make a cutout of the reference map encompassing the ON region"""
         geom = self.reference_map.geom
         mask = geom.region_mask([self.on_region], inside=True)
 
@@ -88,10 +93,22 @@ class SpectrumDatasetMakerObs:
         center_x = 0.5 * (ONpixels.x.max() + ONpixels.x.min())
         center_y = 0.5 * (ONpixels.y.max() + ONpixels.y.min())
         center = PixCoord(center_x, center_y).to_sky(geom.wcs)
-        print(max_size)
-        cutout_kwargs = {"position": center, "width": 1.1 * max_size, "mode": "partial"}
 
-        return geom.cutout(**cutout_kwargs)
+        cutout_kwargs = {"position": center, "width": 1.1 * max_size, "mode": "partial"}
+        self.cutout = geom.cutout(**cutout_kwargs)
+
+        geom_reco = self.cutout.to_cube(
+            [MapAxis.from_edges(self.e_reco, name="energy")]
+        )
+
+        geom_true = self.cutout.to_cube(
+            [MapAxis.from_edges(self.e_true, name="energy")]
+        )
+
+        # we put an artificially large offset_max
+        self.mapmaker = MapMakerObs(
+            self.observation, geom_reco, 10 * u.deg, geom_true=geom_true
+        )
 
     def make_dataset(self):
         """Create empty vector.
@@ -112,29 +129,34 @@ class SpectrumDatasetMakerObs:
         )
         self.dataset.counts.fill(on_events)
 
-    def extract_irfs(self):
-        """Extract IRFs."""
+    def extract_edisp(self):
+        """Extract edisp from IRFs."""
         offset = self.observation.pointing_radec.separation(self.on_region.center)
-        self.dataset.aeff = self.observation.aeff.to_effective_area_table(
-            offset, energy=self.e_true
-        )
         self.dataset.edisp = self.observation.edisp.to_energy_dispersion(
             offset, e_reco=self.e_reco, e_true=self.e_true
         )
 
+    def extract_aeff(self):
+        """Extract edisp from IRFs."""
+        if self.containment_correction is True:
+            offset = self.observation.pointing_radec.separation(self.on_region.center)
+            self.dataset.aeff = self.observation.aeff.to_effective_area_table(
+                offset, energy=self.e_true
+            )
+        else:
+            maps = self.mapmaker.run(["exposure"])
+            mask = self.cutout.to_image().region_mask([self.on_region])
+            exp_data = maps["exposure"].quantity[..., mask].mean(axis=1)
+
+            self.dataset.aeff = EffectiveAreaTable(
+                energy_lo=self.e_true[:-1], energy_hi=self.e_true[1:], data=exp_data
+            )
+
     def extract_bkg(self):
         """Extract background from IRF"""
-        offset = self.observation.pointing_radec.separation(self.on_region.center)
 
-        cutout_geom = self.make_cutout().to_cube(
-            [MapAxis.from_edges(self.e_reco, name="energy")]
-        )
-
-        # we put an artificially large offset_max
-        mapmaker = MapMakerObs(self.observation, cutout_geom, 10 * u.deg)
-
-        maps = mapmaker.run(["background"])
-        mask = cutout_geom.to_image().region_mask([self.on_region])
+        maps = self.mapmaker.run(["background"])
+        mask = self.cutout.to_image().region_mask([self.on_region])
         bkg_data = maps["background"].quantity[..., mask].sum(axis=1)
 
         self.dataset.background = CountsSpectrum(
@@ -144,13 +166,16 @@ class SpectrumDatasetMakerObs:
     def run(self):
         """Process the observation."""
 
-        self.extract_counts()
-        self.extract_irfs()
+        self.prepare_maps()
 
-        try:
-            self.extract_bkg()
-        except:
-            self.dataset.background = None
+        self.extract_counts()
+        self.extract_edisp()
+        self.extract_aeff()
+
+        #        try:
+        self.extract_bkg()
+        #        except:
+        #            self.dataset.background = None
 
         if self.containment_correction:
             self.apply_containment_correction()
