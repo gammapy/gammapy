@@ -127,17 +127,16 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
                 % (par.name)
             )
 
-    logging.info("List of free parameters:", labels)
+    logging.info("List of free parameters: %s" %(labels) )
     logging.info("{} walkers will run for {} steps".format(nwalkers, nrun))
-    logging.info("Parameters init value for 1st walker:", p0[0])
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, lnprob, args=[dataset], threads=threads
     )
 
     for idx, result in enumerate(sampler.sample(p0, iterations=nrun)):
-        if (idx + 1) % 100 == 0:
+        if (idx) % (nrun / 4) == 0:
             logging.info("{0:5.0%}".format(idx / nrun))
-    logging.info("Sampling completed")
+    logging.info("100% => sampling completed")
 
     return sampler
 
