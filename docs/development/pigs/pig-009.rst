@@ -29,8 +29,8 @@ events, background events, effects of instrument response functions (IRF) and
 arrival times. As underlying method for the actual event sampling we propose to
 use inverse cumulative distribution function (CDF) sampling (inverseCDF_) with finely 
 binned discrete source and background. Temporal models will be also taken into account
-and treated separately in a 1D analysis, assuming that the temporal depence of the 
-input source models factorizes.
+and time will be sampled separately in a 1D analysis, assuming that the temporal 
+depence of the input source models factorizes.
 
 A working prototype of the proposed method and API can be found in Prototype_ .
 
@@ -56,8 +56,9 @@ The precision of the inverse CDF sampling method can be controlled by the resolu
 of the input probability mass function (PMF) and is in practice only limited by the
 available memory. We will study the required bin-size of the PMFs to reach sufficient
 precision. If we find the inverse CDF sampling method to be not precise enough,
-it is still possible to achieve better precision with and combination of
-analytical and rejection sampling.
+it is still possible to achieve better precision adopting the rejection sampling. This
+will not have an impact on the structure of the event-sampler as the few lines of code
+that usi the inverseCDF will be replaced by those of the rejection sample.
 
 The inverse CDF method is also successfully used by `ASTRIsim` (_astrisim), the event
 simulator of the AGILE collaboration.
@@ -123,8 +124,8 @@ as background maps, we propose to introduce a `MapEventSampler` class. The
 responsibility of this class is to handle the physical coordinate transformations, 
 time dependence of the model, output data structures and sampling of the total 
 number of observed events.
-Starting from a predicted number of counts map, obtained through dedicated Gammapy
-classes already existing:
+Starting from a predicted number of counts map (e.g. computed by the `MapEvaluator`) 
+the code follows as:
 
 .. code::
 
@@ -206,6 +207,8 @@ This is the proposed high level API:
     dataset_sampler = MapDatasetEventSampler(dataset, pointing)
     events = dataset_sampler.sample()
 
+where `pointing` is an `~astropy.SkyCoord` object, necessary in the case the user
+wants to simulate a source in an off-axis position.
 This requires to add `t_min` and `t_max` information to `MapDataset` or maybe a 
 `MapDataset.gti` attribute, defining the GTI for the given dataset. In addition 
 it also requires to add a lightcurve model to the `SkyModel`. Alternatively the
@@ -219,8 +222,8 @@ information has to added from the outside:
 
 The `MapEventSampler` finally returns an `EventList` object and adds the following
 columns to the event table: `EVENT_ID` and `MC_ID`. Where `EVENT_ID` is a unique
-number to identify the event, while `MC_ID` is a unique ID (number or string) to
-identify the model component the event was sampled from.
+number or a string to identify the sampled event, while `MC_ID` is a unique ID 
+(number or string) to identify the model component the event was sampled from.
 
 The `MapDatasetSampler` should also fill the mandatory header information
 for event list files decribed on `gamma-astro-data-formats`_.
@@ -248,8 +251,8 @@ the over-all correctness of the simulated data. Later this prototype can be
 developed further into a full simulation / fitting continuous integration system.
 
 
-Alternatives
-============
+Alternatives / Outlook
+======================
 So far Gammapy only supports binned likelihood analysis and technically most use-
 cases for the event sampling could be solved with binned simulations. A binned
 simulation can be basically achieved by a call to `numpy.random.poisson()` based
