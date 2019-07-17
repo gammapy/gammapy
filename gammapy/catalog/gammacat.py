@@ -14,7 +14,7 @@ from ..utils.scripts import make_path
 from ..spectrum import FluxPoints
 from gammapy.modeling.models.spectrum.core import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
 from gammapy.modeling.models.image import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel, SkyModels
+from gammapy.modeling.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

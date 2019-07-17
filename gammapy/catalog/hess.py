@@ -12,7 +12,7 @@ from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..spectrum import FluxPoints
 from gammapy.modeling.models.spectrum.core import PowerLaw, ExponentialCutoffPowerLaw
 from gammapy.modeling.models.image import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel, SkyModels
+from gammapy.modeling.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

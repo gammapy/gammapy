@@ -14,7 +14,7 @@ from ..fitting import Parameter, Parameters
 from ...maps import Map
 from gammapy.modeling.models import image as spatial
 from gammapy.modeling.models.spectrum import core as spectral
-from ...cube.models import SkyModels, SkyModel
+from gammapy.modeling.models import SkyModels, SkyModel
 
 log = logging.getLogger(__name__)
 

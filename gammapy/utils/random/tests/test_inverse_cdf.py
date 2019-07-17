@@ -9,7 +9,7 @@ from astropy.time import Time
 
 from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from ....cube import MapEvaluator
-from ....cube.models import SkyModel
+from gammapy.modeling.models import SkyModel
 from gammapy.modeling.models.image import SkyGaussian
 from ....maps import Map, MapAxis
 from gammapy.modeling.models.spectrum.core import PowerLaw

@@ -4,7 +4,7 @@ import astropy.units as u
 from ..cube import MapDataset, PSFKernel
 from ..cube import make_map_exposure_true_energy, make_map_background_irf
 from ..maps import WcsNDMap
-from ..cube.models import BackgroundModel
+from gammapy.modeling.models import BackgroundModel
 from ..utils.random import get_random_state
 
 __all__ = ["simulate_dataset"]

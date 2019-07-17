@@ -3,15 +3,15 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_data
-from ...maps import MapAxis, WcsGeom, Map
-from ...irf.energy_dispersion import EnergyDispersion
-from ...cube.psf_kernel import PSFKernel
-from ...cube.models import SkyDiffuseCube, BackgroundModel, BackgroundModels
+from gammapy.utils.testing import requires_data
+from gammapy.maps import MapAxis, WcsGeom, Map
+from gammapy.irf.energy_dispersion import EnergyDispersion
+from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.modeling.models.image import SkyGaussian
 from gammapy.modeling.models.spectrum.core import PowerLaw
-from ..fit import MapEvaluator
-from ..models import SkyModel, SkyModels
+from gammapy.cube import MapEvaluator
+from ..core import SkyDiffuseCube, BackgroundModel, BackgroundModels
+from ..core import SkyModel, SkyModels
 
 
 @pytest.fixture(scope="session")

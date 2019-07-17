@@ -30,7 +30,3 @@ Reference/API
 .. automodapi:: gammapy.modeling
     :no-inheritance-diagram:
     :include-all-objects:
-
-.. automodapi:: gammapy.modeling.models
-    :no-inheritance-diagram:
-    :include-all-objects:

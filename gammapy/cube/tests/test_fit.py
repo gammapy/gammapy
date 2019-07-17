@@ -12,7 +12,7 @@ from ...irf.energy_dispersion import EnergyDispersion
 from ...maps import MapAxis, WcsGeom, Map
 from gammapy.modeling.models.image import SkyGaussian
 from gammapy.modeling.models.spectrum.core import PowerLaw
-from ..models import SkyModel, BackgroundModel
+from gammapy.modeling.models import SkyModel, BackgroundModel
 from .. import MapDataset, make_map_exposure_true_energy, PSFKernel
 
 

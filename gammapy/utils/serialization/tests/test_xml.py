@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from ...testing import requires_data
 from gammapy.modeling.models.spectrum import core as spectral
 from gammapy.modeling.models import image as spatial
-from ....cube.models import SkyModels
+from gammapy.modeling.models import SkyModels
 from ...serialization import xml_to_sky_models, UnknownModelError
 
 

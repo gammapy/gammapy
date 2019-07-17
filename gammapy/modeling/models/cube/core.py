@@ -2,9 +2,9 @@
 import copy
 import numpy as np
 import astropy.units as u
-from ..utils.fitting import Parameter, Model, Parameters
-from ..utils.scripts import make_path
-from ..maps import Map
+from gammapy.utils.fitting import Parameter, Model, Parameters
+from gammapy.utils.scripts import make_path
+from gammapy.maps import Map
 
 __all__ = [
     "SkyModelBase",
@@ -87,7 +87,7 @@ class SkyModels:
     @classmethod
     def from_xml(cls, xml):
         """Read from XML string."""
-        from ..utils.serialization import xml_to_sky_models
+        from gammapy.utils.serialization import xml_to_sky_models
 
         return xml_to_sky_models(xml)
 
@@ -111,7 +111,7 @@ class SkyModels:
 
     def to_xml(self, filename):
         """Write to XML file."""
-        from ..utils.serialization import sky_models_to_xml
+        from gammapy.utils.serialization import sky_models_to_xml
 
         xml = sky_models_to_xml(self)
         filename = make_path(filename)
@@ -421,7 +421,7 @@ class BackgroundModel(Model):
         psf : `~gammapy.cube.PSFKernel`
             PSF kernel
         """
-        from .fit import MapEvaluator
+        from gammapy.cube.fit import MapEvaluator
 
         evaluator = MapEvaluator(
             model=skymodel, exposure=exposure, edisp=edisp, psf=psf

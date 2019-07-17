@@ -10,7 +10,7 @@ from gammapy.modeling.models.spectrum.core import PowerLaw, ExponentialCutoffPow
 from ..simulation import SpectrumSimulation
 from ..flux_point import FluxPointsEstimator
 from ...cube import simulate_dataset
-from ...cube.models import SkyModel
+from gammapy.modeling.models import SkyModel
 from gammapy.modeling.models.image import SkyGaussian
 from ...maps import MapAxis, WcsGeom
 

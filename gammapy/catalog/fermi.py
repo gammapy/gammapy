@@ -17,7 +17,7 @@ from gammapy.modeling.models.spectrum.core import (
     LogParabola,
 )
 from gammapy.modeling.models.image import SkyPointSource, SkyGaussian, SkyDisk, SkyDiffuseMap
-from ..cube.models import SkyModel
+from gammapy.modeling.models import SkyModel
 from ..time import LightCurve
 from .core import SourceCatalog, SourceCatalogObject
 
