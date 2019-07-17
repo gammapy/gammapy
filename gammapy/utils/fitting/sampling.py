@@ -1,13 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # helper functions for mcmc smapling
+import logging
 import numpy as np
 import emcee
-import matplotlib.pyplot as plt
 import corner
 
 __all__ = ["uniform_prior", "run_mcmc", "plot_trace", "plot_corner"]
 
-#TODO: so far only works with a uniform prior on parameters
+log = logging.getLogger(__name__)
+
+# TODO: so far only works with a uniform prior on parameters
+# as there is no way yet to enter min,mean,max in parameters for normal prior
+# lnprob() uses a uniform prior. hard coded for now.
 
 # Prior functions
 def uniform_prior(value, umin, umax):
@@ -24,7 +28,7 @@ def normal_prior(value, mean, sigma):
 
 
 # Read/write parameters in the dataset
-def model_to_par(dataset):
+def dataset_free_parameter_factors(dataset):
     """
     Return a tuple of the factor parameters of all
     free parameters in the dataset sky model.
@@ -43,7 +47,7 @@ def par_to_model(dataset, pars):
 
 
 # Compute LogLike associated with prior and data/model evaluation
-def lnprior(dataset):
+def ln_uniform_prior(dataset):
     """
     Return probability of parameter values according to prior knowledge.
     Parameter limits should be done here through uniform prior ditributions
@@ -61,7 +65,7 @@ def lnprob(pars, dataset):
     for factor, par in zip(pars, dataset.parameters.free_parameters):
         par.factor = factor
 
-    lnprob_priors = lnprior(dataset)
+    lnprob_priors = ln_uniform_prior(dataset)
 
     # dataset.likelihood returns Cash statistics values
     # emcee will maximisise the LogLikelihood so we need -dataset.likelihood
@@ -76,7 +80,7 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
 
     Parameters
     ----------
-    dataset : `MapDataset`
+    dataset : `gammapy.utils.fitting.Dataset`
         A gammapy dataset object. This contains the observed counts cube,
         the exposure cube, the psf cube, and the sky model and model.
         Each free parameter in the sky model is considered as parameter for the MCMC.
@@ -89,13 +93,27 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
         Low nrun (<100?) will underestimate the errors.
         Samples that would populate the distribution are nrun*nwalkers.
         This step can be ~seen as the error estimation step.
+    threads: (optional)
+        The number of threads to use for parallelization. If ``threads == 1``,
+        then the ``multiprocessing`` module is not used but if
+        ``threads > 1``, then a ``Pool`` object is created and calls to
+        ``lnpostfn`` are run in parallel.
+
+    Returns
+    -------
+    sampler : `emcee.EnsembleSampler`
+        sampler object containing the trace of all walkers.
     """
     dataset.parameters.autoscale()  # Autoscale parameters
-    pars = model_to_par(dataset)  # get a tuple of parameters from dataset
+    pars = dataset_free_parameter_factors(
+        dataset
+    )  # get a tuple of free parameters from dataset
     ndim = len(pars)
 
     # Initialize walkers in a ball of relative size 0.5% in all dimensions if the
     # parameters have been fit, or to 10% otherwise
+    # TODO: the spread of 0.5% below is valid if a pre-fit of the model has been obtained.
+    # currently the run_mcmc() doesn't know the status of previous fit.
     spread = 0.5 / 100
     p0var = np.array([spread * pp for pp in pars])
     p0 = emcee.utils.sample_ball(pars, p0var, nwalkers)
@@ -104,28 +122,32 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     for par in dataset.parameters.free_parameters:
         labels.append(par.name)
         if (par.min is np.nan) and (par.max is np.nan):
-            print(
-                    "Warning: no priors have been set for parameter %s\n The MCMC will likely not work !"
-                    % (par.name)
+            logging.warning(
+                "Warning: no priors have been set for parameter %s\n The MCMC will likely not work !"
+                % (par.name)
             )
 
-    print("List of free parameters:", labels)
-    print("{} walkers will run for {} steps".format(nwalkers, nrun))
-    print("Parameters init value for 1st walker:", p0[0])
+    logging.info("List of free parameters:", labels)
+    logging.info("{} walkers will run for {} steps".format(nwalkers, nrun))
+    logging.info("Parameters init value for 1st walker:", p0[0])
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, lnprob, args=[dataset], threads=threads
     )
 
     for idx, result in enumerate(sampler.sample(p0, iterations=nrun)):
         if (idx + 1) % 100 == 0:
-            print("{0:5.0%}".format(idx / nrun))
+            logging.info("{0:5.0%}".format(idx / nrun))
+    logging.info("Sampling completed")
 
     return sampler
+
 
 def plot_trace(sampler, dataset):
     """
     Plot the trace of walkers for every steps
     """
+    import matplotlib.pyplot as plt
+
     labels = []
     for par in dataset.parameters.free_parameters:
         labels.append(par.name)
@@ -143,8 +165,8 @@ def plot_corner(sampler, dataset, nburn=0):
 
     Parameters
     ----------
-    sampler : `EnsembleSample`
-        Sample instance.
+    sampler : `emcee.EnsembleSampler`
+        Sampler object containing the trace of all walkers.
 
     nburn: int
         Number of runs that will be discarded (burnt) until reaching ~stationary states for walkers.
@@ -157,6 +179,4 @@ def plot_corner(sampler, dataset, nburn=0):
 
     samples = sampler.chain[:, nburn:, :].reshape((-1, len(labels)))
 
-    corner.corner(
-        samples, labels=labels, quantiles=[0.16, 0.5, 0.84], show_titles=True
-    )
+    corner.corner(samples, labels=labels, quantiles=[0.16, 0.5, 0.84], show_titles=True)
