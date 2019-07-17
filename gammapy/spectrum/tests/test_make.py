@@ -20,7 +20,11 @@ def test_spectrumdatasetmaker_cta_1dc_data():
 
     # This will test non PSF3D input as well as absence of default thresholds
     extract = SpectrumDatasetMakerObs(
-        observation=observations[0], on_region=on_region, containment_correction=False, binsz=0.04*u.deg
+        observation=observations[0],
+        on_region=on_region,
+        containment_correction=False,
+        binsz=0.04 * u.deg,
+        spatial_averaging=True,
     )
     ds = extract.run()
 

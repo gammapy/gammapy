@@ -23,8 +23,9 @@ class SpectrumDatasetMakerObs:
     Counts are extracted from an on region using a tangent projection centered on
     the pointing position.
 
-    Reduced IRFs are extracted at the region center.
-    TODO: allow for extended source extraction and average over region
+    For point source extraction, the input region should be a `CircleSkyRegion` and
+    the reduced IRFs are extracted at the region center.
+
 
     Parameters
     ----------
@@ -36,12 +37,16 @@ class SpectrumDatasetMakerObs:
         Reconstructed energy binning
     e_true : `~astropy.units.Quantity`, optional
         True energy binning
-   containment_correction : bool
-        Apply containment correction for point sources and circular on regions.
+    spatial_averaging : bool
+        Apply averaging of effective area over the on region (default is False)
+    containment_correction : bool
+        Apply containment correction for point sources and circular on regions
     use_recommended_erange : bool
         Extract spectrum only within the recommended valid energy range of the
         effective area table (default is True).
-
+    binsz : `~astropy.coordinate.Angle`
+        bin size used to perform spatial integration of background and averaging of
+        effective area. (default is 0.01 deg)
     Returns
     -------
     dataset : `~gammapy.spectrum.SpectrumDataset`
@@ -59,6 +64,7 @@ class SpectrumDatasetMakerObs:
         on_region,
         e_reco=None,
         e_true=None,
+        spatial_averaging=False,
         containment_correction=False,
         use_recommended_erange=True,
         binsz=0.02 * u.deg,
@@ -67,6 +73,7 @@ class SpectrumDatasetMakerObs:
         self.on_region = on_region
         self.e_reco = e_reco if e_reco is not None else self.DEFAULT_RECO_ENERGY
         self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
+        self.spatial_averaging = spatial_averaging
         self.containment_correction = containment_correction
         self.use_recommended_erange = use_recommended_erange
         self.binsz = binsz
@@ -138,7 +145,7 @@ class SpectrumDatasetMakerObs:
 
     def extract_aeff(self):
         """Extract edisp from IRFs."""
-        if self.containment_correction is True:
+        if self.spatial_averaging is False:
             offset = self.observation.pointing_radec.separation(self.on_region.center)
             self.dataset.aeff = self.observation.aeff.to_effective_area_table(
                 offset, energy=self.e_true
