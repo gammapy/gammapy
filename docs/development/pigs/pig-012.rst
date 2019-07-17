@@ -32,8 +32,10 @@ We have been using `Click`_ to develop a very small set of tools for an embryoni
 ``gammapy info``, ``gammapy download``, ``gammapy jupyter``), only `gammapy image`_
 can be considered as potentially needed in a data analysis process. It actually
 creates a counts image from an event-list file and a image that serves as a reference
-geometry. Hence, we have a code set-up in ``gammapy.scripts``, but we will not
-use it for the moment to expose the High Level Interface API.
+geometry. Hence, we have a code set-up in ``gammapy.scripts``, we will not
+use it for the moment to expose the high-level interface API, but to develop a very
+small set of specific command line tools identified (i.e. perform low processing taks, 
+see *Command line tools* section below)
 
 We have a set of `Jupyter notebooks`_ and `Python scripts`_ as examples of tutorials
 and recipes demostrating the use of Gammapy. Though most (or all) of the Python 
@@ -42,7 +44,7 @@ are continuously tested and are one of the pillars of the user documentation. We
 check most of the use cases are covered by the High Level Inteface with the help
 of these notebooks, but we could also use them as a basis for experimental
 automated workflows driven by parametrized notebooks executed with `papermill`_ 
-under the hood. (*see Outlook section below*)
+under the hood. (see *Outlook* section below)
 
 We also have some *high-level analysis* classes in the API that concatenate several
 atomic actions and provide rough estimated results for more complex processes. (i.e. 
@@ -61,6 +63,7 @@ We see then two main options on how to use the High Level Interface API:
 
 - Within an IPython session or notebook mostly dealing with a manager object to perform specific 
 tasks in an **interactive** analysis process
+
 - In a Python script or notebook declaring the orchestration of the tasks with the manager object 
 for an **automatized** process
 
@@ -236,7 +239,7 @@ Then the user would type `ipython` or `juypter notebook` and write the code belo
 
 We will add a ``gammapy analysis data_reduction`` or ``gammapy analysis optimise`` which does the slow parts before going to ipython or jupyter, using all the information from the config file.
 
-**Commnad Line Tools**
+**Commnad line tools**
 
 - ``gammapy analysis config``: dumps a template configuration file
 - ``gammapy analysis data_reduction``: performs a data reduction process
@@ -266,6 +269,8 @@ TODO /CLARIFY
      
     Making a lightcurve could be part of one Analysis (like it is in Fermi), or could be a higher-level, creating on Analysis and running it for each time bin. This exercise of pro / con is left to the LC PIG. Christoph expects that datasets serialisation is much simpler if LC / time bins isn't part of serialisation for one analysis, i.e. it would be something higher-level.
     Source detection with iteratively adding sources is not the responsibility of Analysis. It's higher-level, could use Analysis or not, not discussed here.
+    
+    Restructuring all of Gammapy to be Tool based with good tool chains and config handling
 
 
 We could explore the use of `papermill`_ to run workflows defined in a notebook using the values of
