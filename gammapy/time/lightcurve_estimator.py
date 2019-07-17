@@ -8,7 +8,7 @@ from scipy.stats import chisquare
 from ..utils.fitting import Fit
 from ..utils.interpolation import interpolate_likelihood_profile
 
-__all__ = ["LightCurve", "LightCurveEstimator"]
+__all__ = ["LightCurve", "LightCurveEstimator3D"]
 
 
 class LightCurve:
@@ -253,7 +253,7 @@ class LightCurve:
         return ax
 
 
-class LightCurveEstimator:
+class LightCurveEstimator3D:
     """Flux Points estimated for each time bin.
 
     Estimates flux points for a given list of datasets.
