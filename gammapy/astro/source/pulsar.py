@@ -95,7 +95,7 @@ class Pulsar(SimplePulsar):
         self.P_dot_0 = (B / B_CONST) ** 2 / P_0
         self.tau_0 = P_0 / (2 * self.P_dot_0)
         self.n = float(n)
-        self.beta = (n + 1.0) / (n - 1.0)
+        self.beta = - (n + 1.0) / (n - 1.0)
         if age is not None:
             self.age = Quantity(age, "yr")
         if L_0 is None:
@@ -105,7 +105,7 @@ class Pulsar(SimplePulsar):
         r"""Spin down luminosity.
 
         .. math::
-            \dot{L}(t) = \dot{L}_0 \left(1 + \frac{t}{\tau_0}\right)^{\frac{n + 1}{n - 1}}
+            \dot{L}(t) = \dot{L}_0 \left(1 + \frac{t}{\tau_0}\right)^{-\frac{n + 1}{n - 1}}
 
         Parameters
         ----------
@@ -142,7 +142,7 @@ class Pulsar(SimplePulsar):
             Time after birth of the pulsar
         """
         t = Quantity(t, "yr")
-        return self.P_0 * (1 + (t / self.tau_0)) ** self.beta
+        return self.P_0 * (1 + (t / self.tau_0)) ** (1./(self.n - 1 ))
 
     def period_dot(self, t):
         r"""Period derivative at age t.
