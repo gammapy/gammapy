@@ -199,13 +199,13 @@ List of proposed pull requests
 This is a proposal for a list of pull requests implementing the proposed changes, 
 ordered by priority:
 
-1. Implement the `sample` method in `gammapy.cube.MapDataset` and add tests (v0.14).
-2. Implement the `sample` method in `gammapy.time.models.LightCurveTableModel`
+ 1. Implement the `sample` method in `gammapy.cube.MapDataset` and add tests (v0.14).
+ 2. Implement the `sample` method in `gammapy.time.models.LightCurveTableModel`
 and `gammapy.time.models.PhaseCurveTableModel` and add tests (v0.14).
-3. Implement the `distribute` method in `gammapy.cube.PSFMap` and add tests (v0.14).
-4. Implement the `distribute` method in `gammapy.cube.EdispMap` and add tests (v0.14).
-5. Introduce the `MapDatasetEventSampler` into `gammapy.cube.` and add tests (v.1.0).
-6. Add tutorials for event simulations of different kinds of sources. (v0.14).
+ 3. Implement the `distribute` method in `gammapy.cube.PSFMap` and add tests (v0.14).
+ 4. Implement the `distribute` method in `gammapy.cube.EdispMap` and add tests (v0.14).
+ 5. Introduce the `MapDatasetEventSampler` into `gammapy.cube.` and add tests (v.1.0).
+ 6. Add tutorials for event simulations of different kinds of sources. (v0.14).
 
 
 Decision
