@@ -61,11 +61,8 @@ sessions to perform simple and most common IACT analysis.
 
 We see then two main options on how to use the High Level Interface API:
 
-- Within an IPython session or notebook mostly dealing with a manager object to perform specific 
-tasks in an **interactive** analysis process
-
-- In a Python script or notebook declaring the orchestration of the tasks with the manager object 
-for an **automatized** process
+- Within an IPython session or notebook mostly dealing with a manager object to perform specific tasks in an **interactive** analysis process
+- In a Python script or notebook declaring the orchestration of the tasks with the manager object for an **automatized** process
 
 This high-level interface API is similar to what it is done in `Fermipy`_, including
 also the options to save and recover session states, as well as serialization of intermediate
