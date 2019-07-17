@@ -57,42 +57,42 @@ and general sampling method.
 The precision of the inverse CDF sampling method can be controlled by the resolution
 of the input probability mass function (PMF) and is in practice only limited by the
 available memory. We will study the required bin-size of the PMFs to reach sufficient
-precision. If we find the inverse CDF sampling method to be not precise enough,
-it is still possible to achieve better precision adopting the rejection sampling. This
-will not have an impact on the structure of the event-sampler as the few lines of code
-that usi the inverseCDF will be replaced by those of the rejection sample.
+precision. If we find the inverse CDF sampling method to be not precise enough, it is 
+still possible to achieve better precision adopting the rejection sampling. This will 
+not have a strong impact on the structure of the event-sampler.
 
 
 Proposal
 ========
 
-We propose to include in `gammapy.cube` an high level interface (HLI) class labelled as
+We propose to include in `gammapy.cube` an high level interface (HLI) class, labelled as
 `MapDatasetEventSampler`. This class handles the complete event sampling process, 
-including the corrections related to the IRF.
-First of all it is requested to the user to create a `MapDataset` object, as following:
+including the corrections related to the IRF and source temporal variability.
 
-## 20 lines of code with for the `MapDataset` object setup.
+As a first step, the User should create a `MapDataset` object, as described below:
 
-This object needs to contain the pointing sky coordinates, the GTI, and all the models 
-(spectra, spatial morphology, temporal model) for a given source, and it is passed as 
-input parameter to the `MapDatasetEventSampler`. It is important to note that the 
-`MapDataset` object can contain more than one source.
-Then, a method `.sample` will sample the events and will provide an output Astropy.Table 
-model with reconstructed sky positions, energies, times, and an `EVENT_ID` and `MC_ID`. 
-Where `EVENT_ID` is a unique number or a string to identify the sampled event, while 
-`MC_ID` is a unique ID (number or string) to identify the model component the event was 
-sampled from.
+# 20 lines of code with for the `MapDataset` object setup.
+
+This object will contain the pointing sky coordinates, the GTI, and the setup of all the 
+models (spectra, spatial morphology, temporal model) for any given source, and it is passed 
+as input parameter to the `MapDatasetEventSampler`. It is important to note that the 
+`MapDataset` object can store information for more than one source.
+Then, a `.sample` method will draw the sampled events and will provide an output 
+`~astropy.table.Table` object. The latter will containt the reconstructed sky positions, 
+energies, times, and an `EVENT_ID` and `MC_ID`. `EVENT_ID` is a unique number or a string 
+to identify the sampled event, while `MC_ID` is a unique ID (number or string) to identify 
+the model component the event was sampled from.
 The `MapDatasetSampler` should also fill the mandatory header information for event list 
 files decribed on `gamma-astro-data-formats`_.
-We note that the `MapDatasetSampler` can work alternatively for input flux or count maps.
+We note that the `MapDatasetSampler` will be designed to work alternatively for input flux or 
+counts maps.
 
 The basic code structure is the following:
 
 .. code::
     
-    dataset = MapDataset(....)
-    dataset_sampler = MapDatasetEventSampler(dataset[sky, spectrum, GTI, pointing, LC/PC], 
-						   random_state)
+    dataset = MapDataset([pointing, GTI, models])
+    dataset_sampler = MapDatasetEventSampler(dataset, random_state)
     event_list = dataset_sampler.sample()
 
 where `random_state` is the seed for the random number generator. 
@@ -110,30 +110,30 @@ The general design of the `sample` method is as follows:
 	npred_tot = npred_total(npred_map, random_state)
 	evt = MapDataset.sample(npred_tot)
 	events_time = LightCurveTableModel.sample(npred_tot, src.GTI)
-# OR	events_time = PhaseCurveTableModel.sample(npred_tot, src.GTI)
+        OR 	events_time = PhaseCurveTableModel.sample(npred_tot, src.GTI)
 	events_psf = PSFMap.distribute(evt)
 	events_edisp = EdispMap.distribute(events_psf)
-	events = Table('RECO_RA', 'RECO_DEC', 'RECO_ENE', 'TIME')
+	events = Table('RA', 'DEC', 'ENERGY', 'TIME')
     return EventList
 
-In more detail, it starts a loop over the sources stored into the dataset object.
-Then, for each source, the `src.evaluate` method will calculate the predicted 
-number of counts, which are then given to `npred_total` method. The latter uses
-a Poisson distribution, with mean equal to the predicted counts, to estimate a 
-random number that will be the number of sampled events.
+In more detail, `sample` starts a loop over the sources stored into the `MapDataset` 
+object. Then, for each source, the `src.evaluate` method will calculate the predicted 
+number of source counts, that will be the input of the `npred_total` method. The latter 
+uses a Poisson distribution, with mean equal to the predicted counts, to estimate the
+random number of sampled events.
 
 We propose to add a `sample` method in `~gamampy.cube.MapDataset` that will be the
 core of the sampling process. The `sample` is based on the 
-`~gammapy.utils.random.InverseCDFSampler` class described in PR#2229_ . The output 
-will be an astropy.Table with true energies and true positions for the events.
+`~gammapy.utils.random.InverseCDFSampler` class described in PR#2229_. The output 
+will be an `~astropy.table.Table` with columns: `TRUE_RA`, `TRUE_DEC` and `TRUE_ENERGIES`.
 
-Then, the time can be sampled independently as well. This will be done through a
-`sample` method that we propose to add into `~gammapy.time.models.LightCurveTableModel`
+Then, the time will be sampled independently. This will be done through a `sample` 
+method that we propose to add into `~gammapy.time.models.LightCurveTableModel`
 or `~gammapy.time.models.PhaseCurveTableModel`. This method will take as input a 
-lightcurve (or phasecurve) model and the GTIs (i.e. one Tstart and Tstop). Also in this
-case the `InverseCDFSamler` class is used to sample the time of the events.
-In the case the temporal model is not provided, the time is uniformly sampled in the 
-time range Tstart-Tstop.
+lightcurve (or phasecurve) model and the GTIs (i.e. one Tstart and Tstop) in the `MapDataset`
+object. Also in this case the `InverseCDFSamler` class is the machine used to sample the 
+time of the events. In the case the temporal model is not provided, the time is uniformly 
+sampled in the time range Tstart-Tstop.
 
 The IRF correction can now be applied to sampled events. We propose to add a `distribute`
 method in both `~gammapy.cube.PSFMap` and `~gammapy.cube.EdispMap`. 
@@ -144,7 +144,7 @@ and not time-dependent. The output will be an `Astropy.Table` with reconstructed
 energies and positions, i.e. `RA`, `DEC` and `ENERGY`.
 
 Finally, the times and the energies/coordinates of the events will be merged into a 
-unique `Astropy.Table`.
+unique `~astropy.table.Table` with the columns:`RA`, `DEC` and `ENERGY and `TIME` .
  
 We note that the `MapDatasetEventSampler` can be used to simulate the background as well,
 although the IRF corrections will not be applied.
