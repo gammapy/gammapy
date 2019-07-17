@@ -7,6 +7,7 @@ from ...utils.testing import requires_data
 from ...spectrum import SpectrumDatasetMakerObs
 from ...data import DataStore
 
+
 @requires_data()
 def test_spectrumdatasetmaker_cta_1dc_data():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
@@ -21,8 +22,12 @@ def test_spectrumdatasetmaker_cta_1dc_data():
     extract = SpectrumDatasetMakerObs(
         observation=observations[0], on_region=on_region, containment_correction=True
     )
-    extract.run()
+    ds = extract.run()
 
     extract.compute_energy_threshold(method_lo="area_max", area_percent_lo=10)
     actual = extract.dataset.energy_range[0]
     assert_quantity_allclose(actual, 0.774263 * u.TeV, rtol=1e-3)
+
+    assert ds.background is not None
+    assert ds.aeff is not None
+    assert ds.edisp is not None

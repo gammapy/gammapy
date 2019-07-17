@@ -1,13 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import astropy.units as u
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, PixCoord
 from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
 from .core import CountsSpectrum
 from .dataset import SpectrumDataset
 from ..background import ReflectedRegionsFinder
+from ..cube import MapMakerObs
+from ..maps import MapAxis
 
 __all__ = ["SpectrumDatasetMakerObs"]
+
 
 class SpectrumDatasetMakerObs:
     """Creates and fill a `~gammapy.spectrum.SpectrumDataset` for a single observation.
@@ -39,18 +42,21 @@ class SpectrumDatasetMakerObs:
     dataset : `~gammapy.spectrum.SpectrumDataset`
         the output dataset
     """
+
     DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
     """True energy axis to be used if not specified otherwise"""
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
     """Reconstruced energy axis to be used if not specified otherwise"""
 
-    def __init__(self,
+    def __init__(
+        self,
         observation,
         on_region,
         e_reco=None,
         e_true=None,
         containment_correction=False,
         use_recommended_erange=True,
+        binsz=0.02 * u.deg,
     ):
         self.observation = observation
         self.on_region = on_region
@@ -58,11 +64,35 @@ class SpectrumDatasetMakerObs:
         self.e_true = e_true if e_true is not None else self.DEFAULT_TRUE_ENERGY
         self.containment_correction = containment_correction
         self.use_recommended_erange = use_recommended_erange
+        self.binsz = binsz
 
         self.dataset = self.make_dataset()
-        self.reference_map = ReflectedRegionsFinder.make_reference_map(self.on_region,
-                                                                      self.observation.pointing_radec,
-                                                                      binsz=0.01*u.deg)
+        self.reference_map = ReflectedRegionsFinder.make_reference_map(
+            self.on_region, self.observation.pointing_radec, binsz=self.binsz
+        )
+
+    def make_cutout(self):
+        """Make a cutout encompassing the ON region"""
+        geom = self.reference_map.geom
+        mask = geom.region_mask([self.on_region], inside=True)
+
+        # Extract all pixcoords in the geom
+        X, Y = geom.get_pix()
+        ONpixels = PixCoord(X[mask], Y[mask])
+        max_size = (
+            np.maximum(
+                ONpixels.x.max() - ONpixels.x.min(), ONpixels.y.max() - ONpixels.y.min()
+            )
+            * self.binsz
+        )
+        center_x = 0.5 * (ONpixels.x.max() + ONpixels.x.min())
+        center_y = 0.5 * (ONpixels.y.max() + ONpixels.y.min())
+        center = PixCoord(center_x, center_y).to_sky(geom.wcs)
+        print(max_size)
+        cutout_kwargs = {"position": center, "width": 1.1 * max_size, "mode": "partial"}
+
+        return geom.cutout(**cutout_kwargs)
+
     def make_dataset(self):
         """Create empty vector.
         This method copies over all meta info and sets up the energy binning.
@@ -71,11 +101,15 @@ class SpectrumDatasetMakerObs:
             energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:]
         )
 
-#        on_vector.meta = self.observation.meta
-        return SpectrumDataset(counts=on_vector, livetime=self.observation.observation_live_time_duration)
+        #        on_vector.meta = self.observation.meta
+        return SpectrumDataset(
+            counts=on_vector, livetime=self.observation.observation_live_time_duration
+        )
 
     def extract_counts(self):
-        on_events = self.observation.events.select_region(self.on_region, self.reference_map.geom.wcs)
+        on_events = self.observation.events.select_region(
+            self.on_region, self.reference_map.geom.wcs
+        )
         self.dataset.counts.fill(on_events)
 
     def extract_irfs(self):
@@ -91,9 +125,18 @@ class SpectrumDatasetMakerObs:
     def extract_bkg(self):
         """Extract background from IRF"""
         offset = self.observation.pointing_radec.separation(self.on_region.center)
-        bkg_data = self.observation.bkg.evaluate_integrate(
-            fov_lon=0 * u.deg, fov_lat=offset, energy_reco=self.e_reco
+
+        cutout_geom = self.make_cutout().to_cube(
+            [MapAxis.from_edges(self.e_reco, name="energy")]
         )
+
+        # we put an artificially large offset_max
+        mapmaker = MapMakerObs(self.observation, cutout_geom, 10 * u.deg)
+
+        maps = mapmaker.run(["background"])
+        mask = cutout_geom.to_image().region_mask([self.on_region])
+        bkg_data = maps["background"].quantity[..., mask].sum(axis=1)
+
         self.dataset.background = CountsSpectrum(
             energy_lo=self.e_reco[:-1], energy_hi=self.e_reco[1:], data=bkg_data
         )
@@ -141,7 +184,9 @@ class SpectrumDatasetMakerObs:
         else:
             psf = self.observation.psf.to_energy_dependent_table_psf(offset, angles)
 
-        new_aeff = apply_containment_fraction(self.dataset.aeff, psf, self.on_region.radius)
+        new_aeff = apply_containment_fraction(
+            self.dataset.aeff, psf, self.on_region.radius
+        )
 
         self.dataset.aeff = new_aeff
 
@@ -151,7 +196,9 @@ class SpectrumDatasetMakerObs:
         See `~gammapy.irf.compute_energy_thresholds` for full
         documentation about the options.
         """
-        emin, emax = compute_energy_thresholds(self.dataset.aeff, self.dataset.edisp, **kwargs)
+        emin, emax = compute_energy_thresholds(
+            self.dataset.aeff, self.dataset.edisp, **kwargs
+        )
         mask_safe = self.dataset.counts.energy_mask(emin=emin, emax=emax)
 
         if self.dataset.mask_safe is not None:
