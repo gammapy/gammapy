@@ -183,12 +183,14 @@ the event sampling in Gammapy. It also serves as a proof of concept of efficient
 event sampling in Python.
 
 The question of the API to simulate multiple observations from e.g. an `ObservationTable`
-or `GTI` object as it is needed for simulating data for the CTA data challenge
-is not addressed in this PIG. With the `MapDatasetEventSampler` the fundamental
-class to simulate events corresponding to a given observation and / or GTI is in
-place.
+or a list of `GTIs` as it is needed for simulating data for the CTA data challenge
+is not addressed in this PIG. For the scope of this PIG, the fundamental
+class `MapDatasetEventSampler` to simulate events corresponding to a given observation 
+and / or single GTI is in place.
 
-Later additional info such as `DETX` and `DETY` could be added.
+The proposed Event Sampler will not provide, for each event, the corresponding
+`DETX` and `DETY` position. These will be added in a future development of the 
+simulator.
 
 
 List of proposed pull requests
@@ -197,17 +199,18 @@ List of proposed pull requests
 This is a proposal for a list of pull requests implementing the proposed changes, 
 ordered by priority:
 
-1. Implement the `sample` method in `gammapy.cube.MapDataset' and add tests (v0.14)
+1. Implement the `sample` method in `gammapy.cube.MapDataset' and add tests (v0.14).
 2. Implement the `sample` method in `gammapy.time.models.LightCurveTableModel'
-and `gammapy.time.models.PhaseCurveTableModel' and add tests (v0.14)
-3. Implement the `distribute` method in `gammapy.cube.PSFMap' and add tests (v0.14)
-4. Implement the `distribute` method in `gammapy.cube.EdispMap' and add tests (v0.14)
-5. Introduce the `MapDatasetEventSampler` into `gammapy.cube.` and add tests (v.1.0)
-6. Add tutorials for event simulations of different kinds of sources. (v0.14)
+and `gammapy.time.models.PhaseCurveTableModel' and add tests (v0.14).
+3. Implement the `distribute` method in `gammapy.cube.PSFMap' and add tests (v0.14).
+4. Implement the `distribute` method in `gammapy.cube.EdispMap' and add tests (v0.14).
+5. Introduce the `MapDatasetEventSampler` into `gammapy.cube.` and add tests (v.1.0).
+6. Add tutorials for event simulations of different kinds of sources. (v0.14).
 
 
 Decision
 ========
+
 
 
 .. _`rejection sampling in Python`: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
