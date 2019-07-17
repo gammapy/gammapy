@@ -27,7 +27,7 @@ code-base without breaking user-defined workflows or recipes based on this API.
 Proposal
 ========
 
-Design and develop a High-level interface API
+1. Design and develop a High-level interface API
 ---------------------------------------------
 
 We will develop a High-level interface Python API which uses a param-value configuration file 
@@ -48,19 +48,33 @@ analysis process, and not only from the very start to the very end.
 
 The use cases covered are in the scope of a single analysis and model, not parameterised variations, within a single region (e.g. 10 deg region with 5 sources).
 
-The main use cases for analysis forseen are:
+The main use cases for analysis forseen:
 
 - 3D map analysis
 - 2D map analysis (same as 3D?)
 - 1D spec analysis
 
-TODO
+TODO /CLARIFY
+
+    - Different background models
+    - Joint vs stacked
+    - On vs on/off
+    - What about simulate / fake?
+    - What about flexible background modeling?
+    - How would one write an interative detection method on top of this?
+    - Spectral points (for any analysis)
+    - Lightcurves
+    - Diagnostics (residuals, significance, TS)
 
     Making an SED is still part of one Analysis, because many SED methods require the full model and all energy data. 
     Making a lightcurve could be part of one Analysis (like it is in Fermi), or could be a higher-level, creating on Analysis and running it for each time bin. This exercise of pro / con is left to the LC PIG. Christoph expects that datasets serialisation is much simpler if LC / time bins isn't part of serialisation for one analysis, i.e. it would be something higher-level.
     Source detection with iteratively adding sources is not the responsibility of Analysis. It's higher-level, could use Analysis or not, not discussed here.
 
 **Configuration file**
+
+To generate the config file, we could add a ``gammapy analysis config`` which dumps the config file with all lines commented out, and the user can then fill in the numbers they care about. As an alternative users could copy & paste from config file example in the docs.
+
+We will develop a schema and validate / give good error messages on read.
 
 .. code::
 
@@ -98,15 +112,101 @@ TODO
 **API overall structure**
 
 - The Analysis class
+Analysis is the boss, manager, driver
 
 - The Tools classes
+Middle management agents (e.g. MapMaker, ReflectedBgEstimator, ...)
 
 - Control dispatching among manager and tools
 
+.. code::
+
+    class Analysis:
+        def reduce_data(self):
+            config = self.make_data_reduction_config(self.config)
+            maker = self.make_data_recution_class(config)
+            maker.run()
+            self.datasets = maker.datasets
+
+We will need "registries" mapping options to classes, e.g.:
+
+.. code::
+
+    DATA_REDUCERS = {
+    "1d": "gammapy.spectrum.SpectrumExtration",
+    "3d": "gammapy.cube.MapMaker",
+    }
+
+By having registries (i.e. Python dicts), both within Gammapy and users can add their own, we are a "framework" that is extensible even at runtime. For this to work, we need to have a limited number or data containers (e.g. DataSet subclasses), because "makers" require a certain structure of containers, modify them in-place or make new containers.
+
+
+TODO /CLARIFY
+
+        Design how these interact, not clear who drives what. Very important: what's the responsibility of `Analysis` vs `Observations` vs `Datasets` vs `Fit`. How do we compose lower-level Tools into Analysis chains? Who creates the Tool objects when? Analysis needs to know how to turn config into Python objects. E.g. for geom, but also for exclusion_mask: exclusion.fits, make a Map object. 
+
 **Serialisation**
 
+The read and write would work like this:
+
+- Everyone in Gammapy knows how to serialise/read themselves
+- Composite objects serialise each part
+- Serialisation will be a mix of YAML and FITS files-
+- In v1.0 we will not have a framework supporting different serialisation backends, we will have one way.
+
+
 **Session workflow**
-      
+
+.. code::
+
+        $ mkdir analysis99
+        $ cd analysis99
+        $ edit gammapy_analysis_config.yaml
+        
+Then you would type ipython or juypter and put the code below.
+
+.. code::
+
+        from gammapy import Analysis
+
+        analysis = Analysis(config)
+
+        analysis.select_observations()
+        # analysis.observations: gammapy.data.Observations
+
+        analysis.reduce_data()  # often slow, can be hours
+        # analysis.datasets: gammapy.datasets.Datasets
+
+        # If the user wants they can save all results from data reduction
+        # and re-start later. This stores config, datasets, ... all the
+        # analysis class state.
+        # analysis.write()
+        # analysis = Analysis.read())
+
+        analysis.optimise()  # often slow, can be hours
+
+        # Again, we could write and read, do the slow things only once.
+        # e.g. supervisor comes in and asks about significance of some
+        # model component or whatever
+
+        # Everything is accessible via the "analysis"
+        # It's like the Analysis in Fermipy or Sherpa "session" or "HESSArray" in HAP
+        # a global object that gives you access to everything.
+        # Method calls modify data members (e.g. models), but in between method calls
+        # advanced users can do a lot of custom processing.
+        # Many advanced use cases can be done with the Analysis API.
+        profile = analysis.model("source_42").spectrum.plot()
+
+        # Do we need energy_binning for the SED points in config or only here?
+        sed = analysis.spectral_points("source_42", energy_binning)
+
+We could add a ``gammapy analysis data_reduction`` or ``gammapy analysis optimise`` which does the slow parts before going to ipython or jupyter, using all the information from the config file.
+
+**Commnad Line Tools**
+
+- ``gammapy analysis config``
+- ``gammapy analysis data_reduction``
+- ``gammapy analysis optimise``
+
 
 **More info**
 
@@ -116,7 +216,7 @@ Details discussed at the first stage of the design may be found in these noteboo
 - `PIG 12 demo`_
  
  
-Explore the use of papermill to run workflows driven by parametrized notebooks
+2. Explore the use of papermill to run workflows driven by parametrized notebooks
 ------------------------------------------------------------------------------
 
 Only in the case there's still time after development of the High-level interface API, we could
