@@ -1090,11 +1090,7 @@ class MapCoord:
         return self.__class__(coords, coordsys=self.coordsys)
 
 
-class MapGeomMeta(abc.ABCMeta):
-    pass
-
-
-class MapGeom(metaclass=MapGeomMeta):
+class MapGeom(abc.ABC):
     """Base class for WCS and HEALPix geometries."""
 
     @property

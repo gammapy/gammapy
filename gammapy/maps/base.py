@@ -14,11 +14,7 @@ from ..utils.scripts import make_path
 __all__ = ["Map"]
 
 
-class MapMeta(abc.ABCMeta):
-    pass
-
-
-class Map(metaclass=MapMeta):
+class Map(abc.ABC):
     """Abstract map class.
 
     This can represent WCS- or HEALPIX-based maps
