@@ -599,7 +599,6 @@ class WcsNDMap(WcsMap):
 
         return on_counts
 
-
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
         Convolve map with a kernel.

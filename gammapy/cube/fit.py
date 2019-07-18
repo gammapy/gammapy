@@ -180,7 +180,7 @@ class MapDataset(Dataset):
         """
         residuals = self.counts - self.npred()
 
-        with np.errstate(invalid='ignore'):
+        with np.errstate(invalid="ignore"):
             if norm == "model":
                 residuals /= self.npred()
             elif norm == "sqrt_model":
@@ -236,9 +236,7 @@ class MapDataset(Dataset):
         axes = []
 
         # residuals cube
-        residuals = self.residuals(norm=norm)
-        if self.mask:
-            residuals *= self.mask
+        residuals = self.residuals(norm=norm) * self.mask
 
         geom = residuals.geom
         edges = geom.axes[0].edges
@@ -248,27 +246,22 @@ class MapDataset(Dataset):
             width=smooth_radius, kernel=kernel
         )
 
-        position = on_region.center if on_region else geom.center_skydir
-        if not width:
-            width = tuple(geom.width)
-        spatial_residuals = spatial_residuals.cutout(position=position, width=width)
+        if width:
+            position = on_region.center if on_region else geom.center_skydir
+            spatial_residuals = spatial_residuals.cutout(position=position, width=width)
 
         # If no region is provided, skip spectral residuals
         if on_region:
             ncols = 2
         else:
-            ncols=1
+            ncols = 1
         axes.append(fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs))
 
-        kwargs.setdefault('cmap', 'coolwarm')
-        kwargs.setdefault('stretch', 'linear')
-        kwargs.setdefault('vmin', -5)
-        kwargs.setdefault('vmax', 5)
-        spatial_residuals.plot(
-            ax=axes[0],
-            add_cbar=True,
-            **kwargs
-        )
+        kwargs.setdefault("cmap", "coolwarm")
+        kwargs.setdefault("stretch", "linear")
+        kwargs.setdefault("vmin", -5)
+        kwargs.setdefault("vmax", 5)
+        spatial_residuals.plot(ax=axes[0], add_cbar=True, **kwargs)
 
         # Spectral residuals
         if on_region:

@@ -1243,7 +1243,7 @@ class FluxPointsDataset(Dataset):
         model = self.model(fp.e_ref)
         residuals = data - model
 
-        with np.errstate(invalid='ignore'):
+        with np.errstate(invalid="ignore"):
             if norm == "model":
                 residuals /= model
             elif norm == "sqrt_model":

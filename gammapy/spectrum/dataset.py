@@ -225,7 +225,7 @@ class SpectrumDataset(Dataset):
 
         residuals = self.counts.data - self.npred().data
 
-        with np.errstate(invalid='ignore'):
+        with np.errstate(invalid="ignore"):
             if norm == "model":
                 residuals /= self.npred().data
             elif norm == "sqrt_model":
