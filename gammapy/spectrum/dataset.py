@@ -90,7 +90,7 @@ class SpectrumDataset(Dataset):
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self.counts.energy.edges,
-                edisp=self.edisp
+                edisp=self.edisp,
             )
         else:
             self._parameters = None
@@ -128,11 +128,6 @@ class SpectrumDataset(Dataset):
         """Excess (counts - alpha * counts_off)"""
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
-
-    def residuals(self):
-        """Residuals (npred_sig - excess)."""
-        residuals = self.npred().data - self.excess.data
-        return self._as_counts_spectrum(residuals)
 
     def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
@@ -213,7 +208,26 @@ class SpectrumDataset(Dataset):
         ax.set_title("")
         return ax
 
-    def plot_residuals(self, ax=None):
+    def residuals(self, norm=None):
+
+        residuals = self.counts.data - self.npred().data
+
+        if norm == "model":
+            residuals /= self.npred().data
+        elif norm == "sqrt_model":
+            residuals /= np.sqrt(self.npred().data)
+        elif norm != None:
+            raise AttributeError(
+                "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
+                    self.norm
+                )
+            )
+
+        residuals = np.nan_to_num(residuals)
+
+        return self._as_counts_spectrum(residuals)
+
+    def plot_residuals(self, norm=None, ax=None):
         """Plot residuals.
 
         Parameters
@@ -230,9 +244,18 @@ class SpectrumDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        residuals = self.residuals()
+        residuals = self.residuals(norm=norm)
 
-        residuals.plot(ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit)
+        if not norm:
+            label = "(counts - model)"
+        elif norm == "model":
+            label = "(counts - model)/model"
+        elif norm == "sqrt_model":
+            label = "(counts - model)/sqrt(model)"
+
+        residuals.plot(
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit, label=label
+        )
         ax.axhline(0, color="black", lw=0.5)
 
         ymax = 1.2 * max(residuals.data)
@@ -240,6 +263,7 @@ class SpectrumDataset(Dataset):
 
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
         ax.set_ylabel("Residuals")
+        plt.legend()
         return ax
 
 

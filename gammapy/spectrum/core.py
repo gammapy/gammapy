@@ -172,7 +172,8 @@ class CountsSpectrum:
         bounds = self.energy.edges.to_value(energy_unit)
         xerr = [x - bounds[:-1], bounds[1:] - x]
         yerr = np.sqrt(counts) if show_poisson_errors else 0
-        kwargs.setdefault("fmt", "")
+        kwargs.setdefault("fmt", ".")
+        kwargs.setdefault("color", "black")
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(energy_unit)

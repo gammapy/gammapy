@@ -1223,22 +1223,31 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def residuals(self):
+    def residuals(self, norm=None):
         """Compute flux point residuals (`~numpy.ndarray`).
-
-        Definition: ``(data - model) / model``
         """
         fp = self.data
         data = fp.table[fp.sed_type].quantity
 
         model = self.model(fp.e_ref)
-        residuals = ((data - model) / model).to_value("")
+        residuals = data - model
+
+        if norm == "model":
+            residuals /= model
+        elif norm == "sqrt_model":
+            residuals /= np.sqrt(model)
+        elif norm != None:
+            raise AttributeError(
+                "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
+                    norm
+                )
+            )
 
         # Remove residuals for upper_limits
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self, **kwargs):
+    def peek(self, norm=None, **kwargs):
         """Plot flux points, best fit model and residuals."""
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
@@ -1251,7 +1260,7 @@ class FluxPointsDataset(Dataset):
         ax_spectrum.set_xticks([])
 
         ax_residuals = plt.subplot(gs[5:, :])
-        self.plot_residuals(ax=ax_residuals)
+        self.plot_residuals(ax=ax_residuals, norm=norm)
         return ax_spectrum, ax_residuals
 
     @property
@@ -1265,7 +1274,7 @@ class FluxPointsDataset(Dataset):
     def _e_unit(self):
         return self.data.e_ref.unit
 
-    def plot_residuals(self, ax=None, **kwargs):
+    def plot_residuals(self, norm=None, ax=None, **kwargs):
         """Plot flux point residuals.
 
         Parameters
@@ -1284,7 +1293,7 @@ class FluxPointsDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        residuals = self.residuals()
+        residuals = self.residuals(norm=norm)
 
         fp = self.data
 
@@ -1294,19 +1303,47 @@ class FluxPointsDataset(Dataset):
 
         model = self.model(fp.e_ref)
         yerr = fp._plot_get_flux_err(fp.sed_type)
-        yerr = (yerr[0] / model).to_value(""), (yerr[1] / model).to_value("")
+
+        if not norm:
+            unit = yerr[0].unit
+            yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)
+        elif norm == "model":
+            unit = ""
+            yerr = (yerr[0] / model).to_value(""), (yerr[1] / model).to_value(unit)
+        elif norm == "sqrt_model":
+            unit = yerr[0].unit / np.sqrt(model).unit
+            yerr = (
+                (yerr[0] / np.sqrt(model)).to_value(unit),
+                (yerr[1] / np.sqrt(model)).to_value(unit),
+            )
+
+        if not norm:
+            label = "(flux points - model)"
+        elif norm == "model":
+            label = "(flux points - model)/model"
+        elif norm == "sqrt_model":
+            label = "(flux points - model)/sqrt(model)"
 
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
-        ax.errorbar(self.data.e_ref.value, residuals, xerr=xerr, yerr=yerr, **kwargs)
+        kwargs.setdefault("color", "black")
+
+        ax.errorbar(
+            self.data.e_ref.value,
+            residuals.value,
+            xerr=xerr,
+            yerr=yerr,
+            label=label,
+            **kwargs
+        )
 
         # format axes
         ax.axhline(0, color="black", lw=0.5)
-        ax.set_ylabel("Residuals")
+        ax.set_ylabel("Residuals   {}".format(unit.__str__()))
         ax.set_xlabel("Energy ({})".format(self._e_unit))
-        ax.set_ylim(-1, 1)
         ax.set_xscale("log")
         ax.set_xlim(self._e_range.to_value(self._e_unit))
+        plt.legend()
         return ax
 
     def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
