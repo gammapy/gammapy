@@ -53,6 +53,9 @@ class GTI:
     def __init__(self, table):
         self.table = table
 
+    def copy(self):
+        return self.__class__(self.table)
+
     @classmethod
     def read(cls, filename, **kwargs):
         """Read from FITS file.
@@ -136,6 +139,28 @@ class GTI:
 
         return self.__class__(gti_within)
 
+    def stack(self, other):
+        """Stack with another GTI.
+
+        This simply changes the time reference of the second GTI table
+        and stack the two tables. No logic is applied to the intervals.
+
+        Parameters
+        ----------
+        other : `~gammapy.data.GTI`
+            the GTI to stack to self
+
+        Returns
+        -------
+        new_gti : `~gammapy.data.GTI`
+            the new GTI
+        """
+        start = (other.time_start - self.time_ref).sec
+        end = (other.time_stop - self.time_ref).sec
+        table = Table(rows={"START": start, "END": end})
+
+        return astropy.table.vstack([self.table, table])
+
     def _interval_union(self, time_interval):
         """Performs union of interval with GTI
 
@@ -187,7 +212,7 @@ class GTI:
         union : `~gammapy.data.GTI`
             The merged GTI table
         """
-        new_gti = self.__class__(self.table)
+        new_gti = self.copy()
         for time_interval in zip(gti.time_start, gti.time_stop):
             new_gti = new_gti._interval_union(time_interval)
         return new_gti
