@@ -2,6 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.time import Time
+from astropy.table import Table
 import numpy as np
 from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.random import get_random_state
@@ -14,6 +16,8 @@ from ...spectrum import (
     CountsSpectrum,
     SpectrumDatasetOnOffStacker,
 )
+from ...data import GTI
+from ...utils.time import time_ref_to_dict
 
 
 @requires_dependency("iminuit")
@@ -458,6 +462,12 @@ def _read_hess_obs():
     return [obs1, obs2]
 
 
+def make_gti(times, time_ref="2010-01-01"):
+    meta = time_ref_to_dict(time_ref)
+    table = Table(times, meta=meta)
+    return GTI(table)
+
+
 @requires_dependency("sherpa")
 @requires_data("gammapy-data")
 def make_observation_list():
@@ -484,6 +494,10 @@ def make_observation_list():
     )
     edisp = EnergyDispersion.from_gauss(e_true=energy, e_reco=energy, sigma=0.2, bias=0)
 
+    time_ref = Time("2010-01-01")
+    gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)
+    gti2 = make_gti({"START": [14], "STOP": [15]}, time_ref=time_ref)
+
     obs1 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector1,
@@ -494,6 +508,7 @@ def make_observation_list():
         acceptance=1,
         acceptance_off=2,
         obs_id=2,
+        gti=gti1,
     )
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
@@ -505,6 +520,7 @@ def make_observation_list():
         acceptance=1,
         acceptance_off=4,
         obs_id=2,
+        gti=gti2,
     )
 
     obs_list = [obs1, obs2]
@@ -515,7 +531,6 @@ def make_observation_list():
 class TestSpectrumDatasetOnOffStacker:
     def setup(self):
         self.obs_list = _read_hess_obs()
-
         # Change threshold to make stuff more interesting
         self.obs_list[0].mask_safe = self.obs_list[0].counts.energy_mask(
             emin=1.2 * u.TeV, emax=50 * u.TeV
@@ -573,3 +588,12 @@ class TestSpectrumDatasetOnOffStacker:
         assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.0)
         # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
         assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
+
+    def test_stack_gti(self):
+        obs_list = make_observation_list()
+        obs_stacker = SpectrumDatasetOnOffStacker(obs_list)
+        obs_stacker.run()
+        table_gti = Table({"START": [1.0, 5.0, 14.0], "STOP": [4.0, 8.0, 15.0]})
+        table_gti_stacked_obs = obs_stacker.stacked_obs.gti.table
+        assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
+        assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])

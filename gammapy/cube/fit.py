@@ -51,6 +51,9 @@ class MapDataset(Dataset):
         This mode is recommended for global optimization algorithms.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
+    gti : '~gammapy.data.gti.GTI'
+        GTI of the observation or union of GTI if it is a stacked observation
+
     """
 
     def __init__(
@@ -65,6 +68,7 @@ class MapDataset(Dataset):
         likelihood="cash",
         evaluation_mode="local",
         mask_safe=None,
+        gti=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -79,7 +83,7 @@ class MapDataset(Dataset):
         self.edisp = edisp
         self.background_model = background_model
         self.mask_safe = mask_safe
-
+        self.gti = gti
         if likelihood == "cash":
             self._stat = cash
             self._stat_sum = cash_sum_cython

@@ -97,7 +97,6 @@ class TestSpectrumExtraction:
         extraction = SpectrumExtraction(
             observations=observations, bkg_estimate=bkg_estimate, **pars
         )
-
         extraction.run()
         obs = extraction.spectrum_observations[0]
         aeff_actual = obs.aeff.data.evaluate(energy=5 * u.TeV)
@@ -116,6 +115,12 @@ class TestSpectrumExtraction:
         assert n_on_actual == results["n_on"]
         assert_allclose(sigma_actual, results["sigma"], atol=1e-2)
         assert_allclose(containment_actual, results["containment"], rtol=1e-3)
+
+        for i_obs, obs in enumerate(observations):
+            gti_obs = obs.gti.table
+            gti_dataset = extraction.spectrum_observations[i_obs].gti.table
+            assert_allclose(gti_dataset["START"], gti_obs["START"])
+            assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
 
     @staticmethod
     def test_alpha(observations, bkg_estimate):
