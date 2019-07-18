@@ -13,6 +13,7 @@ from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
     ExponentialCutoffPowerLaw3FGL,
+    PLSuperExpCutoff4FGL,
     PLSuperExpCutoff3FGL,
     LogParabola,
 )
@@ -22,10 +23,12 @@ from ..time import LightCurve
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
+    "SourceCatalogObject4FGL",
     "SourceCatalogObject3FGL",
     "SourceCatalogObject1FHL",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FHL",
+    "SourceCatalog4FGL",
     "SourceCatalog3FGL",
     "SourceCatalog1FHL",
     "SourceCatalog2FHL",
@@ -39,6 +42,52 @@ def compute_flux_points_ul(quantity, quantity_errp):
     See https://arxiv.org/pdf/1501.02003.pdf (page 30)
     """
     return 2 * quantity_errp + quantity
+
+
+class SourceCatalogObject4FGL(SourceCatalogObject):
+    """One source from the Fermi-LAT 4FGL catalog.
+
+    Catalog is represented by `~gammapy.catalog.SourceCatalog4FGL`.
+    """
+
+    @property
+    def spectral_model(self):
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        spec_type = self.data["SpectrumType"].strip()
+
+        pars, errs = {}, {}
+        pars["reference"] = self.data["Pivot_Energy"]
+
+        if spec_type == "PowerLaw":
+            pars["amplitude"] = self.data["PL_Flux_Density"]
+            pars["index"] = self.data["PL_Index"]
+            errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
+            errs["index"] = self.data["Unc_PL_Index"]
+            model = PowerLaw(**pars)
+        elif spec_type == "LogParabola":
+            pars["amplitude"] = self.data["LP_Flux_Density"]
+            pars["alpha"] = self.data["LP_Index"]
+            pars["beta"] = self.data["LP_beta"]
+            errs["amplitude"] = self.data["Unc_LP_Flux_Density"]
+            errs["alpha"] = self.data["Unc_LP_Index"]
+            errs["beta"] = self.data["Unc_LP_beta"]
+            model = LogParabola(**pars)
+        elif spec_type == "PLSuperExpCutoff":
+            # TODO: why convert to GeV here? Remove?
+            pars["amplitude"] = self.data["PLEC_Flux_Density"]
+            pars["index_1"] = self.data["PLEC_Index"]
+            pars["index_2"] = self.data["PLEC_Exp_Index"]
+            pars["expfactor"] = self.data["PLEC_Expfactor"]
+            errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
+            errs["index_1"] = self.data["Unc_PLEC_Index"]
+            errs["index_2"] = self.data["Unc_PLEC_Exp_Index"]
+            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"]
+            model = PLSuperExpCutoff4FGL(**pars)
+        else:
+            raise ValueError("Invalid spec_type: {!r}".format(spec_type))
+
+        model.parameters.set_parameter_errors(errs)
+        return model
 
 
 class SourceCatalogObject3FGL(SourceCatalogObject):
@@ -452,7 +501,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ]
         )
         return LightCurve(table)
-
 
 class SourceCatalogObject1FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 1FHL catalog.
@@ -1040,6 +1088,57 @@ class SourceCatalog3FGL(SourceCatalog):
         selection = self.is_source_class(source_class)
         catalog.table = catalog.table[selection]
         return catalog
+
+
+class SourceCatalog4FGL(SourceCatalog):
+    """Fermi-LAT 4FGL source catalog.
+
+    Reference: https://arxiv.org/abs/1902.10045
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
+    """
+
+    name = "4fgl"
+    ## also change this description
+    description = "LAT 8-year point source catalog"
+    source_object_class = SourceCatalogObject4FGL
+    ## TODO: source categories ?
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit"):
+        filename = str(make_path(filename))
+
+        with warnings.catch_warnings():  # ignore FITS units warnings
+            warnings.simplefilter("ignore", u.UnitsWarning)
+            ##check this
+            table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
+
+        table_standardise_units_inplace(table)
+
+        source_name_key = "Source_Name"
+        source_name_alias = (
+            "Extended_Source_Name",
+            "0FGL_Name",
+            "1FGL_Name",
+            "2FGL_Name",
+            "1FHL_Name",
+            "ASSOC_TEV",
+            "ASSOC1",
+            "ASSOC2",
+        )
+        super().__init__(
+            table=table,
+            source_name_key=source_name_key,
+            source_name_alias=source_name_alias,
+        )
+
+        ## what is the difference between the point and the extended
+        self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+
+
+
+
+
+
 
 
 class SourceCatalog1FHL(SourceCatalog):

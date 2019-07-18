@@ -1040,6 +1040,72 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         return pwl * cutoff
 
 
+class PLSuperExpCutoff4FGL(SpectralModel):
+    r"""Spectral super exponential cutoff power-law model used for 4FGL.
+
+    .. math::
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
+                  \exp \left( a \left(E_0 ^{\Gamma_2} - \E^{\Gamma_2} \right)
+                              \right)
+
+    Parameters
+    ----------
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    expfactor : `~astropy.units.Quantity`
+        :math: 'a'
+
+    Examples
+    --------
+    This is how to plot the default `PLSuperExpCutoff4FGL` model::
+
+        from astropy import units as u
+        from gammapy.spectrum.models import PLSuperExpCutoff4FGL
+
+        secpl_4fgl = PLSuperExpCutoff4FGL()
+        secpl_4fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
+    """
+
+    __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
+
+    def __init__(
+        self,
+        index_1=1.5,
+        index_2=2,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        expfactor = "1e-2 TeV-2",
+    ):
+        self.index_1 = Parameter("index_1", index_1)
+        self.index_2 = Parameter("index_2", index_2)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+        self.expfactor = Parameter("expfactor", expfactor)
+
+        super().__init__(
+            [self.index_1, self.index_2, self.amplitude, self.reference, self.expfactor]
+        )
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
+        """Evaluate the model (static function)."""
+        pwl = amplitude * (energy / reference) ** (-index_1)
+        try:
+            cutoff = expfactor * np.exp(reference ** index_2 - energy ** index_2)
+        except AttributeError:
+            from uncertainties.unumpy import exp
+
+            cutoff = expfactor * exp(reference ** index_2 - energy ** index_2)
+        return pwl * cutoff
+
+
 class LogParabola(SpectralModel):
     r"""Spectral log parabola model.
 

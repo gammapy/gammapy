@@ -13,6 +13,7 @@ from ...spectrum.models import (
     PLSuperExpCutoff3FGL,
 )
 from .. import (
+    SourceCatalog4FGL,
     SourceCatalog3FGL,
     SourceCatalog2FHL,
     SourceCatalog1FHL,
@@ -439,3 +440,9 @@ class TestSourceCatalog3FHL:
 
         selection = self.cat.select_source_class("PSR")
         assert len(selection.table) == 53
+
+def test_4fgl():
+    cat = SourceCatalog4FGL()
+    source = cat[188]
+    spectral_model = source.spectral_model
+    print(spectral_model)
