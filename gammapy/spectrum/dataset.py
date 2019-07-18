@@ -216,23 +216,18 @@ class SpectrumDataset(Dataset):
         return self._as_counts_spectrum(excess)
 
     def fake(self, random_state="random-seed"):
-        """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
+        """Simulate fake counts for the current model and reduced irfs.
+        Erase the counts data and replace them by the simulated ones.
 
         Parameters
         ----------
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        spectrum : `~gammapy.spectrum.CountsSpectrum`
-            the fake count spectrum
         """
         random_state = get_random_state(random_state)
         data = random_state.poisson(self.npred().data)
-        energy = self.counts.energy.edges
-        return CountsSpectrum(energy[:-1], energy[1:], data)
+        self.counts.data = data
 
     @property
     def energy_range(self):
@@ -382,6 +377,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Relative background efficiency in
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
+    background : `~gammapy.spectrum.CountsSpectrum`
+        Background model use to simulate observation
 
     See Also
     --------
@@ -466,6 +463,26 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
+
+    def fake(self, background_model, random_state="random-seed"):
+        """Simulate fake counts for the current model and reduced irfs.
+        Simulate fake background counts for the current background model.
+        Erase the counts and background data and replace them by the simulated ones.
+
+        Parameters
+        ----------
+        background_model : `~gammapy.spectrum.CountsSpectrum`
+            BackgroundModel. In the future will be part of the SpectrumDataset Class.
+            For the moment, a CountSpectrum.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+        data = random_state.poisson(self.npred().data + background_model.data)
+        self.counts.data = data
+        bkg = random_state.poisson(background_model.data / self.alpha)
+        self.counts_off.data = bkg
 
     @classmethod
     def read(cls, filename):

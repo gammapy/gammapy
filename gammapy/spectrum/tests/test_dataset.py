@@ -83,11 +83,12 @@ class TestSpectrumDataset:
 
     def test_fake(self):
         """Test the fake dataset"""
-        fake_spectrum = self.dataset.fake(314)
-
-        assert isinstance(fake_spectrum, CountsSpectrum)
-        assert_allclose(fake_spectrum.energy.edges, self.dataset.counts.energy.edges)
-        assert fake_spectrum.data.sum() == 907331
+        real_dataset = self.dataset.copy()
+        self.dataset.fake(314)
+        assert real_dataset.counts.data.shape == self.dataset.counts.data.shape
+        assert real_dataset.background.data.sum() == self.dataset.background.data.sum()
+        assert int(real_dataset.counts.data.sum()) == 907010
+        assert self.dataset.counts.data.sum() == 907331
 
     def test_incorrect_mask(self):
         mask_fit = np.ones(self.nbins, dtype=np.dtype("float"))
@@ -259,6 +260,7 @@ class TestSpectrumOnOff:
         desired = [False, False, True, True]
         assert_allclose(mask, desired)
 
+
     def test_str(self):
         model = PowerLaw()
         dataset = SpectrumDatasetOnOff(
@@ -273,6 +275,39 @@ class TestSpectrumOnOff:
         )
         assert "SpectrumDatasetOnOff" in str(dataset)
         assert "wstat" in str(dataset)
+
+
+    def test_fake(self):
+        """Test the fake dataset"""
+        source_model = PowerLaw()
+        dataset = SpectrumDatasetOnOff(
+            counts=self.on_counts,
+            counts_off=self.off_counts,
+            model=source_model,
+            aeff=self.aeff,
+            livetime=self.livetime,
+            edisp=self.edisp,
+            backscale=1,
+            backscale_off=10,
+        )
+        real_dataset = dataset.copy()
+        # Define background model counts
+        elo = self.on_counts.energy.edges[:-1]
+        ehi = self.on_counts.energy.edges[1:]
+        data = np.ones(self.on_counts.data.shape)
+        background_model = CountsSpectrum(elo, ehi, data)
+        dataset.fake(background_model=background_model, random_state=314)
+
+        assert real_dataset.counts.data.shape == dataset.counts.data.shape
+        assert real_dataset.counts_off.data.shape == dataset.counts_off.data.shape
+        assert (
+            real_dataset.counts.energy.center.mean()
+            == dataset.counts.energy.center.mean()
+        )
+        assert real_dataset.backscale.mean() == dataset.backscale.mean()
+        assert dataset.counts_off.data.sum() == 39
+        assert dataset.counts.data.sum() == 9
+
 
 
 @requires_dependency("iminuit")

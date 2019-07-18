@@ -5,6 +5,7 @@ from astropy.utils import lazyproperty
 import astropy.units as u
 from astropy.nddata.utils import NoOverlapError
 from astropy.io import fits
+from ..utils.random import get_random_state
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
@@ -392,6 +393,21 @@ class MapDataset(Dataset):
             stat = self._stat_sum(counts.ravel(), npred.ravel())
 
         return stat
+
+    def fake(self, random_state="random-seed"):
+        """
+        Simulate fake counts for the current model and reduced irfs.
+        Erase the counts data and replace them by the simulated ones.
+
+        Parameters
+        ----------
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+        data = random_state.poisson(self.npred().data)
+        self.counts.data = data
 
     def to_hdulist(self):
         """Convert map dataset to list of HDUs.
