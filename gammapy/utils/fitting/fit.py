@@ -2,7 +2,6 @@
 import logging
 import abc
 import numpy as np
-from astropy.utils.misc import InheritDocstrings
 from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
 from .sherpa import optimize_sherpa, covariance_sherpa
 from .scipy import optimize_scipy, covariance_scipy, confidence_scipy
@@ -13,7 +12,7 @@ __all__ = ["Fit"]
 log = logging.getLogger(__name__)
 
 
-class FitMeta(InheritDocstrings, abc.ABCMeta):
+class FitMeta(abc.ABCMeta):
     pass
 
 
