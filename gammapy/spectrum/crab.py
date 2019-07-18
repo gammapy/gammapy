@@ -12,7 +12,7 @@ class MeyerCrabModel(SpectralModel):
     See 2010A%26A...523A...2M, Appendix D.
     """
 
-    coefficients = np.array([-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708])
+    coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod
     def evaluate(energy):
@@ -24,7 +24,7 @@ class MeyerCrabModel(SpectralModel):
 
 
 def create_crab_spectral_model(reference="meyer"):
-    """Create the Crab nebula spectral model depending of the reference given.
+    """Create a Crab nebula reference spectral model.
 
     The Crab nebula is often used as a standard candle in gamma-ray astronomy.
     Fluxes and sensitivities are often quoted relative to the Crab spectrum.
@@ -71,53 +71,40 @@ def create_crab_spectral_model(reference="meyer"):
         >>> print(flux_int_cu)
         3.5350582166 %
     """
-
     if reference == "meyer":
-        model = MeyerCrabModel()
+        return MeyerCrabModel()
     elif reference == "hegra":
-        model = PowerLaw(
+        return PowerLaw(
             amplitude=2.83e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.62,
             reference=1 * u.TeV,
         )
     elif reference == "hess_pl":
-        # HESS publication: 2006A&A...457..899A
-        model = PowerLaw(
+        return PowerLaw(
             amplitude=3.45e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.63,
             reference=1 * u.TeV,
         )
     elif reference == "hess_ecpl":
-        model = ExponentialCutoffPowerLaw(
+        return ExponentialCutoffPowerLaw(
             amplitude=3.76e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.39,
             lambda_=1 / (14.3 * u.TeV),
             reference=1 * u.TeV,
         )
     elif reference == "magic_lp":
-        model = LogParabola(
+        return LogParabola(
             amplitude=3.23e-11 * u.Unit("1 / (cm2 s TeV)"),
             alpha=2.47,
             beta=0.24 / np.log(10),
             reference=1 * u.TeV,
         )
     elif reference == "magic_ecpl":
-        model = ExponentialCutoffPowerLaw(
+        return ExponentialCutoffPowerLaw(
             amplitude=3.80e-11 * u.Unit("1 / (cm2 s TeV)"),
             index=2.21,
             lambda_=1 / (6.0 * u.TeV),
             reference=1 * u.TeV,
         )
     else:
-        fmt = "Invalid reference: {!r}. Choices: {!r}"
-        references = [
-            "meyer",
-            "hegra",
-            "hess_pl",
-            "hess_ecpl",
-            "magic_lp",
-            "magic_ecpl",
-        ]
-        raise ValueError(fmt.format(reference, references))
-
-    return model
+        raise ValueError("Invalid reference: {!r}".format(reference))
