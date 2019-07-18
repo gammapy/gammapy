@@ -568,36 +568,37 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def to_counts_spectrum(self, on_region=None, func=np.sum):
-        """
-        Computes the counts spectrum by summing (or, more generally, applying `func`) along the spatial axis
-        in each energy bin. This occurs only inside the `on_region`, which by default is assumed to be the
-        whole spatial extension of the map.
+    def get_spectrum(self, region=None, func=np.nansum):
+        """Extract spectrum in a given region.
+
+        The spectrum can be computed by summing (or, more generally, applying `func`)
+        along the spatial axies in each energy bin. This occurs only inside the `region`,
+        which by default is assumed to be the whole spatial extension of the map.
 
         Parameters
         ----------
-        on_region: `~regions.Region`
-            Python region (pixel or sky regions accepted)
-        func: `~numpy.ufunc`
+        region: `~regions.Region`
+             Region (pixel or sky regions accepted).
+        func : `~numpy.ufunc`
+            Function to reduce the data.
 
         Returns
-        `on_counts`: `~numpy.ndarray`
         -------
-
+        spectrum : `CountsSpectrum`
+            Spectrum in the given region.
         """
-        geom = self.geom
+        from ..spectrum import CountsSpectrum
 
-        if not on_region:
-            position = geom.center_skydir
-            width, height = geom.width
-            on_region = RectangleSkyRegion(position, width=width[0], height=height[0])
+        if region:
+            mask = self.geom.region_mask([region], inside=True)
+        else:
+            mask = 1
 
-        on_mask = geom.region_mask([on_region], inside=True)
-        on_map = self * on_mask
+        data = func(self.data * mask, axis=(1, 2))
 
-        on_counts = np.nansum(on_map.data, axis=(1, 2))
-
-        return on_counts
+        energy_axis = self.geom.get_axis_by_name("energy")
+        edges = energy_axis.edges
+        return CountsSpectrum(data=data, energy_lo=edges[:1], energy_hi=edges[1:])
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """

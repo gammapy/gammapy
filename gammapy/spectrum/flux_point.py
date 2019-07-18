@@ -1224,18 +1224,22 @@ class FluxPointsDataset(Dataset):
             pass
 
     def residuals(self, norm=None):
-        """Compute the flux point residuals (`~numpy.ndarray`).
-
-        Available options are:
-        - `norm=None` (default) for: flux points - model
-        - `norm='model'` for: (flux points - model)/model
-        - `norm='sqrt_model'` for: (flux points - model)/sqrt(model)
+        """Compute the flux point residuals ().
 
         Parameters
         ----------
         norm: `str`, optional
-            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+            Normalization used to compute the residuals. Choose between `None`,
+            `model` and `sqrt_model`. Available options are:
+                - `norm=None` (default) for: flux points - model
+                - `norm='model'` for: (flux points - model)/model
+                - `norm='sqrt_model'` for: (flux points - model)/sqrt(model)
 
+
+        Returns
+        -------
+        residuals : `~numpy.ndarray`
+            Residuals array.
         """
         fp = self.data
         data = fp.table[fp.sed_type].quantity
@@ -1292,16 +1296,15 @@ class FluxPointsDataset(Dataset):
     def _e_unit(self):
         return self.data.e_ref.unit
 
-    def plot_residuals(self, norm=None, ax=None, **kwargs):
+    def plot_residuals(self, ax=None, norm=None,  **kwargs):
         """Plot flux point residuals.
 
-        The normalization used for the residuals computation can be controlled using the `norm` parameter.
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
         norm: `str`
-            normalization used to compute the spectral residuals. Choose between `None`, `model` and `sqrt_model`.
+            Normalization used to compute the spectral residuals. See `FLuxPointsDataset.residuals`
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 

@@ -211,15 +211,14 @@ class SpectrumDataset(Dataset):
     def residuals(self, norm=None):
         """Compute the spectral residuals (`~~gammapy.spectrum.core.CountsSpectrum`).
 
-        Available options are:
-        - `norm=None` (default) for: data - model
-        - `norm='model'` for: (data - model)/model
-        - `norm='sqrt_model'` for: (data - model)/sqrt(model)
-
         Parameters
         ----------
         norm: `str`, optional
-            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+            Normalization used to compute the residuals. Available options are:
+                - `norm=None` (default) for: data - model
+                - `norm='model'` for: (data - model)/model
+                - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+
 
         """
 
@@ -241,16 +240,17 @@ class SpectrumDataset(Dataset):
 
         return self._as_counts_spectrum(residuals)
 
-    def plot_residuals(self, norm=None, ax=None):
+    def plot_residuals(self, norm=None, ax=None, **kwargs):
         """Plot residuals.
 
-        The normalization used for the residuals computation can be controlled using the `norm` parameter.
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
         norm: `str`
             normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+        **kwargs : dict
+            Keywords passed to `CountsSpectrum.plot()`
 
         Returns
         -------
@@ -266,12 +266,13 @@ class SpectrumDataset(Dataset):
         if not norm:
             label = "(counts - model)"
         elif norm == "model":
-            label = "(counts - model)/model"
+            label = "(counts - model) / model"
         elif norm == "sqrt_model":
-            label = "(counts - model)/sqrt(model)"
+            label = "(counts - model) / sqrt(model)"
 
         residuals.plot(
-            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit, label=label
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit, label=label,
+            **kwargs
         )
         ax.axhline(0, color="black", lw=0.5)
 

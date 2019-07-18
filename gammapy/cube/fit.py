@@ -164,17 +164,21 @@ class MapDataset(Dataset):
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, norm=None):
-        """Compute the residuals cube (`gammapy.maps.WcsNDMap`).
-
-        Available options are:
-        - `norm=None` (default) for: data - model
-        - `norm='model'` for: (data - model)/model
-        - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+        """Compute residuals map.
 
         Parameters
         ----------
         norm: `str`, optional
-            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+            Normalization used to compute the residuals. Choose between `None`,
+            `model` and `sqrt_model`. Available options are:
+                - `norm=None` (default) for: data - model
+                - `norm='model'` for: (data - model)/model
+                - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+
+        Returns
+        -------
+        residuals : `gammapy.maps.WcsNDMap`
+            Residual map.
 
         """
         residuals = self.counts - self.npred()
@@ -196,80 +200,74 @@ class MapDataset(Dataset):
     def plot_residuals(
         self,
         norm=None,
-        kernel="gauss",
+        smooth_kernel="gauss",
         smooth_radius="0.1 deg",
-        on_region=None,
-        width=None,
+        region=None,
         figsize=(15, 4),
         **kwargs
     ):
         """
-        Plot spatial and spectral residuals. The spectral residuals are extracted from the provided `on_region`,
-        and the normalization used for the residuals computation can be controlled using the `norm` parameter.
-        If no `on_region` is passed, only the spatial residuals are shown.
+        Plot spatial and spectral residuals.
+
+        The spectral residuals are extracted from the provided `region`, and the
+        normalization used for the residuals computation can be controlled using
+        the `norm` parameter. If no `region` is passed, only the spatial
+        residuals are shown.
 
         Parameters
         ----------
-        norm: `str`
-            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
-        kernel : {'gauss', 'box'}
-            Kernel shape
+        norm : `str`
+            Normalization used to compute the residuals, see `MapDataset.residual()`
+        smooth_kernel : {'gauss', 'box'}
+            Kernel shape.
         smooth_radius: `~astropy.units.Quantity`, str or float
-        Smoothing width given as quantity or float. If a float is given it
-        is interpreted as smoothing width in pixels.
-        on_region: `~regions.Region`
-            Python region (pixel or sky regions accepted)
-        width : tuple of `~astropy.coordinates.Angle`
-            Angular sizes of the region in (lon, lat) in that specific order.
-            If only one value is passed, a square region is extracted.
+            Smoothing width given as quantity or float. If a float is given it
+            is interpreted as smoothing width in pixels.
+        region: `~regions.Region`
+            Region (pixel or sky regions accepted)
+        figsize : tuple
+            Figure size used for the plotting.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+
         Returns
         -------
-
+        ax_image, ax_spec : `~matplotlib.pyplot.Axes`,
+            Image and spectrum axes.
         """
-
         import matplotlib.pyplot as plt
 
         fig = plt.figure(figsize=figsize)
-        axes = []
 
         # residuals cube
         residuals = self.residuals(norm=norm)
-        if self.mask:
+        
+        if self.mask is not None:
             residuals *= self.mask
 
         geom = residuals.geom
-        edges = geom.axes[0].edges
 
         # Spatial residuals
         spatial_residuals = residuals.sum_over_axes().smooth(
-            width=smooth_radius, kernel=kernel
+            width=smooth_radius, kernel=smooth_kernel
         )
 
-        if width:
-            position = on_region.center if on_region else geom.center_skydir
-            spatial_residuals = spatial_residuals.cutout(position=position, width=width)
-
         # If no region is provided, skip spectral residuals
-        if on_region:
-            ncols = 2
-        else:
-            ncols = 1
-        axes.append(fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs))
+        ncols = 2 if region is not None else 1
+        ax_image = fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs)
+        ax_spec = None
 
         kwargs.setdefault("cmap", "coolwarm")
         kwargs.setdefault("stretch", "linear")
         kwargs.setdefault("vmin", -5)
         kwargs.setdefault("vmax", 5)
-        spatial_residuals.plot(ax=axes[0], add_cbar=True, **kwargs)
+        spatial_residuals.plot(ax=ax_image, add_cbar=True, **kwargs)
 
         # Spectral residuals
-        if on_region:
-            axes.append(fig.add_subplot(1, 2, 2))
+        if region:
+            ax_spec = fig.add_subplot(1, 2, 2)
+            spec = residuals.get_spectrum(region=region)
 
-            data = residuals.to_counts_spectrum(on_region=on_region)
-            spec = CountsSpectrum(energy_lo=edges[:-1], energy_hi=edges[1:], data=data)
             if not norm:
                 label = "(counts - model)"
             elif norm == "model":
@@ -278,13 +276,15 @@ class MapDataset(Dataset):
                 label = "(counts - model)/sqrt(model)"
             spec.plot(label=label)
 
-            plt.ylim(np.min(data) - (np.max(data) - np.min(data)) / 5.0)
+            plt.ylim(np.min(spec.data) - (np.max(spec.data) - np.min(spec.data)) / 5.0)
             plt.ylabel("Residuals")
             plt.legend()
 
             # Overlay spectral extraction region on the spatial residuals
-            pix_region = on_region.to_pixel(wcs=spatial_residuals.geom.wcs)
-            pix_region.plot(ax=axes[0], ls="--", edgecolor="black")
+            pix_region = region.to_pixel(wcs=spatial_residuals.geom.wcs)
+            pix_region.plot(ax=ax_image, ls="--", edgecolor="black")
+
+        return ax_image, ax_spec
 
     @lazyproperty
     def _counts_data(self):
