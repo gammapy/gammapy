@@ -89,12 +89,12 @@ counts maps.
 
 The basic code structure is the following:
 
-.. code::
+::
     
     dataset = MapDataset([pointing, GTI, models])
     dataset_sampler = MapDatasetEventSampler(dataset, random_state)
     event_list = dataset_sampler.sample()
-
+    
 where `random_state` is the seed for the random number generator. 
 
 
@@ -103,7 +103,7 @@ MapDatasetEventSampler
 
 The general design of the `sample` method is as follows:
 
-.. code::
+::
 
     for src in dataset[source1, source2, ...sourceN]:
 	npred_map = src.evaluate()
@@ -115,7 +115,7 @@ The general design of the `sample` method is as follows:
 	events_edisp = EdispMap.distribute(events_psf)
 	events = Table('RA', 'DEC', 'ENERGY', 'TIME')
     return EventList
-
+    
 In more detail, `sample` starts a loop over the sources stored into the `MapDataset` 
 object. Then, for each source, the `src.evaluate` method will calculate the predicted 
 number of source counts, that will be the input of the `npred_total` method. The latter 
