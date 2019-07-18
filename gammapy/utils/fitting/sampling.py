@@ -122,21 +122,21 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     for par in dataset.parameters.free_parameters:
         labels.append(par.name)
         if (par.min is np.nan) and (par.max is np.nan):
-            logging.warning(
+            log.warning(
                 "Warning: no priors have been set for parameter %s\n The MCMC will likely not work !"
                 % (par.name)
             )
 
-    logging.info("List of free parameters: %s" %(labels) )
-    logging.info("{} walkers will run for {} steps".format(nwalkers, nrun))
+        log.info("List of free parameters: %s" %(labels) )
+    log.info("{} walkers will run for {} steps".format(nwalkers, nrun))
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, lnprob, args=[dataset], threads=threads
     )
 
     for idx, result in enumerate(sampler.sample(p0, iterations=nrun)):
         if (idx) % (nrun / 4) == 0:
-            logging.info("{0:5.0%}".format(idx / nrun))
-    logging.info("100% => sampling completed")
+            log.info("{0:5.0%}".format(idx / nrun))
+    log.info("100% => sampling completed")
 
     return sampler
 
