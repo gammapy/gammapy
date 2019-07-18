@@ -209,19 +209,33 @@ class SpectrumDataset(Dataset):
         return ax
 
     def residuals(self, norm=None):
+        """Compute the spectral residuals (`~~gammapy.spectrum.core.CountsSpectrum`).
+
+        Available options are:
+        - `norm=None` (default) for: data - model
+        - `norm='model'` for: (data - model)/model
+        - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+
+        Parameters
+        ----------
+        norm: `str`, optional
+            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+
+        """
 
         residuals = self.counts.data - self.npred().data
 
-        if norm == "model":
-            residuals /= self.npred().data
-        elif norm == "sqrt_model":
-            residuals /= np.sqrt(self.npred().data)
-        elif norm != None:
-            raise AttributeError(
-                "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
-                    self.norm
+        with np.errstate(invalid='ignore'):
+            if norm == "model":
+                residuals /= self.npred().data
+            elif norm == "sqrt_model":
+                residuals /= np.sqrt(self.npred().data)
+            elif norm != None:
+                raise AttributeError(
+                    "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
+                        self.norm
+                    )
                 )
-            )
 
         residuals = np.nan_to_num(residuals)
 
@@ -230,10 +244,13 @@ class SpectrumDataset(Dataset):
     def plot_residuals(self, norm=None, ax=None):
         """Plot residuals.
 
+        The normalization used for the residuals computation can be controlled using the `norm` parameter.
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+        norm: `str`
+            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
 
         Returns
         -------

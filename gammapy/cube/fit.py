@@ -12,7 +12,8 @@ from ..maps import Map
 from ..irf import EnergyDispersion
 from .models import SkyModel, SkyModels, BackgroundModel
 from .psf_kernel import PSFKernel
-
+from astropy.coordinates import Angle
+from gammapy.spectrum.core import CountsSpectrum
 
 __all__ = ["MapEvaluator", "MapDataset"]
 
@@ -164,18 +165,32 @@ class MapDataset(Dataset):
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, norm=None):
+        """Compute the residuals cube (`gammapy.maps.WcsNDMap`).
+
+        Available options are:
+        - `norm=None` (default) for: data - model
+        - `norm='model'` for: (data - model)/model
+        - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+
+        Parameters
+        ----------
+        norm: `str`, optional
+            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+
+        """
         residuals = self.counts - self.npred()
 
-        if norm == "model":
-            residuals /= self.npred()
-        elif norm == "sqrt_model":
-            residuals /= np.sqrt(self.npred().data)
-        elif norm != None:
-            raise AttributeError(
-                "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
-                    self.norm
+        with np.errstate(invalid='ignore'):
+            if norm == "model":
+                residuals /= self.npred()
+            elif norm == "sqrt_model":
+                residuals /= np.sqrt(self.npred().data)
+            elif norm != None:
+                raise AttributeError(
+                    "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
+                        self.norm
+                    )
                 )
-            )
 
         return residuals
 
@@ -183,19 +198,39 @@ class MapDataset(Dataset):
         self,
         norm=None,
         kernel="gauss",
-        vmin=-5,
-        vmax=5,
         smooth_radius="0.1 deg",
         on_region=None,
         width=None,
         figsize=(15, 4),
+        **kwargs,
     ):
+        """
+        Plot spatial and spectral residuals. The spectral residuals are extracted from the provided `on_region`,
+        and the normalization used for the residuals computation can be controlled using the `norm` parameter.
+        If no `on_region` is passed, only the spatial residuals are shown.
+
+        Parameters
+        ----------
+        norm: `str`
+            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+        kernel : {'gauss', 'box'}
+            Kernel shape
+        smooth_radius: `~astropy.units.Quantity`, str or float
+        Smoothing width given as quantity or float. If a float is given it
+        is interpreted as smoothing width in pixels.
+        on_region: `~regions.Region`
+            Python region (pixel or sky regions accepted)
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+        Returns
+        -------
+
+        """
 
         import matplotlib.pyplot as plt
-        from regions import CircleSkyRegion
-        from astropy.coordinates import Angle
-        from gammapy.spectrum.core import CountsSpectrum
-        import numpy.ma as ma
 
         fig = plt.figure(figsize=figsize)
         axes = []
@@ -208,57 +243,54 @@ class MapDataset(Dataset):
         geom = residuals.geom
         edges = geom.axes[0].edges
 
-        if on_region:
-            position = on_region.center
-        else:
-            position = geom.center_skydir
-            on_region = CircleSkyRegion(position, Angle(np.min(geom.width) / 2.0))
-
         # Spatial residuals
         spatial_residuals = residuals.sum_over_axes().smooth(
             width=smooth_radius, kernel=kernel
         )
-        if width:
-            spatial_residuals = spatial_residuals.cutout(position=position, width=width)
 
-        axes.append(fig.add_subplot(1, 2, 1, projection=spatial_residuals.geom.wcs))
+        position = on_region.center if on_region else geom.center_skydir
+        if not width:
+            width = tuple(geom.width)
+        spatial_residuals = spatial_residuals.cutout(position=position, width=width)
 
+        # If no region is provided, skip spectral residuals
+        if on_region:
+            ncols = 2
+        else:
+            ncols=1
+        axes.append(fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs))
+
+        kwargs.setdefault('cmap', 'coolwarm')
+        kwargs.setdefault('stretch', 'linear')
+        kwargs.setdefault('vmin', -5)
+        kwargs.setdefault('vmax', 5)
         spatial_residuals.plot(
             ax=axes[0],
-            vmin=vmin,
-            vmax=vmax,
-            cmap="coolwarm",
             add_cbar=True,
-            stretch="linear",
+            **kwargs
         )
 
         # Spectral residuals
-        axes.append(fig.add_subplot(1, 2, 2))
+        if on_region:
+            axes.append(fig.add_subplot(1, 2, 2))
 
-        on_mask = geom.region_mask([on_region], inside=True)
-        on_residuals = residuals * on_mask
+            data = residuals.to_counts_spectrum(on_region=on_region)
+            spec = CountsSpectrum(energy_lo=edges[:-1], energy_hi=edges[1:], data=data)
+            if not norm:
+                label = "(counts - model)"
+            elif norm == "model":
+                label = "(counts - model)/model"
+            elif norm == "sqrt_model":
+                label = "(counts - model)/sqrt(model)"
+            spec.plot(label=label)
 
-        data = []
-        for idx in range(len(edges[:-1])):
-            energy_slice = on_residuals.slice_by_idx({"energy": idx})
-            data.append(ma.masked_invalid(energy_slice.data).sum())
+            plt.ylim(np.min(data) - (np.max(data) - np.min(data)) / 5.0)
+            plt.ylabel("Residuals")
+            plt.legend()
 
-        spec = CountsSpectrum(energy_lo=edges[:-1], energy_hi=edges[1:], data=data)
-        if not norm:
-            label = "(counts - model)"
-        elif norm == "model":
-            label = "(counts - model)/model"
-        elif norm == "sqrt_model":
-            label = "(counts - model)/sqrt(model)"
-        spec.plot(label=label)
-
-        plt.ylim(np.min(data) - (np.max(data) - np.min(data)) / 5.0)
-        plt.ylabel("Residuals")
-        plt.legend()
-
-        # Overlay spectral extraction region on the spatial residuals
-        pix_region = on_region.to_pixel(wcs=spatial_residuals.geom.wcs)
-        pix_region.plot(ax=axes[0], ls="--", edgecolor="black")
+            # Overlay spectral extraction region on the spatial residuals
+            pix_region = on_region.to_pixel(wcs=spatial_residuals.geom.wcs)
+            pix_region.plot(ax=axes[0], ls="--", edgecolor="black")
 
     @lazyproperty
     def _counts_data(self):

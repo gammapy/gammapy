@@ -1224,7 +1224,18 @@ class FluxPointsDataset(Dataset):
             pass
 
     def residuals(self, norm=None):
-        """Compute flux point residuals (`~numpy.ndarray`).
+        """Compute the flux point residuals (`~numpy.ndarray`).
+
+        Available options are:
+        - `norm=None` (default) for: flux points - model
+        - `norm='model'` for: (flux points - model)/model
+        - `norm='sqrt_model'` for: (flux points - model)/sqrt(model)
+
+        Parameters
+        ----------
+        norm: `str`, optional
+            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+
         """
         fp = self.data
         data = fp.table[fp.sed_type].quantity
@@ -1232,23 +1243,30 @@ class FluxPointsDataset(Dataset):
         model = self.model(fp.e_ref)
         residuals = data - model
 
-        if norm == "model":
-            residuals /= model
-        elif norm == "sqrt_model":
-            residuals /= np.sqrt(model)
-        elif norm != None:
-            raise AttributeError(
-                "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
-                    norm
+        with np.errstate(invalid='ignore'):
+            if norm == "model":
+                residuals /= model
+            elif norm == "sqrt_model":
+                residuals /= np.sqrt(model)
+            elif norm != None:
+                raise AttributeError(
+                    "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
+                        norm
+                    )
                 )
-            )
 
         # Remove residuals for upper_limits
         residuals[fp.is_ul] = np.nan
         return residuals
 
     def peek(self, norm=None, **kwargs):
-        """Plot flux points, best fit model and residuals."""
+        """Plot flux points, best fit model and residuals.
+
+        Parameters
+        ----------
+        norm: `str`
+            normalization used to compute the spectral residuals. Choose between `None`, `model` and `sqrt_model`.
+        """
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
 
@@ -1277,10 +1295,13 @@ class FluxPointsDataset(Dataset):
     def plot_residuals(self, norm=None, ax=None, **kwargs):
         """Plot flux point residuals.
 
+        The normalization used for the residuals computation can be controlled using the `norm` parameter.
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+        norm: `str`
+            normalization used to compute the spectral residuals. Choose between `None`, `model` and `sqrt_model`.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 

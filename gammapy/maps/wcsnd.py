@@ -9,6 +9,7 @@ from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 from scipy.signal import fftconvolve
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
+from regions import RectangleSkyRegion
 from ..extern.skimage import block_reduce
 from ..utils.units import unit_from_fits_image_hdu
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -566,6 +567,38 @@ class WcsNDMap(WcsMap):
             smoothed_data[idx] = data
 
         return self._init_copy(data=smoothed_data)
+
+    def to_counts_spectrum(self, on_region=None, func=np.sum):
+        """
+        Computes the counts spectrum by summing (or, more generally, applying `func`) along the spatial axis
+        in each energy bin. This occurs only inside the `on_region`, which by default is assumed to be the
+        whole spatial extension of the map.
+
+        Parameters
+        ----------
+        on_region: `~regions.Region`
+            Python region (pixel or sky regions accepted)
+        func: `~numpy.ufunc`
+
+        Returns
+        `on_counts`: `~numpy.ndarray`
+        -------
+
+        """
+        geom = self.geom
+
+        if not on_region:
+            position = geom.center_skydir
+            width, height = geom.width
+            on_region = RectangleSkyRegion(position, width=width[0], height=height[0])
+
+        on_mask = geom.region_mask([on_region], inside=True)
+        on_map = self * on_mask
+
+        on_counts = np.nansum(on_map.data, axis=(1, 2))
+
+        return on_counts
+
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
