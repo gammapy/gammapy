@@ -124,7 +124,7 @@ random number of sampled events.
 
 We propose to add a `sample` method in `~gamampy.cube.MapDataset` that will be the
 core of the sampling process. The `sample` is based on the 
-`~gammapy.utils.random.InverseCDFSampler` class described in PR#2229_. The output 
+`~gammapy.utils.random.InverseCDFSampler` class described in `PR#2229`_ . The output 
 will be an `~astropy.table.Table` with columns: `TRUE_RA`, `TRUE_DEC` and `TRUE_ENERGIES`.
 
 Then, the time will be sampled independently. This will be done through a `sample` 
