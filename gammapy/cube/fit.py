@@ -236,7 +236,9 @@ class MapDataset(Dataset):
         axes = []
 
         # residuals cube
-        residuals = self.residuals(norm=norm) * self.mask
+        residuals = self.residuals(norm=norm)
+        if self.mask:
+            residuals *= self.mask
 
         geom = residuals.geom
         edges = geom.axes[0].edges
