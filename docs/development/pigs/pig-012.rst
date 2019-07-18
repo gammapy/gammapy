@@ -61,8 +61,8 @@ to perform simple and most common IACT analysis.
 
 We see then two main options on how to use the High Level Interface API:
 
-- Within an IPython session or notebook, mostly dealing with a manager object to perform specific tasks in an **interactive** analysis process
-- In a Python script or notebook, declaring the orchestration of the tasks with a manager object for an **automatized** process
+    - Within an IPython session or notebook, mostly dealing with a manager object to perform specific tasks in an **interactive** analysis process
+    - In a Python script or notebook, declaring the orchestration of the tasks with a manager object for an **automatized** process
 
 This high-level interface API is similar to what it is done in `Fermipy`_, including also the 
 options to save and recover session states, as well as serialization of intermediate data products
@@ -76,15 +76,15 @@ multidimensional grid space of variables, and within a single region (e.g. 10 de
 
 The main use cases for analysis to be covered are:
 
-- 3D map analysis
-- 2D map analysis (same as 3D?)
-- 1D spectrum analysis
+    - 3D map analysis
+    - 2D map analysis (same as 3D?)
+    - 1D spectrum analysis
 
 Including the main methods for data reduction, modelling and fitting:
 
-- On vs on/off data reduction
-- Different background models
-- Joint vs stacked likelihood fitting
+    - On vs on/off data reduction
+    - Different background models
+    - Joint vs stacked likelihood fitting
 
 Making a SED may be the final part of the analysis, as many SED methods require the full model and 
 all energy data.
@@ -187,10 +187,10 @@ or make new containers.
 The user could choose in the configuration file to serialise the products delivered by the tools 
 with the help of a boolean parameter. The serialisation would then be performed as follows:
 
-- Every tool in Gammapy knows how to serialise/read themselves
-- Composite objects will be serialised as a series of all of their componets
-- Serialisation will be a mix of YAML (models, state) and FITS files (maps)
-- There will not be framework supporting different serialisation backends, we will have one way.
+    - Every tool in Gammapy knows how to serialise/read themselves
+    - Composite objects will be serialised as a series of all of their componets
+    - Serialisation will be a mix of YAML (models, state) and FITS files (maps)
+    - There will not be framework supporting different serialisation backends, we will have one way.
 
 **Session workflow**
 
@@ -306,14 +306,14 @@ One random example of such a tool is the `Angular CLI`_, or `cookiecutter`_.
 Task list
 =========
 
-- Prototype manager class, agents, tools, etc. in the high-level interface API.
-- Define a syntax for the declaration of parameter-value pairs needed for all tools in the analysis process. 
-- Develop the session manager class responsible to drive the orchestration of tools in the analysis process.
-- Develop the tools classes responsible to perform each one of the tasks in the analysis process.
-- Develop the small set of helpers command line tools described above.
-- Develop use cases or choose among the existing tutorials or benchmarks those that may be translated into high-level interface notebooks.
-- Provide a notebook using the high-level interface API for each of the chosen tutorials, benchamarks and/or use cases identified.
-- Add documentation for the high-level interface API and clean the list of documentation tutorials, making a distinct separation among those using Gammapy as a high-level interface API and those using Gammapy as a Python toolbox.
+    - Prototype manager class, agents, tools, etc. in the high-level interface API.
+    - Define a syntax for the declaration of parameter-value pairs needed for all tools in the analysis process. 
+    - Develop the session manager class responsible to drive the orchestration of tools in the analysis process.
+    - Develop the tools classes responsible to perform each one of the tasks in the analysis process.
+    - Develop the small set of helpers command line tools described above.
+    - Develop use cases or choose among the existing tutorials or benchmarks those that may be translated into high-level interface notebooks.
+    - Provide a notebook using the high-level interface API for each of the chosen tutorials, benchamarks and/or use cases identified.
+    - Add documentation for the high-level interface API and clean the list of documentation tutorials, making a distinct separation among those using Gammapy as a high-level interface API and those using Gammapy as a Python toolbox.
 
 Decision
 ========
