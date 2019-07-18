@@ -12,7 +12,6 @@ from ..maps import Map
 from ..irf import EnergyDispersion
 from .models import SkyModel, SkyModels, BackgroundModel
 from .psf_kernel import PSFKernel
-from astropy.coordinates import Angle
 from gammapy.spectrum.core import CountsSpectrum
 
 __all__ = ["MapEvaluator", "MapDataset"]
