@@ -202,7 +202,7 @@ class MapDataset(Dataset):
         on_region=None,
         width=None,
         figsize=(15, 4),
-        **kwargs,
+        **kwargs
     ):
         """
         Plot spatial and spectral residuals. The spectral residuals are extracted from the provided `on_region`,
