@@ -244,9 +244,9 @@ and a ``gammapy analysis optimise`` which perform the long processing tasks from
 outside an ipython session or jupyter notebook, using all the information from the config 
 file and/or saved state.
 
-- ``gammapy analysis config``: dumps a template configuration file
-- ``gammapy analysis data_reduction``: performs a data reduction process
-- ``gammapy analysis optimise``: performs a model fitting process
+    - ``gammapy analysis config``: dumps a template configuration file
+    - ``gammapy analysis data_reduction``: performs a data reduction process
+    - ``gammapy analysis optimise``: performs a model fitting process
  
  
 Outlook
