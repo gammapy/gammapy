@@ -95,6 +95,10 @@ def ref_dict():
     time_ref = Time("2018-10-29 20:00:00.000")
     return time_ref_to_dict(time_ref)
 
+@pytest.fixture(scope="session")
+def ref_dict2():
+    time_ref = Time("2018-10-29 21:00:00.000")
+    return time_ref_to_dict(time_ref)
 
 @pytest.fixture(scope="session")
 def gti_list(ref_dict):
@@ -112,11 +116,11 @@ def gti_list(ref_dict):
 
 
 @pytest.fixture(scope="session")
-def outside_gti(ref_dict):
+def outside_gti(ref_dict2):
     start = u.Quantity([1 * u.d])
     stop = start + 30 * u.min
     gti_table = Table(
-        [start.to("s"), stop.to("s")], names=("START", "STOP"), meta=ref_dict
+        [start.to("s"), stop.to("s")], names=("START", "STOP"), meta=ref_dict2
     )
     return GTI(gti_table)
 
@@ -129,6 +133,10 @@ def overlapping_gti(ref_dict):
         [start.to("s"), stop.to("s")], names=("START", "STOP"), meta=ref_dict
     )
     return GTI(gti_table)
+
+def test_gti_stack(gti_list, outside_gti):
+    stacked_gti = gti_list.stack(outside_gti)
+    assert len(union.table) == 4
 
 
 def test_gti_union(gti_list, outside_gti, overlapping_gti):

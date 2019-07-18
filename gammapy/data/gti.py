@@ -88,6 +88,11 @@ class GTI:
         return Quantity(stop - start, "second")
 
     @property
+    def time_ref(self):
+        """Time reference (`~astropy.time.Time`)."""
+        return time_ref_from_dict(self.table.meta)
+
+    @property
     def time_sum(self):
         """Sum of GTIs in seconds (`~astropy.units.Quantity`)."""
         return self.time_delta.sum()
@@ -95,16 +100,14 @@ class GTI:
     @property
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
-        met_ref = time_ref_from_dict(self.table.meta)
         met = Quantity(self.table["START"].astype("float64"), "second")
-        return met_ref + met
+        return self.time_ref + met
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
-        met_ref = time_ref_from_dict(self.table.meta)
         met = Quantity(self.table["STOP"].astype("float64"), "second")
-        return met_ref + met
+        return self.time_ref + met
 
     def select_time(self, time_interval):
         """Select and crop GTIs in time interval.
