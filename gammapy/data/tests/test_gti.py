@@ -95,10 +95,12 @@ def ref_dict():
     time_ref = Time("2018-10-29 20:00:00.000")
     return time_ref_to_dict(time_ref)
 
+
 @pytest.fixture(scope="session")
 def ref_dict2():
-    time_ref = Time("2018-10-29 21:00:00.000")
+    time_ref = Time("2018-10-30 20:00:00.000")
     return time_ref_to_dict(time_ref)
+
 
 @pytest.fixture(scope="session")
 def gti_list(ref_dict):
@@ -134,9 +136,15 @@ def overlapping_gti(ref_dict):
     )
     return GTI(gti_table)
 
+
 def test_gti_stack(gti_list, outside_gti):
     stacked_gti = gti_list.stack(outside_gti)
-    assert len(union.table) == 4
+    assert len(stacked_gti.table) == 4
+    assert stacked_gti.time_ref == gti_list.time_ref
+
+    inverse_stacked_gti = outside_gti.stack(gti_list)
+    assert inverse_stacked_gti.time_ref == outside_gti.time_ref
+    assert len(inverse_stacked_gti.table) == 4
 
 
 def test_gti_union(gti_list, outside_gti, overlapping_gti):
@@ -163,8 +171,10 @@ def test_gti_union(gti_list, outside_gti, overlapping_gti):
     assert_time_allclose(union.time_start[0], overlapping_gti.time_start[0])
     assert_time_allclose(union.time_stop[0], gti_list.time_stop[1])
     assert_time_allclose(union.time_start[2], outside_gti.time_start[0])
+    assert_time_allclose(union.time_ref, gti_list.time_ref)
 
     # Reverse union order should give the same result
     union2 = new_gti.union(gti_list)
     assert_time_allclose(union.time_start, union2.time_start)
     assert_time_allclose(union.time_stop, union2.time_stop)
+    assert_time_allclose(union.time_ref, new_gti.time_ref)

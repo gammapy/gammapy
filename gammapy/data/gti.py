@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import Table
+from astropy.table import Table, vstack
 from ..utils.time import time_ref_from_dict, time_relative_to_ref
 from ..utils.scripts import make_path
 
@@ -160,54 +160,17 @@ class GTI:
         """
         start = (other.time_start - self.time_ref).sec
         end = (other.time_stop - self.time_ref).sec
-        table = Table(rows={"START": start, "END": end})
+        table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
+        return self.__class__(vstack([self.table, table]))
 
-        return astropy.table.vstack([self.table, table])
-
-    def _interval_union(self, time_interval):
-        """Performs union of interval with GTI
-
-        Parameters
-        ----------
-        time_interval : `astropy.time.Time`
-            Start and stop time of the interval
-
-        Returns
-        -------
-        gti : `GTI`
-            Copy of the GTI table with interval union.
-        """
-
-        # Find GTIs that overlap with time interval
-        mask = self.time_start < time_interval[1]
-        mask &= self.time_stop > time_interval[0]
-
-        # If there is an overlap determine the new interval, otherwise add a new one
-        if not np.all(mask == False):
-            new_min = np.minimum(np.min(self.time_start[mask]), time_interval[0])
-            new_max = np.maximum(np.max(self.time_stop[mask]), time_interval[1])
-        else:
-            new_min = time_interval[0]
-            new_max = time_interval[1]
-
-        start_met = time_relative_to_ref(new_min, self.table.meta)
-        stop_met = time_relative_to_ref(new_max, self.table.meta)
-
-        # Add new interval to the list of GTIs that do not overlap the input interval
-        new_tab = self.table[~mask]
-        new_tab.add_row([start_met.value, stop_met.value])
-
-        new_tab.sort("START")
-        return self.__class__(new_tab)
-
-    def union(self, gti):
+    def union(self, other):
         """Performs union of two GTIs tables.
 
         Overlapping intervals will be merged
 
         Parameters
         ----------
-        gti : `~gammapy.data.GTI`
+        other : `~gammapy.data.GTI`
             Copy of the GTI table with selection applied.
 
         Returns
@@ -215,7 +178,33 @@ class GTI:
         union : `~gammapy.data.GTI`
             The merged GTI table
         """
-        new_gti = self.copy()
-        for time_interval in zip(gti.time_start, gti.time_stop):
-            new_gti = new_gti._interval_union(time_interval)
-        return new_gti
+        new_gti = self.stack(other)
+
+        new_gti.table.sort("START")
+        start = new_gti.time_start - new_gti.time_ref
+        stop = new_gti.time_stop - new_gti.time_ref
+
+        class TimeInterval:
+            def __init__(self, start, stop):
+                self.start = start
+                self.stop = stop
+
+        intervals = [TimeInterval(s, t) for s, t in zip(start, stop)]
+
+        union = [intervals[0]]
+
+        for interval in intervals[1:]:
+            if union[-1].stop < interval.start:
+                union.append(interval)
+            else:
+                union[-1].stop = np.maximum(interval.stop, union[-1].stop)
+
+        table = Table(
+            {
+                "START": [_.start.sec for _ in union],
+                "STOP": [_.stop.sec for _ in union],
+            },
+            names=["START", "STOP"],
+        )
+        table.meta.update(new_gti.table.meta)
+        return self.__class__(table)
