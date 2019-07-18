@@ -32,8 +32,6 @@ binned discrete source and background. Temporal models will be also taken into a
 and time will be sampled separately in a 1D analysis, assuming that the temporal 
 depence of the input source models factorizes.
 
-A working prototype of the proposed method and API can be found in Prototype_ .
-
 
 Sampling methods
 ====================
