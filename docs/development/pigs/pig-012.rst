@@ -252,22 +252,22 @@ file and/or saved state.
 Outlook
 =======
 
-TODO /CLARIFY
+Some of the use cases not covered by this high-level interface API are the following:
 
-
-    - What about simulate / fake?
-    - What about flexible background modeling?
-    - How would one write an interative detection method on top of this?
-    - Spectral points (for any analysis)
-    - Lightcurves
+    - Generation of simulated events and/or counts 
     - Diagnostics (residuals, significance, TS)
+    - Iterative source detection methods
+    - Flexible background modelling
+    - Spectral points
+    - Lightcurves
 
-     
-    Making a lightcurve could be part of one Analysis (like it is in Fermi), or could be a higher-level, creating on Analysis and running it for each time bin. This exercise of pro / con is left to the LC PIG. Christoph expects that datasets serialisation is much simpler if LC / time bins isn't part of serialisation for one analysis, i.e. it would be something higher-level.
-    Source detection with iteratively adding sources is not the responsibility of Analysis. It's higher-level, could use Analysis or not, not discussed here.
-    
-    Restructuring all of Gammapy to be Tool based with good tool chains and config handling
-
+These use cases can be actually addressed using Gammapy as a Python toolbox, though in the 
+near future some of them could be incorporated progressively to the high-level interface. 
+For example, making a lightcurve could be part of one Analysis (like it is in Fermi), or 
+could be done at higher-level, creating Analysis instances and running them for each time bin.
+This exercise of pro / con is left to the PIG on Light Curves. We could expect that restructuring
+all of Gammapy to be tools based with good tool chains and config handling will be eventually
+achieved after a certain time if we define a solid high-level interface API.
 
 We could explore the use of `papermill`_ to run workflows defined in a notebook using the values of
 the paramter-value configuration file defined for the high-level interface API. The notebooks could
