@@ -14,29 +14,104 @@ PIG 16 - Gammapy package structure
 Abstract
 ========
 
-Gammapy is currently (as of v0.12 in July 2019) structured into 14 sub-packages,
-with 6 further structured into sub-sub-packages: utils, spectrum, image, cube,
-astro, time. 
+Gammapy is currently (as of v0.13 in July 2019) structured into 14 sub-packages.
+Six of those are further structured into sub-sub-packages: utils, spectrum,
+image, cube, astro, time. Here we show the structure of the Gammapy package and
+consider possible changes to improve it.
 
-This PIG describes some options to change the package structure (add or remove
-sub-packages), and points out some advantages and disadvantages of possible
-changes.
+For Gammapy v0.14 in September 2019 (and same for v1.0), we propose the following changes:
 
-Currently the recommended changes are very small, to be implemented in v0.14
-(September 2019) which would then already be the structure for v1.0 (October
-2019). However, there are some larger changes we should discuss and consider,
-currently listed in the alternatives section.
+- move
+gammapy.utils.fitting to gammapy.modeling, and to move all models from spectrum,
+image, cube and time to gammapy.modeling.models
 
-Introduction
-============
+- dissolve
+gammapy.background, moving it's functionality into gammapy.spectrum and
+gammapy.cube
 
-The current Gammapy package structure (as of v0.12, probably the same in v0.13):
+- dissolve gammapy.image
 
-.. image:: pig-016-fig-1.png
-   :alt: Gammapy package structure (v0.12)
+- We also propose to clean up gammapy.utils and restructure tests.
+
+After Gammapy v1.0, we propose to consider larger changes, described in the
+outlook section.
+
+Status
+======
+
+The current Gammapy package structure (as of v0.13):
+
+.. image:: pig-016-gammapy-package-organisation-status.png
+   :alt: Gammapy package structure status (v0.13)
 
 This illustrates the namespaces where the Gammapy API is exposed. the number of
 Python files is much larger (about 100) and not so important.
+
+Proposal
+========
+
+We propose to introduce gammapy.modeling and gammapy.modeling.models,
+and to dissolve gammapy.background in the v0.14 development cycle.
+
+.. image:: pig-016-gammapy-package-organisation-proposal.png
+   :alt: Gammapy package structure proposal (v0.14)
+
+Introduce gammapy.modeling
+--------------------------
+
+Introduce a gammapy.models package and group gammapy.spectrum.models,
+gammapy.image.models, gammapy.cube.models and gammapy.time.models
+there together. The gammapy.utils.fitting could be moved there or could stay
+as-is, e.g. in Astropy they have astropy.modeling with the framework and
+astropy.modeling.models with the many models.
+
+Introducing this change was tried in `GH 2290`_, it works well at the moment.
+
+We think having the separate sub-package gammapy.modeling can work, if
+gammapy.maps vs gammapy.cube and gammapy.spectrum separation stays,
+and if model evaluation, integration, sampling and caching remains in a form
+where the model classes are loosely coupled to the other classes like e.g. the
+datasets, i.e. having to import something from cube or spectrum in
+gammapy.modeling is never or only very rarely needed.
+
+Remove gammapy.background
+-------------------------
+
+We propose to remove gammapy.background, and to move reflected.py to gammapy.spectrum``,
+and the other few things to ``gammapy.image`` or ``gammapy.cube``.
+
+* background_estimate.py, reflected.py, phase.py -> gammapy.spectrum
+* ring.py -> gammapy/cube/background_ring.py
+
+This would mean that the dependency chain ``maps`` -> ``image`` ->
+``background`` -> ``spectrum`` -> ``cube`` is resolved, making ``spectrum`` less
+tightly coupled to the rest, mostly independent of ``image`` and ``cube``.
+
+
+Clean up ``gammapy.utils``
+--------------------------
+
+tbd
+
+Improve tests
+-------------
+
+Move code from ``gammapy-benchmarks`` here to achieve version coupling?
+
+Move high-level tests into gammapy/tests or gammapy/scripts/tests
+
+Outlook
+=======
+
+During discussion of this PIG, several other ideas surfaced and were considered.
+We don't propose those changes here and for v1.0, because discussion didn't
+conclude on whether it's a good idea or not, and in some cases because
+introducing the change would require a detailed dedicated PIG with a feasability
+exploration as in `GH 2290`_ and then significant extra developments. We do
+expect that some of these changes will be made in the future.
+
+``gammapy.astro``
+-----------------
 
 ``gammapy.astro`` and ``gammapy.catalog`` are independent from the rest of
 Gammapy in the sense that they are not imported or used from elsewhere. Still,
@@ -47,41 +122,19 @@ clear where they would go, and maintaining multiple repos is much harder than
 one repo and their code would break immediately, since the Gammapy API isn't stable
 yet.
 
-Also ``gammapy.detect`` and ``gammapy.time`` are mostly high-level and not used
-from anywhere else (except possibly from ``gammapy.scripts`` soon. Therefore we
-will not say much about them in this PIG.
 
-The main question here is how to structure the code for data, IRFs, maps and spectra
-into sub-packages.
-
-Proposal
-========
-
-Remove gammapy.background
--------------------------
-
-We propose to remove ``gammapy.background``, and to move ``reflected.py`` to ``gammapy.spectrum``,
-and the other few things to ``gammapy.image`` or ``gammapy.cube``.
-
-This would mean that the dependency chain ``maps`` -> ``image`` ->
-``background`` -> ``spectrum`` -> ``cube`` is resolved, making ``spectrum`` less
-tightly coupled to the rest, mostly independent of ``image`` and ``cube``.
-
-Clean up gammapy.utils
-----------------------
+gammapy.catalog
+---------------
 
 tbd
 
-Other options
--------------
+gammapy.image and gammapy.detect
+--------------------------------
 
-There's a few other smallish changes we could do, if we think they are improvements:
 
-Introduce a ``gammapy.models`` package and group ``gammapy.spectrum.models``,
-``gammapy.image.models``, ``gammapy.cube.models`` and ``gammapy.time.models``
-there together. The ``gammapy.utils.fitting`` could be moved there or could stay
-as-is, e.g. in Astropy they have ``astropy.modeling`` with the framework and
-``astropy.modeling.models`` with the many models.
+Also ``gammapy.detect`` and ``gammapy.time`` are mostly high-level and not used
+from anywhere else (except possibly from ``gammapy.scripts`` soon. Therefore we
+will not say much about them in this PIG.
 
 Dissolve ``gammapy.image``, moving it's content to ``gammapy.cube``. The main
 thing it contains is ``gammapy.image.models``, the rest is just a few
@@ -98,9 +151,6 @@ algorithms in one place). But this might introduce circular dependencies with
 Similar to models, built-in dataset subclasses could be grouped in a new
 ``gammapy.datasets``. Although this might introduce circular dependencies within
 Gammapy, it's less clear than for ``models`` if this is a good idea.
-
-Outlook
-=======
 
 Generalising maps to allow maps without a WCS and spatial axes, and / or using
 it everywhere in Gammapy (for IRFs, spectra, lightcurves) could be nice.
@@ -136,11 +186,6 @@ Task list
 
 tbd
 
-Alternatives
-============
-
-- 
-
 Decision
 ========
 
@@ -148,3 +193,4 @@ tbd
 
 
 .. _GH 2274: https://github.com/gammapy/gammapy/pull/2274
+.. _GH 2290: https://github.com/gammapy/gammapy/pull/2290
