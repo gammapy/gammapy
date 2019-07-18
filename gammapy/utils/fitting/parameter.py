@@ -179,17 +179,25 @@ class Parameter:
             "min={min!r}, max={max!r}, frozen={frozen!r})"
         ).format(**self.to_dict())
 
-    def to_dict(self):
-        return dict(
-            name=self.name,
-            value=self.value,
-            factor=self.factor,
-            scale=self.scale,
-            unit=self.unit.to_string("fits"),
-            min=self.min,
-            max=self.max,
-            frozen=self.frozen,
-        )
+    def to_dict(self, do_cut=False):
+        if do_cut is True:
+            return dict(
+                name=self.name,
+                value=self.value,
+                unit=self.unit.to_string("fits"),
+                frozen=self.frozen,
+                )
+        else:
+            return dict(
+                name=self.name,
+                value=self.value,
+                factor=self.factor,
+                scale=self.scale,
+                unit=self.unit.to_string("fits"),
+                min=self.min,
+                max=self.max,
+                frozen=self.frozen,
+)
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
@@ -330,10 +338,10 @@ class Parameters:
         idx = self._get_idx(name)
         return self.parameters[idx]
 
-    def to_dict(self):
+    def to_dict(self, do_cut=False):
         retval = dict(parameters=[], covariance=None)
         for par in self.parameters:
-            retval["parameters"].append(par.to_dict())
+            retval["parameters"].append(par.to_dict(do_cut))
         if self.covariance is not None:
             retval["covariance"] = self.covariance.tolist()
         return retval
@@ -366,10 +374,10 @@ class Parameters:
                 Parameter(
                     name=par["name"],
                     factor=float(par["value"]),
-                    unit=par["unit"],
-                    min=float(par["min"]),
-                    max=float(par["max"]),
-                    frozen=par["frozen"],
+                    unit=par["unit"] if "unit" in par.keys() else '',
+                    min=float(par["min"]) if "min" in par.keys() else np.nan,
+                    max=float(par["max"]) if "max" in par.keys() else np.nan,
+                    frozen=par["frozen"] if "frozen" in par.keys() else False,
                 )
             )
         try:

@@ -6,6 +6,8 @@ from ..utils.fitting import Parameter, Model, Parameters
 from ..utils.scripts import make_path
 from ..spectrum.models import SpectralModel
 from ..image.models import SkySpatialModel
+from ..utils.scripts import make_path, write_yaml, name_from_path
+from ..utils.serialization.io import models_to_dict
 from ..maps import Map
 
 __all__ = [
@@ -119,6 +121,11 @@ class SkyModels:
         filename = make_path(filename)
         with filename.open("w") as output:
             output.write(xml)
+
+    def to_yaml(self, filename, do_cut=False):
+        """Write to yaml file."""
+        components_dict = models_to_dict(self.skymodels, do_cut)
+        write_yaml(components_dict, filename+'_models')
 
     def evaluate(self, lon, lat, energy):
         out = self.skymodels[0].evaluate(lon, lat, energy)

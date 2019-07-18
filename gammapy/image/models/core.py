@@ -534,9 +534,9 @@ class SkyDiffuseMap(SkySpatialModel):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
     """
 
-    __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
+    __slots__ = ["map", "norm", "meta", "_interp_kwargs",'file']
 
-    def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None):
+    def __init__(self, map, norm=1, meta=None, normalize=True, interp_kwargs=None, file=''):
         if (map.data < 0).any():
             log.warning("Diffuse map has negative values. Check and fix this!")
 
@@ -552,7 +552,7 @@ class SkyDiffuseMap(SkySpatialModel):
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
-
+        self.file = file
         super().__init__([self.norm])
 
     @property
@@ -587,7 +587,7 @@ class SkyDiffuseMap(SkySpatialModel):
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "sr-1"
-        return cls(m, normalize=normalize)
+        return cls(m, normalize=normalize, file=filename)
 
     def evaluate(self, lon, lat, norm):
         """Evaluate model."""
