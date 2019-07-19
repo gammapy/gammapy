@@ -31,8 +31,25 @@ workshop Dec. 2018 (private link to indico_).
 
 Releases
 ========
-Up to the Gammapy 1.0 release we will pursue a **shorter release cycle**, with
-releases  **every 2-3 months**. The following releases are planned:
+
+Starting in fall 2018, we will create stable releases **every 2 months**.
+
+We plan to release Gammapy 1.0 in November 2019, and to add a Gammapy 0.15
+release in October 2019, to allow for increased user feedback before releasing
+1.0.
+
+Our definition of Gammapy 1.0 is that Gammapy supports the major IACT analysis
+use cases (spectra, maps, lightcurves) and the work outlined below has been
+mostly achieved.
+
+Please note that likely we will continue to develop Gammapy at a rapid pace in
+the coming years, and likely will continue this development in the Gammapy 1.1,
+1.2, ... releases in 2020. If API stability in the 1.x series is deemed useful,
+we would have to do what e.g. CPython or other mature packages do, i.e. to
+release 2.0 immediately after 1.0, and then to develop Gammapy in 2.0, 2.1, 2.2,
+... and at some point to announce stability in the 2.x series or declare 2.x as
+completely unstable and to release a stable 3.0. The discusion and decision how
+to continue post v1.0 will be made in fall 2019.
 
 * Gammapy 0.9 in November 2018
 * Gammapy 0.10 in January 2019
@@ -40,9 +57,10 @@ releases  **every 2-3 months**. The following releases are planned:
 * Gammapy 0.12 in Mai 2019
 * Gammapy 0.13 in Juli 2019
 * Gammapy 0.14 in September 2019
-* Gammapy 1.0 in October 2019
+* Gammapy 0.15 in October 2019
+* Gammapy 1.0 in November 2019
 
-The exact schedule is flexible, as it depends on when features are ready to ship.
+There is some flexibility in the schedule within each given month.
 With this process we aim to enhance user feedback as well as set intermediate
 **milestones for the development progress**.
 
@@ -163,11 +181,7 @@ Python scripts or notebooks, that can be edited and executed by users.
 
 Papers
 ------
-As a reference for the current work as well as giving credit to current and past
-contributors, we plan to release a short Gammapy paper in  2019. Based on one of
-the Gammapy intermediate releases we will introduce the idea of building the CTA
-ST based on Python, Numpy and Astropy to the community. Alternatively a paper about
-Gammapy v1.0 could be written.
+We plan to write a paper on Gammapy in fall 2019, describing Gammapy v1.0.
 
 There will be a HESS validation paper. We will support the paper with implementing
 required bugfixes and features on short time scales.
