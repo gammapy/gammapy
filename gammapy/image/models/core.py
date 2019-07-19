@@ -343,7 +343,7 @@ class SkyEllipse(SkySpatialModel):
         self, lon_0, lat_0, semi_major, e, theta, edge="0.01 deg", frame="galactic"
     ):
         try:
-            from astropy.coordinates.angle_utilities import offset_by, position_angle
+            from astropy.coordinates.angle_utilities import offset_by
 
             self._offset_by = offset_by
         except ImportError:
