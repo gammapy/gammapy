@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import Table
+from astropy.table import Table, vstack
 from ..utils.time import time_ref_from_dict, time_relative_to_ref
 from ..utils.scripts import make_path
 
@@ -53,6 +53,9 @@ class GTI:
     def __init__(self, table):
         self.table = table
 
+    def copy(self):
+        return self.__class__(self.table)
+
     @classmethod
     def read(cls, filename, **kwargs):
         """Read from FITS file.
@@ -85,6 +88,11 @@ class GTI:
         return Quantity(stop - start, "second")
 
     @property
+    def time_ref(self):
+        """Time reference (`~astropy.time.Time`)."""
+        return time_ref_from_dict(self.table.meta)
+
+    @property
     def time_sum(self):
         """Sum of GTIs in seconds (`~astropy.units.Quantity`)."""
         return self.time_delta.sum()
@@ -92,16 +100,14 @@ class GTI:
     @property
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
-        met_ref = time_ref_from_dict(self.table.meta)
         met = Quantity(self.table["START"].astype("float64"), "second")
-        return met_ref + met
+        return self.time_ref + met
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
-        met_ref = time_ref_from_dict(self.table.meta)
         met = Quantity(self.table["STOP"].astype("float64"), "second")
-        return met_ref + met
+        return self.time_ref + met
 
     def select_time(self, time_interval):
         """Select and crop GTIs in time interval.
@@ -135,3 +141,51 @@ class GTI:
         )
 
         return self.__class__(gti_within)
+
+    def stack(self, other):
+        """Stack with another GTI.
+
+        This simply changes the time reference of the second GTI table
+        and stack the two tables. No logic is applied to the intervals.
+
+        Parameters
+        ----------
+        other : `~gammapy.data.GTI`
+            GTI to stack to self
+
+        Returns
+        -------
+        new_gti : `~gammapy.data.GTI`
+            New GTI
+        """
+        start = (other.time_start - self.time_ref).sec
+        end = (other.time_stop - self.time_ref).sec
+        table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
+        return self.__class__(vstack([self.table, table]))
+
+    def union(self):
+        """Union of overlapping time intervals.
+
+        Returns a new `~gammapy.data.GTI` object.
+
+        Intervals that touch will be merged, e.g.
+        ``(1, 2)`` and ``(2, 3)`` will result in ``(1, 3)``.
+        """
+        # Algorithm to merge overlapping intervals is well-known,
+        # see e.g. https://stackoverflow.com/a/43600953/498873
+
+        table = self.table.copy()
+        table.sort("START")
+
+        # We use Python dict instead of astropy.table.Row objects,
+        # because on some versions modifying Row entries doesn't behave as expected
+        merged = [{"START": table[0]["START"], "STOP": table[0]["STOP"]}]
+        for row in table[1:]:
+            interval = {"START": row["START"], "STOP": row["STOP"]}
+            if merged[-1]["STOP"] <= interval["START"]:
+                merged.append(interval)
+            else:
+                merged[-1]["STOP"] = max(interval["STOP"], merged[-1]["STOP"])
+
+        merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
+        return self.__class__(merged)
