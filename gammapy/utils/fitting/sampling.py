@@ -144,6 +144,17 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
 def plot_trace(sampler, dataset):
     """
     Plot the trace of walkers for every steps
+
+    Parameters
+    ----------
+    sampler : `emcee.EnsembleSampler`
+        Sampler object containing the trace of all walkers.
+
+    dataset : `gammapy.utils.fitting.Dataset`
+        A gammapy dataset object. This contains the observed counts cube,
+        the exposure cube, the psf cube, and the sky model and model.
+        Each free parameter in the sky model is considered as parameter for the MCMC.
+
     """
     import matplotlib.pyplot as plt
 
@@ -151,11 +162,12 @@ def plot_trace(sampler, dataset):
     for par in dataset.parameters.free_parameters:
         labels.append(par.name)
 
-    fig, ax = plt.subplots(len(labels), sharex=True)
-    for i in range(len(ax)):
-        ax[i].plot(sampler.chain[:, :, i].T, "-k", alpha=0.2)
-        ax[i].set_ylabel(labels[i])
+    fig, axes = plt.subplots(len(labels), sharex=True)
+    for i, ax in range(len(axes)):
+        ax.plot(sampler.chain[:, :, i].T, "-k", alpha=0.2)
+        ax.set_ylabel(labels[i])
     plt.xlabel("Nrun")
+    plt.show()
 
 
 def plot_corner(sampler, dataset, nburn=0):
