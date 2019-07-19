@@ -322,7 +322,7 @@ class SkyEllipse(SkySpatialModel):
         from gammapy.image.models.core import SkyEllipse
         from gammapy.maps import Map, WcsGeom
 
-        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "20 deg", frame='galactic')
+        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "20 deg", frame= "galactic")
 
         m_geom = WcsGeom.create(binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT")
         coords = m_geom.get_coord()
