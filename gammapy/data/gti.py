@@ -169,6 +169,9 @@ class GTI:
         """Union of overlapping time intervals.
 
         Returns a new `~gammapy.data.GTI` object.
+
+        Intervals that touch will be merged, e.g.
+        ``(1, 2)`` and ``(2, 3)`` will result in ``(1, 3)``.
         """
         # Algorithm to merge overlapping intervals is well-known,
         # see e.g. https://stackoverflow.com/a/43600953/498873

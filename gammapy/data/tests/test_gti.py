@@ -90,91 +90,28 @@ def test_select_time(time_interval, expected_length, expected_times):
         assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
 
 
-@pytest.fixture(scope="session")
-def ref_dict():
-    time_ref = Time("2018-10-29 20:00:00.000")
-    return time_ref_to_dict(time_ref)
+def make_gti(times, time_ref="2010-01-01"):
+    meta = time_ref_to_dict(time_ref)
+    table = Table(times, meta=meta)
+    return GTI(table)
 
 
-@pytest.fixture(scope="session")
-def ref_dict2():
-    time_ref = Time("2018-10-30 20:00:00.000")
-    return time_ref_to_dict(time_ref)
+def test_gti_stack():
+    time_ref = Time("2010-01-01")
+    gti1 = make_gti({"START": [0, 2], "STOP": [1, 3]}, time_ref=time_ref)
+    gti2 = make_gti({"START": [4], "STOP": [5]}, time_ref=time_ref + 10 * u.s)
+
+    gti = gti1.stack(gti2)
+
+    assert_time_allclose(gti.time_ref, gti1.time_ref)
+    assert_allclose(gti.table["START"], [0, 2, 14])
+    assert_allclose(gti.table["STOP"], [1, 3, 15])
 
 
-@pytest.fixture(scope="session")
-def gti_list(ref_dict):
-    time_start = 30 * u.min
-    time_step = 60 * u.min
-    duration = 30 * u.min
-    nstep = 3
-    start = time_start + time_step * np.arange(nstep)
-    stop = start + duration
+def test_gti_union():
+    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
 
-    gti_table = Table(
-        [start.to("s"), stop.to("s")], names=("START", "STOP"), meta=ref_dict
-    )
-    return GTI(gti_table)
+    gti = gti.union()
 
-
-@pytest.fixture(scope="session")
-def outside_gti(ref_dict2):
-    start = u.Quantity([1 * u.d])
-    stop = start + 30 * u.min
-    gti_table = Table(
-        [start.to("s"), stop.to("s")], names=("START", "STOP"), meta=ref_dict2
-    )
-    return GTI(gti_table)
-
-
-@pytest.fixture(scope="session")
-def overlapping_gti(ref_dict):
-    start = u.Quantity([0 * u.s])
-    stop = start + 110 * u.min
-    gti_table = Table(
-        [start.to("s"), stop.to("s")], names=("START", "STOP"), meta=ref_dict
-    )
-    return GTI(gti_table)
-
-
-def test_gti_stack(gti_list, outside_gti):
-    stacked_gti = gti_list.stack(outside_gti)
-    assert len(stacked_gti.table) == 4
-    assert stacked_gti.time_ref == gti_list.time_ref
-
-    inverse_stacked_gti = outside_gti.stack(gti_list)
-    assert inverse_stacked_gti.time_ref == outside_gti.time_ref
-    assert len(inverse_stacked_gti.table) == 4
-
-
-def test_gti_union(gti_list, outside_gti, overlapping_gti):
-    # interval after all intervals in the list
-    union = gti_list.stack(outside_gti).union()
-    assert len(union.table) == 4
-    assert_allclose(union.time_sum.to_value("h"), 2)
-    assert_time_allclose(union.time_start[3], outside_gti.time_start[0])
-
-    # interval covering the first interval in the list and part of the second
-    union = gti_list.stack(overlapping_gti).union()
-    assert len(union.table) == 2
-    assert_allclose(union.time_sum.to_value("h"), 2.5)
-    assert_time_allclose(union.time_start[0], overlapping_gti.time_start[0])
-    assert_time_allclose(union.time_stop[0], gti_list.time_stop[1])
-
-    # now take union of outside and overlap
-    new_gti = overlapping_gti.stack(outside_gti).union()
-    union = gti_list.stack(new_gti).union()
-
-    assert len(new_gti.table) == 2
-    assert len(union.table) == 3
-    assert_allclose(union.time_sum.to_value("h"), 3)
-    assert_time_allclose(union.time_start[0], overlapping_gti.time_start[0])
-    assert_time_allclose(union.time_stop[0], gti_list.time_stop[1])
-    assert_time_allclose(union.time_start[2], outside_gti.time_start[0])
-    assert_time_allclose(union.time_ref, gti_list.time_ref)
-
-    # Reverse union order should give the same result
-    union2 = new_gti.stack(gti_list).union()
-    assert_time_allclose(union.time_start, union2.time_start)
-    assert_time_allclose(union.time_stop, union2.time_stop)
-    assert_time_allclose(union.time_ref, new_gti.time_ref)
+    assert_allclose(gti.table["START"], [1, 5])
+    assert_allclose(gti.table["STOP"], [4, 8])
