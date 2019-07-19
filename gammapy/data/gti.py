@@ -1,6 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import namedtuple
-
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table, vstack
@@ -179,13 +177,15 @@ class GTI:
         table = self.table.copy()
         table.sort("START")
 
-        merged = [table[0]]
-        for current in table[1:]:
-            previous = merged[-1]
-            if previous["STOP"] <= current["START"]:
-                merged.append(current)
+        # We use Python dict instead of astropy.table.Row objects,
+        # because on some versions modifying Row entries doesn't behave as expected
+        merged = [{"START": table[0]["START"], "STOP": table[0]["STOP"]}]
+        for row in table[1:]:
+            interval = {"START": row["START"], "STOP": row["STOP"]}
+            if merged[-1]["STOP"] <= interval["START"]:
+                merged.append(interval)
             else:
-                previous["STOP"] = max(current["STOP"], previous["STOP"])
+                merged[-1]["STOP"] = max(interval["STOP"], merged[-1]["STOP"])
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
         return self.__class__(merged)
