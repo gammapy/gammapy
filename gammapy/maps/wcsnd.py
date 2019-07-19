@@ -468,6 +468,7 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault("interpolation", "nearest")
         kwargs.setdefault("origin", "lower")
         kwargs.setdefault("cmap", "afmhot")
+
         norm = simple_norm(data[np.isfinite(data)], stretch)
         kwargs.setdefault("norm", norm)
 
@@ -590,7 +591,7 @@ class WcsNDMap(WcsMap):
         from ..spectrum import CountsSpectrum
 
         if region:
-            mask = self.geom.region_mask([region], inside=True)
+            mask = self.geom.region_mask([region])
         else:
             mask = 1
 
@@ -598,7 +599,7 @@ class WcsNDMap(WcsMap):
 
         energy_axis = self.geom.get_axis_by_name("energy")
         edges = energy_axis.edges
-        return CountsSpectrum(data=data, energy_lo=edges[:1], energy_hi=edges[1:])
+        return CountsSpectrum(data=data, energy_lo=edges[:-1], energy_hi=edges[1:])
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
