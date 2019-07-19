@@ -130,14 +130,14 @@ def test_sky_ellipse_edge():
         lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, theta="0 deg"
     )
     value_center = model(0 * u.deg, 0 * u.deg)
-    value_edge = model(r_0, 0 * u.deg)
+    value_edge = model(0 * u.deg, r_0)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
 
     edge = model.edge.quantity
-    value_edge_pwidth = model(r_0 + edge / 2, 0 * u.deg)
+    value_edge_pwidth = model(0 * u.deg, r_0 + edge / 2)
     assert_allclose((value_edge_pwidth / value_center).to_value(""), 0.05)
 
-    value_edge_nwidth = model(r_0 - edge / 2, 0 * u.deg)
+    value_edge_nwidth = model(0 * u.deg, r_0 - edge / 2)
     assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
 
 

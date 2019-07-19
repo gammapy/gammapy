@@ -303,7 +303,7 @@ class SkyEllipse(SkySpatialModel):
     theta : `~astropy.coordinates.Angle`
         :math:`\theta`:
         Rotation angle of the major semiaxis.  The rotation angle increases counter-clockwise
-        from the North Celestial Pole direction (see https://en.wikipedia.org/wiki/Position_angle).
+        from the North direction.
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
         smooth edges of the model drops from 95% to 5% of its amplitude
@@ -322,11 +322,9 @@ class SkyEllipse(SkySpatialModel):
         from gammapy.image.models.core import SkyEllipse
         from gammapy.maps import Map, WcsGeom
 
-        # The reference for the position angle, indipendently of the
-        # chosen frame, is the direction of the North Galactic Pole
-        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "20 deg", frame='icrs')
+        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "20 deg", frame='galactic')
 
-        m_geom = WcsGeom.create(binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="CEL", proj="AIT")
+        m_geom = WcsGeom.create(binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT")
         coords = m_geom.get_coord()
         lon = coords.lon * u.deg
         lat = coords.lat * u.deg
@@ -390,10 +388,6 @@ class SkyEllipse(SkySpatialModel):
 
     def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, theta, edge):
         """Evaluate the model (static function)."""
-        # apply the IAU convention for PA computation (https://en.wikipedia.org/wiki/Position_angle)
-        if self.frame == "galactic":
-            theta += 123 * u.deg
-
         # find the foci of the ellipse
         c = semi_major * e
         lon_1, lat_1 = self._offset_by(lon_0, lat_0, theta, c)
