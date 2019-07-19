@@ -163,17 +163,16 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
-    def residuals(self, norm=None):
+    def residuals(self, method="diff"):
         """Compute residuals map.
 
         Parameters
         ----------
-        norm: `str`, optional
-            Normalization used to compute the residuals. Choose between `None`,
-            `model` and `sqrt_model`. Available options are:
-                - `norm=None` (default) for: data - model
-                - `norm='model'` for: (data - model)/model
-                - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
 
         Returns
         -------
@@ -181,29 +180,16 @@ class MapDataset(Dataset):
             Residual map.
 
         """
-        residuals = self.counts - self.npred()
-
-        with np.errstate(invalid="ignore"):
-            if norm == "model":
-                residuals /= self.npred()
-            elif norm == "sqrt_model":
-                residuals /= np.sqrt(self.npred().data)
-            elif norm != None:
-                raise AttributeError(
-                    "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
-                        self.norm
-                    )
-                )
-
+        residuals = self._compute_residuals(self.counts, self.npred(), method=method)
         return residuals
 
     def plot_residuals(
         self,
-        norm=None,
+        method="diff",
         smooth_kernel="gauss",
         smooth_radius="0.1 deg",
         region=None,
-        figsize=(15, 4),
+        figsize=(12, 4),
         **kwargs
     ):
         """
@@ -216,8 +202,8 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        norm : `str`
-            Normalization used to compute the residuals, see `MapDataset.residual()`
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals, see `MapDataset.residuals()`
         smooth_kernel : {'gauss', 'box'}
             Kernel shape.
         smooth_radius: `~astropy.units.Quantity`, str or float
@@ -239,18 +225,17 @@ class MapDataset(Dataset):
 
         fig = plt.figure(figsize=figsize)
 
-        # residuals cube
-        residuals = self.residuals(norm=norm)
-        
+        counts, npred = self.counts, self.npred()
+
         if self.mask is not None:
-            residuals *= self.mask
+            counts = counts * self.mask
+            npred = npred * self.mask
 
-        geom = residuals.geom
+        counts_spatial = counts.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
+        npred_spatial = npred.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
+        spatial_residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
 
-        # Spatial residuals
-        spatial_residuals = residuals.sum_over_axes().smooth(
-            width=smooth_radius, kernel=smooth_kernel
-        )
+        spatial_residuals.data[self.exposure.data[0] == 0] = np.nan
 
         # If no region is provided, skip spectral residuals
         ncols = 2 if region is not None else 1
@@ -266,23 +251,20 @@ class MapDataset(Dataset):
         # Spectral residuals
         if region:
             ax_spec = fig.add_subplot(1, 2, 2)
-            spec = residuals.get_spectrum(region=region)
+            counts_spec = counts.get_spectrum(region=region)
+            npred_spec = npred.get_spectrum(region=region)
+            residuals = self._compute_residuals(counts_spec, npred_spec, method)
+            ax = residuals.plot()
+            ax.axhline(0, color="black", lw=0.5)
 
-            if not norm:
-                label = "(counts - model)"
-            elif norm == "model":
-                label = "(counts - model)/model"
-            elif norm == "sqrt_model":
-                label = "(counts - model)/sqrt(model)"
-            spec.plot(label=label)
-
-            plt.ylim(np.min(spec.data) - (np.max(spec.data) - np.min(spec.data)) / 5.0)
-            plt.ylabel("Residuals")
-            plt.legend()
+            y_max = 2 * np.nanmax(residuals.data)
+            plt.ylim(-y_max, y_max)
+            label = self._residuals_labels[method]
+            plt.ylabel("Residuals ({})".format(label))
 
             # Overlay spectral extraction region on the spatial residuals
             pix_region = region.to_pixel(wcs=spatial_residuals.geom.wcs)
-            pix_region.plot(ax=ax_image, ls="--", edgecolor="black")
+            pix_region.plot(ax=ax_image)
 
         return ax_image, ax_spec
 

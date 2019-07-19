@@ -110,6 +110,8 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
+        if self._predictor is None:
+            raise AttributeError("No model set for Dataset")
         npred = self._predictor.compute_npred()
         if self.background:
             npred.data += self.background.data
@@ -208,47 +210,35 @@ class SpectrumDataset(Dataset):
         ax.set_title("")
         return ax
 
-    def residuals(self, norm=None):
-        """Compute the spectral residuals (`~~gammapy.spectrum.core.CountsSpectrum`).
+    def residuals(self, method="diff"):
+        """Compute the spectral residuals.
 
         Parameters
         ----------
-        norm: `str`, optional
-            Normalization used to compute the residuals. Available options are:
-                - `norm=None` (default) for: data - model
-                - `norm='model'` for: (data - model)/model
-                - `norm='sqrt_model'` for: (data - model)/sqrt(model)
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
 
-
+        Returns
+        -------
+        residuals : `CountsSpectrum`
+            Residual spectrum.
         """
 
-        residuals = self.counts.data - self.npred().data
+        residuals = self._compute_residuals(self.counts, self.npred(), method)
+        return residuals
 
-        with np.errstate(invalid="ignore"):
-            if norm == "model":
-                residuals /= self.npred().data
-            elif norm == "sqrt_model":
-                residuals /= np.sqrt(self.npred().data)
-            elif norm is not None:
-                raise AttributeError(
-                    "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
-                        self.norm
-                    )
-                )
-
-        residuals = np.nan_to_num(residuals)
-
-        return self._as_counts_spectrum(residuals)
-
-    def plot_residuals(self, norm=None, ax=None, **kwargs):
+    def plot_residuals(self, method="diff", ax=None, **kwargs):
         """Plot residuals.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
-        norm: `str`
-            normalization used to compute the residuals. Choose between `None`, `model` and `sqrt_model`.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals()`
         **kwargs : dict
             Keywords passed to `CountsSpectrum.plot()`
 
@@ -261,27 +251,20 @@ class SpectrumDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        residuals = self.residuals(norm=norm)
-
-        if not norm:
-            label = "(counts - model)"
-        elif norm == "model":
-            label = "(counts - model) / model"
-        elif norm == "sqrt_model":
-            label = "(counts - model) / sqrt(model)"
+        residuals = self.residuals(method=method)
+        label = self._residuals_labels[method]
 
         residuals.plot(
-            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit, label=label,
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit,
             **kwargs
         )
         ax.axhline(0, color="black", lw=0.5)
 
-        ymax = 1.2 * max(residuals.data)
+        ymax = 1.2 * np.nanmax(residuals.data)
         ax.set_ylim(-ymax, ymax)
 
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
-        ax.set_ylabel("Residuals")
-        plt.legend()
+        ax.set_ylabel("Residuals ({})".format(label))
         return ax
 
 
