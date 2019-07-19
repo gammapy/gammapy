@@ -149,21 +149,21 @@ def test_gti_stack(gti_list, outside_gti):
 
 def test_gti_union(gti_list, outside_gti, overlapping_gti):
     # interval after all intervals in the list
-    union = gti_list.union(outside_gti)
+    union = gti_list.stack(outside_gti).union()
     assert len(union.table) == 4
     assert_allclose(union.time_sum.to_value("h"), 2)
     assert_time_allclose(union.time_start[3], outside_gti.time_start[0])
 
     # interval covering the first interval in the list and part of the second
-    union = gti_list.union(overlapping_gti)
+    union = gti_list.stack(overlapping_gti).union()
     assert len(union.table) == 2
     assert_allclose(union.time_sum.to_value("h"), 2.5)
     assert_time_allclose(union.time_start[0], overlapping_gti.time_start[0])
     assert_time_allclose(union.time_stop[0], gti_list.time_stop[1])
 
     # now take union of outside and overlap
-    new_gti = overlapping_gti.union(outside_gti)
-    union = gti_list.union(new_gti)
+    new_gti = overlapping_gti.stack(outside_gti).union()
+    union = gti_list.stack(new_gti).union()
 
     assert len(new_gti.table) == 2
     assert len(union.table) == 3
@@ -174,7 +174,7 @@ def test_gti_union(gti_list, outside_gti, overlapping_gti):
     assert_time_allclose(union.time_ref, gti_list.time_ref)
 
     # Reverse union order should give the same result
-    union2 = new_gti.union(gti_list)
+    union2 = new_gti.stack(gti_list).union()
     assert_time_allclose(union.time_start, union2.time_start)
     assert_time_allclose(union.time_stop, union2.time_stop)
     assert_time_allclose(union.time_ref, new_gti.time_ref)

@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from collections import namedtuple
+
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table, vstack
@@ -151,60 +153,36 @@ class GTI:
         Parameters
         ----------
         other : `~gammapy.data.GTI`
-            the GTI to stack to self
+            GTI to stack to self
 
         Returns
         -------
         new_gti : `~gammapy.data.GTI`
-            the new GTI
+            New GTI
         """
         start = (other.time_start - self.time_ref).sec
         end = (other.time_stop - self.time_ref).sec
         table = Table({"START": start, "STOP": end}, names=["START", "STOP"])
         return self.__class__(vstack([self.table, table]))
 
-    def union(self, other):
-        """Performs union of two GTIs tables.
+    def union(self):
+        """Union of overlapping time intervals.
 
-        Overlapping intervals will be merged
-
-        Parameters
-        ----------
-        other : `~gammapy.data.GTI`
-            Copy of the GTI table with selection applied.
-
-        Returns
-        -------
-        union : `~gammapy.data.GTI`
-            The merged GTI table
+        Returns a new `~gammapy.data.GTI` object.
         """
-        new_gti = self.stack(other)
+        # Algorithm to merge overlapping intervals is well-known,
+        # see e.g. https://stackoverflow.com/a/43600953/498873
 
-        new_gti.table.sort("START")
-        start = new_gti.time_start - new_gti.time_ref
-        stop = new_gti.time_stop - new_gti.time_ref
+        table = self.table.copy()
+        table.sort("START")
 
-        class TimeInterval:
-            def __init__(self, start, stop):
-                self.start = start
-                self.stop = stop
-
-        intervals = [TimeInterval(s, t) for s, t in zip(start, stop)]
-
-        union = [intervals[0]]
-
-        for interval in intervals[1:]:
-            if union[-1].stop < interval.start:
-                union.append(interval)
+        merged = [table[0]]
+        for current in table[1:]:
+            previous = merged[-1]
+            if previous["STOP"] <= current["START"]:
+                merged.append(current)
             else:
-                union[-1].stop = np.maximum(interval.stop, union[-1].stop)
+                previous["STOP"] = max(current["STOP"], previous["STOP"])
 
-        table = Table(
-            {
-                "START": [_.start.sec for _ in union],
-                "STOP": [_.stop.sec for _ in union],
-            },
-            names=["START", "STOP"],
-        )
-        table.meta.update(new_gti.table.meta)
-        return self.__class__(table)
+        merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
+        return self.__class__(merged)
