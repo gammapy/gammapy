@@ -229,7 +229,7 @@ class SpectrumDataset(Dataset):
                 residuals /= self.npred().data
             elif norm == "sqrt_model":
                 residuals /= np.sqrt(self.npred().data)
-            elif norm != None:
+            elif norm is not None:
                 raise AttributeError(
                     "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
                         self.norm

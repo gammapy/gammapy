@@ -1252,7 +1252,7 @@ class FluxPointsDataset(Dataset):
                 residuals /= model
             elif norm == "sqrt_model":
                 residuals /= np.sqrt(model)
-            elif norm != None:
+            elif norm is not None:
                 raise AttributeError(
                     "Invalid normalization: {}. Choose between 'model' and 'sqrt_model'".format(
                         norm
