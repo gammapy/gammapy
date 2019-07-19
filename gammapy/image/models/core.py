@@ -14,6 +14,7 @@ __all__ = [
     "SkySpatialModel",
     "SkyPointSource",
     "SkyGaussian",
+    "SkyGaussianElongated",
     "SkyDisk",
     "SkyEllipse",
     "SkyShell",
@@ -167,6 +168,92 @@ class SkyGaussian(SkySpatialModel):
         sep = angular_separation(lon, lat, lon_0, lat_0)
         a = 1.0 - np.cos(sigma)
         norm = 1 / (4 * np.pi * a * (1.0 - np.exp(-1.0 / a)))
+        exponent = -0.5 * ((1 - np.cos(sep)) / a)
+        return u.Quantity(norm.value * np.exp(exponent).value, "sr-1", copy=False)
+
+class SkyGaussianElongated(SkySpatialModel):
+    r"""Two-dimensional elongated Gaussian model
+
+    .. math::
+        \phi(\text{lon}, \text{lat}) = N \times \text{exp}\left\{-\frac{1}{2}
+            \frac{1-\text{cos}\theta}{1-\text{cos}\sigma}\right\}\,,
+
+    where :math:`\theta` is the angular separation between the center of the Gaussian and the evaluation point.
+    This angle is calculated on the celestial sphere using the function `angular.separation` defined in
+    `astropy.coordinates.angle_utilities`. The Gaussian is normalized to 1 on
+    the sphere:
+
+    .. math::
+        N = \frac{1}{4\pi a\left[1-\text{exp}(-1/a)\right]}\,,\,\,\,\,
+        a = 1-\text{cos}\sigma\,.
+
+    The normalization factor is in units of :math:`\text{sr}^{-1}`.
+    In the limit of small :math:`\theta` and :math:`\sigma`, this definition reduces to the usual form:
+
+    .. math::
+        \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
+            \frac{\theta^2}{\sigma^2}\right)}
+
+    Parameters
+    ----------
+    lon_0 : `~astropy.coordinates.Longitude`
+        :math:`\text{lon}_0`
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`\text{lat}_0`
+    sigma : `~astropy.coordinates.Angle`
+        :math:`\sigma`
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
+    """
+
+    __slots__ = ["frame", "lon_0", "lat_0", "sigma_semi_major", "e", "theta", "_offset_by"]
+
+    def __init__(
+        self, lon_0, lat_0, sigma_semi_major, e, theta, frame="galactic"
+    ):
+        try:
+            from astropy.coordinates.angle_utilities import offset_by
+
+            self._offset_by = offset_by
+        except ImportError:
+            raise ImportError("The SkyGaussianElongated model requires astropy>=3.1")
+
+        self.frame = frame
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
+        )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.sigma_semi_major = Parameter("sigma_semi_major", Angle(sigma_semi_major))
+        self.e = Parameter("e", e, min=0, max=1)
+        self.theta = Parameter("theta", Angle(theta))
+
+        super().__init__(
+            [self.lon_0, self.lat_0, self.sigma_semi_major, self.e, self.theta]
+        )
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set as :math:`5\sigma`.
+        """
+        return 5 * self.parameters["sigma_semi_major"].quantity
+
+    def evaluate(self, lon, lat, lon_0, lat_0, sigma_semi_major, e, theta):
+        """Evaluate the model (static function)."""
+        # find the foci of the ellipse corresponding to the 1 sigma isocontour of the Gaussian
+        c = sigma_semi_major * e
+        lon_1, lat_1 = self._offset_by(lon_0, lat_0, theta, c)
+        lon_2, lat_2 = self._offset_by(lon_0, lat_0, 180 * u.deg + theta, c)
+
+        sep_1 = angular_separation(lon, lat, lon_1, lat_1)
+        sep_2 = angular_separation(lon, lat, lon_2, lat_2)
+
+        # effective distance for model evaluation similar to the symmetric Gaussian
+        sep = 0.5 * (sep_1 + sep_2)
+
+        sigma_semi_minor = sigma_semi_major * np.sqrt(1 - e ** 2)
+        norm = 1 / (2 * np.pi * sigma_semi_major * sigma_semi_minor)
+        a = 1.0 - np.cos(sigma_semi_major)
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm.value * np.exp(exponent).value, "sr-1", copy=False)
 
