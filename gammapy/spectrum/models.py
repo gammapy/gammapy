@@ -19,6 +19,7 @@ __all__ = [
     "PowerLaw2",
     "ExponentialCutoffPowerLaw",
     "ExponentialCutoffPowerLaw3FGL",
+    "PLSuperExpCutoff4FGL",
     "PLSuperExpCutoff3FGL",
     "LogParabola",
     "TableModel",
@@ -32,7 +33,6 @@ __all__ = [
 
 class SpectralModel(Model):
     """Spectral model base class.
-
     Derived classes should store their parameters as
     `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
@@ -99,12 +99,10 @@ class SpectralModel(Model):
 
     def evaluate_error(self, energy):
         """Evaluate spectral model with error propagation.
-
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate
-
         Returns
         -------
         flux, flux_error : tuple of `~astropy.units.Quantity`
@@ -119,13 +117,10 @@ class SpectralModel(Model):
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate spectral model numerically.
-
         .. math::
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} \phi(E) dE
-
         If array input for ``emin`` and ``emax`` is given you have to set
         ``intervals=True`` if you want the integral in each energy bin.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -137,14 +132,12 @@ class SpectralModel(Model):
 
     def integral_error(self, emin, emax, **kwargs):
         """Integrate spectral model numerically with error propagation.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
             Lower adn upper  bound of integration range.
         **kwargs : dict
             Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
-
         Returns
         -------
         integral, integral_error : tuple of `~astropy.units.Quantity`
@@ -163,10 +156,8 @@ class SpectralModel(Model):
 
     def energy_flux(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range.
-
         .. math::
             G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} E \phi(E) dE
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -182,17 +173,14 @@ class SpectralModel(Model):
 
     def energy_flux_error(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range with error propagation.
-
         .. math::
             G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} E \phi(E) dE
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
             Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
-
         Returns
         -------
         energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
@@ -238,19 +226,14 @@ class SpectralModel(Model):
         **kwargs
     ):
         """Plot spectral model curve.
-
         kwargs are forwarded to `matplotlib.pyplot.plot`
-
         By default a log-log scaling of the axes is used, if you want to change
         the y axis scaling to linear you can use::
-
             from gammapy.spectrum.models import ExponentialCutoffPowerLaw
             from astropy import units as u
-
             pwl = ExponentialCutoffPowerLaw()
             ax = pwl.plot(energy_range=(0.1, 100) * u.TeV)
             ax.set_yscale('linear')
-
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
@@ -265,7 +248,6 @@ class SpectralModel(Model):
             Power of energy to multiply flux axis with
         n_points : int, optional
             Number of evaluation nodes
-
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
@@ -299,21 +281,17 @@ class SpectralModel(Model):
         **kwargs
     ):
         """Plot spectral model error band.
-
         .. note::
-
             This method calls ``ax.set_yscale("log", nonposy='clip')`` and
             ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
             The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
             when the error band extends to negative values (see also
             https://github.com/matplotlib/matplotlib/issues/8623).
-
             When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitely in your
             plotting code and the error band extends to negative values, it is not
             shown correctly. To circumvent this issue also use
             ``plt.loglog(nonposx='clip', nonposy='clip')``
             or ``plt.semilogy(nonposy='clip')``.
-
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
@@ -330,8 +308,6 @@ class SpectralModel(Model):
             Number of evaluation nodes
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`
-
-
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
@@ -381,14 +357,12 @@ class SpectralModel(Model):
 
     def spectral_index(self, energy, epsilon=1e-5):
         """Compute spectral index at given energy.
-
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index
         epsilon : float
             Fractional energy increment to use for determining the spectral index.
-
         Returns
         -------
         index : float
@@ -400,9 +374,7 @@ class SpectralModel(Model):
 
     def inverse(self, value, emin=0.1 * u.TeV, emax=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
-
         Calls the `scipy.optimize.brentq` numerical root finding method.
-
         Parameters
         ----------
         value : `~astropy.units.Quantity`
@@ -411,7 +383,6 @@ class SpectralModel(Model):
             Lower bracket value in case solution is not unique.
         emax : `~astropy.units.Quantity`
             Upper bracket value in case solution is not unique.
-
         Returns
         -------
         energy : `~astropy.units.Quantity`
@@ -436,9 +407,7 @@ class SpectralModel(Model):
 
 class ConstantModel(SpectralModel):
     r"""Constant model.
-
     .. math:: \phi(E) = k
-
     Parameters
     ----------
     const : `~astropy.units.Quantity`
@@ -460,7 +429,6 @@ class ConstantModel(SpectralModel):
 
 class CompoundSpectralModel(SpectralModel):
     """Arithmetic combination of two spectral models.
-
     Itself again a spectral model.
     """
 
@@ -497,10 +465,8 @@ class CompoundSpectralModel(SpectralModel):
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
-
     .. math::
         \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
-
     Parameters
     ----------
     index : `~astropy.units.Quantity`
@@ -509,14 +475,11 @@ class PowerLaw(SpectralModel):
         :math:`\phi_0`
     reference : `~astropy.units.Quantity`
         :math:`E_0`
-
     Examples
     --------
     This is how to plot the default `PowerLaw` model::
-
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw
-
         pwl = PowerLaw()
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -574,12 +537,10 @@ class PowerLaw(SpectralModel):
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate power law analytically.
-
         .. math::
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE = \left.
             \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
             \right \vert _{E_{min}}^{E_{max}}
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -592,12 +553,10 @@ class PowerLaw(SpectralModel):
 
     def integral_error(self, emin, emax, **kwargs):
         r"""Integrate power law analytically with error propagation.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-
         Returns
         -------
         integral, integral_error : tuple of `~astropy.units.Quantity`
@@ -626,12 +585,10 @@ class PowerLaw(SpectralModel):
 
     def energy_flux(self, emin, emax):
         r"""Compute energy flux in given energy range analytically.
-
         .. math::
             G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
             \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
             \right \vert _{E_{min}}^{E_{max}}
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -644,12 +601,10 @@ class PowerLaw(SpectralModel):
 
     def energy_flux_error(self, emin, emax, **kwargs):
         r"""Compute energy flux in given energy range analytically with error propagation.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-
         Returns
         -------
         energy_flux, energy_flux_error : tuple of `~astropy.units.Quantity`
@@ -678,7 +633,6 @@ class PowerLaw(SpectralModel):
 
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
-
         Parameters
         ----------
         value : `~astropy.units.Quantity`
@@ -691,11 +645,8 @@ class PowerLaw(SpectralModel):
     @property
     def pivot_energy(self):
         r"""The decorrelation energy is defined as:
-
         .. math::
-
             E_D = E_0 * \exp{cov(\phi_0, \Gamma) / (\phi_0 \Delta \Gamma^2)}
-
         Formula (1) in https://arxiv.org/pdf/0910.4881.pdf
         """
         index_err = self.parameters.error("index")
@@ -707,13 +658,10 @@ class PowerLaw(SpectralModel):
 
 class PowerLaw2(SpectralModel):
     r"""Spectral power-law model with integral as amplitude parameter.
-
     See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
-
     .. math::
         \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
          - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
-
     Parameters
     ----------
     index : `~astropy.units.Quantity`
@@ -724,14 +672,11 @@ class PowerLaw2(SpectralModel):
         Lower energy limit :math:`E_{0, min}`.
     emax : `~astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
-
     Examples
     --------
     This is how to plot the default `PowerLaw2` model::
-
         from astropy import units as u
         from gammapy.spectrum.models import PowerLaw2
-
         pwl2 = PowerLaw2()
         pwl2.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -760,12 +705,10 @@ class PowerLaw2(SpectralModel):
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate power law analytically.
-
         .. math::
             F(E_{min}, E_{max}) = F_0 \cdot \frac{E_{max}^{\Gamma + 1} \
                                 - E_{min}^{\Gamma + 1}}{E_{0, max}^{\Gamma + 1} \
                                 - E_{0, min}^{\Gamma + 1}}
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -785,12 +728,10 @@ class PowerLaw2(SpectralModel):
 
     def integral_error(self, emin, emax, **kwargs):
         r"""Integrate power law analytically with error propagation.
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-
         Returns
         -------
         integral, integral_error : tuple of `~astropy.units.Quantity`
@@ -815,7 +756,6 @@ class PowerLaw2(SpectralModel):
 
     def inverse(self, value):
         """Return energy for a given function value of the spectral model.
-
         Parameters
         ----------
         value : `~astropy.units.Quantity`
@@ -838,10 +778,8 @@ class PowerLaw2(SpectralModel):
 
 class ExponentialCutoffPowerLaw(SpectralModel):
     r"""Spectral exponential cutoff power-law model.
-
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(-\lambda E)
-
     Parameters
     ----------
     index : `~astropy.units.Quantity`
@@ -852,14 +790,11 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         :math:`E_0`
     lambda_ : `~astropy.units.Quantity`
         :math:`\lambda`
-
     Examples
     --------
     This is how to plot the default `ExponentialCutoffPowerLaw` model::
-
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw
-
         ecpl = ExponentialCutoffPowerLaw()
         ecpl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -896,9 +831,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     @property
     def e_peak(self):
         r"""Spectral energy distribution peak energy (`~astropy.utils.Quantity`).
-
         This is the peak in E^2 x dN/dE and is given by:
-
         .. math::
             E_{Peak} = (2 - \Gamma) / \lambda
         """
@@ -914,13 +847,10 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     r"""Spectral exponential cutoff power-law model used for 3FGL.
-
     Note that the parametrization is different from `ExponentialCutoffPowerLaw`:
-
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
                   \exp \left( \frac{E_0 - E}{E_{C}} \right)
-
     Parameters
     ----------
     index : `~astropy.units.Quantity`
@@ -931,14 +861,11 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
-
     Examples
     --------
     This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model::
-
         from astropy import units as u
         from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
-
         ecpl_3fgl = ExponentialCutoffPowerLaw3FGL()
         ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -975,13 +902,11 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
 class PLSuperExpCutoff3FGL(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 3FGL.
-
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
                   \exp \left( \left(\frac{E_0}{E_{C}} \right)^{\Gamma_2} -
                               \left(\frac{E}{E_{C}} \right)^{\Gamma_2}
                               \right)
-
     Parameters
     ----------
     index_1 : `~astropy.units.Quantity`
@@ -994,14 +919,11 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         :math:`E_0`
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`
-
     Examples
     --------
     This is how to plot the default `PLSuperExpCutoff3FGL` model::
-
         from astropy import units as u
         from gammapy.spectrum.models import PLSuperExpCutoff3FGL
-
         secpl_3fgl = PLSuperExpCutoff3FGL()
         secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -1040,14 +962,76 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         return pwl * cutoff
 
 
+class PLSuperExpCutoff4FGL(SpectralModel):
+    r"""Spectral super exponential cutoff power-law model used for 4FGL.
+
+	This model parametrisation is very similar, but slightly different from
+	`PLSuperExpCutoff3FGL` or `ExponentialCutoffPowerLaw3FGL
+    .. math::
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
+                  \exp \left( a \left(E_0 ^{\Gamma_2} - \E^{\Gamma_2} \right)
+                              \right)
+    Parameters
+    ----------
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`
+    expfactor : `~astropy.units.Quantity`
+        :math: 'a'
+    Examples
+    --------
+    This is how to plot the default `PLSuperExpCutoff4FGL` model::
+        from astropy import units as u
+        from gammapy.spectrum.models import PLSuperExpCutoff4FGL
+        secpl_4fgl = PLSuperExpCutoff4FGL()
+        secpl_4fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        plt.show()
+    """
+
+    __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
+
+    def __init__(
+        self,
+        index_1=1.5,
+        index_2=2,
+        amplitude="1e-12 cm-2 s-1 TeV-1",
+        reference="1 TeV",
+        expfactor="1e-2 TeV-2",
+    ):
+        self.index_1 = Parameter("index_1", index_1)
+        self.index_2 = Parameter("index_2", index_2)
+        self.amplitude = Parameter("amplitude", amplitude)
+        self.reference = Parameter("reference", reference, frozen=True)
+        self.expfactor = Parameter("expfactor", expfactor)
+
+        super().__init__(
+            [self.index_1, self.index_2, self.amplitude, self.reference, self.expfactor]
+        )
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
+        """Evaluate the model (static function)."""
+        pwl = amplitude * (energy / reference) ** (-index_1)
+        try:
+            cutoff = expfactor * np.exp(reference ** index_2 - energy ** index_2)
+        except AttributeError:
+            from uncertainties.unumpy import exp
+
+            cutoff = expfactor * exp(reference ** index_2 - energy ** index_2)
+        return pwl * cutoff
+
+
 class LogParabola(SpectralModel):
     r"""Spectral log parabola model.
-
     .. math::
         \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {
           - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
         }
-
     Note that :math:`log` refers to the natural logarithm. This is consistent
     with the `Fermi Science Tools
     <https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>`_
@@ -1057,7 +1041,6 @@ class LogParabola(SpectralModel):
     package>`_ package, however, uses :math:`log_{10}`. If you have
     parametrization based on :math:`log_{10}` you can use the
     :func:`~gammapy.spectrum.models.LogParabola.from_log10` method.
-
     Parameters
     ----------
     amplitude : `~astropy.units.Quantity`
@@ -1068,14 +1051,11 @@ class LogParabola(SpectralModel):
         :math:`\alpha`
     beta : `~astropy.units.Quantity`
         :math:`\beta`
-
     Examples
     --------
     This is how to plot the default `LogParabola` model::
-
         from astropy import units as u
         from gammapy.spectrum.models import LogParabola
-
         log_parabola = LogParabola()
         log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -1115,9 +1095,7 @@ class LogParabola(SpectralModel):
     @property
     def e_peak(self):
         r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
-
         This is the peak in E^2 x dN/dE and is given by:
-
         .. math::
             E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
         """
@@ -1130,15 +1108,12 @@ class LogParabola(SpectralModel):
 
 class TableModel(SpectralModel):
     """A model generated from a table of energy and value arrays.
-
     the units returned will be the units of the values array provided at
     initialization. The model will return values interpolated in
     log-space, returning 0 for energies outside of the limits of the provided
     energy array.
-
     Class implementation follows closely what has been done in
     `naima.models.TableModel`
-
     Parameters
     ----------
     energy : `~astropy.units.Quantity` array
@@ -1182,24 +1157,19 @@ class TableModel(SpectralModel):
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
         """Read XSPEC table model.
-
         The input is a table containing absorbed values from a XSPEC model as a
         function of energy.
-
         TODO: Format of the file should be described and discussed in
         https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
-
         Parameters
         ----------
         filename : str
             File containing the XSPEC model
         param : float
             Model parameter value
-
         Examples
         --------
         Fill table from an EBL model (Franceschini, 2008)
-
         >>> from gammapy.spectrum.models import TableModel
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
@@ -1234,9 +1204,7 @@ class TableModel(SpectralModel):
     @classmethod
     def read_fermi_isotropic_model(cls, filename, **kwargs):
         """Read Fermi isotropic diffuse model.
-
         See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`_
-
         Parameters
         ----------
         filename : str
@@ -1256,7 +1224,6 @@ class TableModel(SpectralModel):
 
 class ScaleModel(SpectralModel):
     """Wrapper to scale another spectral model by a norm factor.
-
     Parameters
     ----------
     model : `SpectralModel`
@@ -1278,7 +1245,6 @@ class ScaleModel(SpectralModel):
 
 class Absorption:
     r"""Gamma-ray absorption models.
-
     Parameters
     ----------
     energy_lo, energy_hi : `~astropy.units.Quantity`
@@ -1287,24 +1253,19 @@ class Absorption:
         Lower and upper bin edges of parameter axis
     data : `~astropy.units.Quantity`
         Model value
-
     Examples
     --------
     Create and plot EBL absorption models for a redshift of 0.5:
-
     .. plot::
         :include-source:
-
         import matplotlib.pyplot as plt
         import astropy.units as u
         from gammapy.spectrum.models import Absorption
-
         # Load tables for z=0.5
         redshift = 0.5
         dominguez = Absorption.read_builtin('dominguez').table_model(redshift)
         franceschini = Absorption.read_builtin('franceschini').table_model(redshift)
         finke = Absorption.read_builtin('finke').table_model(redshift)
-
         # start customised plot
         energy_range = [0.08, 3] * u.TeV
         ax = plt.gca()
@@ -1312,7 +1273,6 @@ class Absorption:
         franceschini.plot(label='Franceschini 2008', **opts)
         finke.plot(label='Finke 2010', **opts)
         dominguez.plot(label='Dominguez 2011', **opts)
-
         # tune plot
         ax.set_ylabel(r'Absorption coefficient [$\exp{(-\tau(E))}$]')
         ax.set_xlim(energy_range.value)  # we get ride of units
@@ -1321,7 +1281,6 @@ class Absorption:
         ax.set_title('EBL models (z=' + str(redshift) + ')')
         plt.grid(which='both')
         plt.legend(loc='best') # legend
-
         # show plot
         plt.show()
     """
@@ -1345,9 +1304,7 @@ class Absorption:
     @classmethod
     def read(cls, filename):
         """Build object from an XSPEC model.
-
         Todo: Format of XSPEC binary files should be referenced at https://gamma-astro-data-formats.readthedocs.io/en/latest/
-
         Parameters
         ----------
         filename : str
@@ -1393,12 +1350,10 @@ class Absorption:
     @classmethod
     def read_builtin(cls, name):
         """Read one of the built-in absorption models.
-
         Parameters
         ----------
         name : {'franceschini', 'dominguez', 'finke'}
             name of one of the available model in gammapy-data
-
         References
         ----------
         .. [1] Franceschini et al., "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",
@@ -1417,7 +1372,6 @@ class Absorption:
 
     def table_model(self, parameter, unit="TeV"):
         """Table model for a given parameter (`~gammapy.spectrum.models.TableModel`).
-
         Parameters
         ----------
         parameter : float
@@ -1436,7 +1390,6 @@ class Absorption:
 
 class AbsorbedSpectralModel(SpectralModel):
     """Spectral model with EBL absorption.
-
     Parameters
     ----------
     spectral_model : `~gammapy.spectrum.models.SpectralModel`
@@ -1482,12 +1435,10 @@ class AbsorbedSpectralModel(SpectralModel):
 
 class NaimaModel(SpectralModel):
     r"""A wrapper for Naima models.
-
     This class provides an interface with the models defined in the `~naima.models` module.
     The model accepts as a positional argument a `Naima <https://naima.readthedocs.io/en/latest/>`_
     radiative model instance, used to compute the non-thermal emission from populations of
     relativistic electrons or protons due to interactions with the ISM or with radiation and magnetic fields.
-
     One of the advantages provided by this class consists in the possibility of performing a maximum
     likelihood spectral fit of the model's parameters directly on observations, as opposed to the MCMC
     `fit to flux points <https://naima.readthedocs.io/en/latest/mcmc.html>`_ featured in
@@ -1496,7 +1447,6 @@ class NaimaModel(SpectralModel):
     ~naima.radiative.Synchrotron`, the magnetic field strength may also be fitted. Parameters can be
     freezed/unfreezed before the fit, and maximum/minimum values can be set to limit the parameters space to
     the physically interesting region.
-
     Parameters
     ----------
     radiative_model : `~naima.models.BaseRadiative`
@@ -1509,21 +1459,16 @@ class NaimaModel(SpectralModel):
         in case of a `~naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields
-
     Examples
     --------
     Create and plot a spectral model that convolves an `ExponentialCutoffPowerLaw` electron distribution
     with an `InverseCompton` radiative model, in the presence of multiple seed photon fields.
-
     .. plot::
         :include-source:
-
         import naima
         from gammapy.spectrum.models import NaimaModel
         import astropy.units as u
         import matplotlib.pyplot as plt
-
-
         particle_distribution = naima.models.ExponentialCutoffPowerLaw(1e30 / u.eV, 10 * u.TeV, 3.0, 30 * u.TeV)
         radiative_model = naima.radiative.InverseCompton(
             particle_distribution,
@@ -1533,23 +1478,18 @@ class NaimaModel(SpectralModel):
             ],
             Eemin=100 * u.GeV,
         )
-
         model = NaimaModel(radiative_model, distance=1.5 * u.kpc)
-
         opts = {
             "energy_range" : [10 * u.GeV, 80 * u.TeV],
             "energy_power" : 2,
             "flux_unit" : "erg-1 cm-2 s-1",
         }
-
         # Plot the total inverse Compton emission
         model.plot(label='IC (total)', **opts)
-
         # Plot the separate contributions from each seed photon field
         for seed, ls in zip(['CMB','FIR'], ['-','--']):
             model = NaimaModel(radiative_model, seed=seed, distance=1.5 * u.kpc)
             model.plot(label="IC ({})".format(seed), ls=ls, color="gray", **opts)
-
         plt.legend(loc='best')
         plt.show()
     """
@@ -1614,13 +1554,8 @@ class NaimaModel(SpectralModel):
 
 class SpectralGaussian(SpectralModel):
     r"""Gaussian spectral model.
-
     .. math::
-
         \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{\left( E-\bar{E} \right)^2 }{2 \sigma^2} }
-
-
-
     Parameters
     ----------
     norm : `~astropy.units.Quantity`
@@ -1629,17 +1564,12 @@ class SpectralGaussian(SpectralModel):
         :math:`\bar{E}`
     sigma : `~astropy.units.Quantity`
         :math:`\sigma`
-
-
     Examples
     --------
     This is how to plot the default `Gaussian` spectral model:
-
     .. code:: python
-
         from astropy import units as u
         from gammapy.spectrum.models import SpectralGaussian
-
         gaussian = SpectralGaussian()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
@@ -1664,11 +1594,8 @@ class SpectralGaussian(SpectralModel):
 
     def integral(self, emin, emax, **kwargs):
         r"""Integrate Gaussian analytically.
-
         .. math::
             F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
-
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`
@@ -1690,13 +1617,10 @@ class SpectralGaussian(SpectralModel):
 
     def energy_flux(self, emin, emax):
         r"""Compute energy flux in given energy range analytically.
-
         .. math::
             G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
             \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
              \right]_{E_{min}}^{E_{max}}
-
-
         Parameters
         ----------
         emin, emax : `~astropy.units.Quantity`

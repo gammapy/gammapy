@@ -13,6 +13,7 @@ from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
     ExponentialCutoffPowerLaw3FGL,
+    PLSuperExpCutoff4FGL,
     PLSuperExpCutoff3FGL,
     LogParabola,
 )
@@ -22,10 +23,12 @@ from ..time import LightCurve
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
+    "SourceCatalogObject4FGL",
     "SourceCatalogObject3FGL",
     "SourceCatalogObject1FHL",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FHL",
+    "SourceCatalog4FGL",
     "SourceCatalog3FGL",
     "SourceCatalog1FHL",
     "SourceCatalog2FHL",
@@ -35,15 +38,57 @@ __all__ = [
 
 def compute_flux_points_ul(quantity, quantity_errp):
     """Compute UL value for fermi flux points.
-
     See https://arxiv.org/pdf/1501.02003.pdf (page 30)
     """
     return 2 * quantity_errp + quantity
 
 
+class SourceCatalogObject4FGL(SourceCatalogObject):
+    """One source from the Fermi-LAT 4FGL catalog.
+    Catalog is represented by `~gammapy.catalog.SourceCatalog4FGL`.
+    """
+
+    @property
+    def spectral_model(self):
+        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        spec_type = self.data["SpectrumType"].strip()
+
+        pars, errs = {}, {}
+        pars["reference"] = self.data["Pivot_Energy"]
+
+        if spec_type == "PowerLaw":
+            pars["amplitude"] = self.data["PL_Flux_Density"]
+            pars["index"] = self.data["PL_Index"]
+            errs["amplitude"] = self.data["Unc_PL_Flux_Density"]
+            errs["index"] = self.data["Unc_PL_Index"]
+            model = PowerLaw(**pars)
+        elif spec_type == "LogParabola":
+            pars["amplitude"] = self.data["LP_Flux_Density"]
+            pars["alpha"] = self.data["LP_Index"]
+            pars["beta"] = self.data["LP_beta"]
+            errs["amplitude"] = self.data["Unc_LP_Flux_Density"]
+            errs["alpha"] = self.data["Unc_LP_Index"]
+            errs["beta"] = self.data["Unc_LP_beta"]
+            model = LogParabola(**pars)
+        elif spec_type == "PLSuperExpCutoff":
+            pars["amplitude"] = self.data["PLEC_Flux_Density"]
+            pars["index_1"] = self.data["PLEC_Index"]
+            pars["index_2"] = self.data["PLEC_Exp_Index"]
+            pars["expfactor"] = self.data["PLEC_Expfactor"]
+            errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
+            errs["index_1"] = self.data["Unc_PLEC_Index"]
+            errs["index_2"] = self.data["Unc_PLEC_Exp_Index"]
+            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"]
+            model = PLSuperExpCutoff4FGL(**pars)
+        else:
+            raise ValueError("Invalid spec_type: {!r}".format(spec_type))
+
+        model.parameters.set_parameter_errors(errs)
+        return model
+
+
 class SourceCatalogObject3FGL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FGL catalog.
-
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FGL`.
     """
 
@@ -51,7 +96,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     _ebounds_suffix = ["100_300", "300_1000", "1000_3000", "3000_10000", "10000_100000"]
     energy_range = u.Quantity([100, 100000], "MeV")
     """Energy range of the catalog.
-
     Paper says that analysis uses data up to 300 GeV,
     but results are all quoted up to 100 GeV only to
     be consistent with previous catalogs.
@@ -62,7 +106,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     def info(self, info="all"):
         """Summary info string.
-
         Parameters
         ----------
         info : {'all', 'basic', 'position', 'spectral', 'lightcurve'}
@@ -412,7 +455,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def lightcurve(self):
         """Lightcurve (`~gammapy.time.LightCurve`).
-
         Examples
         --------
         >>> from gammapy.catalog import source_catalogs
@@ -456,7 +498,6 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
 class SourceCatalogObject1FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 1FHL catalog.
-
     Catalog is represented by `~gammapy.catalog.SourceCatalog1FHL`.
     """
 
@@ -528,7 +569,6 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
-
     Catalog is represented by `~gammapy.catalog.SourceCatalog2FHL`.
     """
 
@@ -602,7 +642,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
 class SourceCatalogObject3FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 3FHL catalog.
-
     Catalog is represented by `~gammapy.catalog.SourceCatalog3FHL`.
     """
 
@@ -616,7 +655,6 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     def info(self, info="all"):
         """Summary info string.
-
         Parameters
         ----------
         info : {'all', 'basic', 'position', 'spectral'}
@@ -908,9 +946,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
 class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
-
     Reference: https://ui.adsabs.harvard.edu/#abs/2015ApJS..218...23A
-
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FGL`.
     """
 
@@ -980,17 +1016,13 @@ class SourceCatalog3FGL(SourceCatalog):
     def is_source_class(self, source_class):
         """
         Check if source belongs to a given source class.
-
         The classes are described in Table 3 of the 3FGL paper:
-
         https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-
         Parameters
         ----------
         source_class : str
             Source class designator as defined in Table 3. There are a few extra
             selections available:
-
             - 'ALL': all identified objects
             - 'all': all objects with associations
             - 'galactic': all sources with an associated galactic object
@@ -998,7 +1030,6 @@ class SourceCatalog3FGL(SourceCatalog):
             - 'extra-galactic': all sources with an associated extra-galactic object
             - 'EXTRA-GALACTIC': all identified extra-galactic sources
             - 'unassociated': all unassociated objects
-
         Returns
         -------
         selection : `~numpy.ndarray`
@@ -1023,14 +1054,11 @@ class SourceCatalog3FGL(SourceCatalog):
     def select_source_class(self, source_class):
         """
         Select all sources of a given source class.
-
         See `SourceCatalog3FHL.is_source_class` for further documentation
-
         Parameters
         ----------
         source_class : str
             Source class designator.
-
         Returns
         -------
         selection : `SourceCatalog3FHL`
@@ -1042,11 +1070,48 @@ class SourceCatalog3FGL(SourceCatalog):
         return catalog
 
 
+class SourceCatalog4FGL(SourceCatalog):
+    """Fermi-LAT 4FGL source catalog.
+    Reference: https://arxiv.org/abs/1902.10045
+	Regerence: https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
+    One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
+    """
+
+    name = "4fgl"
+    description = "LAT 8-year point source catalog"
+    source_object_class = SourceCatalogObject4FGL
+    ## TODO: source categories ?
+
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit"):
+        filename = str(make_path(filename))
+
+        table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
+
+        table_standardise_units_inplace(table)
+
+        source_name_key = "Source_Name"
+        #        source_name_alias = (
+        #            "Extended_Source_Name",
+        #            "0FGL_Name",
+        #            "1FGL_Name",
+        #            "2FGL_Name",
+        #            "1FHL_Name",
+        #            "ASSOC_TEV",
+        #            "ASSOC1",
+        #            "ASSOC2",
+        #        )
+        super().__init__(
+            table=table,
+            source_name_key=source_name_key,
+            #            source_name_alias=source_name_alias,
+        )
+
+        self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
+
+
 class SourceCatalog1FHL(SourceCatalog):
     """Fermi-LAT 1FHL source catalog.
-
     Reference: https://ui.adsabs.harvard.edu/abs/2013ApJS..209...34A
-
     One source is represented by `~gammapy.catalog.SourceCatalogObject1FHL`.
     """
 
@@ -1076,9 +1141,7 @@ class SourceCatalog1FHL(SourceCatalog):
 
 class SourceCatalog2FHL(SourceCatalog):
     """Fermi-LAT 2FHL source catalog.
-
     Reference: https://ui.adsabs.harvard.edu/abs/2016ApJS..222....5A
-
     One source is represented by `~gammapy.catalog.SourceCatalogObject2FHL`.
     """
 
@@ -1110,9 +1173,7 @@ class SourceCatalog2FHL(SourceCatalog):
 
 class SourceCatalog3FHL(SourceCatalog):
     """Fermi-LAT 3FHL source catalog.
-
     Reference: https://ui.adsabs.harvard.edu/abs/2017ApJS..232...18A
-
     One source is represented by `~gammapy.catalog.SourceCatalogObject3FHL`.
     """
 
@@ -1151,17 +1212,13 @@ class SourceCatalog3FHL(SourceCatalog):
     def is_source_class(self, source_class):
         """
         Check if source belongs to a given source class.
-
         The classes are described in Table 3 of the 3FGL paper:
-
         https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-
         Parameters
         ----------
         source_class : str
             Source class designator as defined in Table 3. There are a few extra
             selections available:
-
             - 'ALL': all identified objects
             - 'all': all objects with associations
             - 'galactic': all sources with an associated galactic object
@@ -1169,7 +1226,6 @@ class SourceCatalog3FHL(SourceCatalog):
             - 'extra-galactic': all sources with an associated extra-galactic object
             - 'EXTRA-GALACTIC': all identified extra-galactic sources
             - 'unassociated': all unassociated objects
-
         Returns
         -------
         selection : `~numpy.ndarray`
@@ -1194,14 +1250,11 @@ class SourceCatalog3FHL(SourceCatalog):
     def select_source_class(self, source_class):
         """
         Select all sources of a given source class.
-
         See `SourceCatalog3FHL.is_source_class` for further documentation
-
         Parameters
         ----------
         source_class : str
             Source class designator.
-
         Returns
         -------
         selection : `SourceCatalog3FHL`
