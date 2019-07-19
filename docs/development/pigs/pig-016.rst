@@ -28,8 +28,6 @@ For Gammapy v0.14 in September 2019 (and same for v1.0), we propose the followin
 - dissolve gammapy.image, moving the useful functionality to gammapy.maps and
   gammapy.cube.
 - Clean up gammapy.utils sub-packages
-- Refactor end-to-end analysis tests to gammapy.scripts, using the new high-level
-  API
 
 After Gammapy v1.0, we propose to continue discussion on other changes
 considered while writing this PIG, described in the outlook section.
@@ -68,26 +66,33 @@ and the built-in models in Gammapy are distributed like this:
 - gammapy.cube.models -- 3D cube models
 - gammapy.time.models -- 1D time models
 
-Our proposal is to create a new gammapy.modeling and restructure like this:
+Our proposal is to create a new sub-package gammapy.modeling and
+gammapy.modeling.models following the organisation chosen for models in Astropy and
+restructure code like this:
 
-- gammapy.utils.fitting -> gammapy.modeling.fitting
-- gammapy.utils.serialisation -> gammapy.modeling.serialisation
-- gammapy.spectrum.models -- gammapy.modeling.models.spectrum
-- gammapy.image.models -- gammapy.modeling.models.image
-- gammapy.cube.models -- gammapy.modeling.models.cube
-- gammapy.time.models -- gammapy.modeling.models.time
+- gammapy/utils/fitting -> gammapy/modeling/fitting
+- gammapy/utils/serialisation -> gammapy/modeling/serialisation
+- gammapy/spectrum/models -- gammapy/modeling/models/spectrum
+- gammapy/image/models -- gammapy/modeling/models/image
+- gammapy/cube/models -- gammapy/modeling/models/cube
+- gammapy/time/models -- gammapy/modeling/models/time
 
-We propose to change all models to include "Spectral", "Spatial", "Cube" and
-"Time", and to expose them in one namespace: gammapy.modeling.models We also
-plan to add factory functions and a YAML format to make it easy to make models,
-i.e. very often users will not have to type many, many class names. For the
-fitting and serialisation framework, we propose to expose it in the
-gammapy.modeling namespace, unless that causes circular import issues, then we
-would keep it in gammapy.modeling.fitting and gammapy.modeling.serialisation
-only.
+Since it is very inconvenient for users to have to type sub-sub-sub-package
+names, we propose to expose the end-user API direction in gammapy.modeling for
+general classes (Parameter, Parameters, Model, Fit, Dataset). For the models, we
+propose to expose them in gammapy.modeling.models (same as Astropy), and to
+introduce a factory function to make it easy to make models that is easy to
+import and use. E.g. it could be gammapy.modeling.make_model and take a model
+specification string or dictionary.
+
+We propose to add "Source" to all (currently 3D) source models, and to add
+"Spectral", "Spatial" and "Time" for the spectral, spatial and time models. This
+avoids user confusion concerning the type of model, which currently exists in
+v0.13, because for some models (Gaussian, diffuse, table, constant) it isn't
+obvious what kind they are.
 
 The motivation for this change is weak, but in discussions at the Erlangen
-coding sprint most Gammapy developers preferred it. The reasoning is that it's
+coding sprint most Gammapy developers preferred it. The reasoning was that it's
 a bit easier to find and maintain models if they are all in one place.
 
 There was a concern that this might introduce circular dependencies between
@@ -134,15 +139,15 @@ such as code to make a radial profile from an image. Much later gammapy.maps was
 introduced and we managed to support 2D and 3D maps with one container instead
 of separate gammapy.image.SkyImage and gammapy.cube.SkyCube.
 
-Now, if we move gammapy.image.models to gammap.modeling.models.image as proposed
-above, and that SkyImage has been removed in 2018, there is very little
-functionality left in gammapy.image, and it's not clear what it's scope is.
+Now, if we move gammapy.image.models to gammap.modeling as proposed above, and
+that SkyImage has been removed in 2018, there is very little functionality left
+in gammapy.image, and it's not clear what it's scope is.
 
 So we propose to clean this up, roughly like this:
 
 - asmooth.py and utils.py -> move to gammapy.cube
-- measure.py and profile.py -> replace with docs example or move to maps or cube?
-- plotting.py -> replace with docs example or move to maps?
+- measure.py and profile.py -> replace with docs example or move to maps or cube
+- plotting.py -> replace with docs example or move to maps
 
 Clean up ``gammapy.utils``
 --------------------------
@@ -164,99 +169,37 @@ case-by-case basis. After that we will review what is left and decide whether we
 keep or completely remove gammapy.utils from the Gammapy docs, i.e. if it's
 public API or not.
 
-Improve tests
--------------
-
-Every sub-package in Gammapy has a tests folder where the corresponding tests
-are located. In addition we have the tutorial notebooks under test (without
-asserts), and there is `gammapy-benchmarks`_ where we have started to benchmark
-the CPU and RAM usage of the most common high-level analyses.
-
-We plan to add a high-level interface for Gammapy now (see `GH 2219`_). We
-propose to review Gammapy tests, especially in gammapy.spectrum, gammapy.cube
-and gammapy.time, and to move the end-to-end analysis tests to tests that
-use the high-level interface.
-
 Outlook
 =======
 
 During discussion of this PIG, several other ideas surfaced and were considered.
-We don't propose those changes here and for v1.0, because discussion didn't
-conclude on whether it's a good idea or not, and in some cases because
-introducing the change would require a detailed dedicated PIG with a feasability
-exploration as in `GH 2290`_ and then significant extra developments. We do
-expect that some of these changes will be made in the future.
-
-``gammapy.astro``
------------------
-
-``gammapy.astro`` and ``gammapy.catalog`` are independent from the rest of
-Gammapy in the sense that they are not imported or used from elsewhere. Still,
-they are useful, and they do import many things from Gammapy, e.g. the spectral
-and spatial model classes. We will clean them up a bit, but they will remain
-mostly as-is in Gammapy. Splitting them out isn't a good idea at this point, not
-clear where they would go, and maintaining multiple repos is much harder than
-one repo and their code would break immediately, since the Gammapy API isn't stable
-yet.
-
-
-gammapy.catalog
----------------
-
-tbd
-
-gammapy.image and gammapy.detect
---------------------------------
-
-
-Also ``gammapy.detect`` and ``gammapy.time`` are mostly high-level and not used
-from anywhere else (except possibly from ``gammapy.scripts`` soon. Therefore we
-will not say much about them in this PIG.
-
-Dissolve ``gammapy.image``, moving it's content to ``gammapy.cube``. The main
-thing it contains is ``gammapy.image.models``, the rest is just a few
-conveniences that could also be removed (e.g. to make profiles from images).
-If we introduce ``gammapy.models`` then ``gammapy.image.models`` would go there.
-
-We could rename ``cube`` to ``mapanalysis`` to make it clearer what it does?
-Moving all of ``gammapy.image``, ``gammapy.background`` and ``gammapy.cube``
-into ``gammapy.maps`` should be possible (all map-based data structures and
-algorithms in one place). But this might introduce circular dependencies with
-``spectrum```, which are currently avoided by having ``maps`` -> ``spectrum`` ->
-``cube``, where ``cube`` can use things from ``spectrum``.
-
-Similar to models, built-in dataset subclasses could be grouped in a new
-``gammapy.datasets``. Although this might introduce circular dependencies within
-Gammapy, it's less clear than for ``models`` if this is a good idea.
+We don't propose those changes here and for v1.0, in some cases because
+discussion didn't conclude on whether it's a good idea or not, and in some cases
+because introducing the change would require a detailed dedicated PIG with a
+feasability exploration as in `GH 2290`_ and then significant extra
+developments. We do expect that some of these changes will be made in the
+future (and some won't).
 
 Generalising maps to allow maps without a WCS and spatial axes, and / or using
 it everywhere in Gammapy (for IRFs, spectra, lightcurves) could be nice.
 Possibly ALMA does this, all their data is in 4D containers with lon, lat,
 wavelength, time, and e.g. a 1D spectrum would have only one bin in lon, lat,
-time. This is something we should explore for Gammapy 2.0 in 2020, doesn't seem
-feasible for Gammapy 1.0 in 2019.
+time.
 
-Currently the fact that ``naima`` is a separate package is causing problems. We
-can't add anything there, and we have to wrap the spectral models there, which
-is inconvenient for us as developers, but mostly the issue is that users have to
-learn two different modeling APIs to use Naima and Gammapy. We could pull
-``naima`` into ``gammapy.astro.naima`` (or rename to ``gammapy.astro.radiation``
-or something), or a separate good Python nonthermal modeling package might
-appear and we interface or integrate that with Gammapy. For v1.0 we probaly
-don't have enough time or manpower to pull it in. For now, we leave
-``gammapy.astro`` and ``gammapy.catalog`` in Gammapy, but some people have
-suggested to split it out from Gammapy, and in that sense pulling ``naima`` in
-would be the wrong direction.
-
-The relationship between ``gammapy`` and ``ctapipe`` is unclear. Not so much
-functionality wise, but in terms of Python package dependency, i.e. who imports
-from whom. We would benefit a lot from shared development, e.g. ``ctapipe`` has
-a Tool / Component concept and provenance already, and Gammapy already has IRF
-classes and sensitivity computation tools that are needed by the pipeline. We
-just note this question here, for Gammapy v1.0 we don't propose to introduce any
-coupling on our side, i.e. if we want to use something from ``ctapipe`` such as
-the ``Tool`` class, we would put a copy in ``gammapy.extern`` to avoid the
-dependency.
+- CTA IRFs and other CTA data level 3 classes might be maintained in ctapipe or
+  somehow shared between Gammapy and ctapipe.
+- gammapy.irf and gammapy.spectrum and most containers in Gammapy might be changed to maps.
+- gammapy.spectrum will likely become higher-level than gammapy.cube,
+  i.e. 1D spectral analysis will be based on 3D maps analysis more.
+- gammapy.detect will likely grow map analysis and modeling based algorithms,
+  i.e. depend on gammapy.cube and the rest of the Gammapy package
+- gammapy.astro could grow (merge in Naima) or be split out from Gammapy.
+- we might rename gammapy.cube to gammapy.map_analysis or gammapy.scripts
+  to gammapy.analysis or similar changes depending on how their purpose and
+  scope changes in the future
+- datasets could be grouped in gammapy.datasets, if they are simple container objects
+  (like models) that aren't tightly coupled with analysis code in
+  gammapy.spectrum and gammapy.maps.
 
 Task list
 =========
