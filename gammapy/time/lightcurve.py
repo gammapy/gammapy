@@ -66,7 +66,7 @@ class LightCurve:
     @property
     def time(self):
         """Time (`~astropy.time.Time`)."""
-        return self._make_time("time")
+        return self.time_mid
 
     @property
     def time_min(self):

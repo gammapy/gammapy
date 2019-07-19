@@ -1,19 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.table import QTable, Column
 from astropy.time import Time
-from scipy.interpolate import interp1d
-from scipy.stats import chisquare
 from ..utils.fitting import Fit
-from ..utils.interpolation import interpolate_likelihood_profile
 from ..time import LightCurve
+from ..spectrum import SpectrumDatasetOnOff, FluxPoints
+from ..spectrum.models import ScaleModel
+from ..utils.table import table_from_row_data
 
-__all__ = [ "LightCurveEstimator3D"]
+__all__ = [ "LightCurveEstimator3D", "LightCurveEstimatorNew"]
 
-
-
+log = logging.getLogger(__name__)
 
 class LightCurveEstimator3D:
     """Flux Points estimated for each time bin.
@@ -163,7 +163,153 @@ class LightCurveEstimator3D:
             ts.append(np.abs(loglike_null - loglike))
         return ts
 
-    def estimate_time_bin_flux(self, datasets, steps="all"):
+
+class LightCurveEstimatorNew:
+    """Flux Points estimated for each time bin.
+
+    Estimates flux points for a given list of datasets.
+
+    Parameters
+    ----------
+    datasets : list of `~gammapy.spectrum.SpectrumDatatset` or `~gammapy.cube.MapDataset`
+        Spectrum or Map datasets.
+    source : str
+        For which source in the model to compute the flux points. Default is ''
+    norm_min : float
+        Minimum value for the norm used for the likelihood profile evaluation.
+    norm_max : float
+        Maximum value for the norm used for the likelihood profile evaluation.
+    norm_n_values : int
+        Number of norm values used for the likelihood profile.
+    norm_values : `numpy.ndarray`
+        Array of norm values to be used for the likelihood profile.
+    sigma : int
+        Sigma to use for asymmetric error computation.
+    sigma_ul : int
+        Sigma to use for upper limit computation.
+    reoptimize : bool
+        reoptimize other parameters during likelihod scan
+    """
+
+    def __init__(self,
+                 datasets,
+                 source='',
+                 norm_min=0.2,
+                 norm_max=5,
+                 norm_n_values=11,
+                 norm_values=None,
+                 sigma=1,
+                 sigma_ul=2,
+                 reoptimize=False,
+                 ):
+
+        self.datasets = datasets
+
+        if not datasets.is_all_same_type and datasets.is_all_same_shape:
+            raise ValueError(
+                "Light Curve estimation requires a list of datasets"
+                " of the same type and data shape."
+            )
+
+        dataset = self.datasets.datasets[0]
+
+        if isinstance(dataset, SpectrumDatasetOnOff):
+            model = dataset.model
+        else:
+            model = dataset.model[source].spectral_model
+
+        self.model = ScaleModel(model)
+        self.model.norm.min = 0
+        self.model.norm.max = 1e5
+
+        if norm_values is None:
+            norm_values = np.logspace(
+                np.log10(norm_min), np.log10(norm_max), norm_n_values
+            )
+
+        self.norm_values = norm_values
+
+        self.sigma = sigma
+        self.sigma_ul = sigma_ul
+        self.reoptimize = reoptimize
+        self.source = source
+
+        self._set_scale_model()
+
+    def t_start(self):
+        """Return the start times present in the counts meta"""
+        t_start = []
+        for dataset in self.datasets:
+            t_start.append(dataset.counts.meta["t_start"])
+        return t_start
+
+    def t_stop(self):
+        """Return the stop times present in the counts meta"""
+        t_stop = []
+        for dataset in self.datasets:
+            t_stop.append(dataset.counts.meta["t_stop"])
+        return t_stop
+
+    def _set_scale_model(self):
+        # set the model on all datasets
+        for dataset in self.datasets.datasets:
+            if isinstance(dataset, SpectrumDatasetOnOff):
+                dataset.model = self.model
+            else:
+                dataset.model[self.source].spectral_model = self.model
+
+    @property
+    def ref_model(self):
+        return self.model.model
+
+    def run(self, eref, emin, emax, steps="all"):
+        """Run light curve extraction.
+
+        Normalize integral and energy flux between emin and emax.
+
+        Parameters
+        ----------
+        eref : `~astropy.unit.Quantity`
+            reference energy of dnde flux normalization
+        emin : `~astropy.unit.Quantity`
+            minimum energy of integral and energy flux normalization interval
+        emax : `~astropy.unit.Quantity`
+            minimum energy of integral and energy flux normalization interval
+        steps : list of str
+            Which steps to execute. Available options are:
+
+                * "err": estimate symmetric error.
+                * "errn-errp": estimate asymmetric errors.
+                * "ul": estimate upper limits.
+                * "ts": estimate ts and sqrt(ts) values.
+                * "norm-scan": estimate likelihood profiles.
+
+            By default all steps are executed.
+
+        Returns
+        -------
+        lightcurve : `~gammapy.time.LightCurve`
+            the Light Curve object
+        """
+        self.e_ref = eref
+        self.e_min = emin
+        self.e_max = emax
+
+        rows = []
+
+        for dataset in self.datasets.datasets:
+            print(dataset.counts.meta['t_start'])
+            row = {'time_min':dataset.counts.meta['t_start'].mjd,
+                         'time_max': dataset.counts.meta['t_stop'].mjd}
+            row.update(self.estimate_time_bin_flux(dataset, steps))
+            rows.append(row)
+
+        meta = OrderedDict([("SED_TYPE", "likelihood")])
+        table = table_from_row_data(rows=rows, meta=meta)
+        table = FluxPoints(table).to_sed_type("flux").table
+        return LightCurve(table)
+
+    def estimate_time_bin_flux(self, dataset, steps="all"):
         """Estimate flux point for a single energy group.
 
         Parameters
@@ -184,6 +330,7 @@ class LightCurveEstimator3D:
         result : dict
             Dict with results for the flux point.
         """
+        self.fit = Fit(dataset)
 
         result = OrderedDict(
             [
@@ -212,13 +359,13 @@ class LightCurveEstimator3D:
             result.update(self.estimate_norm_err())
 
         if "counts" in steps:
-            result.update(self.estimate_counts())
+            result.update(self.estimate_counts(dataset))
 
         if "errp-errn" in steps:
             result.update(self.estimate_norm_errn_errp())
 
         if "ul" in steps:
-            result.update(self.estimate_norm_ul())
+            result.update(self.estimate_norm_ul(dataset))
 
         if "ts" in steps:
             result.update(self.estimate_norm_ts())
@@ -253,8 +400,13 @@ class LightCurveEstimator3D:
         norm_err = result.parameters.error(self.model.norm)
         return {"norm_err": norm_err}
 
-    def estimate_counts(self):
+    def estimate_counts(self, dataset):
         """Estimate counts for the flux point.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.utils.fitting.Dataset`
+            the dataset object
 
         Returns
         -------
@@ -263,16 +415,18 @@ class LightCurveEstimator3D:
         """
         counts = []
 
-        for dataset in self.datasets.datasets:
-            mask = dataset.mask_fit
-            if dataset.mask_safe is not None:
-                mask &= dataset.mask_safe
+        # TODO : use e_min and e_max interval for counts calculation
+        # TODO : add off counts and excess? for DatasetOnOff
+        # TODO : this may require a loop once we support Datasets per time bin
+        mask = dataset.mask
+        if dataset.mask_safe is not None:
+            mask &= dataset.mask_safe
 
-            counts.append(dataset.counts.data[mask].sum())
+        counts.append(dataset.counts.data[mask].sum())
 
         return {"counts": np.array(counts, dtype=int)}
 
-    def estimate_norm_ul(self):
+    def estimate_norm_ul(self, dataset):
         """Estimate upper limit for a flux point.
 
         Returns
@@ -284,8 +438,8 @@ class LightCurveEstimator3D:
 
         # TODO: the minuit backend has convergence problems when the likelihood is not
         #  of parabolic shape, which is the case, when there are zero counts in the
-        #  energy bin. For this case we change to the scipy backend.
-        counts = self.estimate_counts()["counts"]
+        #  bin. For this case we change to the scipy backend.
+        counts = self.estimate_counts(dataset)["counts"]
 
         if np.all(counts == 0):
             result = self.fit.confidence(
