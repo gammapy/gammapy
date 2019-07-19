@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from ...utils.testing import requires_data, requires_dependency
+from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.fitting import Fit
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
@@ -170,6 +170,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
 
 
+
 @requires_dependency("iminuit")
 @requires_data()
 def test_map_fit(sky_model, geom, geom_etrue):
@@ -228,6 +229,9 @@ def test_map_fit(sky_model, geom, geom_etrue):
     with pytest.raises(ValueError):
         dataset_1.model.skymodels[0].spatial_model.lon_0.value = 150
         dataset_1.npred()
+
+    with mpl_plot_check():
+        dataset_1.plot_residuals()
 
 
 @requires_dependency("iminuit")

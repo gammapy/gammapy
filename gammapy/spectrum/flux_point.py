@@ -1223,23 +1223,44 @@ class FluxPointsDataset(Dataset):
             # TODO: add likelihood profiles
             pass
 
-    def residuals(self):
-        """Compute flux point residuals (`~numpy.ndarray`).
+    def residuals(self, method="diff"):
+        """Compute the flux point residuals ().
 
-        Definition: ``(data - model) / model``
+        Parameters
+        ----------
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+                - `norm='sqrt_model'` for: (flux points - model)/sqrt(model)
+
+
+        Returns
+        -------
+        residuals : `~numpy.ndarray`
+            Residuals array.
         """
         fp = self.data
-        data = fp.table[fp.sed_type].quantity
+        data = fp.table[fp.sed_type]
 
         model = self.model(fp.e_ref)
-        residuals = ((data - model) / model).to_value("")
 
+        residuals = data - model
+
+        residuals = self._compute_residuals(data, model, method)
         # Remove residuals for upper_limits
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self, **kwargs):
-        """Plot flux points, best fit model and residuals."""
+    def peek(self, norm=None, **kwargs):
+        """Plot flux points, best fit model and residuals.
+
+        Parameters
+        ----------
+        norm: `str`
+            normalization used to compute the spectral residuals. Choose between `None`, `model` and `sqrt_model`.
+        """
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
 
@@ -1251,7 +1272,7 @@ class FluxPointsDataset(Dataset):
         ax_spectrum.set_xticks([])
 
         ax_residuals = plt.subplot(gs[5:, :])
-        self.plot_residuals(ax=ax_residuals)
+        self.plot_residuals(ax=ax_residuals, norm=norm)
         return ax_spectrum, ax_residuals
 
     @property
@@ -1265,13 +1286,15 @@ class FluxPointsDataset(Dataset):
     def _e_unit(self):
         return self.data.e_ref.unit
 
-    def plot_residuals(self, ax=None, **kwargs):
+    def plot_residuals(self, ax=None, method="diff",  **kwargs):
         """Plot flux point residuals.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals, see `MapDataset.residuals()`
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.errorbar`.
 
@@ -1284,7 +1307,7 @@ class FluxPointsDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        residuals = self.residuals()
+        residuals = self.residuals(method=method)
 
         fp = self.data
 
@@ -1294,19 +1317,36 @@ class FluxPointsDataset(Dataset):
 
         model = self.model(fp.e_ref)
         yerr = fp._plot_get_flux_err(fp.sed_type)
-        yerr = (yerr[0] / model).to_value(""), (yerr[1] / model).to_value("")
+
+        if method == "diff":
+            unit = yerr[0].unit
+            yerr = yerr[0].to_value(unit), yerr[1].to_value(unit)
+        elif method == "diff/model":
+            unit = ""
+            yerr = (yerr[0] / model).to_value(""), (yerr[1] / model).to_value(unit)
+        else:
+            raise ValueError("Invalid method, choose between 'diff' and 'diff/model'")
 
         kwargs.setdefault("marker", "+")
         kwargs.setdefault("ls", "None")
-        ax.errorbar(self.data.e_ref.value, residuals, xerr=xerr, yerr=yerr, **kwargs)
+        kwargs.setdefault("color", "black")
+
+        ax.errorbar(
+            self.data.e_ref.value,
+            residuals.value,
+            xerr=xerr,
+            yerr=yerr,
+            **kwargs
+        )
 
         # format axes
         ax.axhline(0, color="black", lw=0.5)
-        ax.set_ylabel("Residuals")
+        ax.set_ylabel("Residuals   {}".format(unit.__str__()))
         ax.set_xlabel("Energy ({})".format(self._e_unit))
-        ax.set_ylim(-1, 1)
         ax.set_xscale("log")
         ax.set_xlim(self._e_range.to_value(self._e_unit))
+        y_max = 2 * np.nanmax(residuals).value
+        ax.set_ylim(-y_max, y_max)
         return ax
 
     def plot_spectrum(self, ax=None, fp_kwargs=None, model_kwargs=None):
