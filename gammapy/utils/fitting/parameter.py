@@ -186,14 +186,14 @@ class Parameter:
         selection : {"all", "simple"}
             Selection of information to include.
         """
-        if selection == "all":
+        if selection == "simple":
             return dict(
                 name=self.name,
                 value=self.value,
                 unit=self.unit.to_string("fits"),
                 frozen=self.frozen,
             )
-        elif selection == "simple":
+        elif selection == "all":
             return dict(
                 name=self.name,
                 value=self.value,
