@@ -94,7 +94,7 @@ def dict_to_models(filemodel):
     models_list = []
     for ks in components_list:
         keys = list(ks.keys())
-        try:
+        if "SkySpatialModel" in keys and "SpectralModel" in keys:
             item = ks["SkySpatialModel"]
             if "File" in list(item.keys()):
                 spatial_model = getattr(spatial, item["Type"]).read(item["File"])
@@ -106,9 +106,6 @@ def dict_to_models(filemodel):
                 }
                 spatial_model = getattr(spatial, item["Type"])(**params)
                 spatial_model.parameters = Parameters.from_dict(item)
-        except:
-            pass
-        try:
             item = ks["SpectralModel"]
             if "energy" in list(item.keys()):
                 energy = Quantity(item["energy"]["data"], item["energy"]["unit"])
@@ -122,9 +119,6 @@ def dict_to_models(filemodel):
                 }
                 spectral_model = getattr(spectral, item["Type"])(**params)
                 spectral_model.parameters = Parameters.from_dict(item)
-        except:
-            pass
-        if "SkySpatialModel" in keys and "SpectralModel" in keys:
             models_list.append(
                 SkyModel(
                     name=ks["Name"],
@@ -132,10 +126,5 @@ def dict_to_models(filemodel):
                     spectral_model=spectral_model,
                 )
             )
-        elif "Model" in keys:
-            if ks["Model"]["Type"] != "BackgroundModel":
-                try:
-                    models_list.append(spectral_model)
-                except:
-                    pass
+
     return models_list
