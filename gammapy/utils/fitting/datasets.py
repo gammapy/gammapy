@@ -20,6 +20,11 @@ class Dataset(abc.ABC):
     - `gammapy.spectrum.SpectrumDataset`
     - `gammapy.spectrum.FluxPointsDataset`
     """
+    _residuals_labels = {
+            "diff": "data - model",
+            "diff/model": "(data - model) / model",
+            "diff/sqrt(model)": "(data - model) / sqrt(model)",
+        }
 
     @property
     def mask(self):
@@ -51,6 +56,22 @@ class Dataset(abc.ABC):
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
+
+    @staticmethod
+    def _compute_residuals(data, model, method="diff"):
+        with np.errstate(invalid="ignore"):
+            if method == "diff":
+                residuals = data - model
+            elif method == "diff/model":
+                residuals = (data - model) / model
+            elif method == "diff/sqrt(model)":
+                residuals = (data - model) / np.sqrt(model)
+            else:
+                raise AttributeError(
+                    "Invalid method: {}. Choose between 'diff',"
+                    " 'diff/model' and 'diff/sqrt(model)'".format(method)
+                )
+        return residuals
 
 
 class Datasets:

@@ -66,6 +66,11 @@ class CountsSpectrum:
     def quantity(self):
         return self.data * self.unit
 
+    @quantity.setter
+    def quantity(self, quantity):
+        self.data = quantity.value
+        self.unit = quantity.unit
+
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="COUNTS", hdu2="EBOUNDS"):
         """Read from HDU list in OGIP format."""
@@ -173,7 +178,6 @@ class CountsSpectrum:
         xerr = [x - bounds[:-1], bounds[1:] - x]
         yerr = np.sqrt(counts) if show_poisson_errors else 0
         kwargs.setdefault("fmt", ".")
-        kwargs.setdefault("color", "black")
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs)
         if show_energy is not None:
             ener_val = u.Quantity(show_energy).to_value(energy_unit)
@@ -181,7 +185,6 @@ class CountsSpectrum:
         ax.set_xlabel("Energy [{}]".format(energy_unit))
         ax.set_ylabel("Counts")
         ax.set_xscale("log")
-        ax.set_ylim(0, 1.2 * max(self.data))
         return ax
 
     def plot_hist(self, ax=None, energy_unit="TeV", show_energy=None, **kwargs):
@@ -261,3 +264,41 @@ class CountsSpectrum:
         emax = emax if emax is not None else edges[-1]
 
         return (edges[:-1] >= emin) & (edges[1:] <= emax)
+
+    def _arithmetics(self, operator, other, copy):
+        """Perform arithmetics on maps after checking geometry consistency."""
+        if isinstance(other, CountsSpectrum):
+            q = other.quantity
+        else:
+            q = u.Quantity(other, copy=False)
+
+        out = self.copy() if copy else self
+        out.quantity = operator(out.quantity, q)
+        return out
+
+    def __add__(self, other):
+        return self._arithmetics(np.add, other, copy=True)
+
+    def __iadd__(self, other):
+        return self._arithmetics(np.add, other, copy=False)
+
+    def __sub__(self, other):
+        return self._arithmetics(np.subtract, other, copy=True)
+
+    def __isub__(self, other):
+        return self._arithmetics(np.subtract, other, copy=False)
+
+    def __mul__(self, other):
+        return self._arithmetics(np.multiply, other, copy=True)
+
+    def __imul__(self, other):
+        return self._arithmetics(np.multiply, other, copy=False)
+
+    def __truediv__(self, other):
+        return self._arithmetics(np.true_divide, other, copy=True)
+
+    def __itruediv__(self, other):
+        return self._arithmetics(np.true_divide, other, copy=False)
+
+    def __array__(self):
+        return self.data

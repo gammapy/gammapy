@@ -573,7 +573,7 @@ class WcsNDMap(WcsMap):
         """Extract spectrum in a given region.
 
         The spectrum can be computed by summing (or, more generally, applying `func`)
-        along the spatial axies in each energy bin. This occurs only inside the `region`,
+        along the spatial axes in each energy bin. This occurs only inside the `region`,
         which by default is assumed to be the whole spatial extension of the map.
 
         Parameters
