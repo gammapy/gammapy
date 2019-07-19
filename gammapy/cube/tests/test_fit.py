@@ -115,6 +115,8 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     dataset.mask_safe = dataset.mask_fit
     assert "MapDataset" in str(dataset)
 
+
+@requires_data()
 def test_fake(sky_model, geom, geom_etrue):
     """Test the fake dataset"""
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
