@@ -2,7 +2,7 @@
 """Utils to create scripts and command-line tools"""
 import sys
 import logging
-import oyaml as yaml
+import yaml
 from os.path import expandvars
 from pathlib import Path
 
@@ -75,7 +75,9 @@ def write_yaml(dictionary, filename, logger=None):
     if logger is not None:
         logger.info("Writing {}".format(filename))
     with open(str(filename), "w") as outfile:
-        outfile.write(yaml.safe_dump(dictionary, default_flow_style=False))
+        outfile.write(
+            yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=False)
+        )
 
 
 def make_path(path):
@@ -91,26 +93,6 @@ def make_path(path):
     # Otherwise this can result in cryptic errors later on
     return Path(expandvars(str(path)))
 
-def name_from_path(filepath):
-    """get file name from file path.
-
-    Parameters
-    ----------
-    filename : str
-        file path to get file name
-    """
-    islash = [k for k in range(len(filepath)) if filepath[k] == '/']
-    if islash == []:
-        islash = -1
-    else:
-        islash = islash[-1]
-    idot = [k for k in range(len(filepath)) if filepath[k] == '.']
-    if idot == []:
-        idot = -1
-    else:
-        idot = idot[-1]
-    name = filepath[islash+1:idot]
-    return name
 
 def recursive_merge_dicts(a, b):
     """Recursively merge two dictionaries.

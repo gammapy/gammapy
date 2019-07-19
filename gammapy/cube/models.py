@@ -2,11 +2,13 @@
 import copy
 import numpy as np
 import astropy.units as u
+from pathlib import Path
 from ..utils.fitting import Parameter, Model, Parameters
 from ..utils.scripts import make_path
 from ..spectrum.models import SpectralModel
 from ..image.models import SkySpatialModel
 from ..utils.scripts import make_path, write_yaml, name_from_path
+from ..utils.scripts import make_path, write_yaml
 from ..utils.serialization.io import models_to_dict
 from ..maps import Map
 
@@ -122,10 +124,10 @@ class SkyModels:
         with filename.open("w") as output:
             output.write(xml)
 
-    def to_yaml(self, filename, do_cut=False):
+    def to_yaml(self, filename, selection="all"):
         """Write to yaml file."""
-        components_dict = models_to_dict(self.skymodels, do_cut)
-        write_yaml(components_dict, filename+'_models')
+        components_dict = models_to_dict(self.skymodels, selection)
+        write_yaml(components_dict, filename + "_models")
 
     def evaluate(self, lon, lat, energy):
         out = self.skymodels[0].evaluate(lon, lat, energy)
@@ -338,7 +340,8 @@ class SkyDiffuseCube(SkyModelBase):
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
-        return cls(m)
+        name = name_from_path(filename)
+        return cls(m, name=name, file=filename)
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
