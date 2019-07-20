@@ -82,7 +82,7 @@ class SpectrumDataset(Dataset):
 
     def __str__(self):
         str_ = self.__class__.__name__
-        str_ += "\n"
+        str_ += "\n\n"
         counts = np.nan
         if self.counts is not None:
             counts = np.sum(self.counts.data)
@@ -137,12 +137,16 @@ class SpectrumDataset(Dataset):
             stat = self.likelihood()
         str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
 
-        # model section
+        n_pars, n_free_pars = 0, 0
+        if self.model is not None:
+            n_pars = len(self.model.parameters)
+            n_free_pars = len(self.parameters.free_parameters)
+
         str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", len(self.parameters.parameters)
+            "Number of parameters", n_pars
         )
         str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", len(self.parameters.free_parameters)
+            "Number of free parameters", n_free_pars
         )
 
         if self.model is not None:
@@ -400,7 +404,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         return str_
 
     def __str__(self):
-        str_ = super().__str__() + "\n"
+        str_ = super().__str__()
 
         backscale = np.nan
         if self.backscale is not None:
