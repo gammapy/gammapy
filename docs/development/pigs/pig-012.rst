@@ -156,16 +156,21 @@ Prototype configuration file.
 **API design**
 
 The design of the high-level interface API is driven by the use cases considered, the different
-tools (tasks) identified and their responsibilities, as well as the need of a main `Analysis`
+tools (tasks) identified and their responsibilities, as well as the need of a main ``Analysis``
 session object that drives and orchestrates internally the different tools involved, their inputs
-and products. The `Analysis` session object will be initialized with a configuration file (see *prototype
+and products. The ``Analysis`` session object will be initialized with a configuration file (see *prototype
 configuration file* above) and will be the responsible to instantiate and run the different tools
 classes (see *session workflow* below). The tools are middle  management agents (e.g. MapMaker,
 ReflectedBgEstimator, ...) responsible to perform the different tasks identified in the use cases covered.
 
-The present ``gammapy.scripts`` module will be renamed to ``gammapy.analysis`` where this high-level
-interface will be placed. This module will contain also the set of different command line tools provided,
-where some small cleaning and refactoring may be needed (i.e. remove ``gammapy image`` command line tool)
+The ``Analysis`` session object will provide access to every object involved and data structure produced
+during the session. ``Analysis`` methods calls will produce and modify datasets (i.e. models, maps,..),
+but in between method calls advanced users can do a lot of custom processing by their own with scripting
+using the Gammapy Python toolbox.
+
+The code of the ``Analysis`` class as well as any other eventual class needed will be placed in ``gammapy.scripts``.
+This module will contain also the set of different command line tools provided, where some small cleaning
+and refactoring may be needed (i.e. remove ``gammapy image`` command line tool)
 
 **Serialisation**
 
@@ -185,7 +190,7 @@ with the help of a boolean parameter. The serialisation would then be performed 
         $ cd analysis
         $ edit gammapy_analysis_config.yaml
         
-Then the user would type `ipython`, `juypter notebook` or write a script with the code below.
+Then the user would type ``ipython``, ``juypter notebook``or write a script with the code below.
 
 .. code::
 
@@ -194,32 +199,25 @@ Then the user would type `ipython`, `juypter notebook` or write a script with th
         analysis = Analysis(config)
 
         analysis.select_observations()
-        # analysis.observations: gammapy.data.Observations
+        # Select observations using the parameters defined in the configuration file.
 
         analysis.reduce_data()  # often slow, can be hours
-        # analysis.datasets: gammapy.datasets.Datasets
-
-        # If the user wants they can save all results from data reduction
-        # and re-start later. This stores config, datasets, ... all the
-        # analysis class state.
+        # If the user wants they can save all results from data reduction and re-start later.
+        # This stores config, datasets, ... all the analysis class state.
         # analysis.write()
-        # analysis = Analysis.read())
+        # analysis = Analysis.read()
 
         analysis.optimise()  # often slow, can be hours
-
         # Again, we could write and read, do the slow things only once.
-        # e.g. supervisor comes in and asks about significance of some
-        # model component or whatever
+        # e.g. supervisor comes in and asks about significance of some model component or whatever.
+        # analysis.write()
+        # analysis = Analysis.read()
 
-        # Everything is accessible via the "analysis"
-        # It's like the Analysis in Fermipy or Sherpa "session" or "HESSArray" in HAP
-        # a global object that gives you access to everything.
-        # Method calls modify data members (e.g. models), but in between method calls
-        # advanced users can do a lot of custom processing.
-        # Many advanced use cases can be done with the Analysis API.
-        profile = analysis.model("source_42").spectrum.plot()
+        # Since anything is accessible from the Analysis object
+        # many advanced use cases can be done with the Analysis API.
+        analysis.model("source_42").spectrum.plot()
 
-        # Do we need energy_binning for the SED points in config or only here?
+        # Should we need energy_binning for the SED points in config or only here?
         sed = analysis.spectral_points("source_42", energy_binning)
 
 **Command line tools**
@@ -258,7 +256,7 @@ would provide a rich-text formatted report of the analysis process execution.
 
 One extra dimension that arises from the development of this high-level interface API is the possibility
 to capture data provenance as structured logs of tasks executions in a session or in an automated workflow. 
-Capturing provenance in this way is only useful if we also provide the means for it to be easily queried 
+Capturing provenance in this way is more useful if we also provide the means for it to be easily queried
 and inspected in multiple ways, allowing also forensic studies of the research analysis process as well 
 as improving reproducibility and reuse by the community. This work will be the scope of another PIG.
 
@@ -292,16 +290,15 @@ One random example of such a tool is the `Angular CLI`_, or `cookiecutter`_.
 
 Task list
 =========
-
 - Prototype for a manager class, agents, tools, etc.
 - Define a syntax for the declaration of parameter-value pairs needed for all tools in the analysis process.
 - Develop the session manager class responsible to drive the orchestration of tools in the analysis process.
 - Develop the tools classes responsible to perform each one of the tasks in the analysis process.
-- Cleaning and refactoring in ``gammapy.scripts`` to transform into ``gammapy.analysis``
 - Develop the small set of helpers command line tools described above.
 - Design use cases and/or choose among the existing tutorials or benchmarks those that may be translated into high-level interface notebooks.
 - Provide notebooks using the high-level interface API for each of the chosen tutorials, benchmarks and/or use cases identified.
 - Add documentation for the high-level interface API and clean the list of documentation tutorials, making a distinct separation among those using Gammapy as a high-level interface API and those using Gammapy as a Python toolbox.
+- Cleaning and refactoring of ``gammapy.scripts`` module to remove old and unused command line tools.
 - Cleaning present documentation on ``gammapy.scripts`` to transform into documentation of helper command line tools.
 
 Decision
