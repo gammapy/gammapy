@@ -115,24 +115,7 @@ class TestSpectrumDataset:
         assert dataset.parameters[0] == self.source_model.parameters[0]
 
     def test_str(self):
-        assert "Total counts" in str(self.dataset)
-        assert "Total background counts" in str(self.dataset)
-        assert "Effective Area" in str(self.dataset)
-        assert "EnergyDispersion" in str(self.dataset)
-        assert "Total points" in str(self.dataset)
-        assert "Points used for the fit" in str(self.dataset)
-        assert "Excluded for safe energy range" in str(self.dataset)
-        assert "Excluded by user" in str(self.dataset)
-        assert "Model" in str(self.dataset)
-        assert "N parameters" in str(self.dataset)
-        assert "N free parameters" in str(self.dataset)
-        assert "List of parameters" in str(self.dataset)
-        assert "index" in str(self.dataset)
-        assert "amplitude" in str(self.dataset)
-        assert "reference" in str(self.dataset)
-        assert "Total predicted counts" in str(self.dataset)
-        assert "Likelihood" in str(self.dataset)
-        assert "Likelihood value" in str(self.dataset)
+        assert "SpectrumDataset" in str(self.dataset)
 
 
 class TestSpectrumOnOff:
@@ -290,7 +273,6 @@ class TestSpectrumOnOff:
         )
         assert "SpectrumDatasetOnOff" in str(dataset)
         assert "wstat" in str(dataset)
-        assert "Backscale Mean" in str(dataset)
 
 
 @requires_dependency("iminuit")
