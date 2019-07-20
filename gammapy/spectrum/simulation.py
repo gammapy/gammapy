@@ -142,9 +142,9 @@ class SpectrumSimulation:
         self.simulate_source_counts(random_state)
         if self.background_model is not None:
             self.simulate_background_counts(random_state)
-            backscale_off = 1 / self.alpha
+            acceptance_off = 1 / self.alpha
         else:
-            backscale_off = None
+            acceptance_off = None
 
         obs = SpectrumDatasetOnOff(
             counts=self.on_vector,
@@ -152,8 +152,8 @@ class SpectrumSimulation:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
-            backscale=1,
-            backscale_off=backscale_off,
+            acceptance=1,
+            acceptance_off=acceptance_off,
             obs_id=obs_id,
         )
         self.obs = obs
