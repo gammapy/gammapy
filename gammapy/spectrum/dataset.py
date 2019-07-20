@@ -194,6 +194,8 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
+        if self._predictor is None:
+            raise AttributeError("No model set for Dataset")
         npred = self._predictor.compute_npred()
         if self.background:
             npred.data += self.background.data
@@ -212,11 +214,6 @@ class SpectrumDataset(Dataset):
         """Excess (counts - alpha * counts_off)"""
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
-
-    def residuals(self):
-        """Residuals (npred_sig - excess)."""
-        residuals = self.npred().data - self.excess.data
-        return self._as_counts_spectrum(residuals)
 
     def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
@@ -297,13 +294,37 @@ class SpectrumDataset(Dataset):
         ax.set_title("")
         return ax
 
-    def plot_residuals(self, ax=None):
+    def residuals(self, method="diff"):
+        """Compute the spectral residuals.
+
+        Parameters
+        ----------
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+
+        Returns
+        -------
+        residuals : `CountsSpectrum`
+            Residual spectrum.
+        """
+
+        residuals = self._compute_residuals(self.counts, self.npred(), method)
+        return residuals
+
+    def plot_residuals(self, method="diff", ax=None, **kwargs):
         """Plot residuals.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals()`
+        **kwargs : dict
+            Keywords passed to `CountsSpectrum.plot()`
 
         Returns
         -------
@@ -314,16 +335,20 @@ class SpectrumDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        residuals = self.residuals()
+        residuals = self.residuals(method=method)
+        label = self._residuals_labels[method]
 
-        residuals.plot(ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit)
+        residuals.plot(
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit,
+            **kwargs
+        )
         ax.axhline(0, color="black", lw=0.5)
 
-        ymax = 1.2 * max(residuals.data)
+        ymax = 1.2 * np.nanmax(residuals.data)
         ax.set_ylim(-ymax, ymax)
 
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
-        ax.set_ylabel("Residuals")
+        ax.set_ylabel("Residuals ({})".format(label))
         return ax
 
 

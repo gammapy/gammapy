@@ -6,7 +6,6 @@ import json
 from collections import OrderedDict
 import numpy as np
 from astropy import units as u
-from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from .geom import pix_tuple_to_idx, MapCoord
 from .utils import INVALID_VALUE
@@ -15,11 +14,7 @@ from ..utils.scripts import make_path
 __all__ = ["Map"]
 
 
-class MapMeta(InheritDocstrings, abc.ABCMeta):
-    pass
-
-
-class Map(metaclass=MapMeta):
+class Map(abc.ABC):
     """Abstract map class.
 
     This can represent WCS- or HEALPIX-based maps
@@ -1015,3 +1010,6 @@ class Map(metaclass=MapMeta):
 
     def __itruediv__(self, other):
         return self._arithmetics(np.true_divide, other, copy=False)
+
+    def __array__(self):
+        return self.data

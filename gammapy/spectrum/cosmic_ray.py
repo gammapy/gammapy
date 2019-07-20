@@ -4,37 +4,14 @@
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
-import numpy as np
-from astropy.units import Quantity
+from astropy import units as u
+from .models import PowerLaw, SpectralLogGaussian
 
-__all__ = ["cosmic_ray_flux"]
-
-
-def _power_law(E, N, k):
-    E = Quantity(E, "TeV")
-    E0 = Quantity(1, "TeV")
-    N = Quantity(N, "m^-2 s^-1 TeV^-1 sr^-1")
-    flux = N * (E / E0) ** (-k)
-    return flux
+__all__ = ["create_cosmic_ray_spectral_model"]
 
 
-def _log_normal(E, L, E_p, w):
-    E = Quantity(E, "TeV")
-    E_p = Quantity(E_p, "TeV")
-    L = Quantity(L, "m^-2 s^-1 sr^-1")
-    term1 = L / (E * w * np.sqrt(2 * np.pi))
-    term2 = np.exp(-np.log(E / E_p) ** 2 / (2 * w ** 2))
-    return term1 * term2
-
-
-def _electron_spectrum(E, N, k, L, E_p, w):
-    flux = _power_law(E, N, k)
-    flux += _log_normal(E, L, E_p, w)
-    return flux
-
-
-def cosmic_ray_flux(energy, particle="proton"):
-    """Cosmic ray flux at Earth.
+def create_cosmic_ray_spectral_model(particle="proton"):
+    """Cosmic a cosmic ray spectral model at Earth.
 
     These are the spectra assumed in this CTA study:
     Table 3 in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
@@ -45,8 +22,6 @@ def cosmic_ray_flux(energy, particle="proton"):
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
-        Particle energy
     particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}
         Particle type
 
@@ -55,17 +30,37 @@ def cosmic_ray_flux(energy, particle="proton"):
     flux : `~astropy.units.Quantity`
         Cosmic ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
-    pars = {
-        "electron": {"N": 6.85e-5, "k": 3.21, "L": 3.19e-3, "E_p": 0.107, "w": 0.776},
-        "proton": {"N": 0.096, "k": 2.70},
-        "N": {"N": 0.0719, "k": 2.64},
-        "Si": {"N": 0.0284, "k": 2.66},
-        "Fe": {"N": 0.0134, "k": 2.63},
-    }
-
-    if particle == "electron":
-        return _electron_spectrum(energy, **pars["electron"])
-    elif particle in ["proton", "He", "N", "Si", "Fe"]:
-        return _power_law(energy, **pars[particle])
+    if particle == "proton":
+        return PowerLaw(
+            amplitude=0.096 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.70,
+            reference=1 * u.TeV,
+        )
+    elif particle == "N":
+        return PowerLaw(
+            amplitude=0.0719 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.64,
+            reference=1 * u.TeV,
+        )
+    elif particle == "Si":
+        return PowerLaw(
+            amplitude=0.0284 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.66,
+            reference=1 * u.TeV,
+        )
+    elif particle == "Fe":
+        return PowerLaw(
+            amplitude=0.0134 * u.Unit("1 / (m2 s TeV sr)"),
+            index=2.63,
+            reference=1 * u.TeV,
+        )
+    elif particle == "electron":
+        return PowerLaw(
+            amplitude=6.85e-5 * u.Unit("1 / (m2 s TeV sr)"),
+            index=3.21,
+            reference=1 * u.TeV,
+        ) + SpectralLogGaussian(
+            norm=3.19e-3 * u.Unit("1 / (m2 s sr)"), mean=0.107 * u.TeV, sigma=0.776
+        )
     else:
-        raise ValueError("Invalid argument for particle: {}".format(particle))
+        raise ValueError("Invalid particle: {!r}".format(particle))

@@ -271,6 +271,111 @@ class MapDataset(Dataset):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
 
+    def residuals(self, method="diff"):
+        """Compute residuals map.
+
+        Parameters
+        ----------
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+
+        Returns
+        -------
+        residuals : `gammapy.maps.WcsNDMap`
+            Residual map.
+
+        """
+        residuals = self._compute_residuals(self.counts, self.npred(), method=method)
+        return residuals
+
+    def plot_residuals(
+        self,
+        method="diff",
+        smooth_kernel="gauss",
+        smooth_radius="0.1 deg",
+        region=None,
+        figsize=(12, 4),
+        **kwargs
+    ):
+        """
+        Plot spatial and spectral residuals.
+
+        The spectral residuals are extracted from the provided `region`, and the
+        normalization used for the residuals computation can be controlled using
+        the `norm` parameter. If no `region` is passed, only the spatial
+        residuals are shown.
+
+        Parameters
+        ----------
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals, see `MapDataset.residuals()`
+        smooth_kernel : {'gauss', 'box'}
+            Kernel shape.
+        smooth_radius: `~astropy.units.Quantity`, str or float
+            Smoothing width given as quantity or float. If a float is given it
+            is interpreted as smoothing width in pixels.
+        region: `~regions.Region`
+            Region (pixel or sky regions accepted)
+        figsize : tuple
+            Figure size used for the plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+
+        Returns
+        -------
+        ax_image, ax_spec : `~matplotlib.pyplot.Axes`,
+            Image and spectrum axes.
+        """
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=figsize)
+
+        counts, npred = self.counts, self.npred()
+
+        if self.mask is not None:
+            counts = counts * self.mask
+            npred = npred * self.mask
+
+        counts_spatial = counts.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
+        npred_spatial = npred.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
+        spatial_residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
+
+        spatial_residuals.data[self.exposure.data[0] == 0] = np.nan
+
+        # If no region is provided, skip spectral residuals
+        ncols = 2 if region is not None else 1
+        ax_image = fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs)
+        ax_spec = None
+
+        kwargs.setdefault("cmap", "coolwarm")
+        kwargs.setdefault("stretch", "linear")
+        kwargs.setdefault("vmin", -5)
+        kwargs.setdefault("vmax", 5)
+        spatial_residuals.plot(ax=ax_image, add_cbar=True, **kwargs)
+
+        # Spectral residuals
+        if region:
+            ax_spec = fig.add_subplot(1, 2, 2)
+            counts_spec = counts.get_spectrum(region=region)
+            npred_spec = npred.get_spectrum(region=region)
+            residuals = self._compute_residuals(counts_spec, npred_spec, method)
+            ax = residuals.plot()
+            ax.axhline(0, color="black", lw=0.5)
+
+            y_max = 2 * np.nanmax(residuals.data)
+            plt.ylim(-y_max, y_max)
+            label = self._residuals_labels[method]
+            plt.ylabel("Residuals ({})".format(label))
+
+            # Overlay spectral extraction region on the spatial residuals
+            pix_region = region.to_pixel(wcs=spatial_residuals.geom.wcs)
+            pix_region.plot(ax=ax_image)
+
+        return ax_image, ax_spec
+
     @lazyproperty
     def _counts_data(self):
         return self.counts.data.astype(float)

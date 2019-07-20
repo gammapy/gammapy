@@ -1,9 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
+import astropy.units as u
+from astropy.table import Table
 from ...utils.testing import requires_data, assert_time_allclose
 from ...data import GTI
+from ...utils.time import time_ref_to_dict
 
 
 @requires_data()
@@ -84,3 +88,30 @@ def test_select_time(time_interval, expected_length, expected_times):
         expected_times.format = "mjd"
         assert_time_allclose(gti_selected.time_start[0], expected_times[0])
         assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
+
+
+def make_gti(times, time_ref="2010-01-01"):
+    meta = time_ref_to_dict(time_ref)
+    table = Table(times, meta=meta)
+    return GTI(table)
+
+
+def test_gti_stack():
+    time_ref = Time("2010-01-01")
+    gti1 = make_gti({"START": [0, 2], "STOP": [1, 3]}, time_ref=time_ref)
+    gti2 = make_gti({"START": [4], "STOP": [5]}, time_ref=time_ref + 10 * u.s)
+
+    gti = gti1.stack(gti2)
+
+    assert_time_allclose(gti.time_ref, gti1.time_ref)
+    assert_allclose(gti.table["START"], [0, 2, 14])
+    assert_allclose(gti.table["STOP"], [1, 3, 15])
+
+
+def test_gti_union():
+    gti = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]})
+
+    gti = gti.union()
+
+    assert_allclose(gti.table["START"], [1, 5])
+    assert_allclose(gti.table["STOP"], [4, 8])

@@ -9,6 +9,7 @@ from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 from scipy.signal import fftconvolve
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
+from regions import RectangleSkyRegion
 from ..extern.skimage import block_reduce
 from ..utils.units import unit_from_fits_image_hdu
 from ..utils.interpolation import ScaledRegularGridInterpolator
@@ -467,6 +468,7 @@ class WcsNDMap(WcsMap):
         kwargs.setdefault("interpolation", "nearest")
         kwargs.setdefault("origin", "lower")
         kwargs.setdefault("cmap", "afmhot")
+
         norm = simple_norm(data[np.isfinite(data)], stretch)
         kwargs.setdefault("norm", norm)
 
@@ -566,6 +568,38 @@ class WcsNDMap(WcsMap):
             smoothed_data[idx] = data
 
         return self._init_copy(data=smoothed_data)
+
+    def get_spectrum(self, region=None, func=np.nansum):
+        """Extract spectrum in a given region.
+
+        The spectrum can be computed by summing (or, more generally, applying `func`)
+        along the spatial axes in each energy bin. This occurs only inside the `region`,
+        which by default is assumed to be the whole spatial extension of the map.
+
+        Parameters
+        ----------
+        region: `~regions.Region`
+             Region (pixel or sky regions accepted).
+        func : `~numpy.ufunc`
+            Function to reduce the data.
+
+        Returns
+        -------
+        spectrum : `CountsSpectrum`
+            Spectrum in the given region.
+        """
+        from ..spectrum import CountsSpectrum
+
+        if region:
+            mask = self.geom.region_mask([region])
+        else:
+            mask = 1
+
+        data = func(self.data * mask, axis=(1, 2))
+
+        energy_axis = self.geom.get_axis_by_name("energy")
+        edges = energy_axis.edges
+        return CountsSpectrum(data=data, energy_lo=edges[:-1], energy_hi=edges[1:])
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
