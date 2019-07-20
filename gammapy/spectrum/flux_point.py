@@ -1187,6 +1187,63 @@ class FluxPointsDataset(Dataset):
                 " either 'chi2' or 'chi2assym'"
             )
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = "{}: \n".format(self.__class__.__name__)
+        str_ += "\n"
+        if self.model is None:
+            str_ += "\t{:32}:   {} \n".format("Model Name", "No Model")
+        else:
+            str_ += "\t{:32}:   {} \n".format("Total flux points", len(self.data.table))
+            str_ += "\t{:32}:   {} \n".format(
+                "Points used for the fit", len(np.where(self.mask)[0])
+            )
+            str_ += "\t{:32}:   {} \n".format(
+                "Excluded for safe energy range",
+                len(np.where(self.mask_safe == False)[0]),
+            )
+            if self.mask_fit is None:
+                str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
+            else:
+                str_ += "\t{:32}:   {} \n".format(
+                    "Excluded by user", len(np.where(self.mask_fit == False)[0])
+                )
+            str_ += "\t{:32}:   {}\n".format(
+                "Model Name", self.model.__class__.__name__
+            )
+            str_ += "\t{:32}:   {}\n".format(
+                "N parameters", len(self.parameters.parameters)
+            )
+            str_ += "\t{:32}:   {}\n".format(
+                "N free parameters", len(self.parameters.free_parameters)
+            )
+            str_ += "\tList of parameters\n"
+            for par in self.parameters.parameters:
+                if par.frozen:
+                    if par.name == "amplitude":
+                        str_ += "\t \t {:14} (Frozen):   {:.2e} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                    else:
+                        str_ += "\t \t {:14} (Frozen):   {:.2f} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                else:
+                    if par.name == "amplitude":
+                        str_ += "\t \t {:23}:   {:.2e} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+                    else:
+                        str_ += "\t \t {:23}:   {:.2f} {} \n".format(
+                            par.name, par.value, par.unit
+                        )
+            str_ += "\t{:32}:   {}\n".format("Likelihood type", self._likelihood)
+            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
+        return str_
+
     def data_shape(self):
         """Shape of the flux points data (tuple)."""
         return self.data.e_ref.shape

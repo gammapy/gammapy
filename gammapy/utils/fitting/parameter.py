@@ -289,11 +289,23 @@ class Parameters:
         return [par.name for par in self.parameters]
 
     def __str__(self):
-        ss = self.__class__.__name__
+        str_ = self.__class__.__name__ + "\n\n"
+
         for par in self.parameters:
-            ss += "\n{}".format(par)
-        ss += "\n\ncovariance: \n{}".format(self.covariance)
-        return ss
+            if par.name == "amplitude":
+                line = "\t{:12} {:11}: {:.2e} {} {}\n"
+            else:
+                line = "\t{:12} {:11}: {:.3f} {} {}\n"
+
+            frozen = "(frozen)" if par.frozen else ""
+            try:
+                error = "+/- {:.2f}".format(self.get_error(par))
+            except AttributeError:
+                error = ""
+
+            str_ += line.format(par.name, frozen, par.value, error, par.unit)
+
+        return str_
 
     def _get_idx(self, val):
         """Get position index for a given parameter.

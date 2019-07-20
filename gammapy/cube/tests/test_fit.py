@@ -109,6 +109,13 @@ def get_map_dataset(sky_model, geom, geom_etrue, **kwargs):
     )
 
 
+def test_map_dataset_str(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit
+    assert "MapDataset" in str(dataset)
+
+
 @requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
@@ -141,7 +148,6 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset.write(tmpdir / "test.fits")
 
     dataset_new = MapDataset.read(tmpdir / "test.fits")
-
     assert dataset_new.model is None
     assert dataset_new.mask.dtype == bool
 

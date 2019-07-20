@@ -15,7 +15,6 @@ from ..data import ObservationStats
 from .core import CountsSpectrum
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
-
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 
 
@@ -50,6 +49,7 @@ class SpectrumDataset(Dataset):
     SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
 
     """
+    likelihood_type = "cash"
 
     def __init__(
         self,
@@ -75,6 +75,90 @@ class SpectrumDataset(Dataset):
         self.model = model
         self.mask_safe = mask_safe
         self.obs_id = obs_id
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        counts = np.nan
+        if self.counts is not None:
+            counts = np.sum(self.counts.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
+
+        npred = np.nan
+        if self.model is not None:
+            npred = np.sum(self.npred().data)
+        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
+
+        counts_off = np.nan
+        if getattr(self, "counts_off", None) is not None:
+            counts_off = np.sum(self.counts_off.data)
+        str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+
+        aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
+        if self.aeff is not None:
+            aeff_min = np.min(self.aeff.data.data.value[self.aeff.data.data.value > 0])
+            aeff_max = np.max(self.aeff.data.data.value)
+            aeff_unit = self.aeff.data.data.unit
+
+        str_ += "\t{:32}: {:.2e} {}\n".format(
+            "Effective area min", aeff_min, aeff_unit
+        )
+        str_ += "\t{:32}: {:.2e} {}\n\n".format(
+            "Effective area max", aeff_max, aeff_unit
+        )
+
+        livetime = np.nan
+        if self.livetime is not None:
+            livetime = self.livetime
+        str_ += "\t{:32}: {:.2e}\n\n".format(
+            "Livetime", livetime
+        )
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask)
+        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+
+        # likelihood section
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+
+        stat = np.nan
+        if self.model is not None:
+            stat = self.likelihood()
+        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+
+        n_pars, n_free_pars = 0, 0
+        if self.model is not None:
+            n_pars = len(self.model.parameters)
+            n_free_pars = len(self.parameters.free_parameters)
+
+        str_ += "\t{:32}: {}\n".format(
+            "Number of parameters", n_pars
+        )
+        str_ += "\t{:32}: {}\n\n".format(
+            "Number of free parameters", n_free_pars
+        )
+
+        if self.model is not None:
+            str_ += "\t{:32}: {}\n".format(
+                "Model type", self.model.__class__.__name__
+            )
+            info = str(self.model.parameters)
+            lines = info.split("\n")
+            for line in lines[2:-1]:
+                str_ += "\t" + line.replace(":", "\t:") + "\n"
+
+        return str_.expandtabs(tabsize=4)
 
     @property
     def model(self):
@@ -304,6 +388,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     SpectrumDataset, FluxPointsDataset, MapDataset
 
     """
+    likelihood_type = "wstat"
 
     def __init__(
         self,
@@ -338,6 +423,20 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.backscale = backscale
         self.backscale_off = backscale_off
         self.obs_id = obs_id
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = super().__str__()
+
+        backscale = np.nan
+        if self.backscale is not None:
+            backscale = np.mean(self.backscale)
+
+        str_ += "\t{:32}: {}\n".format("Backscale mean:", backscale)
+        return str_.expandtabs(tabsize=4)
 
     @property
     def background(self):

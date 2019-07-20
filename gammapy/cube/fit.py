@@ -12,12 +12,10 @@ from ..maps import Map
 from ..irf import EnergyDispersion
 from .models import SkyModel, SkyModels, BackgroundModel
 from .psf_kernel import PSFKernel
-from gammapy.spectrum.core import CountsSpectrum
 
 __all__ = ["MapEvaluator", "MapDataset"]
 
 log = logging.getLogger(__name__)
-
 
 CUTOUT_MARGIN = 0.1 * u.deg
 
@@ -71,6 +69,7 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
+        self.likelihood_type = likelihood
         self.model = model
         self.counts = counts
         self.exposure = exposure
@@ -88,6 +87,115 @@ class MapDataset(Dataset):
             self._stat_sum = cstat_sum_cython
         else:
             raise ValueError("Invalid likelihood: {!r}".format(likelihood))
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = "{}\n".format(self.__class__.__name__)
+        str_ += "\n"
+
+        counts = np.nan
+        if self.counts is not None:
+            counts = np.sum(self.counts.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
+
+        npred = np.nan
+        if self.model is not None:
+            npred = np.sum(self.npred().data)
+        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
+
+        background = np.nan
+        if self.background_model is not None:
+            background = np.sum(self.background_model.evaluate().data)
+        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
+
+        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
+        if self.exposure is not None:
+            exposure_min = np.min(self.exposure.data[self.exposure.data > 0])
+            exposure_max = np.max(self.exposure.data)
+            exposure_unit = self.exposure.unit
+
+        str_ += "\t{:32}: {:.2e} {}\n".format(
+            "Exposure min", exposure_min, exposure_unit
+        )
+        str_ += "\t{:32}: {:.2e} {}\n\n".format(
+            "Exposure max", exposure_max, exposure_unit
+        )
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask)
+        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+
+        # likelihood section
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+
+        stat = np.nan
+        if self.model is not None:
+            stat = self.likelihood()
+        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+
+        # model section
+        n_models = 0
+        if self.model is not None:
+            n_models = len(self.model.skymodels)
+        str_ += "\t{:32}: {} \n".format("Number of models", n_models)
+
+        n_bkg_models = 0
+        if self.background_model is not None:
+            try:
+                n_bkg_models = len(self.background_model.models)
+            except AttributeError:
+                n_bkg_models = 1
+        str_ += "\t{:32}: {} \n".format("Number of background models", n_bkg_models)
+
+        str_ += "\t{:32}: {}\n".format(
+            "Number of parameters", len(self.parameters.parameters)
+        )
+        str_ += "\t{:32}: {}\n\n".format(
+            "Number of free parameters", len(self.parameters.free_parameters)
+        )
+
+        if self.model is not None:
+            for idx, model in enumerate(self.model.skymodels):
+                str_ += "\tSource {}: \n".format(idx)
+                str_ += "\t\t{:28}: {}\n".format("Name", model.name)
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Spatial model type", model.spatial_model.__class__.__name__
+                )
+                info = str(model.spatial_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+                str_ += "\n\t\t{:28}: {}\n".format(
+                    "Spectral model type", model.spectral_model.__class__.__name__
+                )
+                info = str(model.spectral_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+        if self.background_model is not None:
+            try:
+                background_models = self.background_model.models
+            except AttributeError:
+                background_models = [self.background_model]
+
+            for idx, model in enumerate(background_models):
+                str_ += "\n\n\tBackground {}: \n".format(idx)
+                str_ += "\t\t{:28}: {}\n".format("Model type", self.background_model.__class__.__name__)
+                info = str(self.background_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+        return str_.expandtabs(tabsize=4)
 
     @property
     def model(self):
