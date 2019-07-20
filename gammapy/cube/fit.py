@@ -93,129 +93,109 @@ class MapDataset(Dataset):
         return str_
 
     def __str__(self):
-        def __repr__(self):
-            str_ = self.__class__.__name__
-            return str_
-
-    def __str__(self):
-        str_ = "{}: \n".format(self.__class__.__name__)
+        str_ = "{}\n".format(self.__class__.__name__)
         str_ += "\n"
-        if self.counts is None:
-            str_ += "\t{:32}:   {} \n".format("Total counts", "0")
-        else:
-            str_ += "\t{:32}:   {} \n".format(
-                "Total counts", int(np.sum(self.counts.data))
-            )
-        if self.background_model is None:
-            str_ += "\t{:32}:   {} \n".format("Total background counts", "0")
-        else:
-            str_ += "\t{:32}:   {} \n".format(
-                "Total background counts", int(np.sum(self.background_model.map.data))
-            )
-        if self.exposure is None:
-            str_ += "\t{:32}:   {} \n".format("Exposure", "No")
-        else:
-            str_ += "\t{:32}:\n".format("Exposure")
-            str_ += "\t\t{:24}:   {:.2e}\n".format(
-                "Min value", np.min(self.exposure.data)
-            )
-            str_ += "\t\t{:24}:   {:.2e}\n".format(
-                "Max value", np.max(self.exposure.data)
-            )
-        if self.edisp is None:
-            str_ += "\t{:32}:   {} \n".format("EnergyDispersion", "No")
-        else:
-            str_ += "\t{:32} \n".format("EnergyDispersion")
-            str_ += "\t\t{:24}:   {}\n".format(
-                "Resolution at 1 TeV", self.edisp.get_resolution(1 * u.TeV)[0]
-            )
-            str_ += "\t\t{:24}:   {:.2f}\n".format(
-                "Bias at 1 TeV", self.edisp.get_bias(1 * u.TeV)[0]
-            )
-        if self.psf is None:
-            str_ += "\t{:32}:   {} \n".format("PSF", "No")
-        else:
-            str_ += "\t{:32}:   {}: {} {} * {} {} \n".format(
-                "PSF",
-                "Size of the kernel",
-                self.psf.psf_kernel_map.geom.width[0, 0].value,
-                self.psf.psf_kernel_map.geom.width.unit,
-                self.psf.psf_kernel_map.geom.width[1, 0].value,
-                self.psf.psf_kernel_map.geom.width.unit,
-            )
-        if self.model is None:
-            str_ += "\t{:32}:   {} \n".format("Model", "No Model")
-        else:
-            if self.counts is None:
-                str_ += "\t{:32}:   {} \n".format("Total points", "0")
-            else:
-                str_ += "\t{:32}:   {} \n".format(
-                    "Total points", len(self.counts.data.ravel())
+
+        counts = np.nan
+        if self.counts is not None:
+            counts = np.sum(self.counts.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
+
+        npred = np.nan
+        if self.model is not None:
+            npred = np.sum(self.npred().data)
+        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
+
+        background = np.nan
+        if self.background_model is not None:
+            background = np.sum(self.background_model.evaluate().data)
+        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
+
+        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
+        if self.exposure is not None:
+            exposure_min = np.min(self.exposure.data[self.exposure.data > 0])
+            exposure_max = np.max(self.exposure.data)
+            exposure_unit = self.exposure.unit
+
+        str_ += "\t{:32}: {:.2e} {}\n".format(
+            "Exposure min", exposure_min, exposure_unit
+        )
+        str_ += "\t{:32}: {:.2e} {}\n\n".format(
+            "Exposure max", exposure_max, exposure_unit
+        )
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask)
+        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+
+        # likelihood section
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+
+        stat = np.nan
+        if self.model is not None:
+            stat = self.likelihood()
+        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+
+        # model section
+        n_models = 0
+        if self.model is not None:
+            n_models = len(self.model.skymodels)
+        str_ += "\t{:32}: {} \n".format("Number of models", n_models)
+
+        n_bkg_models = 0
+        if self.background_model is not None:
+            try:
+                n_bkg_models = len(self.background_model.models)
+            except AttributeError:
+                n_bkg_models = 1
+        str_ += "\t{:32}: {} \n".format("Number of background models", n_bkg_models)
+
+        str_ += "\t{:32}: {}\n".format(
+            "Number of parameters", len(self.parameters.parameters)
+        )
+        str_ += "\t{:32}: {}\n\n".format(
+            "Number of free parameters", len(self.parameters.free_parameters)
+        )
+
+        if self.model is not None:
+            for idx, model in enumerate(self.model.skymodels):
+                str_ += "\tSource {}: \n".format(idx)
+                str_ += "\t\t{:28}: {}\n".format("Name", model.name)
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Spatial model type", model.spatial_model.__class__.__name__
                 )
-            if self.mask is None:
-                str_ += "\t{:32}:   {} \n".format(
-                    "Points used for the fit", len(self.counts.data.ravel())
+                info = str(model.spatial_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+                str_ += "\n\t\t{:28}: {}\n".format(
+                    "Spectral model type", model.spectral_model.__class__.__name__
                 )
-            else:
-                str_ += "\t{:32}:   {} \n".format(
-                    "Points used for the fit", len(np.where(self.mask)[0])
-                )
-            if self.mask_safe is None:
-                str_ += "\t{:32}:   {} \n".format("Excluded for safe energy range", "0")
-            else:
-                str_ += "\t{:32}:   {} \n".format(
-                    "Excluded for safe energy range",
-                    len(np.where(self.mask_safe == False)[0]),
-                )
-            if self.mask_fit is None:
-                str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
-            else:
-                str_ += "\t{:32}:   {} \n".format(
-                    "Excluded by user", len(np.where(self.mask_fit == False)[0])
-                )
-            str_ += "\t{:32}:   {} \n".format(
-                "Number of Model", len(self.model.skymodels)
-            )
-            for i_model, model in enumerate(self.model.skymodels):
-                str_ += "\tModel {}: \n".format(i_model + 1)
-                str_ += "\t\t{:24}:   {}\n".format(
-                    "Spatial component", model.spatial_model.__class__.__name__
-                )
-                str_ += "\t\t{:24}:   {}\n".format(
-                    "Spectal component", model.spectral_model.__class__.__name__
-                )
-            str_ += "\t{:32}:   {}\n".format(
-                "N parameters", len(self.parameters.parameters)
-            )
-            str_ += "\t{:32}:   {}\n".format(
-                "N free parameters", len(self.parameters.free_parameters)
-            )
-            str_ += "\tList of parameters\n"
-            for par in self.parameters.parameters:
-                if par.frozen:
-                    if par.name == "amplitude":
-                        str_ += "\t \t {:14} (Frozen):   {:.2e} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-                    else:
-                        str_ += "\t \t {:14} (Frozen):   {:.2f} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-                else:
-                    if par.name == "amplitude":
-                        str_ += "\t \t {:23}:   {:.2e} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-                    else:
-                        str_ += "\t \t {:23}:   {:.2f} {} \n".format(
-                            par.name, par.value, par.unit
-                        )
-            str_ += "\t{:32}:   {:.2f}\n".format(
-                "Total predicted counts", np.sum(self.npred().data)
-            )
-            str_ += "\t{:32}:   {}\n".format("Likelihood type", self.likelihood_type)
-            str_ += "\t{:32}:   {:.2f}\n".format("Likelihood value", self.likelihood())
-        return str_
+                info = str(model.spectral_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+        if self.background_model is not None:
+            try:
+                background_models = self.background_model.models
+            except AttributeError:
+                background_models = [self.background_model]
+
+            for idx, model in enumerate(background_models):
+                str_ += "\n\n\tBackground {}: \n".format(idx)
+                str_ += "\t\t{:28}: {}\n".format("Model type", self.background_model.__class__.__name__)
+                info = str(self.background_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+        return str_.expandtabs(tabsize=4)
 
     @property
     def model(self):
