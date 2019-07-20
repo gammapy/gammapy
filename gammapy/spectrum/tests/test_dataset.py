@@ -268,8 +268,8 @@ class TestSpectrumOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
-            backscale=1,
-            backscale_off=10,
+            acceptance=1,
+            acceptance_off=10,
         )
         assert "SpectrumDatasetOnOff" in str(dataset)
         assert "wstat" in str(dataset)

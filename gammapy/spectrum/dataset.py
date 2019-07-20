@@ -139,7 +139,7 @@ class SpectrumDataset(Dataset):
 
         n_pars, n_free_pars = 0, 0
         if self.model is not None:
-            n_pars = len(self.model.parameters)
+            n_pars = len(self.model.parameters.parameters)
             n_free_pars = len(self.parameters.free_parameters)
 
         str_ += "\t{:32}: {}\n".format(
@@ -431,11 +431,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def __str__(self):
         str_ = super().__str__()
 
-        backscale = np.nan
-        if self.backscale is not None:
-            backscale = np.mean(self.backscale)
+        acceptance = np.nan
+        if self.acceptance is not None:
+            acceptance = np.mean(self.acceptance)
 
-        str_ += "\t{:32}: {}\n".format("Backscale mean:", backscale)
+        str_ += "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
         return str_.expandtabs(tabsize=4)
 
     @property
