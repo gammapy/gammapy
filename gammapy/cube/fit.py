@@ -13,11 +13,9 @@ from ..irf import EnergyDispersion
 from .models import SkyModel, SkyModels, BackgroundModel
 from .psf_kernel import PSFKernel
 
-
 __all__ = ["MapEvaluator", "MapDataset"]
 
 log = logging.getLogger(__name__)
-
 
 CUTOUT_MARGIN = 0.1 * u.deg
 
@@ -71,6 +69,7 @@ class MapDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self.evaluation_mode = evaluation_mode
+        self.likelihood_type = likelihood
         self.model = model
         self.counts = counts
         self.exposure = exposure
@@ -88,6 +87,115 @@ class MapDataset(Dataset):
             self._stat_sum = cstat_sum_cython
         else:
             raise ValueError("Invalid likelihood: {!r}".format(likelihood))
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = "{}\n".format(self.__class__.__name__)
+        str_ += "\n"
+
+        counts = np.nan
+        if self.counts is not None:
+            counts = np.sum(self.counts.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
+
+        npred = np.nan
+        if self.model is not None:
+            npred = np.sum(self.npred().data)
+        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
+
+        background = np.nan
+        if self.background_model is not None:
+            background = np.sum(self.background_model.evaluate().data)
+        str_ += "\t{:32}: {:.2f}\n\n".format("Total background counts", background)
+
+        exposure_min, exposure_max, exposure_unit = np.nan, np.nan, ""
+        if self.exposure is not None:
+            exposure_min = np.min(self.exposure.data[self.exposure.data > 0])
+            exposure_max = np.max(self.exposure.data)
+            exposure_unit = self.exposure.unit
+
+        str_ += "\t{:32}: {:.2e} {}\n".format(
+            "Exposure min", exposure_min, exposure_unit
+        )
+        str_ += "\t{:32}: {:.2e} {}\n\n".format(
+            "Exposure max", exposure_max, exposure_unit
+        )
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask)
+        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+
+        # likelihood section
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+
+        stat = np.nan
+        if self.model is not None:
+            stat = self.likelihood()
+        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+
+        # model section
+        n_models = 0
+        if self.model is not None:
+            n_models = len(self.model.skymodels)
+        str_ += "\t{:32}: {} \n".format("Number of models", n_models)
+
+        n_bkg_models = 0
+        if self.background_model is not None:
+            try:
+                n_bkg_models = len(self.background_model.models)
+            except AttributeError:
+                n_bkg_models = 1
+        str_ += "\t{:32}: {} \n".format("Number of background models", n_bkg_models)
+
+        str_ += "\t{:32}: {}\n".format(
+            "Number of parameters", len(self.parameters.parameters)
+        )
+        str_ += "\t{:32}: {}\n\n".format(
+            "Number of free parameters", len(self.parameters.free_parameters)
+        )
+
+        if self.model is not None:
+            for idx, model in enumerate(self.model.skymodels):
+                str_ += "\tSource {}: \n".format(idx)
+                str_ += "\t\t{:28}: {}\n".format("Name", model.name)
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Spatial model type", model.spatial_model.__class__.__name__
+                )
+                info = str(model.spatial_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+                str_ += "\n\t\t{:28}: {}\n".format(
+                    "Spectral model type", model.spectral_model.__class__.__name__
+                )
+                info = str(model.spectral_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+        if self.background_model is not None:
+            try:
+                background_models = self.background_model.models
+            except AttributeError:
+                background_models = [self.background_model]
+
+            for idx, model in enumerate(background_models):
+                str_ += "\n\n\tBackground {}: \n".format(idx)
+                str_ += "\t\t{:28}: {}\n".format("Model type", self.background_model.__class__.__name__)
+                info = str(self.background_model.parameters)
+                lines = info.split("\n")
+                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+        return str_.expandtabs(tabsize=4)
 
     @property
     def model(self):
@@ -162,6 +270,111 @@ class MapDataset(Dataset):
     def likelihood_per_bin(self):
         """Likelihood per bin given the current model parameters"""
         return self._stat(n_on=self.counts.data, mu_on=self.npred().data)
+
+    def residuals(self, method="diff"):
+        """Compute residuals map.
+
+        Parameters
+        ----------
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+
+        Returns
+        -------
+        residuals : `gammapy.maps.WcsNDMap`
+            Residual map.
+
+        """
+        residuals = self._compute_residuals(self.counts, self.npred(), method=method)
+        return residuals
+
+    def plot_residuals(
+        self,
+        method="diff",
+        smooth_kernel="gauss",
+        smooth_radius="0.1 deg",
+        region=None,
+        figsize=(12, 4),
+        **kwargs
+    ):
+        """
+        Plot spatial and spectral residuals.
+
+        The spectral residuals are extracted from the provided `region`, and the
+        normalization used for the residuals computation can be controlled using
+        the `norm` parameter. If no `region` is passed, only the spatial
+        residuals are shown.
+
+        Parameters
+        ----------
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals, see `MapDataset.residuals()`
+        smooth_kernel : {'gauss', 'box'}
+            Kernel shape.
+        smooth_radius: `~astropy.units.Quantity`, str or float
+            Smoothing width given as quantity or float. If a float is given it
+            is interpreted as smoothing width in pixels.
+        region: `~regions.Region`
+            Region (pixel or sky regions accepted)
+        figsize : tuple
+            Figure size used for the plotting.
+        **kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+
+        Returns
+        -------
+        ax_image, ax_spec : `~matplotlib.pyplot.Axes`,
+            Image and spectrum axes.
+        """
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=figsize)
+
+        counts, npred = self.counts, self.npred()
+
+        if self.mask is not None:
+            counts = counts * self.mask
+            npred = npred * self.mask
+
+        counts_spatial = counts.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
+        npred_spatial = npred.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
+        spatial_residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
+
+        spatial_residuals.data[self.exposure.data[0] == 0] = np.nan
+
+        # If no region is provided, skip spectral residuals
+        ncols = 2 if region is not None else 1
+        ax_image = fig.add_subplot(1, ncols, 1, projection=spatial_residuals.geom.wcs)
+        ax_spec = None
+
+        kwargs.setdefault("cmap", "coolwarm")
+        kwargs.setdefault("stretch", "linear")
+        kwargs.setdefault("vmin", -5)
+        kwargs.setdefault("vmax", 5)
+        spatial_residuals.plot(ax=ax_image, add_cbar=True, **kwargs)
+
+        # Spectral residuals
+        if region:
+            ax_spec = fig.add_subplot(1, 2, 2)
+            counts_spec = counts.get_spectrum(region=region)
+            npred_spec = npred.get_spectrum(region=region)
+            residuals = self._compute_residuals(counts_spec, npred_spec, method)
+            ax = residuals.plot()
+            ax.axhline(0, color="black", lw=0.5)
+
+            y_max = 2 * np.nanmax(residuals.data)
+            plt.ylim(-y_max, y_max)
+            label = self._residuals_labels[method]
+            plt.ylabel("Residuals ({})".format(label))
+
+            # Overlay spectral extraction region on the spatial residuals
+            pix_region = region.to_pixel(wcs=spatial_residuals.geom.wcs)
+            pix_region.plot(ax=ax_image)
+
+        return ax_image, ax_spec
 
     @lazyproperty
     def _counts_data(self):

@@ -48,7 +48,10 @@ class TestSpectrumDataset:
             energy_lo=binning[:-1], energy_hi=binning[1:], data=source_counts
         )
         self.dataset = SpectrumDataset(
-            model=self.source_model, counts=self.src, livetime=self.livetime, background=self.bkg
+            model=self.source_model,
+            counts=self.src,
+            livetime=self.livetime,
+            background=self.bkg,
         )
 
     def test_data_shape(self):
@@ -61,7 +64,6 @@ class TestSpectrumDataset:
 
     def test_cash(self):
         """Simple CASH fit to the on vector"""
-
         fit = Fit(self.dataset)
         result = fit.run()
 
@@ -112,12 +114,14 @@ class TestSpectrumDataset:
         dataset.model = self.source_model
         assert dataset.parameters[0] == self.source_model.parameters[0]
 
+    def test_str(self):
+        assert "SpectrumDataset" in str(self.dataset)
 
-class TestSpectrumDatasetOnOff:
+
+class TestSpectrumOnOff:
     """ Test ON OFF SpectrumDataset"""
 
     def setup(self):
-
         etrue = np.logspace(-1, 1, 10) * u.TeV
         self.e_true = etrue
         ereco = np.logspace(-1, 1, 5) * u.TeV
@@ -140,8 +144,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             edisp=self.edisp,
             livetime=self.livetime,
-            backscale=np.ones(elo.shape),
-            backscale_off=np.ones(elo.shape) * 10,
+            acceptance=np.ones(elo.shape),
+            acceptance_off=np.ones(elo.shape) * 10,
             obs_id="test",
         )
 
@@ -183,8 +187,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
-            backscale=1,
-            backscale_off=10,
+            acceptance=1,
+            acceptance_off=10,
         )
         with mpl_plot_check():
             dataset.peek()
@@ -199,8 +203,8 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
-            backscale=1,
-            backscale_off=10,
+            acceptance=1,
+            acceptance_off=10,
         )
         with mpl_plot_check():
             dataset.plot_fit()
@@ -213,8 +217,8 @@ class TestSpectrumDatasetOnOff:
             edisp=self.edisp,
             livetime=self.livetime,
             mask_safe=np.ones(self.on_counts.energy.nbin, dtype=bool),
-            backscale=1,
-            backscale_off=10,
+            acceptance=1,
+            acceptance_off=10,
             obs_id="test",
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
@@ -231,7 +235,7 @@ class TestSpectrumDatasetOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             mask_safe=np.ones(self.on_counts.energy.nbin, dtype=bool),
-            backscale=1,
+            acceptance=1,
             obs_id="test",
         )
         dataset.to_ogip_files(outdir=tmpdir, overwrite=True)
@@ -254,6 +258,21 @@ class TestSpectrumDatasetOnOff:
         mask = self.dataset.counts.energy_mask(emin=1 * u.TeV)
         desired = [False, False, True, True]
         assert_allclose(mask, desired)
+
+    def test_str(self):
+        model = PowerLaw()
+        dataset = SpectrumDatasetOnOff(
+            counts=self.on_counts,
+            counts_off=self.off_counts,
+            model=model,
+            aeff=self.aeff,
+            livetime=self.livetime,
+            edisp=self.edisp,
+            acceptance=1,
+            acceptance_off=10,
+        )
+        assert "SpectrumDatasetOnOff" in str(dataset)
+        assert "wstat" in str(dataset)
 
 
 @requires_dependency("iminuit")
@@ -296,8 +315,8 @@ class TestSimpleFit:
         obs = SpectrumDatasetOnOff(
             counts=on_vector,
             counts_off=self.off,
-            backscale=1,
-            backscale_off=1 / self.alpha,
+            acceptance=1,
+            acceptance_off=1 / self.alpha,
         )
         obs.model = self.source_model
 
@@ -439,8 +458,8 @@ def make_observation_list():
         edisp=edisp,
         livetime=livetime,
         mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
-        backscale=1,
-        backscale_off=2,
+        acceptance=1,
+        acceptance_off=2,
         obs_id=2,
     )
     obs2 = SpectrumDatasetOnOff(
@@ -450,8 +469,8 @@ def make_observation_list():
         edisp=edisp,
         livetime=livetime,
         mask_safe=np.ones(on_vector.energy.nbin, dtype=bool),
-        backscale=1,
-        backscale_off=4,
+        acceptance=1,
+        acceptance_off=4,
         obs_id=2,
     )
 
@@ -490,7 +509,6 @@ class TestSpectrumDatasetOnOffStacker:
         assert summed_counts == stacked_counts
 
     def test_thresholds(self):
-
         e_min, e_max = self.obs_stacker.stacked_obs.energy_range
 
         assert e_min.unit == "keV"

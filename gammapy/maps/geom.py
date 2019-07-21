@@ -7,7 +7,6 @@ from collections import OrderedDict
 import logging
 import numpy as np
 from scipy.interpolate import interp1d
-from astropy.utils.misc import InheritDocstrings
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -1091,11 +1090,7 @@ class MapCoord:
         return self.__class__(coords, coordsys=self.coordsys)
 
 
-class MapGeomMeta(InheritDocstrings, abc.ABCMeta):
-    pass
-
-
-class MapGeom(metaclass=MapGeomMeta):
+class MapGeom(abc.ABC):
     """Base class for WCS and HEALPix geometries."""
 
     @property

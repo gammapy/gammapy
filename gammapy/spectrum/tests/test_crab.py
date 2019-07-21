@@ -46,18 +46,15 @@ CRAB_SPECTRA = [
 
 @pytest.mark.parametrize("spec", CRAB_SPECTRA, ids=lambda _: _["name"])
 def test_crab_spectrum(spec):
-    energy = 2 * u.TeV
-    emin, emax = [1, 1e3] * u.TeV
-
     crab_spectrum = create_crab_spectral_model(reference=spec["name"])
 
-    dnde = crab_spectrum(energy)
+    dnde = crab_spectrum(2 * u.TeV)
     assert_quantity_allclose(dnde, spec["dnde"])
 
-    flux = crab_spectrum.integral(emin, emax)
+    flux = crab_spectrum.integral(1 * u.TeV, 1e3 * u.TeV)
     assert_quantity_allclose(flux, spec["flux"])
 
-    index = crab_spectrum.spectral_index(energy)
+    index = crab_spectrum.spectral_index(2 * u.TeV)
     assert_quantity_allclose(index, spec["index"], rtol=1e-5)
 
 

@@ -15,7 +15,6 @@ from ..data import ObservationStats
 from .core import CountsSpectrum
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 
-
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 
 
@@ -50,6 +49,7 @@ class SpectrumDataset(Dataset):
     SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
 
     """
+    likelihood_type = "cash"
 
     def __init__(
         self,
@@ -76,6 +76,90 @@ class SpectrumDataset(Dataset):
         self.mask_safe = mask_safe
         self.obs_id = obs_id
 
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = self.__class__.__name__
+        str_ += "\n\n"
+        counts = np.nan
+        if self.counts is not None:
+            counts = np.sum(self.counts.data)
+        str_ += "\t{:32}: {:.0f} \n".format("Total counts", counts)
+
+        npred = np.nan
+        if self.model is not None:
+            npred = np.sum(self.npred().data)
+        str_ += "\t{:32}: {:.2f}\n".format("Total predicted counts", npred)
+
+        counts_off = np.nan
+        if getattr(self, "counts_off", None) is not None:
+            counts_off = np.sum(self.counts_off.data)
+        str_ += "\t{:32}: {:.2f}\n\n".format("Total off counts", counts_off)
+
+        aeff_min, aeff_max, aeff_unit = np.nan, np.nan, ""
+        if self.aeff is not None:
+            aeff_min = np.min(self.aeff.data.data.value[self.aeff.data.data.value > 0])
+            aeff_max = np.max(self.aeff.data.data.value)
+            aeff_unit = self.aeff.data.data.unit
+
+        str_ += "\t{:32}: {:.2e} {}\n".format(
+            "Effective area min", aeff_min, aeff_unit
+        )
+        str_ += "\t{:32}: {:.2e} {}\n\n".format(
+            "Effective area max", aeff_max, aeff_unit
+        )
+
+        livetime = np.nan
+        if self.livetime is not None:
+            livetime = self.livetime
+        str_ += "\t{:32}: {:.2e}\n\n".format(
+            "Livetime", livetime
+        )
+
+        # data section
+        n_bins = 0
+        if self.counts is not None:
+            n_bins = self.counts.data.size
+        str_ += "\t{:32}: {} \n".format("Number of total bins", n_bins)
+
+        n_fit_bins = 0
+        if self.mask is not None:
+            n_fit_bins = np.sum(self.mask)
+        str_ += "\t{:32}: {} \n\n".format("Number of fit bins", n_fit_bins)
+
+        # likelihood section
+        str_ += "\t{:32}: {}\n".format("Fit statistic type", self.likelihood_type)
+
+        stat = np.nan
+        if self.model is not None:
+            stat = self.likelihood()
+        str_ += "\t{:32}: {:.2f}\n\n".format("Fit statistic value (-2 log(L))", stat)
+
+        n_pars, n_free_pars = 0, 0
+        if self.model is not None:
+            n_pars = len(self.model.parameters.parameters)
+            n_free_pars = len(self.parameters.free_parameters)
+
+        str_ += "\t{:32}: {}\n".format(
+            "Number of parameters", n_pars
+        )
+        str_ += "\t{:32}: {}\n\n".format(
+            "Number of free parameters", n_free_pars
+        )
+
+        if self.model is not None:
+            str_ += "\t{:32}: {}\n".format(
+                "Model type", self.model.__class__.__name__
+            )
+            info = str(self.model.parameters)
+            lines = info.split("\n")
+            for line in lines[2:-1]:
+                str_ += "\t" + line.replace(":", "\t:") + "\n"
+
+        return str_.expandtabs(tabsize=4)
+
     @property
     def model(self):
         return self._model
@@ -90,7 +174,7 @@ class SpectrumDataset(Dataset):
                 livetime=self.livetime,
                 aeff=self.aeff,
                 e_true=self.counts.energy.edges,
-                edisp=self.edisp
+                edisp=self.edisp,
             )
         else:
             self._parameters = None
@@ -110,6 +194,8 @@ class SpectrumDataset(Dataset):
 
     def npred(self):
         """Returns npred map (model + background)"""
+        if self._predictor is None:
+            raise AttributeError("No model set for Dataset")
         npred = self._predictor.compute_npred()
         if self.background:
             npred.data += self.background.data
@@ -128,11 +214,6 @@ class SpectrumDataset(Dataset):
         """Excess (counts - alpha * counts_off)"""
         excess = self.counts.data - self.background.data
         return self._as_counts_spectrum(excess)
-
-    def residuals(self):
-        """Residuals (npred_sig - excess)."""
-        residuals = self.npred().data - self.excess.data
-        return self._as_counts_spectrum(residuals)
 
     def fake(self, random_state="random-seed"):
         """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
@@ -213,13 +294,37 @@ class SpectrumDataset(Dataset):
         ax.set_title("")
         return ax
 
-    def plot_residuals(self, ax=None):
+    def residuals(self, method="diff"):
+        """Compute the spectral residuals.
+
+        Parameters
+        ----------
+        method: {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals. Available options are:
+                - `diff` (default): data - model
+                - `diff/model`: (data - model) / model
+                - `diff/sqrt(model)`: (data - model) / sqrt(model)
+
+        Returns
+        -------
+        residuals : `CountsSpectrum`
+            Residual spectrum.
+        """
+
+        residuals = self._compute_residuals(self.counts, self.npred(), method)
+        return residuals
+
+    def plot_residuals(self, method="diff", ax=None, **kwargs):
         """Plot residuals.
 
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axes`
             Axes object.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals()`
+        **kwargs : dict
+            Keywords passed to `CountsSpectrum.plot()`
 
         Returns
         -------
@@ -230,16 +335,20 @@ class SpectrumDataset(Dataset):
 
         ax = plt.gca() if ax is None else ax
 
-        residuals = self.residuals()
+        residuals = self.residuals(method=method)
+        label = self._residuals_labels[method]
 
-        residuals.plot(ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit)
+        residuals.plot(
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit,
+            **kwargs
+        )
         ax.axhline(0, color="black", lw=0.5)
 
-        ymax = 1.2 * max(residuals.data)
+        ymax = 1.2 * np.nanmax(residuals.data)
         ax.set_ylim(-ymax, ymax)
 
         ax.set_xlabel("Energy [{}]".format(self._e_unit))
-        ax.set_ylabel("Residuals")
+        ax.set_ylabel("Residuals ({})".format(label))
         return ax
 
 
@@ -279,6 +388,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     SpectrumDataset, FluxPointsDataset, MapDataset
 
     """
+    likelihood_type = "wstat"
 
     def __init__(
         self,
@@ -290,8 +400,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         aeff=None,
         edisp=None,
         mask_safe=None,
-        backscale=None,
-        backscale_off=None,
+        acceptance=None,
+        acceptance_off=None,
         obs_id=None,
     ):
 
@@ -304,15 +414,29 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.model = model
         self.mask_safe = mask_safe
 
-        if np.isscalar(backscale):
-            backscale = np.ones(counts.energy.nbin) * backscale
+        if np.isscalar(acceptance):
+            acceptance = np.ones(counts.energy.nbin) * acceptance
 
-        if np.isscalar(backscale_off):
-            backscale_off = np.ones(counts.energy.nbin) * backscale_off
+        if np.isscalar(acceptance_off):
+            acceptance_off = np.ones(counts.energy.nbin) * acceptance_off
 
-        self.backscale = backscale
-        self.backscale_off = backscale_off
+        self.acceptance = acceptance
+        self.acceptance_off = acceptance_off
         self.obs_id = obs_id
+
+    def __repr__(self):
+        str_ = self.__class__.__name__
+        return str_
+
+    def __str__(self):
+        str_ = super().__str__()
+
+        acceptance = np.nan
+        if self.acceptance is not None:
+            acceptance = np.mean(self.acceptance)
+
+        str_ += "\t{:32}: {}\n".format("Acceptance mean:", acceptance)
+        return str_.expandtabs(tabsize=4)
 
     @property
     def background(self):
@@ -323,7 +447,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     @property
     def alpha(self):
         """Exposure ratio between signal and background regions"""
-        return self.backscale / self.backscale_off
+        return self.acceptance / self.acceptance_off
 
     def npred_sig(self):
         """Predicted counts from source model (`CountsSpectrum`)."""
@@ -437,8 +561,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         counts_table = self.counts.to_table()
         counts_table["QUALITY"] = np.logical_not(self.mask_safe)
-        counts_table["BACKSCAL"] = self.backscale
-        counts_table["AREASCAL"] = np.ones(self.backscale.size)
+        counts_table["BACKSCAL"] = self.acceptance
+        counts_table["AREASCAL"] = np.ones(self.acceptance.size)
         meta = self._ogip_meta()
 
         meta["respfile"] = rmffile
@@ -458,8 +582,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if self.counts_off is not None:
             counts_off_table = self.counts_off.to_table()
             counts_off_table["QUALITY"] = np.logical_not(self.mask_safe)
-            counts_off_table["BACKSCAL"] = self.backscale_off
-            counts_off_table["AREASCAL"] = np.ones(self.backscale.size)
+            counts_off_table["BACKSCAL"] = self.acceptance_off
+            counts_off_table["AREASCAL"] = np.ones(self.acceptance.size)
             meta = self._ogip_meta()
             meta["hduclas2"] = "BKG"
 
@@ -547,10 +671,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                     data=data_bkg["data"],
                 )
 
-                backscale_off = data_bkg["backscal"]
+                acceptance_off = data_bkg["backscal"]
         except IOError:
             # TODO : Add logger and echo warning
-            counts_off, backscale_off = None, None
+            counts_off, acceptance_off = None, None
 
         arffile = phafile.replace("pha", "arf")
         aeff = EffectiveAreaTable.read(str(dirname / arffile))
@@ -564,8 +688,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             edisp=energy_dispersion,
             livetime=data["livetime"],
             mask_safe=mask_safe,
-            backscale=data["backscal"],
-            backscale_off=backscale_off,
+            acceptance=data["backscal"],
+            acceptance_off=acceptance_off,
             obs_id=data["obs_id"],
         )
 
@@ -577,12 +701,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         mask = self.mask_safe if in_safe_energy_range else slice(None)
 
         # TODO: handle energy dependent a_on / a_off
-        info["a_on"] = self.backscale[0]
+        info["a_on"] = self.acceptance[0]
         info["n_on"] = self.counts.data[mask].sum()
 
         if self.counts_off is not None:
             info["n_off"] = self.counts_off.data[mask].sum()
-            info["a_off"] = self.backscale_off[0]
+            info["a_off"] = self.acceptance_off[0]
         else:
             info["n_off"] = 0
             info["a_off"] = 1
@@ -814,7 +938,7 @@ class SpectrumDatasetOnOffStacker:
             edisp=self.stacked_edisp,
             livetime=self.total_livetime,
             mask_safe=np.logical_not(self.stacked_quality),
-            backscale=self.stacked_on_vector.backscal,
-            backscale_off=self.stacked_off_vector.backscal,
+            acceptance=self.stacked_on_vector.backscal,
+            acceptance_off=self.stacked_off_vector.backscal,
             obs_id=[obs.obs_id for obs in self.obs_list],
         )

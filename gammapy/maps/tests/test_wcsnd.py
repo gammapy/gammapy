@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.convolution import Gaussian2DKernel
 import astropy.units as u
+from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...cube import PSFKernel
 from ...irf import EnergyDependentMultiGaussPSF
@@ -568,3 +569,19 @@ def test_plot_allsky():
     m = WcsNDMap.create(binsz=10 * u.deg)
     with mpl_plot_check():
         m.plot()
+
+
+def test_get_spectrum():
+    axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
+
+    geom = WcsGeom.create(skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], coordsys="GAL")
+
+    m = Map.from_geom(geom)
+    m.data += 1
+
+    center = SkyCoord(0, 0, frame="galactic", unit="deg")
+    region = CircleSkyRegion(center=center, radius=1 * u.deg)
+
+    spec = m.get_spectrum(region=region)
+
+    assert_allclose(spec.data, [13., 13., 13.])

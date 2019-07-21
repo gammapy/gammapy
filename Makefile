@@ -87,6 +87,10 @@ test-nb:
 test-scripts:
 	python -m gammapy.utils.scripts_test
 
+clean-nb:
+	python -m gammapy jupyter --src=tutorials black
+	python -m gammapy jupyter --src=tutorials strip
+    
 docs-sphinx:
 	python setup.py build_docs
 

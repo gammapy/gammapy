@@ -1,7 +1,7 @@
 import pytest
 import astropy.units as u
 from ...utils.testing import assert_quantity_allclose
-from ...spectrum import cosmic_ray_spectrum
+from ...spectrum import create_cosmic_ray_spectral_model
 
 Cosmic_rays_SPECTRA = [
     dict(
@@ -39,21 +39,18 @@ Cosmic_rays_SPECTRA = [
 
 @pytest.mark.parametrize("spec", Cosmic_rays_SPECTRA, ids=lambda _: _["name"])
 def test_cosmic_ray_spectrum(spec):
-    energy = 2 * u.TeV
-    emin, emax = [1, 1e3] * u.TeV
+    cr_spectrum = create_cosmic_ray_spectral_model(particle=spec["name"])
 
-    cr_spectrum = cosmic_ray_spectrum(particle=spec["name"])
-
-    dnde = cr_spectrum(energy)
+    dnde = cr_spectrum(2 * u.TeV)
     assert_quantity_allclose(dnde, spec["dnde"])
 
-    flux = cr_spectrum.integral(emin, emax)
+    flux = cr_spectrum.integral(1 * u.TeV, 1e3 * u.TeV)
     assert_quantity_allclose(flux, spec["flux"])
 
-    index = cr_spectrum.spectral_index(energy)
+    index = cr_spectrum.spectral_index(2 * u.TeV)
     assert_quantity_allclose(index, spec["index"], rtol=1e-5)
 
 
 def test_invalid_format():
     with pytest.raises(ValueError):
-        cosmic_ray_spectrum("spam")
+        create_cosmic_ray_spectral_model("spam")
