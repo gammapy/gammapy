@@ -1102,11 +1102,11 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
-            cutoff = expfactor * np.exp(reference ** index_2 - energy ** index_2)
+            cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2) )
         except AttributeError:
             from uncertainties.unumpy import exp
 
-            cutoff = expfactor * exp(reference ** index_2 - energy ** index_2)
+            cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2) )
         return pwl * cutoff
 
 

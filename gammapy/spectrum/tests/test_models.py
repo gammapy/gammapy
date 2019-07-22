@@ -104,9 +104,9 @@ TEST_MODELS = [
             reference=1 * u.TeV,
             expfactor=1e-2 / u.TeV ** 2,
         ),
-        val_at_2TeV=u.Quantity(4.63879566, "cm-2 s-1 TeV-1"),
-        integral_1_10TeV=u.Quantity(2.6034046173089, "cm-2 s-1"),
-        eflux_1_10TeV=u.Quantity(5.340285560055799, "TeV cm-2 s-1"),
+        val_at_2TeV=u.Quantity(3.43104309e-13, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(1.2125247e-12, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(3.38072082e-12, "TeV cm-2 s-1"),
     ),
     dict(
         name="logpar",
@@ -262,12 +262,15 @@ def test_models(spectrum):
     model = spectrum["model"]
     energy = 2 * u.TeV
     value = model(energy)
+    print("myvalue:", value)
     assert_quantity_allclose(value, spectrum["val_at_2TeV"])
     emin = 1 * u.TeV
     emax = 10 * u.TeV
+    print("myvalue:", value)
     assert_quantity_allclose(
         model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"]
     )
+    print("myvalue:", value)
     assert_quantity_allclose(
         model.energy_flux(emin=emin, emax=emax), spectrum["eflux_1_10TeV"]
     )
