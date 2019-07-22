@@ -208,7 +208,8 @@ class SpectrumDataset(Dataset):
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
-        Erase the counts data and replace them by the simulated ones.
+
+        This method overwrites the counts defined on the dataset object.
 
         Parameters
         ----------
@@ -217,8 +218,9 @@ class SpectrumDataset(Dataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        data = random_state.poisson(self.npred().data)
-        self.counts.data = data
+        npred = self.npred()
+        npred.data = random_state.poisson(npred.data)
+        self.counts = npred
 
     @property
     def energy_range(self):
@@ -457,8 +459,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
-        Simulate fake background counts for the current background model.
-        Erase the counts and background data and replace them by the simulated ones.
+
+         This method overwrites the counts and off counts defined on the dataset object.
+
 
         Parameters
         ----------
