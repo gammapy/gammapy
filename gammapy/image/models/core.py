@@ -255,7 +255,7 @@ class SkyGaussianElongated(SkySpatialModel):
         norm = 1 / (2 * np.pi * sigma_semi_major * sigma_semi_minor)
         a = 1.0 - np.cos(sigma_semi_major)
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
-        return u.Quantity(norm.value * np.exp(exponent).value, "sr-1", copy=False)
+        return u.Quantity(norm.to_value('sr-1') * np.exp(exponent).value, "sr-1", copy=False)
 
 
 class SkyDisk(SkySpatialModel):
