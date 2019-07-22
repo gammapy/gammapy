@@ -192,7 +192,7 @@ class SpectrumDataset(Dataset):
     @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self._energy_axis.nbin
+        return (self._energy_axis.nbin,)
 
     def npred(self):
         """Returns npred map (model + background)"""
