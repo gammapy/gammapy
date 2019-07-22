@@ -49,6 +49,7 @@ class SpectrumDataset(Dataset):
     SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
 
     """
+
     likelihood_type = "cash"
 
     def __init__(
@@ -104,9 +105,7 @@ class SpectrumDataset(Dataset):
             aeff_max = np.max(self.aeff.data.data.value)
             aeff_unit = self.aeff.data.data.unit
 
-        str_ += "\t{:32}: {:.2e} {}\n".format(
-            "Effective area min", aeff_min, aeff_unit
-        )
+        str_ += "\t{:32}: {:.2e} {}\n".format("Effective area min", aeff_min, aeff_unit)
         str_ += "\t{:32}: {:.2e} {}\n\n".format(
             "Effective area max", aeff_max, aeff_unit
         )
@@ -114,9 +113,7 @@ class SpectrumDataset(Dataset):
         livetime = np.nan
         if self.livetime is not None:
             livetime = self.livetime
-        str_ += "\t{:32}: {:.2e}\n\n".format(
-            "Livetime", livetime
-        )
+        str_ += "\t{:32}: {:.2e}\n\n".format("Livetime", livetime)
 
         # data section
         n_bins = 0
@@ -142,17 +139,11 @@ class SpectrumDataset(Dataset):
             n_pars = len(self.model.parameters.parameters)
             n_free_pars = len(self.parameters.free_parameters)
 
-        str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", n_pars
-        )
-        str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", n_free_pars
-        )
+        str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
+        str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
 
         if self.model is not None:
-            str_ += "\t{:32}: {}\n".format(
-                "Model type", self.model.__class__.__name__
-            )
+            str_ += "\t{:32}: {}\n".format("Model type", self.model.__class__.__name__)
             info = str(self.model.parameters)
             lines = info.split("\n")
             for line in lines[2:-1]:
@@ -334,8 +325,7 @@ class SpectrumDataset(Dataset):
         label = self._residuals_labels[method]
 
         residuals.plot(
-            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit,
-            **kwargs
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit, **kwargs
         )
         ax.axhline(0, color="black", lw=0.5)
 
@@ -385,6 +375,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     SpectrumDataset, FluxPointsDataset, MapDataset
 
     """
+
     likelihood_type = "wstat"
 
     def __init__(

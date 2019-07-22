@@ -133,7 +133,6 @@ def test_fake(sky_model, geom, geom_etrue):
     assert dataset.counts.data.sum() == 6553
 
 
-
 @requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
@@ -192,7 +191,6 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
         dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value
     )
     assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
-
 
 
 @requires_dependency("iminuit")

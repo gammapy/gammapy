@@ -260,7 +260,6 @@ class TestSpectrumOnOff:
         desired = [False, False, True, True]
         assert_allclose(mask, desired)
 
-
     def test_str(self):
         model = PowerLaw()
         dataset = SpectrumDatasetOnOff(
@@ -275,7 +274,6 @@ class TestSpectrumOnOff:
         )
         assert "SpectrumDatasetOnOff" in str(dataset)
         assert "wstat" in str(dataset)
-
 
     def test_fake(self):
         """Test the fake dataset"""
@@ -307,7 +305,6 @@ class TestSpectrumOnOff:
         assert real_dataset.backscale.mean() == dataset.backscale.mean()
         assert dataset.counts_off.data.sum() == 39
         assert dataset.counts.data.sum() == 9
-
 
 
 @requires_dependency("iminuit")

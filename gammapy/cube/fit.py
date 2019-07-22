@@ -191,7 +191,9 @@ class MapDataset(Dataset):
 
             for idx, model in enumerate(background_models):
                 str_ += "\n\n\tBackground {}: \n".format(idx)
-                str_ += "\t\t{:28}: {}\n".format("Model type", self.background_model.__class__.__name__)
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Model type", self.background_model.__class__.__name__
+                )
                 info = str(self.background_model.parameters)
                 lines = info.split("\n")
                 str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
@@ -340,9 +342,15 @@ class MapDataset(Dataset):
             counts = counts * self.mask
             npred = npred * self.mask
 
-        counts_spatial = counts.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
-        npred_spatial = npred.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
-        spatial_residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
+        counts_spatial = counts.sum_over_axes().smooth(
+            width=smooth_radius, kernel=smooth_kernel
+        )
+        npred_spatial = npred.sum_over_axes().smooth(
+            width=smooth_radius, kernel=smooth_kernel
+        )
+        spatial_residuals = self._compute_residuals(
+            counts_spatial, npred_spatial, method
+        )
 
         spatial_residuals.data[self.exposure.data[0] == 0] = np.nan
 
