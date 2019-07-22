@@ -20,6 +20,7 @@ __all__ = [
     "ExponentialCutoffPowerLaw",
     "ExponentialCutoffPowerLaw3FGL",
     "PLSuperExpCutoff3FGL",
+    "PLSuperExpCutoff4FGL",
     "LogParabola",
     "TableModel",
     "AbsorbedSpectralModel",
@@ -1043,6 +1044,9 @@ class PLSuperExpCutoff3FGL(SpectralModel):
 class PLSuperExpCutoff4FGL(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL.
 
+    This model parametrisation is very similar, but slightly different from
+    `PLSuperExpCutoff3FGL` or `ExponentialCutoffPowerLaw3FGL`
+
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
                   \exp \left( a \left(E_0 ^{\Gamma_2} - \E^{\Gamma_2} \right)
@@ -1081,7 +1085,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         index_2=2,
         amplitude="1e-12 cm-2 s-1 TeV-1",
         reference="1 TeV",
-        expfactor = "1e-2 TeV-2",
+        expfactor="1e-2 TeV-2",
     ):
         self.index_1 = Parameter("index_1", index_1)
         self.index_2 = Parameter("index_2", index_2)

@@ -73,7 +73,6 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             errs["beta"] = self.data["Unc_LP_beta"]
             model = LogParabola(**pars)
         elif spec_type == "PLSuperExpCutoff":
-            # TODO: why convert to GeV here? Remove?
             pars["amplitude"] = self.data["PLEC_Flux_Density"]
             pars["index_1"] = self.data["PLEC_Index"]
             pars["index_2"] = self.data["PLEC_Exp_Index"]
@@ -501,6 +500,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
             ]
         )
         return LightCurve(table)
+
 
 class SourceCatalogObject1FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 1FHL catalog.
@@ -1093,13 +1093,13 @@ class SourceCatalog3FGL(SourceCatalog):
 class SourceCatalog4FGL(SourceCatalog):
     """Fermi-LAT 4FGL source catalog.
 
-    Reference: https://arxiv.org/abs/1902.10045
+    Reference: - https://arxiv.org/abs/1902.10045
+                - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
 
     name = "4fgl"
-    ## also change this description
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
     ## TODO: source categories ?
@@ -1107,10 +1107,7 @@ class SourceCatalog4FGL(SourceCatalog):
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit"):
         filename = str(make_path(filename))
 
-        with warnings.catch_warnings():  # ignore FITS units warnings
-            warnings.simplefilter("ignore", u.UnitsWarning)
-            ##check this
-            table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
+        table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
 
         table_standardise_units_inplace(table)
 
@@ -1131,14 +1128,7 @@ class SourceCatalog4FGL(SourceCatalog):
             source_name_alias=source_name_alias,
         )
 
-        ## what is the difference between the point and the extended
         self.extended_sources_table = Table.read(filename, hdu="ExtendedSources")
-
-
-
-
-
-
 
 
 class SourceCatalog1FHL(SourceCatalog):
