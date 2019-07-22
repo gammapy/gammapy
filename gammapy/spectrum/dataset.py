@@ -164,7 +164,7 @@ class SpectrumDataset(Dataset):
                 model=self.model,
                 livetime=self.livetime,
                 aeff=self.aeff,
-                e_true=self.counts.energy.edges,
+                e_true=self._energy_axis.edges,
                 edisp=self.edisp,
             )
         else:
@@ -179,9 +179,20 @@ class SpectrumDataset(Dataset):
             return self._parameters
 
     @property
+    def _energy_axis(self):
+        if self.counts is not None:
+            e_axis = self.counts.energy
+        elif self.edisp is not None:
+            e_axis = self.edisp.data.axis("e_reco")
+        elif self.aeff is not None:
+            # assume e_reco = e_true
+            e_axis = self.aeff.data.axis("energy")
+        return e_axis
+
+    @property
     def data_shape(self):
         """Shape of the counts data"""
-        return self.counts.data.shape
+        return (self._energy_axis.nbin,)
 
     def npred(self):
         """Returns npred map (model + background)"""
@@ -208,7 +219,8 @@ class SpectrumDataset(Dataset):
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
-        Erase the counts data and replace them by the simulated ones.
+
+        This method overwrites the counts defined on the dataset object.
 
         Parameters
         ----------
@@ -217,8 +229,9 @@ class SpectrumDataset(Dataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        data = random_state.poisson(self.npred().data)
-        self.counts.data = data
+        npred = self.npred()
+        npred.data = random_state.poisson(npred.data)
+        self.counts = npred
 
     @property
     def energy_range(self):
@@ -403,10 +416,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.mask_safe = mask_safe
 
         if np.isscalar(acceptance):
-            acceptance = np.ones(counts.energy.nbin) * acceptance
+            acceptance = np.ones(self.data_shape) * acceptance
 
         if np.isscalar(acceptance_off):
-            acceptance_off = np.ones(counts.energy.nbin) * acceptance_off
+            acceptance_off = np.ones(self.data_shape) * acceptance_off
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
@@ -457,8 +470,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def fake(self, background_model, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced irfs.
-        Simulate fake background counts for the current background model.
-        Erase the counts and background data and replace them by the simulated ones.
+
+         This method overwrites the counts and off counts defined on the dataset object.
+
 
         Parameters
         ----------
@@ -470,10 +484,18 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        data = random_state.poisson(self.npred().data + background_model.data)
-        self.counts.data = data
-        bkg = random_state.poisson(background_model.data / self.alpha)
-        self.counts_off.data = bkg
+
+        npred_sig = self.npred_sig()
+        npred_sig.data = random_state.poisson(npred_sig.data)
+
+        npred_bkg = background_model.copy()
+        npred_bkg.data = random_state.poisson(npred_bkg.data)
+
+        self.counts = npred_sig + npred_bkg
+
+        npred_off = background_model / self.alpha
+        npred_off.data = random_state.poisson(npred_off.data)
+        self.counts_off = npred_off
 
     @classmethod
     def read(cls, filename):

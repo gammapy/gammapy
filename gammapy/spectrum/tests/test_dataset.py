@@ -305,7 +305,7 @@ class TestSpectrumOnOff:
         assert real_dataset.acceptance.mean() == dataset.acceptance.mean()
         assert real_dataset.acceptance_off.mean() == dataset.acceptance_off.mean()
         assert dataset.counts_off.data.sum() == 39
-        assert dataset.counts.data.sum() == 9
+        assert dataset.counts.data.sum() == 5
 
 
 @requires_dependency("iminuit")
