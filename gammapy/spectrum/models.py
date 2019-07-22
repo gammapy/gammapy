@@ -1045,12 +1045,15 @@ class PLSuperExpCutoff4FGL(SpectralModel):
     r"""Spectral super exponential cutoff power-law model used for 4FGL.
 
     This model parametrisation is very similar, but slightly different from
-    `PLSuperExpCutoff3FGL` or `ExponentialCutoffPowerLaw3FGL`
+    `PLSuperExpCutoff3FGL` or `ExponentialCutoffPowerLaw3FGL`.
+
+    See Equation (3) in https://arxiv.org/pdf/1902.10045.pdf
 
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-                  \exp \left( a \left(E_0 ^{\Gamma_2} - E^{\Gamma_2} \right)
-                              \right)
+                  \exp \left(
+                      a \left( E_0 ^{\Gamma_2} - E^{\Gamma_2} \right)
+                  \right)
 
     Parameters
     ----------
@@ -1072,8 +1075,8 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         from astropy import units as u
         from gammapy.spectrum.models import PLSuperExpCutoff4FGL
 
-        secpl_4fgl = PLSuperExpCutoff4FGL()
-        secpl_4fgl.plot(energy_range=[0.1, 100] * u.TeV)
+        model = PLSuperExpCutoff4FGL()
+        model.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
 
