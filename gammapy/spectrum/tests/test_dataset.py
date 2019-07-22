@@ -285,8 +285,8 @@ class TestSpectrumOnOff:
             aeff=self.aeff,
             livetime=self.livetime,
             edisp=self.edisp,
-            backscale=1,
-            backscale_off=10,
+            acceptance=1,
+            acceptance_off=10,
         )
         real_dataset = dataset.copy()
         # Define background model counts
@@ -302,7 +302,8 @@ class TestSpectrumOnOff:
             real_dataset.counts.energy.center.mean()
             == dataset.counts.energy.center.mean()
         )
-        assert real_dataset.backscale.mean() == dataset.backscale.mean()
+        assert real_dataset.acceptance.mean() == dataset.acceptance.mean()
+        assert real_dataset.acceptance_off.mean() == dataset.acceptance_off.mean()
         assert dataset.counts_off.data.sum() == 39
         assert dataset.counts.data.sum() == 9
 
