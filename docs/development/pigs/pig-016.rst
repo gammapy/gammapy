@@ -186,25 +186,22 @@ Possibly ALMA does this, all their data is in 4D containers with lon, lat,
 wavelength, time, and e.g. a 1D spectrum would have only one bin in lon, lat,
 time.
 
-- CTA IRFs and other CTA data level 3 classes might be maintained in ctapipe or
-  somehow shared between Gammapy and ctapipe.
-- gammapy.irf and gammapy.spectrum and most containers in Gammapy might be changed to maps.
-- gammapy.spectrum will likely become higher-level than gammapy.cube,
-  i.e. 1D spectral analysis will be based on 3D maps analysis more.
-- gammapy.detect will likely grow map analysis and modeling based algorithms,
-  i.e. depend on gammapy.cube and the rest of the Gammapy package
-- gammapy.astro could grow (merge in Naima) or be split out from Gammapy.
-- we might rename gammapy.cube to gammapy.map_analysis or gammapy.scripts
-  to gammapy.analysis or similar changes depending on how their purpose and
-  scope changes in the future
-- datasets could be grouped in gammapy.datasets, if they are simple container objects
-  (like models) that aren't tightly coupled with analysis code in
-  gammapy.spectrum and gammapy.maps.
+CTA IRFs and other CTA data level 3 classes might be maintained in ctapipe or
+somehow shared between Gammapy and ctapipe.
 
-Task list
-=========
+gammapy.spectrum will likely become higher-level than gammapy.cube, i.e. 1D
+spectral analysis will be based on 3D maps analysis more.
 
-tbd
+gammapy.detect will likely grow map analysis and modeling based algorithms, i.e.
+depend on gammapy.cube and the rest of the Gammapy package
+
+gammapy.astro could grow (merge in Naima) or be split out from Gammapy.
+
+gammapy.cube could be renamed to gammapy.map_analysis or gammapy.scripts to
+gammapy.analysis or similar changes depending on how their purpose and scope
+changes in the future datasets could be grouped in gammapy.datasets, if they are
+simple container objects (like models) that aren't tightly coupled with analysis
+code in gammapy.spectrum and gammapy.maps.
 
 Decision
 ========
