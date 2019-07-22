@@ -484,9 +484,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 Passed to `~gammapy.utils.random.get_random_state`.
         """
         random_state = get_random_state(random_state)
-        npred = self.npred_sig() + background_model.data
-        npred.data = random_state.poisson(npred.data)
-        self.counts = npred
+
+        npred_sig = self.npred_sig()
+        npred_sig.data = random_state.poisson(npred_sig.data)
+
+        npred_bkg = background_model.copy()
+        npred_bkg.data = random_state.poisson(npred_bkg.data)
+
+        self.counts = npred_sig + npred_bkg
 
         npred_off = background_model / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
