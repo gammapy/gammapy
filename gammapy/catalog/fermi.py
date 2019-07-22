@@ -1093,8 +1093,10 @@ class SourceCatalog3FGL(SourceCatalog):
 class SourceCatalog4FGL(SourceCatalog):
     """Fermi-LAT 4FGL source catalog.
 
-    Reference: - https://arxiv.org/abs/1902.10045
-                - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
+    Reference:
+
+    - https://arxiv.org/abs/1902.10045
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/8yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """

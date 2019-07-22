@@ -1049,7 +1049,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
 
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-                  \exp \left( a \left(E_0 ^{\Gamma_2} - \E^{\Gamma_2} \right)
+                  \exp \left( a \left(E_0 ^{\Gamma_2} - E^{\Gamma_2} \right)
                               \right)
 
     Parameters
@@ -1063,7 +1063,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
     reference : `~astropy.units.Quantity`
         :math:`E_0`
     expfactor : `~astropy.units.Quantity`
-        :math: 'a'
+        :math: `a`
 
     Examples
     --------
@@ -1102,11 +1102,11 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         """Evaluate the model (static function)."""
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
-            cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2) )
+            cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
         except AttributeError:
             from uncertainties.unumpy import exp
 
-            cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2) )
+            cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2))
         return pwl * cutoff
 
 
