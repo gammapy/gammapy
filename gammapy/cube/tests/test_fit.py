@@ -118,6 +118,23 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
 
 
 @requires_data()
+def test_fake(sky_model, geom, geom_etrue):
+    """Test the fake dataset"""
+    dataset = get_map_dataset(sky_model, geom, geom_etrue)
+    dataset.counts = dataset.npred()
+    real_dataset = dataset.copy()
+    dataset.fake(314)
+    assert real_dataset.counts.data.shape == dataset.counts.data.shape
+    assert (
+        real_dataset.background_model.map.data.sum()
+        == dataset.background_model.map.data.sum()
+    )
+    assert real_dataset.exposure.data.sum() == dataset.exposure.data.sum()
+    assert int(real_dataset.counts.data.sum()) == 6455
+    assert dataset.counts.data.sum() == 6553
+
+
+@requires_data()
 def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
     dataset.counts = dataset.npred()
@@ -175,7 +192,6 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
         dataset.edisp.e_reco.edges.value, dataset_new.edisp.e_reco.edges.value
     )
     assert dataset.edisp.e_true.unit == dataset_new.edisp.e_true.unit
-
 
 
 @requires_dependency("iminuit")

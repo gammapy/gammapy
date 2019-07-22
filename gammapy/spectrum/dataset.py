@@ -49,6 +49,7 @@ class SpectrumDataset(Dataset):
     SpectrumDatasetOnOff, FluxPointsDataset, MapDataset
 
     """
+
     likelihood_type = "cash"
 
     def __init__(
@@ -104,9 +105,7 @@ class SpectrumDataset(Dataset):
             aeff_max = np.max(self.aeff.data.data.value)
             aeff_unit = self.aeff.data.data.unit
 
-        str_ += "\t{:32}: {:.2e} {}\n".format(
-            "Effective area min", aeff_min, aeff_unit
-        )
+        str_ += "\t{:32}: {:.2e} {}\n".format("Effective area min", aeff_min, aeff_unit)
         str_ += "\t{:32}: {:.2e} {}\n\n".format(
             "Effective area max", aeff_max, aeff_unit
         )
@@ -114,9 +113,7 @@ class SpectrumDataset(Dataset):
         livetime = np.nan
         if self.livetime is not None:
             livetime = self.livetime
-        str_ += "\t{:32}: {:.2e}\n\n".format(
-            "Livetime", livetime
-        )
+        str_ += "\t{:32}: {:.2e}\n\n".format("Livetime", livetime)
 
         # data section
         n_bins = 0
@@ -142,17 +139,11 @@ class SpectrumDataset(Dataset):
             n_pars = len(self.model.parameters.parameters)
             n_free_pars = len(self.parameters.free_parameters)
 
-        str_ += "\t{:32}: {}\n".format(
-            "Number of parameters", n_pars
-        )
-        str_ += "\t{:32}: {}\n\n".format(
-            "Number of free parameters", n_free_pars
-        )
+        str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
+        str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
 
         if self.model is not None:
-            str_ += "\t{:32}: {}\n".format(
-                "Model type", self.model.__class__.__name__
-            )
+            str_ += "\t{:32}: {}\n".format("Model type", self.model.__class__.__name__)
             info = str(self.model.parameters)
             lines = info.split("\n")
             for line in lines[2:-1]:
@@ -216,23 +207,18 @@ class SpectrumDataset(Dataset):
         return self._as_counts_spectrum(excess)
 
     def fake(self, random_state="random-seed"):
-        """Simulate a fake `~gammapy.spectrum.CountsSpectrum`.
+        """Simulate fake counts for the current model and reduced irfs.
+        Erase the counts data and replace them by the simulated ones.
 
         Parameters
         ----------
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        spectrum : `~gammapy.spectrum.CountsSpectrum`
-            the fake count spectrum
         """
         random_state = get_random_state(random_state)
         data = random_state.poisson(self.npred().data)
-        energy = self.counts.energy.edges
-        return CountsSpectrum(energy[:-1], energy[1:], data)
+        self.counts.data = data
 
     @property
     def energy_range(self):
@@ -339,8 +325,7 @@ class SpectrumDataset(Dataset):
         label = self._residuals_labels[method]
 
         residuals.plot(
-            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit,
-            **kwargs
+            ax=ax, ecolor="black", fmt="none", energy_unit=self._e_unit, **kwargs
         )
         ax.axhline(0, color="black", lw=0.5)
 
@@ -382,12 +367,15 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Relative background efficiency in
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
+    background : `~gammapy.spectrum.CountsSpectrum`
+        Background model use to simulate observation
 
     See Also
     --------
     SpectrumDataset, FluxPointsDataset, MapDataset
 
     """
+
     likelihood_type = "wstat"
 
     def __init__(
@@ -466,6 +454,26 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             mu_sig=mu_sig,
         )
         return np.nan_to_num(on_stat_)
+
+    def fake(self, background_model, random_state="random-seed"):
+        """Simulate fake counts for the current model and reduced irfs.
+        Simulate fake background counts for the current background model.
+        Erase the counts and background data and replace them by the simulated ones.
+
+        Parameters
+        ----------
+        background_model : `~gammapy.spectrum.CountsSpectrum`
+            BackgroundModel. In the future will be part of the SpectrumDataset Class.
+            For the moment, a CountSpectrum.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+        data = random_state.poisson(self.npred().data + background_model.data)
+        self.counts.data = data
+        bkg = random_state.poisson(background_model.data / self.alpha)
+        self.counts_off.data = bkg
 
     @classmethod
     def read(cls, filename):

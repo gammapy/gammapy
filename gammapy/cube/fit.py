@@ -5,6 +5,7 @@ from astropy.utils import lazyproperty
 import astropy.units as u
 from astropy.nddata.utils import NoOverlapError
 from astropy.io import fits
+from ..utils.random import get_random_state
 from ..utils.scripts import make_path
 from ..utils.fitting import Parameters, Dataset
 from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
@@ -190,7 +191,9 @@ class MapDataset(Dataset):
 
             for idx, model in enumerate(background_models):
                 str_ += "\n\n\tBackground {}: \n".format(idx)
-                str_ += "\t\t{:28}: {}\n".format("Model type", self.background_model.__class__.__name__)
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Model type", self.background_model.__class__.__name__
+                )
                 info = str(self.background_model.parameters)
                 lines = info.split("\n")
                 str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
@@ -339,9 +342,15 @@ class MapDataset(Dataset):
             counts = counts * self.mask
             npred = npred * self.mask
 
-        counts_spatial = counts.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
-        npred_spatial = npred.sum_over_axes().smooth(width=smooth_radius, kernel=smooth_kernel)
-        spatial_residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
+        counts_spatial = counts.sum_over_axes().smooth(
+            width=smooth_radius, kernel=smooth_kernel
+        )
+        npred_spatial = npred.sum_over_axes().smooth(
+            width=smooth_radius, kernel=smooth_kernel
+        )
+        spatial_residuals = self._compute_residuals(
+            counts_spatial, npred_spatial, method
+        )
 
         spatial_residuals.data[self.exposure.data[0] == 0] = np.nan
 
@@ -392,6 +401,21 @@ class MapDataset(Dataset):
             stat = self._stat_sum(counts.ravel(), npred.ravel())
 
         return stat
+
+    def fake(self, random_state="random-seed"):
+        """
+        Simulate fake counts for the current model and reduced irfs.
+        Erase the counts data and replace them by the simulated ones.
+
+        Parameters
+        ----------
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+        data = random_state.poisson(self.npred().data)
+        self.counts.data = data
 
     def to_hdulist(self):
         """Convert map dataset to list of HDUs.
