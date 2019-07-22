@@ -67,24 +67,14 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
 
     Parameters
     ----------
-    dataset : `gammapy.utils.fitting.Dataset`
-        A gammapy dataset object. This contains the observed counts cube,
-        the exposure cube, the psf cube, and the sky model and model.
-        Each free parameter in the sky model is considered as parameter for the MCMC.
+    dataset : `~gammapy.utils.fitting.Dataset`
+        Dataset
     nwalkers : int
-        Required integer number of walkers to use in ensemble.
-        Minimum is 2*nparam+2, but more than that is usually better.
-        Must be even to use MPI mode.
+        Number of walkers
     nrun : int
-        Number of steps for walkers. Typically at least a few hundreds (but depends on dimensionality).
-        Low nrun (<100?) will underestimate the errors.
-        Samples that would populate the distribution are nrun*nwalkers.
-        This step can be ~seen as the error estimation step.
+        Number of steps each walker takes
     threads : (optional)
-        The number of threads to use for parallelization. If ``threads == 1``,
-        then the ``multiprocessing`` module is not used but if
-        ``threads > 1``, then a ``Pool`` object is created and calls to
-        ``lnpostfn`` are run in parallel.
+        Number of threads or processes to use
 
     Returns
     -------
@@ -134,26 +124,23 @@ def plot_trace(sampler, dataset):
     Parameters
     ----------
     sampler : `emcee.EnsembleSampler`
-        Sampler object containing the trace of all walkers.
-
-    dataset : `gammapy.utils.fitting.Dataset`
-        A gammapy dataset object. This contains the observed counts cube,
-        the exposure cube, the psf cube, and the sky model and model.
-        Each free parameter in the sky model is considered as parameter for the MCMC.
-
+        Sampler object containing the trace of all walkers
+    dataset : `~gammapy.utils.fitting.Dataset`
+        Dataset
     """
     import matplotlib.pyplot as plt
 
-    labels = []
-    for par in dataset.parameters.free_parameters:
-        labels.append(par.name)
+    labels = [par.name for par in dataset.parameters.free_parameters]
 
     fig, axes = plt.subplots(len(labels), sharex=True)
-    for i, ax in range(len(axes)):
-        ax.plot(sampler.chain[:, :, i].T, "-k", alpha=0.2)
-        ax.set_ylabel(labels[i])
+
+    for idx, ax in enumerate(axes):
+        ax.plot(sampler.chain[:, :, idx].T, "-k", alpha=0.2)
+        ax.set_ylabel(labels[idx])
+
     plt.xlabel("Nrun")
     plt.show()
+
 
 def plot_corner(sampler, dataset, nburn=0):
     """Corner plot for each parameter explored by the walkers.
@@ -161,14 +148,11 @@ def plot_corner(sampler, dataset, nburn=0):
     Parameters
     ----------
     sampler : `emcee.EnsembleSampler`
-        Sampler object containing the trace of all walkers.
-    dataset : `gammapy.utils.fitting.Dataset`
+        Sampler object containing the trace of all walkers
+    dataset : `~gammapy.utils.fitting.Dataset`
         Dataset
-    nburn: int
-        Number of runs that will be discarded (burnt) until reaching ~stationary states for walkers.
-        Hard to guess. Depends how close to best-fit you are.
-        A good nbrun value can be estimated from the trace plot.
-        This step can be ~seen as the fitting step.
+    nburn : int
+        Number of runs to discard, because considered part of the burn-in phase
     """
     labels = [par.name for par in dataset.parameters.free_parameters]
 
