@@ -245,20 +245,9 @@ def dataset():
     return dataset
 
 
-def test_FluxPointsDataset_str(dataset):
-    assert "Total flux points" in str(dataset)
-    assert "Points used for the fit" in str(dataset)
-    assert "Excluded for safe energy range" in str(dataset)
-    assert "Excluded by user" in str(dataset)
-    assert "Model Name" in str(dataset)
-    assert "N parameters" in str(dataset)
-    assert "N free parameters" in str(dataset)
-    assert "List of parameters" in str(dataset)
-    assert "index" in str(dataset)
-    assert "amplitude" in str(dataset)
-    assert "reference" in str(dataset)
-    assert "Likelihood type" in str(dataset)
-    assert "Likelihood value" in str(dataset)
+@requires_data()
+def test_flux_point_dataset_str(dataset):
+    assert "FluxPointsDataset" in str(dataset)
 
 
 @requires_data()
