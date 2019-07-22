@@ -262,15 +262,12 @@ def test_models(spectrum):
     model = spectrum["model"]
     energy = 2 * u.TeV
     value = model(energy)
-    print("1 - myvalue:", value)
     assert_quantity_allclose(value, spectrum["val_at_2TeV"])
     emin = 1 * u.TeV
     emax = 10 * u.TeV
-    print("myvalue:", value)
     assert_quantity_allclose(
         model.integral(emin=emin, emax=emax), spectrum["integral_1_10TeV"]
     )
-    print("myvalue:", value)
     assert_quantity_allclose(
         model.energy_flux(emin=emin, emax=emax), spectrum["eflux_1_10TeV"]
     )
