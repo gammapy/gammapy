@@ -7,7 +7,8 @@ from astropy.coordinates import SkyCoord
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EffectiveAreaTable, load_cta_irfs
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
-from ..simulation import SpectrumSimulation
+from ..dataset import SpectrumDatasetOnOff
+from ..utils import SpectrumEvaluator
 from ..flux_point import FluxPointsEstimator
 from ...cube import simulate_dataset
 from ...cube.models import SkyModel
@@ -20,16 +21,24 @@ def simulate_spectrum_dataset(model):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     bkg_model = PowerLaw(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
-    sim = SpectrumSimulation(
+
+    dataset = SpectrumDatasetOnOff(
         aeff=aeff,
-        source_model=model,
+        model=model,
         livetime=100 * u.h,
-        background_model=bkg_model,
-        alpha=0.2,
+        acceptance=1,
+        acceptance_off=5,
     )
-    sim.run(seed=[0])
-    obs = sim.result[0]
-    return obs
+
+    eval = SpectrumEvaluator(
+        model=bkg_model,
+        aeff=aeff,
+        livetime=100 * u.h,
+    )
+
+    bkg_model = eval.compute_npred()
+    dataset.fake(random_state=0, background_model=bkg_model)
+    return dataset
 
 
 def create_fpe(model):
