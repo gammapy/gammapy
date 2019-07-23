@@ -82,8 +82,8 @@ def test_yaml_io_3d():
 
     models_dict = models_to_dict(models)
     write_yaml(models_dict, "$GAMMAPY_DATA/tests/models/examples_write.yaml")
-    dict_to_models("$GAMMAPY_DATA/tests/models/examples_write.yaml")
+    SkyModels.from_yaml("$GAMMAPY_DATA/tests/models/examples_write.yaml")
 
     models_dict = models_to_dict(models, selection="simple")
     write_yaml(models_dict, "$GAMMAPY_DATA/tests/models/examples_write_cut.yaml")
-    dict_to_models("$GAMMAPY_DATA/tests/models/examples_write_cut.yaml")
+    SkyModels.from_yaml("$GAMMAPY_DATA/tests/models/examples_write_cut.yaml")
