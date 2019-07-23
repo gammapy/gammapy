@@ -2,7 +2,7 @@ Components:
 - Name: source0
   SkySpatialModel:
     Type: SkyPointSource
-    parameters:
+    Parameters:
     - name: lon_0
       value: -50.
       factor: -500.
@@ -21,7 +21,7 @@ Components:
       frozen: true
   SpectralModel:
     Type: ExponentialCutoffPowerLaw
-    parameters:
+    Parameters:
     - name: index
       value: 2.1
       factor: 2.1
@@ -57,7 +57,7 @@ Components:
 - Name: source1
   SkySpatialModel:
     Type: SkyDisk
-    parameters:
+    Parameters:
     - name: lon_0
       value: -50.
       unit: deg
@@ -72,7 +72,7 @@ Components:
       frozen: false
   SpectralModel:
     Type: PowerLaw
-    parameters:
+    Parameters:
     - name: index
       value: 2.2
       factor: 2.2
@@ -100,27 +100,27 @@ Components:
 - Name: source2
   SkySpatialModel:
     Type: SkyDiffuseMap
-    File: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
-    parameters:
+    Filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
+    Parameters:
     - name: norm
       value: 1.0
       unit: ''
       frozen: false
   SpectralModel:
     Type: TableModel
-    energy:
+    Energy:
       data:
       - 34.171
       - 44.333
       - 57.517
       unit: MeV
-    values:
+    Values:
       data:
       - 2.52894e-06
       - 1.2486e-06
       - 6.14648e-06
       unit: 1 / (cm2 MeV s sr)
-    parameters:
+    Parameters:
     - name: norm
       value: 2.1
       factor: 2.1
@@ -133,7 +133,7 @@ Components:
   ID: CTA-gc
   Model:
     Type: BackgroundModel
-    parameters:
+    Parameters:
     - name: norm
       value: 1.01
       factor: 1.01
@@ -160,10 +160,10 @@ Components:
       frozen: true
 - Name: cube_iem
   ID: Global
-  File: $GAMMAPY_DATA/fermi-3fhl/gll_iem_v06_cutout.fits
+  Filename: $GAMMAPY_DATA/fermi-3fhl/gll_iem_v06_cutout.fits
   Model:
     Type: BackgroundModel
-    parameters:
+    Parameters:
     - name: norm
       value: 1.09
       factor: 1.09

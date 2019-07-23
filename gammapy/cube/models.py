@@ -314,7 +314,16 @@ class SkyDiffuseCube(SkyModelBase):
 
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
-    def __init__(self, map, norm=1, meta=None, interp_kwargs=None, name="diffuse"):
+    def __init__(
+        self,
+        map,
+        norm=1,
+        meta=None,
+        interp_kwargs=None,
+        name="diffuse",
+        filename=None,
+        obs_id="Global",
+    ):
         self.name = name
         axis = map.geom.get_axis_by_name("energy")
 

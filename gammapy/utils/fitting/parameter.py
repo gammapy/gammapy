@@ -347,11 +347,11 @@ class Parameters:
         return self.parameters[idx]
 
     def to_dict(self, selection="all"):
-        retval = dict(parameters=[], covariance=None)
+        retval = dict(Parameters=[], Covariance=None)
         for par in self.parameters:
-            retval["parameters"].append(par.to_dict(selection))
+            retval["Parameters"].append(par.to_dict(selection))
         if self.covariance is not None:
-            retval["covariance"] = self.covariance.tolist()
+            retval["Covariance"] = self.covariance.tolist()
         return retval
 
     def to_table(self):
@@ -377,7 +377,7 @@ class Parameters:
     @classmethod
     def from_dict(cls, val):
         pars = []
-        for par in val["parameters"]:
+        for par in val["Parameters"]:
             pars.append(
                 Parameter(
                     name=par["name"],

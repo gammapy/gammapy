@@ -9,78 +9,27 @@ from ..scripts import read_yaml
 
 def models_to_dict(components_list, selection="all"):
     dict_list = []
-    for ks in components_list:
+    for kc in components_list:
+        tmp_dict = {}
+        tmp_dict["Name"] = getattr(kc, "name", kc.__class__.__name__)
         try:
-            tmp_dict = {"Name": ks.name}
-        except:
-            tmp_dict = {"Name": ks.__class__.__name__}
-        try:
-            tmp_dict["ID"] = ks.ID
-        except:
+            tmp_dict["ID"] = kc.obs_id
+        except AttributeError:
             pass
-        try:
-            if ks.file != "":
-                tmp_dict["File"] = ks.file
-        except:
-            pass
-        if ks.__class__.__name__ == "SkyModel":
-            km = ks.spatial_model
-            tmp_dict["SkySpatialModel"] = {
-                "Type": km.__class__.__name__,
-                "parameters": km.parameters.to_dict(selection)["parameters"],
-            }
-            try:
-                tmp_dict["SkySpatialModel"]["File"] = km.file
-            except:
-                pass
+        if getattr(kc, "filename", None) is not None:
+            tmp_dict["Filename"] = kc.filename
 
-            km = ks.spectral_model
-
-            tmp_dict["SpectralModel"] = {
-                "Type": km.__class__.__name__,
-                "parameters": km.parameters.to_dict(selection)["parameters"],
-            }
-            try:
-                tmp_dict["SpectralModel"]["energy"] = {
-                    "data": km.energy.data.tolist(),
-                    "unit": str(km.energy.unit),
-                }
-                tmp_dict["SpectralModel"]["values"] = {
-                    "data": km.values.data.tolist(),
-                    "unit": str(km.values.unit),
-                }
-            except:
-                pass
-
-            try:
-                km = ks.temporal_model
-                tmp_dict["TemporalModel"] = {
-                    "Type": km.__class__.__name__,
-                    "parameters": km.parameters.to_dict(selection)["parameters"],
-                }
-            except:
-                pass
+        if kc.__class__.__name__ == "SkyModel":
+            tmp_dict["SkySpatialModel"] = kc.spatial_model.to_dict(selection)
+            if getattr(kc.spatial_model, "filename", None) is not None:
+                tmp_dict["SkySpatialModel"]["Filename"] = kc.spatial_model.filename
+            tmp_dict["SpectralModel"] = kc.spectral_model.to_dict(selection)
         else:
-            tmp_dict["Model"] = {
-                "Type": ks.__class__.__name__,
-                "parameters": ks.parameters.to_dict(selection)["parameters"],
-            }
-        dict_list.append(tmp_dict)
+            tmp_dict["Model"] = kc.to_dict(selection)
+        if tmp_dict not in dict_list:
+            dict_list.append(tmp_dict)
 
-    # remove duplicates
-    # typically diffuse model with global parameters repeated in different MapDatasets backgrounds
-    seen = set()
-    dict_list_unique = []
-    for kd in dict_list:
-        try:
-            t = tuple((kd["Name"], kd["ID"]))
-            if t not in seen:
-                seen.add(t)
-                dict_list_unique.append(kd)
-        except:
-            dict_list_unique.append(kd)
-
-    components_dict = {"Components": dict_list_unique}
+    components_dict = {"Components": dict_list}
     return components_dict
 
 
@@ -92,36 +41,36 @@ def dict_to_models(filemodel):
 
     components_list = read_yaml(filemodel)["Components"]
     models_list = []
-    for ks in components_list:
-        keys = list(ks.keys())
+    for kc in components_list:
+        keys = list(kc.keys())
         if "SkySpatialModel" in keys and "SpectralModel" in keys:
-            item = ks["SkySpatialModel"]
-            if "File" in list(item.keys()):
-                spatial_model = getattr(spatial, item["Type"]).read(item["File"])
-                spatial_model.file = item["File"]
+            item = kc["SkySpatialModel"]
+            if "Filename" in list(item.keys()):
+                spatial_model = getattr(spatial, item["Type"]).read(item["Filename"])
+                spatial_model.filename = item["Filename"]
                 spatial_model.parameters = Parameters.from_dict(item)
             else:
                 params = {
-                    x["name"]: x["value"] * Unit(x["unit"]) for x in item["parameters"]
+                    x["name"]: x["value"] * Unit(x["unit"]) for x in item["Parameters"]
                 }
                 spatial_model = getattr(spatial, item["Type"])(**params)
                 spatial_model.parameters = Parameters.from_dict(item)
-            item = ks["SpectralModel"]
-            if "energy" in list(item.keys()):
-                energy = Quantity(item["energy"]["data"], item["energy"]["unit"])
-                values = Quantity(item["values"]["data"], item["values"]["unit"])
+            item = kc["SpectralModel"]
+            if "Energy" in list(item.keys()):
+                energy = Quantity(item["Energy"]["data"], item["Energy"]["unit"])
+                values = Quantity(item["Values"]["data"], item["Values"]["unit"])
                 params = {"energy": energy, "values": values}
                 spectral_model = getattr(spectral, item["Type"])(**params)
                 spectral_model.parameters = Parameters.from_dict(item)
             else:
                 params = {
-                    x["name"]: x["value"] * Unit(x["unit"]) for x in item["parameters"]
+                    x["name"]: x["value"] * Unit(x["unit"]) for x in item["Parameters"]
                 }
                 spectral_model = getattr(spectral, item["Type"])(**params)
                 spectral_model.parameters = Parameters.from_dict(item)
             models_list.append(
                 SkyModel(
-                    name=ks["Name"],
+                    name=kc["Name"],
                     spatial_model=spatial_model,
                     spectral_model=spectral_model,
                 )
