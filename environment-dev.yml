@@ -34,7 +34,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-xdist
-  - sphinx==1.8.5
+  - sphinx
   - pandoc
   - pylint
   - flake8
