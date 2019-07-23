@@ -134,6 +134,7 @@ class SpectrumExtraction:
             acceptance=1,
             acceptance_off=bkg.a_off,
             obs_id=observation.obs_id,
+            gti=observation.gti,
         )
 
         if self.use_recommended_erange:

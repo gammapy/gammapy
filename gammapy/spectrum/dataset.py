@@ -45,7 +45,8 @@ class SpectrumDataset(Dataset):
         Mask to apply to the likelihood for fitting.
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
-
+    gti : '~gammapy.data.gti.GTI'
+        GTI of the observation or union of GTI if it is a stacked observation
 
     See Also
     --------
@@ -66,6 +67,7 @@ class SpectrumDataset(Dataset):
         mask_safe=None,
         mask_fit=None,
         obs_id=None,
+        gti=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -79,6 +81,7 @@ class SpectrumDataset(Dataset):
         self.model = model
         self.mask_safe = mask_safe
         self.obs_id = obs_id
+        self.gti = gti
 
     def __repr__(self):
         str_ = self.__class__.__name__
@@ -385,6 +388,8 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Relative background efficiency in the off region.
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
+    gti : '~gammapy.data.gti.GTI'
+        GTI of the observation or union of GTI if it is a stacked observation
 
     See Also
     --------
@@ -407,6 +412,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         acceptance=None,
         acceptance_off=None,
         obs_id=None,
+        gti=None,
     ):
 
         self.counts = counts
@@ -427,6 +433,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
         self.obs_id = obs_id
+        self.gti = gti
 
     def __repr__(self):
         str_ = self.__class__.__name__
@@ -838,6 +845,7 @@ class SpectrumDatasetOnOffStacker:
         self.stacked_bkscal_on = None
         self.stacked_bkscal_off = None
         self.stacked_obs = None
+        self.stacked_gti = None
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -849,6 +857,7 @@ class SpectrumDatasetOnOffStacker:
         self.stack_counts_vectors()
         self.stack_aeff()
         self.stack_edisp()
+        self.stack_gti()
         self.stack_obs()
         return self.stacked_obs
 
@@ -962,6 +971,18 @@ class SpectrumDatasetOnOffStacker:
         irf_stacker.stack_edisp()
         self.stacked_edisp = irf_stacker.stacked_edisp
 
+    def stack_gti(self):
+        """Stack GTI
+        """
+        first_gti = self.obs_list[0].gti
+        if first_gti is None:
+            self.stacked_gti = None
+        else:
+            stack_gti = first_gti.copy()
+            for obs in self.obs_list[1:]:
+                stack_gti = stack_gti.stack(obs.gti)
+            self.stacked_gti = stack_gti.union()
+
     def stack_obs(self):
         """Create stacked `~gammapy.spectrum.SpectrumDatasetOnOff`."""
         self.stacked_obs = SpectrumDatasetOnOff(
@@ -974,4 +995,5 @@ class SpectrumDatasetOnOffStacker:
             acceptance=self.stacked_on_vector.backscal,
             acceptance_off=self.stacked_off_vector.backscal,
             obs_id=[obs.obs_id for obs in self.obs_list],
+            gti=self.stacked_gti,
         )
