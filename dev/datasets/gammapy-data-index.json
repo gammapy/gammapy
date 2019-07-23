@@ -208,6 +208,12 @@
     "hashmd5": "b0471fe06a96141f22407878e24bac64"
    },
    {
+    "path": "catalogs/fermi/gll_psc_v19.fit.gz",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psc_v19.fit.gz",
+    "filesize": 2969858,
+    "hashmd5": "31f4fb79c3ee240cfd7de6bbe3cb825a"
+   },
+   {
     "path": "catalogs/fermi/gll_iem_v05_rev1_cutout.fits",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_iem_v05_rev1_cutout.fits",
     "filesize": 3121920,
@@ -554,6 +560,588 @@
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/Extended_archive_v15/Templates/W51C.fits",
     "filesize": 8640,
     "hashmd5": "fe1cfdd061a069b72a19c5a47c807e3d"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Extended_8years.txt",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Extended_8years.txt",
+    "filesize": 2636,
+    "hashmd5": "e9d6436927837c7160855a12dd689e25"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/LAT_extended_sources_8years.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/LAT_extended_sources_8years.fits",
+    "filesize": 34560,
+    "hashmd5": "70f8b8c19e8698fab4264701ec497100"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/LAT_extended_sources_8years.reg",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/LAT_extended_sources_8years.reg",
+    "filesize": 6068,
+    "hashmd5": "dd5b44333ab6848f3f562fcd2a15435f"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ2208.4+6443.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ2208.4+6443.xml",
+    "filesize": 822,
+    "hashmd5": "54e199baa242ebbbcd87eb10c392eb60"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1741.6-3917.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1741.6-3917.xml",
+    "filesize": 803,
+    "hashmd5": "aca86a5cf6f8b4281a48c7cad9c573ac"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1626.9-2431.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1626.9-2431.xml",
+    "filesize": 823,
+    "hashmd5": "b0ffc299179daeed50d965168ba86b01"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/Rosette.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/Rosette.xml",
+    "filesize": 791,
+    "hashmd5": "1ca7e7e35384272f0f6510f65d82b214"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1501.0-6310.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1501.0-6310.xml",
+    "filesize": 822,
+    "hashmd5": "bcd84361066c314ec016e3460aa69a10"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/RXJ1713-3946.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/RXJ1713-3946.xml",
+    "filesize": 715,
+    "hashmd5": "d383d0e670f4217f28e1f08608be84b9"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1813-178.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1813-178.xml",
+    "filesize": 828,
+    "hashmd5": "403bd93e54b31b66cf62ff41da315a71"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ2301.9+5855.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ2301.9+5855.xml",
+    "filesize": 790,
+    "hashmd5": "fdd6cfae127fd4bb1c957cbf30df8198"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/MSH15-56PWN.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/MSH15-56PWN.xml",
+    "filesize": 703,
+    "hashmd5": "6661dd66c5558a79f1fca087a70b920f"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/Kes73.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/Kes73.xml",
+    "filesize": 788,
+    "hashmd5": "854154a0a0dce3037b6a5c433ef3c31a"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1303-631.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1303-631.xml",
+    "filesize": 805,
+    "hashmd5": "b0f87ed39eab2222a6bd636e86013aeb"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ0427.2+5533.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ0427.2+5533.xml",
+    "filesize": 793,
+    "hashmd5": "bc12f5c956fb3c5d9f87c800ea78ae91"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HB9.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HB9.xml",
+    "filesize": 784,
+    "hashmd5": "5022037145b31450de49d4e6e69647b8"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ0851.9-4620.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ0851.9-4620.xml",
+    "filesize": 800,
+    "hashmd5": "0c0a0dd10ff1c96a5c14d9fe96b21b09"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/CenALobes.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/CenALobes.xml",
+    "filesize": 703,
+    "hashmd5": "5a920a8081fad93d41fdea69aa14917a"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1614-518.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1614-518.xml",
+    "filesize": 803,
+    "hashmd5": "97e04e460c13df28adc18cb80ff04471"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1036.3-5833.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1036.3-5833.xml",
+    "filesize": 805,
+    "hashmd5": "3a3cd74d391d804f3117655e514cd147"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/LMC-30DorWest.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/LMC-30DorWest.xml",
+    "filesize": 703,
+    "hashmd5": "474a44c712fe21fd866828a5c49820af"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1553.8-5325.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1553.8-5325.xml",
+    "filesize": 802,
+    "hashmd5": "8d27014e08a93d03df676f51b57c37ea"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1514.2-5909.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1514.2-5909.xml",
+    "filesize": 796,
+    "hashmd5": "a0e2ec76761a430426c45bf505580c09"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1213.3-6240.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1213.3-6240.xml",
+    "filesize": 806,
+    "hashmd5": "d8e3200cdbb5d9f919cde91c7ee327fb"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1636.3-4731.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1636.3-4731.xml",
+    "filesize": 883,
+    "hashmd5": "efee681766839745640d54d335f0ccc6"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1642.1-5428.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1642.1-5428.xml",
+    "filesize": 820,
+    "hashmd5": "7a61acafc9f564ee92cc233c8f0c93a0"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/Monoceros.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/Monoceros.xml",
+    "filesize": 889,
+    "hashmd5": "42cab4707b94fa1f8d3e75a1691768d2"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ2304.0+5406.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ2304.0+5406.xml",
+    "filesize": 822,
+    "hashmd5": "3235a9879518fd1418db95605e7daebe"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HB21.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HB21.xml",
+    "filesize": 893,
+    "hashmd5": "3771a421bd1b197526380fcef0358632"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1804.7-2144.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1804.7-2144.xml",
+    "filesize": 803,
+    "hashmd5": "d9ea65af5264e3ec4cd4af042bbf4ebc"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1809-193.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1809-193.xml",
+    "filesize": 793,
+    "hashmd5": "da9f2e7da23937110c7388eccd70d815"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1023.3-5747.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1023.3-5747.xml",
+    "filesize": 800,
+    "hashmd5": "29f3aa8744813e96eb1aea836b19f23e"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/RCW86.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/RCW86.xml",
+    "filesize": 688,
+    "hashmd5": "7f8d15c142785329d037e7a27c0347e5"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1745.8-3028.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1745.8-3028.xml",
+    "filesize": 802,
+    "hashmd5": "96ade2a42cc3644c2d0cef199633b6fc"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/W28.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/W28.xml",
+    "filesize": 893,
+    "hashmd5": "3cbc8bbb5fc20f471faa7e4145bfea21"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1857.7+0246.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1857.7+0246.xml",
+    "filesize": 799,
+    "hashmd5": "958096535dddfa1fa399152a81f37067"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/S147.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/S147.xml",
+    "filesize": 692,
+    "hashmd5": "6f8ce195b1b8fc654cd7d1951b69ee44"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1409.1-6121.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1409.1-6121.xml",
+    "filesize": 803,
+    "hashmd5": "74fae54c61bbfe7cd490d319cd45edaf"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1825-137.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1825-137.xml",
+    "filesize": 909,
+    "hashmd5": "72ccdf2a056a3165d54d3084bdc53dad"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/CygnusLoop.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/CygnusLoop.xml",
+    "filesize": 807,
+    "hashmd5": "e5d28e2984356121cffe913e4ca89334"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FornaxA.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FornaxA.xml",
+    "filesize": 691,
+    "hashmd5": "074f2ed5ab6b5b7a2153b21d1ef97c34"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1616-508.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1616-508.xml",
+    "filesize": 803,
+    "hashmd5": "f185b774124e2c75dca2286dcb41be42"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1836.5-0651.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1836.5-0651.xml",
+    "filesize": 802,
+    "hashmd5": "bf97234dda826019fc67add047fb211f"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1355.1-6420.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1355.1-6420.xml",
+    "filesize": 818,
+    "hashmd5": "23af2e257e7c20d8f8631ed57ce68585"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/W51C.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/W51C.xml",
+    "filesize": 777,
+    "hashmd5": "b2ab4fc57e378573bef826d176d757b7"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/CygnusCocoon.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/CygnusCocoon.xml",
+    "filesize": 778,
+    "hashmd5": "b2fcb235260d755aadde6e31cbfccb19"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/LMC-North.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/LMC-North.xml",
+    "filesize": 695,
+    "hashmd5": "ecf7c247ebac33311b1b8e53a6ea7cfe"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/IC443.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/IC443.xml",
+    "filesize": 901,
+    "hashmd5": "43f0fba75ffa4ccee0de3098809ca3b9"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1507.9-6228.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1507.9-6228.xml",
+    "filesize": 800,
+    "hashmd5": "e88e6df5bd9e6c5d6bddeb0b434b2264"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1109.4-6115.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1109.4-6115.xml",
+    "filesize": 890,
+    "hashmd5": "2555c7d77e47cde241dbb773c2b19b7d"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/MSH15-56SNR.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/MSH15-56SNR.xml",
+    "filesize": 706,
+    "hashmd5": "b2f9fe354039f2ef223361e9e0c0b75f"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/W30.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/W30.xml",
+    "filesize": 892,
+    "hashmd5": "f743f9af42bef960306abe32da4e1b02"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1808-204.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1808-204.xml",
+    "filesize": 940,
+    "hashmd5": "15d59ebb417712178b718394b5335b09"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/LMC-FarWest.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/LMC-FarWest.xml",
+    "filesize": 699,
+    "hashmd5": "8244d49e689d932b4df6b7584288f683"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1652.2-4633.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1652.2-4633.xml",
+    "filesize": 803,
+    "hashmd5": "8ba14e3558b20fda37139a8fbde5fad7"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/gammaCygni.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/gammaCygni.xml",
+    "filesize": 770,
+    "hashmd5": "ac3815894c2485972c345a84e886ec5e"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1420.3-6046.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1420.3-6046.xml",
+    "filesize": 820,
+    "hashmd5": "6698224f6c35fd37aa1a418e47290adf"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1834.1-0706.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1834.1-0706.xml",
+    "filesize": 797,
+    "hashmd5": "b4e9c21a34a7e442f6bb825cae9e7452"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/G42.8+0.6.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/G42.8+0.6.xml",
+    "filesize": 787,
+    "hashmd5": "85818b8a09fba029bbb3e43d631afff3"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/Kes79.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/Kes79.xml",
+    "filesize": 917,
+    "hashmd5": "1cda5e4c884f35ff5f2f2eae41b7e74a"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/W41.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/W41.xml",
+    "filesize": 810,
+    "hashmd5": "824e31cc79280757299e49101eb7f059"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1838.9-0704.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1838.9-0704.xml",
+    "filesize": 802,
+    "hashmd5": "c5ae234cf243b7134913cb1c12aaab90"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1534-571.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1534-571.xml",
+    "filesize": 824,
+    "hashmd5": "858c2927abadfb2965ff791c4316c42e"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HB3.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HB3.xml",
+    "filesize": 885,
+    "hashmd5": "06186e2e8b01d51eb0fc99b40551b74c"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/G296.5+10.0.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/G296.5+10.0.xml",
+    "filesize": 793,
+    "hashmd5": "bba3bf33919731d46c0c887a4a7c5827"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1655.5-4737.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1655.5-4737.xml",
+    "filesize": 800,
+    "hashmd5": "7f74d1441bb3ed960d69fe483b89e5b9"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ0534.5+2201.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ0534.5+2201.xml",
+    "filesize": 851,
+    "hashmd5": "a09aec5b26fdd7559378af2ac2e700dc"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ0822.1-4253.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ0822.1-4253.xml",
+    "filesize": 795,
+    "hashmd5": "f77abea3e1c1187f36ca8d0a8dd8bcbf"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1841-055.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/HESSJ1841-055.xml",
+    "filesize": 707,
+    "hashmd5": "54ee071708fba0c813312bd77de2b940"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ2129.9+5833.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ2129.9+5833.xml",
+    "filesize": 822,
+    "hashmd5": "cb605c9230eab6f5e3bcbba03c53017d"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1631.6-4756.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1631.6-4756.xml",
+    "filesize": 805,
+    "hashmd5": "2753ce53ca29ab8e0b5560dbde18f27c"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/W3.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/W3.xml",
+    "filesize": 782,
+    "hashmd5": "8ffb643cd1f8a2c8ff0579cc441d8ad9"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/LMC-Galaxy.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/LMC-Galaxy.xml",
+    "filesize": 791,
+    "hashmd5": "2f603483711898cb2a9416bcc18ce1e0"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/VelaX.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/VelaX.xml",
+    "filesize": 770,
+    "hashmd5": "77983c0573c3e3812d3175dc06e88f5e"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/W44.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/W44.xml",
+    "filesize": 790,
+    "hashmd5": "8ba67c7b48ce07f24f2ab6b17e877310"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/SMC-Galaxy.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/SMC-Galaxy.xml",
+    "filesize": 881,
+    "hashmd5": "e3e6754bc63da2e2fa5cc43d34e2d22d"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1633.0-4746.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FGESJ1633.0-4746.xml",
+    "filesize": 805,
+    "hashmd5": "1f6f45da0acc2e2e04b846bf158d30f7"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1723.5-0501.xml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/XML/FHESJ1723.5-0501.xml",
+    "filesize": 822,
+    "hashmd5": "f57763367b4ac14da65e972cd8cca755"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/CygnusLoop.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/CygnusLoop.fits",
+    "filesize": 31680,
+    "hashmd5": "a7ea3625dc4c9506e579724f61702f78"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-North.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-North.fits",
+    "filesize": 383040,
+    "hashmd5": "e3af30b762f6793347a9bd837790707c"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/MSH15-56_SNRmask.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/MSH15-56_SNRmask.fits",
+    "filesize": 164160,
+    "hashmd5": "eedcc05f842917106bd9ae1e68f48984"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/CenALobes.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/CenALobes.fits",
+    "filesize": 103680,
+    "hashmd5": "750789bc7adb1287abfae28a76f7c593"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/RCW86.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/RCW86.fits",
+    "filesize": 17280,
+    "hashmd5": "69de80b1f5b8d45f962adcebffa263b9"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/HB9.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/HB9.fits",
+    "filesize": 25920,
+    "hashmd5": "02f69bffabd133fd9f6035f9f9e11f32"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/Rosette.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/Rosette.fits",
+    "filesize": 14400,
+    "hashmd5": "7a0306cf469404fae6230c9b218edbb1"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-FarWest.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-FarWest.fits",
+    "filesize": 846720,
+    "hashmd5": "09e78a3b993c93e26752c2ed1808f718"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/HESSJ1841-055.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/HESSJ1841-055.fits",
+    "filesize": 31680,
+    "hashmd5": "e1c7594d2d3e625a9e288c8ac5781230"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/W44.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/W44.fits",
+    "filesize": 23040,
+    "hashmd5": "622426056c3931be2c77f149a920e87a"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/SMC-Galaxy.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/SMC-Galaxy.fits",
+    "filesize": 2905920,
+    "hashmd5": "31d7a9a2fb20cb93302f93ad642a0162"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/MSH15-56_PWN.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/MSH15-56_PWN.fits",
+    "filesize": 14400,
+    "hashmd5": "d122bc019d970720b28f4c9b1dea11f8"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-30DorWest.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-30DorWest.fits",
+    "filesize": 846720,
+    "hashmd5": "90325239f6002a1bdf3644d99fbd3027"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/W3.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/W3.fits",
+    "filesize": 5760,
+    "hashmd5": "d8884fbb37563e29c61c1c5d3852fe25"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/S147.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/S147.fits",
+    "filesize": 40320,
+    "hashmd5": "ef6e4f86de0ae34948b7c4d396f5f8bb"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/FornaxA.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/FornaxA.fits",
+    "filesize": 144000,
+    "hashmd5": "a46b46c69a78eb334856b5ee434ab184"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/RXJ1713_2016_250GeV.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/RXJ1713_2016_250GeV.fits",
+    "filesize": 69120,
+    "hashmd5": "a6ff1b27d7f888516729a166a5405d3c"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-Galaxy.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/LMC-Galaxy.fits",
+    "filesize": 4167360,
+    "hashmd5": "4226cd77a2ea0d703c4e9b94120bafb0"
+   },
+   {
+    "path": "catalogs/fermi/LAT_extended_sources_8years/Templates/W51C.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/LAT_extended_sources_8years/Templates/W51C.fits",
+    "filesize": 43200,
+    "hashmd5": "dea38edcb9002c986bfccef5e9b99ffe"
    },
    {
     "path": "catalogs/fermi/Extended_archive_v18/Extended_v18.log",
@@ -2070,8 +2658,8 @@
    {
     "path": "fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz",
     "url": "https://github.com/gammapy/gammapy-fermi-lat-data/raw/master/3fhl/galactic-center/fermi-3fhl-gc-events.fits.gz",
-    "filesize": 1914454,
-    "hashmd5": "68409a296aea8a68681986188f3e82ae"
+    "filesize": 2409727,
+    "hashmd5": "fc195f11fdef7f53774bc80f12a0db81"
    },
    {
     "path": "fermi-3fhl-gc/fermi-3fhl-gc-exposure-cube.fits.gz",
