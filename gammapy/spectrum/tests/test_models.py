@@ -11,6 +11,7 @@ from ..models import (
     PowerLaw2,
     ExponentialCutoffPowerLaw,
     ExponentialCutoffPowerLaw3FGL,
+    PLSuperExpCutoff4FGL,
     LogParabola,
     TableModel,
     AbsorbedSpectralModel,
@@ -94,6 +95,19 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.7349563611124971, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(2.6034046173089, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(5.340285560055799, "TeV cm-2 s-1"),
+    ),
+    dict(
+        name="plsec_4fgl",
+        model=PLSuperExpCutoff4FGL(
+            index_1=1.5,
+            index_2=2,
+            amplitude=1 / u.cm ** 2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            expfactor=1e-2 / u.TeV ** 2,
+        ),
+        val_at_2TeV=u.Quantity(0.3431043087721737, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(1.2125247, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(3.38072082, "TeV cm-2 s-1"),
     ),
     dict(
         name="logpar",
@@ -225,10 +239,10 @@ TEST_MODELS.append(
 TEST_MODELS.append(
     dict(
         name="compound6",
-        model=TEST_MODELS[7]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
-        val_at_2TeV=TEST_MODELS[7]["val_at_2TeV"] * 2,
-        integral_1_10TeV=TEST_MODELS[7]["integral_1_10TeV"] * 2,
-        eflux_1_10TeV=TEST_MODELS[7]["eflux_1_10TeV"] * 2,
+        model=TEST_MODELS[8]["model"] + u.Quantity(4, "cm-2 s-1 TeV-1"),
+        val_at_2TeV=TEST_MODELS[8]["val_at_2TeV"] * 2,
+        integral_1_10TeV=TEST_MODELS[8]["integral_1_10TeV"] * 2,
+        eflux_1_10TeV=TEST_MODELS[8]["eflux_1_10TeV"] * 2,
     )
 )
 

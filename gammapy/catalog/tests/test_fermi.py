@@ -11,13 +11,39 @@ from ...spectrum.models import (
     LogParabola,
     ExponentialCutoffPowerLaw3FGL,
     PLSuperExpCutoff3FGL,
+    PLSuperExpCutoff4FGL,
 )
 from .. import (
+    SourceCatalog4FGL,
     SourceCatalog3FGL,
     SourceCatalog2FHL,
     SourceCatalog1FHL,
     SourceCatalog3FHL,
 )
+
+SOURCES_4FGL = [
+    dict(
+        idx=0,
+        name="4FGL J0000.3-7355",
+        spec_type=PowerLaw,
+        dnde=u.Quantity(2.9476e-11, "cm-2 s-1 GeV-1"),
+        dnde_err=u.Quantity(5.3318e-12, "cm-2 s-1 GeV-1"),
+    ),
+    dict(
+        idx=3,
+        name="4FGL J0001.5+2113",
+        spec_type=LogParabola,
+        dnde=u.Quantity(2.8545e-8, "cm-2 s-1 GeV-1"),
+        dnde_err=u.Quantity(1.3324e-9, "cm-2 s-1 GeV-1"),
+    ),
+    dict(
+        idx=7,
+        name="4FGL J0002.8+6217",
+        spec_type=PLSuperExpCutoff4FGL,
+        dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
+        dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
+    ),
+]
 
 SOURCES_3FGL = [
     dict(
@@ -66,6 +92,19 @@ SOURCES_3FHL = [
         dnde_err=u.Quantity(4.219030630302381e-13, "cm-2 s-1 GeV-1"),
     ),
 ]
+
+
+@requires_data()
+class TestFermi4FGLObject:
+    @classmethod
+    @requires_dependency("uncertainties")
+    @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
+    def test_spectral_model(self, ref):
+        model = self.cat[ref["idx"]].spectral_model
+        dnde, dnde_err = model.evaluate_error(1 * u.GeV)
+        assert isinstance(model, ref["spec_type"])
+        assert_quantity_allclose(dnde, ref["dnde"])
+        assert_quantity_allclose(dnde_err, ref["dnde_err"])
 
 
 @requires_data()
