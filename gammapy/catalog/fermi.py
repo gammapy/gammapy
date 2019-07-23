@@ -76,11 +76,11 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             pars["amplitude"] = self.data["PLEC_Flux_Density"]
             pars["index_1"] = self.data["PLEC_Index"]
             pars["index_2"] = self.data["PLEC_Exp_Index"]
-            pars["expfactor"] = self.data["PLEC_Expfactor"]
+            pars["expfactor"] = self.data["PLEC_Expfactor"] / u.MeV ** pars["index_2"]
             errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
             errs["index_1"] = self.data["Unc_PLEC_Index"]
-            errs["index_2"] = self.data["Unc_PLEC_Exp_Index"]
-            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"]
+            errs["index_2"] = np.nan_to_num(self.data["Unc_PLEC_Exp_Index"])
+            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"] / u.MeV ** pars["index_2"]
             model = PLSuperExpCutoff4FGL(**pars)
         else:
             raise ValueError("Invalid spec_type: {!r}".format(spec_type))
@@ -1105,7 +1105,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 8-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v19.fit.gz"):
         filename = str(make_path(filename))
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
@@ -1113,13 +1113,14 @@ class SourceCatalog4FGL(SourceCatalog):
         source_name_key = "Source_Name"
         source_name_alias = (
             "Extended_Source_Name",
-            "0FGL_Name",
-            "1FGL_Name",
-            "2FGL_Name",
-            "1FHL_Name",
-            "ASSOC_TEV",
-            "ASSOC1",
-            "ASSOC2",
+            'ASSOC_FGL',
+            'ASSOC_FHL',
+            'ASSOC_GAM1',
+            'ASSOC_GAM2',
+            'ASSOC_GAM3',
+            'ASSOC_TEV',
+            'ASSOC1',
+            'ASSOC2',
         )
         super().__init__(
             table=table,
