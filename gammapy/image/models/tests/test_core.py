@@ -95,6 +95,12 @@ def test_sky_ellipse():
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
     assert_allclose(radius.value, semi_major.value)
+    # test rotation
+    semi_major = 2 * u.deg
+    semi_minor = 1 * u.deg
+    eccentricity = np.sqrt(1 - (semi_minor / semi_major) ** 2)
+    model_rot_test = SkyEllipse(0 * u.deg, 0 * u.deg, semi_major, eccentricity, 90 * u.deg)
+    assert_allclose(model_rot_test(0 * u.deg, 1.5 * u.deg).value, 0)
 
     # test the normalization for a disk (ellipse with e=0) at the Galactic Pole,
     # both analytically and comparing with the SkyDisk model
@@ -130,14 +136,14 @@ def test_sky_ellipse_edge():
         lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, theta="0 deg"
     )
     value_center = model(0 * u.deg, 0 * u.deg)
-    value_edge = model(r_0, 0 * u.deg)
+    value_edge = model(0 * u.deg, r_0)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
 
     edge = model.edge.quantity
-    value_edge_pwidth = model(r_0 + edge / 2, 0 * u.deg)
+    value_edge_pwidth = model(0 * u.deg, r_0 + edge / 2)
     assert_allclose((value_edge_pwidth / value_center).to_value(""), 0.05)
 
-    value_edge_nwidth = model(r_0 - edge / 2, 0 * u.deg)
+    value_edge_nwidth = model(0 * u.deg, r_0 - edge / 2)
     assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
 
 

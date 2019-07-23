@@ -302,8 +302,8 @@ class SkyEllipse(SkySpatialModel):
         Eccentricity of the ellipse (:math:`0< e< 1`).
     theta : `~astropy.coordinates.Angle`
         :math:`\theta`:
-        Rotation angle of the major semiaxis.  The rotation angle increases clockwise
-        (i.e., East of North) from the positive `lon` axis.
+        Rotation angle of the major semiaxis.  The rotation angle increases counter-clockwise
+        from the North direction.
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
         smooth edges of the model drops from 95% to 5% of its amplitude
@@ -322,7 +322,7 @@ class SkyEllipse(SkySpatialModel):
         from gammapy.image.models.core import SkyEllipse
         from gammapy.maps import Map, WcsGeom
 
-        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "30 deg")
+        model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "30 deg", frame= "galactic")
 
         m_geom = WcsGeom.create(binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT")
         coords = m_geom.get_coord()
@@ -332,15 +332,16 @@ class SkyEllipse(SkySpatialModel):
         skymap = Map.from_geom(m_geom, data=vals.value)
 
         _, ax, _ = skymap.smooth("0.05 deg").plot()
+
         transform = ax.get_transform('galactic')
         ax.scatter(2, 2, transform=transform, s=20, edgecolor='red', facecolor='red')
-        ax.text(2.0, 1.8, r"$(l_0, b_0)$", transform=transform, ha="center")
-        ax.plot([2, 2 + np.cos(np.pi / 6)], [2, 2 + np.sin(np.pi / 6)], color="r", transform=transform)
-        ax.hlines(y=2, color='r', linestyle='--', transform=transform, xmin=0, xmax=5)
-        ax.text(2.5, 2.06, r"$\theta$", transform=transform);
+        ax.text(1.7, 1.85, r"$(l_0, b_0)$", transform=transform, ha="center")
+        ax.plot([2, 2 + np.sin(np.pi / 6)], [2, 2 + np.cos(np.pi / 6)], color="r", transform=transform)
+        ax.vlines(x=2, color='r', linestyle='--', transform=transform, ymin=0, ymax=5)
+        ax.text(2.15, 2.3, r"$\theta$", transform=transform);
 
         plt.show()
-    """
+        """
 
     __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "theta", "_offset_by"]
 
@@ -397,8 +398,8 @@ class SkyEllipse(SkySpatialModel):
         """Evaluate the model (static function)."""
         # find the foci of the ellipse
         c = semi_major * e
-        lon_1, lat_1 = self._offset_by(lon_0, lat_0, 90 * u.deg - theta, c)
-        lon_2, lat_2 = self._offset_by(lon_0, lat_0, 270 * u.deg - theta, c)
+        lon_1, lat_1 = self._offset_by(lon_0, lat_0, theta, c)
+        lon_2, lat_2 = self._offset_by(lon_0, lat_0, 180 * u.deg + theta, c)
 
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
