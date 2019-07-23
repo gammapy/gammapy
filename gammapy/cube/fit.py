@@ -671,7 +671,7 @@ class MapEvaluator:
         else:
             energy = self.energy_center
 
-        return {"lon": lon.value, "lat": lat.value, "energy": energy.value}
+        return {"lon": lon.value, "lat": lat.value, "energy": energy}
 
     @property
     def needs_update(self):
