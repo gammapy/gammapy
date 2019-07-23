@@ -43,6 +43,9 @@ class SpectrumDataset(Dataset):
         Mask defining the safe data range.
     mask_fit : `~numpy.ndarray`
         Mask to apply to the likelihood for fitting.
+    obs_id : int or list of int
+        Observation id(s) corresponding to the (stacked) dataset.
+
 
     See Also
     --------
@@ -376,12 +379,12 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Mask defining the safe data range.
     mask_fit : `~numpy.array`
         Mask to apply to the likelihood for fitting.
-    backscale : `~numpy.array` or float
-        Relative background efficiency in
+    acceptance : `~numpy.array` or float
+        Relative background efficiency in the on region.
+    acceptance_off : `~numpy.array` or float
+        Relative background efficiency in the off region.
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
-    background : `~gammapy.spectrum.CountsSpectrum`
-        Background model use to simulate observation
 
     See Also
     --------
@@ -397,10 +400,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         counts=None,
         counts_off=None,
         livetime=None,
-        mask_fit=None,
         aeff=None,
         edisp=None,
         mask_safe=None,
+        mask_fit=None,
         acceptance=None,
         acceptance_off=None,
         obs_id=None,
