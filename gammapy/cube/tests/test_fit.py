@@ -78,7 +78,7 @@ def sky_model():
     return SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
-def get_map_dataset(sky_model, geom, geom_etrue, **kwargs):
+def get_map_dataset(sky_model, geom, geom_etrue, edisp=True, **kwargs):
     """This computes the total npred"""
     # define background model
     m = Map.from_geom(geom)
@@ -88,10 +88,13 @@ def get_map_dataset(sky_model, geom, geom_etrue, **kwargs):
     psf = get_psf(geom_etrue)
     exposure = get_exposure(geom_etrue)
 
-    # define energy dispersion
-    e_true = geom_etrue.get_axis_by_name("energy").edges
-    e_reco = geom.get_axis_by_name("energy").edges
-    edisp = EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+    if edisp:
+        # define energy dispersion
+        e_true = geom_etrue.get_axis_by_name("energy").edges
+        e_reco = geom.get_axis_by_name("energy").edges
+        edisp = EnergyDispersion.from_diagonal_response(e_true=e_true, e_reco=e_reco)
+    else:
+        edisp = None
 
     # define fit mask
     center = sky_model.spatial_model.position
@@ -126,8 +129,25 @@ def test_fake(sky_model, geom, geom_etrue):
     dataset.fake(314)
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
-    assert_allclose(real_dataset.counts.data.sum(), 6455)
+    assert_allclose(real_dataset.counts.data.sum(), 6455.037802)
     assert_allclose(dataset.counts.data.sum(), 6553)
+
+
+@requires_data()
+def test_different_exposure_unit(sky_model, geom, geom_etrue):
+    dataset_ref = get_map_dataset(sky_model, geom, geom_etrue, edisp=False)
+    npred_ref = dataset_ref.npred()
+
+    ebounds_true = np.logspace(2, 4, 4)
+    axis = MapAxis.from_edges(ebounds_true, name="energy", unit="GeV")
+    geom_gev = WcsGeom.create(
+        skydir=(0, 0), binsz=0.02, width=(2, 2), coordsys="GAL", axes=[axis]
+    )
+
+    dataset = get_map_dataset(sky_model, geom, geom_gev, edisp=False)
+    npred = dataset.npred()
+
+    assert_allclose(npred.data[0, 50, 50], npred_ref.data[0, 50, 50])
 
 
 @requires_data()
