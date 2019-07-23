@@ -43,14 +43,10 @@ class SpectrumDataset(Dataset):
         Mask defining the safe data range.
     mask_fit : `~numpy.ndarray`
         Mask to apply to the likelihood for fitting.
-<<<<<<< 254d4234395720352bd9c04c7c0fb6920b153249
     obs_id : int or list of int
         Observation id(s) corresponding to the (stacked) dataset.
-
-=======
     gti : '~gammapy.data.gti.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
->>>>>>> Add gti member to Dataset + gti stack to SpectrumStack
 
     See Also
     --------

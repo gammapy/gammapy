@@ -116,11 +116,10 @@ class TestSpectrumExtraction:
         assert_allclose(sigma_actual, results["sigma"], atol=1e-2)
         assert_allclose(containment_actual, results["containment"], rtol=1e-3)
 
-        for i_obs, obs in enumerate(observations):
-            gti_obs = obs.gti.table
-            gti_dataset = extraction.spectrum_observations[i_obs].gti.table
-            assert_allclose(gti_dataset["START"], gti_obs["START"])
-            assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
+        gti_obs = obs.gti.table
+        gti_dataset = extraction.spectrum_observations[0].gti.table
+        assert_allclose(gti_dataset["START"], gti_obs["START"])
+        assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
 
     @staticmethod
     def test_alpha(observations, bkg_estimate):
