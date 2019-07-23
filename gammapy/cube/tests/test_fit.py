@@ -124,14 +124,10 @@ def test_fake(sky_model, geom, geom_etrue):
     dataset.counts = dataset.npred()
     real_dataset = dataset.copy()
     dataset.fake(314)
+
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
-    assert (
-        real_dataset.background_model.map.data.sum()
-        == dataset.background_model.map.data.sum()
-    )
-    assert real_dataset.exposure.data.sum() == dataset.exposure.data.sum()
-    assert int(real_dataset.counts.data.sum()) == 6455
-    assert dataset.counts.data.sum() == 6553
+    assert_allclose(real_dataset.counts.data.sum(), 6455)
+    assert_allclose(dataset.counts.data.sum(), 6553)
 
 
 @requires_data()
