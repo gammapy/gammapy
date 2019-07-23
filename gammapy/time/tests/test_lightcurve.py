@@ -37,7 +37,6 @@ def lc():
     table = Table(
         meta=meta,
         data=[
-            Column(Time(["2010-01-02", "2010-01-05"]).mjd, "time"),
             Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
             Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
             Column([1e-11, 3e-11], "flux", unit="cm-2 s-1"),
@@ -62,7 +61,7 @@ def test_lightcurve_properties_time(lc):
     time = lc.time
     assert time.scale == "utc"
     assert time.format == "mjd"
-    assert_allclose(time.mjd, [55198, 55201])
+    assert_allclose(time.mjd, [55198, 55202.5])
 
     assert_allclose(lc.time_min.mjd, [55197, 55199])
     assert_allclose(lc.time_max.mjd, [55199, 55206])
@@ -96,7 +95,7 @@ def test_lightcurve_read_write(tmpdir, lc, format):
     time = lc.time
     assert time.scale == "utc"
     assert time.format == "mjd"
-    assert_allclose(time.mjd, [55198, 55201])
+    assert_allclose(time.mjd, [55198, 55202.5])
 
 
 def test_lightcurve_fvar(lc):
@@ -137,12 +136,12 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
 @pytest.mark.parametrize(
     "time_format, output",
     [
-        ("mjd", ([55198.0, 55201], ([1.0, 2.0], [1.0, 5.0]))),
+        ("mjd", ([55198.0, 55202.5], ([1.0, 3.5], [1.0, 3.5]))),
         (
             "iso",
             (
-                [datetime(2010, 1, 2), datetime(2010, 1, 5)],
-                ([timedelta(1), timedelta(2)], [timedelta(1), timedelta(5)]),
+                [datetime(2010, 1, 2), datetime(2010, 1, 6, 12)],
+                ([timedelta(1), timedelta(3.5)], [timedelta(1), timedelta(3.5)]),
             ),
         ),
     ],
