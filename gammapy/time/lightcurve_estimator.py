@@ -89,20 +89,6 @@ class LightCurveEstimator3D:
 
         self._set_scale_model()
 
-    def t_start(self):
-        """Return the start times present in the counts meta"""
-        t_start = []
-        for dataset in self.datasets:
-            t_start.append(dataset.counts.meta["t_start"])
-        return t_start
-
-    def t_stop(self):
-        """Return the stop times present in the counts meta"""
-        t_stop = []
-        for dataset in self.datasets:
-            t_stop.append(dataset.counts.meta["t_stop"])
-        return t_stop
-
     def _set_scale_model(self):
         # set the model on all datasets
         for dataset in self.datasets.datasets:
