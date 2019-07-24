@@ -281,6 +281,8 @@ def get_spectrum_datasets():
     return [dataset_1, dataset_2]
 
 
+@requires_data()
+@requires_dependency("iminuit")
 def test_lightcurve_estimator_spectrum_datasets():
     datasets = get_spectrum_datasets()
 
@@ -325,6 +327,8 @@ def get_map_datasets():
     return [dataset_1, dataset_2]
 
 
+@requires_data()
+@requires_dependency("iminuit")
 def test_lightcurve_estimator_map_datasets():
     datasets = get_map_datasets()
 
