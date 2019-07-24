@@ -16,8 +16,7 @@ log = logging.getLogger(__name__)
 class LightCurveEstimator3D:
     """Flux Points estimated for each time bin.
 
-    Estimates flux points for a given list of datasets.
-    This new class will replace the current LightCurveEstimator
+    Estimates flux points for a given list of datasets, each per time bin.
 
     Parameters
     ----------
@@ -101,18 +100,18 @@ class LightCurveEstimator3D:
     def ref_model(self):
         return self.model.model
 
-    def run(self, eref, emin, emax, steps="all"):
+    def run(self, e_ref, e_min, e_max, steps="all"):
         """Run light curve extraction.
 
         Normalize integral and energy flux between emin and emax.
 
         Parameters
         ----------
-        eref : `~astropy.unit.Quantity`
+        e_ref : `~astropy.unit.Quantity`
             reference energy of dnde flux normalization
-        emin : `~astropy.unit.Quantity`
+        e_min : `~astropy.unit.Quantity`
             minimum energy of integral and energy flux normalization interval
-        emax : `~astropy.unit.Quantity`
+        e_max : `~astropy.unit.Quantity`
             minimum energy of integral and energy flux normalization interval
         steps : list of str
             Which steps to execute. Available options are:
@@ -130,9 +129,9 @@ class LightCurveEstimator3D:
         lightcurve : `~gammapy.time.LightCurve`
             the Light Curve object
         """
-        self.e_ref = eref
-        self.e_min = emin
-        self.e_max = emax
+        self.e_ref = e_ref
+        self.e_min = e_min
+        self.e_max = e_max
 
         rows = []
 
@@ -252,8 +251,6 @@ class LightCurveEstimator3D:
         result : dict
             Dict with an array with one entry per dataset with counts for the flux point.
         """
-        counts = []
-
         # TODO : use e_min and e_max interval for counts calculation
         # TODO : add off counts and excess? for DatasetOnOff
         # TODO : this may require a loop once we support Datasets per time bin
@@ -261,9 +258,9 @@ class LightCurveEstimator3D:
         if dataset.mask_safe is not None:
             mask &= dataset.mask_safe
 
-        counts.append(dataset.counts.data[mask].sum())
+        counts = dataset.counts.data[mask].sum()
 
-        return {"counts": np.array(counts, dtype=int)}
+        return {"counts": counts}
 
     def estimate_norm_ul(self, dataset):
         """Estimate upper limit for a flux point.
