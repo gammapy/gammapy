@@ -12,15 +12,12 @@ from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import energy_logspace
 from ...data import DataStore
-from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff, CountsSpectrum
+from ...spectrum import SpectrumExtraction
 from ...spectrum.tests.test_flux_point_estimator import simulate_spectrum_dataset, simulate_map_dataset
-from ...irf import EnergyDispersion, EffectiveAreaTable
-from ...spectrum.models import PowerLaw, PowerLaw2
+from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
 from ..lightcurve import LightCurve, LightCurveEstimator
 from ..lightcurve_estimator import LightCurveEstimator3D
-from ...cube import MapDataset
-from ...cube.models import SkyModel
 
 
 
