@@ -10,7 +10,7 @@ from ..utils.scripts import make_path
 from ..utils.table import table_from_row_data
 from ..stats.poisson import significance_on_off
 
-__all__ = ["LightCurve", "LightCurveEstimator"]
+__all__ = ["LightCurve"]
 
 
 class LightCurve:

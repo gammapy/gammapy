@@ -3,20 +3,14 @@ from datetime import datetime, timedelta
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord, Angle
 from astropy.time import Time
 import astropy.units as u
 from astropy.table import Table, Column
-from regions import CircleSkyRegion
 from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...utils.testing import assert_quantity_allclose
-from ...utils.energy import energy_logspace
-from ...data import DataStore
-from ...spectrum import SpectrumExtraction
 from ...spectrum.tests.test_flux_point_estimator import simulate_spectrum_dataset, simulate_map_dataset
 from ...spectrum.models import PowerLaw
-from ...background import ReflectedRegionsBackgroundEstimator
-from ..lightcurve import LightCurve, LightCurveEstimator
+from ..lightcurve import LightCurve
 from ..lightcurve_estimator import LightCurveEstimator3D
 
 
@@ -153,115 +147,6 @@ def test_lightcurve_plot_time(lc, time_format, output):
     t, terr = lc._get_times_and_errors(time_format)
     assert np.array_equal(t, output[0])
     assert np.array_equal(terr, output[1])
-
-
-# TODO: Reuse fixtures from spectrum tests
-@pytest.fixture(scope="session")
-def spec_extraction():
-    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
-    obs_ids = [23523, 23526]
-    observations = data_store.get_observations(obs_ids)
-
-    target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
-    on_region_radius = Angle("0.11 deg")
-    on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
-
-    bkg_estimator = ReflectedRegionsBackgroundEstimator(
-        on_region=on_region, observations=observations
-    )
-    bkg_estimator.run()
-
-    e_reco = energy_logspace(0.2, 100, 51, unit="TeV")  # fine binning
-    e_true = energy_logspace(0.05, 100, 201, unit="TeV")
-    extraction = SpectrumExtraction(
-        observations=observations,
-        bkg_estimate=bkg_estimator.result,
-        containment_correction=False,
-        e_reco=e_reco,
-        e_true=e_true,
-    )
-    extraction.run()
-    extraction.compute_energy_threshold(method_lo="area_max", area_percent_lo=10.0)
-    return extraction
-
-
-@requires_data()
-def test_lightcurve_estimator(spec_extraction):
-    lc_estimator = LightCurveEstimator(spec_extraction)
-
-    intervals = []
-    for obs in spec_extraction.observations:
-        intervals.append([obs.events.time[0], obs.events.time[-1]])
-
-    model = PowerLaw(
-        index=2.3 * u.Unit(""),
-        amplitude=3.4e-11 * u.Unit("1 / (cm2 s TeV)"),
-        reference=1 * u.TeV,
-    )
-
-    lc = lc_estimator.light_curve(
-        time_intervals=intervals, spectral_model=model, energy_range=[0.5, 100] * u.TeV
-    )
-    table = lc.table
-
-    assert isinstance(lc.table["time_min"][0], type(intervals[0][0].value))
-
-    assert_quantity_allclose(len(table), 2)
-
-    assert_allclose(table["flux"][0], 4.333763e-11, rtol=5e-3)
-    assert_allclose(table["flux"][-1], 3.527114e-11, rtol=5e-3)
-
-    assert_allclose(table["flux_err"][0], 4.135581e-12, rtol=5e-3)
-    assert_allclose(table["flux_err"][-1], 3.657088e-12, rtol=5e-3)
-
-    # TODO: change dataset and also add LC point with weak signal
-    # or even negative excess that is an UL
-    assert_allclose(table["flux_ul"][0], 5.550045e-11, rtol=5e-3)
-    assert not table["is_ul"][0]
-
-    # same but with threshold equal to 2 TeV
-    lc = lc_estimator.light_curve(
-        time_intervals=intervals, spectral_model=model, energy_range=[2, 100] * u.TeV
-    )
-    table = lc.table
-
-    assert_allclose(table["flux"][0], 5.0902e-12, rtol=5e-3)
-
-    # TODO: add test exercising e_reco selection
-    # TODO: add asserts on all measured quantities
-
-
-@requires_data()
-def test_lightcurve_interval_maker(spec_extraction):
-    table = LightCurveEstimator.make_time_intervals_fixes(500, spec_extraction)
-    intervals = list(zip(table["t_start"], table["t_stop"]))
-
-    assert len(intervals) == 9
-    t = intervals[0]
-    assert_allclose(t[1].value - t[0].value, 500 / (24 * 3600), rtol=1e-5)
-
-
-@requires_data()
-def test_lightcurve_adaptative_interval_maker(spec_extraction):
-    lc_estimator = LightCurveEstimator(spec_extraction)
-    separator = [
-        Time((53343.94050200008 + 53343.952979345195) / 2, scale="tt", format="mjd")
-    ]
-    table = lc_estimator.make_time_intervals_min_significance(
-        significance=3,
-        significance_method="lima",
-        energy_range=[0.2, 100] * u.TeV,
-        spectrum_extraction=spec_extraction,
-        separators=separator,
-    )
-    assert_allclose(table["significance"] >= 3, True)
-    assert_allclose(table["t_start"][5].value, 53343.927761, rtol=1e-10)
-    assert_allclose(table["alpha"][5], 0.0833333, rtol=1e-5)
-    assert len(table) == 52
-    assert_allclose(table["t_start"][0].value, 53343.922392, rtol=1e-10)
-    assert_allclose(table["t_stop"][-1].value, 53343.973528, rtol=1e-10)
-    val = (table["t_start"] < separator[0]) & (table["t_stop"] > separator[0])
-    assert_allclose(val, False)
 
 
 def get_spectrum_datasets():
