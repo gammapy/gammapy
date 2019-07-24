@@ -111,6 +111,7 @@ setup(
       'regions>=0.4',
       'pyyaml',
       'click',
+      'parfive',
     ],
     extras_require=dict(
       analysis=[
