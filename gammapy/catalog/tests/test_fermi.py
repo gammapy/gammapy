@@ -97,14 +97,19 @@ SOURCES_3FHL = [
 @requires_data()
 class TestFermi4FGLObject:
     @classmethod
+    def setup_class(cls):
+        cls.cat = SourceCatalog4FGL()
+
     @requires_dependency("uncertainties")
     @pytest.mark.parametrize("ref", SOURCES_4FGL, ids=lambda _: _["name"])
     def test_spectral_model(self, ref):
         model = self.cat[ref["idx"]].spectral_model
-        dnde, dnde_err = model.evaluate_error(1 * u.GeV)
+
+        e_ref = model.reference.quantity
+        dnde, dnde_err = model.evaluate_error(e_ref)
         assert isinstance(model, ref["spec_type"])
-        assert_quantity_allclose(dnde, ref["dnde"])
-        assert_quantity_allclose(dnde_err, ref["dnde_err"])
+        assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
+        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
 
 
 @requires_data()
