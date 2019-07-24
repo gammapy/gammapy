@@ -13,9 +13,12 @@ from ...utils.testing import assert_quantity_allclose
 from ...utils.energy import energy_logspace
 from ...data import DataStore
 from ...spectrum import SpectrumExtraction
+from ...spectrum.tests.test_flux_point_estimator import simulate_spectrum_dataset, simulate_map_dataset
 from ...spectrum.models import PowerLaw
 from ...background import ReflectedRegionsBackgroundEstimator
 from ..lightcurve import LightCurve, LightCurveEstimator
+from ..lightcurve_estimator import LightCurveEstimator3D
+
 
 
 # time time_min time_max flux flux_err flux_ul
@@ -259,3 +262,92 @@ def test_lightcurve_adaptative_interval_maker(spec_extraction):
     assert_allclose(table["t_stop"][-1].value, 53343.973528, rtol=1e-10)
     val = (table["t_start"] < separator[0]) & (table["t_stop"] > separator[0])
     assert_allclose(val, False)
+
+
+def get_spectrum_datasets():
+    model = PowerLaw()
+    dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
+    dataset_1.counts.meta = {
+        "t_start": Time('2010-01-01T00:00:00'),
+        "t_stop": Time('2010-01-01T01:00:00'),
+    }
+
+    dataset_2 = simulate_spectrum_dataset(model, random_state=1)
+    dataset_2.counts.meta = {
+        "t_start": Time('2010-01-01T01:00:00'),
+        "t_stop": Time('2010-01-01T02:00:00'),
+    }
+
+    return [dataset_1, dataset_2]
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_spectrum_datasets():
+    datasets = get_spectrum_datasets()
+
+    estimator = LightCurveEstimator3D(datasets, norm_n_values=3)
+    lightcurve = estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV)
+
+    assert_allclose(lightcurve.table["time_min"], [55197., 55197.041667])
+    assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(lightcurve.table["e_ref"], [10, 10])
+    assert_allclose(lightcurve.table["e_min"], [1 , 1])
+    assert_allclose(lightcurve.table["e_max"], [100, 100])
+    assert_allclose(lightcurve.table["ref_dnde"], [1e-14, 1e-14])
+    assert_allclose(lightcurve.table["ref_flux"], [9.9e-13, 9.9e-13])
+    assert_allclose(lightcurve.table["ref_eflux"], [4.60517e-12, 4.60517e-12])
+    assert_allclose(lightcurve.table["ref_e2dnde"], [1e-12, 1e-12])
+    assert_allclose(lightcurve.table["loglike"], [23.302288, 22.457766], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm"], [0.988127, 0.948108], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm_err"], [0.043985, 0.043498], rtol=1e-4)
+    assert_allclose(lightcurve.table["counts"], [2281, 2222])
+    assert_allclose(lightcurve.table["norm_errp"], [0.044231, 0.04377], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm_errn"], [0.04374, 0.043226], rtol=1e-5)
+    assert_allclose(lightcurve.table["norm_ul"], [1.077213, 1.036237], rtol=1e-5)
+    assert_allclose(lightcurve.table["sqrt_ts"], [37.16802, 37.168033], rtol=1e-5)
+    assert_allclose(lightcurve.table["ts"], [1381.461738, 1381.462675], rtol=1e-5)
+    assert_allclose(lightcurve.table[0]["norm_scan"], [0.2, 1., 5.])
+    assert_allclose(lightcurve.table[0]["dloglike_scan"], [444.426957, 23.375417, 3945.382802], rtol=1e-5)
+
+
+def get_map_datasets():
+    dataset_1 = simulate_map_dataset(random_state=0)
+    dataset_1.counts.meta = {
+        "t_start": Time('2010-01-01T00:00:00'),
+        "t_stop": Time('2010-01-01T01:00:00'),
+    }
+
+    dataset_2 = simulate_map_dataset(random_state=1)
+    dataset_2.counts.meta = {
+        "t_start": Time('2010-01-01T01:00:00'),
+        "t_stop": Time('2010-01-01T02:00:00'),
+    }
+
+    return [dataset_1, dataset_2]
+
+
+@requires_data()
+@requires_dependency("iminuit")
+def test_lightcurve_estimator_map_datasets():
+    datasets = get_map_datasets()
+
+    estimator = LightCurveEstimator3D(datasets, source="source")
+    steps = ["err", "counts", "ts", "norm-scan"]
+    lightcurve = estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
+
+    assert_allclose(lightcurve.table["time_min"], [55197., 55197.041667])
+    assert_allclose(lightcurve.table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(lightcurve.table["e_ref"], [10, 10])
+    assert_allclose(lightcurve.table["e_min"], [1 , 1])
+    assert_allclose(lightcurve.table["e_max"], [100, 100])
+    assert_allclose(lightcurve.table["ref_dnde"], [1e-13, 1e-13])
+    assert_allclose(lightcurve.table["ref_flux"], [9.9e-12, 9.9e-12])
+    assert_allclose(lightcurve.table["ref_eflux"], [4.60517e-11, 4.60517e-11])
+    assert_allclose(lightcurve.table["ref_e2dnde"], [1e-11, 1e-11])
+    assert_allclose(lightcurve.table["loglike"], [-86541.447142, -89740.436161])
+    assert_allclose(lightcurve.table["norm_err"], [0.042729, 0.042469], rtol=1e-4)
+    assert_allclose(lightcurve.table["counts"], [46648, 47321])
+    assert_allclose(lightcurve.table["sqrt_ts"], [54.034112, 53.920883], rtol=1e-5)
+    assert_allclose(lightcurve.table["ts"], [2919.685309, 2907.461611], rtol=1e-5)
+

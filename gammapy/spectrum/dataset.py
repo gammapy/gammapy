@@ -73,6 +73,10 @@ class SpectrumDataset(Dataset):
             raise ValueError("mask data must have dtype bool")
 
         self.counts = counts
+
+        if livetime is not None:
+            livetime = u.Quantity(livetime)
+
         self.livetime = livetime
         self.mask_fit = mask_fit
         self.aeff = aeff
@@ -417,6 +421,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         self.counts = counts
         self.counts_off = counts_off
+
+        if livetime is not None:
+            livetime = u.Quantity(livetime)
+
         self.livetime = livetime
         self.mask_fit = mask_fit
         self.aeff = aeff
