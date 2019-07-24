@@ -69,21 +69,19 @@ including the corrections related to the IRF and source temporal variability.
 
 As a first step, the User should create a `MapDataset` object, as described below:
 
-# 20 lines of code with for the `MapDataset` object setup.
+# 20 lines of code with the `MapDataset` object setup.
 
 This object will contain the pointing sky coordinates, the GTI, and the setup of all the 
 models (spectra, spatial morphology, temporal model) for any given source, and it is passed 
 as input parameter to the `MapDatasetEventSampler`. It is important to note that the 
-`MapDataset` object can store information for more than one source.
-Then, a `.sample` method will draw the sampled events and will provide an output 
-`~astropy.table.Table` object. The latter will containt the reconstructed sky positions, 
-energies, times, and an `EVENT_ID` and `MC_ID`. `EVENT_ID` is a unique number or a string 
-to identify the sampled event, while `MC_ID` is a unique ID (number or string) to identify 
-the model component the event was sampled from.
-The `MapDatasetSampler` should also fill the mandatory header information for event list 
-files decribed on `gamma-astro-data-formats`_.
-We note that the `MapDatasetSampler` will be designed to work alternatively for input flux or 
-counts maps.
+`MapDataset` object can store information for more than one source. Then, a `.sample` method 
+will draw the sampled events and will provide an output `~astropy.table.Table` object. The 
+latter will containt the reconstructed sky positions, energies, times, and an `EVENT_ID` and 
+`MC_ID`. `EVENT_ID` is a unique number or a string to identify the sampled event, while 
+`MC_ID` is a unique ID (number or string) to identify the model component the event was sampled
+from. The `MapDatasetSampler` should also fill the mandatory header information for event list 
+files decribed on `gamma-astro-data-formats`_. The `MapDatasetSampler` will be designed to work 
+alternatively for input flux or counts maps.
 
 The basic code structure is the following:
 
@@ -112,7 +110,7 @@ The general design of the `sample` method is as follows:
 	events_psf = PSFMap.distribute(evt)
 	events_edisp = EdispMap.distribute(events_psf)
 	events = Table('RA', 'DEC', 'ENERGY', 'TIME')
-    return EventList
+    return EventList[source1, source2, ...sourceN]
     
 In more detail, `sample` starts a loop over the sources stored into the `MapDataset` 
 object. Then, for each source, the `src.evaluate` method will calculate the predicted 
@@ -121,9 +119,9 @@ uses a Poisson distribution, with mean equal to the predicted counts, to estimat
 random number of sampled events.
 
 We propose to add a `sample` method in `~gamampy.cube.MapDataset` that will be the
-core of the sampling process. The `sample` is based on the 
-`~gammapy.utils.random.InverseCDFSampler` class described in `PR#2229`_ . The output 
-will be an `~astropy.table.Table` with columns: `TRUE_RA`, `TRUE_DEC` and `TRUE_ENERGIES`.
+core of the sampling process. The `sample` is based on the `~gammapy.utils.random.InverseCDFSampler` 
+class described in `PR#2229`_ . The output will be an `~astropy.table.Table` with columns: 
+`TRUE_RA`, `TRUE_DEC` and `TRUE_ENERGIES`.
 
 Then, the time will be sampled independently. This will be done through a `sample` 
 method that we propose to add into `~gammapy.time.models.LightCurveTableModel`
@@ -144,8 +142,8 @@ energies and positions, i.e. `RA`, `DEC` and `ENERGY`.
 Finally, the times and the energies/coordinates of the events will be merged into a 
 unique `~astropy.table.Table` with the columns:`RA`, `DEC` and `ENERGY and `TIME` .
  
-We note that the `MapDatasetEventSampler` can be used to simulate the background as well,
-although the IRF corrections will not be applied.
+The `MapDatasetEventSampler` can be used to sample background events as well, although 
+the IRF corrections will not be applied.
 
 
 Performance and precision evaluation
@@ -174,17 +172,11 @@ required. In future Gammapy possibly also supports event based analysis methods
 lists. For this reason binned simulations cannot present a full equivalent
 solution to event sampling.
 
-For the event sampling Gammapy could rely on external tools, such as gammalib
-or the IDL based Astri event sampler. As event sampling is a requirement for
-CTA science tools and the implementation effort is limited we favor to re-implement
-the event sampling in Gammapy. It also serves as a proof of concept of efficient
-event sampling in Python.
-
 The question of the API to simulate multiple observations from e.g. an `ObservationTable`
 or a list of `GTIs` as it is needed for simulating data for the CTA data challenge
-is not addressed in this PIG. For the scope of this PIG, the fundamental
-class `MapDatasetEventSampler` to simulate events corresponding to a given observation 
-and / or single GTI is in place.
+is not addressed in this PIG. For the scope of this PIG, the fundamental class 
+`MapDatasetEventSampler` to simulate events corresponding to a given observation 
+and/or single GTI is in place.
 
 The proposed Event Sampler will not provide, for each event, the corresponding
 `DETX` and `DETY` position. These will be added in a future development of the 
@@ -196,6 +188,7 @@ List of proposed pull requests
 
 This is a proposal for a list of pull requests implementing the proposed changes, 
 ordered by priority:
+
  1. Implement the `sample` method in `gammapy.cube.MapDataset` and add tests (v0.14).
  2. Implement the `sample` method in `gammapy.time.models.LightCurveTableModel` and `gammapy.time.models.PhaseCurveTableModel` and add tests (v0.14).
  3. Implement the `distribute` method in `gammapy.cube.PSFMap` and add tests (v0.14).
