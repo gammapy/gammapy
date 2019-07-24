@@ -17,7 +17,7 @@ from ...maps import MapAxis, WcsGeom
 
 
 # TODO: use pregenerate data instead
-def simulate_spectrum_dataset(model):
+def simulate_spectrum_dataset(model, random_state=0):
     energy = np.logspace(-0.5, 1.5, 21) * u.TeV
     aeff = EffectiveAreaTable.from_parametrization(energy=energy)
     bkg_model = PowerLaw(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
@@ -37,7 +37,7 @@ def simulate_spectrum_dataset(model):
     )
 
     bkg_model = eval.compute_npred()
-    dataset.fake(random_state=0, background_model=bkg_model)
+    dataset.fake(random_state=random_state, background_model=bkg_model)
     return dataset
 
 
@@ -48,7 +48,7 @@ def create_fpe(model):
     return FluxPointsEstimator(datasets=[dataset], e_edges=e_edges, norm_n_values=11)
 
 
-def simulate_map_dataset():
+def simulate_map_dataset(random_state=0):
     irfs = load_cta_irfs(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -65,7 +65,7 @@ def simulate_map_dataset():
     pwl = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
     dataset = simulate_dataset(
-        skymodel=skymodel, geom=geom, pointing=skydir, irfs=irfs, random_state=0
+        skymodel=skymodel, geom=geom, pointing=skydir, irfs=irfs, random_state=random_state
     )
     return dataset
 
