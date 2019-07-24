@@ -66,7 +66,7 @@ class LightCurve:
     @property
     def time(self):
         """Time (`~astropy.time.Time`)."""
-        return self._make_time("time")
+        return self.time_mid
 
     @property
     def time_min(self):
@@ -319,10 +319,7 @@ class LightCurve:
         """
         from matplotlib.dates import num2timedelta
 
-        try:
-            x = self.time
-        except KeyError:
-            x = self.time_mid
+        x = self.time
 
         try:
             xn, xp = x - self.time_min, self.time_max - x

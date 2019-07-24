@@ -2,5 +2,6 @@
 """Time analysis."""
 from .simulate import *
 from .lightcurve import *
+from .lightcurve_estimator import *
 from .events import *
 from .period import *
