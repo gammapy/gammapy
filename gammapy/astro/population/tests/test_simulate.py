@@ -117,7 +117,7 @@ def test_add_pulsar_parameters():
     assert table["age"].unit == "yr"
     assert_allclose(table["age"], [100, 1000])
     assert table["P0"].unit == "s"
-    assert_allclose(table["P0"], [0.220778, 0.246389], atol=1e-5)
+    assert_allclose(table["P0"], [0.214478, 0.246349], atol=1e-5)
     assert table["P1"].unit == ""
     assert_allclose(table["P1"], [6.310423e-13, 4.198294e-16], atol=1e-5)
     assert table["P0_birth"].unit == "s"
@@ -129,7 +129,7 @@ def test_add_pulsar_parameters():
     assert table["Tau0"].unit == "yr"
     assert_allclose(table["Tau0"], [5.131385e03, 9.294538e06], atol=1e-5)
     assert table["L_PSR"].unit == "erg / s"
-    assert_allclose(table["L_PSR"], [2.807844e36, 1.109265e33], rtol=1e-5)
+    assert_allclose(table["L_PSR"], [2.599229e+36, 1.108788e+33], rtol=1e-5)
     assert table["L0_PSR"].unit == "erg / s"
     assert_allclose(table["L0_PSR"], [2.701524e36, 1.109026e33], rtol=1e-5)
     assert table["B_PSR"].unit == "G"
