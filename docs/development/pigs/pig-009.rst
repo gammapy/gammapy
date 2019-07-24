@@ -101,28 +101,29 @@ The general design of the `sample` method is as follows:
 
 ::
 
-def sample(dataset, random_state)
-    """Sample events from a `MapDataset`"""
+    def sample(dataset, random_state)
+       """Sample events from a `MapDataset`"""
 
-    events_list = []
+       events_list = []
     
-    for evaluator in dataset.evaluators:
-        npred = evaluator.compute_npred()
-        n_events = random_state.poisson(npred.data.sum())
-        events = npred.sample(n_events, random_state)
-        events_list.append(events)
+       for evaluator in dataset.evaluators:
+            npred = evaluator.compute_npred()
+            n_events = random_state.poisson(npred.data.sum())
+            events = npred.sample(n_events, random_state)
+            events_list.append(events)
     
-    events_src = vstack(events_list)
-    events_src = dataset.psf.distribute(events_src, random_state)
-    events_src = dataset.edisp.distribute(events_src, random_state)
+       events_src = vstack(events_list)
+       events_src = dataset.psf.distribute(events_src, random_state)
+       events_src = dataset.edisp.distribute(events_src, random_state)
     
-    n_events_bkg = random_state.poisson(dataset.background_model.map.data.sum())
-    events_bkg = dataset.background_model.sample(n_events, random_state)
+       n_events_bkg = random_state.poisson(dataset.background_model.map.data.sum())
+       events_bkg = dataset.background_model.sample(n_events, random_state)
     
-    events_total = vstack([events_src, events_bkg])
-    events_total.meta = get_events_meta_data(dataset)
-    return EventList(events_total)
+       events_total = vstack([events_src, events_bkg])
+       events_total.meta = get_events_meta_data(dataset)
+       return EventList(events_total)
     
+
 In more detail, `sample` starts a loop over the sources stored into the `MapDataset` 
 object. Then, for each source, the `src.evaluate` method will calculate the predicted 
 number of source counts, that will be the input of the `npred_total` method. The latter 
