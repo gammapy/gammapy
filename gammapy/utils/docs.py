@@ -60,7 +60,7 @@ class DocsImage(Image):
                 "GAMMAPY_DATA not available. "
                 "Missing image: name: {!r} filename: {!r}".format(self.name, filename)
             )
-            self.options["alt"] = self.arguments[1]
+            self.options["alt"] = self.arguments[1] if len(self.arguments) > 1 else ''
 
         return super().run()
 
