@@ -36,7 +36,7 @@ Notebooks
    notebooks/spectrum_fitting_with_sherpa.ipynb
    notebooks/sed_fitting_gammacat_fermi.ipynb
    notebooks/fermi_lat.ipynb
-   notebooks/light_curve.ipynb
+   notebooks/lightcurve_3d.ipynb
    notebooks/cta_sensitivity.ipynb
    notebooks/spectrum_simulation.ipynb
    notebooks/image_analysis.ipynb
@@ -79,7 +79,7 @@ To get started with H.E.S.S. data analysis see here:
 
 Time-dependent analysis:
 
-- `Light curves <notebooks/light_curve.html>`__ | *light_curve.ipynb*
+- `Light curves <notebooks/lightcurve_3d.html>`__ | *lightcurve_3d.ipynb*
 
 Sensitivity:
 
