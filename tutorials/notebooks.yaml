@@ -79,10 +79,10 @@
     - fermi-3fhl-gc
   images:
     - gammapy_maps
-- name: lightcurve_3d
-  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/lightcurve_3d.ipynb
-  datasets:
-    - hess-dl3-dr1
+#- name: lightcurve_3d
+#  url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/lightcurve_3d.ipynb
+#  datasets:
+#    - hess-dl3-dr1
 - name: mcmc_sampling
   url: https://raw.githubusercontent.com/gammapy/gammapy/master/tutorials/mcmc_sampling.ipynb
   requires: emcee
