@@ -21,20 +21,20 @@ counts measurements.
 For on-off methods we will use the following variable names following the
 notation in [Cousins2007]_:
 
-================= ====================================================
-Variable          Definition
-================= ====================================================
-``n_on``          Total observed counts in the on region
-``n_off``         Total observed counts in the off region
-``mu_on``         Total expected counts in the on region
-``mu_off``        Total expected counts in the off region
-``mu_sig``        Signal expected counts in the on region
-``mu_bkg``        Background expected counts in the on region
-``a_on``          Relative background exposure in the on region  
-``a_off``         Relative background exposure in the off region
-``alpha``         Background efficiency ratio ``a_on`` / ``a_off``
-``n_bkg``         Background estimate in the on region
-================= ====================================================
+================= ====================== ====================================================
+Variable          Dataset attribute name Definition
+================= ====================== ====================================================
+``n_on``          ``counts``             Total observed counts in the on region
+``n_off``         ``counts_off``         Total observed counts in the off region
+``mu_on``         ``npred``              Total expected counts in the on region
+``mu_off``        ``npred_off``          Total expected counts in the off region
+``mu_sig``        ``npred_sig``          Signal expected counts in the on region
+``mu_bkg``        ``npred_bkg``          Background expected counts in the on region
+``a_on``          ``acceptance``         Relative background exposure in the on region
+``a_off``         ``acceptance_off``     Relative background exposure in the off region
+``alpha``         ``alpha``              Background efficiency ratio ``a_on`` / ``a_off``
+``n_bkg``         ``background``         Background estimate in the on region
+================= ====================== ====================================================
 
 The following formulae show how an on-off measurement :math:`(n_{on}, n_{off})`
 is related to the quantities in the above table:
