@@ -230,14 +230,15 @@ class MapDataset(Dataset):
     @property
     def parameters(self):
         """List of parameters (`~gammapy.utils.fitting.Parameters`)"""
+        parameters = []
+
+        if self.model:
+            parameters += self.model.parameters.parameters
+
         if self.background_model:
-            parameters = Parameters(
-                self.model.parameters.parameters
-                + self.background_model.parameters.parameters
-            )
-        else:
-            parameters = Parameters(self.model.parameters.parameters)
-        return parameters
+            parameters += self.background_model.parameters.parameters
+
+        return Parameters(parameters)
 
     @property
     def _geom(self):
@@ -253,24 +254,25 @@ class MapDataset(Dataset):
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
+        npred_total = Map.from_geom(self._geom)
+
         if self.background_model:
-            npred_total = self.background_model.evaluate()
-        else:
-            npred_total = Map.from_geom(self._geom)
+            npred_total += self.background_model.evaluate()
 
-        for evaluator in self._evaluators:
-            # if the model component drifts out of its support the evaluator has
-            # has to be updated
-            if evaluator.needs_update:
-                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
+        if self.model:
+            for evaluator in self._evaluators:
+                # if the model component drifts out of its support the evaluator has
+                # has to be updated
+                if evaluator.needs_update:
+                    evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
 
-            npred = evaluator.compute_npred()
+                npred = evaluator.compute_npred()
 
-            # avoid slow fancy indexing, when the shape is equivalent
-            if npred.data.shape == npred_total.data.shape:
-                npred_total += npred.data
-            else:
-                npred_total.data[evaluator.coords_idx] += npred.data
+                # avoid slow fancy indexing, when the shape is equivalent
+                if npred.data.shape == npred_total.data.shape:
+                    npred_total += npred.data
+                else:
+                    npred_total.data[evaluator.coords_idx] += npred.data
 
         return npred_total
 
