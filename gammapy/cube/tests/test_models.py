@@ -97,6 +97,20 @@ def sky_models_2(sky_model):
     return SkyModels([sky_model_4, sky_model_5])
 
 
+def test_sky_model_init():
+    with pytest.raises(ValueError) as excinfo:
+        spatial_model = SkyGaussian("0 deg", "0 deg", "0.1 deg")
+        _ = SkyModel(spectral_model=1234, spatial_model=spatial_model)
+
+    assert "Spectral model" in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = SkyModel(spectral_model=PowerLaw(), spatial_model=1234)
+
+    assert "Spatial model" in str(excinfo.value)
+
+
+
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
     result = sky_model + sky_model.copy()
     assert isinstance(result, SkyModels)

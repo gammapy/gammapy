@@ -4,6 +4,8 @@ import numpy as np
 import astropy.units as u
 from ..utils.fitting import Parameter, Model, Parameters
 from ..utils.scripts import make_path
+from ..spectrum.models import SpectralModel
+from ..image.models import SkySpatialModel
 from ..maps import Map
 
 __all__ = [
@@ -186,8 +188,19 @@ class SkyModel(SkyModelBase):
 
     def __init__(self, spatial_model, spectral_model, name="source"):
         self.name = name
+
+        if not isinstance(spatial_model, SkySpatialModel):
+            raise ValueError("Spatial model must be instance / subclass "
+                             " of `SkySpatialModel` and not {}.".format(spatial_model.__class__.__name__))
+
         self._spatial_model = spatial_model
+
+        if not isinstance(spectral_model, SpectralModel):
+            raise ValueError("Spectral model model must be instance / subclass "
+                             "of `SpectralModel` and not {}.".format(spatial_model.__class__.__name__))
+
         self._spectral_model = spectral_model
+
         parameters = (
             spatial_model.parameters.parameters + spectral_model.parameters.parameters
         )
