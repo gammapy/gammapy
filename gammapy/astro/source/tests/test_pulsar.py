@@ -44,19 +44,19 @@ def test_SimplePulsar_atnf():
 
 def test_Pulsar_period():
     """Test pulsar period"""
-    reference = Quantity([0.10000001, 0.10000123, 0.10012331, 0.11270709], "s")
+    reference = Quantity([0.1, 0.10000031, 0.10003081, 0.10303572], "s")
     assert_quantity_allclose(pulsar.period(time), reference)
 
 
 def test_Pulsar_peridod_dot():
     """Test pulsar period derivative"""
-    reference = [9.76562380e-19, 9.76550462e-19, 9.75359785e-19, 8.66460603e-19]
+    reference = [9.76562470e-19, 9.76559490e-19, 9.76261682e-19, 9.47790252e-19]
     assert_allclose(pulsar.period_dot(time), reference)
 
 
 def test_Pulsar_luminosity_spindown():
     """Test pulsar spin down luminosity"""
-    reference = [3.85531469e31, 3.85536174e31, 3.86006820e31, 4.34521233e31]
+    reference = [3.85531374e+31, 3.85526669e+31, 3.85056609e+31, 3.42064935e+31]
     assert_allclose(pulsar.luminosity_spindown(time).value, reference)
 
 
