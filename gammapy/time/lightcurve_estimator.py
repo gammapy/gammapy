@@ -8,12 +8,12 @@ from ..spectrum import SpectrumDatasetOnOff, FluxPoints
 from ..spectrum.models import ScaleModel
 from ..utils.table import table_from_row_data
 
-__all__ = [ "LightCurveEstimator3D"]
+__all__ = [ "LightCurveEstimator"]
 
 log = logging.getLogger(__name__)
 
 
-class LightCurveEstimator3D:
+class LightCurveEstimator:
     """Flux Points estimated for each time bin.
 
     Estimates flux points for a given list of datasets, each per time bin.

@@ -11,7 +11,7 @@ from ...utils.testing import assert_quantity_allclose
 from ...spectrum.tests.test_flux_point_estimator import simulate_spectrum_dataset, simulate_map_dataset
 from ...spectrum.models import PowerLaw
 from ..lightcurve import LightCurve
-from ..lightcurve_estimator import LightCurveEstimator3D
+from ..lightcurve_estimator import LightCurveEstimator
 
 
 
@@ -171,7 +171,7 @@ def get_spectrum_datasets():
 def test_lightcurve_estimator_spectrum_datasets():
     datasets = get_spectrum_datasets()
 
-    estimator = LightCurveEstimator3D(datasets, norm_n_values=3)
+    estimator = LightCurveEstimator(datasets, norm_n_values=3)
     lightcurve = estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV)
 
     assert_allclose(lightcurve.table["time_min"], [55197., 55197.041667])
@@ -217,7 +217,7 @@ def get_map_datasets():
 def test_lightcurve_estimator_map_datasets():
     datasets = get_map_datasets()
 
-    estimator = LightCurveEstimator3D(datasets, source="source")
+    estimator = LightCurveEstimator(datasets, source="source")
     steps = ["err", "counts", "ts", "norm-scan"]
     lightcurve = estimator.run(e_ref=10 * u.TeV, e_min=1 * u.TeV, e_max=100 * u.TeV, steps=steps)
 
