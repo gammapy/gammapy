@@ -583,5 +583,7 @@ def test_get_spectrum():
     region = CircleSkyRegion(center=center, radius=1 * u.deg)
 
     spec = m.get_spectrum(region=region)
-
     assert_allclose(spec.data, [13., 13., 13.])
+
+    spec = m.get_spectrum(region=region, func=np.mean)
+    assert_allclose(spec.data, [1., 1., 1.])

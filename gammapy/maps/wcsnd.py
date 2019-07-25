@@ -589,17 +589,17 @@ class WcsNDMap(WcsMap):
             Spectrum in the given region.
         """
         from ..spectrum import CountsSpectrum
+        energy_axis = self.geom.get_axis_by_name("energy")
 
         if region:
             mask = self.geom.region_mask([region])
+            data = self.data[mask].reshape(energy_axis.nbin, -1)
+            data = func(data, axis=1)
         else:
-            mask = 1
+            data = func(self.data, axis=(1, 2))
 
-        data = func(self.data * mask, axis=(1, 2))
-
-        energy_axis = self.geom.get_axis_by_name("energy")
         edges = energy_axis.edges
-        return CountsSpectrum(data=data, energy_lo=edges[:-1], energy_hi=edges[1:])
+        return CountsSpectrum(data=data, energy_lo=edges[:-1], energy_hi=edges[1:], unit=self.unit)
 
     def convolve(self, kernel, use_fft=True, **kwargs):
         """
