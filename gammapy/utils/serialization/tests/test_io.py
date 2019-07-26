@@ -5,7 +5,7 @@ from ...testing import requires_data
 from ....spectrum import models as spectral
 from ....image import models as spatial
 from ....cube.models import SkyModels
-from ...scripts import read_yaml, write_yaml
+from ...scripts import write_yaml
 from ...serialization import models_to_dict, dict_to_models
 from astropy.utils.data import get_pkg_data_filename
 
@@ -61,13 +61,14 @@ def test_yaml_io_3d():
     assert pars1["r_0"].unit == "deg"
 
     model2 = models[2]
-    assert model2.spectral_model.energy.data.tolist() == [34.171, 44.333, 57.517]
+    assert_allclose(
+        model2.spectral_model.energy.data, [34.171, 44.333, 57.517]
+    )
     assert model2.spectral_model.energy.unit == "MeV"
-    assert model2.spectral_model.values.data.tolist() == [
-        2.52894e-06,
-        1.2486e-06,
-        6.14648e-06,
-    ]
+    assert_allclose(
+        model2.spectral_model.values.data,
+        [2.52894e-06, 1.2486e-06, 6.14648e-06],
+    )
     assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
 
     assert isinstance(model2.spectral_model, spectral.TableModel)

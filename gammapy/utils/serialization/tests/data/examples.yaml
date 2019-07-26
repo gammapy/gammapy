@@ -1,8 +1,8 @@
-Components:
-- Name: source0
-  SkySpatialModel:
-    Type: SkyPointSource
-    Parameters:
+components:
+- name: source0
+  spatial:
+    type: SkyPointSource
+    parameters:
     - name: lon_0
       value: -50.
       factor: -500.
@@ -19,9 +19,9 @@ Components:
       min: -90.0
       max: 90.0
       frozen: true
-  SpectralModel:
-    Type: ExponentialCutoffPowerLaw
-    Parameters:
+  spectral:
+    type: ExponentialCutoffPowerLaw
+    parameters:
     - name: index
       value: 2.1
       factor: 2.1
@@ -54,10 +54,10 @@ Components:
       min: .nan
       max: .nan
       frozen: false
-- Name: source1
-  SkySpatialModel:
-    Type: SkyDisk
-    Parameters:
+- name: source1
+  spatial:
+    type: SkyDisk
+    parameters:
     - name: lon_0
       value: -50.
       unit: deg
@@ -70,9 +70,9 @@ Components:
       value: 0.2
       unit: deg
       frozen: false
-  SpectralModel:
-    Type: PowerLaw
-    Parameters:
+  spectral:
+    type: PowerLaw
+    parameters:
     - name: index
       value: 2.2
       factor: 2.2
@@ -97,30 +97,30 @@ Components:
       min: .nan
       max: .nan
       frozen: true
-- Name: source2
-  SkySpatialModel:
-    Type: SkyDiffuseMap
-    Filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
-    Parameters:
+- name: source2
+  spatial:
+    type: SkyDiffuseMap
+    filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
+    parameters:
     - name: norm
       value: 1.0
       unit: ''
       frozen: false
-  SpectralModel:
-    Type: TableModel
-    Energy:
+  spectral:
+    type: TableModel
+    energy:
       data:
       - 34.171
       - 44.333
       - 57.517
       unit: MeV
-    Values:
+    values:
       data:
       - 2.52894e-06
       - 1.2486e-06
       - 6.14648e-06
       unit: 1 / (cm2 MeV s sr)
-    Parameters:
+    parameters:
     - name: norm
       value: 2.1
       factor: 2.1
@@ -129,11 +129,11 @@ Components:
       min: .nan
       max: .nan
       frozen: false
-- Name: background_irf
-  ID: CTA-gc
-  Model:
-    Type: BackgroundModel
-    Parameters:
+- name: background_irf
+  id: CTA-gc
+  model:
+    type: BackgroundModel
+    parameters:
     - name: norm
       value: 1.01
       factor: 1.01
@@ -158,12 +158,12 @@ Components:
       min: .nan
       max: .nan
       frozen: true
-- Name: cube_iem
-  ID: Global
-  Filename: $GAMMAPY_DATA/fermi-3fhl/gll_iem_v06_cutout.fits
-  Model:
-    Type: BackgroundModel
-    Parameters:
+- name: cube_iem
+  id: global
+  filename: $GAMMAPY_DATA/fermi-3fhl/gll_iem_v06_cutout.fits
+  model:
+    type: BackgroundModel
+    parameters:
     - name: norm
       value: 1.09
       factor: 1.09
