@@ -43,21 +43,26 @@ def _configure_root_logger(level="info", format=None):
 
 
 def read_yaml(filename, logger=None):
-    """
-    Read YAML file
+    """Read YAML file.
 
     Parameters
     ----------
-    filename : `pathlib.Path`, str
-        File to read
-    """
-    filename = make_path(filename)
-    if logger is not None:
-        logger.info("Reading {}".format(filename))
-    with open(str(filename)) as fh:
-        dictionary = yaml.safe_load(fh)
+    filename : `~pathlib.Path`
+        Filename
+    logger : `~logging.Logger`
+        Logger
 
-    return dictionary
+    Returns
+    -------
+    data : dict
+        YAML file content as a dict
+    """
+    path = make_path(filename)
+    if logger is not None:
+        logger.info("Reading {}".format(path))
+
+    text = path.read_text()
+    return yaml.safe_load(text)
 
 
 def write_yaml(dictionary, filename, logger=None):
@@ -67,17 +72,18 @@ def write_yaml(dictionary, filename, logger=None):
     ----------
     dictionary : dict
         Python dictionary
-    filename : str, `~gammapy.exter.pathlib.Path`
-        file to write
+    filename : `~pathlib.Path`
+        Filename
+    logger : `~logging.Logger`
+        Logger
     """
-    filename = make_path(filename)
-    filename.parent.mkdir(exist_ok=True)
+    text = yaml.safe_dump(dictionary, default_flow_style=False)
+
+    path = make_path(filename)
+    path.parent.mkdir(exist_ok=True)
     if logger is not None:
-        logger.info("Writing {}".format(filename))
-    with open(str(filename), "w") as outfile:
-        outfile.write(
-            yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=False)
-        )
+        logger.info("Writing {}".format(path))
+    path.write_text(text)
 
 
 def make_path(path):
