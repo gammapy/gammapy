@@ -7,7 +7,6 @@ import sys
 import yaml
 from urllib.request import urlretrieve, urlopen
 from pathlib import Path
-from parfive import Downloader
 from .. import version
 
 log = logging.getLogger(__name__)
@@ -203,6 +202,12 @@ class ParallelDownload:
         self.bar = 0
 
     def run(self):
+        try:
+            from parfive import Downloader
+        except ImportError:
+            log.error("The parfive package needs to be installed to download files with gammapy download")
+            return
+
         if self.listfiles:
             log.info("Content will be downloaded in {}".format(self.outfolder))
 

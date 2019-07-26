@@ -111,7 +111,6 @@ setup(
       'regions>=0.4',
       'pyyaml',
       'click',
-      'parfive',
     ],
     extras_require=dict(
       analysis=[
@@ -120,6 +119,7 @@ setup(
           'naima',
           'iminuit>=1.3.2',
           'sherpa',
+          'parfive',
       ],
       plotting=[
           'matplotlib>=2.1',

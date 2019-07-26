@@ -33,7 +33,7 @@ env:
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
-        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy'
+        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy parfive'
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
@@ -67,7 +67,7 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.6 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click regions'
-               PIP_DEPENDENCIES='pytest-astropy'
+               PIP_DEPENDENCIES='pytest-astropy parfive'
 
         # Run tests without GAMMAPY_EXTRA available
         - os: linux
@@ -99,7 +99,7 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.6 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
-               PIP_DEPENDENCIES='uncertainties==3.0.* git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy'
+               PIP_DEPENDENCIES='uncertainties==3.0.* git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy parfive'
 
         # Test Fermipy master against gammapy master
         - os: linux
