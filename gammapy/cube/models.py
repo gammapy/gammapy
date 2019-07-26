@@ -1,12 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+from pathlib import Path
 import numpy as np
 import astropy.units as u
 from ..utils.fitting import Parameter, Model, Parameters
-from ..utils.scripts import make_path
 from ..spectrum.models import SpectralModel
 from ..image.models import SkySpatialModel
-from ..utils.scripts import make_path, write_yaml, name_from_path
 from ..utils.scripts import make_path, write_yaml
 from ..maps import Map
 
@@ -540,5 +539,6 @@ class BackgroundModels(Model):
 
     def to_yaml(self, filename, selection="all"):
         """Write to yaml file."""
+        from ..utils.serialization import models_to_dict
         components_dict = models_to_dict(self.models, selection)
         write_yaml(components_dict, filename)
