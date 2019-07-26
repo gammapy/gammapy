@@ -2,14 +2,12 @@
 import copy
 import numpy as np
 import astropy.units as u
-from pathlib import Path
 from ..utils.fitting import Parameter, Model, Parameters
 from ..utils.scripts import make_path
 from ..spectrum.models import SpectralModel
 from ..image.models import SkySpatialModel
 from ..utils.scripts import make_path, write_yaml, name_from_path
 from ..utils.scripts import make_path, write_yaml
-from ..utils.serialization.io import models_to_dict, dict_to_models
 from ..maps import Map
 
 __all__ = [
@@ -126,12 +124,14 @@ class SkyModels:
 
     @classmethod
     def from_yaml(cls, filename):
-        """Write to yaml file."""
+        """Write to YAML file."""
+        from ..utils.serialization import dict_to_models
         skymodels = dict_to_models(filename)
         return cls(skymodels)
 
     def to_yaml(self, filename, selection="all"):
-        """Write to yaml file."""
+        """Write to YAML file."""
+        from ..utils.serialization import models_to_dict
         components_dict = models_to_dict(self.skymodels, selection)
         write_yaml(components_dict, filename)
 

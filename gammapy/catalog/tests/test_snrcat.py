@@ -13,7 +13,7 @@ def test_load_catalog_snrcat(tmpdir):
     assert len(table) > 300
     expected_colnames = ["Source_Name", "RAJ2000"]
     assert set(expected_colnames).issubset(table.colnames)
-    # Check if catalog can be serialised to FITS
+    # Check if catalog can be serialized to FITS
     filename = str(tmpdir / "snrcat_test.fits")
     table.write(filename)
 
@@ -23,6 +23,6 @@ def test_load_catalog_snrcat(tmpdir):
     expected_colnames = ["SNR_id", "source_id"]
     assert set(expected_colnames).issubset(table.colnames)
 
-    # Check if catalog can be serialised to FITS
+    # Check if catalog can be serialized to FITS
     filename = str(tmpdir / "obs_test.fits")
     table.write(filename)

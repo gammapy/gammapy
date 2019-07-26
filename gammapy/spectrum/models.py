@@ -213,11 +213,11 @@ class SpectralModel(Model):
         return self._parse_uarray(uarray) * unit
 
     @classmethod
-    def from_dict(cls, val):
+    def from_dict(cls, data):
         """Create from dict."""
-        val_copy = val.copy()
-        classname = val_copy.pop("Type")
-        parameters = Parameters.from_dict(val_copy)
+        data = data.copy()
+        classname = data.pop("type")
+        parameters = Parameters.from_dict(data)
         model = globals()[classname]()
         model.parameters = parameters
         model.parameters.covariance = parameters.covariance
@@ -1322,19 +1322,18 @@ class TableModel(SpectralModel):
         return norm * values
 
     def to_dict(self, selection="all"):
-        tmp_dict = {
-            "Type": self.__class__.__name__,
-            "Parameters": self.parameters.to_dict(selection)["Parameters"],
-            "Energy": {
+        return {
+            "type": self.__class__.__name__,
+            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "energy": {
                 "data": self.energy.data.tolist(),
                 "unit": str(self.energy.unit),
             },
-            "Values": {
+            "values": {
                 "data": self.values.data.tolist(),
                 "unit": str(self.values.unit),
             },
         }
-        return tmp_dict
 
 
 class ScaleModel(SpectralModel):

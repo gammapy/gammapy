@@ -40,8 +40,7 @@ class Model:
         return ss
 
     def to_dict(self, selection="all"):
-        tmp_dict = {
-            "Type": self.__class__.__name__,
-            "Parameters": self.parameters.to_dict(selection)["Parameters"],
+        return {
+            "type": self.__class__.__name__,
+            "parameters": self.parameters.to_dict(selection)["parameters"],
         }
-        return tmp_dict

@@ -393,7 +393,7 @@ def test_wcs_geom_equal(npix, binsz, coordsys, proj, skypos, axes, result):
 @pytest.mark.parametrize("node_type", ["edges", "center"])
 @pytest.mark.parametrize("interp", ["log", "lin", "sqrt"])
 def test_read_write(tmpdir, node_type, interp):
-    # Regression test for MapAxis interp and node_type FITS serialisation
+    # Regression test for MapAxis interp and node_type FITS serialization
     # https://github.com/gammapy/gammapy/issues/1887
     e_ax = MapAxis([1, 2], interp, "energy", node_type, "TeV")
     t_ax = MapAxis([3, 4], interp, "time", node_type, "s")

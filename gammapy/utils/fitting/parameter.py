@@ -180,11 +180,12 @@ class Parameter:
         ).format(**self.to_dict())
 
     def to_dict(self, selection="all"):
-        """
+        """Convert to dict.
+
         Parameters
         -----------
         selection : {"all", "simple"}
-            Selection of information to include.
+            Selection of information to include
         """
         if selection == "simple":
             return dict(
@@ -205,7 +206,7 @@ class Parameter:
                 frozen=self.frozen,
             )
         else:
-            raise ValueError("Invalid salection: {}".format(selection))
+            raise ValueError("Invalid selection: {!r}".format(selection))
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
@@ -347,12 +348,13 @@ class Parameters:
         return self.parameters[idx]
 
     def to_dict(self, selection="all"):
-        retval = dict(Parameters=[], Covariance=None)
+        data = dict(parameters=[], covariance=None)
         for par in self.parameters:
-            retval["Parameters"].append(par.to_dict(selection))
+            data["parameters"].append(par.to_dict(selection))
         if self.covariance is not None:
-            retval["Covariance"] = self.covariance.tolist()
-        return retval
+            data["covariance"] = self.covariance.tolist()
+
+        return data
 
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
@@ -375,25 +377,25 @@ class Parameters:
         return t
 
     @classmethod
-    def from_dict(cls, val):
-        pars = []
-        for par in val["Parameters"]:
-            pars.append(
-                Parameter(
-                    name=par["name"],
-                    factor=float(par["value"]),
-                    unit=par.get("unit", ""),
-                    min=float(par.get("min", np.nan)),
-                    max=float(par.get("max", np.nan)),
-                    frozen=par.get("frozen", False),
-                )
+    def from_dict(cls, data):
+        parameters = []
+        for par in data["parameters"]:
+            parameter = Parameter(
+                name=par["name"],
+                factor=float(par["value"]),
+                unit=par.get("unit", ""),
+                min=float(par.get("min", np.nan)),
+                max=float(par.get("max", np.nan)),
+                frozen=par.get("frozen", False),
             )
+            parameters.append(parameter)
+
         try:
-            covariance = np.array(val["covariance"])
+            covariance = np.array(data["covariance"])
         except KeyError:
             covariance = None
 
-        return cls(parameters=pars, covariance=covariance)
+        return cls(parameters=parameters, covariance=covariance)
 
     def covariance_to_table(self):
         """Convert covariance matrix to `~astropy.table.Table`."""

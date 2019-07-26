@@ -139,7 +139,7 @@ class ObservationStats(Stats):
     def to_dict(self):
         """Data as a dict.
 
-        This is useful for serialisation or putting the info in a table.
+        This is useful for serialization or putting the info in a table.
         """
         return {
             "obs_id": self.obs_id,

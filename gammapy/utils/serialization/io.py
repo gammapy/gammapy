@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
-"""
-Utilities to import and export models
-"""
-from astropy.units import Unit, Quantity
+"""Utilities to serialize models."""
+import astropy.units as u
+from ...image import models as spatial
+from ...spectrum import models as spectral
+from ...cube.models import SkyModel
 from ..scripts import read_yaml
+from ..fitting import Parameters
 
 
 def models_to_dict(components_list, selection="all"):
+    """TODO: describe"""
     dict_list = []
     for kc in components_list:
         tmp_dict = {}
@@ -29,16 +31,11 @@ def models_to_dict(components_list, selection="all"):
         if tmp_dict not in dict_list:
             dict_list.append(tmp_dict)
 
-    components_dict = {"Components": dict_list}
-    return components_dict
+    return {"Components": dict_list}
 
 
 def dict_to_models(filemodel):
-    from ..fitting import Parameters
-    from ...image import models as spatial
-    from ...spectrum import models as spectral
-    from ...cube.models import SkyModel
-
+    """TODO: describe"""
     components_list = read_yaml(filemodel)["Components"]
     models_list = []
     for kc in components_list:
@@ -51,20 +48,20 @@ def dict_to_models(filemodel):
                 spatial_model.parameters = Parameters.from_dict(item)
             else:
                 params = {
-                    x["name"]: x["value"] * Unit(x["unit"]) for x in item["Parameters"]
+                    x["name"]: x["value"] * u.Unit(x["unit"]) for x in item["Parameters"]
                 }
                 spatial_model = getattr(spatial, item["Type"])(**params)
                 spatial_model.parameters = Parameters.from_dict(item)
             item = kc["SpectralModel"]
             if "Energy" in list(item.keys()):
-                energy = Quantity(item["Energy"]["data"], item["Energy"]["unit"])
-                values = Quantity(item["Values"]["data"], item["Values"]["unit"])
+                energy = u.Quantity(item["Energy"]["data"], item["Energy"]["unit"])
+                values = u.Quantity(item["Values"]["data"], item["Values"]["unit"])
                 params = {"energy": energy, "values": values}
                 spectral_model = getattr(spectral, item["Type"])(**params)
                 spectral_model.parameters = Parameters.from_dict(item)
             else:
                 params = {
-                    x["name"]: x["value"] * Unit(x["unit"]) for x in item["Parameters"]
+                    x["name"]: x["value"] * u.Unit(x["unit"]) for x in item["Parameters"]
                 }
                 spectral_model = getattr(spectral, item["Type"])(**params)
                 spectral_model.parameters = Parameters.from_dict(item)
