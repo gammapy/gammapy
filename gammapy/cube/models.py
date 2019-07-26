@@ -333,6 +333,8 @@ class SkyDiffuseCube(SkyModelBase):
         self.map = map
         self.norm = Parameter("norm", norm)
         self.meta = {} if meta is None else meta
+        self.filename = filename
+        self.obs_id = obs_id
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
@@ -355,8 +357,8 @@ class SkyDiffuseCube(SkyModelBase):
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
-        name = name_from_path(filename)
-        return cls(m, name=name, file=filename)
+        name = Path(filename).stem
+        return cls(m, name=name, filename=filename)
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
@@ -406,9 +408,18 @@ class BackgroundModel(Model):
         Reference energy of the tilt.
     """
 
-    __slots__ = ["map", "norm", "tilt", "reference"]
+    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename", "obs_id"]
 
-    def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
+    def __init__(
+        self,
+        background,
+        norm=1,
+        tilt=0,
+        reference="1 TeV",
+        name="background",
+        filename=None,
+        obs_id=None,
+    ):
         axis = background.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
@@ -417,7 +428,9 @@ class BackgroundModel(Model):
         self.norm = Parameter("norm", norm, unit="", min=0)
         self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
         self.reference = Parameter("reference", reference, frozen=True)
-
+        self.name = name
+        self.filename = filename
+        self.obs_id = obs_id
         super().__init__([self.norm, self.tilt, self.reference])
 
     @property
@@ -465,7 +478,12 @@ class BackgroundModel(Model):
             model=skymodel, exposure=exposure, edisp=edisp, psf=psf
         )
         background = evaluator.compute_npred()
-        return cls(background=background, **kwargs)
+        background_model = cls(background=background, **kwargs)
+        background_model.name = skymodel.name
+        background_model.obs_id = skymodel.obs_id
+        if skymodel.__class__.__name__ == "SkyDiffuseCube":
+            background_model.filename = skymodel.filename
+        return background_model
 
     def __add__(self, model):
         models = [self]
@@ -519,3 +537,8 @@ class BackgroundModels(Model):
         model_ = self.copy()
         model_ += model
         return model_
+
+    def to_yaml(self, filename, selection="all"):
+        """Write to yaml file."""
+        components_dict = models_to_dict(self.models, selection)
+        write_yaml(components_dict, filename)
