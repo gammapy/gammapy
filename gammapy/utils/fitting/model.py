@@ -38,3 +38,9 @@ class Model:
             covariance = self.parameters.covariance_to_table()
             ss += "\n\t".join(covariance.pformat())
         return ss
+
+    def to_dict(self, selection="all"):
+        return {
+            "type": self.__class__.__name__,
+            "parameters": self.parameters.to_dict(selection)["parameters"],
+        }

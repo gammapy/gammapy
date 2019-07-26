@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+from pathlib import Path
 import numpy as np
 import astropy.units as u
 from ..utils.fitting import Parameter, Model, Parameters
-from ..utils.scripts import make_path
 from ..spectrum.models import SpectralModel
 from ..image.models import SkySpatialModel
+from ..utils.scripts import make_path, write_yaml
 from ..maps import Map
 
 __all__ = [
@@ -119,6 +120,21 @@ class SkyModels:
         filename = make_path(filename)
         with filename.open("w") as output:
             output.write(xml)
+
+    @classmethod
+    def from_yaml(cls, filename):
+        """Write to YAML file."""
+        from ..utils.serialization import dict_to_models
+        from ..utils.scripts import read_yaml
+        data = read_yaml(filename)
+        skymodels = dict_to_models(data)
+        return cls(skymodels)
+
+    def to_yaml(self, filename, selection="all"):
+        """Write to YAML file."""
+        from ..utils.serialization import models_to_dict
+        components_dict = models_to_dict(self.skymodels, selection)
+        write_yaml(components_dict, filename)
 
     def evaluate(self, lon, lat, energy):
         out = self.skymodels[0].evaluate(lon, lat, energy)
@@ -299,7 +315,16 @@ class SkyDiffuseCube(SkyModelBase):
 
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
-    def __init__(self, map, norm=1, meta=None, interp_kwargs=None, name="diffuse"):
+    def __init__(
+        self,
+        map,
+        norm=1,
+        meta=None,
+        interp_kwargs=None,
+        name="diffuse",
+        filename=None,
+        obs_id="Global",
+    ):
         self.name = name
         axis = map.geom.get_axis_by_name("energy")
 
@@ -309,6 +334,8 @@ class SkyDiffuseCube(SkyModelBase):
         self.map = map
         self.norm = Parameter("norm", norm)
         self.meta = {} if meta is None else meta
+        self.filename = filename
+        self.obs_id = obs_id
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
@@ -331,7 +358,8 @@ class SkyDiffuseCube(SkyModelBase):
         m = Map.read(filename, **kwargs)
         if m.unit == "":
             m.unit = "cm-2 s-1 MeV-1 sr-1"
-        return cls(m)
+        name = Path(filename).stem
+        return cls(m, name=name, filename=filename)
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
@@ -381,9 +409,18 @@ class BackgroundModel(Model):
         Reference energy of the tilt.
     """
 
-    __slots__ = ["map", "norm", "tilt", "reference"]
+    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename", "obs_id"]
 
-    def __init__(self, background, norm=1, tilt=0, reference="1 TeV"):
+    def __init__(
+        self,
+        background,
+        norm=1,
+        tilt=0,
+        reference="1 TeV",
+        name="background",
+        filename=None,
+        obs_id=None,
+    ):
         axis = background.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
             raise ValueError('Need an integrated map, energy axis node_type="edges"')
@@ -392,7 +429,9 @@ class BackgroundModel(Model):
         self.norm = Parameter("norm", norm, unit="", min=0)
         self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
         self.reference = Parameter("reference", reference, frozen=True)
-
+        self.name = name
+        self.filename = filename
+        self.obs_id = obs_id
         super().__init__([self.norm, self.tilt, self.reference])
 
     @property
@@ -440,7 +479,12 @@ class BackgroundModel(Model):
             model=skymodel, exposure=exposure, edisp=edisp, psf=psf
         )
         background = evaluator.compute_npred()
-        return cls(background=background, **kwargs)
+        background_model = cls(background=background, **kwargs)
+        background_model.name = skymodel.name
+        background_model.obs_id = skymodel.obs_id
+        if skymodel.__class__.__name__ == "SkyDiffuseCube":
+            background_model.filename = skymodel.filename
+        return background_model
 
     def __add__(self, model):
         models = [self]
@@ -494,3 +538,9 @@ class BackgroundModels(Model):
         model_ = self.copy()
         model_ += model
         return model_
+
+    def to_yaml(self, filename, selection="all"):
+        """Write to yaml file."""
+        from ..utils.serialization import models_to_dict
+        components_dict = models_to_dict(self.models, selection)
+        write_yaml(components_dict, filename)

@@ -212,18 +212,12 @@ class SpectralModel(Model):
         uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
         return self._parse_uarray(uarray) * unit
 
-    def to_dict(self):
-        """Convert to dict."""
-        retval = self.parameters.to_dict()
-        retval["name"] = self.__class__.__name__
-        return retval
-
     @classmethod
-    def from_dict(cls, val):
+    def from_dict(cls, data):
         """Create from dict."""
-        val_copy = val.copy()
-        classname = val_copy.pop("name")
-        parameters = Parameters.from_dict(val_copy)
+        data = data.copy()
+        classname = data.pop("type")
+        parameters = Parameters.from_dict(data)
         model = globals()[classname]()
         model.parameters = parameters
         model.parameters.covariance = parameters.covariance
@@ -1326,6 +1320,20 @@ class TableModel(SpectralModel):
         """Evaluate the model (static function)."""
         values = self._evaluate((energy,), clip=True)
         return norm * values
+
+    def to_dict(self, selection="all"):
+        return {
+            "type": self.__class__.__name__,
+            "parameters": self.parameters.to_dict(selection)["parameters"],
+            "energy": {
+                "data": self.energy.data.tolist(),
+                "unit": str(self.energy.unit),
+            },
+            "values": {
+                "data": self.values.data.tolist(),
+                "unit": str(self.values.unit),
+            },
+        }
 
 
 class ScaleModel(SpectralModel):

@@ -1,0 +1,190 @@
+components:
+- name: source0
+  spatial:
+    type: SkyPointSource
+    parameters:
+    - name: lon_0
+      value: -50.
+      factor: -500.
+      scale: 0.01
+      unit: deg
+      min: -180.0
+      max: 180.0
+      frozen: true
+    - name: lat_0
+      value: -0.05
+      factor: -5.
+      scale: 0.01
+      unit: deg
+      min: -90.0
+      max: 90.0
+      frozen: true
+  spectral:
+    type: ExponentialCutoffPowerLaw
+    parameters:
+    - name: index
+      value: 2.1
+      factor: 2.1
+      scale: 1.0
+      unit: ''
+      min: .nan
+      max: .nan
+      frozen: false
+    - name: amplitude
+      value: 2.3e-12
+      factor: 2.3
+      scale: 1.0e-12
+      unit: cm-2 s-1 TeV-1
+      min: .nan
+      max: .nan
+      frozen: false
+    - name: reference
+      value: 1.0
+      factor: 1.0
+      scale: 1.0
+      unit: TeV
+      min: .nan
+      max: .nan
+      frozen: true
+    - name: lambda_
+      value: 0.06
+      factor: 0.6
+      scale: 0.1
+      unit: TeV-1
+      min: .nan
+      max: .nan
+      frozen: false
+- name: source1
+  spatial:
+    type: SkyDisk
+    parameters:
+    - name: lon_0
+      value: -50.
+      unit: deg
+      frozen: false
+    - name: lat_0
+      value: -0.05
+      unit: deg
+      frozen: false
+    - name: r_0
+      value: 0.2
+      unit: deg
+      frozen: false
+  spectral:
+    type: PowerLaw
+    parameters:
+    - name: index
+      value: 2.2
+      factor: 2.2
+      scale: 1.0
+      unit: ''
+      min: .nan
+      max: .nan
+      frozen: false
+    - name: amplitude
+      value: 2.3e-12
+      factor: 2.3
+      scale: 1.0e-12
+      unit: cm-2 s-1 TeV-1
+      min: .nan
+      max: .nan
+      frozen: false
+    - name: reference
+      value: 1.0
+      factor: 1.0
+      scale: 1.0
+      unit: TeV
+      min: .nan
+      max: .nan
+      frozen: true
+- name: source2
+  spatial:
+    type: SkyDiffuseMap
+    filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
+    parameters:
+    - name: norm
+      value: 1.0
+      unit: ''
+      frozen: false
+  spectral:
+    type: TableModel
+    energy:
+      data:
+      - 34.171
+      - 44.333
+      - 57.517
+      unit: MeV
+    values:
+      data:
+      - 2.52894e-06
+      - 1.2486e-06
+      - 6.14648e-06
+      unit: 1 / (cm2 MeV s sr)
+    parameters:
+    - name: norm
+      value: 2.1
+      factor: 2.1
+      scale: 1.0
+      unit: ''
+      min: .nan
+      max: .nan
+      frozen: false
+- name: background_irf
+  id: CTA-gc
+  model:
+    type: BackgroundModel
+    parameters:
+    - name: norm
+      value: 1.01
+      factor: 1.01
+      scale: 1.0
+      unit: ''
+      min: 0.0
+      max: .nan
+      frozen: false
+    - name: tilt
+      value: 0.0
+      factor: 0.0
+      scale: 1.0
+      unit: ''
+      min: .nan
+      max: .nan
+      frozen: true
+    - name: reference
+      value: 1.0
+      factor: 1.0
+      scale: 1.0
+      unit: TeV
+      min: .nan
+      max: .nan
+      frozen: true
+- name: cube_iem
+  id: global
+  filename: $GAMMAPY_DATA/fermi-3fhl/gll_iem_v06_cutout.fits
+  model:
+    type: BackgroundModel
+    parameters:
+    - name: norm
+      value: 1.09
+      factor: 1.09
+      scale: 1.0
+      unit: ''
+      min: 0.0
+      max: .nan
+      frozen: false
+    - name: tilt
+      value: 0.0
+      factor: 0.0
+      scale: 1.0
+      unit: ''
+      min: .nan
+      max: .nan
+      frozen: true
+    - name: reference
+      value: 1.0
+      factor: 1.0
+      scale: 1.0
+      unit: TeV
+      min: .nan
+      max: .nan
+      frozen: true

@@ -130,7 +130,7 @@ i.e. if you don't pass extra options, this is equivalent to
 
 >>> hdu = fits.table_to_hdu(table)
 
-However, in this case, the column metadata that is serialised is
+However, in this case, the column metadata that is serialized is
 doesn't include the column ``description``.
 TODO: how to get consistent behaviour and FITS headers?
 
