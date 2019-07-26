@@ -1,19 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.utils.data import get_pkg_data_filename
 from ...testing import requires_data
 from ....spectrum import models as spectral
 from ....image import models as spatial
 from ....cube.models import SkyModels
-from ...scripts import write_yaml
+from ...scripts import read_yaml, write_yaml
 from ...serialization import models_to_dict, dict_to_models
-from astropy.utils.data import get_pkg_data_filename
 
 
 @requires_data()
-def test_yaml_io_3d():
+def test_dict_to_skymodels(tmpdir):
     filename = get_pkg_data_filename("data/examples.yaml")
-    models = dict_to_models(filename)
+    models_data = read_yaml(filename)
+    models = dict_to_models(models_data)
 
     assert len(models) == 3
 
@@ -61,13 +62,10 @@ def test_yaml_io_3d():
     assert pars1["r_0"].unit == "deg"
 
     model2 = models[2]
-    assert_allclose(
-        model2.spectral_model.energy.data, [34.171, 44.333, 57.517]
-    )
+    assert_allclose(model2.spectral_model.energy.data, [34.171, 44.333, 57.517])
     assert model2.spectral_model.energy.unit == "MeV"
     assert_allclose(
-        model2.spectral_model.values.data,
-        [2.52894e-06, 1.2486e-06, 6.14648e-06],
+        model2.spectral_model.values.data, [2.52894e-06, 1.2486e-06, 6.14648e-06]
     )
     assert model2.spectral_model.values.unit == "1 / (cm2 MeV s sr)"
 
@@ -79,10 +77,24 @@ def test_yaml_io_3d():
     # TODO problem of duplicate parameter name between SkyDiffuseMap and TableModel
     # assert model2.parameters["norm"].value == 2.1 # fail
 
-    models_dict = models_to_dict(models)
-    write_yaml(models_dict, "$GAMMAPY_DATA/tests/models/examples_write.yaml")
-    SkyModels.from_yaml("$GAMMAPY_DATA/tests/models/examples_write.yaml")
 
-    models_dict = models_to_dict(models, selection="simple")
-    write_yaml(models_dict, "$GAMMAPY_DATA/tests/models/examples_write_cut.yaml")
-    SkyModels.from_yaml("$GAMMAPY_DATA/tests/models/examples_write_cut.yaml")
+# TODO: test background model serialisation
+
+@requires_data()
+def test_sky_models_io(tmpdir):
+    # TODO: maybe change to a test case where we create a model programatically?
+    filename = get_pkg_data_filename("data/examples.yaml")
+    models = SkyModels.from_yaml(filename)
+
+    filename = str(tmpdir / "io_example.yaml")
+    models.to_yaml(filename)
+    SkyModels.from_yaml(filename)
+    # TODO: add asserts to check content
+
+    models.to_yaml(filename, selection="simple")
+    SkyModels.from_yaml(filename)
+    # TODO add assert to check content
+
+    # TODO: not sure if we should just round-trip, or if we should
+    # check YAML file content (e.g. against a ref file in the repo)
+    # or check serialised dict content

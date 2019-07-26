@@ -125,7 +125,9 @@ class SkyModels:
     def from_yaml(cls, filename):
         """Write to YAML file."""
         from ..utils.serialization import dict_to_models
-        skymodels = dict_to_models(filename)
+        from ..utils.scripts import read_yaml
+        data = read_yaml(filename)
+        skymodels = dict_to_models(data)
         return cls(skymodels)
 
     def to_yaml(self, filename, selection="all"):
