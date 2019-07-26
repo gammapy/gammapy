@@ -35,21 +35,17 @@ Releases
 Starting in fall 2018, we will create stable releases **every 2 months**.
 
 We plan to release Gammapy 1.0 in November 2019, and to add a Gammapy 0.15
-release in October 2019, to allow for increased user feedback before releasing
-1.0.
+release in October 2019, to support increased user testing and feedback before
+releasing 1.0.
 
 Our definition of Gammapy 1.0 is that Gammapy supports the major IACT analysis
 use cases (spectra, maps, lightcurves) and the work outlined below has been
 mostly achieved.
 
-Please note that likely we will continue to develop Gammapy at a rapid pace in
-the coming years, and likely will continue this development in the Gammapy 1.1,
-1.2, ... releases in 2020. If API stability in the 1.x series is deemed useful,
-we would have to do what e.g. CPython or other mature packages do, i.e. to
-release 2.0 immediately after 1.0, and then to develop Gammapy in 2.0, 2.1, 2.2,
-... and at some point to announce stability in the 2.x series or declare 2.x as
-completely unstable and to release a stable 3.0. The discusion and decision how
-to continue post v1.0 will be made in fall 2019.
+A roadmap and release plan post Gammapy v1.0 will be discussed and written in
+fall 2019. One option we could envision is to continue to develop Gammapy at a
+rapid pace and frequent releases throughout 2020 in the v1.x series, and to
+create bugfix releases for v1.0 in a v1.0.x series.
 
 * Gammapy 0.9 in November 2018
 * Gammapy 0.10 in January 2019
