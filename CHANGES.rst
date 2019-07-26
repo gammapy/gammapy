@@ -46,13 +46,6 @@ on Python 3.7, Ipython 7.5, Scipy 1.3, Matplotlib 3.1, Astropy 3.1, and Healpy 1
 These updates should be backwards compatible. Sripts and notebooks should
 run and give the same results.
 
-We also actively continued to write PIG documents to finish the development and
-feature planning for Gammapy v1.0. This includes proposals for a high level
-interface, improvements in data reduction, event sampling and time analysis.
-We already started the implementation of YAML serialisation for models, event
-sampling and better lightcurve estimation. Stay tuned for the next Gammapy
-release in September!
-
 
 **Contributors:**
 
