@@ -213,15 +213,13 @@ class ParallelDownload:
             md5 = ""
             if "hashmd5" in self.listfiles[rec]:
                 md5 = self.listfiles[rec]["hashmd5"]
-            ifolder = Path(path).parent
-            ifolder.mkdir(parents=True, exist_ok=True)
             retrieve = True
             if md5 and path.exists():
                 md5local = hashlib.md5(path.read_bytes()).hexdigest()
-                if md5local != md5:
+                if md5local == md5:
                     retrieve = False
             if retrieve:
-                dl.enqueue_file(url, path=str(path))
+                dl.enqueue_file(url, path=str(path.parent))
 
         try:
             dl.download()
