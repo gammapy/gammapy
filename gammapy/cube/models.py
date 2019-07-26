@@ -481,7 +481,6 @@ class BackgroundModel(Model):
         background = evaluator.compute_npred()
         background_model = cls(background=background, **kwargs)
         background_model.name = skymodel.name
-        background_model.obs_id = skymodel.obs_id
         if skymodel.__class__.__name__ == "SkyDiffuseCube":
             background_model.filename = skymodel.filename
         return background_model
