@@ -42,13 +42,13 @@ create a dedicated environment for the latest stable Gammapy version and a known
 good set of Gammapy dependencies (e.g. Python, Numpy and Astropy).
 
 Once Anaconda has been installed, use the following commands to install and activate
-the ``gammapy-0.12`` conda environment:
+the ``gammapy-0.13`` conda environment:
 
 .. code-block:: bash
 
-    curl -O https://gammapy.org/download/install/gammapy-0.12-environment.yml
-    conda env create -f gammapy-0.12-environment.yml
-    conda activate gammapy-0.12
+    curl -O https://gammapy.org/download/install/gammapy-0.13-environment.yml
+    conda env create -f gammapy-0.13-environment.yml
+    conda activate gammapy-0.13
 
 On Windows, comment out the lines for ``sherpa`` and ``healpy`` in the
 environment YAML file. These are optional dependencies that we are currently
@@ -65,7 +65,7 @@ Congratulations! You are all set to start using Gammapy!
 
 .. code-block:: bash
 
-    conda activate gammapy-0.12
+    conda activate gammapy-0.13
 
 Download tutorials
 ------------------
@@ -76,9 +76,9 @@ size to download is about 100 MB.
 
 .. code-block:: bash
 
-    gammapy download tutorials --release 0.12
+    gammapy download tutorials --release 0.13
     cd gammapy-tutorials
-    export GAMMAPY_DATA=$PWD/datasets-0.12
+    export GAMMAPY_DATA=$PWD/datasets-0.13
 
 You might want to put the definition of the ``$GAMMAPY_DATA`` environment
 variable in your shell profile setup file that is executed when you open a new
