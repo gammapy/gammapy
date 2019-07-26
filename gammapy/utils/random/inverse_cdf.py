@@ -108,9 +108,18 @@ class MapEventSampler:
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`.
     """
+
     time_unit = u.second
 
-    def __init__(self, npred_map, t_min, t_max, t_delta="1 s", temporal_model=None, random_state=0):
+    def __init__(
+        self,
+        npred_map,
+        t_min,
+        t_max,
+        t_delta="1 s",
+        temporal_model=None,
+        random_state=0,
+    ):
         self.npred_map = npred_map
         self.temporal_model = temporal_model
         self.t_min = Time(t_min)
@@ -144,11 +153,10 @@ class MapEventSampler:
             Sequence of coordinates and energies of the sampled events.
         """
         from ...maps import MapCoord
+
         n_events = self.npred_total if n_events is None else n_events
 
-        sampler = InverseCDFSampler(
-            self.npred_map.data, random_state=self.random_state
-        )
+        sampler = InverseCDFSampler(self.npred_map.data, random_state=self.random_state)
 
         coords_pix = sampler.sample(n_events)
         coords = self.npred_map.geom.pix_to_coord(coords_pix[::-1])
@@ -198,13 +206,13 @@ class MapEventSampler:
 
             pdf = self.temporal_model.evaluate_norm_at_time(t * self.time_unit)
 
-            sampler = InverseCDFSampler(
-                pdf=pdf, random_state=self.random_state
-            )
+            sampler = InverseCDFSampler(pdf=pdf, random_state=self.random_state)
             time_pix = sampler.sample(n_events)[0]
             time = np.interp(time_pix, np.arange(len(t)), t) * self.time_unit
         else:
-            time = self.random_state.uniform(high=t_stop, size=n_events) * self.time_unit
+            time = (
+                self.random_state.uniform(high=t_stop, size=n_events) * self.time_unit
+            )
 
         return time
 

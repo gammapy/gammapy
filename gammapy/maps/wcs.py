@@ -790,8 +790,12 @@ class WcsGeom(MapGeom):
         right = low_right.separation(up_right)
 
         # compute enclosed angles
-        angle_low_right = low_right.position_angle(up_right) - low_right.position_angle(low_left)
-        angle_up_left = up_left.position_angle(up_right) - low_left.position_angle(up_left)
+        angle_low_right = low_right.position_angle(up_right) - low_right.position_angle(
+            low_left
+        )
+        angle_up_left = up_left.position_angle(up_right) - low_left.position_angle(
+            up_left
+        )
 
         # compute area assuming a planar triangle
         area_low_right = 0.5 * low * right * np.sin(angle_low_right)

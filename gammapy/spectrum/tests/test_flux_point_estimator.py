@@ -23,18 +23,10 @@ def simulate_spectrum_dataset(model, random_state=0):
     bkg_model = PowerLaw(index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1")
 
     dataset = SpectrumDatasetOnOff(
-        aeff=aeff,
-        model=model,
-        livetime=100 * u.h,
-        acceptance=1,
-        acceptance_off=5,
+        aeff=aeff, model=model, livetime=100 * u.h, acceptance=1, acceptance_off=5
     )
 
-    eval = SpectrumEvaluator(
-        model=bkg_model,
-        aeff=aeff,
-        livetime=100 * u.h,
-    )
+    eval = SpectrumEvaluator(model=bkg_model, aeff=aeff, livetime=100 * u.h)
 
     bkg_model = eval.compute_npred()
     dataset.fake(random_state=random_state, background_model=bkg_model)
@@ -65,7 +57,11 @@ def simulate_map_dataset(random_state=0):
     pwl = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
     skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
     dataset = simulate_dataset(
-        skymodel=skymodel, geom=geom, pointing=skydir, irfs=irfs, random_state=random_state
+        skymodel=skymodel,
+        geom=geom,
+        pointing=skydir,
+        irfs=irfs,
+        random_state=random_state,
     )
     return dataset
 

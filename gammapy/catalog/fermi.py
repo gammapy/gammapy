@@ -80,7 +80,9 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
             errs["amplitude"] = self.data["Unc_PLEC_Flux_Density"]
             errs["index_1"] = self.data["Unc_PLEC_Index"]
             errs["index_2"] = np.nan_to_num(self.data["Unc_PLEC_Exp_Index"])
-            errs["expfactor"] = self.data["Unc_PLEC_Expfactor"] / u.MeV ** pars["index_2"]
+            errs["expfactor"] = (
+                self.data["Unc_PLEC_Expfactor"] / u.MeV ** pars["index_2"]
+            )
             model = PLSuperExpCutoff4FGL(**pars)
         else:
             raise ValueError("Invalid spec_type: {!r}".format(spec_type))
@@ -1113,14 +1115,14 @@ class SourceCatalog4FGL(SourceCatalog):
         source_name_key = "Source_Name"
         source_name_alias = (
             "Extended_Source_Name",
-            'ASSOC_FGL',
-            'ASSOC_FHL',
-            'ASSOC_GAM1',
-            'ASSOC_GAM2',
-            'ASSOC_GAM3',
-            'ASSOC_TEV',
-            'ASSOC1',
-            'ASSOC2',
+            "ASSOC_FGL",
+            "ASSOC_FHL",
+            "ASSOC_GAM1",
+            "ASSOC_GAM2",
+            "ASSOC_GAM3",
+            "ASSOC_TEV",
+            "ASSOC1",
+            "ASSOC2",
         )
         super().__init__(
             table=table,

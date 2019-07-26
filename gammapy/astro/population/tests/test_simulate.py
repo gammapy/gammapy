@@ -129,7 +129,7 @@ def test_add_pulsar_parameters():
     assert table["Tau0"].unit == "yr"
     assert_allclose(table["Tau0"], [5.131385e03, 9.294538e06], atol=1e-5)
     assert table["L_PSR"].unit == "erg / s"
-    assert_allclose(table["L_PSR"], [2.599229e+36, 1.108788e+33], rtol=1e-5)
+    assert_allclose(table["L_PSR"], [2.599229e36, 1.108788e33], rtol=1e-5)
     assert table["L0_PSR"].unit == "erg / s"
     assert_allclose(table["L0_PSR"], [2.701524e36, 1.109026e33], rtol=1e-5)
     assert table["B_PSR"].unit == "G"

@@ -126,6 +126,7 @@ class SkyModels:
         """Write to YAML file."""
         from ..utils.serialization import dict_to_models
         from ..utils.scripts import read_yaml
+
         data = read_yaml(filename)
         skymodels = dict_to_models(data)
         return cls(skymodels)
@@ -133,6 +134,7 @@ class SkyModels:
     def to_yaml(self, filename, selection="all"):
         """Write to YAML file."""
         from ..utils.serialization import models_to_dict
+
         components_dict = models_to_dict(self.skymodels, selection)
         write_yaml(components_dict, filename)
 
@@ -206,14 +208,22 @@ class SkyModel(SkyModelBase):
         self.name = name
 
         if not isinstance(spatial_model, SkySpatialModel):
-            raise ValueError("Spatial model must be instance / subclass "
-                             " of `SkySpatialModel` and not {}.".format(spatial_model.__class__.__name__))
+            raise ValueError(
+                "Spatial model must be instance / subclass "
+                " of `SkySpatialModel` and not {}.".format(
+                    spatial_model.__class__.__name__
+                )
+            )
 
         self._spatial_model = spatial_model
 
         if not isinstance(spectral_model, SpectralModel):
-            raise ValueError("Spectral model model must be instance / subclass "
-                             "of `SpectralModel` and not {}.".format(spatial_model.__class__.__name__))
+            raise ValueError(
+                "Spectral model model must be instance / subclass "
+                "of `SpectralModel` and not {}.".format(
+                    spatial_model.__class__.__name__
+                )
+            )
 
         self._spectral_model = spectral_model
 
@@ -541,5 +551,6 @@ class BackgroundModels(Model):
     def to_yaml(self, filename, selection="all"):
         """Write to yaml file."""
         from ..utils.serialization import models_to_dict
+
         components_dict = models_to_dict(self.models, selection)
         write_yaml(components_dict, filename)

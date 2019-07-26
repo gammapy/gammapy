@@ -1343,7 +1343,7 @@ class FluxPointsDataset(Dataset):
     def _e_unit(self):
         return self.data.e_ref.unit
 
-    def plot_residuals(self, ax=None, method="diff",  **kwargs):
+    def plot_residuals(self, ax=None, method="diff", **kwargs):
         """Plot flux point residuals.
 
         Parameters
@@ -1389,11 +1389,7 @@ class FluxPointsDataset(Dataset):
         kwargs.setdefault("color", "black")
 
         ax.errorbar(
-            self.data.e_ref.value,
-            residuals.value,
-            xerr=xerr,
-            yerr=yerr,
-            **kwargs
+            self.data.e_ref.value, residuals.value, xerr=xerr, yerr=yerr, **kwargs
         )
 
         # format axes

@@ -8,7 +8,7 @@ from ..spectrum import SpectrumDatasetOnOff, FluxPoints
 from ..spectrum.models import ScaleModel
 from ..utils.table import table_from_row_data
 
-__all__ = [ "LightCurveEstimator"]
+__all__ = ["LightCurveEstimator"]
 
 log = logging.getLogger(__name__)
 
@@ -40,17 +40,18 @@ class LightCurveEstimator:
         reoptimize other parameters during likelihod scan
     """
 
-    def __init__(self,
-                 datasets,
-                 source='',
-                 norm_min=0.2,
-                 norm_max=5,
-                 norm_n_values=11,
-                 norm_values=None,
-                 sigma=1,
-                 sigma_ul=2,
-                 reoptimize=False,
-                 ):
+    def __init__(
+        self,
+        datasets,
+        source="",
+        norm_min=0.2,
+        norm_max=5,
+        norm_n_values=11,
+        norm_values=None,
+        sigma=1,
+        sigma_ul=2,
+        reoptimize=False,
+    ):
 
         if not isinstance(datasets, Datasets):
             datasets = Datasets(datasets)
@@ -136,8 +137,10 @@ class LightCurveEstimator:
         rows = []
 
         for dataset in self.datasets.datasets:
-            row = {'time_min':dataset.counts.meta['t_start'].mjd,
-                         'time_max': dataset.counts.meta['t_stop'].mjd}
+            row = {
+                "time_min": dataset.counts.meta["t_start"].mjd,
+                "time_max": dataset.counts.meta["t_stop"].mjd,
+            }
             row.update(self.estimate_time_bin_flux(dataset, steps))
             rows.append(row)
 
@@ -185,9 +188,11 @@ class LightCurveEstimator:
 
         if not result.pop("success"):
             log.warning(
-                    "Fit failed for time bin between {t_min} and {t_max},"
-                    " setting NaN.".format(t_min=dataset.counts.meta["t_start"],
-                                           t_max=dataset.counts.meta["t_stop"])
+                "Fit failed for time bin between {t_min} and {t_max},"
+                " setting NaN.".format(
+                    t_min=dataset.counts.meta["t_start"],
+                    t_max=dataset.counts.meta["t_stop"],
+                )
             )
 
         if steps == "all":
@@ -213,8 +218,7 @@ class LightCurveEstimator:
 
         return result
 
-
-    #TODO : most of the following code is copied from FluxPointsEstimator, can it be restructured?
+    # TODO : most of the following code is copied from FluxPointsEstimator, can it be restructured?
     def estimate_norm_errn_errp(self):
         """Estimate asymmetric errors for a flux point.
 

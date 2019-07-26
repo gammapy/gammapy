@@ -6,10 +6,7 @@ from ...spectrum import models as spectral
 from ...cube.models import SkyModel
 from ..fitting import Parameters
 
-__all__ = [
-    "models_to_dict",
-    "dict_to_models",
-]
+__all__ = ["models_to_dict", "dict_to_models"]
 
 
 def models_to_dict(models, selection="all"):
@@ -82,10 +79,7 @@ def _dict_to_skymodel(model):
         spatial_model.filename = item["filename"]
         spatial_model.parameters = Parameters.from_dict(item)
     else:
-        params = {
-            x["name"]: x["value"] * u.Unit(x["unit"])
-            for x in item["parameters"]
-        }
+        params = {x["name"]: x["value"] * u.Unit(x["unit"]) for x in item["parameters"]}
         spatial_model = getattr(spatial, item["type"])(**params)
         spatial_model.parameters = Parameters.from_dict(item)
 
@@ -97,15 +91,10 @@ def _dict_to_skymodel(model):
         spectral_model = getattr(spectral, item["type"])(**params)
         spectral_model.parameters = Parameters.from_dict(item)
     else:
-        params = {
-            x["name"]: x["value"] * u.Unit(x["unit"])
-            for x in item["parameters"]
-        }
+        params = {x["name"]: x["value"] * u.Unit(x["unit"]) for x in item["parameters"]}
         spectral_model = getattr(spectral, item["type"])(**params)
         spectral_model.parameters = Parameters.from_dict(item)
 
     return SkyModel(
-        name=model["name"],
-        spatial_model=spatial_model,
-        spectral_model=spectral_model,
+        name=model["name"], spatial_model=spatial_model, spectral_model=spectral_model
     )

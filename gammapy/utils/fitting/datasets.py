@@ -20,11 +20,12 @@ class Dataset(abc.ABC):
     - `gammapy.spectrum.SpectrumDataset`
     - `gammapy.spectrum.FluxPointsDataset`
     """
+
     _residuals_labels = {
-            "diff": "data - model",
-            "diff/model": "(data - model) / model",
-            "diff/sqrt(model)": "(data - model) / sqrt(model)",
-        }
+        "diff": "data - model",
+        "diff/model": "(data - model) / model",
+        "diff/sqrt(model)": "(data - model) / sqrt(model)",
+    }
 
     @property
     def mask(self):

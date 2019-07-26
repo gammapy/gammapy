@@ -80,6 +80,7 @@ def test_dict_to_skymodels(tmpdir):
 
 # TODO: test background model serialisation
 
+
 @requires_data()
 def test_sky_models_io(tmpdir):
     # TODO: maybe change to a test case where we create a model programatically?

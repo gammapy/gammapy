@@ -110,7 +110,6 @@ def test_sky_model_init():
     assert "Spatial model" in str(excinfo.value)
 
 
-
 def test_skymodel_addition(sky_model, sky_models, sky_models_2, diffuse_model):
     result = sky_model + sky_model.copy()
     assert isinstance(result, SkyModels)

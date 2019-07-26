@@ -123,7 +123,14 @@ def test_map_sampling():
     t_min = Time("2010-01-01T00:00:00")
     t_max = Time("2010-01-01T08:00:00")
 
-    sampler = MapEventSampler(npred, t_min=t_min, t_max=t_max,  temporal_model=temporal_model, random_state=0, t_delta="10 min")
+    sampler = MapEventSampler(
+        npred,
+        t_min=t_min,
+        t_max=t_max,
+        temporal_model=temporal_model,
+        random_state=0,
+        t_delta="10 min",
+    )
     events = sampler.sample_events(n_events=2)
 
     assert len(events) == 2

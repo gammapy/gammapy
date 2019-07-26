@@ -574,7 +574,9 @@ def test_plot_allsky():
 def test_get_spectrum():
     axis = MapAxis.from_bounds(1, 10, nbin=3, unit="TeV", name="energy")
 
-    geom = WcsGeom.create(skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], coordsys="GAL")
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=(2.5, 2.5), binsz=0.5, axes=[axis], coordsys="GAL"
+    )
 
     m = Map.from_geom(geom)
     m.data += 1
@@ -583,7 +585,7 @@ def test_get_spectrum():
     region = CircleSkyRegion(center=center, radius=1 * u.deg)
 
     spec = m.get_spectrum(region=region)
-    assert_allclose(spec.data, [13., 13., 13.])
+    assert_allclose(spec.data, [13.0, 13.0, 13.0])
 
     spec = m.get_spectrum(region=region, func=np.mean)
-    assert_allclose(spec.data, [1., 1., 1.])
+    assert_allclose(spec.data, [1.0, 1.0, 1.0])

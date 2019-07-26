@@ -17,5 +17,5 @@ def make_example_2():
     models.to_yaml(DATA_PATH / "example2.yaml")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     make_example_2()
