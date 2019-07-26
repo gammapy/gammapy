@@ -153,7 +153,7 @@ So we propose to clean this up, roughly like this:
 
 - utils.py -> one helper function, move to gammapy/maps/utils.py
 - asmooth.py -> move to gammapy.detect
-- measure.py and profile.py -> replace with docs example or move to maps or cube
+- measure.py and profile.py -> move to gammapy.maps (and clean up)
 - plotting.py -> move to gammapy/maps/plotting.py (remove illustrate_colormap and grayify_colormap)
 
 Clean up ``gammapy.utils``
