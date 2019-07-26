@@ -104,6 +104,13 @@ out, and the users can then uncomment and fill in the parameters and values they
 alternative users could copy & paste from a config file example in the docs. We will develop a 
 schema and validate / give good error messages on read.
 
+We roughly sketch below an example of a prototype configuration file in YAML format, just to illustrate
+how a structured schema could expose most of the parameter/values needed in a data analysis process.
+The configuration file should be explicit enough for the users to understand which parameters
+to edit in order to define a specific configuration for an analysis session or workflow. The final
+schema for this configuration file will be achieved iteratively during the development of the high-level
+interface and later on eventual improvements, also taking user feedback into account.
+
 Prototype configuration file.
 
 .. code::    
@@ -190,7 +197,7 @@ with the help of a boolean parameter. The serialisation would then be performed 
         $ cd analysis
         $ edit gammapy_analysis_config.yaml
         
-Then the user would type ``ipython``, ``juypter notebook``or write a script with the code below.
+Then the user would type ``ipython``, ``juypter notebook`` or write a script with the code below.
 
 .. code::
 
