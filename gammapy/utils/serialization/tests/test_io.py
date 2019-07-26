@@ -6,8 +6,8 @@ from ...testing import requires_data
 from ....spectrum import models as spectral
 from ....image import models as spatial
 from ....cube.models import SkyModels
-from ...scripts import read_yaml, write_yaml
-from ...serialization import models_to_dict, dict_to_models
+from ...scripts import read_yaml
+from ...serialization import dict_to_models
 
 
 @requires_data()

@@ -1199,17 +1199,17 @@ class FluxPointsDataset(Dataset):
         else:
             str_ += "\t{:32}:   {} \n".format("Total flux points", len(self.data.table))
             str_ += "\t{:32}:   {} \n".format(
-                "Points used for the fit", len(np.where(self.mask)[0])
+                "Points used for the fit", self.mask.sum()
             )
             str_ += "\t{:32}:   {} \n".format(
                 "Excluded for safe energy range",
-                len(np.where(self.mask_safe == False)[0]),
+                (~self.mask_safe).sum(),
             )
             if self.mask_fit is None:
                 str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
             else:
                 str_ += "\t{:32}:   {} \n".format(
-                    "Excluded by user", len(np.where(self.mask_fit == False)[0])
+                    "Excluded by user", (~self.mask_fit).sum()
                 )
             str_ += "\t{:32}:   {}\n".format(
                 "Model Name", self.model.__class__.__name__

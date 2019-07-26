@@ -6,7 +6,6 @@ from astropy.wcs import WCS
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.coordinates import SkyCoord, Angle
-from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs.utils import proj_plane_pixel_scales
 import astropy.units as u
 from regions import SkyRegion

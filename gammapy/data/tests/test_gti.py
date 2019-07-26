@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
 import astropy.units as u

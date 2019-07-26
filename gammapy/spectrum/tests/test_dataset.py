@@ -158,7 +158,7 @@ class TestSpectrumOnOff:
         with pytest.raises(AttributeError):
             self.dataset.npred()
 
-        assert hasattr(self.dataset, "parameters") == False
+        assert not hasattr(self.dataset, "parameters")
 
     def test_alpha(self):
         assert self.dataset.alpha.shape == (4,)

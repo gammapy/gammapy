@@ -1,14 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from ..spectrum.utils import SpectrumEvaluator
-from ..stats.poisson import excess_error, excess_ul_helene
 from ..utils.scripts import make_path
-from ..utils.table import table_from_row_data
-from ..stats.poisson import significance_on_off
 
 __all__ = ["LightCurve"]
 

@@ -14,13 +14,13 @@ log = logging.getLogger(__name__)
 
 
 class LightCurveEstimator:
-    """Flux Points estimated for each time bin.
+    """Estimate flux points for a given list of datasets, each per time bin.
 
-    Estimates flux points for a given list of datasets, each per time bin.
+
 
     Parameters
     ----------
-    datasets : list of `~gammapy.spectrum.SpectrumDatatset` or `~gammapy.cube.MapDataset`
+    datasets : list of `~gammapy.spectrum.SpectrumDataset` or `~gammapy.cube.MapDataset`
         Spectrum or Map datasets.
     source : str
         For which source in the model to compute the flux points. Default is ''

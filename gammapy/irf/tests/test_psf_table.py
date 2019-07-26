@@ -53,26 +53,14 @@ class TestEnergyDependentTablePSF:
 
         # Test cases
         energy = u.Quantity(1, "GeV")
-        rad = Angle(0.1, "deg")
-        energies = u.Quantity([1, 2], "GeV").to("TeV")
-        rads = Angle([0.1, 0.2], "deg")
-
-        # actual = psf.evaluate(energy=energy, rad=rad)
-        # desired = u.Quantity(17760.814249206363, 'sr^-1')
-        # assert_quantity_allclose(actual, desired)
-
-        # actual = psf.evaluate(energy=energies, rad=rads)
-        # desired = u.Quantity([17760.81424921, 5134.17706619], 'sr^-1')
-        # assert_quantity_allclose(actual, desired)
 
         psf1 = self.psf.table_psf_at_energy(energy)
         containment = np.linspace(0, 0.95, 3)
         actual = psf1.containment_radius(containment).to_value("deg")
         desired = [0.0, 0.195423, 1.036735]
         assert_allclose(actual, desired, rtol=1e-5)
-        # TODO: test average_psf
-        # psf2 = psf.psf_in_energy_band(energy_band, spectrum)
 
+        # TODO: test average_psf
         # TODO: test containment_radius
         # TODO: test containment_fraction
         # TODO: test info
@@ -80,6 +68,7 @@ class TestEnergyDependentTablePSF:
 
         energy_band = u.Quantity([10, 500], "GeV")
         psf_band = self.psf.table_psf_in_energy_band(energy_band)
+        # TODO: add assert
 
     @requires_dependency("matplotlib")
     def test_plot(self):
@@ -93,8 +82,6 @@ class TestEnergyDependentTablePSF:
 
     @requires_dependency("matplotlib")
     def test_plot2(self):
-        # psf.plot_containment('fermi_psf_containment.pdf')
-        # psf.plot_exposure('fermi_psf_exposure.pdf')
         with mpl_plot_check():
             self.psf.plot_psf_vs_rad()
 

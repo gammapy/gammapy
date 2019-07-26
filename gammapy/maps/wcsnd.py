@@ -9,7 +9,6 @@ from scipy.ndimage import gaussian_filter, uniform_filter, convolve
 from scipy.signal import fftconvolve
 from scipy.interpolate import griddata
 from scipy.ndimage import map_coordinates
-from regions import RectangleSkyRegion
 from ..extern.skimage import block_reduce
 from ..utils.units import unit_from_fits_image_hdu
 from ..utils.interpolation import ScaledRegularGridInterpolator

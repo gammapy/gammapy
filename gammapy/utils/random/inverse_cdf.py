@@ -13,10 +13,10 @@ __all__ = ["InverseCDFSampler", "MapEventSampler"]
 
 class InverseCDFSampler:
     """Inverse CDF sampler.
-       
-   It determines a set of random numbers and calculate the cumulative 
+
+   It determines a set of random numbers and calculate the cumulative
    distribution function.
-   
+
    Parameters
    ----------
    pdf : `~gammapy.maps.Map`
@@ -25,7 +25,7 @@ class InverseCDFSampler:
         Axis along which sampling the indexes.
    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.   
+        Passed to `~gammapy.utils.random.get_random_state`.
     """
 
     def __init__(self, pdf, axis=None, random_state=0):
@@ -146,7 +146,7 @@ class MapEventSampler:
         ----------
         n_events : int
             Number of events to sample.
-            
+
         Returns
         -------
         coords : `~gammapy.maps.MapCoord` object.
