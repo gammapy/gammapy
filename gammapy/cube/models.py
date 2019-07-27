@@ -333,7 +333,6 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs=None,
         name="diffuse",
         filename=None,
-        obs_id="Global",
     ):
         self.name = name
         axis = map.geom.get_axis_by_name("energy")
@@ -345,7 +344,6 @@ class SkyDiffuseCube(SkyModelBase):
         self.norm = Parameter("norm", norm)
         self.meta = {} if meta is None else meta
         self.filename = filename
-        self.obs_id = obs_id
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
@@ -429,7 +427,7 @@ class BackgroundModel(Model):
         reference="1 TeV",
         name="background",
         filename=None,
-        obs_id=None,
+        obs_id="local",
     ):
         axis = background.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
@@ -467,7 +465,7 @@ class BackgroundModel(Model):
         return self.map.copy(data=back_values)
 
     @classmethod
-    def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, **kwargs):
+    def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, obs_id="global", **kwargs):
         """Create background model from sky model by applying IRFs.
 
         Typically used for diffuse Galactic or constant emission models.
@@ -491,7 +489,8 @@ class BackgroundModel(Model):
         background = evaluator.compute_npred()
         background_model = cls(background=background, **kwargs)
         background_model.name = skymodel.name
-        if skymodel.__class__.__name__ == "SkyDiffuseCube":
+        background_model.obs_id = obs_id
+        if skymodel.__class__.__name__ == "SkyDiffuseCube":   
             background_model.filename = skymodel.filename
         return background_model
 

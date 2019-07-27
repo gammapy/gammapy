@@ -65,6 +65,7 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         background_model=None,
+        obs_id=None,
         likelihood="cash",
         evaluation_mode="local",
         mask_safe=None,
@@ -82,6 +83,7 @@ class MapDataset(Dataset):
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
+        self.obs_id=obs_id
         self.mask_safe = mask_safe
         self.gti = gti
         if likelihood == "cash":
