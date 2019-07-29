@@ -129,6 +129,9 @@ class TestSpectrumExtraction:
         assert_allclose(gti_dataset["START"], gti_obs["START"])
         assert_allclose(gti_dataset["STOP"], gti_obs["STOP"])
 
+        obs_info = extraction.spectrum_observations[0].obs_info
+        assert 'OBS_ID' in obs_info.colnames
+
     @staticmethod
     def test_alpha(observations, bkg_estimate):
         bkg_estimate[0].a_off = 0
