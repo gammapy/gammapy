@@ -141,3 +141,89 @@ class Datasets:
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
+
+    def set_models_from_yaml(self, filemodel):
+        """add models and backgrounds to datasets from yaml files
+    
+        Parameters
+        ----------
+        fdatasets : str
+            filepath to yaml datasets file
+        filemodel : str
+            filepath to yaml models file
+        """
+        from ..serialization import models_to_datasets
+        from ..scripts import read_yaml
+
+        components = read_yaml(filemodel)
+        models_to_datasets(self, components, get_lists=False)
+
+    @classmethod
+    def from_yaml(cls, filedata, filemodel):
+        from ...cube.fit import MapDataset
+        from ..scripts import read_yaml
+
+        """De-serialize datasets from yaml and fits files
+    
+        Parameters
+        ----------
+        fdatasets : str
+            filepath to yaml datasets file
+        filemodel : str
+            filepath to yaml models file
+            
+        Returns
+        -------
+        dataset : `Datasets`
+            'gammapy.utils.fitting.Datasets'
+         """
+
+        data_list = read_yaml(filedata)
+        datasets_list = []
+        for data in data_list["datasets"]:
+            dataset = MapDataset.read(data["filename"])
+            dataset.obs_id = data["id"]
+            datasets_list.append(dataset)
+        datasets = cls(datasets_list)
+        datasets.set_models_from_yaml(filemodel)
+        return datasets
+
+    def to_yaml(self, path, selection="all", overwrite=False):
+        """Serialize datasets to yaml and fits files
+
+        Parameters
+        ----------
+        path : str
+            path to write files
+        selection : {"all", "simple"}
+            "simple" option reduce models parameters attributes displayed to only 
+            name, value, unit,frozen
+        """
+        from ..serialization import models_to_dict
+        from ..scripts import write_yaml
+        from ...cube.models import BackgroundModels, SkyModels
+
+        models_list = []
+        backgrounds_list = []
+        datasets_dictlist = []
+        for dataset in self.datasets:
+            filename = str(path) + "maps_" + dataset.obs_id + ".fits"
+            dataset.write(filename, overwrite)
+            datasets_dictlist.append({"id": dataset.obs_id, "filename": filename})
+
+            if isinstance(dataset.background_model, BackgroundModels):
+                backgrounds = dataset.background_model.models
+            else:
+                backgrounds = [dataset.background_model]
+            if isinstance(dataset.model, SkyModels):
+                models = dataset.model.skymodels
+            else:
+                models = [dataset.model]
+            models_list += models
+            backgrounds_list += backgrounds
+
+        components_dict = models_to_dict(models_list + backgrounds_list, selection)
+        datasets_dict = {"datasets": datasets_dictlist}
+
+        write_yaml(datasets_dict, str(path)+"datasets.yaml")
+        write_yaml(components_dict, str(path)+"models.yaml")

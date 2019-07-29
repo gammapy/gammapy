@@ -1,12 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 import astropy.units as u
-from ...cube.models import SkyModel
-from ...image import models as spatial
-from ...spectrum import models as spectral
-from ..fitting import Parameters
+from gammapy.image import models as spatial
+from gammapy.spectrum import models as spectral
+from gammapy.cube.models import (
+    SkyModel,
+    SkyModels,
+    SkyDiffuseCube,
+    BackgroundModel,
+    BackgroundModels,
+)
+from gammapy.utils.fitting import Parameters
 
-__all__ = ["models_to_dict", "dict_to_models"]
+__all__ = ["models_to_dict", "dict_to_models", "models_to_datasets"]
 
 
 def models_to_dict(models, selection="all"):
@@ -98,3 +104,92 @@ def _dict_to_skymodel(model):
     return SkyModel(
         name=model["name"], spatial_model=spatial_model, spectral_model=spectral_model
     )
+
+
+def _get_backgrounds_names(dataset):
+    BGnames = []
+    for background in dataset.background_model.models:
+        BGnames.append(background.name)
+    return BGnames
+
+
+def models_to_datasets(datasets, components, get_lists=False):
+    """add models and background to datasets
+    
+    Parameters
+    ----------
+    datasets : object
+        '~gammapy.utils,fitting.MapDatasets'
+    components : dict
+        dict describing model components
+    get_lists : bool
+        get the datasets, models and backgrounds lists separetely (used to initialize FitManager)
+        
+    """
+    datasets_list = datasets.datasets
+    models = dict_to_models(components)
+
+    params_register = {}
+    cube_register = {}
+    backgrounds_local = []
+    backgrounds_global = []
+    for dataset in datasets_list:
+
+        if not isinstance(dataset.background_model, BackgroundModels):
+            dataset.background_model = BackgroundModels[dataset.background_model]
+        BGnames = _get_backgrounds_names(dataset)
+
+        backgrounds = []
+        for component in components["components"]:
+            if (
+                "model" in component
+                and component["model"]["type"] == "BackgroundModel"
+                and component["id"] in ["global", "local", dataset.obs_id]
+            ):
+                if "filename" in component:
+                    # check if file is already loaded in memory else read
+                    try:
+                        cube = cube_register[component["name"]]
+                    except KeyError:
+                        cube = SkyDiffuseCube.read(component["filename"])
+                        cube_register[component["name"]] = cube
+                    background_model = BackgroundModel.from_skymodel(
+                        cube,
+                        exposure=dataset.exposure,
+                        psf=dataset.psf,
+                        edisp=dataset.edisp,
+                    )
+                else:
+                    if component["name"].strip().upper() in BGnames:
+                        BGind = BGnames.index(component["name"].strip().upper())
+                    elif component["name"] in BGnames:
+                        BGind = BGnames.index(component["name"])
+                    else:
+                        raise ValueError("Unknown Background")
+                    background_model = dataset.background_model.models[BGind]
+                background_model.name = component["name"]
+
+                # link parameters for global backgrounds
+                if component["id"] == "global":
+                    try:
+                        params = params_register[component["name"]]
+                    except KeyError:
+                        params = Parameters.from_dict(component["model"])
+                        params_register[component["name"]] = params
+                    background_model.parameters = params
+                    background_model.obs_id = "global"
+                    backgrounds_global.append(background_model)
+                elif component["id"] in ["local", dataset.obs_id]:
+                    background_model.parameters = Parameters.from_dict(
+                        component["model"]
+                    )
+                    background_model.obs_id = dataset.obs_id
+                    backgrounds_local.append(background_model)
+
+                backgrounds.append(background_model)
+
+        dataset.background_model = BackgroundModels(backgrounds)
+        dataset.model = SkyModels(models)
+
+    if get_lists is True:
+        return datasets_list, models, backgrounds_global, backgrounds_local

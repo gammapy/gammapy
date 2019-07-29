@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import filecmp
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
-from ....cube.models import SkyModels
-from ....image import models as spatial
-from ....spectrum import models as spectral
-from ...scripts import read_yaml
-from ...serialization import dict_to_models
-from ...testing import requires_data
+from gammapy.image import models as spatial
+from gammapy.spectrum import models as spectral
+from gammapy.cube.models import SkyModels, BackgroundModels
+from gammapy.utils.fitting import Datasets
+from gammapy.utils.scripts import read_yaml
+from gammapy.utils.serialization import dict_to_models
+from gammapy.utils.testing import requires_data
 
 
 @requires_data()
@@ -78,9 +80,6 @@ def test_dict_to_skymodels(tmpdir):
     # assert model2.parameters["norm"].value == 2.1 # fail
 
 
-# TODO: test background model serialisation
-
-
 @requires_data()
 def test_sky_models_io(tmpdir):
     # TODO: maybe change to a test case where we create a model programatically?
@@ -89,13 +88,76 @@ def test_sky_models_io(tmpdir):
 
     filename = str(tmpdir / "io_example.yaml")
     models.to_yaml(filename)
-    SkyModels.from_yaml(filename)
-    # TODO: add asserts to check content
+    models = SkyModels.from_yaml(filename)
+    assert models.parameters["lat_0"].min == -90.0
 
     models.to_yaml(filename, selection="simple")
-    SkyModels.from_yaml(filename)
-    # TODO add assert to check content
+    models = SkyModels.from_yaml(filename)
+    assert np.isnan(models.parameters["lat_0"].min)
 
     # TODO: not sure if we should just round-trip, or if we should
     # check YAML file content (e.g. against a ref file in the repo)
     # or check serialised dict content
+
+
+@requires_data()
+def test_datasets_to_io(tmpdir):
+    filedata = get_pkg_data_filename("data/datasets_CTA-gc.yaml")
+    filemodel = get_pkg_data_filename("data/models_CTA-gc.yaml")
+
+    datasets = Datasets.from_yaml(filedata, filemodel)
+
+    assert len(datasets.datasets) == 2
+    dataset0 = datasets.datasets[0]
+    assert dataset0.counts.data.sum() == 144754
+    assert_allclose(dataset0.exposure.data.sum(), 5511689000000000.0)
+    assert dataset0.psf is not None
+    assert dataset0.edisp is not None
+
+    assert isinstance(dataset0.background_model, BackgroundModels)
+    assert len(dataset0.background_model.models) == 2
+    assert_allclose(
+        dataset0.background_model.models[0].evaluate().data.sum(), 130416.97522559075
+    )
+    assert_allclose(
+        dataset0.background_model.models[1].evaluate().data.sum(), 8054.892073330987
+    )
+    assert dataset0.background_model.models[0].name == "background_irf"
+    assert dataset0.background_model.models[1].name == "gll_iem_v06_cutout"
+    assert dataset0.background_model.models[0].obs_id == dataset0.obs_id
+    assert dataset0.background_model.models[1].obs_id == "global"
+
+    assert isinstance(dataset0.model, SkyModels)
+    assert len(dataset0.model.skymodels) == 2
+    assert dataset0.model.skymodels[0].name == "gc-source"
+    assert dataset0.model.skymodels[1].name == "fake-source"
+    assert dataset0.model.skymodels[1].parameters["lon_0"].value == -10.0
+
+    dataset1 = datasets.datasets[0]
+    assert dataset1.background_model.models[0].obs_id == dataset1.obs_id
+    assert dataset1.background_model.models[1].obs_id == "global"
+
+    filename = str(tmpdir / "backgrounds.yaml")
+    filebg = get_pkg_data_filename("data/backgrounds_CTA-gc.yaml")
+    dataset0.background_model.to_yaml(filename)
+    assert filecmp.cmp(filename, filebg)
+
+    path = str(tmpdir / "written_")
+    datasets.to_yaml(
+        "$GAMMAPY_DATA/tests/models/written_", selection="all", overwrite=True
+    )
+    datasets.to_yaml(path, selection="all", overwrite=False)
+    # TODO: improve file-to-file comparison test
+    # fitsdata="$GAMMAPY_DATA/tests/models/maps_CTA-gc.fits"
+    # assert filecmp.cmp(path + "maps_CTA-gc.fits", fitsdata)
+    # seems to not work for fits file except is they are true copy
+    # assert filecmp.cmp(path + "datasets.yaml", filedata)
+    # fail because datasets fits files path change to tmp dir
+    assert filecmp.cmp(path + "models.yaml", filemodel)
+    datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
+    assert len(datasets_read.datasets) == 2
+    dataset0 = datasets_read.datasets[0]
+    assert dataset0.counts.data.sum() == 144754
+    assert_allclose(dataset0.exposure.data.sum(), 5511689000000000.0)
+    assert dataset0.psf is not None
+    assert dataset0.edisp is not None

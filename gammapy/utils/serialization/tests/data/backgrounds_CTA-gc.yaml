@@ -1,0 +1,60 @@
+components:
+- id: CTA-gc
+  model:
+    parameters:
+    - factor: 1.0103693657508739
+      frozen: false
+      max: .nan
+      min: 0.0
+      name: norm
+      scale: 1.0
+      unit: ''
+      value: 1.0103693657508739
+    - factor: 0.0
+      frozen: true
+      max: .nan
+      min: .nan
+      name: tilt
+      scale: 1.0
+      unit: ''
+      value: 0.0
+    - factor: 1.0
+      frozen: true
+      max: .nan
+      min: .nan
+      name: reference
+      scale: 1.0
+      unit: TeV
+      value: 1.0
+    type: BackgroundModel
+  name: background_irf
+- filename: $GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits
+  id: global
+  model:
+    parameters:
+    - factor: 0.9100280760979458
+      frozen: false
+      max: .nan
+      min: 0.0
+      name: norm
+      scale: 1.0
+      unit: ''
+      value: 0.9100280760979458
+    - factor: 0.0
+      frozen: true
+      max: .nan
+      min: .nan
+      name: tilt
+      scale: 1.0
+      unit: ''
+      value: 0.0
+    - factor: 1.0
+      frozen: true
+      max: .nan
+      min: .nan
+      name: reference
+      scale: 1.0
+      unit: TeV
+      value: 1.0
+    type: BackgroundModel
+  name: gll_iem_v06_cutout

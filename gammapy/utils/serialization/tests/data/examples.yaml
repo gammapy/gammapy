@@ -160,7 +160,7 @@ components:
       frozen: true
 - name: cube_iem
   id: global
-  filename: $GAMMAPY_DATA/fermi-3fhl/gll_iem_v06_cutout.fits
+  filename: $GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits
   model:
     type: BackgroundModel
     parameters:
