@@ -623,6 +623,9 @@ def make_observation_list():
     gti1 = make_gti({"START": [5, 6, 1, 2], "STOP": [8, 7, 3, 4]}, time_ref=time_ref)
     gti2 = make_gti({"START": [14], "STOP": [15]}, time_ref=time_ref)
 
+    obs_info1 = Table([[1],[2],[3]], names=('col1', 'col2', 'col3'))
+    obs_info2 = Table([[4],[5],[6]], names=('col1', 'col2', 'col3'))
+
     obs1 = SpectrumDatasetOnOff(
         counts=on_vector,
         counts_off=off_vector1,
@@ -634,6 +637,7 @@ def make_observation_list():
         acceptance_off=2,
         name="2",
         gti=gti1,
+        obs_info=obs_info1,
     )
     obs2 = SpectrumDatasetOnOff(
         counts=on_vector,
@@ -646,6 +650,7 @@ def make_observation_list():
         acceptance_off=4,
         name="2",
         gti=gti2,
+        obs_info=obs_info2,
     )
 
     obs_list = [obs1, obs2]
@@ -727,7 +732,6 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
         assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
 
-
 @requires_data("gammapy-data")
 def test_datasets_stack_reduce():
     obs_ids = [23523, 23526, 23559, 23592]
@@ -739,3 +743,5 @@ def test_datasets_stack_reduce():
     datasets = Datasets(dataset_list)
     stacked = datasets.stack_reduce()
     assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)
+    assert len(stacked.obs_info) == 4
+

@@ -45,6 +45,9 @@ class SpectrumDataset(Dataset):
         Dataset name.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    obs_info : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset
+        One line per observation for stacked datasets.
 
     See Also
     --------
@@ -65,6 +68,7 @@ class SpectrumDataset(Dataset):
         mask_fit=None,
         name="",
         gti=None,
+        obs_info=None,
     ):
         if mask_fit is not None and mask_fit.dtype != np.dtype("bool"):
             raise ValueError("mask data must have dtype bool")
@@ -83,6 +87,7 @@ class SpectrumDataset(Dataset):
         self.mask_safe = mask_safe
         self.name = name
         self.gti = gti
+        self.obs_info = obs_info
 
     def __str__(self):
         str_ = self.__class__.__name__
@@ -518,6 +523,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         Name of the dataset.
     gti : `~gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation
+    obs_info : `~astropy.table.Table`
+        Table listing informations on observations used to create the dataset
+        One line per observation for stacked datasets.
 
     See Also
     --------
@@ -540,6 +548,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         acceptance_off=None,
         name="",
         gti=None,
+        obs_info=None,
     ):
 
         self.counts = counts
@@ -565,6 +574,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         self.acceptance_off = acceptance_off
         self.name = name
         self.gti = gti
+        self.obs_info = obs_info
 
     def __str__(self):
         str_ = super().__str__()
