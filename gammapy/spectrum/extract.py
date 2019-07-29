@@ -4,8 +4,10 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
+
 from gammapy.irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
 from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_from_row_data
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 
@@ -125,6 +127,12 @@ class SpectrumExtraction:
         else:
             self.containment = np.ones(self._aeff.energy.nbin)
 
+        # Export observation info if it exists
+        if observation.obs_info is not None:
+            obs_info = table_from_row_data([observation.obs_info])
+        else:
+            obs_info = None
+
         spectrum_observation = SpectrumDatasetOnOff(
             counts=self._on_vector,
             aeff=self._aeff,
@@ -135,6 +143,7 @@ class SpectrumExtraction:
             acceptance_off=bkg.a_off,
             name=str(observation.obs_id),
             gti=observation.gti,
+            obs_info=obs_info,
         )
 
         if self.use_recommended_erange:
