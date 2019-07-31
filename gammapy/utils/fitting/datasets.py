@@ -159,7 +159,7 @@ class Datasets:
         models_to_datasets(self, components, get_lists=False)
 
     @classmethod
-    def from_yaml(cls, filedata, filemodel):
+    def from_yaml(cls, filedata, filemodel=None):
         from ...cube.fit import MapDataset
         from ..scripts import read_yaml
 
@@ -185,7 +185,8 @@ class Datasets:
             dataset.obs_id = data["id"]
             datasets_list.append(dataset)
         datasets = cls(datasets_list)
-        datasets.set_models_from_yaml(filemodel)
+        if filemodel is not None:
+            datasets.set_models_from_yaml(filemodel)
         return datasets
 
     def to_yaml(self, path, selection="all", overwrite=False):
