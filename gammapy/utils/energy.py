@@ -31,7 +31,7 @@ def energy_logspace(emin, emax, nbins, unit=None, per_decade=False):
     x_min, x_max = np.log10([emin.value, emax.value])
 
     if per_decade:
-        nbins = (x_max - x_min) * nbins
+        nbins = int((x_max - x_min) * nbins)
 
     energy = np.logspace(x_min, x_max, nbins)
 
