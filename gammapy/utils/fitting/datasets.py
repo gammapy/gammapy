@@ -156,7 +156,7 @@ class Datasets:
         from ..scripts import read_yaml
 
         components = read_yaml(filemodel)
-        models_to_datasets(self, components, get_lists=False)
+        models_to_datasets(self, components)
 
     @classmethod
     def from_yaml(cls, filedata, filemodel=None):
@@ -174,15 +174,15 @@ class Datasets:
             
         Returns
         -------
-        dataset : `Datasets`
-            'gammapy.utils.fitting.Datasets'
+        dataset : 'gammapy.utils.fitting.Datasets'
+            Datasets
          """
 
         data_list = read_yaml(filedata)
         datasets_list = []
         for data in data_list["datasets"]:
             dataset = MapDataset.read(data["filename"])
-            dataset.obs_id = data["id"]
+            dataset.dataset_id = data["id"]
             datasets_list.append(dataset)
         datasets = cls(datasets_list)
         if filemodel is not None:
@@ -200,31 +200,11 @@ class Datasets:
             "simple" option reduce models parameters attributes displayed to only 
             name, value, unit,frozen
         """
-        from ..serialization import models_to_dict
         from ..scripts import write_yaml
-        from ...cube.models import BackgroundModels, SkyModels
+        from ..serialization import datasets_to_dict
 
-        models_list = []
-        backgrounds_list = []
-        datasets_dictlist = []
-        for dataset in self.datasets:
-            filename = str(path) + "maps_" + dataset.obs_id + ".fits"
-            dataset.write(filename, overwrite)
-            datasets_dictlist.append({"id": dataset.obs_id, "filename": filename})
-
-            if isinstance(dataset.background_model, BackgroundModels):
-                backgrounds = dataset.background_model.models
-            else:
-                backgrounds = [dataset.background_model]
-            if isinstance(dataset.model, SkyModels):
-                models = dataset.model.skymodels
-            else:
-                models = [dataset.model]
-            models_list += models
-            backgrounds_list += backgrounds
-
-        components_dict = models_to_dict(models_list + backgrounds_list, selection)
-        datasets_dict = {"datasets": datasets_dictlist}
-
-        write_yaml(datasets_dict, str(path)+"datasets.yaml")
-        write_yaml(components_dict, str(path)+"models.yaml")
+        datasets_dict, components_dict = datasets_to_dict(
+            self.datasets, path, selection, overwrite
+        )
+        write_yaml(datasets_dict, path + "datasets.yaml")
+        write_yaml(components_dict, path + "models.yaml")

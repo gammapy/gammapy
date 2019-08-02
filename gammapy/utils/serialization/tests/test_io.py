@@ -124,8 +124,8 @@ def test_datasets_to_io(tmpdir):
     )
     assert dataset0.background_model.models[0].name == "background_irf"
     assert dataset0.background_model.models[1].name == "gll_iem_v06_cutout"
-    assert dataset0.background_model.models[0].obs_id == dataset0.obs_id
-    assert dataset0.background_model.models[1].obs_id == "global"
+    assert dataset0.background_model.models[0].dataset_id == dataset0.dataset_id
+    assert dataset0.background_model.models[1].dataset_id == "global"
 
     assert isinstance(dataset0.model, SkyModels)
     assert len(dataset0.model.skymodels) == 2
@@ -134,8 +134,8 @@ def test_datasets_to_io(tmpdir):
     assert dataset0.model.skymodels[1].parameters["lon_0"].value == -10.0
 
     dataset1 = datasets.datasets[0]
-    assert dataset1.background_model.models[0].obs_id == dataset1.obs_id
-    assert dataset1.background_model.models[1].obs_id == "global"
+    assert dataset1.background_model.models[0].dataset_id == dataset1.dataset_id
+    assert dataset1.background_model.models[1].dataset_id == "global"
 
     filename = str(tmpdir / "backgrounds.yaml")
     filebg = get_pkg_data_filename("data/backgrounds_CTA-gc.yaml")
@@ -143,16 +143,7 @@ def test_datasets_to_io(tmpdir):
     assert filecmp.cmp(filename, filebg)
 
     path = str(tmpdir / "written_")
-    datasets.to_yaml(
-        "$GAMMAPY_DATA/tests/models/written_", selection="all", overwrite=True
-    )
     datasets.to_yaml(path, selection="all", overwrite=False)
-    # TODO: improve file-to-file comparison test
-    # fitsdata="$GAMMAPY_DATA/tests/models/maps_CTA-gc.fits"
-    # assert filecmp.cmp(path + "maps_CTA-gc.fits", fitsdata)
-    # seems to not work for fits file except is they are true copy
-    # assert filecmp.cmp(path + "datasets.yaml", filedata)
-    # fail because datasets fits files path change to tmp dir
     assert filecmp.cmp(path + "models.yaml", filemodel)
     datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
     assert len(datasets_read.datasets) == 2
@@ -161,3 +152,11 @@ def test_datasets_to_io(tmpdir):
     assert_allclose(dataset0.exposure.data.sum(), 5511689000000000.0)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
+    assert isinstance(dataset0.background_model, BackgroundModels)
+    assert len(dataset0.background_model.models) == 2
+    assert_allclose(
+        dataset0.background_model.models[0].evaluate().data.sum(), 130416.97522559075
+    )
+    assert_allclose(
+        dataset0.background_model.models[1].evaluate().data.sum(), 8054.892073330987
+    )

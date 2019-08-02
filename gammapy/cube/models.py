@@ -326,13 +326,7 @@ class SkyDiffuseCube(SkyModelBase):
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(
-        self,
-        map,
-        norm=1,
-        meta=None,
-        interp_kwargs=None,
-        name="diffuse",
-        filename=None,
+        self, map, norm=1, meta=None, interp_kwargs=None, name="diffuse", filename=None
     ):
         self.name = name
         axis = map.geom.get_axis_by_name("energy")
@@ -417,7 +411,7 @@ class BackgroundModel(Model):
         Reference energy of the tilt.
     """
 
-    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename", "obs_id"]
+    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename", "dataset_id"]
 
     def __init__(
         self,
@@ -427,7 +421,7 @@ class BackgroundModel(Model):
         reference="1 TeV",
         name="background",
         filename=None,
-        obs_id="local",
+        dataset_id="local",
     ):
         axis = background.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
@@ -439,7 +433,7 @@ class BackgroundModel(Model):
         self.reference = Parameter("reference", reference, frozen=True)
         self.name = name
         self.filename = filename
-        self.obs_id = obs_id
+        self.dataset_id = dataset_id
         super().__init__([self.norm, self.tilt, self.reference])
 
     @property
@@ -465,7 +459,9 @@ class BackgroundModel(Model):
         return self.map.copy(data=back_values)
 
     @classmethod
-    def from_skymodel(cls, skymodel, exposure, edisp=None, psf=None, obs_id="global", **kwargs):
+    def from_skymodel(
+        cls, skymodel, exposure, edisp=None, psf=None, dataset_id="global", **kwargs
+    ):
         """Create background model from sky model by applying IRFs.
 
         Typically used for diffuse Galactic or constant emission models.
@@ -489,8 +485,8 @@ class BackgroundModel(Model):
         background = evaluator.compute_npred()
         background_model = cls(background=background, **kwargs)
         background_model.name = skymodel.name
-        background_model.obs_id = obs_id
-        if skymodel.__class__.__name__ == "SkyDiffuseCube":   
+        background_model.dataset_id = dataset_id
+        if skymodel.__class__.__name__ == "SkyDiffuseCube":
             background_model.filename = skymodel.filename
         return background_model
 

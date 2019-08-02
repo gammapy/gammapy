@@ -65,7 +65,7 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         background_model=None,
-        obs_id=None,
+        dataset_id=None,
         likelihood="cash",
         evaluation_mode="local",
         mask_safe=None,
@@ -83,7 +83,7 @@ class MapDataset(Dataset):
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
-        self.obs_id = obs_id
+        self.dataset_id = dataset_id
         self.mask_safe = mask_safe
         self.gti = gti
         if likelihood == "cash":
@@ -445,12 +445,12 @@ class MapDataset(Dataset):
         if isinstance(self.background_model, BackgroundModels):
             for background in self.background_model.models:
                 if background.filename is None:
-                    hdulist += background.map.to_hdulist(hdu="BG_" + background.name)[
+                    hdulist += background.map.to_hdulist(hdu="BKG_" + background.name)[
                         exclude_primary
                     ]
         else:
             hdulist += self.background_model.map.to_hdulist(
-                hdu="BG_" + self.background_model.name
+                hdu="BKG_" + self.background_model.name
             )[exclude_primary]
 
         if self.edisp is not None:
@@ -505,9 +505,9 @@ class MapDataset(Dataset):
 
         backgrounds = []
         for hdu in hdulist:
-            if isinstance(hdu, fits.hdu.image.ImageHDU) and "BG_" in hdu.name:
+            if isinstance(hdu, fits.hdu.image.ImageHDU) and "BKG_" in hdu.name:
                 background_map = Map.from_hdulist(hdulist, hdu=hdu.name)
-                backgrounds.append(BackgroundModel(background_map, name=hdu.name[3:]))
+                backgrounds.append(BackgroundModel(background_map, name=hdu.name[4:]))
         init_kwargs["background_model"] = BackgroundModels(backgrounds)
 
         if "EDISP_MATRIX" in hdulist:
