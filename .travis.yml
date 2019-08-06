@@ -90,6 +90,7 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+               PYTEST_VERSION<3.7
 
         - os: linux
           env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev SETUP_CMD='test -V'
