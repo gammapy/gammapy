@@ -883,7 +883,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index)
         try:
             cutoff = np.exp(-energy * lambda_)
-        except AttributeError:
+        except (AttributeError, TypeError):
             from uncertainties.unumpy import exp
 
             cutoff = exp(-energy * lambda_)
@@ -962,7 +962,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index)
         try:
             cutoff = np.exp((reference - energy) / ecut)
-        except AttributeError:
+        except (AttributeError, TypeError):
             from uncertainties.unumpy import exp
 
             cutoff = exp((reference - energy) / ecut)
@@ -1029,7 +1029,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
             cutoff = np.exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
-        except AttributeError:
+        except (AttributeError, TypeError):
             from uncertainties.unumpy import exp
 
             cutoff = exp((reference / ecut) ** index_2 - (energy / ecut) ** index_2)
@@ -1101,7 +1101,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         pwl = amplitude * (energy / reference) ** (-index_1)
         try:
             cutoff = np.exp(expfactor * (reference ** index_2 - energy ** index_2))
-        except AttributeError:
+        except (AttributeError, TypeError):
             from uncertainties.unumpy import exp
 
             cutoff = exp(expfactor * (reference ** index_2 - energy ** index_2))
@@ -1173,7 +1173,7 @@ class LogParabola(SpectralModel):
         try:
             xx = (energy / reference).to("")
             exponent = -alpha - beta * np.log(xx)
-        except AttributeError:
+        except (AttributeError, TypeError):
             from uncertainties.unumpy import log
 
             xx = energy / reference
