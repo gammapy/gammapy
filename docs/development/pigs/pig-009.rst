@@ -164,7 +164,7 @@ with the new columns ``RA``, ``DEC`` and ``ENERGY``, which are the reconstructed
 positions.
 
 Finally, the times and the energies/coordinates of the events will be merged into a 
-unique ``~astropy.table.Table`` with the columns:``RA``, ``DEC`` and ``ENERGY and ``TIME`` .
+unique ``~astropy.table.Table`` with the columns:``RA``, ``DEC`` and ``ENERGY`` and ``TIME`` .
  
 The ``MapDatasetEventSampler`` can be used to sample background events using the 
 ``Map.sample(n_events=, random_state=)`` as well. The time of the events is sampled
