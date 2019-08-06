@@ -10,7 +10,7 @@ PIG 9 - Event Sampling
 * Created: May 03, 2019
 * Accepted: 
 * Status: Draft
-* Discussion: ``GH 2136``_
+* Discussion: `GH 2136`_
 
 Abstract
 ========
@@ -47,7 +47,7 @@ has to be done numerically (see an example here gammalib_).
 As rejection sampling can directly sample from continuous probability density
 functions, it is expected to yield very precise results. However an enveloping
 distribution is needed, which should be adapted to the target distribution
-to be efficient (see also ``rejection sampling in Python``_ for an example implementation),
+to be efficient (see also `rejection sampling in Python`_ for an example implementation),
 otherwise a lot of computation time is spend in rejecting drawn samples.
 
 For this reason we favour the inverse CDF sampling method, as a simple to implement
