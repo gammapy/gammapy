@@ -64,7 +64,7 @@ Proposal
 ========
 
 We propose to include in ``gammapy.cube`` an high level interface (HLI) class, labelled as
-``MapDatasetEventSampler`` or ``MapDataset.sample()`` method. This class handles the complete
+``MapDatasetEventSampler`` or ``MapDataset.sample`` method. This class handles the complete
 event sampling process, including the corrections related to the IRF and source temporal
 variability, for a given GTI / observation.
 
@@ -94,7 +94,7 @@ latter will containt the reconstructed sky positions, energies, times, and an ``
 ``MC_ID``. ``EVENT_ID`` is a unique number or a string to identify the sampled event, while 
 ``MC_ID`` is a unique ID (number or string) to identify the model component the event was sampled
 from. The ``MapDatasetSampler`` should also fill the mandatory header information for event list 
-files decribed on ``gamma-astro-data-formats``_.
+files decribed on `gamma-astro-data-formats`_.
 
 MapDatasetEventSampler
 ----------------------
@@ -140,8 +140,8 @@ events.
 
 We propose to add a ``MapDataset.sample(n_events=, random_state=)`` method in ``~gamampy.cube.MapDataset`` 
 that will be the core of the sampling process. The ``sample`` is based on the 
-``~gammapy.utils.random.InverseCDFSampler`` class described in ``GH 2229``_ . The output
-will be an ``~astropy.table.Table`` with columns: ``RA_TRUE``, ``DEC_TRUE`` and ``ENERGY_TRUE``.
+``~gammapy.utils.random.InverseCDFSampler`` class described in `GH 2229`_ . The output
+will be an ``~astropy.table.Table`` with columns: ``RA_TRUE``, ``DEC_TRUE`` and ``ENERGY_TRUE`` .
 
 Then, the time will be sampled independently using the temporal information stored into 
 the ``MapDataset`` model for each source of interest. This will be done through a 
