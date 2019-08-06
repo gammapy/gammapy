@@ -74,7 +74,7 @@ illustrated in the following example:
 
 ::
 
-    obs = Observation(pointing, gti, aeff, psf, edisp)
+    obs = Observation(pointing, gti, aeff, psf, edisp, expomap)
     maker = MapDatasetMaker(geom, geom_irf, ...)
     dataset = maker.run(obs)
     model = SkyModels.read("model.yaml")
@@ -130,10 +130,13 @@ The general design of the ``sample`` method is as follows:
     
 
 In more detail, ``sample`` starts a loop over the sources stored into the ``MapDataset`` 
-model. Then, for each source, the ``src.evaluate`` method will calculate the predicted 
-number of source counts, that will be the input of the ``npred_total`` method. The latter 
-uses a Poisson distribution, with mean equal to the predicted counts, to estimate the
-random number of sampled events.
+model. Then, for each source, the ``src.compute_npred`` method will calculate the predicted 
+number of source counts ``npred``. In particular, it is important to note that 
+``npred = exposure * flux``, where ``exposure`` is defined as ``effective_area * exposure_time``.
+``npred`` is therefore calculated irrespective of the energy dispersion of PSF.
+Then, ``npred`` will be the input of the ``npred.sample`` method. The latter uses a Poisson 
+distribution, with mean equal to the predicted counts, to estimate the random number of sampled 
+events.
 
 We propose to add a ``MapDataset.sample(n_events=, random_state=)`` method in ``~gamampy.cube.MapDataset`` 
 that will be the core of the sampling process. The ``sample`` is based on the 
