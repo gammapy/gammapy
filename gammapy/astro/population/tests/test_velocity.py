@@ -39,7 +39,7 @@ velocity_models_1D = {
 @pytest.mark.parametrize(
     ("model_class", "test_parameters"), list(velocity_models_1D.items())
 )
-class TestMorphologyModels(Fittable1DModelTester):
+class TestVelocityModels(Fittable1DModelTester):
     @classmethod
     def setup_class(cls):
         cls.N = 100

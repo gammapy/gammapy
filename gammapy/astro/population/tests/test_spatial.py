@@ -15,7 +15,6 @@ from ..spatial import (
     ZMAX,
     Exponential,
 )
-from .test_velocity import velocity_models_1D
 
 radial_models_1D = {
     FaucherKaspi2006: {
@@ -69,13 +68,11 @@ radial_models_1D = {
     },
 }
 
-radial_models_1D.update(velocity_models_1D)
-
 
 @pytest.mark.parametrize(
     ("model_class", "test_parameters"), list(radial_models_1D.items())
 )
-class TestMorphologyModels(Fittable1DModelTester):
+class TestRadialModels(Fittable1DModelTester):
     @classmethod
     def setup_class(cls):
         cls.N = 100
