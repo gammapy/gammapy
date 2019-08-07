@@ -14,23 +14,19 @@ def test_cta_irf():
 
     energy = Quantity(1, "TeV")
     offset = Quantity(3, "deg")
-    rad = Quantity(0.1, "deg")
-    migra = 1
 
     val = irf["aeff"].data.evaluate(energy=energy, offset=offset)
-    assert_allclose(val.value, 545269.4675532734)
+    assert_allclose(val.value, 545269.4675, rtol=1e-5)
     assert val.unit == "m2"
 
-    val = irf["edisp"].data.evaluate(offset=offset, e_true=energy, migra=migra)
-    assert_allclose(val.value, 3183.688224335546)
+    val = irf["edisp"].data.evaluate(offset=offset, e_true=energy, migra=1)
+    assert_allclose(val.value, 3183.6882, rtol=1e-5)
     assert val.unit == ""
 
     psf = irf["psf"].psf_at_energy_and_theta(energy=energy, theta=offset)
-    val = psf(rad)
-    assert_allclose(val, 4.868832183085153)
+    val = psf(Quantity(0.1, "deg"))
+    assert_allclose(val, 4.868832183, rtol=1e-5)
 
-    val = irf["bkg"].data.evaluate(
-        energy=energy, fov_lon=offset, fov_lat=Quantity(0, "deg")
-    )
-    assert_allclose(val.value, 9.400071082017065e-05)
+    val = irf["bkg"].data.evaluate(energy=energy, fov_lon=offset, fov_lat="0 deg")
+    assert_allclose(val.value, 9.400071e-05, rtol=1e-5)
     assert val.unit == "1 / (MeV s sr)"
