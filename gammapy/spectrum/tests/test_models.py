@@ -265,7 +265,7 @@ except ImportError:
 
 @requires_dependency("uncertainties")
 @requires_dependency("scipy")
-@pytest.mark.parametrize("spectrum", TEST_MODELS, ids=[_["name"] for _ in TEST_MODELS])
+@pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_models(spectrum):
     model = spectrum["model"]
     energy = 2 * u.TeV
@@ -455,7 +455,7 @@ class TestNaimaModel:
     e_array = [2, 10, 20] * u.TeV
     e_array = e_array[:, np.newaxis, np.newaxis]
 
-    def test_pion_decay_(self):
+    def test_pion_decay(self):
         import naima
 
         particle_distribution = naima.models.PowerLaw(

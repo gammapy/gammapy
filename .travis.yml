@@ -33,7 +33,7 @@ env:
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
-        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy pytest-cov'
+        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy'
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
@@ -56,7 +56,7 @@ matrix:
 
         # MacOS X tests
         - os: osx
-          env: PYTHON_VERSION=3.5 SETUP_CMD='test'
+          env: PYTHON_VERSION=3.6 SETUP_CMD='test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
         # The main build that's used for coverage measurement
@@ -65,7 +65,7 @@ matrix:
 
         # Run tests without optional dependencies
         - os: linux
-          env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES='pytest-astropy'
 
@@ -86,13 +86,9 @@ matrix:
           env: PYTHON_VERSION=3.7 SETUP_CMD='bdist_conda'
                PACKAGING_TEST=true
 
-        # Older Python versions
-        - os: linux
-          env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-
         # Test with Astropy dev and LTS versions
         - os: linux
-          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         - os: linux
@@ -119,12 +115,12 @@ matrix:
 
         # Test Jupyter notebooks
         - os: linux
-          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-nb'
+          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
         # Test example scripts
         - os: linux
-          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-scripts'
+          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
     # You can move builds that temporarily fail because of some non-Gammapy here.
@@ -132,7 +128,7 @@ matrix:
     # copy the part from the `include` section above here.
 #    allow_failures:
 #        - os: linux
-#          env: PYTHON_VERSION=3.5 MAIN_CMD='make' SETUP_CMD='test-nb'
+#          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-nb'
 #               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
 
