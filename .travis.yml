@@ -33,7 +33,7 @@ env:
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
-        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy pytest-cov'
+        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy'
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
@@ -90,7 +90,6 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
-               PYTEST_VERSION<3.7
 
         - os: linux
           env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev SETUP_CMD='test -V'
