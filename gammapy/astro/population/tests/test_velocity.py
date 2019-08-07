@@ -22,7 +22,7 @@ test_cases = [
 ]
 
 
-@pytest.mark.parametrize("case", test_cases, ids=lambda _: _["class"])
+@pytest.mark.parametrize("case", test_cases, ids=lambda _: _["class"].__name__)
 def test_velocity_model(case):
     model = case["class"]()
     y = model(case["x"])

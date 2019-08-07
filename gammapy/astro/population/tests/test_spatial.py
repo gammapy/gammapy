@@ -50,8 +50,8 @@ test_cases = [
 ]
 
 
-@pytest.mark.parametrize("case", test_cases, ids=lambda _: _["class"])
-def test_velocity_model(case):
+@pytest.mark.parametrize("case", test_cases, ids=lambda _: _["class"].__name__)
+def test_spatial_model(case):
     model = case["class"]()
     y = model(case["x"])
     assert_allclose(y, case["y"], rtol=1e-5)
