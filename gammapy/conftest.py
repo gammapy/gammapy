@@ -25,7 +25,9 @@ TESTED_VERSIONS[packagename] = version.version
 # Treat all DeprecationWarnings as exceptions
 from astropy.tests.helper import enable_deprecations_as_exceptions
 
-enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["astropy"])
+# Remove naima ignore once https://github.com/zblz/naima/issues/185
+# is addressed and released
+enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["naima", "astropy"])
 
 # Declare for which packages version numbers should be displayed
 # when running the tests
