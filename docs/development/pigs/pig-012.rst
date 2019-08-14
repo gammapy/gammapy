@@ -83,6 +83,7 @@ The main use cases for analysis to be covered are:
 - 3D map analysis
 - 2D map analysis
 - 1D spectrum analysis
+- Light curve estimation
 
 Including the main methods for data reduction, modelling and fitting:
 
@@ -90,7 +91,7 @@ Including the main methods for data reduction, modelling and fitting:
 - Different background models
 - Joint vs stacked likelihood fitting
 - Diagnostics (residuals, significance, TS)
-- Spectral points
+- Spectral flux points
 
 Making a SED may be the final part of the analysis, as many SED methods require the full model and 
 all energy data.
@@ -107,7 +108,8 @@ schema and validate / give good error messages on read.
 We roughly sketch below an example of a prototype configuration file in YAML format, just to illustrate
 how a structured schema could expose most of the parameter/values needed in a data analysis process.
 The configuration file should be explicit enough for the users to understand which parameters
-to edit in order to define a specific configuration for an analysis session or workflow. The final
+to edit in order to define a specific configuration for an analysis session or workflow, and should use
+units for quantities where it makes sense, e.g. "angle: 3 deg" instead of "angle: 3". The final
 schema for this configuration file will be achieved iteratively during the development of the high-level
 interface and later on eventual improvements, also taking user feedback into account.
 
@@ -181,13 +183,12 @@ and refactoring may be needed (i.e. remove ``gammapy image`` command line tool)
 
 **Serialisation**
 
-The user could choose in the configuration file to serialise the products delivered by the tools 
-with the help of a boolean parameter. The serialisation would then be performed as follows:
-
-- Every tool in Gammapy knows how to serialise/read themselves
-- Composite objects will be serialised as a series of all of their components
-- Serialisation will be a mix of YAML (models, state) and FITS files (maps)
-- There will not be framework supporting different serialisation backends, we will have one way.
+There will be the possibility to save and recover session states with their associated data products. The user 
+could also choose in the configuration file, with the help of a boolean parameter, to work with serialised 
+intermediate products delivered by the tools instead of in memory. The state serialisation will be a mix of YAML 
+(i.e. models, state) and FITS files (i.e. maps), where the delegated tools should know how to serialise and 
+read themselves. The solution to address serialization of different datasets by the different tools is not in 
+the scope of this PIG. 
 
 **Session workflow**
 
@@ -246,13 +247,13 @@ Some of the use cases not covered by this high-level interface API are the follo
 
 - Generation of simulated events and/or counts
 - Iterative source detection methods
-- Lightcurves
+- Complex or memory eager processing on lightcurves
 
 These use cases can be actually addressed using Gammapy as a Python toolbox, though in the 
 near future some of them could be incorporated progressively to the high-level interface. 
 For example, making a lightcurve could be part of one Analysis (like it is in Fermi), or 
 could be done at higher-level, creating Analysis instances and running them for each time bin.
-This exercise of pro / con is left to the PIG on Light Curves. We could expect that restructuring
+This exercise of pro/con is left to the `PIG on Light Curves`_. We could expect that restructuring
 all of Gammapy to be tools based with good tool chains and config handling will be eventually
 achieved after a certain time if we define a solid high-level interface API.
 
@@ -297,14 +298,21 @@ One random example of such a tool is the `Angular CLI`_, or `cookiecutter`_.
 
 Task list
 =========
+
+Required for Gammapy v1.0
+
 - Prototype for a manager class, agents, tools, etc.
 - Define a syntax for the declaration of parameter-value pairs needed for all tools in the analysis process.
 - Develop the session manager class responsible to drive the orchestration of tools in the analysis process.
 - Develop the tools classes responsible to perform each one of the tasks in the analysis process.
-- Develop the small set of helpers command line tools described above.
 - Design use cases and/or choose among the existing tutorials or benchmarks those that may be translated into high-level interface notebooks.
 - Provide notebooks using the high-level interface API for each of the chosen tutorials, benchmarks and/or use cases identified.
 - Add documentation for the high-level interface API and clean the list of documentation tutorials, making a distinct separation among those using Gammapy as a high-level interface API and those using Gammapy as a Python toolbox.
+
+Extra features (command line tools)
+
+- Develop the small set of helpers command line tools described above.
+- Develop an assistant command line tool that produces Python scripts and/or notebooks using the high-level interface API.
 - Cleaning and refactoring of ``gammapy.scripts`` module to remove old and unused command line tools.
 - Cleaning present documentation on ``gammapy.scripts`` to transform into documentation of helper command line tools.
 
@@ -331,4 +339,5 @@ tbd
 .. _LightCurveEstimator: https://docs.gammapy.org/0.12/api/gammapy.time.LightCurveEstimator.html
 .. _benchmarks: https://github.com/gammapy/gammapy-benchmarks
 .. _ctapipe tools: https://cta-observatory.github.io/ctapipe/ctapipe_api/tools/index.html
+.. _PIG on Light Curves: https://github.com/gammapy/gammapy/pull/1451
 
