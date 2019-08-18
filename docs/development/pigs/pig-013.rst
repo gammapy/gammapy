@@ -15,32 +15,28 @@ PIG 13 - Gammapy dependencies and distribution
 Abstract
 ========
 
-This is a proposal to make some updates concerning Gammapy dependencies and
-supported distribution channels, to be introduced in Gammapy v0.14, and then to
-be used in Gammapy v1.0.
+Since Gammapy v0.7, released in Feb 2018, the recommended way to install
+Gammapy and its dependencies has been via conda. This has worked well, allowing
+us to ship a reproducible science tool environment with up-to-date versions to
+all Gammapy users for each Gammapy release.
 
-Concerning Gammapy dependencies, given that we have a good way to ship
-reproducible execution environments and recent versions of Gammapy and all
-dependencies to users on all platforms via `conda`_ and `pip`_, we suggest to
-drop support for Python 3.5, and to increase the minimum supported version of
-our dependencies. Below we give tables and comments that clarify which Gammapy
-dependencies are required and which are optional, and what the minimum supported
-version for each dependency is. Older versions often will work, but are not
-tested by us.
+We discussed alternative Gammapy distribution channels (pip, Macports, Linux
+package managers, ...) and ways to ship the full environment to users
+(metapackages, extras_require, ...), but after consideration, we propose to
+continue shipping the upcoming Gammapy v0.14, v0.15, v1.0 in the same way, via a
+conda ``environment.yml`` file distributed via gammapy.org for each Gammapy
+release as the one fully supported way to install Gammapy. Specifically we
+suggest to remove the Macports installation page from the Gammapy docs.
 
-Concerning Gammapy distribution, we suggest to try to build and distribute
-Python binary wheels for Gammapy, regions, reproject and astropy-healpix for
-Linux, macOS and Windows, so that users don't need a compiler and installation
-is fast. We suggest to define a list of dependencies "all" in ``extras_require``
-via setuptools, so that ``pip install gammapy[all]`` installs the optional
-Gammapy dependencies. We suggest to remove the extensive installation
-instruction page for Macports from the Gammapy docs, and to not include
-Macports, HomeBrew or Linux distributions in the distribution channels that are
-maintained by the Gammapy team.
+We propose to take advantage of the good situation concerning distribution, and
+to require recent versions of required and optional dependencies of Gammapy as
+listed below, e.g. Python 3.6, Numpy 1.16 and Astropy 3.2. We think this change
+will have very little impact on users (zero impact for most), but it will allow
+us to develop Gammapy more quickly by taking advantage of new features and it
+will significantly reduce the effort on maintenance and testing.
 
-The main reason to write a PIG for this is to give everyone an opportunity to
-give feedback. We will announce this on the Gammapy user list, but not run a
-dedicated user survey. Let us know what you need and want!
+This PIG will benefit from user feedback. If you use or want to use Gammapy, but
+what is described here doesn't work well for you, let us know!
 
 Introduction
 ============
