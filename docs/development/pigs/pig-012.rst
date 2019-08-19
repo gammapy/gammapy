@@ -8,8 +8,8 @@ PIG 12 - High-level interface
 
 * Author: José Enrique Ruiz, Christoph Deil, Axel Donath, Regis Terrier, Lars Mohrmann
 * Created: June 6, 2019
-* Accepted: tbd
-* Status: draft
+* Accepted: August 19, 2019
+* Status: accepted
 * Discussion: `GH 2219`_
 
 Abstract
@@ -319,7 +319,7 @@ Extra features (command line tools)
 Decision
 ========
 
-tbd
+The PIG has benn discussed at the Gammapy coding sprint in July 2019. A final review announced on the Gammapy and CC mailing lists provided additional comments that were addressed in `GH 2219`_. The PIG was accepted on August 19, 2019.
 
 
 .. _GH 2219: https://github.com/gammapy/gammapy/pull/2219
