@@ -36,7 +36,7 @@ We have been using `Click`_ to develop a very small set of tools for an embryoni
 `Gammapy command line interface`_. Among the existing tools (``gammapy image``, ``gammapy info``, 
 ``gammapy download``, ``gammapy jupyter``), only `gammapy image`_ can be considered as 
 potentially needed in a data analysis process. It actually creates a counts image from an 
-event-list file and a image that serves as a reference geometry. Hence, we have a code 
+event-list file and an image that serves as a reference geometry. Hence, we have a code
 set-up in ``gammapy.scripts``, that we will not use it for the moment to expose the 
 high-level interface API, but to develop a very small set of specific command line tools 
 identified (i.e. perform long-time processing tasks, see *Command line tools* section below)
@@ -326,11 +326,8 @@ The PIG has benn discussed at the Gammapy coding sprint in July 2019. A final re
 .. _Gammapy roadmap: https://docs.gammapy.org/0.12/development/pigs/pig-005.html#high-level-interface
 .. _Gammapy command line interface: https://docs.gammapy.org/0.12/scripts/index.html
 .. _gammapy image: https://docs.gammapy.org/0.12/scripts/index.html#example
-.. _ctools: http://cta.irap.omp.eu/ctools/users/reference_manual/index.html
 .. _Enrico: https://enrico.readthedocs.io/en/latest/configfile.html
 .. _Fermitools: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html
-.. _Fermipy: https://fermipy.readthedocs.io/en/latest/quickstart.html
-.. _Click: https://click.palletsprojects.com
 .. _Jupyter notebooks: https://docs.gammapy.org/0.12/tutorials.html
 .. _Angular CLI: https://cli.angular.io/
 .. _papermill: https://github.com/nteract/papermill/
