@@ -17,33 +17,32 @@ class Analysis:
     def __init__(self, configfile=CONFIG_PATH/"default.yaml"):
         self.schemafile = CONFIG_PATH / "schema.yaml"
         self.configfile = configfile
+        self.params = read_yaml(self.configfile)
 
-        try:
-            self.params = read_yaml(self.configfile)
-            self._validate_schema()
-        except Exception as ex:
-            log.error(ex)
+        self.validate_schema()
+        self.set_log()
 
-        self._set_log()
+    def set_log(self):
+        """Set logging parameters for API."""
 
-    def _set_log(self):
-        """Set log level for API."""
-
-        cfg = self.params['config']
+        cfg = self.params['global']
         if "logging" in cfg:
             log_params = dict()
             for par, val in cfg['logging'].items():
                 log_params[par] = val
             log_params['level'] = cfg['logging']['level'].upper()
             logging.basicConfig(**log_params)
-            log.info("Setting log parameters")
+            log.info("Setting logging parameters")
 
-    def _validate_schema(self):
+    def validate_schema(self):
         """Validate config parameters against schema."""
         schema = read_yaml(self.schemafile)
 
         try:
             jsonschema.validate(self.params, schema)
+
+        # make error more specific based on param/value
         except jsonschema.exceptions.ValidationError as ex:
-            log.error('Invalid input file: {}'.format(self.configfile))
+            log.error('Error when validating configuration parameters against schema.')
+            log.error(ex.message)
             raise ex
