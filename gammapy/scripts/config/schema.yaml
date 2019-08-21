@@ -1,0 +1,14 @@
+"$schema": "http://json-schema.org/schema#"
+"title" : "Schema validation for Gammapy high-level interface API configuration"
+
+type: object
+additionalProperties: true
+properties:
+
+    logging:
+        type: object
+        additionalProperties: true
+        description: yeah
+        properties:
+            level:
+                type: string
