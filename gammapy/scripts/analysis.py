@@ -13,7 +13,20 @@ CONFIG_PATH = Path(__file__).resolve().parent / "config"
 SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
 
 
-class Analysis:
+class Singleton(type):
+    def __init__(cls, *args, **kwargs):
+        cls.__instance = None
+        super().__init__(*args, **kwargs)
+
+    def __call__(cls, *args, **kwargs):
+        if cls.__instance is None:
+            cls.__instance = super().__call__(*args, **kwargs)
+            return cls.__instance
+        else:
+            return cls.__instance
+
+
+class Analysis(metaclass = Singleton):
     """High-level interface analysis session class."""
 
     __slots__ = ["configfile", "params"]
@@ -62,6 +75,7 @@ def _astropy_quantity(_, instance):
         try:
             valid = u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
         except ValueError as ex:
+            log.error('Error when validating configuration parameters against schema.')
             log.error("{} is not a valid astropy quantity.".format(str(instance)))
             raise ex
     return valid
