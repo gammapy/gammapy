@@ -2,13 +2,59 @@
 "title" : "Schema validation for Gammapy high-level interface API configuration"
 
 type: object
-additionalProperties: true
+additionalProperties: true #--- still adding
 properties:
 
-    logging:
+  global:
+    type: object
+    additionalProperties: true #--- still adding
+    properties:
+
+      q:
+        type: array
+        items: {type: number}
+
+
+      out_folder:
+        type: string
+
+      logging:
         type: object
-        additionalProperties: true
-        description: yeah
+        additionalProperties: false
         properties:
-            level:
-                type: string
+          level:
+            enum: [CRITICAL, critical, 50,
+                   ERROR, error, 40,
+                   WARNING, warning, 30,
+                   INFO, info, 20,
+                   DEBUG, debug, 10,
+                   NOTSET, notset]
+          filename: {type: string}
+          filemode: {type: string}
+          format: {type: string}
+          datefmt: {type: string}
+        required: [level]
+        dependencies:
+          filemode: [filename]
+
+      #---
+
+
+  observations:
+    type: object
+
+  grid:
+    type: object
+
+  model:
+    type: object
+
+  analysis:
+    type: object
+
+
+
+#---
+definitions:
+  prop:
+    enum: [values]
