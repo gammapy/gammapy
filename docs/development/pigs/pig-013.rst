@@ -105,6 +105,7 @@ Astropy          2.0   (Jul 2017)  3.2   (Jun 2019)
 regions          0.4   (Jun 2019)  0.5   (Sep 2019)
 pyyaml           unclear           5.1   (Mar 2019)
 click            unclear           7.0   (Sep 2018)
+jsonschema       --                3.0   (Feb 2019)
 ===============  ================  ================
 
 We already mentioned the possibility to drop Python 3.5 support in
@@ -130,6 +131,9 @@ we propose to keep things as-is, and only specify a minimum version that we'll
 test, although in practice we didn't have any version-dependent issues with
 ``click`` in the past years.
 
+We plan to use ``jsonschema`` to validate YAML config files. It's a small,
+pure-Python dependency.
+
 Optional dependencies
 =====================
 
@@ -153,7 +157,11 @@ sherpa           4.11  (Feb 2019)  4.11  (Feb 2019)
 naima            0.8   (Dec 2016)  0.8.3 (Nov 2018)
 emcee            --                2.2   (Jul 2016)
 corner           --                2.0   (May 2016)
+parfive          --                1.0   (May 2019)
 ===============  ================  ================
+
+We plan to use ``parfive`` for tutorial notebook and example dataset file
+download (features parallel download and a progress bar).
 
 Distributions
 =============
@@ -191,74 +199,43 @@ the recommendations in `APE 17`_. Work on this has already started in `GH
 Alternatives
 ============
 
-We could continue to support old versions of dependencies and multiple
-distribution channels. The cost 
-
 Since we have a working setup already, we could do nothing, which seems nice at
 first, but really means continued time sink and suffering by the Gammapy
 maintainers of the continuous integration testing system and the release
 manager.
 
-The parts here that require a lot of work are ``astropy-healpix``,
-``uncertainties`` and the binary wheels. If any of those parts gets stuck or we
-don't have the manpower to do it, they can be done later, they aren't blockers
-for v1.0.
-
 For conda, we should strongly consider introducing a ``gammapy-all`` metapackage
 instead of the current ``gammapy-environment.yml`` shipped via ``gammapy.org``.
 That's what e.g. the Fermi tools and glueviz and others do, and they like that
-solution. This could be done any time, that change is independent of the rest of
-the changes described here.
+solution. It does have the advantage ob using a conda-native solution to the
+question how to ship an environment. This could be prototyped any time, in
+parallel with the existing solution, to gain familiarity with metapackages.
 
 We could support other ways to ship Gammapy, e.g. Homebrew (works on MacOS and
-also Linux now), or Docker images (works anywhere).
+also Linux now), or Docker images (works anywhere, self-contained).
 
-For YAML support, the ``ruamel_yaml`` package is an alternative we could use
-instead of ``pyyaml``. ``ruamel_yaml`` is a fork of ``pyyaml`` from a few years
-ago, that has added support for YAML spec version 1.2 (``pyyaml`` only supports
-YAML spec version 1.1). In practice the differences are very small, but one
-annoyance is that with pyyaml ``4.2e3`` gets parsed as a string, and one has to
-write ``4.2e+3`` to get the expected float type, when manually writing YAML.
-``ruamel_yaml`` also has support for round-tripping including comments, which is
-something that might be nice to have for Gammapy (e.g. to auto-generate or
-programatically modify YAML config or model files). An important project using
-``ruamel_yaml`` is ``conda``. The reason we prefer ``pyyaml`` is that it's been
-stable for the past decade and we assume will be for the next, whereas with
-``ruamel_yaml`` it's less clear how stable it is: they recently introduced a new
-high-level API and plan to deprecate the old one, and are still pre v1.0. Even
-more importantly: Astropy uses ``pyyaml`` heavily, e.g. for ECSV and ASDF I/O.
-So if we adopted ``ruamel_yaml`` for Gammapy, then we'd effectively get both
-YAML packages as dependencies, doubling the chances for something to break in
-the coming years.
+We note that we expect the Gammapy dependencies to change from time to time.
+Especially within the next year or two, eventually Gammapy will mature and
+settle down. E.g. if Astropy changes to use ``ruamel_yaml`` instead of
+``pyyaml``, we would likely follow. Another change we will likely make is to use
+``astropy-healpix`` instead of ``healpy`` once ``astropy-healpix`` has matured.
+We also plan to work on performance in Gammapy next year, and will consider
+using ``numba``. The dependencies listed in this PIG are the current status,
+each change will be considered and discussed via a pull request or future PIG.
 
 Task list
 =========
 
-Following the Gammapy v0.13 release in July 2019, the following changes should
-be made, which will ship to users in Gammapy v0.14 in September 2019:
-
-- Maybe: update Gammapy packaging and dev tools to follow new recommendations in `APE 17`_.
-  There's some advantages to doing this first, to make it easier to define the
-  new CI test matrix, but this could also come later.
 - Update continuous integration test matrix to test against the minimum required
   versions as specified here (and also newer versions in addition) (`GH 2270`_).
 - Drop Python 3.5 support and modernise codebase (e.g. use f-strings and use
   dict instead of OrderedDict).
 - Review Gammapy codebase and remove workarounds for old Python, Numpy, Astropy,
   ... versions.
-- Update ``extras_require`` in ``setup.py``. Try moving the spec out of
-  ``setup.py`` to ``setup.cfg`` or ``pyproject.toml``.
+- Remove ``extras_require`` in ``setup.py``
+  (don't attempt to maintain the list of optional dependencies there)
 - Review, restructure and update all Gammapy installation instructions
-- Change ``astropy-healpix`` to the CDS implementation, release a stable version and
-  check conda and pip binaries (`astropy-healpix GH 128`_)
-- Change Gammapy from ``healpy`` to ``astropy-healpix`` (`GH 1167`_)
-- Add binary wheels for gammapy, regions, reproject and astropy-healpix on PyPI,
-  then add Gammapy CI build testing ``pip install gammapy[all]``
-- After releasing Gammapy v0.14, update Gammapy ``conda-forge`` recipe, and do
-  extensive testing before announcing to users. Maybe define some Dockerfiles
-  that install from scratch from the user's perspective, to be used for
-  post-release checks?
-
+- Clearly describe all required and optional dependencies in the docs
 
 Decision
 ========
