@@ -30,7 +30,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip setuptools
-      pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy parfive
+      pip install pytest pytest-cov cython numpy astropy regions pyyaml click pytest-astropy parfive jsonschema
       pip install matplotlib reproject iminuit uncertainties
     displayName: 'Install dependencies'
 

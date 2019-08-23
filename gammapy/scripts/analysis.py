@@ -22,13 +22,22 @@ class Singleton(type):
     def __call__(cls, *args, **kwargs):
         if cls.__instance is None:
             cls.__instance = super().__call__(*args, **kwargs)
-            return cls.__instance
-        else:
-            return cls.__instance
+        return cls.__instance
 
 
 class Analysis(metaclass=Singleton):
-    """High-level interface analysis session class."""
+    """High-level interface analysis session class.
+
+    The Analysis class drives an analysis working session with Gammapy using the
+    high-level interface API. It is initialized by default with a set of configuration
+    parameters and values declared in an internal configuration YAML file, though
+    it also accepts a the name of user defined configuration file when instantiated.
+
+    Parameters
+    ----------
+    configfile : string
+        The name of a user defined configuration file.
+    """
 
     __slots__ = ["configfile", "_params"]
 
@@ -37,6 +46,10 @@ class Analysis(metaclass=Singleton):
         self._params = read_yaml(self.configfile)
         self._validate_schema()
         self._set_log()
+
+    def reset(self):
+        """Reset configuration parameters to initial state."""
+        self.__init__(self.configfile)
 
     def list_config(self):
         """Returns list of configuration parameters."""
@@ -48,7 +61,9 @@ class Analysis(metaclass=Singleton):
         --------
         >>> from gammapy.scripts import Analysis
         >>> analysis = Analysis()
-        >>> analysis.set_config("global.logging.level", 'info')
+        >>> analysis.set_config("global.logging.level", "info")
+        >>> analysis.set_config("global.test", "test")
+        >>> analysis.set_config("global.test", None)
         """
         branch = par.split(".")
         par_str = "self._params"
