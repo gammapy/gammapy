@@ -52,16 +52,14 @@ def test_sky_gaussian_elongated():
         binsz=0.05, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_1.get_coord()
-    angles = m_geom_1.solid_angle()
+    solid_angle = m_geom_1.solid_angle()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
     semi_major = 3 * u.deg
     model_1 = SkyGaussianElongated(2 * u.deg, 2 * u.deg, semi_major, 0.8, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
-    assert_allclose(
-        np.sum(vals_1 * angles), 1, rtol=1.0e-3
-    )
+    assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
@@ -94,7 +92,7 @@ def test_sky_gaussian_elongated():
         binsz=0.05, width=(25, 25), skydir=(0, 90), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_4.get_coord()
-    angles = m_geom_4.solid_angle()
+    solid_angle = m_geom_4.solid_angle()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
 
@@ -107,8 +105,8 @@ def test_sky_gaussian_elongated():
     vals_4_el = model_4_el(lon, lat)
     vals_4_sym = model_4_sym(lon, lat)
 
-    int_elongated = np.sum(vals_4_el * angles)
-    int_symmetric = np.sum(vals_4_sym * angles)
+    int_elongated = np.sum(vals_4_el * solid_angle)
+    int_symmetric = np.sum(vals_4_sym * solid_angle)
 
     assert_allclose(int_symmetric, int_elongated, rtol=1e-3)
 
@@ -149,16 +147,14 @@ def test_sky_ellipse():
         binsz=0.015, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_1.get_coord()
-    angles = m_geom_1.solid_angle()
+    solid_angle = m_geom_1.solid_angle()
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
     semi_major = 10 * u.deg
     model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, semi_major, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
-    assert_allclose(
-        np.sum(vals_1 * angles), 1, rtol=1.0e-3
-    )
+    assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
@@ -178,7 +174,7 @@ def test_sky_ellipse():
         binsz=0.1, width=(6, 6), skydir=(0, 90), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_2.get_coord()
-    angles = m_geom_2.solid_angle()
+    solid_angle = m_geom_2.solid_angle()
 
     lon = coords.lon * u.deg
     lat = coords.lat * u.deg
@@ -193,18 +189,13 @@ def test_sky_ellipse():
     solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
     assert_allclose(np.max(vals_2).value * solid_angle, 1)
 
-    assert_allclose(
-        np.sum(vals_2 * angles),
-        np.sum(vals_disk * angles),
-    )
+    assert_allclose(np.sum(vals_2 * solid_angle), np.sum(vals_disk * solid_angle))
 
 
 def test_sky_ellipse_edge():
     pytest.importorskip("astropy", minversion="3.1.1")
     r_0 = 2 * u.deg
-    model = SkyEllipse(
-        lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, phi="0 deg"
-    )
+    model = SkyEllipse(lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, phi="0 deg")
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
