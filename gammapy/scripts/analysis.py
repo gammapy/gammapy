@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high-level interface API"""
+import copy
 import jsonschema
 import logging
 from ..utils.scripts import read_yaml
@@ -26,39 +27,68 @@ class Singleton(type):
             return cls.__instance
 
 
-class Analysis(metaclass = Singleton):
+class Analysis(metaclass=Singleton):
     """High-level interface analysis session class."""
 
-    __slots__ = ["configfile", "params"]
+    __slots__ = ["configfile", "_params"]
 
-    def __init__(self, configfile=CONFIG_PATH/"default.yaml"):
+    def __init__(self, configfile=CONFIG_PATH / "default.yaml"):
         self.configfile = configfile
-        self.params = read_yaml(self.configfile)
+        self._params = read_yaml(self.configfile)
+        self._validate_schema()
+        self._set_log()
 
-        self.validate_schema()
-        self.set_log()
+    def list_config(self):
+        """Returns list of configuration parameters."""
+        return self._params
 
-    def set_log(self):
-        """Set logging parameters for API."""
-
-        cfg = self.params['global']
-        if "logging" in cfg:
-            log_params = dict()
-            for par, val in cfg['logging'].items():
-                log_params[par] = val
-            log_params['level'] = cfg['logging']['level'].upper()
-            logging.basicConfig(**log_params)
-            log.info("Setting logging parameters.")
-
-    def validate_schema(self):
-        """Validate config parameters against schema."""
-        schema = read_yaml(SCHEMA_FILE)
+    def set_config(self, par, val):
+        """Sets and removes configuration parameters.
+        Examples
+        --------
+        >>> from gammapy.scripts import Analysis
+        >>> analysis = Analysis()
+        >>> analysis.set_config("global.logging.level", 'info')
+        """
+        branch = par.split(".")
+        par_str = "self._params"
+        if isinstance(val, str):
+            val = "'{}'".format(val)
+        for leaf in branch[:-1]:
+            par_str += "['{}']".format(leaf)
+        if val is None:
+            par_str = "{}.pop('{}', None)".format(par_str, branch[-1])
+        else:
+            par_str += ".update({}={})".format(branch[-1], val)
+        backup_params = copy.deepcopy(self._params)
 
         try:
-            jsonschema.validate(self.params, schema, _gp_validator)
+            eval(par_str)
+            self._validate_schema()
+        except Exception as ex:
+            log.error("Error when setting config param.")
+            log.error(par_str)
+            self._params = backup_params
+            raise ex
 
+    def _set_log(self):
+        """Set logging parameters for API."""
+        cfg = self._params["global"]
+        if "logging" in cfg:
+            log_params = dict()
+            for par, val in cfg["logging"].items():
+                log_params[par] = val
+            log_params["level"] = cfg["logging"]["level"].upper()
+            logging.basicConfig(**log_params)
+            log.info("Setting logging parameters ({}).".format(log_params["level"]))
+
+    def _validate_schema(self):
+        """Validate config parameters against schema."""
+        schema = read_yaml(SCHEMA_FILE)
+        try:
+            jsonschema.validate(self._params, schema, _gp_validator)
         except jsonschema.exceptions.ValidationError as ex:
-            log.error('Error when validating configuration parameters against schema.')
+            log.error("Error when validating configuration parameters against schema.")
             log.error("Parameter: {}".format(ex.schema_path[-2]))
             log.error(ex.message)
             raise ex
@@ -68,18 +98,19 @@ def _astropy_quantity(_, instance):
     """Check a number may also be an astropy quantity."""
     valid = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
     quantity = str(instance).split()
-
     if not valid and len(quantity) >= 2:
         value = str(instance).split()[0]
         unit = "".join(str(instance).split()[1:])
         try:
             valid = u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
         except ValueError as ex:
-            log.error('Error when validating configuration parameters against schema.')
             log.error("{} is not a valid astropy quantity.".format(str(instance)))
-            raise ex
     return valid
 
 
-_type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine("number", _astropy_quantity)
-_gp_validator = jsonschema.validators.extend(jsonschema.Draft7Validator, type_checker=_type_checker)
+_type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
+    "number", _astropy_quantity
+)
+_gp_validator = jsonschema.validators.extend(
+    jsonschema.Draft7Validator, type_checker=_type_checker
+)

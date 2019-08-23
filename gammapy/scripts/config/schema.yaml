@@ -1,60 +1,54 @@
+---
 "$schema": "http://json-schema.org/schema#"
-"title" : "Schema validation for Gammapy high-level interface API configuration"
+"title": "Schema validation for Gammapy high-level interface API configuration"
 
 type: object
-additionalProperties: true #--- still adding
+additionalProperties: true      # --- still adding
 properties:
 
-  global:
-    type: object
-    additionalProperties: true #--- still adding
-    properties:
-
-      q:
-        type: array
-        items: {type: number}
-
-
-      out_folder:
-        type: string
-
-      logging:
+    global:
         type: object
-        additionalProperties: false
+        additionalProperties: true  # --- still adding
         properties:
-          level:
-            enum: [CRITICAL, critical, 50,
-                   ERROR, error, 40,
-                   WARNING, warning, 30,
-                   INFO, info, 20,
-                   DEBUG, debug, 10,
-                   NOTSET, notset]
-          filename: {type: string}
-          filemode: {type: string}
-          format: {type: string}
-          datefmt: {type: string}
-        required: [level]
-        dependencies:
-          filemode: [filename]
 
-      #---
+            out_folder:
+                type: string
+
+            logging:
+                type: object
+                additionalProperties: false
+                properties:
+                    level:
+                        enum: [CRITICAL, critical, 50,
+                               ERROR, error, 40,
+                               WARNING, warning, 30,
+                               INFO, info, 20,
+                               DEBUG, debug, 10,
+                               NOTSET, notset]
+                    filename: {type: string}
+                    filemode: {type: string}
+                    format: {type: string}
+                    datefmt: {type: string}
+                required: [level]
+                dependencies:
+                    filemode: [filename]
+
+    # ---
+
+    observations:
+        type: object
+
+    grid:
+        type: object
+
+    model:
+        type: object
+
+    analysis:
+        type: object
 
 
-  observations:
-    type: object
-
-  grid:
-    type: object
-
-  model:
-    type: object
-
-  analysis:
-    type: object
-
-
-
-#---
+# ---
 definitions:
-  prop:
-    enum: [values]
+    prop:
+        enum: [values]
