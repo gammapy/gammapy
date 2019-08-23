@@ -5,7 +5,7 @@ import json
 import logging
 import sys
 import yaml
-from urllib.request import urlretrieve, urlopen
+from urllib.request import urlopen
 from pathlib import Path
 from .. import version
 
@@ -58,13 +58,20 @@ class ComputePlan:
         log.info("Looking for {}...".format(self.option))
 
     def getenvironment(self):
+        try:
+            from parfive import Downloader
+        except ImportError:
+            log.error("The parfive package needs to be installed to download files with gammapy download")
+            return
+        dl = Downloader()
         filename_env = "gammapy-" + self.release + "-environment.yml"
         url_file_env = BASE_URL + "/install/" + filename_env
         filepath_env = str(self.outfolder / filename_env)
+        dl.enqueue_file(url_file_env, path=filepath_env)
         try:
             log.info("Downloading {}".format(url_file_env))
             Path(filepath_env).parent.mkdir(parents=True, exist_ok=True)
-            urlretrieve(url_file_env, filepath_env)
+            dl.download()
         except Exception as ex:
             log.error(ex)
             exit()
