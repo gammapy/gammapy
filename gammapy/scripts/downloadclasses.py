@@ -5,8 +5,7 @@ import json
 import logging
 import sys
 import yaml
-import multiprocessing
-from urllib.request import urlretrieve, urlopen
+from urllib.request import urlopen
 from pathlib import Path
 from .. import version
 
@@ -17,23 +16,6 @@ BASE_URL_DEV = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 DEV_NBS_YAML_URL = BASE_URL_DEV + "tutorials/notebooks.yaml"
 DEV_SCRIPTS_YAML_URL = BASE_URL_DEV + "examples/scripts.yaml"
 DEV_DATA_JSON_URL = BASE_URL_DEV + "dev/datasets/gammapy-data-index.json"
-
-
-def get_file(ftuple):
-    url, filepath, md5server = ftuple
-
-    retrieve = True
-    if md5server and Path(filepath).exists():
-        md5local = hashlib.md5(Path(filepath).read_bytes()).hexdigest()
-        if md5local == md5server:
-            retrieve = False
-
-    if retrieve:
-        try:
-            urlretrieve(url, filepath)
-        except Exception as ex:
-            log.error(filepath + " could not be copied.")
-            log.error(ex)
 
 
 def parse_datafiles(datasearch, datasetslist):
@@ -76,13 +58,20 @@ class ComputePlan:
         log.info("Looking for {}...".format(self.option))
 
     def getenvironment(self):
+        try:
+            from parfive import Downloader
+        except ImportError:
+            log.error("The parfive package needs to be installed to download files with gammapy download")
+            return
+        dl = Downloader()
         filename_env = "gammapy-" + self.release + "-environment.yml"
         url_file_env = BASE_URL + "/install/" + filename_env
         filepath_env = str(self.outfolder / filename_env)
+        dl.enqueue_file(url_file_env, path=filepath_env)
         try:
             log.info("Downloading {}".format(url_file_env))
             Path(filepath_env).parent.mkdir(parents=True, exist_ok=True)
-            get_file((url_file_env, filepath_env, ""))
+            dl.download()
         except Exception as ex:
             log.error(ex)
             exit()
@@ -220,23 +209,35 @@ class ParallelDownload:
         self.bar = 0
 
     def run(self):
+        try:
+            from parfive import Downloader
+        except ImportError:
+            log.error("The parfive package needs to be installed to download files with gammapy download")
+            return
+
         if self.listfiles:
             log.info("Content will be downloaded in {}".format(self.outfolder))
 
-        pool = multiprocessing.Pool(5)
+        dl = Downloader()
         for rec in self.listfiles:
             url = self.listfiles[rec]["url"]
             path = self.outfolder / self.listfiles[rec]["path"]
             md5 = ""
             if "hashmd5" in self.listfiles[rec]:
                 md5 = self.listfiles[rec]["hashmd5"]
-            ifolder = Path(path).parent
-            ifolder.mkdir(parents=True, exist_ok=True)
-            ftuple = (url, str(path), md5)
-            pool.apply_async(get_file, args=(ftuple,), callback=self.progressbar)
-        pool.close()
-        pool.join()
-        pool.close()
+            retrieve = True
+            if md5 and path.exists():
+                md5local = hashlib.md5(path.read_bytes()).hexdigest()
+                if md5local == md5:
+                    retrieve = False
+            if retrieve:
+                dl.enqueue_file(url, path=str(path.parent))
+
+        try:
+            dl.download()
+        except Exception as ex:
+            log.error("Failed to download files.")
+            log.error(ex)
 
     def show_info_datasets(self):
         print("")
@@ -259,16 +260,3 @@ class ParallelDownload:
         print("*** You might want to declare GAMMAPY_DATA env variable")
         print("export GAMMAPY_DATA={}".format(GAMMAPY_DATA))
         print("")
-
-    def progressbar(self, args):
-        self.bar += 1
-        barLength, status = 50, ""
-        progress = self.bar / len(self.listfiles)
-        if progress >= 1.0:
-            progress, status = 1, "\r\n"
-        block = int(round(barLength * progress))
-        text = "\rDownloading files [{}] {:.0f}% {}".format(
-            "=" * block + "." * (barLength - block), round(progress * 100, 0), status
-        )
-        sys.stdout.write(text)
-        sys.stdout.flush()

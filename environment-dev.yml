@@ -49,3 +49,4 @@ dependencies:
     - numdifftools
     - pytest-astropy
     - twine
+    - parfive

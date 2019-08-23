@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import pytest
-from ...utils.testing import run_cli
+from ...utils.testing import run_cli, requires_dependency
 from ..main import cli
 
 
@@ -27,6 +27,7 @@ def test_cli_download_help():
     assert "Usage" in result.output
 
 
+@requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_datasets(files_dir, config):
     option_out = "--out={}".format(files_dir)
@@ -39,6 +40,7 @@ def test_cli_download_datasets(files_dir, config):
     assert "GAMMAPY_DATA" in result.output
 
 
+@requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_notebooks(files_dir, config):
     option_out = "--out={}".format(files_dir)
@@ -54,6 +56,7 @@ def test_cli_download_notebooks(files_dir, config):
     assert (Path(files_dir) / dirname / filename).exists()
 
 
+@requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_scripts(files_dir, config):
     option_out = "--out={}".format(files_dir)
@@ -68,6 +71,7 @@ def test_cli_download_scripts(files_dir, config):
     assert (Path(files_dir) / dirname / filename).exists()
 
 
+@requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_tutorials(files_dir, config):
     option_out = "--out={}".format(files_dir)

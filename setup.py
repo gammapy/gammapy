@@ -119,6 +119,7 @@ setup(
           'naima',
           'iminuit>=1.3.2',
           'sherpa',
+          'parfive',
       ],
       plotting=[
           'matplotlib>=2.1',
