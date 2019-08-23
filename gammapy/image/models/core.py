@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation
+from astropy.coordinates.angle_utilities import angular_separation, position_angle
 from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
 from ...utils.fitting import Parameter, Model
 from ...maps import Map
@@ -14,6 +14,7 @@ __all__ = [
     "SkySpatialModel",
     "SkyPointSource",
     "SkyGaussian",
+    "SkyGaussianElongated",
     "SkyDisk",
     "SkyEllipse",
     "SkyShell",
@@ -90,8 +91,7 @@ class SkyPointSource(SkySpatialModel):
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0):
-        """Evaluate the model (static function)."""
-
+        """Evaluate model."""
         wrapval = lon_0 + 180 * u.deg
         lon = Angle(lon).wrap_at(wrapval)
 
@@ -107,23 +107,24 @@ class SkyPointSource(SkySpatialModel):
 
 
 class SkyGaussian(SkySpatialModel):
-    r"""Two-dimensional symmetric Gaussian model
+    r"""Two-dimensional symmetric Gaussian model.
 
     .. math::
-        \phi(\text{lon}, \text{lat}) = N \times \text{exp}\left\{-\frac{1}{2}
-            \frac{1-\text{cos}\theta}{1-\text{cos}\sigma}\right\}\,,
+        \phi(\text{lon}, \text{lat}) = N \times \exp\left\{-\frac{1}{2}
+            \frac{1-\cos \theta}{1-\cos \sigma}\right\}\,,
 
-    where :math:`\theta` is the angular separation between the center of the Gaussian and the evaluation point.
+    where :math:`\theta` is the sky separation to the model center.
     This angle is calculated on the celestial sphere using the function `angular.separation` defined in
     `astropy.coordinates.angle_utilities`. The Gaussian is normalized to 1 on
     the sphere:
 
     .. math::
-        N = \frac{1}{4\pi a\left[1-\text{exp}(-1/a)\right]}\,,\,\,\,\,
-        a = 1-\text{cos}\sigma\,.
+        N = \frac{1}{4\pi a\left[1-\exp(-1/a)\right]}\,,\,\,\,\,
+        a = 1-\cos \sigma\,.
 
     The normalization factor is in units of :math:`\text{sr}^{-1}`.
-    In the limit of small :math:`\theta` and :math:`\sigma`, this definition reduces to the usual form:
+    In the limit of small :math:`\theta` and :math:`\sigma`, this definition
+    reduces to the usual form:
 
     .. math::
         \phi(\text{lon}, \text{lat}) = \frac{1}{2\pi\sigma^2} \exp{\left(-\frac{1}{2}
@@ -163,12 +164,139 @@ class SkyGaussian(SkySpatialModel):
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, sigma):
-        """Evaluate the model (static function)."""
+        """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         a = 1.0 - np.cos(sigma)
         norm = 1 / (4 * np.pi * a * (1.0 - np.exp(-1.0 / a)))
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm.value * np.exp(exponent).value, "sr-1", copy=False)
+
+
+class SkyGaussianElongated(SkySpatialModel):
+    r"""Two-dimensional elongated Gaussian model.
+
+    .. math::
+        \phi(\text{lon}, \text{lat}) = N \times \exp\left\{-\frac{1}{2}
+            \frac{1-\cos(\theta)}{1-\cos\sigma_{eff}}\right\}\,,
+
+    where :math:`\theta` is the sky separation to the model center.
+    The effective radius of the Gaussian, used for the evaluation of the model, is:
+
+    .. math::
+        \sigma_{eff}(\text{lon}, \text{lat}) = \sqrt{
+            (\sigma_M \sin(\Delta \phi))^2 +
+            (\sigma_m \cos(\Delta \phi))^2
+        },
+
+    where :math:`\sigma_M` (:math:`\sigma_m`) is the major (minor) semiaxis of the Gaussian, and
+    :math:`\Delta \phi` is the difference between `phi`, the position angle of the Gaussian, and the
+    position angle of the evaluation point.
+
+    **Caveat:** The model is normalized to 1 on the plane, i.e. in small angle approximation:
+    :math:`N = 1/(2 \pi \sigma_M \sigma_m)`. This means that for huge elongated Gaussians on the sky
+    this model is not correctly normalized. However, this approximation is perfectly acceptable for the more
+    common case of models with modest dimensions: indeed, the error introduced by normalizing on the plane
+    rather than on the sphere is below 0.1\% for Gaussians with radii smaller than ~ 5 deg.
+
+    Parameters
+    ----------
+    lon_0 : `~astropy.coordinates.Longitude`
+        :math:`\text{lon}_0`: `lon` coordinate for the center of the Gaussian.
+    lat_0 : `~astropy.coordinates.Latitude`
+        :math:`\text{lat}_0`: `lat` coordinate for the center of the Gaussian.
+    sigma_semi_major : `~astropy.coordinates.Angle`
+        Length of the major semiaxis of the Gaussian, in angular units.
+    e : `float`
+        Eccentricity of the Gaussian (:math:`0< e< 1`).
+    phi : `~astropy.coordinates.Angle`
+        Rotation angle :math:`\phi`: of the major semiaxis.
+        Increases counter-clockwise from the North direction.
+    frame : {"galactic", "icrs"}
+        Coordinate frame of `lon_0` and `lat_0`.
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        import numpy as np
+        import matplotlib.pyplot as plt
+        import astropy.units as u
+        from astropy.coordinates import Angle
+        from gammapy.image.models import SkyGaussianElongated
+        from gammapy.maps import Map, WcsGeom
+
+        m_geom = WcsGeom.create(
+            binsz=0.01, width=(5, 5), skydir=(2, 2), coordsys="GAL", proj="AIT"
+        )
+        phi = Angle("30 deg")
+        model = SkyGaussianElongated("2 deg", "2 deg", "1 deg", 0.7, phi, frame="galactic")
+
+        coords = m_geom.get_coord()
+        lon = coords.lon * u.deg
+        lat = coords.lat * u.deg
+        vals = model(lon, lat)
+        skymap = Map.from_geom(m_geom, data=vals.value)
+
+        _, ax, _ = skymap.smooth("0.05 deg").plot()
+
+        transform = ax.get_transform("galactic")
+        ax.scatter(2, 2, transform=transform, s=20, edgecolor="red", facecolor="red")
+        ax.text(1.5, 1.85, r"$(l_0, b_0)$", transform=transform, ha="center")
+        ax.plot([2, 2 + np.sin(phi)], [2, 2 + np.cos(phi)], color="r", transform=transform)
+        ax.vlines(x=2, color="r", linestyle="--", transform=transform, ymin=-5, ymax=5)
+        ax.text(2.25, 2.45, r"$\phi$", transform=transform)
+        ax.contour(skymap.data, cmap="coolwarm", levels=10, alpha=0.6)
+
+        plt.show()
+    """
+
+    __slots__ = ["frame", "lon_0", "lat_0", "sigma_semi_major", "e", "phi"]
+
+    def __init__(self, lon_0, lat_0, sigma_semi_major, e, phi, frame="galactic"):
+        self.frame = frame
+        self.lon_0 = Parameter(
+            "lon_0", Longitude(lon_0).wrap_at("180d"), min=-180, max=180
+        )
+        self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
+        self.sigma_semi_major = Parameter("sigma_semi_major", Angle(sigma_semi_major))
+        self.e = Parameter("e", e, min=0, max=1)
+        self.phi = Parameter("phi", Angle(phi))
+
+        super().__init__(
+            [self.lon_0, self.lat_0, self.sigma_semi_major, self.e, self.phi]
+        )
+
+    @property
+    def evaluation_radius(self):
+        r"""Evaluation radius (`~astropy.coordinates.Angle`).
+
+        Set as :math:`5\sigma`.
+        """
+        return 5 * self.parameters["sigma_semi_major"].quantity
+
+    @staticmethod
+    def evaluate(lon, lat, lon_0, lat_0, sigma_semi_major, e, phi):
+        """Evaluate model."""
+        sep = angular_separation(lon, lat, lon_0, lat_0)
+
+        phi_0 = position_angle(lon_0, lat_0, lon, lat)
+        d_phi = phi - phi_0
+        sigma_semi_minor = Angle(sigma_semi_major * np.sqrt(1 - e ** 2))
+
+        # Effective radius, used for model evaluation as in the symmetric case
+        a2 = (sigma_semi_major * np.sin(d_phi)) ** 2
+        b2 = (sigma_semi_minor * np.cos(d_phi)) ** 2
+        denominator = np.sqrt(a2 + b2)
+        sigma_eff = sigma_semi_major * sigma_semi_minor / denominator
+
+        norm = 1 / (2 * np.pi * sigma_semi_major * sigma_semi_minor)
+
+        a = 1.0 - np.cos(sigma_eff)
+        exponent = -0.5 * ((1 - np.cos(sep)) / a)
+        return u.Quantity(
+            norm.to_value("sr-1") * np.exp(exponent).value, "sr-1", copy=False
+        )
 
 
 class SkyDisk(SkySpatialModel):
@@ -184,7 +312,6 @@ class SkyDisk(SkySpatialModel):
     where :math:`\theta` is the sky separation. To improve fit convergence of the
     model, the sharp edges is smoothed using `~scipy.special.erf`.
 
-
     Parameters
     ----------
     lon_0 : `~astropy.coordinates.Longitude`
@@ -199,7 +326,6 @@ class SkyDisk(SkySpatialModel):
         (see illustration below).
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
-
 
     Examples
     --------
@@ -233,7 +359,6 @@ class SkyDisk(SkySpatialModel):
         plt.hlines([0.05], edge_max - 0.02, edge_max + 0.02, linestyles=["-"])
         plt.text(edge_max - 0.02, 0.05, "5%", size=12, va="center", ha="right")
         plt.show()
-
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "r_0"]
@@ -259,7 +384,7 @@ class SkyDisk(SkySpatialModel):
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0, edge):
-        """Evaluate the model (static function)."""
+        """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
         # Surface area of a spherical cap, see https://en.wikipedia.org/wiki/Spherical_cap
@@ -287,8 +412,7 @@ class SkyEllipse(SkySpatialModel):
     The model is defined on the celestial sphere, with a normalization defined by:
 
     .. math::
-       \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
-
+        \int_{4\pi}\phi(\text{lon}, \text{lat}) \,d\Omega = 1\,.
 
     Parameters
     ----------
@@ -300,10 +424,9 @@ class SkyEllipse(SkySpatialModel):
         :math:`a`: length of the major semiaxis, in angular units.
     e : `float`
         Eccentricity of the ellipse (:math:`0< e< 1`).
-    theta : `~astropy.coordinates.Angle`
-        :math:`\theta`:
-        Rotation angle of the major semiaxis.  The rotation angle increases counter-clockwise
-        from the North direction.
+    phi : `~astropy.coordinates.Angle`
+        Rotation angle :math:`\phi`: of the major semiaxis.
+        Increases counter-clockwise from the North direction.
     edge : `~astropy.coordinates.Angle`
         Width of the edge. The width is defined as the range within the
         smooth edges of the model drops from 95% to 5% of its amplitude
@@ -338,15 +461,15 @@ class SkyEllipse(SkySpatialModel):
         ax.text(1.7, 1.85, r"$(l_0, b_0)$", transform=transform, ha="center")
         ax.plot([2, 2 + np.sin(np.pi / 6)], [2, 2 + np.cos(np.pi / 6)], color="r", transform=transform)
         ax.vlines(x=2, color='r', linestyle='--', transform=transform, ymin=0, ymax=5)
-        ax.text(2.15, 2.3, r"$\theta$", transform=transform);
+        ax.text(2.15, 2.3, r"$\phi$", transform=transform);
 
         plt.show()
         """
 
-    __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "theta", "_offset_by"]
+    __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "phi", "_offset_by"]
 
     def __init__(
-        self, lon_0, lat_0, semi_major, e, theta, edge="0.01 deg", frame="galactic"
+        self, lon_0, lat_0, semi_major, e, phi, edge="0.01 deg", frame="galactic"
     ):
         try:
             from astropy.coordinates.angle_utilities import offset_by
@@ -362,11 +485,11 @@ class SkyEllipse(SkySpatialModel):
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.semi_major = Parameter("semi_major", Angle(semi_major))
         self.e = Parameter("e", e, min=0, max=1)
-        self.theta = Parameter("theta", Angle(theta))
+        self.phi = Parameter("phi", Angle(phi))
         self.edge = Parameter("edge", Angle(edge), frozen=True, min=0.01)
 
         super().__init__(
-            [self.lon_0, self.lat_0, self.semi_major, self.e, self.theta, self.edge]
+            [self.lon_0, self.lat_0, self.semi_major, self.e, self.phi, self.edge]
         )
 
     @property
@@ -394,12 +517,12 @@ class SkyEllipse(SkySpatialModel):
             2 * quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, np.pi)[0]
         ) ** -1
 
-    def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, theta, edge):
-        """Evaluate the model (static function)."""
+    def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, phi, edge):
+        """Evaluate model."""
         # find the foci of the ellipse
         c = semi_major * e
-        lon_1, lat_1 = self._offset_by(lon_0, lat_0, theta, c)
-        lon_2, lat_2 = self._offset_by(lon_0, lat_0, 180 * u.deg + theta, c)
+        lon_1, lat_1 = self._offset_by(lon_0, lat_0, phi, c)
+        lon_2, lat_2 = self._offset_by(lon_0, lat_0, 180 * u.deg + phi, c)
 
         sep_1 = angular_separation(lon, lat, lon_1, lat_1)
         sep_2 = angular_separation(lon, lat, lon_2, lat_2)
@@ -465,7 +588,7 @@ class SkyShell(SkySpatialModel):
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, radius, width):
-        """Evaluate the model (static function)."""
+        """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
         radius_out = radius + width
 
@@ -502,14 +625,12 @@ class SkyDiffuseConstant(SkySpatialModel):
 
     @property
     def evaluation_radius(self):
-        """Evaluation radius (``None``).
-
-        Set to ``None``.
-        """
+        """Evaluation radius (``None``)."""
         return None
 
     @staticmethod
     def evaluate(lon, lat, value):
+        """Evaluate model."""
         return value
 
 
