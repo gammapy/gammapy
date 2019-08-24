@@ -1,24 +1,13 @@
 from ..analysis import Analysis
-import copy
 
 
 def test_config():
-    assert Analysis()._validate_schema() is None
+    assert "global" in Analysis().config.keys()
+    assert "global" not in Analysis(configfile="").config.keys()
+    assert Analysis(test=True).config["test"]
 
 
-def test_list_config():
-    assert "global" in Analysis().list_config().keys()
-
-
-def test_set_config():
-    analysis = Analysis()
-    analysis.set_config("global.logging.level", "info")
-    cfgset = copy.deepcopy(analysis.list_config())
-    analysis.set_config("global.test", "test")
-    cfgadd = copy.deepcopy(analysis.list_config())
-    analysis.set_config("global.test", None)
-    cfgdel = copy.deepcopy(analysis.list_config())
-
-    assert cfgset["global"]["logging"]["level"] == "info"
-    assert cfgadd["global"]["test"] == "test"
-    assert "test" not in cfgdel["global"].keys()
+def test_validate_config():
+    cfg = {"global": {"logging": {"level": "INFO"}}}
+    assert Analysis().validate_config() is None
+    assert Analysis(configfile="", **cfg).validate_config() is None

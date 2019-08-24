@@ -4,7 +4,7 @@ global:
     out_folder: "."  # default is current working directory
     store_per_obs: true
     logging:
-        level: info
+        level: INFO
 
 observations:
     data_store: $GAMMAPY_DATA/cta-1dc/index/gps/
