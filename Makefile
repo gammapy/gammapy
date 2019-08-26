@@ -94,7 +94,7 @@ clean-nb:
 docs-sphinx:
 	# TODO: can we get -W option to pass here?
 	# Currently gives error because _static isn't there!?
-	python -m sphinx docs docs/_build/html -b html
+	cd docs && python -m sphinx . _build/html -b html
 
 docs-all:
 	which python
