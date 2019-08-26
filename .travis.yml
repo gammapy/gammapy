@@ -148,7 +148,7 @@ script:
           gammapy download datasets --out=$GAMMAPY_DATA;
       fi
 
-    - if RUN_INSTALL; then
+    - if $RUN_INSTALL; then
           pip install -e .;
       fi
 
