@@ -196,6 +196,9 @@ Somewhat related to this PIG: we plan to modernise Gammapy packaging following
 the recommendations in `APE 17`_. Work on this has already started in `GH
 2279`_.
 
+We could support other ways to ship Gammapy, e.g. Homebrew (works on MacOS and
+also Linux now), or Docker images (works anywhere, self-contained).
+
 Alternatives
 ============
 
@@ -211,17 +214,6 @@ solution. It does have the advantage ob using a conda-native solution to the
 question how to ship an environment. This could be prototyped any time, in
 parallel with the existing solution, to gain familiarity with metapackages.
 
-We could support other ways to ship Gammapy, e.g. Homebrew (works on MacOS and
-also Linux now), or Docker images (works anywhere, self-contained).
-
-We note that we expect the Gammapy dependencies to change from time to time.
-Especially within the next year or two, eventually Gammapy will mature and
-settle down. E.g. if Astropy changes to use ``ruamel_yaml`` instead of
-``pyyaml``, we would likely follow. Another change we will likely make is to use
-``astropy-healpix`` instead of ``healpy`` once ``astropy-healpix`` has matured.
-We also plan to work on performance in Gammapy next year, and will consider
-using ``numba``. The dependencies listed in this PIG are the current status,
-each change will be considered and discussed via a pull request or future PIG.
 
 Task list
 =========
