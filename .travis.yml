@@ -24,13 +24,14 @@ addons:
 
 env:
     global:
+        - PYTHON_VERSION=3.7
         - NUMPY_VERSION=1.15
         - ASTROPY_VERSION=stable
 
         - CONDA_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_OSX='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa regions reproject pandoc ipython iminuit'
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima regions reproject pandoc ipython iminuit'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
+        - CONDA_DEPENDENCIES_DOCS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
         - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy parfive'
@@ -39,10 +40,9 @@ env:
 
         - FETCH_GAMMAPY_EXTRA=false
         - FETCH_GAMMAPY_DATA=true
-        - PACKAGING_TEST=false
+        - TEST_COVERAGE=false
+        - TEST_PACKAGING=false
         - TEST_FERMIPY=false
-
-        - MAIN_CMD='python setup.py'
 
         - ASTROPY_USE_SYSTEM_PYTEST=1
 
@@ -54,82 +54,65 @@ matrix:
 
     include:
 
+        # Main test, used for coverage
+        - env: TEST_COVERAGE=true CMD='make test-cov'
+
         # MacOS X tests
         - os: osx
-          env: PYTHON_VERSION=3.6 SETUP_CMD='test'
+          env: PYTHON_VERSION=3.6 CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_OSX
 
-        # The main build that's used for coverage measurement
-        - os: linux
-          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='test-cov'
-
         # Run tests without optional dependencies
-        - os: linux
-          env: PYTHON_VERSION=3.6 SETUP_CMD='test -V'
+        - env: PYTHON_VERSION=3.6 CMD='make test'
                CONDA_DEPENDENCIES='Cython click regions'
                PIP_DEPENDENCIES='pytest-astropy parfive'
 
         # Run tests without GAMMAPY_EXTRA available
         - os: linux
-          env: FETCH_GAMMAPY_DATA=false PYTHON_VERSION=3.7 SETUP_CMD='test -V'
-               FETCH_GAMMAPY_EXTRA=false
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
+          env: CMD='make test'
+               FETCH_GAMMAPY_EXTRA=false FETCH_GAMMAPY_DATA=false
 
         # Build docs
         - os: linux
-          env: PYTHON_VERSION=3.7 MAIN_CMD='make' SETUP_CMD='docs-all'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+          env: CMD='make docs-all'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
 
         # Test conda build (which runs a bunch of useful tests after building the package)
         # See https://conda.io/docs/bdist_conda.html
         - os: linux
-          env: PYTHON_VERSION=3.7 SETUP_CMD='bdist_conda'
-               PACKAGING_TEST=true
+          env: CMD='python setup.py bdist_conda'
+               TEST_PACKAGING=true
 
-        # Test with Astropy dev and LTS versions
+        # Test with Astropy LTS version
         - os: linux
-          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
+        # Test with Astropy dev version
         - os: linux
-          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Sherpa dev, this may take a longer time
         - os: linux
-          env: PYTHON_VERSION=3.6 SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.6 SETUP_CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
                PIP_DEPENDENCIES='uncertainties==3.0.* git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy parfive'
 
         # Test Fermipy master against gammapy master
         - os: linux
-          env: PYTHON_VERSION=3.6 SETUP_CMD='install'
+          env: PYTHON_VERSION=3.6 CMD='pip install .'
                TEST_FERMIPY=true
-
-# Skip this test because of https://travis-ci.org/gammapy/gammapy/jobs/553230683#L4172
-# and we drop support for these old numpy version soon anyway.
-#        # Test with other numpy versions
-#        - os: linux
-#          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.10 ASTROPY_VERSION=lts
-#               SETUP_CMD='test -V'
 
         # Test Jupyter notebooks
         - os: linux
-          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-nb'
+          env: PYTHON_VERSION=3.6 CMD='make test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
         # Test example scripts
         - os: linux
-          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-scripts'
+          env: PYTHON_VERSION=3.6 CMD='make test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
-
-    # You can move builds that temporarily fail because of some non-Gammapy here.
-    # Please add a link to a GH issue that tracks the upstream issue.
-    # copy the part from the `include` section above here.
-#    allow_failures:
-#        - os: linux
-#          env: PYTHON_VERSION=3.6 MAIN_CMD='make' SETUP_CMD='test-nb'
-#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
 
 install:
@@ -139,7 +122,7 @@ install:
     # From https://conda.io/docs/bdist_conda.html
     # bdist_conda must be installed into a root conda environment,
     # as it imports conda and conda_build. It is included as part of the conda build package.
-    - if $PACKAGING_TEST; then
+    - if $TEST_PACKAGING; then
           conda install -n root conda-build astropy Cython click regions;
           conda info;
           conda --version;
@@ -166,11 +149,11 @@ script:
           gammapy download datasets --out=$GAMMAPY_DATA;
       fi
 
-    - if [[ $SETUP_CMD == 'test-cov' ]]; then
+    - if $TEST_COVERAGE; then
           pip install -e .;
       fi
 
-    - $MAIN_CMD $SETUP_CMD
+    - $CMD
 
     - if $TEST_FERMIPY; then
           git clone https://github.com/fermiPy/fermipy.git;
@@ -179,7 +162,7 @@ script:
       fi
 
 after_success:
-    - if [[ $SETUP_CMD == 'test-cov' ]]; then
+    - if $TEST_COVERAGE; then
           pip install coveralls;
           coveralls --rcfile='gammapy/tests/coveragerc';
       fi
