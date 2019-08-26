@@ -34,7 +34,7 @@ env:
         - CONDA_DEPENDENCIES_DOCS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima pygments sherpa libgfortran regions reproject pandoc ipython jupyter'
         - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy healpy matplotlib pyyaml uncertainties=3.0 pandas naima sherpa libgfortran iminuit regions reproject pandoc ipython jupyter'
 
-        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy parfive'
+        - PIP_DEPENDENCIES='nbsphinx sphinx-astropy sphinx-click sphinx_rtd_theme pytest-astropy pytest-cov parfive'
 
         - CONDA_CHANNELS='conda-forge sherpa'
 
@@ -43,8 +43,7 @@ env:
         - TEST_COVERAGE=false
         - TEST_PACKAGING=false
         - TEST_FERMIPY=false
-
-        - ASTROPY_USE_SYSTEM_PYTEST=1
+        - RUN_INSTALL=true
 
 
 matrix:
@@ -149,7 +148,7 @@ script:
           gammapy download datasets --out=$GAMMAPY_DATA;
       fi
 
-    - if $TEST_COVERAGE; then
+    - if RUN_INSTALL; then
           pip install -e .;
       fi
 

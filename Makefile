@@ -81,7 +81,6 @@ test-cov:
 	python -m pytest -v gammapy --cov=gammapy --cov-report=html --cov-config=gammapy/tests/coveragerc
 
 test-nb:
-	pip install -e .
 	python -m gammapy.utils.tutorials_test
 
 test-scripts:
@@ -95,8 +94,6 @@ docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html
 
 docs-all:
-	which python
-	pip install -e .
 	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)"
 	cd docs && python -m sphinx . _build/html -b html
 
