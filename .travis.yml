@@ -163,7 +163,7 @@ script:
     - if $FETCH_GAMMAPY_DATA; then
           export GAMMAPY_DATA=${HOME}/gammapy-data;
           pip install .;
-          gammapy download datasets --out=$GAMMAPY_DATA;
+          gammapy download datasets --out=$GAMMAPY_DATA --silent;
       fi
 
     - if [[ $SETUP_CMD == 'test-cov' ]]; then

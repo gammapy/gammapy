@@ -17,13 +17,14 @@ log = logging.getLogger(__name__)
 )
 @click.option("--release", default="", help="Number of release - ex: 0.12)")
 @click.option("--modetutorials", default=False, hidden=True)
-def cli_download_notebooks(src, out, release, modetutorials):
+@click.option("--silent", default=True, is_flag=True, hidden=True)
+def cli_download_notebooks(src, out, release, modetutorials, silent):
     """Download notebooks"""
     plan = ComputePlan(src, out, release, "notebooks")
     if release:
         plan.getenvironment()
     down = ParallelDownload(
-        plan.getfilelist(), plan.getlocalfolder(), release, "notebooks", modetutorials
+        plan.getfilelist(), plan.getlocalfolder(), release, "notebooks", modetutorials, silent
     )
     down.run()
     print("")
@@ -39,13 +40,14 @@ def cli_download_notebooks(src, out, release, modetutorials):
 )
 @click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=False, hidden=True)
-def cli_download_scripts(src, out, release, modetutorials):
+@click.option("--silent", default=True, is_flag=True, hidden=False)
+def cli_download_scripts(src, out, release, modetutorials, silent):
     """Download scripts"""
     plan = ComputePlan(src, out, release, "scripts")
     if release:
         plan.getenvironment()
     down = ParallelDownload(
-        plan.getfilelist(), plan.getlocalfolder(), release, "scripts", modetutorials
+        plan.getfilelist(), plan.getlocalfolder(), release, "scripts", modetutorials, silent
     )
     down.run()
     print("")
@@ -61,11 +63,12 @@ def cli_download_scripts(src, out, release, modetutorials):
     show_default=True,
 )
 @click.option("--modetutorials", default=False, hidden=True)
-def cli_download_datasets(src, out, release, modetutorials):
+@click.option("--silent", default=True, is_flag=True, hidden=True)
+def cli_download_datasets(src, out, release, modetutorials, silent):
     """Download datasets"""
     plan = ComputePlan(src, out, release, "datasets", modetutorials=modetutorials)
     down = ParallelDownload(
-        plan.getfilelist(), plan.getlocalfolder(), release, "datasets", modetutorials
+        plan.getfilelist(), plan.getlocalfolder(), release, "datasets", modetutorials, silent
     )
     down.run()
     down.show_info_datasets()
@@ -82,7 +85,8 @@ def cli_download_datasets(src, out, release, modetutorials):
 )
 @click.option("--release", default="", help="Number of release - ex: 0.12")
 @click.option("--modetutorials", default=True, hidden=True)
-def cli_download_tutorials(ctx, src, out, release, modetutorials):
+@click.option("--silent", default=True, is_flag=True, hidden=True)
+def cli_download_tutorials(ctx, src, out, release, modetutorials, silent):
     """Download notebooks, scripts and datasets"""
     ctx.forward(cli_download_notebooks)
     ctx.forward(cli_download_scripts)
