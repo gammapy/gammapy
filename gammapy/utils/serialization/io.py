@@ -10,9 +10,10 @@ from gammapy.cube.models import (
     BackgroundModel,
     BackgroundModels,
 )
+from gammapy.cube.fit import MapDataset
 from gammapy.utils.fitting import Parameters
 
-__all__ = ["models_to_dict", "dict_to_models", "models_to_datasets", "datasets_to_dict"]
+__all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
 
 def models_to_dict(models, selection="all"):
@@ -39,10 +40,6 @@ def models_to_dict(models, selection="all"):
 def _model_to_dict(model, selection):
     data = {}
     data["name"] = getattr(model, "name", model.__class__.__name__)
-    try:
-        data["id"] = model.dataset_id
-    except AttributeError:
-        pass
     if getattr(model, "filename", None) is not None:
         data["filename"] = model.filename
     if model.__class__.__name__ == "SkyModel":
@@ -114,10 +111,8 @@ def datasets_to_dict(datasets, path, selection, overwrite):
     backgrounds_list = []
     datasets_dictlist = []
     for dataset in datasets:
-        filename = path + "maps_" + dataset.dataset_id + ".fits"
+        filename = path + "data_" + dataset.name + ".fits"
         dataset.write(filename, overwrite)
-        datasets_dictlist.append({"id": dataset.dataset_id, "filename": filename})
-
         if isinstance(dataset.background_model, BackgroundModels):
             backgrounds = dataset.background_model.models
         else:
@@ -127,7 +122,16 @@ def datasets_to_dict(datasets, path, selection, overwrite):
         else:
             models = [dataset.model]
         # TODO: remove isinstance checks once #2102  is resolved
-
+        bkg_names = [background.name for background in backgrounds]
+        models_names = [model.name for model in models]
+        datasets_dictlist.append(
+            {
+                "name": dataset.name,
+                "filename": filename,
+                "backgrounds": bkg_names,
+                "models": models_names,
+            }
+        )
         models_list += models
         backgrounds_list += backgrounds
 
@@ -136,7 +140,7 @@ def datasets_to_dict(datasets, path, selection, overwrite):
     return datasets_dict, components_dict
 
 
-class models_to_datasets:
+class dict_to_datasets:
     """add models and backgrounds to datasets
     
     Parameters
@@ -150,38 +154,39 @@ class models_to_datasets:
         
     """
 
-    def __init__(self, datasets, components):
-
-        self.datasets = datasets.datasets
-        self.models = dict_to_models(components)
-        self.backgrounds_local = []
-        self.backgrounds_global = []
-
+    def __init__(self, data_list, components):
         self.params_register = {}
         self.cube_register = {}
 
-        for dataset in self.datasets:
-            self.update_dataset(dataset, components)
+        self.models = dict_to_models(components)
+        self.datasets = []
+        for data in data_list["datasets"]:
+            dataset = MapDataset.read(data["filename"], name=data["name"])
+            bkg_names = data["backgrounds"]
+            model_names = data["models"]
+            self.update_dataset(dataset, components, bkg_names, model_names)
+            self.datasets.append(dataset)
 
-    def update_dataset(self, dataset, components):
+    def update_dataset(self, dataset, components, bkg_names, model_names):
         if not isinstance(dataset.background_model, BackgroundModels):
             dataset.background_model = BackgroundModels([dataset.background_model])
         # TODO: remove isinstance checks once #2102  is resolved
-        BKG_names = [model.name for model in dataset.background_model.models]
+        bkg_prev = [model.name for model in dataset.background_model.models]
         backgrounds = []
         for component in components["components"]:
             if (
                 "model" in component
                 and component["model"]["type"] == "BackgroundModel"
-                and component["id"] in ["global", "local", dataset.dataset_id]
+                and component["name"] in bkg_names
             ):
-                background_model = self.add_background(dataset, component, BKG_names)
+                background_model = self.add_background(dataset, component, bkg_prev)
                 self.link_parameters(dataset, component, background_model)
                 backgrounds.append(background_model)
         dataset.background_model = BackgroundModels(backgrounds)
-        dataset.model = SkyModels(self.models)
+        models = [model for model in self.models if model.name in model_names]
+        dataset.model = SkyModels(models)
 
-    def add_background(self, dataset, component, BKG_names):
+    def add_background(self, dataset, component, bkg_prev):
         if "filename" in component:
             # check if file is already loaded in memory else read
             try:
@@ -193,28 +198,19 @@ class models_to_datasets:
                 cube, exposure=dataset.exposure, psf=dataset.psf, edisp=dataset.edisp
             )
         else:
-            if component["name"].strip().upper() in BKG_names:
-                BGind = BKG_names.index(component["name"].strip().upper())
-            elif component["name"] in BKG_names:
-                BGind = BKG_names.index(component["name"])
-            else:
-                raise ValueError("Unknown Background")
+            if component["name"].strip().upper() in bkg_prev:
+                BGind = bkg_prev.index(component["name"].strip().upper())
+            elif component["name"] in bkg_prev:
+                BGind = bkg_prev.index(component["name"])
             background_model = dataset.background_model.models[BGind]
         background_model.name = component["name"]
         return background_model
 
     def link_parameters(self, dataset, component, background_model):
         """ link parameters to background """
-        if component["id"] == "global":
-            try:
-                params = self.params_register[component["name"]]
-            except KeyError:
-                params = Parameters.from_dict(component["model"])
-                self.params_register[component["name"]] = params
-            background_model.parameters = params
-            background_model.dataset_id = "global"
-            self.backgrounds_global.append(background_model)
-        elif component["id"] in ["local", dataset.dataset_id]:
-            background_model.parameters = Parameters.from_dict(component["model"])
-            background_model.dataset_id = dataset.dataset_id
-            self.backgrounds_local.append(background_model)
+        try:
+            params = self.params_register[component["name"]]
+        except KeyError:
+            params = Parameters.from_dict(component["model"])
+            self.params_register[component["name"]] = params
+        background_model.parameters = params

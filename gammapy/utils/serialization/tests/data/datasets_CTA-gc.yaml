@@ -1,5 +1,0 @@
-datasets:
-- filename: $GAMMAPY_DATA/tests/models/maps_CTA-gc-copy.fits
-  id: CTA-gc
-- filename: $GAMMAPY_DATA/tests/models/maps_CTA-gc.fits
-  id: CTA-gc-copy

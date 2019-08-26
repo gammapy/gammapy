@@ -142,27 +142,8 @@ class Datasets:
         """A deep copy."""
         return copy.deepcopy(self)
 
-    def set_models_from_yaml(self, filemodel):
-        """add models and backgrounds to datasets from yaml files
-    
-        Parameters
-        ----------
-        fdatasets : str
-            filepath to yaml datasets file
-        filemodel : str
-            filepath to yaml models file
-        """
-        from ..serialization import models_to_datasets
-        from ..scripts import read_yaml
-
-        components = read_yaml(filemodel)
-        models_to_datasets(self, components)
-
     @classmethod
-    def from_yaml(cls, filedata, filemodel=None):
-        from ...cube.fit import MapDataset
-        from ..scripts import read_yaml
-
+    def from_yaml(cls, filedata, filemodel):
         """De-serialize datasets from yaml and fits files
     
         Parameters
@@ -177,17 +158,13 @@ class Datasets:
         dataset : 'gammapy.utils.fitting.Datasets'
             Datasets
          """
+        from ..scripts import read_yaml
+        from ..serialization import dict_to_datasets
 
+        components = read_yaml(filemodel)
         data_list = read_yaml(filedata)
-        datasets_list = []
-        for data in data_list["datasets"]:
-            dataset = MapDataset.read(data["filename"])
-            dataset.dataset_id = data["id"]
-            datasets_list.append(dataset)
-        datasets = cls(datasets_list)
-        if filemodel is not None:
-            datasets.set_models_from_yaml(filemodel)
-        return datasets
+        constructor = dict_to_datasets(data_list, components)
+        return cls(constructor.datasets)
 
     def to_yaml(self, path, selection="all", overwrite=False):
         """Serialize datasets to yaml and fits files

@@ -65,7 +65,7 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         background_model=None,
-        dataset_id=None,
+        name="",
         likelihood="cash",
         evaluation_mode="local",
         mask_safe=None,
@@ -83,7 +83,7 @@ class MapDataset(Dataset):
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
-        self.dataset_id = dataset_id
+        self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
         if likelihood == "cash":
@@ -486,7 +486,7 @@ class MapDataset(Dataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist):
+    def from_hdulist(cls, hdulist, name=""):
         """Create map dataset from list of HDUs.
 
         Parameters
@@ -500,6 +500,7 @@ class MapDataset(Dataset):
             Map dataset.
         """
         init_kwargs = {}
+        init_kwargs["name"]=name
         init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
         init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
@@ -526,7 +527,6 @@ class MapDataset(Dataset):
         if "MASK_FIT" in hdulist:
             mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
             init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
-
         return cls(**init_kwargs)
 
     def write(self, filename, overwrite=False):
@@ -544,7 +544,7 @@ class MapDataset(Dataset):
         hdulist.writeto(str(filename), overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, name=""):
         """Read map dataset from file.
 
         Parameters
@@ -559,7 +559,7 @@ class MapDataset(Dataset):
         """
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
-        return cls.from_hdulist(hdulist)
+        return cls.from_hdulist(hdulist, name=name)
 
 
 class MapEvaluator:

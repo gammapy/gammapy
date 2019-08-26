@@ -411,7 +411,7 @@ class BackgroundModel(Model):
         Reference energy of the tilt.
     """
 
-    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename", "dataset_id"]
+    __slots__ = ["map", "norm", "tilt", "reference", "name", "filename"]
 
     def __init__(
         self,
@@ -421,7 +421,6 @@ class BackgroundModel(Model):
         reference="1 TeV",
         name="background",
         filename=None,
-        dataset_id="local",
     ):
         axis = background.geom.get_axis_by_name("energy")
         if axis.node_type != "edges":
@@ -433,7 +432,6 @@ class BackgroundModel(Model):
         self.reference = Parameter("reference", reference, frozen=True)
         self.name = name
         self.filename = filename
-        self.dataset_id = dataset_id
         super().__init__([self.norm, self.tilt, self.reference])
 
     @property
@@ -460,7 +458,7 @@ class BackgroundModel(Model):
 
     @classmethod
     def from_skymodel(
-        cls, skymodel, exposure, edisp=None, psf=None, dataset_id="global", **kwargs
+        cls, skymodel, exposure, name=None, edisp=None, psf=None, **kwargs
     ):
         """Create background model from sky model by applying IRFs.
 
@@ -484,8 +482,10 @@ class BackgroundModel(Model):
         )
         background = evaluator.compute_npred()
         background_model = cls(background=background, **kwargs)
-        background_model.name = skymodel.name
-        background_model.dataset_id = dataset_id
+        if name is None:
+            background_model.name = skymodel.name
+        else:
+            background_model.name = name
         if skymodel.__class__.__name__ == "SkyDiffuseCube":
             background_model.filename = skymodel.filename
         return background_model

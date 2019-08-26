@@ -102,61 +102,69 @@ def test_sky_models_io(tmpdir):
 
 @requires_data()
 def test_datasets_to_io(tmpdir):
-    filedata = get_pkg_data_filename("data/datasets_CTA-gc.yaml")
-    filemodel = get_pkg_data_filename("data/models_CTA-gc.yaml")
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
 
     datasets = Datasets.from_yaml(filedata, filemodel)
 
     assert len(datasets.datasets) == 2
+
     dataset0 = datasets.datasets[0]
-    assert dataset0.counts.data.sum() == 144754
-    assert_allclose(dataset0.exposure.data.sum(), 5511689000000000.0)
+    assert dataset0.counts.data.sum() == 6824
+    assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
 
     assert isinstance(dataset0.background_model, BackgroundModels)
     assert len(dataset0.background_model.models) == 2
     assert_allclose(
-        dataset0.background_model.models[0].evaluate().data.sum(), 130416.97522559075
+        dataset0.background_model.models[0].evaluate().data.sum(), 4094.2, atol=0.1
     )
     assert_allclose(
-        dataset0.background_model.models[1].evaluate().data.sum(), 8054.892073330987
+        dataset0.background_model.models[1].evaluate().data.sum(), 928.8, atol=0.1
     )
-    assert dataset0.background_model.models[0].name == "background_irf"
-    assert dataset0.background_model.models[1].name == "gll_iem_v06_cutout"
-    assert dataset0.background_model.models[0].dataset_id == dataset0.dataset_id
-    assert dataset0.background_model.models[1].dataset_id == "global"
+    assert dataset0.background_model.models[0].name in [
+        "background_irf_gc",
+        "gll_iem_v06_cutout",
+    ]
+    assert dataset0.background_model.models[1].name in [
+        "background_irf_gc",
+        "gll_iem_v06_cutout",
+    ]
+
+    dataset1 = datasets.datasets[1]
+    assert len(dataset1.background_model.models) == 2
+    assert dataset1.background_model.models[0].name in [
+        "background_irf_g09",
+        "gll_iem_v06_cutout",
+    ]
+    assert dataset1.background_model.models[1].name in [
+        "background_irf_g09",
+        "gll_iem_v06_cutout",
+    ]
 
     assert isinstance(dataset0.model, SkyModels)
     assert len(dataset0.model.skymodels) == 2
-    assert dataset0.model.skymodels[0].name == "gc-source"
-    assert dataset0.model.skymodels[1].name == "fake-source"
-    assert dataset0.model.skymodels[1].parameters["lon_0"].value == -10.0
+    assert dataset0.model.skymodels[0].name == "gc"
+    assert dataset0.model.skymodels[1].name == "g09"
+    assert_allclose(
+        dataset0.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
+    )
 
-    dataset1 = datasets.datasets[0]
-    assert dataset1.background_model.models[0].dataset_id == dataset1.dataset_id
-    assert dataset1.background_model.models[1].dataset_id == "global"
-
-    filename = str(tmpdir / "backgrounds.yaml")
-    filebg = get_pkg_data_filename("data/backgrounds_CTA-gc.yaml")
-    dataset0.background_model.to_yaml(filename)
-    assert filecmp.cmp(filename, filebg)
-
-    path = str(tmpdir / "written_")
-    datasets.to_yaml(path, selection="all", overwrite=False)
-    assert filecmp.cmp(path + "models.yaml", filemodel)
+    path = str(tmpdir / "/written_")
+    datasets.to_yaml(path, selection="simple", overwrite=True)
     datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
     assert len(datasets_read.datasets) == 2
     dataset0 = datasets_read.datasets[0]
-    assert dataset0.counts.data.sum() == 144754
-    assert_allclose(dataset0.exposure.data.sum(), 5511689000000000.0)
+    assert dataset0.counts.data.sum() == 6824
+    assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
     assert isinstance(dataset0.background_model, BackgroundModels)
     assert len(dataset0.background_model.models) == 2
     assert_allclose(
-        dataset0.background_model.models[0].evaluate().data.sum(), 130416.97522559075
+        dataset0.background_model.models[0].evaluate().data.sum(), 4094.2, atol=0.1
     )
     assert_allclose(
-        dataset0.background_model.models[1].evaluate().data.sum(), 8054.892073330987
+        dataset0.background_model.models[1].evaluate().data.sum(), 928.8, atol=0.1
     )
