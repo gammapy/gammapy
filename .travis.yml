@@ -55,6 +55,7 @@ matrix:
 
         # Main test, used for coverage
         - env: TEST_COVERAGE=true CMD='make test-cov'
+               PIP_DEPENDENCIES="$PIP_DEPENDENCIES pytest-cov"
 
         # MacOS X tests
         - os: osx
@@ -67,50 +68,41 @@ matrix:
                PIP_DEPENDENCIES='pytest-astropy parfive'
 
         # Run tests without GAMMAPY_EXTRA available
-        - os: linux
-          env: CMD='make test'
+        - env: CMD='make test'
                FETCH_GAMMAPY_EXTRA=false FETCH_GAMMAPY_DATA=false
 
         # Build docs
-        - os: linux
-          env: CMD='make docs-all'
+        - env: CMD='make docs-all'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOCS
 
         # Test conda build (which runs a bunch of useful tests after building the package)
         # See https://conda.io/docs/bdist_conda.html
-        - os: linux
-          env: CMD='python setup.py bdist_conda'
+        - env: CMD='python setup.py bdist_conda'
                TEST_PACKAGING=true
 
         # Test with Astropy LTS version
-        - os: linux
-          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts CMD='make test'
+        - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=lts CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Astropy dev version
-        - os: linux
-          env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
+        - env: PYTHON_VERSION=3.6 ASTROPY_VERSION=dev CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
         # Test with Sherpa dev, this may take a longer time
-        - os: linux
-          env: PYTHON_VERSION=3.6 SETUP_CMD='make test'
+        - env: PYTHON_VERSION=3.6 SETUP_CMD='make test'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
                PIP_DEPENDENCIES='uncertainties==3.0.* git+http://github.com/sherpa/sherpa.git#egg=sherpa pytest-astropy parfive'
 
         # Test Fermipy master against gammapy master
-        - os: linux
-          env: PYTHON_VERSION=3.6 CMD='pip install .'
+        - env: PYTHON_VERSION=3.6 CMD='pip install .'
                TEST_FERMIPY=true
 
         # Test Jupyter notebooks
-        - os: linux
-          env: PYTHON_VERSION=3.6 CMD='make test-nb'
+        - env: PYTHON_VERSION=3.6 CMD='make test-nb'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
         # Test example scripts
-        - os: linux
-          env: PYTHON_VERSION=3.6 CMD='make test-scripts'
+        - env: PYTHON_VERSION=3.6 CMD='make test-scripts'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES
 
 
