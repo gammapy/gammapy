@@ -2,8 +2,8 @@
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy.units import Quantity
-from ....utils.testing import assert_quantity_allclose
-from ...source import Pulsar, SimplePulsar
+from gammapy.astro.source import Pulsar, SimplePulsar
+from gammapy.utils.testing import assert_quantity_allclose
 
 pulsar = Pulsar()
 time = Quantity([1e2, 1e4, 1e6, 1e8], "yr")

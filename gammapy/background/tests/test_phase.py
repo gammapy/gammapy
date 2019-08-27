@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from astropy.coordinates import Angle, SkyCoord
-from ...data import DataStore, EventList
-from ...utils.regions import SphericalCircleSkyRegion
-from ...utils.testing import requires_data
-from .. import BackgroundEstimate, PhaseBackgroundEstimator
+from gammapy.background import BackgroundEstimate, PhaseBackgroundEstimator
+from gammapy.data import DataStore, EventList
+from gammapy.utils.regions import SphericalCircleSkyRegion
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

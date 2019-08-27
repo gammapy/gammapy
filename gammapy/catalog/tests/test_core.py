@@ -5,8 +5,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.table import Column, Table
 from astropy.units import Quantity
-from ...utils.testing import assert_quantity_allclose
-from ..core import SourceCatalog
+from gammapy.catalog import SourceCatalog
+from gammapy.utils.testing import assert_quantity_allclose
 
 
 def make_test_catalog():

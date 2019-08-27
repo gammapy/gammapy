@@ -5,8 +5,8 @@ from scipy.optimize import fsolve
 import astropy.constants as const
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from ..source.pulsar import Pulsar
-from ..source.snr import SNRTrueloveMcKee
+from .pulsar import Pulsar
+from .snr import SNRTrueloveMcKee
 
 __all__ = ["PWN"]
 

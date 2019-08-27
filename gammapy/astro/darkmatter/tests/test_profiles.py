@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from ....utils.testing import assert_quantity_allclose
-from .. import profiles
+from gammapy.astro.darkmatter import profiles
+from gammapy.utils.testing import assert_quantity_allclose
 
 dm_profiles = [
     profiles.NFWProfile,

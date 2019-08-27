@@ -3,8 +3,8 @@
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
-from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER, cartesian, polar
-from ...utils.random import get_random_state
+from gammapy.utils.coordinates import D_SUN_TO_GALACTIC_CENTER, cartesian, polar
+from gammapy.utils.random import get_random_state
 
 __all__ = [
     "CaseBattacharya1998",

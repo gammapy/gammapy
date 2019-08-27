@@ -4,10 +4,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
-from ...data import EventList
-from ...maps import HpxGeom, Map, MapAxis, WcsNDMap
-from ...utils.testing import requires_dependency
-from ..counts import fill_map_counts
+from gammapy.cube import fill_map_counts
+from gammapy.data import EventList
+from gammapy.maps import HpxGeom, Map, MapAxis, WcsNDMap
+from gammapy.utils.testing import requires_dependency
 
 
 @pytest.fixture()

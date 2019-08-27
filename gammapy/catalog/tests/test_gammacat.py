@@ -3,12 +3,16 @@ from collections import OrderedDict
 import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
-from ...utils.testing import (
+from gammapy.catalog import (
+    GammaCatResource,
+    GammaCatResourceIndex,
+    SourceCatalogGammaCat,
+)
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,
     requires_dependency,
 )
-from ..gammacat import GammaCatResource, GammaCatResourceIndex, SourceCatalogGammaCat
 
 SOURCES = [
     {

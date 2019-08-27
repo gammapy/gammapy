@@ -10,11 +10,11 @@ from collections import OrderedDict, namedtuple
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from ..cube.models import SkyModel, SkyModels
-from ..image.models import SkyGaussian, SkyPointSource, SkyShell
-from ..spectrum import FluxPoints
-from ..spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
-from ..utils.scripts import make_path
+from gammapy.cube.models import SkyModel, SkyModels
+from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.spectrum import FluxPoints
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
+from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

@@ -5,8 +5,8 @@ from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
-from ..utils.array import _is_int
-from ..utils.table import table_from_row_data, table_row_to_dict
+from gammapy.utils.array import _is_int
+from gammapy.utils.table import table_from_row_data, table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 

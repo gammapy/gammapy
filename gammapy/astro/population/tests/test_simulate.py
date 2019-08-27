@@ -2,7 +2,7 @@
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.table import Table
-from ...population import (
+from gammapy.astro.population import (
     add_observed_parameters,
     add_pulsar_parameters,
     add_pwn_parameters,

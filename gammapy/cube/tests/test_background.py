@@ -5,11 +5,11 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
-from ...data.pointing import FixedPointingInfo
-from ...irf import Background3D
-from ...maps import HpxGeom, MapAxis, WcsGeom
-from ...utils.testing import requires_data
-from ..background import make_map_background_irf
+from gammapy.cube import make_map_background_irf
+from gammapy.data import FixedPointingInfo
+from gammapy.irf import Background3D
+from gammapy.maps import HpxGeom, MapAxis, WcsGeom
+from gammapy.utils.testing import requires_data
 
 pytest.importorskip("healpy")
 

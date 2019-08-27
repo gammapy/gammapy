@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from ..velocity import (
+from gammapy.astro.population.velocity import (
     FaucherKaspi2006VelocityBimodal,
     FaucherKaspi2006VelocityMaxwellian,
     Paczynski1990Velocity,

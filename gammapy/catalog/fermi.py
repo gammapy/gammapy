@@ -5,11 +5,11 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
-from ..cube.models import SkyModel
-from ..image.models import SkyDiffuseMap, SkyDisk, SkyGaussian, SkyPointSource
-from ..maps import Map
-from ..spectrum import FluxPoints
-from ..spectrum.models import (
+from gammapy.cube.models import SkyModel
+from gammapy.image.models import SkyDiffuseMap, SkyDisk, SkyGaussian, SkyPointSource
+from gammapy.maps import Map
+from gammapy.spectrum import FluxPoints
+from gammapy.spectrum.models import (
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
     PLSuperExpCutoff3FGL,
@@ -17,9 +17,9 @@ from ..spectrum.models import (
     PowerLaw,
     PowerLaw2,
 )
-from ..time import LightCurve
-from ..utils.scripts import make_path
-from ..utils.table import table_standardise_units_inplace
+from gammapy.time import LightCurve
+from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_standardise_units_inplace
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

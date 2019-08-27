@@ -4,7 +4,7 @@ from itertools import product
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from ..image.utils import scale_cube
+from gammapy.image.utils import scale_cube
 
 __all__ = ["AdaptiveRingBackgroundEstimator", "RingBackgroundEstimator"]
 

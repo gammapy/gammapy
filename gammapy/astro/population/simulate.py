@@ -4,16 +4,16 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.table import Column, Table
 from astropy.units import Quantity
-from ...utils import coordinates as astrometry
-from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
-from ...utils.random import (
+from gammapy.astro.source import PWN, SNR, Pulsar, SNRTrueloveMcKee
+from gammapy.utils import coordinates as astrometry
+from gammapy.utils.random import (
     draw,
     get_random_state,
     pdf,
     sample_sphere,
     sample_sphere_distance,
 )
-from ..population.spatial import (
+from .spatial import (
     RMAX,
     RMIN,
     ZMAX,
@@ -22,8 +22,7 @@ from ..population.spatial import (
     FaucherSpiral,
     radial_distributions,
 )
-from ..population.velocity import VMAX, VMIN, velocity_distributions
-from ..source import PWN, SNR, Pulsar, SNRTrueloveMcKee
+from .velocity import VMAX, VMIN, velocity_distributions
 
 __all__ = [
     "make_catalog_random_positions_cube",
@@ -394,7 +393,7 @@ def add_observed_parameters(table, obs_pos=None):
     table : `~astropy.table.Table`
         Modified input table with columns added
     """
-    obs_pos = obs_pos or [D_SUN_TO_GALACTIC_CENTER, 0, 0]
+    obs_pos = obs_pos or [astrometry.D_SUN_TO_GALACTIC_CENTER, 0, 0]
 
     # Get data
     x, y, z = table["x"].quantity, table["y"].quantity, table["z"].quantity
