@@ -304,4 +304,4 @@ class TestFluxPointFit:
         fp_dataset = fit.datasets.datasets[0]
 
         with mpl_plot_check():
-            fp_dataset.peek()
+            fp_dataset.peek(method="diff/model")

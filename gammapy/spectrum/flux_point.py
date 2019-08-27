@@ -1202,8 +1202,7 @@ class FluxPointsDataset(Dataset):
                 "Points used for the fit", self.mask.sum()
             )
             str_ += "\t{:32}:   {} \n".format(
-                "Excluded for safe energy range",
-                (~self.mask_safe).sum(),
+                "Excluded for safe energy range", (~self.mask_safe).sum()
             )
             if self.mask_fit is None:
                 str_ += "\t{:32}:   {} \n".format("Excluded by user", "0")
@@ -1303,20 +1302,18 @@ class FluxPointsDataset(Dataset):
 
         model = self.model(fp.e_ref)
 
-        residuals = data - model
-
         residuals = self._compute_residuals(data, model, method)
         # Remove residuals for upper_limits
         residuals[fp.is_ul] = np.nan
         return residuals
 
-    def peek(self, norm=None, **kwargs):
+    def peek(self, method="diff", **kwargs):
         """Plot flux points, best fit model and residuals.
 
         Parameters
         ----------
-        norm: `str`
-            normalization used to compute the spectral residuals. Choose between `None`, `model` and `sqrt_model`.
+        method : {"diff", "diff/model", "diff/sqrt(model)"}
+            Method used to compute the residuals, see `MapDataset.residuals()`
         """
         from matplotlib.gridspec import GridSpec
         import matplotlib.pyplot as plt
@@ -1329,7 +1326,7 @@ class FluxPointsDataset(Dataset):
         ax_spectrum.set_xticks([])
 
         ax_residuals = plt.subplot(gs[5:, :])
-        self.plot_residuals(ax=ax_residuals, norm=norm)
+        self.plot_residuals(ax=ax_residuals, method=method)
         return ax_spectrum, ax_residuals
 
     @property
