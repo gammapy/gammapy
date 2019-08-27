@@ -2,13 +2,13 @@
 import pytest
 from numpy.testing import assert_allclose
 from ..spatial import (
-    FaucherKaspi2006,
-    Lorimer2006,
-    YusifovKucuk2004,
-    YusifovKucuk2004B,
-    Paczynski1990,
     CaseBattacharya1998,
     Exponential,
+    FaucherKaspi2006,
+    Lorimer2006,
+    Paczynski1990,
+    YusifovKucuk2004,
+    YusifovKucuk2004B,
 )
 
 test_cases = [

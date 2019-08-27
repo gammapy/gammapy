@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of adaptive smoothing algorithms."""
 import numpy as np
-from astropy.coordinates import Angle
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
+from astropy.coordinates import Angle
 from ..stats import significance
 from .utils import scale_cube
 

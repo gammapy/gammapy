@@ -4,6 +4,7 @@
 from xml.parsers import expat
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.xmlreader import AttributesImpl
+
 try:  # pragma no cover
     from cStringIO import StringIO
 except ImportError:  # pragma no cover

@@ -35,7 +35,7 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 
 __all__ = ["__version__", "test", "song"]
 
-from pkg_resources import get_distribution, DistributionNotFound
+from pkg_resources import DistributionNotFound, get_distribution
 
 try:
     __version__ = get_distribution(__name__).version

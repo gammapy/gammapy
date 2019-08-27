@@ -4,7 +4,6 @@ import logging
 import numpy as np
 from scipy.stats import norm, poisson, rankdata
 
-
 __all__ = [
     "fc_find_acceptance_interval_gauss",
     "fc_find_acceptance_interval_poisson",

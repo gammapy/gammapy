@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
-from collections import OrderedDict
 import copy
+from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
 from ..utils.array import _is_int
-from ..utils.table import table_row_to_dict, table_from_row_data
+from ..utils.table import table_from_row_data, table_row_to_dict
 
 __all__ = ["SourceCatalog", "SourceCatalogObject"]
 

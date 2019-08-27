@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
 from astropy.time import Time
-from astropy import units as u
 from astropy.utils import lazyproperty
-
 from .utils import get_random_state
 
 __all__ = ["InverseCDFSampler", "MapEventSampler"]

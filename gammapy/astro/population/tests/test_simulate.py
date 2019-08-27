@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose, assert_equal
-from astropy.table import Table
 import astropy.units as u
+from astropy.table import Table
 from ...population import (
+    add_observed_parameters,
+    add_pulsar_parameters,
+    add_pwn_parameters,
+    add_snr_parameters,
     make_base_catalog_galactic,
     make_catalog_random_positions_cube,
     make_catalog_random_positions_sphere,
-    add_snr_parameters,
-    add_pulsar_parameters,
-    add_pwn_parameters,
-    add_observed_parameters,
 )
 
 

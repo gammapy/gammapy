@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from .test_fit import MyDataset
 from ..datasets import Datasets
+from .test_fit import MyDataset
 
 
 @pytest.fixture(scope="session")

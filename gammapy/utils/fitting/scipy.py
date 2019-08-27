@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.optimize import minimize, brentq
+from scipy.optimize import brentq, minimize
 from scipy.optimize.zeros import RootResults
-from .likelihood import Likelihood
 from ..interpolation import interpolate_likelihood_profile
+from .likelihood import Likelihood
 
 __all__ = [
     "optimize_scipy",

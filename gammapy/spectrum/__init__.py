@@ -4,7 +4,7 @@ from .core import *
 from .cosmic_ray import *
 from .crab import *
 from .dataset import *
-from .flux_point import *
-from .utils import *
 from .extract import *
+from .flux_point import *
 from .sensitivity import *
+from .utils import *

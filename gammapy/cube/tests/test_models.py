@@ -3,13 +3,13 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_data
-from ...maps import MapAxis, WcsGeom, Map
-from ...irf.energy_dispersion import EnergyDispersion
+from ...cube.models import BackgroundModel, BackgroundModels, SkyDiffuseCube
 from ...cube.psf_kernel import PSFKernel
-from ...cube.models import SkyDiffuseCube, BackgroundModel, BackgroundModels
 from ...image.models import SkyGaussian
+from ...irf.energy_dispersion import EnergyDispersion
+from ...maps import Map, MapAxis, WcsGeom
 from ...spectrum.models import PowerLaw
+from ...utils.testing import requires_data
 from ..fit import MapEvaluator
 from ..models import SkyModel, SkyModels
 

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import pytest
-from ...utils.testing import run_cli, requires_dependency
+from ...utils.testing import requires_dependency, run_cli
 from ..main import cli
 
 

@@ -4,10 +4,10 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from ..utils.nddata import NDDataArray
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
 from ..utils.energy import energy_logcenter
+from ..utils.nddata import NDDataArray
 from ..utils.scripts import make_path
 
 __all__ = ["EffectiveAreaTable", "EffectiveAreaTable2D"]

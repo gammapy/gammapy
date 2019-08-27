@@ -2,9 +2,8 @@
 """Helper functions to work with distributions."""
 import numbers
 import numpy as np
-from astropy.coordinates import Angle
 from scipy.integrate import quad
-
+from astropy.coordinates import Angle
 
 __all__ = [
     "get_random_state",

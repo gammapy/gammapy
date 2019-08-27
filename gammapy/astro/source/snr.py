@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Supernova remnant (SNR) source models."""
 import numpy as np
-from astropy.units import Quantity
 import astropy.constants as const
+from astropy.units import Quantity
 from astropy.utils import lazyproperty
 
 __all__ = ["SNR", "SNRTrueloveMcKee"]

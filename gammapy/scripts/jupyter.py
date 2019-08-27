@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Command line tool to perform actions on jupyter notebooks."""
-import click
 import logging
 import os
 import subprocess
 import sys
 import time
+import click
 
 log = logging.getLogger(__name__)
 

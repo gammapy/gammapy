@@ -2,13 +2,16 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, mpl_plot_check
-from ...maps import WcsNDMap, WcsGeom
-from ..profile import compute_binning, ImageProfile, ImageProfileEstimator
+from astropy.table import Table
+from ...maps import WcsGeom, WcsNDMap
+from ...utils.testing import (
+    assert_quantity_allclose,
+    mpl_plot_check,
+    requires_dependency,
+)
+from ..profile import ImageProfile, ImageProfileEstimator, compute_binning
 
 
 @requires_dependency("pandas")

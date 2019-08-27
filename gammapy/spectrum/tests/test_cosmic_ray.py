@@ -1,7 +1,7 @@
 import pytest
 import astropy.units as u
-from ...utils.testing import assert_quantity_allclose
 from ...spectrum import create_cosmic_ray_spectral_model
+from ...utils.testing import assert_quantity_allclose
 
 Cosmic_rays_SPECTRA = [
     dict(

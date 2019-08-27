@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from ...stats import (
-    significance_to_probability_normal,
     probability_to_significance_normal,
     probability_to_significance_normal_limit,
+    significance_to_probability_normal,
     significance_to_probability_normal_limit,
 )
 

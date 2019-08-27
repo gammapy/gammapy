@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_data, requires_dependency
-from ...utils.random import get_random_state
-from ...utils.fitting import Fit
+import astropy.units as u
 from ...irf import EffectiveAreaTable
 from ...spectrum import (
     CountsSpectrum,
-    models,
-    SpectrumDatasetOnOff,
     SpectrumDataset,
+    SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
+    models,
 )
+from ...utils.fitting import Fit
+from ...utils.random import get_random_state
+from ...utils.testing import requires_data, requires_dependency
 
 
 @requires_dependency("sherpa")

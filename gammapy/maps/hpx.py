@@ -1,17 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for dealing with HEALPix projections and mappings."""
-from collections import OrderedDict
-import re
 import copy
+import re
+from collections import OrderedDict
 import numpy as np
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.units import Quantity
+from .geom import (
+    MapCoord,
+    MapGeom,
+    coordsys_to_frame,
+    find_and_read_bands,
+    make_axes,
+    pix_tuple_to_idx,
+    skycoord_to_lonlat,
+)
 from .utils import INVALID_INDEX
 from .wcs import WcsGeom
-from .geom import MapGeom, MapCoord, pix_tuple_to_idx
-from .geom import coordsys_to_frame, skycoord_to_lonlat
-from .geom import find_and_read_bands, make_axes
 
 # Not sure if we should expose this in the docs or not:
 # HPX_FITS_CONVENTIONS, HpxConv

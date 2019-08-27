@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from numpy.testing import assert_allclose
 import pytest
-from astropy.coordinates import SkyCoord
+from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
+from ...background import ReflectedRegionsBackgroundEstimator
 from ...data import DataStore, Observations, ObservationStats
 from ...utils.testing import requires_data
-from ...background import ReflectedRegionsBackgroundEstimator
 
 
 @pytest.fixture(scope="session")

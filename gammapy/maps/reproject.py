@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import astropy.units as u
 from scipy.ndimage import map_coordinates
-
+import astropy.units as u
 
 __all__ = ["reproject_car_to_hpx", "reproject_car_to_wcs"]
 

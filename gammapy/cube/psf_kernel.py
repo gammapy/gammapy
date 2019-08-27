@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
-import astropy.units as u
-from ..utils.gauss import Gauss2DPDF
-from ..maps import Map, WcsGeom
 from ..irf import TablePSF
+from ..maps import Map, WcsGeom
 from ..spectrum.models import PowerLaw
+from ..utils.gauss import Gauss2DPDF
 
 __all__ = ["PSFKernel"]
 

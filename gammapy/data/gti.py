@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.units import Quantity
 from astropy.table import Table, vstack
-from ..utils.time import time_ref_from_dict, time_relative_to_ref
+from astropy.units import Quantity
 from ..utils.scripts import make_path
+from ..utils.time import time_ref_from_dict, time_relative_to_ref
 
 __all__ = ["GTI"]
 

@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 from collections import OrderedDict
+import pytest
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
-from astropy.coordinates import SkyCoord
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.units import Unit, Quantity
+from astropy.coordinates import SkyCoord
+from astropy.units import Quantity, Unit
 from ...utils.testing import requires_dependency
 from ..base import Map
 from ..geom import MapAxis
-from ..wcs import WcsGeom
-from ..wcsnd import WcsNDMap
 from ..hpx import HpxGeom
 from ..hpxnd import HpxNDMap
+from ..wcs import WcsGeom
+from ..wcsnd import WcsNDMap
 
 pytest.importorskip("numpy", "1.12.0")
 pytest.importorskip("healpy")

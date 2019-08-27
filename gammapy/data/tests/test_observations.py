@@ -4,8 +4,11 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from ...data import DataStore
-from ...utils.testing import requires_data
-from ...utils.testing import assert_time_allclose, assert_skycoord_allclose
+from ...utils.testing import (
+    assert_skycoord_allclose,
+    assert_time_allclose,
+    requires_data,
+)
 
 
 @pytest.fixture(scope="session")

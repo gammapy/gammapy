@@ -2,14 +2,13 @@
 import logging
 import subprocess
 from pathlib import Path
-from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from ..utils.scripts import make_path
 from ..utils.testing import Checker
-from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
-from .obs_table import ObservationTableChecker
-from .observations import DataStoreObservation, Observations, ObservationChecker
+from .obs_table import ObservationTable, ObservationTableChecker
+from .observations import DataStoreObservation, ObservationChecker, Observations
 
 __all__ = ["DataStore"]
 

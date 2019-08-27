@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from scipy.interpolate import interp1d
-from astropy.version import version as astropy_version
-from astropy.utils import lazyproperty
-from astropy.units import Quantity
+from astropy.coordinates import AltAz, CartesianRepresentation, SkyCoord
 from astropy.table import Table
-from astropy.coordinates import SkyCoord, AltAz, CartesianRepresentation
+from astropy.units import Quantity
+from astropy.utils import lazyproperty
+from astropy.version import version as astropy_version
+from ..utils.fits import earth_location_from_dict
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from ..utils.fits import earth_location_from_dict
 
 __all__ = ["FixedPointingInfo", "PointingInfo"]
 

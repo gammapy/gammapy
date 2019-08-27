@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from astropy.time import Time
 import astropy.units as u
 from astropy.table import Table
-from ...utils.testing import requires_data, assert_time_allclose
+from astropy.time import Time
 from ...data import GTI
+from ...utils.testing import assert_time_allclose, requires_data
 from ...utils.time import time_ref_to_dict
 
 

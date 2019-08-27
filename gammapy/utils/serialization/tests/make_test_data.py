@@ -3,9 +3,9 @@
 (some will be also written manually)
 """
 from pathlib import Path
+from gammapy.cube.models import SkyModel, SkyModels
 from gammapy.image.models import SkyGaussian
 from gammapy.spectrum.models import PowerLaw
-from gammapy.cube.models import SkyModels, SkyModel
 
 DATA_PATH = Path("gammapy/utils/serialization/tests/data/")
 

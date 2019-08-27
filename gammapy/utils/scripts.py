@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
-import sys
 import logging
-import yaml
+import sys
 from os.path import expandvars
 from pathlib import Path
+import yaml
 
 __all__ = ["read_yaml", "write_yaml", "make_path", "recursive_merge_dicts"]
 

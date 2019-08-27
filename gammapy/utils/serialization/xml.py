@@ -9,12 +9,12 @@ For XML model format definitions, see here:
 import logging
 import numpy as np
 import astropy.units as u
+from ...cube.models import SkyModel, SkyModels
 from ...extern import xmltodict
-from ..fitting import Parameter, Parameters
-from ...maps import Map
 from ...image import models as spatial
+from ...maps import Map
 from ...spectrum import models as spectral
-from ...cube.models import SkyModels, SkyModel
+from ..fitting import Parameter, Parameters
 
 log = logging.getLogger(__name__)
 

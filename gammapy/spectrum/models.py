@@ -6,9 +6,9 @@ from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
 from ..utils.energy import energy_logspace
-from ..utils.scripts import make_path
-from ..utils.fitting import Parameter, Parameters, Model
+from ..utils.fitting import Model, Parameter, Parameters
 from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.scripts import make_path
 from .utils import integrate_spectrum
 
 __all__ = [

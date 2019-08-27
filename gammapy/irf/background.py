@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
 import numpy as np
-from astropy.table import Table
-from astropy.io import fits
 import astropy.units as u
+from astropy.io import fits
+from astropy.table import Table
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
 from ..utils.nddata import NDDataArray

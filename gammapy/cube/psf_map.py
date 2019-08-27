@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import astropy.io.fits as fits
 import astropy.units as u
 from astropy.coordinates import Angle
-import astropy.io.fits as fits
+from ..cube import PSFKernel
 from ..irf import EnergyDependentTablePSF
 from ..maps import Map
-from ..cube import PSFKernel
 
 __all__ = ["make_psf_map", "PSFMap"]
 

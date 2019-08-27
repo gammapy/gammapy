@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
 from astropy.table import Table
+from astropy.units import Quantity
 from ....utils.testing import assert_quantity_allclose
 from ...source import Pulsar, SimplePulsar
 

@@ -4,16 +4,16 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from ...utils.testing import requires_dependency, requires_data
-from ...irf import EffectiveAreaTable, load_cta_irfs
-from ..models import PowerLaw, ExponentialCutoffPowerLaw
-from ..dataset import SpectrumDatasetOnOff
-from ..utils import SpectrumEvaluator
-from ..flux_point import FluxPointsEstimator
 from ...cube import simulate_dataset
 from ...cube.models import SkyModel
 from ...image.models import SkyGaussian
+from ...irf import EffectiveAreaTable, load_cta_irfs
 from ...maps import MapAxis, WcsGeom
+from ...utils.testing import requires_data, requires_dependency
+from ..dataset import SpectrumDatasetOnOff
+from ..flux_point import FluxPointsEstimator
+from ..models import ExponentialCutoffPowerLaw, PowerLaw
+from ..utils import SpectrumEvaluator
 
 
 # TODO: use pregenerate data instead

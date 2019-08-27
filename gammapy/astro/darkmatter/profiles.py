@@ -3,8 +3,8 @@
 import abc
 import numpy as np
 import astropy.units as u
-from ...utils.fitting import Parameter, Parameters
 from ...spectrum.utils import integrate_spectrum
+from ...utils.fitting import Parameter, Parameters
 
 __all__ = [
     "DMProfile",

@@ -2,17 +2,17 @@
 import logging
 from collections import namedtuple
 import numpy as np
-from astropy.units import Quantity, Unit
-from astropy.coordinates import SkyCoord, Angle, AltAz
+from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
+from astropy.units import Quantity, Unit
 from ..utils.energy import energy_logspace
 from ..utils.fits import earth_location_from_dict
-from ..utils.scripts import make_path
-from ..utils.time import time_ref_from_dict
-from ..utils.testing import Checker
 from ..utils.regions import make_region
+from ..utils.scripts import make_path
+from ..utils.testing import Checker
+from ..utils.time import time_ref_from_dict
 
 __all__ = ["EventListBase", "EventList", "EventListLAT"]
 

@@ -17,8 +17,8 @@ __version_info__ = (1, 4, 1)
 __version__ = '.'.join(map(str, __version_info__))
 
 
-import sys
 import os
+import sys
 
 PY3 = sys.version_info[0] == 3
 

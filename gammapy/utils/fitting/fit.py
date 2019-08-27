@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from .iminuit import optimize_iminuit, covariance_iminuit, confidence_iminuit, mncontour
-from .sherpa import optimize_sherpa, covariance_sherpa
-from .scipy import optimize_scipy, covariance_scipy, confidence_scipy
 from .datasets import Datasets
+from .iminuit import confidence_iminuit, covariance_iminuit, mncontour, optimize_iminuit
+from .scipy import confidence_scipy, covariance_scipy, optimize_scipy
+from .sherpa import covariance_sherpa, optimize_sherpa
 
 __all__ = ["Fit"]
 

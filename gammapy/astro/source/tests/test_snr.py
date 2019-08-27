@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from numpy.testing import assert_allclose
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from ...source import SNR, SNRTrueloveMcKee
 

@@ -2,15 +2,23 @@
 import copy
 from collections import OrderedDict
 import numpy as np
-from astropy.wcs import WCS
+import astropy.units as u
+from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.nddata import Cutout2D
-from astropy.coordinates import SkyCoord, Angle
+from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
-import astropy.units as u
 from regions import SkyRegion
-from .geom import MapGeom, MapCoord, pix_tuple_to_idx, skycoord_to_lonlat
-from .geom import get_shape, make_axes, find_and_read_bands, axes_pix_to_coord
+from .geom import (
+    MapCoord,
+    MapGeom,
+    axes_pix_to_coord,
+    find_and_read_bands,
+    get_shape,
+    make_axes,
+    pix_tuple_to_idx,
+    skycoord_to_lonlat,
+)
 from .utils import INVALID_INDEX
 
 __all__ = ["WcsGeom"]

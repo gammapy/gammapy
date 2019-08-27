@@ -3,18 +3,18 @@
 
 https://github.com/gammapy/gamma-cat
 """
-from collections import OrderedDict, namedtuple
 import functools
-import logging
 import json
+import logging
+from collections import OrderedDict, namedtuple
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from ..utils.scripts import make_path
-from ..spectrum import FluxPoints
-from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw
-from ..image.models import SkyPointSource, SkyGaussian, SkyShell
 from ..cube.models import SkyModel, SkyModels
+from ..image.models import SkyGaussian, SkyPointSource, SkyShell
+from ..spectrum import FluxPoints
+from ..spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
+from ..utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

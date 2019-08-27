@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.io import fits
-from .sparse import SparseArray
 from .geom import pix_tuple_to_idx
-from .hpxmap import HpxMap
 from .hpx import HpxGeom
+from .hpxmap import HpxMap
+from .sparse import SparseArray
 
 __all__ = ["HpxSparseMap"]
 

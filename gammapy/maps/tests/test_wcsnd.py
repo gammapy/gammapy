@@ -2,19 +2,19 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.io import fits
-from astropy.coordinates import SkyCoord
-from astropy.convolution import Gaussian2DKernel
 import astropy.units as u
+from astropy.convolution import Gaussian2DKernel
+from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from regions import CircleSkyRegion
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
 from ...cube import PSFKernel
 from ...irf import EnergyDependentMultiGaussPSF
-from ..utils import fill_poisson
-from ..geom import MapAxis, MapCoord, coordsys_to_frame
+from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
 from ..base import Map
-from ..wcs import WcsGeom
+from ..geom import MapAxis, MapCoord, coordsys_to_frame
 from ..hpx import HpxGeom
+from ..utils import fill_poisson
+from ..wcs import WcsGeom
 from ..wcsnd import WcsNDMap
 
 pytest.importorskip("reproject")

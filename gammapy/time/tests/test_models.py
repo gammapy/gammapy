@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.table import Table
 from ...utils.scripts import make_path
 from ...utils.testing import requires_data
-from ..models import PhaseCurveTableModel, LightCurveTableModel
+from ..models import LightCurveTableModel, PhaseCurveTableModel
 
 
 @pytest.fixture(scope="session")

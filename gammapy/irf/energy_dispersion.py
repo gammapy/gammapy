@@ -2,16 +2,16 @@
 from collections import OrderedDict
 import numpy as np
 from scipy.special import erf
-from astropy.io import fits
 from astropy.coordinates import Angle
-from astropy.units import Quantity
+from astropy.io import fits
 from astropy.table import Table
+from astropy.units import Quantity
 from ..maps import MapAxis
 from ..maps.utils import edges_from_lo_hi
-from ..utils.scripts import make_path
-from ..utils.nddata import NDDataArray
-from ..utils.fits import energy_axis_to_ebounds
 from ..utils.energy import energy_logcenter
+from ..utils.fits import energy_axis_to_ebounds
+from ..utils.nddata import NDDataArray
+from ..utils.scripts import make_path
 
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 

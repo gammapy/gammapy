@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.io import fits
+from scipy.integrate import cumtrapz
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.io import fits
 from astropy.utils import lazyproperty
-from scipy.integrate import cumtrapz
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.gauss import Gauss2DPDF
-from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import energy_logspace
+from ..utils.gauss import Gauss2DPDF
+from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.scripts import make_path
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF"]
 

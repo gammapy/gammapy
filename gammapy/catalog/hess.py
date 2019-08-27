@@ -3,16 +3,16 @@
 from collections import OrderedDict
 import numpy as np
 import astropy.units as u
-from astropy.table import Table
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
+from astropy.table import Table
+from ..cube.models import SkyModel, SkyModels
+from ..image.models import SkyGaussian, SkyPointSource, SkyShell
+from ..spectrum import FluxPoints
+from ..spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
+from ..utils.interpolation import ScaledRegularGridInterpolator
 from ..utils.scripts import make_path
 from ..utils.table import table_row_to_dict
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..spectrum import FluxPoints
-from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
-from ..image.models import SkyPointSource, SkyGaussian, SkyShell
-from ..cube.models import SkyModel, SkyModels
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

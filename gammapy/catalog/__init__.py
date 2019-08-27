@@ -2,8 +2,8 @@
 """Source catalogs."""
 from .core import *
 from .fermi import *
+from .gammacat import *
 from .hawc import *
 from .hess import *
-from .gammacat import *
 from .registry import *
 from .snrcat import *

@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from .. import Parameter, Parameters, optimize_iminuit, confidence_iminuit
+from .. import Parameter, Parameters, confidence_iminuit, optimize_iminuit
 
 pytest.importorskip("iminuit")
 

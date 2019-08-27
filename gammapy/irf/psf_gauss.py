@@ -1,19 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from astropy.convolution import Gaussian2DKernel
+from astropy.coordinates import Angle
 from astropy.io import fits
+from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-from astropy.coordinates import Angle
-from astropy.convolution import Gaussian2DKernel
-from astropy.stats import gaussian_fwhm_to_sigma
 from ..utils.array import array_stats_str
 from ..utils.energy import energy_logspace
-from ..utils.scripts import make_path
 from ..utils.gauss import MultiGauss2D
 from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.scripts import make_path
 from .psf_3d import PSF3D
-from . import EnergyDependentTablePSF
+from .psf_table import EnergyDependentTablePSF
 
 __all__ = ["EnergyDependentMultiGaussPSF"]
 

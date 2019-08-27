@@ -2,7 +2,9 @@
 import logging
 import numpy as np
 from astropy import units as u
-from . import EnergyDependentTablePSF, IRFStacker, EffectiveAreaTable
+from .effective_area import EffectiveAreaTable
+from .irf_stack import IRFStacker
+from .psf_table import EnergyDependentTablePSF
 
 __all__ = [
     "make_psf",

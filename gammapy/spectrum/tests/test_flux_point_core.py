@@ -2,10 +2,10 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table
 import astropy.units as u
-from ..models import PowerLaw
+from astropy.table import Table
 from ..flux_point import FluxPoints
+from ..models import PowerLaw
 
 
 @pytest.fixture(scope="session")

@@ -4,9 +4,9 @@ from astropy.io import fits
 from astropy.units import Quantity
 from ..utils.units import unit_from_fits_image_hdu
 from .geom import MapCoord, pix_tuple_to_idx
-from .utils import interp_to_order, INVALID_INDEX
-from .hpxmap import HpxMap
 from .hpx import HpxGeom, HpxToWcsMapping, nside_to_order
+from .hpxmap import HpxMap
+from .utils import INVALID_INDEX, interp_to_order
 
 __all__ = ["HpxNDMap"]
 

@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.table import Table
-from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.io import fits
+from astropy.table import Table
 from astropy.utils import lazyproperty
 from ..utils.array import array_stats_str
-from ..utils.scripts import make_path
 from ..utils.energy import energy_logspace
 from ..utils.interpolation import ScaledRegularGridInterpolator
-from .psf_table import TablePSF, EnergyDependentTablePSF
+from ..utils.scripts import make_path
+from .psf_table import EnergyDependentTablePSF, TablePSF
 
 __all__ = ["PSF3D"]
 

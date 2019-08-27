@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from astropy.io import fits
-from astropy.table import Table, Column
+from astropy.table import Column, Table
 from ..fits import SmartHDUList
 
 

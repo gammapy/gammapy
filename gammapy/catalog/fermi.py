@@ -3,23 +3,23 @@
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.table import Table, Column
+from astropy.table import Column, Table
 from astropy.time import Time
-from ..utils.scripts import make_path
-from ..utils.table import table_standardise_units_inplace
+from ..cube.models import SkyModel
+from ..image.models import SkyDiffuseMap, SkyDisk, SkyGaussian, SkyPointSource
 from ..maps import Map
 from ..spectrum import FluxPoints
 from ..spectrum.models import (
+    ExponentialCutoffPowerLaw3FGL,
+    LogParabola,
+    PLSuperExpCutoff3FGL,
+    PLSuperExpCutoff4FGL,
     PowerLaw,
     PowerLaw2,
-    ExponentialCutoffPowerLaw3FGL,
-    PLSuperExpCutoff4FGL,
-    PLSuperExpCutoff3FGL,
-    LogParabola,
 )
-from ..image.models import SkyPointSource, SkyGaussian, SkyDisk, SkyDiffuseMap
-from ..cube.models import SkyModel
 from ..time import LightCurve
+from ..utils.scripts import make_path
+from ..utils.table import table_standardise_units_inplace
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

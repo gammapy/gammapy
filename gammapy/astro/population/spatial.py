@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions."""
 import numpy as np
-from astropy.units import Quantity
 from astropy.modeling import Fittable1DModel, Parameter
-from ...utils.coordinates import cartesian, polar, D_SUN_TO_GALACTIC_CENTER
+from astropy.units import Quantity
+from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER, cartesian, polar
 from ...utils.random import get_random_state
 
 __all__ = [

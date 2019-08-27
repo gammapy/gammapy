@@ -1,19 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from numpy.testing import assert_allclose
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
 from ....maps import Map, WcsGeom
 from ....utils.testing import requires_data
 from ..core import (
-    SkyPointSource,
-    SkyGaussian,
-    SkyGaussianElongated,
-    SkyDisk,
-    SkyEllipse,
-    SkyShell,
     SkyDiffuseConstant,
     SkyDiffuseMap,
+    SkyDisk,
+    SkyEllipse,
+    SkyGaussian,
+    SkyGaussianElongated,
+    SkyPointSource,
+    SkyShell,
 )
 
 

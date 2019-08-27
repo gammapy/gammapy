@@ -2,12 +2,12 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
-from ...testing import requires_data
-from ....spectrum import models as spectral
-from ....image import models as spatial
 from ....cube.models import SkyModels
+from ....image import models as spatial
+from ....spectrum import models as spectral
 from ...scripts import read_yaml
 from ...serialization import dict_to_models
+from ...testing import requires_data
 
 
 @requires_data()

@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 from collections import OrderedDict
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table, Column
+from astropy.table import Column, Table
 from astropy.units import Quantity
 from ...utils.testing import assert_quantity_allclose
 from ..core import SourceCatalog

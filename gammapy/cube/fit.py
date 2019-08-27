@@ -1,17 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.utils import lazyproperty
 import astropy.units as u
-from astropy.nddata.utils import NoOverlapError
 from astropy.io import fits
+from astropy.nddata.utils import NoOverlapError
+from astropy.utils import lazyproperty
+from ..irf import EnergyDispersion
+from ..maps import Map
+from ..stats import cash, cash_sum_cython, cstat, cstat_sum_cython
+from ..utils.fitting import Dataset, Parameters
 from ..utils.random import get_random_state
 from ..utils.scripts import make_path
-from ..utils.fitting import Parameters, Dataset
-from ..stats import cash, cstat, cash_sum_cython, cstat_sum_cython
-from ..maps import Map
-from ..irf import EnergyDispersion
-from .models import SkyModel, SkyModels, BackgroundModel
+from .models import BackgroundModel, SkyModel, SkyModels
 from .psf_kernel import PSFKernel
 
 __all__ = ["MapEvaluator", "MapDataset"]

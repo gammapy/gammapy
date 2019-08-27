@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy.table import Table, Column
 import astropy.units as u
+from astropy.table import Column, Table
 from ..stats import excess_matching_significance_on_off
 from .models import PowerLaw
 from .utils import SpectrumEvaluator

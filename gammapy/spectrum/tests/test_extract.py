@@ -3,14 +3,17 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data
-from ...spectrum import SpectrumExtraction, SpectrumDatasetOnOff
 from ...background import ReflectedRegionsBackgroundEstimator
-from ...maps import WcsGeom, WcsNDMap
 from ...data import DataStore, ObservationStats
+from ...maps import WcsGeom, WcsNDMap
+from ...spectrum import SpectrumDatasetOnOff, SpectrumExtraction
+from ...utils.testing import (
+    assert_quantity_allclose,
+    requires_data,
+    requires_dependency,
+)
 
 
 @pytest.fixture(scope="session")

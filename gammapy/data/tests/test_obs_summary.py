@@ -1,13 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from numpy.testing import assert_allclose
 import pytest
-from astropy.coordinates import SkyCoord
+from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from ...data import DataStore, ObservationTableSummary, ObservationSummary
-from ...data import ObservationStats
-from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
 from ...background import ReflectedRegionsBackgroundEstimator
+from ...data import (
+    DataStore,
+    ObservationStats,
+    ObservationSummary,
+    ObservationTableSummary,
+)
+from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @requires_data()

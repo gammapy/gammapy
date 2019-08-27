@@ -109,6 +109,9 @@ black:
 	--exclude="extern/|docs/_static|docs/_build" \
 	--line-length 88
 
+isort:
+	isort -rc gammapy
+
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-import astropy.units as u
 import astropy.io.fits as fits
+import astropy.units as u
 from ..irf import EnergyDispersion
 from ..maps import Map
 

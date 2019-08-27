@@ -1,22 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from regions import (
     CircleSkyRegion,
     EllipseAnnulusSkyRegion,
-    RectangleSkyRegion,
     EllipseSkyRegion,
+    RectangleSkyRegion,
 )
+from ...data import DataStore
+from ...maps import WcsGeom, WcsNDMap
 from ...utils.testing import (
-    requires_data,
-    requires_dependency,
     assert_quantity_allclose,
     mpl_plot_check,
+    requires_data,
+    requires_dependency,
 )
-from ...maps import WcsNDMap, WcsGeom
-from ...data import DataStore
-from ..reflected import ReflectedRegionsFinder, ReflectedRegionsBackgroundEstimator
+from ..reflected import ReflectedRegionsBackgroundEstimator, ReflectedRegionsFinder
 
 
 @pytest.fixture(scope="session")

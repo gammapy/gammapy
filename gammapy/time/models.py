@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
-from astropy.utils import lazyproperty
 from astropy import units as u
 from astropy.table import Table
+from astropy.utils import lazyproperty
+from ..utils.fitting import Model, Parameter
 from ..utils.scripts import make_path
 from ..utils.time import time_ref_from_dict
-from ..utils.fitting import Parameter, Model
 
 __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 

@@ -1,19 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
-import numpy as np
 from pathlib import Path
+import numpy as np
 from astropy import units as u
-from astropy.table import Table
 from astropy.io import fits
-from .utils import SpectrumEvaluator
-from ..utils.scripts import make_path
-from ..utils.fitting import Dataset, Parameters
-from ..utils.fits import energy_axis_to_ebounds
-from ..stats import wstat, cash
-from ..utils.random import get_random_state
+from astropy.table import Table
 from ..data import ObservationStats
-from .core import CountsSpectrum
 from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+from ..stats import cash, wstat
+from ..utils.fits import energy_axis_to_ebounds
+from ..utils.fitting import Dataset, Parameters
+from ..utils.random import get_random_state
+from ..utils.scripts import make_path
+from .core import CountsSpectrum
+from .utils import SpectrumEvaluator
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 

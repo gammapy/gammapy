@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ..parameter import Parameter, Parameters
 from ..model import Model
+from ..parameter import Parameter, Parameters
 
 
 class MyModel(Model):

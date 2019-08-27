@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
-from numpy.testing import assert_allclose
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...data.event_list import EventListBase, EventList, EventListLAT
-from ...maps import WcsGeom, Map, MapAxis
+from ...data.event_list import EventList, EventListBase, EventListLAT
+from ...maps import Map, MapAxis, WcsGeom
+from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @requires_data()

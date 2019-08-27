@@ -5,15 +5,15 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
-from ...utils.fitting import Fit
+from ...image.models import SkyGaussian
 from ...irf import EffectiveAreaTable2D, EnergyDependentMultiGaussPSF
 from ...irf.energy_dispersion import EnergyDispersion
-from ...maps import MapAxis, WcsGeom, Map
-from ...image.models import SkyGaussian
+from ...maps import Map, MapAxis, WcsGeom
 from ...spectrum.models import PowerLaw
-from ..models import SkyModel, BackgroundModel
-from .. import MapDataset, make_map_exposure_true_energy, PSFKernel
+from ...utils.fitting import Fit
+from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
+from .. import MapDataset, PSFKernel, make_map_exposure_true_energy
+from ..models import BackgroundModel, SkyModel
 
 
 @pytest.fixture

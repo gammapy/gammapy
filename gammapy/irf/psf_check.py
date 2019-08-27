@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import math
+from collections import OrderedDict
 import numpy as np
 
 __all__ = []

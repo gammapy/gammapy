@@ -2,11 +2,11 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.units import Unit
 from astropy.coordinates import SkyCoord
-from ...irf import EnergyDispersion2D, EffectiveAreaTable2D
-from ...maps import MapAxis, WcsGeom
+from astropy.units import Unit
 from ...cube import EDispMap, make_edisp_map, make_map_exposure_true_energy
+from ...irf import EffectiveAreaTable2D, EnergyDispersion2D
+from ...maps import MapAxis, WcsGeom
 
 
 def fake_aeff2d(area=1e6 * u.m ** 2):

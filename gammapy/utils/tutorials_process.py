@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Process tutorials notebooks for publication in documentation."""
+import argparse
 import logging
 import os
 import subprocess
-import argparse
 import sys
+from distutils.util import strtobool
 from pathlib import Path
 from shutil import copyfile, copytree, rmtree
-from distutils.util import strtobool
 from ..scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)

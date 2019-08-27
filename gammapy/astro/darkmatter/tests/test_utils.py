@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from ....utils.testing import assert_quantity_allclose, requires_data
 from ....maps import WcsGeom
-from .. import JFactory, profiles, DMAnnihilation
+from ....utils.testing import assert_quantity_allclose, requires_data
+from .. import DMAnnihilation, JFactory, profiles
 
 
 @pytest.fixture(scope="session")

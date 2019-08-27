@@ -3,17 +3,16 @@ import numpy as np
 import scipy.stats as stats
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.table import Table
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from astropy.time import Time
-
-from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 from ....cube import MapEvaluator
 from ....cube.models import SkyModel
 from ....image.models import SkyGaussian
 from ....maps import Map, MapAxis
 from ....spectrum.models import PowerLaw
 from ....time.models import LightCurveTableModel
+from ..inverse_cdf import InverseCDFSampler, MapEventSampler
 
 
 def uniform_dist(x, a, b):

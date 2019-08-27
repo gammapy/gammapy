@@ -1,23 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.time import Time
 from astropy.table import Table
-import numpy as np
-from ...utils.testing import requires_data, requires_dependency, mpl_plot_check
-from ...utils.random import get_random_state
+from astropy.time import Time
+from ...data import GTI
 from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...utils.fitting import Fit
-from ..models import PowerLaw, ConstantModel, ExponentialCutoffPowerLaw
 from ...spectrum import (
-    SpectrumDatasetOnOff,
-    SpectrumDataset,
     CountsSpectrum,
+    SpectrumDataset,
+    SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
 )
-from ...data import GTI
+from ...utils.fitting import Fit
+from ...utils.random import get_random_state
+from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
 from ...utils.time import time_ref_to_dict
+from ..models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
 
 
 @requires_dependency("iminuit")

@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
-from numpy.testing import assert_allclose
 import pytest
+from numpy.testing import assert_allclose
 from astropy import units as u
 from ...utils.testing import (
+    assert_quantity_allclose,
     requires_data,
     requires_dependency,
-    assert_quantity_allclose,
 )
-from ..gammacat import SourceCatalogGammaCat, GammaCatResource, GammaCatResourceIndex
+from ..gammacat import GammaCatResource, GammaCatResourceIndex, SourceCatalogGammaCat
 
 SOURCES = [
     {

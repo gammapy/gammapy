@@ -3,6 +3,8 @@
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
 import os
+# Treat all DeprecationWarnings as exceptions
+from astropy.tests.helper import enable_deprecations_as_exceptions
 from astropy.version import version as astropy_version
 
 if astropy_version < "3.0":
@@ -17,8 +19,6 @@ else:
     from astropy.tests.plugins.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 
 
-# Treat all DeprecationWarnings as exceptions
-from astropy.tests.helper import enable_deprecations_as_exceptions
 
 # TODO: add numpy again once https://github.com/astropy/regions/pull/252 is addressed
 enable_deprecations_as_exceptions(warnings_to_ignore_entire_module=["numpy", "astropy"])

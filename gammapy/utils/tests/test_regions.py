@@ -10,10 +10,10 @@ stable, so need to establish a bit what works and what doesn't.
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from astropy.coordinates import SkyCoord
 import regions
+from astropy.coordinates import SkyCoord
 from ...maps import WcsGeom
-from ..regions import make_region, make_pixel_region, SphericalCircleSkyRegion
+from ..regions import SphericalCircleSkyRegion, make_pixel_region, make_region
 
 
 def test_make_region():

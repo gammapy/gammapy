@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import yaml
-from ..utils.scripts import make_path
-from ..utils.fitting import Fit
-from ..spectrum import (
-    FluxPointsEstimator,
-    FluxPointsDataset,
-    SpectrumExtraction,
-    SpectrumDatasetOnOffStacker,
-)
 from ..background import ReflectedRegionsBackgroundEstimator
+from ..spectrum import (
+    FluxPointsDataset,
+    FluxPointsEstimator,
+    SpectrumDatasetOnOffStacker,
+    SpectrumExtraction,
+)
+from ..utils.fitting import Fit
+from ..utils.scripts import make_path
 
 __all__ = ["SpectrumAnalysisIACT"]
 

@@ -2,18 +2,18 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.table import Table
 import astropy.units as u
+from astropy.table import Table
 from ...catalog.fermi import SourceCatalog3FGL
+from ...utils.fitting import Fit
 from ...utils.testing import (
-    requires_dependency,
-    requires_data,
     assert_quantity_allclose,
     mpl_plot_check,
+    requires_data,
+    requires_dependency,
 )
-from ...utils.fitting import Fit
-from ..models import PowerLaw, SpectralModel
 from ..flux_point import FluxPoints, FluxPointsDataset
+from ..models import PowerLaw, SpectralModel
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",

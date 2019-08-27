@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy import units as u
 from numpy.testing import assert_allclose
+from astropy import units as u
 from ..energy import energy_logcenter, energy_logspace
 
 

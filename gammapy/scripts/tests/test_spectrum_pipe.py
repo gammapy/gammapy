@@ -2,13 +2,13 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from ...utils.energy import energy_logspace
-from ...utils.testing import requires_dependency, requires_data
-from ...spectrum.models import PowerLaw
-from ..spectrum_pipe import SpectrumAnalysisIACT
 from ...data import DataStore
+from ...spectrum.models import PowerLaw
+from ...utils.energy import energy_logspace
+from ...utils.testing import requires_data, requires_dependency
+from ..spectrum_pipe import SpectrumAnalysisIACT
 
 
 @pytest.fixture(scope="session")
