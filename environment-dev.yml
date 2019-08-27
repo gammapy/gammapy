@@ -46,6 +46,7 @@ dependencies:
     - sphinx-click
     - pydocstyle
     - black
+    - isort
     - naima
     - numdifftools
     - pytest-astropy
