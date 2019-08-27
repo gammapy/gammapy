@@ -5,7 +5,7 @@ from scipy.ndimage import binary_erosion
 from scipy.ndimage.morphology import binary_fill_holes
 from astropy.convolution import CustomKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from ..maps import Map
+from gammapy.maps import Map
 from .lima import compute_lima_image
 
 log = logging.getLogger(__name__)

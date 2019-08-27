@@ -8,8 +8,8 @@ from multiprocessing import Pool
 import numpy as np
 from scipy.optimize import brentq, newton
 from astropy.convolution import CustomKernel, Kernel2D
-from ..stats import cash, cash_sum_cython
-from ..utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.stats import cash, cash_sum_cython
+from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from ._test_statistics_cython import (
     _amplitude_bounds_cython,
     _f_cash_root_cython,

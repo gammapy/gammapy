@@ -3,9 +3,9 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from ...maps import Map
-from ...utils.testing import requires_data
-from ..asmooth import ASmooth
+from gammapy.image import ASmooth
+from gammapy.maps import Map
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

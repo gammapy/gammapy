@@ -2,8 +2,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...irf import EffectiveAreaTable
-from ...spectrum import (
+from gammapy.irf import EffectiveAreaTable
+from gammapy.spectrum import (
     CountsSpectrum,
     SpectrumDataset,
     SpectrumDatasetOnOff,

@@ -3,9 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
-from ..background import Background3D
-from ..effective_area import EffectiveAreaTable2D
-from ..energy_dispersion import EnergyDispersion2D
+from gammapy.irf import Background3D, EffectiveAreaTable2D, EnergyDispersion2D
 
 
 class TestIRFWrite:

@@ -3,16 +3,15 @@ import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.time import Time, TimeDelta
 from astropy.units import Quantity
-from ...data import GTI
-from ...utils.random import get_random_state, sample_sphere
-from ...utils.testing import (
+from gammapy.data import GTI, observatory_locations
+from gammapy.data.obs_table import ObservationTable, ObservationTableChecker
+from gammapy.utils.random import get_random_state, sample_sphere
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
     requires_data,
 )
-from ...utils.time import time_ref_from_dict, time_relative_to_ref
-from ..obs_table import ObservationTable, ObservationTableChecker
-from ..observers import observatory_locations
+from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
 
 
 def make_test_observation_table(

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from ...maps import Map
-from ...utils.testing import assert_wcs_allclose, requires_data, run_cli
-from ..main import cli
+from gammapy.maps import Map
+from gammapy.scripts.main import cli
+from gammapy.utils.testing import assert_wcs_allclose, requires_data, run_cli
 
 
 @requires_data()

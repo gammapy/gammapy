@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import yaml
-from ..background import ReflectedRegionsBackgroundEstimator
-from ..spectrum import (
+from gammapy.background import ReflectedRegionsBackgroundEstimator
+from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )
-from ..utils.fitting import Fit
-from ..utils.scripts import make_path
+from gammapy.utils.fitting import Fit
+from gammapy.utils.scripts import make_path
 
 __all__ = ["SpectrumAnalysisIACT"]
 

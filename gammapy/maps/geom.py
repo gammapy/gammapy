@@ -11,7 +11,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Column, QTable
-from ..utils.interpolation import interpolation_scale
+from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, find_bands_hdu, find_hdu
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]

@@ -5,7 +5,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from ..utils.scripts import make_path
+from gammapy.utils.scripts import make_path
 
 __all__ = ["HDULocation", "HDUIndexTable"]
 

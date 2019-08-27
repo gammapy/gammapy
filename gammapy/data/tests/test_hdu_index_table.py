@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import pytest
-from ...utils.scripts import make_path
-from ...utils.testing import requires_data
-from ..hdu_index_table import HDUIndexTable
+from gammapy.data import HDUIndexTable
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

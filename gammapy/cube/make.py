@@ -3,7 +3,7 @@ import logging
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
-from ..maps import Map, WcsGeom
+from gammapy.maps import Map, WcsGeom
 from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy

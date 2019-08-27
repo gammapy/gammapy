@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from ..geom import MapAxis, MapCoord
-from ..hpx import (
+from gammapy.maps import MapAxis, MapCoord
+from gammapy.maps.hpx import (
     HpxGeom,
     get_hpxregion_dir,
     get_hpxregion_size,

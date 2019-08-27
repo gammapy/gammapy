@@ -2,8 +2,8 @@
 import os
 from pathlib import Path
 import pytest
-from ...data import DataStore
-from ...utils.testing import requires_data
+from gammapy.data import DataStore
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

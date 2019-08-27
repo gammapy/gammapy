@@ -3,7 +3,7 @@ import numpy as np
 from scipy.ndimage import maximum_filter
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from ..maps import WcsNDMap
+from gammapy.maps import WcsNDMap
 
 __all__ = ["find_peaks"]
 

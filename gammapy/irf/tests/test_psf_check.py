@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_data
-from ..psf_3d import PSF3D
-from ..psf_check import PSF3DChecker
+from gammapy.irf import PSF3D
+from gammapy.irf.psf_check import PSF3DChecker
+from gammapy.utils.testing import requires_data
 
 
 @requires_data()

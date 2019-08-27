@@ -5,14 +5,14 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
-from ..irf import EnergyDispersion
-from ..maps import Map
-from ..stats import cash, cash_sum_cython, cstat, cstat_sum_cython
-from ..utils.fitting import Dataset, Parameters
-from ..utils.random import get_random_state
-from ..utils.scripts import make_path
-from .models import BackgroundModel, SkyModel, SkyModels
-from .psf_kernel import PSFKernel
+from gammapy.cube.models import BackgroundModel, SkyModel, SkyModels
+from gammapy.cube.psf_kernel import PSFKernel
+from gammapy.irf import EnergyDispersion
+from gammapy.maps import Map
+from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
+from gammapy.utils.fitting import Dataset, Parameters
+from gammapy.utils.random import get_random_state
+from gammapy.utils.scripts import make_path
 
 __all__ = ["MapEvaluator", "MapDataset"]
 

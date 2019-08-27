@@ -7,7 +7,7 @@ for developers and the test runner from including it in test collection.
 import logging
 import warnings
 import click
-from .. import test
+from gammapy import test
 
 log = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from scipy.signal import fftconvolve
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
 from astropy.io import fits
 from astropy.table import Table
-from ..maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 
 __all__ = ["CWT", "CWTData", "CWTKernels"]
 

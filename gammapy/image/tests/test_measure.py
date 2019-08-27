@@ -4,14 +4,14 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.modeling.models import Gaussian2D
-from ...image import (
+from gammapy.image import (
     measure_containment,
     measure_containment_radius,
     measure_curve_of_growth,
     measure_image_moments,
 )
-from ...maps import WcsGeom, WcsNDMap
-from ...utils.testing import assert_quantity_allclose
+from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.utils.testing import assert_quantity_allclose
 
 
 @pytest.fixture(scope="session")

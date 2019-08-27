@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from ..geom import MapAxis
-from ..hpx import HpxGeom
-from ..hpxsparse import HpxSparseMap
+from gammapy.maps import HpxGeom, HpxSparseMap, MapAxis
 
 pytest.importorskip("healpy")
 

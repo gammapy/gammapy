@@ -5,9 +5,9 @@ from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from astropy.version import version as astropy_version
-from ..utils.fits import earth_location_from_dict
-from ..utils.scripts import make_path
-from ..utils.time import time_ref_from_dict
+from gammapy.utils.fits import earth_location_from_dict
+from gammapy.utils.scripts import make_path
+from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["FixedPointingInfo", "PointingInfo"]
 

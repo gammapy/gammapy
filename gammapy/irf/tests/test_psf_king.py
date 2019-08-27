@@ -2,8 +2,8 @@
 import pytest
 import numpy as np
 from astropy.coordinates import Angle
-from ...irf import PSFKing
-from ...utils.testing import assert_quantity_allclose, requires_data
+from gammapy.irf import PSFKing
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
 @pytest.fixture(scope="session")

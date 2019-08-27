@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
-from ...irf.effective_area import EffectiveAreaTable, EffectiveAreaTable2D
-from ...utils.testing import (
+from gammapy.irf import EffectiveAreaTable, EffectiveAreaTable2D
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,

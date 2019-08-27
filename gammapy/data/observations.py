@@ -5,10 +5,10 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from ..utils.fits import earth_location_from_dict
-from ..utils.table import table_row_to_dict
-from ..utils.testing import Checker
-from ..utils.time import time_ref_from_dict
+from gammapy.utils.fits import earth_location_from_dict
+from gammapy.utils.table import table_row_to_dict
+from gammapy.utils.testing import Checker
+from gammapy.utils.time import time_ref_from_dict
 from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .pointing import FixedPointingInfo

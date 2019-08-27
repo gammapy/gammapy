@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import click
-from ..cube import fill_map_counts
-from ..data import EventList
-from ..maps import Map
+from gammapy.cube import fill_map_counts
+from gammapy.data import EventList
+from gammapy.maps import Map
 
 log = logging.getLogger(__name__)
 

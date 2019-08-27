@@ -2,9 +2,9 @@
 import pytest
 from numpy.testing import assert_allclose
 from astropy.convolution import Gaussian2DKernel
-from ...detect import TSMapEstimator
-from ...maps import Map
-from ...utils.testing import requires_data
+from gammapy.detect import TSMapEstimator
+from gammapy.maps import Map
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

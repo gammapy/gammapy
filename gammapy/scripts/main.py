@@ -4,7 +4,7 @@ import sys
 import warnings
 from pathlib import Path
 import click
-from .. import __version__
+from gammapy import __version__
 
 
 # We implement the --version following the example from here:

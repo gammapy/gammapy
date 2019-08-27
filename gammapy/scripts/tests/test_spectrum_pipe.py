@@ -4,11 +4,11 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
-from ...data import DataStore
-from ...spectrum.models import PowerLaw
-from ...utils.energy import energy_logspace
-from ...utils.testing import requires_data, requires_dependency
-from ..spectrum_pipe import SpectrumAnalysisIACT
+from gammapy.data import DataStore
+from gammapy.scripts import SpectrumAnalysisIACT
+from gammapy.spectrum.models import PowerLaw
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")

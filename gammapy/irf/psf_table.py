@@ -6,11 +6,11 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.utils import lazyproperty
-from ..utils.array import array_stats_str
-from ..utils.energy import energy_logspace
-from ..utils.gauss import Gauss2DPDF
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.scripts import make_path
+from gammapy.utils.array import array_stats_str
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.gauss import Gauss2DPDF
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.scripts import make_path
 
 __all__ = ["TablePSF", "EnergyDependentTablePSF"]
 

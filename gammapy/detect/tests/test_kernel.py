@@ -2,9 +2,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ...maps import Map
-from ...utils.testing import requires_data
-from ..kernel import KernelBackgroundEstimator
+from gammapy.detect import KernelBackgroundEstimator
+from gammapy.maps import Map
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

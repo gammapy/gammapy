@@ -6,8 +6,8 @@ from scipy.special import erf
 import astropy.units as u
 from astropy.coordinates import Angle, Latitude, Longitude, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
-from ...maps import Map
-from ...utils.fitting import Model, Parameter
+from gammapy.maps import Map
+from gammapy.utils.fitting import Model, Parameter
 
 __all__ = [
     "SkySpatialModel",

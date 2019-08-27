@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.convolution import Tophat2DKernel
-from ...detect import compute_lima_image, compute_lima_on_off_image
-from ...maps import Map
-from ...utils.testing import requires_data
+from gammapy.detect import compute_lima_image, compute_lima_on_off_image
+from gammapy.maps import Map
+from gammapy.utils.testing import requires_data
 
 
 @requires_data()

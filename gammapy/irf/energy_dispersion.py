@@ -6,12 +6,12 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from ..maps import MapAxis
-from ..maps.utils import edges_from_lo_hi
-from ..utils.energy import energy_logcenter
-from ..utils.fits import energy_axis_to_ebounds
-from ..utils.nddata import NDDataArray
-from ..utils.scripts import make_path
+from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.utils.energy import energy_logcenter
+from gammapy.utils.fits import energy_axis_to_ebounds
+from gammapy.utils.nddata import NDDataArray
+from gammapy.utils.scripts import make_path
 
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 

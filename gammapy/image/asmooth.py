@@ -3,7 +3,7 @@
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from ..stats import significance
+from gammapy.stats import significance
 from .utils import scale_cube
 
 __all__ = ["ASmooth"]

@@ -3,9 +3,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle
-from ...irf import TablePSF
-from ...maps import MapAxis, WcsGeom
-from .. import PSFKernel
+from gammapy.cube import PSFKernel
+from gammapy.irf import TablePSF
+from gammapy.maps import MapAxis, WcsGeom
 
 
 def test_table_psf_to_kernel_map():

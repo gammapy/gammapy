@@ -7,11 +7,11 @@ from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-from ..utils.array import array_stats_str
-from ..utils.energy import energy_logspace
-from ..utils.gauss import MultiGauss2D
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.scripts import make_path
+from gammapy.utils.array import array_stats_str
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.gauss import MultiGauss2D
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.scripts import make_path
 from .psf_3d import PSF3D
 from .psf_table import EnergyDependentTablePSF
 

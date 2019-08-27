@@ -2,8 +2,8 @@
 import numpy as np
 from astropy.table import Table, vstack
 from astropy.units import Quantity
-from ..utils.scripts import make_path
-from ..utils.time import time_ref_from_dict, time_relative_to_ref
+from gammapy.utils.scripts import make_path
+from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
 
 __all__ = ["GTI"]
 

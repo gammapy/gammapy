@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from ..maps import WcsNDMap
-from ..spectrum.models import PowerLaw
+from gammapy.maps import WcsNDMap
+from gammapy.spectrum.models import PowerLaw
 
 __all__ = ["make_map_exposure_true_energy"]
 

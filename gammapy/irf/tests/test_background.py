@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_data
-from ..background import Background2D, Background3D
+from gammapy.irf import Background2D, Background3D
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
