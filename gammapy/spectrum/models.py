@@ -1699,7 +1699,7 @@ class SpectralGaussian(SpectralModel):
 
     .. math::
 
-        \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{\left( E-\bar{E} \right)^2 }{2 \sigma^2} }
+        \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }
 
 
 
@@ -1741,7 +1741,7 @@ class SpectralGaussian(SpectralModel):
         return (
             norm
             / (sigma * np.sqrt(2 * np.pi))
-            * np.exp((energy - mean) ** 2 / (2 * sigma ** 2))
+            * np.exp(-(energy - mean) ** 2 / (2 * sigma ** 2))
         )
 
     def integral(self, emin, emax, **kwargs):
@@ -1806,7 +1806,7 @@ class SpectralLogGaussian(SpectralModel):
     .. math::
 
         \phi(E) = \frac{N_0}{E \, \sigma \sqrt{2\pi}}
-         \exp{ \frac{\left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
+         \exp{ \frac{- \left( \ln(\frac{E}{\bar{E}}) \right)^2 }{2 \sigma^2} }
 
     This model was used in this CTA study for the electron spectrum: Table 3
      in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B

@@ -172,6 +172,7 @@ TEST_MODELS = [
             norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2 * u.TeV
         ),
         val_at_2TeV=u.Quantity(7.978845608028654, "cm-2 s-1 TeV-1"),
+        val_at_3TeV=u.Quantity(2.973439029468601e-05, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(3.9999988533937123, "cm-2 s-1"),
         integral_infinity=u.Quantity(4, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(7.999998896163037, "TeV cm-2 s-1"),
@@ -180,6 +181,7 @@ TEST_MODELS = [
         name="SpectralLogGaussian",
         model=SpectralLogGaussian(norm=4 / u.cm ** 2 / u.s, mean=2 * u.TeV, sigma=0.2),
         val_at_2TeV=u.Quantity(3.98942280401, "cm-2 s-1 TeV-1"),
+        val_at_3TeV=u.Quantity(0.34066933236079916, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(3.994439, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(8.151414, "TeV cm-2 s-1"),
     ),
@@ -271,6 +273,11 @@ def test_models(spectrum):
     energy = 2 * u.TeV
     value = model(energy)
     assert_quantity_allclose(value, spectrum["val_at_2TeV"])
+    if "val_at_3TeV" in spectrum:
+        energy = 3 * u.TeV
+        value = model(energy)
+        assert_quantity_allclose(value, spectrum["val_at_3TeV"])
+
     emin = 1 * u.TeV
     emax = 10 * u.TeV
     assert_quantity_allclose(
