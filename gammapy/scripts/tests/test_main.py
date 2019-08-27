@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from ...utils.testing import run_cli
-from ... import version
+from ... import __version__
 from ..main import cli
 
 
@@ -17,4 +17,4 @@ def test_cli_help():
 
 def test_cli_version():
     result = run_cli(cli, ["--version"])
-    assert "gammapy version {}".format(version.version) in result.output
+    assert "gammapy version {}".format(__version__) in result.output

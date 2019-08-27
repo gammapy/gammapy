@@ -17,5 +17,3 @@ extraction:
       exclude:
         - dev
         - gammapy/extern
-        - _astropy_init.py
-        - ah_bootstrap.py

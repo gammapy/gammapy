@@ -23,6 +23,7 @@ _build
 .cache
 v
 .pytest_cache
+.tox
 
 # Packages/installer info
 *.egg
@@ -62,7 +63,8 @@ docs/_static/notebooks
 docs/notebooks
 tutorials/fit_result_LogParabola.yaml
 tutorials/hgps_data
-
+gammapy-datasets
+temp
 
 gammapy/gammapy.cfg
 

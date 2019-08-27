@@ -81,7 +81,6 @@ test-cov:
 	python -m pytest -v gammapy --cov=gammapy --cov-report=html --cov-config=gammapy/tests/coveragerc
 
 test-nb:
-	pip install -e .
 	python -m gammapy.utils.tutorials_test
 
 test-scripts:
@@ -92,36 +91,35 @@ clean-nb:
 	python -m gammapy jupyter --src=tutorials strip
     
 docs-sphinx:
-	python setup.py build_docs
+	cd docs && python -m sphinx . _build/html -b html
 
 docs-all:
-	which python
-	pip install -e .
 	python -m gammapy.utils.tutorials_process --src="$(src)" --nbs="$(nbs)"
-	python setup.py build_docs
+	cd docs && python -m sphinx . _build/html -b html
 
 docs-show:
 	open docs/_build/html/index.html
 
+# TODO: fix gammapy/catalog/tests/test_gammacat.py (move to ref txt file and exclude here?)
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
 black:
 	black $(PROJECT)/ examples/ docs/ \
-	--exclude="_astropy_init.py|version.py|extern/|docs/_static|docs/_build" \
+	--exclude="extern/|docs/_static|docs/_build" \
 	--line-length 88
 
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
-    --exclude=gammapy/extern,gammapy/conftest.py,gammapy/_astropy_init.py,__init__.py \
+    --exclude=gammapy/extern,gammapy/conftest.py,__init__.py \
     --ignore=E501
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
 	pylint -E $(PROJECT)/ \
-	--ignore=_astropy_init.py,gammapy/extern \
+	--ignore=gammapy/extern \
 	-d E0611,E1101,E1103 \
 	--msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
 

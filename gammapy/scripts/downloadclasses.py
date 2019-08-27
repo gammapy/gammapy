@@ -7,7 +7,7 @@ import sys
 import yaml
 from urllib.request import urlopen
 from pathlib import Path
-from .. import version
+from .. import __version__
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class ComputePlan:
         suffix = "-{}".format(self.release)
 
         if self.release == "":
-            suffix += version.version
+            suffix += __version__
         if self.option == "notebooks":
             return self.outfolder / "notebooks{}".format(suffix)
         if self.option == "scripts":
