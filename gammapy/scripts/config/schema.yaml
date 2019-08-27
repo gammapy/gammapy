@@ -7,18 +7,17 @@ additionalProperties: false
 properties:
 
     general:
-        description: ""
+        description: "General settings for the API."
         type: object
         default: {"logging": {}}
         additionalProperties: false
         properties:
             out_folder:
-                description: ""
+                description: "Output folder where files will be stored."
                 type: string
                 default: "."
-
             logging:
-                description: ""
+                description: "Logging settings for the session."
                 type: object
                 default: {"level": ""}
                 additionalProperties: false
@@ -42,10 +41,17 @@ properties:
                     filemode: [filename]
         required: [logging]
 
-    # ---
-
     observations:
+        description: "Observations used in the analysis."
         type: object
+        additionalProperties: false
+        properties:
+            data_store:
+                description: "Data store where to fetch the observations."
+                type: string
+            filter:
+                type: array
+                items: {"$ref": "#/definitions/observations_filter"}
 
     grid:
         type: object
@@ -60,5 +66,25 @@ required: [general]
 
 # ---
 definitions:
-    prop:
-        enum: [values]
+    observations_filter:
+        description: "Filter criteria to select the observations."
+        type: object
+        additionalProperties: false
+        properties:
+            exclude: {type: boolean}
+            inverted: {type: boolean}
+            filter_type:
+                enum: [sky_circle, angle_box, quantity_box, par_box, ids]
+            frame:
+                enum: [galactic, equatorial, icrs, fk5]
+            lon: {type: number}
+            lat: {type: number}
+            radius: {type: number}
+            border: {type: number}
+            variable: {type: string}
+            value_range:
+                type: array
+                items: {type: number}
+                minItems: 2
+                maxItems: 2
+            obs_ids: {type: array, items: {type: integer}}
