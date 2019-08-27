@@ -61,7 +61,9 @@ class ComputePlan:
         try:
             from parfive import Downloader
         except ImportError:
-            log.error("The parfive package needs to be installed to download files with gammapy download")
+            log.error(
+                "The parfive package needs to be installed to download files with gammapy download"
+            )
             return
         dl = Downloader(progress=False)
         filename_env = "gammapy-" + self.release + "-environment.yml"
@@ -213,7 +215,9 @@ class ParallelDownload:
         try:
             from parfive import Downloader
         except ImportError:
-            log.error("The parfive package needs to be installed to download files with gammapy download")
+            log.error(
+                "The parfive package needs to be installed to download files with gammapy download"
+            )
             return
 
         if self.listfiles:

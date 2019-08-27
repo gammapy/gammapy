@@ -24,7 +24,12 @@ def cli_download_notebooks(src, out, release, modetutorials, silent):
     if release:
         plan.getenvironment()
     down = ParallelDownload(
-        plan.getfilelist(), plan.getlocalfolder(), release, "notebooks", modetutorials, silent
+        plan.getfilelist(),
+        plan.getlocalfolder(),
+        release,
+        "notebooks",
+        modetutorials,
+        silent,
     )
     down.run()
     print("")
@@ -47,7 +52,12 @@ def cli_download_scripts(src, out, release, modetutorials, silent):
     if release:
         plan.getenvironment()
     down = ParallelDownload(
-        plan.getfilelist(), plan.getlocalfolder(), release, "scripts", modetutorials, silent
+        plan.getfilelist(),
+        plan.getlocalfolder(),
+        release,
+        "scripts",
+        modetutorials,
+        silent,
     )
     down.run()
     print("")
@@ -68,7 +78,12 @@ def cli_download_datasets(src, out, release, modetutorials, silent):
     """Download datasets"""
     plan = ComputePlan(src, out, release, "datasets", modetutorials=modetutorials)
     down = ParallelDownload(
-        plan.getfilelist(), plan.getlocalfolder(), release, "datasets", modetutorials, silent
+        plan.getfilelist(),
+        plan.getlocalfolder(),
+        release,
+        "datasets",
+        modetutorials,
+        silent,
     )
     down.run()
     down.show_info_datasets()
