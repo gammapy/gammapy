@@ -5,11 +5,11 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from ...utils.testing import requires_data
-from ...data import DataStore
-from ...maps import WcsGeom, MapAxis, Map
-from ..make import MapMaker, MapMakerRing
 from ...background import RingBackgroundEstimator
+from ...data import DataStore
+from ...maps import Map, MapAxis, WcsGeom
+from ...utils.testing import requires_data
+from ..make import MapMaker, MapMakerRing
 
 
 @pytest.fixture(scope="session")

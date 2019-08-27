@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from astropy.time import TimeDelta, Time
+from astropy.time import Time, TimeDelta
 from ..time import (
+    absolute_time,
     time_ref_from_dict,
     time_ref_to_dict,
     time_relative_to_ref,
-    absolute_time,
 )
 
 

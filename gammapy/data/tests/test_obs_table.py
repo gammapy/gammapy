@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord, AltAz
+from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.time import Time, TimeDelta
+from astropy.units import Quantity
 from ...data import GTI
+from ...utils.random import get_random_state, sample_sphere
 from ...utils.testing import (
-    requires_data,
-    assert_time_allclose,
     assert_quantity_allclose,
+    assert_time_allclose,
+    requires_data,
 )
 from ...utils.time import time_ref_from_dict, time_relative_to_ref
-from ...utils.random import sample_sphere, get_random_state
 from ..obs_table import ObservationTable, ObservationTableChecker
 from ..observers import observatory_locations
 

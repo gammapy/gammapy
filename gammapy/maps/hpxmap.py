@@ -4,8 +4,8 @@ import json
 import numpy as np
 from astropy.io import fits
 from .base import Map
-from .hpx import HpxGeom, HpxConv
-from .utils import find_bintable_hdu, find_bands_hdu
+from .hpx import HpxConv, HpxGeom
+from .utils import find_bands_hdu, find_bintable_hdu
 
 __all__ = ["HpxMap"]
 

@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import importlib
+import logging
 import os
 import platform
 import sys
 import warnings
-import logging
-import importlib
 from collections import OrderedDict
 import click
 from .. import __version__

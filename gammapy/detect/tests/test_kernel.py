@@ -2,8 +2,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ...utils.testing import requires_data
 from ...maps import Map
+from ...utils.testing import requires_data
 from ..kernel import KernelBackgroundEstimator
 
 

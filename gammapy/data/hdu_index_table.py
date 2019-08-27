@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import sys
 import numpy as np
-import logging
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.utils.data import download_file
 from astropy.coordinates import Angle, SkyCoord
-from astropy.table import Table, Column
+from astropy.table import Column, Table
+from astropy.utils.data import download_file
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = ["SourceCatalogSNRcat", "SourceCatalogObjectSNRcat"]

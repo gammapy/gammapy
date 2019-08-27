@@ -2,10 +2,10 @@
 import logging
 from collections import OrderedDict
 import numpy as np
-from ..utils.fitting import Fit, Datasets
-from ..time import LightCurve
-from ..spectrum import SpectrumDatasetOnOff, FluxPoints
+from ..spectrum import FluxPoints, SpectrumDatasetOnOff
 from ..spectrum.models import ScaleModel
+from ..time import LightCurve
+from ..utils.fitting import Datasets, Fit
 from ..utils.table import table_from_row_data
 
 __all__ = ["LightCurveEstimator"]

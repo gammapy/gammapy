@@ -1,10 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
 import astropy.units as u
-from ..cube import MapDataset, PSFKernel
-from ..cube import make_map_exposure_true_energy, make_map_background_irf
-from ..maps import WcsNDMap
+from ..cube import (
+    MapDataset,
+    PSFKernel,
+    make_map_background_irf,
+    make_map_exposure_true_energy,
+)
 from ..cube.models import BackgroundModel
+from ..maps import WcsNDMap
 from ..utils.random import get_random_state
 
 __all__ = ["simulate_dataset"]

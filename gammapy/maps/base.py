@@ -7,9 +7,9 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from .geom import pix_tuple_to_idx, MapCoord
-from .utils import INVALID_VALUE
 from ..utils.scripts import make_path
+from .geom import MapCoord, pix_tuple_to_idx
+from .utils import INVALID_VALUE
 
 __all__ = ["Map"]
 

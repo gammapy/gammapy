@@ -1,14 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import astropy.units as u
-from astropy.coordinates.angle_utilities import angular_separation, position_angle
-from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord
-from ...utils.fitting import Parameter, Model
-from ...maps import Map
 from scipy.integrate import quad
 from scipy.special import erf
-
+import astropy.units as u
+from astropy.coordinates import Angle, Latitude, Longitude, SkyCoord
+from astropy.coordinates.angle_utilities import angular_separation, position_angle
+from ...maps import Map
+from ...utils.fitting import Model, Parameter
 
 __all__ = [
     "SkySpatialModel",

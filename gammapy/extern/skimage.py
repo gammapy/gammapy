@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions copied from scikit-image (git master on August 7, 2018)"""
+from warnings import warn
 import numpy as np
 from numpy.lib.stride_tricks import as_strided
-from warnings import warn
 
 
 def view_as_blocks(arr_in, block_shape):

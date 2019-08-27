@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import pytest
+import numpy as np
 from astropy.coordinates import Angle
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_data
 from ...irf import PSFKing
+from ...utils.testing import assert_quantity_allclose, requires_data
 
 
 @pytest.fixture(scope="session")

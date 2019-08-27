@@ -1,23 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.io import fits
-import astropy.units as u
-from astropy.nddata import Cutout2D
-from astropy.convolution import Tophat2DKernel
-from scipy.ndimage import gaussian_filter, uniform_filter, convolve
-from scipy.signal import fftconvolve
 from scipy.interpolate import griddata
-from scipy.ndimage import map_coordinates
+from scipy.ndimage import convolve, gaussian_filter, map_coordinates, uniform_filter
+from scipy.signal import fftconvolve
+import astropy.units as u
+from astropy.convolution import Tophat2DKernel
+from astropy.io import fits
+from astropy.nddata import Cutout2D
 from ..extern.skimage import block_reduce
-from ..utils.units import unit_from_fits_image_hdu
 from ..utils.interpolation import ScaledRegularGridInterpolator
+from ..utils.units import unit_from_fits_image_hdu
 from .geom import pix_tuple_to_idx
-from .wcs import _check_width
-from .utils import interp_to_order, INVALID_INDEX
-from .wcsmap import WcsGeom, WcsMap
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
-
+from .utils import INVALID_INDEX, interp_to_order
+from .wcs import _check_width
+from .wcsmap import WcsGeom, WcsMap
 
 __all__ = ["WcsNDMap"]
 

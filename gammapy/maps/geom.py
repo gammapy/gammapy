@@ -2,17 +2,17 @@
 import abc
 import copy
 import inspect
+import logging
 import re
 from collections import OrderedDict
-import logging
 import numpy as np
 from scipy.interpolate import interp1d
-from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.table import QTable, Column
+from astropy.io import fits
+from astropy.table import Column, QTable
 from ..utils.interpolation import interpolation_scale
-from .utils import find_hdu, find_bands_hdu, INVALID_INDEX
+from .utils import INVALID_INDEX, find_bands_hdu, find_hdu
 
 __all__ = ["MapCoord", "MapGeom", "MapAxis"]
 

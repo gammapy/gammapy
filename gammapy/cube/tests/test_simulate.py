@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.coordinates import SkyCoord
 import astropy.units as u
-from ...utils.testing import requires_data
-from ...irf import load_cta_irfs
-from ...maps import WcsGeom, MapAxis
-from ...spectrum.models import PowerLaw
-from ...image.models import SkyGaussian
-from ...cube.models import SkyModel, SkyModels
+from astropy.coordinates import SkyCoord
 from ...cube import MapDataset
+from ...cube.models import SkyModel, SkyModels
+from ...image.models import SkyGaussian
+from ...irf import load_cta_irfs
+from ...maps import MapAxis, WcsGeom
+from ...spectrum.models import PowerLaw
+from ...utils.testing import requires_data
 from ..simulate import simulate_dataset
 
 

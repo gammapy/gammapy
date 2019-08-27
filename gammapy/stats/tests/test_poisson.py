@@ -7,11 +7,11 @@ from ..poisson import (
     background_error,
     excess,
     excess_error,
-    significance,
-    significance_on_off,
     excess_matching_significance,
     excess_matching_significance_on_off,
     excess_ul_helene,
+    significance,
+    significance_on_off,
 )
 
 

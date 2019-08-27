@@ -2,11 +2,11 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ...testing import requires_data
-from ....spectrum import models as spectral
-from ....image import models as spatial
 from ....cube.models import SkyModels
-from ...serialization import xml_to_sky_models, UnknownModelError
+from ....image import models as spatial
+from ....spectrum import models as spectral
+from ...serialization import UnknownModelError, xml_to_sky_models
+from ...testing import requires_data
 
 
 def test_from_xml():

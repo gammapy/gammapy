@@ -3,11 +3,11 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from ..utils.fitting import Parameter, Model, Parameters
-from ..spectrum.models import SpectralModel
 from ..image.models import SkySpatialModel
-from ..utils.scripts import make_path, write_yaml
 from ..maps import Map
+from ..spectrum.models import SpectralModel
+from ..utils.fitting import Model, Parameter, Parameters
+from ..utils.scripts import make_path, write_yaml
 
 __all__ = [
     "SkyModelBase",

@@ -3,7 +3,6 @@ import numpy as np
 from scipy.optimize import brentq
 from astropy.units import Quantity
 
-
 __all__ = [
     "measure_containment_fraction",
     "measure_containment_radius",

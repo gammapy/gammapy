@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing"""
-import sys
 import os
+import sys
 from numpy.testing import assert_allclose
 import astropy.units as u
-from astropy.time import Time
 from astropy.coordinates import SkyCoord
+from astropy.time import Time
 
 __all__ = [
     "requires_dependency",

@@ -3,23 +3,27 @@ import pytest
 import numpy as np
 import astropy.units as u
 from ...utils.energy import energy_logspace
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
+from ...utils.testing import (
+    assert_quantity_allclose,
+    mpl_plot_check,
+    requires_data,
+    requires_dependency,
+)
 from ..models import (
-    SpectralModel,
-    PowerLaw,
-    PowerLaw2,
-    ExponentialCutoffPowerLaw,
-    ExponentialCutoffPowerLaw3FGL,
-    PLSuperExpCutoff4FGL,
-    LogParabola,
-    TableModel,
     AbsorbedSpectralModel,
     Absorption,
     ConstantModel,
+    ExponentialCutoffPowerLaw,
+    ExponentialCutoffPowerLaw3FGL,
+    LogParabola,
     NaimaModel,
+    PLSuperExpCutoff4FGL,
+    PowerLaw,
+    PowerLaw2,
     SpectralGaussian,
     SpectralLogGaussian,
+    SpectralModel,
+    TableModel,
 )
 
 

@@ -2,12 +2,12 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
-from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
-from ..wcs import WcsGeom, _check_width
-from ..geom import MapAxis
+from astropy.coordinates import Angle, SkyCoord
+from astropy.io import fits
 from ..base import Map
+from ..geom import MapAxis
+from ..wcs import WcsGeom, _check_width
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [

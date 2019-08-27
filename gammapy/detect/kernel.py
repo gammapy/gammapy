@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from scipy.ndimage import binary_erosion
 from scipy.ndimage.morphology import binary_fill_holes
+from astropy.convolution import CustomKernel, Tophat2DKernel
 from astropy.coordinates import Angle
-from astropy.convolution import Tophat2DKernel, CustomKernel
 from ..maps import Map
 from .lima import compute_lima_image
 

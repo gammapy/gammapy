@@ -4,9 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
-from ...utils.testing import requires_dependency
-from ...maps import MapAxis, HpxGeom, Map, WcsNDMap
 from ...data import EventList
+from ...maps import HpxGeom, Map, MapAxis, WcsNDMap
+from ...utils.testing import requires_dependency
 from ..counts import fill_map_counts
 
 

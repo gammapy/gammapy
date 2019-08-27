@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Conversion functions for test statistic <-> significance <-> probability."""
 import numpy as np
-from scipy.stats import norm
-from scipy.special import erfinv, erf
 from scipy.optimize import fsolve
-
+from scipy.special import erf, erfinv
+from scipy.stats import norm
 
 __all__ = [
     "significance_to_probability_normal",

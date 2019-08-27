@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
-import logging
 import contextlib
+import logging
 import warnings
 from functools import partial
 from multiprocessing import Pool
 import numpy as np
-from scipy.optimize import newton, brentq
+from scipy.optimize import brentq, newton
 from astropy.convolution import CustomKernel, Kernel2D
 from ..stats import cash, cash_sum_cython
 from ..utils.array import shape_2N, symmetric_crop_pad_width

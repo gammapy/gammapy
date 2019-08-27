@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ..nddata import NDDataArray
 from ...maps import MapAxis
+from ..nddata import NDDataArray
 
 
 @pytest.fixture(scope="session")

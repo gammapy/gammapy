@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
-from scipy.integrate import quad, dblquad
+from numpy.testing import assert_almost_equal, assert_equal
+from scipy.integrate import dblquad, quad
 from ..gauss import Gauss2DPDF, MultiGauss2D
 
 

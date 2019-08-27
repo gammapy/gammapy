@@ -2,12 +2,11 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
 from collections import OrderedDict
 import numpy as np
-from astropy.table import Table
-from astropy import units as u
-from astropy.coordinates import Angle
-from astropy.convolution import Gaussian1DKernel, Box1DKernel
 from scipy import ndimage
-
+from astropy import units as u
+from astropy.convolution import Box1DKernel, Gaussian1DKernel
+from astropy.coordinates import Angle
+from astropy.table import Table
 
 __all__ = ["ImageProfile", "ImageProfileEstimator"]
 

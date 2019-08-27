@@ -2,8 +2,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..sparse import SparseArray
 from .._sparse import merge_sparse_arrays
+from ..sparse import SparseArray
 
 test_params = [(8,), (8, 16), (8, 16, 32)]
 

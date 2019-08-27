@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models."""
 import numpy as np
+from scipy.optimize import fsolve
+import astropy.constants as const
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-import astropy.constants as const
-from scipy.optimize import fsolve
-from ..source import Pulsar, SNRTrueloveMcKee
+from ..source.pulsar import Pulsar
+from ..source.snr import SNRTrueloveMcKee
 
 __all__ = ["PWN"]
 

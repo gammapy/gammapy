@@ -1,17 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
 import scipy.stats
+from numpy.testing import assert_allclose
 from ...stats import (
+    fc_construct_acceptance_intervals,
+    fc_construct_acceptance_intervals_pdfs,
     fc_find_acceptance_interval_gauss,
     fc_find_acceptance_interval_poisson,
-    fc_construct_acceptance_intervals_pdfs,
-    fc_get_limits,
-    fc_fix_limits,
-    fc_find_limit,
     fc_find_average_upper_limit,
-    fc_construct_acceptance_intervals,
+    fc_find_limit,
+    fc_fix_limits,
+    fc_get_limits,
 )
 
 

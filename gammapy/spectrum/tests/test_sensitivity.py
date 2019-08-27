@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from numpy.testing import assert_allclose
 import numpy as np
+from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_data
 from ...irf import EffectiveAreaTable, EnergyDispersion
+from ...utils.testing import requires_data
 from ..core import CountsSpectrum
 from ..sensitivity import SensitivityEstimator
 

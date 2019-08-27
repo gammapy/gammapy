@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 import astropy.units as u
+from ...cube.models import SkyModel
 from ...image import models as spatial
 from ...spectrum import models as spectral
-from ...cube.models import SkyModel
 from ..fitting import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models"]

@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ...utils.testing import run_cli
 from ... import __version__
+from ...utils.testing import run_cli
 from ..main import cli
 
 

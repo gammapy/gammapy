@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from ...utils.testing import (
-    requires_dependency,
-    mpl_plot_check,
-    assert_quantity_allclose,
-)
 from ...utils.energy import energy_logspace
+from ...utils.testing import (
+    assert_quantity_allclose,
+    mpl_plot_check,
+    requires_dependency,
+)
 from .. import CountsSpectrum
 
 

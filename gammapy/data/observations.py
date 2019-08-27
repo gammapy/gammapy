@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 from collections import OrderedDict
+import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.units import Quantity
 from astropy.time import Time
-from .event_list import EventListChecker
-from ..utils.testing import Checker
+from astropy.units import Quantity
 from ..utils.fits import earth_location_from_dict
 from ..utils.table import table_row_to_dict
+from ..utils.testing import Checker
 from ..utils.time import time_ref_from_dict
+from .event_list import EventListChecker
 from .filters import ObservationFilter
 from .pointing import FixedPointingInfo
 

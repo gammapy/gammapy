@@ -4,9 +4,9 @@ import hashlib
 import json
 import logging
 import sys
-import yaml
-from urllib.request import urlopen
 from pathlib import Path
+from urllib.request import urlopen
+import yaml
 from .. import __version__
 
 log = logging.getLogger(__name__)

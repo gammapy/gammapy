@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from astropy.table import Table
-from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
-from ..utils.scripts import make_path
+from astropy.table import Table
+from astropy.units import Quantity
 from ..utils.array import array_stats_str
-from . import EnergyDependentTablePSF
+from ..utils.scripts import make_path
+from .psf_table import EnergyDependentTablePSF
 
 __all__ = ["PSFKing"]
 

@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from ...utils.testing import requires_data
-from ...detect import CWT, CWTKernels, CWTData
+from ...detect import CWT, CWTData, CWTKernels
 from ...maps import Map
+from ...utils.testing import requires_data
 
 
 @requires_data()

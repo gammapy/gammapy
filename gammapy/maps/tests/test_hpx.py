@@ -4,9 +4,18 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from ..geom import MapAxis, MapCoord
-from ..hpx import HpxGeom, get_pix_size_from_nside, nside_to_order
-from ..hpx import make_hpx_to_wcs_mapping, unravel_hpx_index, ravel_hpx_index
-from ..hpx import get_hpxregion_dir, get_hpxregion_size, get_subpixels, get_superpixels
+from ..hpx import (
+    HpxGeom,
+    get_hpxregion_dir,
+    get_hpxregion_size,
+    get_pix_size_from_nside,
+    get_subpixels,
+    get_superpixels,
+    make_hpx_to_wcs_mapping,
+    nside_to_order,
+    ravel_hpx_index,
+    unravel_hpx_index,
+)
 
 pytest.importorskip("numpy", "1.13.0")
 pytest.importorskip("healpy")

@@ -1,29 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate source catalogs."""
 import numpy as np
-from astropy.table import Table, Column
-from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
+from astropy.table import Column, Table
+from astropy.units import Quantity
 from ...utils import coordinates as astrometry
 from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
 from ...utils.random import (
+    draw,
+    get_random_state,
+    pdf,
     sample_sphere,
     sample_sphere_distance,
-    get_random_state,
-    draw,
-    pdf,
 )
-from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population.spatial import (
+    RMAX,
+    RMIN,
+    ZMAX,
+    ZMIN,
     Exponential,
     FaucherSpiral,
-    RMIN,
-    RMAX,
-    ZMIN,
-    ZMAX,
     radial_distributions,
 )
-from ..population.velocity import VMIN, VMAX, velocity_distributions
+from ..population.velocity import VMAX, VMIN, velocity_distributions
+from ..source import PWN, SNR, Pulsar, SNRTrueloveMcKee
 
 __all__ = [
     "make_catalog_random_positions_cube",

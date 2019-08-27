@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Test if Jupyter notebooks work."""
-import os
-import sys
 import logging
-from pathlib import Path
-from pkg_resources import working_set
+import os
 import subprocess
+import sys
+from pathlib import Path
 import yaml
+from pkg_resources import working_set
 
 log = logging.getLogger(__name__)
 

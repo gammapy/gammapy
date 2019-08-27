@@ -2,16 +2,16 @@
 import pytest
 import numpy as np
 from astropy import units as u
-from astropy.modeling.models import Gaussian2D
 from astropy.coordinates import SkyCoord
-from ...utils.testing import assert_quantity_allclose
-from ...maps import WcsGeom, WcsNDMap
+from astropy.modeling.models import Gaussian2D
 from ...image import (
-    measure_containment_radius,
-    measure_image_moments,
     measure_containment,
+    measure_containment_radius,
     measure_curve_of_growth,
+    measure_image_moments,
 )
+from ...maps import WcsGeom, WcsNDMap
+from ...utils.testing import assert_quantity_allclose
 
 
 @pytest.fixture(scope="session")

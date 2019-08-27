@@ -2,8 +2,8 @@
 """MCMC sampling helper functions using ``emcee``."""
 import logging
 import numpy as np
-import emcee
 import corner
+import emcee
 
 __all__ = ["uniform_prior", "run_mcmc", "plot_trace", "plot_corner"]
 

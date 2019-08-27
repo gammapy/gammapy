@@ -1,12 +1,9 @@
 """Fitting framework and backends."""
-# Core
-from .parameter import *
-from .model import *
-from .likelihood import *
-from .fit import *
 from .datasets import *
-
-# Backends
-from .scipy import *
+from .fit import *
 from .iminuit import *
+from .likelihood import *
+from .model import *
+from .parameter import *
+from .scipy import *
 from .sherpa import *

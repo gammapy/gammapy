@@ -18,15 +18,15 @@ Here's some good resources with working examples:
 """
 import os
 import re
-from pathlib import Path
 from distutils.util import strtobool
-from docutils.parsers.rst.directives.images import Image
-from docutils.parsers.rst.directives import register_directive
-from docutils.parsers.rst import roles
-from docutils import nodes
-from sphinx.util import logging
-from nbformat.v4 import new_markdown_cell
+from pathlib import Path
 import nbformat
+from docutils import nodes
+from docutils.parsers.rst import roles
+from docutils.parsers.rst.directives import register_directive
+from docutils.parsers.rst.directives.images import Image
+from nbformat.v4 import new_markdown_cell
+from sphinx.util import logging
 from .. import __version__
 
 try:

@@ -2,13 +2,12 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
 import astropy.units as u
-from ...utils.testing import assert_quantity_allclose
-from ...utils.testing import requires_dependency
+from astropy.units import Quantity
 from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...spectrum import integrate_spectrum, SpectrumEvaluator
-from ..models import ExponentialCutoffPowerLaw, PowerLaw, TableModel, PowerLaw2
+from ...spectrum import SpectrumEvaluator, integrate_spectrum
+from ...utils.testing import assert_quantity_allclose, requires_dependency
+from ..models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2, TableModel
 
 
 def test_integrate_spectrum():

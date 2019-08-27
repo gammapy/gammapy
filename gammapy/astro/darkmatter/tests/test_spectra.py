@@ -2,7 +2,7 @@
 import pytest
 import astropy.units as u
 from ....utils.testing import assert_quantity_allclose, requires_data
-from .. import PrimaryFlux, DMAnnihilation
+from .. import DMAnnihilation, PrimaryFlux
 
 
 @requires_data()

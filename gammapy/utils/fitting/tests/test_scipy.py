@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 from .. import (
     Parameter,
     Parameters,
-    optimize_scipy,
     confidence_scipy,
     likelihood_profile_ul_scipy,
+    optimize_scipy,
 )
 
 

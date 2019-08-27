@@ -193,12 +193,11 @@ as a stable and nice interface on top of what Astropy provides.
 """
 from collections import OrderedDict
 import numpy as np
+from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
 from astropy.table import Table
-from astropy.coordinates import Angle, EarthLocation
 from astropy.units import Quantity
 from .scripts import make_path
-
 
 __all__ = ["SmartHDUList", "energy_axis_to_ebounds", "earth_location_from_dict"]
 

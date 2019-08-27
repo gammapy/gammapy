@@ -16,7 +16,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
-from regions import DS9Parser, SkyRegion, PixelRegion, Region, CircleSkyRegion
+from regions import CircleSkyRegion, DS9Parser, PixelRegion, Region, SkyRegion
 
 __all__ = ["make_region", "make_pixel_region"]
 

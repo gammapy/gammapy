@@ -2,9 +2,9 @@
 import pytest
 from numpy.testing import assert_allclose
 from ..velocity import (
+    FaucherKaspi2006VelocityBimodal,
     FaucherKaspi2006VelocityMaxwellian,
     Paczynski1990Velocity,
-    FaucherKaspi2006VelocityBimodal,
 )
 
 test_cases = [

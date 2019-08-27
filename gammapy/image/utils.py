@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
 import logging
-from multiprocessing import Pool
 from functools import partial
+from multiprocessing import Pool
 import numpy as np
-from scipy.signal import fftconvolve
 from scipy.ndimage.filters import gaussian_filter
+from scipy.signal import fftconvolve
 from astropy.convolution import Gaussian2DKernel
-
 
 __all__ = ["scale_cube"]
 

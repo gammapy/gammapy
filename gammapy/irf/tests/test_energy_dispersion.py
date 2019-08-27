@@ -2,11 +2,11 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-from astropy.coordinates import Angle
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data, mpl_plot_check
-from ...utils.energy import energy_logspace
+from astropy.coordinates import Angle
 from ...irf import EnergyDispersion, EnergyDispersion2D
+from ...utils.energy import energy_logspace
+from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 class TestEnergyDispersion:

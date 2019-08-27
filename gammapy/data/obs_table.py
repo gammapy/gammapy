@@ -1,16 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 import numpy as np
-from astropy.table import Table
-from astropy.units import Unit, Quantity
 from astropy.coordinates import Angle, SkyCoord
+from astropy.table import Table
 from astropy.time import Time
+from astropy.units import Quantity, Unit
 from astropy.utils import lazyproperty
-
-from ..utils.scripts import make_path
-from ..utils.time import time_relative_to_ref
-from ..utils.testing import Checker
 from ..utils.regions import SphericalCircleSkyRegion
+from ..utils.scripts import make_path
+from ..utils.testing import Checker
+from ..utils.time import time_relative_to_ref
 from .gti import GTI
 
 __all__ = ["ObservationTable"]

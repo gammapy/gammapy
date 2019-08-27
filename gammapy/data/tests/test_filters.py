@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from astropy.coordinates import SkyCoord, Angle
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from astropy import units as u
+from ...data import GTI, DataStore, EventListBase, ObservationFilter
 from ...utils.regions import SphericalCircleSkyRegion
-from ...data import DataStore, ObservationFilter, EventListBase, GTI
-from ...utils.testing import requires_data, assert_time_allclose
+from ...utils.testing import assert_time_allclose, requires_data
 
 
 def test_event_filter_types():
