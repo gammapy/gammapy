@@ -5,10 +5,10 @@ import numpy as np
 from scipy.optimize import brentq
 import astropy.units as u
 from astropy.table import Table
-from ..utils.energy import energy_logspace
-from ..utils.fitting import Model, Parameter, Parameters
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.scripts import make_path
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.fitting import Model, Parameter, Parameters
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.scripts import make_path
 from .utils import integrate_spectrum
 
 __all__ = [

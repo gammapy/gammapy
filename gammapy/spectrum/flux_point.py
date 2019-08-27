@@ -5,10 +5,10 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
-from ..utils.fitting import Dataset, Datasets, Fit
-from ..utils.interpolation import interpolate_likelihood_profile
-from ..utils.scripts import make_path
-from ..utils.table import table_from_row_data, table_standardise_units_copy
+from gammapy.utils.fitting import Dataset, Datasets, Fit
+from gammapy.utils.interpolation import interpolate_likelihood_profile
+from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .dataset import SpectrumDatasetOnOff
 from .models import PowerLaw, ScaleModel
 

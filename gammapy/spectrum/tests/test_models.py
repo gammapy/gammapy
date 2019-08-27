@@ -2,14 +2,7 @@
 import pytest
 import numpy as np
 import astropy.units as u
-from ...utils.energy import energy_logspace
-from ...utils.testing import (
-    assert_quantity_allclose,
-    mpl_plot_check,
-    requires_data,
-    requires_dependency,
-)
-from ..models import (
+from gammapy.spectrum.models import (
     AbsorbedSpectralModel,
     Absorption,
     ConstantModel,
@@ -24,6 +17,13 @@ from ..models import (
     SpectralLogGaussian,
     SpectralModel,
     TableModel,
+)
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.testing import (
+    assert_quantity_allclose,
+    mpl_plot_check,
+    requires_data,
+    requires_dependency,
 )
 
 

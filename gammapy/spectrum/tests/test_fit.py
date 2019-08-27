@@ -9,7 +9,7 @@ from gammapy.spectrum import (
     SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
 )
-from gammapy.spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.fitting import Fit
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency
@@ -25,9 +25,7 @@ class TestFit:
         self.source_model = PowerLaw(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = PowerLaw(
-            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
-        )
+        self.bkg_model = PowerLaw(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
 
         self.alpha = 0.1
         random_state = get_random_state(23)

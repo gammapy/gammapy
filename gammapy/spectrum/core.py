@@ -5,11 +5,11 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from ..data import EventList
-from ..maps import MapAxis
-from ..maps.utils import edges_from_lo_hi
-from ..utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
-from ..utils.scripts import make_path
+from gammapy.data import EventList
+from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.utils.fits import ebounds_to_energy_axis, energy_axis_to_ebounds
+from gammapy.utils.scripts import make_path
 
 __all__ = ["CountsSpectrum"]
 
