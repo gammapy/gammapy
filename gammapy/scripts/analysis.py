@@ -5,7 +5,6 @@ import jsonschema
 import logging
 from ..utils.scripts import read_yaml
 from astropy import units as u
-from collections import ChainMap
 from pathlib import Path
 
 __all__ = ["Analysis"]
