@@ -7,7 +7,7 @@ from ..utils.scripts import read_yaml
 from astropy import units as u
 from pathlib import Path
 
-__all__ = ["Analysis"]
+__all__ = ["Analysis", "Config"]
 
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
@@ -15,18 +15,16 @@ SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
 
 
 class Analysis:
-    """The Analysis class drives an analysis working session using the high-level interface API.
+    """Class for analysis session using the high-level interface API.
+
     It is initialized by default with a set of configuration parameters and values declared in
-    an internal configuration schema YAML file, though you can also provide your own configuration
-    file, as well as configuration parameters passed as a nested dictionary at the moment of
-    instantiation. In that case these parameters will overwrite the values of those present in the
-    configuration file.
+    an internal configuration schema YAML file, though the user can also provide configuration
+    parameters passed as a nested dictionary at the moment of instantiation. In that case these
+    parameters will overwrite the default values of those present in the configuration file.
 
     Parameters
     ----------
-    configfile : string
-        The name of a user defined configuration file.
-    config : dict
+    cfg : dict
         A nested dictionary with configuration parameters and values.
 
     Examples
@@ -34,42 +32,50 @@ class Analysis:
     Here are different examples on how to create an `Analysis` session class:
 
     >>> from gammapy.scripts import Analysis
-    >>> cfg = {"general": {"out_folder": "myfolder"}}
-    >>> analysis = Analysis(configfile="myfile.yaml", config=cfg)
-    >>> analysis = Analysis(config=cfg)
+    >>> settings = {"general": {"out_folder": "myfolder"}}
+    >>> analysis = Analysis(settings)
     >>> analysis = Analysis()
     """
 
-    def __init__(self, configfile="", config=dict()):
-
-        self.configuration = Config(configfile, config)
+    def __init__(self, cfg=None):
+        self._conf = Config(cfg)
         self._set_logging()
+
+    @property
+    def configuration(self):
+        """Configuration object for the analysis session."""
+        return self._conf
+
+    @property
+    def settings(self):
+        """Configuration settings for the analysis session."""
+        return self.configuration.settings
 
     def _set_logging(self):
         """Set logging parameters for API."""
-        logging.basicConfig(**self.configuration.settings["general"]["logging"])
+        logging.basicConfig(**self.settings["general"]["logging"])
         log.info(
             "Setting logging parameters ({}).".format(
-                self.configuration.settings["general"]["logging"]["level"]
+                self.settings["general"]["logging"]["level"]
             )
         )
 
 
 class Config:
-    def __init__(self, configfile, config):
-
+    def __init__(self, cfg=None):
         self._default_settings = dict()
-        self._file_settings = dict()
         self._command_settings = dict()
         self.settings = dict()
+
+        # fill settings with default values
         self.validate()
         self._default_settings = copy.deepcopy(self.settings)
 
-        if configfile:
-            self._file_settings = read_yaml(configfile)
-            self._update_settings(self._file_settings, self.settings)
-        if len(config):
-            self._command_settings = config
+        # overwrite with config provided by the user
+        if cfg is None:
+            cfg = dict()
+        if len(cfg):
+            self._command_settings = cfg
             self._update_settings(self._command_settings, self.settings)
         self.validate()
 

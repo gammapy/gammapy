@@ -1,14 +1,15 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from ..analysis import Analysis
 
 
 def test_config():
     analysis = Analysis()
-    assert analysis.configuration.settings["general"]["logging"]["level"] == "INFO"
+    assert analysis.settings["general"]["logging"]["level"] == "INFO"
 
     cfg = {"general": {"out_folder": "test"}}
-    analysis = Analysis(config=cfg)
-    assert analysis.configuration.settings["general"]["logging"]["level"] == "INFO"
-    assert analysis.configuration.settings["general"]["out_folder"] == "test"
+    analysis = Analysis(cfg)
+    assert analysis.settings["general"]["logging"]["level"] == "INFO"
+    assert analysis.settings["general"]["out_folder"] == "test"
 
 
 def test_validate_config():
@@ -24,5 +25,5 @@ def test_validate_astropy_quantities():
                           ]
                 }
             }
-    analysis = Analysis(config=cfg)
+    analysis = Analysis(cfg)
     assert analysis.configuration.validate() is None
