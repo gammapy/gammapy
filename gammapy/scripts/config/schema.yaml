@@ -3,22 +3,30 @@
 "title": "Schema validation for Gammapy high-level interface API configuration"
 
 type: object
-additionalProperties: true      # --- still adding
+additionalProperties: false
 properties:
 
-    global:
+    general:
+        description: ""
         type: object
-        additionalProperties: true  # --- still adding
+        default: {"logging": {}}
+        additionalProperties: false
         properties:
-
             out_folder:
+                description: ""
                 type: string
+                default: "."
 
             logging:
+                description: ""
                 type: object
+                default: {"level": ""}
                 additionalProperties: false
                 properties:
                     level:
+                        description: ""
+                        type: string
+                        default: INFO
                         enum: [CRITICAL, 50,
                                ERROR, 40,
                                WARNING, 30,
@@ -32,6 +40,7 @@ properties:
                 required: [level]
                 dependencies:
                     filemode: [filename]
+        required: [logging]
 
     # ---
 
@@ -47,6 +56,7 @@ properties:
     analysis:
         type: object
 
+required: [general]
 
 # ---
 definitions:

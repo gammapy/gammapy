@@ -1,57 +1,115 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high-level interface API"""
+import copy
 import jsonschema
 import logging
 from ..utils.scripts import read_yaml
 from astropy import units as u
+from collections import ChainMap
 from pathlib import Path
 
 __all__ = ["Analysis"]
 
 log = logging.getLogger(__name__)
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
-CONFIG_FILE = CONFIG_PATH / "default.yaml"
 SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
 
 
-class Analysis():
-    """High-level interface analysis session class.
-
-    The Analysis class drives an analysis working session using the high-level interface
-    API. It is initialized by default with a set of configuration parameters and values
-    declared in an internal configuration YAML file.
+class Analysis:
+    """The Analysis class drives an analysis working session using the high-level interface API.
+    It is initialized by default with a set of configuration parameters and values declared in
+    an internal configuration schema YAML file, though you can also provide your own configuration
+    file, as well as configuration parameters passed as a nested dictionary at the moment of
+    instantiation. In that case these parameters will overwrite the values of those present in the
+    configuration file.
 
     Parameters
     ----------
     configfile : string
         The name of a user defined configuration file.
+    config : dict
+        A nested dictionary with configuration parameters and values.
+
+    Examples
+    --------
+    Here are different examples on how to create an `Analysis` session class:
+
+    >>> from gammapy.scripts import Analysis
+    >>> cfg = {"general": {"out_folder": "myfolder"}}
+    >>> analysis = Analysis(configfile="myfile.yaml", config=cfg)
+    >>> analysis = Analysis(config=cfg)
+    >>> analysis = Analysis()
     """
 
-    def __init__(self, configfile=CONFIG_FILE, **kwargs):
-        self.config = dict()
-        if configfile:
-            self.configfile = configfile
-            self.config = read_yaml(self.configfile)
-        if len(kwargs):
-            self.config.update(**kwargs)
-        self._set_logging()
+    def __init__(self, configfile="", config=dict()):
 
-    def validate_config(self):
-        """Validate config parameters against schema."""
-        schema = read_yaml(SCHEMA_FILE)
-        try:
-            jsonschema.validate(self.config, schema, _gp_validator)
-        except jsonschema.exceptions.ValidationError as ex:
-            log.error("Error when validating configuration parameters against schema.")
-            log.error("Parameter: {}".format(ex.schema_path[-2]))
-            log.error(ex.message)
-            raise ex
+        self.configuration = Config(configfile, config)
+        self._set_logging()
 
     def _set_logging(self):
         """Set logging parameters for API."""
-        if "global" in self.config and "logging" in self.config["global"]:
-            logging.basicConfig(**self.config["global"]["logging"])
-            log.info("Setting logging parameters ({}).".format(self.config["global"]["logging"]["level"]))
+        logging.basicConfig(**self.configuration.settings["general"]["logging"])
+        log.info(
+            "Setting logging parameters ({}).".format(
+                self.configuration.settings["general"]["logging"]["level"]
+            )
+        )
+
+
+class Config:
+    def __init__(self, configfile, config):
+
+        self._default_settings = dict()
+        self._file_settings = dict()
+        self._command_settings = dict()
+        self.settings = dict()
+        self.validate()
+        self._default_settings = copy.deepcopy(self.settings)
+
+        if configfile:
+            self._file_settings = read_yaml(configfile)
+            self._update_settings(self._file_settings, self.settings)
+        if len(config):
+            self._command_settings = config
+            self._update_settings(self._command_settings, self.settings)
+        self.validate()
+
+    def validate(self):
+        """Validate config parameters against schema."""
+        schema = read_yaml(SCHEMA_FILE)
+        jsonschema.validate(self.settings, schema, _gp_validator)
+
+    def _update_settings(self, source, target):
+        for key, val in source.items():
+            if key not in target:
+                target[key] = {}
+            if not isinstance(val, dict) or val == {}:
+                target[key] = val
+            else:
+                self._update_settings(val, target[key])
+
+
+def extend_with_default(validator_class):
+    validate_properties = validator_class.VALIDATORS["properties"]
+    reserved = [
+        "default",
+        "const",
+        "readOnly",
+        "items",
+        "uniqueItems",
+        "definitions",
+        "properties",
+        "patternProperties",
+    ]
+
+    def set_defaults(validator, properties, instance, schema):
+        for prop, sub_schema in properties.items():
+            if prop not in reserved and "default" in sub_schema:
+                instance.setdefault(prop, sub_schema["default"])
+        for error in validate_properties(validator, properties, instance, schema):
+            yield error
+
+    return jsonschema.validators.extend(validator_class, {"properties": set_defaults})
 
 
 def _astropy_quantity(_, instance):
@@ -71,6 +129,7 @@ def _astropy_quantity(_, instance):
 _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
     "number", _astropy_quantity
 )
-_gp_validator = jsonschema.validators.extend(
+_gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
+_gp_validator = extend_with_default(_gp_units_validator)
