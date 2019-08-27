@@ -155,5 +155,5 @@ script:
 after_success:
     - if $TEST_COVERAGE; then
           pip install coveralls;
-          coveralls --rcfile='gammapy/tests/coveragerc';
+          coveralls;
       fi

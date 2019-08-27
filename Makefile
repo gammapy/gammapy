@@ -78,7 +78,7 @@ test:
 	python -m pytest -v gammapy
 
 test-cov:
-	python -m pytest -v gammapy --cov=gammapy --cov-report=html --cov-config=gammapy/tests/coveragerc
+	python -m pytest -v gammapy --cov=gammapy --cov-report=html
 
 test-nb:
 	python -m gammapy.utils.tutorials_test
