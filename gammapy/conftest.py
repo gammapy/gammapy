@@ -37,7 +37,7 @@ PYTEST_HEADER_MODULES["reproject"] = "reproject"
 
 def pytest_configure(config):
     """Print some info ..."""
-    from .utils.testing import has_data
+    from gammapy.utils.testing import has_data
 
     print("")
     print("Gammapy test data availability:")

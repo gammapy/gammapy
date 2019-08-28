@@ -6,13 +6,13 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
-from ....cube import MapEvaluator
-from ....cube.models import SkyModel
-from ....image.models import SkyGaussian
-from ....maps import Map, MapAxis
-from ....spectrum.models import PowerLaw
-from ....time.models import LightCurveTableModel
-from ..inverse_cdf import InverseCDFSampler, MapEventSampler
+from gammapy.cube import MapEvaluator
+from gammapy.cube.models import SkyModel
+from gammapy.image.models import SkyGaussian
+from gammapy.maps import Map, MapAxis
+from gammapy.spectrum.models import PowerLaw
+from gammapy.time.models import LightCurveTableModel
+from gammapy.utils.random import InverseCDFSampler, MapEventSampler
 
 
 def uniform_dist(x, a, b):

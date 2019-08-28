@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.testing import assert_almost_equal
 from astropy.units import Quantity
-from ..simulate import random_times
+from gammapy.time import random_times
 
 
 def test_random_times():

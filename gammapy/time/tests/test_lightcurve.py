@@ -6,19 +6,18 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
-from ...spectrum.models import PowerLaw
-from ...spectrum.tests.test_flux_point_estimator import (
+from gammapy.spectrum.models import PowerLaw
+from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
 )
-from ...utils.testing import (
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
     requires_dependency,
 )
-from ..lightcurve import LightCurve
-from ..lightcurve_estimator import LightCurveEstimator
+from gammapy.time import LightCurve, LightCurveEstimator
 
 # time time_min time_max flux flux_err flux_ul
 # 48705.1757 48705.134 48705.2174 0.57 0.29 nan

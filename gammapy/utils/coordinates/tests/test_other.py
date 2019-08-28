@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.units import Quantity
-from ...coordinates import galactic
+from gammapy.utils.coordinates import galactic
 
 
 def test_galactic():

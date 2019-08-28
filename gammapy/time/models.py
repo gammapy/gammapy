@@ -4,9 +4,9 @@ import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from ..utils.fitting import Model, Parameter
-from ..utils.scripts import make_path
-from ..utils.time import time_ref_from_dict
+from gammapy.utils.fitting import Model, Parameter
+from gammapy.utils.scripts import make_path
+from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["PhaseCurveTableModel", "LightCurveTableModel"]
 

@@ -2,8 +2,6 @@
 """MCMC sampling helper functions using ``emcee``."""
 import logging
 import numpy as np
-import corner
-import emcee
 
 __all__ = ["uniform_prior", "run_mcmc", "plot_trace", "plot_corner"]
 
@@ -81,6 +79,8 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     sampler : `emcee.EnsembleSampler`
         sampler object containing the trace of all walkers.
     """
+    import emcee
+
     dataset.parameters.autoscale()  # Autoscale parameters
     pars = [par.factor for par in dataset.parameters.free_parameters]
     ndim = len(pars)
@@ -154,8 +154,10 @@ def plot_corner(sampler, dataset, nburn=0):
     nburn : int
         Number of runs to discard, because considered part of the burn-in phase
     """
+    from corner import corner
+
     labels = [par.name for par in dataset.parameters.free_parameters]
 
     samples = sampler.chain[:, nburn:, :].reshape((-1, len(labels)))
 
-    corner.corner(samples, labels=labels, quantiles=[0.16, 0.5, 0.84], show_titles=True)
+    corner(samples, labels=labels, quantiles=[0.16, 0.5, 0.84], show_titles=True)

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ...utils.scripts import recursive_merge_dicts
+from gammapy.utils.scripts import recursive_merge_dicts
 
 
 def test_recursive_merge_dicts():

@@ -2,7 +2,7 @@
 import numpy as np
 import scipy.integrate
 from numpy.testing import assert_almost_equal, assert_equal
-from ..gauss import Gauss2DPDF, MultiGauss2D
+from gammapy.utils.gauss import Gauss2DPDF, MultiGauss2D
 
 
 class TestGauss2DPDF:

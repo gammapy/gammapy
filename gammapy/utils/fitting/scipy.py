@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.optimize
-from ..interpolation import interpolate_likelihood_profile
+from gammapy.utils.interpolation import interpolate_likelihood_profile
 from .likelihood import Likelihood
 
 __all__ = [

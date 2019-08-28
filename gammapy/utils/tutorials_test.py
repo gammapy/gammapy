@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 import pkg_resources
 import yaml
-from ..scripts.jupyter import notebook_test
+from gammapy.scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
 

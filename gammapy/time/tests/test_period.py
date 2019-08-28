@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.stats import LombScargle
-from ...utils.testing import requires_dependency
-from ..period import plot_periodogram, robust_periodogram
+from gammapy.utils.testing import requires_dependency
+from gammapy.time import plot_periodogram, robust_periodogram
 
 pytest.importorskip("astropy", "3.0")
 

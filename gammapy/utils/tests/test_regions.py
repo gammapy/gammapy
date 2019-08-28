@@ -12,8 +12,8 @@ from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 import regions
 from astropy.coordinates import SkyCoord
-from ...maps import WcsGeom
-from ..regions import SphericalCircleSkyRegion, make_pixel_region, make_region
+from gammapy.maps import WcsGeom
+from gammapy.utils.regions import SphericalCircleSkyRegion, make_pixel_region, make_region
 
 
 def test_make_region():

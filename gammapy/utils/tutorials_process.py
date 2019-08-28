@@ -8,7 +8,7 @@ import subprocess
 import sys
 from distutils.util import strtobool
 from pathlib import Path
-from ..scripts.jupyter import notebook_test
+from gammapy.scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
 

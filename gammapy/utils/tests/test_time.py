@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.time import Time, TimeDelta
-from ..time import (
+from gammapy.utils.time import (
     absolute_time,
     time_ref_from_dict,
     time_ref_to_dict,
