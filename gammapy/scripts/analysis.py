@@ -2,6 +2,10 @@
 """Session class driving the high-level interface API"""
 import copy
 import logging
+from ..utils.scripts import make_path, read_yaml
+from ..data import DataStore, Observations, ObservationTable
+from astropy.coordinates import Angle
+from astropy import units as u
 from pathlib import Path
 from astropy import units as u
 import jsonschema
@@ -40,6 +44,8 @@ class Analysis:
     def __init__(self, config=None):
         self._config = Config(config)
         self._set_logging()
+        self.datastore = DataStore()
+        self.observations = Observations()
 
     @property
     def config(self):
@@ -50,6 +56,57 @@ class Analysis:
     def settings(self):
         """Configuration settings for the analysis session."""
         return self.config.settings
+
+    def get_observations(self):
+        """Fetch observations from the data store according to criteria defined in the configuration."""
+        cfg_ds = make_path(self.settings["observations"]["data_store"])
+        if cfg_ds.is_file():
+            self.datastore = DataStore().from_file(cfg_ds)
+        elif cfg_ds.is_dir():
+            self.datastore = DataStore().from_dir(cfg_ds)
+        else:
+            log.error("Datastore {} not found.".format(cfg_ds))
+            return False
+
+        ids = set()
+        selection = dict()
+        for criteria in self.settings["observations"]["filter"]:
+            selected_obs = ObservationTable()
+
+            selection["type"] = criteria["filter_type"]
+            if "inverted" in criteria and criteria["inverted"]:
+                selection["inverted"] = True
+            if selection["type"] == "sky_circle":
+                selection["frame"] = criteria["frame"]
+                selection["lon"] = Angle(criteria["lon"])
+                selection["lat"] = Angle(criteria["lat"])
+                selection["radius"] = Angle(criteria["radius"])
+                selection["border"] = Angle(criteria["border"])
+            if selection["type"] == "par_box":
+                selection["variable"] = criteria["variable"]
+                selection["value_range"] = criteria["value_range"]
+            if selection["type"] == "angle_box":
+                selection["type"] = "par_box"
+                selection["variable"] = criteria["variable"]
+                selection["value_range"] = Angle(criteria["value_range"])
+
+            if selection["type"] != "ids" and selection["type"] != "all":
+                selected_obs = self.datastore.obs_table.select_observations(selection)
+            if selection["type"] == "ids":
+                obs_list = self.datastore.get_observations(criteria["obs_ids"])
+                selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
+            if selection["type"] == "all":
+                obs_list = self.datastore.get_observations()
+                selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
+            if len(selected_obs):
+                if "exclude" in criteria and criteria["exclude"]:
+                    ids.difference_update(selected_obs["OBS_ID"].tolist())
+                else:
+                    ids.update(selected_obs["OBS_ID"].tolist())
+        if len(ids):
+            self.observations = self.datastore.get_observations(ids)
+        else:
+            self.observations = Observations()
 
     def _set_logging(self):
         """Set logging parameters for API."""
