@@ -3,18 +3,19 @@
 
 https://github.com/gammapy/gamma-cat
 """
+import collections
 import functools
 import json
 import logging
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from ..cube.models import SkyModel, SkyModels
-from ..image.models import SkyGaussian, SkyPointSource, SkyShell
-from ..spectrum import FluxPoints
-from ..spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
-from ..utils.scripts import make_path
+from gammapy.cube.models import SkyModel, SkyModels
+from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.spectrum import FluxPoints
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
+from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -580,7 +581,7 @@ class GammaCatResource:
     def to_namedtuple(self):
         """Convert to `collections.namedtuple`."""
         d = self.to_dict()
-        return namedtuple("GammaCatResourceNamedTuple", d.keys())(**d)
+        return collections.namedtuple("GammaCatResourceNamedTuple", d.keys())(**d)
 
     def to_dict(self):
         """Convert to `collections.OrderedDict`."""

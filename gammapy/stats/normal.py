@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Conversion functions for test statistic <-> significance <-> probability."""
 import numpy as np
-from scipy.optimize import fsolve
-from scipy.special import erf, erfinv
-from scipy.stats import norm
+import scipy.optimize
+import scipy.special
+import scipy.stats
 
 __all__ = [
     "significance_to_probability_normal",
@@ -44,7 +44,7 @@ def significance_to_probability_normal(significance):
     >>> significance_to_probability_normal(10)
     7.6198530241604696e-24
     """
-    return norm.sf(significance)
+    return scipy.stats.norm.sf(significance)
 
 
 def probability_to_significance_normal(probability):
@@ -70,7 +70,7 @@ def probability_to_significance_normal(probability):
     >>> probability_to_significance_normal(1e-10)
     6.3613409024040557
     """
-    return norm.isf(probability)
+    return scipy.stats.norm.isf(probability)
 
 
 def _p_to_s_direct(probability, one_sided=True):
@@ -80,7 +80,7 @@ def _p_to_s_direct(probability, one_sided=True):
     """
     probability = 1 - probability  # We want p to be the tail probability
     temp = np.where(one_sided, 2 * probability - 1, probability)
-    return np.sqrt(2) * erfinv(temp)
+    return np.sqrt(2) * scipy.special.erfinv(temp)
 
 
 def _s_to_p_direct(significance, one_sided=True):
@@ -88,7 +88,7 @@ def _s_to_p_direct(significance, one_sided=True):
 
     Note: _p_to_s_direct was solved for p.
     """
-    temp = erf(significance / np.sqrt(2))
+    temp = scipy.special.erf(significance / np.sqrt(2))
     probability = np.where(one_sided, (temp + 1) / 2.0, temp)
     return 1 - probability  # We want p to be the tail probability
 
@@ -120,4 +120,4 @@ def significance_to_probability_normal_limit(significance, guess=1e-100):
         else:
             return 1e100
 
-    return fsolve(f, guess)
+    return scipy.optimize.fsolve(f, guess)

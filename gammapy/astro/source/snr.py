@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Supernova remnant (SNR) source models."""
 import numpy as np
-import astropy.constants as const
+import astropy.constants
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 
@@ -34,7 +34,7 @@ class SNR:
         e_sn="1e51 erg",
         theta=Quantity(0.1),
         n_ISM=Quantity(1, "cm-3"),
-        m_ejecta=const.M_sun,
+        m_ejecta=astropy.constants.M_sun,
         t_stop=Quantity(1e6, "K"),
         age=None,
         morphology="Shell2D",
@@ -42,7 +42,7 @@ class SNR:
     ):
         self.e_sn = Quantity(e_sn, "erg")
         self.theta = theta
-        self.rho_ISM = n_ISM * const.m_p
+        self.rho_ISM = n_ISM * astropy.constants.m_p
         self.n_ISM = n_ISM
         self.m_ejecta = m_ejecta
         self.t_stop = t_stop
@@ -90,7 +90,7 @@ class SNR:
         """
         # proportional constant for the free expansion phase
         term_1 = (self.e_sn / Quantity(1e51, "erg")) ** (1.0 / 2)
-        term_2 = (self.m_ejecta / const.M_sun) ** (-1.0 / 2)
+        term_2 = (self.m_ejecta / astropy.constants.M_sun) ** (-1.0 / 2)
         return Quantity(0.01, "pc/yr") * term_1 * term_2 * t
 
     def _radius_sedov_taylor(self, t):
@@ -143,7 +143,7 @@ class SNR:
         # Flux in 1 k distance according to Drury formula 9
         term_0 = energy_min / Quantity(1, "TeV")
         term_1 = self.e_sn / Quantity(1e51, "erg")
-        term_2 = self.rho_ISM / (Quantity(1, "cm-3") * const.m_p)
+        term_2 = self.rho_ISM / (Quantity(1, "cm-3") * astropy.constants.m_p)
         L = self.theta * term_0 ** (1 - self.spectral_index) * term_1 * term_2
 
         # Corresponding luminosity
@@ -170,8 +170,10 @@ class SNR:
             \text{yr}
         """
         term1 = (self.e_sn / Quantity(1e51, "erg")) ** (-1.0 / 2)
-        term2 = (self.m_ejecta / const.M_sun) ** (5.0 / 6)
-        term3 = (self.rho_ISM / (Quantity(1, "cm-3") * const.m_p)) ** (-1.0 / 3)
+        term2 = (self.m_ejecta / astropy.constants.M_sun) ** (5.0 / 6)
+        term3 = (self.rho_ISM / (Quantity(1, "cm-3") * astropy.constants.m_p)) ** (
+            -1.0 / 3
+        )
         return Quantity(200, "yr") * term1 * term2 * term3
 
     @lazyproperty
@@ -190,7 +192,11 @@ class SNR:
             \left(\frac{\rho_{ISM}}{1.66\cdot 10^{-24}g/cm^3}\right)^{-1/3}
             \text{yr}
         """
-        term1 = 3 * const.m_p.cgs / (100 * const.k_B.cgs * self.t_stop)
+        term1 = (
+            3
+            * astropy.constants.m_p.cgs
+            / (100 * astropy.constants.k_B.cgs * self.t_stop)
+        )
         term2 = (self.e_sn / self.rho_ISM) ** (2.0 / 5)
         return ((term1 * term2) ** (5.0 / 6)).to("yr")
 

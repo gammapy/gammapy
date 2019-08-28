@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ...utils.testing import run_cli
-from ..main import cli
+from gammapy.scripts.main import cli
+from gammapy.utils.testing import run_cli
 
 
 def test_cli_info_help():

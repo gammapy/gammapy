@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from ...image import (
+from gammapy.image import (
     MapPanelPlotter,
     colormap_hess,
     colormap_milagro,
     illustrate_colormap,
 )
-from ...maps import Map
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.maps import Map
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):

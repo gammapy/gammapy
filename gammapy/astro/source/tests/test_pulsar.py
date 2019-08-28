@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import scipy.integrate
 from numpy.testing import assert_allclose
 from astropy.table import Table
 from astropy.units import Quantity
-from ....utils.testing import assert_quantity_allclose
-from ...source import Pulsar, SimplePulsar
+from gammapy.astro.source import Pulsar, SimplePulsar
+from gammapy.utils.testing import assert_quantity_allclose
 
 pulsar = Pulsar()
 time = Quantity([1e2, 1e4, 1e6, 1e8], "yr")
@@ -63,14 +64,13 @@ def test_Pulsar_luminosity_spindown():
 def test_Pulsar_energy_integrated():
     """Test against numerical integration"""
     energies = []
-    from scipy.integrate import quad
 
     def lumi(t):
         t = Quantity(t, "s")
         return pulsar.luminosity_spindown(t).value
 
     for t_ in time:
-        energy = quad(lumi, 0, t_.cgs.value, epsrel=0.01)[0]
+        energy = scipy.integrate.quad(lumi, 0, t_.cgs.value, epsrel=0.01)[0]
         energies.append(energy)
     # The last value is quite inaccurate, because integration is over several decades
     assert_allclose(energies, pulsar.energy_integrated(time).value, rtol=0.2)

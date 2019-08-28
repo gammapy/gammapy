@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from ...utils.energy import energy_logspace
-from ...utils.testing import (
+from gammapy.spectrum import CountsSpectrum
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_dependency,
 )
-from .. import CountsSpectrum
 
 
 class TestCountsSpectrum:

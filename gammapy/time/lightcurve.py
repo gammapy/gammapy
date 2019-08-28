@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from ..utils.scripts import make_path
+from gammapy.utils.scripts import make_path
 
 __all__ = ["LightCurve"]
 

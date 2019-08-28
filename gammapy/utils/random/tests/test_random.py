@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from ....utils.testing import assert_quantity_allclose
+from gammapy.utils.testing import assert_quantity_allclose
 from ..utils import sample_powerlaw, sample_sphere, sample_sphere_distance
 
 

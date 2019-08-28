@@ -4,9 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle
-from ...irf import EnergyDispersion, EnergyDispersion2D
-from ...utils.energy import energy_logspace
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.irf import EnergyDispersion, EnergyDispersion2D
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 class TestEnergyDispersion:

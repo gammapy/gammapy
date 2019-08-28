@@ -5,9 +5,9 @@ from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.units import Quantity
-from ...data import GTI, DataStore, EventListBase, ObservationFilter
-from ...utils.regions import SphericalCircleSkyRegion
-from ...utils.testing import assert_time_allclose, requires_data
+from gammapy.data import GTI, DataStore, EventListBase, ObservationFilter
+from gammapy.utils.regions import SphericalCircleSkyRegion
+from gammapy.utils.testing import assert_time_allclose, requires_data
 
 
 def test_event_filter_types():

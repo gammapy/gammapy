@@ -4,8 +4,8 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
-from ..irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
-from ..utils.scripts import make_path
+from gammapy.irf import PSF3D, apply_containment_fraction, compute_energy_thresholds
+from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum
 from .dataset import SpectrumDatasetOnOff
 

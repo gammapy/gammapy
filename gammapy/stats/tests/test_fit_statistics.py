@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ... import stats
+from gammapy import stats
 
 
 @pytest.fixture

@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models."""
 import numpy as np
-from scipy.optimize import fsolve
-import astropy.constants as const
+import scipy.optimize
+import astropy.constants
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from ..source.pulsar import Pulsar
-from ..source.snr import SNRTrueloveMcKee
+from .pulsar import Pulsar
+from .snr import SNRTrueloveMcKee
 
 __all__ = ["PWN"]
 
@@ -74,7 +74,7 @@ class PWN:
             return r_pwn - r_shock
 
         # 4e3 years is a typical value that works for fsolve
-        return Quantity(fsolve(time_coll, 4e3), "yr")
+        return Quantity(scipy.optimize.fsolve(time_coll, 4e3), "yr")
 
     def radius(self, t):
         r"""Radius of the PWN at age t.
@@ -120,4 +120,4 @@ class PWN:
         t = Quantity(t, "yr")
         energy = self.pulsar.energy_integrated(t)
         volume = 4.0 / 3 * np.pi * self.radius(t) ** 3
-        return np.sqrt(2 * const.mu0 * self.eta_B * energy / volume)
+        return np.sqrt(2 * astropy.constants.mu0 * self.eta_B * energy / volume)

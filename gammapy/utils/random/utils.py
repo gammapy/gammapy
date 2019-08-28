@@ -2,7 +2,7 @@
 """Helper functions to work with distributions."""
 import numbers
 import numpy as np
-from scipy.integrate import quad
+import scipy.integrate
 from astropy.coordinates import Angle
 
 __all__ = [
@@ -21,7 +21,7 @@ def normalize(func, x_min, x_max):
     """Normalize a 1D function over a given range."""
 
     def f(x):
-        return func(x) / quad(func, x_min, x_max)[0]
+        return func(x) / scipy.integrate.quad(func, x_min, x_max)[0]
 
     return f
 

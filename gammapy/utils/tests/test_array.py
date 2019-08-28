@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from ..array import array_stats_str, shape_2N
+from gammapy.utils.array import array_stats_str, shape_2N
 
 
 def test_array_stats_str():

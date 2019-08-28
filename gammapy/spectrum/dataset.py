@@ -5,13 +5,13 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from ..data import ObservationStats
-from ..irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
-from ..stats import cash, wstat
-from ..utils.fits import energy_axis_to_ebounds
-from ..utils.fitting import Dataset, Parameters
-from ..utils.random import get_random_state
-from ..utils.scripts import make_path
+from gammapy.data import ObservationStats
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+from gammapy.stats import cash, wstat
+from gammapy.utils.fits import energy_axis_to_ebounds
+from gammapy.utils.fitting import Dataset, Parameters
+from gammapy.utils.random import get_random_state
+from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum
 from .utils import SpectrumEvaluator
 

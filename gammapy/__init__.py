@@ -35,11 +35,11 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 
 __all__ = ["__version__", "test", "song"]
 
-from pkg_resources import DistributionNotFound, get_distribution
+import pkg_resources
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
+    __version__ = pkg_resources.get_distribution(__name__).version
+except pkg_resources.DistributionNotFound:
     # package is not installed
     pass
 

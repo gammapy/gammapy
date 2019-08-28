@@ -1,17 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
 import numpy as np
-from scipy.special import erf
+import scipy.special
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from ..maps import MapAxis
-from ..maps.utils import edges_from_lo_hi
-from ..utils.energy import energy_logcenter
-from ..utils.fits import energy_axis_to_ebounds
-from ..utils.nddata import NDDataArray
-from ..utils.scripts import make_path
+from gammapy.maps import MapAxis
+from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.utils.energy import energy_logcenter
+from gammapy.utils.fits import energy_axis_to_ebounds
+from gammapy.utils.nddata import NDDataArray
+from gammapy.utils.scripts import make_path
 
 __all__ = ["EnergyDispersion", "EnergyDispersion2D"]
 
@@ -800,7 +800,7 @@ class EnergyDispersion2D:
         s = np.sqrt(2) * sigma
         t1 = (migra2d_hi - 1 - bias) / s
         t2 = (migra2d_lo - 1 - bias) / s
-        pdf = (erf(t1) - erf(t2)) / 2
+        pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
 
         pdf_array = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
 

@@ -4,25 +4,25 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.time import Time
-from ...spectrum.models import (
+from gammapy.catalog import (
+    SourceCatalog1FHL,
+    SourceCatalog2FHL,
+    SourceCatalog3FGL,
+    SourceCatalog3FHL,
+    SourceCatalog4FGL,
+)
+from gammapy.spectrum.models import (
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
     PowerLaw,
 )
-from ...utils.testing import (
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     assert_time_allclose,
     requires_data,
     requires_dependency,
-)
-from .. import (
-    SourceCatalog1FHL,
-    SourceCatalog2FHL,
-    SourceCatalog3FGL,
-    SourceCatalog3FHL,
-    SourceCatalog4FGL,
 )
 
 SOURCES_4FGL = [

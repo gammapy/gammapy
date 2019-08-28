@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import collections
 import logging
-from collections import namedtuple
 import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.units import Quantity, Unit
-from ..utils.energy import energy_logspace
-from ..utils.fits import earth_location_from_dict
-from ..utils.regions import make_region
-from ..utils.scripts import make_path
-from ..utils.testing import Checker
-from ..utils.time import time_ref_from_dict
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.fits import earth_location_from_dict
+from gammapy.utils.regions import make_region
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import Checker
+from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["EventListBase", "EventList", "EventListLAT"]
 
@@ -763,7 +763,7 @@ class EventListChecker(Checker):
         "ALTITUDE",
     ]
 
-    _col = namedtuple("col", ["name", "unit"])
+    _col = collections.namedtuple("col", ["name", "unit"])
     columns_required = [
         _col(name="EVENT_ID", unit=""),
         _col(name="TIME", unit="s"),

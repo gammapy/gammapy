@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
-from ..stats import Stats, significance_on_off
+from gammapy.stats import Stats, significance_on_off
 
 __all__ = ["ObservationStats"]
 

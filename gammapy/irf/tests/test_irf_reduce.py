@@ -4,19 +4,20 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
-from ...data import DataStore, Observations
-from ...utils.energy import energy_logspace
-from ...utils.testing import assert_quantity_allclose, requires_data
-from ..effective_area import EffectiveAreaTable
-from ..energy_dispersion import EnergyDispersion
-from ..irf_reduce import (
+from gammapy.data import DataStore, Observations
+from gammapy.irf import (
+    EffectiveAreaTable,
+    EnergyDependentTablePSF,
+    EnergyDispersion,
+    TablePSF,
     apply_containment_fraction,
     compute_energy_thresholds,
     make_mean_edisp,
     make_mean_psf,
     make_psf,
 )
-from ..psf_table import EnergyDependentTablePSF, TablePSF
+from gammapy.utils.energy import energy_logspace
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
 @pytest.fixture(scope="session")

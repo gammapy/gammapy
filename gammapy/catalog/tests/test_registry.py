@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from ...utils.testing import requires_data
-from ..gammacat import SourceCatalogGammaCat
-from ..registry import SourceCatalogRegistry
+from gammapy.catalog import SourceCatalogGammaCat, SourceCatalogRegistry
+from gammapy.utils.testing import requires_data
 from .test_core import make_test_catalog
 
 

@@ -5,8 +5,8 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-from ..utils.array import array_stats_str
-from ..utils.scripts import make_path
+from gammapy.utils.array import array_stats_str
+from gammapy.utils.scripts import make_path
 from .psf_table import EnergyDependentTablePSF
 
 __all__ = ["PSFKing"]

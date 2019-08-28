@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from astropy.io import fits
 from astropy.table import Column, Table
-from ..fits import SmartHDUList
+from gammapy.utils.fits import SmartHDUList
 
 
 def make_test_hdu_list():

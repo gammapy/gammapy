@@ -2,12 +2,12 @@
 """Test if Jupyter notebooks work."""
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
-from shutil import copytree, rmtree
+import pkg_resources
 import yaml
-from pkg_resources import working_set
-from ..scripts.jupyter import notebook_test
+from gammapy.scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def requirement_missing(notebook):
             return False
         for package in notebook["requires"].split():
             try:
-                working_set.require(package)
+                pkg_resources.working_set.require(package)
             except Exception:
                 return True
     return False
@@ -46,8 +46,8 @@ def main():
     # setup
     path_temp = Path("temp")
     path_empty_nbs = Path("tutorials")
-    rmtree(str(path_temp), ignore_errors=True)
-    copytree(str(path_empty_nbs), str(path_temp))
+    shutil.rmtree(str(path_temp), ignore_errors=True)
+    shutil.copytree(str(path_empty_nbs), str(path_temp))
 
     for notebook in get_notebooks():
         if requirement_missing(notebook):
@@ -65,7 +65,7 @@ def main():
             passed = False
 
     # tear down
-    rmtree(str(path_temp), ignore_errors=True)
+    shutil.rmtree(str(path_temp), ignore_errors=True)
 
     if not passed:
         sys.exit("Some tests failed. Existing now.")

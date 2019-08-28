@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.time import TimeDelta
-from ..utils.random import get_random_state
+from gammapy.utils.random import get_random_state
 
 __all__ = ["random_times"]
 

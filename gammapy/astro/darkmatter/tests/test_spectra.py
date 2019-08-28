@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from ....utils.testing import assert_quantity_allclose, requires_data
-from .. import DMAnnihilation, PrimaryFlux
+from gammapy.astro.darkmatter import DMAnnihilation, PrimaryFlux
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
 @requires_data()
@@ -18,7 +18,6 @@ def test_primary_flux():
 
 @requires_data()
 def test_DMAnnihilation():
-
     channel = "b"
     massDM = 5 * u.TeV
     jfactor = 3.41e19 * u.Unit("GeV2 cm-5")

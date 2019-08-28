@@ -6,10 +6,10 @@ from astropy.table import Table
 from astropy.time import Time
 from astropy.units import Quantity, Unit
 from astropy.utils import lazyproperty
-from ..utils.regions import SphericalCircleSkyRegion
-from ..utils.scripts import make_path
-from ..utils.testing import Checker
-from ..utils.time import time_relative_to_ref
+from gammapy.utils.regions import SphericalCircleSkyRegion
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import Checker
+from gammapy.utils.time import time_relative_to_ref
 from .gti import GTI
 
 __all__ = ["ObservationTable"]

@@ -6,13 +6,13 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from ..cube.models import SkyModel, SkyModels
-from ..image.models import SkyGaussian, SkyPointSource, SkyShell
-from ..spectrum import FluxPoints
-from ..spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
-from ..utils.interpolation import ScaledRegularGridInterpolator
-from ..utils.scripts import make_path
-from ..utils.table import table_row_to_dict
+from gammapy.cube.models import SkyModel, SkyModels
+from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.spectrum import FluxPoints
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.utils.interpolation import ScaledRegularGridInterpolator
+from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_row_to_dict
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

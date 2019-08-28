@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from pathlib import Path
 import pytest
-from ...utils.testing import requires_dependency, run_cli
-from ..main import cli
+from gammapy.scripts.main import cli
+from gammapy.utils.testing import requires_dependency, run_cli
 
 
 @pytest.fixture(scope="session")

@@ -2,8 +2,8 @@
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
-from ..irf import EnergyDispersion
-from ..maps import Map
+from gammapy.irf import EnergyDispersion
+from gammapy.maps import Map
 
 __all__ = ["make_edisp_map", "EDispMap"]
 

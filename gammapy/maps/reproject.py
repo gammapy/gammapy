@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.ndimage import map_coordinates
+import scipy.ndimage
 import astropy.units as u
 
 __all__ = ["reproject_car_to_hpx", "reproject_car_to_wcs"]
@@ -54,7 +54,7 @@ def reproject_car_to_hpx(input_data, coord_system_out, nside, order=1, nested=Fa
     # Interpolate
     data = np.pad(data, 3, mode="wrap")
 
-    healpix_data = map_coordinates(
+    healpix_data = scipy.ndimage.map_coordinates(
         data, [xinds + 3, yinds + 3], order=order, mode="wrap", cval=np.nan
     )
 
@@ -92,7 +92,7 @@ def reproject_car_to_wcs(input_data, wcs_out, shape_out, order=1):
     # Make sure image is floating point. We do this only now because
     # we want to avoid converting the whole input array if possible
     slice_in = np.asarray(slice_in, dtype=float)
-    slice_out[:, :] = map_coordinates(
+    slice_out[:, :] = scipy.ndimage.map_coordinates(
         slice_in, coordinates + 3, order=order, cval=np.nan, mode="constant"
     ).reshape(slice_out.shape)
 

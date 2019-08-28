@@ -4,9 +4,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from ...data import GTI
-from ...utils.testing import assert_time_allclose, requires_data
-from ...utils.time import time_ref_to_dict
+from gammapy.data import GTI
+from gammapy.utils.testing import assert_time_allclose, requires_data
+from gammapy.utils.time import time_ref_to_dict
 
 
 @requires_data()

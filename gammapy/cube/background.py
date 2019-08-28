@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.coordinates import SkyOffsetFrame
-from ..data import FixedPointingInfo
-from ..maps import WcsNDMap
-from ..utils.coordinates import sky_to_fov
+from gammapy.data import FixedPointingInfo
+from gammapy.maps import WcsNDMap
+from gammapy.utils.coordinates import sky_to_fov
 
 __all__ = ["make_map_background_irf"]
 

@@ -5,7 +5,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from astropy.units.core import UnitConversionError
-from ..array import check_type
+from gammapy.utils.array import check_type
 
 __all__ = ["Parameter", "Parameters"]
 

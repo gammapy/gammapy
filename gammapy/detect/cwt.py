@@ -2,12 +2,12 @@
 import copy
 import logging
 import numpy as np
-from scipy.ndimage import label
-from scipy.signal import fftconvolve
+import scipy.ndimage
+import scipy.signal
 from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
 from astropy.io import fits
 from astropy.table import Table
-from ..maps import MapAxis, WcsGeom, WcsNDMap
+from gammapy.maps import MapAxis, WcsGeom, WcsNDMap
 
 __all__ = ["CWT", "CWTData", "CWTKernels"]
 
@@ -130,20 +130,22 @@ class CWT:
 
         log.debug("Computing transform and error")
         for idx_scale, kern in self.kernels.kern_base.items():
-            data._transform_3d[idx_scale] = fftconvolve(excess, kern, mode="same")
+            data._transform_3d[idx_scale] = scipy.signal.fftconvolve(
+                excess, kern, mode="same"
+            )
             data._error[idx_scale] = np.sqrt(
-                fftconvolve(total_background, kern ** 2, mode="same")
+                scipy.signal.fftconvolve(total_background, kern ** 2, mode="same")
             )
         log.debug("Error sum: {:.4f}".format(data._error.sum()))
         log.debug("Error max: {:.4f}".format(data._error.max()))
 
         log.debug("Computing approx and approx_bkg")
-        data._approx = fftconvolve(
+        data._approx = scipy.signal.fftconvolve(
             data._counts - data._model - data._background,
             self.kernels.kern_approx,
             mode="same",
         )
-        data._approx_bkg = fftconvolve(
+        data._approx_bkg = scipy.signal.fftconvolve(
             data._background, self.kernels.kern_approx, mode="same"
         )
         log.debug("Approximate sum: {:.4f}".format(data._approx.sum()))
@@ -191,7 +193,7 @@ class CWT:
             mask = significance[idx_scale] > self.significance_threshold
 
             # Produce a list of connex structures in the support
-            labeled_mask, n_structures = label(mask)
+            labeled_mask, n_structures = scipy.ndimage.label(mask)
             for struct_label in range(n_structures):
                 coords = np.where(labeled_mask == struct_label + 1)
 

@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import scipy.stats
 from numpy.testing import assert_allclose
-from ...stats import (
+from gammapy.stats import (
     fc_construct_acceptance_intervals,
     fc_construct_acceptance_intervals_pdfs,
     fc_find_acceptance_interval_gauss,

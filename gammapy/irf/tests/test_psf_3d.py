@@ -2,8 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
-from ...irf import PSF3D
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.irf import PSF3D
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")

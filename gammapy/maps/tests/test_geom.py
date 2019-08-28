@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from ..geom import MapAxis, MapCoord
+from gammapy.maps import MapAxis, MapCoord
 
 mapaxis_geoms = [
     (np.array([0.25, 0.75, 1.0, 2.0]), "lin"),

@@ -7,15 +7,12 @@ from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from regions import CircleSkyRegion
-from ...cube import PSFKernel
-from ...irf import EnergyDependentMultiGaussPSF
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
-from ..base import Map
-from ..geom import MapAxis, MapCoord, coordsys_to_frame
-from ..hpx import HpxGeom
-from ..utils import fill_poisson
-from ..wcs import WcsGeom
-from ..wcsnd import WcsNDMap
+from gammapy.cube import PSFKernel
+from gammapy.irf import EnergyDependentMultiGaussPSF
+from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
+from gammapy.maps.geom import coordsys_to_frame
+from gammapy.maps.utils import fill_poisson
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("reproject")
 

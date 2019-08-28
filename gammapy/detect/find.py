@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.ndimage import maximum_filter
+import scipy.ndimage
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
-from ..maps import WcsNDMap
+from gammapy.maps import WcsNDMap
 
 __all__ = ["find_peaks"]
 
@@ -69,7 +69,7 @@ def find_peaks(image, threshold, min_distance=1):
         return Table()
 
     # Run peak finder
-    data_max = maximum_filter(data, size=size, mode="constant")
+    data_max = scipy.ndimage.maximum_filter(data, size=size, mode="constant")
     mask = (data == data_max) & (data > threshold)
     y, x = mask.nonzero()
     value = data[y, x]

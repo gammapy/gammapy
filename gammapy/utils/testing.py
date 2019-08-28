@@ -10,6 +10,7 @@ from astropy.time import Time
 __all__ = [
     "requires_dependency",
     "requires_data",
+    "mpl_plot_check",
     "assert_quantity_allclose",
     "assert_wcs_allclose",
     "assert_skycoord_allclose",

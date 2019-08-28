@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from ...data import DataStore
-from ...utils.testing import (
+from gammapy.data import DataStore
+from gammapy.utils.testing import (
     assert_skycoord_allclose,
     assert_time_allclose,
     requires_data,

@@ -3,10 +3,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...utils.testing import requires_data
-from ..core import CountsSpectrum
-from ..sensitivity import SensitivityEstimator
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.spectrum import CountsSpectrum, SensitivityEstimator
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture()

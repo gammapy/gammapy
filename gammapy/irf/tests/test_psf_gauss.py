@@ -5,12 +5,12 @@ from numpy.testing import assert_allclose, assert_almost_equal
 from astropy import units as u
 from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
-from ...utils.testing import requires_data
-from ..psf_gauss import (
+from gammapy.irf.psf_gauss import (
     EnergyDependentMultiGaussPSF,
     HESSMultiGaussPSF,
     multi_gauss_psf_kernel,
 )
+from gammapy.utils.testing import requires_data
 
 
 def make_test_psf(energy_bins=15, theta_bins=12):

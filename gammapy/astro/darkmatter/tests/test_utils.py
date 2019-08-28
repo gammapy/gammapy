@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from ....maps import WcsGeom
-from ....utils.testing import assert_quantity_allclose, requires_data
-from .. import DMAnnihilation, JFactory, profiles
+from gammapy.astro.darkmatter import DMAnnihilation, JFactory, profiles
+from gammapy.maps import WcsGeom
+from gammapy.utils.testing import assert_quantity_allclose, requires_data
 
 
 @pytest.fixture(scope="session")
@@ -19,7 +19,6 @@ def jfact(geom):
 
 @requires_data()
 def test_dmfluxmap(jfact):
-
     emin = 0.1 * u.TeV
     emax = 10 * u.TeV
     massDM = 1 * u.TeV

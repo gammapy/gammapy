@@ -2,11 +2,11 @@
 import pytest
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
-from ...irf import EffectiveAreaTable2D
-from ...maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
-from ...spectrum.models import ConstantModel
-from ...utils.testing import requires_data
-from ..exposure import _map_spectrum_weight, make_map_exposure_true_energy
+from gammapy.cube.exposure import _map_spectrum_weight, make_map_exposure_true_energy
+from gammapy.irf import EffectiveAreaTable2D
+from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
+from gammapy.spectrum.models import ConstantModel
+from gammapy.utils.testing import requires_data
 
 pytest.importorskip("healpy")
 

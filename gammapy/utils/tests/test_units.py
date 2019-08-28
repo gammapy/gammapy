@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ..units import standardise_unit
+from gammapy.utils.units import standardise_unit
 
 
 def test_standardise_unit():

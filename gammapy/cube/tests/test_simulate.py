@@ -3,14 +3,13 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from ...cube import MapDataset
-from ...cube.models import SkyModel, SkyModels
-from ...image.models import SkyGaussian
-from ...irf import load_cta_irfs
-from ...maps import MapAxis, WcsGeom
-from ...spectrum.models import PowerLaw
-from ...utils.testing import requires_data
-from ..simulate import simulate_dataset
+from gammapy.cube import MapDataset, simulate_dataset
+from gammapy.cube.models import SkyModel, SkyModels
+from gammapy.image.models import SkyGaussian
+from gammapy.irf import load_cta_irfs
+from gammapy.maps import MapAxis, WcsGeom
+from gammapy.spectrum.models import PowerLaw
+from gammapy.utils.testing import requires_data
 
 
 @requires_data()

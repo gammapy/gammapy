@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
-from ..events import exptest
-from ..simulate import random_times
+from gammapy.time import exptest, random_times
 
 
 def test_exptest():

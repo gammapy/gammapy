@@ -8,15 +8,18 @@ from regions import (
     EllipseSkyRegion,
     RectangleSkyRegion,
 )
-from ...data import DataStore
-from ...maps import WcsGeom, WcsNDMap
-from ...utils.testing import (
+from gammapy.background import (
+    ReflectedRegionsBackgroundEstimator,
+    ReflectedRegionsFinder,
+)
+from gammapy.data import DataStore
+from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
     requires_dependency,
 )
-from ..reflected import ReflectedRegionsBackgroundEstimator, ReflectedRegionsFinder
 
 
 @pytest.fixture(scope="session")

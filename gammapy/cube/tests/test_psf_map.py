@@ -4,9 +4,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.units import Unit
-from ...cube import PSFMap, make_map_exposure_true_energy, make_psf_map
-from ...irf import PSF3D, EffectiveAreaTable2D
-from ...maps import MapAxis, WcsGeom
+from gammapy.cube import PSFMap, make_map_exposure_true_energy, make_psf_map
+from gammapy.irf import PSF3D, EffectiveAreaTable2D
+from gammapy.maps import MapAxis, WcsGeom
 
 
 def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):

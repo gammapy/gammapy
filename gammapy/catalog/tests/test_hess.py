@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import Counter
+import collections
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
-from ...spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
-from ...utils.testing import (
+from gammapy.catalog import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,
     requires_dependency,
 )
-from ..hess import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
 
 
 @pytest.fixture(scope="session")
@@ -123,7 +123,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_spectral_model_type(cat):
-        spec_types = Counter([_.spectral_model_type for _ in cat])
+        spec_types = collections.Counter([_.spectral_model_type for _ in cat])
         assert spec_types == {"pl": 66, "ecpl": 12}
 
     @staticmethod
@@ -175,7 +175,7 @@ class TestSourceCatalogObjectHGPS:
 
     @staticmethod
     def test_spatial_model_type(cat):
-        morph_types = Counter([_.spatial_model_type for _ in cat])
+        morph_types = collections.Counter([_.spatial_model_type for _ in cat])
         assert morph_types == {
             "gaussian": 52,
             "2-gaussian": 8,

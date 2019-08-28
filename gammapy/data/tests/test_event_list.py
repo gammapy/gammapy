@@ -6,9 +6,9 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
-from ...data.event_list import EventList, EventListBase, EventListLAT
-from ...maps import Map, MapAxis, WcsGeom
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.data import EventList, EventListBase, EventListLAT
+from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 @requires_data()

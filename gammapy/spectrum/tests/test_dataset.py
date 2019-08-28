@@ -5,19 +5,19 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from astropy.time import Time
-from ...data import GTI
-from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...spectrum import (
+from gammapy.data import GTI
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.spectrum import (
     CountsSpectrum,
     SpectrumDataset,
     SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
 )
-from ...utils.fitting import Fit
-from ...utils.random import get_random_state
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
-from ...utils.time import time_ref_to_dict
-from ..models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.spectrum.models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.utils.fitting import Fit
+from gammapy.utils.random import get_random_state
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.time import time_ref_to_dict
 
 
 @requires_dependency("iminuit")

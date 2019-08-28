@@ -2,17 +2,17 @@
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...irf import EffectiveAreaTable
-from ...spectrum import (
+from gammapy.irf import EffectiveAreaTable
+from gammapy.spectrum import (
     CountsSpectrum,
     SpectrumDataset,
     SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
-    models,
 )
-from ...utils.fitting import Fit
-from ...utils.random import get_random_state
-from ...utils.testing import requires_data, requires_dependency
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.utils.fitting import Fit
+from gammapy.utils.random import get_random_state
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @requires_dependency("sherpa")
@@ -22,12 +22,10 @@ class TestFit:
     def setup(self):
         self.nbins = 30
         binning = np.logspace(-1, 1, self.nbins + 1) * u.TeV
-        self.source_model = models.PowerLaw(
+        self.source_model = PowerLaw(
             index=2, amplitude=1e5 / u.TeV, reference=0.1 * u.TeV
         )
-        self.bkg_model = models.PowerLaw(
-            index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV
-        )
+        self.bkg_model = PowerLaw(index=3, amplitude=1e4 / u.TeV, reference=0.1 * u.TeV)
 
         self.alpha = 0.1
         random_state = get_random_state(23)
@@ -109,11 +107,11 @@ class TestSpectralFit:
         obs2 = SpectrumDatasetOnOff.from_ogip_files(path + "pha_obs23592.fits")
         self.obs_list = [obs1, obs2]
 
-        self.pwl = models.PowerLaw(
+        self.pwl = PowerLaw(
             index=2, amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
 
-        self.ecpl = models.ExponentialCutoffPowerLaw(
+        self.ecpl = ExponentialCutoffPowerLaw(
             index=2,
             amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
             reference=1 * u.TeV,

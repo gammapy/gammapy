@@ -7,7 +7,7 @@ import sys
 import warnings
 from collections import OrderedDict
 import click
-from .. import __version__
+from gammapy import __version__
 
 log = logging.getLogger(__name__)
 

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.time import Time
-from ...utils.testing import assert_time_allclose, requires_data
-from ..pointing import FixedPointingInfo, PointingInfo
+from gammapy.data import FixedPointingInfo, PointingInfo
+from gammapy.utils.testing import assert_time_allclose, requires_data
 
 
 @requires_data()

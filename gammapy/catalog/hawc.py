@@ -2,8 +2,8 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from ..spectrum.models import PowerLaw
-from ..utils.scripts import make_path
+from gammapy.spectrum.models import PowerLaw
+from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = ["SourceCatalog2HWC", "SourceCatalogObject2HWC"]

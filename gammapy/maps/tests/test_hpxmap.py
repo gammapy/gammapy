@@ -5,14 +5,10 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from ...utils.testing import mpl_plot_check, requires_dependency
-from ..base import Map
-from ..geom import MapAxis, coordsys_to_frame
-from ..hpx import HpxGeom
-from ..hpxmap import HpxMap
-from ..hpxnd import HpxNDMap
-from ..hpxsparse import HpxSparseMap
-from ..utils import fill_poisson
+from gammapy.maps import HpxGeom, HpxMap, HpxNDMap, HpxSparseMap, Map, MapAxis
+from gammapy.maps.geom import coordsys_to_frame
+from gammapy.maps.utils import fill_poisson
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 pytest.importorskip("numpy", "1.12.0")
 pytest.importorskip("healpy")

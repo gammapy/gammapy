@@ -4,9 +4,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from ...background import ReflectedRegionsBackgroundEstimator
-from ...data import DataStore, Observations, ObservationStats
-from ...utils.testing import requires_data
+from gammapy.background import ReflectedRegionsBackgroundEstimator
+from gammapy.data import DataStore, Observations, ObservationStats
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")

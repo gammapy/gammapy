@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from ..poisson import (
+from gammapy.stats import (
     background,
     background_error,
     excess,

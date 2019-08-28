@@ -3,9 +3,9 @@
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from ...spectrum.models import SpectralModel, TableModel
-from ...utils.fitting import Parameter
-from ...utils.scripts import make_path
+from gammapy.spectrum.models import SpectralModel, TableModel
+from gammapy.utils.fitting import Parameter
+from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DMAnnihilation"]
 

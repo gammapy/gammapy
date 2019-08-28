@@ -2,7 +2,7 @@
 import copy
 import logging
 import numpy as np
-from ..stats import significance, significance_on_off
+from gammapy.stats import significance, significance_on_off
 
 __all__ = ["compute_lima_image", "compute_lima_on_off_image"]
 

@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
-from ...source import SNR, SNRTrueloveMcKee
+from gammapy.astro.source import SNR, SNRTrueloveMcKee
 
 t = Quantity([0, 1, 10, 100, 1000, 10000], "yr")
 snr = SNR()

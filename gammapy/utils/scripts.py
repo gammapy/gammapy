@@ -2,7 +2,7 @@
 """Utils to create scripts and command-line tools"""
 import logging
 import sys
-from os.path import expandvars
+import os.path
 from pathlib import Path
 import yaml
 
@@ -97,7 +97,7 @@ def make_path(path):
     # TODO: raise error or warning if environment variables that don't resolve are used
     # e.g. "spam/$DAMN/ham" where `$DAMN` is not defined
     # Otherwise this can result in cryptic errors later on
-    return Path(expandvars(str(path)))
+    return Path(os.path.expandvars(str(path)))
 
 
 def recursive_merge_dicts(a, b):

@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
+import functools
 import logging
-from functools import partial
-from multiprocessing import Pool
+import multiprocessing
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
-from scipy.signal import fftconvolve
+import scipy.ndimage
+import scipy.signal
 from astropy.convolution import Gaussian2DKernel
 
 __all__ = ["scale_cube"]
@@ -19,9 +19,9 @@ def _fftconvolve_wrap(kernel, data):
     if isinstance(kernel, Gaussian2DKernel):
         width = kernel.model.x_stddev.value
         norm = kernel.array.sum()
-        return norm * gaussian_filter(data, width)
+        return norm * scipy.ndimage.gaussian_filter(data, width)
     else:
-        return fftconvolve(data, kernel.array, mode="same")
+        return scipy.signal.fftconvolve(data, kernel.array, mode="same")
 
 
 def scale_cube(data, kernels, parallel=True):
@@ -45,10 +45,10 @@ def scale_cube(data, kernels, parallel=True):
     cube : `~numpy.ndarray`
         Array of the shape (len(kernels), data.shape)
     """
-    wrap = partial(_fftconvolve_wrap, data=data)
+    wrap = functools.partial(_fftconvolve_wrap, data=data)
 
     if parallel:
-        pool = Pool()
+        pool = multiprocessing.Pool()
         result = pool.map(wrap, kernels)
         pool.close()
         pool.join()

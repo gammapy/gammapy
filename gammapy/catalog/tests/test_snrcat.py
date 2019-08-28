@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from ..snrcat import SourceCatalogSNRcat
+from gammapy.catalog import SourceCatalogSNRcat
 
 
 @pytest.mark.skip(reason="see https://github.com/gammapy/gammapy/issues/2162")

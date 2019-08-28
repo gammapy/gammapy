@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from urllib.request import urlopen
 import yaml
-from .. import __version__
+from gammapy import __version__
 
 log = logging.getLogger(__name__)
 

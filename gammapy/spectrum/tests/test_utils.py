@@ -4,10 +4,15 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Quantity
-from ...irf import EffectiveAreaTable, EnergyDispersion
-from ...spectrum import SpectrumEvaluator, integrate_spectrum
-from ...utils.testing import assert_quantity_allclose, requires_dependency
-from ..models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2, TableModel
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.spectrum import SpectrumEvaluator, integrate_spectrum
+from gammapy.spectrum.models import (
+    ExponentialCutoffPowerLaw,
+    PowerLaw,
+    PowerLaw2,
+    TableModel,
+)
+from gammapy.utils.testing import assert_quantity_allclose, requires_dependency
 
 
 def test_integrate_spectrum():

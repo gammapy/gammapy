@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
-from ...maps import WcsGeom, WcsNDMap
-from ...utils.testing import (
+from gammapy.image.profile import ImageProfile, ImageProfileEstimator, compute_binning
+from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_dependency,
 )
-from ..profile import ImageProfile, ImageProfileEstimator, compute_binning
 
 
 @requires_dependency("pandas")

@@ -2,7 +2,8 @@
 import logging
 import numpy as np
 from astropy.units import Quantity
-from ..irf import EffectiveAreaTable, EnergyDispersion
+from .effective_area import EffectiveAreaTable
+from .energy_dispersion import EnergyDispersion
 
 __all__ = ["IRFStacker"]
 

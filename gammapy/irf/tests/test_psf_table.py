@@ -3,8 +3,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle
-from ...irf import EnergyDependentTablePSF, TablePSF
-from ...utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.irf import EnergyDependentTablePSF, TablePSF
+from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 
 class TestTablePSF:

@@ -2,8 +2,8 @@
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
-from ...utils.testing import requires_data, requires_dependency
-from ..hawc import SourceCatalog2HWC
+from gammapy.catalog import SourceCatalog2HWC
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 @pytest.fixture(scope="session")

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ..utils.scripts import make_path
+from gammapy.utils.scripts import make_path
 from .background import Background3D
 from .effective_area import EffectiveAreaTable2D
 from .energy_dispersion import EnergyDispersion2D
