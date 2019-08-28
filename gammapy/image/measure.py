@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.optimize import brentq
+import scipy.optimize
 from astropy.units import Quantity
 
 __all__ = [
@@ -100,7 +100,7 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
             - containment_fraction
         )
 
-    containment_radius = brentq(func, a=0, b=separation.max().value)
+    containment_radius = scipy.optimize.brentq(func, a=0, b=separation.max().value)
     return Quantity(containment_radius, separation.unit)
 
 

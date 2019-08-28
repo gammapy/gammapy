@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities"""
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator, interp1d
+import scipy.interpolate
 from astropy import units as u
 
 __all__ = [
@@ -60,11 +60,13 @@ class ScaledRegularGridInterpolator:
             kwargs.setdefault("fill_value", None)
 
         if axis is None:
-            self._interpolate = RegularGridInterpolator(
+            self._interpolate = scipy.interpolate.RegularGridInterpolator(
                 points=points_scaled, values=values_scaled, **kwargs
             )
         else:
-            self._interpolate = interp1d(points_scaled[0], values_scaled, axis=axis)
+            self._interpolate = scipy.interpolate.interp1d(
+                points_scaled[0], values_scaled, axis=axis
+            )
 
     def __call__(self, points, method="linear", clip=True, **kwargs):
         """Interpolate data points.

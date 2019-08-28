@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS images."""
 import contextlib
+import functools
 import logging
+import multiprocessing
 import warnings
-from functools import partial
-from multiprocessing import Pool
 import numpy as np
-from scipy.optimize import brentq, newton
+import scipy.optimize
 from astropy.convolution import CustomKernel, Kernel2D
 from gammapy.stats import cash, cash_sum_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
@@ -316,7 +316,7 @@ class TSMapEstimator:
         error_method = p["error_method"] if "flux_err" in which else "none"
         ul_method = p["ul_method"] if "flux_ul" in which else "none"
 
-        wrap = partial(
+        wrap = functools.partial(
             _ts_value,
             counts=counts,
             exposure=exposure,
@@ -336,7 +336,7 @@ class TSMapEstimator:
         x, y = np.where(mask.data)
         positions = list(zip(x, y))
 
-        with contextlib.closing(Pool(processes=p["n_jobs"])) as pool:
+        with contextlib.closing(multiprocessing.Pool(processes=p["n_jobs"])) as pool:
             log.info("Using {} jobs to compute TS map.".format(p["n_jobs"]))
             results = pool.map(wrap, positions)
 
@@ -553,7 +553,7 @@ def _root_amplitude(counts, background, model, flux, rtol=RTOL):
         warnings.simplefilter("ignore")
         try:
             return (
-                newton(
+                scipy.optimize.newton(
                     _f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=rtol
                 ),
                 0,
@@ -595,7 +595,7 @@ def _root_amplitude_brentq(counts, background, model, rtol=RTOL):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            result = brentq(
+            result = scipy.optimize.brentq(
                 _f_cash_root_cython,
                 amplitude_min,
                 amplitude_max,
@@ -633,7 +633,7 @@ def _compute_flux_err_conf(amplitude, counts, background, model, c_1, error_sigm
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            result = brentq(
+            result = scipy.optimize.brentq(
                 ts_diff,
                 amplitude,
                 amplitude_max,

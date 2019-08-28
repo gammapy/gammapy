@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.optimize import brentq, minimize
-from scipy.optimize.zeros import RootResults
+import scipy.optimize
 from ..interpolation import interpolate_likelihood_profile
 from .likelihood import Likelihood
 
@@ -24,7 +23,9 @@ def optimize_scipy(parameters, function, **kwargs):
         bounds.append((parmin, parmax))
 
     likelihood = Likelihood(function, parameters)
-    result = minimize(likelihood.fcn, pars, bounds=bounds, method=method, **kwargs)
+    result = scipy.optimize.minimize(
+        likelihood.fcn, pars, bounds=bounds, method=method, **kwargs
+    )
 
     factors = result.x
     info = {"success": result.success, "message": result.message, "nfev": result.nfev}
@@ -76,7 +77,7 @@ def _confidence_scipy_brentq(
     message, success = "Confidence terminated successfully.", True
 
     try:
-        result = brentq(ts_diff.fcn, full_output=True, **kwargs)
+        result = scipy.optimize.brentq(ts_diff.fcn, full_output=True, **kwargs)
     except ValueError:
         message = (
             "Confidence estimation failed, because bracketing interval"
@@ -85,7 +86,9 @@ def _confidence_scipy_brentq(
         success = False
         result = (
             np.nan,
-            RootResults(root=np.nan, iterations=0, function_calls=0, flag=0),
+            scipy.optimize.RootResults(
+                root=np.nan, iterations=0, function_calls=0, flag=0
+            ),
         )
 
     suffix = "errp" if upper else "errn"
@@ -169,6 +172,6 @@ def likelihood_profile_ul_scipy(
 
     idx = np.argmin(dloglike_scan)
     norm_best_fit = value_scan[idx]
-    ul = brentq(f, a=norm_best_fit, b=value_scan[-1], **kwargs)
+    ul = scipy.optimize.brentq(f, a=norm_best_fit, b=value_scan[-1], **kwargs)
 
     return ul

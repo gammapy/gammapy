@@ -3,10 +3,10 @@
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
 import os
+import astropy.version
 from astropy.tests.helper import enable_deprecations_as_exceptions
-from astropy.version import version as astropy_version
 
-if astropy_version < "3.0":
+if astropy.version.version < "3.0":
     # With older versions of Astropy, we actually need to import the pytest
     # plugins themselves in order to make them discoverable by pytest.
     from astropy.tests.pytest_plugins import *

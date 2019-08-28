@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import collections
 import logging
-from collections import namedtuple
 import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
@@ -763,7 +763,7 @@ class EventListChecker(Checker):
         "ALTITUDE",
     ]
 
-    _col = namedtuple("col", ["name", "unit"])
+    _col = collections.namedtuple("col", ["name", "unit"])
     columns_required = [
         _col(name="EVENT_ID", unit=""),
         _col(name="TIME", unit="s"),

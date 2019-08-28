@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.interpolate import griddata
-from scipy.ndimage import convolve, gaussian_filter, map_coordinates, uniform_filter
-from scipy.signal import fftconvolve
+import scipy.interpolate
+import scipy.ndimage
+import scipy.signal
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
@@ -184,7 +184,9 @@ class WcsNDMap(WcsMap):
                 for x in pix
             ]
         )
-        return map_coordinates(self.data.T, pix, order=order, mode="nearest")
+        return scipy.ndimage.map_coordinates(
+            self.data.T, pix, order=order, mode="nearest"
+        )
 
     def _interp_by_coord_griddata(self, coords, interp=None):
         order = interp_to_order(interp)
@@ -195,11 +197,13 @@ class WcsNDMap(WcsMap):
 
         grid_coords = tuple(self.geom.get_coord(flat=True))
         data = self.data[np.isfinite(self.data)]
-        vals = griddata(grid_coords, data, tuple(coords), method=method)
+        vals = scipy.interpolate.griddata(
+            grid_coords, data, tuple(coords), method=method
+        )
 
         m = ~np.isfinite(vals)
         if np.any(m):
-            vals_fill = griddata(
+            vals_fill = scipy.interpolate.griddata(
                 grid_coords, data, tuple([c[m] for c in coords]), method="nearest"
             )
             vals[m] = vals_fill
@@ -392,7 +396,9 @@ class WcsNDMap(WcsMap):
             idx_ax = self.geom.get_axis_index_by_name(axis)
             pix[idx_ax] = (pix[idx_ax] - 0.5 * (factor - 1)) / factor
 
-        data = map_coordinates(self.data.T, tuple(pix), order=order, mode="nearest")
+        data = scipy.ndimage.map_coordinates(
+            self.data.T, tuple(pix), order=order, mode="nearest"
+        )
 
         if preserve_counts:
             if axis is None:
@@ -553,13 +559,13 @@ class WcsNDMap(WcsMap):
         for img, idx in self.iter_by_image():
             img = img.astype(float)
             if kernel == "gauss":
-                data = gaussian_filter(img, width, **kwargs)
+                data = scipy.ndimage.gaussian_filter(img, width, **kwargs)
             elif kernel == "disk":
                 disk = Tophat2DKernel(width)
                 disk.normalize("integral")
-                data = convolve(img, disk.array, **kwargs)
+                data = scipy.ndimage.convolve(img, disk.array, **kwargs)
             elif kernel == "box":
-                data = uniform_filter(img, width, **kwargs)
+                data = scipy.ndimage.uniform_filter(img, width, **kwargs)
             else:
                 raise ValueError("Invalid kernel: {!r}".format(kernel))
             smoothed_data[idx] = data
@@ -626,7 +632,7 @@ class WcsNDMap(WcsMap):
         """
         from ..cube.psf_kernel import PSFKernel
 
-        conv_function = fftconvolve if use_fft else convolve
+        conv_function = scipy.signal.fftconvolve if use_fft else scipy.ndimage.convolve
         convolved_data = np.empty(self.data.shape, dtype=np.float32)
         if use_fft:
             kwargs.setdefault("mode", "same")

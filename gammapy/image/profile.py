@@ -2,7 +2,7 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
 from collections import OrderedDict
 import numpy as np
-from scipy import ndimage
+import scipy.ndimage
 from astropy import units as u
 from astropy.convolution import Box1DKernel, Gaussian1DKernel
 from astropy.coordinates import Angle
@@ -135,21 +135,21 @@ class ImageProfileEstimator:
         index = np.arange(1, len(self._get_x_edges(image)))
 
         if p["method"] == "sum":
-            profile = ndimage.sum(image.data, labels.data, index)
+            profile = scipy.ndimage.sum(image.data, labels.data, index)
 
             if image.unit.is_equivalent("counts"):
                 profile_err = np.sqrt(profile)
             elif image_err:
                 # gaussian error propagation
-                err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
+                err_sum = scipy.ndimage.sum(image_err.data ** 2, labels.data, index)
                 profile_err = np.sqrt(err_sum)
 
         elif p["method"] == "mean":
             # gaussian error propagation
-            profile = ndimage.mean(image.data, labels.data, index)
+            profile = scipy.ndimage.mean(image.data, labels.data, index)
             if image_err:
-                N = ndimage.sum(~np.isnan(image_err.data), labels.data, index)
-                err_sum = ndimage.sum(image_err.data ** 2, labels.data, index)
+                N = scipy.ndimage.sum(~np.isnan(image_err.data), labels.data, index)
+                err_sum = scipy.ndimage.sum(image_err.data ** 2, labels.data, index)
                 profile_err = np.sqrt(err_sum) / N
 
         return profile, profile_err
@@ -280,7 +280,9 @@ class ImageProfile:
         width = 2 * radius.value + 1
 
         if kernel == "box":
-            smoothed = ndimage.uniform_filter(profile.astype("float"), width, **kwargs)
+            smoothed = scipy.ndimage.uniform_filter(
+                profile.astype("float"), width, **kwargs
+            )
             # renormalize data
             if table["profile"].unit.is_equivalent("count"):
                 smoothed *= int(width)
@@ -289,15 +291,17 @@ class ImageProfile:
                 profile_err = table["profile_err"]
                 # use gaussian error propagation
                 box = Box1DKernel(width)
-                err_sum = ndimage.convolve(profile_err ** 2, box.array ** 2)
+                err_sum = scipy.ndimage.convolve(profile_err ** 2, box.array ** 2)
                 smoothed_err = np.sqrt(err_sum)
         elif kernel == "gauss":
-            smoothed = ndimage.gaussian_filter(profile.astype("float"), width, **kwargs)
+            smoothed = scipy.ndimage.gaussian_filter(
+                profile.astype("float"), width, **kwargs
+            )
             # use gaussian error propagation
             if "profile_err" in table.colnames:
                 profile_err = table["profile_err"]
                 gauss = Gaussian1DKernel(width)
-                err_sum = ndimage.convolve(profile_err ** 2, gauss.array ** 2)
+                err_sum = scipy.ndimage.convolve(profile_err ** 2, gauss.array ** 2)
                 smoothed_err = np.sqrt(err_sum)
         else:
             raise ValueError("Not valid kernel choose either 'box' or 'gauss'")

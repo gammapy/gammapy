@@ -2,7 +2,8 @@
 """Spectral models for Gammapy."""
 import operator
 import numpy as np
-from scipy.optimize import brentq
+import scipy.optimize
+import scipy.special
 import astropy.units as u
 from astropy.table import Table
 from gammapy.utils.energy import energy_logspace
@@ -424,7 +425,9 @@ class SpectralModel(Model):
                 y = self(energy).to_value(value.unit)
                 return 1e12 * (y - val.value)
 
-            energy = brentq(f, emin.to_value(eunit), emax.to_value(eunit))
+            energy = scipy.optimize.brentq(
+                f, emin.to_value(eunit), emax.to_value(eunit)
+            )
             energies.append(energy)
 
         return u.Quantity(energies, eunit, copy=False)
@@ -1756,8 +1759,6 @@ class SpectralGaussian(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range
         """
-        from scipy.special import erf
-
         # kwargs are passed to this function but not used
         # this is to get a consistent API with SpectralModel.integral()
         pars = self.parameters
@@ -1768,7 +1769,11 @@ class SpectralGaussian(SpectralModel):
             (emax - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
         ).to_value("")
 
-        return pars["norm"].quantity / (2) * (erf(u_max) - erf(u_min))
+        return (
+            pars["norm"].quantity
+            / 2
+            * (scipy.special.erf(u_max) - scipy.special.erf(u_min))
+        )
 
     def energy_flux(self, emin, emax):
         r"""Compute energy flux in given energy range analytically.
@@ -1784,8 +1789,6 @@ class SpectralGaussian(SpectralModel):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
-        from scipy.special import erf
-
         pars = self.parameters
         u_min = (
             (emin - pars["mean"].quantity) / (np.sqrt(2) * pars["sigma"].quantity)
@@ -1796,7 +1799,7 @@ class SpectralGaussian(SpectralModel):
         a = pars["norm"].quantity * pars["sigma"].quantity / np.sqrt(2 * np.pi)
         b = pars["norm"].quantity * pars["mean"].quantity / 2
         return a * (np.exp(-u_min ** 2) - np.exp(-u_max ** 2)) + b * (
-            erf(u_max) - erf(u_min)
+            scipy.special.erf(u_max) - scipy.special.erf(u_min)
         )
 
 

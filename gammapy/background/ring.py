@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Ring background estimation."""
-from itertools import product
+import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
@@ -122,7 +122,7 @@ class AdaptiveRingBackgroundEstimator:
             raise ValueError("Invalid method: {}".format(p["method"]))
 
         kernels = []
-        for r_in, width in product(r_ins, widths):
+        for r_in, width in itertools.product(r_ins, widths):
             kernel = Ring2DKernel(r_in, width)
             kernel.normalize("peak")
             kernels.append(kernel)

@@ -5,8 +5,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+import pkg_resources
 import yaml
-from pkg_resources import working_set
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def requirement_missing(script):
             return False
         for package in script["requires"].split():
             try:
-                working_set.require(package)
+                pkg_resources.working_set.require(package)
             except Exception:
                 return True
     return False

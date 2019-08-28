@@ -3,11 +3,11 @@
 import argparse
 import logging
 import os
+import shutil
 import subprocess
 import sys
 from distutils.util import strtobool
 from pathlib import Path
-from shutil import copyfile, copytree, rmtree
 from ..scripts.jupyter import notebook_test
 
 log = logging.getLogger(__name__)
@@ -55,20 +55,20 @@ def build_notebooks(args):
     path_filled_nbs = Path("docs") / "notebooks"
     path_static_nbs = Path("docs") / "_static" / "notebooks"
 
-    rmtree(str(path_temp), ignore_errors=True)
+    shutil.rmtree(str(path_temp), ignore_errors=True)
     path_temp.mkdir(parents=True, exist_ok=True)
     path_filled_nbs.mkdir(parents=True, exist_ok=True)
     path_static_nbs.mkdir(parents=True, exist_ok=True)
 
     if pathsrc == path_empty_nbs:
-        rmtree(str(path_temp), ignore_errors=True)
-        rmtree(str(path_static_nbs), ignore_errors=True)
-        rmtree(str(path_filled_nbs), ignore_errors=True)
-        copytree(str(path_empty_nbs), str(path_temp), ignore=ignorefiles)
+        shutil.rmtree(str(path_temp), ignore_errors=True)
+        shutil.rmtree(str(path_static_nbs), ignore_errors=True)
+        shutil.rmtree(str(path_filled_nbs), ignore_errors=True)
+        shutil.copytree(str(path_empty_nbs), str(path_temp), ignore=ignorefiles)
     elif pathsrc.exists():
         notebookname = pathsrc.name
         pathdest = path_temp / notebookname
-        copyfile(str(pathsrc), str(pathdest))
+        shutil.copyfile(str(pathsrc), str(pathdest))
     else:
         log.info("Notebook file does not exist.")
         sys.exit()
@@ -88,7 +88,7 @@ def build_notebooks(args):
     # copy generated filled notebooks to doc
     if pathsrc == path_empty_nbs:
         # copytree is needed to copy subfolder images
-        copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignorefiles)
+        shutil.copytree(str(path_empty_nbs), str(path_static_nbs), ignore=ignorefiles)
         for path in path_static_nbs.glob("*.ipynb"):
             subprocess.run(
                 [
@@ -101,11 +101,11 @@ def build_notebooks(args):
                     str(path),
                 ]
             )
-        copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
+        shutil.copytree(str(path_temp), str(path_filled_nbs), ignore=ignorefiles)
     else:
         pathsrc = path_temp / notebookname
         pathdest = path_static_nbs / notebookname
-        copyfile(str(pathsrc), str(pathdest))
+        shutil.copyfile(str(pathsrc), str(pathdest))
         subprocess.run(
             [
                 sys.executable,
@@ -118,10 +118,10 @@ def build_notebooks(args):
             ]
         )
         pathdest = path_filled_nbs / notebookname
-        copyfile(str(pathsrc), str(pathdest))
+        shutil.copyfile(str(pathsrc), str(pathdest))
 
     # tear down
-    rmtree(str(path_temp), ignore_errors=True)
+    shutil.rmtree(str(path_temp), ignore_errors=True)
 
 
 def main():

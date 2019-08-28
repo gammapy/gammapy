@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from datetime import datetime, timedelta
+import datetime
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -142,8 +142,11 @@ def test_lightcurve_plot_flux_ul(lc, flux_unit):
         (
             "iso",
             (
-                [datetime(2010, 1, 2), datetime(2010, 1, 6, 12)],
-                ([timedelta(1), timedelta(3.5)], [timedelta(1), timedelta(3.5)]),
+                [datetime.datetime(2010, 1, 2), datetime.datetime(2010, 1, 6, 12)],
+                (
+                    [datetime.timedelta(1), datetime.timedelta(3.5)],
+                    [datetime.timedelta(1), datetime.timedelta(3.5)],
+                ),
             ),
         ),
     ],

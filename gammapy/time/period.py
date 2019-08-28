@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
 import numpy as np
-from scipy.optimize import least_squares
+import scipy.optimize
 
 __all__ = ["robust_periodogram", "plot_periodogram"]
 
@@ -123,14 +123,14 @@ def _robust_regression(time, flux, flux_err, periods, loss, scale):
     chi_noise = np.empty([len(periods)])
 
     for i in range(len(periods)):
-        chi_model[i] = least_squares(
+        chi_model[i] = scipy.optimize.least_squares(
             _model,
             beta0,
             loss=loss,
             f_scale=scale,
             args=(x, periods[i], time, flux, flux_err),
         ).cost
-        chi_noise[i] = least_squares(
+        chi_noise[i] = scipy.optimize.least_squares(
             _noise, mu, loss=loss, f_scale=scale, args=(time, flux, flux_err)
         ).cost
     power = 1 - chi_model / chi_noise

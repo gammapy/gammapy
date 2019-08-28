@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from scipy.interpolate import interp1d
+import scipy.interpolate
 from astropy.coordinates import AltAz, CartesianRepresentation, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity
@@ -227,9 +227,9 @@ class PointingInfo:
         t_new = time.mjd
         t = self.time.mjd
         xyz = self.altaz.cartesian
-        x_new = interp1d(t, xyz.x)(t_new)
-        y_new = interp1d(t, xyz.y)(t_new)
-        z_new = interp1d(t, xyz.z)(t_new)
+        x_new = scipy.interpolate.interp1d(t, xyz.x)(t_new)
+        y_new = scipy.interpolate.interp1d(t, xyz.y)(t_new)
+        z_new = scipy.interpolate.interp1d(t, xyz.z)(t_new)
         xyz_new = CartesianRepresentation(x_new, y_new, z_new)
         altaz_frame = AltAz(obstime=time, location=self.location)
 

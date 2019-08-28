@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.ndimage import binary_erosion
-from scipy.ndimage.morphology import binary_fill_holes
+import scipy.ndimage
 from astropy.convolution import CustomKernel, Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.maps import Map
@@ -176,7 +175,7 @@ class KernelBackgroundEstimator:
         mask = (
             significance.data < self.parameters["significance_threshold"]
         ) | np.isnan(significance.data)
-        mask = binary_erosion(mask, structure, border_value=1)
+        mask = scipy.ndimage.binary_erosion(mask, structure, border_value=1)
 
         return counts.copy(data=mask.astype("float"))
 
@@ -201,5 +200,5 @@ class KernelBackgroundEstimator:
 
         # Because of pixel to pixel noise, the masks can still differ.
         # This is handled by removing structures of the scale of one pixel
-        mask = binary_fill_holes(mask)
+        mask = scipy.ndimage.binary_fill_holes(mask)
         return np.all(mask)

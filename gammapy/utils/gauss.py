@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multi-Gaussian distribution utilities (Gammapy internal)."""
 import numpy as np
-from scipy.optimize import brentq
+import scipy.optimize
 
 
 class Gauss2DPDF:
@@ -302,7 +302,7 @@ class MultiGauss2D:
         # Expand until we really find a theta_max
         while f(theta_max) < 0:
             theta_max *= 2
-        return brentq(f, a=0, b=theta_max)
+        return scipy.optimize.brentq(f, a=0, b=theta_max)
 
     def match_sigma(self, containment_fraction):
         """Compute equivalent Gauss width.

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.integrate import quad
-from scipy.special import erf
+import scipy.integrate
+import scipy.special
 import astropy.units as u
 from astropy.coordinates import Angle, Latitude, Longitude, SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation, position_angle
@@ -29,7 +29,7 @@ EDGE_WIDTH_95 = 2.326174307353347
 
 def smooth_edge(x, width):
     value = (x / width).to_value("")
-    return 0.5 * (1 - erf(value * EDGE_WIDTH_95))
+    return 0.5 * (1 - scipy.special.erf(value * EDGE_WIDTH_95))
 
 
 class SkySpatialModel(Model):
@@ -513,7 +513,10 @@ class SkyEllipse(SkySpatialModel):
             return 1 - np.sqrt(1 - 1 / (B + C * cs2))
 
         return (
-            2 * quad(lambda x: integral_fcn(x, semi_major, semi_minor), 0, np.pi)[0]
+            2
+            * scipy.integrate.quad(
+                lambda x: integral_fcn(x, semi_major, semi_minor), 0, np.pi
+            )[0]
         ) ** -1
 
     def evaluate(self, lon, lat, lon_0, lat_0, semi_major, e, phi, edge):

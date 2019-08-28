@@ -5,9 +5,9 @@
 * background estimated from ``n_off`
 """
 import numpy as np
-from scipy.optimize import fsolve
-from scipy.special import erf
-from scipy.stats import norm, poisson
+import scipy.optimize
+import scipy.special
+import scipy.stats
 from .normal import significance_to_probability_normal
 
 __all__ = [
@@ -340,10 +340,10 @@ def _significance_direct(n_on, mu_bkg):
     # for n_on included or more, because `poisson.sf(k)` returns the
     # probability for more than k, with k excluded
     # For `n_on = 0` this returns `
-    probability = poisson.sf(n_on - 1, mu_bkg)
+    probability = scipy.stats.poisson.sf(n_on - 1, mu_bkg)
 
     # Convert probability to a significance
-    return norm.isf(probability)
+    return scipy.stats.norm.isf(probability)
 
 
 def _significance_direct_on_off(n_on, n_off, alpha):
@@ -368,7 +368,7 @@ def _significance_direct_on_off(n_on, n_off, alpha):
         probability -= term_1 * term_2
 
     # Convert probability to a significance
-    return norm.isf(probability)
+    return scipy.stats.norm.isf(probability)
 
 
 def excess_ul_helene(excess, excess_error, significance):
@@ -400,33 +400,33 @@ def excess_ul_helene(excess, excess_error, significance):
     if excess >= 0.0:
         zeta = excess / excess_error
         value = zeta / np.sqrt(2.0)
-        integral = (1.0 + erf(value)) / 2.0
+        integral = (1.0 + scipy.special.erf(value)) / 2.0
         integral2 = 1.0 - conf_level1 * integral
         value_old = value
         value_new = value_old + 0.01
         if integral > integral2:
             value_new = 0.0
-        integral = (1.0 + erf(value_new)) / 2.0
+        integral = (1.0 + scipy.special.erf(value_new)) / 2.0
     else:
         zeta = -excess / excess_error
         value = zeta / np.sqrt(2.0)
-        integral = 1 - (1.0 + erf(value)) / 2.0
+        integral = 1 - (1.0 + scipy.special.erf(value)) / 2.0
         integral2 = 1.0 - conf_level1 * integral
         value_old = value
         value_new = value_old + 0.01
-        integral = (1.0 + erf(value_new)) / 2.0
+        integral = (1.0 + scipy.special.erf(value_new)) / 2.0
 
     # The 1st Loop is for Speed & 2nd For Precision
     while integral < integral2:
         value_old = value_new
         value_new = value_new + 0.01
-        integral = (1.0 + erf(value_new)) / 2.0
+        integral = (1.0 + scipy.special.erf(value_new)) / 2.0
     value_new = value_old + 0.0000001
-    integral = (1.0 + erf(value_new)) / 2.0
+    integral = (1.0 + scipy.special.erf(value_new)) / 2.0
 
     while integral < integral2:
         value_new = value_new + 0.0000001
-        integral = (1.0 + erf(value_new)) / 2.0
+        integral = (1.0 + scipy.special.erf(value_new)) / 2.0
     value_new = value_new * np.sqrt(2.0)
 
     if excess >= 0.0:
@@ -567,7 +567,7 @@ def _excess_matching_significance_lima(mu_bkg, significance):
 
     # solver options to control robustness / accuracy / speed
     opts = dict(factor=0.1)
-    n_on = fsolve(target_significance, n_on_guess, **opts)
+    n_on = scipy.optimize.fsolve(target_significance, n_on_guess, **opts)
     return n_on - mu_bkg
 
 
@@ -592,7 +592,7 @@ def _excess_matching_significance_on_off_lima(n_off, alpha, significance):
 
     # solver options to control robustness / accuracy / speed
     opts = dict(factor=0.1)
-    n_on = fsolve(target_significance, n_on_guess, **opts)
+    n_on = scipy.optimize.fsolve(target_significance, n_on_guess, **opts)
     return n_on - background(n_off, alpha)
 
 

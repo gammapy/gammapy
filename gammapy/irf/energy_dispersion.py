@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import OrderedDict
 import numpy as np
-from scipy.special import erf
+import scipy.special
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
@@ -800,7 +800,7 @@ class EnergyDispersion2D:
         s = np.sqrt(2) * sigma
         t1 = (migra2d_hi - 1 - bias) / s
         t2 = (migra2d_lo - 1 - bias) / s
-        pdf = (erf(t1) - erf(t2)) / 2
+        pdf = (scipy.special.erf(t1) - scipy.special.erf(t2)) / 2
 
         pdf_array = pdf.T[:, :, np.newaxis] * np.ones(len(offset) - 1)
 

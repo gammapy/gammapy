@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
+import scipy.interpolate
 from astropy import units as u
 from astropy.table import Table
 from astropy.utils import lazyproperty
@@ -196,7 +196,7 @@ class LightCurveTableModel(Model):
     def _interpolator(self):
         x = self.table["TIME"].data
         y = self.table["NORM"].data
-        return InterpolatedUnivariateSpline(x, y, k=1)
+        return scipy.interpolate.InterpolatedUnivariateSpline(x, y, k=1)
 
     @lazyproperty
     def _time_ref(self):

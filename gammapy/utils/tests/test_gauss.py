@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import scipy.integrate
 from numpy.testing import assert_almost_equal, assert_equal
-from scipy.integrate import dblquad, quad
 from ..gauss import Gauss2DPDF, MultiGauss2D
 
 
@@ -21,15 +21,15 @@ class TestGauss2DPDF:
             assert_almost_equal(actual, desired)
             # Check that distribution integrates to 1
             xy_max = 5 * g.sigma  # integration range
-            integral = dblquad(g, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max)[
-                0
-            ]
+            integral = scipy.integrate.dblquad(
+                g, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max
+            )[0]
             assert_almost_equal(integral, 1, decimal=5)
 
     def test_dpdtheta2(self):
         for g in self.gs:
             theta2_max = (7 * g.sigma) ** 2
-            integral = quad(g.dpdtheta2, 0, theta2_max)[0]
+            integral = scipy.integrate.quad(g.dpdtheta2, 0, theta2_max)[0]
             assert_almost_equal(integral, 1, decimal=5)
 
     def test_containment(self):
@@ -59,14 +59,16 @@ class TestMultiGauss2D:
     def test_call():
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         xy_max = 5 * m.max_sigma  # integration range
-        integral = dblquad(m, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max)[0]
+        integral = scipy.integrate.dblquad(
+            m, -xy_max, xy_max, lambda _: -xy_max, lambda _: xy_max
+        )[0]
         assert_almost_equal(integral, 7, decimal=5)
 
     @staticmethod
     def test_dpdtheta2():
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         theta2_max = (7 * m.max_sigma) ** 2
-        integral = quad(m.dpdtheta2, 0, theta2_max)[0]
+        integral = scipy.integrate.quad(m.dpdtheta2, 0, theta2_max)[0]
         assert_almost_equal(integral, 7, decimal=5)
 
     @staticmethod

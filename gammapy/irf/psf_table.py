@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.integrate import cumtrapz
+import scipy.integrate
 from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.io import fits
@@ -51,7 +51,9 @@ class TablePSF:
             rad = self.rad
 
         rad_drad = 2 * np.pi * rad * self.evaluate(rad)
-        values = cumtrapz(rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0)
+        values = scipy.integrate.cumtrapz(
+            rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0
+        )
 
         return ScaledRegularGridInterpolator(points=(rad,), values=values, fill_value=1)
 
@@ -277,7 +279,7 @@ class EnergyDependentTablePSF:
             rad = self.rad
 
         rad_drad = 2 * np.pi * rad * self.evaluate(energy=self.energy, rad=rad)
-        values = cumtrapz(
+        values = scipy.integrate.cumtrapz(
             rad_drad.to_value("rad-1"), rad.to_value("rad"), initial=0, axis=1
         )
 
