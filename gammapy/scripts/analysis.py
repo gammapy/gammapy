@@ -2,12 +2,16 @@
 """Session class driving the high-level interface API"""
 import copy
 import logging
-from pathlib import Path
-from astropy.coordinates import Angle
-from astropy import units as u
 import jsonschema
+from pathlib import Path
+from astropy.coordinates import Angle, SkyCoord
+from astropy import units as u
+from gammapy.background import ReflectedRegionsBackgroundEstimator
 from gammapy.data import DataStore, Observations, ObservationTable
+from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.spectrum import SpectrumExtraction
 from gammapy.utils.scripts import make_path, read_yaml
+from regions import CircleSkyRegion
 
 
 __all__ = ["Analysis", "Config"]
@@ -58,13 +62,15 @@ class Analysis:
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
-        config_ds = make_path(self.settings["observations"]["data_store"])
-        if config_ds.is_file():
-            self.datastore = DataStore().from_file(config_ds)
-        elif config_ds.is_dir():
-            self.datastore = DataStore().from_dir(config_ds)
+        self.config.validate()
+
+        datastore_path = make_path(self.settings["observations"]["data_store"])
+        if datastore_path.is_file():
+            self.datastore = DataStore().from_file(datastore_path)
+        elif datastore_path.is_dir():
+            self.datastore = DataStore().from_dir(datastore_path)
         else:
-            log.error("Datastore {} not found.".format(config_ds))
+            log.error("Datastore {} not found.".format(datastore_path))
             return False
 
         ids = set()
@@ -89,8 +95,14 @@ class Analysis:
                 selection["variable"] = criteria["variable"]
                 selection["value_range"] = Angle(criteria["value_range"])
 
-            if selection["type"] != "ids" and selection["type"] != "all":
+            if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
                 selected_obs = self.datastore.obs_table.select_observations(selection)
+            if selection["type"] == "par_value":
+                mask = (
+                    self.datastore.obs_table[criteria["variable"]]
+                    == criteria["par_value"]
+                )
+                selected_obs = self.datastore.obs_table[mask]
             if selection["type"] == "ids":
                 obs_list = self.datastore.get_observations(criteria["obs_ids"])
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
@@ -106,6 +118,65 @@ class Analysis:
             self.observations = self.datastore.get_observations(ids)
         else:
             self.observations = Observations()
+
+    def reduce_data(self):
+        """Produce reduced data sets."""
+        self.config.validate()
+
+        # create geometry
+        self.geom = WcsGeom.create(
+            skydir=tuple(self.settings["geometry"]["skydir"]),
+            binsz=self.settings["geometry"]["binsz"],
+            width=tuple(self.settings["geometry"]["width"]),
+            coordsys=self.settings["geometry"]["coordsys"],
+            proj=self.settings["geometry"]["proj"],
+        )
+        # axes=[energy_axis]
+
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            self._spectrum_extraction()
+
+    def _spectrum_extraction(self):
+        # """Run all steps for the spectrum extraction."""
+
+        on = self.settings["reduction"]["background"]["on_region"]
+        on_lon = Angle(on["center"][0])
+        on_lat = Angle(on["center"][1])
+        on_center = SkyCoord(on_lon, on_lat, frame=on["frame"])
+        on_region = CircleSkyRegion(on_center, Angle(on["radius"]))
+        background_pars = {"on_region": on_region}
+
+        if "exclusion_region" in self.settings["reduction"]["background"]:
+            exclusion = self.settings["reduction"]["background"]["exclusion_region"]
+            exclusion_lon = Angle(exclusion["center"][0])
+            exclusion_lat = Angle(exclusion["center"][1])
+            exclusion_center = SkyCoord(
+                exclusion_lon, exclusion_lat, frame=exclusion["frame"]
+            )
+            exclusion_region = CircleSkyRegion(
+                exclusion_center, Angle(exclusion["radius"])
+            )
+            mask = self.geom.region_mask([exclusion_region], inside=True)
+            exclusion_mask = WcsNDMap(geom=self.geom, data=mask)
+            background_pars.update({"exclusion_mask": exclusion_mask})
+
+        if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
+            self.background_estimator = ReflectedRegionsBackgroundEstimator(
+                observations=self.observations, **background_pars
+            )
+            self.background_estimator.run()
+
+        # e_reco
+        # e_true
+        # containment_correction=False,
+        # extraction_pars = {"e_reco": e_reco, "e_true": e_true, 2containment_correction": containment_correction}
+
+        self.extraction = SpectrumExtraction(
+            observations=self.observations,
+            bkg_estimate=self.background_estimator.result,
+            # **extraction_pars
+        )
+        self.extraction.run()
 
     def _set_logging(self):
         """Set logging parameters for API."""

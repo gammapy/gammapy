@@ -50,7 +50,7 @@ properties:
             data_store:
                 description: "Data store where to fetch observations."
                 type: string
-                default: $GAMMAPY_DATA/cta-1dc/index/gps/
+                default: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
             filter:
                 description: "Array of filter criteria to select observations."
                 type: array
@@ -62,19 +62,22 @@ properties:
                         exclude: {type: boolean}
                         inverted: {type: boolean}
                         filter_type:
-                            default: all
+                            default: par_value
                             enum: [sky_circle,
                                    angle_box,
                                    par_box,
+                                   par_value,
                                    ids,
                                    all]
                         frame:
+                            default: icrs
                             enum: [galactic, equatorial, icrs, fk5]
-                        lon: {type: number}
-                        lat: {type: number}
-                        radius: {type: number}
-                        border: {type: number}
-                        variable: {type: string}
+                        lon: {type: number, default: 83.633 deg}
+                        lat: {type: number, default: 22.014 deg}
+                        radius: {type: number, default: 0.5 deg}
+                        border: {type: number, default: 0.5 deg}
+                        variable: {type: string, default: TARGET_NAME}
+                        par_value: {type: string, default: Crab}
                         value_range:
                             type: array
                             items: {type: number}
@@ -109,14 +112,14 @@ properties:
                             center:
                                 type: array
                                 items: {type: number}
-                                default: [0 deg, 0 deg]
+                                default: [83.633 deg, 22.014 deg]
                                 minItems: 2
                                 maxItems: 2
                             radius:
                                 type: number
                                 default: 0.1 deg
                             frame:
-                                default: galactic
+                                default: icrs
                                 enum: [galactic, equatorial, icrs, fk5]
                     exclusion_region:
                         type: object
@@ -159,7 +162,7 @@ properties:
             coordsys:
                 description: "Coordinate system"
                 type: string
-                default: GAL
+                default: CEL
                 enum: [CEL, GAL]
             proj:
                 description: "Any valid WCS projection type."
@@ -169,7 +172,7 @@ properties:
                 description: "Lon and lat in deg in the coordsys of the map."
                 type: array
                 items: {type: number}
-                default: [0, 0]
+                default: [83.633, 22.014]
                 minItems: 2
                 maxItems: 2
             width:
