@@ -27,13 +27,22 @@ def test_validate_astropy_quantities():
 @pytest.mark.parametrize(
     "config",
     [
-        {"result": 4},
         {
-            "observations": {"filter": [{"filter_type": "ids", "obs_ids": [110380]}]},
+            "observations": {
+                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
+                "filter": [{"filter_type": "all"}],
+            },
+            "result": 4},
+        {
+            "observations": {
+                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
+                "filter": [{"filter_type": "ids", "obs_ids": [110380]}],
+            },
             "result": 1,
         },
         {
             "observations": {
+                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
                 "filter": [
                     {"filter_type": "all"},
                     {"filter_type": "ids", "obs_ids": [110380], "exclude": True},
@@ -43,6 +52,7 @@ def test_validate_astropy_quantities():
         },
         {
             "observations": {
+                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
                 "filter": [
                     {
                         "filter_type": "sky_circle",
@@ -58,6 +68,7 @@ def test_validate_astropy_quantities():
         },
         {
             "observations": {
+                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
                 "filter": [
                     {
                         "filter_type": "angle_box",
@@ -70,6 +81,7 @@ def test_validate_astropy_quantities():
         },
         {
             "observations": {
+                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
                 "filter": [
                     {
                         "filter_type": "par_box",

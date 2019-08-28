@@ -47,7 +47,7 @@ properties:
         default: {}
         additionalProperties: false
         properties:
-            data_store:
+            datastore:
                 description: "Data store where to fetch observations."
                 type: string
                 default: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
@@ -88,7 +88,7 @@ properties:
                             items: {type: integer}
                             default: []
                     required: [filter_type]
-        required: [data_store]
+        required: [datastore]
 
     reduction:
         description: "Process of data reduction."

@@ -64,7 +64,7 @@ class Analysis:
         """Fetch observations from the data store according to criteria defined in the configuration."""
         self.config.validate()
 
-        datastore_path = make_path(self.settings["observations"]["data_store"])
+        datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
             self.datastore = DataStore().from_file(datastore_path)
         elif datastore_path.is_dir():
