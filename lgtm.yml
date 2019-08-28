@@ -3,12 +3,14 @@
 
 path_classifiers:
   test:
-    - "gammapy/*/test_*.py"
+    - "gammapy/**/test_*.py"
   docs:
     - docs
 
 extraction:
   python:
+    python_setup:
+      version: 3
     prepare:
       packages:
         - bison
