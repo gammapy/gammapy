@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from gammapy.scripts import Analysis
 
 
@@ -6,10 +7,10 @@ def test_config():
     analysis = Analysis()
     assert analysis.settings["general"]["logging"]["level"] == "INFO"
 
-    config = {"general": {"out_folder": "test"}}
+    config = {"general": {"outdir": "test"}}
     analysis = Analysis(config)
     assert analysis.settings["general"]["logging"]["level"] == "INFO"
-    assert analysis.settings["general"]["out_folder"] == "test"
+    assert analysis.settings["general"]["outdir"] == "test"
 
 
 def test_validate_config():
@@ -18,9 +19,9 @@ def test_validate_config():
 
 
 def test_validate_astropy_quantities():
-    cfg = {"observations": {"filter": [{"lon": "1 deg"}]}}
-    analysis = Analysis(cfg)
-    assert analysis.configuration.validate() is None
+    config = {"observations": {"filter": [{"lon": "1 deg"}]}}
+    analysis = Analysis(config)
+    assert analysis.config.validate() is None
 
 
 @pytest.mark.parametrize(

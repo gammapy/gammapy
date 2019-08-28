@@ -2,14 +2,13 @@
 """Session class driving the high-level interface API"""
 import copy
 import logging
-from ..utils.scripts import make_path, read_yaml
-from ..data import DataStore, Observations, ObservationTable
+from pathlib import Path
 from astropy.coordinates import Angle
 from astropy import units as u
-from pathlib import Path
-from astropy import units as u
 import jsonschema
-from gammapy.utils.scripts import read_yaml
+from gammapy.data import DataStore, Observations, ObservationTable
+from gammapy.utils.scripts import make_path, read_yaml
+
 
 __all__ = ["Analysis", "Config"]
 
@@ -36,7 +35,7 @@ class Analysis:
     Here are different examples on how to create an `Analysis` session class:
 
     >>> from gammapy.scripts import Analysis
-    >>> settings = {"general": {"out_folder": "myfolder"}}
+    >>> settings = {"general": {"outdir": "myfolder"}}
     >>> analysis = Analysis(settings)
     >>> analysis = Analysis()
     """
@@ -59,13 +58,13 @@ class Analysis:
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
-        cfg_ds = make_path(self.settings["observations"]["data_store"])
-        if cfg_ds.is_file():
-            self.datastore = DataStore().from_file(cfg_ds)
-        elif cfg_ds.is_dir():
-            self.datastore = DataStore().from_dir(cfg_ds)
+        config_ds = make_path(self.settings["observations"]["data_store"])
+        if config_ds.is_file():
+            self.datastore = DataStore().from_file(config_ds)
+        elif config_ds.is_dir():
+            self.datastore = DataStore().from_dir(config_ds)
         else:
-            log.error("Datastore {} not found.".format(cfg_ds))
+            log.error("Datastore {} not found.".format(config_ds))
             return False
 
         ids = set()
@@ -123,11 +122,11 @@ class Config:
 
     Parameters
     ----------
-    cfg : dict
+    config : dict
         Configuration parameters
     """
 
-    def __init__(self, cfg=None):
+    def __init__(self, config=None):
         self._default_settings = {}
         self._command_settings = {}
         self.settings = {}
@@ -137,11 +136,10 @@ class Config:
         self._default_settings = copy.deepcopy(self.settings)
 
         # overwrite with config provided by the user
-        if cfg is None:
-            cfg = {}
-
-        if len(cfg):
-            self._command_settings = cfg
+        if config is None:
+            config = {}
+        if len(config):
+            self._command_settings = config
             self._update_settings(self._command_settings, self.settings)
 
         self.validate()
