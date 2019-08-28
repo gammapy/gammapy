@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high-level interface API"""
 import copy
-import jsonschema
 import logging
-from ..utils.scripts import read_yaml
-from astropy import units as u
 from pathlib import Path
+from astropy import units as u
+import jsonschema
+from gammapy.utils.scripts import read_yaml
 
 __all__ = ["Analysis", "Config"]
 
@@ -15,7 +15,7 @@ SCHEMA_FILE = CONFIG_PATH / "schema.yaml"
 
 
 class Analysis:
-    """Class for analysis session using the high-level interface API.
+    """Config-driven high-level analysis interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
     an internal configuration schema YAML file, though the user can also provide configuration
@@ -24,7 +24,7 @@ class Analysis:
 
     Parameters
     ----------
-    cfg : dict
+    config : dict
         A nested dictionary with configuration parameters and values.
 
     Examples
@@ -37,19 +37,19 @@ class Analysis:
     >>> analysis = Analysis()
     """
 
-    def __init__(self, cfg=None):
-        self._conf = Config(cfg)
+    def __init__(self, config=None):
+        self._config = Config(config)
         self._set_logging()
 
     @property
-    def configuration(self):
-        """Configuration object for the analysis session."""
-        return self._conf
+    def config(self):
+        """Analysis configuration (`Config`)"""
+        return self._config
 
     @property
     def settings(self):
         """Configuration settings for the analysis session."""
-        return self.configuration.settings
+        return self.config.settings
 
     def _set_logging(self):
         """Set logging parameters for API."""
@@ -62,10 +62,18 @@ class Analysis:
 
 
 class Config:
+    """Analysis configuration.
+
+    Parameters
+    ----------
+    cfg : dict
+        Configuration parameters
+    """
+
     def __init__(self, cfg=None):
-        self._default_settings = dict()
-        self._command_settings = dict()
-        self.settings = dict()
+        self._default_settings = {}
+        self._command_settings = {}
+        self.settings = {}
 
         # fill settings with default values
         self.validate()
@@ -73,10 +81,12 @@ class Config:
 
         # overwrite with config provided by the user
         if cfg is None:
-            cfg = dict()
+            cfg = {}
+
         if len(cfg):
             self._command_settings = cfg
             self._update_settings(self._command_settings, self.settings)
+
         self.validate()
 
     def validate(self):
