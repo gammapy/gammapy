@@ -2926,6 +2926,12 @@
     "hashmd5": "5dc6ee7eb3d6eb37d1c35ead8e2e9e70"
    },
    {
+    "path": "tests/models/gc_example_data_g09.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_data_g09.fits",
+    "filesize": 60480,
+    "hashmd5": "d7c1f27cb35868b8c8df511be4f76d23"
+   },
+   {
     "path": "tests/models/shell.xml",
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/shell.xml",
     "filesize": 1491,
@@ -2948,6 +2954,24 @@
     "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/examples.xml",
     "filesize": 5178,
     "hashmd5": "9c68dbe906afc246367811fbfea090a3"
+   },
+   {
+    "path": "tests/models/gc_example_datasets.yaml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_datasets.yaml",
+    "filesize": 331,
+    "hashmd5": "4a0c1c1c9b1e8d3aaedb6cd62417a4ba"
+   },
+   {
+    "path": "tests/models/gc_example_models.yaml",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_models.yaml",
+    "filesize": 2156,
+    "hashmd5": "a912d6dab7adb0fadf540f2db15df0c1"
+   },
+   {
+    "path": "tests/models/gc_example_data_gc.fits",
+    "url": "https://github.com/gammapy/gammapy-extra/raw/master/datasets/tests/models/gc_example_data_gc.fits",
+    "filesize": 60480,
+    "hashmd5": "34fdb92130bfc27dccc269b446ff102f"
    },
    {
     "path": "tests/models/README.rst",
