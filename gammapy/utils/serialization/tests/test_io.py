@@ -108,6 +108,7 @@ def test_datasets_to_io(tmpdir):
     datasets = Datasets.from_yaml(filedata, filemodel)
 
     assert len(datasets.datasets) == 2
+    assert len(datasets.parameters.parameters) == 20
 
     dataset0 = datasets.datasets[0]
     assert dataset0.counts.data.sum() == 6824
@@ -147,6 +148,19 @@ def test_datasets_to_io(tmpdir):
     assert len(dataset0.model.skymodels) == 2
     assert dataset0.model.skymodels[0].name == "gc"
     assert dataset0.model.skymodels[1].name == "g09"
+    assert (
+        dataset0.model.skymodels[0].parameters["reference"]
+        is dataset0.model.skymodels[1].parameters["reference"]
+    )
+    assert (
+        dataset1.model.skymodels[0].parameters["reference"]
+        is dataset1.model.skymodels[1].parameters["reference"]
+    )
+    assert (
+        dataset0.model.skymodels[0].parameters["reference"]
+        is dataset1.model.skymodels[1].parameters["reference"]
+    )
+
     assert_allclose(
         dataset0.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
     )

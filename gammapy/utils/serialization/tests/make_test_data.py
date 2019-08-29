@@ -20,6 +20,7 @@ from gammapy.utils.fitting import Datasets
 
 DATA_PATH = Path("gammapy/utils/serialization/tests/data")
 
+
 def make_example_2():
     spatial = SkyGaussian("0 deg", "0 deg", "1 deg")
     model = SkyModel(spatial, PowerLaw())
@@ -66,6 +67,14 @@ def make_datasets_example():
             spatial_model=spatial_model, spectral_model=spectral_model, name=names[ind]
         )
         models.append(model_ecpl)
+    # test to link a spectral parameter
+    params0 = models[0].spectral_model.parameters
+    params1 = models[1].spectral_model.parameters
+    ind = params0.parameters.index(params0["reference"])
+    params0.parameters[ind] = params1["reference"]
+    # update the sky model
+    ind = models[0].parameters.parameters.index(models[0].parameters["reference"])
+    models[0].parameters.parameters[ind] = params1["reference"]
 
     obs_ids = [110380, 111140, 111159]
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
@@ -114,18 +123,24 @@ def make_datasets_example():
             edisp=edisp,
         )
         datasets_list.append(dataset)
+
     datasets = Datasets(datasets_list)
-    path = str("$GAMMAPY_DATA/tests/models/gc_example_")
-    datasets.to_yaml(path, selection="simple", overwrite=True)
 
     dataset0 = datasets.datasets[0]
     print("dataset0")
     print("counts sum : ", dataset0.counts.data.sum())
     print("expo sum : ", dataset0.exposure.data.sum())
-    print("bkg0 sum : %.1f" %(dataset0.background_model.models[0].evaluate().data.sum()))
-    print("bkg1 sum : %.1f" %(dataset0.background_model.models[1].evaluate().data.sum()))
-    
+    print(
+        "bkg0 sum : %.1f" % (dataset0.background_model.models[0].evaluate().data.sum())
+    )
+    print(
+        "bkg1 sum : %.1f" % (dataset0.background_model.models[1].evaluate().data.sum())
+    )
+
+    path = str("$GAMMAPY_DATA/tests/models/gc_example_")
+    datasets.to_yaml(path, selection="simple", overwrite=True)
+
 
 if __name__ == "__main__":
-    make_example_2()
+    #    make_example_2()
     make_datasets_example()
