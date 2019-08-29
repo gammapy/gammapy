@@ -51,8 +51,8 @@ properties:
                 description: "Data store where to fetch observations."
                 type: string
                 default: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
-            filter:
-                description: "Array of filter criteria to select observations."
+            filters:
+                description: "Array of filters with criteria to select observations."
                 type: array
                 default: [{}]
                 items:

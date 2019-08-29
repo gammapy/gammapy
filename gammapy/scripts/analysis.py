@@ -47,8 +47,11 @@ class Analysis:
     def __init__(self, config=None):
         self._config = Config(config)
         self._set_logging()
-        self.datastore = DataStore()
-        self.observations = Observations()
+
+        self.observations = None
+        self.geom = None
+        self.background_estimator = None
+        self.extraction = None
 
     @property
     def config(self):
@@ -66,56 +69,50 @@ class Analysis:
 
         datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
-            self.datastore = DataStore().from_file(datastore_path)
+            datastore = DataStore().from_file(datastore_path)
         elif datastore_path.is_dir():
-            self.datastore = DataStore().from_dir(datastore_path)
+            datastore = DataStore().from_dir(datastore_path)
         else:
-            log.error("Datastore {} not found.".format(datastore_path))
-            return False
+            raise FileNotFoundError("Datastore {} not found.".format(datastore_path))
 
         ids = set()
         selection = dict()
-        for criteria in self.settings["observations"]["filter"]:
+        for criteria in self.settings["observations"]["filters"]:
             selected_obs = ObservationTable()
 
+            # -- TODO Handled by datastore.obs_table.select_observations
+            # -
             selection["type"] = criteria["filter_type"]
-            if "inverted" in criteria and criteria["inverted"]:
-                selection["inverted"] = True
-            if selection["type"] == "sky_circle":
-                selection["frame"] = criteria["frame"]
-                selection["lon"] = Angle(criteria["lon"])
-                selection["lat"] = Angle(criteria["lat"])
-                selection["radius"] = Angle(criteria["radius"])
-                selection["border"] = Angle(criteria["border"])
-            if selection["type"] == "par_box":
-                selection["variable"] = criteria["variable"]
-                selection["value_range"] = criteria["value_range"]
+            for key, val in criteria.items():
+                if key in ["lon", "lat", "radius", "border"]:
+                    val = Angle(val)
+                selection[key] = val
             if selection["type"] == "angle_box":
                 selection["type"] = "par_box"
-                selection["variable"] = criteria["variable"]
                 selection["value_range"] = Angle(criteria["value_range"])
-
             if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
-                selected_obs = self.datastore.obs_table.select_observations(selection)
+                selected_obs = datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
                 mask = (
-                    self.datastore.obs_table[criteria["variable"]]
-                    == criteria["par_value"]
+                    datastore.obs_table[criteria["variable"]] == criteria["par_value"]
                 )
-                selected_obs = self.datastore.obs_table[mask]
+                selected_obs = datastore.obs_table[mask]
             if selection["type"] == "ids":
-                obs_list = self.datastore.get_observations(criteria["obs_ids"])
+                obs_list = datastore.get_observations(criteria["obs_ids"])
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
             if selection["type"] == "all":
-                obs_list = self.datastore.get_observations()
+                obs_list = datastore.get_observations()
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
+            # --
+            # -
+
             if len(selected_obs):
                 if "exclude" in criteria and criteria["exclude"]:
                     ids.difference_update(selected_obs["OBS_ID"].tolist())
                 else:
                     ids.update(selected_obs["OBS_ID"].tolist())
         if len(ids):
-            self.observations = self.datastore.get_observations(ids)
+            self.observations = datastore.get_observations(ids)
         else:
             self.observations = Observations()
 
