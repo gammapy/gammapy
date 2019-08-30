@@ -86,6 +86,9 @@ test-nb:
 test-scripts:
 	python -m gammapy.utils.scripts_test
 
+data-update:
+	gammapy download datasets --out=$GAMMAPY_DATA
+
 clean-nb:
 	python -m gammapy jupyter --src=tutorials black
 	python -m gammapy jupyter --src=tutorials strip
