@@ -83,16 +83,15 @@ class TestSourceCatalogGammaCat:
         assert len(gammacat.positions) == 162
 
     def test_w28_alias_names(self, gammacat):
-        names = [
+        for name in [
             "W28",
             "HESS J1801-233",
             "W 28",
             "SNR G6.4-0.1",
             "SNR G006.4-00.1",
             "GRO J1801-2320",
-        ]
-        for name in names:
-            assert str(gammacat[name]) == str(gammacat["W28"])
+        ]:
+            assert gammacat[name].index == 112
 
     def test_sort_table(self, gammacat):
         name = "HESS J1848-018"
