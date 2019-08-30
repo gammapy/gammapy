@@ -80,7 +80,7 @@ def config_observations():
           datastore: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
           filters:
           - filter_type: par_value
-            par_value: Crab
+            value_param: Crab
             variable: TARGET_NAME
         result: 4
     """

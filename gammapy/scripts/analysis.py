@@ -3,12 +3,13 @@
 import copy
 import logging
 import jsonschema
+import yaml
 from pathlib import Path
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from gammapy.background import ReflectedRegionsBackgroundEstimator
-from gammapy.data import DataStore, Observations, ObservationTable
-from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.data import DataStore, ObservationTable
+from gammapy.maps import Map, WcsGeom
 from gammapy.spectrum import SpectrumExtraction
 from gammapy.utils.scripts import make_path, read_yaml
 from regions import CircleSkyRegion
@@ -80,7 +81,9 @@ class Analysis:
         for criteria in self.settings["observations"]["filters"]:
             selected_obs = ObservationTable()
 
-            # -- TODO Handled by datastore.obs_table.select_observations
+            # -- TODO
+            # Reduce significantly the code.
+            # This block would be handled by datastore.obs_table.select_observations
             # -
             selection["type"] = criteria["filter_type"]
             for key, val in criteria.items():
@@ -94,7 +97,7 @@ class Analysis:
                 selected_obs = datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
                 mask = (
-                    datastore.obs_table[criteria["variable"]] == criteria["par_value"]
+                    datastore.obs_table[criteria["variable"]] == criteria["value_param"]
                 )
                 selected_obs = datastore.obs_table[mask]
             if selection["type"] == "ids":
@@ -111,48 +114,43 @@ class Analysis:
                     ids.difference_update(selected_obs["OBS_ID"].tolist())
                 else:
                     ids.update(selected_obs["OBS_ID"].tolist())
-        self.observations = datastore.get_observations(ids)
+        self.observations = datastore.get_observations(ids, skip_missing=True)
+        for obs in self.observations.list:
+            log.info(obs)
 
     def reduce_data(self):
         """Produce reduced data sets."""
-        self.config.validate()
+        if self._validate_reduction_settings():
+            if self.settings["reduction"]["data_reducer"] == "1d":
+                self._spectrum_extraction()
 
-        # create geometry
-        self.geom = WcsGeom.create(
-            skydir=tuple(self.settings["geometry"]["skydir"]),
-            binsz=self.settings["geometry"]["binsz"],
-            width=tuple(self.settings["geometry"]["width"]),
-            coordsys=self.settings["geometry"]["coordsys"],
-            proj=self.settings["geometry"]["proj"],
-        )
-        # axes=[energy_axis]
-
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            self._spectrum_extraction()
+    def _validate_reduction_settings(self):
+        """Validate settings before proceeding to data reduction."""
+        if self.observations and len(self.observations):
+            self.config.validate()
+            return True
+        else:
+            log.info("No observations selected.")
+            return False
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
+        background_params = self.settings["reduction"]["background"]
 
-        on = self.settings["reduction"]["background"]["on_region"]
+        on = background_params["on_region"]
         on_lon = Angle(on["center"][0])
         on_lat = Angle(on["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=on["frame"])
         on_region = CircleSkyRegion(on_center, Angle(on["radius"]))
         background_pars = {"on_region": on_region}
 
-        if "exclusion_region" in self.settings["reduction"]["background"]:
-            exclusion = self.settings["reduction"]["background"]["exclusion_region"]
-            exclusion_lon = Angle(exclusion["center"][0])
-            exclusion_lat = Angle(exclusion["center"][1])
-            exclusion_center = SkyCoord(
-                exclusion_lon, exclusion_lat, frame=exclusion["frame"]
-            )
-            exclusion_region = CircleSkyRegion(
-                exclusion_center, Angle(exclusion["radius"])
-            )
-            mask = self.geom.region_mask([exclusion_region], inside=True)
-            exclusion_mask = WcsNDMap(geom=self.geom, data=mask)
-            background_pars.update({"exclusion_mask": exclusion_mask})
+        if "exclusion_mask" in background_params:
+            map_hdu = {}
+            filename = background_params["exclusion_mask"]["filename"]
+            if "hdu" in background_params["exclusion_mask"]:
+                map_hdu = {"hdu": background_params["exclusion_mask"]["hdu"]}
+            exclusion_region = Map.read(filename, **map_hdu)
+            background_pars.update({"exclusion_mask": exclusion_region})
 
         if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
             self.background_estimator = ReflectedRegionsBackgroundEstimator(
@@ -160,17 +158,26 @@ class Analysis:
             )
             self.background_estimator.run()
 
-        # e_reco
-        # e_true
-        # containment_correction=False,
-        # extraction_pars = {"e_reco": e_reco, "e_true": e_true, 2containment_correction": containment_correction}
+        # TODO
+        # add energy axes (e_reco, e_true) and maybe other eventual params and types
+        # validated and properly transformed in the jsonschema validation class
+        extraction_pars = {}
+        if "containment_correction" in self.settings["reduction"]:
+            extraction_pars.update({"containment_correction": self.settings["reduction"]["containment_correction"]})
 
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
-            # **extraction_pars
+            **extraction_pars
         )
         self.extraction.run()
+
+    # -- TODO
+    # add energy axes (e_reco, e_true) and maybe other eventual params and types
+    # validated and properly transformed in the jsonschema validation class
+    def _create_geometry(self):
+        geom_params = self.settings["geometry"]
+        self.geom = WcsGeom.create(**geom_params)
 
     def _set_logging(self):
         """Set logging parameters for API."""
@@ -217,7 +224,7 @@ class Config:
     def view_settings(self):
         """Display settings in pretty YAML format."""
         print(yaml.dump(self.settings))
-        
+
     def _update_settings(self, source, target):
         for key, val in source.items():
             if key not in target:
