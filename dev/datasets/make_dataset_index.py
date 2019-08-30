@@ -206,7 +206,7 @@ class DatasetFermi3FHLGC(DownloadDataset):
 
 
 class DownloadDatasetIndex:
-    path = "gammapy-data-index.json"
+    path = Path(__file__).parent / "gammapy-data-index.json"
     download_datasets = [
         DatasetCTA1DC,
         DatasetDarkMatter,
