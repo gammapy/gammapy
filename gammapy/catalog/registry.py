@@ -68,7 +68,7 @@ class SourceCatalogRegistry:
 
     def __getitem__(self, name):
         if name not in self._available_catalogs:
-            msg = 'Unknown catalog: {!r}. '.format(name)
+            msg = "Unknown catalog: {!r}. ".format(name)
             msg += "Available catalogs: {!r}".format(self.catalog_names)
             raise KeyError(msg)
 

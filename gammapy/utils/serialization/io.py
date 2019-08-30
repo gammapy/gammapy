@@ -20,7 +20,7 @@ def models_to_dict(models, selection="all"):
     """Convert list of models to dict.
 
     Parameters
-    -----------
+    ----------
     models : list
         Python list of Model objects
     selection : {"all", "simple"}
@@ -81,7 +81,7 @@ def dict_to_models(data, link=True):
     """De-serialise model data to Model objects.
 
     Parameters
-    -----------
+    ----------
     data : dict
         Serialised model information
     link : bool
@@ -273,7 +273,7 @@ class dict_to_datasets:
         return background_model
 
     def link_background_parameters(self, component, background_model):
-        """ link parameters to background """
+        """Link parameters to background."""
         try:
             params = self.params_register[component["name"]]
         except KeyError:

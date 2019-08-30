@@ -463,7 +463,7 @@ class SkyEllipse(SkySpatialModel):
         ax.text(2.15, 2.3, r"$\phi$", transform=transform);
 
         plt.show()
-        """
+    """
 
     __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "phi", "_offset_by"]
 

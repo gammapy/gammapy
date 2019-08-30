@@ -1,22 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalog2HWC
 from gammapy.utils.testing import requires_data, requires_dependency
 
 SOURCES = [
-    {
-        "idx": 0,
-        "name": "2HWC J0534+220",
-        "str_ref_file": "data/2hwc_j0534+220.txt",
-    },
-    {
-        "idx": 1,
-        "name": "2HWC J0631+169",
-        "str_ref_file": "data/2hwc_j0631+169.txt",
-    },
+    {"idx": 0, "name": "2HWC J0534+220", "str_ref_file": "data/2hwc_j0534+220.txt"},
+    {"idx": 1, "name": "2HWC J0631+169", "str_ref_file": "data/2hwc_j0631+169.txt"},
 ]
 
 

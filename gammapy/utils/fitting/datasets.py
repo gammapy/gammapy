@@ -144,11 +144,11 @@ class Datasets:
 
     @classmethod
     def from_yaml(cls, filedata, filemodel):
-        """De-serialize datasets from yaml and fits files
+        """De-serialize datasets from YAML and FITS files.
 
         Parameters
         ----------
-        fdatasets : str
+        filedata : str
             filepath to yaml datasets file
         filemodel : str
             filepath to yaml models file
@@ -157,7 +157,7 @@ class Datasets:
         -------
         dataset : 'gammapy.utils.fitting.Datasets'
             Datasets
-         """
+        """
         from gammapy.utils.scripts import read_yaml
         from gammapy.utils.serialization import dict_to_datasets
 
@@ -167,7 +167,7 @@ class Datasets:
         return cls(constructor.datasets)
 
     def to_yaml(self, path, selection="all", overwrite=False):
-        """Serialize datasets to yaml and fits files
+        """Serialize datasets to YAML and FITS files.
 
         Parameters
         ----------

@@ -13,16 +13,16 @@ __all__ = ["InverseCDFSampler", "MapEventSampler"]
 class InverseCDFSampler:
     """Inverse CDF sampler.
 
-   It determines a set of random numbers and calculate the cumulative
-   distribution function.
+    It determines a set of random numbers and calculate the cumulative
+    distribution function.
 
-   Parameters
-   ----------
-   pdf : `~gammapy.maps.Map`
+    Parameters
+    ----------
+    pdf : `~gammapy.maps.Map`
         Map of the predicted source counts.
-   axis : int
+    axis : int
         Axis along which sampling the indexes.
-   random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
     """
@@ -50,7 +50,6 @@ class InverseCDFSampler:
         -------
         index : tuple of `~numpy.ndarray`
             Coordinates of the drawn sample.
-
         """
         choice = self.random_state.uniform(high=1, size=len(self.cdf))
 
@@ -229,7 +228,6 @@ class MapEventSampler:
         events : `~astropy.table`
             Sampled event list in an astropy table format.
         """
-
         coords = self.sample_position_energy(n_events)
         skycoord = coords.skycoord
 

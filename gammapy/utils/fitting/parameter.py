@@ -183,7 +183,7 @@ class Parameter:
         """Convert to dict.
 
         Parameters
-        -----------
+        ----------
         selection : {"all", "simple"}
             Selection of information to include
         """

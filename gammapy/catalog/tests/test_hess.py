@@ -2,12 +2,12 @@
 import collections
 import pytest
 import numpy as np
-import astropy
-from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose
+import astropy
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
+from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
 from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.testing import (
@@ -17,21 +17,9 @@ from gammapy.utils.testing import (
 )
 
 SOURCES = [
-    {
-        "idx": 33,
-        "name": "HESS J1713-397",
-        "str_ref_file": "data/hess_j1713-397.txt",
-    },
-    {
-        "idx": 54,
-        "name": "HESS J1825-137",
-        "str_ref_file": "data/hess_j1825-137.txt",
-    },
-    {
-        "idx": 76,
-        "name": "HESS J1930+188",
-        "str_ref_file": "data/hess_j1930+188.txt",
-    },
+    {"idx": 33, "name": "HESS J1713-397", "str_ref_file": "data/hess_j1713-397.txt"},
+    {"idx": 54, "name": "HESS J1825-137", "str_ref_file": "data/hess_j1825-137.txt"},
+    {"idx": 76, "name": "HESS J1930+188", "str_ref_file": "data/hess_j1930+188.txt"},
 ]
 
 
@@ -109,7 +97,9 @@ class TestSourceCatalogObjectHGPS:
         assert "Component HGPSC 083:" in ss
 
     @staticmethod
-    @pytest.mark.skipif(astropy.__version__ <= "3.2", reason="table formatting differences")
+    @pytest.mark.skipif(
+        astropy.__version__ <= "3.2", reason="table formatting differences"
+    )
     @pytest.mark.parametrize("ref", SOURCES)
     def test_str(cat, ref):
         actual = str(cat[ref["idx"]])
