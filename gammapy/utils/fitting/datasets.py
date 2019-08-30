@@ -141,3 +141,47 @@ class Datasets:
     def copy(self):
         """A deep copy."""
         return copy.deepcopy(self)
+
+    @classmethod
+    def from_yaml(cls, filedata, filemodel):
+        """De-serialize datasets from yaml and fits files
+    
+        Parameters
+        ----------
+        fdatasets : str
+            filepath to yaml datasets file
+        filemodel : str
+            filepath to yaml models file
+            
+        Returns
+        -------
+        dataset : 'gammapy.utils.fitting.Datasets'
+            Datasets
+         """
+        from ..scripts import read_yaml
+        from ..serialization import dict_to_datasets
+
+        components = read_yaml(filemodel)
+        data_list = read_yaml(filedata)
+        constructor = dict_to_datasets(data_list, components)
+        return cls(constructor.datasets)
+
+    def to_yaml(self, path, selection="all", overwrite=False):
+        """Serialize datasets to yaml and fits files
+
+        Parameters
+        ----------
+        path : str
+            path to write files
+        selection : {"all", "simple"}
+            "simple" option reduce models parameters attributes displayed to only 
+            name, value, unit,frozen
+        """
+        from ..scripts import write_yaml
+        from ..serialization import datasets_to_dict
+
+        datasets_dict, components_dict = datasets_to_dict(
+            self.datasets, path, selection, overwrite
+        )
+        write_yaml(datasets_dict, path + "datasets.yaml")
+        write_yaml(components_dict, path + "models.yaml")

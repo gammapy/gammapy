@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
-from gammapy.cube.models import BackgroundModel, SkyModel, SkyModels
+from gammapy.cube.models import BackgroundModel, BackgroundModels, SkyModel, SkyModels
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map
@@ -65,6 +65,7 @@ class MapDataset(Dataset):
         psf=None,
         edisp=None,
         background_model=None,
+        name="",
         likelihood="cash",
         evaluation_mode="local",
         mask_safe=None,
@@ -82,6 +83,7 @@ class MapDataset(Dataset):
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
+        self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
         if likelihood == "cash":
@@ -440,9 +442,16 @@ class MapDataset(Dataset):
         hdulist = fits.HDUList([hdu_primary])
         hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
         hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
-        hdulist += self.background_model.map.to_hdulist(hdu="background")[
-            exclude_primary
-        ]
+        if isinstance(self.background_model, BackgroundModels):
+            for background in self.background_model.models:
+                if background.filename is None:
+                    hdulist += background.map.to_hdulist(hdu="BKG_" + background.name)[
+                        exclude_primary
+                    ]
+        else:
+            hdulist += self.background_model.map.to_hdulist(
+                hdu="BKG_" + self.background_model.name
+            )[exclude_primary]
 
         if self.edisp is not None:
             if isinstance(self.edisp, EnergyDispersion):
@@ -477,7 +486,7 @@ class MapDataset(Dataset):
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist):
+    def from_hdulist(cls, hdulist, name=""):
         """Create map dataset from list of HDUs.
 
         Parameters
@@ -491,11 +500,16 @@ class MapDataset(Dataset):
             Map dataset.
         """
         init_kwargs = {}
+        init_kwargs["name"]=name
         init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
         init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
-        background_map = Map.from_hdulist(hdulist, hdu="background")
-        init_kwargs["background_model"] = BackgroundModel(background_map)
+        backgrounds = []
+        for hdu in hdulist:
+            if isinstance(hdu, fits.hdu.image.ImageHDU) and "BKG_" in hdu.name:
+                background_map = Map.from_hdulist(hdulist, hdu=hdu.name)
+                backgrounds.append(BackgroundModel(background_map, name=hdu.name[4:]))
+        init_kwargs["background_model"] = BackgroundModels(backgrounds)
 
         if "EDISP_MATRIX" in hdulist:
             init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
@@ -513,7 +527,6 @@ class MapDataset(Dataset):
         if "MASK_FIT" in hdulist:
             mask_fit_map = Map.from_hdulist(hdulist, hdu="mask_fit")
             init_kwargs["mask_fit"] = mask_fit_map.data.astype(bool)
-
         return cls(**init_kwargs)
 
     def write(self, filename, overwrite=False):
@@ -531,7 +544,7 @@ class MapDataset(Dataset):
         hdulist.writeto(str(filename), overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, name=""):
         """Read map dataset from file.
 
         Parameters
@@ -546,7 +559,7 @@ class MapDataset(Dataset):
         """
         filename = make_path(filename)
         hdulist = fits.open(str(filename))
-        return cls.from_hdulist(hdulist)
+        return cls.from_hdulist(hdulist, name=name)
 
 
 class MapEvaluator:

@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import filecmp
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
-from ....cube.models import SkyModels
-from ....image import models as spatial
-from ....spectrum import models as spectral
-from ...scripts import read_yaml
-from ...serialization import dict_to_models
-from ...testing import requires_data
+from gammapy.image import models as spatial
+from gammapy.spectrum import models as spectral
+from gammapy.cube.models import SkyModels, BackgroundModels
+from gammapy.utils.fitting import Datasets
+from gammapy.utils.scripts import read_yaml
+from gammapy.utils.serialization import dict_to_models
+from gammapy.utils.testing import requires_data
 
 
 @requires_data()
@@ -78,9 +80,6 @@ def test_dict_to_skymodels(tmpdir):
     # assert model2.parameters["norm"].value == 2.1 # fail
 
 
-# TODO: test background model serialisation
-
-
 @requires_data()
 def test_sky_models_io(tmpdir):
     # TODO: maybe change to a test case where we create a model programatically?
@@ -89,13 +88,97 @@ def test_sky_models_io(tmpdir):
 
     filename = str(tmpdir / "io_example.yaml")
     models.to_yaml(filename)
-    SkyModels.from_yaml(filename)
-    # TODO: add asserts to check content
+    models = SkyModels.from_yaml(filename)
+    assert models.parameters["lat_0"].min == -90.0
 
     models.to_yaml(filename, selection="simple")
-    SkyModels.from_yaml(filename)
-    # TODO add assert to check content
+    models = SkyModels.from_yaml(filename)
+    assert np.isnan(models.parameters["lat_0"].min)
 
     # TODO: not sure if we should just round-trip, or if we should
     # check YAML file content (e.g. against a ref file in the repo)
     # or check serialised dict content
+
+
+@requires_data()
+def test_datasets_to_io(tmpdir):
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
+
+    datasets = Datasets.from_yaml(filedata, filemodel)
+
+    assert len(datasets.datasets) == 2
+    assert len(datasets.parameters.parameters) == 20
+
+    dataset0 = datasets.datasets[0]
+    assert dataset0.counts.data.sum() == 6824
+    assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
+    assert dataset0.psf is not None
+    assert dataset0.edisp is not None
+
+    assert isinstance(dataset0.background_model, BackgroundModels)
+    assert len(dataset0.background_model.models) == 2
+    assert_allclose(
+        dataset0.background_model.models[0].evaluate().data.sum(), 4094.2, atol=0.1
+    )
+    assert_allclose(
+        dataset0.background_model.models[1].evaluate().data.sum(), 928.8, atol=0.1
+    )
+    assert dataset0.background_model.models[0].name in [
+        "background_irf_gc",
+        "gll_iem_v06_cutout",
+    ]
+    assert dataset0.background_model.models[1].name in [
+        "background_irf_gc",
+        "gll_iem_v06_cutout",
+    ]
+
+    dataset1 = datasets.datasets[1]
+    assert len(dataset1.background_model.models) == 2
+    assert dataset1.background_model.models[0].name in [
+        "background_irf_g09",
+        "gll_iem_v06_cutout",
+    ]
+    assert dataset1.background_model.models[1].name in [
+        "background_irf_g09",
+        "gll_iem_v06_cutout",
+    ]
+
+    assert isinstance(dataset0.model, SkyModels)
+    assert len(dataset0.model.skymodels) == 2
+    assert dataset0.model.skymodels[0].name == "gc"
+    assert dataset0.model.skymodels[1].name == "g09"
+    assert (
+        dataset0.model.skymodels[0].parameters["reference"]
+        is dataset0.model.skymodels[1].parameters["reference"]
+    )
+    assert (
+        dataset1.model.skymodels[0].parameters["reference"]
+        is dataset1.model.skymodels[1].parameters["reference"]
+    )
+    assert (
+        dataset0.model.skymodels[0].parameters["reference"]
+        is dataset1.model.skymodels[1].parameters["reference"]
+    )
+
+    assert_allclose(
+        dataset0.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
+    )
+
+    path = str(tmpdir / "/written_")
+    datasets.to_yaml(path, selection="simple", overwrite=True)
+    datasets_read = Datasets.from_yaml(path + "datasets.yaml", path + "models.yaml")
+    assert len(datasets_read.datasets) == 2
+    dataset0 = datasets_read.datasets[0]
+    assert dataset0.counts.data.sum() == 6824
+    assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
+    assert dataset0.psf is not None
+    assert dataset0.edisp is not None
+    assert isinstance(dataset0.background_model, BackgroundModels)
+    assert len(dataset0.background_model.models) == 2
+    assert_allclose(
+        dataset0.background_model.models[0].evaluate().data.sum(), 4094.2, atol=0.1
+    )
+    assert_allclose(
+        dataset0.background_model.models[1].evaluate().data.sum(), 928.8, atol=0.1
+    )
