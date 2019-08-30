@@ -2,6 +2,7 @@
 import collections
 import pytest
 import numpy as np
+import astropy
 from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose
 from astropy import units as u
@@ -108,6 +109,7 @@ class TestSourceCatalogObjectHGPS:
         assert "Component HGPSC 083:" in ss
 
     @staticmethod
+    @pytest.mark.skipif(astropy.__version__ <= "3.2", reason="table formatting differences")
     @pytest.mark.parametrize("ref", SOURCES)
     def test_str(cat, ref):
         actual = str(cat[ref["idx"]])
