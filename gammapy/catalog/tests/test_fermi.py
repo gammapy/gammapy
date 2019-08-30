@@ -222,19 +222,14 @@ class TestFermi3FGLObject:
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 8.071e-08, rtol=1e-3)
 
-    @pytest.mark.parametrize(
-        "name",
-        [
+    def test_crab_alias(self):
+        for name in [
             "Crab",
             "3FGL J0534.5+2201",
             "1FHL J0534.5+2201",
-            "2FGL J0534.5+2201",
             "PSR J0534+2200",
-            "0FGL J0534.6+2201",
-        ],
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab"]) == str(self.cat[name])
+        ]:
+            assert self.cat[name].index == 621
 
 
 @requires_data()
@@ -377,11 +372,9 @@ class TestFermi3FHLObject:
         desired = [5.169889e-09, 2.245024e-09, 9.243175e-10, 2.758956e-10, 6.684021e-11]
         assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-3)
 
-    @pytest.mark.parametrize(
-        "name", ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab Nebula"]) == str(self.cat[name])
+    def test_crab_alias(self):
+        for name in ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]:
+            assert self.cat[name].index == 352
 
 
 @requires_data()
@@ -427,11 +420,14 @@ class TestSourceCatalog1FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 18
 
-    @pytest.mark.parametrize(
-        "name", ["Crab", "1FHL J0534.5+2201", "2FGL J0534.5+2201", "PSR J0534+2200"]
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab"]) == str(self.cat[name])
+    def test_crab_alias(self):
+        for name in [
+            "Crab",
+            "1FHL J0534.5+2201",
+            "2FGL J0534.5+2201",
+            "PSR J0534+2200",
+        ]:
+            assert self.cat[name].index == 116
 
 
 @requires_data()
@@ -447,11 +443,14 @@ class TestSourceCatalog2FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 25
 
-    @pytest.mark.parametrize(
-        "name", ["Crab", "3FGL J0534.5+2201i", "1FHL J0534.5+2201", "TeV J0534+2200"]
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab"]) == str(self.cat[name])
+    def test_crab_alias(self):
+        for name in [
+            "Crab",
+            "3FGL J0534.5+2201i",
+            "1FHL J0534.5+2201",
+            "TeV J0534+2200",
+        ]:
+            assert self.cat[name].index == 85
 
 
 @requires_data()
