@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import yaml
-from gammapy.background import ReflectedRegionsBackgroundEstimator
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
+    ReflectedRegionsBackgroundEstimator,
     SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )

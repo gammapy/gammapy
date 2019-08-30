@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
-from gammapy.spectrum.background_estimate import BackgroundEstimate
+from .background_estimate import BackgroundEstimate
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
 
