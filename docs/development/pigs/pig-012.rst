@@ -115,7 +115,7 @@ interface and later on eventual improvements, also taking user feedback into acc
 
 Prototype configuration file.
 
-.. code::    
+::
     
     analysis:
         process:
@@ -192,7 +192,7 @@ the scope of this PIG.
 
 **Session workflow**
 
-.. code::
+::
 
         $ mkdir analysis
         $ cd analysis
@@ -200,7 +200,7 @@ the scope of this PIG.
         
 Then the user would type ``ipython``, ``juypter notebook`` or write a script with the code below.
 
-.. code::
+::
 
         from gammapy.analysis import Analysis
 

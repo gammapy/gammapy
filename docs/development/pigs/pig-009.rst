@@ -233,11 +233,10 @@ all remaining comments were addressed and the PIG was accepted on August 30, 201
 
 
 
-.. _``rejection sampling in Python``: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
+.. _`rejection sampling in Python`: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
 .. _Prototype: https://github.com/fabiopintore/notebooks-public/blob/master/gammapy-event-sampling/prototype.ipynb
 .. _inverseCDF: https://en.wikipedia.org/wiki/Inverse_transform_sampling
 .. _here: https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584
-.. _gammalib: http://cta.irap.omp.eu/gammalib/doxygen/GModelSpatialRadialGauss_8cpp_source.html#l00325
 .. _spec: https://docs.gammapy.org/0.11/api/gammapy.spectrum.SpectrumSimulation.html
 .. _three-D: https://docs.gammapy.org/0.11/notebooks/simulate_3d.html
 .. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
