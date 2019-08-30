@@ -75,39 +75,39 @@ class HDULocation:
         hdu = self.hdu_name
 
         if hdu_class == "events":
-            from ..data import EventList
+            from gammapy.data import EventList
 
             return EventList.read(filename, hdu=hdu)
         elif hdu_class == "gti":
-            from ..data import GTI
+            from gammapy.data import GTI
 
             return GTI.read(filename, hdu=hdu)
         elif hdu_class == "aeff_2d":
-            from ..irf import EffectiveAreaTable2D
+            from gammapy.irf import EffectiveAreaTable2D
 
             return EffectiveAreaTable2D.read(filename, hdu=hdu)
         elif hdu_class == "edisp_2d":
-            from ..irf import EnergyDispersion2D
+            from gammapy.irf import EnergyDispersion2D
 
             return EnergyDispersion2D.read(filename, hdu=hdu)
         elif hdu_class == "psf_table":
-            from ..irf import PSF3D
+            from gammapy.irf import PSF3D
 
             return PSF3D.read(filename, hdu=hdu)
         elif hdu_class == "psf_3gauss":
-            from ..irf import EnergyDependentMultiGaussPSF
+            from gammapy.irf import EnergyDependentMultiGaussPSF
 
             return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu)
         elif hdu_class == "psf_king":
-            from ..irf import PSFKing
+            from gammapy.irf import PSFKing
 
             return PSFKing.read(filename, hdu=hdu)
         elif hdu_class == "bkg_2d":
-            from ..irf import Background2D
+            from gammapy.irf import Background2D
 
             return Background2D.read(filename, hdu=hdu)
         elif hdu_class == "bkg_3d":
-            from ..irf import Background3D
+            from gammapy.irf import Background3D
 
             return Background3D.read(filename, hdu=hdu)
         else:

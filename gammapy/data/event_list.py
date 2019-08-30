@@ -335,7 +335,7 @@ class EventListBase:
         return energy_logspace(energy.min(), energy.max(), 50)
 
     def _counts_spectrum(self, ebounds):
-        from ..spectrum import CountsSpectrum
+        from gammapy.spectrum import CountsSpectrum
 
         if not ebounds:
             ebounds = self._default_plot_ebounds()
@@ -653,7 +653,7 @@ class EventList(EventListBase):
         ax.text(0, 1, txt, fontsize=12, verticalalignment="top")
 
     def _counts_image(self):
-        from ..maps import WcsNDMap
+        from gammapy.maps import WcsNDMap
 
         opts = {
             "width": (7, 7),
@@ -699,7 +699,7 @@ class EventListLAT(EventListBase):
 
     def plot_image(self):
         """Quick look counts map sky plot."""
-        from ..maps import WcsNDMap
+        from gammapy.maps import WcsNDMap
 
         m = WcsNDMap.create(npix=(360, 180), binsz=1.0, proj="AIT", coordsys="GAL")
         m.fill_by_coord(self.radec)

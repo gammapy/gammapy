@@ -277,7 +277,7 @@ def check_all_table_psf(data_store):
 
 if __name__ == "__main__":
     import sys
-    from ..data.data_store import DataStore
+    from gammapy.data import DataStore
 
     data_store = DataStore.from_dir(sys.argv[1])
     check_all_table_psf(data_store)

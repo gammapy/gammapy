@@ -3,6 +3,7 @@
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
+from gammapy.maps import WcsNDMap
 from gammapy.stats import significance
 from .utils import scale_cube
 
@@ -111,8 +112,6 @@ class ASmooth:
                 * 'scales'
                 * 'significance'.
         """
-        from ..maps import WcsNDMap
-
         pixel_scale = counts.geom.pixel_scales.mean()
         kernels = self.kernels(pixel_scale)
 

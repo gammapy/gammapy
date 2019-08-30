@@ -151,7 +151,7 @@ class MapEventSampler:
         coords : `~gammapy.maps.MapCoord` object.
             Sequence of coordinates and energies of the sampled events.
         """
-        from ...maps import MapCoord
+        from gammapy.maps import MapCoord
 
         n_events = self.npred_total if n_events is None else n_events
 

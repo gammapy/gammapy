@@ -158,8 +158,8 @@ class Datasets:
         dataset : 'gammapy.utils.fitting.Datasets'
             Datasets
          """
-        from ..scripts import read_yaml
-        from ..serialization import dict_to_datasets
+        from gammapy.utils.scripts import read_yaml
+        from gammapy.utils.serialization import dict_to_datasets
 
         components = read_yaml(filemodel)
         data_list = read_yaml(filedata)
@@ -177,8 +177,8 @@ class Datasets:
             "simple" option reduce models parameters attributes displayed to only 
             name, value, unit,frozen
         """
-        from ..scripts import write_yaml
-        from ..serialization import datasets_to_dict
+        from gammapy.utils.scripts import write_yaml
+        from gammapy.utils.serialization import datasets_to_dict
 
         datasets_dict, components_dict = datasets_to_dict(
             self.datasets, path, selection, overwrite

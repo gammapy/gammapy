@@ -161,8 +161,8 @@ def _link_shared_parameters(models):
 
 
 def datasets_to_dict(datasets, path, selection, overwrite):
-    from ..serialization import models_to_dict
-    from ...cube.models import BackgroundModels, SkyModels
+    from gammapy.utils.serialization import models_to_dict
+    from gammapy.cube.models import BackgroundModels, SkyModels
 
     models_list = []
     backgrounds_list = []

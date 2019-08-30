@@ -90,7 +90,7 @@ class SkyModels:
     @classmethod
     def from_xml(cls, xml):
         """Read from XML string."""
-        from ..utils.serialization import xml_to_sky_models
+        from gammapy.utils.serialization import xml_to_sky_models
 
         return xml_to_sky_models(xml)
 
@@ -114,7 +114,7 @@ class SkyModels:
 
     def to_xml(self, filename):
         """Write to XML file."""
-        from ..utils.serialization import sky_models_to_xml
+        from gammapy.utils.serialization import sky_models_to_xml
 
         xml = sky_models_to_xml(self)
         filename = make_path(filename)
@@ -124,8 +124,8 @@ class SkyModels:
     @classmethod
     def from_yaml(cls, filename):
         """Write to YAML file."""
-        from ..utils.serialization import dict_to_models
-        from ..utils.scripts import read_yaml
+        from gammapy.utils.serialization import dict_to_models
+        from gammapy.utils.scripts import read_yaml
 
         data = read_yaml(filename)
         skymodels = dict_to_models(data)
@@ -133,7 +133,7 @@ class SkyModels:
 
     def to_yaml(self, filename, selection="all"):
         """Write to YAML file."""
-        from ..utils.serialization import models_to_dict
+        from gammapy.utils.serialization import models_to_dict
 
         components_dict = models_to_dict(self.skymodels, selection)
         write_yaml(components_dict, filename)
@@ -545,7 +545,7 @@ class BackgroundModels(Model):
 
     def to_yaml(self, filename, selection="all"):
         """Write to yaml file."""
-        from ..utils.serialization import models_to_dict
+        from gammapy.utils.serialization import models_to_dict
 
         components_dict = models_to_dict(self.models, selection)
         write_yaml(components_dict, filename)

@@ -591,7 +591,7 @@ class WcsNDMap(WcsMap):
         spectrum : `CountsSpectrum`
             Spectrum in the given region.
         """
-        from ..spectrum import CountsSpectrum
+        from gammapy.spectrum import CountsSpectrum
 
         energy_axis = self.geom.get_axis_by_name("energy")
 
@@ -630,7 +630,7 @@ class WcsNDMap(WcsMap):
         map : `WcsNDMap`
             Convolved map.
         """
-        from ..cube.psf_kernel import PSFKernel
+        from gammapy.cube import PSFKernel
 
         conv_function = scipy.signal.fftconvolve if use_fft else scipy.ndimage.convolve
         convolved_data = np.empty(self.data.shape, dtype=np.float32)

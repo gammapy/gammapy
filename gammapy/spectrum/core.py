@@ -243,7 +243,7 @@ class CountsSpectrum:
         spectrum : `~gammapy.spectrum.CountsSpectrum`
             Downsampled spectrum.
         """
-        from ..extern.skimage import block_reduce
+        from gammapy.extern.skimage import block_reduce
 
         data = block_reduce(self.data, block_size=(factor,))
         energy = self.energy.downsample(factor).edges
