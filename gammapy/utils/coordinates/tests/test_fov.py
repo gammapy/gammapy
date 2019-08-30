@@ -25,7 +25,10 @@ def test_fov_to_sky():
     az_pointing = [52.42056255, 52.24706061, 52.06655505, 51.86795724]
     alt_pointing = [51.11908203, 51.23454751, 51.35376141, 51.48385814]
     az, alt = fov_to_sky(
-        fov_altaz_lon * u.deg, fov_altaz_lat * u.deg, az_pointing * u.deg, alt_pointing * u.deg
+        fov_altaz_lon * u.deg,
+        fov_altaz_lat * u.deg,
+        az_pointing * u.deg,
+        alt_pointing * u.deg,
     )
     assert_allclose(az.value, [51.320575, 50.899125, 52.154053, 48.233023])
     assert_allclose(alt.value, [49.505451, 50.030165, 51.811739, 54.700102])
@@ -51,7 +54,9 @@ def test_sky_to_fov():
     alt = [49.505451, 50.030165, 51.811739, 54.700102]
     az_pointing = [52.42056255, 52.24706061, 52.06655505, 51.86795724]
     alt_pointing = [51.11908203, 51.23454751, 51.35376141, 51.48385814]
-    lon, lat = sky_to_fov(az * u.deg, alt * u.deg, az_pointing * u.deg, alt_pointing * u.deg)
+    lon, lat = sky_to_fov(
+        az * u.deg, alt * u.deg, az_pointing * u.deg, alt_pointing * u.deg
+    )
     assert_allclose(
         lon.value, [0.7145614, 0.86603433, -0.05409698, 2.10295248], rtol=1e-5
     )

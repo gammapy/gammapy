@@ -2,8 +2,8 @@
 """Unit tests for the Fit class"""
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.utils.testing import requires_dependency
 from gammapy.utils.fitting import Fit, Parameter, Parameters
+from gammapy.utils.testing import requires_dependency
 
 pytest.importorskip("iminuit")
 

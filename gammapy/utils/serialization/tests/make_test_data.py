@@ -3,19 +3,16 @@
 (some will be also written manually)
 """
 from pathlib import Path
-from gammapy.cube.models import SkyModel, SkyModels
-from gammapy.image.models import SkyGaussian
-from gammapy.spectrum.models import PowerLaw
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from gammapy.cube import MapDataset, MapMaker, PSFKernel
+from gammapy.cube.models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
 from gammapy.data import DataStore
-from gammapy.irf import make_mean_psf, make_mean_edisp
-from gammapy.maps import WcsGeom, MapAxis
-from gammapy.cube import MapMaker, PSFKernel, MapDataset
-from gammapy.cube.models import SkyDiffuseCube, BackgroundModel
-from gammapy.spectrum.models import ExponentialCutoffPowerLaw
-from gammapy.image.models import SkyPointSource
+from gammapy.image.models import SkyGaussian, SkyPointSource
+from gammapy.irf import make_mean_edisp, make_mean_psf
+from gammapy.maps import MapAxis, WcsGeom
+from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.fitting import Datasets
 
 DATA_PATH = Path("gammapy/utils/serialization/tests/data")

@@ -500,7 +500,7 @@ class MapDataset(Dataset):
             Map dataset.
         """
         init_kwargs = {}
-        init_kwargs["name"]=name
+        init_kwargs["name"] = name
         init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
         init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 

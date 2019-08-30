@@ -4,16 +4,16 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
-from ...catalog.fermi import SourceCatalog3FGL
-from ...utils.fitting import Fit
-from ...utils.testing import (
+from gammapy.catalog.fermi import SourceCatalog3FGL
+from gammapy.spectrum import FluxPoints, FluxPointsDataset
+from gammapy.spectrum.models import PowerLaw, SpectralModel
+from gammapy.utils.fitting import Fit
+from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
     requires_dependency,
 )
-from ..flux_point import FluxPoints, FluxPointsDataset
-from ..models import PowerLaw, SpectralModel
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",

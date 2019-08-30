@@ -11,13 +11,13 @@ from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
 )
+from gammapy.time import LightCurve, LightCurveEstimator
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,
     requires_data,
     requires_dependency,
 )
-from gammapy.time import LightCurve, LightCurveEstimator
 
 # time time_min time_max flux flux_err flux_ul
 # 48705.1757 48705.134 48705.2174 0.57 0.29 nan

@@ -2,7 +2,12 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.utils.fitting import Parameter, Parameters, confidence_iminuit, optimize_iminuit
+from gammapy.utils.fitting import (
+    Parameter,
+    Parameters,
+    confidence_iminuit,
+    optimize_iminuit,
+)
 
 pytest.importorskip("iminuit")
 

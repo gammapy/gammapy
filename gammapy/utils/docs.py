@@ -27,7 +27,7 @@ from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.images import Image
 from nbformat.v4 import new_markdown_cell
 from sphinx.util import logging
-from .. import __version__
+from gammapy import __version__
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])

@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import filecmp
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
+from gammapy.cube.models import BackgroundModels, SkyModels
 from gammapy.image import models as spatial
 from gammapy.spectrum import models as spectral
-from gammapy.cube.models import SkyModels, BackgroundModels
 from gammapy.utils.fitting import Datasets
 from gammapy.utils.scripts import read_yaml
 from gammapy.utils.serialization import dict_to_models

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
 import logging
-import sys
 import os.path
+import sys
 from pathlib import Path
 import yaml
 

@@ -4,7 +4,11 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Column, Table
-from gammapy.utils.table import table_from_row_data, table_row_to_dict, table_standardise_units_copy
+from gammapy.utils.table import (
+    table_from_row_data,
+    table_row_to_dict,
+    table_standardise_units_copy,
+)
 
 
 def test_table_standardise_units():

@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 import astropy.units as u
-from gammapy.image import models as spatial
-from gammapy.spectrum import models as spectral
+from gammapy.cube.fit import MapDataset
 from gammapy.cube.models import (
-    SkyModel,
-    SkyModels,
-    SkyDiffuseCube,
     BackgroundModel,
     BackgroundModels,
+    SkyDiffuseCube,
+    SkyModel,
+    SkyModels,
 )
-from gammapy.cube.fit import MapDataset
+from gammapy.image import models as spatial
+from gammapy.spectrum import models as spectral
 from gammapy.utils.fitting import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
