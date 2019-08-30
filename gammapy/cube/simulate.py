@@ -25,7 +25,7 @@ def simulate_dataset(
     random_state="random-seed",
 ):
     """Simulate a 3D dataset.
-    
+
     Simulate a source defined with a sky model for a given pointing,
     geometry and irfs for a given exposure time.
     This will return a dataset object which includes the counts cube,

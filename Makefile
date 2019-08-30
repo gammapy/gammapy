@@ -100,7 +100,6 @@ docs-all:
 docs-show:
 	open docs/_build/html/index.html
 
-# TODO: fix gammapy/catalog/tests/test_gammacat.py (move to ref txt file and exclude here?)
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
