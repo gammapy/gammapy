@@ -10,7 +10,7 @@ class BackgroundEstimate:
     This container holds the result from a region based background estimation
     for one observation.
 
-    Created e.g. by `~gammapy.background.ReflectedRegionsBackgroundEstimator`.
+    Created e.g. by `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`.
 
     Parameters
     ----------

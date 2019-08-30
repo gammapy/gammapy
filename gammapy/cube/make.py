@@ -325,7 +325,7 @@ class MapMakerRing(MapMaker):
 
     The main motivation for this class in addition to the `MapMaker`
     is to have the common image background estimation methods,
-    like `~gammapy.background.RingBackgroundEstimator`,
+    like `~gammapy.cube.RingBackgroundEstimator`,
     that work using on and off maps.
 
     To ensure adequate statistics, only observations that are fully
@@ -339,8 +339,8 @@ class MapMakerRing(MapMaker):
         Maximum offset angle
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask
-    background_estimator : `~gammapy.background.RingBackgroundEstimator`
-        or `~gammapy.background.AdaptiveRingBackgroundEstimator`
+    background_estimator : `~gammapy.cube.RingBackgroundEstimator`
+        or `~gammapy.cube.AdaptiveRingBackgroundEstimator`
         Ring background estimator or something with an equivalent API.
 
     Examples
@@ -352,9 +352,8 @@ class MapMakerRing(MapMaker):
         from astropy.coordinates import SkyCoord
         from regions import CircleSkyRegion
         from gammapy.maps import Map, WcsGeom, MapAxis
-        from gammapy.cube import MapMakerRing
+        from gammapy.cube import MapMakerRing, RingBackgroundEstimator
         from gammapy.data import DataStore
-        from gammapy.background import RingBackgroundEstimator
 
         # Create observation list
         data_store = DataStore.from_file(

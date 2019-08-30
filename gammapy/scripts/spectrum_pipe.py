@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import yaml
-from gammapy.background import ReflectedRegionsBackgroundEstimator
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
+    ReflectedRegionsBackgroundEstimator,
     SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )
@@ -26,7 +26,7 @@ class SpectrumAnalysisIACT:
     * outdir : `pathlib.Path`, str
         Output folder, None means no output
     * background : dict
-        Forwarded to `~gammapy.background.ReflectedRegionsBackgroundEstimator`
+        Forwarded to `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`
     * extraction : dict
         Forwarded to `~gammapy.spectrum.SpectrumExtraction`
     * fp_binning : `~astropy.units.Quantity`

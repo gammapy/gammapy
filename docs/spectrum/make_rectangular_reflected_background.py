@@ -4,7 +4,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion
 from gammapy.data import DataStore
-from gammapy.background import ReflectedRegionsBackgroundEstimator
+from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 mask = data_store.obs_table["TARGET_NAME"] == "Crab"

@@ -294,7 +294,7 @@ regions", but really that's a bad name, reflecting would only give one region on
 the other side; what is done is rotating the regions.
 
 In Gammapy, rotated regions are implemented in
-`gammapy/background/reflected.py`_. This is one of the most complex pieces of
+``gammapy/background/reflected.py``. This is one of the most complex pieces of
 code in Gammapy, because it was started before ``astropy.coordinates`` or
 ``astropy-regions`` existed and then adapted many times, never achieving a clean
 design and implementation until now. The problem was that ``astropy-region``
@@ -440,7 +440,6 @@ additional comments. Therefore the PIG was accepted on June 17, 2019.
 .. These explicit URLs to Gammapy classes are to avoid possible future breakage of
 .. the links in the PIG if those classes are removed or changed:
 
-.. _gammapy/background/reflected.py: https://github.com/gammapy/gammapy/blob/master/gammapy/background/reflected.py
 .. _gammapy.data.GTI: https://docs.gammapy.org/0.11/api/gammapy.data.GTI.html
 .. _gammapy.maps.WcsGeom.region_mask: https://docs.gammapy.org/0.11/api/gammapy.maps.WcsGeom.html#gammapy.maps.WcsGeom.region_mask
 .. _gammapy.data.EventList: https://docs.gammapy.org/0.11/api/gammapy.data.EventList.html

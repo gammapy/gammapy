@@ -4,8 +4,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from gammapy.background import ReflectedRegionsBackgroundEstimator
 from gammapy.data import DataStore, Observations, ObservationStats
+from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 from gammapy.utils.testing import requires_data
 
 

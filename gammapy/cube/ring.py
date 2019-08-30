@@ -38,7 +38,7 @@ class AdaptiveRingBackgroundEstimator:
     Example using `AdaptiveRingBackgroundEstimator`::
 
         from gammapy.maps import Map
-        from gammapy.background import AdaptiveRingBackgroundEstimator
+        from gammapy.cube import AdaptiveRingBackgroundEstimator
 
         filename = '$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz'
         images = {
@@ -267,7 +267,7 @@ class RingBackgroundEstimator:
     Example using `RingBackgroundEstimator`::
 
         from gammapy.maps import Map
-        from gammapy.background import RingBackgroundEstimator
+        from gammapy.cube import RingBackgroundEstimator
 
         filename = '$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/input_all.fits.gz'
         images = {

@@ -6,7 +6,7 @@
 Reflected regions background
 ****************************
 
-.. currentmodule:: gammapy.background
+.. currentmodule:: gammapy.spectrum
 
 Overview
 --------
@@ -25,8 +25,8 @@ be found in [Berge2007]_
 
 The extraction of the ON and OFF events from the `~gammapy.data.EventList` of a
 set of observations is performed by the
-`~gammapy.background.ReflectedRegionsBackgroundEstimator`. The latter uses the
-`~gammapy.background.ReflectedRegionsFinder` to create reflected regions for a
+`ReflectedRegionsBackgroundEstimator`. The latter uses the
+`~gammapy.spectrum.ReflectedRegionsFinder` to create reflected regions for a
 given circular on region and exclusion mask.
 
 Using regions
@@ -39,7 +39,7 @@ complex region such as a `~regions.CircleAnnulusSkyRegion` a
 
 The following example shows how to create such regions:
 
-.. plot:: background/create_region.py
+.. plot:: spectrum/create_region.py
     :include-source:
 
 The reflected region finder
@@ -47,29 +47,29 @@ The reflected region finder
 
 The following example illustrates how to create reflected regions for a given
 circular on region and exclusion mask using the
-`~gammapy.background.ReflectedRegionsFinder`. In particular, it shows how to
+`~gammapy.spectrum.ReflectedRegionsFinder`. In particular, it shows how to
 change the minimal distance between the ON region and the reflected regions.
 This is useful to limit contamination by events leaking out the ON region. It
 also shows how to change the minimum distance between adjacent regions as well
 as the maximum number of reflected regions.
 
-.. plot:: background/make_reflected_regions.py
+.. plot:: spectrum/make_reflected_regions.py
     :include-source:
 
 Using the reflected background estimator
 ----------------------------------------
 
 In practice, the user does not usually need to directly interact with the
-`~gammapy.background.ReflectedRegionsFinder`. This actually is done via the
-`~gammapy.background.ReflectedRegionsBackgroundEstimator`, which extracts the ON
+`~gammapy.spectrum.ReflectedRegionsFinder`. This actually is done via the
+`~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`, which extracts the ON
 and OFF events for an `~gammapy.data.Observations` object. The last example
 shows how to run it on a few observations with a rectangular region.
 
-.. plot:: background/make_rectangular_reflected_background.py
+.. plot:: spectrum/make_rectangular_reflected_background.py
     :include-source:
 
 The following notebook shows an example using
-`~gammapy.background.ReflectedRegionsBackgroundEstimator` to perform a spectral
+`~gammapy.spectrum.ReflectedRegionsBackgroundEstimator` to perform a spectral
 extraction and fitting:
 
 * :gp-notebook:`spectrum_analysis`

@@ -8,12 +8,9 @@ from regions import (
     EllipseSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.background import (
-    ReflectedRegionsBackgroundEstimator,
-    ReflectedRegionsFinder,
-)
 from gammapy.data import DataStore
 from gammapy.maps import WcsGeom, WcsNDMap
+from gammapy.spectrum import ReflectedRegionsBackgroundEstimator, ReflectedRegionsFinder
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,

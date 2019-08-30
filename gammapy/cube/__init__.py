@@ -8,4 +8,5 @@ from .fit import *
 from .make import *
 from .psf_kernel import *
 from .psf_map import *
+from .ring import *
 from .simulate import *

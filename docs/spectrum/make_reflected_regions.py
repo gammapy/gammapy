@@ -4,7 +4,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from gammapy.maps import WcsNDMap
-from gammapy.background import ReflectedRegionsFinder
+from gammapy.spectrum import ReflectedRegionsFinder
 
 # Exclude a rectangular region
 exclusion_mask = WcsNDMap.create(npix=(801, 701), binsz=0.01, skydir=(83.6, 23.0))
