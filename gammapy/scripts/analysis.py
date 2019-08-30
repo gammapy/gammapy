@@ -214,6 +214,10 @@ class Config:
         schema = read_yaml(SCHEMA_FILE)
         jsonschema.validate(self.settings, schema, _gp_validator)
 
+    def view_settings(self):
+        """Display settings in pretty YAML format."""
+        print(yaml.dump(self.settings))
+        
     def _update_settings(self, source, target):
         for key, val in source.items():
             if key not in target:
