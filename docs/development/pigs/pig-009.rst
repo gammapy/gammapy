@@ -212,7 +212,7 @@ The proposed Event Sampler will not provide, for each event, the corresponding
 simulator.
 
 
-List of proposed pull requests
+Tasks
 ==============================
 
 This is a proposal for a list of pull requests implementing the proposed changes, 
