@@ -1,0 +1,90 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 118
+Common name     : HESS J1813-178
+Other names     : HESS J1813-178,G12.82-0.02,PSR J1813-1749,CXOU J181335.1-174957,IGR J18135-1751,W33
+Location        : gal
+Class           : pwn
+
+TeVCat ID       : 114
+TeVCat 2 ID     : Unhlxa
+TeVCat name     : TeV J1813-178
+
+TGeVCat ID      : 116
+TGeVCat name    : TeV J1813-1750
+
+Discoverer      : hess
+Discovery date  : 2005-03
+Seen by         : hess,magic
+Reference       : 2006ApJ...636..777A
+
+*** Position info ***
+
+SIMBAD:
+RA                   : 273.363 deg
+DEC                  : -17.849 deg
+GLON                 : 12.787 deg
+GLAT                 : 0.000 deg
+
+Measurement:
+RA                   : 273.408 deg
+DEC                  : -17.842 deg
+GLON                 : 12.813 deg
+GLAT                 : -0.034 deg
+Position error       : 0.005 deg
+
+*** Morphology info ***
+
+Morphology model type     : gauss
+Sigma                     : 0.036 deg
+Sigma error               : 0.006 deg
+Sigma2                    : nan deg
+Sigma2 error              : nan deg
+Position angle            : nan deg
+Position angle error      : nan deg
+Position angle frame      : 
+
+*** Spectral info ***
+
+Significance    : 13.500
+Livetime        : 9.700 h
+
+Spectrum type   : pl2
+flux            : 1.42e-11 +- 1.1e-12 (stat) +- 3e-13 (sys) cm-2 s-1
+index           : 2.09 +- 0.08 (stat) +- 0.2 (sys)
+e_min           : 0.2 TeV
+e_max           : nan TeV
+
+Energy range         : (nan, nan) TeV
+theta                : 0.15 deg
+
+
+Derived fluxes:
+Spectral model norm (1 TeV)    : 2.68e-12 +- 2.55e-13 (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV)       : 2.46e-12 +- 3.69e-13 (stat) cm-2 s-1
+Integrated flux (>1 TeV)       : 11.844 +- 1.780 (% Crab)
+Integrated flux (1-10 TeV)     : 8.92e-12 +- 1.46e-12 (stat) erg cm-2 s-1
+
+*** Spectral points ***
+
+SED reference id          : 2006ApJ...636..777A
+Number of spectral points : 13
+Number of upper limits    : 0
+
+e_ref        dnde         dnde_errn       dnde_errp   
+ TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+------ --------------- --------------- ---------------
+ 0.323       2.736e-11       5.690e-12       5.971e-12
+ 0.427       1.554e-11       3.356e-12       3.559e-12
+ 0.574       8.142e-12       1.603e-12       1.716e-12
+ 0.777       4.567e-12       9.319e-13       1.007e-12
+ 1.023       2.669e-12       5.586e-13       6.110e-13
+ 1.373       1.518e-12       3.378e-13       3.721e-13
+ 1.841       7.966e-13       2.166e-13       2.426e-13
+ 2.476       3.570e-13       1.135e-13       1.295e-13
+ 3.159       3.321e-13       8.757e-14       1.012e-13
+ 4.414       1.934e-13       5.764e-14       6.857e-14
+ 5.560       4.461e-14       2.130e-14       2.844e-14
+10.765       1.318e-14       6.056e-15       1.085e-14
+22.052       1.372e-14       6.128e-15       1.178e-14
