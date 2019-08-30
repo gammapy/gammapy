@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import PixCoord
 from gammapy.maps import Map, WcsGeom, WcsNDMap
-from .background_estimate import BackgroundEstimate
+from gammapy.spectrum.background_estimate import BackgroundEstimate
 
 __all__ = ["ReflectedRegionsFinder", "ReflectedRegionsBackgroundEstimator"]
 
@@ -259,7 +259,7 @@ class ReflectedRegionsBackgroundEstimator:
     """Reflected Regions background estimator.
 
     This class is responsible for creating a
-    `~gammapy.background.BackgroundEstimate` by placing reflected regions given
+    `~gammapy.spectrum.BackgroundEstimate` by placing reflected regions given
     a target region and an observation.
 
     For a usage example see :gp-notebook:`spectrum_analysis`

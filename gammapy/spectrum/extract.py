@@ -33,7 +33,7 @@ class SpectrumExtraction:
     ----------
     observations : `~gammapy.data.Observations`
         Observations to process
-    bkg_estimate : `~gammapy.background.BackgroundEstimate`
+    bkg_estimate : `~gammapy.spectrum.BackgroundEstimate`
         Background estimate, e.g. of
         `~gammapy.background.ReflectedRegionsBackgroundEstimator`
     e_reco : `~astropy.units.Quantity`, optional
@@ -107,7 +107,7 @@ class SpectrumExtraction:
         ----------
         observation : `~gammapy.data.DataStoreObservation`
             Observation
-        bkg : `~gammapy.background.BackgroundEstimate`
+        bkg : `~gammapy.spectrum.BackgroundEstimate`
             Background estimate
 
         Returns
@@ -158,7 +158,7 @@ class SpectrumExtraction:
         ----------
         observation : `~gammapy.data.DataStoreObservation`
             Observation
-        bkg : `~gammapy.background.BackgroundEstimate`
+        bkg : `~gammapy.spectrum.BackgroundEstimate`
             Background estimate
         """
         log.info("Update observation meta info")
@@ -177,7 +177,7 @@ class SpectrumExtraction:
 
         Parameters
         ----------
-        bkg : `~gammapy.background.BackgroundEstimate`
+        bkg : `~gammapy.spectrum.BackgroundEstimate`
             Background estimate
         """
         log.info("Fill events")
@@ -208,7 +208,7 @@ class SpectrumExtraction:
         ----------
         observation : `~gammapy.data.DataStoreObservation`
             observation
-        bkg : `~gammapy.background.BackgroundEstimate`
+        bkg : `~gammapy.spectrum.BackgroundEstimate`
             background esimate
         """
         if not isinstance(bkg.on_region, CircleSkyRegion):

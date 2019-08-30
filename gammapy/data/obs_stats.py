@@ -50,7 +50,7 @@ class ObservationStats(Stats):
         ----------
         observation : `~gammapy.data.DataStoreObservation`
             IACT data store observation
-        bg_estimate : `~gammapy.background.BackgroundEstimate`
+        bg_estimate : `~gammapy.spectrum.BackgroundEstimate`
             Background estimate
         """
         n_on = len(bg_estimate.on_events.table)

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from gammapy.data import EventList
-from .background_estimate import BackgroundEstimate
+from gammapy.spectrum import BackgroundEstimate
 
 __all__ = ["PhaseBackgroundEstimator"]
 
@@ -10,11 +10,11 @@ class PhaseBackgroundEstimator:
     """Background estimation with on and off phases.
 
     This class is responsible for creating a
-    `~gammapy.background.BackgroundEstimate` by counting events
+    `~gammapy.spectrum.BackgroundEstimate` by counting events
     in the on-phase-zone and off-phase-zone in an ON-region,
     given an observation, an on_region, an on-phase-zone, an off-phase-zone.
 
-    For a usage example see future notebook.
+    TODO: For a usage example see future notebook.
 
     TODO: The phase interval has to be between 0 and 1.
     Cases like [-0.1, 0.1], for example, are still not supported.

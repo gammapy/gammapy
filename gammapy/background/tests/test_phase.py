@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from astropy.coordinates import Angle, SkyCoord
-from gammapy.background import BackgroundEstimate, PhaseBackgroundEstimator
+from gammapy.background import PhaseBackgroundEstimator
 from gammapy.data import DataStore, EventList
+from gammapy.spectrum import BackgroundEstimate
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import requires_data
 
