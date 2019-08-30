@@ -19,7 +19,6 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 ::
 
  `astro`          --- Astrophysical source and population models
- `background`     --- Background estimation and modeling
  `catalog`        --- Source catalog tools
  `cube`           --- Cube analysis
  `data`           --- Data and observation handling

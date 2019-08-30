@@ -26,7 +26,7 @@ class SpectrumAnalysisIACT:
     * outdir : `pathlib.Path`, str
         Output folder, None means no output
     * background : dict
-        Forwarded to `~gammapy.background.ReflectedRegionsBackgroundEstimator`
+        Forwarded to `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`
     * extraction : dict
         Forwarded to `~gammapy.spectrum.SpectrumExtraction`
     * fp_binning : `~astropy.units.Quantity`

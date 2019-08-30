@@ -24,7 +24,7 @@ class ReflectedRegionsFinder:
 
     If you want to make a
     background estimate for an IACT observation using the reflected regions
-    method, see also `~gammapy.background.ReflectedRegionsBackgroundEstimator`
+    method, see also `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`
 
     Parameters
     ----------
@@ -49,7 +49,7 @@ class ReflectedRegionsFinder:
     --------
     >>> from astropy.coordinates import SkyCoord, Angle
     >>> from regions import CircleSkyRegion
-    >>> from gammapy.background import ReflectedRegionsFinder
+    >>> from gammapy.spectrum import ReflectedRegionsFinder
     >>> pointing = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
     >>> target_position = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
     >>> theta = Angle(0.4, 'deg')
@@ -273,7 +273,7 @@ class ReflectedRegionsBackgroundEstimator:
     binsz : `~astropy.coordinates.Angle`
         Optional, bin size of the maps used to compute the regions, Default '0.01 deg'
     kwargs : dict
-        Forwarded to `~gammapy.background.ReflectedRegionsFinder`
+        Forwarded to `~gammapy.spectrum.ReflectedRegionsFinder`
     """
 
     def __init__(self, on_region, observations, binsz=0.01 * u.deg, **kwargs):

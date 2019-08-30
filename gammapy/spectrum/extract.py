@@ -21,7 +21,7 @@ class SpectrumExtraction:
     `~gammapy.spectrum.SpectrumObservation` from a
     `~gammapy.data.DataStoreObservation`. The background estimation is done
     beforehand, using e.g. the
-    `~gammapy.background.ReflectedRegionsBackgroundEstimator`. For point
+    `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`. For point
     sources analyzed with 'full containment' IRFs, a correction for PSF
     leakage out of the circular ON region can be applied.
 
@@ -35,7 +35,7 @@ class SpectrumExtraction:
         Observations to process
     bkg_estimate : `~gammapy.spectrum.BackgroundEstimate`
         Background estimate, e.g. of
-        `~gammapy.background.ReflectedRegionsBackgroundEstimator`
+        `~gammapy.spectrum.ReflectedRegionsBackgroundEstimator`
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
     e_true : `~astropy.units.Quantity`, optional
