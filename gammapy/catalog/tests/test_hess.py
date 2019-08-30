@@ -2,6 +2,7 @@
 import collections
 import pytest
 import numpy as np
+from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -13,6 +14,24 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+
+SOURCES = [
+    {
+        "idx": 33,
+        "name": "HESS J1713-397",
+        "str_ref_file": "data/hess_j1713-397.txt",
+    },
+    {
+        "idx": 54,
+        "name": "HESS J1825-137",
+        "str_ref_file": "data/hess_j1825-137.txt",
+    },
+    {
+        "idx": 76,
+        "name": "HESS J1930+188",
+        "str_ref_file": "data/hess_j1930+188.txt",
+    },
+]
 
 
 @pytest.fixture(scope="session")
@@ -89,18 +108,11 @@ class TestSourceCatalogObjectHGPS:
         assert "Component HGPSC 083:" in ss
 
     @staticmethod
-    def test_str(cat):
-        source = cat["HESS J1930+188"]
-        assert source.data["Spatial_Model"] == "Gaussian"
-        assert "Spatial components   : HGPSC 097" in str(source)
-
-        source = cat["HESS J1825-137"]
-        assert source.data["Spatial_Model"] == "3-Gaussian"
-        assert "Spatial components   : HGPSC 065, HGPSC 066, HGPSC 067" in str(source)
-
-        source = cat["HESS J1713-397"]
-        assert source.data["Spatial_Model"] == "Shell"
-        assert "Source name          : HESS J1713-397" in str(source)
+    @pytest.mark.parametrize("ref", SOURCES)
+    def test_str(cat, ref):
+        actual = str(cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
 
     @staticmethod
     def test_position(source):
