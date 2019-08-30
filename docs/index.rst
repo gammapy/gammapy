@@ -40,7 +40,6 @@ To get started with Gammapy, follow the installation and setup instructions in
     image/index
     cube/index
     detect/index
-    background/index
     spectrum/index
     time/index
 
