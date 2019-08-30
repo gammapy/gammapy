@@ -1,9 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.catalog import SourceCatalog2HWC
 from gammapy.utils.testing import requires_data, requires_dependency
+
+SOURCES = [
+    {
+        "idx": 0,
+        "name": "2HWC J0534+220",
+        "str_ref_file": "data/2hwc_j0534+220.txt",
+    },
+    {
+        "idx": 1,
+        "name": "2HWC J0631+169",
+        "str_ref_file": "data/2hwc_j0631+169.txt",
+    },
+]
 
 
 @pytest.fixture(scope="session")
@@ -37,14 +51,11 @@ class TestSourceCatalogObject2HWC:
         assert_allclose(position.dec.deg, 22.024, atol=1e-3)
 
     @staticmethod
-    def test_str(cat):
-        source = cat[0]
-        assert "2HWC J0534+220" in str(source)
-        assert "No second spectrum available for this source" in str(source)
-
-        source = cat[1]
-        assert "2HWC J0631+169" in str(source)
-        assert "Spectrum 1:" in str(source)
+    @pytest.mark.parametrize("ref", SOURCES)
+    def test_str(cat, ref):
+        actual = str(cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
 
     @staticmethod
     @requires_dependency("uncertainties")

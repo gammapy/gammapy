@@ -145,14 +145,14 @@ class Datasets:
     @classmethod
     def from_yaml(cls, filedata, filemodel):
         """De-serialize datasets from yaml and fits files
-    
+
         Parameters
         ----------
         fdatasets : str
             filepath to yaml datasets file
         filemodel : str
             filepath to yaml models file
-            
+
         Returns
         -------
         dataset : 'gammapy.utils.fitting.Datasets'
@@ -174,7 +174,7 @@ class Datasets:
         path : str
             path to write files
         selection : {"all", "simple"}
-            "simple" option reduce models parameters attributes displayed to only 
+            "simple" option reduce models parameters attributes displayed to only
             name, value, unit,frozen
         """
         from gammapy.utils.scripts import write_yaml

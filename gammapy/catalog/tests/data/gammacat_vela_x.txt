@@ -1,0 +1,101 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 36
+Common name     : Vela X
+Other names     : HESS J0835-455
+Location        : gal
+Class           : pwn
+
+TeVCat ID       : 86
+TeVCat 2 ID     : yVoFOS
+TeVCat name     : TeV J0835-456
+
+TGeVCat ID      : 37
+TGeVCat name    : TeV J0835-4536
+
+Discoverer      : hess
+Discovery date  : 2006-03
+Seen by         : hess
+Reference       : 2012A&A...548A..38A
+
+*** Position info ***
+
+SIMBAD:
+RA                   : 128.287 deg
+DEC                  : -45.190 deg
+GLON                 : 263.332 deg
+GLAT                 : -3.106 deg
+
+Measurement:
+RA                   : 128.750 deg
+DEC                  : -45.600 deg
+GLON                 : 263.856 deg
+GLAT                 : -3.089 deg
+Position error       : nan deg
+
+*** Morphology info ***
+
+Morphology model type     : gauss
+Sigma                     : 0.480 deg
+Sigma error               : 0.030 deg
+Sigma2                    : 0.360 deg
+Sigma2 error              : 0.030 deg
+Position angle            : 41.000 deg
+Position angle error      : 7.000 deg
+Position angle frame      : radec
+
+*** Spectral info ***
+
+Significance    : 27.900
+Livetime        : 53.100 h
+
+Spectrum type   : ecpl
+norm            : 1.46e-11 +- 8e-13 (stat) +- 3e-12 (sys) cm-2 s-1 TeV-1
+index           : 1.32 +- 0.06 (stat) +- 0.12 (sys)
+e_cut           : 14.0 +- 1.6 (stat) +- 2.6 (stat) TeV
+reference       : 1.0 TeV
+
+Energy range         : (0.75, nan) TeV
+theta                : 1.2 deg
+
+
+Derived fluxes:
+Spectral model norm (1 TeV)    : 1.36e-11 +- 7.53e-13 (stat) cm-2 s-1 TeV-1
+Integrated flux (>1 TeV)       : 2.1e-11 +- 1.97e-12 (stat) cm-2 s-1
+Integrated flux (>1 TeV)       : 101.425 +- 9.511 (% Crab)
+Integrated flux (1-10 TeV)     : 9.27e-11 +- 9.59e-12 (stat) erg cm-2 s-1
+
+*** Spectral points ***
+
+SED reference id          : 2012A&A...548A..38A
+Number of spectral points : 24
+Number of upper limits    : 0
+
+e_ref        dnde         dnde_errn       dnde_errp   
+ TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+------ --------------- --------------- ---------------
+ 0.719       1.055e-11       3.284e-12       3.280e-12
+ 0.868       1.304e-11       2.130e-12       2.130e-12
+ 1.051       9.211e-12       1.401e-12       1.399e-12
+ 1.274       8.515e-12       9.580e-13       9.610e-13
+ 1.546       5.378e-12       7.070e-13       7.090e-13
+ 1.877       4.455e-12       5.050e-13       5.070e-13
+ 2.275       3.754e-12       3.300e-13       3.340e-13
+ 2.759       2.418e-12       2.680e-13       2.700e-13
+ 3.352       1.605e-12       1.800e-13       1.830e-13
+ 4.078       1.445e-12       1.260e-13       1.290e-13
+ 4.956       9.240e-13       9.490e-14       9.700e-14
+ 6.008       7.348e-13       6.470e-14       6.710e-14
+ 7.271       3.863e-13       4.540e-14       4.700e-14
+ 8.795       3.579e-13       3.570e-14       3.750e-14
+10.650       1.696e-13       2.490e-14       2.590e-14
+12.910       1.549e-13       2.060e-14       2.160e-14
+15.650       6.695e-14       1.134e-14       1.230e-14
+18.880       2.105e-14       1.390e-14       1.320e-14
+22.620       3.279e-14       6.830e-15       7.510e-15
+26.870       3.026e-14       5.910e-15       6.660e-15
+31.610       1.861e-14       4.380e-15       5.120e-15
+36.970       5.653e-15       2.169e-15       2.917e-15
+43.080       3.479e-15       1.641e-15       2.410e-15
+52.370       1.002e-15       8.327e-16       1.615e-15

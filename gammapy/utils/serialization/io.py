@@ -203,7 +203,7 @@ def datasets_to_dict(datasets, path, selection, overwrite):
 
 class dict_to_datasets:
     """add models and backgrounds to datasets
-    
+
     Parameters
     ----------
     datasets : `~gammapy.utils.fitting.Datasets`
@@ -212,7 +212,7 @@ class dict_to_datasets:
         dict describing model components
     get_lists : bool
         get the datasets, models and backgrounds lists separetely (used to initialize FitManager)
-        
+
     """
 
     def __init__(self, data_list, components):

@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.time import Time
+from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import (
     SourceCatalog1FHL,
     SourceCatalog2FHL,
@@ -53,6 +54,7 @@ SOURCES_3FGL = [
     dict(
         idx=0,
         name="3FGL J0000.1+6545",
+        str_ref_file="data/3fgl_J0000.1+6545.txt",
         spec_type=PowerLaw,
         dnde=u.Quantity(1.4351261e-9, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.1356270e-10, "cm-2 s-1 GeV-1"),
@@ -60,6 +62,7 @@ SOURCES_3FGL = [
     dict(
         idx=4,
         name="3FGL J0001.4+2120",
+        str_ref_file="data/3fgl_J0001.4+2120.txt",
         spec_type=LogParabola,
         dnde=u.Quantity(8.3828599e-10, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.6713238e-10, "cm-2 s-1 GeV-1"),
@@ -67,6 +70,7 @@ SOURCES_3FGL = [
     dict(
         idx=55,
         name="3FGL J0023.4+0923",
+        str_ref_file="data/3fgl_J0023.4+0923.txt",
         spec_type=ExponentialCutoffPowerLaw3FGL,
         dnde=u.Quantity(1.8666925e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.2068837e-10, "cm-2 s-1 GeV-1"),
@@ -74,6 +78,7 @@ SOURCES_3FGL = [
     dict(
         idx=960,
         name="3FGL J0835.3-4510",
+        str_ref_file="data/3fgl_J0835.3-4510.txt",
         spec_type=PLSuperExpCutoff3FGL,
         dnde=u.Quantity(1.6547128794756733e-06, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.6621504e-11, "cm-2 s-1 MeV-1"),
@@ -139,21 +144,11 @@ class TestFermi3FGLObject:
         assert_allclose(position.ra.deg, 83.637199, atol=1e-3)
         assert_allclose(position.dec.deg, 22.024099, atol=1e-3)
 
-    def test_str(self):
-        ss = str(self.source)
-        assert "Source name          : 3FGL J0534.5+2201" in ss
-        assert "RA                   : 83.637 deg" in ss
-        assert "Detection significance (100 MeV - 300 GeV)    : 30.670" in ss
-        assert (
-            "Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1"
-            in ss
-        )
-
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
-    def test_str_all(self, ref):
-        ss = str(self.cat[ref["idx"]])
-        # TODO: put better assert on content. Maybe like for gamma-cat?
-        assert "Source name" in ss
+    def test_str(self, ref):
+        actual = str(self.cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
 
     def test_data_python_dict(self):
         data = self.source._data_python_dict
@@ -227,19 +222,14 @@ class TestFermi3FGLObject:
         assert table["flux_errn"].unit == "cm-2 s-1"
         assert_allclose(table["flux_errn"][0], 8.071e-08, rtol=1e-3)
 
-    @pytest.mark.parametrize(
-        "name",
-        [
+    def test_crab_alias(self):
+        for name in [
             "Crab",
             "3FGL J0534.5+2201",
             "1FHL J0534.5+2201",
-            "2FGL J0534.5+2201",
             "PSR J0534+2200",
-            "0FGL J0534.6+2201",
-        ],
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab"]) == str(self.cat[name])
+        ]:
+            assert self.cat[name].index == 621
 
 
 @requires_data()
@@ -333,13 +323,9 @@ class TestFermi3FHLObject:
         assert_allclose(self.source.data["Signif_Avg"], 168.64082)
 
     def test_str(self):
-        source = self.cat["3FHL J2301.9+5855e"]  # Picking an extended source
-        ss = str(source)
-        assert "Source name          : 3FHL J2301.9+5855e" in ss
-        assert "RA                   : 345.494 deg" in ss
-        assert "Significance (10 GeV - 2 TeV)    : 7.974" in ss
-        assert "Integral flux (10 GeV - 1 TeV)   : 1.46e-10 +- 2.57e-11 cm-2 s-1" in ss
-        assert "Model form       : Disk" in ss
+        actual = str(self.cat["3FHL J2301.9+5855e"])  # an extended source
+        expected = open(get_pkg_data_filename("data/3fhl_j2301.9+5855e.txt")).read()
+        assert actual == expected
 
     def test_data_python_dict(self):
         data = self.source._data_python_dict
@@ -382,11 +368,9 @@ class TestFermi3FHLObject:
         desired = [5.169889e-09, 2.245024e-09, 9.243175e-10, 2.758956e-10, 6.684021e-11]
         assert_allclose(flux_points.table["flux"].data, desired, rtol=1e-3)
 
-    @pytest.mark.parametrize(
-        "name", ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab Nebula"]) == str(self.cat[name])
+    def test_crab_alias(self):
+        for name in ["Crab Nebula", "3FHL J0534.5+2201", "3FGL J0534.5+2201i"]:
+            assert self.cat[name].index == 352
 
 
 @requires_data()
@@ -432,11 +416,14 @@ class TestSourceCatalog1FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 18
 
-    @pytest.mark.parametrize(
-        "name", ["Crab", "1FHL J0534.5+2201", "2FGL J0534.5+2201", "PSR J0534+2200"]
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab"]) == str(self.cat[name])
+    def test_crab_alias(self):
+        for name in [
+            "Crab",
+            "1FHL J0534.5+2201",
+            "2FGL J0534.5+2201",
+            "PSR J0534+2200",
+        ]:
+            assert self.cat[name].index == 116
 
 
 @requires_data()
@@ -452,11 +439,14 @@ class TestSourceCatalog2FHL:
         table = self.cat.extended_sources_table
         assert len(table) == 25
 
-    @pytest.mark.parametrize(
-        "name", ["Crab", "3FGL J0534.5+2201i", "1FHL J0534.5+2201", "TeV J0534+2200"]
-    )
-    def test_crab_alias(self, name):
-        assert str(self.cat["Crab"]) == str(self.cat[name])
+    def test_crab_alias(self):
+        for name in [
+            "Crab",
+            "3FGL J0534.5+2201i",
+            "1FHL J0534.5+2201",
+            "TeV J0534+2200",
+        ]:
+            assert self.cat[name].index == 85
 
 
 @requires_data()

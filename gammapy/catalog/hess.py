@@ -644,6 +644,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
         self._table_components = Table.read(filename, hdu="HGPS_GAUSS_COMPONENTS")
         self._table_associations = Table.read(filename, hdu="HGPS_ASSOCIATIONS")
+        self._table_associations["Separation"].format = ".6f"
         self._table_identifications = Table.read(filename, hdu="HGPS_IDENTIFICATIONS")
         self._table_large_scale_component = Table.read(
             filename, hdu="HGPS_LARGE_SCALE_COMPONENT"

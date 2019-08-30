@@ -1,0 +1,57 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 0
+Source name          : 3FGL J0000.1+6545 
+Extended name        :                   
+Associations         : 
+Other names          : 2FGL J2359.6+6543c
+Class                :      
+TeVCat flag          : No TeV association
+Other flags          : Source-to-background ratio less than 10% in highest band in which TS > 25. Background is integrated over the 68%-confidence area (pi*r_682) or 1 square degree, whichever is smaller.
+
+*** Position info ***
+
+RA                   : 0.038 deg
+DEC                  : 65.752 deg
+GLON                 : 117.694 deg
+GLAT                 : 3.403 deg
+
+Semimajor (68%)      : 0.0628 deg
+Semiminor (68%)      : 0.0481 deg
+Position angle (68%) : 41.03 deg
+Semimajor (95%)      : 0.1019 deg
+Semiminor (95%)      : 0.0780 deg
+Position angle (95%) : 41.03 deg
+ROI number           : 185
+
+*** Spectral info ***
+
+Spectrum type                                 : PowerLaw        
+Detection significance (100 MeV - 300 GeV)    : 6.813
+Significance curvature                        : 3.4
+Pivot energy                                  : 1159 MeV
+Power law spectral index                      : 2.411
+Spectral index                                : 2.411 +- 0.082
+Flux Density at pivot energy                  : 1.01e-12 +- 1.49e-13 cm-2 MeV-1 s-1
+Integral flux (1 - 100 GeV)                   : 1.02e-09 +- 1.58e-10 cm-2 s-1
+Energy flux (100 MeV - 100 GeV)               : 1.36e-11 +- 2.07e-12 erg cm-2 s-1
+
+*** Spectral points ***
+
+  e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul    sqrt_TS 
+   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)          
+--------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- ---------
+  100.000    300.000   1.808e-08   8.395e-09   8.236e-09     4.175e-12     1.938e-12     1.902e-12 False         nan           nan 2.1687548
+  300.000   1000.000   6.941e-09   1.353e-09   1.367e-09     4.544e-12     8.856e-13     8.948e-13 False         nan           nan  5.269711
+ 1000.000   3000.000   1.237e-09   2.251e-10   2.343e-10     2.855e-12     5.198e-13     5.411e-13 False         nan           nan   6.02224
+ 3000.000  10000.000   5.781e-11   4.045e-11   4.853e-11     3.784e-13     2.648e-13     3.177e-13 False         nan           nan 1.5091934
+10000.000 100000.000   2.840e-11   1.484e-11   1.915e-11     4.317e-13     2.257e-13     2.912e-13 False         nan           nan 2.4211686
+
+*** Lightcurve info ***
+
+Lightcurve measured in the energy band: 100 MeV - 100 GeV
+
+Variability index : 40.754
+
+No peak measured for this source.

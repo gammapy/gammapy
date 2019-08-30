@@ -1,0 +1,127 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 33
+Source name          : HESS J1713-397
+Analysis reference   : EXTERN
+Source class         : SNR
+Identified object    : RX J1713.7-3946
+Gamma-Cat id         : 96
+
+
+*** Info from map analysis ***
+
+RA                   :  258.355 deg = 17h13m25s
+DEC                  :  -39.771 deg = -39d46m16s
+GLON                 :  347.311 +/- nan deg
+GLAT                 :   -0.457 +/- nan deg
+Position Error (68%) : nan deg
+Position Error (95%) : nan deg
+ROI number           : -1
+Spatial model        : Shell
+Spatial components   : 
+TS                   : nan
+sqrt(TS)             : nan
+Size                 : 0.500 +/- nan (UL: nan) deg
+R70                  : nan deg
+RSpec                : 0.600 deg
+Total model excess   : nan
+Excess in RSpec      : nan
+Model Excess in RSpec : nan
+Background in RSpec  : nan
+Livetime             : 164.0 hours
+Energy threshold     : nan TeV
+Source flux (>1 TeV) : (16.879 +/- 0.824) x 10^-12 cm^-2 s^-1 = (74.69 +/- 3.64) % Crab
+
+Fluxes in RSpec (> 1 TeV):
+Map measurement                : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
+Source model                   : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
+Other component model          : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
+Large scale component model    : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
+Total model                    : nan x 10^-12 cm^-2 s^-1 =   nan % Crab
+Containment in RSpec                :   nan %
+Contamination in RSpec              :   nan %
+Flux correction (RSpec -> Total)    :   nan %
+Flux correction (Total -> RSpec)    :   nan %
+
+*** Info from spectral analysis ***
+
+Livetime             : 164.0 hours
+Energy range:        : 0.20 to 40.00 TeV
+Background           : nan
+Excess               : nan
+Spectral model       : ECPL
+TS ECPL over PL      : nan
+Best-fit model flux(> 1 TeV) : (16.879 +/- 0.824) x 10^-12 cm^-2 s^-1  = (74.69 +/- 3.64) % Crab
+Best-fit model energy flux(1 to 10 TeV) : (59.996 +/- 3.173) x 10^-12 erg cm^-2 s^-1
+Pivot energy         : nan TeV
+Flux at pivot energy : (nan +/- nan) x 10^-12 cm^-2 s^-1 TeV^-1  = (nan +/- nan) % Crab
+PL   Flux(> 1 TeV)   : (nan +/- nan) x 10^-12 cm^-2 s^-1  = (nan +/- nan) % Crab
+PL   Flux(@ 1 TeV)   : (nan +/- nan) x 10^-12 cm^-2 s^-1 TeV^-1  = (nan +/- nan) % Crab
+PL   Index           : nan +/- nan
+ECPL   Flux(@ 1 TeV) : (21.284 +/- 0.936) x 10^-12 cm^-2 s^-1 TeV^-1  = (94.18 +/- 2.67) % Crab
+ECPL   Flux(> 1 TeV) : (16.879 +/- 0.824) x 10^-12 cm^-2 s^-1  = (74.69 +/- 3.64) % Crab
+ECPL Index           : 2.06 +/- 0.02
+ECPL Lambda          : 0.078 +/- 0.007 TeV^-1
+ECPL E_cut           : 12.90 +/- 1.10 TeV
+
+*** Flux points info ***
+
+Number of flux points: 30
+Flux points table: 
+
+e_ref  e_min  e_max        dnde         dnde_errn       dnde_errp        dnde_ul     is_ul
+ TeV    TeV    TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)      
+------ ------ ------ --------------- --------------- --------------- --------------- -----
+ 0.230  0.210  0.250       5.239e-10       9.852e-11       9.852e-11             nan False
+ 0.270  0.250  0.290       3.416e-10       4.426e-11       4.426e-11             nan False
+ 0.320  0.290  0.350       2.609e-10       2.146e-11       2.146e-11             nan False
+ 0.380  0.350  0.410       1.694e-10       1.042e-11       1.042e-11             nan False
+ 0.450  0.410  0.490       1.221e-10       6.288e-12       6.288e-12             nan False
+ 0.530  0.490  0.580       7.510e-11       3.844e-12       3.844e-12             nan False
+ 0.630  0.580  0.690       5.394e-11       2.217e-12       2.217e-12             nan False
+ 0.750  0.690  0.810       3.784e-11       1.487e-12       1.487e-12             nan False
+ 0.890  0.810  0.960       2.529e-11       9.613e-13       9.613e-13             nan False
+ 1.050  0.960  1.140       1.664e-11       6.341e-13       6.341e-13             nan False
+ 1.250  1.140  1.360       1.206e-11       4.354e-13       4.354e-13             nan False
+ 1.480  1.360  1.610       9.261e-12       3.049e-13       3.049e-13             nan False
+ 1.760  1.610  1.910       6.025e-12       2.035e-13       2.035e-13             nan False
+ 2.080  1.910  2.260       4.458e-12       1.717e-13       1.717e-13             nan False
+ 2.470  2.260  2.680       2.680e-12       1.269e-13       1.269e-13             nan False
+ 2.930  2.680  3.180       1.847e-12       8.506e-14       8.506e-14             nan False
+ 3.470  3.180  3.770       1.343e-12       6.117e-14       6.117e-14             nan False
+ 4.120  3.770  4.470       8.788e-13       4.707e-14       4.707e-14             nan False
+ 4.880  4.470  5.290       6.552e-13       3.224e-14       3.224e-14             nan False
+ 5.790  5.290  6.280       4.357e-13       2.439e-14       2.439e-14             nan False
+ 6.860  6.280  7.440       2.666e-13       1.830e-14       1.830e-14             nan False
+ 8.140  7.440  8.830       1.639e-13       1.422e-14       1.422e-14             nan False
+ 9.650  8.830 10.470       9.518e-14       1.025e-14       1.025e-14             nan False
+11.440 10.470 12.410       7.535e-14       7.583e-15       7.583e-15             nan False
+13.560 12.410 14.710       2.831e-14       5.771e-15       5.771e-15             nan False
+16.080 14.710 17.450       2.334e-14       4.031e-15       4.031e-15             nan False
+19.990 17.450 22.530       5.967e-15       2.202e-15       2.202e-15             nan False
+24.620 22.530 26.710       5.849e-15       1.802e-15       1.802e-15             nan False
+29.190 26.710 31.670       2.044e-15       1.150e-15       1.150e-15             nan False
+34.610 31.670 37.550       2.647e-15       6.617e-16       6.617e-16             nan False
+
+*** Source associations info ***
+
+  Source_Name    Association_Catalog    Association_Name   Separation
+                                                              deg    
+---------------- ------------------- --------------------- ----------
+  HESS J1713-397                2FHL    2FHL J1713.5-3945e   0.029067
+  HESS J1713-397                2FHL     2FHL J1714.1-4012   0.457815
+  HESS J1713-397                3FGL    3FGL J1713.5-3945e   0.029067
+  HESS J1713-397                 SNR            G347.3-0.5   0.059676
+
+*** Source identification info ***
+
+Source_Name: HESS J1713-397
+Identified_Object: RX J1713.7-3946
+Class: SNR
+Evidence: Morphology
+Reference: 2004Natur.432...75A
+Distance_Reference: SNRCat
+Distance: 3.5 kpc
+Distance_Min: 1.0 kpc
+Distance_Max: 6.0 kpc
