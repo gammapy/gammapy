@@ -1,0 +1,58 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 960
+Source name          : 3FGL J0835.3-4510 
+Extended name        :                   
+Associations         : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
+Other names          : 0FGL J0835.4-4510, 1FGL J0835.3-4510, 2FGL J0835.3-4510, 1FHL J0835.3-4510
+Class                : PSR  
+TeVCat flag          : Small TeV source
+Other flags          : None
+
+*** Position info ***
+
+RA                   : 128.838 deg
+DEC                  : -45.178 deg
+GLON                 : 263.555 deg
+GLAT                 : -2.787 deg
+
+Semimajor (68%)      : 0.0032 deg
+Semiminor (68%)      : 0.0032 deg
+Position angle (68%) : 20.08 deg
+Semimajor (95%)      : 0.0052 deg
+Semiminor (95%)      : 0.0052 deg
+Position angle (95%) : 20.08 deg
+ROI number           : 88
+
+*** Spectral info ***
+
+Spectrum type                                 : PLSuperExpCutoff
+Detection significance (100 MeV - 300 GeV)    : 1048.959
+Significance curvature                        : 54.0
+Super-exponential cutoff index                : 0.47586068511009216 +- 0.008638832718133926
+Pivot energy                                  : 833 MeV
+Power law spectral index                      : 1.952
+Spectral index                                : 1.003 +- 0.018
+Flux Density at pivot energy                  : 2.33e-09 +- 4.4e-12 cm-2 MeV-1 s-1
+Integral flux (1 - 100 GeV)                   : 1.3e-06 +- 2.89e-09 cm-2 s-1
+Energy flux (100 MeV - 100 GeV)               : 8.93e-09 +- 1.73e-11 erg cm-2 s-1
+
+*** Spectral points ***
+
+  e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul    sqrt_TS  
+   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)           
+--------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- ----------
+  100.000    300.000   5.376e-06   2.615e-08   2.615e-08     1.372e-09     6.673e-12     6.673e-12 False         nan           nan  160.97115
+  300.000   1000.000   3.217e-06   7.406e-09   7.406e-09     2.292e-09     5.278e-12     5.278e-12 False         nan           nan  528.53766
+ 1000.000   3000.000   1.070e-06   3.075e-09   3.075e-09     2.525e-09     7.256e-12     7.256e-12 False         nan           nan   711.6319
+ 3000.000  10000.000   2.162e-07   1.255e-09   1.255e-09     1.321e-09     7.670e-12     7.670e-12 False         nan           nan  465.89935
+10000.000 100000.000   1.138e-08   2.888e-10   2.888e-10     1.055e-10     2.676e-12     2.676e-12 False         nan           nan 111.192406
+
+*** Lightcurve info ***
+
+Lightcurve measured in the energy band: 100 MeV - 100 GeV
+
+Variability index : 20.009
+
+No peak measured for this source.
