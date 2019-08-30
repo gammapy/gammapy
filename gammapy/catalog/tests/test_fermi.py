@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.time import Time
+from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import (
     SourceCatalog1FHL,
     SourceCatalog2FHL,
@@ -53,6 +54,7 @@ SOURCES_3FGL = [
     dict(
         idx=0,
         name="3FGL J0000.1+6545",
+        str_ref_file="data/3fgl_J0000.1+6545.txt",
         spec_type=PowerLaw,
         dnde=u.Quantity(1.4351261e-9, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.1356270e-10, "cm-2 s-1 GeV-1"),
@@ -60,6 +62,7 @@ SOURCES_3FGL = [
     dict(
         idx=4,
         name="3FGL J0001.4+2120",
+        str_ref_file="data/3fgl_J0001.4+2120.txt",
         spec_type=LogParabola,
         dnde=u.Quantity(8.3828599e-10, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.6713238e-10, "cm-2 s-1 GeV-1"),
@@ -67,6 +70,7 @@ SOURCES_3FGL = [
     dict(
         idx=55,
         name="3FGL J0023.4+0923",
+        str_ref_file="data/3fgl_J0023.4+0923.txt",
         spec_type=ExponentialCutoffPowerLaw3FGL,
         dnde=u.Quantity(1.8666925e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(2.2068837e-10, "cm-2 s-1 GeV-1"),
@@ -74,6 +78,7 @@ SOURCES_3FGL = [
     dict(
         idx=960,
         name="3FGL J0835.3-4510",
+        str_ref_file="data/3fgl_J0835.3-4510.txt",
         spec_type=PLSuperExpCutoff3FGL,
         dnde=u.Quantity(1.6547128794756733e-06, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.6621504e-11, "cm-2 s-1 MeV-1"),
@@ -139,21 +144,11 @@ class TestFermi3FGLObject:
         assert_allclose(position.ra.deg, 83.637199, atol=1e-3)
         assert_allclose(position.dec.deg, 22.024099, atol=1e-3)
 
-    def test_str(self):
-        ss = str(self.source)
-        assert "Source name          : 3FGL J0534.5+2201" in ss
-        assert "RA                   : 83.637 deg" in ss
-        assert "Detection significance (100 MeV - 300 GeV)    : 30.670" in ss
-        assert (
-            "Integral flux (1 - 100 GeV)                   : 1.57e-07 +- 1.08e-09 cm-2 s-1"
-            in ss
-        )
-
     @pytest.mark.parametrize("ref", SOURCES_3FGL, ids=lambda _: _["name"])
-    def test_str_all(self, ref):
-        ss = str(self.cat[ref["idx"]])
-        # TODO: put better assert on content. Maybe like for gamma-cat?
-        assert "Source name" in ss
+    def test_str(self, ref):
+        actual = str(self.cat[ref["idx"]])
+        expected = open(get_pkg_data_filename(ref["str_ref_file"])).read()
+        assert actual == expected
 
     def test_data_python_dict(self):
         data = self.source._data_python_dict
