@@ -1,0 +1,63 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 1500
+Source name          : 3FHL J2301.9+5855e
+Extended name        : FGES J2301.9+5855 
+Associations     : CTB 109, 3FGL J2301.2+5853
+ASSOC_PROB_BAY   : nan
+ASSOC_PROB_LR    : nan
+Class            : SNR    
+TeVCat flag      : No TeV association
+
+Significance (10 GeV - 2 TeV)    : 7.974
+Npred                            : 53.1
+
+*** Position info ***
+
+RA                   : 345.494 deg
+DEC                  : 58.920 deg
+GLON                 : 109.203 deg
+GLAT                 : -1.003 deg
+
+Semimajor (95%)      : nan deg
+Semiminor (95%)      : nan deg
+Position angle (95%) : nan deg
+ROI number           : 479
+*** Extended source information ***
+Model form       : Disk       
+Model semimajor  : 0.2488 deg
+Model semiminor  : 0.2488 deg
+Position angle   : 0.0000 deg
+Spatial function : RadialDisk 
+Spatial filename :                         
+
+
+*** Spectral fit info ***
+
+Spectrum type                    : PowerLaw   
+Significance curvature           : 1.0
+Power-law spectral index         : 2.006 +- 0.174
+Pivot energy                     : 30.2 GeV
+Flux Density at pivot energy     : 1.61e-12 +- 2.81e-13 cm-2 GeV-1 s-1
+Integral flux (10 GeV - 1 TeV)   : 1.46e-10 +- 2.57e-11 cm-2 s-1
+Energy flux (10 GeV - TeV)       : 1.08e-11 +- 2.9e-12 erg cm-2 s-1
+
+*** Spectral points ***
+
+ e_min   e_max       flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
+  GeV     GeV    1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+------- -------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
+ 10.000   20.000   7.545e-11   1.849e-11   2.071e-11     2.417e-12     5.923e-13     6.632e-13 False         nan           nan   5.446
+ 20.000   50.000   4.747e-11   1.296e-11   1.507e-11     2.534e-12     6.916e-13     8.042e-13 False         nan           nan   5.218
+ 50.000  150.000   2.058e-11   7.593e-12   9.512e-12     2.471e-12     9.117e-13     1.142e-12 False         nan           nan   4.016
+150.000  500.000   4.437e-12   3.076e-12   4.877e-12     1.522e-12     1.055e-12     1.673e-12 False         nan           nan   1.791
+500.000 2000.000   6.598e-17         nan   4.626e-12     7.039e-17           nan     4.936e-12  True   9.252e-12     9.872e-12   0.000
+
+*** Other info ***
+
+HEP Energy       : 364.828 GeV
+HEP Probability  : 0.849
+Bayesian Blocks  : 1 (not variable)
+Redshift         : nan
+NuPeak_obs       : nan Hz

@@ -323,13 +323,9 @@ class TestFermi3FHLObject:
         assert_allclose(self.source.data["Signif_Avg"], 168.64082)
 
     def test_str(self):
-        source = self.cat["3FHL J2301.9+5855e"]  # Picking an extended source
-        ss = str(source)
-        assert "Source name          : 3FHL J2301.9+5855e" in ss
-        assert "RA                   : 345.494 deg" in ss
-        assert "Significance (10 GeV - 2 TeV)    : 7.974" in ss
-        assert "Integral flux (10 GeV - 1 TeV)   : 1.46e-10 +- 2.57e-11 cm-2 s-1" in ss
-        assert "Model form       : Disk" in ss
+        actual = str(self.cat["3FHL J2301.9+5855e"])  # an extended source
+        expected = open(get_pkg_data_filename("data/3fhl_j2301.9+5855e.txt")).read()
+        assert actual == expected
 
     def test_data_python_dict(self):
         data = self.source._data_python_dict
