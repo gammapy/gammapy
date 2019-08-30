@@ -216,7 +216,7 @@ Task list
 =========
 This is a proposal for a list of tasks to implement the proposed changes:
 
- 1. Implement the ``sample`` method in ``gammapy.cube.MapDataset`` and add tests.
+ 1. Implement the ``sample`` method in ``gammapy.maps.Map`` and add tests.
  2. Implement the ``sample`` method in ``gammapy.time.models.LightCurveTableModel`` and ``gammapy.time.models.PhaseCurveTableModel`` and add tests.
  3. Implement the ``sample`` method in ``gammapy.cube.PSFMap`` and add tests.
  4. Implement the ``sample`` method in ``gammapy.cube.EdispMap`` and add tests.
