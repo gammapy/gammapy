@@ -1,0 +1,22 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 0
+Source name:    : 2HWC J0534+220
+
+*** Position info ***
+
+RA                   : 83.628 deg
+DEC                  : 22.024 deg
+GLON                 : 184.547 deg
+GLAT                 : -5.783 deg
+Position error       : 0.057 deg
+
+*** Spectral info ***
+
+Spectrum 0:
+Flux at 7 TeV        : 1.85e-13 +- 2.38e-15 cm-2 s-1 TeV-1
+Spectral index       : -2.580 +- 0.010
+Test radius          : 0.0 deg
+
+No second spectrum available for this source
