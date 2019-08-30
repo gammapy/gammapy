@@ -66,8 +66,9 @@ def cli_jupyter_strip(ctx):
     for path in ctx.obj["paths"]:
         rawnb = nbformat.read(str(path), as_version=nbformat.NO_CONVERT)
 
+        rawnb["metadata"].pop("pycharm", None)
+
         for cell in rawnb.cells:
-            cell["metadata"].pop("pycharm", None)
             if cell["cell_type"] == "code":
                 cell["execution_count"] = None
                 cell["outputs"] = []
