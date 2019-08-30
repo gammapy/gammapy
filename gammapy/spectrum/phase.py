@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from gammapy.data import EventList
-from gammapy.spectrum import BackgroundEstimate
+from .background_estimate import BackgroundEstimate
 
 __all__ = ["PhaseBackgroundEstimator"]
 
