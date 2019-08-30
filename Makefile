@@ -27,7 +27,8 @@ help:
 	@echo '     flake8             Run flake8 static code analysis'
 	@echo '     pylint             Run pylint static code analysis'
 	@echo '     pydocstyle         Run docstring checks'
-	@echo '     datasets-index     Create download dataset index json file'
+	@echo '     dataset-index      Create download dataset index json file'
+	@echo '     dataset-download   Download the latest data to the $GAMMAPY_DATA folder'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -142,7 +143,10 @@ pydocstyle:
 	--match='(?!test_).*\.py' \
 	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D205,D400,D401,D403,D410
 
-datasets-index:
+dataset-index:
 	python dev/datasets/make_dataset_index.py dataset-index
+
+dataset-download:
+	gammapy download datasets --out=$GAMMAPY_DATA
 
 # TODO: add test and code quality checks for `examples`
