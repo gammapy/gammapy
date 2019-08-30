@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from gammapy.background import AdaptiveRingBackgroundEstimator, RingBackgroundEstimator
+from gammapy.cube import AdaptiveRingBackgroundEstimator, RingBackgroundEstimator
 from gammapy.maps import WcsNDMap
 
 

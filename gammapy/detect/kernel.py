@@ -43,8 +43,8 @@ class KernelBackgroundEstimator:
 
     See Also
     --------
-    gammapy.background.RingBackgroundEstimator,
-    gammapy.background.AdaptiveRingBackgroundEstimator
+    gammapy.cube.RingBackgroundEstimator,
+    gammapy.cube.AdaptiveRingBackgroundEstimator
 
     Examples
     --------
