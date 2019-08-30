@@ -8,8 +8,8 @@ PIG 9 - Event Sampling
 
 * Author: Fabio Pintore, Andrea Giuliani, Axel Donath
 * Created: May 03, 2019
-* Accepted: 
-* Status: Draft
+* Accepted: August 30, 2019
+* Status: accepted
 * Discussion: `GH_2136`_
 
 Abstract
@@ -226,6 +226,10 @@ This is a proposal for a list of tasks to implement the proposed changes:
 
 Decision
 ========
+
+The PIG was discussed extensively in `GH_2136`_, the weekly Gammapy developer calls
+and coding sprint in person. After the deadline for final review expired on August 20,
+all remaining comments were addressed and the PIG was accepted on August 30, 2019.
 
 
 
