@@ -10,7 +10,7 @@ PIG 9 - Event Sampling
 * Created: May 03, 2019
 * Accepted: 
 * Status: Draft
-* Discussion: `GH 2136`_
+* Discussion: `GH_2136`_
 
 Abstract
 ========
@@ -37,7 +37,7 @@ dependency of the input source models factorizes.
 Sampling methods
 ====================
 Inverse CDF sampling (inverseCDF_) is an established method to sample from discrete
-probability mass functions. It is used by ``ASTRIsim`` (_astrisim), the event simulator 
+probability mass functions. It is used by ``ASTRIsim`` (astrisim_), the event simulator 
 of the AGILE collaboration. However it is not the method of choice for other existing 
 event samplers such as the the Fermi-LAT Science Tools (gtobsim) and CTOOLS (ctobssim). 
 The latter uses a combination of analytical sampling for models, where a solution is 
@@ -133,14 +133,14 @@ In more detail, ``sample`` starts a loop over the sources stored into the ``MapD
 model. Then, for each source, the ``src.compute_npred`` method will calculate the predicted 
 number of source counts ``npred``. In particular, it is important to note that 
 ``npred = exposure * flux``, where ``exposure`` is defined as ``effective_area * exposure_time``.
-``npred`` is therefore calculated irrespective of the energy dispersion of PSF.
+``npred`` is therefore calculated irrespective of the energy dispersion and of PSF.
 Then, ``npred`` will be the input of the ``npred.sample`` method. The latter uses a Poisson 
 distribution, with mean equal to the predicted counts, to estimate the random number of sampled 
 events.
 
 We propose to add a ``MapDataset.sample(n_events=, random_state=)`` method in ``~gamampy.cube.MapDataset`` 
 that will be the core of the sampling process. The ``sample`` is based on the 
-``~gammapy.utils.random.InverseCDFSampler`` class described in `GH 2229`_ . The output
+``~gammapy.utils.random.InverseCDFSampler`` class described in `GH_2229`_ . The output
 will be an ``~astropy.table.Table`` with columns: ``RA_TRUE``, ``DEC_TRUE`` and ``ENERGY_TRUE`` .
 
 Then, the time will be sampled independently using the temporal information stored into 
@@ -151,7 +151,7 @@ This method will take as input a lightcurve (or phasecurve) model and the GTIs (
 Tstart and Tstop) in the ``MapDataset`` object. Also in this case the ``InverseCDFSampler`` 
 class is the machine used to sample the time of the events. In the case the temporal 
 model is not provided, the time is uniformly sampled in the time range ``t_min`` and ``t_max``.
-The define a light-curve per model component the current ``SkyModel`` class will be
+To define a light-curve per model component, the current ``SkyModel`` class will be
 extended by a ``SkyModel(..., temporal_model=)``.
 
 The IRF correction can now be applied to sampled events. We propose to add a 
@@ -168,8 +168,8 @@ unique ``~astropy.table.Table`` with the columns:``RA``, ``DEC`` and ``ENERGY`` 
  
 The ``MapDatasetEventSampler`` can be used to sample background events using the 
 ``Map.sample(n_events=, random_state=)`` as well. The time of the events is sampled
-assuming a constant event rate. Finally, the IRF corrections are not applied to sampled
-events.
+assuming a constant event rate. Finally, the IRF corrections are not applied to background
+sampled events.
 
 
 Performance and precision evaluation
@@ -241,5 +241,5 @@ Decision
 .. _astrisim: http://www.iasf-milano.inaf.it/~giuliani/astrisim/
 .. _gamma-astro-data-formats: https://gamma-astro-data-formats.readthedocs.io/en/latest/events/events.html#mandatory-header-keywords
 .. _rej_sampl: https://en.wikipedia.org/wiki/Rejection_sampling
-.. _GH 2136:https://github.com/gammapy/gammapy/pull/2136
-.. _GH 2229:https://github.com/gammapy/gammapy/pull/2229
+.. _GH_2136: https://github.com/gammapy/gammapy/pull/2136
+.. _GH_2229: https://github.com/gammapy/gammapy/pull/2229
