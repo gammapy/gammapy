@@ -111,10 +111,7 @@ class Analysis:
                     ids.difference_update(selected_obs["OBS_ID"].tolist())
                 else:
                     ids.update(selected_obs["OBS_ID"].tolist())
-        if len(ids):
-            self.observations = datastore.get_observations(ids)
-        else:
-            self.observations = Observations()
+        self.observations = datastore.get_observations(ids)
 
     def reduce_data(self):
         """Produce reduced data sets."""
@@ -134,7 +131,7 @@ class Analysis:
             self._spectrum_extraction()
 
     def _spectrum_extraction(self):
-        # """Run all steps for the spectrum extraction."""
+        """Run all steps for the spectrum extraction."""
 
         on = self.settings["reduction"]["background"]["on_region"]
         on_lon = Angle(on["center"][0])

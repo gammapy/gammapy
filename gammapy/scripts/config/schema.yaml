@@ -200,5 +200,4 @@ properties:
     model:
         type: object
 
-
 required: [general, observations]

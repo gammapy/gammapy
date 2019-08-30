@@ -2,7 +2,7 @@
 import pytest
 from gammapy.scripts import Analysis
 from gammapy.utils.testing import requires_data
-
+import yaml
 
 def test_config():
     analysis = Analysis()
@@ -25,91 +25,71 @@ def test_validate_astropy_quantities():
     assert analysis.config.validate() is None
 
 
+def config_observations():
+    cfg = """
+      - observations:
+          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+          filters:
+          - filter_type: all
+        result: 4
+      - observations:
+          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+          filters:
+          - filter_type: ids
+            obs_ids:
+            - 110380
+        result: 1
+      - observations:
+          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+          filters:
+          - filter_type: all
+          - exclude: true
+            filter_type: ids
+            obs_ids:
+            - 110380
+        result: 3
+      - observations:
+          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+          filters:
+          - border: 0.5 deg
+            filter_type: sky_circle
+            frame: galactic
+            lat: 0 deg
+            lon: 0 deg
+            radius: 1 deg
+        result: 1
+      - observations:
+          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+          filters:
+          - filter_type: angle_box
+            value_range:
+            - 265 deg
+            - 268 deg
+            variable: RA_PNT
+        result: 2
+      - observations:
+          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+          filters:
+          - filter_type: par_box
+            value_range:
+            - 106000
+            - 107000
+            variable: EVENT_COUNT
+        result: 2
+      - observations:
+          datastore: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
+          filters:
+          - filter_type: par_value
+            par_value: Crab
+            variable: TARGET_NAME
+        result: 4
+    """
+    config_obs = yaml.safe_load(cfg)
+    return config_obs
+
+
 @requires_data()
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
-                "filters": [{"filter_type": "all"}],
-            },
-            "result": 4,
-        },
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
-                "filters": [{"filter_type": "ids", "obs_ids": [110380]}],
-            },
-            "result": 1,
-        },
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
-                "filters": [
-                    {"filter_type": "all"},
-                    {"filter_type": "ids", "obs_ids": [110380], "exclude": True},
-                ],
-            },
-            "result": 3,
-        },
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
-                "filters": [
-                    {
-                        "filter_type": "sky_circle",
-                        "frame": "galactic",
-                        "lon": "0 deg",
-                        "lat": "0 deg",
-                        "radius": "1 deg",
-                        "border": "0.5 deg",
-                    }
-                ],
-            },
-            "result": 1,
-        },
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
-                "filters": [
-                    {
-                        "filter_type": "angle_box",
-                        "variable": "RA_PNT",
-                        "value_range": ["265 deg", "268 deg"],
-                    }
-                ],
-            },
-            "result": 2,
-        },
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/cta-1dc/index/gps/",
-                "filters": [
-                    {
-                        "filter_type": "par_box",
-                        "variable": "EVENT_COUNT",
-                        "value_range": [106000, 107000],
-                    }
-                ],
-            },
-            "result": 2,
-        },
-        {
-            "observations": {
-                "datastore": "$GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz",
-                "filters": [
-                    {
-                        "filter_type": "par_value",
-                        "variable": "TARGET_NAME",
-                        "par_value": "Crab",
-                    }
-                ],
-            },
-            "result": 4,
-        },
-    ],
-)
+@pytest.mark.parametrize("config", config_observations())
 def test_get_observations(config):
     analysis = Analysis(config)
     analysis.get_observations()
