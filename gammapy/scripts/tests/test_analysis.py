@@ -2,7 +2,7 @@
 import pytest
 import yaml
 from gammapy.scripts import Analysis
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 from numpy.testing import assert_allclose
 
 
@@ -147,13 +147,21 @@ def config_analysis_data():
 
 
 @requires_data()
+@requires_dependency("sherpa")
 def test_analysis(config_analysis_data):
     analysis = Analysis(config_analysis_data)
     analysis.get_observations()
     analysis.reduce()
     analysis.fit()
+    analysis.get_flux_points()
     assert len(analysis.extraction.spectrum_observations) == 2
     assert_allclose(analysis.fit_result.total_stat, 82.5995, rtol=1e-2)
+    assert len(analysis.flux_points_dataset.data.table) == 4
+
+    dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
+    assert dnde.unit == "cm-2 s-1 TeV-1"
+    assert_allclose(dnde[0].value, 1.02113e-11, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 1.85784e-15, rtol=1e-2)
 
 
 def test_validate_astropy_quantities():

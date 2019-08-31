@@ -140,6 +140,8 @@ properties:
             containment_correction:
                 type: boolean
                 default: true
+            # compute_energy_threshold
+            #    method_lo="area_max", area_percent_lo=10.0
         if:
             properties:
                 data_reducer:
@@ -188,6 +190,7 @@ properties:
                     e_true:
                         type: array
                         items: {type: number}
+                # e_reco, e_true astropy.quantity [:]
 
     model:
         description: "Model serialized components and parameters."
@@ -209,6 +212,12 @@ properties:
 
     fit:
         type: object
+        # fit_range[0], fit_range[1] astropy.quantity [2]
+
+    flux:
+        type: object
+        # fp_binning astropy.quantity [:]
+
 
 required: [general, observations]
 

@@ -10,7 +10,12 @@ from astropy import units as u
 from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, WcsGeom
-from gammapy.spectrum import SpectrumExtraction
+from gammapy.spectrum import (
+    FluxPointsDataset,
+    FluxPointsEstimator,
+    SpectrumExtraction,
+    SpectrumDatasetOnOffStacker,
+)
 from gammapy.spectrum.models import SpectralModel
 from gammapy.utils.fitting import Fit
 from gammapy.utils.scripts import make_path, read_yaml
@@ -57,6 +62,7 @@ class Analysis:
         self.extraction = None
         self.model = None
         self.fit_result = None
+        self.flux_points_dataset = None
 
     @property
     def config(self):
@@ -76,7 +82,40 @@ class Analysis:
                 self._fit_reduced_data(optimize_opts=optimize_opts)
         else:
             # TODO
-            log.info("Data reduction available only for 1d spectrum.")
+            log.info("Fitting available only for 1D spectrum.")
+
+    def get_flux_points(self):
+        """Calculate flux points."""
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            if self._validate_fp_settings():
+                log.info("Calculating flux points.")
+                obs_stacker = SpectrumDatasetOnOffStacker(
+                    self.extraction.spectrum_observations
+                )
+                obs_stacker.run()
+                stacked = obs_stacker.stacked_obs
+                flux_model = self.model.copy()
+                flux_model.parameters.covariance = self.fit_result.parameters.covariance
+                stacked.model = flux_model
+
+                # TODO
+                #
+                from gammapy.utils.energy import energy_logspace
+                fp_binning = energy_logspace(1, 50, 5, "TeV")
+                # self.config["fp_binning"]
+
+                flux_point_estimator = FluxPointsEstimator(
+                    e_edges=fp_binning, datasets=stacked
+                )
+                fp = flux_point_estimator.run()
+                fp.table["is_ul"] = fp.table["ts"] < 4
+                self.flux_points_dataset = FluxPointsDataset(
+                    data=fp, model=self.model
+                )
+                cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+                log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
+        else:
+            log.info("Flux point estimation available only for 1D spectrum.")
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
@@ -139,10 +178,10 @@ class Analysis:
                 self._spectrum_extraction()
         else:
             # TODO
-            log.info("Data reduction available only for 1d spectrum.")
+            log.info("Data reduction available only for 1D spectrum.")
 
     # TODO
-    # add energy axes (e_reco, e_true) and maybe other eventual params and types
+    # add energy axes (e_reco, e_true) and other eventual params and types
     # validated and properly transformed in the jsonschema validation class
     def _create_geometry(self):
         """Create the geometry."""
@@ -155,7 +194,7 @@ class Analysis:
             for obs in self.extraction.spectrum_observations:
                 # TODO
                 # consider fit_range
-                #if fit_range is not None:
+                # if fit_range is not None:
                 #    obs.mask_fit = obs.counts.energy_mask(fit_range[0], fit_range[1])
                 obs.model = self.model
             log.info("Fitting data sets to model.")
@@ -170,11 +209,11 @@ class Analysis:
     def _read_model(self):
         """Read the model from settings."""
         # TODO
-        # make reading for generic spatial and spectral with multiple components
+        # make reading for generic spatial and spectral models with multiple components
         if self.settings["reduction"]["data_reducer"] == "1d":
             model_pars = self.settings["model"]["components"][0]["spectral"]
         else:
-            log.info("Model reading available only for a single component spectral model.")
+            log.info("Model reading available only for single component spectral model.")
             return False
         log.info("Reading model.")
         self.model = SpectralModel.from_dict(model_pars)
@@ -208,14 +247,14 @@ class Analysis:
             exclusion_region = Map.read(filename, **map_hdu)
             background_pars.update({"exclusion_mask": exclusion_region})
 
-        if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
+        if background_params["background_estimator"] == "reflected":
             self.background_estimator = ReflectedRegionsBackgroundEstimator(
                 observations=self.observations, **background_pars
             )
             self.background_estimator.run()
         else:
             # TODO
-            log.info("Background estimation available only for method of reflected regions.")
+            log.info("Background estimation available only for reflected regions method.")
             return False
 
         # TODO
@@ -224,7 +263,13 @@ class Analysis:
         # add also params for compute_energy_threshold
         extraction_pars = {}
         if "containment_correction" in self.settings["reduction"]:
-            extraction_pars.update({"containment_correction": self.settings["reduction"]["containment_correction"]})
+            extraction_pars.update(
+                {
+                    "containment_correction": self.settings["reduction"][
+                        "containment_correction"
+                    ]
+                }
+            )
 
         self.extraction = SpectrumExtraction(
             observations=self.observations,
@@ -235,7 +280,10 @@ class Analysis:
 
     def _validate_fitting_settings(self):
         """Validate settings before proceeding to fit."""
-        if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
+        if (
+            self.settings["reduction"]["background"]["background_estimator"]
+            == "reflected"
+        ):
             if self.extraction and len(self.extraction.spectrum_observations):
                 self.config.validate()
                 return True
@@ -245,7 +293,17 @@ class Analysis:
                 return False
         else:
             # TODO
-            log.info("Background estimation available only for method of reflected regions.")
+            log.info("Background estimation available only for reflected regions method.")
+            return False
+
+    def _validate_fp_settings(self):
+        """Validate settings before proceeding to flux points estimation."""
+        if self.fit_result:
+            self.config.validate()
+            return True
+        else:
+            log.info("No observations selected.")
+            log.info("Data reduction cannot be done.")
             return False
 
     def _validate_reduction_settings(self):
