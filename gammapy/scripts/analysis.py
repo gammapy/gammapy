@@ -7,10 +7,12 @@ import yaml
 from pathlib import Path
 from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
-from gammapy.background import ReflectedRegionsBackgroundEstimator
+from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, WcsGeom
 from gammapy.spectrum import SpectrumExtraction
+from gammapy.spectrum.models import SpectralModel
+from gammapy.utils.fitting import Fit
 from gammapy.utils.scripts import make_path, read_yaml
 from regions import CircleSkyRegion
 
@@ -53,6 +55,7 @@ class Analysis:
         self.geom = None
         self.background_estimator = None
         self.extraction = None
+        self.model = None
 
     @property
     def config(self):
@@ -63,6 +66,18 @@ class Analysis:
     def settings(self):
         """Configuration settings for the analysis session."""
         return self.config.settings
+
+    def fit_data(self):
+        """Fitting reduced data sets to model."""
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            if self._validate_fitting_settings():
+                self._read_model()
+
+
+
+        else:
+            # TODO
+            log.info("Data reduction available only for 1d spectrum.")
 
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
@@ -120,18 +135,41 @@ class Analysis:
 
     def reduce_data(self):
         """Produce reduced data sets."""
-        if self._validate_reduction_settings():
-            if self.settings["reduction"]["data_reducer"] == "1d":
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            if self._validate_reduction_settings():
                 self._spectrum_extraction()
-
-    def _validate_reduction_settings(self):
-        """Validate settings before proceeding to data reduction."""
-        if self.observations and len(self.observations):
-            self.config.validate()
-            return True
         else:
-            log.info("No observations selected.")
+            # TODO
+            log.info("Data reduction available only for 1d spectrum.")
+
+    # -- TODO
+    # add energy axes (e_reco, e_true) and maybe other eventual params and types
+    # validated and properly transformed in the jsonschema validation class
+    def _create_geometry(self):
+        geom_params = self.settings["geometry"]
+        self.geom = WcsGeom.create(**geom_params)
+
+    def _read_model(self):
+        """Read the model from settings."""
+        # TODO
+        # make reading for generic spatial and spectral with multiple components
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            model_pars = self.settings["model"]["components"][0]["spectral"]
+        else:
+            log.info("Model reading available only for a single component spectral model.")
             return False
+        log.info("Reading model.")
+        self.model = SpectralModel.from_dict(model_pars)
+        log.info(self.model)
+
+    def _set_logging(self):
+        """Set logging parameters for API."""
+        logging.basicConfig(**self.settings["general"]["logging"])
+        log.info(
+            "Setting logging parameters ({}).".format(
+                self.settings["general"]["logging"]["level"]
+            )
+        )
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
@@ -157,10 +195,15 @@ class Analysis:
                 observations=self.observations, **background_pars
             )
             self.background_estimator.run()
+        else:
+            # TODO
+            log.info("Background estimation available only for method of reflected regions.")
+            return False
 
         # TODO
         # add energy axes (e_reco, e_true) and maybe other eventual params and types
         # validated and properly transformed in the jsonschema validation class
+        # add also params for compute_energy_threshold
         extraction_pars = {}
         if "containment_correction" in self.settings["reduction"]:
             extraction_pars.update({"containment_correction": self.settings["reduction"]["containment_correction"]})
@@ -172,21 +215,30 @@ class Analysis:
         )
         self.extraction.run()
 
-    # -- TODO
-    # add energy axes (e_reco, e_true) and maybe other eventual params and types
-    # validated and properly transformed in the jsonschema validation class
-    def _create_geometry(self):
-        geom_params = self.settings["geometry"]
-        self.geom = WcsGeom.create(**geom_params)
+    def _validate_fitting_settings(self):
+        """Validate settings before proceeding to fit."""
+        if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
+            if self.extraction and len(self.extraction.spectrum_observations):
+                self.config.validate()
+                return True
+            else:
+                log.info("No spectrum observations extracted.")
+                log.info("Fit cannot be done.")
+                return False
+        else:
+            # TODO
+            log.info("Background estimation available only for method of reflected regions.")
+            return False
 
-    def _set_logging(self):
-        """Set logging parameters for API."""
-        logging.basicConfig(**self.settings["general"]["logging"])
-        log.info(
-            "Setting logging parameters ({}).".format(
-                self.settings["general"]["logging"]["level"]
-            )
-        )
+    def _validate_reduction_settings(self):
+        """Validate settings before proceeding to data reduction."""
+        if self.observations and len(self.observations):
+            self.config.validate()
+            return True
+        else:
+            log.info("No observations selected.")
+            log.info("Data reduction cannot be done.")
+            return False
 
 
 class Config:
@@ -216,14 +268,14 @@ class Config:
 
         self.validate()
 
+    def __str__(self):
+        """Display settings in pretty YAML format."""
+        return yaml.dump(self.settings)
+
     def validate(self):
         """Validate config parameters against schema."""
         schema = read_yaml(SCHEMA_FILE)
         jsonschema.validate(self.settings, schema, _gp_validator)
-
-    def view_settings(self):
-        """Display settings in pretty YAML format."""
-        print(yaml.dump(self.settings))
 
     def _update_settings(self, source, target):
         for key, val in source.items():
@@ -260,16 +312,21 @@ def extend_with_default(validator_class):
 
 def _astropy_quantity(_, instance):
     """Check a number may also be an astropy quantity."""
-    valid = jsonschema.Draft7Validator.TYPE_CHECKER.is_type(instance, "number")
     quantity = str(instance).split()
-    if not valid and len(quantity) >= 2:
+    if len(quantity) >= 2:
         value = str(instance).split()[0]
         unit = "".join(str(instance).split()[1:])
         try:
-            valid = u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
+            return u.Quantity(float(value), unit).unit.physical_type != "dimensionless"
         except ValueError:
             log.error("{} is not a valid astropy quantity.".format(str(instance)))
-    return valid
+            raise ValueError("Not a valid astropy quantity.")
+    else:
+        try:
+            number = float(instance)
+        except ValueError:
+            number = instance
+        return jsonschema.Draft7Validator.TYPE_CHECKER.is_type(number, "number")
 
 
 _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(

@@ -87,7 +87,6 @@ properties:
                         obs_ids:
                             type: array
                             items: {type: integer}
-                            default: []
                     required: [filter_type]
         required: [datastore]
 
@@ -191,6 +190,45 @@ properties:
                         items: {type: number}
 
     model:
+        description: "Model serialized components and parameters."
+        type: object
+        additionalProperties: false
+        properties:
+            components:
+                description: "List of component models."
+                type: array
+                items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                        name: {type: string}
+                        spatial:
+                            "$ref": "#/definitions/model_components"
+                        spectral:
+                            "$ref": "#/definitions/model_components"
+
+    fit:
         type: object
 
 required: [general, observations]
+
+definitions:
+    model_components:
+        type: object
+        additionalProperties: false
+        properties:
+            type: {type: string}
+            parameters:
+                type: array
+                items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                        name: {type: string}
+                        value: {type: number}
+                        factor: {type: number}
+                        scale: {type: number}
+                        unit: {type: string}
+                        min: {type: number}
+                        max: {type: number}
+                        frozen: {type: boolean}

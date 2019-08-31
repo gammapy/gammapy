@@ -4,6 +4,7 @@ from gammapy.scripts import Analysis
 from gammapy.utils.testing import requires_data
 import yaml
 
+
 def test_config():
     analysis = Analysis()
     assert analysis.settings["general"]["logging"]["level"] == "INFO"
@@ -12,17 +13,6 @@ def test_config():
     analysis = Analysis(config)
     assert analysis.settings["general"]["logging"]["level"] == "INFO"
     assert analysis.settings["general"]["outdir"] == "test"
-
-
-def test_validate_config():
-    analysis = Analysis()
-    assert analysis.config.validate() is None
-
-
-def test_validate_astropy_quantities():
-    config = {"observations": {"filters": [{"lon": "1 deg"}]}}
-    analysis = Analysis(config)
-    assert analysis.config.validate() is None
 
 
 def config_observations():
@@ -77,12 +67,12 @@ def config_observations():
             variable: EVENT_COUNT
         result: 2
       - observations:
-          datastore: $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
+          datastore: $GAMMAPY_DATA/hess-dl3-dr1
           filters:
           - filter_type: par_value
-            value_param: Crab
+            value_param: Off data
             variable: TARGET_NAME
-        result: 4
+        result: 45
     """
     config_obs = yaml.safe_load(cfg)
     return config_obs
@@ -94,3 +84,81 @@ def test_get_observations(config):
     analysis = Analysis(config)
     analysis.get_observations()
     assert len(analysis.observations) == config["result"]
+
+
+@pytest.fixture(scope="session")
+def config_analysis_data():
+    """Get test config, extend to several scenarios"""
+    cfg = """
+    general:
+      logging:
+        level: INFO
+      outdir: .
+    model:
+      components:
+      - name: source
+        spectral:
+          parameters:
+          - factor: 2.0
+            frozen: false
+            max: .nan
+            min: .nan
+            name: index
+            scale: 1.0
+            unit: ''
+            value: 2.0
+          - factor: 1.0e-12
+            frozen: false
+            max: .nan
+            min: .nan
+            name: amplitude
+            scale: 1.0
+            unit: cm-2 s-1 TeV-1
+            value: 5.0e-11
+          - factor: 1.0
+            frozen: true
+            max: .nan
+            min: .nan
+            name: reference
+            scale: 1.0
+            unit: TeV
+            value: 1.0
+          type: PowerLaw
+    observations:
+      datastore: $GAMMAPY_DATA/hess-dl3-dr1
+      filters:
+      - filter_type: ids
+        obs_ids: [23523, 23526]
+    reduction:
+      background:
+        background_estimator: reflected
+        on_region:
+          center:
+          - 83.633 deg
+          - 22.014 deg
+          frame: icrs
+          radius: 0.11 deg
+      containment_correction: true
+      data_reducer: 1d 
+    """
+    config_reduce_data = yaml.safe_load(cfg)
+    return config_reduce_data
+
+
+@requires_data()
+def test_reduce_data(config_analysis_data):
+    analysis = Analysis(config_analysis_data)
+    analysis.get_observations()
+    analysis.reduce_data()
+    assert len(analysis.extraction.spectrum_observations) == 2
+
+
+def test_validate_astropy_quantities():
+    config = {"observations": {"filters": [{"lon": "1 deg"}]}}
+    analysis = Analysis(config)
+    assert analysis.config.validate() is None
+
+
+def test_validate_config():
+    analysis = Analysis()
+    assert analysis.config.validate() is None
