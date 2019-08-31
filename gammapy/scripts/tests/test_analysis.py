@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import yaml
 from gammapy.scripts import Analysis
 from gammapy.utils.testing import requires_data
-import yaml
+from numpy.testing import assert_allclose
 
 
 def test_config():
@@ -141,16 +142,18 @@ def config_analysis_data():
       containment_correction: true
       data_reducer: 1d 
     """
-    config_reduce_data = yaml.safe_load(cfg)
-    return config_reduce_data
+    config_reduce = yaml.safe_load(cfg)
+    return config_reduce
 
 
 @requires_data()
-def test_reduce_data(config_analysis_data):
+def test_analysis(config_analysis_data):
     analysis = Analysis(config_analysis_data)
     analysis.get_observations()
-    analysis.reduce_data()
+    analysis.reduce()
+    analysis.fit()
     assert len(analysis.extraction.spectrum_observations) == 2
+    assert_allclose(analysis.fit_result.total_stat, 82.5995, rtol=1e-2)
 
 
 def test_validate_astropy_quantities():

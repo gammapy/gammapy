@@ -56,6 +56,7 @@ class Analysis:
         self.background_estimator = None
         self.extraction = None
         self.model = None
+        self.fit_result = None
 
     @property
     def config(self):
@@ -67,14 +68,12 @@ class Analysis:
         """Configuration settings for the analysis session."""
         return self.config.settings
 
-    def fit_data(self):
+    def fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
         if self.settings["reduction"]["data_reducer"] == "1d":
             if self._validate_fitting_settings():
                 self._read_model()
-
-
-
+                self._fit_reduced_data(optimize_opts=optimize_opts)
         else:
             # TODO
             log.info("Data reduction available only for 1d spectrum.")
@@ -82,7 +81,7 @@ class Analysis:
     def get_observations(self):
         """Fetch observations from the data store according to criteria defined in the configuration."""
         self.config.validate()
-
+        log.info("Fetching observations.")
         datastore_path = make_path(self.settings["observations"]["datastore"])
         if datastore_path.is_file():
             datastore = DataStore().from_file(datastore_path)
@@ -90,13 +89,12 @@ class Analysis:
             datastore = DataStore().from_dir(datastore_path)
         else:
             raise FileNotFoundError("Datastore {} not found.".format(datastore_path))
-
         ids = set()
         selection = dict()
         for criteria in self.settings["observations"]["filters"]:
             selected_obs = ObservationTable()
 
-            # -- TODO
+            # TODO
             # Reduce significantly the code.
             # This block would be handled by datastore.obs_table.select_observations
             # -
@@ -133,21 +131,41 @@ class Analysis:
         for obs in self.observations.list:
             log.info(obs)
 
-    def reduce_data(self):
+    def reduce(self):
         """Produce reduced data sets."""
         if self.settings["reduction"]["data_reducer"] == "1d":
             if self._validate_reduction_settings():
+                log.info("Reducing data sets.")
                 self._spectrum_extraction()
         else:
             # TODO
             log.info("Data reduction available only for 1d spectrum.")
 
-    # -- TODO
+    # TODO
     # add energy axes (e_reco, e_true) and maybe other eventual params and types
     # validated and properly transformed in the jsonschema validation class
     def _create_geometry(self):
+        """Create the geometry."""
         geom_params = self.settings["geometry"]
         self.geom = WcsGeom.create(**geom_params)
+
+    def _fit_reduced_data(self, optimize_opts=None):
+        """Fit data to models."""
+        if self.settings["reduction"]["data_reducer"] == "1d":
+            for obs in self.extraction.spectrum_observations:
+                # TODO
+                # consider fit_range
+                #if fit_range is not None:
+                #    obs.mask_fit = obs.counts.energy_mask(fit_range[0], fit_range[1])
+                obs.model = self.model
+            log.info("Fitting data sets to model.")
+            fit = Fit(self.extraction.spectrum_observations)
+            self.fit_result = fit.run(optimize_opts=optimize_opts)
+            log.info(self.fit_result)
+        else:
+            # TODO
+            log.info("Fitting available only for joint likelihood with 1D spectrum.")
+            return False
 
     def _read_model(self):
         """Read the model from settings."""
