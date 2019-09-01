@@ -216,7 +216,9 @@ class Analysis:
         if self.settings["reduction"]["data_reducer"] == "1d":
             model_pars = self.settings["model"]["components"][0]["spectral"]
         else:
-            log.info("Model reading available only for single component spectral model.")
+            log.info(
+                "Model reading available only for single component spectral model."
+            )
             return False
         log.info("Reading model.")
         self.model = SpectralModel.from_dict(model_pars)
@@ -257,7 +259,9 @@ class Analysis:
             self.background_estimator.run()
         else:
             # TODO
-            log.info("Background estimation available only for reflected regions method.")
+            log.info(
+                "Background estimation available only for reflected regions method."
+            )
             return False
         extraction_pars = {}
         if "containment_correction" in self.settings["reduction"]:
@@ -301,7 +305,9 @@ class Analysis:
                 return False
         else:
             # TODO
-            log.info("Background estimation available only for reflected regions method.")
+            log.info(
+                "Background estimation available only for reflected regions method."
+            )
             return False
 
     def _validate_fp_settings(self):

@@ -192,6 +192,7 @@ properties:
         description: "Model serialized components and parameters."
         type: object
         additionalProperties: false
+        default: {}
         properties:
             components:
                 description: "List of component models."
