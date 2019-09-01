@@ -141,6 +141,27 @@ def config_analysis_data():
           radius: 0.11 deg
       containment_correction: true
       data_reducer: 1d 
+    geometry:
+      axes:
+        e_reco:
+          lo_bnd: 0.01
+          hi_bnd: 100
+          nbin: 73
+          unit: TeV
+          interp: log
+        e_true:
+          lo_bnd: 0.01
+          hi_bnd: 315
+          nbin: 109
+          unit: TeV
+          interp: log
+    flux:
+      fp_binning:
+        lo_bnd: 1
+        hi_bnd: 10
+        nbin: 11
+        unit: TeV
+        interp: log      
     """
     config_reduce = yaml.safe_load(cfg)
     return config_reduce
@@ -155,13 +176,12 @@ def test_analysis(config_analysis_data):
     analysis.fit()
     analysis.get_flux_points()
     assert len(analysis.extraction.spectrum_observations) == 2
-    assert_allclose(analysis.fit_result.total_stat, 82.5995, rtol=1e-2)
-    assert len(analysis.flux_points_dataset.data.table) == 4
-
+    assert_allclose(analysis.fit_result.total_stat, 74.4244, rtol=1e-2)
+    assert len(analysis.flux_points_dataset.data.table) == 11
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
-    assert_allclose(dnde[0].value, 1.02113e-11, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 1.85784e-15, rtol=1e-2)
+    assert_allclose(dnde[0].value, 2.0443e-11, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 5.4386e-14, rtol=1e-2)
 
 
 def test_validate_astropy_quantities():

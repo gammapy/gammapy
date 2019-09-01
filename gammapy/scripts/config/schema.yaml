@@ -51,7 +51,7 @@ properties:
                 description: "Data store where to fetch observations."
                 type: string
                 default:
-                    $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
+                    $GAMMAPY_DATA/hess-dl3-dr1
             filters:
                 description: "Array of filters with selection criteria."
                 type: array
@@ -71,10 +71,9 @@ properties:
                                    ids,
                                    all]
                         frame:
-                            default: icrs
                             enum: [galactic, equatorial, icrs, fk5]
-                        lon: {type: number, default: 83.633 deg}
-                        lat: {type: number, default: 22.014 deg}
+                        lon: {type: number}
+                        lat: {type: number}
                         radius: {type: number}
                         border: {type: number}
                         variable: {type: string, default: TARGET_NAME}
@@ -140,8 +139,6 @@ properties:
             containment_correction:
                 type: boolean
                 default: true
-            # compute_energy_threshold
-            #    method_lo="area_max", area_percent_lo=10.0
         if:
             properties:
                 data_reducer:
@@ -154,6 +151,7 @@ properties:
     geometry:
         description: "Geometry where to perform data reduction and analysis."
         type: object
+        default: {}
         additionalProperties: false
         properties:
             binsz:
@@ -182,15 +180,13 @@ properties:
                 type: number
             axes:
                 type: object
+                default: {}
                 additionalProperties: false
                 properties:
                     e_reco:
-                        type: array
-                        items: {type: number}
+                        "$ref": "#/definitions/energy_axis"
                     e_true:
-                        type: array
-                        items: {type: number}
-                # e_reco, e_true astropy.quantity [:]
+                        "$ref": "#/definitions/energy_axis"
 
     model:
         description: "Model serialized components and parameters."
@@ -212,12 +208,24 @@ properties:
 
     fit:
         type: object
-        # fit_range[0], fit_range[1] astropy.quantity [2]
+        additionalProperties: false
+        default: {}
+        properties:
+            fit_range:
+                description: "Energy fit range with units."
+                type: object
+                additionalProperties: false
+                properties:
+                    min: {type: number}
+                    max: {type: number}
 
     flux:
         type: object
-        # fp_binning astropy.quantity [:]
-
+        additionalProperties: false
+        default: {}
+        properties:
+            fp_binning:
+                "$ref": "#/definitions/energy_axis"
 
 required: [general, observations]
 
@@ -241,3 +249,20 @@ definitions:
                         min: {type: number}
                         max: {type: number}
                         frozen: {type: boolean}
+    energy_axis:
+        type: object
+        additionalProperties: false
+        properties:
+            name: {type: string}
+            lo_bnd: {type: number}
+            hi_bnd: {type: number}
+            nbin: {type: number}
+            unit: {type: string}
+            interp:
+                type: string
+                enum: [lin, log, sqrt]
+            node_type:
+                type: string
+                enum: [edges, center]
+
+        required: [lo_bnd, hi_bnd, nbin, unit]

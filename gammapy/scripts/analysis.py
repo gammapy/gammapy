@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy import units as u
 from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 from gammapy.data import DataStore, ObservationTable
-from gammapy.maps import Map, WcsGeom
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
@@ -99,21 +99,22 @@ class Analysis:
                 stacked.model = flux_model
 
                 # TODO
-                #
-                from gammapy.utils.energy import energy_logspace
-                fp_binning = energy_logspace(1, 50, 5, "TeV")
-                # self.config["fp_binning"]
-
-                flux_point_estimator = FluxPointsEstimator(
-                    e_edges=fp_binning, datasets=stacked
-                )
-                fp = flux_point_estimator.run()
-                fp.table["is_ul"] = fp.table["ts"] < 4
-                self.flux_points_dataset = FluxPointsDataset(
-                    data=fp, model=self.model
-                )
-                cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-                log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
+                # fp_binning handled in jsonschema validation class
+                if "fp_binning" in self.settings["flux"]:
+                    ax_pars = self.settings["flux"]["fp_binning"]
+                    e_edges = MapAxis.from_bounds(**ax_pars).edges
+                    flux_point_estimator = FluxPointsEstimator(
+                        e_edges=e_edges, datasets=stacked
+                    )
+                    fp = flux_point_estimator.run()
+                    fp.table["is_ul"] = fp.table["ts"] < 4
+                    self.flux_points_dataset = FluxPointsDataset(
+                        data=fp, model=self.model
+                    )
+                    cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+                    log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
+                else:
+                    log.error("Parameter flux.fp_binning is missing.")
         else:
             log.info("Flux point estimation available only for 1D spectrum.")
 
@@ -181,7 +182,7 @@ class Analysis:
             log.info("Data reduction available only for 1D spectrum.")
 
     # TODO
-    # add energy axes (e_reco, e_true) and other eventual params and types
+    # add energy axes and other eventual params and types
     # validated and properly transformed in the jsonschema validation class
     def _create_geometry(self):
         """Create the geometry."""
@@ -193,9 +194,11 @@ class Analysis:
         if self.settings["reduction"]["data_reducer"] == "1d":
             for obs in self.extraction.spectrum_observations:
                 # TODO
-                # consider fit_range
-                # if fit_range is not None:
-                #    obs.mask_fit = obs.counts.energy_mask(fit_range[0], fit_range[1])
+                # fit_range handled in jsonschema validation class
+                if "fit_range" in self.settings["fit"]:
+                    e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
+                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["e_max"])
+                    obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
                 obs.model = self.model
             log.info("Fitting data sets to model.")
             fit = Fit(self.extraction.spectrum_observations)
@@ -256,11 +259,6 @@ class Analysis:
             # TODO
             log.info("Background estimation available only for reflected regions method.")
             return False
-
-        # TODO
-        # add energy axes (e_reco, e_true) and maybe other eventual params and types
-        # validated and properly transformed in the jsonschema validation class
-        # add also params for compute_energy_threshold
         extraction_pars = {}
         if "containment_correction" in self.settings["reduction"]:
             extraction_pars.update(
@@ -271,6 +269,16 @@ class Analysis:
                 }
             )
 
+        # TODO
+        # e_reco/e_true handled in jsonschema validation class
+        if "e_reco" in self.settings["geometry"]["axes"]:
+            ax_pars = self.settings["geometry"]["axes"]["e_reco"]
+            e_reco = MapAxis.from_bounds(**ax_pars).center
+            extraction_pars.update({"e_reco": e_reco})
+        if "e_true" in self.settings["geometry"]["axes"]:
+            ax_pars = self.settings["geometry"]["axes"]["e_true"]
+            e_true = MapAxis.from_bounds(**ax_pars).center
+            extraction_pars.update({"e_true": e_true})
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
