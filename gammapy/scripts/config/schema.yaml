@@ -40,6 +40,14 @@ properties:
                 dependencies:
                     filemode: [filename]
         required: [logging]
+#    general:
+#        logging:
+#            level: INFO
+#            filename: mylogfile.log
+#            filemode: w
+#            format: %(asctime)s - %(message)s
+#            datefmt: %d-%b-%y %H:%M:%S
+#        outdir: .
 
     observations:
         description: "Observations used in the analysis."
@@ -88,6 +96,23 @@ properties:
                             items: {type: integer}
                     required: [filter_type]
         required: [datastore]
+#    observations:
+#        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+#        filters:
+#            - filter_type: sky_circle, angle_box, par_box, par_value, ids, all
+#              frame: galactic, equatorial, icrs, fk5
+#              lon: 83.633 deg
+#              lat: 22.014 deg
+#              radius: 1 deg
+#              border: 1 deg
+#              variable: 1 TARGET_NAME
+#              value_param: Crab
+#              value_range:
+#              - 265 deg
+#              - 268 deg
+#              obs_ids: [23523, 23526]
+#           exclude: false
+#           inverted: false
 
     reduction:
         description: "Process of data reduction."
@@ -147,6 +172,19 @@ properties:
             properties:
                 background:
                     required: [background_estimator, on_region]
+#        background:
+#            background_estimator: reflected
+#            on_region:
+#                center:
+#                - 83.633 deg
+#                - 22.014 deg
+#                frame: icrs
+#                radius: 0.11 deg
+#            exclusion_mask
+#                filename: mask.fits
+#                hdu: IMAGE
+#        containment_correction: true
+#        data_reducer: 1d
 
     geometry:
         description: "Geometry where to perform data reduction and analysis."
@@ -187,6 +225,26 @@ properties:
                         "$ref": "#/definitions/energy_axis"
                     e_true:
                         "$ref": "#/definitions/energy_axis"
+#    geometry:
+#        binsz: 0.02
+#        coordsys: CEL, GAL
+#        proj: CAR
+#        skydir: [83, 22]
+#        width: [5, 5]
+#        offset_max: 3 deg
+#        axes:
+#            e_reco:
+#                lo_bnd: 0.01
+#                hi_bnd: 100
+#                nbin: 73
+#                unit: TeV
+#                interp: log
+#            e_true:
+#                lo_bnd: 0.01
+#                hi_bnd: 315
+#                nbin: 109
+#                unit: TeV
+#                interp: log
 
     model:
         description: "Model serialized components and parameters."
@@ -206,6 +264,63 @@ properties:
                             "$ref": "#/definitions/model_components"
                         spectral:
                             "$ref": "#/definitions/model_components"
+#    model:
+#        components:
+#            - name: source
+#              spatial:
+#                    parameters:
+#                    - factor: 0.0
+#                      frozen: false
+#                      max: 180.0
+#                      min: -180.0
+#                      name: lon_0
+#                      scale: 1.0
+#                      unit: deg
+#                      value: 0.0
+#                    - factor: 0.0
+#                      frozen: false
+#                      max: 90.0
+#                      min: -90.0
+#                      name: lat_0
+#                      scale: 1.0
+#                      unit: deg
+#                      value: 0.0
+#                    - factor: 1.0
+#                      frozen: false
+#                      max: .nan
+#                      min: 0.0
+#                      name: sigma
+#                      scale: 1.0
+#                      unit: deg
+#                      value: 1.0
+#                    type: SkyGaussian
+#              spectral:
+#                    parameters:
+#                    - factor: 2.0
+#                      frozen: false
+#                      max: .nan
+#                      min: .nan
+#                      name: index
+#                      scale: 1.0
+#                      unit: ''
+#                      value: 2.0
+#                    - factor: 1.0e-12
+#                      frozen: false
+#                      max: .nan
+#                      min: .nan
+#                      name: amplitude
+#                      scale: 1.0
+#                      unit: cm-2 s-1 TeV-1
+#                      value: 1.0e-12
+#                    - factor: 1.0
+#                      frozen: true
+#                      max: .nan
+#                      min: .nan
+#                      name: reference
+#                      scale: 1.0
+#                      unit: TeV
+#                      value: 1.0
+#                    type: PowerLaw
 
     fit:
         type: object
@@ -219,6 +334,10 @@ properties:
                 properties:
                     min: {type: number}
                     max: {type: number}
+#    fit:
+#        fit_range:
+#            min: 1 TeV
+#            max: 100 Tev
 
     flux:
         type: object
@@ -227,6 +346,13 @@ properties:
         properties:
             fp_binning:
                 "$ref": "#/definitions/energy_axis"
+#    flux:
+#        fp_binning:
+#            lo_bnd: 1
+#            hi_bnd: 10
+#            nbin: 11
+#            unit: TeV
+#            interp: log
 
 required: [general, observations]
 
