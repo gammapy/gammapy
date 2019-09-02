@@ -349,6 +349,13 @@ class Config:
         """Display settings in pretty YAML format."""
         return yaml.dump(self.settings)
 
+    @staticmethod
+    def get_template():
+        """Display template configuration settings."""
+        with open(SCHEMA_FILE) as f:
+            for line in filter(lambda line: line.startswith("#"), f):
+                print(line, end='')
+
     def validate(self):
         """Validate config parameters against schema."""
         schema = read_yaml(SCHEMA_FILE)

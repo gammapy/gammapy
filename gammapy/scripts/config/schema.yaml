@@ -105,7 +105,7 @@ properties:
 #              lat: 22.014 deg
 #              radius: 1 deg
 #              border: 1 deg
-#              variable: 1 TARGET_NAME
+#              variable: TARGET_NAME
 #              value_param: Crab
 #              value_range:
 #              - 265 deg
