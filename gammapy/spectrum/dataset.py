@@ -398,6 +398,62 @@ class SpectrumDataset(Dataset):
         )
 
 
+    def stack(self, other):
+        """Stack this dataset with another one.
+
+        Stacking is done in place.
+
+        Safe mask is applied to compute the stacked counts vector.
+        Counts outside each dataset safe mask are lost.
+
+        Parameters
+        ----------
+        other : `~gammapy.spectrum.SpectrumDataset`
+            the dataset to stack to the current one
+        """
+        if not isinstance(other, SpectrumDataset):
+            raise TypeError("Incompatible types for SpectrumDataset stacking")
+
+        if self.counts is not None and other.counts is not None:
+            self.counts.data[self.mask_safe] *= 0.
+            self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
+        else:
+            # TODO: Add warning
+            self.counts = None
+
+        if self.background is not None and other.background is not None:
+            self.background.data[self.mask_safe] *= 0.
+            self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
+        else:
+            self.background = None
+
+        self.safe_mask = np.logical_or(self.safe_mask, other.safe_mask)
+
+        irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
+                                 list_livetime=[self.livetime, other.livetime],
+                                 list_edisp=[self.edisp, other.edisp]
+                                 )
+
+        if self.aeff is not None and other.aeff is not None:
+            irf_stacker.stack_aeff()
+            self.aeff = irf_stacker.stacked_aeff
+            if self.edisp is not None and other.edisp is not None:
+                irf_stacker.stack_edisp()
+                self.edisp = irf_stacker.stacked_edisp
+            else:
+                self.edisp = None
+        else:
+            self.aeff = None
+            self.edisp = None
+
+
+        if self.gti is not None and other.gti is not None:
+            self.gti.stack(other.gti)
+            self.gti.union()
+        else:
+            # TODO : add warning if one gti is missing
+            self.gti = None
+
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
 
