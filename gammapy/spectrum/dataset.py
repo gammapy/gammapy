@@ -427,7 +427,7 @@ class SpectrumDataset(Dataset):
         else:
             self.background = None
 
-        self.safe_mask = np.logical_or(self.safe_mask, other.safe_mask)
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
 
         irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
                                  list_livetime=[self.livetime, other.livetime],

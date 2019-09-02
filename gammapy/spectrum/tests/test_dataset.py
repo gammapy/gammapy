@@ -136,6 +136,26 @@ class TestSpectrumDataset:
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
 
+    def test_spectrum_dataset_stack(self):
+        aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
+        edisp = EnergyDispersion.from_diagonal_response(
+            self.src.energy.edges, self.src.energy.edges
+        )
+        livetime = self.livetime
+        dataset1 = SpectrumDataset(
+            None, self.src, livetime, None, aeff, edisp, self.bkg
+        )
+
+        livetime2 = 0.5*livetime
+        aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], 2*aeff.data.data)
+        bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:],2*self.bkg.data)
+        dataset2 = SpectrumDataset(
+            None, self.src, livetime2, None, aeff2, edisp, bkg2
+        )
+
+        dataset1.stack(dataset2)
+
+        assert dataset1.counts.data.sum() == self.src.data.sum()*2
 
 class TestSpectrumOnOff:
     """ Test ON OFF SpectrumDataset"""
