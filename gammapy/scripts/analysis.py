@@ -189,7 +189,7 @@ class Analysis:
                 # TODO: fit_range handled in jsonschema validation class
                 if "fit_range" in self.settings["fit"]:
                     e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["e_max"])
+                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
                     obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
                 obs.model = self.model
             log.info("Fitting data sets to model.")
