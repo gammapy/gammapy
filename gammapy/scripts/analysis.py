@@ -350,11 +350,18 @@ class Config:
         return yaml.dump(self.settings)
 
     @staticmethod
-    def get_template():
+    def print_template(section=""):
         """Display template configuration settings."""
+        template = {}
         with open(SCHEMA_FILE) as f:
             for line in filter(lambda line: line.startswith("#"), f):
-                print(line, end='')
+                line = line.strip("\n")
+                if not line.startswith("#     "):
+                    keyword = line.strip("#")
+                    keyword = keyword.strip(":")
+                    keyword = keyword.strip()
+                if section == "" or section == keyword:
+                    print(line)
 
     def validate(self):
         """Validate config parameters against schema."""
