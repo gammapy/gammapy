@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import yaml
 from gammapy.scripts import Analysis
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 def test_config():
@@ -131,7 +131,7 @@ def config_analysis_data():
           frame: icrs
           radius: 0.11 deg
       containment_correction: true
-      data_reducer: 1d 
+      data_reducer: 1d
     geometry:
       axes:
         e_reco:
@@ -152,11 +152,12 @@ def config_analysis_data():
         hi_bnd: 10
         nbin: 11
         unit: TeV
-        interp: log      
+        interp: log
     """
     return yaml.safe_load(cfg)
 
 
+@requires_dependency("iminuit")
 @requires_data()
 def test_analysis(config_analysis_data):
     analysis = Analysis(config_analysis_data)
