@@ -96,63 +96,49 @@ def config_analysis_data():
         level: INFO
       outdir: .
     model:
-      components:
-      - name: source
-        spectral:
-          parameters:
-          - factor: 2.0
-            frozen: false
-            name: index
-            unit: ''
-            value: 2.0
-          - factor: 1.0e-12
-            frozen: false
-            name: amplitude
-            unit: cm-2 s-1 TeV-1
-            value: 5.0e-11
-          - factor: 1.0
-            frozen: true
-            name: reference
-            unit: TeV
-            value: 1.0
-          type: PowerLaw
+        components:
+        - name: source
+          spectral:
+                parameters:
+                - factor: 2.0
+                  frozen: false
+                  name: index
+                  unit: ''
+                  value: 2.0
+                - factor: 1.0e-12
+                  frozen: false
+                  name: amplitude
+                  unit: cm-2 s-1 TeV-1
+                  value: 1.0e-11
+                - factor: 1.0
+                  frozen: true
+                  name: reference
+                  unit: TeV
+                  value: 1.0
+                type: PowerLaw
     observations:
       datastore: $GAMMAPY_DATA/hess-dl3-dr1
       filters:
       - filter_type: ids
         obs_ids: [23523, 23526]
     reduction:
-      background:
-        background_estimator: reflected
-        on_region:
-          center:
-          - 83.633 deg
-          - 22.014 deg
-          frame: icrs
-          radius: 0.11 deg
-      containment_correction: true
-      data_reducer: 1d
-    geometry:
-      axes:
-        e_reco:
-          lo_bnd: 0.01
-          hi_bnd: 100
-          nbin: 73
-          unit: TeV
-          interp: log
-        e_true:
-          lo_bnd: 0.01
-          hi_bnd: 315
-          nbin: 109
-          unit: TeV
-          interp: log
+        background:
+            background_estimator: reflected
+            on_region:
+                center:
+                - 83.633 deg
+                - 22.014 deg
+                frame: icrs
+                radius: 0.11 deg
+        containment_correction: false
+        data_reducer: 1d 
     flux:
-      fp_binning:
-        lo_bnd: 1
-        hi_bnd: 10
-        nbin: 11
-        unit: TeV
-        interp: log
+        fp_binning:
+            lo_bnd: 1
+            hi_bnd: 50
+            nbin: 4
+            unit: TeV
+            interp: log      
     """
     return yaml.safe_load(cfg)
 
@@ -166,12 +152,12 @@ def test_analysis(config_analysis_data):
     analysis.fit()
     analysis.get_flux_points()
     assert len(analysis.extraction.spectrum_observations) == 2
-    assert_allclose(analysis.fit_result.total_stat, 74.4244, rtol=1e-2)
-    assert len(analysis.flux_points_dataset.data.table) == 11
+    assert_allclose(analysis.fit_result.total_stat, 79.8849, rtol=1e-2)
+    assert len(analysis.flux_points_dataset.data.table) == 4
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
-    assert_allclose(dnde[0].value, 2.0443e-11, rtol=1e-2)
-    assert_allclose(dnde[-1].value, 5.4386e-14, rtol=1e-2)
+    assert_allclose(dnde[0].value, 6.601518e-12, rtol=1e-2)
+    assert_allclose(dnde[-1].value, 1.295918e-15, rtol=1e-2)
 
 
 def test_validate_astropy_quantities():
