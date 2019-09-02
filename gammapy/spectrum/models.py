@@ -1228,9 +1228,12 @@ class TableModel(SpectralModel):
     tag = "TableModel"
 
     def __init__(
-        self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
+        self, energy, values, norm=1, tilt=0, reference="1 TeV", values_scale="log", interp_kwargs=None, meta=None
     ):
         self.norm = Parameter("norm", norm, unit="")
+        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
+        self.reference = Parameter("reference", reference, frozen=True)
+
         self.energy = energy
         self.values = values
         self.meta = dict() if meta is None else meta
@@ -1242,7 +1245,7 @@ class TableModel(SpectralModel):
             points=(energy,), values=values, **interp_kwargs
         )
 
-        super().__init__([self.norm])
+        super().__init__([self.norm, self.tilt, self.reference])
 
     @classmethod
     def read_xspec_model(cls, filename, param, **kwargs):
@@ -1313,10 +1316,11 @@ class TableModel(SpectralModel):
         values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2 sr-1", copy=False)
         return cls(energy=energy, values=values, **kwargs)
 
-    def evaluate(self, energy, norm):
+    def evaluate(self, energy, norm, tilt, reference):
         """Evaluate the model (static function)."""
         values = self._evaluate((energy,), clip=True)
-        return norm * values
+        tilt_factor = np.power(energy / reference, -tilt)
+        return norm * values * tilt_factor
 
     def to_dict(self, selection="all"):
         return {
