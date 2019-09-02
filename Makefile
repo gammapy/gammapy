@@ -23,9 +23,12 @@ help:
 	@echo ''
 	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
 	@echo '     black              Run black code formatter'
+	@echo '     isort              Run isort code formatter to sort imports'
 	@echo '     flake8             Run flake8 static code analysis'
 	@echo '     pylint             Run pylint static code analysis'
 	@echo '     pydocstyle         Run docstring checks'
+	@echo '     dataset-index      Create download dataset index json file'
+	@echo '     dataset-download   Download the latest data to the $GAMMAPY_DATA folder'
 	@echo ''
 	@echo ' Note that most things are done via `python setup.py`, we only use'
 	@echo ' make for things that are not trivial to execute via `setup.py`.'
@@ -89,7 +92,7 @@ test-scripts:
 clean-nb:
 	python -m gammapy jupyter --src=tutorials black
 	python -m gammapy jupyter --src=tutorials strip
-    
+
 docs-sphinx:
 	cd docs && python -m sphinx . _build/html -b html
 
@@ -114,8 +117,8 @@ isort:
 # Note: flake8 is very fast and almost never has false positives
 flake8:
 	flake8 $(PROJECT) \
-    --exclude=gammapy/extern,gammapy/conftest.py,__init__.py \
-    --ignore=E501
+	--exclude=gammapy/extern,gammapy/conftest.py,__init__.py \
+	--ignore=E501
 
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
@@ -138,5 +141,11 @@ pydocstyle:
 	--match-dir='^(?!extern).*' \
 	--match='(?!test_).*\.py' \
 	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D205,D400,D401,D403,D410
+
+dataset-index:
+	python dev/datasets/make_dataset_index.py dataset-index
+
+dataset-download:
+	gammapy download datasets --out=$GAMMAPY_DATA
 
 # TODO: add test and code quality checks for `examples`

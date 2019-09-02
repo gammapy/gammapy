@@ -15,7 +15,7 @@ BASE_URL = "https://gammapy.org/download"
 BASE_URL_DEV = "https://raw.githubusercontent.com/gammapy/gammapy/master/"
 DEV_NBS_YAML_URL = BASE_URL_DEV + "tutorials/notebooks.yaml"
 DEV_SCRIPTS_YAML_URL = BASE_URL_DEV + "examples/scripts.yaml"
-DEV_DATA_JSON_URL = BASE_URL_DEV + "dev/datasets/gammapy-data-index.json"
+DEV_DATA_JSON_LOCAL = "../../dev/datasets/gammapy-data-index.json"
 
 
 def parse_datafiles(datasearch, datasetslist):
@@ -117,17 +117,20 @@ class ComputePlan:
             if self.modetutorials and not self.listfiles:
                 sys.exit()
 
-            url = DEV_DATA_JSON_URL
             if self.release:
                 filename_datasets = "gammapy-" + self.release + "-data-index.json"
                 url = BASE_URL + "/data/" + filename_datasets
-
-            log.info("Reading {}".format(url))
-            try:
-                txt = urlopen(url).read().decode("utf-8")
-            except Exception as ex:
-                log.error(ex)
-                return False
+                log.info("Reading {}".format(url))
+                try:
+                    txt = urlopen(url).read().decode("utf-8")
+                except Exception as ex:
+                    log.error(ex)
+                    return False
+            else:
+                # for development just use the local index file
+                filename = (Path(__file__).parent / DEV_DATA_JSON_LOCAL).resolve()
+                log.info("Reading {}".format(filename))
+                txt = filename.read_text()
 
             datasets = json.loads(txt)
             datafound = {}
