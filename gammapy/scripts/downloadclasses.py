@@ -130,8 +130,7 @@ class ComputePlan:
                 # for development just use the local index file
                 filename = (Path(__file__).parent / DEV_DATA_JSON_LOCAL).resolve()
                 log.info("Reading {}".format(filename))
-                with filename.open(mode="r") as f:
-                    txt = f.read()
+                txt = filename.read_text()
 
             datasets = json.loads(txt)
             datafound = {}
