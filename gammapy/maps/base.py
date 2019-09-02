@@ -188,7 +188,7 @@ class Map(abc.ABC):
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod
-    def from_geom(geom, meta=None, data=None, map_type="auto", unit=""):
+    def from_geom(geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"):
         """Generate an empty map from a `MapGeom` instance.
 
         Parameters
@@ -226,7 +226,7 @@ class Map(abc.ABC):
                 raise ValueError("Unrecognized geom type.")
 
         cls_out = Map._get_map_cls(map_type)
-        return cls_out(geom, data=data, meta=meta, unit=unit)
+        return cls_out(geom, data=data, meta=meta, unit=unit, dtype=dtype)
 
     @staticmethod
     def from_hdulist(hdulist, hdu=None, hdu_bands=None, map_type="auto"):
