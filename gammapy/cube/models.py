@@ -315,6 +315,10 @@ class SkyDiffuseCube(SkyModelBase):
         Map template
     norm : float
         Norm parameter (multiplied with map values)
+    tilt : float
+        Additional tilt in the spectrum
+    reference : `~astropy.units.Quantity`
+        Reference energy of the tilt.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     interp_kwargs : dict
@@ -326,7 +330,7 @@ class SkyDiffuseCube(SkyModelBase):
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(
-        self, map, norm=1, meta=None, interp_kwargs=None, name="diffuse", filename=None
+        self, map, norm=1, tilt=0, reference="1 TeV", meta=None, interp_kwargs=None, name="diffuse", filename=None
     ):
         self.name = name
         axis = map.geom.get_axis_by_name("energy")
@@ -336,6 +340,8 @@ class SkyDiffuseCube(SkyModelBase):
 
         self.map = map
         self.norm = Parameter("norm", norm)
+        self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
+        self.reference = Parameter("reference", reference, frozen=True)
         self.meta = {} if meta is None else meta
         self.filename = filename
 
@@ -344,7 +350,7 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
 
-        super().__init__([self.norm])
+        super().__init__([self.norm, self.tilt, self.reference])
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -372,7 +378,13 @@ class SkyDiffuseCube(SkyModelBase):
         }
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         norm = self.parameters["norm"].value
-        return u.Quantity(norm * val, self.map.unit, copy=False)
+
+        tilt = self.parameters["tilt"].value
+        reference = self.parameters["reference"].quantity
+        tilt_factor = np.power((energy / reference).to(""), -tilt)
+
+        val = norm * val * tilt_factor.value
+        return u.Quantity(val, self.map.unit, copy=False)
 
     def copy(self):
         """A shallow copy"""
