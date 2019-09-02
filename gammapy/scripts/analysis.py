@@ -2,25 +2,24 @@
 """Session class driving the high-level interface API"""
 import copy
 import logging
+from pathlib import Path
+from astropy import units as u
+from astropy.coordinates import Angle, SkyCoord
+from regions import CircleSkyRegion
 import jsonschema
 import yaml
-from pathlib import Path
-from astropy.coordinates import Angle, SkyCoord
-from astropy import units as u
-from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
-    SpectrumExtraction,
+    ReflectedRegionsBackgroundEstimator,
     SpectrumDatasetOnOffStacker,
+    SpectrumExtraction,
 )
 from gammapy.spectrum.models import SpectralModel
 from gammapy.utils.fitting import Fit
 from gammapy.utils.scripts import make_path, read_yaml
-from regions import CircleSkyRegion
-
 
 __all__ = ["Analysis", "Config"]
 
@@ -40,16 +39,18 @@ class Analysis:
     Parameters
     ----------
     config : dict
-        A nested dictionary with configuration parameters and values.
+        Configuration options following `Config` schema
 
     Examples
     --------
-    Here are different examples on how to create an `Analysis` session class:
+    Example how to create an Analysis object:
 
     >>> from gammapy.scripts import Analysis
-    >>> settings = {"general": {"outdir": "myfolder"}}
-    >>> analysis = Analysis(settings)
-    >>> analysis = Analysis()
+    >>> config = {"general": {"outdir": "myfolder"}}
+    >>> analysis = Analysis(config)
+
+    TODO: show a working example of running an analysis.
+    Probably not here, but in high-level docs, linked to from class docstring.
     """
 
     def __init__(self, config=None):
@@ -81,7 +82,7 @@ class Analysis:
                 self._read_model()
                 self._fit_reduced_data(optimize_opts=optimize_opts)
         else:
-            # TODO
+            # TODO: raise error?
             log.info("Fitting available only for 1D spectrum.")
 
     def get_flux_points(self):
@@ -98,23 +99,19 @@ class Analysis:
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
 
-                # TODO
-                # fp_binning handled in jsonschema validation class
-                if "fp_binning" in self.settings["flux"]:
-                    ax_pars = self.settings["flux"]["fp_binning"]
-                    e_edges = MapAxis.from_bounds(**ax_pars).edges
-                    flux_point_estimator = FluxPointsEstimator(
-                        e_edges=e_edges, datasets=stacked
-                    )
-                    fp = flux_point_estimator.run()
-                    fp.table["is_ul"] = fp.table["ts"] < 4
-                    self.flux_points_dataset = FluxPointsDataset(
-                        data=fp, model=self.model
-                    )
-                    cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
-                    log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
-                else:
-                    log.error("Parameter flux.fp_binning is missing.")
+                # TODO: set default fp_binning handled in jsonschema validation class
+                if "fp_binning" not in self.settings["flux"]:
+                    raise RuntimeError()
+                ax_pars = self.settings["flux"]["fp_binning"]
+                e_edges = MapAxis.from_bounds(**ax_pars).edges
+                flux_point_estimator = FluxPointsEstimator(
+                    e_edges=e_edges, datasets=stacked
+                )
+                fp = flux_point_estimator.run()
+                fp.table["is_ul"] = fp.table["ts"] < 4
+                self.flux_points_dataset = FluxPointsDataset(data=fp, model=self.model)
+                cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
+                log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
         else:
             log.info("Flux point estimation available only for 1D spectrum.")
 
@@ -134,10 +131,8 @@ class Analysis:
         for criteria in self.settings["observations"]["filters"]:
             selected_obs = ObservationTable()
 
-            # TODO
-            # Reduce significantly the code.
+            # TODO: Reduce significantly the code.
             # This block would be handled by datastore.obs_table.select_observations
-            # -
             selection["type"] = criteria["filter_type"]
             for key, val in criteria.items():
                 if key in ["lon", "lat", "radius", "border"]:
@@ -159,8 +154,6 @@ class Analysis:
             if selection["type"] == "all":
                 obs_list = datastore.get_observations()
                 selected_obs["OBS_ID"] = [obs.obs_id for obs in obs_list.list]
-            # --
-            # -
 
             if len(selected_obs):
                 if "exclude" in criteria and criteria["exclude"]:
@@ -193,8 +186,7 @@ class Analysis:
         """Fit data to models."""
         if self.settings["reduction"]["data_reducer"] == "1d":
             for obs in self.extraction.spectrum_observations:
-                # TODO
-                # fit_range handled in jsonschema validation class
+                # TODO: fit_range handled in jsonschema validation class
                 if "fit_range" in self.settings["fit"]:
                     e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
                     e_max = u.Quantity(self.settings["fit"]["fit_range"]["e_max"])
@@ -205,14 +197,13 @@ class Analysis:
             self.fit_result = fit.run(optimize_opts=optimize_opts)
             log.info(self.fit_result)
         else:
-            # TODO
+            # TODO: implement or raise error
             log.info("Fitting available only for joint likelihood with 1D spectrum.")
             return False
 
     def _read_model(self):
         """Read the model from settings."""
-        # TODO
-        # make reading for generic spatial and spectral models with multiple components
+        # TODO: make reading for generic spatial and spectral models with multiple components
         if self.settings["reduction"]["data_reducer"] == "1d":
             model_pars = self.settings["model"]["components"][0]["spectral"]
         else:
@@ -228,9 +219,7 @@ class Analysis:
         """Set logging parameters for API."""
         logging.basicConfig(**self.settings["general"]["logging"])
         log.info(
-            "Setting logging parameters ({}).".format(
-                self.settings["general"]["logging"]["level"]
-            )
+            "Setting logging config: {!r}".format(self.settings["general"]["logging"])
         )
 
     def _spectrum_extraction(self):
@@ -250,7 +239,7 @@ class Analysis:
             if "hdu" in background_params["exclusion_mask"]:
                 map_hdu = {"hdu": background_params["exclusion_mask"]["hdu"]}
             exclusion_region = Map.read(filename, **map_hdu)
-            background_pars.update({"exclusion_mask": exclusion_region})
+            background_pars["exclusion_mask"] = exclusion_region
 
         if background_params["background_estimator"] == "reflected":
             self.background_estimator = ReflectedRegionsBackgroundEstimator(
@@ -258,31 +247,27 @@ class Analysis:
             )
             self.background_estimator.run()
         else:
-            # TODO
+            # TODO: raise or handle return
             log.info(
                 "Background estimation available only for reflected regions method."
             )
             return False
+
         extraction_pars = {}
         if "containment_correction" in self.settings["reduction"]:
-            extraction_pars.update(
-                {
-                    "containment_correction": self.settings["reduction"][
-                        "containment_correction"
-                    ]
-                }
-            )
+            extraction_pars["containment_correction"] = self.settings["reduction"][
+                "containment_correction"
+            ]
 
-        # TODO
-        # e_reco/e_true handled in jsonschema validation class
+        # TODO: e_reco/e_true handled in jsonschema validation class
         if "e_reco" in self.settings["geometry"]["axes"]:
             ax_pars = self.settings["geometry"]["axes"]["e_reco"]
             e_reco = MapAxis.from_bounds(**ax_pars).center
-            extraction_pars.update({"e_reco": e_reco})
+            extraction_pars["e_reco"] = e_reco
         if "e_true" in self.settings["geometry"]["axes"]:
             ax_pars = self.settings["geometry"]["axes"]["e_true"]
             e_true = MapAxis.from_bounds(**ax_pars).center
-            extraction_pars.update({"e_true": e_true})
+            extraction_pars["e_true"] = e_true
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,

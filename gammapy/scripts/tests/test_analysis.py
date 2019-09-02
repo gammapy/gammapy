@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from numpy.testing import assert_allclose
 import yaml
 from gammapy.scripts import Analysis
-from gammapy.utils.testing import requires_data, requires_dependency
-from numpy.testing import assert_allclose
+from gammapy.utils.testing import requires_data
 
 
 def test_config():
@@ -102,26 +102,17 @@ def config_analysis_data():
           parameters:
           - factor: 2.0
             frozen: false
-            max: .nan
-            min: .nan
             name: index
-            scale: 1.0
             unit: ''
             value: 2.0
           - factor: 1.0e-12
             frozen: false
-            max: .nan
-            min: .nan
             name: amplitude
-            scale: 1.0
             unit: cm-2 s-1 TeV-1
             value: 5.0e-11
           - factor: 1.0
             frozen: true
-            max: .nan
-            min: .nan
             name: reference
-            scale: 1.0
             unit: TeV
             value: 1.0
           type: PowerLaw
@@ -163,12 +154,10 @@ def config_analysis_data():
         unit: TeV
         interp: log      
     """
-    config_reduce = yaml.safe_load(cfg)
-    return config_reduce
+    return yaml.safe_load(cfg)
 
 
 @requires_data()
-@requires_dependency("sherpa")
 def test_analysis(config_analysis_data):
     analysis = Analysis(config_analysis_data)
     analysis.get_observations()
