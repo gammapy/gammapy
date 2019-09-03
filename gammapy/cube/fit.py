@@ -76,13 +76,13 @@ class MapDataset(Dataset):
 
         self.evaluation_mode = evaluation_mode
         self.likelihood_type = likelihood
-        self.model = model
         self.counts = counts
         self.exposure = exposure
         self.mask_fit = mask_fit
         self.psf = psf
         self.edisp = edisp
         self.background_model = background_model
+        self.model = model
         self.name = name
         self.mask_safe = mask_safe
         self.gti = gti
@@ -225,6 +225,7 @@ class MapDataset(Dataset):
                 evaluator = MapEvaluator(
                     component, evaluation_mode=self.evaluation_mode
                 )
+                evaluator.update(self.exposure, self.psf, self.edisp, self._geom)
                 evaluators.append(evaluator)
 
             self._evaluators = evaluators
@@ -256,7 +257,7 @@ class MapDataset(Dataset):
 
     def npred(self):
         """Predicted source and background counts (`~gammapy.maps.Map`)."""
-        npred_total = Map.from_geom(self._geom)
+        npred_total = Map.from_geom(self._geom, dtype=float)
 
         if self.background_model:
             npred_total += self.background_model.evaluate()
@@ -695,8 +696,8 @@ class MapEvaluator:
     @property
     def needs_update(self):
         """Check whether the model component has drifted away from its support."""
-        if self.exposure is None:
-            update = True
+        if self.evaluation_mode == "global" or self.model.evaluation_radius is None:
+            return False
         else:
             position = self.model.position
             separation = self._init_position.separation(position)
@@ -719,7 +720,7 @@ class MapEvaluator:
         """
         log.debug("Updating model evaluator")
         # cache current position of the model component
-        self._init_position = self.model.position
+
 
         # TODO: lookup correct Edisp for this component
         self.edisp = edisp
@@ -727,7 +728,8 @@ class MapEvaluator:
         # TODO: lookup correct PSF for this component
         self.psf = psf
 
-        if self.evaluation_mode == "local":
+        if self.evaluation_mode == "local" and self.model.evaluation_radius is not None:
+            self._init_position = self.model.position
             if psf is not None:
                 psf_width = np.max(psf.psf_kernel_map.geom.width)
             else:
