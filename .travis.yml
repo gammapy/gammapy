@@ -136,7 +136,7 @@ script:
 
     - if $FETCH_GAMMAPY_DATA; then
           export GAMMAPY_DATA=${HOME}/gammapy-data;
-          pip install .;
+          pip install -e .;
           gammapy download datasets --out=$GAMMAPY_DATA --silent;
       fi
 
