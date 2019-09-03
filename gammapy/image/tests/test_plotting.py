@@ -5,7 +5,6 @@ from gammapy.image import (
     MapPanelPlotter,
     colormap_hess,
     colormap_milagro,
-    illustrate_colormap,
 )
 from gammapy.maps import Map
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -64,9 +63,3 @@ def test_map_panel_plotter():
 
     with mpl_plot_check():
         plotter.plot(map_image)
-
-
-@requires_dependency("matplotlib")
-def test_illustrate_colormap():
-    with mpl_plot_check():
-        illustrate_colormap("afmhot")

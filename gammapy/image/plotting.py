@@ -8,8 +8,6 @@ __all__ = [
     "colormap_hess",
     "colormap_milagro",
     "MapPanelPlotter",
-    "illustrate_colormap",
-    "grayify_colormap",
 ]
 
 __doctest_requires__ = {("colormap_hess", "colormap_milagro"): ["matplotlib"]}
@@ -157,14 +155,6 @@ def colormap_hess(transition=0.5, width=0.1):
     >>> normalize = ImageNormalize(vmin=-5, vmax=15, stretch=LinearStretch())
     >>> transition = normalize(5)
     >>> cmap = colormap_hess(transition=transition)
-
-    .. plot::
-
-        from gammapy.image import colormap_hess, illustrate_colormap
-        import matplotlib.pyplot as plt
-        cmap = colormap_hess()
-        illustrate_colormap(cmap)
-        plt.show()
     """
     from matplotlib.colors import LinearSegmentedColormap
 
@@ -190,9 +180,8 @@ def colormap_hess(transition=0.5, width=0.1):
         (yellow, (1.0, 1.0, 0)),
         (white, "w"),
     ]
-    cmap = LinearSegmentedColormap.from_list(name="hess", colors=colors)
 
-    return cmap
+    return LinearSegmentedColormap.from_list(name="hess", colors=colors)
 
 
 def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
@@ -236,15 +225,6 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     >>> normalize = ImageNormalize(vmin=-5, vmax=15, stretch=LinearStretch())
     >>> transition = normalize(5)
     >>> cmap = colormap_milagro(transition=transition)
-
-
-    .. plot::
-
-        from gammapy.image import colormap_milagro, illustrate_colormap
-        import matplotlib.pyplot as plt
-        cmap = colormap_milagro()
-        illustrate_colormap(cmap)
-        plt.show()
     """
     from colorsys import hls_to_rgb
     from matplotlib.colors import LinearSegmentedColormap
@@ -266,95 +246,4 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     # Convert HLS values to RGB values
     rgb_colors = [(val, hls_to_rgb(*hls)) for (val, hls) in colors]
 
-    cmap = LinearSegmentedColormap.from_list(name="milagro", colors=rgb_colors)
-
-    return cmap
-
-
-def grayify_colormap(cmap, mode="hsp"):
-    """
-    Return a grayscale version a the colormap.
-
-    The grayscale conversion of the colormap is bases on perceived luminance of
-    the colors. For the conversion either the `~skimage.color.rgb2gray` or a
-    generic method called ``hsp`` [1]_ can be used. The code is loosely based
-    on [2]_.
-
-
-    Parameters
-    ----------
-    cmap : str or `~matplotlib.colors.Colormap`
-        Colormap name or instance.
-    mode : {'skimage, 'hsp'}
-        Grayscale conversion method. Either ``skimage`` or ``hsp``.
-
-    References
-    ----------
-    .. [1] Darel Rex Finley, "HSP Color Model - Alternative to HSV (HSB) and HSL"
-       http://alienryderflex.com/hsp.html
-
-    .. [2] Jake VanderPlas, "How Bad Is Your Colormap?"
-       https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/
-    """
-    import matplotlib.pyplot as plt
-
-    cmap = plt.cm.get_cmap(cmap)
-    colors = cmap(np.arange(cmap.N))
-
-    if mode == "skimage":
-        from skimage.color import rgb2gray  # pylint:disable=import-error
-
-        luminance = rgb2gray(np.array([colors]))
-        colors[:, :3] = luminance[0][:, np.newaxis]
-    elif mode == "hsp":
-        rgb_weight = [0.299, 0.587, 0.114]
-        luminance = np.sqrt(np.dot(colors[:, :3] ** 2, rgb_weight))
-        colors[:, :3] = luminance[:, np.newaxis]
-    else:
-        raise ValueError("Not a valid grayscale conversion mode.")
-
-    return cmap.from_list(cmap.name + "_grayscale", colors, cmap.N)
-
-
-def illustrate_colormap(cmap, **kwargs):
-    """
-    Illustrate color distribution and perceived luminance of a colormap.
-
-    Parameters
-    ----------
-    cmap : str or `~matplotlib.colors.Colormap`
-        Colormap name or instance.
-    kwargs : dicts
-        Keyword arguments passed to `grayify_colormap`.
-    """
-    import matplotlib.pyplot as plt
-
-    cmap = plt.cm.get_cmap(cmap)
-    cmap_gray = grayify_colormap(cmap, **kwargs)
-    figure = plt.figure(figsize=(8, 6))
-    v = np.linspace(0, 1, 4 * cmap.N)
-
-    # Show colormap
-    show_cmap = figure.add_axes([0.1, 0.8, 0.8, 0.1])
-    im = np.outer(np.ones(50), v)
-    show_cmap.imshow(im, cmap=cmap, origin="lower")
-    show_cmap.set_xticklabels([])
-    show_cmap.set_yticklabels([])
-    show_cmap.set_yticks([])
-    show_cmap.set_title("RGB & Gray Luminance of colormap {}".format(cmap.name))
-
-    # Show colormap gray
-    show_cmap_gray = figure.add_axes([0.1, 0.72, 0.8, 0.09])
-    show_cmap_gray.imshow(im, cmap=cmap_gray, origin="lower")
-    show_cmap_gray.set_xticklabels([])
-    show_cmap_gray.set_yticklabels([])
-    show_cmap_gray.set_yticks([])
-
-    # Plot RGB profiles
-    plot_rgb = figure.add_axes([0.1, 0.1, 0.8, 0.6])
-    plot_rgb.plot(v, [cmap(_)[0] for _ in v], color="#A60628")
-    plot_rgb.plot(v, [cmap(_)[1] for _ in v], color="#467821")
-    plot_rgb.plot(v, [cmap(_)[2] for _ in v], color="#348ABD")
-    plot_rgb.plot(v, [cmap_gray(_)[0] for _ in v], color="k", linestyle="--")
-    plot_rgb.set_ylabel("Luminance")
-    plot_rgb.set_ylim(-0.005, 1.005)
+    return LinearSegmentedColormap.from_list(name="milagro", colors=rgb_colors)
