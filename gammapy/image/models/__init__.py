@@ -3,11 +3,11 @@
 from .core import *
 
 spatial_models = {
-            "SkyDiffuseMap": SkyDiffuseMap,
-            "SkyDisk": SkyDisk,
-            "SkyEllipse": SkyEllipse,
-            "SkyGaussian": SkyGaussian,
-            "SkyGaussianElongated": SkyGaussianElongated,
-            "SkyPointSource": SkyPointSource,
-            "SkyShell": SkyShell,
-            }
+    "SkyDiffuseMap": SkyDiffuseMap,
+    "SkyDisk": SkyDisk,
+    "SkyEllipse": SkyEllipse,
+    "SkyGaussian": SkyGaussian,
+    "SkyGaussianElongated": SkyGaussianElongated,
+    "SkyPointSource": SkyPointSource,
+    "SkyShell": SkyShell,
+}

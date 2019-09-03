@@ -150,7 +150,7 @@ class SkyGaussian(SkySpatialModel):
         )
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.sigma = Parameter("sigma", Angle(sigma), min=0)
-        self.tag= "SkyGaussian"
+        self.tag = "SkyGaussian"
         super().__init__([self.lon_0, self.lat_0, self.sigma])
 
     @property
@@ -261,7 +261,7 @@ class SkyGaussianElongated(SkySpatialModel):
         self.sigma_semi_major = Parameter("sigma_semi_major", Angle(sigma_semi_major))
         self.e = Parameter("e", e, min=0, max=1)
         self.phi = Parameter("phi", Angle(phi))
-        self.tag="SkyGaussianElongated"
+        self.tag = "SkyGaussianElongated"
 
         super().__init__(
             [self.lon_0, self.lat_0, self.sigma_semi_major, self.e, self.phi]
@@ -371,7 +371,7 @@ class SkyDisk(SkySpatialModel):
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.r_0 = Parameter("r_0", Angle(r_0))
         self.edge = Parameter("edge", Angle(edge), min=0.01, frozen=True)
-        self.tag="SkyDisk"
+        self.tag = "SkyDisk"
 
         super().__init__([self.lon_0, self.lat_0, self.r_0, self.edge])
 
@@ -488,7 +488,7 @@ class SkyEllipse(SkySpatialModel):
         self.e = Parameter("e", e, min=0, max=1)
         self.phi = Parameter("phi", Angle(phi))
         self.edge = Parameter("edge", Angle(edge), frozen=True, min=0.01)
-        self.tag="SkyEllipse"
+        self.tag = "SkyEllipse"
         super().__init__(
             [self.lon_0, self.lat_0, self.semi_major, self.e, self.phi, self.edge]
         )

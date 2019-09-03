@@ -14,7 +14,7 @@ class Model:
     def __init__(self, params=None):
         self._parameters = Parameters(params)
         self.tag = self.__class__.__name__
-        
+
     @property
     def parameters(self):
         """Parameters (`~gammapy.utils.modeling.Parameters`)"""
@@ -49,7 +49,10 @@ class Model:
 
     @classmethod
     def from_dict(cls, data):
-        params = {x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"]) for x in data["parameters"]}
+        params = {
+            x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"])
+            for x in data["parameters"]
+        }
         init = cls(**params)
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:

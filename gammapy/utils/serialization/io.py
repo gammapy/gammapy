@@ -102,27 +102,27 @@ def dict_to_models(data, link=True):
     return models
 
 
-
 def _dict_to_skymodel(model):
     if "spatial" in model and model["spatial"]["type"] in spatial_models:
-        model_class= spatial_models[model["spatial"]["type"]]
+        model_class = spatial_models[model["spatial"]["type"]]
         spatial_model = model_class.from_dict(model["spatial"])
     else:
         spatial_model = None
     if "spectral" in model and model["spectral"]["type"] in spectral_models:
-        model_class= spectral_models[(model["spectral"]["type"])]
+        model_class = spectral_models[(model["spectral"]["type"])]
         spectral_model = model_class.from_dict(model["spectral"])
     else:
         spectral_model = None
-#    TODO add temporal model to SkyModel once applicable
-#    if "temporal" in model and model["temporal"]["type"] in temporal_models:
-#        model_class= tenporal_models[(model["tenporal"]["type"])]
-#        temporal_model = model_class.from_dict( model["temporal"])
-#    else:
-#        temporal_model = None    
+    #    TODO add temporal model to SkyModel once applicable
+    #    if "temporal" in model and model["temporal"]["type"] in temporal_models:
+    #        model_class= tenporal_models[(model["tenporal"]["type"])]
+    #        temporal_model = model_class.from_dict( model["temporal"])
+    #    else:
+    #        temporal_model = None
     return SkyModel(
         name=model["name"], spatial_model=spatial_model, spectral_model=spectral_model
     )
+
 
 def _link_shared_parameters(models):
     shared_register = {}

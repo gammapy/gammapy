@@ -30,8 +30,9 @@ __all__ = [
     "SpectralGaussian",
     "SpectralLogGaussian",
     "ScaleModel",
-    "spectral_models"
+    "spectral_models",
 ]
+
 
 class SpectralModel(Model):
     """Spectral model base class.
@@ -437,7 +438,7 @@ class ConstantModel(SpectralModel):
 
     def __init__(self, const):
         self.const = Parameter("const", const)
-        self.tag = "ConstantModel" 
+        self.tag = "ConstantModel"
         super().__init__([self.const])
 
     @staticmethod
@@ -1548,7 +1549,7 @@ class AbsorbedSpectralModel(SpectralModel):
         self.parameter = parameter
         self.parameter_name = parameter_name
         self.tag = AbsorbedSpectralModel
-        
+
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
@@ -1653,7 +1654,7 @@ class NaimaModel(SpectralModel):
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
         self.tag = "NaimaModel"
-        
+
         # This ensures the support of naima.models.TableModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
@@ -1852,7 +1853,7 @@ class SpectralLogGaussian(SpectralModel):
         self.mean = Parameter("mean", mean)
         self.sigma = Parameter("sigma", sigma)
         self.tag = "SpectralLogGaussian"
-        
+
         super().__init__([self.norm, self.mean, self.sigma])
 
     @staticmethod
@@ -1864,21 +1865,21 @@ class SpectralLogGaussian(SpectralModel):
         )
 
 
-spectral_models = {           
-            "ConstantModel": ConstantModel,
-            "PowerLaw": PowerLaw,
-            "PowerLaw2": PowerLaw2,
-            "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
-            "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
-            "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
-            "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
-            "LogParabola": LogParabola,
-            "TableModel": TableModel,
-            "SpectralGaussian": SpectralGaussian,
-            "SpectralLogGaussian": SpectralLogGaussian,
-            "ScaleModel": ScaleModel,
-#               TODO: add support for these models writing their .from_dict()
-#                {"AbsorbedSpectralModel":AbsorbedSpectralModel
-#                {"Absorption":Absorption,
-#                {"NaimaModel":NaimaModel,
-            }
+spectral_models = {
+    "ConstantModel": ConstantModel,
+    "PowerLaw": PowerLaw,
+    "PowerLaw2": PowerLaw2,
+    "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
+    "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
+    "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
+    "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
+    "LogParabola": LogParabola,
+    "TableModel": TableModel,
+    "SpectralGaussian": SpectralGaussian,
+    "SpectralLogGaussian": SpectralLogGaussian,
+    "ScaleModel": ScaleModel,
+}
+# TODO: add support for these models writing their .from_dict()
+# "AbsorbedSpectralModel":AbsorbedSpectralModel,
+# "Absorption":Absorption,
+# "NaimaModel":NaimaModel,
