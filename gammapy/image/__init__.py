@@ -4,4 +4,3 @@ from .asmooth import *
 from .measure import *
 from .plotting import *
 from .profile import *
-from .utils import *
