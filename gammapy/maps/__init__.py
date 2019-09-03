@@ -8,6 +8,7 @@ from .hpxnd import *
 from .hpxsparse import *
 from .image_utils import *
 from .measure import *
+from .plotting import *
 from .profile import *
 from .sparse import *
 from .wcs import *

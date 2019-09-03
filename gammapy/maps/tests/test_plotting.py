@@ -1,12 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from gammapy.image import (
-    MapPanelPlotter,
-    colormap_hess,
-    colormap_milagro,
-)
-from gammapy.maps import Map
+from gammapy.maps import Map, MapPanelPlotter, colormap_hess, colormap_milagro
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 

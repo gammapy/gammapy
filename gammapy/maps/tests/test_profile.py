@@ -5,12 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
-from gammapy.maps import (
-    ImageProfile,
-    ImageProfileEstimator,
-    WcsGeom,
-    WcsNDMap,
-)
+from gammapy.maps import ImageProfile, ImageProfileEstimator, WcsGeom, WcsNDMap
 from gammapy.maps.profile import compute_binning
 from gammapy.utils.testing import (
     assert_quantity_allclose,

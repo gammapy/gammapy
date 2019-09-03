@@ -4,11 +4,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import Angle
 
-__all__ = [
-    "colormap_hess",
-    "colormap_milagro",
-    "MapPanelPlotter",
-]
+__all__ = ["colormap_hess", "colormap_milagro", "MapPanelPlotter"]
 
 __doctest_requires__ = {("colormap_hess", "colormap_milagro"): ["matplotlib"]}
 
@@ -149,7 +145,7 @@ def colormap_hess(transition=0.5, width=0.1):
 
     Examples
     --------
-    >>> from gammapy.image import colormap_hess
+    >>> from gammapy.maps import colormap_hess
     >>> from astropy.visualization.mpl_normalize import ImageNormalize
     >>> from astropy.visualization import LinearStretch
     >>> normalize = ImageNormalize(vmin=-5, vmax=15, stretch=LinearStretch())
@@ -219,7 +215,7 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
 
     Examples
     --------
-    >>> from gammapy.image import colormap_milagro
+    >>> from gammapy.maps import colormap_milagro
     >>> from astropy.visualization.mpl_normalize import ImageNormalize
     >>> from astropy.visualization import LinearStretch
     >>> normalize = ImageNormalize(vmin=-5, vmax=15, stretch=LinearStretch())
