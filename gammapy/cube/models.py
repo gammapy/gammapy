@@ -393,6 +393,14 @@ class SkyDiffuseCube(SkyModelBase):
     def frame(self):
         return self.position.frame.name
 
+    @classmethod
+    def from_dict(cls, data):
+        init = cls.read(data["filename"])
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init
+
 
 class BackgroundModel(Model):
     """Background model.

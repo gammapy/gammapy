@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 from .parameter import Parameters
+import astropy.units as u
 
 __all__ = ["Model"]
 
@@ -41,6 +42,18 @@ class Model:
 
     def to_dict(self, selection="all"):
         return {
-            "type": self.__class__.__name__,
+            "type": getattr(self, "tag", self.__class__.__name__),
             "parameters": self.parameters.to_dict(selection)["parameters"],
         }
+
+    @classmethod
+    def from_dict(cls, data):
+        params = {
+            x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"])
+            for x in data["parameters"]
+        }
+        init = cls(**params)
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init
