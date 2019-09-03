@@ -30,7 +30,7 @@ __all__ = [
     "SpectralGaussian",
     "SpectralLogGaussian",
     "ScaleModel",
-    "spectral_models",
+    "SPECTRAL_MODELS",
 ]
 
 
