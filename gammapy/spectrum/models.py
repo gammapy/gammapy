@@ -30,8 +30,8 @@ __all__ = [
     "SpectralGaussian",
     "SpectralLogGaussian",
     "ScaleModel",
+    "spectral_models"
 ]
-
 
 class SpectralModel(Model):
     """Spectral model base class.
@@ -212,17 +212,6 @@ class SpectralModel(Model):
 
         uarray = integrate_spectrum(f, emin.value, emax.value, **kwargs)
         return self._parse_uarray(uarray) * unit
-
-    @classmethod
-    def from_dict(cls, data):
-        """Create from dict."""
-        data = data.copy()
-        classname = data.pop("type")
-        parameters = Parameters.from_dict(data)
-        model = globals()[classname]()
-        model.parameters = parameters
-        model.parameters.covariance = parameters.covariance
-        return model
 
     def plot(
         self,
@@ -448,7 +437,7 @@ class ConstantModel(SpectralModel):
 
     def __init__(self, const):
         self.const = Parameter("const", const)
-
+        self.tag = "ConstantModel" 
         super().__init__([self.const])
 
     @staticmethod
@@ -467,6 +456,7 @@ class CompoundSpectralModel(SpectralModel):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
+        self.tag = "CompoundSpectralModel"
         parameters = (
             self.model1.parameters.parameters + self.model2.parameters.parameters
         )
@@ -527,6 +517,7 @@ class PowerLaw(SpectralModel):
         self.index = Parameter("index", index)
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
+        self.tag = "PowerLaw"
 
         super().__init__([self.index, self.amplitude, self.reference])
 
@@ -745,7 +736,7 @@ class PowerLaw2(SpectralModel):
         self.index = Parameter("index", index)
         self.emin = Parameter("emin", emin, frozen=True)
         self.emax = Parameter("emax", emax, frozen=True)
-
+        self.tag = "PowerLaw2"
         super().__init__([self.index, self.amplitude, self.emin, self.emax])
 
     @staticmethod
@@ -877,7 +868,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.lambda_ = Parameter("lambda_", lambda_)
-
+        self.tag = "ExponentialCutoffPowerLaw"
         super().__init__([self.index, self.amplitude, self.reference, self.lambda_])
 
     @staticmethod
@@ -956,7 +947,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.ecut = Parameter("ecut", ecut)
-
+        self.tag = "ExponentialCutoffPowerLaw3FGL"
         super().__init__([self.index, self.amplitude, self.reference, self.ecut])
 
     @staticmethod
@@ -1021,7 +1012,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.ecut = Parameter("ecut", ecut)
-
+        self.tag = "PLSuperExpCutoff3FGL"
         super().__init__(
             [self.index_1, self.index_2, self.amplitude, self.reference, self.ecut]
         )
@@ -1093,7 +1084,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.expfactor = Parameter("expfactor", expfactor)
-
+        self.tag = "PLSuperExpCutoff4FGL"
         super().__init__(
             [self.index_1, self.index_2, self.amplitude, self.reference, self.expfactor]
         )
@@ -1161,7 +1152,7 @@ class LogParabola(SpectralModel):
         self.reference = Parameter("reference", reference, frozen=True)
         self.alpha = Parameter("alpha", alpha)
         self.beta = Parameter("beta", beta)
-
+        self.tag = "LogParabola"
         super().__init__([self.amplitude, self.reference, self.alpha, self.beta])
 
     @classmethod
@@ -1239,7 +1230,7 @@ class TableModel(SpectralModel):
         self.energy = energy
         self.values = values
         self.meta = dict() if meta is None else meta
-
+        self.tag = "TableModel"
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", ("log",))
@@ -1326,7 +1317,7 @@ class TableModel(SpectralModel):
 
     def to_dict(self, selection="all"):
         return {
-            "type": self.__class__.__name__,
+            "type": self.tag,
             "parameters": self.parameters.to_dict(selection)["parameters"],
             "energy": {
                 "data": self.energy.data.tolist(),
@@ -1337,6 +1328,17 @@ class TableModel(SpectralModel):
                 "unit": str(self.values.unit),
             },
         }
+
+    @classmethod
+    def from_dict(cls, data):
+        energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+        values = u.Quantity(data["values"]["data"], data["values"]["unit"])
+        params = {"energy": energy, "values": values}
+        init = cls(**params)
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init
 
 
 class ScaleModel(SpectralModel):
@@ -1355,6 +1357,7 @@ class ScaleModel(SpectralModel):
     def __init__(self, model, norm=1):
         self.norm = Parameter("norm", norm, unit="")
         self.model = model
+        self.tag = "ScaleModel"
         super().__init__([self.norm])
 
     def evaluate(self, energy, norm):
@@ -1419,6 +1422,7 @@ class Absorption:
         # set values log centers
         self.energy = np.sqrt(energy_lo * energy_hi)
         self.param = (param_hi + param_lo) / 2
+        self.tag = "Absorption"
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
@@ -1543,7 +1547,8 @@ class AbsorbedSpectralModel(SpectralModel):
         self.absorption = absorption
         self.parameter = parameter
         self.parameter_name = parameter_name
-
+        self.tag = AbsorbedSpectralModel
+        
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
@@ -1647,7 +1652,8 @@ class NaimaModel(SpectralModel):
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
-
+        self.tag = "NaimaModel"
+        
         # This ensures the support of naima.models.TableModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
             param_names = ["amplitude"]
@@ -1736,6 +1742,7 @@ class SpectralGaussian(SpectralModel):
         self.norm = Parameter("norm", norm)
         self.mean = Parameter("mean", mean)
         self.sigma = Parameter("sigma", sigma)
+        self.tag = "SpectralGaussian"
 
         super().__init__([self.norm, self.mean, self.sigma])
 
@@ -1844,7 +1851,8 @@ class SpectralLogGaussian(SpectralModel):
         self.norm = Parameter("norm", norm)
         self.mean = Parameter("mean", mean)
         self.sigma = Parameter("sigma", sigma)
-
+        self.tag = "SpectralLogGaussian"
+        
         super().__init__([self.norm, self.mean, self.sigma])
 
     @staticmethod
@@ -1854,3 +1862,23 @@ class SpectralLogGaussian(SpectralModel):
             / (energy * sigma * np.sqrt(2 * np.pi))
             * np.exp(-(np.log(energy / mean)) ** 2 / (2 * sigma ** 2))
         )
+
+
+spectral_models = {           
+            "ConstantModel": ConstantModel,
+            "PowerLaw": PowerLaw,
+            "PowerLaw2": PowerLaw2,
+            "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
+            "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
+            "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
+            "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
+            "LogParabola": LogParabola,
+            "TableModel": TableModel,
+            "SpectralGaussian": SpectralGaussian,
+            "SpectralLogGaussian": SpectralLogGaussian,
+            "ScaleModel": ScaleModel,
+#               TODO: add support for these models writing their .from_dict()
+#                {"AbsorbedSpectralModel":AbsorbedSpectralModel
+#                {"Absorption":Absorption,
+#                {"NaimaModel":NaimaModel,
+            }

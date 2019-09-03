@@ -9,8 +9,8 @@ from gammapy.cube.models import (
     SkyModel,
     SkyModels,
 )
-from gammapy.image import models as spatial
-from gammapy.spectrum import models as spectral
+from gammapy.image.models import spatial_models
+from gammapy.spectrum.models import spectral_models
 from gammapy.utils.fitting import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
@@ -63,7 +63,7 @@ def _restore_shared_parameters(models):
 
 def _model_to_dict(model, selection):
     data = {}
-    data["name"] = getattr(model, "name", model.__class__.__name__)
+    data["name"] = model.name
     if getattr(model, "filename", None) is not None:
         data["filename"] = model.filename
     if model.__class__.__name__ == "SkyModel":
@@ -102,39 +102,27 @@ def dict_to_models(data, link=True):
     return models
 
 
+
 def _dict_to_skymodel(model):
-    item = model["spatial"]
-    if "filename" in item:
-        spatial_model = getattr(spatial, item["type"]).read(item["filename"])
-        spatial_model.filename = item["filename"]
-        spatial_model.parameters = Parameters.from_dict(item)
+    if "spatial" in model and model["spatial"]["type"] in spatial_models:
+        model_class= spatial_models[model["spatial"]["type"]]
+        spatial_model = model_class.from_dict(model["spatial"])
     else:
-        params = {
-            x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"])
-            for x in item["parameters"]
-        }
-        spatial_model = getattr(spatial, item["type"])(**params)
-        spatial_model.parameters = Parameters.from_dict(item)
-
-    item = model["spectral"]
-    if "energy" in item:
-        energy = u.Quantity(item["energy"]["data"], item["energy"]["unit"])
-        values = u.Quantity(item["values"]["data"], item["values"]["unit"])
-        params = {"energy": energy, "values": values}
-        spectral_model = getattr(spectral, item["type"])(**params)
-        spectral_model.parameters = Parameters.from_dict(item)
+        spatial_model = None
+    if "spectral" in model and model["spectral"]["type"] in spectral_models:
+        model_class= spectral_models[(model["spectral"]["type"])]
+        spectral_model = model_class.from_dict(model["spectral"])
     else:
-        params = {
-            x["name"].split("@")[0]: x["value"] * u.Unit(x["unit"])
-            for x in item["parameters"]
-        }
-        spectral_model = getattr(spectral, item["type"])(**params)
-        spectral_model.parameters = Parameters.from_dict(item)
-
+        spectral_model = None
+#    TODO add temporal model to SkyModel once applicable
+#    if "temporal" in model and model["temporal"]["type"] in temporal_models:
+#        model_class= tenporal_models[(model["tenporal"]["type"])]
+#        temporal_model = model_class.from_dict( model["temporal"])
+#    else:
+#        temporal_model = None    
     return SkyModel(
         name=model["name"], spatial_model=spatial_model, spectral_model=spectral_model
     )
-
 
 def _link_shared_parameters(models):
     shared_register = {}
