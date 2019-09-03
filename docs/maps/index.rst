@@ -565,6 +565,7 @@ found in the following sub-pages:
 
     hpxmap
     wcsmap
+    plotting
 
 Reference/API
 =============

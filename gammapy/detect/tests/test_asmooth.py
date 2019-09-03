@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
-from gammapy.image import ASmooth
+from gammapy.detect import ASmooth
 from gammapy.maps import Map
 from gammapy.utils.testing import requires_data
 
