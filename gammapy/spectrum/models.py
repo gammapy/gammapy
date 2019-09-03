@@ -1548,8 +1548,7 @@ class AbsorbedSpectralModel(SpectralModel):
         self.absorption = absorption
         self.parameter = parameter
         self.parameter_name = parameter_name
-        self.tag = AbsorbedSpectralModel
-
+        self.tag = "AbsorbedSpectralModel"
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
