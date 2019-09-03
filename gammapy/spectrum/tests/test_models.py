@@ -15,7 +15,7 @@ from gammapy.spectrum.models import (
     PowerLaw2,
     SpectralGaussian,
     SpectralLogGaussian,
-    SpectralModel,
+    SPECTRAL_MODELS,
     TableModel,
 )
 from gammapy.utils.energy import energy_logspace
@@ -352,7 +352,8 @@ def test_to_from_dict():
     model = spectrum["model"]
 
     model_dict = model.to_dict()
-    new_model = SpectralModel.from_dict(model_dict)
+    model_class = SPECTRAL_MODELS[model_dict["type"]]
+    new_model = model_class.from_dict(model_dict)
 
     assert isinstance(new_model, PowerLaw)
 

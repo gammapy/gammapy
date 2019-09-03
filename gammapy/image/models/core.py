@@ -142,6 +142,7 @@ class SkyGaussian(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "sigma"]
+    tag = "SkyGaussian"
 
     def __init__(self, lon_0, lat_0, sigma, frame="galactic"):
         self.frame = frame
@@ -150,7 +151,6 @@ class SkyGaussian(SkySpatialModel):
         )
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.sigma = Parameter("sigma", Angle(sigma), min=0)
-        self.tag = "SkyGaussian"
         super().__init__([self.lon_0, self.lat_0, self.sigma])
 
     @property
@@ -251,6 +251,7 @@ class SkyGaussianElongated(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "sigma_semi_major", "e", "phi"]
+    tag = "SkyGaussianElongated"
 
     def __init__(self, lon_0, lat_0, sigma_semi_major, e, phi, frame="galactic"):
         self.frame = frame
@@ -261,7 +262,6 @@ class SkyGaussianElongated(SkySpatialModel):
         self.sigma_semi_major = Parameter("sigma_semi_major", Angle(sigma_semi_major))
         self.e = Parameter("e", e, min=0, max=1)
         self.phi = Parameter("phi", Angle(phi))
-        self.tag = "SkyGaussianElongated"
 
         super().__init__(
             [self.lon_0, self.lat_0, self.sigma_semi_major, self.e, self.phi]
@@ -362,6 +362,7 @@ class SkyDisk(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "r_0"]
+    tag = "SkyDisk"
 
     def __init__(self, lon_0, lat_0, r_0, edge="0.01 deg", frame="galactic"):
         self.frame = frame
@@ -371,7 +372,6 @@ class SkyDisk(SkySpatialModel):
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.r_0 = Parameter("r_0", Angle(r_0))
         self.edge = Parameter("edge", Angle(edge), min=0.01, frozen=True)
-        self.tag = "SkyDisk"
 
         super().__init__([self.lon_0, self.lat_0, self.r_0, self.edge])
 
@@ -468,6 +468,7 @@ class SkyEllipse(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "semi_major", "e", "phi", "_offset_by"]
+    tag = "SkyEllipse"
 
     def __init__(
         self, lon_0, lat_0, semi_major, e, phi, edge="0.01 deg", frame="galactic"
@@ -488,7 +489,6 @@ class SkyEllipse(SkySpatialModel):
         self.e = Parameter("e", e, min=0, max=1)
         self.phi = Parameter("phi", Angle(phi))
         self.edge = Parameter("edge", Angle(edge), frozen=True, min=0.01)
-        self.tag = "SkyEllipse"
         super().__init__(
             [self.lon_0, self.lat_0, self.semi_major, self.e, self.phi, self.edge]
         )
@@ -570,6 +570,7 @@ class SkyShell(SkySpatialModel):
     """
 
     __slots__ = ["frame", "lon_0", "lat_0", "radius", "width"]
+    tag = "SkyShell"
 
     def __init__(self, lon_0, lat_0, radius, width, frame="galactic"):
         self.frame = frame
@@ -579,7 +580,6 @@ class SkyShell(SkySpatialModel):
         self.lat_0 = Parameter("lat_0", Latitude(lat_0), min=-90, max=90)
         self.radius = Parameter("radius", Angle(radius))
         self.width = Parameter("width", Angle(width))
-        self.tag = "SkyShell"
 
         super().__init__([self.lon_0, self.lat_0, self.radius, self.width])
 
@@ -622,10 +622,10 @@ class SkyDiffuseConstant(SkySpatialModel):
     __slots__ = ["value"]
 
     frame = None
+    tag = "SkyDiffuseConstant"
 
     def __init__(self, value=1):
         self.value = Parameter("value", value)
-        self.tag = "SkyDiffuseConstant"
 
         super().__init__([self.value])
 
@@ -662,6 +662,7 @@ class SkyDiffuseMap(SkySpatialModel):
     """
 
     __slots__ = ["map", "norm", "meta", "_interp_kwargs", "filename"]
+    tag = "SkyDiffuseMap"
 
     def __init__(
         self, map, norm=1, meta=None, normalize=True, interp_kwargs=None, filename=None
@@ -676,7 +677,6 @@ class SkyDiffuseMap(SkySpatialModel):
 
         self.norm = Parameter("norm", norm)
         self.meta = dict() if meta is None else meta
-        self.tag = "SkyDiffuseMap"
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)

@@ -17,7 +17,7 @@ from gammapy.spectrum import (
     SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )
-from gammapy.spectrum.models import SpectralModel
+from gammapy.spectrum.models import SPECTRAL_MODELS
 from gammapy.utils.fitting import Fit
 from gammapy.utils.scripts import make_path, read_yaml
 
@@ -204,6 +204,7 @@ class Analysis:
     def _read_model(self):
         """Read the model from settings."""
         # TODO: make reading for generic spatial and spectral models with multiple components
+        # use models = serialisation.io.dict_to_models() or models = SkyModels.from_yaml(filename)
         if self.settings["reduction"]["data_reducer"] == "1d":
             model_pars = self.settings["model"]["components"][0]["spectral"]
         else:
@@ -212,7 +213,8 @@ class Analysis:
             )
             return False
         log.info("Reading model.")
-        self.model = SpectralModel.from_dict(model_pars)
+        model_class = SPECTRAL_MODELS[model_pars["type"]]
+        self.model = model_class.from_dict(model_pars)
         log.info(self.model)
 
     def _set_logging(self):

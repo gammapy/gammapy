@@ -435,10 +435,10 @@ class ConstantModel(SpectralModel):
     """
 
     __slots__ = ["const"]
+    tag = "ConstantModel"
 
     def __init__(self, const):
         self.const = Parameter("const", const)
-        self.tag = "ConstantModel"
         super().__init__([self.const])
 
     @staticmethod
@@ -453,11 +453,12 @@ class CompoundSpectralModel(SpectralModel):
     Itself again a spectral model.
     """
 
+    tag = "CompoundSpectralModel"
+
     def __init__(self, model1, model2, operator):
         self.model1 = model1
         self.model2 = model2
         self.operator = operator
-        self.tag = "CompoundSpectralModel"
         parameters = (
             self.model1.parameters.parameters + self.model2.parameters.parameters
         )
@@ -513,6 +514,7 @@ class PowerLaw(SpectralModel):
     """
 
     __slots__ = ["index", "amplitude", "reference"]
+    tag = "PowerLaw"
 
     def __init__(self, index=2.0, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"):
         self.index = Parameter("index", index)
@@ -729,6 +731,7 @@ class PowerLaw2(SpectralModel):
     """
 
     __slots__ = ["index", "amplitude", "emin", "emax"]
+    tag = "PowerLaw2"
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1", index=2, emin="0.1 TeV", emax="100 TeV"
@@ -737,7 +740,6 @@ class PowerLaw2(SpectralModel):
         self.index = Parameter("index", index)
         self.emin = Parameter("emin", emin, frozen=True)
         self.emax = Parameter("emax", emax, frozen=True)
-        self.tag = "PowerLaw2"
         super().__init__([self.index, self.amplitude, self.emin, self.emax])
 
     @staticmethod
@@ -857,6 +859,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     """
 
     __slots__ = ["index", "amplitude", "reference", "lambda_"]
+    tag = "ExponentialCutoffPowerLaw"
 
     def __init__(
         self,
@@ -869,7 +872,6 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.lambda_ = Parameter("lambda_", lambda_)
-        self.tag = "ExponentialCutoffPowerLaw"
         super().__init__([self.index, self.amplitude, self.reference, self.lambda_])
 
     @staticmethod
@@ -936,6 +938,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     """
 
     __slots__ = ["index", "amplitude", "reference", "ecut"]
+    tag = "ExponentialCutoffPowerLaw3FGL"
 
     def __init__(
         self,
@@ -948,7 +951,6 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.ecut = Parameter("ecut", ecut)
-        self.tag = "ExponentialCutoffPowerLaw3FGL"
         super().__init__([self.index, self.amplitude, self.reference, self.ecut])
 
     @staticmethod
@@ -999,6 +1001,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "ecut"]
+    tag = "PLSuperExpCutoff3FGL"
 
     def __init__(
         self,
@@ -1013,7 +1016,6 @@ class PLSuperExpCutoff3FGL(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.ecut = Parameter("ecut", ecut)
-        self.tag = "PLSuperExpCutoff3FGL"
         super().__init__(
             [self.index_1, self.index_2, self.amplitude, self.reference, self.ecut]
         )
@@ -1071,6 +1073,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
     """
 
     __slots__ = ["index_1", "index_2", "amplitude", "reference", "expfactor"]
+    tag = "PLSuperExpCutoff4FGL"
 
     def __init__(
         self,
@@ -1085,7 +1088,6 @@ class PLSuperExpCutoff4FGL(SpectralModel):
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
         self.expfactor = Parameter("expfactor", expfactor)
-        self.tag = "PLSuperExpCutoff4FGL"
         super().__init__(
             [self.index_1, self.index_2, self.amplitude, self.reference, self.expfactor]
         )
@@ -1145,6 +1147,7 @@ class LogParabola(SpectralModel):
     """
 
     __slots__ = ["amplitude", "reference", "alpha", "beta"]
+    tag = "LogParabola"
 
     def __init__(
         self, amplitude="1e-12 cm-2 s-1 TeV-1", reference="10 TeV", alpha=2, beta=1
@@ -1153,7 +1156,6 @@ class LogParabola(SpectralModel):
         self.reference = Parameter("reference", reference, frozen=True)
         self.alpha = Parameter("alpha", alpha)
         self.beta = Parameter("beta", beta)
-        self.tag = "LogParabola"
         super().__init__([self.amplitude, self.reference, self.alpha, self.beta])
 
     @classmethod
@@ -1223,6 +1225,7 @@ class TableModel(SpectralModel):
     """
 
     __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
+    tag = "TableModel"
 
     def __init__(
         self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
@@ -1231,7 +1234,6 @@ class TableModel(SpectralModel):
         self.energy = energy
         self.values = values
         self.meta = dict() if meta is None else meta
-        self.tag = "TableModel"
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
         interp_kwargs.setdefault("points_scale", ("log",))
@@ -1354,11 +1356,11 @@ class ScaleModel(SpectralModel):
     """
 
     __slots__ = ["norm", "model"]
+    tag = "ScaleModel"
 
     def __init__(self, model, norm=1):
         self.norm = Parameter("norm", norm, unit="")
         self.model = model
-        self.tag = "ScaleModel"
         super().__init__([self.norm])
 
     def evaluate(self, energy, norm):
@@ -1414,6 +1416,7 @@ class Absorption:
         # show plot
         plt.show()
     """
+    tag = "Absorption"
 
     def __init__(
         self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
@@ -1423,7 +1426,6 @@ class Absorption:
         # set values log centers
         self.energy = np.sqrt(energy_lo * energy_hi)
         self.param = (param_hi + param_lo) / 2
-        self.tag = "Absorption"
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
@@ -1540,6 +1542,7 @@ class AbsorbedSpectralModel(SpectralModel):
     """
 
     __slots__ = ["spectral_model", "absorption", "parameter", "parameter_name"]
+    tag = "AbsorbedSpectralModel"
 
     def __init__(
         self, spectral_model, absorption, parameter, parameter_name="redshift"
@@ -1548,7 +1551,6 @@ class AbsorbedSpectralModel(SpectralModel):
         self.absorption = absorption
         self.parameter = parameter
         self.parameter_name = parameter_name
-        self.tag = "AbsorbedSpectralModel"
         min_ = self.absorption.param.min()
         max_ = self.absorption.param.max()
         par = Parameter(parameter_name, parameter, min=min_, max=max_, frozen=True)
@@ -1643,6 +1645,7 @@ class NaimaModel(SpectralModel):
         plt.legend(loc='best')
         plt.show()
     """
+    tag = "NaimaModel"
 
     # TODO: prevent users from setting new attributes after init
     def __init__(self, radiative_model, distance=1.0 * u.kpc, seed=None):
@@ -1652,7 +1655,6 @@ class NaimaModel(SpectralModel):
         self._particle_distribution = self.radiative_model.particle_distribution
         self.distance = Parameter("distance", distance, frozen=True)
         self.seed = seed
-        self.tag = "NaimaModel"
 
         # This ensures the support of naima.models.TableModel
         if isinstance(self._particle_distribution, naima.models.TableModel):
@@ -1735,6 +1737,7 @@ class SpectralGaussian(SpectralModel):
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+    tag = "SpectralGaussian"
 
     def __init__(
         self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2 * u.TeV
@@ -1742,7 +1745,6 @@ class SpectralGaussian(SpectralModel):
         self.norm = Parameter("norm", norm)
         self.mean = Parameter("mean", mean)
         self.sigma = Parameter("sigma", sigma)
-        self.tag = "SpectralGaussian"
 
         super().__init__([self.norm, self.mean, self.sigma])
 
@@ -1846,12 +1848,12 @@ class SpectralLogGaussian(SpectralModel):
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
         plt.show()
     """
+    tag = "SpectralLogGaussian"
 
     def __init__(self, norm=1e-12 * u.Unit("cm-2 s-1"), mean=1 * u.TeV, sigma=2):
         self.norm = Parameter("norm", norm)
         self.mean = Parameter("mean", mean)
         self.sigma = Parameter("sigma", sigma)
-        self.tag = "SpectralLogGaussian"
 
         super().__init__([self.norm, self.mean, self.sigma])
 
@@ -1864,7 +1866,7 @@ class SpectralLogGaussian(SpectralModel):
         )
 
 
-spectral_models = {
+SPECTRAL_MODELS = {
     "ConstantModel": ConstantModel,
     "PowerLaw": PowerLaw,
     "PowerLaw2": PowerLaw2,

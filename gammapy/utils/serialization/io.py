@@ -9,8 +9,8 @@ from gammapy.cube.models import (
     SkyModel,
     SkyModels,
 )
-from gammapy.image.models import spatial_models
-from gammapy.spectrum.models import spectral_models
+from gammapy.image.models import SPATIAL_MODELS
+from gammapy.spectrum.models import SPECTRAL_MODELS
 from gammapy.utils.fitting import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
@@ -103,13 +103,13 @@ def dict_to_models(data, link=True):
 
 
 def _dict_to_skymodel(model):
-    if "spatial" in model and model["spatial"]["type"] in spatial_models:
-        model_class = spatial_models[model["spatial"]["type"]]
+    if "spatial" in model and model["spatial"]["type"] in SPATIAL_MODELS:
+        model_class = SPATIAL_MODELS[model["spatial"]["type"]]
         spatial_model = model_class.from_dict(model["spatial"])
     else:
         spatial_model = None
-    if "spectral" in model and model["spectral"]["type"] in spectral_models:
-        model_class = spectral_models[(model["spectral"]["type"])]
+    if "spectral" in model and model["spectral"]["type"] in SPECTRAL_MODELS:
+        model_class = SPECTRAL_MODELS[(model["spectral"]["type"])]
         spectral_model = model_class.from_dict(model["spectral"])
     else:
         spectral_model = None

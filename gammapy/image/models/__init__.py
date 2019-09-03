@@ -2,7 +2,7 @@
 """Spatial 2D image models."""
 from .core import *
 
-spatial_models = {
+SPATIAL_MODELS = {
     "SkyDiffuseMap": SkyDiffuseMap,
     "SkyDisk": SkyDisk,
     "SkyEllipse": SkyEllipse,

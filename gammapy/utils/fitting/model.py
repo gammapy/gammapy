@@ -9,11 +9,10 @@ __all__ = ["Model"]
 class Model:
     """Model base class."""
 
-    __slots__ = ["_parameters", "tag"]
+    __slots__ = ["_parameters"]
 
     def __init__(self, params=None):
         self._parameters = Parameters(params)
-        self.tag = self.__class__.__name__
 
     @property
     def parameters(self):
@@ -43,7 +42,7 @@ class Model:
 
     def to_dict(self, selection="all"):
         return {
-            "type": self.tag,
+            "type": getattr(self, "tag", self.__class__.__name__),
             "parameters": self.parameters.to_dict(selection)["parameters"],
         }
 
