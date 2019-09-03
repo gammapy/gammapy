@@ -7,6 +7,7 @@ from .hpxmap import *
 from .hpxnd import *
 from .hpxsparse import *
 from .image_utils import *
+from .measure import *
 from .sparse import *
 from .wcs import *
 from .wcsmap import *
