@@ -504,6 +504,8 @@ class BackgroundModel(Model):
     def to_dict(self, selection):
         data = super().to_dict(selection=selection)
         data["name"] = self.name
+        if self.filename is not None:
+            data["filename"] = self.filename
         return data
 
 
