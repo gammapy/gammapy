@@ -149,35 +149,32 @@ def _link_shared_parameters(models):
 
 def datasets_to_dict(datasets, path, selection, overwrite):
     from gammapy.utils.serialization import models_to_dict
-    from gammapy.cube.models import BackgroundModels, SkyModels
+    from gammapy.cube.models import BackgroundModels
 
-    models_list = []
-    backgrounds_list = []
+    unique_models = []
+    unique_backgrounds = []
     datasets_dictlist = []
+
     for dataset in datasets:
         filename = path + "data_" + dataset.name + ".fits"
         dataset.write(filename, overwrite)
+        datasets_dictlist.append(dataset.to_dict(filename=filename))
+
+        for model in dataset.model.skymodels:
+            if model not in unique_models:
+                unique_models.append(model)
 
         if isinstance(dataset.background_model, BackgroundModels):
             backgrounds = dataset.background_model.models
         else:
             backgrounds = [dataset.background_model]
-        if isinstance(dataset.model, SkyModels):
-            models = dataset.model.skymodels
-        else:
-            models = [dataset.model]
 
-        datasets_dictlist.append(dataset.to_dict(filename=filename))
-
-        for model in models:
-            if model not in models_list:
-                models_list.append(model)
         for background in backgrounds:
-            if background not in backgrounds_list:
-                backgrounds_list.append(background)
+            if background not in unique_backgrounds:
+                unique_backgrounds.append(background)
 
     datasets_dict = {"datasets": datasets_dictlist}
-    components_dict = models_to_dict(models_list + backgrounds_list, selection)
+    components_dict = models_to_dict(unique_models + unique_backgrounds, selection)
     return datasets_dict, components_dict
 
 
