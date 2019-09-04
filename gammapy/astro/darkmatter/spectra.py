@@ -186,7 +186,7 @@ class DMAnnihilation(SpectralModel):
             scale
             * self.jfactor
             * self.THERMAL_RELIC_CROSS_SECTION
-            * self.primary_flux.evaluate(energy=energy * (1 + self.z), norm=1)
+            * self.primary_flux(energy=energy * (1 + self.z))
             / self.k
             / self.mass
             / self.mass

@@ -618,21 +618,14 @@ class SkyDiffuseConstant(SkySpatialModel):
     value : `~astropy.units.Quantity`
         Value
     """
-
-    __slots__ = ["value"]
-
     frame = None
     tag = "SkyDiffuseConstant"
+    evaluation_radius = None
 
     def __init__(self, value=1):
-        self.value = Parameter("value", value)
+        self.value = Parameter("value", value, frozen=True)
 
         super().__init__([self.value])
-
-    @property
-    def evaluation_radius(self):
-        """Evaluation radius (``None``)."""
-        return None
 
     @staticmethod
     def evaluate(lon, lat, value):
