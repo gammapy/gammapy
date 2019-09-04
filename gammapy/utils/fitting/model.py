@@ -42,7 +42,7 @@ class Model:
 
     def to_dict(self, selection="all"):
         return {
-            "type": getattr(self, "tag", self.__class__.__name__),
+            "type": self.tag,
             "parameters": self.parameters.to_dict(selection)["parameters"],
         }
 

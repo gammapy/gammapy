@@ -62,13 +62,12 @@ def _restore_shared_parameters(models):
 
 def _model_to_dict(model, selection):
     data = {}
-    data["name"] = model.name
     if getattr(model, "filename", None) is not None:
         data["filename"] = model.filename
     if model.__class__.__name__ == "SkyModel":
         data.update(model.to_dict(selection=selection))
     else:
-        data["model"] = model.to_dict(selection)
+        data.update(model.to_dict(selection))
 
     return data
 
@@ -85,11 +84,9 @@ def dict_to_models(data, link=True):
     """
     models = []
     for model in data["components"]:
-        if "model" in model:
-            if model["model"]["type"] == "BackgroundModel":
-                continue
-            else:
-                raise NotImplementedError
+        # background models are created separately
+        if model["type"] == "BackgroundModel":
+            continue
 
         model = _dict_to_skymodel(model)
         models.append(model)
@@ -212,8 +209,7 @@ class dict_to_datasets:
         backgrounds = []
         for component in components["components"]:
             if (
-                "model" in component
-                and component["model"]["type"] == "BackgroundModel"
+                component["type"] == "BackgroundModel"
                 and component["name"] in bkg_names
             ):
                 background_model = self.add_background(dataset, component, bkg_prev)
@@ -232,6 +228,7 @@ class dict_to_datasets:
             try:
                 cube = self.cube_register[component["name"]]
             except KeyError:
+                print(component)
                 cube = SkyDiffuseCube.read(component["filename"])
                 self.cube_register[component["name"]] = cube
 
@@ -251,6 +248,6 @@ class dict_to_datasets:
         try:
             params = self.params_register[component["name"]]
         except KeyError:
-            params = Parameters.from_dict(component["model"])
+            params = Parameters.from_dict(component)
             self.params_register[component["name"]] = params
         background_model.parameters = params
