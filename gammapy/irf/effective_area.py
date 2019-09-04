@@ -286,7 +286,7 @@ class EffectiveAreaTable:
             # use the peak effective area as a default for the energy maximum
             emax = energy[np.argmax(self.data.data)]
 
-        aeff_spectrum = TableModel(energy, self.data.data, values_scale="lin")
+        aeff_spectrum = TableModel(energy, self.data.data)
         return aeff_spectrum.inverse(aeff, emin=emin, emax=emax)
 
     def to_sherpa(self, name):

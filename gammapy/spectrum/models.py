@@ -1218,14 +1218,12 @@ class TableModel(SpectralModel):
         Array with the values of the model at energies ``energy``.
     norm : float
         Model scale that is multiplied to the supplied arrays. Defaults to 1.
-    values_scale : {'log', 'lin', 'sqrt'}
-        Interpolation scaling applied to values. If the values vary over many magnitudes
-        a 'log' scaling is recommended.
     interp_kwargs : dict
         Interpolation keyword arguments pass to `scipy.interpolate.interp1d`.
         By default all values outside the interpolation range are set to zero.
         If you want to apply linear extrapolation you can pass `interp_kwargs={'fill_value':
-        'extrapolate', 'kind': 'linear'}`
+        'extrapolate', 'kind': 'linear'}`. If you want to choose the interpolation
+        scaling applied to values, you can use `interp_kwargs={"values_scale": "log"}`.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialization
     """
@@ -1233,7 +1231,7 @@ class TableModel(SpectralModel):
     __slots__ = ["energy", "values", "norm", "meta", "_evaluate"]
 
     def __init__(
-        self, energy, values, norm=1, values_scale="log", interp_kwargs=None, meta=None
+        self, energy, values, norm=1, interp_kwargs=None, meta=None
     ):
         self.norm = Parameter("norm", norm, unit="")
         self.energy = energy
@@ -1299,7 +1297,7 @@ class TableModel(SpectralModel):
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
         values = u.Quantity(table_spectra[idx][1], "", copy=False)  # no dimension
 
-        kwargs.setdefault("values_scale", "lin")
+        kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
 
     @classmethod
@@ -1512,7 +1510,7 @@ class Absorption:
         """
         energy = self.energy.to(unit)
         values = self.evaluate(energy=energy, parameter=parameter)
-        return TableModel(energy=energy, values=values, values_scale="lin")
+        return TableModel(energy=energy, values=values, interp_kwargs={"values_scale": "lin"})
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""

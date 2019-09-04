@@ -120,8 +120,7 @@ class PrimaryFlux:
         channel_name = self.channel_registry[self.channel]
         dN_dlogx = subtable[channel_name]
         dN_dE = dN_dlogx / (energies * np.log(10))
-
-        return TableModel(energy=energies, values=dN_dE, values_scale="lin")
+        return TableModel(energy=energies, values=dN_dE)
 
 
 class DMAnnihilation(SpectralModel):
