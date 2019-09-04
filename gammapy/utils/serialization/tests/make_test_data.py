@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from gammapy.cube import MapDataset, MapMaker, PSFKernel
+from gammapy.cube import MapDataset, MapMaker, PSFKernel, MapEvaluator
 from gammapy.cube.models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
 from gammapy.data import DataStore
 from gammapy.image.models import SkyGaussian, SkyPointSource
@@ -97,9 +97,10 @@ def make_datasets_example():
             observations, position=src_pos, e_true=energy, e_reco=energy
         )
 
-        background_diffuse = BackgroundModel.from_skymodel(
-            diffuse_model, exposure=maps["exposure"], psf=psf_kernel
-        )
+        evaluator = MapEvaluator(diffuse_model, exposure=maps["exposure"], psf=psf_kernel)
+        bkg_map = evaluator.compute_npred()
+        background_diffuse = BackgroundModel(bkg_map, name=diffuse_model.name)
+
         # set diffuse model as global
         try:
             background_diffuse.parameters = diffuse_parameters[background_diffuse.name]
@@ -112,7 +113,7 @@ def make_datasets_example():
 
         dataset = MapDataset(
             name=names[ind],
-            model=SkyModels(models),
+            model=models[ind],
             counts=maps["counts"],
             exposure=maps["exposure"],
             background_model=background_total,
