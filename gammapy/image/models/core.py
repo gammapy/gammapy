@@ -68,7 +68,7 @@ class SkyPointSource(SkySpatialModel):
     frame : {"galactic", "icrs"}
         Coordinate frame of `lon_0` and `lat_0`.
     """
-
+    tag = "SkyPointSource"
     __slots__ = ["frame", "lon_0", "lat_0"]
 
     def __init__(self, lon_0, lat_0, frame="galactic"):
