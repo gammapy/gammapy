@@ -66,10 +66,7 @@ def _model_to_dict(model, selection):
     if getattr(model, "filename", None) is not None:
         data["filename"] = model.filename
     if model.__class__.__name__ == "SkyModel":
-        data["spatial"] = model.spatial_model.to_dict(selection)
-        if getattr(model.spatial_model, "filename", None) is not None:
-            data["spatial"]["filename"] = model.spatial_model.filename
-        data["spectral"] = model.spectral_model.to_dict(selection)
+        data.update(model.to_dict(selection=selection))
     else:
         data["model"] = model.to_dict(selection)
 

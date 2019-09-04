@@ -302,6 +302,14 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("name", self.name + "-copy")
         return self.__class__(**kwargs)
 
+    def to_dict(self, selection):
+        """Create dict for YAML serilisation"""
+        data = {}
+        data["spatial"] = self.spatial_model.to_dict(selection)
+        data["spectral"] = self.spectral_model.to_dict(selection)
+        return data
+
+
 
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).

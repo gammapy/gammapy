@@ -733,3 +733,9 @@ class SkyDiffuseMap(SkySpatialModel):
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)
         return init
+
+    def to_dict(self, selection):
+        data = super().to_dict(selection=selection)
+        data["filename"] = self.filename
+        return data
+
