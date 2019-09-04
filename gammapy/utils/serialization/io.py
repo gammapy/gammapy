@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-import astropy.units as u
-from gammapy.cube.fit import MapDataset
+from gammapy.cube.fit import MapDataset, MapEvaluator
 from gammapy.cube.models import (
     BackgroundModel,
     BackgroundModels,
@@ -248,9 +247,9 @@ class dict_to_datasets:
             except KeyError:
                 cube = SkyDiffuseCube.read(component["filename"])
                 self.cube_register[component["name"]] = cube
-            background_model = BackgroundModel.from_skymodel(
-                cube, exposure=dataset.exposure, psf=dataset.psf, edisp=dataset.edisp
-            )
+
+            evaluator = MapEvaluator(model=cube, exposure=dataset.exposure, psf=dataset.psf, edisp=dataset.edisp)
+            background_model = BackgroundModel(evaluator.compute_npred())
         else:
             if component["name"].strip().upper() in bkg_prev:
                 BGind = bkg_prev.index(component["name"].strip().upper())
