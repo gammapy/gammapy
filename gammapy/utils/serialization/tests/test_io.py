@@ -145,24 +145,15 @@ def test_datasets_to_io(tmpdir):
     ]
 
     assert isinstance(dataset0.model, SkyModels)
-    assert len(dataset0.model.skymodels) == 2
+    assert len(dataset0.model.skymodels) == 1
     assert dataset0.model.skymodels[0].name == "gc"
-    assert dataset0.model.skymodels[1].name == "g09"
     assert (
         dataset0.model.skymodels[0].parameters["reference"]
-        is dataset0.model.skymodels[1].parameters["reference"]
-    )
-    assert (
-        dataset1.model.skymodels[0].parameters["reference"]
-        is dataset1.model.skymodels[1].parameters["reference"]
-    )
-    assert (
-        dataset0.model.skymodels[0].parameters["reference"]
-        is dataset1.model.skymodels[1].parameters["reference"]
+        is dataset1.model.skymodels[0].parameters["reference"]
     )
 
     assert_allclose(
-        dataset0.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
+        dataset1.model.skymodels[0].parameters["lon_0"].value, 0.9, atol=0.1
     )
 
     path = str(tmpdir / "/written_")
