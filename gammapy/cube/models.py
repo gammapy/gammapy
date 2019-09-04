@@ -358,6 +358,8 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+        self._cached_value = None
+        self._cached_coordinates = (None, None, None)
 
         super().__init__([self.norm, self.tilt, self.reference])
 
@@ -378,21 +380,31 @@ class SkyDiffuseCube(SkyModelBase):
         name = Path(filename).stem
         return cls(m, name=name, filename=filename)
 
-    def evaluate(self, lon, lat, energy):
-        """Evaluate model."""
+    def _interpolate(self, lon, lat, energy):
         coord = {
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
             "energy": energy,
         }
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        return val
+
+    def evaluate(self, lon, lat, energy):
+        """Evaluate model."""
+        if not np.all(_ is ref for _, ref in zip(self._cached_coordinates, [lon, lat, energy])):
+            self._cached_value = None
+
+        if self._cached_value is None:
+            self._cached_coordinates = (lon, lat, energy)
+            self._cached_value = self._interpolate(lon, lat, energy)
+
         norm = self.parameters["norm"].value
 
         tilt = self.parameters["tilt"].value
         reference = self.parameters["reference"].quantity
         tilt_factor = np.power((energy / reference).to(""), -tilt)
 
-        val = norm * val * tilt_factor.value
+        val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
 
     def copy(self):
