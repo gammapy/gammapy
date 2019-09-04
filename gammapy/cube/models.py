@@ -201,7 +201,7 @@ class SkyModel(SkyModelBase):
     name : str
         Model identifier
     """
-
+    tag = "SkyModel"
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="source"):
@@ -305,10 +305,11 @@ class SkyModel(SkyModelBase):
     def to_dict(self, selection):
         """Create dict for YAML serilisation"""
         data = {}
+        data["type"] = self.tag
+        data["name"] = self.name
         data["spatial"] = self.spatial_model.to_dict(selection)
         data["spectral"] = self.spectral_model.to_dict(selection)
         return data
-
 
 
 class SkyDiffuseCube(SkyModelBase):
@@ -334,7 +335,7 @@ class SkyDiffuseCube(SkyModelBase):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
 
     """
-
+    tag = "SkyDiffuseCube"
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(
@@ -421,6 +422,12 @@ class SkyDiffuseCube(SkyModelBase):
             setattr(init, parameter.name, parameter)
         return init
 
+    def to_dict(self, selection):
+        data = super().to_dict(selection=selection)
+        data["filename"] = self.filename
+        data["name"] = self.name
+        return data
+
 
 class BackgroundModel(Model):
     """Background model.
@@ -438,7 +445,7 @@ class BackgroundModel(Model):
     reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
     """
-
+    tag = "BackgroundModel"
     __slots__ = ["map", "norm", "tilt", "reference", "name", "filename"]
 
     def __init__(
@@ -493,6 +500,11 @@ class BackgroundModel(Model):
         else:
             raise NotImplementedError
         return BackgroundModels(models)
+
+    def to_dict(self, selection):
+        data = super().to_dict(selection=selection)
+        data["name"] = self.name
+        return data
 
 
 class BackgroundModels(Model):
