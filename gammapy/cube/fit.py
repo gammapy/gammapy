@@ -562,6 +562,21 @@ class MapDataset(Dataset):
         hdulist = fits.open(str(filename))
         return cls.from_hdulist(hdulist, name=name)
 
+    def to_dict(self, filename=""):
+        """Create dict for YAML serilisation
+
+        Returns
+        -------
+        data : dict
+            Dict with data for the YAML serilisation.
+        """
+        data = {}
+        data["name"] = self.name
+        data["models"] = self.model.names
+        data["backgrounds"] = [_.name for _ in self.background_model.models]
+        data["filename"] = filename
+        return data
+
 
 class MapEvaluator:
     """Sky model evaluation on maps.

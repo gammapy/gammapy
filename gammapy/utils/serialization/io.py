@@ -157,6 +157,7 @@ def datasets_to_dict(datasets, path, selection, overwrite):
     for dataset in datasets:
         filename = path + "data_" + dataset.name + ".fits"
         dataset.write(filename, overwrite)
+
         if isinstance(dataset.background_model, BackgroundModels):
             backgrounds = dataset.background_model.models
         else:
@@ -165,17 +166,9 @@ def datasets_to_dict(datasets, path, selection, overwrite):
             models = dataset.model.skymodels
         else:
             models = [dataset.model]
-        # TODO: remove isinstance checks once #2102  is resolved
-        bkg_names = [background.name for background in backgrounds]
-        models_names = [model.name for model in models]
-        datasets_dictlist.append(
-            {
-                "name": dataset.name,
-                "filename": filename,
-                "backgrounds": bkg_names,
-                "models": models_names,
-            }
-        )
+
+        datasets_dictlist.append(dataset.to_dict(filename=filename))
+
         for model in models:
             if model not in models_list:
                 models_list.append(model)
