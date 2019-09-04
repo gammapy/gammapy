@@ -216,7 +216,6 @@ class dict_to_datasets:
             try:
                 cube = self.cube_register[component["name"]]
             except KeyError:
-                print(component)
                 cube = SkyDiffuseCube.read(component["filename"])
                 self.cube_register[component["name"]] = cube
 
