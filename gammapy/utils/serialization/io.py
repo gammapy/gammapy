@@ -30,7 +30,7 @@ def models_to_dict(models, selection="all"):
 
     models_data = []
     for model in models:
-        model_data = _model_to_dict(model, selection)
+        model_data = model.to_dict(selection)
         # De-duplicate if model appears several times
         if model_data not in models_data:
             models_data.append(model_data)
@@ -58,18 +58,6 @@ def _restore_shared_parameters(models):
     for model in models:
         for param in model.parameters:
             param.name = param.name.split("@")[0]
-
-
-def _model_to_dict(model, selection):
-    data = {}
-    if getattr(model, "filename", None) is not None:
-        data["filename"] = model.filename
-    if model.__class__.__name__ == "SkyModel":
-        data.update(model.to_dict(selection=selection))
-    else:
-        data.update(model.to_dict(selection))
-
-    return data
 
 
 def dict_to_models(data, link=True):
