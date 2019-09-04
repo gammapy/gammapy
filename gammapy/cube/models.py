@@ -476,40 +476,6 @@ class BackgroundModel(Model):
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
 
-    @classmethod
-    def from_skymodel(
-        cls, skymodel, exposure, name=None, edisp=None, psf=None, **kwargs
-    ):
-        """Create background model from sky model by applying IRFs.
-
-        Typically used for diffuse Galactic or constant emission models.
-
-        Parameters
-        ----------
-        skymodel : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyDiffuseCube`
-            Sky model
-        exposure : `~gammapy.maps.Map`
-            Exposure map
-        edisp : `~gammapy.irf.EnergyDispersion`
-            Energy dispersion
-        psf : `~gammapy.cube.PSFKernel`
-            PSF kernel
-        """
-        from .fit import MapEvaluator
-
-        evaluator = MapEvaluator(
-            model=skymodel, exposure=exposure, edisp=edisp, psf=psf
-        )
-        background = evaluator.compute_npred()
-        background_model = cls(background=background, **kwargs)
-        if name is None:
-            background_model.name = skymodel.name
-        else:
-            background_model.name = name
-        if skymodel.__class__.__name__ == "SkyDiffuseCube":
-            background_model.filename = skymodel.filename
-        return background_model
-
     def __add__(self, model):
         models = [self]
         if isinstance(model, BackgroundModels):
