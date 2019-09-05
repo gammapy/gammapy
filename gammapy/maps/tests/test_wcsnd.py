@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.cube import PSFKernel, MapEvaluator
 from gammapy.cube.models import SkyModel
@@ -17,7 +15,6 @@ from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
 from gammapy.spectrum.models import PowerLaw
-from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("reproject")
@@ -622,11 +619,10 @@ def get_npred_map():
 
 
 def test_map_sampling():
-    eval, npred = get_npred_map()
+    evaluate, npred = get_npred_map()
     rand_state = get_random_state(0)
-    n_events = rand_state.poisson(np.sum(npred.data))
 
-    nmap = WcsNDMap(eval.geom)
+    nmap = WcsNDMap(evaluate.geom)
     events = nmap.sample_events(npred_map=npred, n_events=2, random_state=0)
 
     assert len(events) == 2
