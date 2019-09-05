@@ -53,8 +53,8 @@ def test_sky_gaussian_elongated():
     )
     coords = m_geom_1.get_coord()
     solid_angle = m_geom_1.solid_angle()
-    lon = coords.lon * u.deg
-    lat = coords.lat * u.deg
+    lon = coords.lon
+    lat = coords.lat
     semi_major = 3 * u.deg
     model_1 = SkyGaussianElongated(2 * u.deg, 2 * u.deg, semi_major, 0.8, 30 * u.deg)
     vals_1 = model_1(lon, lat)
@@ -93,8 +93,8 @@ def test_sky_gaussian_elongated():
     )
     coords = m_geom_4.get_coord()
     solid_angle = m_geom_4.solid_angle()
-    lon = coords.lon * u.deg
-    lat = coords.lat * u.deg
+    lon = coords.lon
+    lat = coords.lat
 
     semi_major = 5 * u.deg
     model_4_el = SkyGaussianElongated(
@@ -148,8 +148,8 @@ def test_sky_ellipse():
     )
     coords = m_geom_1.get_coord()
     solid_angle = m_geom_1.solid_angle()
-    lon = coords.lon * u.deg
-    lat = coords.lat * u.deg
+    lon = coords.lon
+    lat = coords.lat
     semi_major = 10 * u.deg
     model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, semi_major, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
@@ -176,8 +176,8 @@ def test_sky_ellipse():
     coords = m_geom_2.get_coord()
     solid_angle = m_geom_2.solid_angle()
 
-    lon = coords.lon * u.deg
-    lat = coords.lat * u.deg
+    lon = coords.lon
+    lat = coords.lat
 
     semi_major = 5 * u.deg
     model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, semi_major, 0.0, 0.0 * u.deg)
@@ -261,7 +261,7 @@ def test_sky_diffuse_map_normalize():
     data_map = Map.create(map_type="wcs", width=(10, 5), binsz=1)
     coords = data_map.geom.get_coord()
     solid_angle = data_map.geom.solid_angle()
-    vals = model(coords.lon * u.deg, coords.lat * u.deg) * solid_angle
+    vals = model(coords.lon, coords.lat) * solid_angle
 
     assert vals.unit == ""
     integral = vals.sum()

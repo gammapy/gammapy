@@ -153,7 +153,7 @@ def test_wcsndmap_set_get_by_pix(npix, binsz, coordsys, proj, skydir, axes):
     coords = m.geom.get_coord()
     pix = m.geom.get_idx()
     m.set_by_pix(pix, coords[0])
-    assert_allclose(coords[0], m.get_by_pix(pix))
+    assert_allclose(coords[0].value, m.get_by_pix(pix))
 
 
 def test_get_by_coord_bool_int():
@@ -178,7 +178,7 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
     m.set_by_coord(coords, coords[0])
-    assert_allclose(coords[0], m.get_by_coord(coords))
+    assert_allclose(coords[0].value, m.get_by_coord(coords))
 
     if not geom.is_allsky:
         coords[1][...] = 0.0
@@ -194,7 +194,7 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     skydir_gal = skydir.transform_to("galactic")
 
     m.set_by_coord((skydir_gal,) + tuple(coords[2:]), coords[0])
-    assert_allclose(coords[0], m.get_by_coord(coords))
+    assert_allclose(coords[0].value, m.get_by_coord(coords))
     assert_allclose(
         m.get_by_coord((skydir_cel,) + tuple(coords[2:])),
         m.get_by_coord((skydir_gal,) + tuple(coords[2:])),
@@ -209,7 +209,7 @@ def test_wcsndmap_set_get_by_coord(npix, binsz, coordsys, proj, skydir, axes):
             coords_dict[ax.name] = coords[i + 2]
     map_coords = MapCoord.create(coords_dict, coordsys=coordsys)
     m.set_by_coord(map_coords, coords[0])
-    assert_allclose(coords[0], m.get_by_coord(map_coords))
+    assert_allclose(coords[0].value, m.get_by_coord(map_coords))
 
 
 def test_set_get_by_coord_quantities():
@@ -282,12 +282,12 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord(flat=True)
-    m.set_by_coord(coords, coords[1])
-    assert_allclose(coords[1], m.interp_by_coord(coords, interp="nearest"))
-    assert_allclose(coords[1], m.interp_by_coord(coords, interp="linear"))
-    assert_allclose(coords[1], m.interp_by_coord(coords, interp=1))
+    m.set_by_coord(coords, coords[1].value)
+    assert_allclose(coords[1].value, m.interp_by_coord(coords, interp="nearest"))
+    assert_allclose(coords[1].value, m.interp_by_coord(coords, interp="linear"))
+    assert_allclose(coords[1].value, m.interp_by_coord(coords, interp=1))
     if geom.is_regular and not geom.is_allsky:
-        assert_allclose(coords[1], m.interp_by_coord(coords, interp="cubic"))
+        assert_allclose(coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic"))
 
 
 def test_interp_by_coord_quantities():
@@ -328,7 +328,7 @@ def test_wcsndmap_sum_over_axes(npix, binsz, coordsys, proj, skydir, axes, keepd
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
-    m.fill_by_coord(coords, coords[0])
+    m.fill_by_coord(coords, coords[0].value)
     msum = m.sum_over_axes(keepdims=keepdims)
 
     if m.geom.is_regular:
@@ -369,20 +369,20 @@ def test_wcsndmap_reproject_allsky_car():
     geom = WcsGeom.create(binsz=10.0, proj="CAR", coordsys="CEL")
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
-    m.set_by_coord(coords, coords[0])
+    m.set_by_coord(coords, coords[0].value)
 
     geom0 = WcsGeom.create(
         binsz=1.0, proj="CAR", coordsys="CEL", skydir=(180.0, 0.0), width=30.0
     )
     m0 = m.reproject(geom0, order=1)
     coords0 = m0.geom.get_coord()
-    assert_allclose(m0.get_by_coord(coords0), coords0[0])
+    assert_allclose(m0.get_by_coord(coords0), coords0[0].value)
 
     geom1 = HpxGeom.create(binsz=5.0, coordsys="CEL")
     m1 = m.reproject(geom1, order=1)
     coords1 = m1.geom.get_coord()
 
-    m = (coords1[0] > 10.0) & (coords1[0] < 350.0)
+    m = (coords1[0] > 10) & (coords1[0] < 350)
     assert_allclose(m1.get_by_coord((coords1[0][m], coords1[1][m])), coords1[0][m])
 
 
