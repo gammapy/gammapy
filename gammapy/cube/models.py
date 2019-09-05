@@ -358,6 +358,9 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs.setdefault("interp", "linear")
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
+
+        # TODO: onve we have implement a more general and better model caching
+        #  remove this again
         self._cached_value = None
         self._cached_coordinates = (None, None, None)
 
@@ -391,7 +394,10 @@ class SkyDiffuseCube(SkyModelBase):
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
-        if not np.all(_ is ref for _, ref in zip(self._cached_coordinates, [lon, lat, energy])):
+        is_cached_coord = [_ is coord for _, coord in zip((lon, lat, energy), self._cached_coordinates)]
+
+        # reset cache
+        if not np.all(is_cached_coord):
             self._cached_value = None
 
         if self._cached_value is None:
