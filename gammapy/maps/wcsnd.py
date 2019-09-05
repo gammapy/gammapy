@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from collections import OrderedDict
 import logging
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage
 import scipy.signal
+from astropy.table import Table
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
@@ -11,9 +13,11 @@ from astropy.nddata import Cutout2D
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
-from .geom import pix_tuple_to_idx
+from .geom import pix_tuple_to_idx, MapCoord
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 from .utils import INVALID_INDEX, interp_to_order
+from .utils import get_random_state
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .wcs import _check_width
 from .wcsmap import WcsGeom, WcsMap
 
@@ -688,3 +692,68 @@ class WcsNDMap(WcsMap):
         data = self.data[cutout_slices]
 
         return self._init_copy(geom=geom, data=data)
+
+    def sample_position_energy(self, npred_map=None, n_events=None, random_state=0):
+        """Sample position and energy of events.
+
+        Parameters
+        ----------
+        npred_map : `~gammapy.maps.Map`
+            Predicted number of counts map.
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        coords : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of the sampled events.
+        """
+
+        self.random_state = get_random_state(random_state)
+        self.npred_map = npred_map
+        self.n_events = n_events
+
+        sampler = InverseCDFSampler(self.npred_map.data, random_state=self.random_state)
+
+        coords_pix = sampler.sample(n_events)
+        coords = self.npred_map.geom.pix_to_coord(coords_pix[::-1])
+
+        # TODO: pix_to_coord should return a MapCoord object
+        geom = self.npred_map.geom
+        axes_names = ["lon", "lat"] + [ax.name for ax in geom.axes]
+        cdict = OrderedDict(zip(axes_names, coords))
+        cdict["energy"] *= geom.get_axis_by_name("energy").unit
+
+        return MapCoord.create(cdict, coordsys=geom.coordsys)
+
+    def sample_events(self, npred_map=None, n_events=None, random_state=0):
+        """It converts the given sampled event list into an astropy table.
+
+        Parameters
+        ----------
+        npred_map : `~gammapy.maps.Map`
+            Predicted number of counts map.
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        events : `~astropy.table`
+            Sampled event list in an astropy table format.
+        """
+        coords = self.sample_position_energy(
+            npred_map=npred_map, n_events=n_events, random_state=0
+        )
+        skycoord = coords.skycoord
+
+        events = Table()
+        events["RA_TRUE"] = skycoord.icrs.ra
+        events["DEC_TRUE"] = skycoord.icrs.dec
+        events["ENERGY_TRUE"] = coords["energy"]
+        return events
