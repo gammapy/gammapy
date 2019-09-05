@@ -736,7 +736,6 @@ class MapEvaluator:
         log.debug("Updating model evaluator")
         # cache current position of the model component
 
-
         # TODO: lookup correct Edisp for this component
         self.edisp = edisp
 

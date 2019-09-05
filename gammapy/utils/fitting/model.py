@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
-from .parameter import Parameters
 import astropy.units as u
+from .parameter import Parameters
 
 __all__ = ["Model"]
 

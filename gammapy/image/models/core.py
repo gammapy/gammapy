@@ -618,6 +618,7 @@ class SkyDiffuseConstant(SkySpatialModel):
     value : `~astropy.units.Quantity`
         Value
     """
+
     frame = None
     tag = "SkyDiffuseConstant"
     evaluation_radius = None
@@ -738,4 +739,3 @@ class SkyDiffuseMap(SkySpatialModel):
         data = super().to_dict(selection=selection)
         data["filename"] = self.filename
         return data
-

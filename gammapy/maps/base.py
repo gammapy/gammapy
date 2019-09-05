@@ -188,7 +188,9 @@ class Map(abc.ABC):
             return Map.from_hdulist(hdulist, hdu, hdu_bands, map_type)
 
     @staticmethod
-    def from_geom(geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"):
+    def from_geom(
+        geom, meta=None, data=None, map_type="auto", unit="", dtype="float32"
+    ):
         """Generate an empty map from a `MapGeom` instance.
 
         Parameters

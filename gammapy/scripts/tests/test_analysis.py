@@ -131,14 +131,14 @@ def config_analysis_data():
                 frame: icrs
                 radius: 0.11 deg
         containment_correction: false
-        data_reducer: 1d 
+        data_reducer: 1d
     flux:
         fp_binning:
             lo_bnd: 1
             hi_bnd: 50
             nbin: 4
             unit: TeV
-            interp: log      
+            interp: log
     """
     return yaml.safe_load(cfg)
 

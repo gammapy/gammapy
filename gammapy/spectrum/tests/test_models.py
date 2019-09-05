@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import astropy.units as u
 from gammapy.spectrum.models import (
+    SPECTRAL_MODELS,
     AbsorbedSpectralModel,
     Absorption,
     ConstantModel,
@@ -15,7 +16,6 @@ from gammapy.spectrum.models import (
     PowerLaw2,
     SpectralGaussian,
     SpectralLogGaussian,
-    SPECTRAL_MODELS,
     TableModel,
 )
 from gammapy.utils.energy import energy_logspace

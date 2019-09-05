@@ -201,6 +201,7 @@ class SkyModel(SkyModelBase):
     name : str
         Model identifier
     """
+
     tag = "SkyModel"
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
@@ -335,11 +336,20 @@ class SkyDiffuseCube(SkyModelBase):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
 
     """
+
     tag = "SkyDiffuseCube"
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(
-        self, map, norm=1, tilt=0, reference="1 TeV", meta=None, interp_kwargs=None, name="diffuse", filename=None
+        self,
+        map,
+        norm=1,
+        tilt=0,
+        reference="1 TeV",
+        meta=None,
+        interp_kwargs=None,
+        name="diffuse",
+        filename=None,
     ):
         self.name = name
         axis = map.geom.get_axis_by_name("energy")
@@ -394,7 +404,9 @@ class SkyDiffuseCube(SkyModelBase):
 
     def evaluate(self, lon, lat, energy):
         """Evaluate model."""
-        is_cached_coord = [_ is coord for _, coord in zip((lon, lat, energy), self._cached_coordinates)]
+        is_cached_coord = [
+            _ is coord for _, coord in zip((lon, lat, energy), self._cached_coordinates)
+        ]
 
         # reset cache
         if not np.all(is_cached_coord):
@@ -463,6 +475,7 @@ class BackgroundModel(Model):
     reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
     """
+
     tag = "BackgroundModel"
     __slots__ = ["map", "norm", "tilt", "reference", "name", "filename"]
 

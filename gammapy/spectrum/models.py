@@ -1226,7 +1226,14 @@ class TableModel(SpectralModel):
     tag = "TableModel"
 
     def __init__(
-        self, energy, values, norm=1, tilt=0, reference="1 TeV", interp_kwargs=None, meta=None
+        self,
+        energy,
+        values,
+        norm=1,
+        tilt=0,
+        reference="1 TeV",
+        interp_kwargs=None,
+        meta=None,
     ):
         self.norm = Parameter("norm", norm, unit="")
         self.tilt = Parameter("tilt", tilt, unit="", frozen=True)
@@ -1521,7 +1528,9 @@ class Absorption:
         """
         energy = self.energy.to(unit)
         values = self.evaluate(energy=energy, parameter=parameter)
-        return TableModel(energy=energy, values=values, interp_kwargs={"values_scale": "lin"})
+        return TableModel(
+            energy=energy, values=values, interp_kwargs={"values_scale": "lin"}
+        )
 
     def evaluate(self, energy, parameter):
         """Evaluate model for energy and parameter value."""
