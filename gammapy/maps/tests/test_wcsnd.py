@@ -1,17 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.cube import PSFKernel
+from gammapy.cube import PSFKernel, MapEvaluator
+from gammapy.cube.models import SkyModel
+from gammapy.image.models import SkyGaussian
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
+from gammapy.spectrum.models import PowerLaw
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("reproject")
@@ -592,3 +598,44 @@ def test_get_spectrum():
 
     spec = m.get_spectrum(region=region, func=np.mean)
     assert_allclose(spec.data, [1.0, 1.0, 1.0])
+
+
+def get_npred_map():
+    position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=30, unit="TeV", name="energy", interp="log"
+    )
+
+    exposure = Map.create(
+        binsz=0.02,
+        map_type="wcs",
+        skydir=position,
+        width="5 deg",
+        axes=[energy_axis],
+        coordsys="GAL",
+        unit="cm2 s",
+    )
+
+    spatial_model = SkyGaussian("0 deg", "0 deg", sigma="0.2 deg")
+    spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
+    skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    exposure.data = 1e14 * np.ones(exposure.data.shape)
+    evaluator = MapEvaluator(model=skymodel, exposure=exposure)
+
+    npred = evaluator.compute_npred()
+    return evaluator, npred
+
+
+def test_map_sampling():
+    eval, npred = get_npred_map()
+    rand_state = get_random_state(0)
+    n_events = rand_state.poisson(np.sum(npred.data))
+
+    nmap = WcsNDMap(eval.geom)
+    events = nmap.sample_events(npred_map=npred, n_events=2, random_state=0)
+
+    assert len(events) == 2
+    assert_allclose(events["RA_TRUE"].data, [266.638497, 266.578664], rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"].data, [-28.930393, -28.815534], rtol=1e-5)
+    assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
