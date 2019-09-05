@@ -572,7 +572,7 @@ class HpxNDMap(HpxMap):
             lon, lat = np.degrees(x), np.degrees(np.pi / 2.0 - y)
             # Add a small ofset to avoid vertices wrapping to the
             # other size of the projection
-            if get_angle(np.median(lon), wcs_lonlat[0]) > 0:
+            if get_angle(np.median(lon), wcs_lonlat[0].to_value("deg")) > 0:
                 idx = wcs.coord_to_pix((lon - 1e-4, lat))
             else:
                 idx = wcs.coord_to_pix((lon + 1e-4, lat))

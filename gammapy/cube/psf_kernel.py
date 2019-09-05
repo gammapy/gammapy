@@ -14,7 +14,7 @@ __all__ = ["PSFKernel"]
 def _make_kernel_geom(geom, max_radius):
     # Create a new geom object with an odd number of pixel and a maximum size
     # This is useful for PSF kernel creation.
-    center = geom.center_coord[:2]
+    center = geom.center_skydir
     binsz = Angle(np.abs(geom.wcs.wcs.cdelt[0]), "deg")
     max_radius = Angle(max_radius)
     npix = 2 * int(max_radius.deg / binsz.deg) + 1
@@ -41,7 +41,7 @@ def _compute_kernel_separations(geom, factor):
     map_c = upsampled_image_geom.get_coord()
     # compute distances to map center
     separations = angular_separation(
-        center_coord[0], center_coord[1], map_c.lon * u.deg, map_c.lat * u.deg
+        center_coord[0], center_coord[1], map_c.lon, map_c.lat
     )
 
     # Create map
