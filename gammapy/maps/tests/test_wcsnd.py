@@ -223,41 +223,42 @@ def test_set_get_by_coord_quantities():
     coords_dict["energy"] = 1 * u.TeV
     assert_allclose(42, m.get_by_coord(coords_dict))
 
+def qconcatenate(q_1, q_2):
+    """Concatenate quantity"""
+    return u.Quantity(np.concatenate((q_1.value, q_2.value)), unit=q_1.unit)
+
+
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
-@pytest.mark.xfail
 def test_wcsndmap_fill_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(
         npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
     )
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
-    fill_coords = tuple([np.concatenate((t, t)) for t in coords])
+    fill_coords = tuple([qconcatenate(t, t) for t in coords])
 
     fill_vals = fill_coords[1]
-    m.fill_by_coord(fill_coords, fill_vals)
-    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1])
+    m.fill_by_coord(fill_coords, fill_vals.value)
+    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1].value)
 
     # Test with SkyCoords
     m = WcsNDMap(geom)
     coords = m.geom.get_coord()
-    skydir = SkyCoord(
-        coords[0], coords[1], unit="deg", frame=coordsys_to_frame(geom.coordsys)
-    )
+    skydir = coords.skycoord
     skydir_cel = skydir.transform_to("icrs")
     skydir_gal = skydir.transform_to("galactic")
     fill_coords_cel = (skydir_cel,) + tuple(coords[2:])
     fill_coords_gal = (skydir_gal,) + tuple(coords[2:])
-    m.fill_by_coord(fill_coords_cel, coords[1])
-    m.fill_by_coord(fill_coords_gal, coords[1])
-    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1])
+    m.fill_by_coord(fill_coords_cel, coords[1].value)
+    m.fill_by_coord(fill_coords_gal, coords[1].value)
+    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1].value)
 
 
 @pytest.mark.parametrize(
     ("npix", "binsz", "coordsys", "proj", "skydir", "axes"), wcs_test_geoms
 )
-@pytest.mark.xfail
 def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
     geom = WcsGeom.create(
         npix=npix, binsz=binsz, skydir=skydir, proj=proj, coordsys=coordsys, axes=axes
@@ -266,8 +267,8 @@ def test_wcsndmap_coadd(npix, binsz, coordsys, proj, skydir, axes):
     m1 = WcsNDMap(geom.upsample(2))
     coords = m0.geom.get_coord()
     m1.fill_by_coord(
-        tuple([np.concatenate((t, t)) for t in coords]),
-        np.concatenate((coords[1], coords[1])),
+        tuple([qconcatenate(t, t) for t in coords]),
+        qconcatenate(coords[1], coords[1]).value,
     )
     m0.coadd(m1)
     assert_allclose(np.nansum(m0.data), np.nansum(m1.data), rtol=1e-4)
