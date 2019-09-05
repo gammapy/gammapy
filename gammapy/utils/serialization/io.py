@@ -220,7 +220,7 @@ class dict_to_datasets:
                 self.cube_register[component["name"]] = cube
 
             evaluator = MapEvaluator(model=cube, exposure=dataset.exposure, psf=dataset.psf, edisp=dataset.edisp)
-            background_model = BackgroundModel(evaluator.compute_npred())
+            background_model = BackgroundModel(evaluator.compute_npred(), name=cube.name)
         else:
             if component["name"].strip().upper() in bkg_prev:
                 BGind = bkg_prev.index(component["name"].strip().upper())
