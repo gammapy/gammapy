@@ -810,11 +810,6 @@ class MapCoord:
         if "lon" not in data or "lat" not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        # if issubclass(data["lon"].__class__, u.Quantity):
-        #     raise ValueError("Quantity not supported for 'lon'")
-        # if issubclass(data["lat"].__class__, u.Quantity):
-        #     raise ValueError("Quantity not supported for 'lat'")
-
         data = OrderedDict(
             [(k, np.atleast_1d(np.asanyarray(v))) for k, v in data.items()]
         )
