@@ -1,0 +1,40 @@
+.. include:: ../../references.txt
+
+.. _pig-017:
+
+*******************
+PIG 16 - Provenance
+*******************
+
+* Author: José Enrique Ruiz, Mathieu Servillat
+* Created: September 6, 2019
+* Accepted:
+* Status: Draft
+* Discussion:
+
+Abstract
+========
+
+
+Status
+======
+
+
+
+Proposal
+========
+
+
+
+Outlook
+=======
+
+
+
+Task list
+=========
+
+
+
+Decision
+========
