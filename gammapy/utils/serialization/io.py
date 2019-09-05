@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
-import astropy.units as u
-from gammapy.cube.fit import MapDataset
+from gammapy.cube.fit import MapDataset, MapEvaluator
 from gammapy.cube.models import (
     BackgroundModel,
     BackgroundModels,
@@ -31,7 +30,7 @@ def models_to_dict(models, selection="all"):
 
     models_data = []
     for model in models:
-        model_data = _model_to_dict(model, selection)
+        model_data = model.to_dict(selection)
         # De-duplicate if model appears several times
         if model_data not in models_data:
             models_data.append(model_data)
@@ -61,22 +60,6 @@ def _restore_shared_parameters(models):
             param.name = param.name.split("@")[0]
 
 
-def _model_to_dict(model, selection):
-    data = {}
-    data["name"] = model.name
-    if getattr(model, "filename", None) is not None:
-        data["filename"] = model.filename
-    if model.__class__.__name__ == "SkyModel":
-        data["spatial"] = model.spatial_model.to_dict(selection)
-        if getattr(model.spatial_model, "filename", None) is not None:
-            data["spatial"]["filename"] = model.spatial_model.filename
-        data["spectral"] = model.spectral_model.to_dict(selection)
-    else:
-        data["model"] = model.to_dict(selection)
-
-    return data
-
-
 def dict_to_models(data, link=True):
     """De-serialise model data to Model objects.
 
@@ -89,11 +72,9 @@ def dict_to_models(data, link=True):
     """
     models = []
     for model in data["components"]:
-        if "model" in model:
-            if model["model"]["type"] == "BackgroundModel":
-                continue
-            else:
-                raise NotImplementedError
+        # background models are created separately
+        if model["type"] == "BackgroundModel":
+            continue
 
         model = _dict_to_skymodel(model)
         models.append(model)
@@ -150,42 +131,32 @@ def _link_shared_parameters(models):
 
 def datasets_to_dict(datasets, path, selection, overwrite):
     from gammapy.utils.serialization import models_to_dict
-    from gammapy.cube.models import BackgroundModels, SkyModels
+    from gammapy.cube.models import BackgroundModels
 
-    models_list = []
-    backgrounds_list = []
+    unique_models = []
+    unique_backgrounds = []
     datasets_dictlist = []
+
     for dataset in datasets:
         filename = path + "data_" + dataset.name + ".fits"
         dataset.write(filename, overwrite)
+        datasets_dictlist.append(dataset.to_dict(filename=filename))
+
+        for model in dataset.model.skymodels:
+            if model not in unique_models:
+                unique_models.append(model)
+
         if isinstance(dataset.background_model, BackgroundModels):
             backgrounds = dataset.background_model.models
         else:
             backgrounds = [dataset.background_model]
-        if isinstance(dataset.model, SkyModels):
-            models = dataset.model.skymodels
-        else:
-            models = [dataset.model]
-        # TODO: remove isinstance checks once #2102  is resolved
-        bkg_names = [background.name for background in backgrounds]
-        models_names = [model.name for model in models]
-        datasets_dictlist.append(
-            {
-                "name": dataset.name,
-                "filename": filename,
-                "backgrounds": bkg_names,
-                "models": models_names,
-            }
-        )
-        for model in models:
-            if model not in models_list:
-                models_list.append(model)
+
         for background in backgrounds:
-            if background not in backgrounds_list:
-                backgrounds_list.append(background)
+            if background not in unique_backgrounds:
+                unique_backgrounds.append(background)
 
     datasets_dict = {"datasets": datasets_dictlist}
-    components_dict = models_to_dict(models_list + backgrounds_list, selection)
+    components_dict = models_to_dict(unique_models + unique_backgrounds, selection)
     return datasets_dict, components_dict
 
 
@@ -226,8 +197,7 @@ class dict_to_datasets:
         backgrounds = []
         for component in components["components"]:
             if (
-                "model" in component
-                and component["model"]["type"] == "BackgroundModel"
+                component["type"] == "BackgroundModel"
                 and component["name"] in bkg_names
             ):
                 background_model = self.add_background(dataset, component, bkg_prev)
@@ -248,9 +218,9 @@ class dict_to_datasets:
             except KeyError:
                 cube = SkyDiffuseCube.read(component["filename"])
                 self.cube_register[component["name"]] = cube
-            background_model = BackgroundModel.from_skymodel(
-                cube, exposure=dataset.exposure, psf=dataset.psf, edisp=dataset.edisp
-            )
+
+            evaluator = MapEvaluator(model=cube, exposure=dataset.exposure, psf=dataset.psf, edisp=dataset.edisp)
+            background_model = BackgroundModel(evaluator.compute_npred(), name=cube.name)
         else:
             if component["name"].strip().upper() in bkg_prev:
                 BGind = bkg_prev.index(component["name"].strip().upper())
@@ -265,6 +235,6 @@ class dict_to_datasets:
         try:
             params = self.params_register[component["name"]]
         except KeyError:
-            params = Parameters.from_dict(component["model"])
+            params = Parameters.from_dict(component)
             self.params_register[component["name"]] = params
         background_model.parameters = params

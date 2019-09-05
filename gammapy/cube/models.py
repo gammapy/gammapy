@@ -201,7 +201,7 @@ class SkyModel(SkyModelBase):
     name : str
         Model identifier
     """
-
+    tag = "SkyModel"
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="source"):
@@ -302,6 +302,15 @@ class SkyModel(SkyModelBase):
         kwargs.setdefault("name", self.name + "-copy")
         return self.__class__(**kwargs)
 
+    def to_dict(self, selection):
+        """Create dict for YAML serilisation"""
+        data = {}
+        data["type"] = self.tag
+        data["name"] = self.name
+        data["spatial"] = self.spatial_model.to_dict(selection)
+        data["spectral"] = self.spectral_model.to_dict(selection)
+        return data
+
 
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
@@ -326,7 +335,7 @@ class SkyDiffuseCube(SkyModelBase):
         Default arguments are {'interp': 'linear', 'fill_value': 0}.
 
     """
-
+    tag = "SkyDiffuseCube"
     __slots__ = ["map", "norm", "meta", "_interp_kwargs"]
 
     def __init__(
@@ -350,6 +359,11 @@ class SkyDiffuseCube(SkyModelBase):
         interp_kwargs.setdefault("fill_value", 0)
         self._interp_kwargs = interp_kwargs
 
+        # TODO: onve we have implement a more general and better model caching
+        #  remove this again
+        self._cached_value = None
+        self._cached_coordinates = (None, None, None)
+
         super().__init__([self.norm, self.tilt, self.reference])
 
     @classmethod
@@ -369,21 +383,34 @@ class SkyDiffuseCube(SkyModelBase):
         name = Path(filename).stem
         return cls(m, name=name, filename=filename)
 
-    def evaluate(self, lon, lat, energy):
-        """Evaluate model."""
+    def _interpolate(self, lon, lat, energy):
         coord = {
             "lon": lon.to_value("deg"),
             "lat": lat.to_value("deg"),
             "energy": energy,
         }
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
+        return val
+
+    def evaluate(self, lon, lat, energy):
+        """Evaluate model."""
+        is_cached_coord = [_ is coord for _, coord in zip((lon, lat, energy), self._cached_coordinates)]
+
+        # reset cache
+        if not np.all(is_cached_coord):
+            self._cached_value = None
+
+        if self._cached_value is None:
+            self._cached_coordinates = (lon, lat, energy)
+            self._cached_value = self._interpolate(lon, lat, energy)
+
         norm = self.parameters["norm"].value
 
         tilt = self.parameters["tilt"].value
         reference = self.parameters["reference"].quantity
         tilt_factor = np.power((energy / reference).to(""), -tilt)
 
-        val = norm * val * tilt_factor.value
+        val = norm * self._cached_value * tilt_factor.value
         return u.Quantity(val, self.map.unit, copy=False)
 
     def copy(self):
@@ -413,6 +440,12 @@ class SkyDiffuseCube(SkyModelBase):
             setattr(init, parameter.name, parameter)
         return init
 
+    def to_dict(self, selection):
+        data = super().to_dict(selection=selection)
+        data["filename"] = self.filename
+        data["name"] = self.name
+        return data
+
 
 class BackgroundModel(Model):
     """Background model.
@@ -430,7 +463,7 @@ class BackgroundModel(Model):
     reference : `~astropy.units.Quantity`
         Reference energy of the tilt.
     """
-
+    tag = "BackgroundModel"
     __slots__ = ["map", "norm", "tilt", "reference", "name", "filename"]
 
     def __init__(
@@ -476,40 +509,6 @@ class BackgroundModel(Model):
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
 
-    @classmethod
-    def from_skymodel(
-        cls, skymodel, exposure, name=None, edisp=None, psf=None, **kwargs
-    ):
-        """Create background model from sky model by applying IRFs.
-
-        Typically used for diffuse Galactic or constant emission models.
-
-        Parameters
-        ----------
-        skymodel : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyDiffuseCube`
-            Sky model
-        exposure : `~gammapy.maps.Map`
-            Exposure map
-        edisp : `~gammapy.irf.EnergyDispersion`
-            Energy dispersion
-        psf : `~gammapy.cube.PSFKernel`
-            PSF kernel
-        """
-        from .fit import MapEvaluator
-
-        evaluator = MapEvaluator(
-            model=skymodel, exposure=exposure, edisp=edisp, psf=psf
-        )
-        background = evaluator.compute_npred()
-        background_model = cls(background=background, **kwargs)
-        if name is None:
-            background_model.name = skymodel.name
-        else:
-            background_model.name = name
-        if skymodel.__class__.__name__ == "SkyDiffuseCube":
-            background_model.filename = skymodel.filename
-        return background_model
-
     def __add__(self, model):
         models = [self]
         if isinstance(model, BackgroundModels):
@@ -519,6 +518,13 @@ class BackgroundModel(Model):
         else:
             raise NotImplementedError
         return BackgroundModels(models)
+
+    def to_dict(self, selection):
+        data = super().to_dict(selection=selection)
+        data["name"] = self.name
+        if self.filename is not None:
+            data["filename"] = self.filename
+        return data
 
 
 class BackgroundModels(Model):

@@ -1,5 +1,6 @@
 components:
 - name: source
+  type: SkyModel
   spatial:
     parameters:
     - factor: 0.0

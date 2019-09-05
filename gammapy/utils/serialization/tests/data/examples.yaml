@@ -1,5 +1,6 @@
 components:
 - name: source0
+  type: SkyModel
   spatial:
     type: SkyPointSource
     parameters:
@@ -55,6 +56,7 @@ components:
       max: .nan
       frozen: false
 - name: source1
+  type: SkyModel
   spatial:
     type: SkyDisk
     parameters:
@@ -98,6 +100,7 @@ components:
       max: .nan
       frozen: true
 - name: source2
+  type: SkyModel
   spatial:
     type: SkyDiffuseMap
     filename: $GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits
@@ -131,60 +134,58 @@ components:
       frozen: false
 - name: background_irf
   id: CTA-gc
-  model:
-    type: BackgroundModel
-    parameters:
-    - name: norm
-      value: 1.01
-      factor: 1.01
-      scale: 1.0
-      unit: ''
-      min: 0.0
-      max: .nan
-      frozen: false
-    - name: tilt
-      value: 0.0
-      factor: 0.0
-      scale: 1.0
-      unit: ''
-      min: .nan
-      max: .nan
-      frozen: true
-    - name: reference
-      value: 1.0
-      factor: 1.0
-      scale: 1.0
-      unit: TeV
-      min: .nan
-      max: .nan
-      frozen: true
+  type: BackgroundModel
+  parameters:
+  - name: norm
+    value: 1.01
+    factor: 1.01
+    scale: 1.0
+    unit: ''
+    min: 0.0
+    max: .nan
+    frozen: false
+  - name: tilt
+    value: 0.0
+    factor: 0.0
+    scale: 1.0
+    unit: ''
+    min: .nan
+    max: .nan
+    frozen: true
+  - name: reference
+    value: 1.0
+    factor: 1.0
+    scale: 1.0
+    unit: TeV
+    min: .nan
+    max: .nan
+    frozen: true
 - name: cube_iem
   id: global
   filename: $GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits
-  model:
-    type: BackgroundModel
-    parameters:
-    - name: norm
-      value: 1.09
-      factor: 1.09
-      scale: 1.0
-      unit: ''
-      min: 0.0
-      max: .nan
-      frozen: false
-    - name: tilt
-      value: 0.0
-      factor: 0.0
-      scale: 1.0
-      unit: ''
-      min: .nan
-      max: .nan
-      frozen: true
-    - name: reference
-      value: 1.0
-      factor: 1.0
-      scale: 1.0
-      unit: TeV
-      min: .nan
-      max: .nan
-      frozen: true
+  type: BackgroundModel
+  parameters:
+  - name: norm
+    value: 1.09
+    factor: 1.09
+    scale: 1.0
+    unit: ''
+    min: 0.0
+    max: .nan
+    frozen: false
+  - name: tilt
+    value: 0.0
+    factor: 0.0
+    scale: 1.0
+    unit: ''
+    min: .nan
+    max: .nan
+    frozen: true
+  - name: reference
+    value: 1.0
+    factor: 1.0
+    scale: 1.0
+    unit: TeV
+    min: .nan
+    max: .nan
+    frozen: true
