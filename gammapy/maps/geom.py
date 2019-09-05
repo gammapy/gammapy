@@ -540,7 +540,8 @@ class MapAxis:
             Array of axis coordinate values.
         """
         pix = pix - self._pix_offset
-        return pix_to_coord(self._nodes, pix, interp=self._interp)
+        values = pix_to_coord(self._nodes, pix, interp=self._interp)
+        return u.Quantity(values, unit=self.unit, copy=False)
 
     def coord_to_pix(self, coord):
         """Transform from axis to pixel coordinates.
@@ -688,7 +689,7 @@ class MapAxis:
         edges_pix = np.clip(edges_pix, -0.5, self.nbin - 0.5)
         edges_idx = np.round(edges_pix + 0.5) - 0.5
         edges_idx = np.unique(edges_idx)
-        edges_ref = self.pix_to_coord(edges_idx) * self.unit
+        edges_ref = self.pix_to_coord(edges_idx)
 
         groups = QTable()
         groups["{}_min".format(self.name)] = edges_ref[:-1]
@@ -708,7 +709,7 @@ class MapAxis:
                 "bin_type": "underflow",
                 "idx_min": 0,
                 "idx_max": edge_idx_start,
-                "{}_min".format(self.name): self.pix_to_coord(-0.5) * self.unit,
+                "{}_min".format(self.name): self.pix_to_coord(-0.5),
                 "{}_max".format(self.name): edge_ref_start,
             }
             groups.insert_row(0, vals=underflow)
@@ -721,8 +722,7 @@ class MapAxis:
                 "idx_min": edge_idx_end + 1,
                 "idx_max": self.nbin - 1,
                 "{}_min".format(self.name): edge_ref_end,
-                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5)
-                * self.unit,
+                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5),
             }
             groups.add_row(vals=overflow)
 
@@ -1613,6 +1613,6 @@ class MapGeom(abc.ABC):
 
         # create mask
         coords = self.get_coord()
-        mask = coords["energy"] > emin.to_value(energy_axis.unit)
-        mask &= coords["energy"] < emax.to_value(energy_axis.unit)
+        mask = coords["energy"] > emin
+        mask &= coords["energy"] < emax
         return mask
