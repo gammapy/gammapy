@@ -361,9 +361,8 @@ class Config:
                     print(line)
 
     def validate(self):
-        """Validate config parameters against schema."""
-        schema = read_yaml(SCHEMA_FILE)
-        jsonschema.validate(self.settings, schema, _gp_validator)
+        """Validate or fill initial config parameters against schema."""
+        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), _gp_defaults_1d)
 
     def _update_settings(self, source, target):
         for key, val in source.items():
@@ -375,7 +374,7 @@ class Config:
                 self._update_settings(val, target[key])
 
 
-def extend_with_default(validator_class):
+def extend_with_default(validator_class, template="basic"):
     validate_properties = validator_class.VALIDATORS["properties"]
     reserved = [
         "default",
@@ -387,11 +386,25 @@ def extend_with_default(validator_class):
         "properties",
         "patternProperties",
     ]
+    template_pars = {
+        "basic": {"default_field": "default",
+                  "exclude_props": []},
+        "1d": {"default_field": "default_1d",
+               "exclude_props": []},
+    }
+    reserved.append(template_pars[template]["exclude_props"])
+    default_field = template_pars["basic"]["default_field"]
+    default_specific_field = template_pars[template]["default_field"]
 
     def set_defaults(validator, properties, instance, schema):
         for prop, sub_schema in properties.items():
-            if prop not in reserved and "default" in sub_schema:
-                instance.setdefault(prop, sub_schema["default"])
+            if prop not in reserved:
+                if default_specific_field in sub_schema:
+                    default = default_specific_field
+                else:
+                    default = default_field
+                if default in sub_schema:
+                    instance.setdefault(prop, sub_schema[default])
         for error in validate_properties(validator, properties, instance, schema):
             yield error
 
@@ -423,4 +436,6 @@ _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
 _gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
-_gp_validator = extend_with_default(_gp_units_validator)
+_gp_defaults = extend_with_default(_gp_units_validator, template="basic")
+_gp_defaults_1d = extend_with_default(_gp_units_validator, template="1d")
+#_gp_defaults_3d = extend_with_default(_gp_units_validator, template="3d")
