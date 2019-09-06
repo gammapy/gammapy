@@ -672,10 +672,7 @@ class MapEvaluator:
             if not coord.coordsys == coordsys:
                 coord = coord.to_coordsys(coordsys)
 
-        return (
-            u.Quantity(coord.lon, "deg", copy=False),
-            u.Quantity(coord.lat, "deg", copy=False),
-        )
+        return (coord.lon, coord.lat)
 
     @property
     def lon(self):

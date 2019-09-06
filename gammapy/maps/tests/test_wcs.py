@@ -79,9 +79,9 @@ def test_wcsgeom_test_coord_to_idx(npix, binsz, coordsys, proj, skydir, axes):
 
     if not geom.is_allsky:
         coords = geom.center_coord[:2] + tuple([ax.center[0] for ax in geom.axes])
-        coords[0][...] += 2.0 * np.max(geom.width[0].to_value("deg"))
+        coords[0][...] += 2.0 * np.max(geom.width[0])
         idx = geom.coord_to_idx(coords)
-        assert_allclose(np.full_like(coords[0], -1, dtype=int), idx[0])
+        assert_allclose(np.full_like(coords[0].value, -1, dtype=int), idx[0])
         idx = geom.coord_to_idx(coords, clip=True)
         assert np.all(np.not_equal(np.full_like(coords[0], -1, dtype=int), idx[0]))
 
@@ -231,7 +231,12 @@ def test_cutout():
     )
     position = SkyCoord(0.1, 0.2, unit="deg", frame="galactic")
     cutout_geom = geom.cutout(position=position, width=2 * 0.3 * u.deg, mode="trim")
-    assert_allclose(cutout_geom.center_coord, (0.1, 0.2, 2.0))
+
+    center_coord = cutout_geom.center_coord
+    assert_allclose(center_coord[0].value, 0.1)
+    assert_allclose(center_coord[1].value, 0.2)
+    assert_allclose(center_coord[2].value, 2.0)
+
     assert cutout_geom.data_shape == (2, 6, 6)
 
 
@@ -240,8 +245,10 @@ def test_wcsgeom_get_coord():
         skydir=(0, 0), npix=(4, 3), binsz=1, coordsys="GAL", proj="CAR"
     )
     coord = geom.get_coord(mode="edges")
-    assert_allclose(coord.lon[0, 0], 2)
-    assert_allclose(coord.lat[0, 0], -1.5)
+    assert_allclose(coord.lon[0, 0].value, 2)
+    assert coord.lon[0, 0].unit == "deg"
+    assert_allclose(coord.lat[0, 0].value, -1.5)
+    assert coord.lat[0, 0].unit == "deg"
 
 
 def test_wcsgeom_get_pix_coords():
