@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Column, QTable, Table
+from astropy.utils import lazyproperty
 from gammapy.utils.interpolation import interpolation_scale
 from .utils import INVALID_INDEX, find_bands_hdu, find_hdu, edges_from_lo_hi
 
@@ -414,13 +415,13 @@ class MapAxis:
     def name(self, val):
         self._name = val
 
-    @property
+    @lazyproperty
     def edges(self):
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
-    @property
+    @lazyproperty
     def center(self):
         """Return array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
