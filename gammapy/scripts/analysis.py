@@ -350,16 +350,13 @@ class Config:
         return yaml.dump(self.settings)
 
     @staticmethod
-    def print_template(section=""):
+    def print_help(section=""):
         """Display template configuration settings."""
-        template = {}
         with open(SCHEMA_FILE) as f:
             for line in filter(lambda line: line.startswith("#"), f):
                 line = line.strip("\n")
-                if not line.startswith("#     "):
-                    keyword = line.strip("#")
-                    keyword = keyword.strip(":")
-                    keyword = keyword.strip()
+                if line.startswith("# Block: "):
+                    keyword = line.replace("# Block: ", "")
                 if section == "" or section == keyword:
                     print(line)
 

@@ -6,18 +6,30 @@ type: object
 additionalProperties: true
 properties:
 
+# Block: general
+# General settings for the API
+#
+#    Logging settings for the session
+#    Example values for the following properties
+#    logging:
+#        level: CRITICAL, ERROR, WARNING, INFO, DEBUG
+#        filename: mylogfile.log
+#        filemode: w
+#        format: "%(asctime)s - %(message)s"
+#        datefmt: "%d-%b-%y %H:%M:%S"
+#
+#    Output folder where files will be stored
+#    outdir:
+#
     general:
-        description: "General settings for the API."
         type: object
         default: {"logging": {}}
         additionalProperties: false
         properties:
             outdir:
-                description: "Output folder where files will be stored."
                 type: string
                 default: "."
             logging:
-                description: "Logging settings for the session."
                 type: object
                 default: {"level": ""}
                 additionalProperties: false
@@ -40,28 +52,56 @@ properties:
                 dependencies:
                     filemode: [filename]
         required: [logging]
-#    general:
-#        logging:
-#            level: INFO
-#            filename: mylogfile.log
-#            filemode: w
-#            format: "%(asctime)s - %(message)s"
-#            datefmt: "%d-%b-%y %H:%M:%S"
-#        outdir: .
 
+# Block: observations
+# Observations used in the analysis
+#
+#    Path to data store where to fetch observations
+#    datastore:
+#
+#    List of filters with selection criteria
+#    Example values for the following properties
+#    filters:
+#
+#        - filter_type: sky_circle, angle_box, par_box, par_value, ids, all
+#          Type of filter used
+#
+#          Properties when filter_type is "par_box"
+#          frame: galactic, equatorial, icrs, fk5
+#          lon: 83.633 deg
+#          lat: 22.014 deg
+#          radius: 1 deg
+#          border: 1 deg
+#
+#          Properties when filter_type is "par_box" or "par_value"
+#          variable: TARGET_NAME
+#
+#          Value parameter to match declared variable when filter_type is "par_value"
+#          value_param: Crab
+#
+#          Value range with units to match declared variable when filter_type is "par_box"
+#          value_range:
+#              - 265 deg
+#              - 268 deg
+#
+#          List of observation identifiers when filter_type is "ids"
+#          obs_ids:
+#              - 23523
+#              - 23526
+#
+#          inverted: true for not matching criteria
+#          exclude: true to exclude matched observations
+#
     observations:
-        description: "Observations used in the analysis."
         type: object
         default: {}
         additionalProperties: false
         properties:
             datastore:
-                description: "Data store where to fetch observations."
                 type: string
                 default:
                     $GAMMAPY_DATA/hess-dl3-dr1
             filters:
-                description: "Array of filters with selection criteria."
                 type: array
                 default: [{}]
                 items:
@@ -96,26 +136,31 @@ properties:
                             items: {type: integer}
                     required: [filter_type]
         required: [datastore]
-#    observations:
-#        datastore: $GAMMAPY_DATA/hess-dl3-dr1
-#        filters:
-#            - filter_type: sky_circle, angle_box, par_box, par_value, ids, all
-#              frame: galactic, equatorial, icrs, fk5
-#              lon: 83.633 deg
-#              lat: 22.014 deg
-#              radius: 1 deg
-#              border: 1 deg
-#              variable: TARGET_NAME
-#              value_param: Crab
-#              value_range:
-#              - 265 deg
-#              - 268 deg
-#              obs_ids: [23523, 23526]
-#           exclude: false
-#           inverted: false
+
+# Block: reduction
+# Process of data reduction
+#
+#    Chosen data reducer process
+#    data_reducer: 1d, 2d, 3d
+#
+#    Parameters used in the estimation of the background
+#    Example values for the following properties
+#    background:
+#
+#        background_estimator: reflected
+#        on_region:
+#            center:
+#            - 83.633 deg
+#            - 22.014 deg
+#            frame: icrs
+#            radius: 0.11 deg
+#        exclusion_mask
+#            filename: mask.fits
+#            hdu: IMAGE
+#
+#    containment_correction: true
 
     reduction:
-        description: "Process of data reduction."
         type: object
         default: {}
         additionalProperties: false
@@ -146,7 +191,6 @@ properties:
                                 default: icrs
                                 enum: [galactic, equatorial, icrs, fk5]
                     exclusion_mask:
-                        description: "Filename of a FITS file."
                         type: object
                         additionalProperties: false
                         properties:
@@ -172,44 +216,57 @@ properties:
             properties:
                 background:
                     required: [background_estimator, on_region]
-#        background:
-#            background_estimator: reflected
-#            on_region:
-#                center:
-#                - 83.633 deg
-#                - 22.014 deg
-#                frame: icrs
-#                radius: 0.11 deg
-#            exclusion_mask
-#                filename: mask.fits
-#                hdu: IMAGE
-#        containment_correction: true
-#        data_reducer: 1d
+
+# Block: geometry
+# Geometry where to perform data reduction and analysis
+#
+#        Map pixel size in degrees
+#        binsz: 0.02
+#        Coordinate system
+#        coordsys: CEL, GAL
+#        Any valid WCS projection type
+#        proj: CAR
+#        Lon and lat in deg in the coordsys of the map
+#        skydir: [83, 22]
+#        Width of the map in degrees
+#        width: [5, 5]
+#        offset_max: 3 deg
+#
+#        Additional Map Axes other than spatial
+#        Example values for energy axes
+#        axes:
+#            e_reco:
+#                lo_bnd: 0.01
+#                hi_bnd: 100
+#                nbin: 73
+#                unit: TeV
+#                interp: log
+#            e_true:
+#                lo_bnd: 0.01
+#                hi_bnd: 315
+#                nbin: 109
+#                unit: TeV
+#                interp: log
 
     geometry:
-        description: "Geometry where to perform data reduction and analysis."
+        description: ""
         type: object
         default: {}
         additionalProperties: false
         properties:
             binsz:
-                description: "Map pixel size in degrees."
                 type: number
             coordsys:
-                description: "Coordinate system."
                 type: string
                 enum: [CEL, GAL]
             proj:
-                description: "Any valid WCS projection type."
                 type: string
             skydir:
-                description: "Lon and lat in deg in the coordsys of the map."
                 type: array
                 items: {type: number}
                 minItems: 2
                 maxItems: 2
             width:
-                description: "Width of the map in degrees."
                 type: array
                 items: {type: number}
                 minItems: 1
@@ -225,26 +282,10 @@ properties:
                         "$ref": "#/definitions/energy_axis"
                     e_true:
                         "$ref": "#/definitions/energy_axis"
-#    geometry:
-#        binsz: 0.02
-#        coordsys: CEL, GAL
-#        proj: CAR
-#        skydir: [83, 22]
-#        width: [5, 5]
-#        offset_max: 3 deg
-#        axes:
-#            e_reco:
-#                lo_bnd: 0.01
-#                hi_bnd: 100
-#                nbin: 73
-#                unit: TeV
-#                interp: log
-#            e_true:
-#                lo_bnd: 0.01
-#                hi_bnd: 315
-#                nbin: 109
-#                unit: TeV
-#                interp: log
+
+# Block: model
+# Parameters that define the models used in the analysis process
+# TODO
 
     model:
         description: "Model serialized components and parameters."
@@ -264,63 +305,14 @@ properties:
                             "$ref": "#/definitions/model_components"
                         spectral:
                             "$ref": "#/definitions/model_components"
-#    model:
-#        components:
-#            - name: source
-#              spatial:
-#                    parameters:
-#                    - factor: 0.0
-#                      frozen: false
-#                      max: 180.0
-#                      min: -180.0
-#                      name: lon_0
-#                      scale: 1.0
-#                      unit: deg
-#                      value: 0.0
-#                    - factor: 0.0
-#                      frozen: false
-#                      max: 90.0
-#                      min: -90.0
-#                      name: lat_0
-#                      scale: 1.0
-#                      unit: deg
-#                      value: 0.0
-#                    - factor: 1.0
-#                      frozen: false
-#                      max: .nan
-#                      min: 0.0
-#                      name: sigma
-#                      scale: 1.0
-#                      unit: deg
-#                      value: 1.0
-#                    type: SkyGaussian
-#              spectral:
-#                    parameters:
-#                    - factor: 2.0
-#                      frozen: false
-#                      max: .nan
-#                      min: .nan
-#                      name: index
-#                      scale: 1.0
-#                      unit: ''
-#                      value: 2.0
-#                    - factor: 1.0e-12
-#                      frozen: false
-#                      max: .nan
-#                      min: .nan
-#                      name: amplitude
-#                      scale: 1.0
-#                      unit: cm-2 s-1 TeV-1
-#                      value: 1.0e-12
-#                    - factor: 1.0
-#                      frozen: true
-#                      max: .nan
-#                      min: .nan
-#                      name: reference
-#                      scale: 1.0
-#                      unit: TeV
-#                      value: 1.0
-#                    type: PowerLaw
+
+# Block: fit
+# Parameters that are used in the fitting process
+#
+#        Energy range considered, min and max values with unitas
+#        fit_range:
+#            min: 1 TeV
+#            max: 100 Tev
 
     fit:
         type: object
@@ -334,10 +326,17 @@ properties:
                 properties:
                     min: {type: number}
                     max: {type: number}
-#    fit:
-#        fit_range:
-#            min: 1 TeV
-#            max: 100 Tev
+
+# Block: flux
+# Parameters that are used during the flux estimation process
+#
+#        Energy binning considered
+#        fp_binning:
+#            lo_bnd: 1
+#            hi_bnd: 10
+#            nbin: 11
+#            unit: TeV
+#            interp: log
 
     flux:
         type: object
@@ -346,13 +345,6 @@ properties:
         properties:
             fp_binning:
                 "$ref": "#/definitions/energy_axis"
-#    flux:
-#        fp_binning:
-#            lo_bnd: 1
-#            hi_bnd: 10
-#            nbin: 11
-#            unit: TeV
-#            interp: log
 
 required: [general, observations]
 
