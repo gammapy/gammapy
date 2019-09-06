@@ -375,7 +375,7 @@ class SpectrumDataset(Dataset):
         """
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         background = CountsSpectrum(e_reco[:-1], e_reco[1:])
-        aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_etrue[:-1].shape)*u.m**2)
+        aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_true[:-1].shape)*u.m**2)
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
         mask_safe = np.ones_like(counts.data.data, 'bool')
         livetime = 0*u.s
