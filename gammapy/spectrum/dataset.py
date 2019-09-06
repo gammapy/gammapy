@@ -359,6 +359,34 @@ class SpectrumDataset(Dataset):
         ax.set_ylabel("Residuals ({})".format(label))
         return ax
 
+    @classmethod
+    def create(cls, e_reco, e_true=None):
+        """Creates empty SpectrumDataset
+
+        Empty containers are created with the correct geometry.
+        counts, background and aeff are zero and edisp is diagonal.
+
+        Parameters
+        ----------
+        e_reco : `~astropy.units.Quantity`
+            edges of counts vector
+        e_true : `~astropy.units.Quantity`
+            edges of effective area table. If not set use reco energy values. Default : None
+        """
+        counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
+        background = CountsSpectrum(e_reco[:-1], e_reco[1:])
+        aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_etrue[:-1].shape)*u.m**2)
+        edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+        mask_safe = np.ones_like(counts.data.data, 'bool')
+        livetime = 0*u.s
+
+        return SpectrumDataset(counts=counts,
+                               aeff=aeff,
+                               edisp=edisp,
+                               mask_safe=mask_safe,
+                               background=background,
+                               livetime=livetime,
+                               )
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
