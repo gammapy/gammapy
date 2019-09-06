@@ -375,11 +375,13 @@ class SpectrumDataset(Dataset):
         reference_time : `~astropy.time.Time`
             reference time of the dataset, Default is "2000-01-01"
         """
+        if e_true is None:
+            e_true = e_reco
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         background = CountsSpectrum(e_reco[:-1], e_reco[1:])
         aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_true[:-1].shape)*u.m**2)
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
-        mask_safe = np.ones_like(counts.data.data, 'bool')
+        mask_safe = np.ones_like(counts.data, 'bool')
         gti = GTI.create(u.Quantity([],'s'), u.Quantity([],'s'), reference_time)
         livetime = gti.time_sum
 
