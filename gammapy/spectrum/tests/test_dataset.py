@@ -166,7 +166,7 @@ class TestSpectrumOnOff:
         assert empty_dataset.aeff.data.axis("energy").nbin == 3
         assert empty_dataset.edisp.data.axis("e_reco").nbin == 2
         assert empty_dataset.livetime.value == 0
-
+        assert len(empty_dataset.gti.table) == 0
 
     def test_init_no_model(self):
         with pytest.raises(AttributeError):

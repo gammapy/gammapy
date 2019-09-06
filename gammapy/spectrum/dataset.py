@@ -5,7 +5,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.data import ObservationStats
+from gammapy.data import ObservationStats, GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.stats import cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
@@ -360,7 +360,7 @@ class SpectrumDataset(Dataset):
         return ax
 
     @classmethod
-    def create(cls, e_reco, e_true=None):
+    def create(cls, e_reco, e_true=None, reference_time="2000-01-01"):
         """Creates empty SpectrumDataset
 
         Empty containers are created with the correct geometry.
@@ -372,13 +372,16 @@ class SpectrumDataset(Dataset):
             edges of counts vector
         e_true : `~astropy.units.Quantity`
             edges of effective area table. If not set use reco energy values. Default : None
+        reference_time : `~astropy.time.Time`
+            reference time of the dataset, Default is "2000-01-01"
         """
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         background = CountsSpectrum(e_reco[:-1], e_reco[1:])
         aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_true[:-1].shape)*u.m**2)
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
         mask_safe = np.ones_like(counts.data.data, 'bool')
-        livetime = 0*u.s
+        gti = GTI.create(u.Quantity([],'s'), u.Quantity([],'s'), reference_time)
+        livetime = gti.time_sum
 
         return SpectrumDataset(counts=counts,
                                aeff=aeff,
@@ -386,6 +389,7 @@ class SpectrumDataset(Dataset):
                                mask_safe=mask_safe,
                                background=background,
                                livetime=livetime,
+                               gti=gti,
                                )
 
 class SpectrumDatasetOnOff(SpectrumDataset):

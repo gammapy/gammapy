@@ -124,4 +124,3 @@ def test_gti_create():
     assert len(gti.table) == 2
     assert_allclose(gti.time_ref.mjd, time_ref.tt.mjd)
     assert_allclose(gti.table['START'], start.to_value('s'))
-    
