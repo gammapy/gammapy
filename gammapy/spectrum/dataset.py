@@ -421,6 +421,9 @@ class SpectrumDataset(Dataset):
             # TODO: Add warning
             self.counts = None
 
+        if self.mask_safe is None:
+            self.mask_safe = np.ones_like(self.counts.data)
+
         if self.background is not None and other.background is not None:
             self.background.data[self.mask_safe] *= 0.
             self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
