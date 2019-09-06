@@ -362,7 +362,7 @@ class Config:
 
     def validate(self):
         """Validate or fill initial config parameters against schema."""
-        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), _gp_defaults_1d)
+        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), _gp_defaults)
 
     def _update_settings(self, source, target):
         for key, val in source.items():
@@ -387,12 +387,24 @@ def extend_with_default(validator_class, template="basic"):
         "patternProperties",
     ]
     template_pars = {
+        "all": {"default_field": "default",
+                "exclude_props": []},
         "basic": {"default_field": "default",
-                  "exclude_props": []},
+                  "exclude_props": ["binsz", "border", "coordsys",
+                                    "datefmt", "e_reco", "e_true",
+                                    "exclude", "exclusion_mask",
+                                    "filename", "filemode", "format",
+                                    "inverted", "lat", "lon", "proj",
+                                    "skydir", "spatial", "width", "offset_max"]},
         "1d": {"default_field": "default_1d",
-               "exclude_props": []},
+               "exclude_props": ["binsz", "border", "coordsys",
+                                 "datefmt", "e_reco", "e_true",
+                                 "exclude", "exclusion_mask",
+                                 "filename", "filemode", "format",
+                                 "inverted", "lat", "lon", "proj",
+                                 "skydir", "spatial", "width", "offset_max"]},
     }
-    reserved.append(template_pars[template]["exclude_props"])
+    reserved.extend(template_pars[template]["exclude_props"])
     default_field = template_pars["basic"]["default_field"]
     default_specific_field = template_pars[template]["default_field"]
 
@@ -438,4 +450,5 @@ _gp_units_validator = jsonschema.validators.extend(
 )
 _gp_defaults = extend_with_default(_gp_units_validator, template="basic")
 _gp_defaults_1d = extend_with_default(_gp_units_validator, template="1d")
+_gp_defaults_all = extend_with_default(_gp_units_validator, template="all")
 #_gp_defaults_3d = extend_with_default(_gp_units_validator, template="3d")
