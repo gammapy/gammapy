@@ -2,8 +2,9 @@
 import numpy as np
 from astropy.table import Table, vstack
 from astropy.units import Quantity
+from astropy.time import Time
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
+from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref, time_ref_to_dict
 
 __all__ = ["GTI"]
 
@@ -189,3 +190,22 @@ class GTI:
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
         return self.__class__(merged)
+
+    @classmethod
+    def create(cls, start, stop, reference_time="2000-01-01"):
+        """Creates a GTI table from start and stop times.
+
+        Parameter
+        ---------
+        start : `~astropy.units.Quantity`
+            start times w.r.t. reference time
+        stop : `~astropy.units.Quantity`
+            stop times w.r.t. reference time
+        reference_time : `~astropy.time.Time`
+            the reference time to use in GTI definition
+        """
+        reference_time = Time(reference_time)
+        meta = time_ref_to_dict(reference_time)
+        table=Table({"START": start.to('s'), "STOP": stop.to('s')}, meta=meta)
+        return cls(table)
+
