@@ -143,14 +143,15 @@ class TestSpectrumDataset:
         )
         livetime = self.livetime
         dataset1 = SpectrumDataset(
-            None, self.src, livetime, None, aeff, edisp, self.bkg
+            counts = self.src, livetime=livetime, aeff=aeff, edisp=edisp, background=self.bkg
         )
+        print(dataset1.mask_safe)
 
         livetime2 = 0.5*livetime
         aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], 2*aeff.data.data)
         bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:],2*self.bkg.data)
         dataset2 = SpectrumDataset(
-            None, self.src, livetime2, None, aeff2, edisp, bkg2
+            counts=self.src, livetime=livetime2, aeff=aeff2, edisp=edisp, background=bkg2
         )
 
         dataset1.stack(dataset2)
