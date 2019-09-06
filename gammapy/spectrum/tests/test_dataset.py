@@ -122,6 +122,20 @@ class TestSpectrumDataset:
     def test_str(self):
         assert "SpectrumDataset" in str(self.dataset)
 
+    def test_spectrumdataset_create2(self):
+        e_reco = u.Quantity([0.1,1,10.], 'TeV')
+        e_true = u.Quantity([0.05, 0.5, 5, 20.], 'TeV')
+        empty_dataset = SpectrumDataset.create(e_reco, e_true)
+
+        assert empty_dataset.counts.total_counts == 0
+        assert empty_dataset.data_shape[0] == 2
+        assert empty_dataset.background.total_counts == 0
+        assert empty_dataset.background.energy.nbin == 2
+        assert empty_dataset.aeff.data.axis("energy").nbin == 3
+        assert empty_dataset.edisp.data.axis("e_reco").nbin == 2
+        assert empty_dataset.livetime.value == 0
+        assert len(empty_dataset.gti.table) == 0
+
 
 class TestSpectrumOnOff:
     """ Test ON OFF SpectrumDataset"""
