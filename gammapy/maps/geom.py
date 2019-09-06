@@ -401,6 +401,9 @@ class MapAxis:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash(self.name)
+
     @property
     def interp(self):
         """Interpolation scale of the axis."""
@@ -415,13 +418,13 @@ class MapAxis:
     def name(self, val):
         self._name = val
 
-    @lazyproperty
+    @property
     def edges(self):
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
-    @lazyproperty
+    @property
     def center(self):
         """Return array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
