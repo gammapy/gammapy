@@ -610,7 +610,7 @@ def get_npred_map():
         binsz=0.02,
         map_type="wcs",
         skydir=position,
-        width="5 deg",
+        width="2 deg",
         axes=[energy_axis],
         coordsys="GAL",
         unit="cm2 s",
@@ -629,13 +629,11 @@ def get_npred_map():
 
 def test_map_sampling():
     eval, npred = get_npred_map()
-    rand_state = get_random_state(0)
-    n_events = rand_state.poisson(np.sum(npred.data))
 
-    nmap = WcsNDMap(eval.geom)
-    events = nmap.sample_events(npred_map=npred, n_events=2, random_state=0)
+    nmap = WcsNDMap(geom=eval.geom, data=npred.data)
+    events = nmap.sample_events(n_events=2, random_state=0)
 
     assert len(events) == 2
-    assert_allclose(events["RA_TRUE"].data, [266.638497, 266.578664], rtol=1e-5)
-    assert_allclose(events["DEC_TRUE"].data, [-28.930393, -28.815534], rtol=1e-5)
+    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
     assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
