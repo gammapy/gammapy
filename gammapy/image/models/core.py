@@ -21,15 +21,13 @@ __all__ = [
     "SkyDiffuseMap",
 ]
 
-
 log = logging.getLogger(__name__)
-
-EDGE_WIDTH_95 = 2.326174307353347
 
 
 def smooth_edge(x, width):
     value = (x / width).to_value("")
-    return 0.5 * (1 - scipy.special.erf(value * EDGE_WIDTH_95))
+    edge_width_95 = 2.326174307353347
+    return 0.5 * (1 - scipy.special.erf(value * edge_width_95))
 
 
 class SkySpatialModel(Model):
