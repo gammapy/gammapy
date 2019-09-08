@@ -8,7 +8,7 @@ from gammapy.cube.models import (
     SkyModel,
     SkyModels,
 )
-from gammapy.image.models import SPATIAL_MODELS
+from gammapy.modeling.models import SPATIAL_MODELS
 from gammapy.spectrum.models import SPECTRAL_MODELS
 from gammapy.utils.fitting import Parameters
 

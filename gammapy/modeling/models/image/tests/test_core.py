@@ -3,7 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.image.models import (
+from gammapy.maps import Map, WcsGeom
+from gammapy.modeling.models import (
     SkyDiffuseConstant,
     SkyDiffuseMap,
     SkyDisk,
@@ -13,7 +14,6 @@ from gammapy.image.models import (
     SkyPointSource,
     SkyShell,
 )
-from gammapy.maps import Map, WcsGeom
 from gammapy.utils.testing import requires_data
 
 

@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from gammapy.cube.models import SkyModel, SkyModels
-from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.modeling.models import SkyGaussian, SkyPointSource, SkyShell
 from gammapy.spectrum import FluxPoints
 from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator

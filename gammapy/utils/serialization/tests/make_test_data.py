@@ -9,9 +9,9 @@ from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDataset, MapEvaluator, MapMaker, PSFKernel
 from gammapy.cube.models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
 from gammapy.data import DataStore
-from gammapy.image.models import SkyGaussian, SkyPointSource
 from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling.models import SkyGaussian, SkyPointSource
 from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.fitting import Datasets
 

@@ -11,8 +11,8 @@ import numpy as np
 import astropy.units as u
 from gammapy.cube.models import SkyModel, SkyModels
 from gammapy.extern import xmltodict
-from gammapy.image import models as spatial
 from gammapy.maps import Map
+from gammapy.modeling.models import image as spatial
 from gammapy.spectrum import models as spectral
 from gammapy.utils.fitting import Parameter, Parameters
 

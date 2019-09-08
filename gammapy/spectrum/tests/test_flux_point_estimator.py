@@ -6,9 +6,9 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import simulate_dataset
 from gammapy.cube.models import SkyModel
-from gammapy.image.models import SkyGaussian
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling.models import SkyGaussian
 from gammapy.spectrum import (
     FluxPointsEstimator,
     SpectrumDatasetOnOff,

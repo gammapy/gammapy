@@ -3,8 +3,8 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.image.models import SkySpatialModel
 from gammapy.maps import Map
+from gammapy.modeling.models import SkySpatialModel
 from gammapy.spectrum.models import SpectralModel
 from gammapy.utils.fitting import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, write_yaml

@@ -12,7 +12,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.cube.models import SkyModel, SkyModels
-from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.modeling.models import SkyGaussian, SkyPointSource, SkyShell
 from gammapy.spectrum import FluxPoints
 from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
 from gammapy.utils.scripts import make_path
