@@ -541,7 +541,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         Returns
         -------
-        sky_model : `~gammapy.cube.models.SkyModel`
+        sky_model : `~gammapy.modeling.models.SkyModel`
             Sky model of the catalog object.
         """
         if self.spatial_model_type in {"2-gaussian", "3-gaussian"}:

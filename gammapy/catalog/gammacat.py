@@ -362,7 +362,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
@@ -468,7 +468,7 @@ class SourceCatalogGammaCat(SourceCatalog):
         )
 
     def to_sky_models(self):
-        """Convert to a `~gammapy.cube.models.SkyModels`.
+        """Convert to a `~gammapy.modeling.models.SkyModels`.
 
         TODO: add an option whether to skip or raise on missing models or data.
         """

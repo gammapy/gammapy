@@ -631,7 +631,7 @@ class SkyDiffuseConstant(SkySpatialModel):
 class SkyDiffuseMap(SkySpatialModel):
     """Spatial sky map template model (2D).
 
-    This is for a 2D image. Use `~gammapy.cube.models.SkyDiffuseCube` for 3D cubes with
+    This is for a 2D image. Use `~gammapy.modeling.models.SkyDiffuseCube` for 3D cubes with
     an energy axis.
 
     Parameters

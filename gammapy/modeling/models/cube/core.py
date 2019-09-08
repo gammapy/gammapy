@@ -38,11 +38,11 @@ class SkyModelBase(Model):
 
 
 class SkyModels:
-    """Collection of `~gammapy.cube.models.SkyModel`
+    """Collection of `~gammapy.modeling.models.SkyModel`
 
     Parameters
     ----------
-    skymodels : list of `~gammapy.cube.models.SkyModel`
+    skymodels : list of `~gammapy.modeling.models.SkyModel`
         Sky models
 
     Examples

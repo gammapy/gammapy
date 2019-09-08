@@ -149,7 +149,7 @@ class UnknownParameterError(ValueError):
 
 def xml_to_sky_models(xml):
     """
-    Convert XML to `~gammapy.cube.models.SkyModelList`
+    Convert XML to `~gammapy.modeling.models.SkyModelList`
     """
     full_dict = xmltodict.parse(xml)
     skymodels = list()
@@ -163,7 +163,7 @@ def xml_to_sky_models(xml):
 
 def xml_to_skymodel(xml):
     """
-    Convert XML to `~gammapy.cube.models.SkyModel`
+    Convert XML to `~gammapy.modeling.models.SkyModel`
     """
     type_ = xml["@type"]
     # TODO: Support ctools radial acceptance
@@ -263,7 +263,7 @@ def xml_to_parameters(xml, which, type_):
 
 def sky_models_to_xml(sourcelib):
     """
-    Convert `~gammapy.cube.models.SkyModels` to XML
+    Convert `~gammapy.modeling.models.SkyModels` to XML
     """
     xml = '<?xml version="1.0" encoding="utf-8"?>\n'
     xml += '<source_library title="source library">\n'
@@ -276,7 +276,7 @@ def sky_models_to_xml(sourcelib):
 
 def skymodel_to_xml(skymodel):
     """
-    Convert `~gammapy.cube.models.SkyModel` to XML
+    Convert `~gammapy.modeling.models.SkyModel` to XML
     """
     if "Diffuse" in str(skymodel):
         type_ = "DiffuseSource"

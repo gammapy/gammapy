@@ -412,7 +412,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
@@ -949,7 +949,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
