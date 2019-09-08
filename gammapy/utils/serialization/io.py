@@ -8,8 +8,7 @@ from gammapy.cube.models import (
     SkyModel,
     SkyModels,
 )
-from gammapy.modeling.models import SPATIAL_MODELS
-from gammapy.spectrum.models import SPECTRAL_MODELS
+from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
 from gammapy.utils.fitting import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]

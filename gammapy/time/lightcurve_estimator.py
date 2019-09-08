@@ -2,8 +2,8 @@
 import logging
 from collections import OrderedDict
 import numpy as np
+from gammapy.modeling.models import ScaleModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
-from gammapy.spectrum.models import ScaleModel
 from gammapy.time import LightCurve
 from gammapy.utils.fitting import Datasets, Fit
 from gammapy.utils.table import table_from_row_data

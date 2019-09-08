@@ -5,13 +5,13 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Quantity
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
-from gammapy.spectrum import SpectrumEvaluator, integrate_spectrum
-from gammapy.spectrum.models import (
+from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
     PowerLaw2,
     TableModel,
 )
+from gammapy.spectrum import SpectrumEvaluator, integrate_spectrum
 from gammapy.utils.testing import assert_quantity_allclose, requires_dependency
 
 

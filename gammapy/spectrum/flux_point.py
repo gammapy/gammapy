@@ -5,12 +5,12 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
+from gammapy.modeling.models import PowerLaw, ScaleModel
 from gammapy.utils.fitting import Dataset, Datasets, Fit
 from gammapy.utils.interpolation import interpolate_likelihood_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
 from .dataset import SpectrumDatasetOnOff
-from .models import PowerLaw, ScaleModel
 
 __all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 
@@ -343,7 +343,7 @@ class FluxPoints:
         Examples
         --------
         >>> from gammapy.spectrum import FluxPoints
-        >>> from gammapy.spectrum.models import PowerLaw
+        >>> from gammapy.modeling.models import PowerLaw
         >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits'
         >>> flux_points = FluxPoints.read(filename)
         >>> model = PowerLaw(index=2.2)

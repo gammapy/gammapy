@@ -3,7 +3,7 @@
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from gammapy.spectrum.models import SpectralModel, TableModel
+from gammapy.modeling.models import SpectralModel, TableModel
 from gammapy.utils.fitting import Parameter
 from gammapy.utils.scripts import make_path
 

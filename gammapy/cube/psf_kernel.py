@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from gammapy.irf import TablePSF
 from gammapy.maps import Map, WcsGeom
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import PowerLaw
 from gammapy.utils.gauss import Gauss2DPDF
 
 __all__ = ["PSFKernel"]

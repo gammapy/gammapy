@@ -2,7 +2,7 @@
 """HAWC catalogs (https://www.hawc-observatory.org)."""
 import numpy as np
 from astropy.table import Table
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import PowerLaw
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 

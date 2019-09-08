@@ -7,16 +7,19 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from gammapy.cube.models import SkyModel
 from gammapy.maps import Map
-from gammapy.modeling.models import SkyDiffuseMap, SkyDisk, SkyGaussian, SkyPointSource
-from gammapy.spectrum import FluxPoints
-from gammapy.spectrum.models import (
+from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
     PowerLaw,
     PowerLaw2,
+    SkyDiffuseMap,
+    SkyDisk,
+    SkyGaussian,
+    SkyPointSource,
 )
+from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace

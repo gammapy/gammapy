@@ -8,13 +8,12 @@ from gammapy.cube import simulate_dataset
 from gammapy.cube.models import SkyModel
 from gammapy.irf import EffectiveAreaTable, load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling.models import SkyGaussian
+from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw, SkyGaussian
 from gammapy.spectrum import (
     FluxPointsEstimator,
     SpectrumDatasetOnOff,
     SpectrumEvaluator,
 )
-from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.testing import requires_data, requires_dependency
 
 

@@ -7,8 +7,7 @@ from gammapy.cube import MapDataset, simulate_dataset
 from gammapy.cube.models import SkyModel, SkyModels
 from gammapy.irf import load_cta_irfs
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling.models import SkyGaussian
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import PowerLaw, SkyGaussian
 from gammapy.utils.testing import requires_data
 
 

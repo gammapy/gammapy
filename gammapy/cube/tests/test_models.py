@@ -13,8 +13,7 @@ from gammapy.cube.models import (
 )
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import SkyGaussian
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import PowerLaw, SkyGaussian
 from gammapy.utils.testing import requires_data
 
 

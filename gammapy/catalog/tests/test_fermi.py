@@ -12,7 +12,7 @@ from gammapy.catalog import (
     SourceCatalog3FHL,
     SourceCatalog4FGL,
 )
-from gammapy.spectrum.models import (
+from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
     PLSuperExpCutoff3FGL,

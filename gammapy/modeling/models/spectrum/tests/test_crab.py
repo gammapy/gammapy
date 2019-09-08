@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import astropy.units as u
-from gammapy.spectrum import create_crab_spectral_model
+from gammapy.modeling.models import create_crab_spectral_model
 from gammapy.utils.testing import assert_quantity_allclose
 
 CRAB_SPECTRA = [

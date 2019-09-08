@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import PowerLaw
 from gammapy.spectrum.tests.test_flux_point_estimator import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
