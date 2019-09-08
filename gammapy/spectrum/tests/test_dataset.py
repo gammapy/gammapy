@@ -155,8 +155,8 @@ class TestSpectrumOnOff:
         )
 
     def test_spectrumdataset_create(self):
-        e_reco = u.Quantity([0.1,1,10.], 'TeV')
-        e_true = u.Quantity([0.05, 0.5, 5, 20.], 'TeV')
+        e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
+        e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
         empty_dataset = SpectrumDataset.create(e_reco, e_true)
 
         assert empty_dataset.counts.total_counts == 0

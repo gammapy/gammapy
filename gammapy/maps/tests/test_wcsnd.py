@@ -223,6 +223,7 @@ def test_set_get_by_coord_quantities():
     coords_dict["energy"] = 1 * u.TeV
     assert_allclose(42, m.get_by_coord(coords_dict))
 
+
 def qconcatenate(q_1, q_2):
     """Concatenate quantity"""
     return u.Quantity(np.concatenate((q_1.value, q_2.value)), unit=q_1.unit)
@@ -288,7 +289,9 @@ def test_wcsndmap_interp_by_coord(npix, binsz, coordsys, proj, skydir, axes):
     assert_allclose(coords[1].value, m.interp_by_coord(coords, interp="linear"))
     assert_allclose(coords[1].value, m.interp_by_coord(coords, interp=1))
     if geom.is_regular and not geom.is_allsky:
-        assert_allclose(coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic"))
+        assert_allclose(
+            coords[1].to_value("deg"), m.interp_by_coord(coords, interp="cubic")
+        )
 
 
 def test_interp_by_coord_quantities():

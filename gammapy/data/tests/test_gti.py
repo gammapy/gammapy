@@ -115,12 +115,13 @@ def test_gti_union():
     assert_allclose(gti.table["START"], [1, 5])
     assert_allclose(gti.table["STOP"], [4, 8])
 
+
 def test_gti_create():
-    start = u.Quantity([1, 2], 'min')
-    stop = u.Quantity([1.5,2.5],'min')
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
     time_ref = Time("2010-01-01 00:00:00.0")
-    gti = GTI.create(start,stop, time_ref)
+    gti = GTI.create(start, stop, time_ref)
 
     assert len(gti.table) == 2
     assert_allclose(gti.time_ref.mjd, time_ref.tt.mjd)
-    assert_allclose(gti.table['START'], start.to_value('s'))
+    assert_allclose(gti.table["START"], start.to_value("s"))

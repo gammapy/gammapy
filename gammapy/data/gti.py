@@ -1,10 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.table import Table, vstack
-from astropy.units import Quantity
 from astropy.time import Time
+from astropy.units import Quantity
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref, time_ref_to_dict
+from gammapy.utils.time import (
+    time_ref_from_dict,
+    time_ref_to_dict,
+    time_relative_to_ref,
+)
 
 __all__ = ["GTI"]
 
@@ -208,6 +212,5 @@ class GTI:
         stop = Quantity(stop)
         reference_time = Time(reference_time)
         meta = time_ref_to_dict(reference_time)
-        table=Table({"START": start.to('s'), "STOP": stop.to('s')}, meta=meta)
+        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
         return cls(table)
-

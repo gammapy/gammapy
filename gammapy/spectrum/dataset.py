@@ -5,7 +5,7 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.data import ObservationStats, GTI
+from gammapy.data import GTI, ObservationStats
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
 from gammapy.stats import cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
@@ -379,20 +379,24 @@ class SpectrumDataset(Dataset):
             e_true = e_reco
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         background = CountsSpectrum(e_reco[:-1], e_reco[1:])
-        aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_true[:-1].shape)*u.m**2)
+        aeff = EffectiveAreaTable(
+            e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
+        )
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
-        mask_safe = np.ones_like(counts.data, 'bool')
-        gti = GTI.create(u.Quantity([],'s'), u.Quantity([],'s'), reference_time)
+        mask_safe = np.ones_like(counts.data, "bool")
+        gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
 
-        return SpectrumDataset(counts=counts,
-                               aeff=aeff,
-                               edisp=edisp,
-                               mask_safe=mask_safe,
-                               background=background,
-                               livetime=livetime,
-                               gti=gti,
-                               )
+        return SpectrumDataset(
+            counts=counts,
+            aeff=aeff,
+            edisp=edisp,
+            mask_safe=mask_safe,
+            background=background,
+            livetime=livetime,
+            gti=gti,
+        )
+
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.

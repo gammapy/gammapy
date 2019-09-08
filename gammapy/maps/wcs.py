@@ -669,7 +669,7 @@ class WcsGeom(MapGeom):
 
         coords = [
             u.Quantity(coords[0], unit="deg", copy=False),
-            u.Quantity(coords[1], unit="deg", copy=False)
+            u.Quantity(coords[1], unit="deg", copy=False),
         ]
 
         coords += axes_pix_to_coord(self.axes, pix[self._slice_non_spatial_axes])
