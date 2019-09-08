@@ -5,7 +5,6 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
-from gammapy.cube.models import SkyModel
 from gammapy.maps import Map
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw3FGL,
@@ -17,6 +16,7 @@ from gammapy.modeling.models import (
     SkyDiffuseMap,
     SkyDisk,
     SkyGaussian,
+    SkyModel,
     SkyPointSource,
 )
 from gammapy.spectrum import FluxPoints

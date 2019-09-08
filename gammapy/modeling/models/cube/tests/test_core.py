@@ -4,16 +4,17 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.cube import MapEvaluator, PSFKernel
-from gammapy.cube.models import (
+from gammapy.irf import EnergyDispersion
+from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.modeling.models import (
     BackgroundModel,
     BackgroundModels,
+    PowerLaw,
     SkyDiffuseCube,
+    SkyGaussian,
     SkyModel,
     SkyModels,
 )
-from gammapy.irf import EnergyDispersion
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling.models import PowerLaw, SkyGaussian
 from gammapy.utils.testing import requires_data
 
 

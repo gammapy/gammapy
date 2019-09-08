@@ -6,11 +6,12 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.cube.models import SkyModel, SkyModels
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
     SkyGaussian,
+    SkyModel,
+    SkyModels,
     SkyPointSource,
     SkyShell,
 )

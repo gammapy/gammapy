@@ -11,12 +11,13 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.cube.models import SkyModel, SkyModels
 from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw,
     PowerLaw,
     PowerLaw2,
     SkyGaussian,
+    SkyModel,
+    SkyModels,
     SkyPointSource,
     SkyShell,
 )

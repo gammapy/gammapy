@@ -7,14 +7,17 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.cube import MapDataset, MapEvaluator, MapMaker, PSFKernel
-from gammapy.cube.models import BackgroundModel, SkyDiffuseCube, SkyModel, SkyModels
 from gammapy.data import DataStore
 from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
+    BackgroundModel,
     ExponentialCutoffPowerLaw,
     PowerLaw,
+    SkyDiffuseCube,
     SkyGaussian,
+    SkyModel,
+    SkyModels,
     SkyPointSource,
 )
 from gammapy.utils.fitting import Datasets
