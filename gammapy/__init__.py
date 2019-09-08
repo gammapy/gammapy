@@ -18,18 +18,18 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 
 ::
 
- `astro`          --- Astrophysical source and population models
- `catalog`        --- Source catalog tools
- `cube`           --- Cube analysis
- `data`           --- Data and observation handling
- `detect`         --- Source detection tools
- `image`          --- Image processing and analysis tools
- `irf`            --- Instrument response functions (IRFs)
- `maps`           --- Sky map data structures
- `spectrum`       --- Spectrum estimation and modeling
- `stats`          --- Statistics tools
- `time`           --- Time handling and analysis
- `utils`          --- Utility functions and classes
+ astro        --- Astrophysical source and population models
+ catalog      --- Source catalog tools
+ cube         --- Cube analysis
+ data         --- Data and observation handling
+ detect       --- Source detection tools
+ irf          --- Instrument response functions (IRFs)
+ maps         --- Sky map data structures
+ modeling     --- Models and fitting
+ spectrum     --- Spectrum estimation and modeling
+ stats        --- Statistics tools
+ time         --- Time handling and analysis
+ utils        --- Utility functions and classes
 """
 
 __all__ = ["__version__", "test", "song"]
