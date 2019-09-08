@@ -3,7 +3,7 @@
 import abc
 import numpy as np
 import astropy.units as u
-from gammapy.spectrum import integrate_spectrum
+from gammapy.modeling.models.spectrum.utils import integrate_spectrum
 from gammapy.utils.fitting import Parameter, Parameters
 
 __all__ = [

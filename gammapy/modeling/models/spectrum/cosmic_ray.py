@@ -5,7 +5,7 @@ For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resour
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
 from astropy import units as u
-from gammapy.modeling.models.spectrum.models import PowerLaw, SpectralLogGaussian
+from .core import PowerLaw, SpectralLogGaussian
 
 __all__ = ["create_cosmic_ray_spectral_model"]
 

@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.units import Quantity
 from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
-from gammapy.spectrum import integrate_spectrum
+from gammapy.modeling.models.spectrum.utils import integrate_spectrum
 from gammapy.utils.testing import assert_quantity_allclose, requires_dependency
 
 
