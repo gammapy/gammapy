@@ -55,7 +55,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
         pars, errs = {}, {}
@@ -335,7 +335,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
         pars, errs = {}, {}
@@ -567,7 +567,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model `~gammapy.spectrum.models.SpectralModel`."""
+        """Best fit spectral model `~gammapy.modeling.models.SpectralModel`."""
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux"]
         pars["emin"], pars["emax"] = self.energy_range
@@ -639,7 +639,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux50"]
         pars["emin"], pars["emax"] = self.energy_range
@@ -853,7 +853,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         d = self.data
         spec_type = self.data["SpectrumType"].strip()
 

@@ -194,7 +194,7 @@ class SkyModel(SkyModelBase):
     ----------
     spatial_model : `~gammapy.image.models.SkySpatialModel`
         Spatial model (must be normalised to integrate to 1)
-    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
     name : str
         Model identifier
@@ -240,12 +240,12 @@ class SkyModel(SkyModelBase):
 
     @property
     def spectral_model(self):
-        """`~gammapy.spectrum.models.SpectralModel`"""
+        """`~gammapy.modeling.models.SpectralModel`"""
         return self._spectral_model
 
     @spectral_model.setter
     def spectral_model(self, model):
-        """`~gammapy.spectrum.models.SpectralModel`"""
+        """`~gammapy.modeling.models.SpectralModel`"""
         self._spectral_model = model
         self._parameters = Parameters(
             self.spatial_model.parameters.parameters

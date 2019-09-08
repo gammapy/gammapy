@@ -57,7 +57,7 @@ def _map_spectrum_weight(map, spectrum=None):
     ----------
     map : `~gammapy.maps.Map`
         Input map with an "energy" axis.
-    spectrum : `~gammapy.spectrum.models.SpectralModel`
+    spectrum : `~gammapy.modeling.models.SpectralModel`
         Spectral model to compute the weights.
         Default is power-law with spectral index of 2.
 

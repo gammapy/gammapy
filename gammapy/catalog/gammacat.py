@@ -277,7 +277,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
+        """Source spectral model (`~gammapy.modeling.models.SpectralModel`).
 
         Parameter errors are statistical errors only.
         """

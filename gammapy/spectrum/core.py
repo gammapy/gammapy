@@ -311,7 +311,7 @@ class SpectrumEvaluator:
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
     aeff : `~gammapy.irf.EffectiveAreaTable`
         EffectiveArea

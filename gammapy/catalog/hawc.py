@@ -123,7 +123,7 @@ class SourceCatalogObject2HWC(SourceCatalogObject):
         Returns
         -------
         models : list
-            List of `~gammapy.spectrum.models.SpectralModel`
+            List of `~gammapy.modeling.models.SpectralModel`
         """
         models = [self._get_spectral_model(0)]
 

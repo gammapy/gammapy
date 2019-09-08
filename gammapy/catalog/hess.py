@@ -435,12 +435,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return self.data["Spectral_Model"].strip().lower()
 
     def spectral_model(self, which="best"):
-        """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
+        """Spectral model (`~gammapy.modeling.models.SpectralModel`).
 
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
-        - ``PL`` : `~gammapy.spectrum.models.PowerLaw`
-        - ``ECPL`` : `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
+        - ``PL`` : `~gammapy.modeling.models.PowerLaw`
+        - ``ECPL`` : `~gammapy.modeling.models.ExponentialCutoffPowerLaw`
 
         Parameters
         ----------

@@ -180,7 +180,7 @@ def xml_to_skymodel(xml):
 def xml_to_model(xml, which):
     """
     Convert XML to `~gammapy.image.models.SkySpatialModel` or
-    `~gammapy.spectrum.models.SpectralModel`
+    `~gammapy.modeling.models.SpectralModel`
     """
     type_ = xml["@type"]
 
@@ -295,7 +295,7 @@ def skymodel_to_xml(skymodel):
 def model_to_xml(model, which):
     """
     Convert `~gammapy.image.models.SkySpatialModel` or
-    `~gammapy.spectrum.models.SpectralModel` to XML
+    `~gammapy.modeling.models.SpectralModel` to XML
     """
     tag = "spatialModel" if which == "spatial" else "spectrum"
 

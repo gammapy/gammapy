@@ -97,7 +97,7 @@ class FluxPoints:
         from astropy import units as u
         from astropy.table import Table
         from gammapy.spectrum import FluxPoints
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.modeling.models import PowerLaw
 
         table = Table()
         pwl = PowerLaw()
@@ -320,7 +320,7 @@ class FluxPoints:
         ----------
         sed_type : {'dnde'}
              SED type to convert to.
-        model : `~gammapy.spectrum.models.SpectralModel`
+        model : `~gammapy.modeling.models.SpectralModel`
             Spectral model assumption.  Note that the value of the amplitude parameter
             does not matter. Still it is recommended to use something with the right
             scale and units. E.g. `amplitude = 1e-12 * u.Unit('cm-2 s-1 TeV-1')`
@@ -1133,7 +1133,7 @@ class FluxPointsDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
     data : `~gammapy.spectrum.FluxPoints`
         Flux points.
@@ -1151,7 +1151,7 @@ class FluxPointsDataset(Dataset):
         from astropy import units as u
         from gammapy.spectrum import FluxPoints, FluxPointsDataset
         from gammapy.utils.fitting import Fit
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.modeling.models import PowerLaw
 
         filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'
         flux_points = FluxPoints.read(filename)

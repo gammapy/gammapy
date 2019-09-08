@@ -273,7 +273,7 @@ class PSFKernel:
         ----------
         exposures : `~numpy.ndarray`
             An array of exposures for the same true energies as the PSF kernel
-        spectrum : `~gammapy.spectrum.models.SpectralModel`
+        spectrum : `~gammapy.modeling.models.SpectralModel`
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
 

@@ -16,7 +16,7 @@ class PrimaryFlux:
     Based on the precomputed models by Cirelli et al. (2016). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
-    `~gammapy.spectrum.models.TableModel` for a chosen dark matter mass and
+    `~gammapy.modeling.models.TableModel` for a chosen dark matter mass and
     annihilation channel.
 
     References
@@ -114,7 +114,7 @@ class PrimaryFlux:
 
     @property
     def table_model(self):
-        """Spectrum as `~gammapy.spectrum.models.TableModel`."""
+        """Spectrum as `~gammapy.modeling.models.TableModel`."""
         subtable = self.table[self.table["mDM"] == self.mDM.value]
         energies = (10 ** subtable["Log[10,x]"]) * self.mDM
         channel_name = self.channel_registry[self.channel]
