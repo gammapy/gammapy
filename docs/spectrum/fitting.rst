@@ -23,7 +23,7 @@ simulated crab runs using the `~gammapy.utils.fitting.Fit` class.
 
     from gammapy.spectrum import SpectrumDatasetOnOff
     from gammapy.utils.fitting import Fit
-    from gammapy.spectrum.models import PowerLaw
+    from gammapy.modeling.models import PowerLaw
     import matplotlib.pyplot as plt
 
     path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"

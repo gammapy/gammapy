@@ -4,7 +4,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import WcsGeom, MapAxis, WcsNDMap
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import PowerLaw
 from gammapy.image.models import SkyGaussian
 from gammapy.utils.random import get_random_state
 from gammapy.cube import make_map_exposure_true_energy, MapEvaluator

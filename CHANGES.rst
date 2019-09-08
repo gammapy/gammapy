@@ -547,9 +547,9 @@ learn about the new maps classes, see the ``intro_maps`` tutorial at
 
 The new ``gammapy.utils.fitting`` contains a simple modeling and fitting
 framework, that allows the use of ``iminuit`` and ``sherpa`` optimisers as
-"backends" for any fit in Gammapy. The classes in `gammapy.spectrum.models` (1D
-spectrum models) are updated, and `gammapy.image.models` (2D spatial models) and
-`gammapy.cube.models` (3D cube models) was added. The ``SpectrumFit`` class was
+"backends" for any fit in Gammapy. The classes in ``gammapy.spectrum.models`` (1D
+spectrum models) are updated, and ``gammapy.image.models`` (2D spatial models) and
+``gammapy.cube.models`` (3D cube models) was added. The ``SpectrumFit`` class was
 updated and a ``MapFit`` to fit models to maps was added. This part of Gammapy
 remains work in progress, some changes and major improvements are planned for
 the coming months.
