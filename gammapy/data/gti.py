@@ -199,8 +199,8 @@ class GTI:
     def create(cls, start, stop, reference_time="2000-01-01"):
         """Creates a GTI table from start and stop times.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         start : `~astropy.units.Quantity`
             start times w.r.t. reference time
         stop : `~astropy.units.Quantity`
