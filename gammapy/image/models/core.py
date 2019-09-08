@@ -232,9 +232,7 @@ class SkyGaussianElongated(SkySpatialModel):
         model = SkyGaussianElongated("2 deg", "2 deg", "1 deg", 0.7, phi, frame="galactic")
 
         coords = m_geom.get_coord()
-        lon = coords.lon * u.deg
-        lat = coords.lat * u.deg
-        vals = model(lon, lat)
+        vals = model(coords.lon, coords.lat)
         skymap = Map.from_geom(m_geom, data=vals.value)
 
         _, ax, _ = skymap.smooth("0.05 deg").plot()
@@ -450,9 +448,7 @@ class SkyEllipse(SkySpatialModel):
 
         m_geom = WcsGeom.create(binsz=0.01, width=(3, 3), skydir=(2, 2), coordsys="GAL", proj="AIT")
         coords = m_geom.get_coord()
-        lon = coords.lon * u.deg
-        lat = coords.lat * u.deg
-        vals = model(lon, lat)
+        vals = model(coords.lon, coords.lat)
         skymap = Map.from_geom(m_geom, data=vals.value)
 
         _, ax, _ = skymap.smooth("0.05 deg").plot()
