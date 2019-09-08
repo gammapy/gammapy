@@ -147,7 +147,7 @@ class LightCurveTableModel(Model):
     --------
     Read an example light curve object:
 
-    >>> from gammapy.time.models import LightCurveTableModel
+    >>> from gammapy.modeling.models import LightCurveTableModel
     >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
     >>> light_curve = LightCurveTableModel.read(path)
 
