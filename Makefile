@@ -24,6 +24,9 @@ help:
 	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
 	@echo '     black              Run black code formatter'
 	@echo '     isort              Run isort code formatter to sort imports'
+	@echo '     clean-nb           Run black and clean output from tutorial notebooks'
+	@echo '     polish             Run trailing-spaces, black, isort and clean-nb'
+	@echo ''
 	@echo '     flake8             Run flake8 static code analysis'
 	@echo '     pylint             Run pylint static code analysis'
 	@echo '     pydocstyle         Run docstring checks'
@@ -113,6 +116,8 @@ black:
 
 isort:
 	isort -rc gammapy
+
+polish: black isort trailing-spaces clean-nb;
 
 # Note: flake8 is very fast and almost never has false positives
 flake8:
