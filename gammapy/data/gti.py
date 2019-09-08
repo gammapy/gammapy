@@ -62,6 +62,26 @@ class GTI:
         return self.__class__(self.table)
 
     @classmethod
+    def create(cls, start, stop, reference_time="2000-01-01"):
+        """Creates a GTI table from start and stop times.
+
+        Parameters
+        ----------
+        start : `~astropy.units.Quantity`
+            start times w.r.t. reference time
+        stop : `~astropy.units.Quantity`
+            stop times w.r.t. reference time
+        reference_time : `~astropy.time.Time`
+            the reference time to use in GTI definition
+        """
+        start = Quantity(start)
+        stop = Quantity(stop)
+        reference_time = Time(reference_time)
+        meta = time_ref_to_dict(reference_time)
+        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
+        return cls(table)
+
+    @classmethod
     def read(cls, filename, **kwargs):
         """Read from FITS file.
 
@@ -194,23 +214,3 @@ class GTI:
 
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
         return self.__class__(merged)
-
-    @classmethod
-    def create(cls, start, stop, reference_time="2000-01-01"):
-        """Creates a GTI table from start and stop times.
-
-        Parameters
-        ----------
-        start : `~astropy.units.Quantity`
-            start times w.r.t. reference time
-        stop : `~astropy.units.Quantity`
-            stop times w.r.t. reference time
-        reference_time : `~astropy.time.Time`
-            the reference time to use in GTI definition
-        """
-        start = Quantity(start)
-        stop = Quantity(stop)
-        reference_time = Time(reference_time)
-        meta = time_ref_to_dict(reference_time)
-        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
-        return cls(table)
