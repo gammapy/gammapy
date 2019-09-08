@@ -131,7 +131,7 @@ def _link_shared_parameters(models):
 
 def datasets_to_dict(datasets, path, selection, overwrite):
     from gammapy.utils.serialization import models_to_dict
-    from gammapy.cube.models import BackgroundModels
+    from gammapy.modeling.models import BackgroundModels
 
     unique_models = []
     unique_backgrounds = []
