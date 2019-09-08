@@ -378,7 +378,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spatial_model(self):
         """
-        Source spatial model (`~gammapy.image.models.SkySpatialModel`).
+        Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
         """
         d = self.data
 
@@ -916,7 +916,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SkySpatialModel`)."""
+        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`)."""
         d = self.data
 
         pars = {}

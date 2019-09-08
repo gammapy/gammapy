@@ -84,7 +84,7 @@ class SourceCatalogObjectHGPSComponent:
 
     @property
     def spatial_model(self):
-        """Component spatial model (`~gammapy.image.models.SkyGaussian`)."""
+        """Component spatial model (`~gammapy.modeling.models.SkyGaussian`)."""
         d = self.data
         model = SkyGaussian(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
         model.parameters.set_parameter_errors(
@@ -498,14 +498,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Spatial model (`~gammapy.image.models.SkySpatialModel`).
+        """Spatial model (`~gammapy.modeling.models.SkySpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
-        - ``Point-Like`` or has a size upper limit : `~gammapy.image.models.SkyPointSource`
-        - ``Gaussian``: `~gammapy.image.models.SkyGaussian`
+        - ``Point-Like`` or has a size upper limit : `~gammapy.modeling.models.SkyPointSource`
+        - ``Gaussian``: `~gammapy.modeling.models.SkyGaussian`
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
-        - ``Shell``: `~gammapy.image.models.SkyShell`
+        - ``Shell``: `~gammapy.modeling.models.SkyShell`
         """
         d = self.data
         glon = d["GLON"]

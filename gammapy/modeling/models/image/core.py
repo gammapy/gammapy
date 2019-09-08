@@ -220,7 +220,7 @@ class SkyGaussianElongated(SkySpatialModel):
         import matplotlib.pyplot as plt
         import astropy.units as u
         from astropy.coordinates import Angle
-        from gammapy.image.models import SkyGaussianElongated
+        from gammapy.modeling.models import SkyGaussianElongated
         from gammapy.maps import Map, WcsGeom
 
         m_geom = WcsGeom.create(
@@ -332,7 +332,7 @@ class SkyDisk(SkySpatialModel):
 
         import matplotlib.pyplot as plt
         from astropy import units as u
-        from gammapy.image.models import SkyDisk
+        from gammapy.modeling.models import SkyDisk
 
         lons = np.linspace(0, 0.3, 500) * u.deg
 
@@ -439,7 +439,7 @@ class SkyEllipse(SkySpatialModel):
         import numpy as np
         import matplotlib.pyplot as plt
         import astropy.units as u
-        from gammapy.image.models.core import SkyEllipse
+        from gammapy.modeling.models.core import SkyEllipse
         from gammapy.maps import Map, WcsGeom
 
         model = SkyEllipse("2 deg", "2 deg", "1 deg", 0.8, "30 deg", frame= "galactic")

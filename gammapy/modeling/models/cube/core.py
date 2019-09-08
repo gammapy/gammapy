@@ -192,7 +192,7 @@ class SkyModel(SkyModelBase):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.image.models.SkySpatialModel`
+    spatial_model : `~gammapy.modeling.models.SkySpatialModel`
         Spatial model (must be normalised to integrate to 1)
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
@@ -235,7 +235,7 @@ class SkyModel(SkyModelBase):
 
     @property
     def spatial_model(self):
-        """`~gammapy.image.models.SkySpatialModel`"""
+        """`~gammapy.modeling.models.SkySpatialModel`"""
         return self._spatial_model
 
     @property
@@ -316,7 +316,7 @@ class SkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis. Use `~gammapy.image.models.SkyDiffuseMap`
+    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.SkyDiffuseMap`
     for 2D maps.
 
     Parameters

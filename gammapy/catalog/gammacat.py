@@ -323,7 +323,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SkySpatialModel`).
+        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
 
         TODO: add parameter errors!
         """
