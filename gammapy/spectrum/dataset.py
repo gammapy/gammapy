@@ -388,6 +388,7 @@ class SpectrumDataset(Dataset):
         """
         if e_true is None:
             e_true = e_reco
+
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         background = CountsSpectrum(e_reco[:-1], e_reco[1:])
         aeff = EffectiveAreaTable(
@@ -408,7 +409,6 @@ class SpectrumDataset(Dataset):
             gti=gti,
         )
 
-
     def stack(self, other):
         """Stack this dataset with another one.
 
@@ -427,11 +427,11 @@ class SpectrumDataset(Dataset):
             raise TypeError("Incompatible types for SpectrumDataset stacking")
 
         if self.counts is not None:
-            self.counts.data[~self.mask_safe] *= 0
+            self.counts.data[~self.mask_safe] = 0
             self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
 
         if self.background is not None:
-            self.background.data[~self.mask_safe] *= 0
+            self.background.data[~self.mask_safe] = 0
             self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
 
         self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
@@ -446,24 +446,19 @@ class SpectrumDataset(Dataset):
         if self.aeff is not None:
             irf_stacker.stack_aeff()
             self.aeff = irf_stacker.stacked_aeff
+
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
                 self.edisp = irf_stacker.stacked_edisp
-            else:
-                self.edisp = None
-        else:
-            self.aeff = None
-            self.edisp = None
 
         if self.gti is not None:
             self.gti.stack(other.gti)
             self.gti.union()
-        else:
-            self.gti = None
 
         #TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
         self.livetime += other.livetime
+
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
@@ -640,6 +635,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         """
         if e_true is None:
             e_true = e_reco
+
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         counts_off = CountsSpectrum(e_reco[:-1], e_reco[1:])
         aeff = EffectiveAreaTable(
