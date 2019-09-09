@@ -135,7 +135,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
@@ -147,7 +147,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower adn upper  bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.modeling.models.integrate_spectrum`
 
         Returns
         -------
@@ -176,7 +176,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.modeling.models.integrate_spectrum`
         """
 
         def f(x):
@@ -195,7 +195,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
 
         Returns
         -------
