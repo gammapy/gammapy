@@ -14,7 +14,6 @@ __all__ = [
     "SkyModel",
     "SkyDiffuseCube",
     "BackgroundModel",
-    "BackgroundModels",
 ]
 
 
@@ -522,69 +521,9 @@ class BackgroundModel(Model):
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
 
-    def __add__(self, model):
-        models = [self]
-        if isinstance(model, BackgroundModels):
-            models += model.models
-        elif isinstance(model, BackgroundModel):
-            models += [model]
-        else:
-            raise NotImplementedError
-        return BackgroundModels(models)
-
     def to_dict(self, selection):
         data = super().to_dict(selection=selection)
         data["name"] = self.name
         if self.filename is not None:
             data["filename"] = self.filename
         return data
-
-
-class BackgroundModels(Model):
-    """Background models.
-
-    Parameters
-    ----------
-    models : list of `BackgroundModel`
-        List of background models.
-    """
-
-    __slots__ = ["models", "_parameters"]
-
-    def __init__(self, models):
-        self.models = models
-        parameters = []
-        for model in models:
-            for p in model.parameters:
-                parameters.append(p)
-        super().__init__(parameters)
-
-    def evaluate(self):
-        """Evaluate background models."""
-        for idx, model in enumerate(self.models):
-            if idx == 0:
-                vals = model.evaluate()
-            else:
-                vals += model.evaluate()
-        return vals
-
-    def __iadd__(self, model):
-        if isinstance(model, BackgroundModels):
-            self.models += model.models
-        elif isinstance(model, BackgroundModel):
-            self.models += [model]
-        else:
-            raise NotImplementedError
-        return self
-
-    def __add__(self, model):
-        model_ = self.copy()
-        model_ += model
-        return model_
-
-    def to_yaml(self, filename, selection="all"):
-        """Write to yaml file."""
-        from gammapy.modeling.serialize import models_to_dict
-
-        components_dict = models_to_dict(self.models, selection)
-        write_yaml(components_dict, filename)
