@@ -19,3 +19,22 @@ TIME_MODELS = {
     "PhaseCurveTableModel": PhaseCurveTableModel,
     "LightCurveTableModel": LightCurveTableModel,
 }
+
+# TODO: add support for these models writing their .from_dict()
+# "AbsorbedSpectralModel":AbsorbedSpectralModel,
+# "Absorption":Absorption,
+# "NaimaModel":NaimaModel,
+SPECTRAL_MODELS = {
+    "ConstantModel": ConstantModel,
+    "PowerLaw": PowerLaw,
+    "PowerLaw2": PowerLaw2,
+    "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
+    "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
+    "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
+    "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
+    "LogParabola": LogParabola,
+    "TableModel": TableModel,
+    "SpectralGaussian": SpectralGaussian,
+    "SpectralLogGaussian": SpectralLogGaussian,
+    "ScaleModel": ScaleModel,
+}

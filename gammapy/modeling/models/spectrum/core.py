@@ -30,7 +30,6 @@ __all__ = [
     "SpectralGaussian",
     "SpectralLogGaussian",
     "ScaleModel",
-    "SPECTRAL_MODELS",
 ]
 
 
@@ -1875,23 +1874,3 @@ class SpectralLogGaussian(SpectralModel):
             / (energy * sigma * np.sqrt(2 * np.pi))
             * np.exp(-(np.log(energy / mean)) ** 2 / (2 * sigma ** 2))
         )
-
-
-SPECTRAL_MODELS = {
-    "ConstantModel": ConstantModel,
-    "PowerLaw": PowerLaw,
-    "PowerLaw2": PowerLaw2,
-    "ExponentialCutoffPowerLaw": ExponentialCutoffPowerLaw,
-    "ExponentialCutoffPowerLaw3FGL": ExponentialCutoffPowerLaw3FGL,
-    "PLSuperExpCutoff3FGL": PLSuperExpCutoff3FGL,
-    "PLSuperExpCutoff4FGL": PLSuperExpCutoff4FGL,
-    "LogParabola": LogParabola,
-    "TableModel": TableModel,
-    "SpectralGaussian": SpectralGaussian,
-    "SpectralLogGaussian": SpectralLogGaussian,
-    "ScaleModel": ScaleModel,
-}
-# TODO: add support for these models writing their .from_dict()
-# "AbsorbedSpectralModel":AbsorbedSpectralModel,
-# "Absorption":Absorption,
-# "NaimaModel":NaimaModel,
