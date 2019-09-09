@@ -14,3 +14,8 @@ SPATIAL_MODELS = {
     "SkyPointSource": SkyPointSource,
     "SkyShell": SkyShell,
 }
+
+TIME_MODELS = {
+    "PhaseCurveTableModel": PhaseCurveTableModel,
+    "LightCurveTableModel": LightCurveTableModel,
+}
