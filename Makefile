@@ -115,7 +115,7 @@ black:
 	--line-length 88
 
 isort:
-	isort -rc gammapy
+	isort -rc gammapy examples docs -s docs/conf.py
 
 polish: black isort trailing-spaces clean-nb;
 

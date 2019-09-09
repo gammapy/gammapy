@@ -1,8 +1,8 @@
 """Example how to compute and plot reflected regions."""
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import RectangleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.spectrum import ReflectedRegionsBackgroundEstimator
 

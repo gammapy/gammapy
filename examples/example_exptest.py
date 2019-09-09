@@ -6,8 +6,8 @@ An example for the exptest variability test.
 """
 import numpy as np
 from scipy.stats import norm
-import matplotlib.pyplot as plt
 from astropy.table import Table
+import matplotlib.pyplot as plt
 from gammapy.time import exptest
 
 

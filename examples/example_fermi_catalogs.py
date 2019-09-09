@@ -2,9 +2,9 @@
 """
 import matplotlib.pyplot as plt
 from gammapy.catalog import (
-    SourceCatalog3FGL,
-    SourceCatalog2FHL,
     SourceCatalog1FHL,
+    SourceCatalog2FHL,
+    SourceCatalog3FGL,
     SourceCatalog3FHL,
 )
 

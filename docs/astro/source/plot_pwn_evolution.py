@@ -1,8 +1,8 @@
 """Plot PWN evolution with time."""
 import numpy as np
-import matplotlib.pyplot as plt
-from astropy.units import Quantity
 from astropy.constants import M_sun
+from astropy.units import Quantity
+import matplotlib.pyplot as plt
 from gammapy.astro.source import PWN, SNRTrueloveMcKee
 
 t = Quantity(np.logspace(1, 5, 100), "yr")

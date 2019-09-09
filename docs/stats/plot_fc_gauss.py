@@ -4,13 +4,12 @@ Compute numerical solution for Gaussian with a boundary at the origin.
 Produces Fig. 10 from the Feldman & Cousins paper.
 """
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.stats import norm
-
+import matplotlib.pyplot as plt
 from gammapy.stats import (
     fc_construct_acceptance_intervals_pdfs,
-    fc_get_limits,
     fc_fix_limits,
+    fc_get_limits,
 )
 
 sigma = 1

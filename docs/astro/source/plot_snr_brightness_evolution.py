@@ -1,7 +1,7 @@
 """Plot SNR brightness evolution."""
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.units import Quantity
+import matplotlib.pyplot as plt
 from gammapy.astro.source import SNR
 
 densities = Quantity([1, 0.1], "cm-3")

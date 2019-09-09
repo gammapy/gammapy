@@ -1,8 +1,8 @@
 """Example how to compute and plot reflected regions."""
-import matplotlib.pyplot as plt
 import numpy as np
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.maps import WcsNDMap
 from gammapy.spectrum import ReflectedRegionsFinder
 

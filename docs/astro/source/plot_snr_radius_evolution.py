@@ -1,7 +1,7 @@
 """Plot SNR radius evolution versus time."""
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.units import Quantity
+import matplotlib.pyplot as plt
 from gammapy.astro.source import SNR, SNRTrueloveMcKee
 
 snr_models = [SNR, SNRTrueloveMcKee]

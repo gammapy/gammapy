@@ -1,7 +1,7 @@
 """Plot spin frequency of the pulsar with time."""
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.units import Quantity
+import matplotlib.pyplot as plt
 from gammapy.astro.source import Pulsar
 
 t = Quantity(np.logspace(0, 6, 100), "yr")

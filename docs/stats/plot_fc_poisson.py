@@ -4,12 +4,12 @@ Compute numerical solution for Poisson with background.
 Produces Fig. 7 from the Feldman & Cousins paper.
 """
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.stats import poisson
+import matplotlib.pyplot as plt
 from gammapy.stats import (
     fc_construct_acceptance_intervals_pdfs,
-    fc_get_limits,
     fc_fix_limits,
+    fc_get_limits,
 )
 
 background = 3.0

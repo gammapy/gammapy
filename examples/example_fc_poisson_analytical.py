@@ -4,8 +4,8 @@ Analytical solution for Poisson process with background.
 Produces Fig. 7 from the Feldman Cousins paper.
 """
 from functools import partial
-from astropy.utils.console import ProgressBar
 import numpy as np
+from astropy.utils.console import ProgressBar
 import matplotlib.pyplot as plt
 from gammapy.stats import fc_find_acceptance_interval_poisson, fc_fix_limits
 

@@ -1,3 +1,5 @@
+# TODO: fix the rest of this script or remove it
+import sys
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -11,8 +13,6 @@ from gammapy.utils.random import get_random_state
 filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
-# TODO: fix the rest of this script or remove it
-import sys
 
 sys.exit(0)
 

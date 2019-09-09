@@ -1,8 +1,8 @@
 """Example how to compute and plot reflected regions."""
-import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
-from regions import CircleSkyRegion, RectangleSkyRegion, EllipseAnnulusSkyRegion
+from regions import CircleSkyRegion, EllipseAnnulusSkyRegion, RectangleSkyRegion
+import matplotlib.pyplot as plt
 from gammapy.maps import WcsNDMap
 
 position = SkyCoord(83.63, 22.01, unit="deg", frame="icrs")

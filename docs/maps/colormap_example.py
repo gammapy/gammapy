@@ -1,9 +1,8 @@
 """Plot significance image with HESS and MILAGRO colormap."""
-import matplotlib.pyplot as plt
-from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import LinearStretch
-from gammapy.maps import colormap_hess, colormap_milagro
-from gammapy.maps import Map
+from astropy.visualization.mpl_normalize import ImageNormalize
+import matplotlib.pyplot as plt
+from gammapy.maps import Map, colormap_hess, colormap_milagro
 
 filename = "$GAMMAPY_DATA/tests/unbundled/poisson_stats_image/expected_ts_0.000.fits.gz"
 image = Map.read(filename, hdu="SQRT_TS")

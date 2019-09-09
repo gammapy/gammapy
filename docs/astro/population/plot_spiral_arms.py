@@ -1,10 +1,9 @@
 """Plot Milky Way spiral arms."""
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.units import Quantity
-from gammapy.astro.population import simulate
-from gammapy.astro.population import FaucherSpiral
-from gammapy.utils.coordinates import polar, cartesian
+import matplotlib.pyplot as plt
+from gammapy.astro.population import FaucherSpiral, simulate
+from gammapy.utils.coordinates import cartesian, polar
 
 catalog = simulate.make_base_catalog_galactic(
     n_sources=int(1e4), rad_dis="YK04", vel_dis="H05", max_age=Quantity(1e6, "yr")
