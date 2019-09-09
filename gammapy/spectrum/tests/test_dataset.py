@@ -136,28 +136,30 @@ class TestSpectrumDataset:
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
 
-    def test_spectrum_dataset_stack(self):
+    def test_spectrum_dataset_stack_diagonal(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
         edisp = EnergyDispersion.from_diagonal_response(
             self.src.energy.edges, self.src.energy.edges
         )
         livetime = self.livetime
         dataset1 = SpectrumDataset(
-            counts = self.src, livetime=livetime, aeff=aeff, edisp=edisp, background=self.bkg
+            counts = self.src.copy(), livetime=livetime, aeff=aeff, edisp=edisp, background=self.bkg.copy()
         )
  
         livetime2 = 0.5*livetime
         aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], 2*aeff.data.data)
-        bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:],2*self.bkg.data)
+        bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:], data=2*self.bkg.data)
         dataset2 = SpectrumDataset(
-            counts=self.src, livetime=livetime2, aeff=aeff2, edisp=edisp, background=bkg2
+            counts=self.src.copy(), livetime=livetime2, aeff=aeff2, edisp=edisp, background=bkg2
         )
-
         dataset1.stack(dataset2)
 
-        assert dataset1.counts.data.sum() == self.src.data.sum()*2
+        assert_allclose(dataset1.counts.data, self.src.data*2)
         assert dataset1.livetime == 1.5*self.livetime
-        assert dataset1.background.data.sum() == 3*self.bkg.data.sum()
+        assert_allclose(dataset1.background.data, 3*self.bkg.data)
+        assert_allclose(dataset1.aeff.data.data.to_value('m2'), 4./3*aeff.data.data.to_value('m2'))
+        assert_allclose(dataset1.edisp.pdf_matrix, edisp.pdf_matrix)
+
 
 class TestSpectrumOnOff:
     """ Test ON OFF SpectrumDataset"""
