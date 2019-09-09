@@ -3,13 +3,13 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable
+from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.spectrum import (
     CountsSpectrum,
     SpectrumDataset,
     SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
 )
-from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.fitting import Fit
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import requires_data, requires_dependency

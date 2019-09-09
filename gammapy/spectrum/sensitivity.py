@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import astropy.units as u
 from astropy.table import Column, Table
+from gammapy.modeling.models import PowerLaw
 from gammapy.stats import excess_matching_significance_on_off
-from .models import PowerLaw
-from .utils import SpectrumEvaluator
+from .core import SpectrumEvaluator
 
 __all__ = ["SensitivityEstimator"]
 

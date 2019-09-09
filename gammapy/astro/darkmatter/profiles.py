@@ -3,7 +3,7 @@
 import abc
 import numpy as np
 import astropy.units as u
-from gammapy.spectrum import integrate_spectrum
+from gammapy.modeling.models.spectrum.utils import integrate_spectrum
 from gammapy.utils.fitting import Parameter, Parameters
 
 __all__ = [
@@ -52,7 +52,7 @@ class DMProfile(abc.ABC):
         rmin, rmax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
         """
         integral = integrate_spectrum(self._eval_squared, rmin, rmax, **kwargs)
         return integral.to("GeV2 / cm5")

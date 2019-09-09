@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
-from .models import ExponentialCutoffPowerLaw, LogParabola, PowerLaw, SpectralModel
+from .core import ExponentialCutoffPowerLaw, LogParabola, PowerLaw, SpectralModel
 
 __all__ = ["create_crab_spectral_model"]
 
@@ -47,7 +47,7 @@ def create_crab_spectral_model(reference="meyer"):
 
         import astropy.units as u
         from gammapy.spectrum import create_crab_spectral_model
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.modeling.models import PowerLaw
 
     Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 

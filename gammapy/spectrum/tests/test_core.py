@@ -1,7 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import astropy.units as u
-from gammapy.spectrum import CountsSpectrum
+import numpy as np
+from numpy.testing import assert_allclose
+from astropy import units as u
+from astropy.units import Quantity
+from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.modeling.models import PowerLaw, PowerLaw2, TableModel
+from gammapy.spectrum import CountsSpectrum, SpectrumEvaluator
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -50,3 +55,54 @@ class TestCountsSpectrum:
         actual = rebinned_spec.data[idx]
         desired = [0, 7, 20]
         assert (actual == desired).all()
+
+
+def get_test_cases():
+    e_true = Quantity(np.logspace(-1, 2, 120), "TeV")
+    e_reco = Quantity(np.logspace(-1, 2, 100), "TeV")
+    return [
+        dict(model=PowerLaw(amplitude="1e2 TeV-1"), e_true=e_true, npred=999),
+        dict(
+            model=PowerLaw2(amplitude="1", emin="0.1 TeV", emax="100 TeV"),
+            e_true=e_true,
+            npred=1,
+        ),
+        dict(
+            model=PowerLaw(amplitude="1e-11 TeV-1 cm-2 s-1"),
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            livetime="10 h",
+            npred=1448.05960,
+        ),
+        dict(
+            model=PowerLaw(reference="1 GeV", amplitude="1e-11 GeV-1 cm-2 s-1"),
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            livetime="30 h",
+            npred=4.34417881,
+        ),
+        dict(
+            model=PowerLaw(amplitude="1e-11 TeV-1 cm-2 s-1"),
+            aeff=EffectiveAreaTable.from_parametrization(e_true),
+            edisp=EnergyDispersion.from_gauss(
+                e_reco=e_reco, e_true=e_true, bias=0, sigma=0.2
+            ),
+            livetime="10 h",
+            npred=1437.450076,
+        ),
+        dict(
+            model=TableModel(
+                energy=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+                values=[4.0, 3.0, 1.0, 0.1] * u.Unit("TeV-1"),
+            ),
+            e_true=[0.1, 0.2, 0.3, 0.4] * u.TeV,
+            npred=0.554513062,
+        ),
+    ]
+
+
+@pytest.mark.parametrize("case", get_test_cases())
+def test_counts_predictor(case):
+    opts = case.copy()
+    del opts["npred"]
+    predictor = SpectrumEvaluator(**opts)
+    actual = predictor.compute_npred().total_counts
+    assert_allclose(actual, case["npred"])

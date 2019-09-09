@@ -63,7 +63,7 @@ Introduce gammapy.modeling
 Currently our fitting and modeling framework is in gammapy.utils.fitting,
 and the built-in models in Gammapy are distributed like this:
 
-* gammapy.spectrum.models -- 1D spectral models
+* gammapy.modeling.models -- 1D spectral models
 * gammapy.image.models -- 2D spatial models
 * gammapy.cube.models -- 3D cube models
 * gammapy.time.models -- 1D time models

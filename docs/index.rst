@@ -37,7 +37,7 @@ To get started with Gammapy, follow the installation and setup instructions in
     data/index
     irf/index
     maps/index
-    image/index
+    modeling/index
     cube/index
     detect/index
     spectrum/index

@@ -12,8 +12,7 @@ from gammapy.utils.fits import energy_axis_to_ebounds
 from gammapy.utils.fitting import Dataset, Parameters
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
-from .core import CountsSpectrum
-from .utils import SpectrumEvaluator
+from .core import CountsSpectrum, SpectrumEvaluator
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
 
@@ -27,7 +26,7 @@ class SpectrumDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.modeling.models.SpectralModel`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         Counts spectrum
@@ -408,7 +407,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     Parameters
     ----------
-    model : `~gammapy.spectrum.models.SpectralModel`
+    model : `~gammapy.modeling.models.SpectralModel`
         Fit model
     counts : `~gammapy.spectrum.CountsSpectrum`
         ON Counts spectrum

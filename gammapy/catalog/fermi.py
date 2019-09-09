@@ -5,18 +5,21 @@ import numpy as np
 import astropy.units as u
 from astropy.table import Column, Table
 from astropy.time import Time
-from gammapy.cube.models import SkyModel
-from gammapy.image.models import SkyDiffuseMap, SkyDisk, SkyGaussian, SkyPointSource
 from gammapy.maps import Map
-from gammapy.spectrum import FluxPoints
-from gammapy.spectrum.models import (
+from gammapy.modeling.models import (
     ExponentialCutoffPowerLaw3FGL,
     LogParabola,
     PLSuperExpCutoff3FGL,
     PLSuperExpCutoff4FGL,
     PowerLaw,
     PowerLaw2,
+    SkyDiffuseMap,
+    SkyDisk,
+    SkyGaussian,
+    SkyModel,
+    SkyPointSource,
 )
+from gammapy.spectrum import FluxPoints
 from gammapy.time import LightCurve
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_inplace
@@ -52,7 +55,7 @@ class SourceCatalogObject4FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
         pars, errs = {}, {}
@@ -332,7 +335,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         spec_type = self.data["SpectrumType"].strip()
 
         pars, errs = {}, {}
@@ -375,7 +378,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def spatial_model(self):
         """
-        Source spatial model (`~gammapy.image.models.SkySpatialModel`).
+        Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
         """
         d = self.data
 
@@ -409,7 +412,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
@@ -564,7 +567,7 @@ class SourceCatalogObject1FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model `~gammapy.spectrum.models.SpectralModel`."""
+        """Best fit spectral model `~gammapy.modeling.models.SpectralModel`."""
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux"]
         pars["emin"], pars["emax"] = self.energy_range
@@ -636,7 +639,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         pars, errs = {}, {}
         pars["amplitude"] = self.data["Flux50"]
         pars["emin"], pars["emax"] = self.energy_range
@@ -850,7 +853,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Best fit spectral model (`~gammapy.spectrum.models.SpectralModel`)."""
+        """Best fit spectral model (`~gammapy.modeling.models.SpectralModel`)."""
         d = self.data
         spec_type = self.data["SpectrumType"].strip()
 
@@ -913,7 +916,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SkySpatialModel`)."""
+        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`)."""
         d = self.data
 
         pars = {}
@@ -946,7 +949,7 @@ class SourceCatalogObject3FHL(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)

@@ -428,7 +428,7 @@ class EnergyDependentTablePSF:
         psf : `TablePSF`
             Table PSF
         """
-        from gammapy.spectrum.models import PowerLaw, TableModel
+        from gammapy.modeling.models import PowerLaw, TableModel
 
         if spectrum is None:
             spectrum = PowerLaw()

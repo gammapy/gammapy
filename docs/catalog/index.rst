@@ -61,8 +61,8 @@ The ``SourceCatalog`` class mostly handles data file loading, as well as source
 access by integer row index or source name. The ``SourceCatalogObject`` class
 implements in ``__str__`` a pretty-printed version of ``source.data``, so that
 you can ``print(source)``, as well as factory methods to create Gammapy objects
-such as `gammapy.spectrum.models.SpectralModel` or
-``gammapy.image.models.SkySpatialModel`` or `gammapy.spectrum.FluxPoints`
+such as `gammapy.modeling.models.SpectralModel` or
+`gammapy.modeling.models.SkySpatialModel` or `gammapy.spectrum.FluxPoints`
 representing spatial and spectral models, or spectral points, which you can then
 print or plot or use for simulation and analysis.
 

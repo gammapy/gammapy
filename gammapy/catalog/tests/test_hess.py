@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.catalog import SourceCatalogHGPS, SourceCatalogLargeScaleHGPS
-from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
+from gammapy.modeling.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     requires_data,

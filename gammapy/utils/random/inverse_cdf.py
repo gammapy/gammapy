@@ -99,7 +99,7 @@ class MapEventSampler:
             Stop time of the sampling.
     t_delta : `~astropy.units.Quantity`
             Time step used for sampling of the temporal model.
-    temporal_model : `~gammapy.time.models.LightCurveTableModel` or `~gammapy.time.models.PhaseCurveTableModel`
+    temporal_model : `~gammapy.modeling.models.LightCurveTableModel` or `~gammapy.modeling.models.PhaseCurveTableModel`
             Input light (or phase)-curve model of the source, given with columns labelled
             as "time" (or "phase)" and "normalization" (arbitrary units).
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}

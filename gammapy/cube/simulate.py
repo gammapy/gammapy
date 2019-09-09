@@ -7,8 +7,8 @@ from gammapy.cube import (
     make_map_background_irf,
     make_map_exposure_true_energy,
 )
-from gammapy.cube.models import BackgroundModel
 from gammapy.maps import WcsNDMap
+from gammapy.modeling.models import BackgroundModel
 from gammapy.utils.random import get_random_state
 
 __all__ = ["simulate_dataset"]
@@ -33,7 +33,7 @@ def simulate_dataset(
 
     Parameters
     ----------
-    skymodel : `~gammapy.cube.models.SkyModel`
+    skymodel : `~gammapy.modeling.models.SkyModel`
         Background model map
     geom : `~gammapy.maps.WcsGeom`
         Geometry object for the observation

@@ -5,10 +5,15 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.nddata.utils import NoOverlapError
 from astropy.utils import lazyproperty
-from gammapy.cube.models import BackgroundModel, BackgroundModels, SkyModel, SkyModels
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map
+from gammapy.modeling.models import (
+    BackgroundModel,
+    BackgroundModels,
+    SkyModel,
+    SkyModels,
+)
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.utils.fitting import Dataset, Parameters
 from gammapy.utils.random import get_random_state
@@ -26,7 +31,7 @@ class MapDataset(Dataset):
 
     Parameters
     ----------
-    model : `~gammapy.cube.models.SkyModel` or `~gammapy.cube.models.SkyModels`
+    model : `~gammapy.modeling.models.SkyModel` or `~gammapy.modeling.models.SkyModels`
         Source sky models.
     counts : `~gammapy.maps.WcsNDMap`
         Counts cube
@@ -38,7 +43,7 @@ class MapDataset(Dataset):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background_model : `~gammapy.cube.models.BackgroundModel` or `~gammapy.cube.models.BackgroundModels`
+    background_model : `~gammapy.modeling.models.BackgroundModel` or `~gammapy.modeling.models.BackgroundModels`
         Background models to use for the fit.
     likelihood : {"cash", "cstat"}
         Likelihood function to use for the fit.
@@ -591,7 +596,7 @@ class MapEvaluator:
 
     Parameters
     ----------
-    model : `~gammapy.cube.models.SkyModel`
+    model : `~gammapy.modeling.models.SkyModel`
         Sky model
     exposure : `~gammapy.maps.Map`
         Exposure map

@@ -9,11 +9,11 @@ For XML model format definitions, see here:
 import logging
 import numpy as np
 import astropy.units as u
-from gammapy.cube.models import SkyModel, SkyModels
 from gammapy.extern import xmltodict
-from gammapy.image import models as spatial
 from gammapy.maps import Map
-from gammapy.spectrum import models as spectral
+from gammapy.modeling.models import SkyModel, SkyModels
+from gammapy.modeling.models import image as spatial
+from gammapy.modeling.models import spectrum as spectral
 from gammapy.utils.fitting import Parameter, Parameters
 
 log = logging.getLogger(__name__)
@@ -149,7 +149,7 @@ class UnknownParameterError(ValueError):
 
 def xml_to_sky_models(xml):
     """
-    Convert XML to `~gammapy.cube.models.SkyModelList`
+    Convert XML to `~gammapy.modeling.models.SkyModelList`
     """
     full_dict = xmltodict.parse(xml)
     skymodels = list()
@@ -163,7 +163,7 @@ def xml_to_sky_models(xml):
 
 def xml_to_skymodel(xml):
     """
-    Convert XML to `~gammapy.cube.models.SkyModel`
+    Convert XML to `~gammapy.modeling.models.SkyModel`
     """
     type_ = xml["@type"]
     # TODO: Support ctools radial acceptance
@@ -179,8 +179,8 @@ def xml_to_skymodel(xml):
 
 def xml_to_model(xml, which):
     """
-    Convert XML to `~gammapy.image.models.SkySpatialModel` or
-    `~gammapy.spectrum.models.SpectralModel`
+    Convert XML to `~gammapy.modeling.models.SkySpatialModel` or
+    `~gammapy.modeling.models.SpectralModel`
     """
     type_ = xml["@type"]
 
@@ -263,7 +263,7 @@ def xml_to_parameters(xml, which, type_):
 
 def sky_models_to_xml(sourcelib):
     """
-    Convert `~gammapy.cube.models.SkyModels` to XML
+    Convert `~gammapy.modeling.models.SkyModels` to XML
     """
     xml = '<?xml version="1.0" encoding="utf-8"?>\n'
     xml += '<source_library title="source library">\n'
@@ -276,7 +276,7 @@ def sky_models_to_xml(sourcelib):
 
 def skymodel_to_xml(skymodel):
     """
-    Convert `~gammapy.cube.models.SkyModel` to XML
+    Convert `~gammapy.modeling.models.SkyModel` to XML
     """
     if "Diffuse" in str(skymodel):
         type_ = "DiffuseSource"
@@ -294,8 +294,8 @@ def skymodel_to_xml(skymodel):
 
 def model_to_xml(model, which):
     """
-    Convert `~gammapy.image.models.SkySpatialModel` or
-    `~gammapy.spectrum.models.SpectralModel` to XML
+    Convert `~gammapy.modeling.models.SkySpatialModel` or
+    `~gammapy.modeling.models.SpectralModel` to XML
     """
     tag = "spatialModel" if which == "spatial" else "spectrum"
 

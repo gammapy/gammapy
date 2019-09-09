@@ -6,15 +6,13 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 from gammapy.cube import MapDataset, PSFKernel, make_map_exposure_true_energy
-from gammapy.cube.models import BackgroundModel, SkyModel
-from gammapy.image.models import SkyGaussian
 from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     EnergyDispersion,
 )
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.spectrum.models import PowerLaw
+from gammapy.modeling.models import BackgroundModel, PowerLaw, SkyGaussian, SkyModel
 from gammapy.utils.fitting import Fit
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 

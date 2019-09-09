@@ -2,7 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 from astropy.table import Table
-from gammapy.time.models import LightCurveTableModel, PhaseCurveTableModel
+from gammapy.modeling.models import LightCurveTableModel, PhaseCurveTableModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 

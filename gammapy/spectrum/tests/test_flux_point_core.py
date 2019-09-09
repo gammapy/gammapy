@@ -4,8 +4,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+from gammapy.modeling.models import PowerLaw
 from gammapy.spectrum import FluxPoints
-from gammapy.spectrum.models import PowerLaw
 
 
 @pytest.fixture(scope="session")

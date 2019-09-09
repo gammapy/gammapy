@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 import astropy.units as u
-from gammapy.spectrum.models import (
+from gammapy.modeling.models import (
     SPECTRAL_MODELS,
     AbsorbedSpectralModel,
     Absorption,

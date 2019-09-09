@@ -3,9 +3,7 @@ import copy
 from pathlib import Path
 import numpy as np
 import astropy.units as u
-from gammapy.image.models import SkySpatialModel
 from gammapy.maps import Map
-from gammapy.spectrum.models import SpectralModel
 from gammapy.utils.fitting import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, write_yaml
 
@@ -40,11 +38,11 @@ class SkyModelBase(Model):
 
 
 class SkyModels:
-    """Collection of `~gammapy.cube.models.SkyModel`
+    """Collection of `~gammapy.modeling.models.SkyModel`
 
     Parameters
     ----------
-    skymodels : list of `~gammapy.cube.models.SkyModel`
+    skymodels : list of `~gammapy.modeling.models.SkyModel`
         Sky models
 
     Examples
@@ -194,9 +192,9 @@ class SkyModel(SkyModelBase):
 
     Parameters
     ----------
-    spatial_model : `~gammapy.image.models.SkySpatialModel`
+    spatial_model : `~gammapy.modeling.models.SkySpatialModel`
         Spatial model (must be normalised to integrate to 1)
-    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model
     name : str
         Model identifier
@@ -206,6 +204,8 @@ class SkyModel(SkyModelBase):
     __slots__ = ["name", "_spatial_model", "_spectral_model"]
 
     def __init__(self, spatial_model, spectral_model, name="source"):
+        from gammapy.modeling.models import SkySpatialModel, SpectralModel
+
         self.name = name
 
         if not isinstance(spatial_model, SkySpatialModel):
@@ -235,17 +235,17 @@ class SkyModel(SkyModelBase):
 
     @property
     def spatial_model(self):
-        """`~gammapy.image.models.SkySpatialModel`"""
+        """`~gammapy.modeling.models.SkySpatialModel`"""
         return self._spatial_model
 
     @property
     def spectral_model(self):
-        """`~gammapy.spectrum.models.SpectralModel`"""
+        """`~gammapy.modeling.models.SpectralModel`"""
         return self._spectral_model
 
     @spectral_model.setter
     def spectral_model(self, model):
-        """`~gammapy.spectrum.models.SpectralModel`"""
+        """`~gammapy.modeling.models.SpectralModel`"""
         self._spectral_model = model
         self._parameters = Parameters(
             self.spatial_model.parameters.parameters
@@ -316,7 +316,7 @@ class SkyModel(SkyModelBase):
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
 
-    This is for a 3D map with an energy axis. Use `~gammapy.image.models.SkyDiffuseMap`
+    This is for a 3D map with an energy axis. Use `~gammapy.modeling.models.SkyDiffuseMap`
     for 2D maps.
 
     Parameters

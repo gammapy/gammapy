@@ -5,7 +5,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.cube.exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from gammapy.irf import EffectiveAreaTable2D
 from gammapy.maps import HpxGeom, MapAxis, WcsGeom, WcsNDMap
-from gammapy.spectrum.models import ConstantModel
+from gammapy.modeling.models import ConstantModel
 from gammapy.utils.testing import requires_data
 
 pytest.importorskip("healpy")

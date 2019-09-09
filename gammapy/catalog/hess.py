@@ -6,10 +6,16 @@ import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from gammapy.cube.models import SkyModel, SkyModels
-from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.modeling.models import (
+    ExponentialCutoffPowerLaw,
+    PowerLaw,
+    SkyGaussian,
+    SkyModel,
+    SkyModels,
+    SkyPointSource,
+    SkyShell,
+)
 from gammapy.spectrum import FluxPoints
-from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_row_to_dict
@@ -78,7 +84,7 @@ class SourceCatalogObjectHGPSComponent:
 
     @property
     def spatial_model(self):
-        """Component spatial model (`~gammapy.image.models.SkyGaussian`)."""
+        """Component spatial model (`~gammapy.modeling.models.SkyGaussian`)."""
         d = self.data
         model = SkyGaussian(lon_0=d["GLON"], lat_0=d["GLAT"], sigma=d["Size"])
         model.parameters.set_parameter_errors(
@@ -429,12 +435,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return self.data["Spectral_Model"].strip().lower()
 
     def spectral_model(self, which="best"):
-        """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
+        """Spectral model (`~gammapy.modeling.models.SpectralModel`).
 
         One of the following models (given by ``Spectral_Model`` in the catalog):
 
-        - ``PL`` : `~gammapy.spectrum.models.PowerLaw`
-        - ``ECPL`` : `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
+        - ``PL`` : `~gammapy.modeling.models.PowerLaw`
+        - ``ECPL`` : `~gammapy.modeling.models.ExponentialCutoffPowerLaw`
 
         Parameters
         ----------
@@ -492,14 +498,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Spatial model (`~gammapy.image.models.SkySpatialModel`).
+        """Spatial model (`~gammapy.modeling.models.SkySpatialModel`).
 
         One of the following models (given by ``Spatial_Model`` in the catalog):
 
-        - ``Point-Like`` or has a size upper limit : `~gammapy.image.models.SkyPointSource`
-        - ``Gaussian``: `~gammapy.image.models.SkyGaussian`
+        - ``Point-Like`` or has a size upper limit : `~gammapy.modeling.models.SkyPointSource`
+        - ``Gaussian``: `~gammapy.modeling.models.SkyGaussian`
         - ``2-Gaussian`` or ``3-Gaussian``: composite model (using ``+`` with Gaussians)
-        - ``Shell``: `~gammapy.image.models.SkyShell`
+        - ``Shell``: `~gammapy.modeling.models.SkyShell`
         """
         d = self.data
         glon = d["GLON"]
@@ -535,7 +541,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         Returns
         -------
-        sky_model : `~gammapy.cube.models.SkyModel`
+        sky_model : `~gammapy.modeling.models.SkyModel`
             Sky model of the catalog object.
         """
         if self.spatial_model_type in {"2-gaussian", "3-gaussian"}:

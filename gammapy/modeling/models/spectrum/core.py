@@ -40,7 +40,7 @@ class SpectralModel(Model):
     Derived classes should store their parameters as
     `~gammapy.utils.modeling.Parameters`
     See for example return pardict of
-    `~gammapy.spectrum.models.PowerLaw`.
+    `~gammapy.modeling.models.PowerLaw`.
     """
 
     def __call__(self, energy):
@@ -135,7 +135,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
@@ -147,7 +147,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower adn upper  bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.modeling.models.integrate_spectrum`
 
         Returns
         -------
@@ -176,7 +176,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.modeling.models.integrate_spectrum`
         """
 
         def f(x):
@@ -195,7 +195,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.spectrum.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
 
         Returns
         -------
@@ -231,7 +231,7 @@ class SpectralModel(Model):
         By default a log-log scaling of the axes is used, if you want to change
         the y axis scaling to linear you can use::
 
-            from gammapy.spectrum.models import ExponentialCutoffPowerLaw
+            from gammapy.modeling.models import ExponentialCutoffPowerLaw
             from astropy import units as u
 
             pwl = ExponentialCutoffPowerLaw()
@@ -506,7 +506,7 @@ class PowerLaw(SpectralModel):
     This is how to plot the default `PowerLaw` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PowerLaw
+        from gammapy.modeling.models import PowerLaw
 
         pwl = PowerLaw()
         pwl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -723,7 +723,7 @@ class PowerLaw2(SpectralModel):
     This is how to plot the default `PowerLaw2` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PowerLaw2
+        from gammapy.modeling.models import PowerLaw2
 
         pwl2 = PowerLaw2()
         pwl2.plot(energy_range=[0.1, 100] * u.TeV)
@@ -851,7 +851,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     This is how to plot the default `ExponentialCutoffPowerLaw` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import ExponentialCutoffPowerLaw
+        from gammapy.modeling.models import ExponentialCutoffPowerLaw
 
         ecpl = ExponentialCutoffPowerLaw()
         ecpl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -930,7 +930,7 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
     This is how to plot the default `ExponentialCutoffPowerLaw3FGL` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import ExponentialCutoffPowerLaw3FGL
+        from gammapy.modeling.models import ExponentialCutoffPowerLaw3FGL
 
         ecpl_3fgl = ExponentialCutoffPowerLaw3FGL()
         ecpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -993,7 +993,7 @@ class PLSuperExpCutoff3FGL(SpectralModel):
     This is how to plot the default `PLSuperExpCutoff3FGL` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PLSuperExpCutoff3FGL
+        from gammapy.modeling.models import PLSuperExpCutoff3FGL
 
         secpl_3fgl = PLSuperExpCutoff3FGL()
         secpl_3fgl.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1065,7 +1065,7 @@ class PLSuperExpCutoff4FGL(SpectralModel):
     This is how to plot the default `PLSuperExpCutoff4FGL` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import PLSuperExpCutoff4FGL
+        from gammapy.modeling.models import PLSuperExpCutoff4FGL
 
         model = PLSuperExpCutoff4FGL()
         model.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1121,7 +1121,7 @@ class LogParabola(SpectralModel):
     The `Sherpa <http://cxc.harvard.edu/sherpa/ahelp/logparabola.html_
     package>`_ package, however, uses :math:`log_{10}`. If you have
     parametrization based on :math:`log_{10}` you can use the
-    :func:`~gammapy.spectrum.models.LogParabola.from_log10` method.
+    :func:`~gammapy.modeling.models.LogParabola.from_log10` method.
 
     Parameters
     ----------
@@ -1139,7 +1139,7 @@ class LogParabola(SpectralModel):
     This is how to plot the default `LogParabola` model::
 
         from astropy import units as u
-        from gammapy.spectrum.models import LogParabola
+        from gammapy.modeling.models import LogParabola
 
         log_parabola = LogParabola()
         log_parabola.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1273,7 +1273,7 @@ class TableModel(SpectralModel):
         --------
         Fill table from an EBL model (Franceschini, 2008)
 
-        >>> from gammapy.spectrum.models import TableModel
+        >>> from gammapy.modeling.models import TableModel
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TableModel.read_xspec_model(filename=filename, param=0.3)
         """
@@ -1397,7 +1397,7 @@ class Absorption:
 
         import matplotlib.pyplot as plt
         import astropy.units as u
-        from gammapy.spectrum.models import Absorption
+        from gammapy.modeling.models import Absorption
 
         # Load tables for z=0.5
         redshift = 0.5
@@ -1517,7 +1517,7 @@ class Absorption:
         return cls.read(models[name])
 
     def table_model(self, parameter, unit="TeV"):
-        """Table model for a given parameter (`~gammapy.spectrum.models.TableModel`).
+        """Table model for a given parameter (`~gammapy.modeling.models.TableModel`).
 
         Parameters
         ----------
@@ -1542,9 +1542,9 @@ class AbsorbedSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    spectral_model : `~gammapy.spectrum.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model.
-    absorption : `~gammapy.spectrum.models.Absorption`
+    absorption : `~gammapy.modeling.models.Absorption`
         Absorption model.
     parameter : float
         parameter value for absorption model
@@ -1622,7 +1622,7 @@ class NaimaModel(SpectralModel):
         :include-source:
 
         import naima
-        from gammapy.spectrum.models import NaimaModel
+        from gammapy.modeling.models import NaimaModel
         import astropy.units as u
         import matplotlib.pyplot as plt
 
@@ -1742,7 +1742,7 @@ class SpectralGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.spectrum.models import SpectralGaussian
+        from gammapy.modeling.models import SpectralGaussian
 
         gaussian = SpectralGaussian()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)
@@ -1853,7 +1853,7 @@ class SpectralLogGaussian(SpectralModel):
     .. code:: python
 
         from astropy import units as u
-        from gammapy.spectrum.models import SpectralLogGaussian
+        from gammapy.modeling.models import SpectralLogGaussian
 
         gaussian = SpectralLogGaussian()
         gaussian.plot(energy_range=[0.1, 100] * u.TeV)

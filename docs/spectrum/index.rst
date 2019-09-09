@@ -31,7 +31,7 @@ OGIP format and fit a spectral model.
 
     from gammapy.spectrum import SpectrumDatasetOnOff
     from gammapy.utils.fitting import Fit
-    from gammapy.spectrum.models import PowerLaw
+    from gammapy.modeling.models import PowerLaw
 
     filename = '$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits'
     dataset = SpectrumDatasetOnOff.from_ogip_files(filename)
@@ -93,9 +93,5 @@ Reference/API
 =============
 
 .. automodapi:: gammapy.spectrum
-    :no-inheritance-diagram:
-    :include-all-objects:
-
-.. automodapi:: gammapy.spectrum.models
     :no-inheritance-diagram:
     :include-all-objects:

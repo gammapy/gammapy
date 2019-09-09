@@ -11,10 +11,17 @@ from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.cube.models import SkyModel, SkyModels
-from gammapy.image.models import SkyGaussian, SkyPointSource, SkyShell
+from gammapy.modeling.models import (
+    ExponentialCutoffPowerLaw,
+    PowerLaw,
+    PowerLaw2,
+    SkyGaussian,
+    SkyModel,
+    SkyModels,
+    SkyPointSource,
+    SkyShell,
+)
 from gammapy.spectrum import FluxPoints
-from gammapy.spectrum.models import ExponentialCutoffPowerLaw, PowerLaw, PowerLaw2
 from gammapy.utils.scripts import make_path
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -270,7 +277,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spectral_model(self):
-        """Source spectral model (`~gammapy.spectrum.models.SpectralModel`).
+        """Source spectral model (`~gammapy.modeling.models.SpectralModel`).
 
         Parameter errors are statistical errors only.
         """
@@ -316,7 +323,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def spatial_model(self):
-        """Source spatial model (`~gammapy.image.models.SkySpatialModel`).
+        """Source spatial model (`~gammapy.modeling.models.SkySpatialModel`).
 
         TODO: add parameter errors!
         """
@@ -355,7 +362,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
 
     @property
     def sky_model(self):
-        """Source sky model (`~gammapy.cube.models.SkyModel`)."""
+        """Source sky model (`~gammapy.modeling.models.SkyModel`)."""
         spatial_model = self.spatial_model
         spectral_model = self.spectral_model
         return SkyModel(spatial_model, spectral_model, name=self.name)
@@ -461,7 +468,7 @@ class SourceCatalogGammaCat(SourceCatalog):
         )
 
     def to_sky_models(self):
-        """Convert to a `~gammapy.cube.models.SkyModels`.
+        """Convert to a `~gammapy.modeling.models.SkyModels`.
 
         TODO: add an option whether to skip or raise on missing models or data.
         """

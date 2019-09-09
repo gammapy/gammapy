@@ -2,9 +2,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.cube.models import SkyModels
-from gammapy.image import models as spatial
-from gammapy.spectrum import models as spectral
+from gammapy.modeling.models import SkyModels
+from gammapy.modeling.models import image as spatial
+from gammapy.modeling.models import spectrum as spectral
 from gammapy.utils.serialization import UnknownModelError, xml_to_sky_models
 from gammapy.utils.testing import requires_data
 

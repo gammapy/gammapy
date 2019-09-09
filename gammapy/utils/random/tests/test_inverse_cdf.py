@@ -7,11 +7,13 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.cube import MapEvaluator
-from gammapy.cube.models import SkyModel
-from gammapy.image.models import SkyGaussian
 from gammapy.maps import Map, MapAxis
-from gammapy.spectrum.models import PowerLaw
-from gammapy.time.models import LightCurveTableModel
+from gammapy.modeling.models import (
+    LightCurveTableModel,
+    PowerLaw,
+    SkyGaussian,
+    SkyModel,
+)
 from gammapy.utils.random import InverseCDFSampler, MapEventSampler
 
 
