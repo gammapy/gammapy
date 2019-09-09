@@ -311,6 +311,23 @@ class SkyModel(SkyModelBase):
         data["spectral"] = self.spectral_model.to_dict(selection)
         return data
 
+    @classmethod
+    def from_dict(cls, data):
+        """Create SkyModel from dict"""
+        from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
+
+        model_class = SPECTRAL_MODELS[data["spectral"]["type"]]
+        spectral_model = model_class.from_dict(data["spectral"])
+
+        model_class = SPATIAL_MODELS[data["spatial"]["type"]]
+        spatial_model = model_class.from_dict(data["spatial"])
+
+        return cls(
+            name=data["name"],
+            spatial_model=spatial_model,
+            spectral_model=spectral_model,
+        )
+
 
 class SkyDiffuseCube(SkyModelBase):
     """Cube sky map template model (3D).
