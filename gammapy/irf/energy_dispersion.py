@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import numpy as np
 import scipy.special
 from astropy.coordinates import Angle
@@ -79,7 +78,7 @@ class EnergyDispersion:
         self.data = NDDataArray(
             axes=[e_true_axis, e_reco_axis], data=data, interp_kwargs=interp_kwargs
         )
-        self.meta = OrderedDict(meta) if meta else OrderedDict()
+        self.meta = meta or {}
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -402,19 +401,17 @@ class EnergyDispersion:
         table["N_CHAN"] = n_chan
         table["MATRIX"] = matrix
 
-        table.meta = OrderedDict(
-            [
-                ("name", "MATRIX"),
-                ("chantype", "PHA"),
-                ("hduclass", "OGIP"),
-                ("hduclas1", "RESPONSE"),
-                ("hduclas2", "RSP_MATRIX"),
-                ("detchans", self.e_reco.nbin),
-                ("numgrp", numgrp),
-                ("numelt", numelt),
-                ("tlmin4", 0),
-            ]
-        )
+        table.meta = {
+            "name": "MATRIX",
+            "chantype": "PHA",
+            "hduclass": "OGIP",
+            "hduclas1": "RESPONSE",
+            "hduclas2": "RSP_MATRIX",
+            "detchans": self.e_reco.nbin,
+            "numgrp": numgrp,
+            "numelt": numelt,
+            "tlmin4": 0,
+        }
 
         return table
 
@@ -753,7 +750,7 @@ class EnergyDispersion2D:
         axes = [e_true_axis, migra_axis, offset_axis]
 
         self.data = NDDataArray(axes=axes, data=data, interp_kwargs=interp_kwargs)
-        self.meta = OrderedDict(meta) if meta else OrderedDict()
+        self.meta = meta or {}
 
     def __str__(self):
         ss = self.__class__.__name__

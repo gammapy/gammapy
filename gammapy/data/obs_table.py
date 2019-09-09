@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
@@ -310,7 +310,7 @@ class ObservationTable(Table):
         gti : `~gammapy.data.GTI`
             GTI table containing one row (TSTART and TSTOP of the observation with ``obs_id``)
         """
-        meta = OrderedDict(
+        meta = dict(
             EXTNAME="GTI",
             HDUCLASS="GADF",
             HDUDOC="https://github.com/open-gamma-ray-astro/gamma-astro-data-formats",

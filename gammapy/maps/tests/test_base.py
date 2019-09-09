@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -55,7 +54,7 @@ def test_map_copy(binsz, width, map_type, skydir, axes, unit):
     assert m_copy.unit == "cm-2 s-1"
     assert m_copy.unit is not m.unit
 
-    m_copy = m.copy(meta=OrderedDict([("is_copy", True)]))
+    m_copy = m.copy(meta={"is_copy": True})
     assert m_copy.meta["is_copy"]
     assert m_copy.meta is not m.meta
 
@@ -141,7 +140,7 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
 
 @pytest.mark.parametrize("map_type", ["wcs", "hpx", "hpx-sparse"])
 def test_map_meta_read_write(map_type):
-    meta = OrderedDict([("user", "test")])
+    meta = {"user": "test"}
 
     m = Map.create(
         binsz=0.1,
@@ -210,9 +209,9 @@ def test_map_properties():
     m.unit = "cm-2 s-1"
     assert m.unit.to_string() == "1 / (cm2 s)"
 
-    assert isinstance(m.meta, OrderedDict)
+    assert isinstance(m.meta, dict)
     m.meta = {"spam": 42}
-    assert isinstance(m.meta, OrderedDict)
+    assert isinstance(m.meta, dict)
 
     # The rest of the tests are for the `data` property
 

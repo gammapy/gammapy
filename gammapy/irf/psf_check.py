@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import math
-from collections import OrderedDict
 import numpy as np
 
 __all__ = []
@@ -43,13 +42,13 @@ class PSF3DChecker:
     ):
         self.psf = psf
 
-        self.config = OrderedDict(
-            d_norm=d_norm,
-            containment_fraction=containment_fraction,
-            d_rel_containment=d_rel_containment,
-        )
+        self.config = {
+            "d_norm": d_norm,
+            "containment_fraction": containment_fraction,
+            "d_rel_containment": d_rel_containment,
+        }
 
-        self.results = OrderedDict()
+        self.results = {}
 
     def check_all(self):
         """Run all checks.
@@ -95,7 +94,7 @@ class PSF3DChecker:
                         fail_count += 1
                         break
 
-        results = OrderedDict()
+        results = {}
         if fail_count == 0:
             results["status"] = "ok"
         else:
@@ -145,7 +144,7 @@ class PSF3DChecker:
                     fail_count += 1
 
         # write results to dict
-        results = OrderedDict()
+        results = {}
         if fail_count == 0:
             results["status"] = "ok"
         else:
@@ -251,7 +250,7 @@ class PSF3DChecker:
                         fail_count += 1
 
         # write results to dict
-        results = OrderedDict()
+        results = {}
         if fail_count == 0:
             results["status"] = "ok"
         else:
@@ -263,7 +262,7 @@ class PSF3DChecker:
 def check_all_table_psf(data_store):
     """Check all `gammapy.irf.PSF3D` for a given `gammapy.data.DataStore`.
     """
-    config = OrderedDict(d_norm=0.01, containment_fraction=0.68, d_rel_containment=0.7)
+    config = {"d_norm": 0.01, "containment_fraction": 0.68, "d_rel_containment": 0.7}
 
     obs_ids = data_store.obs_table["OBS_ID"].data
 

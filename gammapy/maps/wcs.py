@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -626,7 +625,7 @@ class WcsGeom(MapGeom):
             coords = tuple([c[is_finite] for c in coords])
 
         axes_names = ["lon", "lat"] + [ax.name for ax in self.axes]
-        cdict = OrderedDict(zip(axes_names, coords))
+        cdict = dict(zip(axes_names, coords))
 
         return MapCoord.create(cdict, coordsys=self.coordsys)
 

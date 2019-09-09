@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HESS Galactic plane survey (HGPS) catalog."""
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
@@ -50,7 +49,7 @@ class SourceCatalogObjectHGPSComponent:
     _source_index_key = "row_index"
 
     def __init__(self, data):
-        self.data = OrderedDict(data)
+        self.data = data
 
     def __repr__(self):
         return "{}({!r})".format(self.__class__.__name__, self.name)

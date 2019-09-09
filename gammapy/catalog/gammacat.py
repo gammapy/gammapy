@@ -7,7 +7,6 @@ import collections
 import functools
 import json
 import logging
-from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -592,13 +591,13 @@ class GammaCatResource:
 
     def to_dict(self):
         """Convert to `collections.OrderedDict`."""
-        data = OrderedDict()
-        data["source_id"] = self.source_id
-        data["reference_id"] = self.reference_id
-        data["file_id"] = self.file_id
-        data["type"] = self.type
-        data["location"] = self.location
-        return data
+        return {
+            "source_id": self.source_id,
+            "reference_id": self.reference_id,
+            "file_id": self.file_id,
+            "type": self.type,
+            "location": self.location,
+        }
 
     @classmethod
     def from_dict(cls, data):
@@ -673,7 +672,7 @@ class GammaCatResourceIndex:
         """Create from `~astropy.table.Table`."""
         resources = []
         for row in table:
-            data = OrderedDict((k, row[k]) for k in table.colnames)
+            data = {k: row[k] for k in table.colnames}
             resources.append(GammaCatResource.from_dict(data))
         return cls(resources=resources)
 

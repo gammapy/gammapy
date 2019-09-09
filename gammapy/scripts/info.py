@@ -5,7 +5,6 @@ import os
 import platform
 import sys
 import warnings
-from collections import OrderedDict
 import click
 from gammapy import __version__
 
@@ -76,31 +75,29 @@ def print_info(info, title):
 
 def get_info_system():
     """Get info about user system"""
-    info = OrderedDict()
-    info["python_executable"] = sys.executable
-    info["python_version"] = platform.python_version()
-    info["machine"] = platform.machine()
-    info["system"] = platform.system()
-    return info
+    return {
+        "python_executable": sys.executable,
+        "python_version": platform.python_version(),
+        "machine": platform.machine(),
+        "system": platform.system(),
+    }
 
 
 def get_info_version():
     """Get detailed info about Gammapy version."""
-    info = OrderedDict()
+    info = {"version": __version__}
     try:
         path = sys.modules["gammapy"].__path__[0]
     except:
         path = "unknown"
     info["path"] = path
 
-    info["version"] = __version__
-
     return info
 
 
 def get_info_dependencies():
     """Get info about Gammapy dependencies."""
-    info = OrderedDict()
+    info = {}
     for name in GAMMAPY_DEPENDENCIES:
         try:
             with warnings.catch_warnings():
@@ -116,7 +113,4 @@ def get_info_dependencies():
 
 def get_info_envvar():
     """Get info about Gammapy environment variables."""
-    info = OrderedDict()
-    for name in GAMMAPY_ENV_VARIABLES:
-        info[name] = os.environ.get(name, "not set")
-    return info
+    return {name: os.environ.get(name, "not set") for name in GAMMAPY_ENV_VARIABLES}

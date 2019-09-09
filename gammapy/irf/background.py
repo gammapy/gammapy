@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -79,7 +78,7 @@ class Background3D:
             data=data,
             interp_kwargs=interp_kwargs,
         )
-        self.meta = OrderedDict(meta) if meta else OrderedDict()
+        self.meta = meta or {}
 
     def __str__(self):
         ss = self.__class__.__name__
@@ -265,7 +264,7 @@ class Background2D:
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
-        self.meta = OrderedDict(meta) if meta else OrderedDict()
+        self.meta = meta or {}
 
     def __str__(self):
         ss = self.__class__.__name__

@@ -328,25 +328,20 @@ latitude.  Non-spatial axes are assigned a default name ``axis{I}`` where
 ``{I}`` is the index of the non-spatial dimension. `MapCoord` objects created
 without named axes must have the same axis ordering as the map geometry.
 
-A `MapCoord` with named axes can be created by calling `MapCoord.create` with a
-`dict` or `~collections.OrderedDict`:
+A `MapCoord` with named axes can be created by calling `MapCoord.create` with a `dict`:
 
 .. code:: python
 
-    # Create a MapCoord from a dict
     c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     print(c[0], c['lon'], c.lon)
     print(c[1], c['lat'], c.lat)
     print(c[2], c['energy'])
 
-    # Create a MapCoord from an OrderedDict
-    from collections import OrderedDict
-    c = MapCoord.create(OrderedDict([('energy',energy), ('lon',lon), ('lat', lat)]))
+    c = MapCoord.create({'energy': energy, 'lon': lon, 'lat': lat})
     print(c[0], c['energy'])
     print(c[1], c['lon'], c.lon)
     print(c[2], c['lat'], c.lat)
 
-    # Create a MapCoord from a dict + SkyCoord
     c = MapCoord.create(dict(skycoord=skycoord, energy=energy))
     print(c[0], c['lon'], c.lon)
     print(c[1], c['lat'], c.lat)

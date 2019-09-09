@@ -2,7 +2,6 @@
 """Utilities for dealing with HEALPix projections and mappings."""
 import copy
 import re
-from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -1690,7 +1689,7 @@ class HpxGeom(MapGeom):
     def get_coord(self, idx=None, flat=False):
         pix = self.get_idx(idx=idx, flat=flat)
         coords = self.pix_to_coord(pix)
-        cdict = OrderedDict([("lon", coords[0]), ("lat", coords[1])])
+        cdict = {"lon": coords[0], "lat": coords[1]}
 
         for i, axis in enumerate(self.axes):
             cdict[axis.name] = coords[i + 2]

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
@@ -116,7 +115,7 @@ class TestSourceCatalogObjectGammaCat:
     def test_data(self, gammacat):
         source = gammacat[0]
 
-        assert isinstance(source.data, OrderedDict)
+        assert isinstance(source.data, dict)
         assert source.data["common_name"] == "CTA 1"
         assert_quantity_allclose(source.data["dec"], 72.782997 * u.deg)
 
@@ -254,15 +253,13 @@ class TestGammaCatResource:
         assert repr(self.resource) == expected
 
     def test_to_dict(self):
-        expected = OrderedDict(
-            [
-                ("source_id", 42),
-                ("reference_id", "2010A&A...516A..62A"),
-                ("file_id", 2),
-                ("type", "none"),
-                ("location", "none"),
-            ]
-        )
+        expected = {
+            "source_id": 42,
+            "reference_id": "2010A&A...516A..62A",
+            "file_id": 2,
+            "type": "none",
+            "location": "none",
+        }
         assert self.resource.to_dict() == expected
 
     def test_dict_roundtrip(self):

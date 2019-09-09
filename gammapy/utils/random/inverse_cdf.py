@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -162,7 +161,7 @@ class MapEventSampler:
         # TODO: pix_to_coord should return a MapCoord object
         geom = self.npred_map.geom
         axes_names = ["lon", "lat"] + [ax.name for ax in geom.axes]
-        cdict = OrderedDict(zip(axes_names, coords))
+        cdict = dict(zip(axes_names, coords))
         cdict["energy"] *= geom.get_axis_by_name("energy").unit
         return MapCoord.create(cdict, coordsys=geom.coordsys)
 
@@ -176,9 +175,7 @@ class MapEventSampler:
         """Time meta information (`OrderedDict`)"""
         # TODO: extend the meta information according to
         #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
-        meta = OrderedDict()
-        meta["ONTIME"] = np.round(self.ontime.to_value("s"), 1)
-        return meta
+        return {"ONTIME": np.round(self.ontime.to_value("s"), 1)}
 
     def sample_time(self, n_events=None):
         """Sample arrival times of events.
