@@ -590,7 +590,7 @@ class GammaCatResource:
         return collections.namedtuple("GammaCatResourceNamedTuple", d.keys())(**d)
 
     def to_dict(self):
-        """Convert to `collections.OrderedDict`."""
+        """Convert to `dict`."""
         return {
             "source_id": self.source_id,
             "reference_id": self.reference_id,

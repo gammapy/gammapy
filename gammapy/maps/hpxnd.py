@@ -26,7 +26,7 @@ class HpxNDMap(HpxMap):
     data : `~numpy.ndarray`
         HEALPIX data array.
         If none then an empty array will be allocated.
-    meta : `~collections.OrderedDict`
+    meta : `dict`
         Dictionary to store meta data.
     unit : str or `~astropy.units.Unit`
         The map unit

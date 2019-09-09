@@ -172,7 +172,7 @@ class MapEventSampler:
         return u.Quantity(ontime.sec, "s")
 
     def _get_time_meta(self):
-        """Time meta information (`OrderedDict`)"""
+        """Time meta information (`dict`)"""
         # TODO: extend the meta information according to
         #  https://gamma-astro-data-formats.readthedocs.io/en/latest/general/time.html#time-formats
         return {"ONTIME": np.round(self.ontime.to_value("s"), 1)}

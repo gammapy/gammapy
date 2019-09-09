@@ -77,7 +77,7 @@ class WcsMap(Map):
             Data type, default is float32
         conv : {'fgst-ccube','fgst-template','gadf'}, optional
             FITS format convention.  Default is 'gadf'.
-        meta : `~collections.OrderedDict`
+        meta : `dict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
             The unit of the map

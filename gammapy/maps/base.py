@@ -137,7 +137,7 @@ class Map(abc.ABC):
             Data type, default is 'float32'
         unit : str or `~astropy.units.Unit`
             Data unit.
-        meta : `~collections.OrderedDict`
+        meta : `dict`
             Dictionary to store meta data.
 
         Returns
@@ -198,7 +198,7 @@ class Map(abc.ABC):
             Map geometry.
         data : `numpy.ndarray`
             data array
-        meta : `~collections.OrderedDict`
+        meta : `dict`
             Dictionary to store meta data.
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to

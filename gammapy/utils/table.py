@@ -70,13 +70,12 @@ def table_row_to_dict(row, make_quantity=True):
 def table_from_row_data(rows, **kwargs):
     """Helper function to create table objects from row data.
 
-    - Works with quantities.
-    - Preserves order of keys if OrderedDicts are used.
+    Works with quantities.
 
     Parameters
     ----------
     rows : list
-        List of row data (each row a dict or OrderedDict)
+        List of row data (each row a dict)
     """
     table = Table(**kwargs)
     colnames = list(rows[0].keys())

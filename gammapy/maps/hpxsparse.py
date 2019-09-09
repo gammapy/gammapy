@@ -20,7 +20,7 @@ class HpxSparseMap(HpxMap):
         HEALPIX geometry object.
     data : `~numpy.ndarray`
         HEALPIX data array.
-    meta : `~collections.OrderedDict`
+    meta : `dict`
         Dictionary to store meta data.
     unit : `~astropy.units.Unit`
         The map unit
