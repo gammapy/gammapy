@@ -6,9 +6,9 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI, ObservationStats
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion, IRFStacker
+from gammapy.modeling import Dataset, Parameters
 from gammapy.stats import cash, wstat
 from gammapy.utils.fits import energy_axis_to_ebounds
-from gammapy.utils.fitting import Dataset, Parameters
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum, SpectrumEvaluator
@@ -575,25 +575,27 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             e_true = e_reco
         counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
         counts_off = CountsSpectrum(e_reco[:-1], e_reco[1:])
-        aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_true[:-1].shape)*u.m**2)
+        aeff = EffectiveAreaTable(
+            e_true[:-1], e_true[1:], np.zeros(e_true[:-1].shape) * u.m ** 2
+        )
         edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
-        mask_safe = np.zeros_like(counts.data, 'bool')
-        gti = GTI.create(u.Quantity([],'s'), u.Quantity([],'s'), reference_time)
+        mask_safe = np.zeros_like(counts.data, "bool")
+        gti = GTI.create(u.Quantity([], "s"), u.Quantity([], "s"), reference_time)
         livetime = gti.time_sum
         acceptance = np.ones_like(counts.data, int)
         acceptance_off = np.ones_like(counts.data, int)
 
-        return SpectrumDatasetOnOff(counts=counts,
-                                    counts_off=counts_off,
-                                    aeff=aeff,
-                                    edisp=edisp,
-                                    mask_safe=mask_safe,
-                                    acceptance=acceptance,
-                                    acceptance_off=acceptance_off,
-                                    livetime=livetime,
-                                    gti=gti,
-                                   )
-
+        return SpectrumDatasetOnOff(
+            counts=counts,
+            counts_off=counts_off,
+            aeff=aeff,
+            edisp=edisp,
+            mask_safe=mask_safe,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            livetime=livetime,
+            gti=gti,
+        )
 
     @classmethod
     def read(cls, filename):

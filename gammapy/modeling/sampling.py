@@ -65,7 +65,7 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
 
     Parameters
     ----------
-    dataset : `~gammapy.utils.fitting.Dataset`
+    dataset : `~gammapy.modeling.Dataset`
         Dataset
     nwalkers : int
         Number of walkers
@@ -125,7 +125,7 @@ def plot_trace(sampler, dataset):
     ----------
     sampler : `emcee.EnsembleSampler`
         Sampler object containing the trace of all walkers
-    dataset : `~gammapy.utils.fitting.Dataset`
+    dataset : `~gammapy.modeling.Dataset`
         Dataset
     """
     import matplotlib.pyplot as plt
@@ -149,7 +149,7 @@ def plot_corner(sampler, dataset, nburn=0):
     ----------
     sampler : `emcee.EnsembleSampler`
         Sampler object containing the trace of all walkers
-    dataset : `~gammapy.utils.fitting.Dataset`
+    dataset : `~gammapy.modeling.Dataset`
         Dataset
     nburn : int
         Number of runs to discard, because considered part of the burn-in phase

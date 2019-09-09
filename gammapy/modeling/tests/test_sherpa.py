@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.utils.fitting import Parameter, Parameters, optimize_sherpa
+from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling.sherpa import optimize_sherpa
 
 pytest.importorskip("sherpa")
 

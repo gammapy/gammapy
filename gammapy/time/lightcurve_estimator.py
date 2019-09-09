@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ScaleModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
 from gammapy.time import LightCurve
-from gammapy.utils.fitting import Datasets, Fit
 from gammapy.utils.table import table_from_row_data
 
 __all__ = ["LightCurveEstimator"]
@@ -240,7 +240,7 @@ class LightCurveEstimator:
 
         Parameters
         ----------
-        dataset : `~gammapy.utils.fitting.Dataset`
+        dataset : `~gammapy.modeling.Dataset`
             the dataset object
 
         Returns

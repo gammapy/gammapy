@@ -155,7 +155,7 @@ class Datasets:
 
         Returns
         -------
-        dataset : 'gammapy.utils.fitting.Datasets'
+        dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
         from gammapy.utils.scripts import read_yaml

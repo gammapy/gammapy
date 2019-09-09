@@ -120,7 +120,7 @@ class Fit:
         Parameters
         ----------
         backend : str
-            Which backend to use (see ``gammapy.utils.fitting.registry``)
+            Which backend to use (see ``gammapy.modeling.registry``)
         **kwargs : dict
             Keyword arguments passed to the optimizer. For the `"minuit"` backend
             see https://iminuit.readthedocs.io/en/latest/api.html#iminuit.Minuit
@@ -185,7 +185,7 @@ class Fit:
         Parameters
         ----------
         backend : str
-            Which backend to use (see ``gammapy.utils.fitting.registry``)
+            Which backend to use (see ``gammapy.modeling.registry``)
 
         Returns
         -------
@@ -234,8 +234,8 @@ class Fit:
         Parameters
         ----------
         backend : str
-            Which backend to use (see ``gammapy.utils.fitting.registry``)
-        parameter : `~gammapy.utils.fitting.Parameter`
+            Which backend to use (see ``gammapy.modeling.registry``)
+        parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         sigma : float
             Number of standard deviations for the confidence level
@@ -296,7 +296,7 @@ class Fit:
 
         Parameters
         ----------
-        parameter : `~gammapy.utils.fitting.Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             Parameter of interest
         values : `~astropy.units.Quantity` (optional)
             Parameter values to evaluate the likelihood for.
@@ -378,7 +378,7 @@ class Fit:
 
         Parameters
         ----------
-        x, y : `~gammapy.utils.fitting.Parameter`
+        x, y : `~gammapy.modeling.Parameter`
             Parameters of interest
         numpoints : int
             Number of contour points

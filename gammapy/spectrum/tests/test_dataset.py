@@ -7,6 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
+from gammapy.modeling import Fit
 from gammapy.modeling.models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.spectrum import (
     CountsSpectrum,
@@ -14,7 +15,6 @@ from gammapy.spectrum import (
     SpectrumDatasetOnOff,
     SpectrumDatasetOnOffStacker,
 )
-from gammapy.utils.fitting import Fit
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.time import time_ref_to_dict
@@ -123,8 +123,8 @@ class TestSpectrumDataset:
         assert "SpectrumDataset" in str(self.dataset)
 
     def test_spectrumdataset_create(self):
-        e_reco = u.Quantity([0.1,1,10.], 'TeV')
-        e_true = u.Quantity([0.05, 0.5, 5, 20.], 'TeV')
+        e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
+        e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
         empty_dataset = SpectrumDataset.create(e_reco, e_true)
 
         assert empty_dataset.counts.total_counts == 0
@@ -168,18 +168,17 @@ class TestSpectrumOnOff:
             obs_id="test",
         )
 
-
     def test_spectrumdatasetonoff_create(self):
-        e_reco = u.Quantity([0.1,1,10.], 'TeV')
-        e_true = u.Quantity([0.05, 0.5, 5, 20.], 'TeV')
+        e_reco = u.Quantity([0.1, 1, 10.0], "TeV")
+        e_true = u.Quantity([0.05, 0.5, 5, 20.0], "TeV")
         empty_dataset = SpectrumDatasetOnOff.create(e_reco, e_true)
 
         assert empty_dataset.counts.total_counts == 0
         assert empty_dataset.data_shape[0] == 2
         assert empty_dataset.counts_off.total_counts == 0
         assert empty_dataset.counts_off.energy.nbin == 2
-        assert_allclose(empty_dataset.acceptance_off,1)
-        assert_allclose(empty_dataset.acceptance,1)
+        assert_allclose(empty_dataset.acceptance_off, 1)
+        assert_allclose(empty_dataset.acceptance, 1)
         assert empty_dataset.acceptance.shape[0] == 2
         assert empty_dataset.acceptance_off.shape[0] == 2
         assert empty_dataset.livetime.value == 0

@@ -160,7 +160,3 @@ Reference/API
 .. automodapi:: gammapy.utils.time
     :no-inheritance-diagram:
     :include-all-objects:
-
-.. automodapi:: gammapy.utils.fitting
-    :no-inheritance-diagram:
-    :include-all-objects:

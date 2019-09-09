@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 from gammapy.cube.fit import MapDataset, MapEvaluator
+from gammapy.modeling import Parameters
 from gammapy.modeling.models import (
     SPATIAL_MODELS,
     SPECTRAL_MODELS,
@@ -10,7 +11,6 @@ from gammapy.modeling.models import (
     SkyModel,
     SkyModels,
 )
-from gammapy.utils.fitting import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
@@ -165,7 +165,7 @@ class dict_to_datasets:
 
     Parameters
     ----------
-    datasets : `~gammapy.utils.fitting.Datasets`
+    datasets : `~gammapy.modeling.Datasets`
         Datasets
     components : dict
         dict describing model components

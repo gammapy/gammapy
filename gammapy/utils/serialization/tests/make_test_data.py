@@ -10,6 +10,7 @@ from gammapy.cube import MapDataset, MapEvaluator, MapMaker, PSFKernel
 from gammapy.data import DataStore
 from gammapy.irf import make_mean_edisp, make_mean_psf
 from gammapy.maps import MapAxis, WcsGeom
+from gammapy.modeling import Datasets
 from gammapy.modeling.models import (
     BackgroundModel,
     ExponentialCutoffPowerLaw,
@@ -20,7 +21,6 @@ from gammapy.modeling.models import (
     SkyModels,
     SkyPointSource,
 )
-from gammapy.utils.fitting import Datasets
 
 DATA_PATH = Path("gammapy/utils/serialization/tests/data")
 
