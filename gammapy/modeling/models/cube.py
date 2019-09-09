@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Cube models (axes: lon, lat, energy)."""
 import copy
 from pathlib import Path
 import numpy as np

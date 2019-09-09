@@ -11,9 +11,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.extern import xmltodict
 from gammapy.maps import Map
-from gammapy.modeling.models import SkyModel, SkyModels
-from gammapy.modeling.models import image as spatial
-from gammapy.modeling.models import spectrum as spectral
+from gammapy.modeling.models import SkyModel, SkyModels, spatial, spectral
 from gammapy.utils.fitting import Parameter, Parameters
 
 log = logging.getLogger(__name__)

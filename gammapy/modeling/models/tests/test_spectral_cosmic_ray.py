@@ -3,7 +3,7 @@ import astropy.units as u
 from gammapy.modeling.models import create_cosmic_ray_spectral_model
 from gammapy.utils.testing import assert_quantity_allclose
 
-Cosmic_rays_SPECTRA = [
+COSMIC_RAY_SPECTRA = [
     dict(
         name="proton",
         dnde=u.Quantity(0.014773732960138994, "m-2 s-1 TeV-1 sr-1"),
@@ -37,7 +37,7 @@ Cosmic_rays_SPECTRA = [
 ]
 
 
-@pytest.mark.parametrize("spec", Cosmic_rays_SPECTRA, ids=lambda _: _["name"])
+@pytest.mark.parametrize("spec", COSMIC_RAY_SPECTRA, ids=lambda _: _["name"])
 def test_cosmic_ray_spectrum(spec):
     cr_spectrum = create_cosmic_ray_spectral_model(particle=spec["name"])
 
