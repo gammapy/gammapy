@@ -180,6 +180,17 @@ class SpectrumDataset(Dataset):
             self._predictor = None
 
     @property
+    def mask_safe(self):
+        if self._mask_safe is None:
+            return np.ones(self.data_shape,bool)
+        else:
+            return self._mask_safe
+
+    @mask_safe.setter
+    def mask_safe(self, mask):
+        self._mask_safe = mask
+
+    @property
     def parameters(self):
         if self._parameters is None:
             raise AttributeError("No model set for Dataset")
@@ -216,7 +227,7 @@ class SpectrumDataset(Dataset):
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def _as_counts_spectrum(self, data):
-        energy = self.counts.energy.edges
+        energy = self._energy_axis.edges
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     @property
@@ -244,7 +255,7 @@ class SpectrumDataset(Dataset):
     @property
     def energy_range(self):
         """Energy range defined by the safe mask"""
-        energy = self.counts.energy.edges
+        energy = self._energy_axis.edges
         e_lo = energy[:-1][self.mask_safe]
         e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])
@@ -397,6 +408,62 @@ class SpectrumDataset(Dataset):
             gti=gti,
         )
 
+
+    def stack(self, other):
+        """Stack this dataset with another one.
+
+        Safe mask is applied to compute the stacked counts vector.
+        Counts outside each dataset safe mask are lost.
+
+        Stacking is performed in-place.
+
+        Parameters
+        ----------
+        other : `~gammapy.spectrum.SpectrumDataset`
+            the dataset to stack to the current one
+       """
+
+        if not isinstance(other, SpectrumDataset):
+            raise TypeError("Incompatible types for SpectrumDataset stacking")
+
+        if self.counts is not None:
+            self.counts.data[~self.mask_safe] *= 0
+            self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
+
+        if self.background is not None:
+            self.background.data[~self.mask_safe] *= 0
+            self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
+
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
+
+        irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
+                                 list_livetime=[self.livetime, other.livetime],
+                                 list_edisp=[self.edisp, other.edisp],
+                                 list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+                                 list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+                                 )
+
+        if self.aeff is not None:
+            irf_stacker.stack_aeff()
+            self.aeff = irf_stacker.stacked_aeff
+            if self.edisp is not None:
+                irf_stacker.stack_edisp()
+                self.edisp = irf_stacker.stacked_edisp
+            else:
+                self.edisp = None
+        else:
+            self.aeff = None
+            self.edisp = None
+
+        if self.gti is not None:
+            self.gti.stack(other.gti)
+            self.gti.union()
+        else:
+            self.gti = None
+
+        #TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
+        # of GTIs
+        self.livetime += other.livetime
 
 class SpectrumDatasetOnOff(SpectrumDataset):
     """Spectrum dataset for on-off likelihood fitting.
