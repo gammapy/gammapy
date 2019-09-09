@@ -549,3 +549,12 @@ class BackgroundModel(Model):
         if self.filename is not None:
             data["filename"] = self.filename
         return data
+
+    @classmethod
+    def from_dict(cls, data):
+        data = Map.read(data["filename"])
+        init = cls(background=data, name=data["name"])
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init
