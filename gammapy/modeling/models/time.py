@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Time-dependent models."""
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
