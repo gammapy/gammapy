@@ -1,12 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
-from gammapy.maps import Map, WcsGeom
+from ..irf import PSF3D
+from gammapy.maps import Map, WcsGeom, MapAxis
 from .background import make_map_background_irf
 from .counts import fill_map_counts
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
+from .psf_map import make_psf_map
+from .edisp_map import make_edisp_map
+
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
@@ -29,6 +34,10 @@ class MapMaker:
         Exclusion mask
     background_oversampling : int
         Background oversampling factor in energy axis.
+    migra_axis : `~gammapy.maps.MapAxis`
+        Migration axis for edisp map
+    rad_axis : `~gammapy.maps.MapAxis`
+        Radial axis for psf map
     """
 
     def __init__(
@@ -38,6 +47,8 @@ class MapMaker:
         geom_true=None,
         exclusion_mask=None,
         background_oversampling=None,
+        migra_axis=None,
+        rad_axis=None,
     ):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
@@ -50,6 +61,16 @@ class MapMaker:
         self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
+        self.migra_axis = (
+            migra_axis
+            if migra_axis
+            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="", name="migra")
+        )
+        self.rad_axis = (
+            rad_axis
+            if rad_axis
+            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="deg", name="theta")
+        )
 
     def _get_empty_maps(self, selection):
         # Initialise zero-filled maps
@@ -93,10 +114,11 @@ class MapMaker:
             maps_obs = obs_maker.run(selection)
 
             for name in selection:
-                data = maps_obs[name].quantity.to_value(maps[name].unit)
                 if name == "exposure":
+                    data = maps_obs[name].quantity.to_value(maps[name].unit)
                     maps[name].fill_by_coord(obs_maker.coords_etrue, data)
-                else:
+                elif name == "counts" or name == "background":
+                    data = maps_obs[name].quantity.to_value(maps[name].unit)
                     maps[name].fill_by_coord(obs_maker.coords, data)
         self._maps = maps
         return maps
@@ -144,6 +166,11 @@ class MapMaker:
         for name, map in maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
+            if name == "psf":
+                map = map.psf_map
+            if name == "edisp":
+                map = map.edisp_map
+
             images[name] = map.sum_over_axes(keepdims=keepdims)
 
         return images
@@ -191,14 +218,19 @@ class MapMakerObs:
     observation : `~gammapy.data.DataStoreObservation`
         Observation
     geom : `~gammapy.maps.WcsGeom`
-        Reference image geometry
+        Reference image geometry in reco energy, used for counts and background maps
     offset_max : `~astropy.coordinates.Angle`
         Maximum offset angle
     geom_true : `~gammapy.maps.WcsGeom`
-        Reference image geometry in true energy, used for exposure maps and PSF.
+        Reference image geometry in true energy, used for IRF maps. It can have a coarser
+        spatial bins than the counts geom.
         If none, the same as geom is assumed
     exclusion_mask : `~gammapy.maps.Map`
         Exclusion mask (used by some background estimators)
+    migra_axis : `~gammapy.maps.MapAxis`
+        Migration axis for edisp map
+    rad_axis : `~gammapy.maps.MapAxis`
+        Radial axis for psf map
     """
 
     def __init__(
@@ -209,6 +241,8 @@ class MapMakerObs:
         geom_true=None,
         exclusion_mask=None,
         background_oversampling=None,
+        migra_axis=None,
+        rad_axis=None,
     ):
         self.observation = observation
         self.geom = geom
@@ -217,15 +251,21 @@ class MapMakerObs:
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}
+        self.migra_axis = (
+            migra_axis
+            if migra_axis
+            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="", name="migra")
+        )
+        self.rad_axis = (
+            rad_axis
+            if rad_axis
+            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="deg", name="theta")
+        )
 
     def _fov_mask(self, coords):
         pointing = self.observation.pointing_radec
         offset = coords.skycoord.separation(pointing)
         return offset >= self.offset_max
-
-    @lazyproperty
-    def fov_mask_etrue(self):
-        return self._fov_mask(self.coords_etrue)
 
     @lazyproperty
     def fov_mask(self):
@@ -235,15 +275,10 @@ class MapMakerObs:
     def coords(self):
         return self.geom.get_coord()
 
-    @lazyproperty
-    def coords_etrue(self):
-        # Compute field of view mask on the cutout in true energy
-        return self.geom_true.get_coord()
-
     def run(self, selection=None):
         """Make maps.
 
-        Returns dict with keys "counts", "exposure" and "background".
+        Returns dict with keys "counts", "exposure" and "background", "psf" and "edisp".
 
         Parameters
         ----------
@@ -267,14 +302,22 @@ class MapMakerObs:
         self.maps["counts"] = counts
 
     def _make_exposure(self):
-        exposure = make_map_exposure_true_energy(
+        exposure_irf = make_map_exposure_true_energy(
             pointing=self.observation.pointing_radec,
             livetime=self.observation.observation_live_time_duration,
             aeff=self.observation.aeff,
             geom=self.geom_true,
         )
-        if self.fov_mask_etrue is not None:
-            exposure.data[..., self.fov_mask_etrue] = 0
+        # the exposure associated with the IRFS
+        self.maps["exposure_irf"] = exposure_irf
+
+        # The real exposure map, with FoV cuts
+        factor = self.geom.data_shape[-1] / self.geom_true.data_shape[-1]
+        exposure = exposure_irf.upsample(factor)
+        coords_etrue = exposure.geom.get_coord()
+        fov_mask_etrue = self._fov_mask(coords_etrue)
+        if fov_mask_etrue is not None:
+            exposure.data[..., fov_mask_etrue] = 0
         self.maps["exposure"] = exposure
 
     def _make_background(self):
@@ -303,10 +346,39 @@ class MapMakerObs:
 
         self.maps["background"] = background
 
+    def _make_edisp(self):
+
+        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        geom_migra = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
+        edisp_map = make_edisp_map(
+            edisp=self.observation.edisp,
+            pointing=self.observation.pointing_radec,
+            geom=geom_migra,
+            max_offset=self.offset_max,
+            exposure_map=self.maps["exposure_irf"],
+        )
+        self.maps["edisp"] = edisp_map
+
+    def _make_psf(self):
+        # CTA 1DC psf is gammapy.irf.psf_gauss.EnergyDependentMultiGaussPSF
+        # TODO: correct handling for 1DC data?
+        if type(self.observation.psf) is not PSF3D:
+            return
+        energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        geom_rad = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
+        psf_map = make_psf_map(
+            psf=self.observation.psf,
+            pointing=self.observation.pointing_radec,
+            geom=geom_rad,
+            max_offset=self.offset_max,
+            exposure_map=self.maps["exposure_irf"],
+        )
+        self.maps["psf"] = psf_map
+
 
 def _check_selection(selection):
     """Handle default and validation of selection"""
-    available = ["counts", "exposure", "background"]
+    available = ["counts", "exposure", "background", "psf", "edisp"]
     if selection is None:
         selection = available
 
