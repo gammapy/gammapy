@@ -17,12 +17,12 @@ Getting Started
 ===============
 
 The following example shows how to fit a power law simultaneously to two
-simulated crab runs using the `~gammapy.utils.fitting.Fit` class.
+simulated crab runs using the `~gammapy.modeling.Fit` class.
 
 .. code-block:: python
 
     from gammapy.spectrum import SpectrumDatasetOnOff
-    from gammapy.utils.fitting import Fit
+    from gammapy.modeling import Fit
     from gammapy.modeling.models import PowerLaw
     import matplotlib.pyplot as plt
 

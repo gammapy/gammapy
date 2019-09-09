@@ -2,8 +2,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
+from gammapy.modeling import Datasets
 from gammapy.modeling.models import BackgroundModels, SkyModels, spatial, spectral
-from gammapy.utils.fitting import Datasets
 from gammapy.utils.scripts import read_yaml
 from gammapy.utils.serialization import dict_to_models
 from gammapy.utils.testing import requires_data

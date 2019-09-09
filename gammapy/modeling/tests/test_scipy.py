@@ -2,9 +2,8 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.utils.fitting import (
-    Parameter,
-    Parameters,
+from gammapy.modeling import Parameter, Parameters
+from gammapy.modeling.scipy import (
     confidence_scipy,
     likelihood_profile_ul_scipy,
     optimize_scipy,

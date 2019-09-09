@@ -4,8 +4,8 @@ import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
+from gammapy.modeling import Dataset, Datasets, Fit
 from gammapy.modeling.models import PowerLaw, ScaleModel
-from gammapy.utils.fitting import Dataset, Datasets, Fit
 from gammapy.utils.interpolation import interpolate_likelihood_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_from_row_data, table_standardise_units_copy
@@ -1134,7 +1134,7 @@ class FluxPointsDataset(Dataset):
 
         from astropy import units as u
         from gammapy.spectrum import FluxPoints, FluxPointsDataset
-        from gammapy.utils.fitting import Fit
+        from gammapy.modeling import Fit
         from gammapy.modeling.models import PowerLaw
 
         filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits'

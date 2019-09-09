@@ -30,7 +30,7 @@ OGIP format and fit a spectral model.
 .. code-block:: python
 
     from gammapy.spectrum import SpectrumDatasetOnOff
-    from gammapy.utils.fitting import Fit
+    from gammapy.modeling import Fit
     from gammapy.modeling.models import PowerLaw
 
     filename = '$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits'

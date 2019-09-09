@@ -5,9 +5,9 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
 from gammapy.catalog.fermi import SourceCatalog3FGL
+from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLaw, SpectralModel
 from gammapy.spectrum import FluxPoints, FluxPointsDataset
-from gammapy.utils.fitting import Fit
 from gammapy.utils.testing import (
     assert_quantity_allclose,
     mpl_plot_check,

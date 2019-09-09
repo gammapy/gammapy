@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
-from gammapy.utils.fitting import Model, Parameter, Parameters
+from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, write_yaml
 
 __all__ = [

@@ -8,6 +8,7 @@ from astropy.utils import lazyproperty
 from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map
+from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import (
     BackgroundModel,
     BackgroundModels,
@@ -15,7 +16,6 @@ from gammapy.modeling.models import (
     SkyModels,
 )
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
-from gammapy.utils.fitting import Dataset, Parameters
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 
@@ -237,7 +237,7 @@ class MapDataset(Dataset):
 
     @property
     def parameters(self):
-        """List of parameters (`~gammapy.utils.fitting.Parameters`)"""
+        """List of parameters (`~gammapy.modeling.Parameters`)"""
         parameters = []
 
         if self.model:

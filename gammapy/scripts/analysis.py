@@ -11,6 +11,7 @@ import jsonschema
 import yaml
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.modeling import Fit
 from gammapy.modeling.models import SPECTRAL_MODELS
 from gammapy.spectrum import (
     FluxPointsDataset,
@@ -19,7 +20,6 @@ from gammapy.spectrum import (
     SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )
-from gammapy.utils.fitting import Fit
 from gammapy.utils.scripts import make_path, read_yaml
 
 __all__ = ["Analysis", "Config"]

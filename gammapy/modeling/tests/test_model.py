@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.utils.fitting import Model, Parameter, Parameters
+from gammapy.modeling import Model, Parameter, Parameters
 
 
 class MyModel(Model):

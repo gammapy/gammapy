@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.utils.fitting import Parameter, Parameters
+from gammapy.modeling import Parameter, Parameters
 
 
 def test_parameter_init():
