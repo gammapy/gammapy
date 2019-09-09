@@ -1,0 +1,265 @@
+.. include:: ../../references.txt
+
+.. _pig-013:
+
+**********************************************
+PIG 13 - Gammapy dependencies and distribution
+**********************************************
+
+* Author: Christoph Deil, Axel Donath, Régis Terrier, Brigitta Sipocz
+* Created: June 6, 2019
+* Accepted: Sep 9, 2019
+* Status: accepted
+* Discussion: `GH 2218`_
+
+Abstract
+========
+
+Now that we have a good way to distribute Gammapy and to ship a science tool
+environment to users, we propose to drop support and testing for old versions of
+dependencies, and alternative distribution channels. Concretely, we propose to
+require Python 3.6, Numpy 1.16 and Astropy 3.2 starting with Gammapy v0.14, and
+to remove the Macports installation instructions from the Gammapy documentation.
+
+We think the impact for users is small (none for most), but the benefit for
+Gammapy developers and maintainers is big, allowing us to progress more quickly.
+
+If you use Gammapy and need to run on old machines or exotic platforms, and this
+change doesn't work for you, let us know!
+
+Introduction
+============
+
+Since Gammapy v0.7, released in Feb 2018, the recommended way to install
+Gammapy and its dependencies has been via conda. This has worked well, allowing
+us to ship a reproducible science tool environment with up-to-date versions to
+all Gammapy users for each Gammapy release.
+
+Each stable release for Gammapy is first published as a source distribution on
+https://pypi.org/project/gammapy/. Then conda binaries for Linux, macOS and
+Windows will be built via conda-forge, and uploaded to
+https://anaconda.org/conda-forge/gammapy. Finally we write a conda environment
+specification file that we publish on gammapy.org, and the end-user installation
+instructions look like this::
+
+    curl -O https://gammapy.org/download/install/gammapy-0.13-environment.yml
+    conda env create -f gammapy-0.13-environment.yml
+    conda activate gammapy-0.13
+
+Dependencies
+------------
+
+For the rest of this document, we would like to define and describe what we mean
+when talking about "required" and "optional" dependencies for Gammapy:
+
+- the required dependencies are the Python packages that get automatically
+  installed when running ``pip install gammapy`` or ``conda install gammapy -c
+  conda-forge``.
+- the optional dependencies are the ones listed in the conda environment
+  specification, that are not already required dependencies.
+
+For example Numpy and Astropy are required dependencies of Gammapy, and
+matplotlib, Jupyter or Naima are optional dependencies. Complete tables of all
+required and optional dependencies that we have at the moment are given below.
+
+The choice which dependencies are required or optional (or neither) is something
+we make in the metadata of the Gammapy source distribution. Our reasoning is to
+declare a dependency as required if it's needed by the vast majority of Gammapy
+users, and for optional dependencies, we include all packages that are used
+somewhere within the Gammapy package, or in examples and tutorials in the
+Gammapy documentation.
+
+We note that these two sets of dependencies are just the default, recommended
+sets, it is possible to install Gammapy even without installing the required
+dependencies, and of course users can install and use Gammapy together with
+other Python packages, e.g. scikit-learn or whatever they like.
+
+Distributions
+-------------
+
+There are many distribution channels for Gammapy just as is the case for most
+open-source software. E.g. at this time there is a Debian and Macports package
+for Gammapy. conda is not the only, but it is the only fully supported
+distribution channel for Gammapy. The reason for this is that currently manpower
+and expertise in the Gammapy team is limited, and conda provides, as far as we
+know, a solution that works for all users. At this time, no-one from the Gammapy
+is using Macports any more, for pip there are no binary wheels published yet for
+Gammapy and astropy-regions, Debian only works for Debian users and has a longer
+update cycle compared to the current Gammapy 2 month release cycle, and e.g. for
+Homebrew no-one packaged Gammapy so far.
+
+Required dependencies
+=====================
+
+We propose to update the Gammapy required dependencies as shown in the following
+table (the release dates for the packages are shown in parentheses are were
+obtained from https://pypi.org/).
+
+===============  ================  ================
+Dependency       Gammapy 0.13      Gammapy 0.14
+===============  ================  ================
+Python           3.5   (Sep 2015)  3.6   (Dec 2016)
+Numpy            1.10  (May 2016)  1.16  (Jan 2019)
+Scipy            0.15  (Jan 2015)  1.2   (Dec 2018)
+Astropy          2.0   (Jul 2017)  3.2   (Jun 2019)
+regions          0.4   (Jun 2019)  0.5   (Sep 2019)
+pyyaml           unclear           5.1   (Mar 2019)
+click            unclear           7.0   (Sep 2018)
+jsonschema       --                3.0   (Feb 2019)
+===============  ================  ================
+
+We already mentioned the possibility to drop Python 3.5 support in
+:ref:`pig-003`. One reason is that Anaconda and conda-forge (our main
+distribution channel, used in our testing continuous integration setup) only
+contains Python 2.7, 3.6 and 3.7 at this point (and 3.8 added in fall 2018),
+i.e. testing on Python 3.5 is already extra effort. Also, Python 3.6 contains
+some nice new features that developers can use. E.g. Sunpy or ctapipe already
+require Python 3.6 or later.
+
+A major motivation to update to very recent versions is that the ``regions``
+package is still under development (see :ref:`pig-010`). In Gammapy 0.13 we
+require regions 0.4, and we plan to make a regions 0.5 release with further
+features and fixes in September, and to require that for Gammapy 0.14.
+
+For ``pyyaml``, we would like to use the recent version, since it allows writing
+with preserved dictionary key order, giving a nice output, whereas previously it
+always sorted keys alphabetically on YAML write.
+
+The current Gammapy command line interface is using ``click``. Whether to keep
+this or whether to use something else will be discussed in `PIG 12`_. For now,
+we propose to keep things as-is, and only specify a minimum version that we'll
+test, although in practice we didn't have any version-dependent issues with
+``click`` in the past years.
+
+We plan to use ``jsonschema`` to validate YAML config files. It's a small,
+pure-Python dependency.
+
+Optional dependencies
+=====================
+
+We propose to update the Gammapy optional dependencies as shown in the following
+table (the release dates for the packages are shown in parentheses are were
+obtained from https://pypi.org/).
+
+===============  ================  ================
+Dependency       Gammapy 0.13      Gammapy 0.14
+===============  ================  ================
+ipython          7.3   (Feb 2019)  7.6   (Jun 2019)
+jupyter          1.0   (n/a)       1.0   (n/a)
+jupyterlab       0.35  (Oct 2018)  1.0   (Jun 2019)             
+matplotlib       2.1   (Oct 2017)  3.0   (Sep 2018)
+pandas           0.24  (Jan 2019)  0.25  (Jul 2019)
+healpy           1.11  (Aug 2017)  1.12  (Jun 2018)
+reproject        0.4   (Jan 2018)  0.5   (Jun 2019)
+uncertainties    3.0   (Aug 2016)  3.1   (May 2019)
+iminuit          1.3   (Jul 2018)  1.3.7 (Jun 2019)
+sherpa           4.11  (Feb 2019)  4.11  (Feb 2019)
+naima            0.8   (Dec 2016)  0.8.3 (Nov 2018)
+emcee            --                2.2   (Jul 2016)
+corner           --                2.0   (May 2016)
+parfive          --                1.0   (May 2019)
+===============  ================  ================
+
+We plan to use ``parfive`` for tutorial notebook and example dataset file
+download (features parallel download and a progress bar).
+
+Distributions
+=============
+
+The situation concerning distribution was described in the introduction above,
+and some alternatives and future work are mentioned in the outlook and
+alternatives sections below.
+
+We propose to remove the Macports installation page from the Gammmapy
+documentation, and to just leave a mention that it's outdated and unsupported on
+the page on "other ways to install Gammapy". Short sections or pages about pip
+and Debian will remain at the end of the installation instructions, for advanced
+users.
+
+For conda, we will improve the installation instructions, explaining the
+difference between using the recommended environment and a plain ``conda install
+-c conda-forge gammapy``, and add lists of required and optional dependencies as
+above to the Gammapy installation documentation.
+
+Outlook
+=======
+
+This PIG describes only the status and very short term plan for Gammapy v0.14
+and v1.0! We expect that dependencies and distribution will evolve in the coming
+years.
+
+E.g. we might add Numba as a dependency, or we might start to fully support pip,
+if binary wheels for Gammapy and all dependencies are available (there is a
+recent effort to implement this).
+
+Somewhat related to this PIG: we plan to modernise Gammapy packaging following
+the recommendations in `APE 17`_. Work on this has already started in `GH
+2279`_.
+
+We could support other ways to ship Gammapy, e.g. Homebrew (works on MacOS and
+also Linux now), or Docker images (works anywhere, self-contained).
+
+Alternatives
+============
+
+Since we have a working setup already, we could do nothing, which seems nice at
+first, but really means continued time sink and suffering by the Gammapy
+maintainers of the continuous integration testing system and the release
+manager.
+
+For conda, we should strongly consider introducing a ``gammapy-all`` metapackage
+instead of the current ``gammapy-environment.yml`` shipped via ``gammapy.org``.
+That's what e.g. the Fermi tools and glueviz and others do, and they like that
+solution. It does have the advantage ob using a conda-native solution to the
+question how to ship an environment. This could be prototyped any time, in
+parallel with the existing solution, to gain familiarity with metapackages.
+
+
+Task list
+=========
+
+- Update continuous integration test matrix to test against the minimum required
+  versions as specified here (and also newer versions in addition) (`GH 2270`_).
+- Drop Python 3.5 support and modernise codebase (e.g. use f-strings and use
+  dict instead of OrderedDict).
+- Review Gammapy codebase and remove workarounds for old Python, Numpy, Astropy,
+  ... versions.
+- Remove ``extras_require`` in ``setup.py``
+  (don't attempt to maintain the list of optional dependencies there)
+- Review, restructure and update all Gammapy installation instructions
+- Clearly describe all required and optional dependencies in the docs
+
+Decision
+========
+
+This proposal was extensively discussed at the July 2019 Gammapy coding sprint.
+In the feedback phase we didn't get a single comment asking for continued
+support of older versions. Thus the proposal was accepted on Sep 9.
+
+.. _GH 1167: https://github.com/gammapy/gammapy/pull/1167
+.. _GH 1245: https://github.com/gammapy/gammapy/issues/1245
+.. _GH 1586: https://github.com/gammapy/gammapy/pull/1586
+.. _GH 1658: https://github.com/gammapy/gammapy/pull/1658
+.. _GH 1863: https://github.com/gammapy/gammapy/pull/1863
+.. _GH 2218: https://github.com/gammapy/gammapy/pull/2218
+.. _GH 2270: https://github.com/gammapy/gammapy/issues/2270
+.. _GH 2275: https://github.com/gammapy/gammapy/issues/2275
+.. _GH 2279: https://github.com/gammapy/gammapy/issues/2279
+.. _PIG 12: https://github.com/gammapy/gammapy/pull/2219
+.. _PIG 14: https://github.com/gammapy/gammapy/pull/2255
+.. _APE 17: https://github.com/astropy/astropy-APEs/pull/52
+.. _PEP 427: https://www.python.org/dev/peps/pep-0427/
+.. _astropy-healpix GH 128: https://github.com/astropy/astropy-healpix/issues/128
+.. _Astropy whatsnew: https://docs.astropy.org/en/stable/whatsnew/
+.. _astropy wheel-forge: https://github.com/astropy/wheel-forge
+.. _astropy-healpix: http://astropy-healpix.readthedocs.io/
+.. _gammapy-0.12-environment.yml: https://github.com/gammapy/gammapy-webpage/blob/gh-pages/download/install/gammapy-0.12-environment.yml
+.. _Installation with Macports: https://docs.gammapy.org/0.12/install/macports.html
+.. _Gammapy in Macports: https://github.com/macports/macports-ports/commits/master/python/py-gammapy/Portfile
+.. _pip requirements file: https://pip.pypa.io/en/stable/user_guide/#requirements-files
+.. _extras_require in Gammapy setup.py: https://github.com/gammapy/gammapy/blob/fe8ca7d6caac77b8a31efc8bec3b21d09aacf6c1/setup.py#L115-L127
+.. _conda metapackage: https://docs.conda.io/projects/conda-build/en/latest/resources/commands/conda-metapackage.html
+.. _fermitools conda meta.yaml: https://github.com/fermi-lat/Fermitools-conda/blob/master/meta.yaml
+.. _glueviz conda meta.yaml: https://github.com/conda-forge/glueviz-feedstock/blob/master/recipe/meta.yaml
+.. _pysal: https://pysal.org/install
+.. _sunpy pip installation instructions: https://docs.sunpy.org/en/stable/guide/installation/advanced.html
