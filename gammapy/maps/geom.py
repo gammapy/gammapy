@@ -329,20 +329,8 @@ class MapAxis:
     unit : str
         String specifying the data units.
     """
-
-    __slots__ = [
-        "_name",
-        "_nodes",
-        "_node_type",
-        "_interp",
-        "_pix_offset",
-        "_nbin",
-        "_unit",
-    ]
-
     # TODO: Add methods to faciliate FITS I/O.
     # TODO: Cache an interpolation object?
-
     def __init__(self, nodes, interp="lin", name="", node_type="edges", unit=""):
 
         self.name = name
@@ -418,13 +406,13 @@ class MapAxis:
     def name(self, val):
         self._name = val
 
-    @property
+    @lazyproperty
     def edges(self):
         """Return array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
         return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
 
-    @property
+    @lazyproperty
     def center(self):
         """Return array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
