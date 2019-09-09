@@ -122,7 +122,7 @@ class TestSpectrumDataset:
     def test_str(self):
         assert "SpectrumDataset" in str(self.dataset)
 
-    def test_spectrumdataset_create2(self):
+    def test_spectrumdataset_create(self):
         e_reco = u.Quantity([0.1,1,10.], 'TeV')
         e_true = u.Quantity([0.05, 0.5, 5, 20.], 'TeV')
         empty_dataset = SpectrumDataset.create(e_reco, e_true)
