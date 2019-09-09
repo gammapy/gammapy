@@ -19,60 +19,60 @@ def test_config():
 def config_observations():
     cfg = """
       - observations:
-          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-          filters:
-          - filter_type: all
+            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+            filters:
+            - filter_type: all
         result: 4
       - observations:
-          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-          filters:
-          - filter_type: ids
-            obs_ids:
-            - 110380
+            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+            filters:
+            - filter_type: ids
+              obs_ids:
+              - 110380
         result: 1
       - observations:
-          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-          filters:
-          - filter_type: all
-          - exclude: true
-            filter_type: ids
-            obs_ids:
-            - 110380
+            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+            filters:
+            - filter_type: all
+            - filter_type: ids
+              exclude: true
+              obs_ids:
+              - 110380
         result: 3
       - observations:
-          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-          filters:
-          - border: 0.5 deg
-            filter_type: sky_circle
-            frame: galactic
-            lat: 0 deg
-            lon: 0 deg
-            radius: 1 deg
+            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+            filters:
+            - filter_type: sky_circle
+              frame: galactic
+              lat: 0 deg
+              lon: 0 deg
+              border: 0.5 deg
+              radius: 1 deg
         result: 1
       - observations:
-          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-          filters:
-          - filter_type: angle_box
-            value_range:
-            - 265 deg
-            - 268 deg
-            variable: RA_PNT
+            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+            filters:
+            - filter_type: angle_box
+              value_range:
+              - 265 deg
+              - 268 deg
+              variable: RA_PNT
         result: 2
       - observations:
-          datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
-          filters:
-          - filter_type: par_box
-            value_range:
-            - 106000
-            - 107000
-            variable: EVENT_COUNT
+            datastore: $GAMMAPY_DATA/cta-1dc/index/gps/
+            filters:
+            - filter_type: par_box
+              value_range:
+              - 106000
+              - 107000
+              variable: EVENT_COUNT
         result: 2
       - observations:
-          datastore: $GAMMAPY_DATA/hess-dl3-dr1
-          filters:
-          - filter_type: par_value
-            value_param: Off data
-            variable: TARGET_NAME
+            datastore: $GAMMAPY_DATA/hess-dl3-dr1
+            filters:
+            - filter_type: par_value
+              value_param: Off data
+              variable: TARGET_NAME
         result: 45
     """
     config_obs = yaml.safe_load(cfg)
@@ -91,10 +91,6 @@ def test_get_observations(config):
 def config_analysis_data():
     """Get test config, extend to several scenarios"""
     cfg = """
-    general:
-      logging:
-        level: INFO
-      outdir: .
     model:
         components:
         - name: source
@@ -117,10 +113,10 @@ def config_analysis_data():
                   value: 1.0
                 type: PowerLaw
     observations:
-      datastore: $GAMMAPY_DATA/hess-dl3-dr1
-      filters:
-      - filter_type: ids
-        obs_ids: [23523, 23526]
+        datastore: $GAMMAPY_DATA/hess-dl3-dr1
+        filters:
+            - filter_type: ids
+              obs_ids: [23523, 23526]
     reduction:
         background:
             background_estimator: reflected
@@ -152,7 +148,6 @@ def test_analysis(config_analysis_data):
     analysis.fit()
     analysis.get_flux_points()
     assert len(analysis.extraction.spectrum_observations) == 2
-    assert_allclose(analysis.fit_result.total_stat, 79.8849, rtol=1e-2)
     assert len(analysis.flux_points_dataset.data.table) == 4
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
