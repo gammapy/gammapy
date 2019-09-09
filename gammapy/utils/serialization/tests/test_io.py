@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.modeling.models import BackgroundModels, SkyModels
-from gammapy.modeling.models import image as spatial
+from gammapy.modeling.models import spatial
 from gammapy.modeling.models import spectrum as spectral
 from gammapy.utils.fitting import Datasets
 from gammapy.utils.scripts import read_yaml
