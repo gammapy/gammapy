@@ -125,7 +125,9 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
 def test_fake(sky_model, geom, geom_etrue):
     """Test the fake dataset"""
     dataset = get_map_dataset(sky_model, geom, geom_etrue)
-    dataset.counts = dataset.npred()
+    npred = dataset.npred()
+    assert len(np.where(npred.data < 0)[0]) == 0  # npred must be positive
+    dataset.counts = npred
     real_dataset = dataset.copy()
     dataset.fake(314)
 
