@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -154,30 +153,28 @@ def test_mapcoords_create():
     assert coords.coordsys == "GAL"
     assert coords.ndim == 2
 
-    # 2D Dict w/ vectors
+    # 2D dict w/ vectors
     coords = MapCoord.create(dict(lon=lon, lat=lat))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert coords.ndim == 2
 
-    # 3D Dict w/ vectors
+    # 3D dict w/ vectors
     coords = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords["energy"], energy)
     assert coords.ndim == 3
 
-    # 3D Dict w/ SkyCoord
+    # 3D dict w/ SkyCoord
     coords = MapCoord.create(dict(skycoord=skycoord_cel, energy=energy))
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords["energy"], energy)
     assert coords.ndim == 3
 
-    # 3D OrderedDict w/ vectors
-    coords = MapCoord.create(
-        OrderedDict([("energy", energy), ("lat", lat), ("lon", lon)])
-    )
+    # 3D dict  w/ vectors
+    coords = MapCoord.create({"energy": energy, "lat": lat, "lon": lon})
     assert_allclose(coords.lon, lon)
     assert_allclose(coords.lat, lat)
     assert_allclose(coords["energy"], energy)

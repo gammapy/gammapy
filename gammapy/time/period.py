@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import numpy as np
 import scipy.optimize
 
@@ -51,7 +50,7 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss="linear", s
 
     Returns
     -------
-    results : `~collections.OrderedDict`
+    results : `dict`
         Results dictionary (see description above).
 
     References
@@ -74,9 +73,7 @@ def robust_periodogram(time, flux, flux_err=None, periods=None, loss="linear", s
     # find period of highest periodogram peak
     best_period = periods[np.argmax(psd_data)]
 
-    return OrderedDict(
-        [("periods", periods), ("power", psd_data), ("best_period", best_period)]
-    )
+    return {"periods": periods, "power": psd_data, "best_period": best_period}
 
 
 def _period_grid(time):

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.io.registry import IORegistryError
@@ -16,45 +15,36 @@ __all__ = ["FluxPoints", "FluxPointsEstimator", "FluxPointsDataset"]
 
 log = logging.getLogger(__name__)
 
-REQUIRED_COLUMNS = OrderedDict(
-    [
-        ("dnde", ["e_ref", "dnde"]),
-        ("e2dnde", ["e_ref", "e2dnde"]),
-        ("flux", ["e_min", "e_max", "flux"]),
-        ("eflux", ["e_min", "e_max", "eflux"]),
-        # TODO: extend required columns
-        (
-            "likelihood",
-            [
-                "e_min",
-                "e_max",
-                "e_ref",
-                "ref_dnde",
-                "norm",
-                "norm_scan",
-                "dloglike_scan",
-            ],
-        ),
-    ]
-)
+REQUIRED_COLUMNS = {
+    "dnde": ["e_ref", "dnde"],
+    "e2dnde": ["e_ref", "e2dnde"],
+    "flux": ["e_min", "e_max", "flux"],
+    "eflux": ["e_min", "e_max", "eflux"],
+    # TODO: extend required columns
+    "likelihood": [
+        "e_min",
+        "e_max",
+        "e_ref",
+        "ref_dnde",
+        "norm",
+        "norm_scan",
+        "dloglike_scan",
+    ],
+}
 
-OPTIONAL_COLUMNS = OrderedDict(
-    [
-        ("dnde", ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "is_ul"]),
-        ("e2dnde", ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"]),
-        ("flux", ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"]),
-        ("eflux", ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"]),
-    ]
-)
+OPTIONAL_COLUMNS = {
+    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "is_ul"],
+    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul", "is_ul"],
+    "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "is_ul"],
+    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "is_ul"],
+}
 
-DEFAULT_UNIT = OrderedDict(
-    [
-        ("dnde", u.Unit("cm-2 s-1 TeV-1")),
-        ("e2dnde", u.Unit("erg cm-2 s-1")),
-        ("flux", u.Unit("cm-2 s-1")),
-        ("eflux", u.Unit("erg cm-2 s-1")),
-    ]
-)
+DEFAULT_UNIT = {
+    "dnde": u.Unit("cm-2 s-1 TeV-1"),
+    "e2dnde": u.Unit("erg cm-2 s-1"),
+    "flux": u.Unit("cm-2 s-1"),
+    "eflux": u.Unit("erg cm-2 s-1"),
+}
 
 
 class FluxPoints:
@@ -883,7 +873,6 @@ class FluxPointsEstimator:
             and available options.
         """
         rows = []
-
         for e_group in self.e_groups:
             if e_group["bin_type"].strip() != "normal":
                 log.debug("Skipping under-/ overflow bin in flux point estimation.")
@@ -892,8 +881,7 @@ class FluxPointsEstimator:
             row = self.estimate_flux_point(e_group, steps=steps)
             rows.append(row)
 
-        meta = OrderedDict([("SED_TYPE", "likelihood")])
-        table = table_from_row_data(rows=rows, meta=meta)
+        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         return FluxPoints(table).to_sed_type("dnde")
 
     def _energy_mask(self, e_group):
@@ -928,18 +916,15 @@ class FluxPointsEstimator:
         # Put at log center of the bin
         e_ref = np.sqrt(e_min * e_max)
 
-        result = OrderedDict(
-            [
-                ("e_ref", e_ref),
-                ("e_min", e_min),
-                ("e_max", e_max),
-                ("ref_dnde", self.ref_model(e_ref)),
-                ("ref_flux", self.ref_model.integral(e_min, e_max)),
-                ("ref_eflux", self.ref_model.energy_flux(e_min, e_max)),
-                ("ref_e2dnde", self.ref_model(e_ref) * e_ref ** 2),
-            ]
-        )
-
+        result = {
+            "e_ref": e_ref,
+            "e_min": e_min,
+            "e_max": e_max,
+            "ref_dnde": self.ref_model(e_ref),
+            "ref_flux": self.ref_model.integral(e_min, e_max),
+            "ref_eflux": self.ref_model.energy_flux(e_min, e_max),
+            "ref_e2dnde": self.ref_model(e_ref) * e_ref ** 2,
+        }
         contribute_to_likelihood = False
 
         for dataset in self.datasets.datasets:
@@ -1030,7 +1015,6 @@ class FluxPointsEstimator:
             Dict with an array with one entry per dataset with counts for the flux point.
         """
         counts = []
-
         for dataset in self.datasets.datasets:
             mask = dataset.mask_fit
             if dataset.mask_safe is not None:

@@ -191,7 +191,6 @@ For further information on Astropy, see the Astropy docs at
 We will have to see if / what we need here in `gammapy.utils.fits`
 as a stable and nice interface on top of what Astropy provides.
 """
-from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import Angle, EarthLocation
 from astropy.io import fits
@@ -361,13 +360,13 @@ class SmartHDUList:
 
 
 def fits_header_to_meta_dict(header):
-    """Convert `astropy.io.fits.Header` to `~collections.OrderedDict`.
+    """Convert `astropy.io.fits.Header` to `dict`.
 
     This is a lossy conversion, only key, value is stored
     (and not e.g. comments for each FITS "card").
     Also, "COMMENT" and "HISTORY" cards are completely removed.
     """
-    meta = OrderedDict(header)
+    meta = dict(header)
 
     # Drop problematic header content, i.e. values of type
     # `astropy.io.fits.header._HeaderCommentaryCards`

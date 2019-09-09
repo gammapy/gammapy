@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images."""
-from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import Angle
 
@@ -36,7 +35,7 @@ class MapPanelPlotter:
         from matplotlib.gridspec import GridSpec
 
         self.figure = figure
-        self.parameters = OrderedDict(xlim=xlim, ylim=ylim, npanels=npanels)
+        self.parameters = {"xlim": xlim, "ylim": ylim, "npanels": npanels}
         self.grid_spec = GridSpec(nrows=npanels, ncols=1, **kwargs)
 
     def _get_ax_extend(self, ax, panel):

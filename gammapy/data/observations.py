@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
@@ -136,7 +135,7 @@ class DataStoreObservation:
 
     @property
     def obs_info(self):
-        """Observation information (`~collections.OrderedDict`)."""
+        """Observation information (`dict`)."""
         row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
         return table_row_to_dict(row)
 
@@ -381,9 +380,10 @@ class ObservationChecker(Checker):
         """
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
-        telescope_met_refs = OrderedDict(
-            FERMI=Time("2001-01-01T00:00:00"), HESS=Time("2001-01-01T00:00:00")
-        )
+        telescope_met_refs = {
+            "FERMI": Time("2001-01-01T00:00:00"),
+            "HESS": Time("2001-01-01T00:00:00"),
+        }
 
         meta = self.dset.event_list.table.meta
         telescope = meta["TELESCOP"]

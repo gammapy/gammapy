@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility functions and classes for n-dimensional data and axes."""
-from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity
 from .array import array_stats_str
@@ -34,8 +33,7 @@ class NDDataArray:
         self._axes = axes
         if data is not None:
             self.data = data
-        if meta is not None:
-            self.meta = OrderedDict(meta)
+        self.meta = meta or {}
         self.interp_kwargs = interp_kwargs or self.default_interp_kwargs
 
         self._regular_grid_interp = None

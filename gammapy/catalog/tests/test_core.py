@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -84,7 +83,7 @@ class TestSourceCatalogObject:
 
     def test_data(self):
         d = self.source.data
-        assert isinstance(d, OrderedDict)
+        assert isinstance(d, dict)
 
         assert isinstance(d["RA"], Quantity)
         assert_quantity_allclose(d["RA"], Quantity(43.3, "deg"))

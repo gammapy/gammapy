@@ -19,7 +19,7 @@ class HpxMap(Map):
         HEALPix geometry object.
     data : `~numpy.ndarray`
         Data array.
-    meta : `~collections.OrderedDict`
+    meta : `dict`
         Dictionary to store meta data.
     unit : `~astropy.units.Unit`
         The map unit
@@ -78,7 +78,7 @@ class HpxMap(Map):
         conv : {'fgst-ccube','fgst-template','gadf'}, optional
             Default FITS format convention that will be used when
             writing this map to a file.  Default is 'gadf'.
-        meta : `~collections.OrderedDict`
+        meta : `dict`
             Dictionary to store meta data.
         unit : str or `~astropy.units.Unit`
             The map unit

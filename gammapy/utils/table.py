@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Table helper utilities."""
-from collections import OrderedDict
 from astropy.table import Table
 from astropy.units import Quantity
 from .units import standardise_unit
@@ -56,10 +55,10 @@ def table_row_to_dict(row, make_quantity=True):
 
     Returns
     -------
-    data : `~collections.OrderedDict`
+    data : `dict`
         Row data
     """
-    data = OrderedDict()
+    data = {}
     for name, col in row.columns.items():
         val = row[name]
         if make_quantity and col.unit:
@@ -71,13 +70,12 @@ def table_row_to_dict(row, make_quantity=True):
 def table_from_row_data(rows, **kwargs):
     """Helper function to create table objects from row data.
 
-    - Works with quantities.
-    - Preserves order of keys if OrderedDicts are used.
+    Works with quantities.
 
     Parameters
     ----------
     rows : list
-        List of row data (each row a dict or OrderedDict)
+        List of row data (each row a dict)
     """
     table = Table(**kwargs)
     colnames = list(rows[0].keys())

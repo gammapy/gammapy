@@ -37,7 +37,7 @@ class WcsNDMap(WcsMap):
         Data array. If none then an empty array will be allocated.
     dtype : str, optional
         Data type, default is float32
-    meta : `~collections.OrderedDict`
+    meta : `dict`
         Dictionary to store meta data.
     unit : str or `~astropy.units.Unit`
         The map unit

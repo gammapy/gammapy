@@ -4,7 +4,6 @@ import copy
 import inspect
 import logging
 import re
-from collections import OrderedDict
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
@@ -795,7 +794,7 @@ class MapCoord:
 
     Parameters
     ----------
-    data : `~collections.OrderedDict` of `~numpy.ndarray`
+    data : `dict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
     coordsys : {'CEL', 'GAL', None}
         Spatial coordinate system.  If None then the coordinate system
@@ -810,11 +809,9 @@ class MapCoord:
         if "lon" not in data or "lat" not in data:
             raise ValueError("data dictionary must contain axes named 'lon' and 'lat'.")
 
-        data = OrderedDict(
-            [(k, np.atleast_1d(np.asanyarray(v))) for k, v in data.items()]
-        )
+        data = {k: np.atleast_1d(np.asanyarray(v)) for k, v in data.items()}
         vals = np.broadcast_arrays(*data.values(), subok=True)
-        self._data = OrderedDict(zip(data.keys(), vals))
+        self._data = dict(zip(data.keys(), vals))
         self._coordsys = coordsys
         self._match_by_name = match_by_name
 
@@ -894,7 +891,7 @@ class MapCoord:
             A coordinates object.
         """
         if isinstance(coords, (list, tuple)):
-            coords_dict = OrderedDict([("lon", coords[0]), ("lat", coords[1])])
+            coords_dict = {"lon": coords[0], "lat": coords[1]}
             for i, c in enumerate(coords[2:]):
                 coords_dict["axis{}".format(i)] = c
         else:
@@ -948,10 +945,8 @@ class MapCoord:
         if "lon" in coords and "lat" in coords:
             return cls(coords, coordsys=coordsys)
         elif "skycoord" in coords:
-            coords_dict = OrderedDict()
             lon, lat, frame = skycoord_to_lonlat(coords["skycoord"], coordsys=coordsys)
-            coords_dict["lon"] = lon
-            coords_dict["lat"] = lat
+            coords_dict = {"lon": lon, "lat": lat}
             for k, v in coords.items():
                 if k == "skycoord":
                     continue
@@ -1041,7 +1036,7 @@ class MapCoord:
         coords : `~MapCoord`
             A coordinates object.
         """
-        data = OrderedDict([(k, v[mask]) for k, v in self._data.items()])
+        data = {k: v[mask] for k, v in self._data.items()}
         return self.__class__(data, self.coordsys, self._match_by_name)
 
     def copy(self):
@@ -1073,7 +1068,7 @@ class MapCoord:
         coords : `MapCoord`
             Map coord object with matched units
         """
-        coords = OrderedDict()
+        coords = {}
 
         for name, coord in self._data.items():
             if name in ["lon", "lat"]:

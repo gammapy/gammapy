@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
-from collections import OrderedDict
 import numpy as np
 import scipy.ndimage
 from astropy import units as u
@@ -104,7 +103,7 @@ class ImageProfileEstimator:
         if method == "radial" and center is None:
             raise ValueError("Please provide center coordinate for radial profiles")
 
-        self.parameters = OrderedDict(method=method, axis=axis, center=center)
+        self.parameters = {"method": method, "axis": axis, "center": center}
 
     def _get_x_edges(self, image):
         if self._x_edges is not None:

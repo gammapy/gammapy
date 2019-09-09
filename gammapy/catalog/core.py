@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
 import copy
-from collections import OrderedDict
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.utils import lazyproperty
@@ -18,7 +17,7 @@ class SourceCatalogObject:
     base class for the other source catalog classes.
 
     The catalog data on this source is stored in the `source.data`
-    attribute as on OrderedDict.
+    attribute as a dict.
 
     The source catalog object is decoupled from the source catalog,
     it doesn't hold a reference back to it.
@@ -55,7 +54,7 @@ class SourceCatalogObject:
         This is mainly used at the moment to pass the data to
         the gamma-sky.net webpage.
         """
-        out = OrderedDict()
+        out = {}
         for key, value in self.data.items():
             if isinstance(value, int):
                 out_val = value

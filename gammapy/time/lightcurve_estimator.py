@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from collections import OrderedDict
 import numpy as np
 from gammapy.modeling.models import ScaleModel
 from gammapy.spectrum import FluxPoints, SpectrumDatasetOnOff
@@ -15,8 +14,6 @@ log = logging.getLogger(__name__)
 
 class LightCurveEstimator:
     """Estimate flux points for a given list of datasets, each per time bin.
-
-
 
     Parameters
     ----------
@@ -135,7 +132,6 @@ class LightCurveEstimator:
         self.e_max = e_max
 
         rows = []
-
         for dataset in self.datasets.datasets:
             row = {
                 "time_min": dataset.counts.meta["t_start"].mjd,
@@ -144,8 +140,7 @@ class LightCurveEstimator:
             row.update(self.estimate_time_bin_flux(dataset, steps))
             rows.append(row)
 
-        meta = OrderedDict([("SED_TYPE", "likelihood")])
-        table = table_from_row_data(rows=rows, meta=meta)
+        table = table_from_row_data(rows=rows, meta={"SED_TYPE": "likelihood"})
         table = FluxPoints(table).to_sed_type("flux").table
         return LightCurve(table)
 
@@ -172,17 +167,15 @@ class LightCurveEstimator:
         """
         self.fit = Fit(dataset)
 
-        result = OrderedDict(
-            [
-                ("e_ref", self.e_ref),
-                ("e_min", self.e_min),
-                ("e_max", self.e_max),
-                ("ref_dnde", self.ref_model(self.e_ref)),
-                ("ref_flux", self.ref_model.integral(self.e_min, self.e_max)),
-                ("ref_eflux", self.ref_model.energy_flux(self.e_min, self.e_max)),
-                ("ref_e2dnde", self.ref_model(self.e_ref) * self.e_ref ** 2),
-            ]
-        )
+        result = {
+            "e_ref": self.e_ref,
+            "e_min": self.e_min,
+            "e_max": self.e_max,
+            "ref_dnde": self.ref_model(self.e_ref),
+            "ref_flux": self.ref_model.integral(self.e_min, self.e_max),
+            "ref_eflux": self.ref_model.energy_flux(self.e_min, self.e_max),
+            "ref_e2dnde": self.ref_model(self.e_ref) * self.e_ref ** 2,
+        }
 
         result.update(self.estimate_norm())
 

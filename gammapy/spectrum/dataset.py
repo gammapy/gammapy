@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 from pathlib import Path
 import numpy as np
 from astropy import units as u
@@ -695,23 +694,23 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
     def _ogip_meta(self):
         """Meta info for the OGIP data format"""
-        meta = OrderedDict()
-        meta["name"] = "SPECTRUM"
-        meta["hduclass"] = "OGIP"
-        meta["hduclas1"] = "SPECTRUM"
-        meta["corrscal"] = ""
-        meta["chantype"] = "PHA"
-        meta["detchans"] = self.counts.energy.nbin
-        meta["filter"] = "None"
-        meta["corrfile"] = ""
-        meta["poisserr"] = True
-        meta["hduclas3"] = "COUNT"
-        meta["hduclas4"] = "TYPE:1"
-        meta["lo_thres"] = self.energy_range[0].to_value("TeV")
-        meta["hi_thres"] = self.energy_range[1].to_value("TeV")
-        meta["exposure"] = self.livetime.to_value("s")
-        meta["obs_id"] = self.obs_id
-        return meta
+        return {
+            "name": "SPECTRUM",
+            "hduclass": "OGIP",
+            "hduclas1": "SPECTRUM",
+            "corrscal": "",
+            "chantype": "PHA",
+            "detchans": self.counts.energy.nbin,
+            "filter": "None",
+            "corrfile": "",
+            "poisserr": True,
+            "hduclas3": "COUNT",
+            "hduclas4": "TYPE:1",
+            "lo_thres": self.energy_range[0].to_value("TeV"),
+            "hi_thres": self.energy_range[1].to_value("TeV"),
+            "exposure": self.livetime.to_value("s"),
+            "obs_id": self.obs_id,
+        }
 
     @classmethod
     def from_ogip_files(cls, filename):

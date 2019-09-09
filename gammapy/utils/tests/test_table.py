@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -38,7 +37,7 @@ def table():
 
 def test_table_row_to_dict(table):
     actual = table_row_to_dict(table[1])
-    expected = OrderedDict([("a", 2), ("b", 2 * u.m), ("c", "yy")])
+    expected = {"a": 2, "b": 2 * u.m, "c": "yy"}
     assert actual == expected
 
 

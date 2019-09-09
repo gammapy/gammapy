@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from collections import OrderedDict
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
@@ -72,7 +71,7 @@ class EffectiveAreaTable:
         self.data = NDDataArray(
             axes=[energy_axis], data=data, interp_kwargs=interp_kwargs
         )
-        self.meta = OrderedDict(meta) if meta else OrderedDict()
+        self.meta = meta or {}
 
     @property
     def energy(self):
@@ -202,14 +201,12 @@ class EffectiveAreaTable:
         Data format specification: :ref:`gadf:ogip-arf`
         """
         table = Table()
-        table.meta = OrderedDict(
-            [
-                ("EXTNAME", "SPECRESP"),
-                ("hduclass", "OGIP"),
-                ("hduclas1", "RESPONSE"),
-                ("hduclas2", "SPECRESP"),
-            ]
-        )
+        table.meta = {
+            "EXTNAME": "SPECRESP",
+            "hduclass": "OGIP",
+            "hduclas1": "RESPONSE",
+            "hduclas2": "SPECRESP",
+        }
 
         energy = self.energy.edges
         table["ENERG_LO"] = energy[:-1]
@@ -383,7 +380,7 @@ class EffectiveAreaTable2D:
         self.data = NDDataArray(
             axes=[energy_axis, offset_axis], data=data, interp_kwargs=interp_kwargs
         )
-        self.meta = OrderedDict(meta) if meta else OrderedDict()
+        self.meta = meta or {}
 
     def __str__(self):
         ss = self.__class__.__name__

@@ -3,7 +3,6 @@ import abc
 import copy
 import inspect
 import json
-from collections import OrderedDict
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -26,8 +25,8 @@ class Map(abc.ABC):
         Geometry
     data : `~numpy.ndarray`
         Data array
-    meta : `~collections.OrderedDict`
-        Dictionary to store meta data.
+    meta : `dict`
+        Dictionary to store meta data
     unit : str or `~astropy.units.Unit`
         Data unit
     """
@@ -93,12 +92,12 @@ class Map(abc.ABC):
 
     @property
     def meta(self):
-        """Map meta (`~collections.OrderedDict`)"""
+        """Map meta (`dict`)"""
         return self._meta
 
     @meta.setter
     def meta(self, val):
-        self._meta = OrderedDict(val)
+        self._meta = val
 
     @property
     def quantity(self):
@@ -138,7 +137,7 @@ class Map(abc.ABC):
             Data type, default is 'float32'
         unit : str or `~astropy.units.Unit`
             Data unit.
-        meta : `~collections.OrderedDict`
+        meta : `dict`
             Dictionary to store meta data.
 
         Returns
@@ -199,7 +198,7 @@ class Map(abc.ABC):
             Map geometry.
         data : `numpy.ndarray`
             data array
-        meta : `~collections.OrderedDict`
+        meta : `dict`
             Dictionary to store meta data.
         map_type : {'wcs', 'wcs-sparse', 'hpx', 'hpx-sparse', 'auto'}
             Map type.  Selects the class that will be used to
@@ -242,10 +241,9 @@ class Map(abc.ABC):
     def _get_meta_from_header(header):
         """Load meta data from a FITS header."""
         if "META" in header:
-            meta = json.loads(header["META"], object_pairs_hook=OrderedDict)
+            return json.loads(header["META"])
         else:
-            meta = OrderedDict()
-        return meta
+            return {}
 
     @staticmethod
     def _get_map_type(hdu_list, hdu_name):
@@ -578,7 +576,7 @@ class Map(abc.ABC):
         """
         if isinstance(coords, tuple):
             axes_names = [_.name for _ in self.geom.axes]
-            coords = OrderedDict(zip(axes_names, coords))
+            coords = dict(zip(axes_names, coords))
 
         idx = []
         for ax in self.geom.axes:
