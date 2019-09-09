@@ -87,6 +87,19 @@ class Analysis:
             # TODO: raise error?
             log.info("Fitting available only for 1D spectrum.")
 
+    @classmethod
+    def from_file(cls, filename):
+        """Instantiation of analysis from settings in config file.
+
+        Parameters
+        ----------
+        filename : str, Path
+            Configuration settings filename
+        """
+        filename = make_path(filename)
+        config = read_yaml(filename)
+        return cls(config=config)
+
     def get_flux_points(self):
         """Calculate flux points."""
         if self.settings["reduction"]["data_reducer"] == "1d":
@@ -360,13 +373,22 @@ class Config:
                 print(doc[keyword])
 
     def dump(self, filename="config.yaml"):
-        """Serialize config into a yaml formatted file."""
+        """Serialize config into a yaml formatted file.
+
+        Parameters
+        ----------
+        filename : str, Path
+            Configuration settings filename
+            Default config.yaml
+        """
+
         settings_str = ""
         doc_dic = self._get_doc_sections()
         for section in doc_dic.keys():
             if section in self.settings:
                 settings_str += doc_dic[section] + "\n"
                 settings_str += yaml.dump(self.settings[section]) + "\n"
+        filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
         path_file.write_text(settings_str)
 
