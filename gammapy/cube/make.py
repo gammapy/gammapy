@@ -166,10 +166,8 @@ class MapMaker:
         for name, map in maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
-            if name == "psf":
-                map = map.psf_map
-            if name == "edisp":
-                map = map.edisp_map
+            if name == "psf" or name == "edisp":
+                continue
 
             images[name] = map.sum_over_axes(keepdims=keepdims)
 
@@ -274,6 +272,10 @@ class MapMakerObs:
     @lazyproperty
     def coords(self):
         return self.geom.get_coord()
+
+    @lazyproperty
+    def coords_etrue(self):
+        return self.geom_true.get_coord()
 
     def run(self, selection=None):
         """Make maps.

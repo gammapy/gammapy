@@ -79,15 +79,11 @@ def test_map_maker(pars, observations, keepdims):
         background_oversampling=pars.get("background_oversampling"),
     )
 
-
-"""
     maps = maker.run(observations)
-
 
     counts = maps["counts"]
     assert counts.unit == ""
     assert_allclose(counts.data.sum(), pars["counts"], rtol=1e-5)
-
 
     exposure = maps["exposure"]
     assert exposure.unit == "m2 s"
@@ -135,7 +131,6 @@ def test_map_maker_ring(observations):
     assert_allclose(np.nansum(images["on"].data), 21981, rtol=1e-2)
     assert_allclose(np.nansum(images["exposure_off"].data), 109751.45, rtol=1e-2)
     assert images["on"].geom.is_image is True
-"""
 
 
 @requires_data()
