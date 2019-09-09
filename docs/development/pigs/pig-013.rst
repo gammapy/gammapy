@@ -8,8 +8,8 @@ PIG 13 - Gammapy dependencies and distribution
 
 * Author: Christoph Deil, Axel Donath, Régis Terrier, Brigitta Sipocz
 * Created: June 6, 2019
-* Accepted: tbd
-* Status: draft
+* Accepted: Sep 9, 2019
+* Status: accepted
 * Discussion: `GH 2218`_
 
 Abstract
@@ -117,7 +117,7 @@ some nice new features that developers can use. E.g. Sunpy or ctapipe already
 require Python 3.6 or later.
 
 A major motivation to update to very recent versions is that the ``regions``
-package is still under development (see :ref:`pig-010`_). In Gammapy 0.13 we
+package is still under development (see :ref:`pig-010`). In Gammapy 0.13 we
 require regions 0.4, and we plan to make a regions 0.5 release with further
 features and fixes in September, and to require that for Gammapy 0.14.
 
@@ -232,7 +232,9 @@ Task list
 Decision
 ========
 
-tbd
+This proposal was extensively discussed at the July 2019 Gammapy coding sprint.
+In the feedback phase we didn't get a single comment asking for continued
+support of older versions. Thus the proposal was accepted on Sep 9.
 
 .. _GH 1167: https://github.com/gammapy/gammapy/pull/1167
 .. _GH 1245: https://github.com/gammapy/gammapy/issues/1245
