@@ -2,6 +2,7 @@
 """Session class driving the high-level interface API"""
 import copy
 import logging
+from collections import defaultdict
 from pathlib import Path
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -40,21 +41,22 @@ class Analysis:
     ----------
     config : dict
         Configuration options following `Config` schema
+    template : str
+        Template for configuration settings
 
     Examples
     --------
     Example how to create an Analysis object:
 
     >>> from gammapy.scripts import Analysis
-    >>> config = {"general": {"outdir": "myfolder"}}
-    >>> analysis = Analysis(config)
+    >>> analysis = Analysis(template="1d")
 
     TODO: show a working example of running an analysis.
     Probably not here, but in high-level docs, linked to from class docstring.
     """
 
-    def __init__(self, config=None):
-        self._config = Config(config)
+    def __init__(self, config=None, template="1d"):
+        self._config = Config(config, template)
         self._set_logging()
 
         self.observations = None
@@ -327,9 +329,10 @@ class Config:
         Configuration parameters
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, template="1d"):
         self._default_settings = {}
         self._command_settings = {}
+        self._template = template
         self.settings = {}
 
         # fill settings with default values
@@ -349,20 +352,34 @@ class Config:
         """Display settings in pretty YAML format."""
         return yaml.dump(self.settings)
 
-    @staticmethod
-    def print_help(section=""):
+    def print_help(self, section=""):
         """Display template configuration settings."""
+        doc = self._get_doc_sections()
+        for keyword in doc.keys():
+            if section == "" or section == keyword:
+                print(doc[keyword])
+
+    def dump(self, filename=None):
+        """Serialize config into a yaml file."""
+        pass
+
+    def validate(self):
+        """Validate and/or fill initial config parameters against schema."""
+        jsonschema.validate(
+            self.settings, read_yaml(SCHEMA_FILE), _gp_defaults[self._template]
+        )
+
+    @staticmethod
+    def _get_doc_sections():
+        """Returns dict with commented docs from schema"""
+        doc = defaultdict(str)
         with open(SCHEMA_FILE) as f:
             for line in filter(lambda line: line.startswith("#"), f):
                 line = line.strip("\n")
                 if line.startswith("# Block: "):
                     keyword = line.replace("# Block: ", "")
-                if section == "" or section == keyword:
-                    print(line)
-
-    def validate(self):
-        """Validate or fill initial config parameters against schema."""
-        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), _gp_defaults)
+                doc[keyword] += line + "\n"
+        return doc
 
     def _update_settings(self, source, target):
         for key, val in source.items():
@@ -374,7 +391,7 @@ class Config:
                 self._update_settings(val, target[key])
 
 
-def extend_with_default(validator_class, template="basic"):
+def extend_with_default(validator_class, template):
     validate_properties = validator_class.VALIDATORS["properties"]
     reserved = [
         "default",
@@ -387,25 +404,34 @@ def extend_with_default(validator_class, template="basic"):
         "patternProperties",
     ]
     template_pars = {
-        "all": {"default_field": "default",
-                "exclude_props": []},
-        "basic": {"default_field": "default",
-                  "exclude_props": ["binsz", "border", "coordsys",
-                                    "datefmt", "e_reco", "e_true",
-                                    "exclude", "exclusion_mask",
-                                    "filename", "filemode", "format",
-                                    "inverted", "lat", "lon", "proj",
-                                    "skydir", "spatial", "width", "offset_max"]},
-        "1d": {"default_field": "default_1d",
-               "exclude_props": ["binsz", "border", "coordsys",
-                                 "datefmt", "e_reco", "e_true",
-                                 "exclude", "exclusion_mask",
-                                 "filename", "filemode", "format",
-                                 "inverted", "lat", "lon", "proj",
-                                 "skydir", "spatial", "width", "offset_max"]},
+        "all": {"default_field": "default", "exclude_props": []},
+        "1d": {
+            "default_field": "default_1d",
+            "exclude_props": [
+                "binsz",
+                "border",
+                "coordsys",
+                "datefmt",
+                "e_reco",
+                "e_true",
+                "exclude",
+                "exclusion_mask",
+                "filename",
+                "filemode",
+                "format",
+                "inverted",
+                "lat",
+                "lon",
+                "proj",
+                "skydir",
+                "spatial",
+                "width",
+                "offset_max",
+            ],
+        },
     }
     reserved.extend(template_pars[template]["exclude_props"])
-    default_field = template_pars["basic"]["default_field"]
+    default_field = template_pars["all"]["default_field"]
     default_specific_field = template_pars[template]["default_field"]
 
     def set_defaults(validator, properties, instance, schema):
@@ -448,7 +474,7 @@ _type_checker = jsonschema.Draft7Validator.TYPE_CHECKER.redefine(
 _gp_units_validator = jsonschema.validators.extend(
     jsonschema.Draft7Validator, type_checker=_type_checker
 )
-_gp_defaults = extend_with_default(_gp_units_validator, template="basic")
-_gp_defaults_1d = extend_with_default(_gp_units_validator, template="1d")
-_gp_defaults_all = extend_with_default(_gp_units_validator, template="all")
-#_gp_defaults_3d = extend_with_default(_gp_units_validator, template="3d")
+_gp_defaults = {
+    "1d": extend_with_default(_gp_units_validator, template="1d"),
+    "all": extend_with_default(_gp_units_validator, template="all"),
+}

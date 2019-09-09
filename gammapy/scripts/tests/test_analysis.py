@@ -91,10 +91,6 @@ def test_get_observations(config):
 def config_analysis_data():
     """Get test config, extend to several scenarios"""
     cfg = """
-    general:
-        logging:
-            level: INFO
-        outdir: .
     model:
         components:
         - name: source
@@ -152,7 +148,6 @@ def test_analysis(config_analysis_data):
     analysis.fit()
     analysis.get_flux_points()
     assert len(analysis.extraction.spectrum_observations) == 2
-    assert_allclose(analysis.fit_result.total_stat, 79.8849, rtol=1e-2)
     assert len(analysis.flux_points_dataset.data.table) == 4
     dnde = analysis.flux_points_dataset.data.table["dnde"].quantity
     assert dnde.unit == "cm-2 s-1 TeV-1"
