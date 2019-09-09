@@ -305,8 +305,8 @@ class SkyModel(SkyModelBase):
     def to_dict(self, selection):
         """Create dict for YAML serilisation"""
         data = {}
-        data["type"] = self.tag
         data["name"] = self.name
+        data["type"] = self.tag
         data["spatial"] = self.spatial_model.to_dict(selection)
         data["spectral"] = self.spectral_model.to_dict(selection)
         return data
@@ -453,8 +453,12 @@ class SkyDiffuseCube(SkyModelBase):
 
     def to_dict(self, selection):
         data = super().to_dict(selection=selection)
-        data["filename"] = self.filename
         data["name"] = self.name
+        data["type"] = data.pop("type")
+        data["filename"] = self.filename
+
+        # Move parameters at the end
+        data["parameters"] = data.pop("parameters")
         return data
 
 
@@ -522,8 +526,9 @@ class BackgroundModel(Model):
         return self.map.copy(data=back_values)
 
     def to_dict(self, selection):
-        data = super().to_dict(selection=selection)
+        data = {}
         data["name"] = self.name
+        data.update(super().to_dict(selection=selection))
         if self.filename is not None:
             data["filename"] = self.filename
         return data
