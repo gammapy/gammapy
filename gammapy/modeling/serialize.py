@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to serialize models."""
 from gammapy.cube.fit import MapDataset, MapEvaluator
-from gammapy.modeling import Parameters
-from gammapy.modeling.models import (
+from .parameter import Parameters
+from .models import (
     SPATIAL_MODELS,
     SPECTRAL_MODELS,
     BackgroundModel,
@@ -130,8 +130,7 @@ def _link_shared_parameters(models):
 
 
 def datasets_to_dict(datasets, path, selection, overwrite):
-    from gammapy.utils.serialization import models_to_dict
-    from gammapy.modeling.models import BackgroundModels
+    from .models import BackgroundModels
 
     unique_models = []
     unique_backgrounds = []
