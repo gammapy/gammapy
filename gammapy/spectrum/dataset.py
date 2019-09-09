@@ -429,14 +429,10 @@ class SpectrumDataset(Dataset):
         if self.counts is not None:
             self.counts.data[~self.mask_safe] *= 0
             self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
-        else:
-            self.counts = None
 
         if self.background is not None:
             self.background.data[~self.mask_safe] *= 0
             self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
-        else:
-            self.background = None
 
         self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
 

@@ -145,7 +145,7 @@ class TestSpectrumDataset:
         dataset1 = SpectrumDataset(
             counts = self.src.copy(), livetime=livetime, aeff=aeff, edisp=edisp, background=self.bkg.copy()
         )
- 
+
         livetime2 = 0.5*livetime
         aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], 2*aeff.data.data)
         bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:], data=2*self.bkg.data)
