@@ -346,7 +346,7 @@ class MapAxis:
         else:
             nodes = np.array(nodes)
 
-        self.unit = unit
+        self._unit = u.Unit(unit)
         self._nodes = nodes
         self._node_type = node_type
         self._interp = interp
@@ -432,10 +432,6 @@ class MapAxis:
     def unit(self):
         """Return coordinate axis unit."""
         return self._unit
-
-    @unit.setter
-    def unit(self, val):
-        self._unit = u.Unit(val)
 
     @classmethod
     def from_bounds(cls, lo_bnd, hi_bnd, nbin, **kwargs):
