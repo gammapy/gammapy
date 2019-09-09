@@ -722,33 +722,3 @@ class WcsNDMap(WcsMap):
         cdict["energy"] *= self.geom.get_axis_by_name("energy").unit
 
         return MapCoord.create(cdict, coordsys=self.geom.coordsys)
-
-    def sample_events(self, n_events=None, random_state=0):
-        """It converts the given sampled event list into an astropy table.
-
-        Parameters
-        ----------
-        npred_map : `~gammapy.maps.Map`
-            Predicted number of counts map.
-        n_events : int
-            Number of events to sample.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
-            Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
-
-        Returns
-        -------
-        events : `~astropy.table`
-            Sampled event list in an astropy table format.
-        """
-        coords = self.sample_coord(
-                                   n_events=n_events,
-                                   random_state=0
-        )
-        skycoord = coords.skycoord
-
-        events = Table()
-        events["RA_TRUE"] = skycoord.icrs.ra
-        events["DEC_TRUE"] = skycoord.icrs.dec
-        events["ENERGY_TRUE"] = coords["energy"]
-        return events

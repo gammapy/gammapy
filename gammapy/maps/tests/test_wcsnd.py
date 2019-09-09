@@ -631,7 +631,13 @@ def test_map_sampling():
     eval, npred = get_npred_map()
 
     nmap = WcsNDMap(geom=eval.geom, data=npred.data)
-    events = nmap.sample_events(n_events=2, random_state=0)
+    coords = nmap.sample_coord(n_events=2, random_state=0)
+    skycoord = coords.skycoord
+
+    events = Table()
+    events["RA_TRUE"] = skycoord.icrs.ra
+    events["DEC_TRUE"] = skycoord.icrs.dec
+    events["ENERGY_TRUE"] = coords["energy"]
 
     assert len(events) == 2
     assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
