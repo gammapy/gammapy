@@ -364,6 +364,8 @@ class SpectrumDataset(Dataset):
         Empty containers are created with the correct geometry.
         counts, background and aeff are zero and edisp is diagonal.
 
+        The safe_mask is set to False in every bin.
+
         Parameters
         ----------
         e_reco : `~astropy.units.Quantity`
@@ -550,6 +552,48 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         npred_off = background_model / self.alpha
         npred_off.data = random_state.poisson(npred_off.data)
         self.counts_off = npred_off
+
+    @classmethod
+    def create(cls, e_reco, e_true=None, reference_time="2000-01-01"):
+        """Creates empty SpectrumDatasetOnOff
+
+        Empty containers are created with the correct geometry.
+        counts, counts_off and aeff are zero and edisp is diagonal.
+
+        The safe_mask is set to False in every bin.
+
+        Parameters
+        ----------
+        e_reco : `~astropy.units.Quantity`
+            edges of counts vector
+        e_true : `~astropy.units.Quantity`
+            edges of effective area table. If not set use reco energy values. Default : None
+        reference_time : `~astropy.time.Time`
+            reference time of the dataset, Default is "2000-01-01"
+        """
+        if e_true is None:
+            e_true = e_reco
+        counts = CountsSpectrum(e_reco[:-1], e_reco[1:])
+        counts_off = CountsSpectrum(e_reco[:-1], e_reco[1:])
+        aeff = EffectiveAreaTable(e_true[:-1],e_true[1:], np.zeros(e_true[:-1].shape)*u.m**2)
+        edisp = EnergyDispersion.from_diagonal_response(e_true, e_reco)
+        mask_safe = np.zeros_like(counts.data, 'bool')
+        gti = GTI.create(u.Quantity([],'s'), u.Quantity([],'s'), reference_time)
+        livetime = gti.time_sum
+        acceptance = np.ones_like(counts.data, int)
+        acceptance_off = np.ones_like(counts.data, int)
+
+        return SpectrumDatasetOnOff(counts=counts,
+                                    counts_off=counts_off,
+                                    aeff=aeff,
+                                    edisp=edisp,
+                                    mask_safe=mask_safe,
+                                    acceptance=acceptance,
+                                    acceptance_off=acceptance_off,
+                                    livetime=livetime,
+                                    gti=gti,
+                                   )
+
 
     @classmethod
     def read(cls, filename):
