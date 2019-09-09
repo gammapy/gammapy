@@ -1,6 +1,5 @@
 components:
 - name: source
-  type: SkyModel
   spatial:
     parameters:
     - factor: 0.0
@@ -55,3 +54,4 @@ components:
       unit: TeV
       value: 1.0
     type: PowerLaw
+  type: SkyModel
