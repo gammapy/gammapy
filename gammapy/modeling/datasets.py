@@ -4,6 +4,7 @@ import copy
 from collections import Counter
 import numpy as np
 from astropy.utils import lazyproperty
+from gammapy.utils.scripts import read_yaml, write_yaml
 from .parameter import Parameters
 
 __all__ = ["Dataset", "Datasets"]
@@ -158,8 +159,7 @@ class Datasets:
         dataset : 'gammapy.modeling.Datasets'
             Datasets
         """
-        from gammapy.utils.scripts import read_yaml
-        from gammapy.utils.serialization import dict_to_datasets
+        from .serialize import dict_to_datasets
 
         components = read_yaml(filemodel)
         data_list = read_yaml(filedata)
@@ -177,8 +177,7 @@ class Datasets:
             "simple" option reduce models parameters attributes displayed to only
             name, value, unit,frozen
         """
-        from gammapy.utils.scripts import write_yaml
-        from gammapy.utils.serialization import datasets_to_dict
+        from .serialize import datasets_to_dict
 
         datasets_dict, components_dict = datasets_to_dict(
             self.datasets, path, selection, overwrite
