@@ -2,7 +2,9 @@
 """Built-in models in Gammapy."""
 from .cube import *
 from .spatial import *
-from .spectrum import *
+from .spectral import *
+from .spectral_cosmic_ray import *
+from .spectral_crab import *
 from .time import *
 
 SPATIAL_MODELS = {
