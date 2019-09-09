@@ -227,7 +227,7 @@ class SpectrumDataset(Dataset):
         return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def _as_counts_spectrum(self, data):
-        energy = self.counts.energy.edges
+        energy = self._energy_axis.edges
         return CountsSpectrum(data=data, energy_lo=energy[:-1], energy_hi=energy[1:])
 
     @property
@@ -255,7 +255,7 @@ class SpectrumDataset(Dataset):
     @property
     def energy_range(self):
         """Energy range defined by the safe mask"""
-        energy = self.counts.energy.edges
+        energy = self._energy_axis.edges
         e_lo = energy[:-1][self.mask_safe]
         e_hi = energy[1:][self.mask_safe]
         return u.Quantity([e_lo.min(), e_hi.max()])

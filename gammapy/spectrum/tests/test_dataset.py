@@ -136,7 +136,7 @@ class TestSpectrumDataset:
         assert empty_dataset.livetime.value == 0
         assert len(empty_dataset.gti.table) == 0
 
-    def test_spectrum_dataset_stack_diagonal(self):
+    def test_spectrum_dataset_stack_diagonal_safe_mask(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
         edisp = EnergyDispersion.from_diagonal_response(
             self.src.energy.edges, self.src.energy.edges
@@ -149,16 +149,50 @@ class TestSpectrumDataset:
         livetime2 = 0.5*livetime
         aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], 2*aeff.data.data)
         bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:], data=2*self.bkg.data)
+        safe_mask2 = np.ones_like(self.src.data, bool)
+        safe_mask2[0] = False
         dataset2 = SpectrumDataset(
-            counts=self.src.copy(), livetime=livetime2, aeff=aeff2, edisp=edisp, background=bkg2
+            counts=self.src.copy(), livetime=livetime2, aeff=aeff2, edisp=edisp, background=bkg2, mask_safe=safe_mask2
         )
         dataset1.stack(dataset2)
 
-        assert_allclose(dataset1.counts.data, self.src.data*2)
+
+        assert_allclose(dataset1.counts.data[1:], self.src.data[1:]*2)
+        assert_allclose(dataset1.counts.data[0], self.src.data[0])
         assert dataset1.livetime == 1.5*self.livetime
-        assert_allclose(dataset1.background.data, 3*self.bkg.data)
+        assert_allclose(dataset1.background.data[1:], 3*self.bkg.data[1:])
+        assert_allclose(dataset1.background.data[0], self.bkg.data[0])
         assert_allclose(dataset1.aeff.data.data.to_value('m2'), 4./3*aeff.data.data.to_value('m2'))
-        assert_allclose(dataset1.edisp.pdf_matrix, edisp.pdf_matrix)
+        assert_allclose(dataset1.edisp.pdf_matrix[1:], edisp.pdf_matrix[1:])
+        assert_allclose(dataset1.edisp.pdf_matrix[0], 0.5*edisp.pdf_matrix[0])
+
+
+    def test_spectrum_dataset_stack_nondiagonal_no_bkg(self):
+        aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
+        edisp1 = EnergyDispersion.from_gauss(
+            self.src.energy.edges, self.src.energy.edges, 0.1, 0.
+        )
+        livetime = self.livetime
+        dataset1 = SpectrumDataset(
+            counts=None, livetime=livetime, aeff=aeff, edisp=edisp1, background=None
+        )
+
+        livetime2 = livetime
+        aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], aeff.data.data)
+        edisp2 = EnergyDispersion.from_gauss(
+            self.src.energy.edges, self.src.energy.edges, 0.2, 0.
+        )
+        dataset2 = SpectrumDataset(
+            counts=self.src.copy(), livetime=livetime2, aeff=aeff2, edisp=edisp2, background=None
+        )
+        dataset1.stack(dataset2)
+
+        assert dataset1.counts is None
+        assert dataset1.background is None
+        assert dataset1.livetime == 2 * self.livetime
+        assert_allclose(dataset1.aeff.data.data.to_value('m2'), aeff.data.data.to_value('m2'))
+        assert_allclose(dataset1.edisp.get_bias(1*u.TeV), 0., atol=1e-3)
+        assert_allclose(dataset1.edisp.get_resolution(1*u.TeV), 0.1581, atol=1e-2)
 
 
 class TestSpectrumOnOff:
