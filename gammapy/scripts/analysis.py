@@ -359,9 +359,16 @@ class Config:
             if section == "" or section == keyword:
                 print(doc[keyword])
 
-    def dump(self, filename=None):
-        """Serialize config into a yaml file."""
-        pass
+    def dump(self, filename="config.yaml"):
+        """Serialize config into a yaml formatted file."""
+        settings_str = ""
+        doc_dic = self._get_doc_sections()
+        for section in doc_dic.keys():
+            if section in self.settings:
+                settings_str += doc_dic[section] + "\n"
+                settings_str += yaml.dump(self.settings[section]) + "\n"
+        path_file = Path(self.settings["general"]["outdir"]) / filename
+        path_file.write_text(settings_str)
 
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
