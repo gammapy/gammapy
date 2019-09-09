@@ -497,7 +497,7 @@ class MapDataset(Dataset):
             init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
 
         if "BACKGROUND" in hdulist:
-            background_map = Map.from_hdulist(hdulist, hdu=hdu.name)
+            background_map = Map.from_hdulist(hdulist, hdu="background")
             init_kwargs["background_model"] = BackgroundModel(background_map)
 
         if "EDISP_MATRIX" in hdulist:
@@ -561,7 +561,7 @@ class MapDataset(Dataset):
         data = {}
         data["name"] = self.name
         data["models"] = self.model.names
-        data["backgrounds"] = [_.name for _ in self.background_model.models]
+        data["background"] = self.background_model.name
         data["filename"] = filename
         return data
 

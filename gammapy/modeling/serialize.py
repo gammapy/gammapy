@@ -2,10 +2,7 @@
 """Utilities to serialize models."""
 from gammapy.cube.fit import MapDataset, MapEvaluator
 from .models import (
-    SPATIAL_MODELS,
-    SPECTRAL_MODELS,
     BackgroundModel,
-    BackgroundModels,
     SkyDiffuseCube,
     SkyModel,
     SkyModels,
@@ -71,38 +68,22 @@ def dict_to_models(data, link=True):
         check for shared parameters and link them
     """
     models = []
-    for model in data["components"]:
+    for component in data["components"]:
         # background models are created separately
-        if model["type"] == "BackgroundModel":
-            continue
+        if component["type"] == "BackgroundModel":
+            model = BackgroundModel.from_dict(component)
 
-        model = _dict_to_skymodel(model)
+        if component["type"] == "SkyDiffuseCube":
+            model = SkyDiffuseCube.from_dict(component)
+
+        if component["type"] == "SkyModel":
+            model = SkyModel.from_dict(component)
+
         models.append(model)
+
     if link is True:
         _link_shared_parameters(models)
     return models
-
-
-def _dict_to_skymodel(model):
-    if "spatial" in model and model["spatial"]["type"] in SPATIAL_MODELS:
-        model_class = SPATIAL_MODELS[model["spatial"]["type"]]
-        spatial_model = model_class.from_dict(model["spatial"])
-    else:
-        spatial_model = None
-    if "spectral" in model and model["spectral"]["type"] in SPECTRAL_MODELS:
-        model_class = SPECTRAL_MODELS[(model["spectral"]["type"])]
-        spectral_model = model_class.from_dict(model["spectral"])
-    else:
-        spectral_model = None
-    #    TODO add temporal model to SkyModel once applicable
-    #    if "temporal" in model and model["temporal"]["type"] in temporal_models:
-    #        model_class= tenporal_models[(model["tenporal"]["type"])]
-    #        temporal_model = model_class.from_dict( model["temporal"])
-    #    else:
-    #        temporal_model = None
-    return SkyModel(
-        name=model["name"], spatial_model=spatial_model, spectral_model=spectral_model
-    )
 
 
 def _link_shared_parameters(models):
@@ -130,8 +111,6 @@ def _link_shared_parameters(models):
 
 
 def datasets_to_dict(datasets, path, selection, overwrite):
-    from .models import BackgroundModels
-
     unique_models = []
     unique_backgrounds = []
     datasets_dictlist = []
@@ -145,14 +124,8 @@ def datasets_to_dict(datasets, path, selection, overwrite):
             if model not in unique_models:
                 unique_models.append(model)
 
-        if isinstance(dataset.background_model, BackgroundModels):
-            backgrounds = dataset.background_model.models
-        else:
-            backgrounds = [dataset.background_model]
-
-        for background in backgrounds:
-            if background not in unique_backgrounds:
-                unique_backgrounds.append(background)
+        if dataset.background_model not in unique_backgrounds:
+            unique_backgrounds.append(dataset.background_model)
 
     datasets_dict = {"datasets": datasets_dictlist}
     components_dict = models_to_dict(unique_models + unique_backgrounds, selection)
@@ -168,9 +141,6 @@ class dict_to_datasets:
         Datasets
     components : dict
         dict describing model components
-    get_lists : bool
-        get the datasets, models and backgrounds lists separetely (used to initialize FitManager)
-
     """
 
     def __init__(self, data_list, components):
@@ -180,25 +150,20 @@ class dict_to_datasets:
         self.models = dict_to_models(components, link=False)
         self.backgrounds = []
         self.datasets = []
+
         for data in data_list["datasets"]:
             dataset = MapDataset.read(data["filename"], name=data["name"])
-            bkg_names = data["backgrounds"]
+            bkg_name = data["background"]
             model_names = data["models"]
-            self.update_dataset(dataset, components, bkg_names, model_names)
+            self.update_dataset(dataset, components, bkg_name, model_names)
             self.datasets.append(dataset)
         _link_shared_parameters(self.models + self.backgrounds)
 
-    def update_dataset(self, dataset, components, bkg_names, model_names):
-        if not isinstance(dataset.background_model, BackgroundModels):
-            dataset.background_model = BackgroundModels([dataset.background_model])
-        # TODO: remove isinstance checks once #2102  is resolved
-        bkg_prev = [model.name for model in dataset.background_model.models]
+    def update_dataset(self, dataset, components, model_names):
+
         backgrounds = []
         for component in components["components"]:
-            if (
-                component["type"] == "BackgroundModel"
-                and component["name"] in bkg_names
-            ):
+            if component["type"] == "BackgroundModel":
                 background_model = self.add_background(dataset, component, bkg_prev)
                 self.link_background_parameters(component, background_model)
                 backgrounds.append(background_model)
@@ -210,28 +175,10 @@ class dict_to_datasets:
         dataset.model = SkyModels(models)
 
     def add_background(self, dataset, component, bkg_prev):
-        if "filename" in component:
-            # check if file is already loaded in memory else read
-            try:
-                cube = self.cube_register[component["name"]]
-            except KeyError:
-                cube = SkyDiffuseCube.read(component["filename"])
-                self.cube_register[component["name"]] = cube
-
-            evaluator = MapEvaluator(
-                model=cube,
-                exposure=dataset.exposure,
-                psf=dataset.psf,
-                edisp=dataset.edisp,
-            )
-            background_model = BackgroundModel(
-                evaluator.compute_npred(), name=cube.name
-            )
-        else:
-            if component["name"].strip().upper() in bkg_prev:
-                BGind = bkg_prev.index(component["name"].strip().upper())
-            elif component["name"] in bkg_prev:
-                BGind = bkg_prev.index(component["name"])
+        if component["name"].strip().upper() in bkg_prev:
+            BGind = bkg_prev.index(component["name"].strip().upper())
+        elif component["name"] in bkg_prev:
+            BGind = bkg_prev.index(component["name"])
             background_model = dataset.background_model.models[BGind]
         background_model.name = component["name"]
         return background_model
