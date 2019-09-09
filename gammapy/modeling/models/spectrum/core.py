@@ -8,9 +8,9 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.utils.energy import energy_logspace
 from gammapy.utils.fitting import Model, Parameter, Parameters
+from gammapy.utils.integrate import integrate_spectrum
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.scripts import make_path
-from .utils import integrate_spectrum
 
 __all__ = [
     "SpectralModel",
@@ -135,7 +135,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.utils.integrate.integrate_spectrum`
         """
         return integrate_spectrum(self, emin, emax, **kwargs)
 
@@ -147,7 +147,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower adn upper  bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.modeling.models.integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.utils.integrate.integrate_spectrum`
 
         Returns
         -------
@@ -176,7 +176,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to func:`~gammapy.modeling.models.integrate_spectrum`
+            Keyword arguments passed to func:`~gammapy.utils.integrate.integrate_spectrum`
         """
 
         def f(x):
@@ -195,7 +195,7 @@ class SpectralModel(Model):
         emin, emax : `~astropy.units.Quantity`
             Lower bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`
+            Keyword arguments passed to :func:`~gammapy.utils.integrate.integrate_spectrum`
 
         Returns
         -------

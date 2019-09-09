@@ -5,6 +5,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import MapAxis
 from gammapy.maps.utils import edges_from_lo_hi
+from gammapy.utils.integrate import _trapz_loglog
 from gammapy.utils.nddata import NDDataArray
 from gammapy.utils.scripts import make_path
 
@@ -197,8 +198,6 @@ class Background3D:
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        from gammapy.modeling.models.spectrum.utils import _trapz_loglog
-
         data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
         return _trapz_loglog(data, energy_reco, axis=0, intervals=True)
 
@@ -377,8 +376,6 @@ class Background2D:
         array : `~astropy.units.Quantity`
             Returns 2D array with axes offset
         """
-        from gammapy.modeling.models.spectrum.utils import _trapz_loglog
-
         data = self.evaluate(fov_lon, fov_lat, energy_reco, method=method)
         return _trapz_loglog(data, energy_reco, axis=0, intervals=True)
 

@@ -2,8 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.modeling.models import SkyModels
-from gammapy.modeling.models import spatial
+from gammapy.modeling.models import SkyModels, spatial
 from gammapy.modeling.models import spectrum as spectral
 from gammapy.utils.serialization import UnknownModelError, xml_to_sky_models
 from gammapy.utils.testing import requires_data
