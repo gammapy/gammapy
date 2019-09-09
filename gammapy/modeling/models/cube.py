@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
-from gammapy.utils.scripts import make_path, write_yaml
+from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 
 __all__ = [
     "SkyModelBase",
@@ -89,7 +89,7 @@ class SkyModels:
     @classmethod
     def from_xml(cls, xml):
         """Read from XML string."""
-        from gammapy.utils.serialization import xml_to_sky_models
+        from gammapy.modeling.serialize_xml import xml_to_sky_models
 
         return xml_to_sky_models(xml)
 
@@ -113,7 +113,7 @@ class SkyModels:
 
     def to_xml(self, filename):
         """Write to XML file."""
-        from gammapy.utils.serialization import sky_models_to_xml
+        from gammapy.modeling.serialize_xml import sky_models_to_xml
 
         xml = sky_models_to_xml(self)
         filename = make_path(filename)
@@ -123,8 +123,7 @@ class SkyModels:
     @classmethod
     def from_yaml(cls, filename):
         """Write to YAML file."""
-        from gammapy.utils.serialization import dict_to_models
-        from gammapy.utils.scripts import read_yaml
+        from gammapy.modeling.serialize import dict_to_models
 
         data = read_yaml(filename)
         skymodels = dict_to_models(data)
@@ -132,7 +131,7 @@ class SkyModels:
 
     def to_yaml(self, filename, selection="all"):
         """Write to YAML file."""
-        from gammapy.utils.serialization import models_to_dict
+        from gammapy.modeling.serialize import models_to_dict
 
         components_dict = models_to_dict(self.skymodels, selection)
         write_yaml(components_dict, filename)
@@ -585,7 +584,7 @@ class BackgroundModels(Model):
 
     def to_yaml(self, filename, selection="all"):
         """Write to yaml file."""
-        from gammapy.utils.serialization import models_to_dict
+        from gammapy.modeling.serialize import models_to_dict
 
         components_dict = models_to_dict(self.models, selection)
         write_yaml(components_dict, filename)

@@ -22,7 +22,7 @@ from gammapy.modeling.models import (
     SkyPointSource,
 )
 
-DATA_PATH = Path("gammapy/utils/serialization/tests/data")
+DATA_PATH = Path("gammapy/modeling/tests/data")
 
 
 def make_example_2():
@@ -137,17 +137,13 @@ def make_datasets_example():
     print("dataset0")
     print("counts sum : ", dataset0.counts.data.sum())
     print("expo sum : ", dataset0.exposure.data.sum())
-    print(
-        "bkg0 sum : %.1f" % (dataset0.background_model.models[0].evaluate().data.sum())
-    )
-    print(
-        "bkg1 sum : %.1f" % (dataset0.background_model.models[1].evaluate().data.sum())
-    )
+    print("bkg0 sum : ", dataset0.background_model.models[0].evaluate().data.sum())
+    print("bkg1 sum : ", dataset0.background_model.models[1].evaluate().data.sum())
 
     path = str("$GAMMAPY_DATA/tests/models/gc_example_")
     datasets.to_yaml(path, selection="simple", overwrite=True)
 
 
 if __name__ == "__main__":
-    #    make_example_2()
+    make_example_2()
     make_datasets_example()
