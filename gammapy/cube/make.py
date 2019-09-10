@@ -4,7 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
-from ..irf import PSF3D
+from ..irf import EnergyDependentMultiGaussPSF, PSF3D
 from gammapy.maps import Map, WcsGeom, MapAxis
 from .background import make_map_background_irf
 from .counts import fill_map_counts
@@ -16,6 +16,14 @@ from .edisp_map import make_edisp_map
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
+
+RAD_MAX = 0.66
+RAD_AXIS_DEFAULT = MapAxis.from_bounds(
+    0, RAD_MAX, nbin=66, node_type="edges", name="theta", unit="deg"
+)
+MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
+    0.2, 5, nbin=48, node_type="edges", name="migra"
+)
 
 
 class MapMaker:
@@ -66,7 +74,7 @@ class MapMaker:
                 maps[name] = Map.from_geom(self.geom, unit="")
         return maps
 
-    def run(self, observations, selection=None):
+    def run(self, observations, selection=["counts", "exposure", "background"]):
         """Make maps for a list of observations.
 
         Parameters
@@ -83,6 +91,7 @@ class MapMaker:
         maps : dict
             Stacked counts, background and exposure maps
         """
+
         selection = _check_selection(selection)
         maps = self._get_empty_maps(selection)
 
@@ -98,11 +107,10 @@ class MapMaker:
             maps_obs = obs_maker.run(selection)
 
             for name in selection:
+                data = maps_obs[name].quantity.to_value(maps[name].unit)
                 if name == "exposure":
-                    data = maps_obs[name].quantity.to_value(maps[name].unit)
                     maps[name].fill_by_coord(obs_maker.coords_etrue, data)
-                elif name == "counts" or name == "background":
-                    data = maps_obs[name].quantity.to_value(maps[name].unit)
+                else:
                     maps[name].fill_by_coord(obs_maker.coords, data)
         self._maps = maps
         return maps
@@ -154,6 +162,7 @@ class MapMaker:
                 continue
 
             images[name] = map.sum_over_axes(keepdims=keepdims)
+        # TODO: PSF (and edisp) map sum_over_axis
 
         return images
 
@@ -233,16 +242,8 @@ class MapMakerObs:
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}
-        self.migra_axis = (
-            migra_axis
-            if migra_axis
-            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="", name="migra")
-        )
-        self.rad_axis = (
-            rad_axis
-            if rad_axis
-            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="deg", name="theta")
-        )
+        self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
+        self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
 
     def _fov_mask(self, coords):
         pointing = self.observation.pointing_radec
@@ -333,7 +334,6 @@ class MapMakerObs:
         self.maps["background"] = background
 
     def _make_edisp(self):
-
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
         geom_migra = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
         edisp_map = make_edisp_map(
@@ -346,14 +346,13 @@ class MapMakerObs:
         self.maps["edisp"] = edisp_map
 
     def _make_psf(self):
-        # CTA 1DC psf is gammapy.irf.psf_gauss.EnergyDependentMultiGaussPSF
-        # TODO: correct handling for 1DC data?
-        if type(self.observation.psf) is not PSF3D:
-            return
+        psf = self.observation.psf
+        if isinstance(psf, EnergyDependentMultiGaussPSF):
+            psf = psf.to_psf3d(self.rad_axis.edges)
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
         geom_rad = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
         psf_map = make_psf_map(
-            psf=self.observation.psf,
+            psf=psf,
             pointing=self.observation.pointing_radec,
             geom=geom_rad,
             max_offset=self.offset_max,
