@@ -34,10 +34,6 @@ class MapMaker:
         Exclusion mask
     background_oversampling : int
         Background oversampling factor in energy axis.
-    migra_axis : `~gammapy.maps.MapAxis`
-        Migration axis for edisp map
-    rad_axis : `~gammapy.maps.MapAxis`
-        Radial axis for psf map
     """
 
     def __init__(
@@ -47,8 +43,6 @@ class MapMaker:
         geom_true=None,
         exclusion_mask=None,
         background_oversampling=None,
-        migra_axis=None,
-        rad_axis=None,
     ):
         if not isinstance(geom, WcsGeom):
             raise ValueError("MapMaker only works with WcsGeom")
@@ -61,16 +55,6 @@ class MapMaker:
         self.offset_max = Angle(offset_max)
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
-        self.migra_axis = (
-            migra_axis
-            if migra_axis
-            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="", name="migra")
-        )
-        self.rad_axis = (
-            rad_axis
-            if rad_axis
-            else MapAxis(nodes=np.linspace(0.0, 1.0, 11), unit="deg", name="theta")
-        )
 
     def _get_empty_maps(self, selection):
         # Initialise zero-filled maps
