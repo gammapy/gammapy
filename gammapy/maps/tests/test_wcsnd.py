@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-from collections import OrderedDict
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
@@ -10,14 +9,11 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 from gammapy.cube import PSFKernel, MapEvaluator
-from gammapy.cube.models import SkyModel
-from gammapy.image.models import SkyGaussian
+from gammapy.modeling.models import SkyModel, SkyGaussian, PowerLaw
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
-from gammapy.spectrum.models import PowerLaw
-from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("reproject")
