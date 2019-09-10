@@ -630,8 +630,6 @@ class TestSpectrumDatasetOnOffStacker:
 
         self.stacked_dataset = self.obs_list[0].copy()
         self.stacked_dataset.stack(self.obs_list[1])
-#        self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
-#        self.obs_stacker.run()
 
     def test_basic(self):
         obs_1, obs_2 = self.obs_list
@@ -640,13 +638,12 @@ class TestSpectrumDatasetOnOffStacker:
         counts2 = obs_2.counts.data[obs_2.mask_safe].sum()
         summed_counts = counts1 + counts2
 
-#        obs_stacked = self.obs_stacker.stacked_obs
         stacked_counts = self.stacked_dataset.counts.data.sum()
 
         assert summed_counts == stacked_counts
 
     def test_thresholds(self):
-        e_min, e_max = self.obs_stacker.stacked_obs.energy_range
+        e_min, e_max = self.stacked_dataset.energy_range
 
         assert e_min.unit == "keV"
         assert_allclose(e_min.value, 8.912509e08, rtol=1e-3)
@@ -659,30 +656,30 @@ class TestSpectrumDatasetOnOffStacker:
         pwl = PowerLaw(
             index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
-        self.obs_stacker.stacked_obs.model = pwl
-        npred_stacked = self.obs_stacker.stacked_obs.npred().data
+        self.stacked_dataset.model = pwl
+        print(self.stacked_dataset.npred().data[self.stacked_dataset.mask_safe].sum())
+        npred_stacked = self.stacked_dataset.npred().data
         npred_summed = np.zeros_like(npred_stacked)
 
         for obs in self.obs_list:
             obs.model = pwl
             npred_summed[obs.mask_safe] += obs.npred().data[obs.mask_safe]
+            print(obs.npred().data[obs.mask_safe].sum())
 
         assert_allclose(npred_stacked, npred_summed)
 
     def test_stack_backscal(self):
         """Verify backscal stacking """
-        obs_list = make_observation_list()
-        obs_stacker = SpectrumDatasetOnOffStacker(obs_list)
-        obs_stacker.run()
-        assert_allclose(obs_stacker.stacked_obs.alpha[0], 1.25 / 4.0)
+        obs1, obs2 = make_observation_list()
+        obs1.stack(obs2)
+        assert_allclose(obs1.alpha[0], 1.25 / 4.0)
         # When the OFF stack observation counts=0, the alpha is averaged on the total OFF counts for each run.
-        assert_allclose(obs_stacker.stacked_obs.alpha[1], 2.5 / 8.0)
+        assert_allclose(obs1.alpha[1], 2.5 / 8.0)
 
     def test_stack_gti(self):
-        obs_list = make_observation_list()
-        obs_stacker = SpectrumDatasetOnOffStacker(obs_list)
-        obs_stacker.run()
+        obs1, obs2 = make_observation_list()
+        obs1.stack(obs2)
         table_gti = Table({"START": [1.0, 5.0, 14.0], "STOP": [4.0, 8.0, 15.0]})
-        table_gti_stacked_obs = obs_stacker.stacked_obs.gti.table
+        table_gti_stacked_obs = obs1.gti.table
         assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
         assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
