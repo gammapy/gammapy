@@ -452,8 +452,7 @@ class SpectrumDataset(Dataset):
                 self.edisp = irf_stacker.stacked_edisp
 
         if self.gti is not None:
-            self.gti.stack(other.gti)
-            self.gti.union()
+            self.gti = self.gti.stack(other.gti).union()
 
         #TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
@@ -712,14 +711,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         total_alpha[other.mask_safe] += (other.alpha*other.counts_off)[other.mask_safe]
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            acceptance_off = total_alpha / total_off
+            acceptance_off = total_off / total_alpha
             average_alpha = total_alpha.sum()/total_off.sum()
 
         acceptance = np.ones_like(self.counts_off.data, dtype=float)
         idx = np.where(total_off == 0)[0]
         # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
         # OFF counts of each run
-        total_alpha[idx] = 1 / average_alpha
+        acceptance_off[idx] = 1 / average_alpha
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
@@ -749,8 +748,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 self.edisp = irf_stacker.stacked_edisp
 
         if self.gti is not None:
-            self.gti.stack(other.gti)
-            self.gti.union()
+            self.gti = self.gti.stack(other.gti).union()
 
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
