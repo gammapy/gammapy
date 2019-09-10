@@ -806,7 +806,9 @@ class MapEvaluator:
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF"""
-        return npred.convolve(self.psf)
+        tmp = npred.convolve(self.psf)
+        tmp.data[tmp.data < 0.0] = 0
+        return tmp
 
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.
