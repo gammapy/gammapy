@@ -693,7 +693,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(geom=geom, data=data)
 
-    def sample_coord(self, n_events=None, random_state=0):
+    def sample_coord(self, n_events, random_state=0):
         """Sample position and energy of events.
 
         Parameters
