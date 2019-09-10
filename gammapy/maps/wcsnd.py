@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from collections import OrderedDict
 import logging
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage
 import scipy.signal
+from astropy.table import Table
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.io import fits
@@ -11,9 +13,11 @@ from astropy.nddata import Cutout2D
 from gammapy.extern.skimage import block_reduce
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
-from .geom import pix_tuple_to_idx
+from .geom import pix_tuple_to_idx, MapCoord
 from .reproject import reproject_car_to_hpx, reproject_car_to_wcs
 from .utils import INVALID_INDEX, interp_to_order
+from .utils import get_random_state
+from gammapy.utils.random import InverseCDFSampler, get_random_state
 from .wcs import _check_width
 from .wcsmap import WcsGeom, WcsMap
 
@@ -688,3 +692,33 @@ class WcsNDMap(WcsMap):
         data = self.data[cutout_slices]
 
         return self._init_copy(geom=geom, data=data)
+
+    def sample_coord(self, n_events, random_state=0):
+        """Sample position and energy of events.
+
+        Parameters
+        ----------
+        n_events : int
+            Number of events to sample.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        coords : `~gammapy.maps.MapCoord` object.
+            Sequence of coordinates and energies of the sampled events.
+        """
+
+        random_state = get_random_state(random_state)
+        sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
+
+        coords_pix = sampler.sample(n_events)
+        coords = self.geom.pix_to_coord(coords_pix[::-1])
+
+        # TODO: pix_to_coord should return a MapCoord object
+        axes_names = ["lon", "lat"] + [ax.name for ax in self.geom.axes]
+        cdict = OrderedDict(zip(axes_names, coords))
+        cdict["energy"] *= self.geom.get_axis_by_name("energy").unit
+
+        return MapCoord.create(cdict, coordsys=self.geom.coordsys)

@@ -6,8 +6,10 @@ import astropy.units as u
 from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.cube import PSFKernel
+from gammapy.cube import PSFKernel, MapEvaluator
+from gammapy.modeling.models import SkyModel, SkyGaussian, PowerLaw
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
@@ -592,3 +594,48 @@ def test_get_spectrum():
 
     spec = m.get_spectrum(region=region, func=np.mean)
     assert_allclose(spec.data, [1.0, 1.0, 1.0])
+
+
+def get_npred_map():
+    position = SkyCoord(0.0, 0.0, frame="galactic", unit="deg")
+    energy_axis = MapAxis.from_bounds(
+        1, 100, nbin=30, unit="TeV", name="energy", interp="log"
+    )
+
+    exposure = Map.create(
+        binsz=0.02,
+        map_type="wcs",
+        skydir=position,
+        width="2 deg",
+        axes=[energy_axis],
+        coordsys="GAL",
+        unit="cm2 s",
+    )
+
+    spatial_model = SkyGaussian("0 deg", "0 deg", sigma="0.2 deg")
+    spectral_model = PowerLaw(amplitude="1e-11 cm-2 s-1 TeV-1")
+    skymodel = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    exposure.data = 1e14 * np.ones(exposure.data.shape)
+    evaluator = MapEvaluator(model=skymodel, exposure=exposure)
+
+    npred = evaluator.compute_npred()
+    return evaluator, npred
+
+
+def test_map_sampling():
+    eval, npred = get_npred_map()
+
+    nmap = WcsNDMap(geom=eval.geom, data=npred.data)
+    coords = nmap.sample_coord(n_events=2, random_state=0)
+    skycoord = coords.skycoord
+
+    events = Table()
+    events["RA_TRUE"] = skycoord.icrs.ra
+    events["DEC_TRUE"] = skycoord.icrs.dec
+    events["ENERGY_TRUE"] = coords["energy"]
+
+    assert len(events) == 2
+    assert_allclose(events["RA_TRUE"].data, [266.307081, 266.442255], rtol=1e-5)
+    assert_allclose(events["DEC_TRUE"].data, [-28.753408, -28.742696], rtol=1e-5)
+    assert_allclose(events["ENERGY_TRUE"].data, [2.755397, 1.72316], rtol=1e-5)
