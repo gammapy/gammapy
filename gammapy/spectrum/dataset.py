@@ -676,6 +676,75 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
         )
 
+    def stack(self, other):
+        """Stack this dataset with another one.
+
+        Safe mask is applied to compute the stacked counts vector.
+        Counts outside each dataset safe mask are lost.
+
+        Stacking is performed in-place.
+
+        Parameters
+        ----------
+        other : `~gammapy.spectrum.SpectrumDatasetOnOff`
+            the dataset to stack to the current one
+       """
+
+        if not isinstance(other, SpectrumDatasetOnOff):
+            raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
+
+        # We assume here that acceptance and acceptance_off are well defined.
+        total_off = self.counts_off*self.mask_safe + other.counts_off.data * other.mask_safe
+        tmp = (self.alpha*self.counts_off)[self.mask_safe] + \
+              (other.alpha*other.counts_off)[other.mask_safe]
+        acceptance_off = tmp/total_off
+        average_alpha = tmp.sum()
+
+        self.acceptance_off[~self.mask_safe] *= 0
+        self.acceptance_off *= self.counts_off.data
+        self.acceptance_off[other.mask_safe] += other.acceptance_off[other.mask_safe]\
+                                                *other.counts_off.data[other.mask_safe]
+
+
+        if self.counts is not None:
+            self.counts.data[~self.mask_safe] *= 0
+            self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
+
+        if self.counts_off is not None:
+            self.counts_off.data[~self.mask_safe] *= 0
+            self.counts_off.data[other.mask_safe] += other.counts_off.data[other.mask_safe]
+
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
+
+        irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
+                                 list_livetime=[self.livetime, other.livetime],
+                                 list_edisp=[self.edisp, other.edisp],
+                                 list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+                                 list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+                                 )
+
+        if self.aeff is not None:
+            irf_stacker.stack_aeff()
+            self.aeff = irf_stacker.stacked_aeff
+            if self.edisp is not None:
+                irf_stacker.stack_edisp()
+                self.edisp = irf_stacker.stacked_edisp
+            else:
+                self.edisp = None
+        else:
+            self.aeff = None
+            self.edisp = None
+
+        if self.gti is not None:
+            self.gti.stack(other.gti)
+            self.gti.union()
+        else:
+            self.gti = None
+
+        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
+        # of GTIs
+        self.livetime += other.livetime
+
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
