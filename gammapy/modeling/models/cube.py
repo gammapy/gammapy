@@ -548,12 +548,19 @@ class BackgroundModel(Model):
         data.update(super().to_dict(selection=selection))
         if self.filename is not None:
             data["filename"] = self.filename
+        data["parameters"] = data.pop("parameters")
         return data
 
     @classmethod
     def from_dict(cls, data):
-        data = Map.read(data["filename"])
-        init = cls(background=data, name=data["name"])
+        if "filename" in data:
+            background = Map.read(data["filename"])
+        elif "map" in data:
+            background = data["map"]
+        else:
+            raise ValueError("Requires either filename or `Map` object")
+
+        init = cls(background=background, name=data["name"])
         init.parameters = Parameters.from_dict(data)
         for parameter in init.parameters.parameters:
             setattr(init, parameter.name, parameter)

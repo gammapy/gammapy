@@ -7,7 +7,6 @@ from .models import (
     SkyModel,
     SkyModels,
 )
-from .parameter import Parameters
 
 __all__ = ["models_to_dict", "dict_to_models", "dict_to_datasets", "datasets_to_dict"]
 
@@ -71,7 +70,7 @@ def dict_to_models(data, link=True):
     for component in data["components"]:
         # background models are created separately
         if component["type"] == "BackgroundModel":
-            model = BackgroundModel.from_dict(component)
+            continue
 
         if component["type"] == "SkyDiffuseCube":
             model = SkyDiffuseCube.from_dict(component)
@@ -81,7 +80,7 @@ def dict_to_models(data, link=True):
 
         models.append(model)
 
-    if link is True:
+    if link:
         _link_shared_parameters(models)
     return models
 
@@ -96,7 +95,7 @@ def _link_shared_parameters(models):
                     new_param = shared_register[name]
                     ind = model.parameters.names.index(name)
                     model.parameters.parameters[ind] = new_param
-                    if isinstance(model, SkyModel) is True:
+                    if isinstance(model, SkyModel):
                         spatial_params = model.spatial_model.parameters
                         spectral_params = model.spectral_model.parameters
                         if name in spatial_params.names:
@@ -144,11 +143,7 @@ class dict_to_datasets:
     """
 
     def __init__(self, data_list, components):
-        self.params_register = {}
-        self.cube_register = {}
-
-        self.models = dict_to_models(components, link=False)
-        self.backgrounds = []
+        self.models = dict_to_models(components)
         self.datasets = []
 
         for data in data_list["datasets"]:
@@ -157,37 +152,15 @@ class dict_to_datasets:
             model_names = data["models"]
             self.update_dataset(dataset, components, bkg_name, model_names)
             self.datasets.append(dataset)
-        _link_shared_parameters(self.models + self.backgrounds)
 
-    def update_dataset(self, dataset, components, model_names):
-
-        backgrounds = []
+    def update_dataset(self, dataset, components, bkg_name, model_names):
         for component in components["components"]:
             if component["type"] == "BackgroundModel":
-                background_model = self.add_background(dataset, component, bkg_prev)
-                self.link_background_parameters(component, background_model)
-                backgrounds.append(background_model)
-                if background_model not in self.backgrounds:
-                    self.backgrounds.append(background_model)
+                if component["name"] == bkg_name:
+                    if "filename" not in component:
+                        component["map"] = dataset.background_model.map
+                    background_model = BackgroundModel.from_dict(component)
+                    dataset.background_model = background_model
 
-        dataset.background_model = BackgroundModels(backgrounds)
         models = [model for model in self.models if model.name in model_names]
         dataset.model = SkyModels(models)
-
-    def add_background(self, dataset, component, bkg_prev):
-        if component["name"].strip().upper() in bkg_prev:
-            BGind = bkg_prev.index(component["name"].strip().upper())
-        elif component["name"] in bkg_prev:
-            BGind = bkg_prev.index(component["name"])
-            background_model = dataset.background_model.models[BGind]
-        background_model.name = component["name"]
-        return background_model
-
-    def link_background_parameters(self, component, background_model):
-        """Link parameters to background."""
-        try:
-            params = self.params_register[component["name"]]
-        except KeyError:
-            params = Parameters.from_dict(component)
-            self.params_register[component["name"]] = params
-        background_model.parameters = params
