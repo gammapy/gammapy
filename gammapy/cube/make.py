@@ -4,7 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
-from ..irf import EnergyDependentMultiGaussPSF, PSF3D
+from ..irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, WcsGeom, MapAxis
 from .background import make_map_background_irf
 from .counts import fill_map_counts
@@ -158,9 +158,6 @@ class MapMaker:
         for name, map in maps.items():
             if name == "exposure":
                 map = _map_spectrum_weight(map, spectrum)
-            if name == "psf" or name == "edisp":
-                continue
-
             images[name] = map.sum_over_axes(keepdims=keepdims)
         # TODO: PSF (and edisp) map sum_over_axis
 
@@ -465,7 +462,7 @@ class MapMakerRing(MapMaker):
                 log.info("Skipping obs_id: {} (partial map overlap)".format(obs.obs_id))
                 continue
 
-            maps_obs = obs_maker.run()
+            maps_obs = obs_maker.run(selection=["counts", "exposure", "background"])
             maps_obs["exclusion"] = obs_maker.exclusion_mask
 
             if sum_over_axis:
