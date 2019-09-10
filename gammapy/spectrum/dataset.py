@@ -703,19 +703,19 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if not is_valid(self) or not is_valid(other):
             raise ValueError("Cannot stack incomplete SpectrumDatsetOnOff.")
 
-        total_off = np.zeros_like(self.counts_off.data)
-        total_alpha = np.zeros_like(self.counts_off.data)
+        total_off = np.zeros_like(self.counts_off.data, dtype=float)
+        total_alpha = np.zeros_like(self.counts_off.data, dtype=float)
 
-        total_off[self.mask_safe] = self.counts_off.data[self.mask_safe]
+        total_off[self.mask_safe] += self.counts_off.data[self.mask_safe]
         total_off[other.mask_safe] += other.counts_off.data[other.mask_safe]
-        total_alpha[self.mask_safe] = (self.alpha*self.counts_off)[self.mask_safe]
-        total_alpha[self.mask_safe] += (other.alpha*other.counts_off)[other.mask_safe]
+        total_alpha[self.mask_safe] += (self.alpha*self.counts_off)[self.mask_safe]
+        total_alpha[other.mask_safe] += (other.alpha*other.counts_off)[other.mask_safe]
 
         with np.errstate(divide="ignore", invalid="ignore"):
             acceptance_off = total_alpha / total_off
             average_alpha = total_alpha.sum()/total_off.sum()
 
-        acceptance = self.ones_like(self.counts_off.data)
+        acceptance = np.ones_like(self.counts_off.data, dtype=float)
         idx = np.where(total_off == 0)[0]
         # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
         # OFF counts of each run

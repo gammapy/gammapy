@@ -628,19 +628,20 @@ class TestSpectrumDatasetOnOffStacker:
             emax=20 * u.TeV
         )
 
-        self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
-        self.obs_stacker.run()
+        self.stacked_dataset = self.obs_list[0].copy()
+        self.stacked_dataset.stack(self.obs_list[1])
+#        self.obs_stacker = SpectrumDatasetOnOffStacker(self.obs_list)
+#        self.obs_stacker.run()
 
     def test_basic(self):
-        assert "Stacker" in str(self.obs_stacker)
         obs_1, obs_2 = self.obs_list
 
         counts1 = obs_1.counts.data[obs_1.mask_safe].sum()
         counts2 = obs_2.counts.data[obs_2.mask_safe].sum()
         summed_counts = counts1 + counts2
 
-        obs_stacked = self.obs_stacker.stacked_obs
-        stacked_counts = obs_stacked.counts.data.sum()
+#        obs_stacked = self.obs_stacker.stacked_obs
+        stacked_counts = self.stacked_dataset.counts.data.sum()
 
         assert summed_counts == stacked_counts
 
