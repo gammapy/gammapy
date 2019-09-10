@@ -11,7 +11,6 @@ from gammapy.maps import Map
 from gammapy.modeling import Dataset, Parameters
 from gammapy.modeling.models import (
     BackgroundModel,
-    BackgroundModels,
     SkyModel,
     SkyModels,
 )
@@ -43,8 +42,8 @@ class MapDataset(Dataset):
         PSF kernel
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion
-    background_model : `~gammapy.modeling.models.BackgroundModel` or `~gammapy.modeling.models.BackgroundModels`
-        Background models to use for the fit.
+    background_model : `~gammapy.modeling.models.BackgroundModel`
+        Background model to use for the fit.
     likelihood : {"cash", "cstat"}
         Likelihood function to use for the fit.
     evaluation_mode : {"local", "global"}
@@ -161,14 +160,6 @@ class MapDataset(Dataset):
             n_models = len(self.model.skymodels)
         str_ += "\t{:32}: {} \n".format("Number of models", n_models)
 
-        n_bkg_models = 0
-        if self.background_model is not None:
-            try:
-                n_bkg_models = len(self.background_model.models)
-            except AttributeError:
-                n_bkg_models = 1
-        str_ += "\t{:32}: {} \n".format("Number of background models", n_bkg_models)
-
         str_ += "\t{:32}: {}\n".format(
             "Number of parameters", len(self.parameters.parameters)
         )
@@ -176,38 +167,34 @@ class MapDataset(Dataset):
             "Number of free parameters", len(self.parameters.free_parameters)
         )
 
-        if self.model is not None:
-            for idx, model in enumerate(self.model.skymodels):
-                str_ += "\tSource {}: \n".format(idx)
-                str_ += "\t\t{:28}: {}\n".format("Name", model.name)
-                str_ += "\t\t{:28}: {}\n".format(
-                    "Spatial model type", model.spatial_model.__class__.__name__
-                )
-                info = str(model.spatial_model.parameters)
-                lines = info.split("\n")
-                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+        components = []
 
-                str_ += "\n\t\t{:28}: {}\n".format(
-                    "Spectral model type", model.spectral_model.__class__.__name__
-                )
-                info = str(model.spectral_model.parameters)
-                lines = info.split("\n")
-                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+        if self.model is not None:
+            components += self.model.skymodels
 
         if self.background_model is not None:
-            try:
-                background_models = self.background_model.models
-            except AttributeError:
-                background_models = [self.background_model]
+            components += [self.background_model]
 
-            for idx, model in enumerate(background_models):
-                str_ += "\n\n\tBackground {}: \n".format(idx)
+        for idx, model in enumerate(components):
+            str_ += "\tComponent {}: \n".format(idx)
+            str_ += "\t\t{:28}: {}\n".format("Name", model.name)
+            str_ += "\t\t{:28}: {}\n".format("Type", model.__class__.__name__)
+
+            if isinstance(model, SkyModel):
                 str_ += "\t\t{:28}: {}\n".format(
-                    "Model type", self.background_model.__class__.__name__
+                    "Spatial  model type", model.spatial_model.__class__.__name__
                 )
-                info = str(self.background_model.parameters)
-                lines = info.split("\n")
-                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Spectral model type", model.spectral_model.__class__.__name__
+                )
+
+            str_ += "\t\tParameters:\n"
+
+            info = str(model.parameters)
+            lines = info.split("\n")
+            str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+            str_ += "\n\n"
 
         return str_.expandtabs(tabsize=4)
 
@@ -446,17 +433,15 @@ class MapDataset(Dataset):
 
         hdu_primary = fits.PrimaryHDU()
         hdulist = fits.HDUList([hdu_primary])
-        hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
-        hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
-        if isinstance(self.background_model, BackgroundModels):
-            for background in self.background_model.models:
-                if background.filename is None:
-                    hdulist += background.map.to_hdulist(hdu="BKG_" + background.name)[
-                        exclude_primary
-                    ]
-        else:
+        if self.counts is not None:
+            hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
+
+        if self.exposure is not None:
+            hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
+
+        if self.background_model is not None:
             hdulist += self.background_model.map.to_hdulist(
-                hdu="BKG_" + self.background_model.name
+                hdu="background"
             )[exclude_primary]
 
         if self.edisp is not None:
@@ -507,15 +492,15 @@ class MapDataset(Dataset):
         """
         init_kwargs = {}
         init_kwargs["name"] = name
-        init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
-        init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+        if "COUNTS" in hdulist:
+            init_kwargs["counts"] = Map.from_hdulist(hdulist, hdu="counts")
 
-        backgrounds = []
-        for hdu in hdulist:
-            if isinstance(hdu, fits.hdu.image.ImageHDU) and "BKG_" in hdu.name:
-                background_map = Map.from_hdulist(hdulist, hdu=hdu.name)
-                backgrounds.append(BackgroundModel(background_map, name=hdu.name[4:]))
-        init_kwargs["background_model"] = BackgroundModels(backgrounds)
+        if "EXPOSURE" in hdulist:
+            init_kwargs["exposure"] = Map.from_hdulist(hdulist, hdu="exposure")
+
+        if "BACKGROUND" in hdulist:
+            background_map = Map.from_hdulist(hdulist, hdu="background")
+            init_kwargs["background_model"] = BackgroundModel(background_map)
 
         if "EDISP_MATRIX" in hdulist:
             init_kwargs["edisp"] = EnergyDispersion.from_hdulist(
@@ -578,7 +563,7 @@ class MapDataset(Dataset):
         data = {}
         data["name"] = self.name
         data["models"] = self.model.names
-        data["backgrounds"] = [_.name for _ in self.background_model.models]
+        data["background"] = self.background_model.name
         data["filename"] = filename
         return data
 

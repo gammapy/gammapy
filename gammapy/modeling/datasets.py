@@ -182,5 +182,5 @@ class Datasets:
         datasets_dict, components_dict = datasets_to_dict(
             self.datasets, path, selection, overwrite
         )
-        write_yaml(datasets_dict, path + "datasets.yaml")
-        write_yaml(components_dict, path + "models.yaml")
+        write_yaml(datasets_dict, path + "datasets.yaml", sort_keys=False)
+        write_yaml(components_dict, path + "models.yaml", sort_keys=False)

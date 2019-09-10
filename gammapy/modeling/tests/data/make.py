@@ -59,6 +59,7 @@ def make_datasets_example():
     sources_coords = [(0, 0), (0.9, 0.1)]
     names = ["gc", "g09"]
     models = []
+
     for ind, (lon, lat) in enumerate(sources_coords):
         spatial_model = SkyPointSource(lon_0=lon * u.deg, lat_0=lat * u.deg)
         spectral_model = ExponentialCutoffPowerLaw(
@@ -71,11 +72,13 @@ def make_datasets_example():
             spatial_model=spatial_model, spectral_model=spectral_model, name=names[ind]
         )
         models.append(model_ecpl)
+
     # test to link a spectral parameter
     params0 = models[0].spectral_model.parameters
     params1 = models[1].spectral_model.parameters
     ind = params0.parameters.index(params0["reference"])
     params0.parameters[ind] = params1["reference"]
+
     # update the sky model
     ind = models[0].parameters.parameters.index(models[0].parameters["reference"])
     models[0].parameters.parameters[ind] = params1["reference"]
@@ -86,7 +89,6 @@ def make_datasets_example():
     diffuse_model = SkyDiffuseCube.read(
         "$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits"
     )
-    diffuse_parameters = {}
 
     datasets_list = []
     for ind, geom in enumerate(geoms):
@@ -104,28 +106,16 @@ def make_datasets_example():
             observations, position=src_pos, e_true=energy, e_reco=energy
         )
 
-        evaluator = MapEvaluator(
-            diffuse_model, exposure=maps["exposure"], psf=psf_kernel
-        )
-        bkg_map = evaluator.compute_npred()
-        background_diffuse = BackgroundModel(bkg_map, name=diffuse_model.name)
-
-        # set diffuse model as global
-        try:
-            background_diffuse.parameters = diffuse_parameters[background_diffuse.name]
-        except KeyError:
-            diffuse_parameters[background_diffuse.name] = background_diffuse.parameters
         background_irf = BackgroundModel(
             maps["background"], norm=1.0, tilt=0.0, name="background_irf_" + names[ind]
         )
-        background_total = background_irf + background_diffuse
 
         dataset = MapDataset(
             name=names[ind],
-            model=models[ind],
+            model=models[ind] + diffuse_model,
             counts=maps["counts"],
             exposure=maps["exposure"],
-            background_model=background_total,
+            background_model=background_irf,
             psf=psf_kernel,
             edisp=edisp,
         )
@@ -137,8 +127,7 @@ def make_datasets_example():
     print("dataset0")
     print("counts sum : ", dataset0.counts.data.sum())
     print("expo sum : ", dataset0.exposure.data.sum())
-    print("bkg0 sum : ", dataset0.background_model.models[0].evaluate().data.sum())
-    print("bkg1 sum : ", dataset0.background_model.models[1].evaluate().data.sum())
+    print("bkg0 sum : ", dataset0.background_model.evaluate().data.sum())
 
     path = str("$GAMMAPY_DATA/tests/models/gc_example_")
     datasets.to_yaml(path, selection="simple", overwrite=True)

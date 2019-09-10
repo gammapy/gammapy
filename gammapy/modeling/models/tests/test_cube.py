@@ -8,7 +8,6 @@ from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     BackgroundModel,
-    BackgroundModels,
     PowerLaw,
     SkyDiffuseCube,
     SkyGaussian,
@@ -150,14 +149,6 @@ def test_background_model(background):
     ).evaluate()
     assert_allclose(bkg2.data[0][0][0], 2.254e-07, rtol=1e-3)
     assert_allclose(bkg2.data.sum(), 7.352e-06, rtol=1e-3)
-
-
-def test_background_models(background):
-    bkg_1 = BackgroundModel(background, norm=1.0)
-    bkg_2 = BackgroundModel(background, norm=2.0)
-    models = BackgroundModels([bkg_1, bkg_2])
-    bkg_eval = models.evaluate()
-    assert_allclose(3 * bkg_1.map.data[0][0][0], bkg_eval.data[0][0][0])
 
 
 class TestSkyModels:

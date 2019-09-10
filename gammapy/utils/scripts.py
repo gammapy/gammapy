@@ -65,7 +65,7 @@ def read_yaml(filename, logger=None):
     return yaml.safe_load(text)
 
 
-def write_yaml(dictionary, filename, logger=None):
+def write_yaml(dictionary, filename, logger=None, sort_keys=True):
     """Write YAML file.
 
     Parameters
@@ -76,8 +76,10 @@ def write_yaml(dictionary, filename, logger=None):
         Filename
     logger : `~logging.Logger`
         Logger
+    sort_keys : bool
+        Whether to sort keys.
     """
-    text = yaml.safe_dump(dictionary, default_flow_style=False)
+    text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
 
     path = make_path(filename)
     path.parent.mkdir(exist_ok=True)

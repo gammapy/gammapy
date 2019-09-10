@@ -14,7 +14,6 @@ __all__ = [
     "SkyModel",
     "SkyDiffuseCube",
     "BackgroundModel",
-    "BackgroundModels",
 ]
 
 
@@ -306,11 +305,28 @@ class SkyModel(SkyModelBase):
     def to_dict(self, selection):
         """Create dict for YAML serilisation"""
         data = {}
-        data["type"] = self.tag
         data["name"] = self.name
+        data["type"] = self.tag
         data["spatial"] = self.spatial_model.to_dict(selection)
         data["spectral"] = self.spectral_model.to_dict(selection)
         return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create SkyModel from dict"""
+        from gammapy.modeling.models import SPATIAL_MODELS, SPECTRAL_MODELS
+
+        model_class = SPECTRAL_MODELS[data["spectral"]["type"]]
+        spectral_model = model_class.from_dict(data["spectral"])
+
+        model_class = SPATIAL_MODELS[data["spatial"]["type"]]
+        spatial_model = model_class.from_dict(data["spatial"])
+
+        return cls(
+            name=data["name"],
+            spatial_model=spatial_model,
+            spectral_model=spectral_model,
+        )
 
 
 class SkyDiffuseCube(SkyModelBase):
@@ -454,8 +470,12 @@ class SkyDiffuseCube(SkyModelBase):
 
     def to_dict(self, selection):
         data = super().to_dict(selection=selection)
-        data["filename"] = self.filename
         data["name"] = self.name
+        data["type"] = data.pop("type")
+        data["filename"] = self.filename
+
+        # Move parameters at the end
+        data["parameters"] = data.pop("parameters")
         return data
 
 
@@ -522,69 +542,26 @@ class BackgroundModel(Model):
         back_values = norm * self.map.data * tilt_factor.value
         return self.map.copy(data=back_values)
 
-    def __add__(self, model):
-        models = [self]
-        if isinstance(model, BackgroundModels):
-            models += model.models
-        elif isinstance(model, BackgroundModel):
-            models += [model]
-        else:
-            raise NotImplementedError
-        return BackgroundModels(models)
-
     def to_dict(self, selection):
-        data = super().to_dict(selection=selection)
+        data = {}
         data["name"] = self.name
+        data.update(super().to_dict(selection=selection))
         if self.filename is not None:
             data["filename"] = self.filename
+        data["parameters"] = data.pop("parameters")
         return data
 
-
-class BackgroundModels(Model):
-    """Background models.
-
-    Parameters
-    ----------
-    models : list of `BackgroundModel`
-        List of background models.
-    """
-
-    __slots__ = ["models", "_parameters"]
-
-    def __init__(self, models):
-        self.models = models
-        parameters = []
-        for model in models:
-            for p in model.parameters:
-                parameters.append(p)
-        super().__init__(parameters)
-
-    def evaluate(self):
-        """Evaluate background models."""
-        for idx, model in enumerate(self.models):
-            if idx == 0:
-                vals = model.evaluate()
-            else:
-                vals += model.evaluate()
-        return vals
-
-    def __iadd__(self, model):
-        if isinstance(model, BackgroundModels):
-            self.models += model.models
-        elif isinstance(model, BackgroundModel):
-            self.models += [model]
+    @classmethod
+    def from_dict(cls, data):
+        if "filename" in data:
+            background = Map.read(data["filename"])
+        elif "map" in data:
+            background = data["map"]
         else:
-            raise NotImplementedError
-        return self
+            raise ValueError("Requires either filename or `Map` object")
 
-    def __add__(self, model):
-        model_ = self.copy()
-        model_ += model
-        return model_
-
-    def to_yaml(self, filename, selection="all"):
-        """Write to yaml file."""
-        from gammapy.modeling.serialize import models_to_dict
-
-        components_dict = models_to_dict(self.models, selection)
-        write_yaml(components_dict, filename)
+        init = cls(background=background, name=data["name"])
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init

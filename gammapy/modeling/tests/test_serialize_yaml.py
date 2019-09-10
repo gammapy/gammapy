@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.modeling import Datasets
-from gammapy.modeling.models import BackgroundModels, SkyModels, spatial, spectral
+from gammapy.modeling.models import SkyModels, spatial, spectral
 from gammapy.modeling.serialize import dict_to_models
 from gammapy.utils.scripts import read_yaml
 from gammapy.utils.testing import requires_data
@@ -113,44 +113,29 @@ def test_datasets_to_io(tmpdir):
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
 
-    assert isinstance(dataset0.background_model, BackgroundModels)
-    assert len(dataset0.background_model.models) == 2
     assert_allclose(
-        dataset0.background_model.models[0].evaluate().data.sum(), 4094.2, atol=0.1
+        dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1
     )
-    assert_allclose(
-        dataset0.background_model.models[1].evaluate().data.sum(), 928.8, atol=0.1
-    )
-    assert dataset0.background_model.models[0].name in [
-        "background_irf_gc",
-        "gll_iem_v06_cutout",
-    ]
-    assert dataset0.background_model.models[1].name in [
-        "background_irf_gc",
-        "gll_iem_v06_cutout",
-    ]
+
+    assert dataset0.background_model.name == "background_irf_gc"
 
     dataset1 = datasets.datasets[1]
-    assert len(dataset1.background_model.models) == 2
-    assert dataset1.background_model.models[0].name in [
-        "background_irf_g09",
-        "gll_iem_v06_cutout",
-    ]
-    assert dataset1.background_model.models[1].name in [
-        "background_irf_g09",
-        "gll_iem_v06_cutout",
-    ]
+    assert dataset1.background_model.name == "background_irf_g09"
+
+    assert dataset0.model["gll_iem_v06_cutout"] == dataset1.model["gll_iem_v06_cutout"]
 
     assert isinstance(dataset0.model, SkyModels)
-    assert len(dataset0.model.skymodels) == 1
+    assert len(dataset0.model.skymodels) == 2
     assert dataset0.model.skymodels[0].name == "gc"
+    assert dataset0.model.skymodels[1].name == "gll_iem_v06_cutout"
+
     assert (
         dataset0.model.skymodels[0].parameters["reference"]
-        is dataset1.model.skymodels[0].parameters["reference"]
+        is dataset1.model.skymodels[1].parameters["reference"]
     )
 
     assert_allclose(
-        dataset1.model.skymodels[0].parameters["lon_0"].value, 0.9, atol=0.1
+        dataset1.model.skymodels[1].parameters["lon_0"].value, 0.9, atol=0.1
     )
 
     path = str(tmpdir / "/written_")
@@ -162,11 +147,6 @@ def test_datasets_to_io(tmpdir):
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
-    assert isinstance(dataset0.background_model, BackgroundModels)
-    assert len(dataset0.background_model.models) == 2
     assert_allclose(
-        dataset0.background_model.models[0].evaluate().data.sum(), 4094.2, atol=0.1
-    )
-    assert_allclose(
-        dataset0.background_model.models[1].evaluate().data.sum(), 928.8, atol=0.1
+        dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1
     )
