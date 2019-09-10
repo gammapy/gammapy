@@ -166,8 +166,8 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
         "COUNTS_BANDS",
         "EXPOSURE",
         "EXPOSURE_BANDS",
-        "BKG_BACKGROUND",
-        "BKG_BACKGROUND_BANDS",
+        "BACKGROUND",
+        "BACKGROUND_BANDS",
         "EDISP_MATRIX",
         "EDISP_MATRIX_EBOUNDS",
         "PSF_KERNEL",
@@ -189,7 +189,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(
         dataset.background_model.map.data,
-        dataset_new.background_model.models[0].map.data,
+        dataset_new.background_model.map.data,
     )
     assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
     assert_allclose(dataset.psf.data, dataset_new.psf.data)
@@ -201,7 +201,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
     assert dataset.exposure.geom == dataset_new.exposure.geom
     assert (
         dataset.background_model.map.geom
-        == dataset_new.background_model.models[0].map.geom
+        == dataset_new.background_model.map.geom
     )
 
     assert_allclose(
