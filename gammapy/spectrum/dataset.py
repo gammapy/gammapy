@@ -690,28 +690,46 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             the dataset to stack to the current one
        """
 
+        def is_valid(dataset):
+            if dataset.acceptance_off is None or dataset.acceptance is None or dataset.counts_off is None:
+                return False
+            else:
+                return True
+
         if not isinstance(other, SpectrumDatasetOnOff):
             raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
 
-        # We assume here that acceptance and acceptance_off are well defined.
-        total_off = self.counts_off*self.mask_safe + other.counts_off.data * other.mask_safe
-        tmp = (self.alpha*self.counts_off)[self.mask_safe] + \
-              (other.alpha*other.counts_off)[other.mask_safe]
-        acceptance_off = tmp/total_off
-        average_alpha = tmp.sum()
+        # We assume here that counts_off, acceptance and acceptance_off are well defined.
+        if not is_valid(self) or not is_valid(other):
+            raise ValueError("Cannot stack incomplete SpectrumDatsetOnOff.")
 
-        self.acceptance_off[~self.mask_safe] *= 0
-        self.acceptance_off *= self.counts_off.data
-        self.acceptance_off[other.mask_safe] += other.acceptance_off[other.mask_safe]\
-                                                *other.counts_off.data[other.mask_safe]
+        total_off = np.zeros_like(self.counts_off.data)
+        total_alpha = np.zeros_like(self.counts_off.data)
 
+        total_off[self.mask_safe] = self.counts_off.data[self.mask_safe]
+        total_off[other.mask_safe] += other.counts_off.data[other.mask_safe]
+        total_alpha[self.mask_safe] = (self.alpha*self.counts_off)[self.mask_safe]
+        total_alpha[self.mask_safe] += (other.alpha*other.counts_off)[other.mask_safe]
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            acceptance_off = total_alpha / total_off
+            average_alpha = total_alpha.sum()/total_off.sum()
+
+        acceptance = self.ones_like(self.counts_off.data)
+        idx = np.where(total_off == 0)[0]
+        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
+        # OFF counts of each run
+        total_alpha[idx] = 1 / average_alpha
+
+        self.acceptance = acceptance
+        self.acceptance_off = acceptance_off
 
         if self.counts is not None:
-            self.counts.data[~self.mask_safe] *= 0
+            self.counts.data[~self.mask_safe] = 0
             self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
 
         if self.counts_off is not None:
-            self.counts_off.data[~self.mask_safe] *= 0
+            self.counts_off.data[~self.mask_safe] = 0
             self.counts_off.data[other.mask_safe] += other.counts_off.data[other.mask_safe]
 
         self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
@@ -729,17 +747,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
                 self.edisp = irf_stacker.stacked_edisp
-            else:
-                self.edisp = None
-        else:
-            self.aeff = None
-            self.edisp = None
 
         if self.gti is not None:
             self.gti.stack(other.gti)
             self.gti.union()
-        else:
-            self.gti = None
 
         # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
