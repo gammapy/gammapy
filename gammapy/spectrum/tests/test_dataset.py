@@ -143,34 +143,50 @@ class TestSpectrumDataset:
         )
         livetime = self.livetime
         dataset1 = SpectrumDataset(
-            counts = self.src.copy(), livetime=livetime, aeff=aeff, edisp=edisp, background=self.bkg.copy()
+            counts=self.src.copy(),
+            livetime=livetime,
+            aeff=aeff,
+            edisp=edisp,
+            background=self.bkg.copy(),
         )
 
-        livetime2 = 0.5*livetime
-        aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], 2*aeff.data.data)
-        bkg2 = CountsSpectrum(self.src.energy.edges[:-1], self.src.energy.edges[1:], data=2*self.bkg.data)
+        livetime2 = 0.5 * livetime
+        aeff2 = EffectiveAreaTable(
+            self.src.energy.edges[:-1], self.src.energy.edges[1:], 2 * aeff.data.data
+        )
+        bkg2 = CountsSpectrum(
+            self.src.energy.edges[:-1],
+            self.src.energy.edges[1:],
+            data=2 * self.bkg.data,
+        )
         safe_mask2 = np.ones_like(self.src.data, bool)
         safe_mask2[0] = False
         dataset2 = SpectrumDataset(
-            counts=self.src.copy(), livetime=livetime2, aeff=aeff2, edisp=edisp, background=bkg2, mask_safe=safe_mask2
+            counts=self.src.copy(),
+            livetime=livetime2,
+            aeff=aeff2,
+            edisp=edisp,
+            background=bkg2,
+            mask_safe=safe_mask2,
         )
         dataset1.stack(dataset2)
 
-
-        assert_allclose(dataset1.counts.data[1:], self.src.data[1:]*2)
+        assert_allclose(dataset1.counts.data[1:], self.src.data[1:] * 2)
         assert_allclose(dataset1.counts.data[0], self.src.data[0])
-        assert dataset1.livetime == 1.5*self.livetime
-        assert_allclose(dataset1.background.data[1:], 3*self.bkg.data[1:])
+        assert dataset1.livetime == 1.5 * self.livetime
+        assert_allclose(dataset1.background.data[1:], 3 * self.bkg.data[1:])
         assert_allclose(dataset1.background.data[0], self.bkg.data[0])
-        assert_allclose(dataset1.aeff.data.data.to_value('m2'), 4./3*aeff.data.data.to_value('m2'))
+        assert_allclose(
+            dataset1.aeff.data.data.to_value("m2"),
+            4.0 / 3 * aeff.data.data.to_value("m2"),
+        )
         assert_allclose(dataset1.edisp.pdf_matrix[1:], edisp.pdf_matrix[1:])
-        assert_allclose(dataset1.edisp.pdf_matrix[0], 0.5*edisp.pdf_matrix[0])
-
+        assert_allclose(dataset1.edisp.pdf_matrix[0], 0.5 * edisp.pdf_matrix[0])
 
     def test_spectrum_dataset_stack_nondiagonal_no_bkg(self):
         aeff = EffectiveAreaTable.from_parametrization(self.src.energy.edges, "HESS")
         edisp1 = EnergyDispersion.from_gauss(
-            self.src.energy.edges, self.src.energy.edges, 0.1, 0.
+            self.src.energy.edges, self.src.energy.edges, 0.1, 0.0
         )
         livetime = self.livetime
         dataset1 = SpectrumDataset(
@@ -178,21 +194,29 @@ class TestSpectrumDataset:
         )
 
         livetime2 = livetime
-        aeff2 = EffectiveAreaTable(self.src.energy.edges[:-1], self.src.energy.edges[1:], aeff.data.data)
+        aeff2 = EffectiveAreaTable(
+            self.src.energy.edges[:-1], self.src.energy.edges[1:], aeff.data.data
+        )
         edisp2 = EnergyDispersion.from_gauss(
-            self.src.energy.edges, self.src.energy.edges, 0.2, 0.
+            self.src.energy.edges, self.src.energy.edges, 0.2, 0.0
         )
         dataset2 = SpectrumDataset(
-            counts=self.src.copy(), livetime=livetime2, aeff=aeff2, edisp=edisp2, background=None
+            counts=self.src.copy(),
+            livetime=livetime2,
+            aeff=aeff2,
+            edisp=edisp2,
+            background=None,
         )
         dataset1.stack(dataset2)
 
         assert dataset1.counts is None
         assert dataset1.background is None
         assert dataset1.livetime == 2 * self.livetime
-        assert_allclose(dataset1.aeff.data.data.to_value('m2'), aeff.data.data.to_value('m2'))
-        assert_allclose(dataset1.edisp.get_bias(1*u.TeV), 0., atol=1e-3)
-        assert_allclose(dataset1.edisp.get_resolution(1*u.TeV), 0.1581, atol=1e-2)
+        assert_allclose(
+            dataset1.aeff.data.data.to_value("m2"), aeff.data.data.to_value("m2")
+        )
+        assert_allclose(dataset1.edisp.get_bias(1 * u.TeV), 0.0, atol=1e-3)
+        assert_allclose(dataset1.edisp.get_resolution(1 * u.TeV), 0.1581, atol=1e-2)
 
 
 class TestSpectrumOnOff:
@@ -616,7 +640,7 @@ def make_observation_list():
 
 
 @requires_data("gammapy-data")
-class TestSpectrumDatasetOnOffStacker:
+class TestSpectrumDatasetOnOffStack:
     def setup(self):
         self.obs_list = _read_hess_obs()
         # Change threshold to make stuff more interesting
@@ -640,7 +664,13 @@ class TestSpectrumDatasetOnOffStacker:
 
         stacked_counts = self.stacked_dataset.counts.data.sum()
 
+        off1 = obs_1.counts_off.data[obs_1.mask_safe].sum()
+        off2 = obs_2.counts_off.data[obs_2.mask_safe].sum()
+        summed_off = off1 + off2
+        stacked_off = self.stacked_dataset.counts_off.data.sum()
+
         assert summed_counts == stacked_counts
+        assert summed_off == stacked_off
 
     def test_thresholds(self):
         e_min, e_max = self.stacked_dataset.energy_range
@@ -657,14 +687,14 @@ class TestSpectrumDatasetOnOffStacker:
             index=2, amplitude=2e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
         )
         self.stacked_dataset.model = pwl
-        print(self.stacked_dataset.npred().data[self.stacked_dataset.mask_safe].sum())
+
         npred_stacked = self.stacked_dataset.npred().data
+        npred_stacked[~self.stacked_dataset.mask_safe] = 0
         npred_summed = np.zeros_like(npred_stacked)
 
         for obs in self.obs_list:
             obs.model = pwl
             npred_summed[obs.mask_safe] += obs.npred().data[obs.mask_safe]
-            print(obs.npred().data[obs.mask_safe].sum())
 
         assert_allclose(npred_stacked, npred_summed)
 

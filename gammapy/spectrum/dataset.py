@@ -182,7 +182,7 @@ class SpectrumDataset(Dataset):
     @property
     def mask_safe(self):
         if self._mask_safe is None:
-            return np.ones(self.data_shape,bool)
+            return np.ones(self.data_shape, bool)
         else:
             return self._mask_safe
 
@@ -432,29 +432,31 @@ class SpectrumDataset(Dataset):
 
         if self.background is not None:
             self.background.data[~self.mask_safe] = 0
-            self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
+            self.background.data[other.mask_safe] += other.background.data[
+                other.mask_safe
+            ]
 
-        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
-
-        irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
-                                 list_livetime=[self.livetime, other.livetime],
-                                 list_edisp=[self.edisp, other.edisp],
-                                 list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-                                 list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-                                 )
+        irf_stacker = IRFStacker(
+            list_aeff=[self.aeff, other.aeff],
+            list_livetime=[self.livetime, other.livetime],
+            list_edisp=[self.edisp, other.edisp],
+            list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+            list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+        )
 
         if self.aeff is not None:
             irf_stacker.stack_aeff()
-            self.aeff = irf_stacker.stacked_aeff
-
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
                 self.edisp = irf_stacker.stacked_edisp
+            self.aeff = irf_stacker.stacked_aeff
+
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
 
         if self.gti is not None:
             self.gti = self.gti.stack(other.gti).union()
 
-        #TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
+        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
         self.livetime += other.livetime
 
@@ -690,7 +692,11 @@ class SpectrumDatasetOnOff(SpectrumDataset):
        """
 
         def is_valid(dataset):
-            if dataset.acceptance_off is None or dataset.acceptance is None or dataset.counts_off is None:
+            if (
+                dataset.acceptance_off is None
+                or dataset.acceptance is None
+                or dataset.counts_off is None
+            ):
                 return False
             else:
                 return True
@@ -707,12 +713,14 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         total_off[self.mask_safe] += self.counts_off.data[self.mask_safe]
         total_off[other.mask_safe] += other.counts_off.data[other.mask_safe]
-        total_alpha[self.mask_safe] += (self.alpha*self.counts_off)[self.mask_safe]
-        total_alpha[other.mask_safe] += (other.alpha*other.counts_off)[other.mask_safe]
+        total_alpha[self.mask_safe] += (self.alpha * self.counts_off)[self.mask_safe]
+        total_alpha[other.mask_safe] += (other.alpha * other.counts_off)[
+            other.mask_safe
+        ]
 
         with np.errstate(divide="ignore", invalid="ignore"):
             acceptance_off = total_off / total_alpha
-            average_alpha = total_alpha.sum()/total_off.sum()
+            average_alpha = total_alpha.sum() / total_off.sum()
 
         acceptance = np.ones_like(self.counts_off.data, dtype=float)
         idx = np.where(total_off == 0)[0]
@@ -729,23 +737,28 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if self.counts_off is not None:
             self.counts_off.data[~self.mask_safe] = 0
-            self.counts_off.data[other.mask_safe] += other.counts_off.data[other.mask_safe]
+            self.counts_off.data[other.mask_safe] += other.counts_off.data[
+                other.mask_safe
+            ]
 
-        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
-
-        irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
-                                 list_livetime=[self.livetime, other.livetime],
-                                 list_edisp=[self.edisp, other.edisp],
-                                 list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-                                 list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-                                 )
+        # We need to put this first to avoid later modifications of the energy ranges
+        irf_stacker = IRFStacker(
+            list_aeff=[self.aeff, other.aeff],
+            list_livetime=[self.livetime, other.livetime],
+            list_edisp=[self.edisp, other.edisp],
+            list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+            list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+        )
 
         if self.aeff is not None:
-            irf_stacker.stack_aeff()
-            self.aeff = irf_stacker.stacked_aeff
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
                 self.edisp = irf_stacker.stacked_edisp
+            irf_stacker.stack_aeff()
+            self.aeff = irf_stacker.stacked_aeff
+
+        # We need to put this last not to modify the self.energy_range for previous calculations
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
 
         if self.gti is not None:
             self.gti = self.gti.stack(other.gti).union()
