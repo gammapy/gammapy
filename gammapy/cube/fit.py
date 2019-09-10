@@ -167,32 +167,34 @@ class MapDataset(Dataset):
             "Number of free parameters", len(self.parameters.free_parameters)
         )
 
-        if self.model is not None:
-            for idx, model in enumerate(self.model.skymodels):
-                str_ += "\tSource {}: \n".format(idx)
-                str_ += "\t\t{:28}: {}\n".format("Name", model.name)
-                str_ += "\t\t{:28}: {}\n".format(
-                    "Spatial model type", model.spatial_model.__class__.__name__
-                )
-                info = str(model.spatial_model.parameters)
-                lines = info.split("\n")
-                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+        components = []
 
-                str_ += "\n\t\t{:28}: {}\n".format(
-                    "Spectral model type", model.spectral_model.__class__.__name__
-                )
-                info = str(model.spectral_model.parameters)
-                lines = info.split("\n")
-                str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+        if self.model is not None:
+            components += self.model.skymodels
 
         if self.background_model is not None:
-            str_ += "\n\n\tBackground: \n"
-            str_ += "\t\t{:28}: {}\n".format(
-                "Model type", self.background_model.__class__.__name__
-            )
-            info = str(self.background_model.parameters)
+            components += [self.background_model]
+
+        for idx, model in enumerate(components):
+            str_ += "\tComponent {}: \n".format(idx)
+            str_ += "\t\t{:28}: {}\n".format("Name", model.name)
+            str_ += "\t\t{:28}: {}\n".format("Type", model.__class__.__name__)
+
+            if isinstance(model, SkyModel):
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Spatial  model type", model.spatial_model.__class__.__name__
+                )
+                str_ += "\t\t{:28}: {}\n".format(
+                    "Spectral model type", model.spectral_model.__class__.__name__
+                )
+
+            str_ += "\t\tParameters:\n"
+
+            info = str(model.parameters)
             lines = info.split("\n")
             str_ += "\t\t" + "\n\t\t".join(lines[2:-1])
+
+            str_ += "\n\n"
 
         return str_.expandtabs(tabsize=4)
 
