@@ -2,14 +2,12 @@
 """Utilities to compute J-factor maps."""
 import astropy.units as u
 from astropy.units import Quantity
-from ...maps import WcsNDMap
-from ...image.models import SkyPointSource
-from ...cube.models import SkyModel
-from ...cube.fit import MapDataset
-from ...spectrum.models import AbsorbedSpectralModel
-from ...utils.fitting import Fit
-from ...utils.table import table_from_row_data
-from .spectra import DMAnnihilation
+from gammapy.maps import WcsNDMap
+from gammapy.modeling.models import SkyPointSource, SkyModel, AbsorbedSpectralModel
+from gammapy.cube.fit import MapDataset
+from gammapy.modeling import Fit
+from gammapy.utils.table import table_from_row_data
+from gammapy.astro.darkmatter import DMAnnihilation
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
 import numpy as np
@@ -81,7 +79,7 @@ class SigmaVEstimator:
 
     Parameters
     ----------
-    dataset : `~gammapy.cube.fit.MapDataset`
+    dataset : `~gammapy.cube.MapDataset`
         Simulated dark matter annihilation dataset.
     masses : list of `~astropy.units.Quantity`
         List of particle masses where the values of :math:`\sigma\nu` will be calculated.
@@ -107,8 +105,7 @@ class SigmaVEstimator:
         logging.getLogger("gammapy.astro.darkmatter.utils").setLevel("INFO")
         from gammapy.cube.simulate import simulate_dataset
         from gammapy.maps import WcsGeom, MapAxis
-        from gammapy.cube.models import SkyModel
-        from gammapy.image.models import SkyPointSource
+        from gammapy.modeling.models import SkyModel, SkyPointSource
         from gammapy.astro.darkmatter import DMAnnihilation, SigmaVEstimator
         from gammapy.irf import load_cta_irfs
         from astropy.coordinates import SkyCoord
@@ -186,11 +183,12 @@ class SigmaVEstimator:
             Dict with results as `~astropy.table.Table` objects for each channel.
         """
 
-        spatial_model = self.dataset.model.skymodels[0].spatial_model
+        self.dataset.fake()
         counts_map = WcsNDMap(
-            self.dataset.counts.geom, np.random.poisson(self.dataset.npred().data)
+            self.dataset.counts.geom, self.dataset.counts.data
         )
         likelihood_profile_opts["parameter"] = "scale"
+        spatial_model = self.dataset.model.skymodels[0].spatial_model
 
         result = {}
         sigma_unit = ""
@@ -232,7 +230,10 @@ class SigmaVEstimator:
                     fit = Fit(dataset_loop)
                     fit_result = fit.run(optimize_opts, covariance_opts)
                     all_profile = fit.likelihood_profile(**likelihood_profile_opts)
+                    #
+                    #
                     scale_best = fit_result.parameters["scale"].value
+                    #
                     likemin = fit_result.total_stat
                     profile = all_profile
 
@@ -259,6 +260,7 @@ class SigmaVEstimator:
                 except Exception as ex:
                     sigma_v = None
                     scale_best = None
+                    scale_found = None
                     all_profile = None
                     likemin = None
                     log.error(ex)
@@ -270,6 +272,7 @@ class SigmaVEstimator:
                 else:
                     row["sigma_v"] = sigma_v
                 row["scale"] = scale_best
+                row["scale_ul"] = scale_found
                 row["likeprofile"] = all_profile
                 row["likemin"] = likemin
                 table_rows.append(row)
