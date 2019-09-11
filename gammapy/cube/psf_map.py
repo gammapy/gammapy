@@ -132,21 +132,6 @@ class PSFMap:
             data = exposure_map.data[:, np.newaxis, :, :]
             exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
 
-            # # Reproject the exposure if the geometries are inconsistent
-            # psf_geom = psf_map.geom.to_image().to_cube([psf_map.geom.axes[1]])
-            # if exposure_map.geom != psf_geom:
-            #     exposure_coord = exposure_map.geom.get_coord()
-            #     reproj_exposure = Map.from_geom(
-            #         psf_geom, unit=exposure_map.unit
-            #     )
-            #     reproj_exposure.fill_by_coord(
-            #         exposure_coord, exposure_map.get_by_coord(exposure_coord)
-            #     )
-            #     exposure_map = reproj_exposure
-            # # Reshape the exposure map adding the rad axis
-            # exposure_map.geom = exposure_map.geom.to_image().to_cube([psf_map.geom.axes[0].squash(), psf_map.geom.axes[1]])
-            # exposure_map.quantity = exposure_map.quantity[:, np.newaxis, :, :]
-
         self.exposure_map = exposure_map
 
     @classmethod
@@ -314,8 +299,6 @@ class PSFMap:
 
     def stack(self, other):
         """Stack PSFMap with another one.
-
-        The other PSFMap is projected on the current PSFMap geometry.
 
         Parameters
         ----------
