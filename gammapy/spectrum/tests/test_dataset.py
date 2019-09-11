@@ -13,7 +13,6 @@ from gammapy.spectrum import (
     CountsSpectrum,
     SpectrumDataset,
     SpectrumDatasetOnOff,
-    SpectrumDatasetOnOffStacker,
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency

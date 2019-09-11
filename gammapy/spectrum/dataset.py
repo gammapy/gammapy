@@ -13,7 +13,7 @@ from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
 from .core import CountsSpectrum, SpectrumEvaluator
 
-__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetOnOffStacker"]
+__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
 
 class SpectrumDataset(Dataset):
@@ -1103,7 +1103,6 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
         obs_id=counts_table.meta["OBS_ID"],
         is_bkg=False,
     )
-
 
 class SpectrumDatasetOnOffStacker:
     r"""Stack a list of homogeneous datasets.
