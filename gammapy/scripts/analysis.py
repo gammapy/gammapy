@@ -11,13 +11,12 @@ import jsonschema
 import yaml
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Datasets
 from gammapy.modeling.models import SPECTRAL_MODELS
 from gammapy.spectrum import (
     FluxPointsDataset,
     FluxPointsEstimator,
     ReflectedRegionsBackgroundEstimator,
-    SpectrumDatasetOnOffStacker,
     SpectrumExtraction,
 )
 from gammapy.utils.scripts import make_path, read_yaml
@@ -105,11 +104,7 @@ class Analysis:
         if self.settings["reduction"]["data_reducer"] == "1d":
             if self._validate_fp_settings():
                 log.info("Calculating flux points.")
-                obs_stacker = SpectrumDatasetOnOffStacker(
-                    self.extraction.spectrum_observations
-                )
-                obs_stacker.run()
-                stacked = obs_stacker.stacked_obs
+                stacked = Datasets(self.extraction.spectrum_observations).stack_reduce()
                 flux_model = self.model.copy()
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
