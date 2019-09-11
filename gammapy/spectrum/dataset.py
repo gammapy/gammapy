@@ -736,6 +736,22 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         ----------
         other : `~gammapy.spectrum.SpectrumDatasetOnOff`
             the dataset to stack to the current one
+
+         Examples
+        --------
+        >>> from gammapy.spectrum import SpectrumDatasetOnOff
+        >>> obs_ids = [23523, 23526, 23559, 23592]
+        >>> datasets = []
+        >>> for obs in obs_ids:
+        >>>     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits"
+        >>>     ds = SpectrumDatasetOnOff.from_ogip_files(filename.format(obs))
+        >>>     datasets.append(ds)
+        >>> stacked = datasets[0]
+        >>> for ds in datasets[1:]:
+        >>>     stacked.stack(ds)
+        >>> print(stacked.livetime)
+        6313.8116406202325 s
+
         """
         if not isinstance(other, SpectrumDatasetOnOff):
             raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
