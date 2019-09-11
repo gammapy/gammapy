@@ -427,7 +427,7 @@ class SpectrumDataset(Dataset):
             raise TypeError("Incompatible types for SpectrumDataset stacking")
 
         if self.counts is not None:
-            self.counts.data[~self.mask_safe] = 0
+            self.counts.data[~self.ask_safe] = 0
             self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
 
         if self.background is not None:
@@ -677,6 +677,17 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
         )
 
+    def _is_stackable(self):
+        """Check if the Dataset contains enough information to be stacked"""
+        if (
+                self.acceptance_off is None
+                or self.acceptance is None
+                or self.counts_off is None
+        ):
+            return False
+        else:
+            return True
+
     def stack(self, other):
         """Stack this dataset with another one.
 
@@ -685,27 +696,52 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         Stacking is performed in-place.
 
+        The stacking of 2 datasets is implemented as follows.
+        Here, :math:`k`  denotes a bin in reconstructed energy and :math: `j = {1,2}` is the dataset number
+
+        The `mask_safe` of each dataset is defined as:
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        Then the total `counts` and `counts_off` are computed according to:
+
+        .. math::
+            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+
+            \overline{\mathrm{n_{off}}}_k = \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}
+
+        The stacked `safe_mask` is then:
+
+        .. math::
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+
+        In each energy bin :math:`k`, the count excess is computed taking into account the ON `acceptance`,
+        :math:`a_{on}_k` and the OFF one:`acceptance_off`, :math:`a_{off}_k`. They define
+        the :math:`\alpha_k=a_{on}_k/a_{off}_k` factors such that :math:`n_{ex}_k = n_{on}_k - \alpha_k n_{off}_k`.
+        We define the stacked value of :math:`\overline{{a}_{on}}_k = 1` so that:
+
+        .. math::
+        \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
+            \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
+
+        Please refer to the `~gammapy.irf.IRFStacker` for the description
+        of how the IRFs are stacked.
+
+
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDatasetOnOff`
             the dataset to stack to the current one
-       """
-
-        def is_valid(dataset):
-            if (
-                dataset.acceptance_off is None
-                or dataset.acceptance is None
-                or dataset.counts_off is None
-            ):
-                return False
-            else:
-                return True
-
+        """
         if not isinstance(other, SpectrumDatasetOnOff):
             raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
 
         # We assume here that counts_off, acceptance and acceptance_off are well defined.
-        if not is_valid(self) or not is_valid(other):
+        if not self._is_stackable() or not other._is_stackable():
             raise ValueError("Cannot stack incomplete SpectrumDatsetOnOff.")
 
         total_off = np.zeros_like(self.counts_off.data, dtype=float)
@@ -723,10 +759,10 @@ class SpectrumDatasetOnOff(SpectrumDataset):
             average_alpha = total_alpha.sum() / total_off.sum()
 
         acceptance = np.ones_like(self.counts_off.data, dtype=float)
-        idx = np.where(total_off == 0)[0]
+        is_zero = total_off == 0
         # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
         # OFF counts of each run
-        acceptance_off[idx] = 1 / average_alpha
+        acceptance_off[is_zero] = 1 / average_alpha
 
         self.acceptance = acceptance
         self.acceptance_off = acceptance_off
