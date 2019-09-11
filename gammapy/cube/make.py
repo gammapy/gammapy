@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
-from ..irf import EnergyDependentMultiGaussPSF
+from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import Map, WcsGeom, MapAxis
 from .background import make_map_background_irf
 from .counts import fill_map_counts
@@ -16,14 +17,6 @@ from .edisp_map import make_edisp_map
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 
 log = logging.getLogger(__name__)
-
-RAD_MAX = 0.66
-RAD_AXIS_DEFAULT = MapAxis.from_bounds(
-    0, RAD_MAX, nbin=66, node_type="edges", name="theta", unit="deg"
-)
-MIGRA_AXIS_DEFAULT = MapAxis.from_bounds(
-    0.2, 5, nbin=48, node_type="edges", name="migra"
-)
 
 
 class MapMaker:
@@ -239,8 +232,8 @@ class MapMakerObs:
         self.exclusion_mask = exclusion_mask
         self.background_oversampling = background_oversampling
         self.maps = {}
-        self.migra_axis = migra_axis if migra_axis else MIGRA_AXIS_DEFAULT
-        self.rad_axis = rad_axis if rad_axis else RAD_AXIS_DEFAULT
+        self.migra_axis = migra_axis
+        self.rad_axis = rad_axis
 
     def _fov_mask(self, coords):
         pointing = self.observation.pointing_radec
@@ -276,6 +269,8 @@ class MapMakerObs:
         for name in selection:
             getattr(self, "_make_" + name)()
 
+        if "exposure_irf" in self.maps:
+            del self.maps["exposure_irf"]
         return self.maps
 
     def _make_counts(self):
@@ -332,6 +327,11 @@ class MapMakerObs:
 
     def _make_edisp(self):
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        if self.migra_axis is None:
+            axes = {
+                axis.name.lower(): axis for axis in self.observation.edisp.data.axes
+            }
+            self.migra_axis = axes["migra"]
         geom_migra = self.geom_true.to_image().to_cube([self.migra_axis, energy_axis])
         edisp_map = make_edisp_map(
             edisp=self.observation.edisp,
@@ -345,8 +345,13 @@ class MapMakerObs:
     def _make_psf(self):
         psf = self.observation.psf
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            psf = psf.to_psf3d(self.rad_axis.edges)
+            rad = np.linspace(0, 0.66, 67) * u.deg  # Arbitrary binning of 0.01 in rad
+            psf = psf.to_psf3d(rad)
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
+        if self.rad_axis is None:
+            rad = psf.rad_lo.value
+            rad_irf = np.append(rad, psf.rad_hi.value[-1])
+            self.rad_axis = MapAxis.from_edges(rad_irf, name="theta", unit="deg")
         geom_rad = self.geom_true.to_image().to_cube([self.rad_axis, energy_axis])
         psf_map = make_psf_map(
             psf=psf,

@@ -150,7 +150,7 @@ def test_map_maker_obs(observations):
     map_obs = maker_obs.run()
     assert map_obs["counts"].geom == geom_reco
     assert map_obs["background"].geom == geom_reco
-    assert map_obs["exposure_irf"].geom == geom_true
     assert map_obs["exposure"].geom == geom_exp
-    assert map_obs["edisp"].edisp_map.data.shape == (3, 48, 5, 10)
+    assert map_obs["edisp"].edisp_map.data.shape == (3, 300, 5, 10)
+    assert map_obs["edisp"].exposure_map.geom == geom_true
     assert map_obs["psf"].psf_map.data.shape == (3, 66, 5, 10)
