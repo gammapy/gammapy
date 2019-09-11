@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
@@ -123,21 +124,28 @@ class PSFMap:
 
         self.psf_map = psf_map
 
-        if exposure_map is not None:
-            # Reproject the exposure if the geometries are inconsistent
-            psf_geom = psf_map.geom.to_image().to_cube([psf_map.geom.axes[1]])
-            if exposure_map.geom != psf_geom:
-                exposure_coord = exposure_map.geom.get_coord()
-                reproj_exposure = Map.from_geom(
-                    psf_geom, unit=exposure_map.unit
-                )
-                reproj_exposure.fill_by_coord(
-                    exposure_coord, exposure_map.get_by_coord(exposure_coord)
-                )
-                exposure_map = reproj_exposure
-            # Reshape the exposure map adding the rad axis
-            exposure_map.geom = exposure_map.geom.to_image().to_cube([psf_map.geom.axes[0].squash(), psf_map.geom.axes[1]])
-            exposure_map.quantity = exposure_map.quantity[:, np.newaxis, :, :]
+        if exposure_map is not None and exposure_map.geom.ndim == 3:
+            geom_image = exposure_map.geom.to_image()
+            rad_axis = psf_map.geom.get_axis_by_name("theta")
+            energy_axis = exposure_map.geom.get_axis_by_name("energy")
+            geom = geom_image.to_cube([rad_axis.squash(), energy_axis])
+            data = exposure_map.data[:, np.newaxis, :, :]
+            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
+
+            # # Reproject the exposure if the geometries are inconsistent
+            # psf_geom = psf_map.geom.to_image().to_cube([psf_map.geom.axes[1]])
+            # if exposure_map.geom != psf_geom:
+            #     exposure_coord = exposure_map.geom.get_coord()
+            #     reproj_exposure = Map.from_geom(
+            #         psf_geom, unit=exposure_map.unit
+            #     )
+            #     reproj_exposure.fill_by_coord(
+            #         exposure_coord, exposure_map.get_by_coord(exposure_coord)
+            #     )
+            #     exposure_map = reproj_exposure
+            # # Reshape the exposure map adding the rad axis
+            # exposure_map.geom = exposure_map.geom.to_image().to_cube([psf_map.geom.axes[0].squash(), psf_map.geom.axes[1]])
+            # exposure_map.quantity = exposure_map.quantity[:, np.newaxis, :, :]
 
         self.exposure_map = exposure_map
 
@@ -334,3 +342,6 @@ class PSFMap:
         self.exposure_map.data[slice_] += other.exposure_map.data
         self.psf_map.data[slice_] /= self.exposure_map.data[slice_]
 
+    def copy(self):
+        """Copy PSFMap"""
+        return deepcopy(self)
