@@ -182,7 +182,7 @@ class SpectrumDataset(Dataset):
     @property
     def mask_safe(self):
         if self._mask_safe is None:
-            return np.ones(self.data_shape,bool)
+            return np.ones(self.data_shape, bool)
         else:
             return self._mask_safe
 
@@ -417,6 +417,33 @@ class SpectrumDataset(Dataset):
 
         Stacking is performed in-place.
 
+        The stacking of 2 datasets is implemented as follows.
+        Here, :math:`k`  denotes a bin in reconstructed energy and :math: `j = {1,2}` is the dataset number
+
+        The `mask_safe` of each dataset is defined as:
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        Then the total `counts` and model background `bkg` are computed according to:
+
+        .. math::
+            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+
+            \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
+             bkg_{2k} \cdot \epsilon_{2k}
+
+        The stacked `safe_mask` is then:
+
+        .. math::
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+
+        Please refer to the `~gammapy.irf.IRFStacker` for the description
+        of how the IRFs are stacked.
+
+
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDataset`
@@ -432,30 +459,31 @@ class SpectrumDataset(Dataset):
 
         if self.background is not None:
             self.background.data[~self.mask_safe] = 0
-            self.background.data[other.mask_safe] += other.background.data[other.mask_safe]
+            self.background.data[other.mask_safe] += other.background.data[
+                other.mask_safe
+            ]
 
-        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
-
-        irf_stacker = IRFStacker(list_aeff=[self.aeff, other.aeff],
-                                 list_livetime=[self.livetime, other.livetime],
-                                 list_edisp=[self.edisp, other.edisp],
-                                 list_low_threshold=[self.energy_range[0], other.energy_range[0]],
-                                 list_high_threshold=[self.energy_range[1], other.energy_range[1]],
-                                 )
+        irf_stacker = IRFStacker(
+            list_aeff=[self.aeff, other.aeff],
+            list_livetime=[self.livetime, other.livetime],
+            list_edisp=[self.edisp, other.edisp],
+            list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+            list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+        )
 
         if self.aeff is not None:
             irf_stacker.stack_aeff()
-            self.aeff = irf_stacker.stacked_aeff
-
             if self.edisp is not None:
                 irf_stacker.stack_edisp()
                 self.edisp = irf_stacker.stacked_edisp
+            self.aeff = irf_stacker.stacked_aeff
+
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
 
         if self.gti is not None:
-            self.gti.stack(other.gti)
-            self.gti.union()
+            self.gti = self.gti.stack(other.gti).union()
 
-        #TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
+        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
         # of GTIs
         self.livetime += other.livetime
 
@@ -675,6 +703,148 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         raise NotImplementedError(
             "To read from an OGIP fits file use SpectrumDatasetOnOff.from_ogip_files."
         )
+
+    def _is_stackable(self):
+        """Check if the Dataset contains enough information to be stacked"""
+        if (
+                self.acceptance_off is None
+                or self.acceptance is None
+                or self.counts_off is None
+        ):
+            return False
+        else:
+            return True
+
+    def stack(self, other):
+        """Stack this dataset with another one.
+
+        Safe mask is applied to compute the stacked counts vector.
+        Counts outside each dataset safe mask are lost.
+
+        Stacking is performed in-place.
+
+        The stacking of 2 datasets is implemented as follows.
+        Here, :math:`k`  denotes a bin in reconstructed energy and :math: `j = {1,2}` is the dataset number
+
+        The `mask_safe` of each dataset is defined as:
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        Then the total `counts` and `counts_off` are computed according to:
+
+        .. math::
+            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+
+            \overline{\mathrm{n_{off}}}_k = \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}
+
+        The stacked `safe_mask` is then:
+
+        .. math::
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+
+        In each energy bin :math:`k`, the count excess is computed taking into account the ON `acceptance`,
+        :math:`a_{on}_k` and the OFF one:`acceptance_off`, :math:`a_{off}_k`. They define
+        the :math:`\alpha_k=a_{on}_k/a_{off}_k` factors such that :math:`n_{ex}_k = n_{on}_k - \alpha_k n_{off}_k`.
+        We define the stacked value of :math:`\overline{{a}_{on}}_k = 1` so that:
+
+        .. math::
+        \overline{{a}_{off}}_k = \frac{\overline{\mathrm {n_{off}}}}{\alpha_{1k} \cdot
+            \mathrm{n_{off}}_{1k} \cdot \epsilon_{1k} + \alpha_{2k} \cdot \mathrm{n_{off}}_{2k} \cdot \epsilon_{2k}}
+
+        Please refer to the `~gammapy.irf.IRFStacker` for the description
+        of how the IRFs are stacked.
+
+
+        Parameters
+        ----------
+        other : `~gammapy.spectrum.SpectrumDatasetOnOff`
+            the dataset to stack to the current one
+
+         Examples
+        --------
+        >>> from gammapy.spectrum import SpectrumDatasetOnOff
+        >>> obs_ids = [23523, 23526, 23559, 23592]
+        >>> datasets = []
+        >>> for obs in obs_ids:
+        >>>     filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits"
+        >>>     ds = SpectrumDatasetOnOff.from_ogip_files(filename.format(obs))
+        >>>     datasets.append(ds)
+        >>> stacked = datasets[0]
+        >>> for ds in datasets[1:]:
+        >>>     stacked.stack(ds)
+        >>> print(stacked.livetime)
+        6313.8116406202325 s
+
+        """
+        if not isinstance(other, SpectrumDatasetOnOff):
+            raise TypeError("Incompatible types for SpectrumDatasetOnOff stacking")
+
+        # We assume here that counts_off, acceptance and acceptance_off are well defined.
+        if not self._is_stackable() or not other._is_stackable():
+            raise ValueError("Cannot stack incomplete SpectrumDatsetOnOff.")
+
+        total_off = np.zeros_like(self.counts_off.data, dtype=float)
+        total_alpha = np.zeros_like(self.counts_off.data, dtype=float)
+
+        total_off[self.mask_safe] += self.counts_off.data[self.mask_safe]
+        total_off[other.mask_safe] += other.counts_off.data[other.mask_safe]
+        total_alpha[self.mask_safe] += (self.alpha * self.counts_off)[self.mask_safe]
+        total_alpha[other.mask_safe] += (other.alpha * other.counts_off)[
+            other.mask_safe
+        ]
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            acceptance_off = total_off / total_alpha
+            average_alpha = total_alpha.sum() / total_off.sum()
+
+        acceptance = np.ones_like(self.counts_off.data, dtype=float)
+        is_zero = total_off == 0
+        # For the bins where the stacked OFF counts equal 0, the alpha value is performed by weighting on the total
+        # OFF counts of each run
+        acceptance_off[is_zero] = 1 / average_alpha
+
+        self.acceptance = acceptance
+        self.acceptance_off = acceptance_off
+
+        if self.counts is not None:
+            self.counts.data[~self.mask_safe] = 0
+            self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
+
+        if self.counts_off is not None:
+            self.counts_off.data[~self.mask_safe] = 0
+            self.counts_off.data[other.mask_safe] += other.counts_off.data[
+                other.mask_safe
+            ]
+
+        # We need to put this first to avoid later modifications of the energy ranges
+        irf_stacker = IRFStacker(
+            list_aeff=[self.aeff, other.aeff],
+            list_livetime=[self.livetime, other.livetime],
+            list_edisp=[self.edisp, other.edisp],
+            list_low_threshold=[self.energy_range[0], other.energy_range[0]],
+            list_high_threshold=[self.energy_range[1], other.energy_range[1]],
+        )
+
+        if self.aeff is not None:
+            if self.edisp is not None:
+                irf_stacker.stack_edisp()
+                self.edisp = irf_stacker.stacked_edisp
+            irf_stacker.stack_aeff()
+            self.aeff = irf_stacker.stacked_aeff
+
+        # We need to put this last not to modify the self.energy_range for previous calculations
+        self.mask_safe = np.logical_or(self.mask_safe, other.mask_safe)
+
+        if self.gti is not None:
+            self.gti = self.gti.stack(other.gti).union()
+
+        # TODO: for the moment, since dead time is not accounted for, livetime cannot be the sum
+        # of GTIs
+        self.livetime += other.livetime
 
     def peek(self, figsize=(10, 10)):
         """Quick-look summary plots."""
