@@ -427,7 +427,7 @@ class SpectrumDataset(Dataset):
             raise TypeError("Incompatible types for SpectrumDataset stacking")
 
         if self.counts is not None:
-            self.counts.data[~self.ask_safe] = 0
+            self.counts.data[~self.mask_safe] = 0
             self.counts.data[other.mask_safe] += other.counts.data[other.mask_safe]
 
         if self.background is not None:
