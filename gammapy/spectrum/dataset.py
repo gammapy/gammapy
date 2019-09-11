@@ -707,9 +707,9 @@ class SpectrumDatasetOnOff(SpectrumDataset):
     def _is_stackable(self):
         """Check if the Dataset contains enough information to be stacked"""
         if (
-                self.acceptance_off is None
-                or self.acceptance is None
-                or self.counts_off is None
+            self.acceptance_off is None
+            or self.acceptance is None
+            or self.counts_off is None
         ):
             return False
         else:

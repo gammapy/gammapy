@@ -9,11 +9,7 @@ from gammapy.cube.psf_kernel import PSFKernel
 from gammapy.irf import EnergyDispersion
 from gammapy.maps import Map
 from gammapy.modeling import Dataset, Parameters
-from gammapy.modeling.models import (
-    BackgroundModel,
-    SkyModel,
-    SkyModels,
-)
+from gammapy.modeling.models import BackgroundModel, SkyModel, SkyModels
 from gammapy.stats import cash, cash_sum_cython, cstat, cstat_sum_cython
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path
@@ -440,9 +436,9 @@ class MapDataset(Dataset):
             hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
 
         if self.background_model is not None:
-            hdulist += self.background_model.map.to_hdulist(
-                hdu="background"
-            )[exclude_primary]
+            hdulist += self.background_model.map.to_hdulist(hdu="background")[
+                exclude_primary
+            ]
 
         if self.edisp is not None:
             if isinstance(self.edisp, EnergyDispersion):

@@ -8,12 +8,12 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
-from gammapy.cube import PSFKernel, MapEvaluator
-from gammapy.modeling.models import SkyModel, SkyGaussian, PowerLaw
+from gammapy.cube import MapEvaluator, PSFKernel
 from gammapy.irf import EnergyDependentMultiGaussPSF
 from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, WcsGeom, WcsNDMap
 from gammapy.maps.geom import coordsys_to_frame
 from gammapy.maps.utils import fill_poisson
+from gammapy.modeling.models import PowerLaw, SkyGaussian, SkyModel
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 
 pytest.importorskip("reproject")

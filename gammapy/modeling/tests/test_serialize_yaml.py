@@ -113,9 +113,7 @@ def test_datasets_to_io(tmpdir):
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
 
-    assert_allclose(
-        dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1
-    )
+    assert_allclose(dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1)
 
     assert dataset0.background_model.name == "background_irf_gc"
 
@@ -147,6 +145,4 @@ def test_datasets_to_io(tmpdir):
     assert_allclose(dataset0.exposure.data.sum(), 2072125400000.0, atol=0.1)
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
-    assert_allclose(
-        dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1
-    )
+    assert_allclose(dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1)

@@ -190,8 +190,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
 
     assert_allclose(dataset.counts.data, dataset_new.counts.data)
     assert_allclose(
-        dataset.background_model.map.data,
-        dataset_new.background_model.map.data,
+        dataset.background_model.map.data, dataset_new.background_model.map.data
     )
     assert_allclose(dataset.edisp.data.data.value, dataset_new.edisp.data.data.value)
     assert_allclose(dataset.psf.data, dataset_new.psf.data)
@@ -201,10 +200,7 @@ def test_map_dataset_fits_io(tmpdir, sky_model, geom, geom_etrue):
 
     assert dataset.counts.geom == dataset_new.counts.geom
     assert dataset.exposure.geom == dataset_new.exposure.geom
-    assert (
-        dataset.background_model.map.geom
-        == dataset_new.background_model.map.geom
-    )
+    assert dataset.background_model.map.geom == dataset_new.background_model.map.geom
 
     assert_allclose(
         dataset.edisp.e_true.edges.value, dataset_new.edisp.e_true.edges.value

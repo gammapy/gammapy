@@ -8,13 +8,7 @@ from gammapy.maps import Map
 from gammapy.modeling import Model, Parameter, Parameters
 from gammapy.utils.scripts import make_path, read_yaml, write_yaml
 
-__all__ = [
-    "SkyModelBase",
-    "SkyModels",
-    "SkyModel",
-    "SkyDiffuseCube",
-    "BackgroundModel",
-]
+__all__ = ["SkyModelBase", "SkyModels", "SkyModel", "SkyDiffuseCube", "BackgroundModel"]
 
 
 class SkyModelBase(Model):
