@@ -184,3 +184,23 @@ class Datasets:
         )
         write_yaml(datasets_dict, path + "datasets.yaml", sort_keys=False)
         write_yaml(components_dict, path + "models.yaml", sort_keys=False)
+
+    def stack_reduce(self):
+        """Reduce the Datasets to a unique Dataset by stacking them together.
+
+        This works only if all Dataset are of the same type and if a proper
+        in-place stack method exists for the Dataset type.
+
+        Returns
+        -------
+        dataset : ~gammapy.utils.Dataset
+            the stacked dataset
+        """
+        if not self.is_all_same_type:
+            raise ValueError("Stacking impossible: all Datasets contained are not of a unique type.")
+
+        dataset = self.datasets[0].copy()
+        for ds in self.datasets[1:]:
+            dataset.stack(ds)
+        return dataset
+

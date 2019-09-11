@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Datasets
 from gammapy.modeling.models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
 from gammapy.spectrum import (
     CountsSpectrum,
@@ -712,3 +712,14 @@ class TestSpectrumDatasetOnOffStack:
         table_gti_stacked_obs = obs1.gti.table
         assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
         assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
+
+def test_datasets_stacke_reduce():
+    obs_ids = [23523, 23526, 23559, 23592]
+    dataset_list = []
+    for obs in obs_ids:
+        filename = "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{}.fits"
+        ds = SpectrumDatasetOnOff.from_ogip_files(filename.format(obs))
+        dataset_list.append(ds)
+    datasets = Datasets(dataset_list)
+    stacked = datasets.stack_reduce()
+    assert_allclose(stacked.livetime.to_value('s'),6313.8116406202325)
