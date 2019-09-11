@@ -713,7 +713,7 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
         assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
 
-def test_datasets_stacke_reduce():
+def test_datasets_stack_reduce():
     obs_ids = [23523, 23526, 23559, 23592]
     dataset_list = []
     for obs in obs_ids:
