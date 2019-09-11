@@ -417,6 +417,33 @@ class SpectrumDataset(Dataset):
 
         Stacking is performed in-place.
 
+        The stacking of 2 datasets is implemented as follows.
+        Here, :math:`k`  denotes a bin in reconstructed energy and :math: `j = {1,2}` is the dataset number
+
+        The `mask_safe` of each dataset is defined as:
+
+        .. math::
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+
+        Then the total `counts` and model background `bkg` are computed according to:
+
+        .. math::
+            \overline{\mathrm{n_{on}}}_k =  \mathrm{n_{on}}_{1k} \cdot \epsilon_{1k} +
+             \mathrm{n_{on}}_{2k} \cdot \epsilon_{2k}
+
+            \overline{bkg}_k = bkg_{1k} \cdot \epsilon_{1k} +
+             bkg_{2k} \cdot \epsilon_{2k}
+
+        The stacked `safe_mask` is then:
+
+        .. math::
+            \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
+
+        Please refer to the `~gammapy.irf.IRFStacker` for the description
+        of how the IRFs are stacked.
+
+
         Parameters
         ----------
         other : `~gammapy.spectrum.SpectrumDataset`
