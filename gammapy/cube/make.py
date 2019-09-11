@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
@@ -345,8 +344,7 @@ class MapMakerObs:
     def _make_psf(self):
         psf = self.observation.psf
         if isinstance(psf, EnergyDependentMultiGaussPSF):
-            rad = np.linspace(0, 0.66, 67) * u.deg  # Arbitrary binning of 0.01 in rad
-            psf = psf.to_psf3d(rad)
+            psf = psf.to_psf3d()
         energy_axis = self.geom_true.get_axis_by_name("ENERGY")
         if self.rad_axis is None:
             rad = psf.rad_lo.value
