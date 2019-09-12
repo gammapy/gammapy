@@ -257,10 +257,7 @@ class RingBackgroundEstimator:
     r_in : `~astropy.units.Quantity`
         Inner ring radius
     width : `~astropy.units.Quantity`
-        Ring width.
-    use_fft_convolution : bool
-        Use FFT convolution?
-
+        Ring width
 
     Examples
     --------
