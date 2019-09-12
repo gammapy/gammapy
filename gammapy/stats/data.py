@@ -53,14 +53,12 @@ class Stats:
         return self.n_on - self.background
 
     def __str__(self):
-        keys = ["n_on", "n_off", "a_on", "a_off", "alpha", "background", "excess"]
-        values = [
-            self.n_on,
-            self.n_off,
-            self.a_on,
-            self.a_off,
-            self.alpha,
-            self.background,
-            self.excess,
-        ]
-        return "\n".join([f"{k} = {v}" for (k, v) in zip(keys, values)])
+        return (
+            f"n_on = {self.n_on}\n"
+            f"n_off = {self.n_off}\n"
+            f"a_on = {self.a_on}\n"
+            f"a_off = {self.a_off}\n"
+            f"alpha = {self.alpha}\n"
+            f"background = {self.background}\n"
+            f"excess = {self.excess}\n"
+        )
