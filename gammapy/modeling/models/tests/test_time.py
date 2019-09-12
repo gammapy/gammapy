@@ -1,7 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
+from astropy import units as u
 from astropy.table import Table
+from astropy.time import Time
 from gammapy.modeling.models import LightCurveTableModel, PhaseCurveTableModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -58,3 +61,33 @@ def test_light_curve_evaluate_norm_at_time(light_curve):
 def test_light_curve_mean_norm_in_time_interval(light_curve):
     val = light_curve.mean_norm_in_time_interval(46300, 46301)
     assert_allclose(val, 0.021192284384617066)
+
+
+def rate(x, c="1e4 s"):
+    c = u.Quantity(c)
+    return np.exp(-x / c)
+
+
+def test_map_sampling():
+    time = np.arange(0, 10, 0.06) * u.hour
+
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = rate(time)
+    temporal_model = LightCurveTableModel(table)
+
+    t_min = "2010-01-01T00:00:00"
+    t_max = "2010-01-01T08:00:00"
+
+    sampler = temporal_model.sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+    )
+
+    sampler_no_lc = LightCurveTableModel(None).sample_time(
+        n_events=2, t_min=t_min, t_max=t_max, random_state=0, t_delta="10 min"
+    )
+
+    assert len(sampler) == 2
+    assert len(sampler_no_lc) == 2
+    assert_allclose(sampler.value, [12661.65802564, 26.9299098], rtol=1e-5)
+    assert_allclose(sampler_no_lc.value, [15805.82891311, 20597.45375153], rtol=1e-5)
