@@ -160,17 +160,9 @@ class Parameter:
 
     @quantity.setter
     def quantity(self, val):
-        val = u.Quantity(val)
-        try:
-            val.to(self.unit)
-            self.value = val.value
-            self.unit = val.unit
-        except UnitConversionError:
-            raise UnitConversionError(
-                "{0} parameter must have units homogeneous with {1}".format(
-                    self.name, self.unit
-                )
-            )
+        val = u.Quantity(val, unit=self.unit)
+        self.value = val.value
+        self.unit = val.unit
 
     def __repr__(self):
         return (
