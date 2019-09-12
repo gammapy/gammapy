@@ -52,15 +52,17 @@ class HowtoHLI(Include):
             if section == "" or section == keyword:
                 raw += doc[keyword]
         include_lines = raw.splitlines()
-        codeblock = CodeBlock(self.name,
-                              [],
-                              self.options,
-                              include_lines,  # content
-                              self.lineno,
-                              self.content_offset,
-                              self.block_text,
-                              self.state,
-                              self.state_machine)
+        codeblock = CodeBlock(
+            self.name,
+            [],
+            self.options,
+            include_lines,  # content
+            self.lineno,
+            self.content_offset,
+            self.block_text,
+            self.state,
+            self.state_machine,
+        )
         return codeblock.run()
 
 
