@@ -1427,10 +1427,14 @@ class Absorption:
     tag = "Absorption"
 
     def __init__(
-        self, energy_lo, energy_hi, param_lo, param_hi, data, interp_kwargs=None
+        self, energy_lo, energy_hi, param_lo, param_hi, data, filename=None, interp_kwargs=None
     ):
+        self._energy_lo = energy_lo
+        self._energy_hi = energy_hi
+        self._param_lo = param_lo
+        self._param_hi = param_hi
         self.data = data
-
+        self.filename = filename
         # set values log centers
         self.energy = np.sqrt(energy_lo * energy_hi)
         self.param = (param_hi + param_lo) / 2
@@ -1442,6 +1446,58 @@ class Absorption:
             points=(self.param, self.energy), values=data, **interp_kwargs
         )
 
+    def to_dict(self):
+        if self.filename is None:
+            out_dict={
+                "type": self.tag,
+                "energy_lo": {
+                    "data": list(self._energy_lo.value),
+                    "unit": str(self._energy_lo.unit),
+                },
+                "energy_hi": {
+                    "data": list(self._energy_hi.value),
+                    "unit": str(self._energy_lo.unit),
+                },
+                "param_lo": {
+                    "data": list(self._param_lo.value),
+                    "unit": str(self._param_lo.unit),
+                },
+                "param_hi": {
+                    "data": list(self._param_hi.value),
+                    "unit": str(self._param_hi.unit),
+                },
+                "values": {
+                    "data": list(self.data.value),
+                    "unit": str(self.data.unit),
+                },
+            }
+        else:
+            out_dict={
+                    "type": self.tag,
+                    "filename": self.filename,
+                        }
+        return out_dict
+
+    @classmethod
+    def from_dict(cls, data):
+        
+        if "filename" in data:
+            init = cls.read(data["filename"])
+        else:
+            energy_lo = u.Quantity(data["energy_lo"]["data"], data["energy_lo"]["unit"])
+            energy_hi = u.Quantity(data["energy_hi"]["data"], data["energy_hi"]["unit"])
+            param_lo = u.Quantity(data["param_lo"]["data"], data["param_lo"]["unit"])
+            param_hi = u.Quantity(data["param_hi"]["data"], data["param_hi"]["unit"])
+            values = u.Quantity(data["values"]["data"], data["values"]["unit"])
+            init = cls(
+                        energy_lo=energy_lo,
+                        energy_hi=energy_hi,
+                        param_lo=param_lo,
+                        param_hi=param_hi,
+                        data=values,
+                    )
+        return init
+    
     @classmethod
     def read(cls, filename):
         """Build object from an XSPEC model.
@@ -1488,6 +1544,7 @@ class Absorption:
             param_lo=param_lo,
             param_hi=param_hi,
             data=data,
+            filename=filename
         )
 
     @classmethod
@@ -1580,6 +1637,31 @@ class AbsorbedSpectralModel(SpectralModel):
         flux = self.spectral_model.evaluate(energy=energy, **kwargs)
         absorption = self.absorption.evaluate(energy=energy, parameter=parameter)
         return flux * absorption
+
+    def to_dict(self, selection="all"):
+        return {
+            "type": self.tag,
+            "base_model": self.spectral_model.to_dict(selection),
+            "absorption": self.absorption.to_dict(),
+            "absorption_parameter": {"name":self.parameter_name,"value":self.parameter},
+            "parameters": self.parameters.to_dict(selection)["parameters"],
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        from gammapy.modeling.models import SPECTRAL_MODELS
+        base_model = SPECTRAL_MODELS[data["base_model"]["type"]]
+        params={
+                "spectral_model": base_model.from_dict(data["base_model"]),
+                "absorption": Absorption.from_dict(data["absorption"]),
+                "parameter": data["absorption_parameter"]["value"],
+                "parameter_name": data["absorption_parameter"]["name"]
+        }
+        init = cls(**params)
+        init.parameters = Parameters.from_dict(data)
+        for parameter in init.parameters.parameters:
+            setattr(init, parameter.name, parameter)
+        return init
 
 
 class NaimaModel(SpectralModel):

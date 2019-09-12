@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_allclose
+import astropy.units as u
 from astropy.utils.data import get_pkg_data_filename
 from gammapy.modeling import Datasets
 from gammapy.modeling.models import SkyModels, spatial, spectral
@@ -146,3 +147,36 @@ def test_datasets_to_io(tmpdir):
     assert dataset0.psf is not None
     assert dataset0.edisp is not None
     assert_allclose(dataset0.background_model.evaluate().data.sum(), 4094.2, atol=0.1)
+
+@requires_data()
+def test_AbsorbedSpectralModel_io():
+    dominguez = spectral.Absorption.read_builtin('dominguez')
+    test_absorption = spectral.Absorption
+    model = spectral.AbsorbedSpectralModel(spectral_model=spectral.PowerLaw(),
+                                           absorption=dominguez,
+                                           parameter=0.5,
+                                           parameter_name="redshift"
+                                          )
+    model_dict = model.to_dict() 
+    new_model = spectral.AbsorbedSpectralModel.from_dict(model_dict)
+    assert new_model.parameter==0.5
+    assert new_model.parameter_name=="redshift"
+    assert new_model.spectral_model.tag=="PowerLaw"
+    assert_allclose(new_model.absorption.energy,dominguez.energy)
+    assert_allclose(new_model.absorption.param,dominguez.param)
+    assert len(new_model.parameters.parameters) == 4
+    
+    test_absorption = spectral.Absorption(u.Quantity(range(3),"keV"),
+                                          u.Quantity(range(3),"keV"),
+                                          u.Quantity(range(2),""),
+                                          u.Quantity(range(2),""),
+                                          u.Quantity(np.ones((2,3)),""))
+    model = spectral.AbsorbedSpectralModel(spectral_model=spectral.PowerLaw(),
+                                           absorption=test_absorption,
+                                           parameter=0.5,
+                                           parameter_name="redshift"
+                                          )
+    model_dict = model.to_dict() 
+    new_model = spectral.AbsorbedSpectralModel.from_dict(model_dict)
+    assert_allclose(new_model.absorption.energy,test_absorption.energy)
+    assert_allclose(new_model.absorption.param,test_absorption.param)
