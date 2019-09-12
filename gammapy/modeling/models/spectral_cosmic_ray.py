@@ -63,4 +63,4 @@ def create_cosmic_ray_spectral_model(particle="proton"):
             norm=3.19e-3 * u.Unit("1 / (m2 s sr)"), mean=0.107 * u.TeV, sigma=0.776
         )
     else:
-        raise ValueError("Invalid particle: {!r}".format(particle))
+        raise ValueError(f"Invalid particle: {particle!r}")

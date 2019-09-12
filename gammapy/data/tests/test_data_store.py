@@ -118,9 +118,7 @@ class TestDataStoreChecker:
 class TestDataStoreMaker:
     def setup(self):
         paths = [
-            "$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_{:06d}.fits".format(
-                obs_id
-            )
+            f"$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_{obs_id:06d}.fits"
             for obs_id in [110380, 111140, 111630, 111159]
         ]
         self.data_store = DataStore.from_events_files(paths)

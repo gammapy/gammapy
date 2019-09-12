@@ -96,14 +96,15 @@ class GTI:
         return cls(table=table)
 
     def __str__(self):
-        ss = "GTI info:\n"
-        ss += "- Number of GTIs: {}\n".format(len(self.table))
-        ss += "- Duration: {}\n".format(self.time_sum)
-        ss += "- Start: {} MET\n".format(self.time_start[0])
-        ss += "- Start: {}\n".format(self.time_start[0].fits)
-        ss += "- Stop: {} MET\n".format(self.time_stop[-1])
-        ss += "- Stop: {}\n".format(self.time_stop[-1].fits)
-        return ss
+        return (
+            "GTI info:\n"
+            f"- Number of GTIs: {len(self.table)}\n"
+            f"- Duration: {self.time_sum}\n"
+            f"- Start: {self.time_start[0]} MET\n"
+            f"- Start: {self.time_start[0].fits}\n"
+            f"- Stop: {self.time_stop[-1]} MET\n"
+            f"- Stop: {self.time_stop[-1].fits}\n"
+        )
 
     @property
     def time_delta(self):

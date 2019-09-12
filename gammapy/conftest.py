@@ -43,12 +43,12 @@ def pytest_configure(config):
     print("Gammapy test data availability:")
 
     has_it = "yes" if has_data("gammapy-data") else "no"
-    print("gammapy-data ... {}".format(has_it))
+    print(f"gammapy-data ... {has_it}")
 
     print("Gammapy environment variables:")
 
     var = os.environ.get("GAMMAPY_DATA", "not set")
-    print("GAMMAPY_DATA = {}".format(var))
+    print(f"GAMMAPY_DATA = {var}")
 
     try:
         # Switch to non-interactive plotting backend to avoid GUI windows

@@ -52,7 +52,7 @@ class SourceCatalogObjectHGPSComponent:
         self.data = data
 
     def __repr__(self):
-        return "{}({!r})".format(self.__class__.__name__, self.name)
+        return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self):
         """Pretty-print source data"""
@@ -100,7 +100,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     """
 
     def __repr__(self):
-        return "{}({!r})".format(self.__class__.__name__, self.name)
+        return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self):
         return self.info()
@@ -156,9 +156,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def _info_id(self):
         ss = "\n*** Source identification info ***\n\n"
-        ss += "\n".join(
-            "{}: {}".format(k, v) for k, v in self.identification_info.items()
-        )
+        ss += "\n".join(f"{k}: {v}" for k, v in self.identification_info.items())
         return ss + "\n"
 
     def _info_map(self):
@@ -257,12 +255,12 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             "Flux correction (RSpec -> Total)",
             100 * d["Flux_Correction_RSpec_To_Total"],
         )
-        ss += "{:<35s} : {:5.1f} %\n".format(label, val)
+        ss += f"{label:<35s} : {val:5.1f} %\n"
         label, val = (
             "Flux correction (Total -> RSpec)",
             100 * (1 / d["Flux_Correction_RSpec_To_Total"]),
         )
-        ss += "{:<35s} : {:5.1f} %\n".format(label, val)
+        ss += f"{label:<35s} : {val:5.1f} %\n"
 
         return ss
 
@@ -453,7 +451,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         elif which in {"pl", "ecpl"}:
             spec_type = which
         else:
-            raise ValueError("Invalid selection: which = {!r}".format(which))
+            raise ValueError(f"Invalid selection: which = {which!r}")
 
         pars, errs = {}, {}
 
@@ -474,7 +472,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             errs["lambda_"] = data["Lambda_Spec_ECPL_Err"]
             model = ExponentialCutoffPowerLaw(**pars)
         else:
-            raise ValueError("Invalid spectral model: {}".format(spec_type))
+            raise ValueError(f"Invalid spectral model: {spec_type}")
 
         model.parameters.set_parameter_errors(errs)
         return model
@@ -526,7 +524,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             width = r_out - radius
             model = SkyShell(lon_0=glon, lat_0=glat, width=width, radius=radius)
         else:
-            raise ValueError("Not a valid spatial model: {}".format(spatial_type))
+            raise ValueError(f"Not a valid spatial model: {spatial_type}")
 
         return model
 

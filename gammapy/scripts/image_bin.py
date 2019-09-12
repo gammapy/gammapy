@@ -20,14 +20,14 @@ def cli_image_bin(event_file, reference_file, out_file, overwrite):
     """
     log.info("Executing cli_image_bin")
 
-    log.info("Reading {}".format(event_file))
+    log.info(f"Reading {event_file}")
     events = EventList.read(event_file)
 
-    log.info("Reading {}".format(reference_file))
+    log.info(f"Reading {reference_file}")
     m_ref = Map.read(reference_file)
 
     counts_map = Map.from_geom(m_ref.geom)
     fill_map_counts(counts_map, events)
 
-    log.info("Writing {}".format(out_file))
+    log.info(f"Writing {out_file}")
     counts_map.write(out_file, overwrite=overwrite)

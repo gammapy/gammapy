@@ -148,16 +148,16 @@ class PointingInfo:
 
     def __str__(self):
         ss = "Pointing info:\n\n"
-        ss += "Location:     {}\n".format(self.location.geodetic)
+        ss += f"Location:     {self.location.geodetic}\n"
         m = self.table.meta
         ss += "MJDREFI, MJDREFF, TIMESYS = {}\n".format(
             (m["MJDREFI"], m["MJDREFF"], m["TIMESYS"])
         )
-        ss += "Time ref:     {}\n".format(self.time_ref.fits)
-        ss += "Time ref:     {} MJD (TT)\n".format(self.time_ref.mjd)
+        ss += f"Time ref:     {self.time_ref.fits}\n"
+        ss += f"Time ref:     {self.time_ref.mjd} MJD (TT)\n"
         sec = self.duration.to("second").value
         hour = self.duration.to("hour").value
-        ss += "Duration:     {} sec = {} hours\n".format(sec, hour)
+        ss += f"Duration:     {sec} sec = {hour} hours\n"
         ss += "Table length: {}\n".format(len(self.table))
 
         ss += "\nSTART:\n" + self._str_for_index(0) + "\n"

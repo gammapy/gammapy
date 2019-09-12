@@ -313,7 +313,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
             errs["lambda_"] = data["spec_ecpl_e_cut_err"] / data["spec_ecpl_e_cut"] ** 2
             pars["reference"] = data["spec_ecpl_e_ref"]
         else:
-            raise ValueError("Invalid spec_type: {}".format(spec_type))
+            raise ValueError(f"Invalid spec_type: {spec_type}")
 
         model = model_class(**pars)
         model.parameters.set_parameter_errors(errs)
@@ -353,11 +353,9 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 width=0.2 * d["morph_sigma"],
             )
         elif morph_type == "none":
-            raise NoDataAvailableError(
-                "No spatial model available: {}".format(self.name)
-            )
+            raise NoDataAvailableError(f"No spatial model available: {self.name}")
         else:
-            raise NotImplementedError("Unknown spatial model: {!r}".format(morph_type))
+            raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
 
     @property
     def sky_model(self):
@@ -386,7 +384,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         valid = np.isfinite(d["sed_e_ref"].value)
 
         if valid.sum() == 0:
-            raise NoDataAvailableError("No flux points available: {}".format(self.name))
+            raise NoDataAvailableError(f"No flux points available: {self.name}")
 
         table["e_ref"] = d["sed_e_ref"]
         table["e_min"] = d["sed_e_min"]
@@ -479,7 +477,7 @@ class SourceCatalogGammaCat(SourceCatalog):
                 source_list.append(source.sky_model)
             except NoDataAvailableError:
                 log.warning(
-                    "Skipping source {} (missing data in gamma-cat)".format(source.name)
+                    f"Skipping source {source.name} (missing data in gamma-cat)"
                 )
                 continue
 

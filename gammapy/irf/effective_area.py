@@ -115,8 +115,8 @@ class EffectiveAreaTable:
             ener_val = u.Quantity(show_energy).to_value(self.energy.unit)
             ax.vlines(ener_val, 0, 1.1 * self.max_area.value, linestyles="dashed")
         ax.set_xscale("log")
-        ax.set_xlabel("Energy [{}]".format(self.energy.unit))
-        ax.set_ylabel("Effective Area [{}]".format(self.data.data.unit))
+        ax.set_xlabel(f"Energy [{self.energy.unit}]")
+        ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
 
         return ax
 
@@ -150,7 +150,7 @@ class EffectiveAreaTable:
         }
 
         if instrument not in pars.keys():
-            ss = "Unknown instrument: {}\n".format(instrument)
+            ss = f"Unknown instrument: {instrument}\n"
             ss += "Valid instruments: HESS, HESS2, CTA"
             raise ValueError(ss)
 
@@ -189,9 +189,10 @@ class EffectiveAreaTable:
             try:
                 aeff = cls.from_hdulist(hdulist, hdu=hdu)
             except KeyError:
-                msg = 'File {} contains no HDU "{}"'.format(filename, hdu)
-                msg += "\n Available {}".format([_.name for _ in hdulist])
-                raise ValueError(msg)
+                raise ValueError(
+                    f"File {filename} contains no HDU {hdu!r}\n"
+                    f"Available: {[_.name for _ in hdulist]}"
+                )
 
         return aeff
 
@@ -384,7 +385,7 @@ class EffectiveAreaTable2D:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.data)
+        ss += f"\n{self.data}"
         return ss
 
     @property
@@ -474,12 +475,12 @@ class EffectiveAreaTable2D:
 
         for off in offset:
             area = self.data.evaluate(offset=off, energy=energy)
-            label = "offset = {:.1f}".format(off)
+            label = f"offset = {off:.1f}"
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale("log")
-        ax.set_xlabel("Energy [{}]".format(self.data.axis("energy").unit))
-        ax.set_ylabel("Effective Area [{}]".format(self.data.data.unit))
+        ax.set_xlabel(f"Energy [{self.data.axis('energy').unit}]")
+        ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc="upper left")
 
@@ -518,11 +519,11 @@ class EffectiveAreaTable2D:
             area /= np.nanmax(area)
             if np.isnan(area).all():
                 continue
-            label = "energy = {:.1f}".format(ee)
+            label = f"energy = {ee:.1f}"
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel("Offset ({})".format(self.data.axis("offset").unit))
+        ax.set_xlabel(f"Offset ({self.data.axis('offset').unit})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
 
@@ -548,14 +549,14 @@ class EffectiveAreaTable2D:
         caxes = ax.pcolormesh(energy.value, offset.value, aeff.value.T, **kwargs)
 
         ax.set_xscale("log")
-        ax.set_ylabel("Offset ({})".format(offset.unit))
-        ax.set_xlabel("Energy ({})".format(energy.unit))
+        ax.set_ylabel(f"Offset ({offset.unit})")
+        ax.set_xlabel(f"Energy ({energy.unit})")
 
         xmin, xmax = energy.value.min(), energy.value.max()
         ax.set_xlim(xmin, xmax)
 
         if add_cbar:
-            label = "Effective Area ({unit})".format(unit=aeff.unit)
+            label = f"Effective Area ({aeff.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax

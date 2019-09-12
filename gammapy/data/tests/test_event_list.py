@@ -45,12 +45,12 @@ class TestEventListHESS:
         assert self.events.galactic[0].to_string(precision=2) == "185.96 -7.69"
         assert self.events.altaz[0].to_string() == "46.5793 30.8799"
         assert_allclose(self.events.offset[0].value, 1.904497742652893, rtol=1e-5)
-        assert "{:1.5f}".format(self.events.energy[0]) == "11.64355 TeV"
+        assert f"{self.events.energy[0]:1.5f}" == "11.64355 TeV"
 
         lon, lat, height = self.events.observatory_earth_location.to_geodetic()
-        assert "{:1.5f}".format(lon) == "16.50022 deg"
-        assert "{:1.5f}".format(lat) == "-23.27178 deg"
-        assert "{:1.5f}".format(height) == "1835.00000 m"
+        assert f"{lon:1.5f}" == "16.50022 deg"
+        assert f"{lat:1.5f}" == "-23.27178 deg"
+        assert f"{height:1.5f}" == "1835.00000 m"
 
     def test_altaz(self):
         altaz = self.events.altaz

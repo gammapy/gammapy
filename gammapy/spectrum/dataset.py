@@ -362,8 +362,8 @@ class SpectrumDataset(Dataset):
         ymax = 1.2 * np.nanmax(residuals.data)
         ax.set_ylim(-ymax, ymax)
 
-        ax.set_xlabel("Energy [{}]".format(self._e_unit))
-        ax.set_ylabel("Residuals ({})".format(label))
+        ax.set_xlabel(f"Energy [{self._e_unit}]")
+        ax.set_ylabel(f"Residuals ({label})")
         return ax
 
     @classmethod
@@ -878,7 +878,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
 
         if self.counts_off is not None:
             stats = ObservationStats(**self._info_dict(in_safe_energy_range=True))
-            ax3.text(0, 0.2, "{}".format(stats), fontsize=12)
+            ax3.text(0, 0.2, f"{stats}", fontsize=12)
 
         ax4.set_title("Energy Dispersion")
         if self.edisp is not None:
@@ -910,7 +910,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         if isinstance(self.obs_id, list):
             phafile = "pha_stacked.fits"
         else:
-            phafile = "pha_obs{}.fits".format(self.obs_id)
+            phafile = f"pha_obs{self.obs_id}.fits"
 
         bkgfile = phafile.replace("pha", "bkg")
         arffile = phafile.replace("pha", "arf")
@@ -1167,7 +1167,7 @@ class SpectrumDatasetOnOffStacker:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.obs_list)
+        ss += f"\n{self.obs_list}"
         return ss
 
     def run(self):

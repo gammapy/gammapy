@@ -70,8 +70,8 @@ class Dataset(abc.ABC):
                 residuals = (data - model) / np.sqrt(model)
             else:
                 raise AttributeError(
-                    "Invalid method: {}. Choose between 'diff',"
-                    " 'diff/model' and 'diff/sqrt(model)'".format(method)
+                    f"Invalid method: {method!r}. Choose between 'diff',"
+                    " 'diff/model' and 'diff/sqrt(model)'"
                 )
         return residuals
 
@@ -135,7 +135,7 @@ class Datasets:
         counter = Counter(self.types)
 
         for key, value in counter.items():
-            str_ += "\t{key}: {value} \n".format(key=key, value=value)
+            str_ += f"\t{key}: {value} \n"
 
         return str_
 

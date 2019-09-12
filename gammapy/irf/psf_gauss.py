@@ -230,7 +230,7 @@ class EnergyDependentMultiGaussPSF:
             pars[name] = interp_norm((theta, energy))
 
         for idx, interp_sigma in enumerate(self._interp_sigmas):
-            pars["sigma_{}".format(idx + 1)] = interp_sigma((theta, energy))
+            pars[f"sigma_{idx + 1}"] = interp_sigma((theta, energy))
 
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
@@ -252,10 +252,10 @@ class EnergyDependentMultiGaussPSF:
                     radius[jdx, idx] = psf.containment_radius(fraction)
                 except ValueError:
                     log.debug(
-                        "Computing containment failed for E = {:.2f}"
-                        " and Theta={:.2f}".format(energy, theta)
+                        f"Computing containment failed for energy = {energy:.2f}"
+                        f" and theta={theta:.2f}"
                     )
-                    log.debug("Sigmas: {} Norms: {}".format(psf.sigmas, psf.norms))
+                    log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
 
         return Angle(radius, "deg")
@@ -295,8 +295,8 @@ class EnergyDependentMultiGaussPSF:
 
         # Axes labels and ticks, colobar
         ax.semilogx()
-        ax.set_ylabel("Offset ({unit})".format(unit=offset.unit))
-        ax.set_xlabel("Energy ({unit})".format(unit=energy.unit))
+        ax.set_ylabel(f"Offset ({offset.unit})")
+        ax.set_xlabel(f"Energy ({energy.unit})")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())
 
@@ -304,9 +304,7 @@ class EnergyDependentMultiGaussPSF:
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = "Containment radius R{:.0f} ({})".format(
-                100 * fraction, containment.unit
-            )
+            label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -317,7 +315,7 @@ class EnergyDependentMultiGaussPSF:
         omin = self.offset.value.min()
         omax = self.offset.value.max()
         ax.hlines(y=esafe.value, xmin=omin, xmax=omax)
-        label = "Safe energy threshold: {:3.2f}".format(esafe)
+        label = f"Safe energy threshold: {esafe:3.2f}"
         ax.text(x=0.1, y=0.9 * esafe.value, s=label, va="top")
 
     def plot_containment_vs_energy(
@@ -334,7 +332,7 @@ class EnergyDependentMultiGaussPSF:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction).squeeze()
-                label = "{} deg, {:.1f}%".format(theta.deg, 100 * fraction)
+                label = f"{theta.deg} deg, {100 * fraction:.1f}%"
                 ax.plot(energy.value, radius.value, label=label)
 
         ax.semilogx()
@@ -386,12 +384,11 @@ class EnergyDependentMultiGaussPSF:
         """
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
-        # Summarise data members
         ss += array_stats_str(self.theta.to("deg"), "Theta")
         ss += array_stats_str(self.energy_hi, "Energy hi")
         ss += array_stats_str(self.energy_lo, "Energy lo")
-        ss += "Safe energy threshold lo: {:6.3f}\n".format(self.energy_thresh_lo)
-        ss += "Safe energy threshold hi: {:6.3f}\n".format(self.energy_thresh_hi)
+        ss += f"Safe energy threshold lo: {self.energy_thresh_lo:6.3f}\n"
+        ss += f"Safe energy threshold hi: {self.energy_thresh_hi:6.3f}\n"
 
         for fraction in fractions:
             containment = self.containment_radius(energies, thetas, fraction)
@@ -542,8 +539,8 @@ class HESSMultiGaussPSF:
         theta2 = np.asarray(theta2, "f")
         total = np.zeros_like(theta2)
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars["A_{}".format(ii)]
-            sigma = self.pars["sigma_{}".format(ii)]
+            A = self.pars[f"A_{ii}"]
+            sigma = self.pars[f"sigma_{ii}"]
             total += A * np.exp(-theta2 / (2 * sigma ** 2))
         return self.pars["scale"] * total
 
@@ -556,8 +553,8 @@ class HESSMultiGaussPSF:
         """
         sigmas, norms = [], []
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars["A_{}".format(ii)]
-            sigma = self.pars["sigma_{}".format(ii)]
+            A = self.pars[f"A_{ii}"]
+            sigma = self.pars[f"sigma_{ii}"]
             norm = self.pars["scale"] * 2 * A * sigma ** 2
             sigmas.append(sigma)
             norms.append(norm)
@@ -599,7 +596,7 @@ def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs)
     psf = None
     for ii in range(1, 4):
         # Convert sigma and amplitude
-        pars = psf_parameters["psf{}".format(ii)]
+        pars = psf_parameters[f"psf{ii}"]
         sigma = gaussian_fwhm_to_sigma * pars["fwhm"] * BINSZ / NEW_BINSZ
         ampl = 2 * np.pi * sigma ** 2 * pars["ampl"]
         if psf is None:

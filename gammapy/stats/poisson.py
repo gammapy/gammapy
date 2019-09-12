@@ -220,7 +220,7 @@ def significance(n_on, mu_bkg, method="lima", n_on_min=1):
     elif method == "direct":
         func = _significance_direct
     else:
-        raise ValueError("Invalid method: {}".format(method))
+        raise ValueError(f"Invalid method: {method}")
 
     # For low `n_on` values, don't try to compute a significance and return `NaN`.
     n_on = np.atleast_1d(n_on)
@@ -307,7 +307,7 @@ def significance_on_off(n_on, n_off, alpha, method="lima"):
         elif method == "direct":
             return _significance_direct_on_off(n_on, n_off, alpha)
         else:
-            raise ValueError("Invalid method: {}".format(method))
+            raise ValueError(f"Invalid method: {method}")
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):
@@ -395,7 +395,7 @@ def excess_ul_helene(excess, excess_error, significance):
     conf_level1 = significance_to_probability_normal(significance)
 
     if excess_error <= 0:
-        raise ValueError("Non-positive excess_error: {}".format(excess_error))
+        raise ValueError(f"Non-positive excess_error: {excess_error}")
 
     if excess >= 0.0:
         zeta = excess / excess_error
@@ -475,7 +475,7 @@ def excess_matching_significance(mu_bkg, significance, method="lima"):
     elif method == "lima":
         return _excess_matching_significance_lima(mu_bkg, significance)
     else:
-        raise ValueError("Invalid method: {}".format(method))
+        raise ValueError(f"Invalid method: {method}")
 
 
 def excess_matching_significance_on_off(n_off, alpha, significance, method="lima"):
@@ -527,7 +527,7 @@ def excess_matching_significance_on_off(n_off, alpha, significance, method="lima
     elif method == "lima":
         return _excess_matching_significance_on_off_lima(n_off, alpha, significance)
     else:
-        raise ValueError("Invalid method: {}".format(method))
+        raise ValueError(f"Invalid method: {method}")
 
 
 def _excess_matching_significance_simple(mu_bkg, significance):

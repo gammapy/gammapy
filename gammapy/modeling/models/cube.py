@@ -53,14 +53,13 @@ class SkyModels:
     __slots__ = ["skymodels"]
 
     def __init__(self, skymodels):
-
         existing_names = []
 
         for model in skymodels:
             if model.name in existing_names:
                 raise ValueError(
-                    "SkyModel '{}' already exists, please choose"
-                    " another name.".format(model.name)
+                    f"SkyModel already exists: {model.name}\n"
+                    f"Please choose another name."
                 )
             existing_names.append(model.name)
 
@@ -139,10 +138,7 @@ class SkyModels:
         str_ = self.__class__.__name__ + "\n\n"
 
         for idx, skymodel in enumerate(self.skymodels):
-            str_ += "Component {idx}: {skymodel}\n\n\t".format(
-                idx=idx, skymodel=skymodel
-            )
-            str_ += "\n\n"
+            str_ += f"Component {idx}: {skymodel}\n\n\t\n\n"
 
         if self.parameters.covariance is not None:
             str_ += "\n\nCovariance: \n\n\t"
@@ -203,20 +199,16 @@ class SkyModel(SkyModelBase):
 
         if not isinstance(spatial_model, SkySpatialModel):
             raise ValueError(
-                "Spatial model must be instance / subclass "
-                " of `SkySpatialModel` and not {}.".format(
-                    spatial_model.__class__.__name__
-                )
+                f"Spatial model must be instance / subclass "
+                f" of `SkySpatialModel` and not {spatial_model.__class__.__name__}."
             )
 
         self._spatial_model = spatial_model
 
         if not isinstance(spectral_model, SpectralModel):
             raise ValueError(
-                "Spectral model model must be instance / subclass "
-                "of `SpectralModel` and not {}.".format(
-                    spatial_model.__class__.__name__
-                )
+                f"Spectral model model must be instance / subclass "
+                f"of `SpectralModel` and not {spatial_model.__class__.__name__}."
             )
 
         self._spectral_model = spectral_model
@@ -260,9 +252,10 @@ class SkyModel(SkyModelBase):
         return self.spatial_model.frame
 
     def __repr__(self):
-        fmt = "{}(spatial_model={!r}, spectral_model={!r})"
-        return fmt.format(
-            self.__class__.__name__, self.spatial_model, self.spectral_model
+        return (
+            f"{self.__class__.__name__}("
+            f"spatial_model={self.spatial_model!r}, "
+            f"spectral_model={self.spectral_model!r})"
         )
 
     def evaluate(self, lon, lat, energy):

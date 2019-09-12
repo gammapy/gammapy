@@ -239,7 +239,7 @@ def compute_energy_thresholds(
     elif method_lo == "none":
         thres_lo = aeff.energy.edges[0]
     else:
-        raise ValueError("Invalid method_lo: {}".format(method_lo))
+        raise ValueError(f"Invalid method_lo: {method_lo}")
 
     # High threshold
     if method_hi == "area_max":
@@ -260,6 +260,6 @@ def compute_energy_thresholds(
     elif method_hi == "none":
         thres_hi = aeff.energy.edges[-1]
     else:
-        raise ValueError("Invalid method_hi: {}".format(method_hi))
+        raise ValueError(f"Invalid method_hi: {method_hi}")
 
     return thres_lo, thres_hi

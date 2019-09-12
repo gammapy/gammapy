@@ -79,7 +79,7 @@ def make_catalog_random_positions_cube(
         y = random_state.uniform(-distance_max, distance_max, size)
         z = random_state.uniform(-distance_max, distance_max, size)
     else:
-        raise ValueError("Invalid dimension: {}".format(dimension))
+        raise ValueError(f"Invalid dimension: {dimension}")
 
     table = Table()
     table["x"] = Column(x, unit="pc", description="Cartesian coordinate")

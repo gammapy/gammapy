@@ -28,7 +28,7 @@ def setup_sphinx_params(args):
     setupfilename = "setup.cfg"
     if not args.nbs:
         flagnotebooks = "False"
-    build_notebooks_line = "build_notebooks = {}\n".format(flagnotebooks)
+    build_notebooks_line = f"build_notebooks = {flagnotebooks}\n"
 
     file_str = ""
     with open(setupfilename) as f:

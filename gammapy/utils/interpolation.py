@@ -42,7 +42,7 @@ class ScaledRegularGridInterpolator:
         values_scale="lin",
         extrapolate=True,
         axis=None,
-        **kwargs
+        **kwargs,
     ):
 
         if points_scale is None:
@@ -113,7 +113,7 @@ def interpolation_scale(scale="lin"):
     elif scale == "sqrt":
         return SqrtScale()
     else:
-        raise ValueError("Not a valid value scaling mode: '{}'.".format(scale))
+        raise ValueError(f"Not a valid value scaling mode: '{scale}'.")
 
 
 class InterpolationScale:

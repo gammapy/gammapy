@@ -65,10 +65,10 @@ def cli_info(system, version, dependencies, envvar):
 
 def print_info(info, title):
     """Print Gammapy info."""
-    info_all = "\n{}:\n\n".format(title)
+    info_all = f"\n{title}:\n\n"
 
     for key, value in info.items():
-        info_all += "\t{:22s} : {:<10s} \n".format(key, value)
+        info_all += f"\t{key:22s} : {value:<10s} \n"
 
     print(info_all)
 

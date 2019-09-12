@@ -39,13 +39,13 @@ class HDULocation:
         if not file:
             file = sys.stdout
 
-        print("OBS_ID = {}".format(self.obs_id), file=file)
-        print("HDU_TYPE = {}".format(self.hdu_type), file=file)
-        print("HDU_CLASS = {}".format(self.hdu_class), file=file)
-        print("BASE_DIR = {}".format(self.base_dir), file=file)
-        print("FILE_DIR = {}".format(self.file_dir), file=file)
-        print("FILE_NAME = {}".format(self.file_name), file=file)
-        print("HDU_NAME = {}".format(self.hdu_name), file=file)
+        print(f"OBS_ID = {self.obs_id}", file=file)
+        print(f"HDU_TYPE = {self.hdu_type}", file=file)
+        print(f"HDU_CLASS = {self.hdu_class}", file=file)
+        print(f"BASE_DIR = {self.base_dir}", file=file)
+        print(f"FILE_DIR = {self.file_dir}", file=file)
+        print(f"FILE_NAME = {self.file_name}", file=file)
+        print(f"HDU_NAME = {self.hdu_name}", file=file)
 
     def path(self, abs_path=True):
         """Full filename path.
@@ -111,7 +111,7 @@ class HDULocation:
 
             return Background3D.read(filename, hdu=hdu)
         else:
-            raise ValueError("Invalid hdu_class: {}".format(hdu_class))
+            raise ValueError(f"Invalid hdu_class: {hdu_class}")
 
 
 class HDUIndexTable(Table):
@@ -181,16 +181,14 @@ class HDUIndexTable(Table):
             idx = idx[0]
         elif len(idx) == 0:
             raise IndexError(
-                "No HDU found matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}"
-                "".format(obs_id, hdu_type, hdu_class)
+                f"No HDU found matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type}, HDU_CLASS = {hdu_class}"
             )
         else:
             idx = idx[0]
             log.warning(
-                "Found multiple HDU matching: OBS_ID = {}, HDU_TYPE = {}, HDU_CLASS = {}."
-                "".format(obs_id, hdu_type, hdu_class)
-                + " Returning the first entry, which has HDU_TYPE = {} and HDU_CLASS = {}"
-                "".format(self[idx]["HDU_TYPE"], self[idx]["HDU_CLASS"])
+                f"Found multiple HDU matching: OBS_ID = {obs_id}, HDU_TYPE = {hdu_type}, HDU_CLASS = {hdu_class}."
+                f" Returning the first entry, which has "
+                f"HDU_TYPE = {self[idx]['HDU_TYPE']} and HDU_CLASS = {self[idx]['HDU_CLASS']}"
             )
 
         return self.location_info(idx)
@@ -204,19 +202,17 @@ class HDUIndexTable(Table):
             raise ValueError("You have to specify `hdu_type` or `hdu_class`.")
 
         if hdu_type and hdu_type not in self.VALID_HDU_TYPE:
-            msg = "Invalid hdu_type: {}. ".format(hdu_type)
             valid = [str(_) for _ in self.VALID_HDU_TYPE]
-            msg += "Valid values are: {}".format(valid)
-            raise ValueError(msg)
+            raise ValueError(f"Invalid hdu_type: {hdu_type}. Valid values are: {valid}")
 
         if hdu_class and hdu_class not in self.VALID_HDU_CLASS:
-            msg = "Invalid hdu_class: {}. ".format(hdu_class)
             valid = [str(_) for _ in self.VALID_HDU_CLASS]
-            msg += "Valid values are: {}".format(valid)
-            raise ValueError(msg)
+            raise ValueError(
+                f"Invalid hdu_class: {hdu_class}. Valid values are: {valid}"
+            )
 
         if obs_id not in self["OBS_ID"]:
-            raise IndexError("No entry available with OBS_ID = {}".format(obs_id))
+            raise IndexError(f"No entry available with OBS_ID = {obs_id}")
 
     def row_idx(self, obs_id, hdu_type=None, hdu_class=None):
         """Table row indices for a given selection.
@@ -287,13 +283,11 @@ class HDUIndexTable(Table):
     def summary(self):
         """Summary report (str)."""
         obs_id = self.obs_id_unique
-        return "\n".join(
-            [
-                "HDU index table:",
-                "BASE_DIR: {}".format(self.base_dir),
-                "Rows: {}".format(len(self)),
-                "OBS_ID: {} -- {}".format(obs_id[0], obs_id[-1]),
-                "HDU_TYPE: {}".format(self.hdu_type_unique),
-                "HDU_CLASS: {}".format(self.hdu_class_unique),
-            ]
+        return (
+            "HDU index table:\n"
+            f"BASE_DIR: {self.base_dir}\n"
+            f"Rows: {len(self)}\n"
+            f"OBS_ID: {obs_id[0]} -- {obs_id[-1]}\n"
+            f"HDU_TYPE: {self.hdu_type_unique}\n"
+            f"HDU_CLASS: {self.hdu_class_unique}\n"
         )

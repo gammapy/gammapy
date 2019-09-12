@@ -20,7 +20,7 @@ def _configure_root_logger(level="info", format=None):
     # level = getattr(logging, level.upper())
     numeric_level = getattr(logging, level.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError("Invalid log level: {}".format(level))
+        raise ValueError(f"Invalid log level: {level}")
     log.setLevel(level=numeric_level)
 
     # Format log handler
@@ -59,7 +59,7 @@ def read_yaml(filename, logger=None):
     """
     path = make_path(filename)
     if logger is not None:
-        logger.info("Reading {}".format(path))
+        logger.info(f"Reading {path}")
 
     text = path.read_text()
     return yaml.safe_load(text)
@@ -84,7 +84,7 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True):
     path = make_path(filename)
     path.parent.mkdir(exist_ok=True)
     if logger is not None:
-        logger.info("Writing {}".format(path))
+        logger.info(f"Writing {path}")
     path.write_text(text)
 
 

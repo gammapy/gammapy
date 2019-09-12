@@ -101,9 +101,7 @@ def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[
     nbfile = nbfolder / nbfilename
 
     if not nbfile.is_file():
-        msg = inliner.reporter.error(
-            "Unknown notebook {}".format(notebook), line=lineno
-        )
+        msg = inliner.reporter.error(f"Unknown notebook {notebook}", line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
     else:
@@ -129,7 +127,7 @@ def make_link_node(rawtext, app, refuri, notebook, options):
 
 def gammapy_sphinx_ext_activate():
     if HAS_GP_DATA:
-        log.info("*** Found GAMMAPY_DATA = {}".format(gammapy_data_path))
+        log.info(f"*** Found GAMMAPY_DATA = {gammapy_data_path}")
         log.info("*** Nice!")
     else:
         log.info("*** gammapy-data *not* found.")

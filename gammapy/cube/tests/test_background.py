@@ -63,7 +63,7 @@ def bkg_3d_custom(symmetry="constant"):
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data]) * u.Unit("s-1 MeV-1 sr-1")
     else:
-        raise ValueError("Unkown value for symmetry: {}".format(symmetry))
+        raise ValueError(f"Unkown value for symmetry: {symmetry}")
 
     energy = [0.1, 10, 1000] * u.TeV
     fov_lon = [-3, -1, 1, 3] * u.deg

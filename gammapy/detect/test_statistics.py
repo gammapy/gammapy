@@ -141,10 +141,10 @@ class TSMapEstimator:
     ):
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
-            raise ValueError("Not a valid method: '{}'".format(method))
+            raise ValueError(f"Not a valid method: '{method}'")
 
         if error_method not in ["covar", "conf"]:
-            raise ValueError("Not a valid error method '{}'".format(error_method))
+            raise ValueError(f"Not a valid error method '{error_method}'")
 
         self.parameters = {
             "method": method,
@@ -337,7 +337,7 @@ class TSMapEstimator:
         positions = list(zip(x, y))
 
         with contextlib.closing(multiprocessing.Pool(processes=p["n_jobs"])) as pool:
-            log.info("Using {} jobs to compute TS map.".format(p["n_jobs"]))
+            log.info(f"Number of jobs to compute TS map: {p['n_jobs']}")
             results = pool.map(wrap, positions)
 
         pool.join()
@@ -372,7 +372,7 @@ class TSMapEstimator:
         info = self.__class__.__name__
         info += "\n\nParameters:\n\n"
         for key in p:
-            info += "\t{key:13s}: {value}\n".format(key=key, value=p[key])
+            info += f"\t{key:13s}: {p[key]}\n"
         return info
 
 
@@ -454,7 +454,7 @@ def _ts_value(
             counts_, background_, model, rtol=rtol
         )
     else:
-        raise ValueError("Invalid method: {}".format(method))
+        raise ValueError(f"Invalid method: {method}")
 
     with np.errstate(invalid="ignore", divide="ignore"):
         c_1 = f_cash(amplitude, counts_, background_, model)

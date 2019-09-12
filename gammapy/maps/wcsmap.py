@@ -108,7 +108,7 @@ class WcsMap(Map):
         elif map_type == "wcs-sparse":
             raise NotImplementedError
         else:
-            raise ValueError("Invalid map type: {!r}".format(map_type))
+            raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
     def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):

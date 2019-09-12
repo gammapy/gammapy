@@ -176,12 +176,14 @@ class LightCurveTableModel(Model):
         super().__init__()
 
     def __str__(self):
-        ss = "LightCurveTableModel model summary:\n"
-        ss += "Start time: {} MJD\n".format(self._time[0].mjd)
-        ss += "End time: {} MJD\n".format(self._time[-1].mjd)
-        ss += "Norm min: {}\n".format(self.table["NORM"].min())
-        ss += "Norm max: {}\n".format(self.table["NORM"].max())
-        return ss
+        norm = self.table["NORM"]
+        return (
+            f"LightCurveTableModel model summary:\n"
+            f"Start time: {self._time[0].mjd} MJD\n"
+            f"End time: {self._time[-1].mjd} MJD\n"
+            f"Norm min: {norm.min()}\n"
+            f"Norm max: {norm.max()}\n"
+        )
 
     @classmethod
     def read(cls, path):
