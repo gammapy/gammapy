@@ -30,7 +30,7 @@ def test_cli_download_help():
 @requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_datasets(files_dir, config):
-    option_out = "--out={}".format(files_dir)
+    option_out = f"--out={files_dir}"
     option_src = "--src={}".format(config["dataset"])
     option_release = "--release={}".format(config["release"])
 
@@ -43,7 +43,7 @@ def test_cli_download_datasets(files_dir, config):
 @requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_notebooks(files_dir, config):
-    option_out = "--out={}".format(files_dir)
+    option_out = f"--out={files_dir}"
     option_src = "--src={}".format(config["notebook"])
     option_release = "--release={}".format(config["release"])
     filename = "{}.ipynb".format(config["notebook"])
@@ -59,7 +59,7 @@ def test_cli_download_notebooks(files_dir, config):
 @requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_scripts(files_dir, config):
-    option_out = "--out={}".format(files_dir)
+    option_out = f"--out={files_dir}"
     option_src = "--src={}".format(config["script"])
     option_release = "--release={}".format(config["release"])
     filename = "{}.py".format(config["script"])
@@ -74,7 +74,7 @@ def test_cli_download_scripts(files_dir, config):
 @requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_tutorials(files_dir, config):
-    option_out = "--out={}".format(files_dir)
+    option_out = f"--out={files_dir}"
     nboption_src = "--src={}".format(config["notebook"])
     scoption_src = "--src={}".format(config["script"])
     option_release = "--release={}".format(config["release"])

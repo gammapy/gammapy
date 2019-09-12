@@ -61,7 +61,7 @@ def unit_from_fits_image_hdu(header):
         u.Unit(unit)
     except ValueError:
         log.warning(
-            "Invalid value BUNIT={!r} in FITS header. Setting empty unit.".format(unit)
+            f"Invalid value BUNIT={unit!r} in FITS header. Setting empty unit."
         )
         unit = ""
 

@@ -134,7 +134,7 @@ def _make_image_header(
     elif coordsys == "GAL":
         ctype1, ctype2 = "GLON-", "GLAT-"
     else:
-        raise ValueError("Unsupported coordsys: {!r}".format(coordsys))
+        raise ValueError(f"Unsupported coordsys: {coordsys!r}")
 
     pars = {
         "NAXIS": 2,
@@ -547,8 +547,8 @@ class WcsGeom(MapGeom):
         self._fill_header_from_axes(header)
         shape = "{},{}".format(np.max(self.npix[0]), np.max(self.npix[1]))
         for ax in self.axes:
-            shape += ",{}".format(ax.nbin)
-        header["WCSSHAPE"] = "({})".format(shape)
+            shape += f",{ax.nbin}"
+        header["WCSSHAPE"] = f"({shape})"
         return header
 
     def get_image_shape(self, idx):
@@ -931,12 +931,12 @@ class WcsGeom(MapGeom):
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
         str_ += "\taxes       : {}\n".format(", ".join(axes))
         str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
-        str_ += "\tndim       : {}\n".format(self.ndim)
-        str_ += "\tcoordsys   : {}\n".format(self.coordsys)
-        str_ += "\tprojection : {}\n".format(self.projection)
+        str_ += f"\tndim       : {self.ndim}\n"
+        str_ += f"\tcoordsys   : {self.coordsys}\n"
+        str_ += f"\tprojection : {self.projection}\n"
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
-        str_ += "\tcenter     : {:.1f} deg, {:.1f} deg\n".format(lon, lat)
+        str_ += f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f}\n".format(
             width=self.width
         )

@@ -111,7 +111,7 @@ class HpxMap(Map):
         elif map_type == "hpx-sparse":
             return HpxSparseMap(hpx, dtype=dtype, meta=meta, unit=unit)
         else:
-            raise ValueError("Unrecognized map type: {!r}".format(map_type))
+            raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @classmethod
     def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None):

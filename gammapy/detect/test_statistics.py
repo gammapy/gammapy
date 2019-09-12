@@ -141,10 +141,10 @@ class TSMapEstimator:
     ):
 
         if method not in ["root brentq", "root newton", "leastsq iter"]:
-            raise ValueError("Not a valid method: '{}'".format(method))
+            raise ValueError(f"Not a valid method: '{method}'")
 
         if error_method not in ["covar", "conf"]:
-            raise ValueError("Not a valid error method '{}'".format(error_method))
+            raise ValueError(f"Not a valid error method '{error_method}'")
 
         self.parameters = {
             "method": method,
@@ -454,7 +454,7 @@ def _ts_value(
             counts_, background_, model, rtol=rtol
         )
     else:
-        raise ValueError("Invalid method: {}".format(method))
+        raise ValueError(f"Invalid method: {method}")
 
     with np.errstate(invalid="ignore", divide="ignore"):
         c_1 = f_cash(amplitude, counts_, background_, model)

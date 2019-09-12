@@ -36,7 +36,7 @@ class ObservationTableSummary:
 
     def __str__(self):
         ss = "*** Observation summary ***\n"
-        ss += "Target position: {}\n".format(self.target_pos)
+        ss += f"Target position: {self.target_pos}\n"
 
         ss += "Number of observations: {}\n".format(len(self.obs_table))
 
@@ -175,14 +175,14 @@ class ObservationSummary:
         """Observation wise summary report (str)."""
         ss = "*** Observation Wise summary ***\n"
         for obs in self.obs_stats:
-            ss += "{}\n".format(obs)
+            ss += f"{obs}\n"
 
         return ss
 
     def __str__(self):
         stack = ObservationStats.stack(self.obs_stats)
         ss = "*** Observation summary ***\n"
-        ss += "{}\n".format(stack)
+        ss += f"{stack}\n"
         return ss
 
     def plot_significance_vs_livetime(self, ax=None, **kwargs):
@@ -203,7 +203,7 @@ class ObservationSummary:
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.sigma, "o", **kwargs)
 
-        ax.set_xlabel("Livetime ({})".format(u.h))
+        ax.set_xlabel(f"Livetime ({u.h})")
         ax.set_ylabel("Significance")
 
         xmax = np.amax(self.livetime.to_value("h")) * 1.2
@@ -230,7 +230,7 @@ class ObservationSummary:
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.excess, "o", **kwargs)
 
-        ax.set_xlabel("Livetime ({})".format(u.h))
+        ax.set_xlabel(f"Livetime ({u.h})")
         ax.set_ylabel("Excess")
 
         xmax = np.amax(self.livetime.to_value("h")) * 1.2
@@ -257,7 +257,7 @@ class ObservationSummary:
         ax = plt.gca() if ax is None else ax
         ax.plot(self.livetime.to(u.h), self.background, "o", **kwargs)
 
-        ax.set_xlabel("Livetime ({})".format(u.h))
+        ax.set_xlabel(f"Livetime ({u.h})")
         ax.set_ylabel("Background")
 
         xmax = np.amax(self.livetime.to_value("h")) * 1.2
@@ -290,7 +290,7 @@ class ObservationSummary:
 
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
-        ax.set_ylabel("Excess rate ({})".format(self.gamma_rate.unit))
+        ax.set_ylabel(f"Excess rate ({self.gamma_rate.unit})")
         ax.axis([0, len(self.gamma_rate), 0.0, np.amax(self.gamma_rate.value) * 1.2])
         ax.set_title("Excess rates")
         return ax
@@ -319,7 +319,7 @@ class ObservationSummary:
 
         ax.set_xticks(xtick_vals)
         ax.set_xticklabels(xtick_labels, rotation=-22.5)
-        ax.set_ylabel("Background rate ({})".format(self.bg_rate.unit))
+        ax.set_ylabel(f"Background rate ({self.bg_rate.unit})")
         ax.axis([0, len(self.bg_rate), 0.0, np.amax(self.bg_rate.value) * 1.2])
         ax.set_title("Background rates")
         return ax

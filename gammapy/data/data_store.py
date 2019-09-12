@@ -109,13 +109,13 @@ class DataStore:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
         if not hdu_table_filename.exists():
-            raise OSError("File not found: {}".format(hdu_table_filename))
-        log.debug("Reading {}".format(hdu_table_filename))
+            raise OSError(f"File not found: {hdu_table_filename}")
+        log.debug(f"Reading {hdu_table_filename}")
         hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            raise OSError("File not found: {}".format(obs_table_filename))
+            raise OSError(f"File not found: {obs_table_filename}")
         log.debug("Reading {}".format(str(obs_table_filename)))
         obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
 
@@ -203,7 +203,7 @@ class DataStore:
         elif path2.is_file():
             filename = path2
         else:
-            raise OSError("File not found at {} or {}".format(path1, path2))
+            raise OSError(f"File not found at {path1} or {path2}")
 
         return filename
 
@@ -258,7 +258,7 @@ class DataStore:
                 obs = self.obs(_)
             except ValueError as err:
                 if skip_missing:
-                    log.warning("Skipping missing obs_id: {!r}".format(_))
+                    log.warning(f"Skipping missing obs_id: {_!r}")
                     continue
                 else:
                     raise err
@@ -369,7 +369,7 @@ class DataStoreChecker(Checker):
             except KeyError:
                 yield {
                     "level": "error",
-                    "msg": "HDU not found: {!r}".format(location_info.__dict__),
+                    "msg": f"HDU not found: {location_info.__dict__!r}",
                 }
 
     def check_consistency(self):
@@ -425,7 +425,7 @@ class DataStoreMaker:
 
     @staticmethod
     def read_events_info(path):
-        log.debug("Reading {}".format(path))
+        log.debug(f"Reading {path}")
         with fits.open(str(path)) as hdu_list:
             header = hdu_list["EVENTS"].header
 
@@ -577,7 +577,7 @@ class CalDBIRF:
     def file_dir(self):
         # In CTA 1DC the header key is "CTA", but the directory is lower-case "cta"
         telescop = self.telescop.lower()
-        return "$CALDB/data/{}/{}/bcf/{}".format(telescop, self.caldb, self.irf)
+        return f"$CALDB/data/{telescop}/{self.caldb}/bcf/{self.irf}"
 
     @property
     def file_name(self):

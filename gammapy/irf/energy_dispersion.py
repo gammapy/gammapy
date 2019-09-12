@@ -82,7 +82,7 @@ class EnergyDispersion:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.data)
+        ss += f"\n{self.data}"
         return ss
 
     def apply(self, data):
@@ -624,8 +624,8 @@ class EnergyDispersion:
             label = "Probability density (A.U.)"
             cbar = ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(r"$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
-        ax.set_ylabel(r"$E_\mathrm{{Reco}}$ [{unit}]".format(unit=e_reco.unit))
+        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{e_true.unit}]")
+        ax.set_ylabel(fr"$E_\mathrm{{Reco}}$ [{e_reco.unit}]")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(x.min(), x.max())
@@ -754,7 +754,7 @@ class EnergyDispersion2D:
 
     def __str__(self):
         ss = self.__class__.__name__
-        ss += "\n{}".format(self.data)
+        ss += f"\n{self.data}"
         return ss
 
     @classmethod
@@ -1001,7 +1001,7 @@ class EnergyDispersion2D:
         for ener in e_true:
             for off in offset:
                 disp = self.data.evaluate(offset=off, e_true=ener, migra=migra)
-                label = "offset = {:.1f}\nenergy = {:.1f}".format(off, ener)
+                label = f"offset = {off:.1f}\nenergy = {ener:.1f}"
                 ax.plot(migra, disp, label=label, **kwargs)
 
         ax.set_xlabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
@@ -1057,7 +1057,7 @@ class EnergyDispersion2D:
             label = "Probability density (A.U.)"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        ax.set_xlabel(r"$E_\mathrm{{True}}$ [{unit}]".format(unit=e_true.unit))
+        ax.set_xlabel(fr"$E_\mathrm{{True}}$ [{e_true.unit}]")
         ax.set_ylabel(r"$E_\mathrm{{Reco}} / E_\mathrm{{True}}$")
         ax.set_xlim(x.min(), x.max())
         ax.set_ylim(y.min(), y.max())

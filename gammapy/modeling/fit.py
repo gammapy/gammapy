@@ -43,12 +43,12 @@ class Registry:
     @classmethod
     def get(cls, task, backend):
         if task not in cls.register:
-            raise ValueError("Unknown task {!r}".format(task))
+            raise ValueError(f"Unknown task {task!r}")
 
         task = cls.register[task]
 
         if backend not in task:
-            raise ValueError("Unknown method {!r} for task {!r}".format(task, backend))
+            raise ValueError(f"Unknown method {task!r} for task {backend!r}")
 
         return task[backend]
 
@@ -450,10 +450,10 @@ class FitResult:
     def __repr__(self):
         str_ = self.__class__.__name__
         str_ += "\n\n"
-        str_ += "\tbackend    : {}\n".format(self.backend)
-        str_ += "\tmethod     : {}\n".format(self.method)
-        str_ += "\tsuccess    : {}\n".format(self.success)
-        str_ += "\tmessage    : {}\n".format(self.message)
+        str_ += f"\tbackend    : {self.backend}\n"
+        str_ += f"\tmethod     : {self.method}\n"
+        str_ += f"\tsuccess    : {self.success}\n"
+        str_ += f"\tmessage    : {self.message}\n"
         return str_
 
 
@@ -483,6 +483,6 @@ class OptimizeResult(FitResult):
 
     def __repr__(self):
         str_ = super().__repr__()
-        str_ += "\tnfev       : {}\n".format(self.nfev)
-        str_ += "\ttotal stat : {:.2f}\n".format(self.total_stat)
+        str_ += f"\tnfev       : {self.nfev}\n"
+        str_ += f"\ttotal stat : {self.total_stat:.2f}\n"
         return str_

@@ -29,7 +29,7 @@ def array_stats_str(x, label=""):
 
     ss = ""
     if label:
-        ss += "{:15s}: ".format(label)
+        ss += f"{label:15s}: "
 
     min = x.min()
     max = x.max()
@@ -117,27 +117,27 @@ def check_type(val, category):
     elif category == "bool":
         return _check_bool(val)
     else:
-        raise ValueError("Invalid category: {}".format(category))
+        raise ValueError(f"Invalid category: {category}")
 
 
 def _check_str(val):
     if isinstance(val, str):
         return val
     else:
-        raise TypeError("Expected a string. Got: {!r}".format(val))
+        raise TypeError(f"Expected a string. Got: {val!r}")
 
 
 def _check_bool(val):
     if isinstance(val, bool):
         return val
     else:
-        raise TypeError("Expected a bool. Got: {!r}".format(val))
+        raise TypeError(f"Expected a bool. Got: {val!r}")
 
 
 def _check_number(val):
     if _is_float(val) or _is_int(val):
         return val
-    raise TypeError("Expected a number. Got: {!r}".format(val))
+    raise TypeError(f"Expected a number. Got: {val!r}")
 
 
 def _is_int(val):

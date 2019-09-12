@@ -102,13 +102,13 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
                 "MCMC will likely fail!".format(par.name)
             )
 
-    log.info("Free parameters: {}".format(labels))
+    log.info(f"Free parameters: {labels}")
 
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, lnprob, args=[dataset], threads=threads
     )
 
-    log.info("Starting MCMC sampling: nwalkers={}, nrun={}".format(nwalkers, nrun))
+    log.info(f"Starting MCMC sampling: nwalkers={nwalkers}, nrun={nrun}")
     for idx, result in enumerate(sampler.sample(p0, iterations=nrun)):
         if idx % (nrun / 4) == 0:
             log.info("{:5.0%}".format(idx / nrun))

@@ -40,10 +40,10 @@ class PhaseBackgroundEstimator:
 
     def __str__(self):
         s = self.__class__.__name__
-        s += "\n{}".format(self.on_region)
-        s += "\n{}".format(self.on_phase)
-        s += "\n{}".format(self.off_phase)
-        s += "\n{}".format(self.observations)
+        s += f"\n{self.on_region}"
+        s += f"\n{self.on_phase}"
+        s += f"\n{self.off_phase}"
+        s += f"\n{self.observations}"
         return s
 
     def run(self):

@@ -17,4 +17,4 @@ def test_cli_help():
 
 def test_cli_version():
     result = run_cli(cli, ["--version"])
-    assert "gammapy version {}".format(__version__) in result.output
+    assert f"gammapy version {__version__}" in result.output

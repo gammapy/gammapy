@@ -12,7 +12,7 @@ from gammapy import __version__
 def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
-    print("gammapy version {}".format(__version__))
+    print(f"gammapy version {__version__}")
     ctx.exit()
 
 
@@ -130,7 +130,7 @@ def cli_jupyter(ctx, src):  # noqa: D301
 
     path = Path(src)
     if not path.exists():
-        log.error("File or folder {} not found.".format(src))
+        log.error(f"File or folder {src} not found.")
         sys.exit()
 
     if path.is_dir():

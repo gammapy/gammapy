@@ -42,7 +42,7 @@ class HpxConv:
         self.coordsys = kwargs.get("coordsys", "COORDSYS")
 
     def colname(self, indx):
-        return "{}{}".format(self.colstring, indx)
+        return f"{self.colstring}{indx}"
 
     @classmethod
     def create(cls, convname="gadf"):
@@ -184,7 +184,7 @@ def get_pix_size_from_nside(nside):
     """
     order = nside_to_order(nside)
     if np.any(order < 0) or np.any(order > 13):
-        raise ValueError("HEALPIX order must be 0 to 13. Got: {!r}".format(order))
+        raise ValueError(f"HEALPIX order must be 0 to 13. Got: {order!r}")
 
     return HPX_ORDER_TO_PIXSIZE[order]
 
@@ -328,7 +328,7 @@ def parse_hpxregion(region):
     m = re.match(r"([A-Za-z\_]*?)\((.*?)\)", region)
 
     if m is None:
-        raise ValueError("Failed to parse hpx region string: {!r}".format(region))
+        raise ValueError(f"Failed to parse hpx region string: {region!r}")
 
     if not m.group(1):
         return re.split(",", m.group(2))
@@ -670,7 +670,7 @@ class HpxGeom(MapGeom):
             self._npix = self._maxpix
 
         else:
-            raise ValueError("Invalid region string: {!r}".format(region))
+            raise ValueError(f"Invalid region string: {region!r}")
 
     def local_to_global(self, idx_local):
         """Compute a local index (partial-sky) from a global (all-sky) index.
@@ -1503,7 +1503,7 @@ class HpxGeom(MapGeom):
                 raise ValueError("Invalid ordering scheme: {!r}".format(tokens[1]))
             ilist = match_hpx_pix(nside, nest, nside_pix, ipix_ring)
         else:
-            raise ValueError("Invalid region type: {!r}".format(reg_type))
+            raise ValueError(f"Invalid region type: {reg_type!r}")
 
         return ilist
 
@@ -1597,7 +1597,7 @@ class HpxGeom(MapGeom):
 
     def get_idx(self, idx=None, local=False, flat=False):
         if idx is not None and np.any(np.array(idx) >= np.array(self.shape_axes)):
-            raise ValueError("Image index out of range: {!r}".format(idx))
+            raise ValueError(f"Image index out of range: {idx!r}")
 
         # Regular all- and partial-sky maps
         if self.is_regular:
@@ -1722,13 +1722,13 @@ class HpxGeom(MapGeom):
         axes = ["skycoord"] + [_.name for _ in self.axes]
         str_ += "\taxes       : {}\n".format(", ".join(axes))
         str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
-        str_ += "\tndim       : {}\n".format(self.ndim)
+        str_ += f"\tndim       : {self.ndim}\n"
         str_ += "\tnside      : {nside[0]}\n".format(nside=self.nside)
-        str_ += "\tnested     : {}\n".format(self.nest)
-        str_ += "\tcoordsys   : {}\n".format(self.coordsys)
-        str_ += "\tprojection : {}\n".format(self.projection)
+        str_ += f"\tnested     : {self.nest}\n"
+        str_ += f"\tcoordsys   : {self.coordsys}\n"
+        str_ += f"\tprojection : {self.projection}\n"
         lon, lat = self.center_skydir.data.lon.deg, self.center_skydir.data.lat.deg
-        str_ += "\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n".format(lon=lon, lat=lat)
+        str_ += f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
         return str_
 
     def __eq__(self, other):

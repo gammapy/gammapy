@@ -95,7 +95,7 @@ class TablePSF:
             gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
             psf_value = gauss2d_pdf(rad.radian)
         else:
-            raise ValueError("Invalid shape: {}".format(shape))
+            raise ValueError(f"Invalid shape: {shape}")
 
         psf_value = u.Quantity(psf_value, "sr^-1")
 
@@ -108,7 +108,7 @@ class TablePSF:
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
-            ss += "containment radius {} deg for {}%\n".format(radius.deg, containment)
+            ss += f"containment radius {radius.deg} deg for {containment}%\n"
 
         return ss
 
@@ -516,7 +516,7 @@ class EnergyDependentTablePSF:
 
         for energy in energies:
             psf_value = np.squeeze(self.evaluate(energy=energy))
-            label = "{:.0f}".format(energy)
+            label = f"{energy:.0f}"
             ax.plot(
                 self.rad.to_value("deg"),
                 psf_value.to_value("sr-1"),

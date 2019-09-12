@@ -326,7 +326,7 @@ class SmartHDUList:
             # the number unchanged. Here we want to raise an error in this case.
             if not (0 <= idx < len(self.hdu_list)):
                 raise KeyError(
-                    "HDU not found: hdu={}. Index out of range.".format(hdu_key)
+                    f"HDU not found: hdu={hdu_key}. Index out of range."
                 )
             return idx
 
@@ -344,9 +344,9 @@ class SmartHDUList:
                     if isinstance(hdu_object, fits.BinTableHDU):
                         return hdu_idx
                 else:
-                    raise ValueError("Invalid hdu_type={}".format(hdu_type))
+                    raise ValueError(f"Invalid hdu_type={hdu_type}")
 
-        raise KeyError("HDU not found: hdu={}, hdu_type={}".format(hdu_key, hdu_type))
+        raise KeyError(f"HDU not found: hdu={hdu_key}, hdu_type={hdu_type}")
 
     def get_hdu(self, hdu=None, hdu_type=None):
         """Get HDU with given name, number or type.

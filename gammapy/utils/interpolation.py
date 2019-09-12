@@ -113,7 +113,7 @@ def interpolation_scale(scale="lin"):
     elif scale == "sqrt":
         return SqrtScale()
     else:
-        raise ValueError("Not a valid value scaling mode: '{}'.".format(scale))
+        raise ValueError(f"Not a valid value scaling mode: '{scale}'.")
 
 
 class InterpolationScale:

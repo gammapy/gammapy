@@ -39,13 +39,13 @@ class HDULocation:
         if not file:
             file = sys.stdout
 
-        print("OBS_ID = {}".format(self.obs_id), file=file)
-        print("HDU_TYPE = {}".format(self.hdu_type), file=file)
-        print("HDU_CLASS = {}".format(self.hdu_class), file=file)
-        print("BASE_DIR = {}".format(self.base_dir), file=file)
-        print("FILE_DIR = {}".format(self.file_dir), file=file)
-        print("FILE_NAME = {}".format(self.file_name), file=file)
-        print("HDU_NAME = {}".format(self.hdu_name), file=file)
+        print(f"OBS_ID = {self.obs_id}", file=file)
+        print(f"HDU_TYPE = {self.hdu_type}", file=file)
+        print(f"HDU_CLASS = {self.hdu_class}", file=file)
+        print(f"BASE_DIR = {self.base_dir}", file=file)
+        print(f"FILE_DIR = {self.file_dir}", file=file)
+        print(f"FILE_NAME = {self.file_name}", file=file)
+        print(f"HDU_NAME = {self.hdu_name}", file=file)
 
     def path(self, abs_path=True):
         """Full filename path.
@@ -111,7 +111,7 @@ class HDULocation:
 
             return Background3D.read(filename, hdu=hdu)
         else:
-            raise ValueError("Invalid hdu_class: {}".format(hdu_class))
+            raise ValueError(f"Invalid hdu_class: {hdu_class}")
 
 
 class HDUIndexTable(Table):
@@ -204,19 +204,19 @@ class HDUIndexTable(Table):
             raise ValueError("You have to specify `hdu_type` or `hdu_class`.")
 
         if hdu_type and hdu_type not in self.VALID_HDU_TYPE:
-            msg = "Invalid hdu_type: {}. ".format(hdu_type)
+            msg = f"Invalid hdu_type: {hdu_type}. "
             valid = [str(_) for _ in self.VALID_HDU_TYPE]
-            msg += "Valid values are: {}".format(valid)
+            msg += f"Valid values are: {valid}"
             raise ValueError(msg)
 
         if hdu_class and hdu_class not in self.VALID_HDU_CLASS:
-            msg = "Invalid hdu_class: {}. ".format(hdu_class)
+            msg = f"Invalid hdu_class: {hdu_class}. "
             valid = [str(_) for _ in self.VALID_HDU_CLASS]
-            msg += "Valid values are: {}".format(valid)
+            msg += f"Valid values are: {valid}"
             raise ValueError(msg)
 
         if obs_id not in self["OBS_ID"]:
-            raise IndexError("No entry available with OBS_ID = {}".format(obs_id))
+            raise IndexError(f"No entry available with OBS_ID = {obs_id}")
 
     def row_idx(self, obs_id, hdu_type=None, hdu_class=None):
         """Table row indices for a given selection.
@@ -290,10 +290,10 @@ class HDUIndexTable(Table):
         return "\n".join(
             [
                 "HDU index table:",
-                "BASE_DIR: {}".format(self.base_dir),
+                f"BASE_DIR: {self.base_dir}",
                 "Rows: {}".format(len(self)),
                 "OBS_ID: {} -- {}".format(obs_id[0], obs_id[-1]),
-                "HDU_TYPE: {}".format(self.hdu_type_unique),
-                "HDU_CLASS: {}".format(self.hdu_class_unique),
+                f"HDU_TYPE: {self.hdu_type_unique}",
+                f"HDU_CLASS: {self.hdu_class_unique}",
             ]
         )

@@ -140,7 +140,7 @@ class Analysis:
         elif datastore_path.is_dir():
             datastore = DataStore().from_dir(datastore_path)
         else:
-            raise FileNotFoundError("Datastore {} not found.".format(datastore_path))
+            raise FileNotFoundError(f"Datastore {datastore_path} not found.")
         ids = set()
         selection = dict()
         for criteria in self.settings["observations"]["filters"]:

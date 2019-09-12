@@ -37,14 +37,14 @@ def execute_notebook(path, kernel="python3", loglevel=30):
         "jupyter",
         "nbconvert",
         "--allow-errors",
-        "--log-level={}".format(loglevel),
+        f"--log-level={loglevel}",
         "--ExecutePreprocessor.timeout=None",
-        "--ExecutePreprocessor.kernel_name={}".format(kernel),
+        f"--ExecutePreprocessor.kernel_name={kernel}",
         "--to",
         "notebook",
         "--inplace",
         "--execute",
-        "{}".format(path),
+        f"{path}",
     ]
     t = time.time()
     completed_process = subprocess.run(cmd)
@@ -53,7 +53,7 @@ def execute_notebook(path, kernel="python3", loglevel=30):
         log.error("Error executing file {}".format(str(path)))
         return False
     else:
-        log.info("   ... Executing duration: {:.1f} seconds".format(t))
+        log.info(f"   ... Executing duration: {t:.1f} seconds")
         return True
 
 
@@ -169,7 +169,7 @@ def notebook_test(path, kernel="python3"):
                     passed = False
                     traceitems = ["--TRACEBACK: "]
                     for o in output["traceback"]:
-                        traceitems.append("{}".format(o))
+                        traceitems.append(f"{o}")
                     traceback = "\n".join(traceitems)
                     infos = "\n\n{} in cell [{}]\n\n" "--SOURCE CODE: \n{}\n\n".format(
                         output["ename"], cell["execution_count"], cell["source"]
@@ -202,7 +202,7 @@ class environment:
             for item in self.envs:
                 if item in os.environ:
                     del os.environ[item]
-                    log.info("Unsetting {} environment variable.".format(item))
+                    log.info(f"Unsetting {item} environment variable.")
             abspath = self.ctx.obj["pathsrc"].absolute()
             datapath = abspath.parent / "datasets"
             if abspath.is_file():

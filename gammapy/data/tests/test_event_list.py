@@ -48,9 +48,9 @@ class TestEventListHESS:
         assert "{:1.5f}".format(self.events.energy[0]) == "11.64355 TeV"
 
         lon, lat, height = self.events.observatory_earth_location.to_geodetic()
-        assert "{:1.5f}".format(lon) == "16.50022 deg"
-        assert "{:1.5f}".format(lat) == "-23.27178 deg"
-        assert "{:1.5f}".format(height) == "1835.00000 m"
+        assert f"{lon:1.5f}" == "16.50022 deg"
+        assert f"{lat:1.5f}" == "-23.27178 deg"
+        assert f"{height:1.5f}" == "1835.00000 m"
 
     def test_altaz(self):
         altaz = self.events.altaz

@@ -266,7 +266,7 @@ class CWT:
         variance_ratio = abs(
             (self.previous_variance - variance) / self.previous_variance
         )
-        log.info("Variance ratio: {:.7f}".format(variance_ratio))
+        log.info(f"Variance ratio: {variance_ratio:.7f}")
 
         self.previous_variance = variance
         return variance_ratio < self.tol
@@ -396,13 +396,13 @@ class CWTKernels:
         info_dict["Kernels approx max"] = self.kern_approx.max()
 
         for idx_scale, scale in enumerate(self.scales):
-            info_dict["Kernels base width for {} scale".format(scale)] = len(
+            info_dict[f"Kernels base width for {scale} scale"] = len(
                 self.kern_base[idx_scale]
             )
-            info_dict["Kernels base sum for {} scale".format(scale)] = self.kern_base[
+            info_dict[f"Kernels base sum for {scale} scale"] = self.kern_base[
                 idx_scale
             ].sum()
-            info_dict["Kernels base max for {} scale".format(scale)] = self.kern_base[
+            info_dict[f"Kernels base max for {scale} scale"] = self.kern_base[
                 idx_scale
             ].max()
 

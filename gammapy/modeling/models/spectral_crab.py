@@ -107,4 +107,4 @@ def create_crab_spectral_model(reference="meyer"):
             reference=1 * u.TeV,
         )
     else:
-        raise ValueError("Invalid reference: {!r}".format(reference))
+        raise ValueError(f"Invalid reference: {reference!r}")

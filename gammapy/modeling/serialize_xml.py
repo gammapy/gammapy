@@ -282,7 +282,7 @@ def skymodel_to_xml(skymodel):
         type_ = "PointSource"
 
     indent = 4 * " "
-    xml = indent + '<source name="{}" type="{}">\n'.format(skymodel.name, type_)
+    xml = indent + f'<source name="{skymodel.name}" type="{type_}">\n'
     xml += model_to_xml(skymodel.spectral_model, "spectral")
     xml += model_to_xml(skymodel.spatial_model, "spatial")
     xml += indent + "</source>\n"
@@ -304,16 +304,16 @@ def model_to_xml(model, which):
             break
 
     if not model_found:
-        msg = "{} model {} not in registry".format(which, model)
+        msg = f"{which} model {model} not in registry"
         raise UnknownModelError(msg)
 
     indent = 8 * " "
-    xml = indent + "<{} ".format(tag)
+    xml = indent + f"<{tag} "
     if xml_type in ["MapCubeFunction", "FileFunction"]:
         xml += 'file="{}" '.format(model.meta["filename"])
-    xml += 'type="{}">\n'.format(xml_type)
+    xml += f'type="{xml_type}">\n'
     xml += parameters_to_xml(model.parameters, which)
-    xml += indent + "</{}>\n".format(tag)
+    xml += indent + f"</{tag}>\n"
     return xml
 
 
@@ -331,7 +331,7 @@ def parameters_to_xml(parameters, which):
                 break
 
         if not par_found:
-            msg = "{} parameter {} not in registry".format(which, par.name)
+            msg = f"{which} parameter {par.name} not in registry"
             raise UnknownParameterError(msg)
 
         xml += indent

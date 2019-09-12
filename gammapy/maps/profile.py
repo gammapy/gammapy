@@ -45,7 +45,7 @@ def compute_binning(data, n_bins, method="equal width", eps=1e-10):
         quantiles = list(np.linspace(0, 100, n_bins + 1))
         bin_edges = np.percentile(data, quantiles)
     else:
-        raise ValueError("Invalid method: {!r}".format(method))
+        raise ValueError(f"Invalid method: {method!r}")
 
     bin_edges[-1] += eps
     return bin_edges
@@ -444,7 +444,7 @@ class ImageProfile:
         elif mode == "integral":
             norm = np.nansum(profile)
         else:
-            raise ValueError("Invalide normalization mode: {!r}".format(mode))
+            raise ValueError(f"Invalide normalization mode: {mode!r}")
 
         table["profile"] /= norm
 

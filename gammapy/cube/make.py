@@ -82,12 +82,12 @@ class MapMaker:
         maps = self._get_empty_maps(selection)
 
         for obs in observations:
-            log.info("Processing observation: OBS_ID = {}".format(obs.obs_id))
+            log.info(f"Processing observation: OBS_ID = {obs.obs_id}")
 
             try:
                 obs_maker = self._get_obs_maker(obs)
             except NoOverlapError:
-                log.info("Skipping observation {} (no map overlap)".format(obs.obs_id))
+                log.info(f"Skipping observation {obs.obs_id} (no map overlap)")
                 continue
 
             maps_obs = obs_maker.run(selection)
@@ -315,7 +315,7 @@ def _check_selection(selection):
 
     for name in selection:
         if name not in available:
-            raise ValueError("Selection not available: {!r}".format(name))
+            raise ValueError(f"Selection not available: {name!r}")
 
     return selection
 
@@ -402,10 +402,10 @@ class MapMakerRing(MapMaker):
             try:
                 obs_maker = self._get_obs_maker(obs, mode="strict")
             except NoOverlapError:
-                log.info("Skipping obs_id: {} (no map overlap)".format(obs.obs_id))
+                log.info(f"Skipping obs_id: {obs.obs_id} (no map overlap)")
                 continue
             except PartialOverlapError:
-                log.info("Skipping obs_id: {} (partial map overlap)".format(obs.obs_id))
+                log.info(f"Skipping obs_id: {obs.obs_id} (partial map overlap)")
                 continue
 
             maps_obs = obs_maker.run()

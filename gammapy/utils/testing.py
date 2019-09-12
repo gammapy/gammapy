@@ -49,7 +49,7 @@ def requires_dependency(name):
 
         _requires_dependency_cache[name] = skip_it
 
-    reason = "Missing dependency: {}".format(name)
+    reason = f"Missing dependency: {name}"
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
@@ -64,7 +64,7 @@ def has_data(name):
     elif name == "fermi-lat":
         return "GAMMAPY_FERMI_LAT_DATA" in os.environ
     else:
-        raise ValueError("Invalid name: {}".format(name))
+        raise ValueError(f"Invalid name: {name}")
 
 
 def requires_data(name="gammapy-data"):
@@ -91,7 +91,7 @@ def requires_data(name="gammapy-data"):
 
     skip_it = not has_data(name)
 
-    reason = "Missing data: {}".format(name)
+    reason = f"Missing data: {name}"
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
@@ -239,7 +239,7 @@ class Checker:
 
         unknown_checks = sorted(set(checks).difference(self.CHECKS.keys()))
         if unknown_checks:
-            raise ValueError("Unknown checks: {!r}".format(unknown_checks))
+            raise ValueError(f"Unknown checks: {unknown_checks!r}")
 
         for check in checks:
             method = getattr(self, self.CHECKS[check])

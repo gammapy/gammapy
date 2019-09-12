@@ -332,6 +332,6 @@ class LightCurve:
             x = x.mjd
             xn, xp = xn.to("d").value, xp.to("d").value
         else:
-            raise ValueError("Invalid time_format: {}".format(time_format))
+            raise ValueError(f"Invalid time_format: {time_format}")
 
         return x, (xn, xp)

@@ -89,7 +89,7 @@ class ObservationTable(Table):
         return "\n".join(
             [
                 "Observation table:",
-                "Observatory name: {!r}".format(obs_name),
+                f"Observatory name: {obs_name!r}",
                 "Number of observations: {}".format(len(self)),
                 # TODO: clean this up. Make those properties?
                 # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
@@ -393,7 +393,7 @@ class ObservationTableChecker(Checker):
         meta_missing = sorted(set(self.meta_required) - set(m))
         if meta_missing:
             yield self._record(
-                level="error", msg="Missing meta keys: {!r}".format(meta_missing)
+                level="error", msg=f"Missing meta keys: {meta_missing!r}"
             )
 
         if m.get("HDUCLAS1", "") != "INDEX":
@@ -410,10 +410,10 @@ class ObservationTableChecker(Checker):
         for name, unit in self.columns_required:
             if name not in t.colnames:
                 yield self._record(
-                    level="error", msg="Missing table column: {!r}".format(name)
+                    level="error", msg=f"Missing table column: {name!r}"
                 )
             else:
                 if Unit(unit) != (t[name].unit or ""):
                     yield self._record(
-                        level="error", msg="Invalid unit for column: {!r}".format(name)
+                        level="error", msg=f"Invalid unit for column: {name!r}"
                     )

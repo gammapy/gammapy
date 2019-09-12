@@ -198,7 +198,7 @@ class Parameter:
                 frozen=self.frozen,
             )
         else:
-            raise ValueError("Invalid selection: {!r}".format(selection))
+            raise ValueError(f"Invalid selection: {selection!r}")
 
     def autoscale(self, method="scale10"):
         """Autoscale the parameters.
@@ -229,7 +229,7 @@ class Parameter:
         elif method == "factor1":
             self.factor, self.scale = 1, self.value
         else:
-            raise ValueError("Invalid method: {}".format(method))
+            raise ValueError(f"Invalid method: {method}")
 
 
 class Parameters:
@@ -330,7 +330,7 @@ class Parameters:
             for idx, par in enumerate(self.parameters):
                 if val == par.name:
                     return idx
-            raise IndexError("No parameter: {!r}".format(val))
+            raise IndexError(f"No parameter: {val!r}")
         else:
             raise TypeError("Invalid type: {!r}".format(type(val)))
 

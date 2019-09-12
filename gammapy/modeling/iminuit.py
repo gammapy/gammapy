@@ -140,7 +140,7 @@ def _make_parnames(parameters):
 
 
 def _make_parname(idx, par):
-    return "par_{:03d}_{}".format(idx, par.name)
+    return f"par_{idx:03d}_{par.name}"
 
 
 def make_minuit_par_kwargs(parameters):
@@ -156,7 +156,7 @@ def make_minuit_par_kwargs(parameters):
 
         min_ = None if np.isnan(par.factor_min) else par.factor_min
         max_ = None if np.isnan(par.factor_max) else par.factor_max
-        kwargs["limit_{}".format(name)] = (min_, max_)
+        kwargs[f"limit_{name}"] = (min_, max_)
 
         if parameters.covariance is not None:
             error = parameters.error(par) / par.scale
@@ -170,6 +170,6 @@ def make_minuit_par_kwargs(parameters):
                 "Minuit optimizer."
             )
 
-        kwargs["error_{}".format(name)] = error
+        kwargs[f"error_{name}"] = error
 
     return kwargs

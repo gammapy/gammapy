@@ -164,7 +164,7 @@ def coordsys_to_frame(coordsys):
     elif coordsys in ["GAL", "G"]:
         return "galactic"
     else:
-        raise ValueError("Unrecognized coordinate system: {!r}".format(coordsys))
+        raise ValueError(f"Unrecognized coordinate system: {coordsys!r}")
 
 
 # TODO: remove (or improve)
@@ -191,7 +191,7 @@ def skycoord_to_lonlat(skycoord, coordsys=None):
     elif frame in ["galactic"]:
         return skycoord.l.deg, skycoord.b.deg, frame
     else:
-        raise ValueError("Unrecognized SkyCoord frame: {!r}".format(frame))
+        raise ValueError(f"Unrecognized SkyCoord frame: {frame!r}")
 
 
 def lonlat_to_skycoord(lon, lat, coordsys):
@@ -370,7 +370,7 @@ class MapAxis:
             self._pix_offset = 0.0
             nbin = len(nodes)
         else:
-            raise ValueError("Invalid node type: {!r}".format(node_type))
+            raise ValueError(f"Invalid node type: {node_type!r}")
 
         self._nbin = nbin
 
@@ -469,7 +469,7 @@ class MapAxis:
         elif node_type == "center":
             nnode = nbin
         else:
-            raise ValueError("Invalid node type: {!r}".format(node_type))
+            raise ValueError(f"Invalid node type: {node_type!r}")
 
         if interp == "lin":
             nodes = np.linspace(lo_bnd, hi_bnd, nnode)
@@ -478,7 +478,7 @@ class MapAxis:
         elif interp == "sqrt":
             nodes = np.linspace(lo_bnd ** 0.5, hi_bnd ** 0.5, nnode) ** 2.0
         else:
-            raise ValueError("Invalid interp: {}".format(interp))
+            raise ValueError(f"Invalid interp: {interp}")
 
         return cls(nodes, **kwargs)
 
@@ -635,8 +635,8 @@ class MapAxis:
         str_ += fmt.format("nbins", str(self.nbin))
         str_ += fmt.format("node type", self.node_type)
         vals = self.edges if self.node_type == "edges" else self.center
-        str_ += fmt.format("{} min".format(self.node_type), "{:.1e}".format(vals.min()))
-        str_ += fmt.format("{} max".format(self.node_type), "{:.1e}".format(vals.max()))
+        str_ += fmt.format(f"{self.node_type} min", "{:.1e}".format(vals.min()))
+        str_ += fmt.format(f"{self.node_type} max", "{:.1e}".format(vals.max()))
         str_ += fmt.format("interp", self._interp)
         return str_
 
@@ -691,8 +691,8 @@ class MapAxis:
         edges_ref = self.pix_to_coord(edges_idx)
 
         groups = QTable()
-        groups["{}_min".format(self.name)] = edges_ref[:-1]
-        groups["{}_max".format(self.name)] = edges_ref[1:]
+        groups[f"{self.name}_min"] = edges_ref[:-1]
+        groups[f"{self.name}_max"] = edges_ref[1:]
 
         groups["idx_min"] = (edges_idx[:-1] + 0.5).astype(int)
         groups["idx_max"] = (edges_idx[1:] - 0.5).astype(int)
@@ -708,8 +708,8 @@ class MapAxis:
                 "bin_type": "underflow",
                 "idx_min": 0,
                 "idx_max": edge_idx_start,
-                "{}_min".format(self.name): self.pix_to_coord(-0.5),
-                "{}_max".format(self.name): edge_ref_start,
+                f"{self.name}_min": self.pix_to_coord(-0.5),
+                f"{self.name}_max": edge_ref_start,
             }
             groups.insert_row(0, vals=underflow)
 
@@ -720,8 +720,8 @@ class MapAxis:
                 "bin_type": "overflow",
                 "idx_min": edge_idx_end + 1,
                 "idx_max": self.nbin - 1,
-                "{}_min".format(self.name): edge_ref_end,
-                "{}_max".format(self.name): self.pix_to_coord(self.nbin - 0.5),
+                f"{self.name}_min": edge_ref_end,
+                f"{self.name}_max": self.pix_to_coord(self.nbin - 0.5),
             }
             groups.add_row(vals=overflow)
 
@@ -893,7 +893,7 @@ class MapCoord:
         if isinstance(coords, (list, tuple)):
             coords_dict = {"lon": coords[0], "lat": coords[1]}
             for i, c in enumerate(coords[2:]):
-                coords_dict["axis{}".format(i)] = c
+                coords_dict[f"axis{i}"] = c
         else:
             raise ValueError("Unrecognized input type.")
 
@@ -922,7 +922,7 @@ class MapCoord:
             coords = (skycoord.l.deg, skycoord.b.deg) + coords[1:]
             coords = cls._from_lonlat(coords, coordsys="GAL")
         else:
-            raise ValueError("Unrecognized coordinate frame: {!r}".format(name))
+            raise ValueError(f"Unrecognized coordinate frame: {name!r}")
 
         if coordsys is None:
             return coords
@@ -1048,8 +1048,8 @@ class MapCoord:
         str_ += "\n\n"
         str_ += "\taxes     : {}\n".format(", ".join(self._data.keys()))
         str_ += "\tshape    : {}\n".format(self.shape[::-1])
-        str_ += "\tndim     : {}\n".format(self.ndim)
-        str_ += "\tcoordsys : {}\n".format(self.coordsys)
+        str_ += f"\tndim     : {self.ndim}\n"
+        str_ += f"\tcoordsys : {self.coordsys}\n"
         return str_
 
     # TODO: this is a temporary solution until we have decided how to handle
@@ -1510,11 +1510,11 @@ class MapGeom(abc.ABC):
             elif ax.name == "energy" and ax.node_type == "center":
                 header[key] = "ENERGY"
             elif ax.node_type == "edges":
-                header[key] = "{}_MIN,{}_MAX".format(name, name)
+                header[key] = f"{name}_MIN,{name}_MAX"
             elif ax.node_type == "center":
                 header[key] = name
             else:
-                raise ValueError("Invalid node type {!r}".format(ax.node_type))
+                raise ValueError(f"Invalid node type {ax.node_type!r}")
 
             key_interp = "INTERP%i" % idx
             header[key_interp] = ax._interp

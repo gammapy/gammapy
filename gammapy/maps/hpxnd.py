@@ -233,7 +233,7 @@ class HpxNDMap(HpxMap):
             vals = self.interp_by_coord(coords, interp=order)
             map_out.set_by_coord(coords, vals)
         else:
-            raise ValueError("Unrecognized pad mode: {!r}".format(mode))
+            raise ValueError(f"Unrecognized pad mode: {mode!r}")
 
         return map_out
 
@@ -274,7 +274,7 @@ class HpxNDMap(HpxMap):
         if order == 1:
             return self._interp_by_coord(coords, order)
         else:
-            raise ValueError("Invalid interpolation order: {!r}".format(order))
+            raise ValueError(f"Invalid interpolation order: {order!r}")
 
     def interp_by_pix(self, pix, interp=None):
         """Interpolate map values at the given pixel coordinates.
@@ -526,7 +526,7 @@ class HpxNDMap(HpxMap):
         elif method == "poly":
             return self._plot_poly(proj=proj, ax=ax)
         else:
-            raise ValueError("Invalid method: {!r}".format(method))
+            raise ValueError(f"Invalid method: {method!r}")
 
     def _plot_poly(self, proj="AIT", step=1, ax=None):
         """Plot the map using a collection of polygons.

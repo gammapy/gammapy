@@ -154,7 +154,7 @@ class Map(abc.ABC):
         elif "hpx" in map_type.lower():
             return HpxMap.create(**kwargs)
         else:
-            raise ValueError("Unrecognized map type: {!r}".format(map_type))
+            raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     @staticmethod
     def read(filename, hdu=None, hdu_bands=None, map_type="auto"):
@@ -288,7 +288,7 @@ class Map(abc.ABC):
 
             return HpxSparseMap
         else:
-            raise ValueError("Unrecognized map type: {!r}".format(map_type))
+            raise ValueError(f"Unrecognized map type: {map_type!r}")
 
     def write(self, filename, overwrite=False, **kwargs):
         """Write to a FITS file.
@@ -908,15 +908,15 @@ class Map(abc.ABC):
         for axis in self.geom.axes:
             if axis.node_type == "edges":
                 options = [
-                    "{:.2e} - {:.2e} {}".format(val_min, val_max, axis.unit)
+                    f"{val_min:.2e} - {val_max:.2e} {axis.unit}"
                     for val_min, val_max in zip(axis.edges[:-1], axis.edges[1:])
                 ]
             else:
-                options = ["{:.2e} {}".format(val, axis.unit) for val in axis.center]
+                options = [f"{val:.2e} {axis.unit}" for val in axis.center]
 
             interact_kwargs[axis.name] = SelectionSlider(
                 options=options,
-                description="Select {}:".format(axis.name),
+                description=f"Select {axis.name}:",
                 continuous_update=False,
                 style={"description_width": "initial"},
                 layout={"width": "50%"},
@@ -963,14 +963,14 @@ class Map(abc.ABC):
         str_ = self.__class__.__name__
         str_ += "\n\n"
         geom = self.geom.__class__.__name__
-        str_ += "\tgeom  : {} \n ".format(geom)
+        str_ += f"\tgeom  : {geom} \n "
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
         axes = axes + [_.name for _ in self.geom.axes]
         str_ += "\taxes  : {}\n".format(", ".join(axes))
         str_ += "\tshape : {}\n".format(self.geom.data_shape[::-1])
-        str_ += "\tndim  : {}\n".format(self.geom.ndim)
+        str_ += f"\tndim  : {self.geom.ndim}\n"
         str_ += "\tunit  : {!r} \n".format(str(self.unit))
-        str_ += "\tdtype : {} \n".format(self.data.dtype)
+        str_ += f"\tdtype : {self.data.dtype} \n"
         return str_
 
     def _arithmetics(self, operator, other, copy):

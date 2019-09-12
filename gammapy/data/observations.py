@@ -33,21 +33,21 @@ class DataStoreObservation:
     def __init__(self, obs_id, data_store, obs_filter=None):
         # Assert that `obs_id` is available
         if obs_id not in data_store.obs_table["OBS_ID"]:
-            raise ValueError("OBS_ID = {} not in obs index table.".format(obs_id))
+            raise ValueError(f"OBS_ID = {obs_id} not in obs index table.")
         if obs_id not in data_store.hdu_table["OBS_ID"]:
-            raise ValueError("OBS_ID = {} not in HDU index table.".format(obs_id))
+            raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
 
         self.obs_id = obs_id
         self.data_store = data_store
         self.obs_filter = obs_filter or ObservationFilter()
 
     def __str__(self):
-        ss = "Info for OBS_ID = {}\n".format(self.obs_id)
-        ss += "- Start time: {:.2f}\n".format(self.tstart.mjd)
+        ss = f"Info for OBS_ID = {self.obs_id}\n"
+        ss += f"- Start time: {self.tstart.mjd:.2f}\n"
         ss += "- Pointing pos: RA {:.2f} / Dec {:.2f}\n".format(
             self.pointing_radec.ra, self.pointing_radec.dec
         )
-        ss += "- Observation duration: {}\n".format(self.observation_time_duration)
+        ss += f"- Observation duration: {self.observation_time_duration}\n"
         ss += "- Dead-time fraction: {:5.3f} %\n".format(
             100 * self.observation_dead_time_fraction
         )
@@ -358,7 +358,7 @@ class ObservationChecker(Checker):
         for name in columns_required:
             if name not in gti.table.colnames:
                 yield self._record(
-                    level="error", msg="Missing table column: {!r}".format(name)
+                    level="error", msg=f"Missing table column: {name!r}"
                 )
 
         # TODO: Check that header keywords agree with table entries

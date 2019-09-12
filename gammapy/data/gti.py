@@ -98,7 +98,7 @@ class GTI:
     def __str__(self):
         ss = "GTI info:\n"
         ss += "- Number of GTIs: {}\n".format(len(self.table))
-        ss += "- Duration: {}\n".format(self.time_sum)
+        ss += f"- Duration: {self.time_sum}\n"
         ss += "- Start: {} MET\n".format(self.time_start[0])
         ss += "- Start: {}\n".format(self.time_start[0].fits)
         ss += "- Stop: {} MET\n".format(self.time_stop[-1])

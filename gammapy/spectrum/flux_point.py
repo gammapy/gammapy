@@ -352,7 +352,7 @@ class FluxPoints:
                 # set e_ref that it represents the mean dnde in the given energy bin
                 e_ref = self._e_ref_lafferty(model, self.e_min, self.e_max)
             else:
-                raise ValueError("Invalid method: {}".format(method))
+                raise ValueError(f"Invalid method: {method}")
             table = self._flux_to_dnde(e_ref, table, model, pwl_approx)
 
         elif self.sed_type == "dnde" and sed_type == "e2dnde":
@@ -637,8 +637,8 @@ class FluxPoints:
 
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
-        ax.set_xlabel("Energy ({})".format(energy_unit))
-        ax.set_ylabel("{} ({})".format(self.sed_type, y_unit))
+        ax.set_xlabel(f"Energy ({energy_unit})")
+        ax.set_ylabel(f"{self.sed_type} ({y_unit})")
         return ax
 
     def plot_likelihood(
@@ -713,8 +713,8 @@ class FluxPoints:
         caxes = ax.pcolormesh(x, y_values, -z.T, **kwargs)
         ax.set_xscale("log", nonposx="clip")
         ax.set_yscale("log", nonposy="clip")
-        ax.set_xlabel("Energy ({})".format(energy_unit))
-        ax.set_ylabel("{} ({})".format(self.sed_type, y_values.unit))
+        ax.set_xlabel(f"Energy ({energy_unit})")
+        ax.set_ylabel(f"{self.sed_type} ({y_values.unit})")
 
         if add_cbar:
             label = "delta log-likelihood"
@@ -855,7 +855,7 @@ class FluxPointsEstimator:
         return energy_axis.group_table(self.e_edges)
 
     def __str__(self):
-        s = "{}:\n".format(self.__class__.__name__)
+        s = f"{self.__class__.__name__}:\n"
         s += str(self.datasets) + "\n"
         s += str(self.e_edges) + "\n"
         s += str(self.model) + "\n"
@@ -1176,7 +1176,7 @@ class FluxPointsDataset(Dataset):
         return str_
 
     def __str__(self):
-        str_ = "{}: \n".format(self.__class__.__name__)
+        str_ = f"{self.__class__.__name__}: \n"
         str_ += "\n"
         if self.model is None:
             str_ += "\t{:32}:   {} \n".format("Model Name", "No Model")
@@ -1376,7 +1376,7 @@ class FluxPointsDataset(Dataset):
         # format axes
         ax.axhline(0, color="black", lw=0.5)
         ax.set_ylabel("Residuals   {}".format(unit.__str__()))
-        ax.set_xlabel("Energy ({})".format(self._e_unit))
+        ax.set_xlabel(f"Energy ({self._e_unit})")
         ax.set_xscale("log")
         ax.set_xlim(self._e_range.to_value(self._e_unit))
         y_max = 2 * np.nanmax(residuals).value

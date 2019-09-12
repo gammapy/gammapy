@@ -135,7 +135,7 @@ class Datasets:
         counter = Counter(self.types)
 
         for key, value in counter.items():
-            str_ += "\t{key}: {value} \n".format(key=key, value=value)
+            str_ += f"\t{key}: {value} \n"
 
         return str_
 
