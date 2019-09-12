@@ -111,7 +111,7 @@ def run_mcmc(dataset, nwalkers=8, nrun=1000, threads=1):
     log.info("Starting MCMC sampling: nwalkers={}, nrun={}".format(nwalkers, nrun))
     for idx, result in enumerate(sampler.sample(p0, iterations=nrun)):
         if idx % (nrun / 4) == 0:
-            log.info("{0:5.0%}".format(idx / nrun))
+            log.info("{:5.0%}".format(idx / nrun))
     log.info("100% => sampling completed")
 
     return sampler

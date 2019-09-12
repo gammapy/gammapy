@@ -472,8 +472,7 @@ def extend_with_default(validator_class, template):
                     default = default_field
                 if default in sub_schema:
                     instance.setdefault(prop, sub_schema[default])
-        for error in validate_properties(validator, properties, instance, schema):
-            yield error
+        yield from validate_properties(validator, properties, instance, schema)
 
     return jsonschema.validators.extend(validator_class, {"properties": set_defaults})
 

@@ -327,9 +327,7 @@ class ReflectedRegionsBackgroundEstimator:
                 off_regions = off_regions.union(reg)
             off_events = obs.events.select_region(off_regions, wcs)
 
-        log.info(
-            "Found {0} reflected regions for the Obs #{1}".format(a_off, obs.obs_id)
-        )
+        log.info("Found {} reflected regions for the Obs #{}".format(a_off, obs.obs_id))
 
         return BackgroundEstimate(
             on_region=self.on_region,

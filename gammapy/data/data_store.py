@@ -109,13 +109,13 @@ class DataStore:
             obs_table_filename = base_dir / cls.DEFAULT_OBS_TABLE
 
         if not hdu_table_filename.exists():
-            raise IOError("File not found: {}".format(hdu_table_filename))
+            raise OSError("File not found: {}".format(hdu_table_filename))
         log.debug("Reading {}".format(hdu_table_filename))
         hdu_table = HDUIndexTable.read(str(hdu_table_filename), format="fits")
         hdu_table.meta["BASE_DIR"] = str(base_dir)
 
         if not obs_table_filename.exists():
-            raise IOError("File not found: {}".format(obs_table_filename))
+            raise OSError("File not found: {}".format(obs_table_filename))
         log.debug("Reading {}".format(str(obs_table_filename)))
         obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
 

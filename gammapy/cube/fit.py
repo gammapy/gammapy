@@ -51,7 +51,7 @@ class MapDataset(Dataset):
         This mode is recommended for global optimization algorithms.
     mask_safe : `~numpy.ndarray`
         Mask defining the safe data range.
-    gti : '~gammapy.data.gti.GTI'
+    gti : '~gammapy.data.GTI'
         GTI of the observation or union of GTI if it is a stacked observation
 
     """
