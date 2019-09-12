@@ -1012,7 +1012,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
         try:
             rmffile = phafile.replace("pha", "rmf")
             energy_dispersion = EnergyDispersion.read(str(dirname / rmffile))
-        except IOError:
+        except OSError:
             # TODO : Add logger and echo warning
             energy_dispersion = None
 
@@ -1029,7 +1029,7 @@ class SpectrumDatasetOnOff(SpectrumDataset):
                 )
 
                 acceptance_off = data_bkg["backscal"]
-        except IOError:
+        except OSError:
             # TODO : Add logger and echo warning
             counts_off, acceptance_off = None, None
 
