@@ -166,10 +166,10 @@ class Parameter:
 
     def __repr__(self):
         return (
-            "Parameter(name={name!r}, value={value!r}, "
-            "factor={factor!r}, scale={scale!r}, unit={unit!r}, "
-            "min={min!r}, max={max!r}, frozen={frozen!r})"
-        ).format(**self.to_dict())
+            f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
+            f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r})"
+        )
 
     def to_dict(self, selection="all"):
         """Convert to dict.
@@ -332,7 +332,7 @@ class Parameters:
                     return idx
             raise IndexError(f"No parameter: {val!r}")
         else:
-            raise TypeError("Invalid type: {!r}".format(type(val)))
+            raise TypeError(f"Invalid type: {type(val)!r}")
 
     def __getitem__(self, name):
         """Access parameter by name or index"""

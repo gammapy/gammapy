@@ -423,7 +423,7 @@ class WcsGeom(MapGeom):
         elif isinstance(skydir, SkyCoord):
             xref, yref, frame = skycoord_to_lonlat(skydir, coordsys=coordsys)
         else:
-            raise ValueError("Invalid type for skydir: {!r}".format(type(skydir)))
+            raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
         if width is not None:
             width = _check_width(width)
@@ -740,8 +740,8 @@ class WcsGeom(MapGeom):
         if axis is None:
             if np.any(np.mod(self.npix, factor) > 0):
                 raise ValueError(
-                    "Spatial shape not divisible by factor {!r} in all axes."
-                    " You need to pad prior to calling downsample.".format(factor)
+                    f"Spatial shape not divisible by factor {factor!r} in all axes."
+                    f" You need to pad prior to calling downsample."
                 )
 
             npix = (self.npix[0] / factor, self.npix[1] / factor)
@@ -751,8 +751,7 @@ class WcsGeom(MapGeom):
         else:
             if not self.is_regular:
                 raise NotImplementedError(
-                    "Upsampling in non-spatial axes not"
-                    " supported for irregular geometries"
+                    "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
 
             axes = copy.deepcopy(self.axes)
@@ -769,8 +768,7 @@ class WcsGeom(MapGeom):
         else:
             if not self.is_regular:
                 raise NotImplementedError(
-                    "Upsampling in non-spatial axes not"
-                    " supported for irregular geometries"
+                    "Upsampling in non-spatial axes not supported for irregular geometries"
                 )
             axes = copy.deepcopy(self.axes)
             idx = self.get_axis_index_by_name(axis)
@@ -926,21 +924,20 @@ class WcsGeom(MapGeom):
         return mask
 
     def __repr__(self):
-        str_ = self.__class__.__name__
-        str_ += "\n\n"
         axes = ["lon", "lat"] + [_.name for _ in self.axes]
-        str_ += "\taxes       : {}\n".format(", ".join(axes))
-        str_ += "\tshape      : {}\n".format(self.data_shape[::-1])
-        str_ += f"\tndim       : {self.ndim}\n"
-        str_ += f"\tcoordsys   : {self.coordsys}\n"
-        str_ += f"\tprojection : {self.projection}\n"
         lon = self.center_skydir.data.lon.deg
         lat = self.center_skydir.data.lat.deg
-        str_ += f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
-        str_ += "\twidth      : {width[0][0]:.1f} x {width[1][0]:.1f}\n".format(
-            width=self.width
+
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\taxes       : {axes}\n"
+            f"\tshape      : {self.data_shape[::-1]}\n"
+            f"\tndim       : {self.ndim}\n"
+            f"\tcoordsys   : {self.coordsys}\n"
+            f"\tprojection : {self.projection}\n"
+            f"\tcenter     : {lon:.1f} deg, {lat:.1f} deg\n"
+            f"\twidth      : {self.width[0][0]:.1f} x {self.width[1][0]:.1f}\n"
         )
-        return str_
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

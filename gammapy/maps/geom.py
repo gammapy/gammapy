@@ -126,9 +126,7 @@ def find_and_read_bands(hdu, header=None):
                 interp = interp_header_val
             else:
                 log.warning(
-                    "Invalid map axis interp: {!r}. Using default: {!r}".format(
-                        interp_header_val, interp
-                    )
+                    f"Invalid map axis interp: {interp_header_val!r}. Using default: {interp!r}"
                 )
 
         unit = hdu.data.columns[cols[0]].unit
@@ -357,9 +355,7 @@ class MapAxis:
 
         if (self._nodes < 0).any() and interp != "lin":
             raise ValueError(
-                "Interpolation scaling '{}' only support for positive node values.".format(
-                    interp
-                )
+                f"Interpolation scaling {interp!r} only support for positive node values."
             )
 
         # Set pixel coordinate of first node
@@ -937,7 +933,7 @@ class MapCoord:
         elif isinstance(coords[0], SkyCoord):
             return cls._from_skycoord(coords, coordsys=coordsys)
         else:
-            raise TypeError("Type not supported: {!r}".format(type(coords)))
+            raise TypeError(f"Type not supported: {type(coords)!r}")
 
     @classmethod
     def _from_dict(cls, coords, coordsys=None):
@@ -998,7 +994,7 @@ class MapCoord:
         elif isinstance(data, SkyCoord):
             return cls._from_skycoord((data,), coordsys=coordsys)
         else:
-            raise TypeError("Unsupported input type: {!r}".format(type(data)))
+            raise TypeError(f"Unsupported input type: {type(data)!r}")
 
     def to_coordsys(self, coordsys):
         """Convert to a different coordinate frame.
@@ -1044,13 +1040,13 @@ class MapCoord:
         return copy.deepcopy(self)
 
     def __repr__(self):
-        str_ = self.__class__.__name__
-        str_ += "\n\n"
-        str_ += "\taxes     : {}\n".format(", ".join(self._data.keys()))
-        str_ += "\tshape    : {}\n".format(self.shape[::-1])
-        str_ += f"\tndim     : {self.ndim}\n"
-        str_ += f"\tcoordsys : {self.coordsys}\n"
-        return str_
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\taxes     : {self._data.keys()}\n"
+            f"\tshape    : {self.shape[::-1]}\n"
+            f"\tndim     : {self.ndim}n"
+            f"\tcoordsys : {self.coordsys}\n"
+        )
 
     # TODO: this is a temporary solution until we have decided how to handle
     # quantities uniformly. This should be called after any `MapCoord.create()`
@@ -1159,7 +1155,7 @@ class MapGeom(abc.ABC):
             axis_names = ["energy"]
         elif conv == "gadf" and hdu is None:
             if hdu_skymap:
-                hdu = "{}_{}".format(hdu_skymap, "BANDS")
+                hdu = f"{hdu_skymap}_BANDS"
             else:
                 hdu = "BANDS"
         # else:

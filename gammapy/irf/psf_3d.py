@@ -329,7 +329,7 @@ class PSF3D:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction)
-                label = "{} deg, {:.1f}%".format(theta.deg, 100 * fraction)
+                label = f"{theta.deg} deg, {100 * fraction:.1f}%"
                 ax.plot(energy.value, radius.value, label=label)
 
         ax.semilogx()
@@ -395,9 +395,7 @@ class PSF3D:
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = "Containment radius R{:.0f} ({})" "".format(
-                100 * fraction, containment.unit
-            )
+            label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax

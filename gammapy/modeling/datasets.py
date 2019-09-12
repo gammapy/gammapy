@@ -70,8 +70,8 @@ class Dataset(abc.ABC):
                 residuals = (data - model) / np.sqrt(model)
             else:
                 raise AttributeError(
-                    "Invalid method: {}. Choose between 'diff',"
-                    " 'diff/model' and 'diff/sqrt(model)'".format(method)
+                    f"Invalid method: {method!r}. Choose between 'diff',"
+                    " 'diff/model' and 'diff/sqrt(model)'"
                 )
         return residuals
 

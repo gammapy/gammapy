@@ -185,8 +185,7 @@ def xml_to_model(xml, which):
     try:
         model = model_registry[which][type_]["model"]
     except KeyError:
-        msg = "{} model '{}' not registered"
-        raise UnknownModelError(msg.format(which, type_))
+        raise UnknownModelError(f"{which} model {type_!r} not registered")
 
     parameters = xml_to_parameters(xml["parameter"], which, type_)
 
@@ -235,8 +234,9 @@ def xml_to_parameters(xml, which, type_):
         try:
             name, unit = model_registry[which][type_]["parameters"][par["@name"]]
         except KeyError:
-            msg = "Parameter '{}' not registered for {} model {}"
-            raise UnknownParameterError(msg.format(par["@name"], which, type_))
+            raise UnknownParameterError(
+                f"Parameter {par['@name']} not registered for {which} model {type_}"
+            )
 
         factor = float(par["@value"])
         scale = float(par["@scale"])

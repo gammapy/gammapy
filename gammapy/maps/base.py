@@ -72,8 +72,7 @@ class Map(abc.ABC):
     def data(self, val):
         if val.shape != self.geom.data_shape:
             raise ValueError(
-                "Shape {!r} does not match map data shape {!r}"
-                "".format(val.shape, self.geom.data_shape)
+                "Shape {val.shape!r} does not match map data shape {self.geom.data_shape!r}"
             )
 
         if isinstance(val, u.Quantity):
@@ -960,18 +959,19 @@ class Map(abc.ABC):
         return self._init_copy(**kwargs)
 
     def __repr__(self):
-        str_ = self.__class__.__name__
-        str_ += "\n\n"
         geom = self.geom.__class__.__name__
-        str_ += f"\tgeom  : {geom} \n "
         axes = ["skycoord"] if self.geom.is_hpx else ["lon", "lat"]
         axes = axes + [_.name for _ in self.geom.axes]
-        str_ += "\taxes  : {}\n".format(", ".join(axes))
-        str_ += "\tshape : {}\n".format(self.geom.data_shape[::-1])
-        str_ += f"\tndim  : {self.geom.ndim}\n"
-        str_ += "\tunit  : {!r} \n".format(str(self.unit))
-        str_ += f"\tdtype : {self.data.dtype} \n"
-        return str_
+
+        return (
+            f"{self.__class__.__name__}\n\n"
+            f"\tgeom  : {geom} \n "
+            f"\taxes  : {axes}\n"
+            f"\tshape : {self.geom.data_shape[::-1]}\n"
+            f"\tndim  : {self.geom.ndim}\n"
+            f"\tunit  : {self.unit}\n"
+            f"\tdtype : {self.data.dtype}\n"
+        )
 
     def _arithmetics(self, operator, other, copy):
         """Perform arithmetics on maps after checking geometry consistency."""

@@ -104,7 +104,7 @@ class TablePSF:
     def info(self):
         """Print basic info."""
         ss = array_stats_str(self.rad.deg, "offset")
-        ss += "integral = {}\n".format(self.integral())
+        ss += f"integral = {self.integral()}\n"
 
         for containment in [68, 80, 95]:
             radius = self.containment_radius(0.01 * containment)
@@ -299,9 +299,8 @@ class EnergyDependentTablePSF:
         for fraction in fractions:
             rads = self.containment_radius(energy=energies, fraction=fraction)
             for energy, rad in zip(energies, rads):
-                ss += "  " + "{}% containment radius at {:3.0f}: {:.2f}\n".format(
-                    100 * fraction, energy, rad
-                )
+                ss += f"  {100 * fraction}% containment radius at {energy:3.0f}: {rad:.2f}\n"
+
         return ss
 
     @classmethod
@@ -540,7 +539,7 @@ class EnergyDependentTablePSF:
 
         for fraction in fractions:
             rad = self.containment_radius(self.energy, fraction)
-            label = "{:.1f}% Containment".format(100 * fraction)
+            label = f"{100 * fraction:.1f}% Containment"
             ax.plot(self.energy.value, rad.value, label=label, **kwargs)
 
         ax.semilogx()

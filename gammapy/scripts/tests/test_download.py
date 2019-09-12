@@ -12,14 +12,14 @@ def files_dir(tmpdir_factory):
 
 @pytest.fixture(scope="session")
 def config():
-    return dict(
-        release="0.8",
-        dataset="dark_matter_spectra",
-        notebook="astro_dark_matter",
-        imagefile="gammapy_datastore_butler.png",
-        script="example_2_gauss",
-        envfilename="gammapy-0.8-environment.yml",
-    )
+    return {
+        "release": "0.8",
+        "dataset": "dark_matter_spectra",
+        "notebook": "astro_dark_matter",
+        "imagefile": "gammapy_datastore_butler.png",
+        "script": "example_2_gauss",
+        "envfilename": "gammapy-0.8-environment.yml",
+    }
 
 
 def test_cli_download_help():
@@ -30,11 +30,13 @@ def test_cli_download_help():
 @requires_dependency("parfive")
 @pytest.mark.remote_data
 def test_cli_download_datasets(files_dir, config):
-    option_out = f"--out={files_dir}"
-    option_src = "--src={}".format(config["dataset"])
-    option_release = "--release={}".format(config["release"])
-
-    args = ["download", "datasets", option_src, option_out, option_release]
+    args = [
+        "download",
+        "datasets",
+        f"--src={config['dataset']}",
+        f"--out={files_dir}",
+        f"--release={config['release']}",
+    ]
     result = run_cli(cli, args)
     assert (Path(files_dir) / config["dataset"]).exists()
     assert "GAMMAPY_DATA" in result.output

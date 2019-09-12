@@ -230,7 +230,7 @@ class EnergyDependentMultiGaussPSF:
             pars[name] = interp_norm((theta, energy))
 
         for idx, interp_sigma in enumerate(self._interp_sigmas):
-            pars["sigma_{}".format(idx + 1)] = interp_sigma((theta, energy))
+            pars[f"sigma_{idx + 1}"] = interp_sigma((theta, energy))
 
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
@@ -252,8 +252,8 @@ class EnergyDependentMultiGaussPSF:
                     radius[jdx, idx] = psf.containment_radius(fraction)
                 except ValueError:
                     log.debug(
-                        "Computing containment failed for E = {:.2f}"
-                        " and Theta={:.2f}".format(energy, theta)
+                        f"Computing containment failed for energy = {energy:.2f}"
+                        f" and theta={theta:.2f}"
                     )
                     log.debug(f"Sigmas: {psf.sigmas} Norms: {psf.norms}")
                     radius[jdx, idx] = np.nan
@@ -304,9 +304,7 @@ class EnergyDependentMultiGaussPSF:
             self._plot_safe_energy_range(ax)
 
         if add_cbar:
-            label = "Containment radius R{:.0f} ({})".format(
-                100 * fraction, containment.unit
-            )
+            label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
             ax.figure.colorbar(caxes, ax=ax, label=label)
 
         return ax
@@ -334,7 +332,7 @@ class EnergyDependentMultiGaussPSF:
         for theta in thetas:
             for fraction in fractions:
                 radius = self.containment_radius(energy, theta, fraction).squeeze()
-                label = "{} deg, {:.1f}%".format(theta.deg, 100 * fraction)
+                label = f"{theta.deg} deg, {100 * fraction:.1f}%"
                 ax.plot(energy.value, radius.value, label=label)
 
         ax.semilogx()
@@ -386,7 +384,6 @@ class EnergyDependentMultiGaussPSF:
         """
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
-        # Summarise data members
         ss += array_stats_str(self.theta.to("deg"), "Theta")
         ss += array_stats_str(self.energy_hi, "Energy hi")
         ss += array_stats_str(self.energy_lo, "Energy lo")
