@@ -327,10 +327,10 @@ class EnergyDispersion:
 
         cols = table.columns
         c0 = fits.Column(
-            name=cols[0].name, format="E", array=cols[0], unit="{}".format(cols[0].unit)
+            name=cols[0].name, format="E", array=cols[0], unit=str(cols[0].unit)
         )
         c1 = fits.Column(
-            name=cols[1].name, format="E", array=cols[1], unit="{}".format(cols[1].unit)
+            name=cols[1].name, format="E", array=cols[1], unit=str(cols[1].unit)
         )
         c2 = fits.Column(name=cols[2].name, format="I", array=cols[2])
         c3 = fits.Column(name=cols[3].name, format="PI()", array=cols[3])
