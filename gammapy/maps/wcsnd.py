@@ -278,9 +278,7 @@ class WcsNDMap(WcsMap):
                     (img, self.geom.wcs), geom.wcs, shape_out=shape_out
                 )
             else:
-                raise TypeError(
-                    f"mode must be 'interp' or 'exact'. Got: {mode!r}"
-                )
+                raise TypeError(f"mode must be 'interp' or 'exact'. Got: {mode!r}")
 
             data[idx] = vals
 

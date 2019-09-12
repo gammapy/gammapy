@@ -73,9 +73,7 @@ def LinkNotebook(name, rawtext, notebook, lineno, inliner, options={}, content=[
     nbfile = nbfolder / nbfilename
 
     if not nbfile.is_file():
-        msg = inliner.reporter.error(
-            f"Unknown notebook {notebook}", line=lineno
-        )
+        msg = inliner.reporter.error(f"Unknown notebook {notebook}", line=lineno)
         prb = inliner.problematic(rawtext, rawtext, msg)
         return [prb], [msg]
     else:

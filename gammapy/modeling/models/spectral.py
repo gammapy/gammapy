@@ -221,7 +221,7 @@ class SpectralModel(Model):
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
         n_points=100,
-        **kwargs
+        **kwargs,
     ):
         """Plot spectral model curve.
 
@@ -282,7 +282,7 @@ class SpectralModel(Model):
         flux_unit="cm-2 s-1 TeV-1",
         energy_power=0,
         n_points=100,
-        **kwargs
+        **kwargs,
     ):
         """Plot spectral model error band.
 
@@ -1283,9 +1283,7 @@ class TableModel(SpectralModel):
         pmin = table_param["MINIMUM"]
         pmax = table_param["MAXIMUM"]
         if param < pmin or param > pmax:
-            raise ValueError(
-                f"Out of range: param={param}, min={pmin}, max={pmax}"
-            )
+            raise ValueError(f"Out of range: param={param}, min={pmin}, max={pmax}")
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")

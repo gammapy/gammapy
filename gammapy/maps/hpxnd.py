@@ -473,7 +473,7 @@ class HpxNDMap(HpxMap):
         proj="AIT",
         oversample=2,
         width_pix=1000,
-        **kwargs
+        **kwargs,
     ):
         """Quickplot method.
 

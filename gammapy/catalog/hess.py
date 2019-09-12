@@ -156,9 +156,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
     def _info_id(self):
         ss = "\n*** Source identification info ***\n\n"
-        ss += "\n".join(
-            f"{k}: {v}" for k, v in self.identification_info.items()
-        )
+        ss += "\n".join(f"{k}: {v}" for k, v in self.identification_info.items())
         return ss + "\n"
 
     def _info_map(self):

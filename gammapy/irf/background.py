@@ -175,7 +175,7 @@ class Background3D:
             fov_lat=fov_lat,
             energy=energy_reco,
             method=method,
-            **kwargs
+            **kwargs,
         )
         return values
 

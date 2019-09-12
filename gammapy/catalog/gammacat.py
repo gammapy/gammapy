@@ -353,9 +353,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
                 width=0.2 * d["morph_sigma"],
             )
         elif morph_type == "none":
-            raise NoDataAvailableError(
-                f"No spatial model available: {self.name}"
-            )
+            raise NoDataAvailableError(f"No spatial model available: {self.name}")
         else:
             raise NotImplementedError(f"Unknown spatial model: {morph_type!r}")
 

@@ -794,9 +794,7 @@ class EventListChecker(Checker):
 
         for name, unit in self.columns_required:
             if name not in t.colnames:
-                yield self._record(
-                    level="error", msg=f"Missing table column: {name!r}"
-                )
+                yield self._record(level="error", msg=f"Missing table column: {name!r}")
             else:
                 if Unit(unit) != (t[name].unit or ""):
                     yield self._record(

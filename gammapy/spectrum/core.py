@@ -147,7 +147,7 @@ class CountsSpectrum:
         energy_unit="TeV",
         show_poisson_errors=False,
         show_energy=None,
-        **kwargs
+        **kwargs,
     ):
         """Plot as data points.
 

@@ -632,7 +632,7 @@ class FluxPoints:
                 xerr=x_err,
                 yerr=y_err,
                 uplims=True,
-                **kwargs
+                **kwargs,
             )
 
         ax.set_xscale("log", nonposx="clip")
@@ -648,7 +648,7 @@ class FluxPoints:
         add_cbar=True,
         y_values=None,
         y_unit=None,
-        **kwargs
+        **kwargs,
     ):
         """Plot likelihood SED profiles as a density plot..
 

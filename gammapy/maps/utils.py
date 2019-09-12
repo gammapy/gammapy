@@ -19,9 +19,7 @@ class InvalidValue:
         elif np.issubdtype(dtype, np.dtype(bool).type):
             return self.bool
         else:
-            raise ValueError(
-                f"No invalid value placeholder defined for {dtype}"
-            )
+            raise ValueError(f"No invalid value placeholder defined for {dtype}")
 
 
 class InvalidIndex:

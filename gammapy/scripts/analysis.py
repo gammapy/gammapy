@@ -288,7 +288,7 @@ class Analysis:
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **extraction_pars
+            **extraction_pars,
         )
         self.extraction.run()
 

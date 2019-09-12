@@ -42,7 +42,7 @@ class ScaledRegularGridInterpolator:
         values_scale="lin",
         extrapolate=True,
         axis=None,
-        **kwargs
+        **kwargs,
     ):
 
         if points_scale is None:

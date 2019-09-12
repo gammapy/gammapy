@@ -521,7 +521,7 @@ class EnergyDependentTablePSF:
                 self.rad.to_value("deg"),
                 psf_value.to_value("sr-1"),
                 label=label,
-                **kwargs
+                **kwargs,
             )
 
         ax.set_yscale("log")

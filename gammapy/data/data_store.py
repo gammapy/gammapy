@@ -555,7 +555,7 @@ class DataStoreMaker:
             HDU_TYPE="psf",
             HDU_CLASS="psf_3gauss",
             HDU_NAME="POINT SPREAD FUNCTION",
-            **info
+            **info,
         )
         yield dict(HDU_TYPE="bkg", HDU_CLASS="bkg_3d", HDU_NAME="BACKGROUND", **info)
 

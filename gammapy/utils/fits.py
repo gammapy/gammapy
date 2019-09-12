@@ -325,9 +325,7 @@ class SmartHDUList:
             # `HDUList.index_of` for integer input doesn't raise, just return
             # the number unchanged. Here we want to raise an error in this case.
             if not (0 <= idx < len(self.hdu_list)):
-                raise KeyError(
-                    f"HDU not found: hdu={hdu_key}. Index out of range."
-                )
+                raise KeyError(f"HDU not found: hdu={hdu_key}. Index out of range.")
             return idx
 
         if hdu_type is not None:

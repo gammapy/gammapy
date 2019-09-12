@@ -174,7 +174,7 @@ class Fit:
             total_stat=self.datasets.likelihood(),
             backend=backend,
             method=kwargs.get("method", backend),
-            **info
+            **info,
         )
 
     def covariance(self, backend="minuit"):
@@ -271,7 +271,7 @@ class Fit:
                     self.datasets.likelihood,
                     sigma,
                     reoptimize,
-                    **kwargs
+                    **kwargs,
                 )
 
         result["errp"] *= parameter.scale

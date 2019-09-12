@@ -298,7 +298,7 @@ class MapDataset(Dataset):
         smooth_radius="0.1 deg",
         region=None,
         figsize=(12, 4),
-        **kwargs
+        **kwargs,
     ):
         """
         Plot spatial and spectral residuals.
