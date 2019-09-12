@@ -71,6 +71,7 @@ parameters or only for one specific section or group of parmeters.
 General settings
 ================
 
+.. gp-howto-hli:: general
 
 
 
@@ -79,26 +80,32 @@ Observations selection
 The observations used in the analysis may be selected from a `Datastore` declared in the
 settings, as well as using different values to build a filter.
 
-
+.. gp-howto-hli:: observations
 
 Data reduction
 ==============
 
+.. gp-howto-hli:: reduction
 
+Geometry
+========
+
+.. gp-howto-hli:: geometry
+
+Model
+=====
+
+.. gp-howto-hli:: model
 
 Fitting
 =======
 
-
+.. gp-howto-hli:: fit
 
 Flux points
 ===========
 
-
-
-
-
-
+.. gp-howto-hli:: flux
 
 
 Command line tools
