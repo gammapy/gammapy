@@ -6,6 +6,8 @@
 scripts - High-level interface
 ******************************
 
+.. currentmodule:: gammapy.scripts
+
 .. _HLI_intro:
 
 Introduction
@@ -13,14 +15,15 @@ Introduction
 
 
 
+.. automodapi:: gammapy.scripts
+    :no-inheritance-diagram:
+    :include-all-objects:
 
-.. currentmodule:: gammapy.scripts
+Command line tools
+==================
 
 .. toctree::
     :maxdepth: 1
 
     cli
 
-.. automodapi:: gammapy.scripts
-    :no-inheritance-diagram:
-    :include-all-objects:

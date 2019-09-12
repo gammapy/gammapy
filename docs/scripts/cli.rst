@@ -27,6 +27,9 @@ use it you have to write a Python script or Jupyter notebook, where you import
 the functions and classes needed for a given analysis, and then call them,
 passing parameters to configure the analysis.
 
+We have also have a :ref:`HLI` that provides high-level Python functions for
+the most common needs present in the analysis process.
+
 That said, for some very commonly used and easy to configure analysis tasks we
 have implemented a **command line interface (CLI)**. It is automatically
 installed together with the Gammapy python package.
@@ -381,12 +384,9 @@ current click-based CLI:
 Plan
 ====
 
-There is no concrete plan yet concerning the high-level user interface for
-Gammapy. Feedback from users and developers on the mailing list is highly
-welcome! What do you want?
-
-Some options we are considering to build the high-level end-user interface for
-Gammapy:
+The high-level end-user interface for Gammapy follows the recommendations written in
+:ref:`pig-012`, where the **command line tools** are part of it. The options explored to
+build the high-level end-user interface for Gammapy were the following:
 
 1. Collection of command line tools. Examples: FTOOLs_, `Fermi ScienceTools`_, `ctools`_
 2. Config-file driven analysis. Examples: `FermiPy`_, or the H.E.S.S.-internal HAP
@@ -421,14 +421,10 @@ possible to configure and drive analyses not just via Python code, but via some
 configuration coming either from configuration files (YAML or XML) or command
 line options.
 
-So what should we do for Gammapy?
+**The chosen solutions were those proposed in Option 2 in a first step, with
+some extra command-line tools to come in a second step.**
 
-I would suggest we continue with the prototyping of the CLI interface as well as
-of a config-file based interface (`gammapy.scripts.SpectrumAnalysisIACT` is a
-starting point). Pull requests that improve and extend what we have are welcome
-any time!
-
-In parallel, we continue to learn and evaluate solutions others have developed.
+In parallel, we can continue to learn and evaluate solutions others have developed.
 In `python-cli-examples`_ I have started an exploration and evaluation of Python
 CLI packages, namely `click`_, but also `cliff`_ and `traitlets`_, and I might
 take a closer look also at `cement`_ and `python-fire`_ there. We should also
