@@ -17,7 +17,7 @@ The high-level interface for Gammapy follows the recommendations written in
 identified in the analysis process. The classes and methods included may be used in
 Python scripts, notebooks or as commands within IPython sessions. The high-level user
 interface could also be used to automatise processes driven by parameters declared
-in a configuration file in YAML format. hence, it also provides you with different
+in a configuration file in YAML format. Hence, it also provides you with different
 configuration templates to address the most common analysis use cases identified.
 
 .. _HLI_start:
@@ -51,6 +51,27 @@ dictionary must follow the parameters hierarchical structure which may be prone 
     >>> config_dict = {"general": {"logging": {"level": "WARNING"}}}
     >>> analysis = Analysis(config=config_dict)
 
+Configuration settings
+======================
+The hierarchical structure of the tens of parameters needed may be hard to follow. You can
+print at any moment a *how-to* documentation with example values for all the sections and
+parameters or only for one specific section or group of parameters.
+
+.. code-block:: python
+
+    >>> analysis.config.print_help()
+    >>> analysis.config.print_help("flux")
+
+You amy also choose to start an analysis using a predefined settings template. As we have
+seen before you may dump these settings into a file, edit the file and re-initialize your
+settings from the modified file.
+
+.. code-block:: python
+
+    >>> analysis = Analysis(template="1d")
+    >>> analysis.config.dump("settings.yaml")
+    >>> analysis = Analysis.from_file("settings.yaml")
+
 At any moment you can change the value of one specific parameter needed in the analysis. Note
 that it is a good practice to validate your settings when you modify the value of parameters.
 
@@ -59,53 +80,160 @@ that it is a good practice to validate your settings when you modify the value o
     >>> analysis.settings["reduction"]["background"]["on_region"]["frame"] = "galactic"
     >>> analysis.config.validate()
 
-The hierarchical structure of the tens of parameters needed may be hard to follow. You can
-print at any moment a *how-to* documentation with example values for all the sections and
-parameters or only for one specific section or group of parmeters.
-
-.. code-block:: python
-
-    >>> analysis.config.print_help()
-    >>> analysis.config.print_help("flux")
+In the following you may find more detailed information on the different sections which
+compose the YAML formatted nested configuration settings hierarchy.
 
 General settings
-================
+----------------
+The `general` section comprises information related with the `logging` configuration,
+as well as the output folder where all file outputs and datasets will be stored, declared
+as value of the `outdir` parameter.
 
 .. gp-howto-hli:: general
 
-
-
 Observations selection
-======================
-The observations used in the analysis may be selected from a `Datastore` declared in the
-settings, as well as using different values to build a filter.
+----------------------
+The observations used in the analysis may be selected from a `datastore` declared in the
+`observations` section of the settings, using also different parameters and values to
+build a composed filter.
 
 .. gp-howto-hli:: observations
 
+You may use the `get_observations()` method to proceed to make the observation filtering.
+The observations are stored as a list of `DataStoreObservation` containers.
+
+.. code-block:: python
+
+    >>> analysis.get_observations()
+    >>> analysis.observations.list
+        [<gammapy.data.observations.DataStoreObservation at 0x11e040320>,
+         <gammapy.data.observations.DataStoreObservation at 0x11153d550>,
+         <gammapy.data.observations.DataStoreObservation at 0x110a84160>,
+         <gammapy.data.observations.DataStoreObservation at 0x110a84b38>]
+
 Data reduction
-==============
+--------------
+The data reduction process needs a method that is declared as the value (1d, 2d, or 3d)
+of the `data_reducer` parameter in the `reduction` section of the settings. For the
+estimation of the background, a `background_estimator` is needed, other parameters
+related with the `on_region` and `exclusion_mask` FITS file may be also present.
 
 .. gp-howto-hli:: reduction
 
+You may use the `reduce()` method to proceed to the data reduction process. For spectral
+data reduction the extracted spectra are stored in the `extraction` property as a
+The observations are stored as a list of `SpectrumDatasetOnOff` containers and information
+related with the background estimation is stored in the `background_estimator` property.
+
+.. code-block:: python
+
+    >>> analysis.reduce()
+    >>> analysis.extraction.spectrum_observations
+        [SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff,
+         SpectrumDatasetOnOff]
+    >>> analysis.background_estimator.on_region
+        <CircleSkyRegion(<SkyCoord (ICRS): (ra, dec) in deg
+            (83.633, 22.014)>, radius=0.1 deg)>
+
 Geometry
-========
+--------
+The ranges and referential frames related with spatial, energy and time coordinates where to perform
+the data reduction and analysis process are declared in the `geometry` section.
 
 .. gp-howto-hli:: geometry
 
+The geometry is stored in the `geometry` property as a `WcsGeom` container.
+
+.. code-block:: python
+
+    >>> analysis.geom
+        WcsGeom
+
+            axes       : lon, lat
+            shape      : (250, 250)
+            ndim       : 2
+            coordsys   : GAL
+            projection : CAR
+            center     : 83.0 deg, 22.0 deg
+            width      : 5.0 deg x 5.0 deg
+
 Model
-=====
+-----
+The different spectral and spatial parameters describing a composed model are declared in the `model` section.
 
 .. gp-howto-hli:: model
 
+The model is stored in the `model` property.
+
+.. code-block:: python
+
+    >>> print(analysis.model)
+        PowerLaw
+
+        Parameters:
+
+               name     value   error      unit      min max frozen
+            --------- --------- ----- -------------- --- --- ------
+                index 2.678e+00   nan                nan nan  False
+            amplitude 2.801e-11   nan cm-2 s-1 TeV-1 nan nan  False
+            reference 1.000e+00   nan            TeV nan nan   True
+
 Fitting
-=======
+-------
+The parameters used in the fitting process are declared in the `fit` section.
 
 .. gp-howto-hli:: fit
 
+You may use the `fit()` method to proceed to the model fitting process. The result
+is stored in the `fit_result` property.
+
+.. code-block:: python
+
+    >>> analysis.fit()
+    >>> analysis.fit_result
+        OptimizeResult
+
+            backend    : minuit
+            method     : minuit
+            success    : True
+            message    : Optimization terminated successfully.
+            nfev       : 111
+            total stat : 239.28
+
 Flux points
-===========
+-----------
+For spectral analysis where we aim to calculate flux points in a range of energies, we
+may declare the parameters needed in the `flux` section.
 
 .. gp-howto-hli:: flux
+
+You may use the `get_flux_points()` method to calculate the flux points. The result
+is stored in the `flux_points_dataset` property as a `FluxPointsDataset` container.
+
+    >>> analysis.get_flux_points()
+        INFO:gammapy.scripts.analysis:Calculating flux points.
+        INFO:gammapy.scripts.analysis:
+              e_ref               ref_flux                 dnde                 dnde_ul                dnde_err        is_ul
+               TeV              1 / (cm2 s)          1 / (cm2 s TeV)        1 / (cm2 s TeV)        1 / (cm2 s TeV)
+        ------------------ ---------------------- ---------------------- ---------------------- ---------------------- -----
+        1.1364636663857248   5.82540193791155e-12 1.6945571729283257e-11 2.0092001005968464e-11  1.491004091925887e-12 False
+        1.3768571648527583 2.0986802770569557e-12 1.1137098968561381e-11 1.4371773951168255e-11  1.483696107656724e-12 False
+        1.6681005372000581 3.0592927032553813e-12  8.330762241576842e-12   9.97704078861513e-12  7.761855010963746e-13 False
+        2.1544346900318834  1.991366151205521e-12  3.749504881244244e-12  4.655825384923802e-12  4.218641798406146e-13 False
+        2.6101572156825363  7.174167397335237e-13 2.3532638339895766e-12 3.2547227459669707e-12   4.05804720903438e-13 False
+        3.1622776601683777 1.0457942646403696e-12 1.5707172671966065e-12 2.0110274930777325e-12 2.0291499028818014e-13 False
+         3.831186849557287 3.7676160725948056e-13  6.988070884720634e-13 1.0900735920193252e-12 1.6898704308171627e-13 False
+        4.6415888336127775  5.492137361542478e-13 4.2471136559991427e-13  6.095655421226728e-13  8.225678668637978e-14 False
+         5.994842503189405 3.5749624179174077e-13 2.2261366353081893e-13  3.350617464903039e-13  4.898878805758816e-14 False
+          7.26291750173621 1.2879288326657447e-13 2.5317668601400673e-13 4.0803852787540073e-13  6.601201499048379e-14 False
+          8.79922543569107  1.877442373267013e-13  7.097738087032472e-14  1.254638299336029e-13 2.2705519890120373e-14 False
+    >>> analysis.flux_points_dataset.peek()
 
 
 Command line tools
