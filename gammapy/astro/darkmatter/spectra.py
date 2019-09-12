@@ -62,14 +62,11 @@ class PrimaryFlux:
 
         self.table_path = make_path(self.table_filename)
         if not self.table_path.exists():
-            message = (
-                "\n\nFile {} not found.\n"
+            raise FileNotFoundError(
+                f"\n\nFile not found: {self.table_filename}\n"
                 "You may download the dataset needed with the following command:\n"
                 "gammapy download datasets --src dark_matter_spectra"
-                "".format(self.table_filename)
             )
-
-            raise FileNotFoundError(message)
         else:
             self.table = Table.read(
                 str(self.table_path),
@@ -106,9 +103,9 @@ class PrimaryFlux:
     @channel.setter
     def channel(self, channel):
         if channel not in self.allowed_channels:
-            msg = "Invalid channel {}\n"
-            msg += "Available: {}\n"
-            raise ValueError(msg.format(channel, self.allowed_channels))
+            raise ValueError(
+                f"Invalid channel: {channel}\nAvailable: {self.allowed_channels}\n"
+            )
         else:
             self._channel = channel
 

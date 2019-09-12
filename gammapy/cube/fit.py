@@ -739,10 +739,8 @@ class MapEvaluator:
                 )
             except NoOverlapError:
                 raise ValueError(
-                    "Position {} of model component is outside the image boundaries."
-                    " Please check the starting values or position parameter boundaries of the model.".format(
-                        self.model.position
-                    )
+                    f"Position {self.model.position!r} of model component is outside the image boundaries."
+                    " Please check the starting values or position parameter boundaries of the model."
                 )
 
             # Reset cached quantities

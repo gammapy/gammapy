@@ -285,8 +285,8 @@ class MapMakerObs:
             pnt = self.observation.pointing_radec
         else:
             raise ValueError(
-                'Found unknown background coordinate system definition: "{}". '
-                'Should be "ALTAZ" or "RADEC".'.format(bkg_coordsys)
+                f"Invalid background coordinate system: {bkg_coordsys!r}\n"
+                "Options: ALTAZ, RADEC"
             )
         background = make_map_background_irf(
             pointing=pnt,

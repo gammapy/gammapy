@@ -107,9 +107,7 @@ class SourceCatalog:
         self._source_name_alias = source_name_alias
 
     def __str__(self):
-        s = self.description
-        s += " with {} objects.".format(len(self.table))
-        return s
+        return self.description + f" with {len(self.table)} objects."
 
     @lazyproperty
     def _name_to_index_cache(self):
@@ -173,21 +171,17 @@ class SourceCatalog:
         Returns
         -------
         source : `SourceCatalogObject`
-            An object representing one source.
-
-        Notes
-        -----
-        At the moment this can raise KeyError, IndexError and ValueError
-        for invalid keys. Should we always raise KeyError to simplify this?
+            An object representing one source
         """
         if isinstance(key, str):
             index = self.row_index(key)
         elif _is_int(key):
             index = key
         else:
-            msg = "Key must be source name string or row index integer. "
-            msg += "Type not understood: {}".format(type(key))
-            raise ValueError(msg)
+            raise TypeError(
+                f"Invalid type: {key!r}\n"
+                "Key must be source name string or row index integer. "
+            )
 
         return self._make_source_object(index)
 
