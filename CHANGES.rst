@@ -808,8 +808,8 @@ Command line interface:
 - The Gammapy command-line interface was changed to use a single command
   ``gammapy`` multiple sub-commands (like ``gammapy info`` or ``gammapy image
   bin``). Discussions on developing the high-level interface for Gammapy (e.g.
-  as a set of command l ine tools, or a config file driven analysis) are starting
-  now. See :ref:`scripts`.
+  as a set of command line tools, or a config file driven analysis) are starting
+  now.
 
 
 Organisation:

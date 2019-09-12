@@ -366,7 +366,7 @@ class Config:
         return yaml.dump(self.settings)
 
     def print_help(self, section=""):
-        """Display template configuration settings."""
+        """Print template configuration settings."""
         doc = self._get_doc_sections()
         for keyword in doc.keys():
             if section == "" or section == keyword:
