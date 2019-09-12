@@ -131,10 +131,7 @@ class KernelBackgroundEstimator:
                 self.images_stack.append(result)
 
             if self._is_converged(result, images) and (idx >= niter_min):
-                log.info(
-                    "Exclusion mask succesfully converged,"
-                    " after {} iterations.".format(idx)
-                )
+                log.info(f"Exclusion mask converged after {idx} iterations.")
                 break
 
         return result

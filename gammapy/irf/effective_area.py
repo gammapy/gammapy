@@ -189,9 +189,10 @@ class EffectiveAreaTable:
             try:
                 aeff = cls.from_hdulist(hdulist, hdu=hdu)
             except KeyError:
-                msg = f'File {filename} contains no HDU "{hdu}"'
-                msg += "\n Available {}".format([_.name for _ in hdulist])
-                raise ValueError(msg)
+                raise ValueError(
+                    f"File {filename} contains no HDU {hdu!r}\n"
+                    f"Available: {[_.name for _ in hdulist]}"
+                )
 
         return aeff
 
@@ -478,7 +479,7 @@ class EffectiveAreaTable2D:
             ax.plot(energy, area.value, label=label, **kwargs)
 
         ax.set_xscale("log")
-        ax.set_xlabel("Energy [{}]".format(self.data.axis("energy").unit))
+        ax.set_xlabel(f"Energy [{self.data.axis('energy').unit}]")
         ax.set_ylabel(f"Effective Area [{self.data.data.unit}]")
         ax.set_xlim(min(energy.value), max(energy.value))
         ax.legend(loc="upper left")
@@ -522,7 +523,7 @@ class EffectiveAreaTable2D:
             ax.plot(offset, area, label=label, **kwargs)
 
         ax.set_ylim(0, 1.1)
-        ax.set_xlabel("Offset ({})".format(self.data.axis("offset").unit))
+        ax.set_xlabel(f"Offset ({self.data.axis('offset').unit})")
         ax.set_ylabel("Relative Effective Area")
         ax.legend(loc="best")
 

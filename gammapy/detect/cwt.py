@@ -125,8 +125,8 @@ class CWT:
         """
         total_background = data._model + data._background + data._approx
         excess = data._counts - total_background
-        log.debug("Excess sum: {:.4f}".format(excess.sum()))
-        log.debug("Excess max: {:.4f}".format(excess.max()))
+        log.debug(f"Excess sum: {excess.sum():.4f}")
+        log.debug(f"Excess max: {excess.max():.4f}")
 
         log.debug("Computing transform and error")
         for idx_scale, kern in self.kernels.kern_base.items():
@@ -136,8 +136,8 @@ class CWT:
             data._error[idx_scale] = np.sqrt(
                 scipy.signal.fftconvolve(total_background, kern ** 2, mode="same")
             )
-        log.debug("Error sum: {:.4f}".format(data._error.sum()))
-        log.debug("Error max: {:.4f}".format(data._error.max()))
+        log.debug(f"Error sum: {data._error.sum():.4f}")
+        log.debug(f"Error max: {data._error.max():.4f}")
 
         log.debug("Computing approx and approx_bkg")
         data._approx = scipy.signal.fftconvolve(
@@ -148,8 +148,8 @@ class CWT:
         data._approx_bkg = scipy.signal.fftconvolve(
             data._background, self.kernels.kern_approx, mode="same"
         )
-        log.debug("Approximate sum: {:.4f}".format(data._approx.sum()))
-        log.debug("Approximate background sum: {:.4f}".format(data._approx_bkg.sum()))
+        log.debug(f"Approximate sum: {data._approx.sum():.4f}")
+        log.debug(f"Approximate background sum: {data._approx_bkg.sum():.4f}")
 
     def _compute_support(self, data):
         """Compute the multiresolution support with hard sigma clipping.
@@ -285,7 +285,7 @@ class CWT:
             self.history = [copy.deepcopy(data)]
 
         for n_iter in range(self.max_iter):
-            log.info("************ Start iteration {} ************".format(n_iter + 1))
+            log.info(f"************ Start iteration {n_iter + 1} ************")
             self._execute_iteration(data=data)
             if self.history is not None:
                 log.debug("Save current data")
@@ -295,11 +295,9 @@ class CWT:
                 break
 
         if converge_answer:
-            log.info("Convergence reached at iteration {}".format(n_iter + 1))
+            log.info(f"Convergence reached at iteration {n_iter + 1}")
         else:
-            log.info(
-                "Convergence not formally reached at iteration {}".format(n_iter + 1)
-            )
+            log.info(f"Convergence not formally reached at iteration {n_iter + 1}")
 
 
 class CWTKernels:

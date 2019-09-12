@@ -99,10 +99,8 @@ class EventListBase:
     def __str__(self):
         ss = (
             "EventList info:\n"
-            + "- Number of events: {}\n".format(len(self.table))
-            + "- Median energy: {:.3g} {}\n".format(
-                np.median(self.energy.value), self.energy.unit
-            )
+            f"- Number of events: {len(self.table)}\n"
+            f"- Median energy: {np.median(self.energy.value):.3g} {self.energy.unit}\n"
         )
 
         if "OBS_ID" in self.table.meta:

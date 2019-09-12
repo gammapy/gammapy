@@ -116,7 +116,7 @@ class DataStore:
 
         if not obs_table_filename.exists():
             raise OSError(f"File not found: {obs_table_filename}")
-        log.debug("Reading {}".format(str(obs_table_filename)))
+        log.debug(f"Reading {obs_table_filename}")
         obs_table = ObservationTable.read(str(obs_table_filename), format="fits")
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)

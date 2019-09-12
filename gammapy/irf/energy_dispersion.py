@@ -104,9 +104,7 @@ class EnergyDispersion:
         """
         if len(data) != self.e_true.nbin:
             raise ValueError(
-                "Input size {} does not match true energy axis {}".format(
-                    len(data), self.e_true.nbin
-                )
+                f"Input size {len(data)} does not match true energy axis {self.e_true.nbin}"
             )
         return np.dot(data, self.data.data)
 

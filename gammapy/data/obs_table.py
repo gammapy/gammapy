@@ -85,24 +85,10 @@ class ObservationTable(Table):
     def summary(self):
         """Summary info string (str)."""
         obs_name = self.meta.get("OBSERVATORY_NAME", "N/A")
-
-        return "\n".join(
-            [
-                "Observation table:",
-                f"Observatory name: {obs_name!r}",
-                "Number of observations: {}".format(len(self)),
-                # TODO: clean this up. Make those properties?
-                # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
-                #
-                # ss += 'Total observation time: {}\n'.format(ontime)
-                # livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
-                # ss += 'Total live time: {}\n'.format(livetime)
-                # dtf = 100. * (1 - livetime / ontime)
-                # ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
-                # time_ref = time_ref_from_dict(self.meta)
-                # time_ref_unit = time_ref_from_dict(self.meta).format
-                # ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
-            ]
+        return (
+            f"Observation table:\n"
+            f"Observatory name: {obs_name!r}\n"
+            f"Number of observations: {len(self)}\n"
         )
 
     def select_range(self, selection_variable, value_range, inverted=False):
@@ -268,7 +254,7 @@ class ObservationTable(Table):
         ...                  value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
-        if "inverted" not in selection.keys():
+        if "inverted" not in selection:
             selection["inverted"] = False
 
         if selection["type"] == "sky_circle":
@@ -293,7 +279,7 @@ class ObservationTable(Table):
                 selection["variable"], selection["value_range"], selection["inverted"]
             )
         else:
-            raise ValueError("Invalid selection type: {}".format(selection["type"]))
+            raise ValueError(f"Invalid selection type: {selection['type']}")
 
     def create_gti(self, obs_id):
         """Returns a GTI table containing TSTART and TSTOP from the table.

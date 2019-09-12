@@ -337,7 +337,7 @@ class TSMapEstimator:
         positions = list(zip(x, y))
 
         with contextlib.closing(multiprocessing.Pool(processes=p["n_jobs"])) as pool:
-            log.info("Using {} jobs to compute TS map.".format(p["n_jobs"]))
+            log.info(f"Number of jobs to compute TS map: {p['n_jobs']}")
             results = pool.map(wrap, positions)
 
         pool.join()
@@ -372,7 +372,7 @@ class TSMapEstimator:
         info = self.__class__.__name__
         info += "\n\nParameters:\n\n"
         for key in p:
-            info += "\t{key:13s}: {value}\n".format(key=key, value=p[key])
+            info += f"\t{key:13s}: {p[key]}\n"
         return info
 
 
