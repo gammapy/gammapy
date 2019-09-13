@@ -445,7 +445,7 @@ class EnergyDependentMultiGaussPSF:
             energy=energies, rad=rad, exposure=exposure, psf_value=psf_value
         )
 
-    def to_psf3d(self, rad):
+    def to_psf3d(self, rad=None):
         """Create a PSF3D from an analytical PSF.
 
         Parameters
@@ -462,6 +462,8 @@ class EnergyDependentMultiGaussPSF:
         energy = self.energy
         energy_lo = self.energy_lo
         energy_hi = self.energy_hi
+        if rad is None:
+            rad = np.linspace(0, 0.66, 67) * Unit("deg") # Arbitrary binning of 0.01 in rad
         rad_lo = rad[:-1]
         rad_hi = rad[1:]
 
