@@ -382,7 +382,7 @@ class Config:
         for section in doc_dic.keys():
             if section in self.settings:
                 settings_str += doc_dic[section] + "\n"
-                settings_str += yaml.dump(self.settings[section]) + "\n"
+                settings_str += yaml.dump({section: self.settings[section]}) + "\n"
         filename = make_path(filename)
         path_file = Path(self.settings["general"]["outdir"]) / filename
         path_file.write_text(settings_str)

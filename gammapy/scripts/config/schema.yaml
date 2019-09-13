@@ -74,10 +74,12 @@ properties:
 #          Properties when filter_type is "par_box" or "par_value"
 #          variable: TARGET_NAME
 #
-#          Value parameter to match declared variable when filter_type is "par_value"
+#          Value to match declared variable
+#          when filter_type is "par_value"
 #          value_param: Crab
 #
-#          Value range with units to match declared variable when filter_type is "par_box"
+#          Value range with units to match declared variable
+#          when filter_type is "par_box"
 #          value_range:
 #              - 265 deg
 #              - 268 deg
