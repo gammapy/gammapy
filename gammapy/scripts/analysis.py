@@ -9,6 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
+from gammapy.irf import make_mean_psf
 from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
@@ -63,7 +64,9 @@ class Analysis:
         self.geom = None
         self.background_estimator = None
         self.extraction = None
+        self.images = None
         self.maps = None
+        self.psf_kernel = None
         self.model = None
         self.fit_result = None
         self.flux_points_dataset = None
@@ -113,7 +116,6 @@ class Analysis:
                 flux_model = self.model.copy()
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
-
                 axis_params = self.settings["flux"]["fp_binning"]
                 e_edges = MapAxis.from_bounds(**axis_params).edges
                 flux_point_estimator = FluxPointsEstimator(
@@ -188,6 +190,13 @@ class Analysis:
                 maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
             maker = MapMaker(self.geom, **maker_params)
             self.maps = maker.run(self.observations)
+            self.images = maker.run_images()
+            table_psf = make_mean_psf(self.observations, self.geom.center_skydir)
+            psf_params = {}
+            if "psf_max_radius" in self.settings["geometry"]:
+                psf_params = {"max_radius": self.settings["geometry"]["psf_max_radius"]}
+            self.psf_kernel = PSFKernel.from_table_psf(table_psf, self.geom, **psf_params)
+
         else:
             # TODO raise error?
             log.info("Data reduction method not available.")
@@ -202,6 +211,8 @@ class Analysis:
         geom_params["skydir"] = tuple(geom_params["skydir"])
         if "offset_max" in geom_params:
             del geom_params["offset_max"]
+        if "psf_max_radius" in geom_params:
+            del geom_params["psf_max_radius"]
         self.geom = WcsGeom.create(**geom_params)
 
     def _energy_axes(self):

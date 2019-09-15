@@ -276,6 +276,7 @@ properties:
 #        Width of the map in degrees
 #        width: [5, 5]
 #        offset_max: 3 deg
+#        psf_max_radius: 0.3 deg
 #
 #        Additional Map Axes other than spatial
 #        Example values for energy axes
@@ -333,9 +334,14 @@ properties:
                 type: string
                 default_all: 3 deg
                 default_3d: 2.5 deg
+            psf_max_radius:
+                type: string
+                default_all: 0.3 deg
+                default_3d: 0.3 deg
             axes:
                 type: object
                 default_all: {}
+                default_basic: {}
                 default_1d: {}
                 default_3d: {}
                 additionalProperties: false
