@@ -519,7 +519,6 @@ class PowerLaw(SpectralModel):
         self.index = Parameter("index", index)
         self.amplitude = Parameter("amplitude", amplitude)
         self.reference = Parameter("reference", reference, frozen=True)
-        self.tag = "PowerLaw"
 
         super().__init__([self.index, self.amplitude, self.reference])
 
