@@ -664,4 +664,18 @@ then:
         flux:
             required: [fp_binning]
 
+if:
+    properties:
+        reduction:
+            properties:
+                data_reducer:
+                    const: 3d
+then:
+    properties:
+        geometry:
+            required: [binsz, width, skydir, coordsys, proj, axes]
+            properties:
+                axes:
+                    required: [e_reco]
+
 required: [general, observations, reduction, model, fit, flux]
