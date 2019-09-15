@@ -54,7 +54,7 @@ class Analysis:
     Probably not here, but in high-level docs, linked to from class docstring.
     """
 
-    def __init__(self, config=None, template="1d"):
+    def __init__(self, config=None, template="basic"):
         self._config = Config(config, template)
         self._set_logging()
 
@@ -79,25 +79,28 @@ class Analysis:
     def fit(self, optimize_opts=None):
         """Fitting reduced data sets to model."""
         if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_fitting_settings():
+            if self._validate_fitting_settings_1d():
                 self._read_model()
-                self._fit_reduced_data(optimize_opts=optimize_opts)
+                self._fit_reduced_data_1d(optimize_opts=optimize_opts)
         else:
-            # TODO: raise error?
-            log.info("Fitting available only for 1D spectrum.")
+            # TODO raise error?
+            log.info("Fitting available only for joint likelihood with 1D spectrum.")
 
     @classmethod
-    def from_file(cls, filename):
+    def from_file(cls, filename, template="basic"):
         """Instantiation of analysis from settings in config file.
 
         Parameters
         ----------
         filename : str, Path
             Configuration settings filename
+        template: str
+            Consider also values in configuration template
+            Default value basic
         """
         filename = make_path(filename)
         config = read_yaml(filename)
-        return cls(config=config)
+        return cls(config=config, template=template)
 
     def get_flux_points(self):
         """Calculate flux points."""
@@ -109,9 +112,6 @@ class Analysis:
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
 
-                # TODO: set default fp_binning handled in jsonschema validation class
-                if "fp_binning" not in self.settings["flux"]:
-                    raise RuntimeError()
                 ax_pars = self.settings["flux"]["fp_binning"]
                 e_edges = MapAxis.from_bounds(**ax_pars).edges
                 flux_point_estimator = FluxPointsEstimator(
@@ -123,6 +123,7 @@ class Analysis:
                 cols = ["e_ref", "ref_flux", "dnde", "dnde_ul", "dnde_err", "is_ul"]
                 log.info("\n{}".format(self.flux_points_dataset.data.table[cols]))
         else:
+            # TODO raise error?
             log.info("Flux point estimation available only for 1D spectrum.")
 
     def get_observations(self):
@@ -154,9 +155,7 @@ class Analysis:
             if selection["type"] == "sky_circle" or selection["type"].endswith("_box"):
                 selected_obs = datastore.obs_table.select_observations(selection)
             if selection["type"] == "par_value":
-                mask = (
-                    datastore.obs_table[criteria["variable"]] == criteria["value_param"]
-                )
+                mask = (datastore.obs_table[criteria["variable"]] == criteria["value_param"])
                 selected_obs = datastore.obs_table[mask]
             if selection["type"] == "ids":
                 obs_list = datastore.get_observations(criteria["obs_ids"])
@@ -181,7 +180,7 @@ class Analysis:
                 log.info("Reducing data sets.")
                 self._spectrum_extraction()
         else:
-            # TODO
+            # TODO raise error?
             log.info("Data reduction available only for 1D spectrum.")
 
     # TODO
@@ -192,24 +191,19 @@ class Analysis:
         geom_params = self.settings["geometry"]
         self.geom = WcsGeom.create(**geom_params)
 
-    def _fit_reduced_data(self, optimize_opts=None):
-        """Fit data to models."""
-        if self.settings["reduction"]["data_reducer"] == "1d":
-            for obs in self.extraction.spectrum_observations:
-                # TODO: fit_range handled in jsonschema validation class
-                if "fit_range" in self.settings["fit"]:
-                    e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
-                    e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
-                    obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
-                obs.model = self.model
-            log.info("Fitting data sets to model.")
-            fit = Fit(self.extraction.spectrum_observations)
-            self.fit_result = fit.run(optimize_opts=optimize_opts)
-            log.info(self.fit_result)
-        else:
-            # TODO: implement or raise error
-            log.info("Fitting available only for joint likelihood with 1D spectrum.")
-            return False
+    def _fit_reduced_data_1d(self, optimize_opts=None):
+        """Fit data to models as joint-likelihood with 1D spectrum."""
+        for obs in self.extraction.spectrum_observations:
+            # TODO: fit_range handled in jsonschema validation class
+            if "fit_range" in self.settings["fit"]:
+                e_min = u.Quantity(self.settings["fit"]["fit_range"]["min"])
+                e_max = u.Quantity(self.settings["fit"]["fit_range"]["max"])
+                obs.mask_fit = obs.counts.energy_mask(e_min, e_max)
+            obs.model = self.model
+        log.info("Fitting spectra to model with joint likelihood.")
+        fit = Fit(self.extraction.spectrum_observations)
+        self.fit_result = fit.run(optimize_opts=optimize_opts)
+        log.info(self.fit_result)
 
     def _read_model(self):
         """Read the model from settings."""
@@ -259,10 +253,8 @@ class Analysis:
             )
             self.background_estimator.run()
         else:
-            # TODO: raise or handle return
-            log.info(
-                "Background estimation available only for reflected regions method."
-            )
+            # TODO: raise error?
+            log.info("Background estimation only for reflected regions method.")
             return False
 
         extraction_pars = {}
@@ -280,6 +272,7 @@ class Analysis:
             ax_pars = self.settings["geometry"]["axes"]["e_true"]
             e_true = MapAxis.from_bounds(**ax_pars).center
             extraction_pars["e_true"] = e_true
+
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
@@ -287,24 +280,21 @@ class Analysis:
         )
         self.extraction.run()
 
-    def _validate_fitting_settings(self):
+    def _validate_fitting_settings_1d(self):
         """Validate settings before proceeding to fit."""
-        if (
-            self.settings["reduction"]["background"]["background_estimator"]
-            == "reflected"
-        ):
-            if self.extraction and len(self.extraction.spectrum_observations):
+
+        if self.extraction and len(self.extraction.spectrum_observations):
+            estimator = self.settings["reduction"]["background"]["background_estimator"]
+            if estimator == "reflected":
                 self.config.validate()
                 return True
             else:
-                log.info("No spectrum observations extracted.")
-                log.info("Fit cannot be done.")
+                # TODO raise error?
+                log.info("Background estimation only for reflected regions method.")
                 return False
         else:
-            # TODO
-            log.info(
-                "Background estimation available only for reflected regions method."
-            )
+            log.info("No spectrum observations extracted.")
+            log.info("Fit cannot be done.")
             return False
 
     def _validate_fp_settings(self):
@@ -313,8 +303,8 @@ class Analysis:
             self.config.validate()
             return True
         else:
-            log.info("No observations selected.")
-            log.info("Data reduction cannot be done.")
+            log.info("No results available from fit.")
+            log.info("Flux points calculation cannot be done.")
             return False
 
     def _validate_reduction_settings(self):
@@ -337,35 +327,23 @@ class Config:
         Configuration parameters
     """
 
-    def __init__(self, config=None, template="1d"):
-        self._default_settings = {}
-        self._command_settings = {}
+    def __init__(self, config=None, template="basic"):
+        self._user_settings = {}
         self._template = template
+        if template not in _implemented_templates:
+            log.warning(f"Template {template} not implemented.")
+            log.warning("Fetching basic template settings.")
+            self._template = "basic"
+        # fill with default values
         self.settings = {}
-
-        # fill settings with default values
         self.validate()
         self._default_settings = copy.deepcopy(self.settings)
-
-        # overwrite with config provided by the user
-        if config is None:
-            config = {}
-        if len(config):
-            self._command_settings = config
-            self._update_settings(self._command_settings, self.settings)
-
-        self.validate()
+        # add user settings
+        self.update_settings(config)
 
     def __str__(self):
         """Display settings in pretty YAML format."""
         return yaml.dump(self.settings)
-
-    def print_help(self, section=""):
-        """Print template configuration settings."""
-        doc = self._get_doc_sections()
-        for keyword in doc.keys():
-            if section == "" or section == keyword:
-                print(doc[keyword])
 
     def dump(self, filename="config.yaml"):
         """Serialize config into a yaml formatted file.
@@ -387,11 +365,29 @@ class Config:
         path_file = Path(self.settings["general"]["outdir"]) / filename
         path_file.write_text(settings_str)
 
+    def print_help(self, section=""):
+        """Print template configuration settings."""
+        doc = self._get_doc_sections()
+        for keyword in doc.keys():
+            if section == "" or section == keyword:
+                print(doc[keyword])
+
+    def update_settings(self, config=None, configfile=""):
+        """Update settings with config dictionary or values in configfile"""
+        if configfile:
+            filename = make_path(configfile)
+            config = read_yaml(filename)
+        if config is None:
+            config = {}
+        if len(config):
+            self._user_settings = config
+            self._update_settings(self._user_settings, self.settings)
+            self.validate()
+
     def validate(self):
         """Validate and/or fill initial config parameters against schema."""
-        jsonschema.validate(
-            self.settings, read_yaml(SCHEMA_FILE), _gp_defaults[self._template]
-        )
+        validator = _gp_defaults[self._template]
+        jsonschema.validate(self.settings, read_yaml(SCHEMA_FILE), validator)
 
     @staticmethod
     def _get_doc_sections():
@@ -427,46 +423,13 @@ def extend_with_default(validator_class, template):
         "properties",
         "patternProperties",
     ]
-    template_pars = {
-        "all": {"default_field": "default", "exclude_props": []},
-        "1d": {
-            "default_field": "default_1d",
-            "exclude_props": [
-                "binsz",
-                "border",
-                "coordsys",
-                "datefmt",
-                "e_reco",
-                "e_true",
-                "exclude",
-                "exclusion_mask",
-                "filename",
-                "filemode",
-                "format",
-                "inverted",
-                "lat",
-                "lon",
-                "proj",
-                "skydir",
-                "spatial",
-                "width",
-                "offset_max",
-            ],
-        },
-    }
-    reserved.extend(template_pars[template]["exclude_props"])
-    default_field = template_pars["all"]["default_field"]
-    default_specific_field = template_pars[template]["default_field"]
+    default_field = f"default_{template}"
 
     def set_defaults(validator, properties, instance, schema):
         for prop, sub_schema in properties.items():
             if prop not in reserved:
-                if default_specific_field in sub_schema:
-                    default = default_specific_field
-                else:
-                    default = default_field
-                if default in sub_schema:
-                    instance.setdefault(prop, sub_schema[default])
+                if default_field in sub_schema:
+                    instance.setdefault(prop, sub_schema[default_field])
         yield from validate_properties(validator, properties, instance, schema)
 
     return jsonschema.validators.extend(validator_class, {"properties": set_defaults})
@@ -500,4 +463,6 @@ _gp_units_validator = jsonschema.validators.extend(
 _gp_defaults = {
     "1d": extend_with_default(_gp_units_validator, template="1d"),
     "all": extend_with_default(_gp_units_validator, template="all"),
+    "basic": extend_with_default(_gp_units_validator, template="basic"),
 }
+_implemented_templates = ["basic", "1d", "all"]

@@ -142,7 +142,7 @@ def config_analysis_data():
 @requires_dependency("iminuit")
 @requires_data()
 def test_analysis(config_analysis_data):
-    analysis = Analysis(config_analysis_data)
+    analysis = Analysis(config_analysis_data, template="1d")
     analysis.get_observations()
     analysis.reduce()
     analysis.fit()
