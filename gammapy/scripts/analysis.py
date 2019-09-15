@@ -175,21 +175,38 @@ class Analysis:
 
     def reduce(self):
         """Produce reduced data sets."""
+        if not self._validate_reduction_settings():
+            return False
         if self.settings["reduction"]["data_reducer"] == "1d":
-            if self._validate_reduction_settings():
-                log.info("Reducing data sets.")
-                self._spectrum_extraction()
+            self._spectrum_extraction()
+        elif self.settings["reduction"]["data_reducer"] == "3d":
+            self._create_geometry()
+            pass
         else:
             # TODO raise error?
-            log.info("Data reduction available only for 1D spectrum.")
+            log.info("Data reduction method not available.")
 
-    # TODO
-    # add energy axes and other eventual params and types
-    # validated and properly transformed in the jsonschema validation class
     def _create_geometry(self):
         """Create the geometry."""
+        # TODO: handled in jsonschema validation class
         geom_params = self.settings["geometry"]
+        e_reco, e_true = self._energy_axes()
+        geom_params["axes"] = []
+        geom_params["axes"].append(e_reco)
+        geom_params["skydir"] = tuple(geom_params["skydir"])
         self.geom = WcsGeom.create(**geom_params)
+
+    def _energy_axes(self):
+        """Builds energy axes from settings in geometry."""
+        # TODO: e_reco/e_true handled in jsonschema validation class
+        e_reco = e_true = None
+        if "e_reco" in self.settings["geometry"]["axes"]:
+            ax_pars = self.settings["geometry"]["axes"]["e_reco"]
+            e_reco = MapAxis.from_bounds(**ax_pars)
+        if "e_true" in self.settings["geometry"]["axes"]:
+            ax_pars = self.settings["geometry"]["axes"]["e_true"]
+            e_true = MapAxis.from_bounds(**ax_pars)
+        return e_reco, e_true
 
     def _fit_reduced_data_1d(self, optimize_opts=None):
         """Fit data to models as joint-likelihood with 1D spectrum."""
@@ -231,7 +248,7 @@ class Analysis:
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
         background_params = self.settings["reduction"]["background"]
-
+        log.info("Reducing spectrum data sets.")
         on = background_params["on_region"]
         on_lon = Angle(on["center"][0])
         on_lat = Angle(on["center"][1])
@@ -262,17 +279,11 @@ class Analysis:
             extraction_pars["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
-
-        # TODO: e_reco/e_true handled in jsonschema validation class
-        if "e_reco" in self.settings["geometry"]["axes"]:
-            ax_pars = self.settings["geometry"]["axes"]["e_reco"]
-            e_reco = MapAxis.from_bounds(**ax_pars).center
-            extraction_pars["e_reco"] = e_reco
-        if "e_true" in self.settings["geometry"]["axes"]:
-            ax_pars = self.settings["geometry"]["axes"]["e_true"]
-            e_true = MapAxis.from_bounds(**ax_pars).center
-            extraction_pars["e_true"] = e_true
-
+        e_reco, e_true = self._energy_axes()
+        if e_reco:
+            extraction_pars["e_reco"] = e_reco.center
+        if e_true:
+            extraction_pars["e_true"] = e_true.center
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,

@@ -565,6 +565,7 @@ properties:
 #            nbin: 11
 #            unit: TeV
 #            interp: log
+#            node_type: edges
 #
     flux:
         type: object
