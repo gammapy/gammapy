@@ -112,8 +112,8 @@ class Analysis:
                 flux_model.parameters.covariance = self.fit_result.parameters.covariance
                 stacked.model = flux_model
 
-                ax_pars = self.settings["flux"]["fp_binning"]
-                e_edges = MapAxis.from_bounds(**ax_pars).edges
+                axis_params = self.settings["flux"]["fp_binning"]
+                e_edges = MapAxis.from_bounds(**axis_params).edges
                 flux_point_estimator = FluxPointsEstimator(
                     e_edges=e_edges, datasets=stacked
                 )
@@ -194,6 +194,8 @@ class Analysis:
         geom_params["axes"] = []
         geom_params["axes"].append(e_reco)
         geom_params["skydir"] = tuple(geom_params["skydir"])
+        if "offset_max" in geom_params:
+            del geom_params["offset_max"]
         self.geom = WcsGeom.create(**geom_params)
 
     def _energy_axes(self):
@@ -201,11 +203,11 @@ class Analysis:
         # TODO: e_reco/e_true handled in jsonschema validation class
         e_reco = e_true = None
         if "e_reco" in self.settings["geometry"]["axes"]:
-            ax_pars = self.settings["geometry"]["axes"]["e_reco"]
-            e_reco = MapAxis.from_bounds(**ax_pars)
+            axis_params = self.settings["geometry"]["axes"]["e_reco"]
+            e_reco = MapAxis.from_bounds(**axis_params)
         if "e_true" in self.settings["geometry"]["axes"]:
-            ax_pars = self.settings["geometry"]["axes"]["e_true"]
-            e_true = MapAxis.from_bounds(**ax_pars)
+            axis_params = self.settings["geometry"]["axes"]["e_true"]
+            e_true = MapAxis.from_bounds(**axis_params)
         return e_reco, e_true
 
     def _fit_reduced_data_1d(self, optimize_opts=None):
@@ -227,15 +229,15 @@ class Analysis:
         # TODO: make reading for generic spatial and spectral models with multiple components
         # use models = serialisation.io.dict_to_models() or models = SkyModels.from_yaml(filename)
         if self.settings["reduction"]["data_reducer"] == "1d":
-            model_pars = self.settings["model"]["components"][0]["spectral"]
+            model_yaml = self.settings["model"]["components"][0]["spectral"]
         else:
             log.info(
                 "Model reading available only for single component spectral model."
             )
             return False
         log.info("Reading model.")
-        model_class = SPECTRAL_MODELS[model_pars["type"]]
-        self.model = model_class.from_dict(model_pars)
+        model_class = SPECTRAL_MODELS[model_yaml["type"]]
+        self.model = model_class.from_dict(model_yaml)
         log.info(self.model)
 
     def _set_logging(self):
@@ -247,26 +249,26 @@ class Analysis:
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
-        background_params = self.settings["reduction"]["background"]
+        background = self.settings["reduction"]["background"]
         log.info("Reducing spectrum data sets.")
-        on = background_params["on_region"]
+        on = background["on_region"]
         on_lon = Angle(on["center"][0])
         on_lat = Angle(on["center"][1])
         on_center = SkyCoord(on_lon, on_lat, frame=on["frame"])
         on_region = CircleSkyRegion(on_center, Angle(on["radius"]))
-        background_pars = {"on_region": on_region}
+        background_params = {"on_region": on_region}
 
         if "exclusion_mask" in background_params:
             map_hdu = {}
-            filename = background_params["exclusion_mask"]["filename"]
-            if "hdu" in background_params["exclusion_mask"]:
-                map_hdu = {"hdu": background_params["exclusion_mask"]["hdu"]}
+            filename = background["exclusion_mask"]["filename"]
+            if "hdu" in background["exclusion_mask"]:
+                map_hdu = {"hdu": background["exclusion_mask"]["hdu"]}
             exclusion_region = Map.read(filename, **map_hdu)
-            background_pars["exclusion_mask"] = exclusion_region
+            background_params["exclusion_mask"] = exclusion_region
 
-        if background_params["background_estimator"] == "reflected":
+        if background["background_estimator"] == "reflected":
             self.background_estimator = ReflectedRegionsBackgroundEstimator(
-                observations=self.observations, **background_pars
+                observations=self.observations, **background_params
             )
             self.background_estimator.run()
         else:
@@ -274,20 +276,20 @@ class Analysis:
             log.info("Background estimation only for reflected regions method.")
             return False
 
-        extraction_pars = {}
+        extraction_params = {}
         if "containment_correction" in self.settings["reduction"]:
-            extraction_pars["containment_correction"] = self.settings["reduction"][
+            extraction_params["containment_correction"] = self.settings["reduction"][
                 "containment_correction"
             ]
         e_reco, e_true = self._energy_axes()
         if e_reco:
-            extraction_pars["e_reco"] = e_reco.center
+            extraction_params["e_reco"] = e_reco.center
         if e_true:
-            extraction_pars["e_true"] = e_true.center
+            extraction_params["e_true"] = e_true.center
         self.extraction = SpectrumExtraction(
             observations=self.observations,
             bkg_estimate=self.background_estimator.result,
-            **extraction_pars,
+            **extraction_params,
         )
         self.extraction.run()
 
@@ -295,8 +297,7 @@ class Analysis:
         """Validate settings before proceeding to fit."""
 
         if self.extraction and len(self.extraction.spectrum_observations):
-            estimator = self.settings["reduction"]["background"]["background_estimator"]
-            if estimator == "reflected":
+            if self.settings["reduction"]["background"]["background_estimator"] == "reflected":
                 self.config.validate()
                 return True
             else:
