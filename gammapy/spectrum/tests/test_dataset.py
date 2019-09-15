@@ -7,13 +7,9 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.irf import EffectiveAreaTable, EnergyDispersion
-from gammapy.modeling import Fit, Datasets
+from gammapy.modeling import Datasets, Fit
 from gammapy.modeling.models import ConstantModel, ExponentialCutoffPowerLaw, PowerLaw
-from gammapy.spectrum import (
-    CountsSpectrum,
-    SpectrumDataset,
-    SpectrumDatasetOnOff,
-)
+from gammapy.spectrum import CountsSpectrum, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.time import time_ref_to_dict
@@ -713,6 +709,7 @@ class TestSpectrumDatasetOnOffStack:
         assert_allclose(table_gti_stacked_obs["START"], table_gti["START"])
         assert_allclose(table_gti_stacked_obs["STOP"], table_gti["STOP"])
 
+
 @requires_data("gammapy-data")
 def test_datasets_stack_reduce():
     obs_ids = [23523, 23526, 23559, 23592]
@@ -723,4 +720,4 @@ def test_datasets_stack_reduce():
         dataset_list.append(ds)
     datasets = Datasets(dataset_list)
     stacked = datasets.stack_reduce()
-    assert_allclose(stacked.livetime.to_value('s'),6313.8116406202325)
+    assert_allclose(stacked.livetime.to_value("s"), 6313.8116406202325)

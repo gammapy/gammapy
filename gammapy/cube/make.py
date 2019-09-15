@@ -5,13 +5,12 @@ from astropy.coordinates import Angle
 from astropy.nddata.utils import NoOverlapError, PartialOverlapError
 from astropy.utils import lazyproperty
 from gammapy.irf import EnergyDependentMultiGaussPSF
-from gammapy.maps import Map, WcsGeom, MapAxis
+from gammapy.maps import Map, MapAxis, WcsGeom
 from .background import make_map_background_irf
 from .counts import fill_map_counts
+from .edisp_map import make_edisp_map
 from .exposure import _map_spectrum_weight, make_map_exposure_true_energy
 from .psf_map import make_psf_map
-from .edisp_map import make_edisp_map
-
 
 __all__ = ["MapMaker", "MapMakerObs", "MapMakerRing"]
 

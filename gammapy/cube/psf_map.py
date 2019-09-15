@@ -3,9 +3,9 @@ import numpy as np
 import astropy.io.fits as fits
 import astropy.units as u
 from astropy.coordinates import Angle
-from .psf_kernel import PSFKernel
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.maps import Map
+from .psf_kernel import PSFKernel
 
 __all__ = ["make_psf_map", "PSFMap"]
 

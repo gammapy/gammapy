@@ -1104,6 +1104,7 @@ def _read_ogip_hdulist(hdulist, hdu1="SPECTRUM", hdu2="EBOUNDS"):
         is_bkg=False,
     )
 
+
 class SpectrumDatasetOnOffStacker:
     r"""Stack a list of homogeneous datasets.
 

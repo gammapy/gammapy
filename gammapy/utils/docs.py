@@ -24,13 +24,13 @@ import nbformat
 from docutils import nodes
 from docutils.parsers.rst import roles
 from docutils.parsers.rst.directives import register_directive
+from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives.misc import Include
-from docutils.parsers.rst.directives.body import CodeBlock
 from nbformat.v4 import new_markdown_cell
 from sphinx.util import logging
-from gammapy.scripts import Config
 from gammapy import __version__
+from gammapy.scripts import Config
 
 try:
     gammapy_data_path = Path(os.environ["GAMMAPY_DATA"])

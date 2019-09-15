@@ -197,10 +197,11 @@ class Datasets:
             the stacked dataset
         """
         if not self.is_all_same_type:
-            raise ValueError("Stacking impossible: all Datasets contained are not of a unique type.")
+            raise ValueError(
+                "Stacking impossible: all Datasets contained are not of a unique type."
+            )
 
         dataset = self.datasets[0].copy()
         for ds in self.datasets[1:]:
             dataset.stack(ds)
         return dataset
-
