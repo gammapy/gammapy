@@ -189,7 +189,7 @@ class Analysis:
     def _create_geometry(self):
         """Create the geometry."""
         # TODO: handled in jsonschema validation class
-        geom_params = self.settings["geometry"]
+        geom_params = copy.deepcopy(self.settings["geometry"])
         e_reco, e_true = self._energy_axes()
         geom_params["axes"] = []
         geom_params["axes"].append(e_reco)
@@ -473,7 +473,8 @@ _gp_units_validator = jsonschema.validators.extend(
 )
 _gp_defaults = {
     "1d": extend_with_default(_gp_units_validator, template="1d"),
+    "3d": extend_with_default(_gp_units_validator, template="3d"),
     "all": extend_with_default(_gp_units_validator, template="all"),
     "basic": extend_with_default(_gp_units_validator, template="basic"),
 }
-_implemented_templates = ["basic", "1d", "all"]
+_implemented_templates = ["1d", "3d", "all", "basic"]

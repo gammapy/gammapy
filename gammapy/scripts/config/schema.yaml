@@ -26,6 +26,7 @@ properties:
         default_all: {"logging": {}}
         default_basic: {"logging": {}}
         default_1d: {"logging": {}}
+        default_3d: {"logging": {}}
         additionalProperties: false
         properties:
             outdir:
@@ -38,6 +39,7 @@ properties:
                 default_all: {}
                 default_basic: {}
                 default_1d: {}
+                default_3d: {}
                 additionalProperties: false
                 properties:
                     level:
@@ -45,6 +47,7 @@ properties:
                         default_all: "INFO"
                         default_basic: "INFO"
                         default_1d: "INFO"
+                        default_3d: "INFO"
                         enum: [CRITICAL, 50,
                                ERROR, 40,
                                WARNING, 30,
@@ -108,6 +111,7 @@ properties:
         default_all: {}
         default_basic: {}
         default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
             datastore:
@@ -115,11 +119,14 @@ properties:
                 default_all: $GAMMAPY_DATA/hess-dl3-dr1
                 default_basic: $GAMMAPY_DATA/hess-dl3-dr1
                 default_1d: $GAMMAPY_DATA/hess-dl3-dr1
+                default_3d:
+                    $GAMMAPY_DATA/hess-dl3-dr1/hess-dl3-dr3-with-background.fits.gz
             filters:
                 type: array
                 default_all: [{}]
                 default_basic: [{}]
                 default_1d: [{}]
+                default_3d: [{}]
                 items:
                     type: object
                     additionalProperties: false
@@ -130,6 +137,7 @@ properties:
                             default_all: all
                             default_basic: all
                             default_1d: par_value
+                            default_3d: par_value
                             enum: [sky_circle,
                                    angle_box,
                                    par_box,
@@ -147,10 +155,12 @@ properties:
                             type: string
                             default_all: TARGET_NAME
                             default_1d: TARGET_NAME
+                            default_3d: TARGET_NAME
                         value_param:
                             type: string
                             default_all: Crab
                             default_1d: Crab
+                            default_3d: Crab
                         value_range:
                             type: array
                             items: {type: number, default_all:[1 TeV, 100 TeV]}
@@ -190,6 +200,7 @@ properties:
         default_all: {}
         default_basic: {}
         default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
             background:
@@ -238,6 +249,7 @@ properties:
                 default_all: 1d
                 default_basic: not assigned
                 default_1d: 1d
+                default_3d: 3d
                 enum: [not assigned, 1d, 2d, 3d]
             containment_correction: {type: boolean, default_all: false}
         if:
@@ -287,22 +299,34 @@ properties:
         default_all: {}
         default_basic: {}
         default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
-            binsz: {type: number, default_all: 0.02}
+            binsz:
+                type: number
+                default_all: 0.02
+                default_3d: 0.02
             coordsys:
                 type: string
                 default_all: CEL
+                default_3d: CEL
                 enum: [CEL, GAL]
-            proj: {type: string, default_all: CAR}
+            proj:
+                type: string
+                default_all: TAN
+                default_3d: TAN
             skydir:
                 type: array
-                items: {type: number, default_all: [83, 22]}
+                default_all: [83.633, 22.014]
+                default_3d: [83.633, 22.014]
+                items: {type: number}
                 minItems: 2
                 maxItems: 2
             width:
                 type: array
-                items: {type: number, default_all: [5, 5]}
+                default_all: [5, 5]
+                default_3d: [5, 5]
+                items: {type: number}
                 minItems: 1
                 maxItems: 2
             offset_max: {type: number, default_all: 3 deg}
@@ -310,25 +334,44 @@ properties:
                 type: object
                 default_all: {}
                 default_1d: {}
+                default_3d: {}
                 additionalProperties: false
                 properties:
                     e_reco:
                         type: object
                         default_all: {}
+                        default_3d: {}
                         additionalProperties: false
                         properties:
-                            name: {type: string, default_all: e_reco}
-                            lo_bnd: {type: number, default_all: 0.01}
-                            hi_bnd: {type: number, default_all: 100}
-                            nbin: {type: number, default_all: 73}
-                            unit: {type: string, default_all: TeV}
+                            name:
+                                type: string
+                                default_all: e_reco
+                                default_3d: energy
+                            lo_bnd:
+                                type: number
+                                default_all: 0.01
+                                default_3d: 1
+                            hi_bnd:
+                                type: number
+                                default_all: 100
+                                default_3d: 10
+                            nbin:
+                                type: number
+                                default_all: 73
+                                default_3d: 4
+                            unit:
+                                type: string
+                                default_all: TeV
+                                default_3d: TeV
                             interp:
                                 type: string
                                 default_all: log
+                                default_3d: log
                                 enum: [lin, log, sqrt]
                             node_type:
                                 type: string
                                 default_all: center
+                                default_3d: center
                                 enum: [edges, center]
                         required: [lo_bnd, hi_bnd, nbin, unit]
                     e_true:
@@ -361,6 +404,7 @@ properties:
         default_all: {}
         default_basic: {}
         default_1d: {}
+        default_3d: {}
         additionalProperties: false
         properties:
             components:
@@ -368,6 +412,7 @@ properties:
                 default_all: [{}]
                 default_basic: [{}]
                 default_1d: [{}]
+                default_3d: [{}]
                 items:
                     type: object
                     additionalProperties: false
@@ -535,6 +580,7 @@ properties:
         default_all: {}
         default_basic: {}
         default_1d: {}
+        default_3d: {}
         properties:
             fit_range:
                 type: object
@@ -573,6 +619,7 @@ properties:
         default_all: {}
         default_basic: {}
         default_1d: {}
+        default_3d: {}
         properties:
             fp_binning:
                 type: object
