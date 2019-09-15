@@ -9,6 +9,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 import jsonschema
 import yaml
+from gammapy.cube import MapDataset, MapMaker, PSFKernel
 from gammapy.data import DataStore, ObservationTable
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Datasets, Fit
@@ -62,6 +63,7 @@ class Analysis:
         self.geom = None
         self.background_estimator = None
         self.extraction = None
+        self.maps = None
         self.model = None
         self.fit_result = None
         self.flux_points_dataset = None
@@ -181,7 +183,11 @@ class Analysis:
             self._spectrum_extraction()
         elif self.settings["reduction"]["data_reducer"] == "3d":
             self._create_geometry()
-            pass
+            maker_params = {}
+            if "offset_max" in self.settings["geometry"]:
+                maker_params = {"offset_max": self.settings["geometry"]["offset_max"]}
+            maker = MapMaker(self.geom, **maker_params)
+            self.maps = maker.run(self.observations)
         else:
             # TODO raise error?
             log.info("Data reduction method not available.")

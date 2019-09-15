@@ -329,7 +329,10 @@ properties:
                 items: {type: number}
                 minItems: 1
                 maxItems: 2
-            offset_max: {type: number, default_all: 3 deg}
+            offset_max:
+                type: string
+                default_all: 3 deg
+                default_3d: 2.5 deg
             axes:
                 type: object
                 default_all: {}
