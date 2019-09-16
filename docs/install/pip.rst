@@ -51,3 +51,21 @@ Now you install, run tests or build the documentation:
 If you want to contribute to Gammapy, but are not familiar with Python or git or
 Astropy yet, please have a look at the `Astropy developer documentation
 <http://docs.astropy.org/en/latest/#developer-documentation>`__.
+
+Development version
+-------------------
+
+You can install the development version of Gammapy like this::
+
+    python -m pip install --user git+https://github.com/gammapy/gammapy.git
+
+This will ``git clone`` the Gammapy repository from Github into a temp folder
+and then build and install Gammapy from there.
+
+If there are any errors related to Cython, Numpy or Astropy, you should install
+those first and try again::
+
+    conda install -c cython numpy astropy click regions
+    python -m pip install --user git+https://github.com/gammapy/gammapy.git
+
+How to get set up for Gammapy development is described here: :ref:`dev_setup`

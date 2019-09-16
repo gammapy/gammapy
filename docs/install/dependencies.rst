@@ -2,22 +2,29 @@
 
 .. _install-dependencies:
 
-Dependencies
-============
+Gammapy Dependencies
+====================
 
-The philosophy of Gammapy is to build on the existing scientific Python stack.
-This means that you need to install those dependencies to use Gammapy.
+The latest stable version of Gammapy is listed at https://gammapy.org
 
-We are aware that too many dependencies is an issue for deployment and
-maintenance. That's why currently Gammapy only has two core dependencies ---
-Numpy and Astropy. We are considering making Scipy and reproject and PyYAML core dependencies.
+Gammapy works with Python 3.6 or later.
 
-In addition there are about a dozen optional dependencies that are OK to import
-from Gammapy because they are potentially useful (not all of those are actually
-currently imported).
+Linux and Mac OS are fully supported.
 
-Before the Gammapy 1.0 release we will re-evaluate and clarify the Gammapy
-dependencies.
+Gammapy itself, and most analyses, work on Windows. However, two optional
+dependencies don't support Windows yet: Sherpa (an optional fitting backend) and
+healpy (needed to work with HEALPix maps, which is common for all-sky analyses).
+
+Gammapy is a Python package built on Numpy and Astropy, as well as a few other
+required dependencies. For certain functionality, optional dependencies are
+used. The recommended way to install Gammapy (see :ref:`install`) is via a conda
+environment which includes all required and optional dependencies.
+
+Below is a complete list of dependencies, with links to the documentation pages
+for each project with further information.
+
+Required dependencies
+---------------------
 
 The required core dependencies of Gammapy are:
 
@@ -27,6 +34,9 @@ The required core dependencies of Gammapy are:
 * `regions`_ - Astropy regions package. Planned for inclusion in Astropy core as ``astropy.regions``.
 * `click`_ for making command line tools
 * `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files)
+
+Optional dependencies
+---------------------
 
 Optional dependencies of Gammapy:
 
