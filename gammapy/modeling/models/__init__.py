@@ -37,6 +37,6 @@ SPECTRAL_MODELS = {
     "TableModel": TableModel,
     "SpectralGaussian": SpectralGaussian,
     "SpectralLogGaussian": SpectralLogGaussian,
-    "AbsorbedSpectralModel":AbsorbedSpectralModel,
-    "Absorption":Absorption,
+    "AbsorbedSpectralModel": AbsorbedSpectralModel,
+    "Absorption": Absorption,
 }

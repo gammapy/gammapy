@@ -1425,25 +1425,12 @@ class Absorption:
     """
     tag = "Absorption"
 
-    def __init__(
-        self,
-        energy_lo,
-        energy_hi,
-        param_lo,
-        param_hi,
-        data,
-        filename=None,
-        interp_kwargs=None,
-    ):
-        self._energy_lo = energy_lo
-        self._energy_hi = energy_hi
-        self._param_lo = param_lo
-        self._param_hi = param_hi
+    def __init__(self, energy, param, data, filename=None, interp_kwargs=None):
         self.data = data
         self.filename = filename
         # set values log centers
-        self.energy = np.sqrt(energy_lo * energy_hi)
-        self.param = (param_hi + param_lo) / 2
+        self.param = param
+        self.energy = energy
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("log", "lin"))
@@ -1456,23 +1443,18 @@ class Absorption:
         if self.filename is None:
             return {
                 "type": self.tag,
-                "energy_lo": {
-                    "data": list(self._energy_lo.value),
-                    "unit": str(self._energy_lo.unit),
+                "energy": {
+                    "data": self.energy.data.tolist(),
+                    "unit": str(self.energy.unit),
                 },
-                "energy_hi": {
-                    "data": list(self._energy_hi.value),
-                    "unit": str(self._energy_lo.unit),
+                "param": {
+                    "data": self.param.data.tolist(),
+                    "unit": str(self.param.unit),
                 },
-                "param_lo": {
-                    "data": list(self._param_lo.value),
-                    "unit": str(self._param_lo.unit),
+                "values": {
+                    "data": self.data.data.tolist(),
+                    "unit": str(self.data.unit),
                 },
-                "param_hi": {
-                    "data": list(self._param_hi.value),
-                    "unit": str(self._param_hi.unit),
-                },
-                "values": {"data": list(self.data.value), "unit": str(self.data.unit)},
             }
         else:
             return {"type": self.tag, "filename": self.filename}
@@ -1483,18 +1465,10 @@ class Absorption:
         if "filename" in data:
             return cls.read(data["filename"])
         else:
-            energy_lo = u.Quantity(data["energy_lo"]["data"], data["energy_lo"]["unit"])
-            energy_hi = u.Quantity(data["energy_hi"]["data"], data["energy_hi"]["unit"])
-            param_lo = u.Quantity(data["param_lo"]["data"], data["param_lo"]["unit"])
-            param_hi = u.Quantity(data["param_hi"]["data"], data["param_hi"]["unit"])
+            energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
+            param = u.Quantity(data["param"]["data"], data["param"]["unit"])
             values = u.Quantity(data["values"]["data"], data["values"]["unit"])
-            return cls(
-                energy_lo=energy_lo,
-                energy_hi=energy_hi,
-                param_lo=param_lo,
-                param_hi=param_hi,
-                data=values,
-            )
+            return cls(energy=energy, param=param, data=values)
 
     @classmethod
     def read(cls, filename):
@@ -1510,18 +1484,7 @@ class Absorption:
         # Create EBL data array
         filename = str(make_path(filename))
         table_param = Table.read(filename, hdu="PARAMETERS")
-
-        par_min = table_param["MINIMUM"]
-        par_max = table_param["MAXIMUM"]
-
-        par_array = table_param[0]["VALUE"]
-        par_delta = np.diff(par_array) * 0.5
-
-        param_lo, param_hi = par_array, par_array  # initialisation
-        param_lo[0] = par_min - par_delta[0]
-        param_lo[1:] -= par_delta
-        param_hi[:-1] += par_delta
-        param_hi[-1] = par_max
+        param = table_param[0]["VALUE"]
 
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
@@ -1531,19 +1494,13 @@ class Absorption:
         energy_hi = u.Quantity(
             table_energy["ENERG_HI"], "keV", copy=False
         )  # unit not stored in file
+        energy = np.sqrt(energy_lo * energy_hi)
 
         # Get spectrum values
         table_spectra = Table.read(filename, hdu="SPECTRA")
         data = table_spectra["INTPSPEC"].data
 
-        return cls(
-            energy_lo=energy_lo,
-            energy_hi=energy_hi,
-            param_lo=param_lo,
-            param_hi=param_hi,
-            data=data,
-            filename=filename,
-        )
+        return cls(energy=energy, param=param, data=data, filename=filename)
 
     @classmethod
     def read_builtin(cls, name):

@@ -6,7 +6,7 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.modeling import Datasets
 from gammapy.modeling.models import SkyModels, spatial, spectral
 from gammapy.modeling.serialize import dict_to_models
-from gammapy.utils.scripts import read_yaml
+from gammapy.utils.scripts import read_yaml, write_yaml
 from gammapy.utils.testing import requires_data
 
 
@@ -150,9 +150,8 @@ def test_datasets_to_io(tmpdir):
 
 
 @requires_data()
-def test_AbsorbedSpectralModel_io():
+def test_absorption_io(tmpdir):
     dominguez = spectral.Absorption.read_builtin("dominguez")
-    test_absorption = spectral.Absorption
     model = spectral.AbsorbedSpectralModel(
         spectral_model=spectral.PowerLaw(),
         absorption=dominguez,
@@ -161,7 +160,7 @@ def test_AbsorbedSpectralModel_io():
     )
     model_dict = model.to_dict()
     new_model = spectral.AbsorbedSpectralModel.from_dict(model_dict)
-    assert_allclose(new_model.parameter, 0.5)
+    assert new_model.parameter == 0.5
     assert new_model.parameter_name == "redshift"
     assert new_model.spectral_model.tag == "PowerLaw"
     assert_allclose(new_model.absorption.energy, dominguez.energy)
@@ -170,8 +169,6 @@ def test_AbsorbedSpectralModel_io():
 
     test_absorption = spectral.Absorption(
         u.Quantity(range(3), "keV"),
-        u.Quantity(range(3), "keV"),
-        u.Quantity(range(2), ""),
         u.Quantity(range(2), ""),
         u.Quantity(np.ones((2, 3)), ""),
     )
@@ -182,6 +179,8 @@ def test_AbsorbedSpectralModel_io():
         parameter_name="redshift",
     )
     model_dict = model.to_dict()
+    write_yaml(model_dict, str(tmpdir / "written.yaml"))
+    read_yaml(str(tmpdir / "written.yaml"))
     new_model = spectral.AbsorbedSpectralModel.from_dict(model_dict)
     assert_allclose(new_model.absorption.energy, test_absorption.energy)
     assert_allclose(new_model.absorption.param, test_absorption.param)
