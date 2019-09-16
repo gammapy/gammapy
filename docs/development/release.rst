@@ -80,7 +80,6 @@ Steps for the day of the release:
 #. Draft the release announcement as a new file in https://github.com/gammapy/gammapy/tree/master/dev/notes
    (usually by copy & pasting the announcement from the last release)
 #. Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock
-#. Update Gammapy Macports package at https://github.com/macports/macports-ports
 #. Encourage the Gammapy developers to try out the new stable version (update and run tests)
    via the Github issue for the release and wait a day or two for feedback.
 

@@ -43,10 +43,6 @@ or with pip::
 
     python -m pip install gammapy
 
-or with Macports (a package manager for Mac OS)::
-
-    sudo port install gammapy
-
 Gammapy is not yet available in the Linux distributions, i.e. at this time you
 can't install it with e.g. ``apt-get`` or ``yum``.
 
@@ -83,8 +79,7 @@ where it's located, type this::
 Need help?
 ==========
 
-If you're not sure how to best install Gammapy on your machine (e.g. whether to
-use conda or pip or Macports ...), we recommend that you give conda a try first.
+If you're not sure how to best install Gammapy on your machine, we recommend that you give conda a try first.
 It's a binary package manager (so generally installation is fast), and allows
 you to install any software in your home folder (without needing ``sudo``) and
 works the same on Linux, Mac OS and Windows. Many Gammapy users and developers
@@ -110,7 +105,6 @@ information on the following sub-pages:
 
     conda
     pip
-    macports
     other
     check
     dependencies
