@@ -37,7 +37,8 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     psfmap : `~gammapy.cube.PSFMap`
         the resulting PSF map
     """
-    energy = geom.get_axis_by_name("energy").center
+    energy_axis = geom.get_axis_by_name("energy")
+    energy = energy_axis.center
 
     rad_axis = geom.get_axis_by_name("theta")
     rad = Angle(rad_axis.center, unit=rad_axis.unit)
@@ -56,6 +57,12 @@ def make_psf_map(psf, pointing, geom, max_offset, exposure_map=None):
     # Create Map and fill relevant entries
     psfmap = Map.from_geom(geom, unit="sr-1")
     psfmap.data[:, :, valid[0], valid[1]] += psf_values.to_value(psfmap.unit)
+
+    if exposure_map is not None and exposure_map.geom.ndim == 3:
+        geom_image = exposure_map.geom.to_image()
+        geom = geom_image.to_cube([rad_axis.squash(), energy_axis])
+        data = exposure_map.data[:, np.newaxis, :, :]
+        exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
 
     return PSFMap(psfmap, exposure_map)
 
@@ -123,15 +130,6 @@ class PSFMap:
             raise ValueError("Incorrect theta axis position in input Map")
 
         self.psf_map = psf_map
-
-        if exposure_map is not None and exposure_map.geom.ndim == 3:
-            geom_image = exposure_map.geom.to_image()
-            rad_axis = psf_map.geom.get_axis_by_name("theta")
-            energy_axis = exposure_map.geom.get_axis_by_name("energy")
-            geom = geom_image.to_cube([rad_axis.squash(), energy_axis])
-            data = exposure_map.data[:, np.newaxis, :, :]
-            exposure_map = Map.from_geom(geom=geom, data=data, unit=exposure_map.unit)
-
         self.exposure_map = exposure_map
 
     @classmethod
