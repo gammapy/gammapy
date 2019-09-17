@@ -154,7 +154,16 @@ def test_background_model(background):
 class TestSkyModels:
     @staticmethod
     def test_parameters(sky_models):
-        parnames = ["lon_0", "lat_0", "sigma", "index", "amplitude", "reference"] * 2
+        parnames = [
+            "lon_0",
+            "lat_0",
+            "sigma",
+            "e",
+            "phi",
+            "index",
+            "amplitude",
+            "reference",
+        ] * 2
         assert sky_models.parameters.names == parnames
 
         # Check that model parameters are references to the parts

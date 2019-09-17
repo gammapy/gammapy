@@ -88,7 +88,7 @@ model_registry = {
             },
         },
         "RadialDisk": {
-            "model": spatial.SkyDisk,
+            "model": spatial.SkyEllipse,
             "parameters": {
                 "RA": ["lon_0", "deg"],
                 "DEC": ["lat_0", "deg"],

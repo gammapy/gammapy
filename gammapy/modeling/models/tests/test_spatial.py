@@ -7,10 +7,8 @@ from gammapy.maps import Map, WcsGeom
 from gammapy.modeling.models import (
     SkyDiffuseConstant,
     SkyDiffuseMap,
-    SkyDisk,
     SkyEllipse,
     SkyGaussian,
-    SkyGaussianElongated,
     SkyPointSource,
     SkyShell,
 )
@@ -33,6 +31,7 @@ def test_sky_point_source():
 
 
 def test_sky_gaussian():
+    # Test symmetric model
     sigma = 1 * u.deg
     model = SkyGaussian(lon_0="5 deg", lat_0="15 deg", sigma=sigma)
     assert model.parameters["sigma"].min == 0
@@ -45,8 +44,6 @@ def test_sky_gaussian():
     assert radius.unit == "deg"
     assert_allclose(radius.value, 5 * sigma.value)
 
-
-def test_sky_gaussian_elongated():
     # test the normalization for an elongated Gaussian near the Galactic Plane
     m_geom_1 = WcsGeom.create(
         binsz=0.05, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
@@ -55,21 +52,21 @@ def test_sky_gaussian_elongated():
     solid_angle = m_geom_1.solid_angle()
     lon = coords.lon
     lat = coords.lat
-    semi_major = 3 * u.deg
-    model_1 = SkyGaussianElongated(2 * u.deg, 2 * u.deg, semi_major, 0.8, 30 * u.deg)
+    sigma = 3 * u.deg
+    model_1 = SkyGaussian(2 * u.deg, 2 * u.deg, sigma, 0.8, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, 5 * semi_major.value)
+    assert_allclose(radius.value, 5 * sigma.value)
 
     # check the ratio between the value at the peak and on the 1-sigma isocontour
-    semi_major = 4 * u.deg
+    sigma = 4 * u.deg
     semi_minor = 2 * u.deg
-    e = np.sqrt(1 - (semi_minor / semi_major) ** 2)
-    model_2 = SkyGaussianElongated(0 * u.deg, 0 * u.deg, semi_major, e, 0 * u.deg)
+    e = np.sqrt(1 - (semi_minor / sigma) ** 2)
+    model_2 = SkyGaussian(0 * u.deg, 0 * u.deg, sigma, e, 0 * u.deg)
     val_0 = model_2(0 * u.deg, 0 * u.deg)
     val_major = model_2(0 * u.deg, 4 * u.deg)
     val_minor = model_2(2 * u.deg, 0 * u.deg)
@@ -81,39 +78,16 @@ def test_sky_gaussian_elongated():
     assert_allclose(ratio_minor, np.exp(0.5))
 
     # check the rotation
-    model_3 = SkyGaussianElongated(0 * u.deg, 0 * u.deg, semi_major, e, 90 * u.deg)
+    model_3 = SkyGaussian(0 * u.deg, 0 * u.deg, sigma, e, 90 * u.deg)
     val_minor_rotated = model_3(0 * u.deg, 2 * u.deg)
     ratio_minor_rotated = val_0 / val_minor_rotated
     assert_allclose(ratio_minor_rotated, np.exp(0.5))
 
-    # compare the normalization of a symmetric Gaussian (ellipse with e=0) and an
-    # elongated Gaussian with null eccentricity, both defined at the Galactic Pole
-    m_geom_4 = WcsGeom.create(
-        binsz=0.05, width=(25, 25), skydir=(0, 90), coordsys="GAL", proj="AIT"
-    )
-    coords = m_geom_4.get_coord()
-    solid_angle = m_geom_4.solid_angle()
-    lon = coords.lon
-    lat = coords.lat
 
-    semi_major = 5 * u.deg
-    model_4_el = SkyGaussianElongated(
-        0 * u.deg, 90 * u.deg, semi_major, 0.0, 0.0 * u.deg
-    )
-    model_4_sym = SkyGaussian(0 * u.deg, 90 * u.deg, semi_major)
-
-    vals_4_el = model_4_el(lon, lat)
-    vals_4_sym = model_4_sym(lon, lat)
-
-    int_elongated = np.sum(vals_4_el * solid_angle)
-    int_symmetric = np.sum(vals_4_sym * solid_angle)
-
-    assert_allclose(int_symmetric, int_elongated, rtol=1e-3)
-
-
-def test_sky_disk():
+def test_sky_ellipse():
+    # Test the disk case (e=0)
     r_0 = 2 * u.deg
-    model = SkyDisk(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
+    model = SkyEllipse(lon_0="1 deg", lat_0="45 deg", r_0=r_0)
     lon = [1, 5, 359] * u.deg
     lat = 46 * u.deg
     val = model(lon, lat)
@@ -124,24 +98,6 @@ def test_sky_disk():
     assert radius.unit == "deg"
     assert_allclose(radius.value, r_0.value)
 
-
-def test_sky_disk_edge():
-    r_0 = 2 * u.deg
-    model = SkyDisk(lon_0="0 deg", lat_0="0 deg", r_0=r_0)
-    value_center = model(0 * u.deg, 0 * u.deg)
-    value_edge = model(r_0, 0 * u.deg)
-    assert_allclose((value_edge / value_center).to_value(""), 0.5)
-
-    edge = model.edge.quantity
-    value_edge_pwidth = model(r_0 + edge / 2, 0 * u.deg)
-    assert_allclose((value_edge_pwidth / value_center).to_value(""), 0.05)
-
-    value_edge_nwidth = model(r_0 - edge / 2, 0 * u.deg)
-    assert_allclose((value_edge_nwidth / value_center).to_value(""), 0.95)
-
-
-def test_sky_ellipse():
-    pytest.importorskip("astropy", minversion="3.1.1")
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
         binsz=0.015, width=(20, 20), skydir=(2, 2), coordsys="GAL", proj="AIT"
@@ -150,54 +106,44 @@ def test_sky_ellipse():
     solid_angle = m_geom_1.solid_angle()
     lon = coords.lon
     lat = coords.lat
-    semi_major = 10 * u.deg
-    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, semi_major, 0.4, 30 * u.deg)
+    r_0 = 10 * u.deg
+    model_1 = SkyEllipse(2 * u.deg, 2 * u.deg, r_0, 0.4, 30 * u.deg)
     vals_1 = model_1(lon, lat)
     assert vals_1.unit == "sr-1"
     assert_allclose(np.sum(vals_1 * solid_angle), 1, rtol=1.0e-3)
 
     radius = model_1.evaluation_radius
     assert radius.unit == "deg"
-    assert_allclose(radius.value, semi_major.value)
+    assert_allclose(radius.value, r_0.value)
     # test rotation
-    semi_major = 2 * u.deg
+    r_0 = 2 * u.deg
     semi_minor = 1 * u.deg
-    eccentricity = np.sqrt(1 - (semi_minor / semi_major) ** 2)
-    model_rot_test = SkyEllipse(
-        0 * u.deg, 0 * u.deg, semi_major, eccentricity, 90 * u.deg
-    )
+    eccentricity = np.sqrt(1 - (semi_minor / r_0) ** 2)
+    model_rot_test = SkyEllipse(0 * u.deg, 0 * u.deg, r_0, eccentricity, 90 * u.deg)
     assert_allclose(model_rot_test(0 * u.deg, 1.5 * u.deg).value, 0)
 
-    # test the normalization for a disk (ellipse with e=0) at the Galactic Pole,
-    # both analytically and comparing with the SkyDisk model
+    # test the normalization for a disk (ellipse with e=0) at the Galactic Pole
     m_geom_2 = WcsGeom.create(
         binsz=0.1, width=(6, 6), skydir=(0, 90), coordsys="GAL", proj="AIT"
     )
     coords = m_geom_2.get_coord()
-    solid_angle = m_geom_2.solid_angle()
-
     lon = coords.lon
     lat = coords.lat
 
-    semi_major = 5 * u.deg
-    model_2 = SkyEllipse(0 * u.deg, 90 * u.deg, semi_major, 0.0, 0.0 * u.deg)
-    vals_2 = model_2(lon, lat)
-
-    disk = SkyDisk(lon_0="0 deg", lat_0="90 deg", r_0="5 deg")
+    r_0 = 5 * u.deg
+    disk = SkyEllipse(0 * u.deg, 90 * u.deg, r_0)
     vals_disk = disk(lon, lat)
 
     solid_angle = 2 * np.pi * (1 - np.cos(5 * u.deg))
-    assert_allclose(np.max(vals_2).value * solid_angle, 1)
-
-    assert_allclose(np.sum(vals_2 * solid_angle), np.sum(vals_disk * solid_angle))
+    assert_allclose(np.max(vals_disk).value * solid_angle, 1)
 
 
 def test_sky_ellipse_edge():
-    pytest.importorskip("astropy", minversion="3.1.1")
     r_0 = 2 * u.deg
-    model = SkyEllipse(lon_0="0 deg", lat_0="0 deg", semi_major=r_0, e=0.5, phi="0 deg")
+    model = SkyEllipse(lon_0="0 deg", lat_0="0 deg", r_0=r_0, e=0.5, phi="0 deg")
     value_center = model(0 * u.deg, 0 * u.deg)
     value_edge = model(0 * u.deg, r_0)
+    print(value_center, value_edge)
     assert_allclose((value_edge / value_center).to_value(""), 0.5)
 
     edge = model.edge.quantity
