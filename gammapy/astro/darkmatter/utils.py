@@ -157,7 +157,10 @@ class SigmaVEstimator:
         self.xsection = xsection
 
     def run(
-        self, likelihood_profile_opts=dict(bounds=5, nvalues=50), optimize_opts=None, covariance_opts=None
+        self,
+        likelihood_profile_opts=dict(bounds=5, nvalues=50),
+        optimize_opts=None,
+        covariance_opts=None,
     ):
         """Run the SigmaVEstimator for all channels and masses.
 
@@ -188,73 +191,95 @@ class SigmaVEstimator:
                 row = {}
                 log.info(f"Mass: {mass}")
                 DMAnnihilation.THERMAL_RELIC_CROSS_SECTION = self.xsection
-                flux_model = DMAnnihilation(
-                    mass=mass,
-                    channel=ch,
-                    scale=1,
-                    jfactor=self.jfact,
-                    z=self.z,
-                    k=self.k,
+                dataset_loop = self._set_model_dataset(ch, mass)
+                fit_result = self._fit_dataset(
+                    dataset_loop,
+                    likelihood_profile_opts=likelihood_profile_opts,
+                    optimize_opts=optimize_opts,
+                    covariance_opts=covariance_opts,
                 )
-                if self.absorption_model:
-                    flux_model = AbsorbedSpectralModel(
-                        flux_model, self.absorption_model, self.z
-                    )
-                dataset_loop = self.dataset.copy()
-                dataset_loop.model = flux_model
-
-                try:
-                    fit = Fit(dataset_loop)
-                    fit_result = fit.run(optimize_opts, covariance_opts)
-                    all_profile = fit.likelihood_profile(**likelihood_profile_opts)
-                    #
-                    #
-                    scale_best = fit_result.parameters["scale"].value
-                    #
-                    likemin = dataset_loop.likelihood()
-                    profile = all_profile
-
-                    # consider scale value in the physical region > 0
-                    assert np.max(profile["values"]) > 0, "Values for scale found outside the physical region"
-                    if scale_best < 0:
-                        scale_best = 0
-                        likemin = interp1d(all_profile["values"], all_profile["likelihood"], kind="quadratic")(0)
-                        idx = np.min(np.argwhere(all_profile["values"] > 0))
-                        filtered_x_values = all_profile["values"][all_profile["values"] > 0]
-                        filtered_y_values = all_profile["likelihood"][idx:]
-                        profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
-                        profile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
-
-                    scale_found = brentq(
-                        interp1d(profile["values"], profile["likelihood"] - likemin - self.RATIO, kind="quadratic"),
-                        scale_best,
-                        np.max(profile["values"]),
-                        maxiter=100,
-                        rtol=1e-5,
-                    )
-                    sigma_v = scale_found * self.xsection
-
-                except Exception as ex:
-                    sigma_v = None
-                    scale_best = None
-                    scale_found = None
-                    all_profile = None
-                    log.error(ex)
-
                 row["mass"] = mass
-                if isinstance(sigma_v, Quantity):
-                    row["sigma_v"] = sigma_v.value
-                    sigma_unit = sigma_v.unit
+                if isinstance(fit_result["sigma_v"], Quantity):
+                    row["sigma_v"] = fit_result["sigma_v"].value
+                    sigma_unit = fit_result["sigma_v"].unit
                 else:
-                    row["sigma_v"] = sigma_v
-                row["scale_best"] = scale_best
-                row["scale_ul"] = scale_found
-                row["likeprofile"] = all_profile
+                    row["sigma_v"] = fit_result["sigma_v"]
+                row["scale_best"] = fit_result["scale_best"]
+                row["scale_ul"] = fit_result["scale_ul"]
+                row["likeprofile"] = fit_result["likeprofile"]
                 table_rows.append(row)
-                log.info(f"Sigma v: {sigma_v}")
-
+                log.info(f"Sigma v: {fit_result['sigma_v']}")
             table = table_from_row_data(rows=table_rows)
             table["sigma_v"].unit = sigma_unit
             result[ch] = table
-
         return result
+
+    def _set_model_dataset(self, ch, mass):
+        """Set model to fit in dataset."""
+        flux_model = DMAnnihilation(
+            mass=mass, channel=ch, scale=1, jfactor=self.jfact, z=self.z, k=self.k
+        )
+        if self.absorption_model:
+            flux_model = AbsorbedSpectralModel(
+                flux_model, self.absorption_model, self.z
+            )
+        ds = self.dataset.copy()
+        ds.model = flux_model
+        return ds
+
+    def _fit_dataset(
+        self,
+        dataset_loop,
+        likelihood_profile_opts=None,
+        optimize_opts=None,
+        covariance_opts=None,
+    ):
+        """Fit dataset to model."""
+        try:
+            fit = Fit(dataset_loop)
+            fit_result = fit.run(optimize_opts, covariance_opts)
+            likeprofile = fit.likelihood_profile(**likelihood_profile_opts)
+            #
+            #
+            scale_best = fit_result.parameters["scale"].value
+            #
+            likemin = dataset_loop.likelihood()
+            profile = likeprofile
+
+            # consider scale value in the physical region > 0
+            assert (np.max(profile["values"]) > 0), "Values for scale found outside the physical region"
+            if scale_best < 0:
+                scale_best = 0
+                likemin = interp1d(likeprofile["values"], likeprofile["likelihood"], kind="quadratic")(0)
+                idx = np.min(np.argwhere(likeprofile["values"] > 0))
+                filtered_x_values = likeprofile["values"][likeprofile["values"] > 0]
+                filtered_y_values = likeprofile["likelihood"][idx:]
+                profile["values"] = np.concatenate((np.array([0]), filtered_x_values))
+                profile["likelihood"] = np.concatenate((np.array([likemin]), filtered_y_values))
+            scale_ul = brentq(
+                interp1d(
+                    profile["values"],
+                    profile["likelihood"] - likemin - self.RATIO,
+                    kind="quadratic",
+                ),
+                scale_best,
+                np.max(profile["values"]),
+                maxiter=100,
+                rtol=1e-5,
+            )
+            sigma_v = scale_ul * self.xsection
+
+        except Exception as ex:
+            sigma_v = None
+            scale_best = None
+            scale_ul = None
+            likeprofile = None
+            log.error(ex)
+
+        res = dict(
+            sigma_v=sigma_v,
+            scale_best=scale_best,
+            scale_ul=scale_ul,
+            likeprofile=likeprofile,
+        )
+        return res
